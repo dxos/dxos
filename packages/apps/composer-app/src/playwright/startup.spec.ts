@@ -5,10 +5,14 @@
 import { type Page, expect, test } from '@playwright/test';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { log } from '@dxos/log';
 
 import { INITIAL_URL } from './app-manager';
+
+// `__dirname` is not defined in ESM; derive from `import.meta.url`.
+const here = path.dirname(fileURLToPath(import.meta.url));
 
 if (process.env.DX_PWA !== 'false') {
   log.error('PWA must be disabled to run e2e tests. Set DX_PWA=false before running again.');
@@ -44,7 +48,7 @@ type StartupReport = {
   responseCount: number;
 };
 
-const REPORT_DIR = path.join(__dirname, '..', '..', '..', '..', '..', 'test-results', 'composer-app');
+const REPORT_DIR = path.join(here, '..', '..', '..', '..', '..', 'test-results', 'composer-app');
 
 const writeReport = (name: string, payload: unknown) => {
   mkdirSync(REPORT_DIR, { recursive: true });
@@ -196,18 +200,27 @@ test.describe('Startup timing harness', () => {
 
   test('boot loader paints before bundle is parsed', async ({ browser }) => {
     // Verifies the native-DOM loader (inline in `index.html`) is on screen before
-    // `main.tsx` finishes executing. The aria-label is what assistive tech reads.
+    // `main.tsx` finishes executing. We can't rely on locator-based waits here,
+    // because by the time Playwright actuates them React may already have
+    // replaced #root and torn the loader DOM down. Instead, capture both signals
+    // (`__composerBoot.status` defined; `#boot-loader` rendered) inside the same
+    // initial-script block so the assertion runs *before* any user JS executes.
     const context = await browser.newContext();
     const page = await context.newPage();
 
-    await page.goto(`${INITIAL_URL}/?profiler=1`, { waitUntil: 'commit' });
-    const loader = page.locator('#boot-loader');
-    await expect(loader).toBeVisible({ timeout: 5_000 });
-    await expect(loader).toHaveAttribute('aria-label', 'Initializing');
+    await page.addInitScript(() => {
+      (window as any).__composerBootSnapshot = () => ({
+        hasDriver: typeof (window as any).__composerBoot?.status === 'function',
+        bootLoaderInDom: !!document.getElementById('boot-loader'),
+        bootLoaderAriaLabel: document.getElementById('boot-loader')?.getAttribute('aria-label') ?? null,
+      });
+    });
+    await page.goto(`${INITIAL_URL}/?profiler=1`, { waitUntil: 'domcontentloaded' });
 
-    // The status driver is installed by an inline script before any module loads.
-    const hasDriver = await page.evaluate(() => typeof (window as any).__composerBoot?.status === 'function');
-    expect(hasDriver).toBe(true);
+    const snapshot = await page.evaluate(() => (window as any).__composerBootSnapshot());
+    expect(snapshot.bootLoaderInDom).toBe(true);
+    expect(snapshot.bootLoaderAriaLabel).toBe('Initializing');
+    expect(snapshot.hasDriver).toBe(true);
 
     await context.close();
   });

@@ -5,6 +5,34 @@ measure, what we can measure better, and how to make the loading experience
 feel faster (and actually be faster). It is intentionally specific — every claim
 points at code so the reader can verify or push back.
 
+## 0. Baseline numbers (chromium, production preview build)
+
+Captured by the new harness in [`src/playwright/startup.spec.ts`](src/playwright/startup.spec.ts) on a developer laptop. Treat as one data point — re-run before/after each follow-up to see deltas. Bytes are uncompressed (PWA disabled, no SW cache); first paint is when the inline boot loader is on screen.
+
+| Scenario | First Paint | profilerTotal (`main:start` → `Startup` activated) | navigation → user-account | Modules activated | Bytes / responses |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| Cold (cleared storage) | **264 ms** | **11,118 ms** | 18,054 ms | 263 | 43.4 MB / 953 |
+| Warm (reload, IDB warm) | 172 ms | 3,166 ms | 7,677 ms | 257 | 43.1 MB / 952 |
+
+Top hotspots on the cold load:
+
+| Module | Cold ms |
+| --- | ---: |
+| `plugin.welcome.module.onboarding` | **5,948** |
+| `plugin.client.module.Client` | 2,322 |
+| `plugin.observability.module.ClientReady` | 1,851 |
+| `plugin.space.module.AppGraphBuilder` | 1,573 |
+| 6× `*.AppGraphBuilder` modules (transcription, pipeline, outliner, assistant, daily-summary, thread) | 1,557–1,568 each |
+
+Production bundle, `out/composer/assets`: **2,558 JS chunk files**, **71 MB total**, with
+`main-*.js` at **8.5 MB raw / 2.39 MB gzip**, `react-surface-*.js` at 5.7 MB raw, `dedicated-worker-*.js` at 3.5 MB raw.
+
+Three things jump out from these numbers and are reflected in §5:
+
+1. **`welcome.onboarding` alone is 5.9 s — over half the cold `profilerTotal`.** It blocks the `Startup` event from completing. Profile and split it before chasing anything else.
+2. **`navigationToReady` exceeds `profilerTotal` by ~7 s on cold.** `Startup` activated ≠ user-account testid mounted. We need an extra mark for "first interactive surface rendered" and to bake that into the harness.
+3. **The first `await import` doesn't even *start* until +4.9 s on cold** — the entire eager `import` chain in `plugin-defs.tsx` is paid synchronously before `main()`'s body runs. Lazy loading of non-core plugins is the largest single lever.
+
 ## 1. The pipeline today
 
 End-to-end, a cold load runs in this order. The first column is when the user
@@ -235,37 +263,49 @@ contribution, this can pile up React renders.
 A bounded concurrency (e.g. 4–8) plus a single batched render via
 `flushSync` after a whole event activates would smooth out paint cadence.
 
-## 5. Recommendations (ranked)
+## 5. Recommendations (ranked, post-baseline)
 
-The order reflects the impact-to-risk ratio I'd assign for a single follow-up
-PR each. The boot loader and harness are already implemented in this PR.
+Ordering rewritten after running the harness — the welcome onboarding cost was
+not visible from static reading.
 
-1. **Lazy-load non-core plugins.** Convert `plugin-defs.tsx` from `import {
+1. **Investigate `plugin.welcome.module.onboarding` (5.9 s cold).** It's
+   blocking the `Startup` event. Likely awaiting first space/identity creation
+   inside an activation effect; either split that work into a post-startup
+   `firesAfterActivation` event, or short-circuit when the user is already
+   onboarded. This single fix is worth every other item on this list combined.
+2. **Lazy-load non-core plugins.** Convert `plugin-defs.tsx` from `import {
    FooPlugin } from '@dxos/plugin-foo'` to a record like
    `{ id: '@dxos/plugin-foo', activate: () => import('@dxos/plugin-foo').then(...)
-   }` so the chunk is only requested when needed. Biggest single win,
-   architectural; needs to land alongside removing eager exports of the same
-   plugins from `index.ts`/translations.
-2. **Pipeline the four `await import`s in `main.tsx`** with `Promise.all`. Tiny
-   diff; measurable on first-paint-to-services.
-3. **Bound module activation concurrency** to 4 in `plugin-manager.ts` (search
-   for `concurrency: 'unbounded'`). Risk: re-orders activations. Need to verify
-   no plugin relies on concurrent contribution timing.
-4. **Yield to the event loop inside `_loadModule`** between
+   }` so the chunk is only requested when needed. Targets the `main-*.js`
+   (8.5 MB raw / 2.39 MB gzip) chunk and the 4.9 s of pre-await sync graph
+   evaluation. Biggest architectural win after #1.
+3. **Pipeline the four `await import`s in `main.tsx`** with `Promise.all`.
+   Tiny diff; measurable on `dynamic-imports` phase (300 ms today; should be
+   <100 ms with HTTP/2 multiplexing).
+4. **Add a `startup:user-account-mounted` mark** in the deck/space plugin so
+   `profilerTotal` reflects "first interactive surface rendered" rather than
+   just `Startup` activation. That eliminates the unaccounted ~7 s gap between
+   `profilerTotal` and `navigationToReady`.
+5. **Bound module activation concurrency** to 4–8 in `plugin-manager.ts`
+   ([:712](packages/sdk/app-framework/src/core/plugin-manager.ts), [:683-684](packages/sdk/app-framework/src/core/plugin-manager.ts)).
+   The 6 `*.AppGraphBuilder` modules clustering at ~1,560 ms each look like
+   they're all waiting on the same upstream and serialising on contention; a
+   bounded queue may both reduce contention and yield to React more often.
+6. **Yield to the event loop inside `_loadModule`** between
    `_contributeCapabilities` and the next module — `yield* Effect.yieldNow()`.
    This is what unblocks React rendering the determinate progress indicator
    reliably.
-5. **`scheduler.yield()` instead of `setInterval(100)`** in `useApp` for
+7. **`scheduler.yield()` instead of `setInterval(100)`** in `useApp` for
    progress updates. Shorter latency to first observed update.
-6. **Move `virtual:pwa-register/react` and PWA registration** into `Fallback`'s
+8. **Move `virtual:pwa-register/react` and PWA registration** into `Fallback`'s
    render path (it's only needed on error or update notifications), and make
    the PWA manifest fetch defer until `'idle'`.
-7. **Track-only the slowest 5 modules in production observability** via
+9. **Track-only the slowest 5 modules in production observability** via
    PostHog so we have a real-world distribution, not just dev-laptop numbers.
    Build on top of `profiler.snapshot()`.
-8. **Swap `cssText` of `#boot-loader` to use the brand Composer logo SVG** so
-   the boot loader visually matches `Placeholder.tsx` — eliminates the slight
-   flash when React replaces the DOM. Cheap, polish-grade.
+10. **Swap `cssText` of `#boot-loader` to use the brand Composer logo SVG** so
+    the boot loader visually matches `Placeholder.tsx` — eliminates the slight
+    flash when React replaces the DOM. Cheap, polish-grade.
 
 ## 6. Files changed in this PR
 
