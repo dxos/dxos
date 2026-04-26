@@ -23,6 +23,18 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
     <link rel="manifest" href="/site.webmanifest" />
+
+    <!--
+      Suppress lit's dev-mode warning. Lit checks `globalThis.litIssuedWarnings`
+      against either the warning code or the full text and skips emitting if a
+      match is already present (`@lit/reactive-element/development/reactive-element.js`).
+      This must execute *before* any module loads — ESM `import`s are hoisted
+      above non-import statements, so the same suppression in `src/main.tsx`
+      fires after lit's `queueMicrotask` warning has already run.
+    -->
+    <script>
+      (window.litIssuedWarnings ??= new Set()).add('dev-mode');
+    </script>
   </head>
   <body>
     <!--

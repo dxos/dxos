@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-// Suppress Lit dev mode warning (https://lit.dev/msg/dev-mode).
-(globalThis as any).litIssuedWarnings ??= new Set();
-(globalThis as any).litIssuedWarnings.add('dev-mode');
+// NOTE: lit dev-mode warning suppression lives inline in `index.html` because
+// ES module imports below this point are hoisted above any executable
+// statement, so the same suppression here would run after lit's
+// `queueMicrotask` warning has already fired.
 
 import '@dxos-theme';
 
@@ -81,10 +82,7 @@ const main = async () => {
   // Phase 7a: enable the profiler by default in dev builds so every devloop
   // produces ledger-able numbers without remembering the `?profiler=1` flag.
   // Production explicitly opts in (or out) via the URL parameter.
-  const profilerEnabled = isTrue(
-    url.searchParams.get(PARAM_PROFILER),
-    Boolean(import.meta.env?.DEV),
-  );
+  const profilerEnabled = isTrue(url.searchParams.get(PARAM_PROFILER), Boolean(import.meta.env?.DEV));
   const profiler = profilerEnabled ? startupProfiler() : undefined;
 
   const logLevel = url.searchParams.get(PARAM_LOG_LEVEL) ?? (safeMode ? 'debug' : undefined);
@@ -196,9 +194,7 @@ const main = async () => {
       .filter((measure) => measure.name.startsWith('module:'))
       .sort((first, second) => second.duration - first.duration);
     const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
-    const transferredBytes = Math.round(
-      resources.reduce((total, resource) => total + (resource.transferSize ?? 0), 0),
-    );
+    const transferredBytes = Math.round(resources.reduce((total, resource) => total + (resource.transferSize ?? 0), 0));
     // Flatten the top-5 modules into individual primitive keys (`top1Module`,
     // `top1Ms`, …) — observability `Attributes` only accept string | number |
     // boolean | undefined, and per-key fields are easier to filter on in
