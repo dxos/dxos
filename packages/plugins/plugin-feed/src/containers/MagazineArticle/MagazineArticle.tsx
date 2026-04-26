@@ -252,7 +252,10 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       // Group resolved posts by their source feed id. Posts without a known
       // source feed (e.g. older posts from before `Post.feed` was added) end
       // up in the `undefined` bucket and are kept unconditionally.
-      const byFeedId = new Map<string | undefined, Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }>>();
+      const byFeedId = new Map<
+        string | undefined,
+        Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }>
+      >();
       for (const pair of resolvedPairs) {
         const feedRefDxn = pair.post.feed?.dxn.toString();
         const feedId = feedRefDxn ? dxnId(feedRefDxn) : undefined;
