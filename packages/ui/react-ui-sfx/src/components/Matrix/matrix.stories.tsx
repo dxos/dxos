@@ -47,3 +47,12 @@ export const Default: Story = {
     count: 32,
   },
 };
+
+export const Small: Story = {
+  args: {
+    dim: 4,
+    size: 4,
+    dotSize: 3,
+    count: 2,
+  },
+};

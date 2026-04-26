@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -23,13 +22,5 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { size: 160 },
-};
-
-export const Slow: Story = {
-  args: { size: 160, duration: 4 },
-};
-
-export const Themed: Story = {
-  args: { size: 160, classNames: 'text-sky-500 dark:text-sky-400' },
+  args: { size: 32, duration: 0.3, classNames: 'text-sky-500 dark:text-sky-400' },
 };
