@@ -56,7 +56,18 @@ export const WithMeta: Story = {
  */
 const MatrixIcon = () => {
   const { running } = useStatusContext('MatrixIcon');
-  return <Matrix classNames='mr-2' active={running} interval={500} dim={5} size={3} dotSize={3} count={10} />;
+  return (
+    <Matrix
+      classNames='mr-2'
+      dim={4}
+      size={3}
+      dotSize={3}
+      // TODO(burdon): Change with activity?
+      count={10}
+      interval={500}
+      active={running}
+    />
+  );
 };
 
 export const WithCustomIcon: Story = {
