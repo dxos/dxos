@@ -25,7 +25,7 @@ const TICK_MS = 1_000;
 //
 
 type StatusContextValue = {
-  /** Wall-clock time (epoch ms). Updated every 500ms by Status.Root while running. */
+  /** Wall-clock time (epoch ms). Updated every TICK_MS by Status.Root while running. */
   time: number;
   /** Whether the Status.Root tick is currently active. Toggled via the StatusController. */
   running: boolean;
@@ -40,9 +40,9 @@ export { useStatusContext };
 //
 
 export type StatusController = {
-  /** Resume the 2Hz tick. No-op if already running. */
+  /** Resume the tick. No-op if already running. */
   start: () => void;
-  /** Pause the 2Hz tick. The reported `time` freezes at its last value. */
+  /** Pause the tick. The reported `time` freezes at its last value. */
   stop: () => void;
 };
 
@@ -131,7 +131,7 @@ export type StopwatchProps = ThemedClassName<{
 }>;
 
 /**
- * Elapsed-time display, driven by the Status.Root context tick (2Hz).
+ * Elapsed-time display, driven by the Status.Root context tick.
  * Re-mount or change the `start` prop to reset.
  */
 const Stopwatch = ({ classNames, start: startProp }: StopwatchProps) => {
