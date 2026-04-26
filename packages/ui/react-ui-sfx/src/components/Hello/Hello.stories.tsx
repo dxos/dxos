@@ -10,7 +10,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { Hello } from './Hello';
 
 const meta = {
-  title: 'ui/react-ui-sfx/experimental/Hello',
+  title: 'ui/react-ui-sfx/Hello',
   component: Hello,
   decorators: [withTheme()],
   parameters: {
