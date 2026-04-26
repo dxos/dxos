@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref, type Tag } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -40,12 +40,17 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   // Reactive query of every Subscription.Feed in the space — used to render the source
   // feed name on each tile without each tile having to subscribe to its own ref.
   const allFeeds = useQuery(db, Filter.type(Subscription.Feed));
-  const feedNamesByDxn = useMemo(() => {
+  // Index feeds by bare object id (last DXN segment) — `Obj.getDXN(feed)`
+  // returns the space-scoped form (`dxn:echo:<spaceId>:<id>`), but
+  // `post.feed.dxn` from a `Ref.make` carries the local-id form
+  // (`dxn:echo:@:<id>`). String-comparing the two never matches, so the
+  // tile's `feedName` lookup silently fails. Indexing by bare id reconciles.
+  const feedNamesById = useMemo(() => {
     const map = new Map<string, string>();
     for (const feed of allFeeds) {
       const name = feed.name;
       if (name) {
-        map.set(Obj.getDXN(feed).toString(), name);
+        map.set((feed as { id: string }).id, name);
       }
     }
     return map;
@@ -196,11 +201,17 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       });
       setState('curating');
       await invokePromise(FeedOperation.CurateMagazine, { magazine: Ref.make(subject) });
-      // Apply the Magazine-level `keep` bound after curation. Done in the UI
-      // (rather than inside the operation) so it lands as a separate write —
-      // chaining a second `mutable.posts = ...` after the operation's append
-      // inside one change block trips ECHO's deep-mapper dedup invariant.
-      const keep = subject.keep ?? Subscription.DEFAULT_KEEP;
+
+      // Apply the per-feed `keep` bound after curation. Each Subscription.Feed
+      // contributes up to its own `feed.keep` posts (default
+      // `Subscription.DEFAULT_KEEP`) — NOT a single magazine-wide cap. With a
+      // global cap, sorting all curated posts by `published` and slicing to
+      // top-N silently drops every post from the older-dated feed; per-feed
+      // keep gives each feed a fair share.
+      //
+      // The prune lands as a separate `Obj.change` write: chaining a second
+      // `mutable.posts = ...` after the operation's append inside one change
+      // block trips ECHO's deep-mapper dedup invariant.
       const tag = db ? findStarTag(db) : undefined;
       const tagDxn = tag ? Obj.getDXN(tag).toString() : undefined;
       const isStarred = (post: Subscription.Post) =>
@@ -212,6 +223,21 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         const ms = Date.parse(post.published);
         return Number.isNaN(ms) ? Number.NEGATIVE_INFINITY : ms;
       };
+      // Bare object id (last DXN segment) is the only stable comparison key —
+      // `Ref.make(obj).dxn` produces the local-id form (`dxn:echo:@:<id>`)
+      // while persisted refs may carry the space-scoped form
+      // (`dxn:echo:<spaceId>:<id>`).
+      const dxnId = (dxn: string): string => dxn.split(':').pop() ?? dxn;
+
+      // Build feed-id → keep map by walking magazine.feeds.
+      const feedKeepById = new Map<string, number>();
+      for (const feedRef of subject.feeds) {
+        const feed = feedRef.target;
+        if (feed) {
+          feedKeepById.set(dxnId(feedRef.dxn.toString()), feed.keep ?? Subscription.DEFAULT_KEEP);
+        }
+      }
+
       const resolvedPairs: Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }> = [];
       const unresolvedRefs: Ref.Ref<Subscription.Post>[] = [];
       for (const ref of subject.posts) {
@@ -222,16 +248,36 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
           unresolvedRefs.push(ref);
         }
       }
-      const starredPairs = resolvedPairs.filter(({ post }) => isStarred(post));
-      const candidatePairs = resolvedPairs
-        .filter(({ post }) => !isStarred(post))
-        .sort((pairA, pairB) => timestamp(pairB.post) - timestamp(pairA.post));
-      const keptCandidates = candidatePairs.slice(0, Math.max(0, keep));
-      const nextRefs: Ref.Ref<Subscription.Post>[] = [
-        ...starredPairs.map(({ ref }) => ref),
-        ...keptCandidates.map(({ ref }) => ref),
-        ...unresolvedRefs,
-      ];
+
+      // Group resolved posts by their source feed id. Posts without a known
+      // source feed (e.g. older posts from before `Post.feed` was added) end
+      // up in the `undefined` bucket and are kept unconditionally.
+      const byFeedId = new Map<string | undefined, Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }>>();
+      for (const pair of resolvedPairs) {
+        const feedRefDxn = pair.post.feed?.dxn.toString();
+        const feedId = feedRefDxn ? dxnId(feedRefDxn) : undefined;
+        const arr = byFeedId.get(feedId) ?? [];
+        arr.push(pair);
+        byFeedId.set(feedId, arr);
+      }
+
+      const nextRefs: Ref.Ref<Subscription.Post>[] = [];
+      for (const [feedId, pairs] of byFeedId) {
+        if (feedId === undefined) {
+          // Orphan posts: keep all (no feed-level bound applies).
+          nextRefs.push(...pairs.map(({ ref }) => ref));
+          continue;
+        }
+        const feedKeep = feedKeepById.get(feedId) ?? Subscription.DEFAULT_KEEP;
+        const starredPairs = pairs.filter(({ post }) => isStarred(post));
+        const candidatePairs = pairs
+          .filter(({ post }) => !isStarred(post))
+          .sort((pairA, pairB) => timestamp(pairB.post) - timestamp(pairA.post));
+        const keptCandidates = candidatePairs.slice(0, Math.max(0, feedKeep));
+        nextRefs.push(...starredPairs.map(({ ref }) => ref), ...keptCandidates.map(({ ref }) => ref));
+      }
+      nextRefs.push(...unresolvedRefs);
+
       if (nextRefs.length !== subject.posts.length) {
         Obj.change(subject, (subject) => {
           subject.posts = nextRefs;
@@ -313,13 +359,19 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
 
   const tileItems = useMemo(
     () =>
-      posts.map((post) => ({
-        post,
-        current: post.id === currentId,
-        feedName: post.feed ? feedNamesByDxn.get(post.feed.dxn.toString()) : undefined,
-        onOpen: handleOpen,
-      })),
-    [posts, currentId, handleOpen, feedNamesByDxn],
+      posts.map((post) => {
+        // Match the post's source feed by bare object id; `post.feed.dxn` is
+        // local-id form, while `feedNamesById` is keyed by id directly.
+        const feedId = post.feed ? (post.feed.dxn.toString().split(':').pop() ?? '') : '';
+        return {
+          post,
+          current: post.id === currentId,
+          feedName: feedId ? feedNamesById.get(feedId) : undefined,
+          starTag,
+          onOpen: handleOpen,
+        };
+      }),
+    [posts, currentId, handleOpen, feedNamesById, starTag],
   );
 
   const curateDisabled = state !== 'idle' || subject.feeds.length === 0;
@@ -422,6 +474,7 @@ type TileData = {
   post: Subscription.Post;
   current: boolean;
   feedName?: string;
+  starTag?: Tag.Tag;
   onOpen: (post: Subscription.Post) => void;
 };
 
@@ -433,5 +486,13 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
   if (!data?.post) {
     return null;
   }
-  return <MagazineTile post={data.post} current={data.current} feedName={data.feedName} onOpen={data.onOpen} />;
+  return (
+    <MagazineTile
+      post={data.post}
+      current={data.current}
+      feedName={data.feedName}
+      starTag={data.starTag}
+      onOpen={data.onOpen}
+    />
+  );
 };
