@@ -56,7 +56,7 @@ export const WithMeta: Story = {
  */
 const MatrixIcon = () => {
   const { running } = useStatusContext('MatrixIcon');
-  return <Matrix classNames='mr-2' dim={4} size={3} dotSize={3} count={10} active={running} />;
+  return <Matrix classNames='mr-2' active={running} interval={500} dim={5} size={3} dotSize={3} count={10} />;
 };
 
 export const WithCustomIcon: Story = {
@@ -78,7 +78,7 @@ export const LongRunning: Story = {
   render: () => (
     <Status.Root>
       <Status.Icon />
-      <Status.Stopwatch start={Date.now() - 65 * 60 * 1_000} />
+      <Status.Stopwatch offset={65 * 60} />
       <Status.Separator />
       <Status.Text>↑ 4.5k</Status.Text>
       <Status.Separator />

@@ -9,7 +9,6 @@ import React, {
   forwardRef,
   useEffect,
   useImperativeHandle,
-  useRef,
   useState,
 } from 'react';
 
@@ -25,8 +24,8 @@ const TICK_MS = 1_000;
 //
 
 type StatusContextValue = {
-  /** Wall-clock time (epoch ms). Updated every TICK_MS by Status.Root while running. */
-  time: number;
+  /** Whole seconds elapsed since Status.Root mounted. Only advances while `running` is true. */
+  elapsed: number;
   /** Whether the Status.Root tick is currently active. Toggled via the StatusController. */
   running: boolean;
 };
@@ -59,7 +58,7 @@ export type RootProps = ThemedClassName<
 
 const Root = forwardRef<StatusController, RootProps>(
   ({ classNames, children, defaultRunning = true }: RootProps, forwardedRef: Ref<StatusController>) => {
-    const [time, setTime] = useState(() => Date.now());
+    const [elapsed, setElapsed] = useState(0);
     const [running, setRunning] = useState(defaultRunning);
 
     useEffect(() => {
@@ -69,9 +68,8 @@ const Root = forwardRef<StatusController, RootProps>(
 
       let timeout: ReturnType<typeof setTimeout>;
       const tick = () => {
-        const now = Date.now();
-        setTime(now);
-        timeout = setTimeout(tick, TICK_MS - (now % TICK_MS));
+        setElapsed((e) => e + 1);
+        timeout = setTimeout(tick, TICK_MS - (Date.now() % TICK_MS));
       };
       timeout = setTimeout(tick, TICK_MS - (Date.now() % TICK_MS));
       return () => clearTimeout(timeout);
@@ -87,7 +85,7 @@ const Root = forwardRef<StatusController, RootProps>(
     );
 
     return (
-      <StatusProvider time={time} running={running}>
+      <StatusProvider elapsed={elapsed} running={running}>
         <span
           role='status'
           className={mx('inline-flex items-center gap-2 text-description font-mono tabular-nums', classNames)}
@@ -127,20 +125,17 @@ const Icon = ({ classNames, children }: IconProps) => {
 //
 
 export type StopwatchProps = ThemedClassName<{
-  /** Start time (epoch ms). Defaults to first-mount time. */
-  start?: number;
+  /** Seconds to add to the context elapsed value before formatting. Defaults to 0. */
+  offset?: number;
 }>;
 
 /**
  * Elapsed-time display, driven by the Status.Root context tick.
- * Re-mount or change the `start` prop to reset.
+ * Re-mount or change `offset` to reset.
  */
-const Stopwatch = ({ classNames, start: startProp }: StopwatchProps) => {
-  const { time } = useStatusContext('Status.Stopwatch');
-  const startRef = useRef<number>(startProp ?? time);
-  const start = startProp ?? startRef.current;
-  const elapsed = Math.max(0, time - start);
-  return <span className={mx(classNames)}>{formatElapsed(elapsed)}</span>;
+const Stopwatch = ({ classNames, offset = 0 }: StopwatchProps) => {
+  const { elapsed } = useStatusContext('Status.Stopwatch');
+  return <span className={mx(classNames)}>{formatElapsed((elapsed + offset) * 1_000)}</span>;
 };
 
 //
