@@ -10,7 +10,7 @@ import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Ref, type Tag } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 
@@ -20,6 +20,7 @@ import { type Magazine, Subscription } from '#types';
 
 import { fetchArticle, findStarTag, hasMetaTag, useStarTag } from '../../util';
 import { MagazineTile, formatPublished } from './MagazineTile';
+import { MagazineToolbar, type MagazineView } from './MagazineToolbar';
 
 export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
 
@@ -30,16 +31,18 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const id = attendableId ?? Obj.getDXN(subject).toString();
   const currentId = useSelected(id, 'single');
   const [sort, setSort] = useState<'date' | 'rank'>('date');
-  const [showArchived, setShowArchived] = useState(false);
-  const [onlyStarred, setOnlyStarred] = useState(false);
+  const [view, setView] = useState<MagazineView>('default');
   const db = Obj.getDatabase(subject);
   const starTag = useStarTag(db);
+
   // Sync feeds → curate magazine → apply per-feed keep, plus state/error
   // tracking. See `useCurate` at the bottom of the file.
   const { state, error, curate: handleCurate } = useCurate(subject, db);
+
   // Reactive query of every Subscription.Feed in the space — used to render the source
   // feed name on each tile without each tile having to subscribe to its own ref.
   const allFeeds = useQuery(db, Filter.type(Subscription.Feed));
+
   // Index feeds by bare object id (last DXN segment) — `Obj.getDXN(feed)`
   // returns the space-scoped form (`dxn:echo:<spaceId>:<id>`), but
   // `post.feed.dxn` from a `Ref.make` carries the local-id form
@@ -48,9 +51,12 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const feedNamesById = useMemo(() => {
     const map = new Map<string, string>();
     for (const feed of allFeeds) {
-      const name = feed.name;
-      if (name) {
-        map.set((feed as { id: string }).id, name);
+      // Fall back to URL when sync hasn't populated `name` yet (or the source RSS has no
+      // `<title>`) so each tile still shows provenance. Use `||` so empty-string names
+      // (parser-supplied empty `<title>`) also fall through to the URL.
+      const label = feed.name || feed.url;
+      if (label) {
+        map.set((feed as { id: string }).id, label);
       }
     }
     return map;
@@ -73,8 +79,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   }, [subject.posts]);
 
   // When the user removes a feed from the magazine via ObjectProperties, prune any
-  // curated posts whose source feed is no longer present. Posts without a known
-  // source feed (e.g. synced before `Post.feed` was added) are left alone.
+  // curated posts whose source feed is no longer present.
   useEffect(() => {
     const feedDxns = new Set(subject.feeds.map((ref) => ref.dxn.toString()));
     const orphanIds = new Set<string>();
@@ -96,7 +101,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     });
   }, [subject, subject.feeds, subject.posts]);
 
-  const posts = useMemo(() => {
+  const posts = useMemo<Subscription.Post[]>(() => {
     const resolved: Subscription.Post[] = [];
     const seenDxn = new Set<string>();
     const seenLink = new Set<string>();
@@ -129,10 +134,17 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       resolved.push(target);
     }
 
-    // Filter archived unless explicitly shown, then optionally filter to starred only.
-    let visible = showArchived ? resolved : resolved.filter((post) => !post.archived);
-    if (onlyStarred) {
-      visible = visible.filter((post) => hasMetaTag(post, starTag));
+    // View mode determines which posts the tile grid shows.
+    // - 'archived'  → only archived posts.
+    // - 'starred'   → only starred (non-archived) posts.
+    // - 'default'   → everything except archived.
+    let visible: Subscription.Post[];
+    if (view === 'archived') {
+      visible = resolved.filter((post) => post.archived);
+    } else if (view === 'starred') {
+      visible = resolved.filter((post) => !post.archived && hasMetaTag(post, starTag));
+    } else {
+      visible = resolved.filter((post) => !post.archived);
     }
 
     if (sort === 'rank') {
@@ -160,15 +172,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     // contents change (ECHO's reactive proxy is stable per-object).
     // Including `.length` and a content fingerprint as deps forces re-computation on
     // any add/remove, so the masonry tiles re-render after Curate / Clear.
-  }, [
-    subject.posts,
-    subject.posts.length,
-    subject.posts.map((ref) => ref.dxn.toString()).join(),
-    sort,
-    showArchived,
-    onlyStarred,
-    starTag,
-  ]);
+  }, [subject.posts, subject.posts.length, subject.posts.map((ref) => ref.dxn.toString()).join(), sort, view, starTag]);
 
   // Reset the magazine's curated post list. Starred posts are preserved so
   // the user doesn't lose manually-saved items; a follow-up Curate will
@@ -237,10 +241,11 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     [id, showItem],
   );
 
-  const tileItems = useMemo(
+  const tileItems = useMemo<TileData[]>(
     () =>
       posts.map((post) => {
-        // Match the post's source feed by bare object id; `post.feed.dxn` is  local-id form, while `feedNamesById` is keyed by id directly.
+        // Match the post's source feed by bare object id; `post.feed.dxn` is local-id form,
+        // while `feedNamesById` is keyed by id directly.
         const feedId = post.feed ? (post.feed.dxn.toString().split(':').pop() ?? '') : '';
         return {
           post,
@@ -267,62 +272,17 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          <Toolbar.ToggleGroup
-            type='single'
-            value={sort}
-            onValueChange={(value) => {
-              if (value === 'date' || value === 'rank') {
-                setSort(value);
-              }
-            }}
-          >
-            <Toolbar.ToggleGroupItem value='date' aria-label={t('sort-by-date.label')} title={t('sort-by-date.label')}>
-              <Icon icon='ph--calendar--regular' size={4} />
-            </Toolbar.ToggleGroupItem>
-            <Toolbar.ToggleGroupItem value='rank' aria-label={t('sort-by-rank.label')} title={t('sort-by-rank.label')}>
-              <Icon icon='ph--list-numbers--regular' size={4} />
-            </Toolbar.ToggleGroupItem>
-          </Toolbar.ToggleGroup>
-          <Toolbar.ToggleGroup
-            type='single'
-            value={onlyStarred ? 'on' : ''}
-            onValueChange={(value) => setOnlyStarred(value === 'on')}
-          >
-            <Toolbar.ToggleGroupItem value='on' aria-label={t('only-starred.label')} title={t('only-starred.label')}>
-              <Icon icon={onlyStarred ? 'ph--star--fill' : 'ph--star--regular'} size={4} />
-            </Toolbar.ToggleGroupItem>
-          </Toolbar.ToggleGroup>
-          <Toolbar.ToggleGroup
-            type='single'
-            value={showArchived ? 'show' : ''}
-            onValueChange={(value) => setShowArchived(value === 'show')}
-          >
-            <Toolbar.ToggleGroupItem
-              value='show'
-              aria-label={t('show-archived.label')}
-              title={t('show-archived.label')}
-            >
-              <Icon icon='ph--archive--regular' size={4} />
-            </Toolbar.ToggleGroupItem>
-          </Toolbar.ToggleGroup>
-          <Toolbar.Separator />
-          <Toolbar.IconButton
-            label={t('clear-magazine.label')}
-            icon='ph--eraser--regular'
-            iconOnly
-            disabled={state !== 'idle'}
-            onClick={handleClear}
-          />
-          <Toolbar.IconButton
-            label={curateTooltip ?? t('curate.label')}
-            icon={state === 'idle' ? 'ph--sparkle--regular' : 'ph--circle-notch--regular'}
-            iconClassNames={state !== 'idle' ? 'animate-spin' : undefined}
-            iconOnly
-            disabled={curateDisabled}
-            onClick={handleCurate}
-          />
-        </Toolbar.Root>
+        <MagazineToolbar
+          sort={sort}
+          onSortChange={setSort}
+          view={view}
+          onViewChange={setView}
+          state={state}
+          curateDisabled={curateDisabled}
+          curateTooltip={curateTooltip}
+          onClear={handleClear}
+          onCurate={handleCurate}
+        />
       </Panel.Toolbar>
       <Panel.Content>
         {posts.length === 0 ? (
@@ -436,9 +396,7 @@ const applyPerFeedKeep = (magazine: Magazine.Magazine, db: Database.Database | u
     }
   }
 
-  // Group resolved posts by their source feed id. Posts without a known
-  // source feed (e.g. older posts from before `Post.feed` was added) end up
-  // in the `undefined` bucket and are kept unconditionally.
+  // Group resolved posts by their source feed id.
   const byFeedId = new Map<string | undefined, Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }>>();
   for (const pair of resolvedPairs) {
     const feedRefDxn = pair.post.feed?.dxn.toString();

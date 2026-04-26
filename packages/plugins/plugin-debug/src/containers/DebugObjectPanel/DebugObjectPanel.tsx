@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { ObjectsTree } from '@dxos/devtools';
@@ -11,6 +11,8 @@ import type { ObjectId } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Clipboard, Grid, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+
+import { createRefReplacer } from './createRefReplacer';
 
 export type DebugObjectPanelProps = Pick<
   AppSurface.ObjectArticleProps<Obj.Unknown, {}, Obj.Unknown>,
@@ -24,6 +26,7 @@ export const DebugObjectPanel = ({ role, companionTo }: DebugObjectPanelProps) =
     db,
     Query.select(Filter.id(selectedId ?? companionTo.id)).options({ deleted: 'include' }),
   );
+  const refReplacer = useMemo(() => (db ? createRefReplacer({ db, depth: 1 }) : undefined), [db]);
 
   return (
     <Clipboard.Provider>
@@ -40,7 +43,7 @@ export const DebugObjectPanel = ({ role, companionTo }: DebugObjectPanelProps) =
                 </ScrollArea.Viewport>
               </ScrollArea.Root>
             )}
-            <Syntax.Root data={selectedObject}>
+            <Syntax.Root data={selectedObject} replacer={refReplacer}>
               <Syntax.Content>
                 <Syntax.Filter />
                 <Syntax.Viewport>

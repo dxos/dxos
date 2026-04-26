@@ -101,6 +101,8 @@ export const curateMagazine = async (
         continue;
       }
       const source = queuePost.description ?? '';
+      // Snippet is rendered as plain text on the magazine tile, so strip HTML rather than
+      // converting to markdown — otherwise `**bold**` / `[link](url)` syntax leaks through.
       const text = stripHtml(source);
       if (!text) {
         continue;
