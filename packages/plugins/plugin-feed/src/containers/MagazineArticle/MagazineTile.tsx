@@ -88,10 +88,27 @@ export const MagazineTile = ({ post, current, feedName, published, starTag, onOp
         classNames={mx('dx-hover dx-current cursor-pointer transition-opacity', read && !current && 'opacity-60')}
       >
         {post.imageUrl && (
-          // `rounded-t-xs` matches `Card.Root`'s `rounded-xs` corner. Without
-          // it the image's square top-corners poke through the card's rounded
-          // outline and visually clip the focus + selection rings at the top.
-          <Card.Poster alt={post.title ?? 'Article'} image={post.imageUrl} classNames='rounded-t-xs' />
+          // Inline poster instead of `Card.Poster`. `Card.Poster` wraps the
+          // image in `Image` (`react-ui/Image`), whose <img> has a hard-coded
+          // `z-10` that elevates it above Focus.Item's focus-ring pseudo
+          // (`dx-ring-pseudo` paints `::after` with `ring-inset`, no explicit
+          // z-index). With `z-10` on the image, the pseudo gets obscured at
+          // the top edge of the tile.
+          //
+          // Plain `<img>` is static-positioned (z-auto), so the focus ring's
+          // `::after` paints over it cleanly. Wrapping `<div>` matches
+          // `Card.Poster`'s `col-span-full` so the image still spans the
+          // full subgrid (fullbleed). `rounded-t-xs` follows `Card.Root`'s
+          // `rounded-xs` corner so the image's top corners don't poke
+          // through the card's rounded outline.
+          <div role='none' className='col-span-full'>
+            <img
+              src={post.imageUrl}
+              alt={post.title ?? 'Article'}
+              loading='lazy'
+              className='w-full max-h-[200px] object-cover rounded-t-xs'
+            />
+          </div>
         )}
         <Card.Toolbar>
           {/* Empty col-1 placeholder so the title lands in the center column
