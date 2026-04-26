@@ -181,5 +181,15 @@ export const CreateFeed: Story = {
     const linkedId = magazine!.feeds[0]?.dxn.toString().split(':').pop();
     const newId = (newFeed as any).id;
     await expect(linkedId, 'magazine.feeds[0] should reference the newly-created Feed').toBe(newId);
+
+    // Fourth: the slot's visible display value must show the new feed's
+    // name. This is the user-reported visual symptom — even with the data
+    // correctly wired into magazine.feeds, the combobox slot still rendered
+    // its empty-state placeholder because RefField.handleGetValue compared
+    // option.id (space-scoped DXN) to ref.dxn (local-id DXN), which never
+    // matched. The fix is dedup-by-bare-object-id in `handleGetValue`.
+    const slotInputs = Array.from(canvasElement.querySelectorAll('input[readonly]')) as HTMLInputElement[];
+    const newFeedSlotInput = slotInputs.find((input) => input.value === 'My Brand New Blog');
+    await expect(newFeedSlotInput, 'the array slot must visibly show the new feed name').toBeDefined();
   },
 };
