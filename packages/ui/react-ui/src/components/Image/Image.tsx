@@ -68,7 +68,16 @@ export const Image = ({
 
   return (
     <div
-      className={mx(`relative flex w-full justify-center overflow-hidden transition-all duration-700`, classNames)}
+      // `isolate` (`isolation: isolate`) creates a new stacking context so
+      // the inner <img>'s `z-10` stays scoped to this wrapper. Without it
+      // the z-10 leaks into the parent's stacking context and elevates the
+      // image above any pseudo-element rings (e.g. Focus.Item's
+      // `dx-ring-pseudo` `::after`) painted on ancestors — most visibly,
+      // the focus ring on a Card containing a Card.Poster.
+      className={mx(
+        `relative flex w-full justify-center overflow-hidden transition-all duration-700 isolate`,
+        classNames,
+      )}
       style={{
         backgroundColor: dominantColor,
       }}
