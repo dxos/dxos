@@ -7,11 +7,11 @@ import { OperationHandlerSet } from '@dxos/operation';
 export * as FeedOperation from './definitions';
 
 export const FeedOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./sync-feed'),
-  () => import('./list-candidate-posts'),
-  () => import('./fetch-article-content'),
-  () => import('./load-post-content'),
   () => import('./add-post-to-magazine'),
   () => import('./curate-magazine'),
+  () => import('./fetch-article-content'),
+  () => import('./list-candidate-posts'),
+  () => import('./load-post-content'),
   () => import('./refresh-magazine'),
+  () => import('./sync-feed'),
 );
