@@ -82,6 +82,19 @@ export default defineConfig((env) => ({
         rootDir,
       ],
     },
+    // Phase 10: pre-transform the critical-path source files when `vite serve`
+    // starts, before any browser request. The first navigation finds them
+    // already in the transform cache, shaving a chunk of wall-clock off the
+    // dev cold-load.
+    warmup: {
+      clientFiles: [
+        './src/main.tsx',
+        './src/dedicated-worker.ts',
+        './src/shared-worker.ts',
+        './src/coordinator-worker.ts',
+        './src/plugin-defs.tsx',
+      ],
+    },
   },
   esbuild: {
     keepNames: true,
@@ -112,76 +125,92 @@ export default defineConfig((env) => ({
   },
   optimizeDeps: {
     exclude: ['@dxos/wa-sqlite'],
-    ...(isFastBundle && {
-      include: [
-        // React.
-        'react',
-        'react-dom',
-        'react/jsx-runtime',
-        // Effect (with subpath imports).
-        'effect',
-        'effect/Effect',
-        'effect/Array',
-        'effect/Ref',
-        'effect/Option',
-        'effect/Cause',
-        'effect/Exit',
-        'effect/Layer',
-        'effect/Runtime',
-        'effect/Fiber',
-        'effect/Deferred',
-        'effect/Function',
-        'effect/HashSet',
-        'effect/PubSub',
-        'effect/Schema',
-        'effect/Context',
-        'effect/Stream',
-        'effect/Console',
-        '@effect/platform',
-        '@effect/platform-browser',
-        // Effect AI (with submodule exports).
-        '@effect/ai',
-        '@effect/ai/AiError',
-        '@effect/ai/Chat',
-        '@effect/ai/LanguageModel',
-        '@effect/ai/Prompt',
-        '@effect/ai/Response',
-        '@effect/ai/Tool',
-        '@effect/ai/Toolkit',
-        '@effect/ai-anthropic',
-        '@effect/ai-anthropic/AnthropicClient',
-        '@effect/ai-anthropic/AnthropicLanguageModel',
-        '@effect/ai-anthropic/AnthropicTool',
-        '@effect/ai-openai',
-        '@effect/ai-openai/OpenAiClient',
-        '@effect/ai-openai/OpenAiLanguageModel',
-        // Automerge.
-        '@automerge/automerge',
-        '@automerge/automerge-repo',
-        // CodeMirror (many files in HAR).
-        'codemirror',
-        '@codemirror/state',
-        '@codemirror/view',
-        '@codemirror/language',
-        '@codemirror/commands',
-        '@codemirror/autocomplete',
-        '@codemirror/lang-javascript',
-        '@codemirror/lang-json',
-        '@codemirror/lang-markdown',
-        '@codemirror/theme-one-dark',
-        // Radix (many requests in HAR).
-        '@radix-ui/react-dialog',
-        '@radix-ui/react-dropdown-menu',
-        '@radix-ui/react-tooltip',
-        '@radix-ui/react-scroll-area',
-        '@radix-ui/react-popover',
-        '@radix-ui/react-slot',
-        '@radix-ui/react-context-menu',
-        // Atlaskit drag-and-drop.
-        '@atlaskit/pragmatic-drag-and-drop',
-        '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator',
-      ],
-    }),
+    // Phase 10: list deeply-imported dep entrypoints unconditionally so vite's
+    // optimize-deps phase pre-bundles them up front. Without this, vite
+    // discovers them mid-load (when a dynamic import unwraps a new subpath),
+    // which forces a full page reload with the "Discovered new dependencies"
+    // banner — easily ~10 s of wasted dev time per discovery cycle. Was
+    // previously gated on `DX_FASTBUNDLE=1`; now it's always on because the
+    // pre-bundle cost is amortized after the first `vite serve`.
+    include: [
+      // React.
+      'react',
+      'react-dom',
+      'react/jsx-runtime',
+      // Effect (with subpath imports).
+      'effect',
+      'effect/Effect',
+      'effect/Array',
+      'effect/Ref',
+      'effect/Option',
+      'effect/Cause',
+      'effect/Exit',
+      'effect/Layer',
+      'effect/Runtime',
+      'effect/Fiber',
+      'effect/Deferred',
+      'effect/Function',
+      'effect/HashSet',
+      'effect/PubSub',
+      'effect/Schema',
+      'effect/Context',
+      'effect/Stream',
+      'effect/Console',
+      '@effect/platform',
+      '@effect/platform-browser',
+      // Effect AI (with submodule exports).
+      '@effect/ai',
+      '@effect/ai/AiError',
+      '@effect/ai/Chat',
+      '@effect/ai/LanguageModel',
+      '@effect/ai/Prompt',
+      '@effect/ai/Response',
+      '@effect/ai/Tool',
+      '@effect/ai/Toolkit',
+      '@effect/ai-anthropic',
+      '@effect/ai-anthropic/AnthropicClient',
+      '@effect/ai-anthropic/AnthropicLanguageModel',
+      '@effect/ai-anthropic/AnthropicTool',
+      '@effect/ai-openai',
+      '@effect/ai-openai/OpenAiClient',
+      '@effect/ai-openai/OpenAiLanguageModel',
+      // Automerge.
+      '@automerge/automerge',
+      '@automerge/automerge-repo',
+      // CodeMirror (many files in HAR).
+      'codemirror',
+      '@codemirror/state',
+      '@codemirror/view',
+      '@codemirror/language',
+      '@codemirror/commands',
+      '@codemirror/autocomplete',
+      '@codemirror/lang-javascript',
+      '@codemirror/lang-json',
+      '@codemirror/lang-markdown',
+      '@codemirror/theme-one-dark',
+      // Radix (many requests in HAR).
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-tooltip',
+      '@radix-ui/react-scroll-area',
+      '@radix-ui/react-popover',
+      '@radix-ui/react-slot',
+      '@radix-ui/react-context-menu',
+      // Atlaskit drag-and-drop.
+      '@atlaskit/pragmatic-drag-and-drop',
+      '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator',
+    ],
+    // Phase 10: scan the auxiliary HTML entrypoints during pre-bundle so
+    // navigations to `internal.html` / `devtools.html` / `reset.html` /
+    // `script-frame/index.html` don't trip a "discovered new dependencies"
+    // reload mid-session.
+    entries: [
+      './index.html',
+      './internal.html',
+      './devtools.html',
+      './reset.html',
+      './script-frame/index.html',
+    ],
   },
   resolve: {
     alias: {
@@ -327,7 +356,7 @@ export default defineConfig((env) => ({
       ],
     }),
 
-    //
+    // ???
     importMapPlugin(),
 
     // Phase 8b: hand the boot loader the Composer brand mark so the visual
@@ -335,10 +364,7 @@ export default defineConfig((env) => ({
     // `fill="currentColor"`, so it picks up the loader's `prefers-color-scheme`
     // text colour and ships as ~1.6 KB of inline markup.
     bootLoaderPlugin({
-      markSvg: readFileSync(
-        path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon-monochrome.svg'),
-        'utf8',
-      ),
+      markSvg: readFileSync(path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon-monochrome.svg'), 'utf8'),
     }),
 
     VitePWA({

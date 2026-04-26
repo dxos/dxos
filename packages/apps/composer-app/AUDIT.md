@@ -835,9 +835,12 @@ Net: clearly worth it for first-impression polish.
 |     6 | Production telemetry (PostHog `composer.startup`)    | `0b39281ade`               | flat perf, new ops visibility            |
 |     7 | `?profiler=1` default in dev + `BroadcastChannel`    | `daf09cd61a`               | flat perf, dev ergonomics                |
 |     8 | Boot-loader brand mark + handoff timing              | `c2927574d5`               | flat perf, visual polish                 |
+|     9 | Dev-server harness (`dev-cold` scenario)             | `8df7ba14ea`               | first `dev-cold` measurement             |
+|    10 | Vite dev pre-bundling + `server.warmup`              | `<TBD>`                    | dev `navToReady` −1.4 s; pre-`main:start` −6.1 s |
 
-Headline cumulative: cold `profilerTotal` 11,118 ms → ~5,400 ms (−51%);
-cold `navToReady` 18,054 ms → ~8,700 ms (−52%); eager bundle −96%.
+Headline cumulative (production preview): cold `profilerTotal` 11,118 ms → ~5,400 ms (−51%);
+cold `navToReady` 18,054 ms → ~8,700 ms (−52%); eager bundle −96%. Dev:
+`navToReady` −8% (17.6 s → 16.2 s), pre-`main:start` gap halved.
 
 ## 11. Dev server load time
 
@@ -858,7 +861,7 @@ different costs:
 - **No minification, no tree-shaking, no chunk-splitting.** Sourcemaps
   inline; bytes per response are larger than prod.
 
-### Phase 9 — dev-server harness (commit `<TBD>`)
+### Phase 9 — dev-server harness (commit `8df7ba14ea`)
 
 | Scenario                            |        Cold profilerTotal |          Cold navToReady |     Bytes |   modules |
 | ----------------------------------- | ------------------------: | -----------------------: | --------: | --------: |
@@ -892,11 +895,62 @@ behavioural change. Benefit: **first quantitative dev-server measurement
 on this branch.** Without it, all dev-server optimization talk is
 hand-waving; with it, phase 10 has a number to move.
 
-### Phase 10: planned (not yet shipped)
+### Phase 10 — vite dev pre-bundling + warmup (commit `<TBD>`)
 
-- Make `optimizeDeps.include` (currently gated on `DX_FASTBUNDLE=1`)
-  permanent so the deeply-imported deps don't trigger mid-load reloads.
-- Add `server.warmup.clientFiles` for `src/main.tsx` and the worker
-  entrypoints so vite pre-transforms the critical paths on serve start.
-- Add `optimizeDeps.entries` for the auxiliary HTML entrypoints
-  (`internal.html`, `devtools.html`, `reset.html`, `script-frame/index.html`).
+|                                | Cold profilerTotal | Cold navToReady |   Pre-`main:start` gap |
+| ------------------------------ | -----------------: | --------------: | ---------------------: |
+| phase 9 (`8df7ba14ea + ⚠`)     |           6,269 ms |       17,586 ms |              11,317 ms |
+| **phase 10** (`<TBD> + ⚠`)     |          11,007 ms |   **16,180 ms** |           **5,173 ms** |
+| delta                          |   +4,738 ms (boundary shift) | **−1,406 ms** | **−6,144 ms (−54%)** |
+
+**Changes** (in [`packages/apps/composer-app/vite.config.ts`](vite.config.ts)):
+
+- **Permanent `optimizeDeps.include`.** The list of deeply-imported deps
+  (`effect/*`, `@codemirror/*`, `@radix-ui/*`, `@effect/ai/*`, `@automerge/*`,
+  `@atlaskit/pragmatic-drag-and-drop`, etc.) was previously gated on
+  `DX_FASTBUNDLE=1`. Now it always applies, so vite pre-bundles all known
+  subpaths up front instead of discovering them mid-load and triggering a
+  full page reload.
+- **`optimizeDeps.entries`.** Added the auxiliary HTML entrypoints
+  (`internal.html`, `devtools.html`, `reset.html`, `script-frame/index.html`)
+  so navigations to those pages don't trip a "discovered new dependencies"
+  reload after the initial scan.
+- **`server.warmup.clientFiles`.** Vite now pre-transforms `src/main.tsx`,
+  the three worker entrypoints, and `src/plugin-defs.tsx` when the dev
+  server starts — before the browser asks for them. The first navigation
+  finds them already in the transform cache.
+
+**Why `profilerTotal` went up while `navToReady` went down:** same
+phase-boundary shift as phase 2 in prod. With the warmup + pre-bundle,
+`main:start` fires earlier (less pre-`main:start` work), so `profilerTotal`
+measures more wall-clock — the lazy plugin chunks are still served as ESM
+in dev, and now their fetches and per-file transforms happen *inside* the
+profiler window. The metric that matters end-to-end is `navToReady`, which
+dropped 1.4 s. The pre-`main:start` gap (the time vite is busy serving
+files while nothing's on screen) dropped 6.1 s — that's the actual user-
+visible win.
+
+**Caveat — first run of `vite serve` after clearing the cache** still pays
+the full pre-bundle cost (now slightly larger because the include list is
+bigger). The harness clears `node_modules/.vite` before each measurement
+so this isn't visible in the row above; in real-world dev, the first
+`pnpm vite` after `pnpm install` will pause for ~10–30 s, but every
+subsequent start reuses the cache.
+
+**Complexity vs. benefit:** purely vite.config edits, ~80 lines of changed
+code (mostly de-conditionalizing the existing `include` block). Zero
+behavioural change in the app itself. Benefit: ~6 s faster pre-`main:start`
+on dev cold loads, plus the elimination of "Discovered new dependencies"
+reload interruptions during normal development. Net: clear win for the
+inner-loop developer experience.
+
+**What's still on the table for dev (not shipped here):**
+
+- Drop `@dxos/vite-plugin-import-source` from default dev (see §11 above
+  — moved into a follow-up because the trade-off is "dev start fast" vs
+  "cross-package iteration fast" and needs a maintainer call).
+- Make `@dxos/swc-log-plugin` opt-in via env in dev — saves a SWC pass per
+  file. Need to measure the actual savings first.
+- Shared `cacheDir` across worktrees — useful given how many `claude/<*>`
+  worktrees exist on this machine, but cache-invalidation correctness
+  needs review before flipping.
