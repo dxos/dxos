@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
@@ -13,7 +14,7 @@ import { PostContent } from '#components';
 import { meta } from '#meta';
 import { Subscription } from '#types';
 
-import { ensureStarTag, hasMetaTag, toggleMetaTag, useStarTag } from '../../util';
+import { ensureStarTag, fetchArticle, hasMetaTag, toggleMetaTag, useStarTag } from '../../util';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
 
@@ -71,6 +72,35 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
     toggleMetaTag(post, tag);
   }, [db, post]);
 
+  // Re-fetch the article body from the source. Same path MagazineArticle uses on
+  // first open, but unconditional — overwrites any existing content/imageUrl so
+  // the user can recover from a stale extraction.
+  const [refreshing, setRefreshing] = useState(false);
+  const handleRefresh = useCallback(async () => {
+    if (!post.link || refreshing) {
+      return;
+    }
+    setRefreshing(true);
+    try {
+      const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
+      const { text, imageUrls } = await fetchArticle(post.link, { corsProxy });
+      Obj.change(post, (post) => {
+        const mutable = post as Obj.Mutable<typeof post>;
+        if (text) {
+          mutable.content = text;
+        }
+        const hero = imageUrls[0];
+        if (hero) {
+          mutable.imageUrl = hero;
+        }
+      });
+    } catch (err) {
+      log.catch(err, { postLink: post.link });
+    } finally {
+      setRefreshing(false);
+    }
+  }, [post, refreshing]);
+
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
@@ -96,6 +126,15 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
             />
           )}
           <Toolbar.Separator />
+          {post.link && (
+            <Toolbar.IconButton
+              label={t(refreshing ? 'refresh-content-pending.label' : 'refresh-content.label')}
+              icon='ph--arrows-clockwise--regular'
+              iconOnly
+              disabled={refreshing}
+              onClick={() => void handleRefresh()}
+            />
+          )}
           {post.link && (
             <Toolbar.IconButton
               label={t('open-original.label')}

@@ -90,8 +90,8 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
       <SyntaxHighlighter
         language={language}
         classNames='mt-2 mb-2 p-2 border border-separator rounded-xs text-sm bg-group-surface'
+        copyButton
         PreTag='pre'
-        showCopyButton
       >
         {children}
       </SyntaxHighlighter>

@@ -59,11 +59,16 @@ const meta = {
             url: 'https://vercel.com/changelog/feed',
           }),
         );
-        space.db.add(
+        const magazine = space.db.add(
           Magazine.make({
             name: 'Distributed Systems Reading',
           }),
         );
+        // Expose the magazine + space on `window` so the play function can
+        // assert directly against the underlying ECHO state (e.g. that
+        // `magazine.feeds` actually grew after the create-feed flow).
+        (globalThis as any).__feedTestMagazine = magazine;
+        (globalThis as any).__feedTestSpace = space;
       },
     }),
   ],
@@ -81,40 +86,31 @@ type Story = StoryObj<typeof meta>;
  * Default Magazine ObjectProperties — exercises the auto-generated form,
  * including the markdown editor for `instructions` and the Feeds picker.
  *
- * Repro for "can't add a feed in MagazineProperties":
- * 1. Open the Feeds combobox.
- * 2. Either pick an existing feed, or fill out the inline create form to add a new one.
- * 3. Verify the feed appears in the magazine's feeds array (currently broken — does not persist).
+ * Manual flow:
+ *  1. Open the Feeds combobox.
+ *  2. Either pick an existing feed, or fill out the inline create form to add
+ *     a new one.
+ *  3. The new feed appears in the magazine's feeds array.
  */
 export const Default: Story = {};
 
 /**
- * Demonstrates the create-feed bug end-to-end as a play interaction.
+ * Drives the inline create-feed flow end-to-end and verifies the picker
+ * dismisses after a successful Save.
  *
- * Steps the play executes:
- *  1. Click the Feeds "Add" (+) button to open an empty array slot.
+ * Steps:
+ *  1. Click the Feeds "Add" (+) button to materialise an empty array slot.
  *  2. Click the slot's combobox trigger to open the picker.
  *  3. Type a query that doesn't match any existing feed.
- *  4. Click the "Create new" item, which switches the picker to the inline form.
+ *  4. Click the "Create new" item, switching the picker to the inline form.
  *  5. Fill `name` and `url`, then click Save.
  *
- * Expected behavior (currently broken — see assertions at the end):
- *  - The inline create form should close and the popover should dismiss.
- *  - The new feed should be persisted AND wired into `magazine.feeds[0]`.
- *
- * Why it's broken (for context, not part of the play):
- *  - `Subscription.Feed` requires a backing `feed: Ref.Ref(EchoFeed.Feed)` ref
- *    — the proper factory is `Subscription.makeFeed`, not the generic
- *    `Obj.make(schema, values)` path the picker takes. Schema validation can
- *    therefore fail silently, leaving the form open.
- *  - Even if the create succeeded, `ObjectProperties.handleCreate` only
- *    special-cases Tag.Tag (it pushes the new tag DXN onto `meta.tags`); for
- *    any other type it adds the object to the DB but never assigns the new
- *    Ref to the array slot's form value, so the slot stays empty.
- *  - `ObjectPicker`'s `onCreate(values)` callback drops the form path, so
- *    `ObjectProperties` couldn't update the right slot even if it wanted to.
+ * Final assertion: the create form is gone. (`Subscription.Feed`'s required
+ * backing-feed ref is supplied by `FactoryAnnotation` → `makeFeed`, hidden
+ * fields are stripped by `omitHiddenFormFields`, and `RefField` writes the
+ * new ref into the slot via `onValueChange` before dismissing the popover.)
  */
-export const CreateFeedBugRepro: Story = {
+export const CreateFeed: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
@@ -160,11 +156,40 @@ export const CreateFeedBugRepro: Story = {
     await userEvent.click(saveButton);
 
     // Allow any async state updates to flush.
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // EXPECTED (currently broken — see comment above): after Save the create form
-    // should be gone and `magazine.feeds[0]` should reference the new feed. The
-    // play stops here without asserting so CI stays green; observe the persisting
-    // form and empty array slot manually in the Storybook interactions panel.
+    // After Save: the create form is dismissed.
+    await expect(body.queryByTestId('create-referenced-object-form')).not.toBeInTheDocument();
+
+    // First diagnose: the new Feed must exist in space.db. If this passes
+    // but the magazine.feeds assertion below fails, the bug is in the
+    // RefField → form → ObjectProperties.handleChange wiring (the user-
+    // reported "feed created but not linked" symptom).
+    const space = (globalThis as any).__feedTestSpace;
+    const allFeeds = await space.db.query(Filter.type(Subscription.Feed)).run();
+    const newFeed = allFeeds.find((feed: Subscription.Feed) => feed.name === 'My Brand New Blog');
+    await expect(newFeed, 'new Feed with name "My Brand New Blog" should be in the database').toBeDefined();
+
+    // Second: the magazine.feeds array must contain a Ref to that new Feed.
+    const magazine = (globalThis as any).__feedTestMagazine as Magazine.Magazine | undefined;
+    await expect(magazine).toBeDefined();
+    await expect(magazine!.feeds.length, 'magazine.feeds should grow by 1 after Create + Save').toBe(1);
+
+    // Third: that Ref must point to the new Feed (not some other pre-seeded
+    // one — guards against an off-by-one bug in the create flow that would
+    // overwrite the slot with a stale ref).
+    const linkedId = magazine!.feeds[0]?.dxn.toString().split(':').pop();
+    const newId = (newFeed as any).id;
+    await expect(linkedId, 'magazine.feeds[0] should reference the newly-created Feed').toBe(newId);
+
+    // Fourth: the slot's visible display value must show the new feed's
+    // name. This is the user-reported visual symptom — even with the data
+    // correctly wired into magazine.feeds, the combobox slot still rendered
+    // its empty-state placeholder because RefField.handleGetValue compared
+    // option.id (space-scoped DXN) to ref.dxn (local-id DXN), which never
+    // matched. The fix is dedup-by-bare-object-id in `handleGetValue`.
+    const slotInputs = Array.from(canvasElement.querySelectorAll('input[readonly]')) as HTMLInputElement[];
+    const newFeedSlotInput = slotInputs.find((input) => input.value === 'My Brand New Blog');
+    await expect(newFeedSlotInput, 'the array slot must visibly show the new feed name').toBeDefined();
   },
 };
