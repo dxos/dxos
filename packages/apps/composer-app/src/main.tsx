@@ -112,10 +112,16 @@ const main = async () => {
   profiler?.mark('dynamic-imports:start');
   bootStatus('Loading framework…');
 
-  const { Config, defs, SaveConfig } = await import('@dxos/config');
-  const { createClientServices } = await import('@dxos/react-client');
-  const { Migrations } = await import('@dxos/migrations');
-  const { __COMPOSER_MIGRATIONS__ } = await import('./migrations');
+  // Phase 3a: load these in parallel rather than serially. With HTTP/2
+  // multiplexing the four chunks pipeline; even on local-disk the parser
+  // can interleave parses, so wall-clock for this phase drops noticeably.
+  const [{ Config, defs, SaveConfig }, { createClientServices }, { Migrations }, { __COMPOSER_MIGRATIONS__ }] =
+    await Promise.all([
+      import('@dxos/config'),
+      import('@dxos/react-client'),
+      import('@dxos/migrations'),
+      import('./migrations'),
+    ]);
 
   profiler?.mark('dynamic-imports:end');
   profiler?.measure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');

@@ -33,6 +33,8 @@ type StartupReport = {
   bootLoaderVisible: number | null;
   /** Total ms reported by `composer.profiler` (main:start → ready). */
   profilerTotal: number;
+  /** Time the React Placeholder is dismissed and `<App>` first commits the real shell (`app-framework:first-interactive`). */
+  firstInteractive: number | null;
   /** Wall-clock ms from `page.goto` until the user-account testid was visible. */
   navigationToReady: number;
   /** Phase, event, and module timings sourced from `composer.profiler.snapshot()`. */
@@ -69,12 +71,14 @@ const collectStartupReport = async (page: Page, scenario: StartupReport['scenari
     const fcp = paints.find((entry) => entry.name === 'first-contentful-paint');
     const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
     const bootMark = performance.getEntriesByName('boot:html-parsed')[0];
+    const firstInteractiveMark = performance.getEntriesByName('app-framework:first-interactive')[0];
     return {
       snapshot,
       firstPaint: fp ? Math.round(fp.startTime) : 0,
       firstContentfulPaint: fcp ? Math.round(fcp.startTime) : 0,
       domContentLoaded: nav ? Math.round(nav.domContentLoadedEventEnd) : 0,
       bootLoaderVisible: bootMark ? Math.round(bootMark.startTime) : null,
+      firstInteractive: firstInteractiveMark ? Math.round(firstInteractiveMark.startTime) : null,
     };
   });
 
@@ -86,6 +90,7 @@ const collectStartupReport = async (page: Page, scenario: StartupReport['scenari
     domContentLoaded: data.domContentLoaded,
     bootLoaderVisible: data.bootLoaderVisible,
     profilerTotal: data.snapshot?.total ?? 0,
+    firstInteractive: data.firstInteractive,
     navigationToReady: 0, // overwritten by caller
     profile: {
       phases: data.snapshot?.phases ?? [],

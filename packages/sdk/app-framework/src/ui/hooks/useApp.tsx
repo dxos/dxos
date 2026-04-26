@@ -164,38 +164,34 @@ export const useApp = ({
       module: 'org.dxos.app-framework.atom-registry',
     });
 
-    // Poll manager atoms for progress (avoids PubSub subscription race).
-    const progressInterval = setInterval(() => {
-      if (readyRef.current) {
-        clearInterval(progressInterval);
-        return;
-      }
-      const active = manager.getActive();
-      const modules = manager.getModules();
-      const total = modules.length;
-      const activated = active.length;
-      const lastModule = active.length > 0 ? active[active.length - 1] : undefined;
-      setStartupProgress({
-        activated,
-        total,
-        progress: total > 0 ? activated / total : 0,
-        status: lastModule ? humanizeModuleId(lastModule) : undefined,
-      });
-    }, 100);
-
     const fiber = Effect.gen(function* () {
       const queue = yield* PubSub.subscribe(manager.activation);
       const listener = yield* Effect.forkDaemon(
         Queue.take(queue).pipe(
-          Effect.tap(({ event, state, error: error$ }) =>
+          Effect.tap(({ event, state, module, error: error$ }) =>
             Effect.sync(() => {
               if (event === ActivationEvents.Startup.id && state === 'activated') {
                 clearTimeout(timeoutId);
-                clearInterval(progressInterval);
                 setReady(true);
                 readyRef.current = true;
                 // Trigger startup profiler dump if available.
                 (globalThis as any).composer?.profiler?.dump();
+                return;
+              }
+              // Phase 3b: update progress on every module-level `activated`
+              // message. Replaces the prior `setInterval(100)` poll — same
+              // information, but driven by the activation event itself, so
+              // the placeholder UI updates as soon as a module commits and
+              // not on the next 100 ms tick.
+              if (module && state === 'activated' && !readyRef.current) {
+                const active = manager.getActive();
+                const total = manager.getModules().length;
+                setStartupProgress({
+                  activated: active.length,
+                  total,
+                  progress: total > 0 ? active.length / total : 0,
+                  status: humanizeModuleId(module),
+                });
               }
               if (error$ && !readyRef.current) {
                 setError(error$);
@@ -232,7 +228,6 @@ export const useApp = ({
     return () => {
       log('useApp: effect cleanup');
       clearTimeout(timeoutId);
-      clearInterval(progressInterval);
       void runAndForwardErrors(Fiber.interrupt(fiber));
       if (!isExternalManager) {
         void runAndForwardErrors(manager.shutdown());

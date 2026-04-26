@@ -32,16 +32,16 @@ The 1,128–1,141 ms cluster is suspicious — those modules likely all activate
 
 ### Bundle size (eager `main-*.js` chunk)
 
-| Phase | Raw | Gzip | Total chunks |
-| --- | ---: | ---: | ---: |
-| 0. baseline | 8.5 MB | 2.39 MB | 2,558 |
-| 1. defer onboarding | 8.5 MB | 2.39 MB | 2,558 |
-| **2. lazy non-core plugins** | **393 KB** | **87 KB** | 2,646 |
+| Phase                        |        Raw |      Gzip | Total chunks |
+| ---------------------------- | ---------: | --------: | -----------: |
+| 0. baseline                  |     8.5 MB |   2.39 MB |        2,558 |
+| 1. defer onboarding          |     8.5 MB |   2.39 MB |        2,558 |
+| **2. lazy non-core plugins** | **393 KB** | **87 KB** |        2,646 |
 
 Phase 2's local-disk `profilerTotal` regressed by ~960 ms while the eager bundle
 dropped 96%. Two effects:
 
-1. **Phase boundary shifted.** Pre-phase-2, `main:start` fired *after* the 8.5 MB
+1. **Phase boundary shifted.** Pre-phase-2, `main:start` fired _after_ the 8.5 MB
    bundle parsed (~4.9 s of pre-await). Now `main:start` fires while the smaller
    bundle parses much faster, so `profilerTotal` measures more wall-clock —
    including `plugins-init` which jumped from 1 ms to ~1 s as the 60 dynamic
@@ -404,6 +404,7 @@ optimization). Instrumentation gaps obscure first-time-user vs returning-user.
   [`packages/sdk/app-framework/src/vite-plugin/boot-loader/index.ts`](../../sdk/app-framework/src/vite-plugin/boot-loader/index.ts).
 - **8b. Use the Composer brand SVG inside the boot loader** so it matches the
   React placeholder's logo (currently a generic horizontal bar).
+- **8c. Loader bar should indicate actual percentage complete.**
 
 ## 6. Files changed in this PR
 
@@ -491,18 +492,18 @@ the target of phase 4.
 
 ### Phase 2 — lazy-load plugin chunks (commit `118261e7e1`)
 
-|                                | Cold profilerTotal | Cold navToReady | Warm profilerTotal |   Warm navToReady |
-| ------------------------------ | -----------------: | --------------: | -----------------: | ----------------: |
-| phase 1 (`e7f390ae3e + ⚠`)     |           4,704 ms |        9,596 ms |           3,163 ms |          7,364 ms |
-| **phase 2** (`118261e7e1 + ⚠`) |           5,664 ms |        9,780 ms |           3,568 ms |          7,481 ms |
+|                                | Cold profilerTotal | Cold navToReady | Warm profilerTotal | Warm navToReady |
+| ------------------------------ | -----------------: | --------------: | -----------------: | --------------: |
+| phase 1 (`e7f390ae3e + ⚠`)     |           4,704 ms |        9,596 ms |           3,163 ms |        7,364 ms |
+| **phase 2** (`118261e7e1 + ⚠`) |           5,664 ms |        9,780 ms |           3,568 ms |        7,481 ms |
 | delta                          | +960 ms (see note) |  +184 ms (flat) | +405 ms (see note) |  +117 ms (flat) |
 
-|                          |    Pre-phase-2 |  Post-phase-2 |    Delta |
-| ------------------------ | -------------: | ------------: | -------: |
-| `main-*.js` raw          |         8.5 MB |    **393 KB** | **−96%** |
-| `main-*.js` gzip         |        2.39 MB |     **87 KB** | **−96%** |
-| Total chunk count        |          2,558 |         2,646 |     +88  |
-| Cold transferred bytes   |        43.4 MB |       41.7 MB |     flat |
+|                        | Pre-phase-2 | Post-phase-2 |    Delta |
+| ---------------------- | ----------: | -----------: | -------: |
+| `main-*.js` raw        |      8.5 MB |   **393 KB** | **−96%** |
+| `main-*.js` gzip       |     2.39 MB |    **87 KB** | **−96%** |
+| Total chunk count      |       2,558 |        2,646 |      +88 |
+| Cold transferred bytes |     43.4 MB |      41.7 MB |     flat |
 
 **Change:** [`packages/apps/composer-app/src/plugin-defs.tsx`](src/plugin-defs.tsx) —
 removed every `import { FooPlugin } from '@dxos/plugin-foo'` and replaced
@@ -521,7 +522,7 @@ plugin is its own chunk requested only when `getPlugins` runs.
 **Why `profilerTotal` regressed by ~960 ms on local-disk:** two effects:
 
 1. **Phase boundary shifted.** Pre-phase-2 the 8.5 MB main bundle parsed
-   *before* `main:start` fired (~4.9 s of pre-await time, invisible to the
+   _before_ `main:start` fired (~4.9 s of pre-await time, invisible to the
    profiler). Now `main:start` fires earlier; `profilerTotal` measures more
    wall-clock — including `plugins-init` which jumped from 1 ms to ~999 ms
    as the 60 dynamic imports load and parse.
@@ -539,3 +540,53 @@ build-time check.
 unchanged from phase 1 — the 8 `*.AppGraphBuilder` modules clustering at
 1,128–1,168 ms each are the next target (phase 4: bound concurrency in
 `_loadCapabilitiesForModules` + insert `Effect.yieldNow()`).
+
+### Phase 3 — small wins bundle (commit `<TBD>`)
+
+|                                | Cold profilerTotal | Cold navToReady | Cold firstInteractive | Warm profilerTotal |
+| ------------------------------ | -----------------: | --------------: | --------------------: | -----------------: |
+| phase 2 (`697d645631 + ⚠`)     |           5,664 ms |        9,780 ms |     — (not captured)  |           3,568 ms |
+| **phase 3** (`<TBD> + ⚠`)      |       **5,480 ms** |    **9,532 ms** |          **8,732 ms** |           3,555 ms |
+| delta                          |   −184 ms (noise)  | −248 ms (noise) |        first capture  |  −13 ms (noise)    |
+
+Phase 3 is mostly hygiene + new instrumentation, not a perf win. The four
+included changes are individually too small (or in 3d's case, too risky for
+the size of the win) to warrant their own phase:
+
+**3a. `Promise.all` the 4 `await import`s in `main.tsx`** — `@dxos/config`,
+`@dxos/react-client`, `@dxos/migrations`, and `./migrations` now load in
+parallel rather than serially. On local-disk this saves ~20–50 ms; on a real
+network the savings would scale with chunk count × RTT.
+
+**3b. Replace `setInterval(100)` with PubSub-driven progress in
+[`useApp.tsx`](../../sdk/app-framework/src/ui/hooks/useApp.tsx).** The hook
+already subscribes to `manager.activation`; we now route `module && state ===
+'activated'` messages directly to `setStartupProgress` instead of polling
+`manager.getActive()` every 100 ms. One fewer timer; the placeholder UI now
+updates exactly when a module commits, not on the next 100 ms tick. No
+visible perf change in the harness because the previous 100 ms cadence was
+already faster than React's render-batching anyway.
+
+**3c. Add `app-framework:first-interactive` mark** when `<App>` first
+transitions out of `<Placeholder>`. Captured by the harness as `firstInteractive`.
+Reveals on cold that:
+
+- `main:start → Startup activated` = 5,480 ms (profilerTotal)
+- `Startup → Placeholder dismissed` = ~1,000 ms (the `useLoading` debounce
+  state machine; `composer-app` calls `useApp({ debounce: 1_000 })` so the
+  fade-in / fade-out states each take 1 s)
+- `Placeholder dismissed → user-account testid visible` = ~800 ms (the real
+  app's plugin-contributed surface trees rendering for the first time)
+
+**3d. Lazy-load `virtual:pwa-register/react` (deferred).** The `useRegisterSW`
+hook is only used inside `Fallback` (error path), but it's imported eagerly
+at the top of `main.tsx` and pulls a small wrapper into the eager bundle.
+Lazy-loading would require a `React.lazy` + `Suspense` boundary to carry
+state from the hook into `Fallback`'s render — added complexity for a
+likely-tiny bundle saving (the wrapper is just `navigator.serviceWorker`
+glue). Tabled.
+
+**Next phase priority shifted:** the `useLoading` debounce is cheaper and
+less risky to retune than phase 4 (activation-graph concurrency). Considering
+moving "tune `useLoading` debounce" into a phase 3.5 / hot-fix slot before
+phase 4.
