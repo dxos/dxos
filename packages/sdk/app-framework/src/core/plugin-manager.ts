@@ -598,12 +598,6 @@ class ManagerImpl implements PluginManager {
       const capabilities = yield* this._loadCapabilitiesForModules(key, modules);
       yield* this._contributeCapabilitiesForModules(modules, capabilities);
 
-      // Phase 4: yield to the event loop AFTER an event's modules have all
-      // finished contributing — gives React's reconciler a paint slot between
-      // events without interrupting an event mid-flight (which would race the
-      // `allOf` resolver — see the comment in `_contributeCapabilitiesForModules`).
-      yield* Effect.yieldNow();
-
       yield* this._activateRelatedEvents(key, this._getAfterEvents(modules, activatingEvents), 'after');
 
       if (!this._get(this._eventsFiredAtom).includes(key)) {
@@ -715,12 +709,7 @@ class ManagerImpl implements PluginManager {
     return Function.pipe(
       modules,
       Array.map((mod) => this._loadModule(mod)),
-      // Phase 4: bound concurrency at 8. Today the largest cluster is 8 modules
-      // (composer-app's `*.AppGraphBuilder`s on `ClientReady`); 'unbounded'
-      // produced identical wall-clock for that case while leaving us exposed
-      // to fan-outs of 50+ modules under future scale. Setting a ceiling
-      // protects the JS event loop without slowing the current shape.
-      Effect.allWith({ concurrency: 8 }),
+      Effect.allWith({ concurrency: 'unbounded' }),
       Effect.catchAll((error) => {
         return Effect.gen(this, function* () {
           yield* PubSub.publish(this.activation, { event: key, state: 'error', error });
