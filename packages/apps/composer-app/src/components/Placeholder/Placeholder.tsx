@@ -19,8 +19,8 @@ export const Placeholder = ({ stage = 1, progress }: PlaceholderProps) => {
 
   return (
     <ThemeProvider tx={defaultTx}>
-      <div className='relative dx-container h-dvh flex flex-col'>
-        <div className='flex flex-col grow justify-center items-center'>
+      <div role='none' className='relative dx-container h-dvh flex flex-col'>
+        <div role='none' className='flex flex-col grow justify-center items-center'>
           <Composer
             className={mx(
               'h-[300px] w-[300px] scale-600 transition-all duration-500 ease-in-out filter grayscale opacity-0',
