@@ -19,7 +19,7 @@ import { FeedOperation } from '#operations';
 import { type Magazine, Subscription } from '#types';
 
 import { fetchArticle, findStarTag, hasMetaTag, useStarTag } from '../../util';
-import { MagazineTile } from './MagazineTile';
+import { MagazineTile, formatPublished } from './MagazineTile';
 
 export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
 
@@ -370,6 +370,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
           post,
           current: post.id === currentId,
           feedName: feedId ? feedNamesById.get(feedId) : undefined,
+          published: formatPublished(post),
           starTag,
           onOpen: handleOpen,
         };
@@ -477,6 +478,7 @@ type TileData = {
   post: Subscription.Post;
   current: boolean;
   feedName?: string;
+  published?: string;
   starTag?: Tag.Tag;
   onOpen: (post: Subscription.Post) => void;
 };
@@ -494,6 +496,7 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
       post={data.post}
       current={data.current}
       feedName={data.feedName}
+      published={data.published}
       starTag={data.starTag}
       onOpen={data.onOpen}
     />
