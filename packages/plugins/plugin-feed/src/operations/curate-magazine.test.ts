@@ -63,42 +63,42 @@ describe('curateMagazine', () => {
     });
 
   test('appends queue posts to the magazine', async () => {
-    const { magazine, queue, queues } = await setup();
+    const { db, magazine, queue, queues } = await setup();
     await queue.append([
       makePost({ title: 'A', description: 'first body', published: '2026-04-01T00:00:00Z' }),
       makePost({ title: 'B', description: 'second body', published: '2026-04-02T00:00:00Z' }),
     ]);
 
-    const result = await curateMagazine(magazine, (dxn) => queues.get(dxn));
+    const result = await curateMagazine(magazine, db, (dxn) => queues.get(dxn));
     expect(result.added).toBe(2);
     expect(magazine.posts.length).toBe(2);
   });
 
   test('re-running curate is idempotent (no addCore invariant violation)', async () => {
-    const { magazine, queue, queues } = await setup();
+    const { db, magazine, queue, queues } = await setup();
     await queue.append([
       makePost({ title: 'A', description: 'first body', published: '2026-04-01T00:00:00Z' }),
       makePost({ title: 'B', description: 'second body', published: '2026-04-02T00:00:00Z' }),
     ]);
 
-    const first = await curateMagazine(magazine, (dxn) => queues.get(dxn));
+    const first = await curateMagazine(magazine, db, (dxn) => queues.get(dxn));
     expect(first.added).toBe(2);
     expect(magazine.posts.length).toBe(2);
 
     // Second invocation: should not throw `addCore` invariant, should add 0.
-    const second = await curateMagazine(magazine, (dxn) => queues.get(dxn));
+    const second = await curateMagazine(magazine, db, (dxn) => queues.get(dxn));
     expect(second.added).toBe(0);
     expect(magazine.posts.length).toBe(2);
   });
 
   test('skips posts with empty descriptions', async () => {
-    const { magazine, queue, queues } = await setup();
+    const { db, magazine, queue, queues } = await setup();
     await queue.append([
       makePost({ title: 'A', description: 'has body', published: '2026-04-01T00:00:00Z' }),
       makePost({ title: 'B', description: '', published: '2026-04-02T00:00:00Z' }),
     ]);
 
-    const result = await curateMagazine(magazine, (dxn) => queues.get(dxn));
+    const result = await curateMagazine(magazine, db, (dxn) => queues.get(dxn));
     expect(result.added).toBe(1);
     expect(magazine.posts.length).toBe(1);
   });
@@ -112,7 +112,7 @@ describe('curateMagazine', () => {
     // `createRef` → `database.add` → `addCore`, hitting the
     // `!this._objects.has(core.id)` invariant. This test guards against that
     // regression: even after a queue.delete, subsequent curate must not throw.
-    const { magazine, queue, queues } = await setup();
+    const { db, magazine, queue, queues } = await setup();
     await queue.append([
       makePost({ title: 'A', description: 'a body', published: '2026-04-01T00:00:00Z' }),
       makePost({ title: 'B', description: 'b body', published: '2026-04-02T00:00:00Z' }),
@@ -121,7 +121,7 @@ describe('curateMagazine', () => {
 
     // First curate — all three posts now in space.db (via createRef) and in
     // magazine.posts.
-    await curateMagazine(magazine, (dxn) => queues.get(dxn));
+    await curateMagazine(magazine, db, (dxn) => queues.get(dxn));
     expect(magazine.posts.length).toBe(3);
 
     // Capture the queue items so we can pull their ids; must do it BEFORE
@@ -136,25 +136,25 @@ describe('curateMagazine', () => {
     await queue.delete(oldestTwo);
 
     // Second curate — must complete without throwing the invariant.
-    await expect(curateMagazine(magazine, (dxn) => queues.get(dxn))).resolves.toBeDefined();
+    await expect(curateMagazine(magazine, db, (dxn) => queues.get(dxn))).resolves.toBeDefined();
   });
 
   test('handles three sequential curate cycles with new posts each time', async () => {
     // Mirrors a user repeatedly clicking Curate as a feed gains new items.
-    const { magazine, queue, queues } = await setup();
+    const { db, magazine, queue, queues } = await setup();
 
     await queue.append([makePost({ title: 'A', description: 'a body', published: '2026-04-01T00:00:00Z' })]);
-    let result = await curateMagazine(magazine, (dxn) => queues.get(dxn));
+    let result = await curateMagazine(magazine, db, (dxn) => queues.get(dxn));
     expect(result.added).toBe(1);
     expect(magazine.posts.length).toBe(1);
 
     await queue.append([makePost({ title: 'B', description: 'b body', published: '2026-04-02T00:00:00Z' })]);
-    result = await curateMagazine(magazine, (dxn) => queues.get(dxn));
+    result = await curateMagazine(magazine, db, (dxn) => queues.get(dxn));
     expect(result.added).toBe(1);
     expect(magazine.posts.length).toBe(2);
 
     await queue.append([makePost({ title: 'C', description: 'c body', published: '2026-04-03T00:00:00Z' })]);
-    result = await curateMagazine(magazine, (dxn) => queues.get(dxn));
+    result = await curateMagazine(magazine, db, (dxn) => queues.get(dxn));
     expect(result.added).toBe(1);
     expect(magazine.posts.length).toBe(3);
   });
@@ -173,10 +173,10 @@ describe('curateMagazine', () => {
     //
     // Verify the fix dedups by the bare object id (last DXN segment) so the
     // mismatch doesn't matter.
-    const { magazine, queue, queues } = await setup();
+    const { db, magazine, queue, queues } = await setup();
     await queue.append([makePost({ title: 'A', description: 'first body', published: '2026-04-01T00:00:00Z' })]);
 
-    const first = await curateMagazine(magazine, (dxn) => queues.get(dxn));
+    const first = await curateMagazine(magazine, db, (dxn) => queues.get(dxn));
     expect(first.added).toBe(1);
 
     // Confirm the DXN form mismatch is real (so this test is exercising the
@@ -187,8 +187,48 @@ describe('curateMagazine', () => {
     expect(magDxn).not.toBe(queueDxn);
 
     // Second curate must not throw the addCore invariant and must add 0.
-    await expect(curateMagazine(magazine, (dxn) => queues.get(dxn))).resolves.toEqual({ added: 0 });
+    await expect(curateMagazine(magazine, db, (dxn) => queues.get(dxn))).resolves.toEqual({ added: 0 });
     expect(magazine.posts.length).toBe(1);
+  });
+
+  test('regression: curate after Clear (magazine emptied while space.db still has posts)', async () => {
+    // The user-reported scenario, played back deterministically:
+    //   1. Curate adds queue posts to magazine.posts. Each post is also added
+    //      to space.db (via `createRef` → `database.add`).
+    //   2. Clear empties magazine.posts. Space.db still tracks the posts.
+    //   3. Curate again. The queue still holds the same items, but
+    //      `queue.queryObjects()` decodes each one fresh from JSON — yielding a
+    //      proxy whose `_internals.database` is unset, even though the bare
+    //      object id is already in `space.db._objects` from step 1.
+    //   4. Outer dedup misses (magazine.posts is empty post-Clear), so each
+    //      post goes back into `added`. The inner write
+    //      `mutable.posts = [...empty, ...fresh]` runs the deep-mapper, which
+    //      calls `createRef` → `database.add` → `addCore` → invariant
+    //      `!_objects.has(core.id)` fires.
+    const { db, magazine, queue, queues } = await setup();
+    await queue.append([
+      makePost({ title: 'A', description: 'a body', published: '2026-04-01T00:00:00Z' }),
+      makePost({ title: 'B', description: 'b body', published: '2026-04-02T00:00:00Z' }),
+    ]);
+
+    const first = await curateMagazine(magazine, db, (dxn) => queues.get(dxn));
+    expect(first.added).toBe(2);
+    expect(magazine.posts.length).toBe(2);
+
+    // Simulate Clear: empty magazine.posts. The Post objects remain in
+    // space.db (added during first curate via createRef).
+    Obj.change(magazine, (magazine) => {
+      const mutable = magazine as Obj.Mutable<typeof magazine>;
+      mutable.posts = [];
+    });
+    expect(magazine.posts.length).toBe(0);
+
+    // Re-curate. With the fix, this must NOT throw the addCore invariant —
+    // it should detect the posts are already in space.db (by id) and reuse
+    // them rather than re-adding via createRef.
+    const second = await curateMagazine(magazine, db, (dxn) => queues.get(dxn));
+    expect(second.added).toBe(2);
+    expect(magazine.posts.length).toBe(2);
   });
 
   test('handles new posts arriving after some queue items were deleted', async () => {
@@ -197,12 +237,12 @@ describe('curateMagazine', () => {
     // `magazine.posts` contains refs to deleted Post objects (still in
     // `space.db` from the first curate), and the deep-mapper walks them
     // alongside fresh refs to brand-new posts.
-    const { magazine, queue, queues } = await setup();
+    const { db, magazine, queue, queues } = await setup();
     await queue.append([
       makePost({ title: 'A', description: 'a body', published: '2026-04-01T00:00:00Z' }),
       makePost({ title: 'B', description: 'b body', published: '2026-04-02T00:00:00Z' }),
     ]);
-    await curateMagazine(magazine, (dxn) => queues.get(dxn));
+    await curateMagazine(magazine, db, (dxn) => queues.get(dxn));
     expect(magazine.posts.length).toBe(2);
 
     // Drop the older one from the queue (the Post stays in space.db,
@@ -213,7 +253,7 @@ describe('curateMagazine', () => {
 
     // Append a brand-new post and curate again.
     await queue.append([makePost({ title: 'C', description: 'c body', published: '2026-04-03T00:00:00Z' })]);
-    const result = await curateMagazine(magazine, (dxn) => queues.get(dxn));
+    const result = await curateMagazine(magazine, db, (dxn) => queues.get(dxn));
     expect(result.added).toBe(1);
     expect(magazine.posts.length).toBe(3);
   });

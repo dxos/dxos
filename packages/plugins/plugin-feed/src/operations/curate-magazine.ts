@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { type Space, getSpace } from '@dxos/client/echo';
-import { DXN, Feed, Obj, Ref } from '@dxos/echo';
+import { DXN, type Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 
@@ -22,17 +22,39 @@ export type QueueAccess = {
  * Extracts the bare ECHO object id from a DXN. Robust to DXN form differences
  * — `dxn:echo:@:<id>` (local), `dxn:echo:<spaceId>:<id>` (space-scoped),
  * `dxn:queue:<...>:<id>` (queue-scoped) — by always taking the last part.
- *
- * Curate's dedup needs this because the same Post can appear with different
- * DXN forms in different contexts: `magazine.posts` refs use the local-id
- * form (set by `Ref.make` → `DXN.fromLocalObjectId(id)`), but a queue post
- * read via `queue.queryObjects()` has a queue-scoped `SelfDXNId` (set by
- * `Obj.fromJSON`'s `dxn` override). String-comparing the full DXNs causes
- * dedup to miss matches and re-process posts on every curate, which then
- * trips ECHO's `!this._objects.has(core.id)` invariant in `addCore` when
- * the fresh queue proxy (with a fresh core) is passed to `database.add`.
  */
 const dxnToObjectId = (dxn: { parts: readonly any[] }): string => String(dxn.parts[dxn.parts.length - 1]);
+
+/**
+ * Returns the canonical space.db proxy for a Post by id, if it has been
+ * registered there before; otherwise registers the supplied queue-side proxy
+ * and returns it.
+ *
+ * Why this exists: `queue.queryObjects()` re-decodes from JSON on every call,
+ * yielding a fresh proxy backed by a fresh `ObjectCore` whose
+ * `core.database` link is unset. If the underlying object was previously
+ * added to `space.db` (e.g. by a prior curate's `createRef` →
+ * `database.add`), `space.db._objects` already maps that id to an OLDER
+ * core. Letting the deep-mapper run `createRef` on the fresh queue proxy
+ * then calls `database.add(freshCore)` → `addCore` → the
+ * `!_objects.has(core.id)` invariant fires.
+ *
+ * Reusing the canonical proxy (its core has `core.database === space.db`,
+ * so `addCore` returns early) sidesteps the invariant entirely. For a Post
+ * being curated for the first time we still call `db.add` ourselves, which
+ * is the safe path because the id is genuinely new.
+ */
+const reuseOrAdd = async (db: Database.Database, post: Subscription.Post): Promise<Subscription.Post> => {
+  const id = (post as { id: string }).id;
+  const existing = await db
+    .query(Filter.id(id))
+    .first()
+    .catch(() => undefined);
+  if (existing) {
+    return existing as Subscription.Post;
+  }
+  return db.add(post);
+};
 
 /**
  * Pure-additive curation logic, extracted from the operation handler so it can
@@ -50,6 +72,7 @@ const dxnToObjectId = (dxn: { parts: readonly any[] }): string => String(dxn.par
  */
 export const curateMagazine = async (
   magazine: Magazine.Magazine,
+  db: Database.Database,
   getQueue: (feedDxn: DXN) => QueueAccess,
 ): Promise<{ added: number }> => {
   const seenIds = new Set(magazine.posts.map((ref) => dxnToObjectId(ref.dxn)));
@@ -72,18 +95,25 @@ export const curateMagazine = async (
       if (!Obj.instanceOf(Subscription.Post, item)) {
         continue;
       }
-      const post = item;
-      const postId = (post as { id: string }).id;
+      const queuePost = item;
+      const postId = (queuePost as { id: string }).id;
       if (seenIds.has(postId)) {
         continue;
       }
-      const source = post.description ?? '';
+      const source = queuePost.description ?? '';
       const text = stripHtml(source);
       if (!text) {
         continue;
       }
       const snippet = makeSnippet(text);
       const imageUrl = extractImageUrls(source)[0];
+
+      // Resolve to the canonical space.db proxy (or register if new) so
+      // the ref we hand to the deep-mapper has a working `core.database`
+      // link. Without this, a re-curate after Clear (or any path that
+      // re-encounters a post already in space.db via a fresh queue proxy)
+      // trips `addCore`'s `!_objects.has(core.id)` invariant.
+      const post = await reuseOrAdd(db, queuePost);
 
       Obj.change(post, (post) => {
         const mutable = post as Obj.Mutable<typeof post>;
@@ -119,7 +149,7 @@ const handler: Operation.WithHandler<typeof CurateMagazine> = CurateMagazine.pip
       const magazine = yield* Effect.promise(() => magazineRef.load());
       const space: Space | undefined = getSpace(magazine);
       invariant(space, 'Space not found.');
-      return yield* Effect.promise(() => curateMagazine(magazine, (feedDxn) => space.queues.get(feedDxn)));
+      return yield* Effect.promise(() => curateMagazine(magazine, space.db, (feedDxn) => space.queues.get(feedDxn)));
     }),
   ),
 );

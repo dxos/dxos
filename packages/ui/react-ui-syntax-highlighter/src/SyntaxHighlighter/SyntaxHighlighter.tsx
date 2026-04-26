@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type CSSProperties } from 'react';
+import React, { Children, type CSSProperties } from 'react';
 import { type SyntaxHighlighterProps as NativeSyntaxHighlighterProps } from 'react-syntax-highlighter';
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async-light';
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -17,9 +17,18 @@ const languages = {
   ts: 'typescript',
 };
 
-export type SyntaxHighlighterProps = NativeSyntaxHighlighterProps & {
+export type SyntaxHighlighterProps = Pick<
+  NativeSyntaxHighlighterProps,
+  | 'language'
+  | 'showLineNumbers'
+  | 'showInlineLineNumbers'
+  | 'startingLineNumber'
+  | 'wrapLines'
+  | 'wrapLongLines'
+  | 'PreTag'
+> & {
   fallback?: string;
-  showCopyButton?: boolean;
+  copyButton?: boolean;
 };
 
 /**
@@ -37,19 +46,19 @@ export type SyntaxHighlighterProps = NativeSyntaxHighlighterProps & {
 export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterProps>(
   (
     {
-      children,
-      language = 'text',
-      fallback = zeroWidthSpace,
-      showCopyButton,
       classNames,
       className,
+      children,
       style,
+      language = 'text',
+      fallback = zeroWidthSpace,
+      copyButton,
       ...nativeProps
     },
     forwardedRef,
   ) => {
     const { themeMode } = useThemeContext();
-    const source = React.Children.toArray(children).join('') || fallback;
+    const source = Children.toArray(children).join('') || fallback;
 
     // The `style` prop here is a Prism theme (a token → CSSProperties map), not a React style.
     // `composableProps` from parent composites may inject `style: {}` for DOM merging; treat it
@@ -63,20 +72,16 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
 
     return (
       <div
-        {...composableProps({ classNames, className }, { classNames: showCopyButton && 'relative group' })}
-        role='none'
+        {...composableProps(
+          // TODO(burdon): Use scoped props?
+          { classNames, className },
+          {
+            role: 'none',
+            classNames: copyButton && 'relative group',
+          },
+        )}
         ref={forwardedRef}
       >
-        {showCopyButton && (
-          <Clipboard.Provider>
-            <Clipboard.IconButton
-              value={source}
-              variant='ghost'
-              size={4}
-              classNames='absolute top-1 right-1 z-10 opacity-0 group-hover:opacity-100 focus:opacity-100'
-            />
-          </Clipboard.Provider>
-        )}
         <NativeSyntaxHighlighter
           language={languages[language as keyof typeof languages] || language}
           style={prismTheme}
@@ -92,6 +97,22 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
           {/* Non-empty fallback prevents collapse. */}
           {source}
         </NativeSyntaxHighlighter>
+
+        {copyButton && (
+          <div
+            role='none'
+            className='pointer-events-none absolute top-1 right-1 z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100'
+          >
+            <Clipboard.Provider>
+              <Clipboard.IconButton
+                value={source}
+                variant='ghost'
+                size={4}
+                classNames='pointer-events-auto aspect-square rounded-sm'
+              />
+            </Clipboard.Provider>
+          </div>
+        )}
       </div>
     );
   },
