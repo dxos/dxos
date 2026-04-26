@@ -10,7 +10,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { Shimmer } from './Shimmer';
 
 const meta = {
-  title: 'ui/react-ui-components/experimental/Shimmer',
+  title: 'ui/react-ui-components/Shimmer',
   component: Shimmer,
   decorators: [withTheme()],
   parameters: {
