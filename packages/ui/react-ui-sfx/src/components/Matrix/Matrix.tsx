@@ -13,9 +13,11 @@ export type MatrixProps = ThemedClassName<{
   count?: number;
   size?: Size;
   dotSize?: number;
+  /** Re-randomization trigger. Dots animate to new positions whenever this value changes. */
+  time?: number;
 }>;
 
-export const Matrix = ({ classNames, dim = 5, count = 20, size = 5, dotSize = 4 }: MatrixProps) => {
+export const Matrix = ({ classNames, dim = 5, count = 20, size = 5, dotSize = 4, time }: MatrixProps) => {
   const variants = useMemo(() => {
     const variants: Record<string, any> = {};
     for (let x = 0; x <= dim - 1; x++) {
@@ -30,18 +32,25 @@ export const Matrix = ({ classNames, dim = 5, count = 20, size = 5, dotSize = 4 
     return variants;
   }, [dim]);
 
-  const randomVariant = () => {
-    const x = Math.floor(Math.random() * dim);
-    const y = Math.floor(Math.random() * dim);
-    return `${x}-${y}`;
-  };
+  // Random positions are recomputed whenever `time`, `count`, or `dim` changes.
+  // Without `time`, positions are stable across re-renders — pass a changing value
+  // (e.g. an epoch ms tick) to drive the animation.
+  const positions = useMemo(
+    () =>
+      Array.from({ length: count }, () => {
+        const x = Math.floor(Math.random() * dim);
+        const y = Math.floor(Math.random() * dim);
+        return `${x}-${y}`;
+      }),
+    [count, dim, time],
+  );
 
   return (
     <div className={mx('flex shrink-0 items-center', getSize(size), classNames)}>
       <div className='dx-expander relative flex'>
         <AnimatePresence>
-          {Array.from({ length: count }).map((_, i) => (
-            <Dot key={i} variants={variants} variant={randomVariant()} size={dotSize} classNames='bg-primary-500' />
+          {positions.map((variant, i) => (
+            <Dot key={i} variants={variants} variant={variant} size={dotSize} classNames='bg-primary-500' />
           ))}
         </AnimatePresence>
       </div>

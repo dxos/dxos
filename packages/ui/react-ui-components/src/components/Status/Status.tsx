@@ -2,7 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, useEffect, useState } from 'react';
+import { createContext } from '@radix-ui/react-context';
+import React, {
+  type PropsWithChildren,
+  type Ref,
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -12,19 +21,82 @@ import { formatElapsed } from './formatElapsed';
 const SECOND = 1_000;
 
 //
+// Context
+//
+
+type StatusContextValue = {
+  /** Wall-clock time (epoch ms). Updated once per second by Status.Root while running. */
+  time: number;
+};
+
+const [StatusProvider, useStatusContext] = createContext<StatusContextValue>('Status');
+
+export { useStatusContext };
+
+//
+// Controller
+//
+
+export type StatusController = {
+  /** Resume the 1Hz tick. No-op if already running. */
+  start: () => void;
+  /** Pause the 1Hz tick. The reported `time` freezes at its last value. */
+  stop: () => void;
+};
+
+//
 // Root
 //
 
-export type RootProps = ThemedClassName<PropsWithChildren>;
+export type RootProps = ThemedClassName<
+  PropsWithChildren<{
+    /** Whether the tick starts running on mount. Defaults to `true`. */
+    defaultRunning?: boolean;
+  }>
+>;
 
-const Root = ({ classNames, children }: RootProps) => (
-  <span
-    role='status'
-    className={mx('inline-flex items-center gap-2 text-description font-mono tabular-nums', classNames)}
-  >
-    {children}
-  </span>
+const Root = forwardRef<StatusController, RootProps>(
+  ({ classNames, children, defaultRunning = true }: RootProps, forwardedRef: Ref<StatusController>) => {
+    const [time, setTime] = useState(() => Date.now());
+    const [running, setRunning] = useState(defaultRunning);
+
+    useEffect(() => {
+      if (!running) {
+        return;
+      }
+      let timeout: ReturnType<typeof setTimeout>;
+      const tick = () => {
+        const now = Date.now();
+        setTime(now);
+        timeout = setTimeout(tick, SECOND - (now % SECOND));
+      };
+      timeout = setTimeout(tick, SECOND - (Date.now() % SECOND));
+      return () => clearTimeout(timeout);
+    }, [running]);
+
+    useImperativeHandle(
+      forwardedRef,
+      () => ({
+        start: () => setRunning(true),
+        stop: () => setRunning(false),
+      }),
+      [],
+    );
+
+    return (
+      <StatusProvider time={time}>
+        <span
+          role='status'
+          className={mx('inline-flex items-center gap-2 text-description font-mono tabular-nums', classNames)}
+        >
+          {children}
+        </span>
+      </StatusProvider>
+    );
+  },
 );
+
+Root.displayName = 'Status.Root';
 
 //
 // Icon
@@ -57,28 +129,14 @@ export type StopwatchProps = ThemedClassName<{
 }>;
 
 /**
- * Elapsed-time display. Ticks at 1Hz aligned to the next whole-second boundary
- * so adjacent Stopwatch instances advance in lockstep.
+ * Elapsed-time display, driven by the Status.Root context tick (1Hz).
  * Re-mount or change the `start` prop to reset.
  */
 const Stopwatch = ({ classNames, start: startProp }: StopwatchProps) => {
-  const [start] = useState(() => startProp ?? Date.now());
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    let timeout: ReturnType<typeof setTimeout>;
-    const tick = () => {
-      setNow(Date.now());
-      const elapsed = Math.max(0, Date.now() - start);
-      timeout = setTimeout(tick, SECOND - (elapsed % SECOND));
-    };
-
-    timeout = setTimeout(tick, SECOND - (Math.max(0, Date.now() - start) % SECOND));
-    return () => clearTimeout(timeout);
-  }, [start]);
-
-  const elapsed = Math.max(0, now - start);
-
+  const { time } = useStatusContext('Status.Stopwatch');
+  const startRef = useRef<number>(startProp ?? time);
+  const start = startProp ?? startRef.current;
+  const elapsed = Math.max(0, time - start);
   return <span className={mx(classNames)}>{formatElapsed(elapsed)}</span>;
 };
 
