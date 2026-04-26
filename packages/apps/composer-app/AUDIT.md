@@ -14,6 +14,7 @@ Captured by the harness in [`src/playwright/startup.spec.ts`](src/playwright/sta
 | 0. baseline (`f1cda8f`)                                          |          11,118 ms |       18,054 ms |           3,166 ms |        7,677 ms | `welcome.onboarding` (5,948 ms)          |
 | 0. baseline re-run (`f1cda8f2f8`)                                |           8,554 ms |       13,485 ms |           3,210 ms |        7,405 ms | `welcome.onboarding` (4,917 ms)          |
 | **1. defer `OnboardingManager.initialize()`** (`e7f390ae3e` + ⚠) |       **4,704 ms** |    **9,596 ms** |           3,163 ms |        7,364 ms | `plugin.client.module.Client` (1,783 ms) |
+| **2. lazy non-core plugins** (`118261e7e1` + ⚠)                  |           5,664 ms |        9,780 ms |           3,568 ms |        7,481 ms | `plugin.client.module.Client` (1,832 ms) |
 
 Cold dropped 45% from the closer baseline (8.5 → 4.7 s). Warm is unchanged within noise — expected, because warm has the identity persisted and `initialize()` short-circuits. The cold-vs-warm gap shrank from ~5.4 s to ~1.5 s; what's left is mostly module-graph evaluation, not identity creation.
 
@@ -29,17 +30,37 @@ Updated cold top-10 after phase 1 (everything below is what's left to chase):
 
 The 1,128–1,141 ms cluster is suspicious — those modules likely all activate on the same upstream signal (probably `ClientReady` from `plugin.client.module.Client` at 1,783 ms) and fan out simultaneously. Reducing concurrency or sequencing them is recommendation #5.
 
-Production bundle, `out/composer/assets`: **2,558 JS chunk files**, **71 MB total**, with
-`main-*.js` at **8.5 MB raw / 2.39 MB gzip**, `react-surface-*.js` at 5.7 MB raw, `dedicated-worker-*.js` at 3.5 MB raw.
+### Bundle size (eager `main-*.js` chunk)
 
-Production bundle, `out/composer/assets`: **2,558 JS chunk files**, **71 MB total**, with
-`main-*.js` at **8.5 MB raw / 2.39 MB gzip**, `react-surface-*.js` at 5.7 MB raw, `dedicated-worker-*.js` at 3.5 MB raw.
+| Phase | Raw | Gzip | Total chunks |
+| --- | ---: | ---: | ---: |
+| 0. baseline | 8.5 MB | 2.39 MB | 2,558 |
+| 1. defer onboarding | 8.5 MB | 2.39 MB | 2,558 |
+| **2. lazy non-core plugins** | **393 KB** | **87 KB** | 2,646 |
+
+Phase 2's local-disk `profilerTotal` regressed by ~960 ms while the eager bundle
+dropped 96%. Two effects:
+
+1. **Phase boundary shifted.** Pre-phase-2, `main:start` fired *after* the 8.5 MB
+   bundle parsed (~4.9 s of pre-await). Now `main:start` fires while the smaller
+   bundle parses much faster, so `profilerTotal` measures more wall-clock —
+   including `plugins-init` which jumped from 1 ms to ~1 s as the 60 dynamic
+   plugin chunks load and parse.
+2. **Local-disk overhead.** On `vite preview` over localhost, splitting into
+   chunks adds per-module parser overhead with zero network benefit. On a real
+   network with HTTP/2 multiplexing, those chunks parallelize. Local doesn't
+   measure the win.
+
+The metric that matters for real users — first paint of useful HTML, transferred
+bytes on the critical path, and main-chunk size — moved decisively. A future
+harness scenario should add CPU and network throttling so the local benchmark
+reflects what slow-network users experience.
 
 Three things jump out from these numbers and are reflected in §5:
 
 1. ~~**`welcome.onboarding` alone is 5.9 s — over half the cold `profilerTotal`.**~~ **Resolved by phase 1** — `initialize()` is no longer awaited inside the module's activation; the manager is contributed synchronously and identity setup runs as a background side-effect. Cold dropped 45%.
-2. **`navigationToReady` exceeds `profilerTotal` by ~5 s on cold (post-phase-1).** `Startup` activated ≠ user-account testid mounted. The gap shrank but didn't disappear with phase 1. Still want the extra `startup:user-account-mounted` mark.
-3. **The first `await import` doesn't even _start_ until +2.9 s on cold (post-phase-1; was +4.9 s)** — the eager `import` chain in `plugin-defs.tsx` is still paid synchronously before `main()`'s body runs. Lazy loading of non-core plugins is the next-largest lever.
+2. **`navigationToReady` exceeds `profilerTotal` by ~4 s on cold (post-phase-2).** `Startup` activated ≠ user-account testid mounted. The gap shrank but didn't disappear. Phase 3 adds an `app-framework:first-interactive` mark to make the gap visible.
+3. ~~**The first `await import` doesn't even start until +2.9 s on cold**~~ **Resolved by phase 2** — the eager bundle now parses in ~150 ms; `dynamic-imports` starts at ~2.2 s on cold (vs 4.9 s baseline, 2.9 s post-phase-1).
 
 ## 1. The pipeline today
 
@@ -271,55 +292,118 @@ contribution, this can pile up React renders.
 A bounded concurrency (e.g. 4–8) plus a single batched render via
 `flushSync` after a whole event activates would smooth out paint cadence.
 
-## 5. Recommendations (ranked, post-baseline)
+## 5. Phased plan
 
-Ordering rewritten after running the harness — the welcome onboarding cost was
-not visible from static reading.
+Reorganized from the original ranked list into shippable phases. Each phase is a
+single PR-sized unit with measurement: the [BENCHMARKS](BENCHMARKS.md) ledger
+gets at least one new row, [§9 phase log](#9-phase-log) gets a new subsection,
+and the next phase planning is informed by the deltas. Items inside a phase are
+bundled because they share review concerns or are individually too small to
+warrant a phase of their own.
 
-1. ✅ **Phase 1 (shipped):** Defer `OnboardingManager.initialize()` so it is
-   not awaited inside the welcome.onboarding module's activation. The manager
-   is contributed synchronously and identity creation continues as a
-   background side-effect. Cold profilerTotal dropped 45% (8.5 → 4.7 s).
-   See [`src/plugins/welcome/capabilities/onboarding.ts`](src/plugins/welcome/capabilities/onboarding.ts).
-   _Caveat:_ on a true first-run user (skipAuth path), the app shell now
-   renders before identity exists — downstream code that reads
-   `WelcomeCapabilities.Onboarding` already obtains the manager and observes
-   identity state via existing `client.halo.identity` subscriptions, so this
-   is OK. The first-run UX flash is unverified at the time of this writing
-   (the e2e suite still passes, but no real first-run user has tested it).
-2. **Lazy-load non-core plugins.** Convert `plugin-defs.tsx` from `import {
-FooPlugin } from '@dxos/plugin-foo'` to a record like
-   `{ id: '@dxos/plugin-foo', activate: () => import('@dxos/plugin-foo').then(...)
-}` so the chunk is only requested when needed. Targets the `main-*.js`
-   (8.5 MB raw / 2.39 MB gzip) chunk and the 4.9 s of pre-await sync graph
-   evaluation. Biggest architectural win after #1.
-3. **Pipeline the four `await import`s in `main.tsx`** with `Promise.all`.
-   Tiny diff; measurable on `dynamic-imports` phase (300 ms today; should be
-   <100 ms with HTTP/2 multiplexing).
-4. **Add a `startup:user-account-mounted` mark** in the deck/space plugin so
-   `profilerTotal` reflects "first interactive surface rendered" rather than
-   just `Startup` activation. That eliminates the unaccounted ~7 s gap between
-   `profilerTotal` and `navigationToReady`.
-5. **Bound module activation concurrency** to 4–8 in `plugin-manager.ts`
-   ([:712](packages/sdk/app-framework/src/core/plugin-manager.ts), [:683-684](packages/sdk/app-framework/src/core/plugin-manager.ts)).
-   The 6 `*.AppGraphBuilder` modules clustering at ~1,560 ms each look like
-   they're all waiting on the same upstream and serialising on contention; a
-   bounded queue may both reduce contention and yield to React more often.
-6. **Yield to the event loop inside `_loadModule`** between
-   `_contributeCapabilities` and the next module — `yield* Effect.yieldNow()`.
-   This is what unblocks React rendering the determinate progress indicator
-   reliably.
-7. **`scheduler.yield()` instead of `setInterval(100)`** in `useApp` for
-   progress updates. Shorter latency to first observed update.
-8. **Move `virtual:pwa-register/react` and PWA registration** into `Fallback`'s
-   render path (it's only needed on error or update notifications), and make
-   the PWA manifest fetch defer until `'idle'`.
-9. **Track-only the slowest 5 modules in production observability** via
-   PostHog so we have a real-world distribution, not just dev-laptop numbers.
-   Build on top of `profiler.snapshot()`.
-10. **Swap `cssText` of `#boot-loader` to use the brand Composer logo SVG** so
-    the boot loader visually matches `Placeholder.tsx` — eliminates the slight
-    flash when React replaces the DOM. Cheap, polish-grade.
+### ✅ Phase 1: defer first-run identity setup (shipped — `9db4acdb1f`)
+
+`OnboardingManager.initialize()` no longer awaits inside the welcome.onboarding
+module's activation; the manager is contributed synchronously and identity
+creation runs as a background side-effect. See
+[`src/plugins/welcome/capabilities/onboarding.ts`](src/plugins/welcome/capabilities/onboarding.ts).
+
+_Caveat:_ on a true first-run user (skipAuth path), the app shell now renders
+before identity exists — downstream code that reads
+`WelcomeCapabilities.Onboarding` already obtains the manager and observes
+identity state via existing `client.halo.identity` subscriptions, so this is
+OK in principle. The e2e suite still passes, but no real first-run user has
+clicked through it.
+
+### ✅ Phase 2: lazy-load plugin chunks (shipped — `118261e7e1`)
+
+`plugin-defs.tsx` no longer eagerly `import`s every plugin package. Plugin
+factories are dynamically `import()`ed in parallel inside `getPlugins`, so
+Rollup emits one chunk per plugin and the eager `main-*.js` shrinks from
+8.5 MB → 393 KB raw (96%). Plugin IDs are hardcoded in a constant block to
+keep `getCore`/`getDefaults` cheap (they only need ids, not the full plugin).
+Local-disk wall-clock barely moved; the bundle reduction's real win is for
+real-network users — see §0 and the phase 5 harness work.
+
+### Phase 3: small wins bundle (next)
+
+Four small, individually-low-risk changes batched together because none of
+them is worth a phase of its own:
+
+- **3a. `Promise.all` the 4 `await import`s in `main.tsx`** so `@dxos/config`,
+  `@dxos/react-client`, `@dxos/migrations`, and `./migrations` load in
+  parallel rather than serially. Targets the now-~150–300 ms `dynamic-imports`
+  phase.
+- **3b. Replace `setInterval(100)` polling with PubSub-driven progress in
+  `useApp`.** `manager.activation` already publishes per-module activated
+  messages; the existing subscription in `useApp` can route them to
+  `setStartupProgress` instead of polling `manager.getActive()` every 100 ms.
+  Shorter latency to first observed update; one fewer timer.
+- **3c. Add an `app-framework:first-interactive` mark** when `<App>` first
+  transitions out of the `<Placeholder>`. Measures the gap between `Startup`
+  activated and the React Placeholder being unmounted (currently ~4 s of
+  unaccounted-for time on cold).
+- **3d. Lazy-load `virtual:pwa-register/react`.** The `useRegisterSW` hook is
+  only used inside `Fallback` (error path), but importing it eagerly at the
+  top of `main.tsx` pulls the PWA register glue into the eager bundle. Move
+  the import into a `React.lazy`-wrapped inner component.
+
+### Phase 4: activation-graph hygiene
+
+The post-phase-1 cold profile shows 8 `*.AppGraphBuilder` modules clustering
+at 1,128–1,168 ms each — they all activate on the same upstream
+(`ClientReady`) and contend on the unbounded fan-out. Two complementary
+changes:
+
+- **4a. Bound `_loadCapabilitiesForModules` concurrency** to 4 in
+  [`plugin-manager.ts:712`](../../sdk/app-framework/src/core/plugin-manager.ts).
+  Risk: re-orders activations; need to verify no plugin relies on
+  concurrent-contribution timing.
+- **4b. Insert `Effect.yieldNow()` between modules** in `_loadModule` so the
+  React reconciler gets a paint slot between contributions. This is what
+  reliably unsticks the determinate progress indicator on cold loads where the
+  cluster of synchronous module activations starves the render loop.
+
+### Phase 5: harness improvements
+
+Local-disk benchmarks under-represent the wins from phase 2 (network
+optimization). Instrumentation gaps obscure first-time-user vs returning-user.
+
+- **5a. Add a `cold-with-persisted-identity` scenario.** Use
+  `browser.launchPersistentContext(userDataDir)` to prime once, then re-open
+  fresh. Separates "load app" from "create new identity from scratch."
+- **5b. Add a CPU/network-throttled scenario.** Playwright supports CDP
+  emulation; we'd run "Slow 3G" + "4× CPU throttle" once per harness run.
+  This is the scenario where phase 2's bundle reduction actually shows up.
+- **5c. Cross-browser CI runs.** Locally we run chromium only; CI should run
+  all three projects and append rows for each.
+
+### Phase 6: production telemetry
+
+- **6a. Push the top 5 slowest modules from `profiler.snapshot()` to PostHog**
+  via the existing observability pipeline. Build on the JSON snapshot phase 0
+  added; one event per session on `Startup` activated.
+
+### Phase 7: instrumentation completeness
+
+- **7a. Make `?profiler=1` default in dev builds** so every devloop produces
+  ledger rows without remembering the flag.
+- **7b. Expose `profiler.snapshot()` over `BroadcastChannel`** so a devtools
+  panel can read it without polling localStorage.
+
+### Phase 8: visual polish
+
+- **8a. Reconcile the boot loader visual with `Placeholder.tsx`.** Currently
+  the native-DOM boot loader and the React `<Placeholder>` are visually
+  similar but not identical, so the handoff at `createRoot.render()` causes a
+  subtle frame of flicker. One option: keep the boot loader visible until
+  `Startup` is activated and skip rendering `<Placeholder>` entirely — making
+  the boot loader the single canonical loading UI. Could also be implemented
+  via SolidJS, which gives reactive DOM updates without React's mounting
+  cost. See `TODO(burdon)` in
+  [`packages/sdk/app-framework/src/vite-plugin/boot-loader/index.ts`](../../sdk/app-framework/src/vite-plugin/boot-loader/index.ts).
+- **8b. Use the Composer brand SVG inside the boot loader** so it matches the
+  React placeholder's logo (currently a generic horizontal bar).
 
 ## 6. Files changed in this PR
 
@@ -403,4 +487,55 @@ user has not clicked through it — flag for design review.
 (1,783 ms), `transcription` (1,141 ms), and a 7-module cluster of
 `*.AppGraphBuilder`s at 1,128–1,139 ms each — strong signal they all activate
 on `ClientReady` and fan out under `concurrency: 'unbounded'`. That cluster is
-the target of recommendation #5.
+the target of phase 4.
+
+### Phase 2 — lazy-load plugin chunks (commit `118261e7e1`)
+
+|                                | Cold profilerTotal | Cold navToReady | Warm profilerTotal |   Warm navToReady |
+| ------------------------------ | -----------------: | --------------: | -----------------: | ----------------: |
+| phase 1 (`e7f390ae3e + ⚠`)     |           4,704 ms |        9,596 ms |           3,163 ms |          7,364 ms |
+| **phase 2** (`118261e7e1 + ⚠`) |           5,664 ms |        9,780 ms |           3,568 ms |          7,481 ms |
+| delta                          | +960 ms (see note) |  +184 ms (flat) | +405 ms (see note) |  +117 ms (flat) |
+
+|                          |    Pre-phase-2 |  Post-phase-2 |    Delta |
+| ------------------------ | -------------: | ------------: | -------: |
+| `main-*.js` raw          |         8.5 MB |    **393 KB** | **−96%** |
+| `main-*.js` gzip         |        2.39 MB |     **87 KB** | **−96%** |
+| Total chunk count        |          2,558 |         2,646 |     +88  |
+| Cold transferred bytes   |        43.4 MB |       41.7 MB |     flat |
+
+**Change:** [`packages/apps/composer-app/src/plugin-defs.tsx`](src/plugin-defs.tsx) —
+removed every `import { FooPlugin } from '@dxos/plugin-foo'` and replaced
+the body of `getPlugins` with a single `Promise.all([...])` of dynamic
+imports, one per plugin. `getPlugins` is now async; `main.tsx` awaits it
+in parallel with `UrlLoader.preload()`. Plugin ids are now hardcoded in a
+private `ID` constant block so `getCore`/`getDefaults` don't need to load
+the full plugin chunks just to read each `meta.id`.
+
+**Why the eager bundle dropped 96%:** Rollup splits each `import('@dxos/plugin-foo')`
+into its own chunk. Before, every plugin's transitive graph (React surface
+components, schema registrations, capabilities) was reachable from the static
+import statements in `plugin-defs.tsx` and bundled into `main`. After, each
+plugin is its own chunk requested only when `getPlugins` runs.
+
+**Why `profilerTotal` regressed by ~960 ms on local-disk:** two effects:
+
+1. **Phase boundary shifted.** Pre-phase-2 the 8.5 MB main bundle parsed
+   *before* `main:start` fired (~4.9 s of pre-await time, invisible to the
+   profiler). Now `main:start` fires earlier; `profilerTotal` measures more
+   wall-clock — including `plugins-init` which jumped from 1 ms to ~999 ms
+   as the 60 dynamic imports load and parse.
+2. **Local-disk overhead.** `vite preview` over localhost has zero network
+   latency; HTTP/2 multiplexing benefits don't apply. Splitting one big
+   bundle into 60 small chunks adds per-module parser overhead with no
+   payoff. Real-network users see this differently — see phase 5.
+
+**Caveat:** plugin ids in `ID` are now duplicated from each plugin's
+`meta.ts`. There's no compile-time guard for drift; if a plugin renames
+its `meta.id`, the constant must be updated by hand. Phase 7 should add a
+build-time check.
+
+**What's left on cold (top of the post-phase-2 profile):** essentially
+unchanged from phase 1 — the 8 `*.AppGraphBuilder` modules clustering at
+1,128–1,168 ms each are the next target (phase 4: bound concurrency in
+`_loadCapabilitiesForModules` + insert `Effect.yieldNow()`).

@@ -286,13 +286,17 @@ const main = async () => {
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
 
-  const builtinPlugins = getPlugins(conf);
-  let remotePlugins: Plugin.Plugin[] = [];
-  try {
-    remotePlugins = await UrlLoader.preload();
-  } catch (error) {
-    log.warn('failed to preload remote plugins', { error });
-  }
+  // Phase 2 (lazy plugins): `getPlugins` is now async — every plugin chunk is
+  // dynamically imported in parallel. Run it concurrently with `UrlLoader.preload`
+  // (network-bound) so the two waits overlap.
+  const [builtinPlugins, remotePluginsResult] = await Promise.all([
+    getPlugins(conf),
+    UrlLoader.preload().catch((error) => {
+      log.warn('failed to preload remote plugins', { error });
+      return [] as Plugin.Plugin[];
+    }),
+  ]);
+  const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins);
   const core = getCore(conf);

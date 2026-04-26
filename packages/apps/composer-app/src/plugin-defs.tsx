@@ -9,66 +9,6 @@ import { APP_DOMAIN } from '@dxos/app-toolkit';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type LogBuffer } from '@dxos/log';
 import { type Observability } from '@dxos/observability';
-import { AssistantPlugin } from '@dxos/plugin-assistant';
-import { AttentionPlugin } from '@dxos/plugin-attention';
-import { AutomationPlugin } from '@dxos/plugin-automation';
-import { BoardPlugin } from '@dxos/plugin-board';
-import { ChessPlugin } from '@dxos/plugin-chess';
-import { ClientPlugin } from '@dxos/plugin-client';
-import { ConductorPlugin } from '@dxos/plugin-conductor';
-import { CrxPlugin } from '@dxos/plugin-crx';
-import { CrxBridgePlugin } from '@dxos/plugin-crx-bridge';
-import { DailySummaryPlugin } from '@dxos/plugin-daily-summary';
-import { DebugPlugin } from '@dxos/plugin-debug';
-import { DeckPlugin } from '@dxos/plugin-deck';
-import { DiscordPlugin } from '@dxos/plugin-discord';
-import { ExplorerPlugin } from '@dxos/plugin-explorer';
-import { FeedPlugin } from '@dxos/plugin-feed';
-import { GraphPlugin } from '@dxos/plugin-graph';
-import { HelpPlugin } from '@dxos/plugin-help';
-import { InboxPlugin } from '@dxos/plugin-inbox';
-import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon';
-import { KanbanPlugin } from '@dxos/plugin-kanban';
-import { MapPlugin } from '@dxos/plugin-map';
-import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid';
-import { MarkdownPlugin } from '@dxos/plugin-markdown';
-import { MasonryPlugin } from '@dxos/plugin-masonry';
-import { MeetingPlugin } from '@dxos/plugin-meeting';
-import { MermaidPlugin } from '@dxos/plugin-mermaid';
-import { NativePlugin } from '@dxos/plugin-native';
-import { NativeFilesystemPlugin } from '@dxos/plugin-native-filesystem';
-import { NavTreePlugin } from '@dxos/plugin-navtree';
-import { ObservabilityPlugin } from '@dxos/plugin-observability';
-import { OutlinerPlugin } from '@dxos/plugin-outliner';
-import { PipelinePlugin } from '@dxos/plugin-pipeline';
-import { PresenterPlugin } from '@dxos/plugin-presenter';
-import { PreviewPlugin } from '@dxos/plugin-preview';
-import { PwaPlugin } from '@dxos/plugin-pwa';
-import { RegistryPlugin } from '@dxos/plugin-registry';
-import { SamplePlugin } from '@dxos/plugin-sample';
-import { ScriptPlugin } from '@dxos/plugin-script';
-import { SearchPlugin } from '@dxos/plugin-search';
-import { SettingsPlugin } from '@dxos/plugin-settings';
-import { SheetPlugin } from '@dxos/plugin-sheet';
-import { SidekickPlugin } from '@dxos/plugin-sidekick';
-import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
-import { SketchPlugin } from '@dxos/plugin-sketch';
-import { SpacePlugin } from '@dxos/plugin-space';
-import { SpacetimePlugin } from '@dxos/plugin-spacetime';
-import { SpecPlugin } from '@dxos/plugin-spec';
-import { SpotlightPlugin } from '@dxos/plugin-spotlight';
-import { StackPlugin } from '@dxos/plugin-stack';
-import { StatusBarPlugin } from '@dxos/plugin-status-bar';
-import { TablePlugin } from '@dxos/plugin-table';
-import { ThemePlugin } from '@dxos/plugin-theme';
-import { ThreadPlugin } from '@dxos/plugin-thread';
-import { TicTacToePlugin } from '@dxos/plugin-tictactoe';
-import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
-import { TranscriptionPlugin } from '@dxos/plugin-transcription';
-import { VoxelPlugin } from '@dxos/plugin-voxel';
-import { WnfsPlugin } from '@dxos/plugin-wnfs';
-import { YouTubePlugin } from '@dxos/plugin-youtube';
-import { ZenPlugin } from '@dxos/plugin-zen';
 import { isTruthy } from '@dxos/util';
 
 import { steps } from './help';
@@ -95,35 +35,108 @@ export type PluginConfig = State & {
   isMobile?: boolean;
 };
 
+/**
+ * Plugin IDs (kept in sync with each plugin's `meta.id`).
+ *
+ * Phase 2 (lazy plugins): the actual plugin factories are dynamically imported in
+ * {@link getPlugins} so the main bundle does not pull every plugin's transitive
+ * graph at module-evaluation time. Hardcoding the ids here lets `getCore` and
+ * `getDefaults` enumerate enabled plugins without paying that cost — they only
+ * need the string ids.
+ *
+ * If a plugin renames its `meta.id`, this constant must be updated. There is no
+ * guard for drift today; a future improvement is to expose `meta` from each
+ * plugin via a `./meta` subpath export so we can import it without dragging the
+ * whole plugin chunk along.
+ */
+const ID = {
+  ASSISTANT: 'org.dxos.plugin.assistant',
+  ATTENTION: 'org.dxos.plugin.attention',
+  AUTOMATION: 'org.dxos.plugin.automation',
+  BOARD: 'org.dxos.plugin.board',
+  CHESS: 'org.dxos.plugin.chess',
+  CLIENT: 'org.dxos.plugin.client',
+  CONDUCTOR: 'org.dxos.plugin.conductor',
+  CRX: 'org.dxos.plugin.crx',
+  CRX_BRIDGE: 'org.dxos.plugin.crx-bridge',
+  DAILY_SUMMARY: 'org.dxos.plugin.daily-summary',
+  DEBUG: 'org.dxos.plugin.debug',
+  DECK: 'org.dxos.plugin.deck',
+  DISCORD: 'org.dxos.plugin.discord',
+  EXPLORER: 'org.dxos.plugin.explorer',
+  FEED: 'org.dxos.plugin.feed',
+  GRAPH: 'org.dxos.plugin.graph',
+  HELP: 'org.dxos.plugin.help',
+  INBOX: 'org.dxos.plugin.inbox',
+  IROH_BEACON: 'org.dxos.plugin.iroh-beacon',
+  KANBAN: 'org.dxos.plugin.kanban',
+  MAP: 'org.dxos.plugin.map',
+  MAP_SOLID: 'org.dxos.plugin.map-solid',
+  MARKDOWN: 'org.dxos.plugin.markdown',
+  MASONRY: 'org.dxos.plugin.masonry',
+  MEETING: 'org.dxos.plugin.meeting',
+  MERMAID: 'org.dxos.plugin.mermaid',
+  NATIVE: 'org.dxos.plugin.native',
+  NATIVE_FILESYSTEM: 'org.dxos.plugin.native-filesystem',
+  NAVTREE: 'org.dxos.plugin.navtree',
+  OBSERVABILITY: 'org.dxos.plugin.observability',
+  OUTLINER: 'org.dxos.plugin.outliner',
+  PIPELINE: 'org.dxos.plugin.pipeline',
+  PRESENTER: 'org.dxos.plugin.presenter',
+  PREVIEW: 'org.dxos.plugin.preview',
+  PWA: 'org.dxos.plugin.pwa',
+  REGISTRY: 'org.dxos.plugin.registry',
+  SAMPLE: 'org.dxos.plugin.sample',
+  SCRIPT: 'org.dxos.plugin.script',
+  SEARCH: 'org.dxos.plugin.search',
+  SETTINGS: 'org.dxos.plugin.settings',
+  SHEET: 'org.dxos.plugin.sheet',
+  SIDEKICK: 'org.dxos.plugin.sidekick',
+  SIMPLE_LAYOUT: 'org.dxos.plugin.simple-layout',
+  SKETCH: 'org.dxos.plugin.sketch',
+  SPACE: 'org.dxos.plugin.space',
+  SPACETIME: 'org.dxos.plugin.spacetime',
+  SPEC: 'org.dxos.plugin.spec',
+  SPOTLIGHT: 'org.dxos.plugin.spotlight',
+  STACK: 'org.dxos.plugin.stack',
+  STATUS_BAR: 'org.dxos.plugin.status-bar',
+  TABLE: 'org.dxos.plugin.table',
+  THEME: 'org.dxos.plugin.theme',
+  THREAD: 'org.dxos.plugin.thread',
+  TICTACTOE: 'org.dxos.plugin.tictactoe',
+  TOKEN_MANAGER: 'org.dxos.plugin.token-manager',
+  TRANSCRIPTION: 'org.dxos.plugin.transcription',
+  VOXEL: 'org.dxos.plugin.voxel',
+  WNFS: 'org.dxos.plugin.wnfs',
+  YOUTUBE: 'org.dxos.plugin.youtube',
+  ZEN: 'org.dxos.plugin.zen',
+} as const;
+
 export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): string[] => {
-  const layoutPluginId = isPopover
-    ? SpotlightPlugin.meta.id
-    : isMobile
-      ? SimpleLayoutPlugin.meta.id
-      : DeckPlugin.meta.id;
+  const layoutPluginId = isPopover ? ID.SPOTLIGHT : isMobile ? ID.SIMPLE_LAYOUT : ID.DECK;
   return [
-    AttentionPlugin.meta.id,
-    AutomationPlugin.meta.id,
-    ClientPlugin.meta.id,
-    CrxPlugin.meta.id,
-    CrxBridgePlugin.meta.id,
-    GraphPlugin.meta.id,
-    HelpPlugin.meta.id,
+    ID.ATTENTION,
+    ID.AUTOMATION,
+    ID.CLIENT,
+    ID.CRX,
+    ID.CRX_BRIDGE,
+    ID.GRAPH,
+    ID.HELP,
     layoutPluginId,
-    isTauri && !isMobile && !isPopover && NativePlugin.meta.id,
+    isTauri && !isMobile && !isPopover && ID.NATIVE,
     OperationPlugin.meta.id,
-    NavTreePlugin.meta.id,
-    ObservabilityPlugin.meta.id,
-    PreviewPlugin.meta.id,
-    !isTauri && isPwa && PwaPlugin.meta.id,
-    RegistryPlugin.meta.id,
+    ID.NAVTREE,
+    ID.OBSERVABILITY,
+    ID.PREVIEW,
+    !isTauri && isPwa && ID.PWA,
+    ID.REGISTRY,
     RuntimePlugin.meta.id,
-    SearchPlugin.meta.id,
-    SettingsPlugin.meta.id,
-    SpacePlugin.meta.id,
-    StatusBarPlugin.meta.id,
-    ThemePlugin.meta.id,
-    TokenManagerPlugin.meta.id,
+    ID.SEARCH,
+    ID.SETTINGS,
+    ID.SPACE,
+    ID.STATUS_BAR,
+    ID.THEME,
+    ID.TOKEN_MANAGER,
     WelcomePlugin.meta.id,
   ]
     .filter(isTruthy)
@@ -133,43 +146,60 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
 export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] =>
   [
     // Default
-    InboxPlugin.meta.id,
-    KanbanPlugin.meta.id,
-    MarkdownPlugin.meta.id,
-    MasonryPlugin.meta.id,
-    SheetPlugin.meta.id,
-    SketchPlugin.meta.id,
-    TablePlugin.meta.id,
-    ThreadPlugin.meta.id,
-    WnfsPlugin.meta.id,
+    ID.INBOX,
+    ID.KANBAN,
+    ID.MARKDOWN,
+    ID.MASONRY,
+    ID.SHEET,
+    ID.SKETCH,
+    ID.TABLE,
+    ID.THREAD,
+    ID.WNFS,
 
-    SpecPlugin.meta.id,
+    ID.SPEC,
 
     // Dev
-    isDev && DebugPlugin.meta.id,
+    isDev && ID.DEBUG,
 
     // Local
-    isLocal && SamplePlugin.meta.id,
+    isLocal && ID.SAMPLE,
 
     // Labs
     (isDev || isLabs) && [
-      AssistantPlugin.meta.id,
-      DailySummaryPlugin.meta.id,
-      DiscordPlugin.meta.id,
-      FeedPlugin.meta.id,
-      IrohBeaconPlugin.meta.id,
-      MeetingPlugin.meta.id,
-      OutlinerPlugin.meta.id,
-      PipelinePlugin.meta.id,
-      SidekickPlugin.meta.id,
-      TranscriptionPlugin.meta.id,
-      ZenPlugin.meta.id,
+      ID.ASSISTANT,
+      ID.DAILY_SUMMARY,
+      ID.DISCORD,
+      ID.FEED,
+      ID.IROH_BEACON,
+      ID.MEETING,
+      ID.OUTLINER,
+      ID.PIPELINE,
+      ID.SIDEKICK,
+      ID.TRANSCRIPTION,
+      ID.ZEN,
     ],
   ]
     .filter(isTruthy)
     .flat();
 
-export const getPlugins = ({
+/**
+ * Constructs every plugin instance the host can offer (whether enabled or not).
+ *
+ * Phase 2 (lazy plugins): instead of `import { FooPlugin } from '@dxos/plugin-foo'`
+ * at the top of the file — which would force every plugin's transitive module
+ * graph into the main bundle at parse time — each plugin is requested via a
+ * dynamic `import()` here. Rollup emits a separate chunk per import; the network
+ * and parser can pipeline all of them in parallel via {@link Promise.all}.
+ *
+ * The host (`main.tsx`) calls this once during the `plugins` profiler phase, so
+ * the cost shifts from "module-graph evaluation before main() runs" (4.9 s of
+ * blank screen on cold load) to a parallel fetch+parse during `plugins-init`
+ * (where the boot loader is already on screen and animating).
+ *
+ * @returns A flat list of `Plugin.Plugin` instances, suitable for passing to
+ *   `useApp({ plugins })`.
+ */
+export const getPlugins = async ({
   appKey,
   config,
   services,
@@ -182,7 +212,134 @@ export const getPlugins = ({
   isTauri,
   isPopover,
   isMobile,
-}: PluginConfig): Plugin.Plugin[] => {
+}: PluginConfig): Promise<Plugin.Plugin[]> => {
+  const [
+    { AssistantPlugin },
+    { AttentionPlugin },
+    { AutomationPlugin },
+    { BoardPlugin },
+    { ChessPlugin },
+    { ClientPlugin },
+    { ConductorPlugin },
+    { CrxPlugin },
+    { CrxBridgePlugin },
+    { DailySummaryPlugin },
+    { DebugPlugin },
+    { DeckPlugin },
+    { DiscordPlugin },
+    { ExplorerPlugin },
+    { FeedPlugin },
+    { GraphPlugin },
+    { HelpPlugin },
+    { InboxPlugin },
+    { IrohBeaconPlugin },
+    { KanbanPlugin },
+    { MapPlugin },
+    mapSolidModule,
+    { MarkdownPlugin },
+    { MasonryPlugin },
+    { MeetingPlugin },
+    { MermaidPlugin },
+    { NativePlugin },
+    { NativeFilesystemPlugin },
+    { NavTreePlugin },
+    { ObservabilityPlugin },
+    { OutlinerPlugin },
+    { PipelinePlugin },
+    { PresenterPlugin },
+    { PreviewPlugin },
+    { PwaPlugin },
+    { RegistryPlugin },
+    { SamplePlugin },
+    { ScriptPlugin },
+    { SearchPlugin },
+    { SettingsPlugin },
+    { SheetPlugin },
+    { SidekickPlugin },
+    { SimpleLayoutPlugin },
+    { SketchPlugin },
+    { SpacePlugin },
+    { SpacetimePlugin },
+    { SpecPlugin },
+    { SpotlightPlugin },
+    { StackPlugin },
+    { StatusBarPlugin },
+    { TablePlugin },
+    { ThemePlugin },
+    { ThreadPlugin },
+    { TicTacToePlugin },
+    { TokenManagerPlugin },
+    { TranscriptionPlugin },
+    { VoxelPlugin },
+    { WnfsPlugin },
+    { YouTubePlugin },
+    { ZenPlugin },
+  ] = await Promise.all([
+    import('@dxos/plugin-assistant'),
+    import('@dxos/plugin-attention'),
+    import('@dxos/plugin-automation'),
+    import('@dxos/plugin-board'),
+    import('@dxos/plugin-chess'),
+    import('@dxos/plugin-client'),
+    import('@dxos/plugin-conductor'),
+    import('@dxos/plugin-crx'),
+    import('@dxos/plugin-crx-bridge'),
+    import('@dxos/plugin-daily-summary'),
+    import('@dxos/plugin-debug'),
+    import('@dxos/plugin-deck'),
+    import('@dxos/plugin-discord'),
+    import('@dxos/plugin-explorer'),
+    import('@dxos/plugin-feed'),
+    import('@dxos/plugin-graph'),
+    import('@dxos/plugin-help'),
+    import('@dxos/plugin-inbox'),
+    import('@dxos/plugin-iroh-beacon'),
+    import('@dxos/plugin-kanban'),
+    import('@dxos/plugin-map'),
+    import('@dxos/plugin-map-solid'),
+    import('@dxos/plugin-markdown'),
+    import('@dxos/plugin-masonry'),
+    import('@dxos/plugin-meeting'),
+    import('@dxos/plugin-mermaid'),
+    import('@dxos/plugin-native'),
+    import('@dxos/plugin-native-filesystem'),
+    import('@dxos/plugin-navtree'),
+    import('@dxos/plugin-observability'),
+    import('@dxos/plugin-outliner'),
+    import('@dxos/plugin-pipeline'),
+    import('@dxos/plugin-presenter'),
+    import('@dxos/plugin-preview'),
+    import('@dxos/plugin-pwa'),
+    import('@dxos/plugin-registry'),
+    import('@dxos/plugin-sample'),
+    import('@dxos/plugin-script'),
+    import('@dxos/plugin-search'),
+    import('@dxos/plugin-settings'),
+    import('@dxos/plugin-sheet'),
+    import('@dxos/plugin-sidekick'),
+    import('@dxos/plugin-simple-layout'),
+    import('@dxos/plugin-sketch'),
+    import('@dxos/plugin-space'),
+    import('@dxos/plugin-spacetime'),
+    import('@dxos/plugin-spec'),
+    import('@dxos/plugin-spotlight'),
+    import('@dxos/plugin-stack'),
+    import('@dxos/plugin-status-bar'),
+    import('@dxos/plugin-table'),
+    import('@dxos/plugin-theme'),
+    import('@dxos/plugin-thread'),
+    import('@dxos/plugin-tictactoe'),
+    import('@dxos/plugin-token-manager'),
+    import('@dxos/plugin-transcription'),
+    import('@dxos/plugin-voxel'),
+    import('@dxos/plugin-wnfs'),
+    import('@dxos/plugin-youtube'),
+    import('@dxos/plugin-zen'),
+  ]);
+
+  // `@dxos/plugin-map-solid` re-exports `MapPlugin` (alias-imported below).
+  const MapPluginSolid = mapSolidModule.MapPlugin;
+
   const layoutPlugin = isPopover ? SpotlightPlugin() : isMobile ? SimpleLayoutPlugin({}) : DeckPlugin();
   const origin = isTauri ? APP_LINK_ORIGIN : window.location.origin;
   return [
