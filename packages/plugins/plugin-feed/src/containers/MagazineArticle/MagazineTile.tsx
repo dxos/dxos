@@ -6,13 +6,13 @@ import React, { type MouseEvent, useCallback } from 'react';
 
 import { Obj, type Tag } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { Icon } from '@dxos/react-ui';
+import { Card, Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type Subscription } from '#types';
 
-import { ensureStarTag, hasMetaTag, toggleMetaTag } from '../../util/star-tag';
 import { formatDate } from '../../util/format-date';
+import { ensureStarTag, hasMetaTag, toggleMetaTag } from '../../util/star-tag';
 
 export type MagazineTileProps = {
   post: Subscription.Post;
@@ -34,14 +34,13 @@ export type MagazineTileProps = {
 };
 
 export const MagazineTile = ({ post, current, feedName, starTag, onOpen }: MagazineTileProps) => {
-  // `useObject(post)` subscribes the tile to ECHO's reactive notifications, so
-  // toggling a star tag (which writes to `Obj.getMeta(post).tags`) re-renders
-  // the icon without a parent re-render forcing it.
+  // `useObject(post)` subscribes the tile to ECHO's reactive notifications,
+  // so toggling a star tag (which writes to `Obj.getMeta(post).tags`)
+  // re-renders the icon without a parent re-render forcing it.
   useObject(post);
   const read = Boolean(post.readAt);
   const date = formatDate(post.published);
-  const metaParts = [post.author, feedName, date].filter((value): value is string => Boolean(value));
-  const tags = post.tags ?? [];
+  const metaParts = [feedName, post.author, date].filter((value): value is string => Boolean(value));
   const starred = hasMetaTag(post, starTag);
 
   const handleClick = useCallback(() => {
@@ -49,16 +48,15 @@ export const MagazineTile = ({ post, current, feedName, starTag, onOpen }: Magaz
   }, [onOpen, post]);
 
   const handleToggleStar = useCallback(
-    (event: MouseEvent<HTMLButtonElement>) => {
+    (event: MouseEvent<HTMLElement>) => {
       // Prevent the parent tile-button's `onOpen` from firing.
       event.stopPropagation();
       const db = Obj.getDatabase(post);
       if (!db) {
         return;
       }
-      // Always reach for the canonical tag (creates one if missing) so the
-      // toggle is consistent regardless of whether `starTag` was undefined
-      // at render time.
+      // Always reach for the canonical tag (creates one if missing) so the toggle is consistent
+      // regardless of whether `starTag` was undefined at render time.
       const tag = ensureStarTag(db);
       toggleMetaTag(post, tag);
     },
@@ -66,53 +64,57 @@ export const MagazineTile = ({ post, current, feedName, starTag, onOpen }: Magaz
   );
 
   return (
-    <button
-      type='button'
-      aria-current={current ? 'true' : undefined}
-      onClick={handleClick}
-      className={mx(
-        'dx-current dx-hover flex flex-col gap-2 p-3 rounded-md text-start bg-input transition-opacity relative',
-        read && !current && 'opacity-60',
-      )}
-    >
-      {post.imageUrl && (
-        <img src={post.imageUrl} alt='' className='rounded w-full object-cover max-h-48' loading='lazy' />
-      )}
-      {/* Star toggle, top-right. Uses a nested <span role="button"> rather than
-          a <button> to avoid an HTML invalidity (button-in-button); the click
-          is handled via the parent <button>'s click bubbling and stopped via
-          the toggle's own onClick. */}
-      <span
-        role='button'
-        tabIndex={0}
-        aria-label={starred ? 'Unstar' : 'Star'}
-        title={starred ? 'Unstar' : 'Star'}
-        onClick={handleToggleStar}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            handleToggleStar(event as unknown as MouseEvent<HTMLButtonElement>);
-          }
-        }}
+    <Card.Root asChild fullWidth>
+      <button
+        type='button'
+        aria-current={current ? 'true' : undefined}
+        onClick={handleClick}
         className={mx(
-          'absolute top-2 right-2 z-10 grid place-items-center w-6 h-6 rounded-full bg-baseSurface/80 backdrop-blur',
-          'cursor-pointer hover:bg-baseSurface focus:outline-none focus:ring-2 focus:ring-accentSurface',
+          'dx-current dx-hover text-start cursor-pointer transition-opacity',
+          read && !current && 'opacity-60',
         )}
       >
-        <Icon icon={starred ? 'ph--star--fill' : 'ph--star--regular'} size={4} />
-      </span>
-      {post.title && <h3 className='font-semibold text-base line-clamp-2'>{post.title}</h3>}
-      {post.snippet && <p className='text-sm text-description line-clamp-3'>{post.snippet}</p>}
-      {metaParts.length > 0 && <div className='text-xs text-subdued'>{metaParts.join(' · ')}</div>}
-      {tags.length > 0 && (
-        <div className='flex flex-wrap gap-1'>
-          {tags.map((tag, index) => (
-            <span key={`${index}-${tag}`} className='text-xs bg-modalSurface px-2 py-0.5 rounded-full'>
-              #{tag}
+        {post.imageUrl && <Card.Poster alt={post.title ?? 'Article'} image={post.imageUrl} />}
+        <Card.Toolbar>
+          {post.title ? <Card.Title classNames='line-clamp-2'>{post.title}</Card.Title> : <div className='grow' />}
+          {/* Star toggle. A nested <span role="button"> avoids the
+              button-in-button HTML invalidity since the parent Card.Root is
+              rendered as a <button> via `asChild`. `stopPropagation` keeps
+              the parent's onOpen from firing. */}
+          <Card.IconBlock padding>
+            <span
+              role='button'
+              tabIndex={0}
+              aria-label={starred ? 'Unstar' : 'Star'}
+              title={starred ? 'Unstar' : 'Star'}
+              onClick={handleToggleStar}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  handleToggleStar(event as unknown as MouseEvent<HTMLElement>);
+                }
+              }}
+              className='grid place-items-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-accentSurface rounded-sm'
+            >
+              <Icon icon={starred ? 'ph--star--fill' : 'ph--star--regular'} size={4} />
             </span>
-          ))}
-        </div>
-      )}
-    </button>
+          </Card.IconBlock>
+        </Card.Toolbar>
+        <Card.Content>
+          {post.snippet && (
+            <Card.Row>
+              <Card.Text variant='description' classNames='line-clamp-3'>
+                {post.snippet}
+              </Card.Text>
+            </Card.Row>
+          )}
+          {metaParts.length > 0 && (
+            <Card.Row>
+              <Card.Text variant='description'>{metaParts.join(' · ')}</Card.Text>
+            </Card.Row>
+          )}
+        </Card.Content>
+      </button>
+    </Card.Root>
   );
 };
