@@ -66,6 +66,7 @@ const Root = forwardRef<StatusController, RootProps>(
       if (!running) {
         return;
       }
+
       let timeout: ReturnType<typeof setTimeout>;
       const tick = () => {
         const now = Date.now();
