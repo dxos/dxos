@@ -774,12 +774,12 @@ small but real: dev productivity (no flag-remembering) plus a clean
 push-based subscription channel for any future devtools panel. Net:
 cheap, additive, stays out of the way.
 
-### Phase 8 — visual polish (commit `<TBD>`)
+### Phase 8 — visual polish (commit `c2927574d5`)
 
 |                            | Cold profilerTotal | Cold navToReady | Warm profilerTotal | Warm-cold profilerTotal |
 | -------------------------- | -----------------: | --------------: | -----------------: | ----------------------: |
 | phase 7 (`daf09cd61a + ⚠`) |           5,425 ms |        8,806 ms |           3,497 ms |                5,118 ms |
-| **phase 8** (`<TBD> + ⚠`)  |       **5,427 ms** |    **8,544 ms** |       **3,444 ms** |            **5,844 ms** |
+| **phase 8** (`c2927574d5 + ⚠`)  |       **5,427 ms** |    **8,544 ms** |       **3,444 ms** |            **5,844 ms** |
 | delta                      |       flat (noise) |     flat (noise) |     flat (noise) |             flat (noise) |
 
 **Changes:**
@@ -831,7 +831,7 @@ Net: clearly worth it for first-impression polish.
 |   5 | Harness: warm-cold + throttled scenarios             | `ca88ace276`          | first `warm-cold` measurement              |
 |   6 | Production telemetry (PostHog `composer.startup`)    | `0b39281ade`          | flat perf, new ops visibility              |
 |   7 | `?profiler=1` default in dev + `BroadcastChannel`    | `daf09cd61a`          | flat perf, dev ergonomics                  |
-|   8 | Boot-loader brand mark + handoff timing              | `<TBD>`               | flat perf, visual polish                   |
+|   8 | Boot-loader brand mark + handoff timing              | `c2927574d5`               | flat perf, visual polish                   |
 
 Headline cumulative: cold `profilerTotal` 11,118 ms → ~5,400 ms (−51%);
 cold `navToReady` 18,054 ms → ~8,700 ms (−52%); eager bundle −96%.
