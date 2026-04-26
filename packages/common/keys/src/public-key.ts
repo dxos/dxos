@@ -216,7 +216,7 @@ export class PublicKey implements Equatable {
     return 'B' + base32Encode(this._value, 'RFC4648');
   }
 
-  truncate(length = undefined): string {
+  truncate(length?: number): string {
     return truncateKey(this, length);
   }
 

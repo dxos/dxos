@@ -19,6 +19,22 @@ export type QueueAccess = {
 };
 
 /**
+ * Extracts the bare ECHO object id from a DXN. Robust to DXN form differences
+ * — `dxn:echo:@:<id>` (local), `dxn:echo:<spaceId>:<id>` (space-scoped),
+ * `dxn:queue:<...>:<id>` (queue-scoped) — by always taking the last part.
+ *
+ * Curate's dedup needs this because the same Post can appear with different
+ * DXN forms in different contexts: `magazine.posts` refs use the local-id
+ * form (set by `Ref.make` → `DXN.fromLocalObjectId(id)`), but a queue post
+ * read via `queue.queryObjects()` has a queue-scoped `SelfDXNId` (set by
+ * `Obj.fromJSON`'s `dxn` override). String-comparing the full DXNs causes
+ * dedup to miss matches and re-process posts on every curate, which then
+ * trips ECHO's `!this._objects.has(core.id)` invariant in `addCore` when
+ * the fresh queue proxy (with a fresh core) is passed to `database.add`.
+ */
+const dxnToObjectId = (dxn: { parts: readonly any[] }): string => String(dxn.parts[dxn.parts.length - 1]);
+
+/**
  * Pure-additive curation logic, extracted from the operation handler so it can
  * be exercised directly from unit tests without an Operation runtime.
  *
@@ -36,7 +52,7 @@ export const curateMagazine = async (
   magazine: Magazine.Magazine,
   getQueue: (feedDxn: DXN) => QueueAccess,
 ): Promise<{ added: number }> => {
-  const seenIds = new Set(magazine.posts.map((ref) => ref.dxn.toString()));
+  const seenIds = new Set(magazine.posts.map((ref) => dxnToObjectId(ref.dxn)));
   const added: Ref.Ref<Subscription.Post>[] = [];
 
   for (const feedRef of magazine.feeds) {
@@ -57,8 +73,8 @@ export const curateMagazine = async (
         continue;
       }
       const post = item;
-      const postDxn = Obj.getDXN(post).toString();
-      if (seenIds.has(postDxn)) {
+      const postId = (post as { id: string }).id;
+      if (seenIds.has(postId)) {
         continue;
       }
       const source = post.description ?? '';
@@ -77,7 +93,7 @@ export const curateMagazine = async (
         }
       });
       added.push(Ref.make(post));
-      seenIds.add(postDxn);
+      seenIds.add(postId);
     }
   }
 
@@ -85,8 +101,8 @@ export const curateMagazine = async (
   if (added.length > 0) {
     Obj.change(magazine, (magazine) => {
       const mutable = magazine as Obj.Mutable<typeof magazine>;
-      const existing = new Set(mutable.posts.map((ref) => ref.dxn.toString()));
-      const fresh = added.filter((ref) => !existing.has(ref.dxn.toString()));
+      const existing = new Set(mutable.posts.map((ref) => dxnToObjectId(ref.dxn)));
+      const fresh = added.filter((ref) => !existing.has(dxnToObjectId(ref.dxn)));
       if (fresh.length > 0) {
         mutable.posts = [...mutable.posts, ...fresh];
       }

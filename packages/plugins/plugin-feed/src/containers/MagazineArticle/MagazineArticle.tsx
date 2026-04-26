@@ -6,10 +6,9 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getObjectPathFromObject } from '@dxos/app-toolkit';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { useShowItem } from '@dxos/plugin-deck';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
@@ -368,7 +367,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
             label={t('clear-magazine.label')}
             icon='ph--eraser--regular'
             iconOnly
-            disabled={state !== 'idle' || subject.posts.length === 0}
+            disabled={state !== 'idle'}
             onClick={handleClear}
           />
           <Toolbar.IconButton

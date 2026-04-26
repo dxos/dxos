@@ -159,6 +159,38 @@ describe('curateMagazine', () => {
     expect(magazine.posts.length).toBe(3);
   });
 
+  test('regression: re-curate with persisted refs survives DXN form mismatch', async () => {
+    // The bug behind the user-reported `addCore` invariant violation: when a
+    // Post is added to magazine.posts via `Ref.make`, the persisted ref's DXN
+    // is in local-id form (`dxn:echo:@:<id>`), but a Post read fresh from the
+    // queue via `queue.queryObjects()` carries a queue-scoped `SelfDXNId`
+    // (`dxn:queue:<spaceId>:<queueId>:<id>`). String-comparing the two forms
+    // makes dedup fail, so subsequent curates re-process the post — call
+    // `Ref.make` on the fresh queue proxy (with a fresh `core`) — and ECHO's
+    // deep-mapper invokes `database.add` on a core whose id is already
+    // present in `_objects` (from the first curate's add), tripping the
+    // `!_objects.has(core.id)` invariant.
+    //
+    // Verify the fix dedups by the bare object id (last DXN segment) so the
+    // mismatch doesn't matter.
+    const { magazine, queue, queues } = await setup();
+    await queue.append([makePost({ title: 'A', description: 'first body', published: '2026-04-01T00:00:00Z' })]);
+
+    const first = await curateMagazine(magazine, (dxn) => queues.get(dxn));
+    expect(first.added).toBe(1);
+
+    // Confirm the DXN form mismatch is real (so this test is exercising the
+    // condition the fix targets, not a coincidence).
+    const magDxn = magazine.posts[0].dxn.toString();
+    const items = (await queue.queryObjects()) ?? [];
+    const queueDxn = Obj.getDXN(items[0] as any).toString();
+    expect(magDxn).not.toBe(queueDxn);
+
+    // Second curate must not throw the addCore invariant and must add 0.
+    await expect(curateMagazine(magazine, (dxn) => queues.get(dxn))).resolves.toEqual({ added: 0 });
+    expect(magazine.posts.length).toBe(1);
+  });
+
   test('handles new posts arriving after some queue items were deleted', async () => {
     // Simulates a sync that prunes old queue items, then a follow-up sync
     // that appends new ones. This is the most invariant-prone shape:
