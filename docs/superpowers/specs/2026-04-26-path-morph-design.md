@@ -1,5 +1,7 @@
 # PathMorph Component
 
+> **Superseded.** This spec described the original `PathMorph` (circle ↔ six-pointed star) experimental component. The shipped component is named **`Hello`**, lives at [packages/ui/react-ui-sfx/src/components/Hello/Hello.tsx](../../../packages/ui/react-ui-sfx/src/components/Hello/Hello.tsx), is part of the package's public surface (no `experimental/` segment), and morphs through a three-shape cycle: **star → small circle → cross → small circle → star**. The geometry helpers (`buildStarPath`, `buildCrossPath`, `buildCirclePath`) and the keyframe list `[0, 1, 2, 1, 0]` are documented in the source. This document is preserved as a record of the original brainstorm + spec-review iterations and is not the source of truth for the shipped component.
+
 ## Summary
 
 Add an experimental `PathMorph` component to `@dxos/react-ui-sfx` that morphs a circle ↔ six-pointed star in an infinite loop. Direct port of the [motion.dev path-morphing tutorial](https://motion.dev/tutorials/react-path-morphing) using `motion/react` and `flubber`.

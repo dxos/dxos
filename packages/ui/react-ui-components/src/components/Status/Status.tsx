@@ -79,10 +79,7 @@ const Root = forwardRef<StatusController, RootProps>(
 
     return (
       <StatusProvider elapsed={elapsed} running={running}>
-        <span
-          role='status'
-          className={mx('inline-flex items-center gap-2 text-description font-mono tabular-nums', classNames)}
-        >
+        <span className={mx('inline-flex items-center gap-2 text-description font-mono tabular-nums', classNames)}>
           {children}
         </span>
       </StatusProvider>
@@ -124,11 +121,16 @@ export type StopwatchProps = ThemedClassName<{
 
 /**
  * Elapsed-time display, driven by the Status.Root context tick.
- * Re-mount or change `offset` to reset.
+ * Use `offset` to shift the displayed value; remount `Status.Root` to reset the underlying counter.
+ * Marked `aria-live='off'` so screen readers don't announce every tick.
  */
 const Stopwatch = ({ classNames, offset = 0 }: StopwatchProps) => {
   const { elapsed } = useStatusContext('Status.Stopwatch');
-  return <span className={mx(classNames)}>{formatElapsed((elapsed + offset) * 1_000)}</span>;
+  return (
+    <span aria-live='off' className={mx(classNames)}>
+      {formatElapsed((elapsed + offset) * 1_000)}
+    </span>
+  );
 };
 
 //
