@@ -17,7 +17,7 @@ export type MagazineSort = 'date' | 'rank';
  */
 export type MagazineView = 'default' | 'starred' | 'archived';
 
-export type CurateState = 'idle' | 'syncing' | 'curating';
+export type CurateState = 'idle' | 'busy';
 
 export type MagazineToolbarProps = {
   sort: MagazineSort;
@@ -32,9 +32,9 @@ export type MagazineToolbarProps = {
 };
 
 export const MagazineToolbar = composable<HTMLDivElement, MagazineToolbarProps>((props, forwardedRef) => {
+  const { t } = useTranslation(meta.id);
   const { sort, onSortChange, view, onViewChange, state, curateDisabled, curateTooltip, onClear, onCurate, ...rest } =
     props;
-  const { t } = useTranslation(meta.id);
 
   return (
     <Toolbar.Root {...composableProps(rest)} ref={forwardedRef}>

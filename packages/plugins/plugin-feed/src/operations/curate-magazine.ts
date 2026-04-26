@@ -13,17 +13,17 @@ import { type Magazine, Subscription } from '../types';
 import { extractImageUrls, makeSnippet, stripHtml } from '../util';
 import { CurateMagazine } from './definitions';
 
-/** Minimal queue surface needed by {@link curateMagazine}; exposed for testability. */
-export type QueueAccess = {
-  queryObjects: () => Promise<readonly unknown[] | undefined>;
-};
-
 /**
  * Extracts the bare ECHO object id from a DXN. Robust to DXN form differences
  * — `dxn:echo:@:<id>` (local), `dxn:echo:<spaceId>:<id>` (space-scoped),
  * `dxn:queue:<...>:<id>` (queue-scoped) — by always taking the last part.
  */
 const dxnToObjectId = (dxn: { parts: readonly any[] }): string => String(dxn.parts[dxn.parts.length - 1]);
+
+/** Minimal queue surface needed by {@link curateMagazine}; exposed for testability. */
+export type QueueAccess = {
+  queryObjects: () => Promise<readonly unknown[] | undefined>;
+};
 
 /**
  * Returns the canonical space.db proxy for a Post by id, if it has been
@@ -53,6 +53,7 @@ const reuseOrAdd = async (db: Database.Database, post: Subscription.Post): Promi
   if (existing) {
     return existing as Subscription.Post;
   }
+
   return db.add(post);
 };
 

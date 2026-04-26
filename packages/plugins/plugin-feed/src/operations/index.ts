@@ -10,6 +10,8 @@ export const FeedOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./sync-feed'),
   () => import('./list-candidate-posts'),
   () => import('./fetch-article-content'),
+  () => import('./load-post-content'),
   () => import('./add-post-to-magazine'),
   () => import('./curate-magazine'),
+  () => import('./refresh-magazine'),
 );
