@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import TurndownService from 'turndown';
-
 /**
  * Lightweight HTML helpers used by the Magazine curation flow.
  * Regex-based; deliberately avoids a parser dependency. Good enough for
@@ -34,13 +32,19 @@ const decodeEntities = (input: string): string =>
  * Strip HTML tags and decode common entities to produce plain text.
  * Block-level tag boundaries (paragraphs, divs, headings, list items, line breaks)
  * are converted to newlines so paragraph structure survives the stripping.
+ *
+ * Decodes entities up front so entity-encoded HTML (`&lt;p&gt;...&lt;/p&gt;` — common in
+ * RSS `<description>` payloads, especially under fast-xml-parser stopNodes) gets stripped
+ * the same as raw HTML. Without that, the encoded tags would survive stripping and only
+ * decode at the end, leaking literal `<p>` into the output.
  */
 export const stripHtml = (html: string): string => {
   if (!html) {
     return '';
   }
+  const decoded = decodeEntities(html);
   // Remove script/style blocks entirely.
-  const withoutScripts = html
+  const withoutScripts = decoded
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
     .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ');
   // Insert paragraph breaks at common block-level boundaries before stripping tags.
@@ -48,35 +52,11 @@ export const stripHtml = (html: string): string => {
     .replace(/<\s*br\s*\/?\s*>/gi, '\n')
     .replace(/<\/\s*(?:p|div|section|article|header|footer|aside|h[1-6]|li|ul|ol|blockquote|pre|tr)\s*>/gi, '\n\n');
   const withoutTags = withParagraphBreaks.replace(/<[^>]+>/g, '');
-  return decodeEntities(withoutTags)
+  return withoutTags
     .replace(/[\t\f\v ]+/g, ' ') // Collapse horizontal whitespace, preserve newlines.
     .replace(/ *\n */g, '\n') // Trim spaces around newlines.
     .replace(/\n{3,}/g, '\n\n') // Collapse 3+ blank lines to a single blank line.
     .trim();
-};
-
-// Reused across calls — turndown's constructor isn't free.
-const turndownService = new TurndownService({
-  headingStyle: 'atx',
-  codeBlockStyle: 'fenced',
-  emDelimiter: '_',
-  bulletListMarker: '-',
-});
-
-/**
- * Convert an HTML fragment to Markdown.
- *
- * RSS `<description>` payloads are usually entity-encoded HTML (`&lt;p&gt;...`); under
- * fast-xml-parser stopNodes the entities aren't decoded at parse time, so they reach us
- * as literal `&lt;p&gt;` and the like. Decode first, then run turndown — that way we
- * preserve paragraph structure and links rather than spilling raw `<p>...</p>` into
- * snippets and content. Returns an empty string on falsy input.
- */
-export const htmlToMarkdown = (html: string): string => {
-  if (!html) {
-    return '';
-  }
-  return turndownService.turndown(decodeEntities(html)).trim();
 };
 
 /** Produce a snippet of approximately `length` characters, cut on a word boundary. */

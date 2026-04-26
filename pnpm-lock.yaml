@@ -9424,9 +9424,6 @@ importers:
       fast-xml-parser:
         specifier: '>=5.3.6'
         version: 5.7.1
-      turndown:
-        specifier: 'catalog:'
-        version: 7.2.1
     devDependencies:
       '@dxos/echo-db':
         specifier: workspace:*
@@ -9461,9 +9458,6 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.7)
-      '@types/turndown':
-        specifier: 'catalog:'
-        version: 5.0.5
       effect:
         specifier: 3.20.0
         version: 3.20.0

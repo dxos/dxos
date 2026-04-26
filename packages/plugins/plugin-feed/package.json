@@ -75,8 +75,7 @@
     "@effect-atom/atom-react": "catalog:",
     "date-fns": "catalog:",
     "defuddle": "catalog:",
-    "fast-xml-parser": "catalog:",
-    "turndown": "catalog:"
+    "fast-xml-parser": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",
@@ -90,7 +89,6 @@
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@types/turndown": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

@@ -41,7 +41,19 @@ export const createRefReplacer = ({ db, depth = 1 }: CreateRefReplacerOptions): 
       if (remaining <= 0) {
         return value;
       }
-      const echoId = DXN.parse(value['/']).asEchoDXN()?.echoId;
+      // The `{ '/': string }` shape is shared with non-DXN IPLD-style refs, and an unexpected
+      // string would otherwise crash the whole `JSON.stringify`. Treat any parse miss as
+      // "leave as-is" rather than propagating.
+      const dxnString = value['/'];
+      if (!dxnString.startsWith('dxn:')) {
+        return value;
+      }
+      let echoId: string | undefined;
+      try {
+        echoId = DXN.parse(dxnString).asEchoDXN()?.echoId;
+      } catch {
+        return value;
+      }
       if (!echoId) {
         return value;
       }

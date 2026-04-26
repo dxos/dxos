@@ -10,7 +10,7 @@ import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Ref, type Tag } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 
@@ -20,6 +20,7 @@ import { type Magazine, Subscription } from '#types';
 
 import { fetchArticle, findStarTag, hasMetaTag, useStarTag } from '../../util';
 import { MagazineTile, formatPublished } from './MagazineTile';
+import { MagazineToolbar } from './MagazineToolbar';
 
 export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
 
@@ -97,7 +98,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     });
   }, [subject, subject.feeds, subject.posts]);
 
-  const posts = useMemo<TileData[]>(() => {
+  const posts = useMemo<Subscription.Post[]>(() => {
     const resolved: Subscription.Post[] = [];
     const seenDxn = new Set<string>();
     const seenLink = new Set<string>();
@@ -269,62 +270,19 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          <Toolbar.ToggleGroup
-            type='single'
-            value={sort}
-            onValueChange={(value) => {
-              if (value === 'date' || value === 'rank') {
-                setSort(value);
-              }
-            }}
-          >
-            <Toolbar.ToggleGroupItem value='date' aria-label={t('sort-by-date.label')} title={t('sort-by-date.label')}>
-              <Icon icon='ph--calendar--regular' size={4} />
-            </Toolbar.ToggleGroupItem>
-            <Toolbar.ToggleGroupItem value='rank' aria-label={t('sort-by-rank.label')} title={t('sort-by-rank.label')}>
-              <Icon icon='ph--list-numbers--regular' size={4} />
-            </Toolbar.ToggleGroupItem>
-          </Toolbar.ToggleGroup>
-          <Toolbar.ToggleGroup
-            type='single'
-            value={onlyStarred ? 'on' : ''}
-            onValueChange={(value) => setOnlyStarred(value === 'on')}
-          >
-            <Toolbar.ToggleGroupItem value='on' aria-label={t('only-starred.label')} title={t('only-starred.label')}>
-              <Icon icon={onlyStarred ? 'ph--star--fill' : 'ph--star--regular'} size={4} />
-            </Toolbar.ToggleGroupItem>
-          </Toolbar.ToggleGroup>
-          <Toolbar.ToggleGroup
-            type='single'
-            value={showArchived ? 'show' : ''}
-            onValueChange={(value) => setShowArchived(value === 'show')}
-          >
-            <Toolbar.ToggleGroupItem
-              value='show'
-              aria-label={t('show-archived.label')}
-              title={t('show-archived.label')}
-            >
-              <Icon icon='ph--archive--regular' size={4} />
-            </Toolbar.ToggleGroupItem>
-          </Toolbar.ToggleGroup>
-          <Toolbar.Separator />
-          <Toolbar.IconButton
-            label={t('clear-magazine.label')}
-            icon='ph--eraser--regular'
-            iconOnly
-            disabled={state !== 'idle'}
-            onClick={handleClear}
-          />
-          <Toolbar.IconButton
-            label={curateTooltip ?? t('curate.label')}
-            icon={state === 'idle' ? 'ph--sparkle--regular' : 'ph--circle-notch--regular'}
-            iconClassNames={state !== 'idle' ? 'animate-spin' : undefined}
-            iconOnly
-            disabled={curateDisabled}
-            onClick={handleCurate}
-          />
-        </Toolbar.Root>
+        <MagazineToolbar
+          sort={sort}
+          onSortChange={setSort}
+          onlyStarred={onlyStarred}
+          onOnlyStarredChange={setOnlyStarred}
+          showArchived={showArchived}
+          onShowArchivedChange={setShowArchived}
+          state={state}
+          curateDisabled={curateDisabled}
+          curateTooltip={curateTooltip}
+          onClear={handleClear}
+          onCurate={handleCurate}
+        />
       </Panel.Toolbar>
       <Panel.Content>
         {posts.length === 0 ? (

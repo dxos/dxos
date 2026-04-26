@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 
 import { type Magazine, Subscription } from '../types';
-import { extractImageUrls, htmlToMarkdown, makeSnippet } from '../util';
+import { extractImageUrls, makeSnippet, stripHtml } from '../util';
 import { CurateMagazine } from './definitions';
 
 /** Minimal queue surface needed by {@link curateMagazine}; exposed for testability. */
@@ -101,11 +101,13 @@ export const curateMagazine = async (
         continue;
       }
       const source = queuePost.description ?? '';
-      const markdown = htmlToMarkdown(source);
-      if (!markdown) {
+      // Snippet is rendered as plain text on the magazine tile, so strip HTML rather than
+      // converting to markdown — otherwise `**bold**` / `[link](url)` syntax leaks through.
+      const text = stripHtml(source);
+      if (!text) {
         continue;
       }
-      const snippet = makeSnippet(markdown);
+      const snippet = makeSnippet(text);
       const imageUrl = extractImageUrls(source)[0];
 
       // Resolve to the canonical space.db proxy (or register if new) so
