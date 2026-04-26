@@ -24,7 +24,13 @@
   gap: 16px;
   background: var(--boot-loader-bg-light, #fafafa);
   color: var(--boot-loader-fg-light, #0a0a0a);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   font-size: 13px;
 }
 
@@ -41,7 +47,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.8;
+  opacity: 0.5;
 }
 
 #boot-loader-mark svg {
@@ -81,6 +87,17 @@
 
 #boot-loader-status {
   opacity: 0.7;
-  min-height: 1em;
+  /*
+   * Pin both `line-height` and `height` so the status box stays exactly the
+   * same size regardless of which phase string is currently displayed. With
+   * only `min-height: 1em`, the browser's `line-height: normal` resolved to
+   * slightly different rendered heights as the text changed, which reflowed
+   * the flex column and bumped the progress bar a few pixels each time.
+   * `white-space: nowrap` makes sure long phase strings ("Loading
+   * framework…") never wrap to a second line.
+   */
+  height: 1.5em;
+  line-height: 1.5;
   letter-spacing: 0.01em;
+  white-space: nowrap;
 }
