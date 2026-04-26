@@ -26,6 +26,7 @@ export type SyntaxHighlighterProps = Pick<
   | 'wrapLines'
   | 'wrapLongLines'
   | 'PreTag'
+  | 'renderer'
 > & {
   fallback?: string;
   copyButton?: boolean;
