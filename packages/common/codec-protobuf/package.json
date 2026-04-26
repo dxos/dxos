@@ -30,13 +30,6 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "stream": [
-        "dist/types/src/stream.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"

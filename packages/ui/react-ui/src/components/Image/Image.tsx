@@ -13,15 +13,16 @@ export type ImageProps = ThemedClassName<
   {
     src: string;
     alt?: string;
+    fit?: 'contain' | 'cover';
     crossOrigin?: 'anonymous' | 'use-credentials' | '';
   } & ColorOptions
 >;
 
-// TODO(burdon): Option for neutral background color.
 export const Image = ({
   classNames,
   src,
   alt = '',
+  fit = 'contain',
   crossOrigin = 'anonymous',
   sampleSize = 64,
   contrast = 0.9,
@@ -68,7 +69,16 @@ export const Image = ({
 
   return (
     <div
-      className={mx(`relative flex w-full justify-center overflow-hidden transition-all duration-700`, classNames)}
+      // `isolate` (`isolation: isolate`) creates a new stacking context so
+      // the inner <img>'s `z-10` stays scoped to this wrapper. Without it
+      // the z-10 leaks into the parent's stacking context and elevates the
+      // image above any pseudo-element rings (e.g. Focus.Item's
+      // `dx-ring-pseudo` `::after`) painted on ancestors — most visibly,
+      // the focus ring on a Card containing a Card.Poster.
+      className={mx(
+        `relative flex w-full justify-center overflow-hidden transition-all duration-700 isolate`,
+        classNames,
+      )}
       style={{
         backgroundColor: dominantColor,
       }}
@@ -94,7 +104,10 @@ export const Image = ({
         crossOrigin={crossOriginState}
         onError={handleImageError}
         onLoad={handleImageLoad}
-        className='z-10 object-contain transition-opacity duration-500'
+        className={mx(
+          'z-10 transition-opacity duration-500',
+          fit === 'cover' ? 'w-full h-full object-cover' : 'object-contain',
+        )}
         style={{
           opacity: imageLoaded ? 1 : 0,
         }}

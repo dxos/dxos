@@ -28,13 +28,6 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "main": [
-        "dist/types/src/main.d.ts"
-      ]
-    }
-  },
   "scripts": {
     "run-tests": "moon run blade-runner:build && node ./dist/lib/node-esm/main.mjs"
   },

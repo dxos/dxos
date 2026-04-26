@@ -393,8 +393,8 @@ const PlankContainer = memo(
       [invokePromise],
     );
 
-    const handleChangeCompanion = useCallback(
-      (companion: string | null) => invokePromise(DeckOperation.ChangeCompanion, { companion }),
+    const handleUpdateCompanion = useCallback(
+      (companion: string | null) => invokePromise(LayoutOperation.UpdateCompanion, { subject: companion }),
       [invokePromise],
     );
 
@@ -410,7 +410,7 @@ const PlankContainer = memo(
         onAdjust={handleAdjust}
         onResize={handleResize}
         onScrollIntoView={handleScrollIntoView}
-        onChangeCompanion={handleChangeCompanion}
+        onUpdateCompanion={handleUpdateCompanion}
       >
         <Plank.Content solo={part === 'solo'} companion={hasCompanion} encapsulate={!!settings?.encapsulatedPlanks}>
           <Plank.Component

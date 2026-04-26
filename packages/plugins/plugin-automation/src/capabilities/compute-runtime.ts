@@ -67,6 +67,12 @@ declare global {
 
 const isDev = import.meta.env.DEV ?? false;
 
+/** Node / test environments have no `localStorage`; browser keeps persistent trigger state. */
+const triggerStateStoreLayer =
+  typeof globalThis.localStorage !== 'undefined'
+    ? TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage))
+    : TriggerStateStore.layerMemory;
+
 /**
  * Adapts plugin capabilities to runtime layers.
  */
@@ -212,11 +218,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             Layer.provideMerge(Layer.succeed(Capability.Service, this.#capabilities)),
             Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, registry)),
             Layer.provideMerge(
-              Layer.mergeAll(
-                FeedTraceSink.layerLive,
-                TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
-                KeyValueStore.layerMemory,
-              ),
+              Layer.mergeAll(FeedTraceSink.layerLive, triggerStateStoreLayer, KeyValueStore.layerMemory),
             ),
             Layer.provideMerge(OperationRegistry.layer),
             Layer.provideMerge(feedServiceFromQueueServiceLayer),

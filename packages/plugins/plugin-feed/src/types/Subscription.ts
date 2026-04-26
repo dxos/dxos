@@ -8,11 +8,24 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, Feed as EchoFeed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
-import { FeedAnnotation } from '@dxos/schema';
+import { FactoryAnnotation, type FactoryFn, FeedAnnotation } from '@dxos/schema';
+
+/**
+ * Label of the canonical {@link Tag.Tag} object used by the star toggle.
+ * Toggling adds/removes that tag's DXN from the Post's `Obj.getMeta().tags`.
+ */
+export const STAR_TAG = 'starred';
 
 /** Feed protocol type. */
 export const FeedType = Schema.Literal('atproto', 'rss');
 export type FeedType = Schema.Schema.Type<typeof FeedType>;
+
+/**
+ * Default upper bound on the number of (non-starred) Posts retained when
+ * syncing a {@link Feed} or curating a Magazine. Applied when the object
+ * has no explicit `keep` value.
+ */
+export const DEFAULT_KEEP = 10;
 
 /**
  * Subscription feed schema: an RSS/Atom/AT Protocol subscription.
@@ -30,6 +43,18 @@ export const Feed = Schema.Struct({
   link: Schema.String.pipe(Schema.optional),
   /** URL of the feed's icon/image. */
   iconUrl: Schema.String.pipe(Schema.optional),
+  /**
+   * Maximum number of (non-starred) Posts retained in the feed's queue when syncing.
+   * Older posts beyond this bound are dropped; starred posts are preserved regardless.
+   * Defaults to {@link DEFAULT_KEEP} when unset.
+   */
+  keep: Schema.Number.pipe(
+    Schema.annotations({
+      title: 'Keep',
+      description: 'Maximum number of items to keep when syncing (starred items are always preserved).',
+    }),
+    Schema.optional,
+  ),
   /** Opaque sync cursor — protocol-specific. */
   cursor: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   /** Backing ECHO feed for posts. */
@@ -45,6 +70,12 @@ export const Feed = Schema.Struct({
     hue: 'orange',
   }),
   FeedAnnotation.set(true),
+  // Generic-form create flows use `Obj.make(schema, values)` by default, but
+  // a Feed needs a backing `EchoFeed.Feed` linked via `feed: Ref.Ref(...)` —
+  // `makeFeed` provides that. The cast keeps Feed's inferred schema type
+  // intact: without it, TypeScript widens `S` in `FactoryAnnotation.set`'s
+  // generic constraint when the value type recursively references `Feed`.
+  FactoryAnnotation.set(((values) => makeFeed(values)) as FactoryFn),
 );
 
 export interface Feed extends Schema.Schema.Type<typeof Feed> {}
@@ -65,6 +96,8 @@ export const makeFeed = (props: Omit<Obj.MakeProps<typeof Feed>, 'feed'> = {}): 
 
 /** A single post/entry within a subscription feed. */
 export const Post = Schema.Struct({
+  /** Source subscription feed; populated by `SyncFeed` so curated posts can show provenance. */
+  feed: Ref.Ref(Feed).pipe(FormInputAnnotation.set(false), Schema.optional),
   /** Post title. */
   title: Schema.String.pipe(Schema.optional),
   /** URL link to the original article. */
@@ -87,6 +120,10 @@ export const Post = Schema.Struct({
   readAt: Schema.String.pipe(Schema.optional),
   /** Agent-assigned tags (populated by a future tagging feature). */
   tags: Schema.Array(Schema.String).pipe(Schema.optional),
+  /** Agent-assigned rank within a magazine (lower = more relevant). Set by the curation flow. */
+  rank: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),
+  /** Archive flag — archived posts are hidden by default in the magazine view. */
+  archived: Schema.Boolean.pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.subscription.post',

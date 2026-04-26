@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type CSSProperties } from 'react';
+import React, { Children } from 'react';
 import { type SyntaxHighlighterProps as NativeSyntaxHighlighterProps } from 'react-syntax-highlighter';
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async-light';
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-import { useThemeContext } from '@dxos/react-ui';
+import { Clipboard, useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 const zeroWidthSpace = '\u200b';
@@ -17,8 +17,20 @@ const languages = {
   ts: 'typescript',
 };
 
-export type SyntaxHighlighterProps = NativeSyntaxHighlighterProps & {
+export type SyntaxHighlighterProps = Pick<
+  NativeSyntaxHighlighterProps,
+  | 'language'
+  | 'renderer'
+  | 'showLineNumbers'
+  | 'showInlineLineNumbers'
+  | 'startingLineNumber'
+  | 'wrapLines'
+  | 'wrapLongLines'
+  | 'PreTag'
+> & {
+  themeStyle?: NativeSyntaxHighlighterProps['style'];
   fallback?: string;
+  copyButton?: boolean;
 };
 
 /**
@@ -35,23 +47,37 @@ export type SyntaxHighlighterProps = NativeSyntaxHighlighterProps & {
  */
 export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterProps>(
   (
-    { children, language = 'text', fallback = zeroWidthSpace, classNames, className, style, ...nativeProps },
+    {
+      classNames,
+      className,
+      children,
+      role,
+      style,
+      themeStyle,
+      language = 'text',
+      fallback = zeroWidthSpace,
+      copyButton,
+      ...nativeProps
+    },
     forwardedRef,
   ) => {
     const { themeMode } = useThemeContext();
+    const source = Children.toArray(children).join('') || fallback;
 
-    // The `style` prop here is a Prism theme (a token → CSSProperties map), not a React style.
-    // `composableProps` from parent composites may inject `style: {}` for DOM merging; treat it
-    // as "no custom theme" so the default theme still applies.
-    const hasCustomTheme = style && typeof style === 'object' && Object.keys(style).length > 0;
-    const prismTheme = hasCustomTheme
-      ? (style as { [key: string]: CSSProperties })
-      : themeMode === 'dark'
-        ? dark
-        : light;
+    const hasCustomTheme = themeStyle && typeof themeStyle === 'object' && Object.keys(themeStyle).length > 0;
+    const prismTheme = hasCustomTheme ? themeStyle : themeMode === 'dark' ? dark : light;
 
     return (
-      <div {...composableProps({ classNames, className })} role='none' ref={forwardedRef}>
+      <div
+        {...composableProps(
+          { classNames, className, role, style },
+          {
+            role: 'none',
+            classNames: copyButton && 'relative group',
+          },
+        )}
+        ref={forwardedRef}
+      >
         <NativeSyntaxHighlighter
           language={languages[language as keyof typeof languages] || language}
           style={prismTheme}
@@ -65,8 +91,24 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
           {...nativeProps}
         >
           {/* Non-empty fallback prevents collapse. */}
-          {children || fallback}
+          {source}
         </NativeSyntaxHighlighter>
+
+        {copyButton && (
+          <div
+            role='none'
+            className='pointer-events-none absolute top-1 right-1 z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100'
+          >
+            <Clipboard.Provider>
+              <Clipboard.IconButton
+                value={source}
+                variant='ghost'
+                size={4}
+                classNames='pointer-events-auto aspect-square rounded-sm'
+              />
+            </Clipboard.Provider>
+          </div>
+        )}
       </div>
     );
   },
