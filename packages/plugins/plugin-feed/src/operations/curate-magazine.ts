@@ -4,92 +4,106 @@
 
 import * as Effect from 'effect/Effect';
 
-import { getSpace } from '@dxos/client/echo';
-import { Feed, Obj, Ref } from '@dxos/echo';
+import { type Space, getSpace } from '@dxos/client/echo';
+import { DXN, Feed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 
-import { Subscription } from '../types';
+import { type Magazine, Subscription } from '../types';
 import { extractImageUrls, makeSnippet, stripHtml } from '../util';
 import { CurateMagazine } from './definitions';
 
+/** Minimal queue surface needed by {@link curateMagazine}; exposed for testability. */
+export type QueueAccess = {
+  queryObjects: () => Promise<readonly unknown[] | undefined>;
+};
+
 /**
- * Deterministic curation invoked by the Curate button. For every uncurated
- * candidate Post in the Magazine's referenced feeds, derives a snippet and
- * image from the Post's existing `description` (no HTTP fetch). Appends each
- * enriched Post's ref to `magazine.posts`. Skips Posts with empty descriptions.
+ * Pure-additive curation logic, extracted from the operation handler so it can
+ * be exercised directly from unit tests without an Operation runtime.
+ *
+ * For every uncurated candidate Post in the Magazine's referenced feeds,
+ * derives a snippet and image from the Post's existing `description` (no HTTP
+ * fetch). Appends each enriched Post's ref to `magazine.posts`. Skips Posts
+ * with empty descriptions.
+ *
+ * The Magazine-level `keep` bound is enforced separately by the Clear button
+ * (and the post-curate prune in `MagazineArticle.handleCurate`) so curate
+ * stays purely additive — making it safe to re-run without pruning
+ * previously-curated items the user may want to keep.
  */
+export const curateMagazine = async (
+  magazine: Magazine.Magazine,
+  getQueue: (feedDxn: DXN) => QueueAccess,
+): Promise<{ added: number }> => {
+  const seenIds = new Set(magazine.posts.map((ref) => ref.dxn.toString()));
+  const added: Ref.Ref<Subscription.Post>[] = [];
+
+  for (const feedRef of magazine.feeds) {
+    const feed = await feedRef.load();
+    const echoFeed = feed.feed?.target;
+    if (!echoFeed) {
+      continue;
+    }
+    const feedDxn = Feed.getQueueDxn(echoFeed);
+    if (!feedDxn) {
+      continue;
+    }
+    const queue = getQueue(feedDxn);
+    const items = (await queue.queryObjects()) ?? [];
+
+    for (const item of items) {
+      if (!Obj.instanceOf(Subscription.Post, item)) {
+        continue;
+      }
+      const post = item;
+      const postDxn = Obj.getDXN(post).toString();
+      if (seenIds.has(postDxn)) {
+        continue;
+      }
+      const source = post.description ?? '';
+      const text = stripHtml(source);
+      if (!text) {
+        continue;
+      }
+      const snippet = makeSnippet(text);
+      const imageUrl = extractImageUrls(source)[0];
+
+      Obj.change(post, (post) => {
+        const mutable = post as Obj.Mutable<typeof post>;
+        mutable.snippet = snippet;
+        if (imageUrl) {
+          mutable.imageUrl = imageUrl;
+        }
+      });
+      added.push(Ref.make(post));
+      seenIds.add(postDxn);
+    }
+  }
+
+  let appended = 0;
+  if (added.length > 0) {
+    Obj.change(magazine, (magazine) => {
+      const mutable = magazine as Obj.Mutable<typeof magazine>;
+      const existing = new Set(mutable.posts.map((ref) => ref.dxn.toString()));
+      const fresh = added.filter((ref) => !existing.has(ref.dxn.toString()));
+      if (fresh.length > 0) {
+        mutable.posts = [...mutable.posts, ...fresh];
+      }
+      appended = fresh.length;
+    });
+  }
+
+  return { added: appended };
+};
+
 const handler: Operation.WithHandler<typeof CurateMagazine> = CurateMagazine.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ magazine: magazineRef }) {
       const magazine = yield* Effect.promise(() => magazineRef.load());
-      const space = getSpace(magazine);
+      const space: Space | undefined = getSpace(magazine);
       invariant(space, 'Space not found.');
-
-      const seenIds = new Set(magazine.posts.map((ref) => ref.dxn.toString()));
-      const added: Ref.Ref<Subscription.Post>[] = [];
-
-      for (const feedRef of magazine.feeds) {
-        const feed = yield* Effect.promise(() => feedRef.load());
-        const echoFeed = feed.feed?.target;
-        if (!echoFeed) {
-          continue;
-        }
-        const feedDxn = Feed.getQueueDxn(echoFeed);
-        if (!feedDxn) {
-          continue;
-        }
-        const queue = space.queues.get(feedDxn);
-        const items = (yield* Effect.promise(() => queue.queryObjects())) ?? [];
-
-        for (const item of items) {
-          if (!Obj.instanceOf(Subscription.Post, item)) {
-            continue;
-          }
-          const post = item;
-          const postDxn = Obj.getDXN(post).toString();
-          if (seenIds.has(postDxn)) {
-            continue;
-          }
-          const source = post.description ?? '';
-          const text = stripHtml(source);
-          if (!text) {
-            continue;
-          }
-          const snippet = makeSnippet(text);
-          const imageUrl = extractImageUrls(source)[0];
-
-          Obj.change(post, (post) => {
-            const mutable = post as Obj.Mutable<typeof post>;
-            mutable.snippet = snippet;
-            if (imageUrl) {
-              mutable.imageUrl = imageUrl;
-            }
-          });
-          added.push(Ref.make(post));
-          seenIds.add(postDxn);
-        }
-      }
-
-      // Append fresh refs to the magazine. The per-feed `keep` bound is enforced
-      // upstream in `SyncFeed` (queue prune); the Magazine-level `keep` bound is
-      // enforced separately by the Clear button so curate stays a pure additive
-      // operation — making it safe to re-run without pruning previously-curated
-      // items the user may want to keep.
-      let appended = 0;
-      if (added.length > 0) {
-        Obj.change(magazine, (magazine) => {
-          const mutable = magazine as Obj.Mutable<typeof magazine>;
-          const existing = new Set(mutable.posts.map((ref) => ref.dxn.toString()));
-          const fresh = added.filter((ref) => !existing.has(ref.dxn.toString()));
-          if (fresh.length > 0) {
-            mutable.posts = [...mutable.posts, ...fresh];
-          }
-          appended = fresh.length;
-        });
-      }
-
-      return { added: appended };
+      return yield* Effect.promise(() => curateMagazine(magazine, (feedDxn) => space.queues.get(feedDxn)));
     }),
   ),
 );
