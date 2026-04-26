@@ -32,7 +32,12 @@ window.__bootLoader = {
     if (!element) {
       return;
     }
-    if (typeof fraction !== 'number' || fraction < 0) {
+    // `Number.isFinite` rejects NaN and Infinity; without this guard
+    // `NaN < 0` is false, so NaN slips past and ends up in
+    // `--boot-loader-bar-progress`, which CSS treats as invalid and silently
+    // resets the bar to the var() default (0%) — surprising visual snap if a
+    // caller ever passes `0/0` or a parsed-but-invalid value.
+    if (typeof fraction !== 'number' || !isFinite(fraction) || fraction < 0) {
       element.removeAttribute('data-determinate');
       element.style.removeProperty('--boot-loader-bar-progress');
       return;

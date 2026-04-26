@@ -70,7 +70,7 @@
   position: absolute;
   inset: 0;
   width: 40%;
-  background: currentColor;
+  background: currentcolor;
   opacity: 0.7;
   border-radius: 1px;
   animation: boot-loader-bar 1.4s ease-in-out infinite;
