@@ -150,7 +150,19 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       return Number.isNaN(ms) ? Number.NEGATIVE_INFINITY : ms;
     };
     return [...visible].sort((postA, postB) => timestamp(postB) - timestamp(postA));
-  }, [subject.posts, sort, showArchived, onlyStarred, starTag]);
+    // `subject.posts` may return the same array proxy reference even when its
+    // contents change (ECHO's reactive proxy is stable per-object). Including
+    // `.length` and a content fingerprint as deps forces re-computation on
+    // any add/remove, so the masonry tiles re-render after Curate / Clear.
+  }, [
+    subject.posts,
+    subject.posts.length,
+    subject.posts.map((ref) => ref.dxn.toString()).join(),
+    sort,
+    showArchived,
+    onlyStarred,
+    starTag,
+  ]);
 
   const handleCurate = useCallback(async () => {
     if (state !== 'idle') {

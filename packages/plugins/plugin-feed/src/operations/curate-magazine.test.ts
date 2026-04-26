@@ -257,4 +257,68 @@ describe('curateMagazine', () => {
     expect(result.added).toBe(1);
     expect(magazine.posts.length).toBe(3);
   });
+
+  test('reactivity: subscribers to magazine fire when curate writes posts', async () => {
+    // Proves CurateMagazine's `Obj.change(magazine, ...)` produces a
+    // notification that React's `useObject(subject)` would consume to
+    // re-render the article. If this test fails, the UI couldn't update
+    // even though the underlying data changed.
+    const { db, magazine, queue, queues } = await setup();
+    await queue.append([
+      makePost({ title: 'A', description: 'a body', published: '2026-04-01T00:00:00Z' }),
+      makePost({ title: 'B', description: 'b body', published: '2026-04-02T00:00:00Z' }),
+    ]);
+
+    let notifyCount = 0;
+    const unsubscribe = Obj.subscribe(magazine, () => {
+      notifyCount += 1;
+    });
+
+    expect(magazine.posts.length).toBe(0);
+    await curateMagazine(magazine, db, (dxn) => queues.get(dxn));
+    expect(magazine.posts.length).toBe(2);
+    // At least one notification fired — proves the array assignment is
+    // observable through ECHO's subscribe primitive.
+    expect(notifyCount).toBeGreaterThan(0);
+
+    unsubscribe();
+  });
+
+  test('reactivity: re-curate after Clear emits notifications', async () => {
+    // The user-reported scenario: Curate → Clear → Curate. Each step must
+    // emit a notification so React re-renders.
+    const { db, magazine, queue, queues } = await setup();
+    await queue.append([
+      makePost({ title: 'A', description: 'a body', published: '2026-04-01T00:00:00Z' }),
+      makePost({ title: 'B', description: 'b body', published: '2026-04-02T00:00:00Z' }),
+    ]);
+
+    await curateMagazine(magazine, db, (dxn) => queues.get(dxn));
+    expect(magazine.posts.length).toBe(2);
+
+    let notifyCountAfterClear = 0;
+    let notifyCountAfterRecurate = 0;
+    const unsubscribe = Obj.subscribe(magazine, () => {
+      notifyCountAfterClear += 1;
+    });
+
+    Obj.change(magazine, (magazine) => {
+      const mutable = magazine as Obj.Mutable<typeof magazine>;
+      mutable.posts = [];
+    });
+    expect(notifyCountAfterClear).toBeGreaterThan(0);
+
+    notifyCountAfterRecurate = 0;
+    const captureRecurate = Obj.subscribe(magazine, () => {
+      notifyCountAfterRecurate += 1;
+    });
+
+    await curateMagazine(magazine, db, (dxn) => queues.get(dxn));
+    expect(magazine.posts.length).toBe(2);
+    // Re-curate after Clear must emit at least one notification too.
+    expect(notifyCountAfterRecurate).toBeGreaterThan(0);
+
+    unsubscribe();
+    captureRecurate();
+  });
 });
