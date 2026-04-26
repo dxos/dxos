@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type MouseEvent, useCallback } from 'react';
+import React, { type KeyboardEvent as ReactKeyboardEvent, type MouseEvent, useCallback } from 'react';
 
 import { Obj, type Tag } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
@@ -52,6 +52,23 @@ export const MagazineTile = ({ post, current, feedName, published, starTag, onOp
     onOpen?.(post);
   }, [onOpen, post]);
 
+  const handleKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLDivElement>) => {
+      // Native click on a focused <div role="button"> via Enter/Space — needed
+      // because the tile root isn't a real <button>. Keep the tile reachable
+      // via Tabster's arrow navigation (which uses the tile's tabindex=0).
+      if (event.key === 'Enter' || event.key === ' ') {
+        // Don't preventDefault for inner controls (the star IconButton lives
+        // inside): only fire when the focused element IS the tile itself.
+        if (event.target === event.currentTarget) {
+          event.preventDefault();
+          onOpen?.(post);
+        }
+      }
+    },
+    [onOpen, post],
+  );
+
   const handleToggleStar = useCallback(
     (event: MouseEvent<HTMLButtonElement>) => {
       // Prevent the parent Card's `onClick` from firing the open action.
@@ -72,8 +89,16 @@ export const MagazineTile = ({ post, current, feedName, published, starTag, onOp
   return (
     <Card.Root
       fullWidth
+      role='button'
+      tabIndex={0}
       onClick={handleClick}
       aria-current={current ? 'true' : undefined}
+      // `onKeyDown` isn't in `CardRootOwnProps` but slottable's `...rest`
+      // forwards it onto the rendered <div>. Needed because role='button'
+      // on a non-<button> element doesn't natively fire click on
+      // Enter/Space.
+      // @ts-expect-error — onKeyDown not in CardRoot's typed prop pick.
+      onKeyDown={handleKeyDown}
       classNames={mx(
         'dx-current dx-hover cursor-pointer transition-opacity',
         read && !current && 'opacity-60',
@@ -107,6 +132,12 @@ export const MagazineTile = ({ post, current, feedName, published, starTag, onOp
               variant='ghost'
               iconOnly
               size={4}
+              // tabIndex=-1 keeps the star out of Tabster's arrow-nav order
+              // (which uses `tabbable: true`), so up/down moves between
+              // tiles instead of between star buttons. Mouse click still
+              // works; keyboard users can toggle starred state via the
+              // PostArticle toolbar's star button after opening the post.
+              tabIndex={-1}
               label={starred ? 'Unstar' : 'Star'}
               icon={starred ? 'ph--star--fill' : 'ph--star--regular'}
               onClick={handleToggleStar}
