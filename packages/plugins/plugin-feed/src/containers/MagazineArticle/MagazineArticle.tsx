@@ -385,6 +385,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
           <Toolbar.IconButton
             label={curateTooltip ?? t('curate.label')}
             icon={state === 'idle' ? 'ph--sparkle--regular' : 'ph--circle-notch--regular'}
+            iconClassNames={state !== 'idle' ? 'animate-spin' : undefined}
             iconOnly
             disabled={curateDisabled}
             onClick={handleCurate}
