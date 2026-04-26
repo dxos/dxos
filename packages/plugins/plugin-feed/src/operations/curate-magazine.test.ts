@@ -38,14 +38,7 @@ describe('curateMagazine', () => {
 
   const setup = async () => {
     const { db, queues } = await builder.createDatabase({
-      types: [
-        EchoFeed.Feed,
-        Subscription.Feed,
-        Subscription.Post,
-        Magazine.Magazine,
-        Tag.Tag,
-        Text.Text,
-      ],
+      types: [EchoFeed.Feed, Subscription.Feed, Subscription.Post, Magazine.Magazine, Tag.Tag, Text.Text],
     });
 
     const subscriptionFeed = db.add(Subscription.makeFeed({ name: 'test feed', url: 'https://example.com/rss' }));
