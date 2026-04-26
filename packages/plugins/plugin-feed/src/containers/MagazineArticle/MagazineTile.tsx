@@ -99,10 +99,7 @@ export const MagazineTile = ({ post, current, feedName, published, starTag, onOp
       // Enter/Space.
       // @ts-expect-error — onKeyDown not in CardRoot's typed prop pick.
       onKeyDown={handleKeyDown}
-      classNames={mx(
-        'dx-current dx-hover cursor-pointer transition-opacity',
-        read && !current && 'opacity-60',
-      )}
+      classNames={mx('dx-current dx-hover cursor-pointer transition-opacity', read && !current && 'opacity-60')}
     >
       {post.imageUrl && (
         // `rounded-t-xs` matches `Card.Root`'s `rounded-xs` corner. Without
