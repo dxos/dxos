@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
+import { Matrix } from '@dxos/react-ui-sfx';
 
 import { Status } from './Status';
 
@@ -48,17 +49,7 @@ export const WithCustomIcon: Story = {
   render: () => (
     <Status.Root>
       <Status.Icon>
-        <svg
-          aria-hidden='true'
-          viewBox='0 0 24 24'
-          className='size-3.5 animate-spin-slow'
-          fill='none'
-          stroke='currentColor'
-          strokeWidth={2}
-        >
-          <circle cx={12} cy={12} r={10} strokeOpacity={0.25} />
-          <path d='M22 12a10 10 0 0 0-10-10' strokeLinecap='round' />
-        </svg>
+        <Matrix dim={4} size={4} dotSize={3} count={2} />
       </Status.Icon>
       <Status.Stopwatch />
     </Status.Root>
