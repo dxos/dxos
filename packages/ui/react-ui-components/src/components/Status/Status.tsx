@@ -34,7 +34,7 @@ export { useStatusContext };
 export type StatusController = {
   /** Resume the tick. No-op if already running. */
   start: () => void;
-  /** Pause the tick. The reported `time` freezes at its last value. */
+  /** Pause the tick. The reported `elapsed` freezes at its last value. */
   stop: () => void;
 };
 
