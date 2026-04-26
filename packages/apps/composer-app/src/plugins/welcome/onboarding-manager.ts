@@ -82,6 +82,9 @@ export class OnboardingManager {
 
     this._subscriptions.add(
       this._client.halo.identity.subscribe((identity) => {
+        if (this._destroyed) {
+          return;
+        }
         this._identity = identity;
 
         // If joining an existing identity, optimistically assume that credential will be found and close welcome.
@@ -93,6 +96,9 @@ export class OnboardingManager {
 
     this._subscriptions.add(
       this._client.halo.credentials.subscribe((credentials) => {
+        if (this._destroyed) {
+          return;
+        }
         this._setCredential(credentials);
       }).unsubscribe,
     );
@@ -203,6 +209,9 @@ export class OnboardingManager {
   }
 
   private _setCredential(credentials: Credential[]): void {
+    if (this._destroyed) {
+      return;
+    }
     const credential = credentials
       .toSorted((a, b) => b.issuanceDate.getTime() - a.issuanceDate.getTime())
       .find(matchServiceCredential(['composer:beta']));
