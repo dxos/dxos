@@ -13,25 +13,19 @@ export type ImageProps = ThemedClassName<
   {
     src: string;
     alt?: string;
-    crossOrigin?: 'anonymous' | 'use-credentials' | '';
-    /**
-     * CSS `object-fit` for the inner `<img>`. Defaults to `'contain'`
-     * (preserves aspect, fits within the box). Use `'cover'` when the
-     * poster should fill the box edge-to-edge (e.g. article hero tiles).
-     */
     fit?: 'contain' | 'cover';
+    crossOrigin?: 'anonymous' | 'use-credentials' | '';
   } & ColorOptions
 >;
 
-// TODO(burdon): Option for neutral background color.
 export const Image = ({
   classNames,
   src,
   alt = '',
+  fit = 'contain',
   crossOrigin = 'anonymous',
   sampleSize = 64,
   contrast = 0.9,
-  fit = 'contain',
 }: ImageProps) => {
   const [crossOriginState, setCrossOriginState] = useState<ImageProps['crossOrigin']>(crossOrigin);
   const [dominantColor, setDominantColor] = useState<string | undefined>(undefined);

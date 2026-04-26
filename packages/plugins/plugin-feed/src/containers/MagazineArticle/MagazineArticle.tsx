@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Ref, type Tag } from '@dxos/echo';
+import { type Database, Filter, Obj, Ref, type Tag } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -25,18 +25,18 @@ export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazi
 
 export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticleProps) => {
   const { t } = useTranslation(meta.id);
-  const { invokePromise } = useOperationInvoker();
   const showItem = useShowItem();
   useObject(subject);
   const id = attendableId ?? Obj.getDXN(subject).toString();
   const currentId = useSelected(id, 'single');
-  const [state, setState] = useState<'idle' | 'syncing' | 'curating'>('idle');
-  const [error, setError] = useState<string>();
   const [sort, setSort] = useState<'date' | 'rank'>('date');
   const [showArchived, setShowArchived] = useState(false);
   const [onlyStarred, setOnlyStarred] = useState(false);
   const db = Obj.getDatabase(subject);
   const starTag = useStarTag(db);
+  // Sync feeds → curate magazine → apply per-feed keep, plus state/error
+  // tracking. See `useCurate` at the bottom of the file.
+  const { state, error, curate: handleCurate } = useCurate(subject, db);
   // Reactive query of every Subscription.Feed in the space — used to render the source
   // feed name on each tile without each tile having to subscribe to its own ref.
   const allFeeds = useQuery(db, Filter.type(Subscription.Feed));
@@ -154,10 +154,11 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       const ms = Date.parse(post.published);
       return Number.isNaN(ms) ? Number.NEGATIVE_INFINITY : ms;
     };
+
     return [...visible].sort((postA, postB) => timestamp(postB) - timestamp(postA));
     // `subject.posts` may return the same array proxy reference even when its
-    // contents change (ECHO's reactive proxy is stable per-object). Including
-    // `.length` and a content fingerprint as deps forces re-computation on
+    // contents change (ECHO's reactive proxy is stable per-object).
+    // Including `.length` and a content fingerprint as deps forces re-computation on
     // any add/remove, so the masonry tiles re-render after Curate / Clear.
   }, [
     subject.posts,
@@ -168,131 +169,6 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     onlyStarred,
     starTag,
   ]);
-
-  const handleCurate = useCallback(async () => {
-    if (state !== 'idle') {
-      return;
-    }
-    setError(undefined);
-    try {
-      setState('syncing');
-      const feeds = await Promise.all(
-        subject.feeds.map(async (ref) => {
-          try {
-            const feed = await ref.load();
-            if (feed.feed) {
-              await feed.feed.load();
-            }
-            return feed;
-          } catch (err) {
-            log.catch(err);
-            return undefined;
-          }
-        }),
-      );
-      const validFeeds = feeds.filter((feed): feed is Subscription.Feed => Boolean(feed?.url));
-      const syncResults = await Promise.allSettled(
-        validFeeds.map((feed) => invokePromise(FeedOperation.SyncFeed, { feed })),
-      );
-      syncResults.forEach((result, index) => {
-        if (result.status === 'rejected') {
-          log.catch(result.reason, { feedUrl: validFeeds[index]?.url });
-        }
-      });
-      setState('curating');
-      await invokePromise(FeedOperation.CurateMagazine, { magazine: Ref.make(subject) });
-
-      // Apply the per-feed `keep` bound after curation. Each Subscription.Feed
-      // contributes up to its own `feed.keep` posts (default
-      // `Subscription.DEFAULT_KEEP`) — NOT a single magazine-wide cap. With a
-      // global cap, sorting all curated posts by `published` and slicing to
-      // top-N silently drops every post from the older-dated feed; per-feed
-      // keep gives each feed a fair share.
-      //
-      // The prune lands as a separate `Obj.change` write: chaining a second
-      // `mutable.posts = ...` after the operation's append inside one change
-      // block trips ECHO's deep-mapper dedup invariant.
-      const tag = db ? findStarTag(db) : undefined;
-      const tagDxn = tag ? Obj.getDXN(tag).toString() : undefined;
-      const isStarred = (post: Subscription.Post) =>
-        tagDxn ? (Obj.getMeta(post).tags?.includes(tagDxn) ?? false) : false;
-      const timestamp = (post: Subscription.Post): number => {
-        if (!post.published) {
-          return Number.NEGATIVE_INFINITY;
-        }
-        const ms = Date.parse(post.published);
-        return Number.isNaN(ms) ? Number.NEGATIVE_INFINITY : ms;
-      };
-      // Bare object id (last DXN segment) is the only stable comparison key —
-      // `Ref.make(obj).dxn` produces the local-id form (`dxn:echo:@:<id>`)
-      // while persisted refs may carry the space-scoped form
-      // (`dxn:echo:<spaceId>:<id>`).
-      const dxnId = (dxn: string): string => dxn.split(':').pop() ?? dxn;
-
-      // Build feed-id → keep map by walking magazine.feeds.
-      const feedKeepById = new Map<string, number>();
-      for (const feedRef of subject.feeds) {
-        const feed = feedRef.target;
-        if (feed) {
-          feedKeepById.set(dxnId(feedRef.dxn.toString()), feed.keep ?? Subscription.DEFAULT_KEEP);
-        }
-      }
-
-      const resolvedPairs: Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }> = [];
-      const unresolvedRefs: Ref.Ref<Subscription.Post>[] = [];
-      for (const ref of subject.posts) {
-        const post = ref.target;
-        if (post) {
-          resolvedPairs.push({ ref, post });
-        } else {
-          unresolvedRefs.push(ref);
-        }
-      }
-
-      // Group resolved posts by their source feed id. Posts without a known
-      // source feed (e.g. older posts from before `Post.feed` was added) end
-      // up in the `undefined` bucket and are kept unconditionally.
-      const byFeedId = new Map<
-        string | undefined,
-        Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }>
-      >();
-      for (const pair of resolvedPairs) {
-        const feedRefDxn = pair.post.feed?.dxn.toString();
-        const feedId = feedRefDxn ? dxnId(feedRefDxn) : undefined;
-        const arr = byFeedId.get(feedId) ?? [];
-        arr.push(pair);
-        byFeedId.set(feedId, arr);
-      }
-
-      const nextRefs: Ref.Ref<Subscription.Post>[] = [];
-      for (const [feedId, pairs] of byFeedId) {
-        if (feedId === undefined) {
-          // Orphan posts: keep all (no feed-level bound applies).
-          nextRefs.push(...pairs.map(({ ref }) => ref));
-          continue;
-        }
-        const feedKeep = feedKeepById.get(feedId) ?? Subscription.DEFAULT_KEEP;
-        const starredPairs = pairs.filter(({ post }) => isStarred(post));
-        const candidatePairs = pairs
-          .filter(({ post }) => !isStarred(post))
-          .sort((pairA, pairB) => timestamp(pairB.post) - timestamp(pairA.post));
-        const keptCandidates = candidatePairs.slice(0, Math.max(0, feedKeep));
-        nextRefs.push(...starredPairs.map(({ ref }) => ref), ...keptCandidates.map(({ ref }) => ref));
-      }
-      nextRefs.push(...unresolvedRefs);
-
-      if (nextRefs.length !== subject.posts.length) {
-        Obj.change(subject, (subject) => {
-          subject.posts = nextRefs;
-        });
-      }
-    } catch (err) {
-      log.catch(err);
-      setError(t('curate-error.message'));
-    } finally {
-      setState('idle');
-    }
-  }, [state, subject, db, invokePromise, t]);
 
   // Reset the magazine's curated post list. Starred posts are preserved so
   // the user doesn't lose manually-saved items; a follow-up Curate will
@@ -313,6 +189,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     if (next.length === subject.posts.length) {
       return;
     }
+
     Obj.change(subject, (subject) => {
       subject.posts = next;
     });
@@ -363,8 +240,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const tileItems = useMemo(
     () =>
       posts.map((post) => {
-        // Match the post's source feed by bare object id; `post.feed.dxn` is
-        // local-id form, while `feedNamesById` is keyed by id directly.
+        // Match the post's source feed by bare object id; `post.feed.dxn` is  local-id form, while `feedNamesById` is keyed by id directly.
         const feedId = post.feed ? (post.feed.dxn.toString().split(':').pop() ?? '') : '';
         return {
           post,
@@ -483,14 +359,11 @@ type TileData = {
   onOpen: (post: Subscription.Post) => void;
 };
 
-// `data` is occasionally undefined while VirtuosoMasonry transitions between
-// item arrays (e.g. toggling the only-starred filter shrinks the list and the
-// virtualizer briefly requests an out-of-range index). Render nothing in that
-// case rather than crashing the plank.
 const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) => {
   if (!data?.post) {
     return null;
   }
+
   return (
     <MagazineTile
       post={data.post}
@@ -501,4 +374,160 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
       onOpen={data.onOpen}
     />
   );
+};
+
+//
+// Curate flow
+//
+
+type CurateState = 'idle' | 'syncing' | 'curating';
+
+/**
+ * Bare-object-id helper. `Ref.make(obj).dxn` produces the local-id form
+ * (`dxn:echo:@:<id>`) while persisted refs may carry the space-scoped form
+ * (`dxn:echo:<spaceId>:<id>`). The id (last segment) is the only stable
+ * comparison key across DXN forms.
+ */
+const dxnTailId = (dxn: string): string => dxn.split(':').pop() ?? dxn;
+
+/** Sortable timestamp from `post.published`; missing/unparseable falls last. */
+const publishedTimestamp = (post: Subscription.Post): number => {
+  if (!post.published) {
+    return Number.NEGATIVE_INFINITY;
+  }
+  const ms = Date.parse(post.published);
+  return Number.isNaN(ms) ? Number.NEGATIVE_INFINITY : ms;
+};
+
+/**
+ * Apply each Subscription.Feed's `keep` bound to `magazine.posts`. Each
+ * feed contributes up to its own `feed.keep ?? DEFAULT_KEEP` posts — NOT a
+ * single magazine-wide cap. With a global cap, sorting all curated posts by
+ * `published` and slicing top-N silently drops every post from the
+ * older-dated feed; per-feed keep gives each feed a fair share. Starred
+ * posts and unresolved refs are preserved unconditionally.
+ *
+ * Lands as a separate `Obj.change` write (not chained inside the
+ * CurateMagazine operation) — chaining a second `mutable.posts = ...`
+ * inside one change block trips ECHO's deep-mapper dedup invariant.
+ */
+const applyPerFeedKeep = (magazine: Magazine.Magazine, db: Database.Database | undefined): void => {
+  const tag = db ? findStarTag(db) : undefined;
+  const tagDxn = tag ? Obj.getDXN(tag).toString() : undefined;
+  const isStarred = (post: Subscription.Post) =>
+    tagDxn ? (Obj.getMeta(post).tags?.includes(tagDxn) ?? false) : false;
+
+  // Build feed-id → keep map by walking magazine.feeds.
+  const feedKeepById = new Map<string, number>();
+  for (const feedRef of magazine.feeds) {
+    const feed = feedRef.target;
+    if (feed) {
+      feedKeepById.set(dxnTailId(feedRef.dxn.toString()), feed.keep ?? Subscription.DEFAULT_KEEP);
+    }
+  }
+
+  const resolvedPairs: Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }> = [];
+  const unresolvedRefs: Ref.Ref<Subscription.Post>[] = [];
+  for (const ref of magazine.posts) {
+    const post = ref.target;
+    if (post) {
+      resolvedPairs.push({ ref, post });
+    } else {
+      unresolvedRefs.push(ref);
+    }
+  }
+
+  // Group resolved posts by their source feed id. Posts without a known
+  // source feed (e.g. older posts from before `Post.feed` was added) end up
+  // in the `undefined` bucket and are kept unconditionally.
+  const byFeedId = new Map<
+    string | undefined,
+    Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }>
+  >();
+  for (const pair of resolvedPairs) {
+    const feedRefDxn = pair.post.feed?.dxn.toString();
+    const feedId = feedRefDxn ? dxnTailId(feedRefDxn) : undefined;
+    const arr = byFeedId.get(feedId) ?? [];
+    arr.push(pair);
+    byFeedId.set(feedId, arr);
+  }
+
+  const nextRefs: Ref.Ref<Subscription.Post>[] = [];
+  for (const [feedId, pairs] of byFeedId) {
+    if (feedId === undefined) {
+      nextRefs.push(...pairs.map(({ ref }) => ref));
+      continue;
+    }
+    const feedKeep = feedKeepById.get(feedId) ?? Subscription.DEFAULT_KEEP;
+    const starredPairs = pairs.filter(({ post }) => isStarred(post));
+    const candidatePairs = pairs
+      .filter(({ post }) => !isStarred(post))
+      .sort((pairA, pairB) => publishedTimestamp(pairB.post) - publishedTimestamp(pairA.post));
+    const keptCandidates = candidatePairs.slice(0, Math.max(0, feedKeep));
+    nextRefs.push(...starredPairs.map(({ ref }) => ref), ...keptCandidates.map(({ ref }) => ref));
+  }
+  nextRefs.push(...unresolvedRefs);
+
+  if (nextRefs.length !== magazine.posts.length) {
+    Obj.change(magazine, (magazine) => {
+      magazine.posts = nextRefs;
+    });
+  }
+};
+
+/**
+ * Drives the Curate button: load each magazine feed, sync the ones with a
+ * url, run CurateMagazine to enrich + append queue items into the magazine,
+ * then apply each feed's `keep` bound. Returns the in-flight `state`
+ * (`'idle' | 'syncing' | 'curating'`), an `error` message on failure, and
+ * the `curate` callback bound to the toolbar button.
+ */
+const useCurate = (subject: Magazine.Magazine, db: Database.Database | undefined) => {
+  const { t } = useTranslation(meta.id);
+  const { invokePromise } = useOperationInvoker();
+  const [state, setState] = useState<CurateState>('idle');
+  const [error, setError] = useState<string>();
+
+  const curate = useCallback(async () => {
+    if (state !== 'idle') {
+      return;
+    }
+    setError(undefined);
+    try {
+      setState('syncing');
+      const feeds = await Promise.all(
+        subject.feeds.map(async (ref) => {
+          try {
+            const feed = await ref.load();
+            if (feed.feed) {
+              await feed.feed.load();
+            }
+            return feed;
+          } catch (err) {
+            log.catch(err);
+            return undefined;
+          }
+        }),
+      );
+      const validFeeds = feeds.filter((feed): feed is Subscription.Feed => Boolean(feed?.url));
+      const syncResults = await Promise.allSettled(
+        validFeeds.map((feed) => invokePromise(FeedOperation.SyncFeed, { feed })),
+      );
+      syncResults.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          log.catch(result.reason, { feedUrl: validFeeds[index]?.url });
+        }
+      });
+      setState('curating');
+      await invokePromise(FeedOperation.CurateMagazine, { magazine: Ref.make(subject) });
+      applyPerFeedKeep(subject, db);
+    } catch (err) {
+      log.catch(err);
+      setError(t('curate-error.message'));
+    } finally {
+      setState('idle');
+    }
+  }, [state, subject, db, invokePromise, t]);
+
+  return { state, error, curate };
 };
