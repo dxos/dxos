@@ -351,7 +351,12 @@ const main = async () => {
       setupEvents,
       cacheEnabled: true,
       safeMode,
-      debounce: 1_000,
+      // Phase 3.5: dropped from 1000ms to 200ms. The useLoading state machine
+      // ticks every `debounce` ms (Loading → FadeIn → FadeOut → Done), so the
+      // gap between `Startup` activated and `<Placeholder>` dismissed is at
+      // least 2× debounce. The boot loader covers the pre-React phase, so we
+      // don't need the longer fade to hide a flash.
+      debounce: 200,
     });
 
     return <App />;

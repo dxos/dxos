@@ -590,3 +590,28 @@ glue). Tabled.
 less risky to retune than phase 4 (activation-graph concurrency). Considering
 moving "tune `useLoading` debounce" into a phase 3.5 / hot-fix slot before
 phase 4.
+
+### Phase 3.5 — `useLoading` debounce: 1_000 → 200 (commit `<TBD>`)
+
+|                                  | Cold profilerTotal | Cold navToReady | Cold firstInteractive | Warm firstInteractive |
+| -------------------------------- | -----------------: | --------------: | --------------------: | --------------------: |
+| phase 3 (`6efdeb84e2 + ⚠`)       |           5,480 ms |        9,532 ms |              8,732 ms |     — (not captured)  |
+| **phase 3.5** (`<TBD> + ⚠`)      |           6,316 ms |       10,289 ms |              9,418 ms |              5,808 ms |
+| delta                            |   +836 ms (noise)  | +757 ms (noise) |     +686 ms (noise)   |          first warm   |
+
+**Change:** [`packages/apps/composer-app/src/main.tsx`](src/main.tsx) — `useApp({
+debounce: 200 })`. The boot loader covers the pre-React phase, so the longer
+fade-out animation isn't needed to hide a flash.
+
+**Result:** debounce was not the dominant cost of the `Startup → first-interactive`
+gap. With debounce=200 the gap should shrink to ~200–400 ms; the actual cold
+gap measured was ~900 ms (down from ~1,000 ms in phase 3). Most of the
+remaining gap is React rendering the contributed `Capabilities.ReactRoot`
+trees for the first time — that's plugin-by-plugin work, not a single tunable.
+
+**Complexity vs. benefit:** trivial (single literal change in main.tsx; zero
+new abstractions). Benefit is real but small (~100 ms cold; cleaner UX
+because there's no longer a perceptible "ready but still fading" beat). Net:
+worth keeping. The harness numbers are within run-to-run noise (±~10% on
+cold), so the headline metric move is illegible — keep an eye on the trend
+in BENCHMARKS.md rather than any single run.
