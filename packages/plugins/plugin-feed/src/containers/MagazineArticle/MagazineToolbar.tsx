@@ -17,24 +17,24 @@ export type MagazineSort = 'date' | 'rank';
  */
 export type MagazineView = 'default' | 'starred' | 'archived';
 
-export type CurateState = 'idle' | 'syncing' | 'curating';
+export type CurateState = 'idle' | 'busy';
 
 export type MagazineToolbarProps = {
+  hasFeeds: boolean;
+  state: CurateState;
   sort: MagazineSort;
   onSortChange: (sort: MagazineSort) => void;
   view: MagazineView;
   onViewChange: (view: MagazineView) => void;
-  state: CurateState;
-  curateDisabled: boolean;
-  curateTooltip?: string;
   onClear: () => void;
   onCurate: () => void;
 };
 
 export const MagazineToolbar = composable<HTMLDivElement, MagazineToolbarProps>((props, forwardedRef) => {
-  const { sort, onSortChange, view, onViewChange, state, curateDisabled, curateTooltip, onClear, onCurate, ...rest } =
-    props;
   const { t } = useTranslation(meta.id);
+  const { hasFeeds, state, sort, onSortChange, view, onViewChange, onClear, onCurate, ...rest } = props;
+  const curateDisabled = state !== 'idle' || !hasFeeds;
+  const curateTooltip = !hasFeeds ? t('no-feeds.label') : state === 'busy' ? t('refreshing-magazine.label') : undefined;
 
   return (
     <Toolbar.Root {...composableProps(rest)} ref={forwardedRef}>
@@ -80,7 +80,7 @@ export const MagazineToolbar = composable<HTMLDivElement, MagazineToolbarProps>(
       <Toolbar.Separator />
       <Toolbar.IconButton
         label={t('clear-magazine.label')}
-        icon='ph--eraser--regular'
+        icon='ph--trash--regular'
         iconOnly
         disabled={state !== 'idle'}
         onClick={onClear}
