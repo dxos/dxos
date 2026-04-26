@@ -9,13 +9,9 @@ import React, { useEffect, useMemo } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-// Circle: cx=50, cy=50, r=40 expressed as four cubic-bezier arcs (handle = r · 0.5523).
-const CIRCLE_PATH =
-  'M50,10 C72.0914,10 90,27.9086 90,50 C90,72.0914 72.0914,90 50,90 C27.9086,90 10,72.0914 10,50 C10,27.9086 27.9086,10 50,10 Z';
-
 /**
  * Builds an n-point star SVG path with alternating outer/inner radii around (cx, cy).
- * First vertex sits at the top (angle = -π/2) so it matches the circle's anchor at (50, 10).
+ * First vertex sits at the top (angle = -π/2).
  */
 const buildStarPath = (cx: number, cy: number, outerR: number, innerR: number, points: number): string => {
   const cmds: string[] = [];
@@ -30,27 +26,73 @@ const buildStarPath = (cx: number, cy: number, outerR: number, innerR: number, p
   return cmds.join(' ');
 };
 
+/**
+ * Builds a 12-vertex plus-sign cross. `outerR` is the distance from center to far edge
+ * of each arm; `armR` is the half-width of each arm.
+ */
+const buildCrossPath = (cx: number, cy: number, outerR: number, armR: number): string =>
+  [
+    `M${cx - armR},${cy - outerR}`,
+    `L${cx + armR},${cy - outerR}`,
+    `L${cx + armR},${cy - armR}`,
+    `L${cx + outerR},${cy - armR}`,
+    `L${cx + outerR},${cy + armR}`,
+    `L${cx + armR},${cy + armR}`,
+    `L${cx + armR},${cy + outerR}`,
+    `L${cx - armR},${cy + outerR}`,
+    `L${cx - armR},${cy + armR}`,
+    `L${cx - outerR},${cy + armR}`,
+    `L${cx - outerR},${cy - armR}`,
+    `L${cx - armR},${cy - armR}`,
+    'Z',
+  ].join(' ');
+
+/**
+ * Builds a circular path of radius `r` around (cx, cy) using four cubic beziers.
+ * Starts at the top vertex (cx, cy - r). Bezier handle = r · 0.5523.
+ */
+const buildCirclePath = (cx: number, cy: number, r: number): string => {
+  const k = r * 0.5523;
+  const top = { x: cx, y: cy - r };
+  const right = { x: cx + r, y: cy };
+  const bottom = { x: cx, y: cy + r };
+  const left = { x: cx - r, y: cy };
+  const f = (n: number) => n.toFixed(3);
+  return [
+    `M${f(top.x)},${f(top.y)}`,
+    `C${f(top.x + k)},${f(top.y)} ${f(right.x)},${f(right.y - k)} ${f(right.x)},${f(right.y)}`,
+    `C${f(right.x)},${f(right.y + k)} ${f(bottom.x + k)},${f(bottom.y)} ${f(bottom.x)},${f(bottom.y)}`,
+    `C${f(bottom.x - k)},${f(bottom.y)} ${f(left.x)},${f(left.y + k)} ${f(left.x)},${f(left.y)}`,
+    `C${f(left.x)},${f(left.y - k)} ${f(top.x - k)},${f(top.y)} ${f(top.x)},${f(top.y)}`,
+    'Z',
+  ].join(' ');
+};
+
 const STAR_PATH = buildStarPath(50, 50, 40, 18, 6);
+const CROSS_PATH = buildCrossPath(50, 50, 40, 12);
+// Intermediate circle is intentionally smaller than the star/cross extents.
+const CIRCLE_PATH = buildCirclePath(50, 50, 20);
 
 export type HelloProps = ThemedClassName<{
   /** Pixel size of the rendered SVG (square). */
   size?: number;
-  /** One-way morph duration in seconds. Full cycle is 2× this value. */
+  /** Duration of one segment (star↔circle or circle↔cross) in seconds. Full cycle = 4× this value. */
   duration?: number;
 }>;
 
 /**
- * Infinite circle ↔ six-point star morph.
- * Direct port of https://motion.dev/tutorials/react-path-morphing.
+ * Infinite morph cycle: star → small circle → cross → small circle → star.
+ * Inspired by https://motion.dev/tutorials/react-path-morphing.
  */
-export const Hello = ({ classNames, size = 100, duration = 2 }: HelloProps) => {
+export const Hello = ({ classNames, size = 32, duration = 2 }: HelloProps) => {
   const progress = useMotionValue(0);
-  const interpolator = useMemo(() => interpolate(CIRCLE_PATH, STAR_PATH, { maxSegmentLength: 2 }), []);
-  const path = useTransform(progress, (t) => interpolator(t));
+  const starToCircle = useMemo(() => interpolate(STAR_PATH, CIRCLE_PATH, { maxSegmentLength: 2 }), []);
+  const circleToCross = useMemo(() => interpolate(CIRCLE_PATH, CROSS_PATH, { maxSegmentLength: 2 }), []);
+  const path = useTransform(progress, (t) => (t <= 1 ? starToCircle(t) : circleToCross(t - 1)));
 
   useEffect(() => {
-    const controls = animate(progress, [0, 1, 0], {
-      duration: duration * 2,
+    const controls = animate(progress, [0, 1, 2, 1, 0], {
+      duration: duration * 4,
       ease: 'easeInOut',
       repeat: Infinity,
     });
