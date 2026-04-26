@@ -176,6 +176,13 @@ export const useApp = ({
                 readyRef.current = true;
                 // Trigger startup profiler dump if available.
                 (globalThis as any).composer?.profiler?.dump();
+                // Phase 6: notify any host observability layer that startup
+                // completed. A `CustomEvent` keeps this generic — app-framework
+                // doesn't import @dxos/observability, and consumers can capture
+                // the startup summary without us picking a provider.
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('app-framework:startup-activated'));
+                }
                 return;
               }
               // Phase 3b: update progress on every module-level `activated`

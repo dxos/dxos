@@ -170,6 +170,63 @@ const main = async () => {
   // Intentionally do not await; the buffering backend in TRACE_PROCESSOR captures
   // early spans and replays them once the real OTEL backend registers.
   const observability = initializeObservability(config, isTauri, logBuffer);
+
+  // Phase 6: capture a one-shot `composer.startup` event when the framework
+  // dispatches `app-framework:startup-activated`. Includes total ms,
+  // dynamic-imports / config / services / plugins-init phase durations, the
+  // top-5 slowest modules, transferred bytes (best-effort from
+  // PerformanceResourceTiming), and the boot-loader visibility mark. Uses
+  // PerformanceResourceTiming directly so production builds (without the
+  // opt-in `?profiler=1` flag) still get the data.
+  const captureStartupSummary = (): Record<string, string | number | boolean | undefined> => {
+    const measures = performance.getEntriesByType('measure');
+    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+    const bootMark = performance.getEntriesByName('boot:html-parsed')[0];
+    const firstInteractive = performance.getEntriesByName('app-framework:first-interactive')[0];
+    const phaseDuration = (name: string): number =>
+      Math.round(measures.find((measure) => measure.name === `startup:${name}`)?.duration ?? 0);
+    const moduleEntries = measures
+      .filter((measure) => measure.name.startsWith('module:'))
+      .sort((first, second) => second.duration - first.duration);
+    const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+    const transferredBytes = Math.round(
+      resources.reduce((total, resource) => total + (resource.transferSize ?? 0), 0),
+    );
+    // Flatten the top-5 modules into individual primitive keys (`top1Module`,
+    // `top1Ms`, …) — observability `Attributes` only accept string | number |
+    // boolean | undefined, and per-key fields are easier to filter on in
+    // PostHog than a JSON blob.
+    const summary: Record<string, string | number | boolean | undefined> = {
+      totalMs: phaseDuration('total'),
+      dynamicImportsMs: phaseDuration('dynamic-imports'),
+      configMs: phaseDuration('config'),
+      servicesMs: phaseDuration('services'),
+      pluginsInitMs: phaseDuration('plugins-init'),
+      bootLoaderVisibleMs: bootMark ? Math.round(bootMark.startTime) : undefined,
+      firstInteractiveMs: firstInteractive ? Math.round(firstInteractive.startTime) : undefined,
+      domContentLoadedMs: navigation ? Math.round(navigation.domContentLoadedEventEnd) : undefined,
+      transferredBytes,
+      moduleCount: moduleEntries.length,
+    };
+    moduleEntries.slice(0, 5).forEach((entry, index) => {
+      summary[`top${index + 1}Module`] = entry.name.replace('module:', '');
+      summary[`top${index + 1}Ms`] = Math.round(entry.duration);
+    });
+    return summary;
+  };
+  window.addEventListener(
+    'app-framework:startup-activated',
+    () => {
+      const summary = captureStartupSummary();
+      void observability
+        .then((obs) => {
+          obs.events.captureEvent('composer.startup', summary);
+          log.info('startup summary captured', summary);
+        })
+        .catch((error) => log.catch(error));
+    },
+    { once: true },
+  );
   const observabilityDisabled = await Observability.isObservabilityDisabled(APP_KEY);
   const observabilityGroup = await Observability.getObservabilityGroup(APP_KEY);
 

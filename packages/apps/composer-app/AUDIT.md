@@ -639,7 +639,7 @@ is that any yield/concurrency change inside the activation graph needs
 to land alongside a fix for the warm-reload race — phase 5 surfaced it
 but did not root-cause it.
 
-### Phase 5 — harness improvements (commit `<TBD>`)
+### Phase 5 — harness improvements (commit `ca88ace276`)
 
 | Scenario                        | Cold profilerTotal | Cold navToReady | Cold firstInteractive | Notes                                          |
 | ------------------------------- | -----------------: | --------------: | --------------------: | ---------------------------------------------- |
@@ -693,3 +693,47 @@ scenario is opt-in so no CI-budget cost. Net: clearly worth it, but the
 ledger now has more failure-mode surface area; future maintenance should
 keep an eye on the warm-test flake (currently a known issue tracked in
 the test's comment).
+
+### Phase 6 — production telemetry (commit `<TBD>`)
+
+|                            | Cold profilerTotal | Cold navToReady | Warm profilerTotal | Warm-cold profilerTotal |
+| -------------------------- | -----------------: | --------------: | -----------------: | ----------------------: |
+| phase 5 (`ca88ace276 + ⚠`) |           5,538 ms |        8,762 ms |           3,645 ms |                5,090 ms |
+| **phase 6** (`<TBD> + ⚠`)  |       **5,548 ms** |    **8,697 ms** |       **3,649 ms** |            **5,079 ms** |
+| delta                      |       flat (noise) |     flat (noise) |     flat (noise) |             flat (noise) |
+
+**Changes:**
+
+- **app-framework — `useApp.tsx`:** when `Startup` activates, dispatch a
+  `CustomEvent('app-framework:startup-activated')` on `window`. The framework
+  doesn't import `@dxos/observability` (avoids a forbidden dep direction);
+  consumers register a one-shot listener and capture the summary themselves.
+- **composer-app — `main.tsx`:** subscribe to the new event, build a flat
+  `Attributes`-compatible summary from `performance.getEntriesByType('measure')`
+  + `performance.getEntriesByType('resource')` + the `boot:html-parsed` and
+  `app-framework:first-interactive` marks, and emit
+  `obs.events.captureEvent('composer.startup', summary)` once observability
+  resolves. Top-5 slowest modules are flattened to `top1Module`/`top1Ms` …
+  `top5Module`/`top5Ms` keys for easier PostHog filtering.
+
+**Why a CustomEvent and not a callback:** the natural alternative is to add
+an `onStartup?: (summary) => void` option to `useApp`. That couples
+`@dxos/app-framework`'s public API to one specific instrumentation pattern.
+A `CustomEvent` is provider-agnostic — any other dxos host (Hub, Devtools,
+future apps) can subscribe to the same name without ceremony. Discoverability
+is the tradeoff: the event name is a string contract, not a typed prop.
+
+**Why read from `performance.*` and not `composer.profiler.snapshot()`:**
+the profiler is opt-in via `?profiler=1` and not enabled in production.
+`performance.getEntriesByType` gives us the same User Timing data
+unconditionally, including the `module:*` measures the plugin manager
+already emits.
+
+**Complexity vs. benefit:** ~50 lines of straight-through code in main.tsx
+plus 5 lines in useApp. No new abstractions, no new dependencies, no
+behavioural change at startup — the harness numbers are flat against
+phase 5. Benefit is qualitatively large: we move from "laptop
+measurements only" to "top-5 slowest modules per real session in
+PostHog". The first time someone runs into a slow plugin in production,
+we'll see it in aggregate before any individual report. Net: cheap at
+the implementation cost, valuable at the ops scale.
