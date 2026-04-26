@@ -39,7 +39,7 @@ export const withLayout =
       const { layout = 'default', classNames, scroll } = props;
       const Container = layouts[layout] ?? layouts.fullscreen;
       return (
-        <Container classNames={mx(classNames, scroll ? 'overflow-y-auto' : 'overflow-hidden')}>
+        <Container classNames={mx(scroll ? 'overflow-y-auto' : 'overflow-hidden', classNames)}>
           <MemoizedStory />
         </Container>
       );
