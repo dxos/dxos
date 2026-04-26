@@ -88,12 +88,12 @@ export const MagazineTile = ({ post, current, feedName, published, starTag, onOp
         classNames={mx('dx-hover dx-current cursor-pointer transition-opacity', read && !current && 'opacity-60')}
       >
         {post.imageUrl && (
-          // `rounded-t-xs` matches `Card.Root`'s `rounded-xs` corner so the
-          // image's top corners don't poke through the card's rounded
-          // outline. (The focus-ring stacking is fixed at the source — the
-          // `Image` component now establishes its own stacking context via
-          // `isolate`.)
-          <Card.Poster alt={post.title ?? 'Article'} image={post.imageUrl} classNames='rounded-t-xs' />
+          // `fit='cover'` fills the poster box edge-to-edge (cropping as
+          // needed) — magazine tiles want a hero photo, not a letterboxed
+          // logo. `rounded-t-xs` matches `Card.Root`'s `rounded-xs` corner
+          // so the image's top corners don't poke through the card's
+          // rounded outline.
+          <Card.Poster alt={post.title ?? 'Article'} image={post.imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
         <Card.Toolbar>
           {/* Empty col-1 placeholder so the title lands in the center column

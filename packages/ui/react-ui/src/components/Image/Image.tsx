@@ -14,6 +14,12 @@ export type ImageProps = ThemedClassName<
     src: string;
     alt?: string;
     crossOrigin?: 'anonymous' | 'use-credentials' | '';
+    /**
+     * CSS `object-fit` for the inner `<img>`. Defaults to `'contain'`
+     * (preserves aspect, fits within the box). Use `'cover'` when the
+     * poster should fill the box edge-to-edge (e.g. article hero tiles).
+     */
+    fit?: 'contain' | 'cover';
   } & ColorOptions
 >;
 
@@ -25,6 +31,7 @@ export const Image = ({
   crossOrigin = 'anonymous',
   sampleSize = 64,
   contrast = 0.9,
+  fit = 'contain',
 }: ImageProps) => {
   const [crossOriginState, setCrossOriginState] = useState<ImageProps['crossOrigin']>(crossOrigin);
   const [dominantColor, setDominantColor] = useState<string | undefined>(undefined);
@@ -103,7 +110,10 @@ export const Image = ({
         crossOrigin={crossOriginState}
         onError={handleImageError}
         onLoad={handleImageLoad}
-        className='z-10 object-contain transition-opacity duration-500'
+        className={mx(
+          'z-10 transition-opacity duration-500',
+          fit === 'cover' ? 'w-full h-full object-cover' : 'object-contain',
+        )}
         style={{
           opacity: imageLoaded ? 1 : 0,
         }}
