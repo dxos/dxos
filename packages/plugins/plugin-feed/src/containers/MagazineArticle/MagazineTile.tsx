@@ -61,7 +61,11 @@ export const MagazineTile = ({ post, current, feedName, published, starTag, onOp
           <Card.Poster alt={post.title ?? 'Article'} image={post.imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
         <Card.Toolbar>
-          {post.title ? <Card.Title classNames='line-clamp-2'>{post.title}</Card.Title> : <div className='grow' />}
+          {post.title ? (
+            <Card.Title classNames='line-clamp-2 col-span-3 px-2'>{post.title}</Card.Title>
+          ) : (
+            <div className='col-span-3' />
+          )}
         </Card.Toolbar>
         <Card.Content>
           {post.snippet && (

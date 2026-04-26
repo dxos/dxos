@@ -41,7 +41,21 @@ export const fetchRss: FeedFetcher = async (url: string, { corsProxy }: FetchOpt
   const fetchUrl = corsProxy ? `${corsProxy}${encodeURIComponent(url)}` : url;
   const response = await fetch(fetchUrl);
   const xml = await response.text();
-  const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
+  const parser = new XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: '@_',
+    // RSS/Atom feeds frequently embed HTML (sometimes un-escaped, without CDATA) in content fields,
+    // which can blow past fast-xml-parser's default 100-tag nesting cap.
+    maxNestedTags: 10_000,
+    // Treat known HTML-bearing fields as opaque text so embedded markup isn't parsed as XML.
+    stopNodes: [
+      '*.description',
+      '*.summary',
+      '*.content',
+      '*.content:encoded',
+      '*.encoded',
+    ],
+  });
   const parsed = parser.parse(xml);
 
   const channel = parsed.rss?.channel ?? parsed.feed;

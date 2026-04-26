@@ -2,16 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { createContextScope, type Scope } from '@radix-ui/react-context';
 import { JSONPath } from 'jsonpath-plus';
-import React, {
-  type FC,
-  type PropsWithChildren,
-  createContext,
-  forwardRef,
-  useContext,
-  useMemo,
-  useState,
-} from 'react';
+import React, { type FC, type PropsWithChildren, forwardRef, useMemo, useState } from 'react';
 
 import { Input, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
@@ -24,7 +17,9 @@ import { SyntaxHighlighter } from '../SyntaxHighlighter';
 // Context
 //
 
-type SyntaxContextType = {
+const SYNTAX_NAME = 'Syntax';
+
+type SyntaxContextValue = {
   mode: 'text' | 'json';
   // Text mode.
   source?: string;
@@ -38,15 +33,10 @@ type SyntaxContextType = {
   replacer?: JsonReplacer;
 };
 
-const SyntaxContext = createContext<SyntaxContextType | null>(null);
+type ScopedProps<P> = P & { __scopeSyntax?: Scope };
 
-const useSyntaxContext = (consumerName: string): SyntaxContextType => {
-  const context = useContext(SyntaxContext);
-  if (!context) {
-    throw new Error(`\`${consumerName}\` must be used within \`Syntax.Root\`.`);
-  }
-  return context;
-};
+const [createSyntaxContext, createSyntaxScope] = createContextScope(SYNTAX_NAME);
+const [SyntaxProvider, useSyntaxContext] = createSyntaxContext<SyntaxContextValue>(SYNTAX_NAME);
 
 //
 // Root
@@ -60,6 +50,11 @@ type SyntaxRootProps = PropsWithChildren<{
   source?: string;
   // JSON mode (presence of the `data` prop selects JSON mode; `undefined` is still JSON).
   data?: any;
+  /**
+   * `JSON.stringify` replacer applied to `data`. Use the function form to follow domain
+   * references (e.g. ECHO refs) by returning a transformed value at the root call. Keeps
+   * this package free of any domain-specific knowledge.
+   */
   replacer?: JsonReplacer;
 }>;
 
@@ -69,8 +64,8 @@ type SyntaxRootProps = PropsWithChildren<{
  * text mode (which would trip `Syntax.Filter`'s JSON-only guard). Mode is chosen by prop
  * presence, not value.
  */
-const SyntaxRoot: FC<SyntaxRootProps> = (props) => {
-  const { children, language, source, replacer } = props;
+const SyntaxRoot: FC<ScopedProps<SyntaxRootProps>> = (props) => {
+  const { __scopeSyntax, children, language, source, replacer } = props;
   const isJson = 'data' in props;
   const data = props.data;
   const [filterText, setFilterText] = useState('');
@@ -86,22 +81,22 @@ const SyntaxRoot: FC<SyntaxRootProps> = (props) => {
     }
   }, [isJson, data, filterText]);
 
-  const context = useMemo<SyntaxContextType>(
-    () => ({
-      mode: isJson ? 'json' : 'text',
-      source,
-      language,
-      data,
-      filteredData,
-      filterText,
-      setFilterText,
-      filterError,
-      replacer,
-    }),
-    [isJson, source, language, data, filteredData, filterText, filterError, replacer],
+  return (
+    <SyntaxProvider
+      scope={__scopeSyntax}
+      mode={isJson ? 'json' : 'text'}
+      source={source}
+      language={language}
+      data={data}
+      filteredData={filteredData}
+      filterText={filterText}
+      setFilterText={setFilterText}
+      filterError={filterError}
+      replacer={replacer}
+    >
+      {children}
+    </SyntaxProvider>
   );
-
-  return <SyntaxContext.Provider value={context}>{children}</SyntaxContext.Provider>;
 };
 
 SyntaxRoot.displayName = SYNTAX_ROOT_NAME;
@@ -136,9 +131,9 @@ type SyntaxFilterProps = ComposableProps<{
 }>;
 
 /** JSONPath filter input. Only meaningful when `Syntax.Root` is in JSON mode. */
-const SyntaxFilter = forwardRef<HTMLInputElement, SyntaxFilterProps>(
-  ({ classNames, placeholder = 'JSONPath (e.g., $.graph.nodes)' }, forwardedRef) => {
-    const { mode, filterText, setFilterText, filterError } = useSyntaxContext(SYNTAX_FILTER_NAME);
+const SyntaxFilter = forwardRef<HTMLInputElement, ScopedProps<SyntaxFilterProps>>(
+  ({ __scopeSyntax, classNames, placeholder = 'JSONPath (e.g., $.graph.nodes)' }, forwardedRef) => {
+    const { mode, filterText, setFilterText, filterError } = useSyntaxContext(SYNTAX_FILTER_NAME, __scopeSyntax);
     if (mode !== 'json') {
       throw new Error(`\`${SYNTAX_FILTER_NAME}\` requires \`Syntax.Root\` to be in JSON mode (pass \`data\`).`);
     }
@@ -190,28 +185,30 @@ type SyntaxCodeProps = ComposableProps<{
 }>;
 
 /** Highlighted code leaf. Reads source/data from `Syntax.Root` context. */
-const SyntaxCode = composable<HTMLDivElement, SyntaxCodeProps>(({ testId, ...props }, forwardedRef) => {
-  const context = useSyntaxContext(SYNTAX_CODE_NAME);
-  const merged = composableProps(props, { classNames: 'py-1 px-2 text-sm' });
+const SyntaxCode = composable<HTMLDivElement, ScopedProps<SyntaxCodeProps>>(
+  ({ __scopeSyntax, testId, ...props }, forwardedRef) => {
+    const context = useSyntaxContext(SYNTAX_CODE_NAME, __scopeSyntax);
+    const merged = composableProps(props, { classNames: 'py-1 px-2 text-sm' });
 
-  if (context.mode === 'json') {
+    if (context.mode === 'json') {
+      return (
+        <JsonHighlighter
+          {...merged}
+          data={context.filteredData}
+          replacer={context.replacer}
+          testId={testId}
+          ref={forwardedRef}
+        />
+      );
+    }
+
     return (
-      <JsonHighlighter
-        {...merged}
-        data={context.filteredData}
-        replacer={context.replacer}
-        testId={testId}
-        ref={forwardedRef}
-      />
+      <SyntaxHighlighter {...merged} language={context.language} data-testid={testId} ref={forwardedRef}>
+        {context.source ?? ''}
+      </SyntaxHighlighter>
     );
-  }
-
-  return (
-    <SyntaxHighlighter {...merged} language={context.language} data-testid={testId} ref={forwardedRef}>
-      {context.source ?? ''}
-    </SyntaxHighlighter>
-  );
-});
+  },
+);
 
 SyntaxCode.displayName = SYNTAX_CODE_NAME;
 
@@ -226,5 +223,7 @@ export const Syntax = {
   Viewport: SyntaxViewport,
   Code: SyntaxCode,
 };
+
+export { createSyntaxScope };
 
 export type { SyntaxRootProps, SyntaxContentProps, SyntaxFilterProps, SyntaxViewportProps, SyntaxCodeProps };
