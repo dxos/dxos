@@ -19,6 +19,10 @@ import { mx } from '@dxos/ui-theme';
 
 const emptyLines: string[] = [];
 
+// The per-line opacity fade runs at 1/3 of the ribbon translate duration, so
+// the active line is fully bright by the time the ribbon settles in place.
+const LINE_FADE_RATIO = 1 / 3;
+
 // TODO(burdon): Factor out to theme?
 export type Size = 'sm' | 'md' | 'lg';
 export const sizes: Size[] = ['sm', 'md', 'lg'];
@@ -261,7 +265,7 @@ const Line = ({
   return (
     <div
       role='none'
-      style={{ transitionDuration: reducedMotion ? '0ms' : `${transition / 3}ms` }}
+      style={{ transitionDuration: reducedMotion ? '0ms' : `${transition * LINE_FADE_RATIO}ms` }}
       className={mx('flex items-center truncate transition-opacity', active ? 'opacity-100' : 'opacity-50', classNames)}
     >
       {line}
