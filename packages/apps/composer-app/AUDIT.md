@@ -591,12 +591,12 @@ less risky to retune than phase 4 (activation-graph concurrency). Considering
 moving "tune `useLoading` debounce" into a phase 3.5 / hot-fix slot before
 phase 4.
 
-### Phase 3.5 — `useLoading` debounce: 1_000 → 200 (commit `<TBD>`)
+### Phase 3.5 — `useLoading` debounce: 1_000 → 200 (commit `562d20e31c`)
 
 |                                  | Cold profilerTotal | Cold navToReady | Cold firstInteractive | Warm firstInteractive |
 | -------------------------------- | -----------------: | --------------: | --------------------: | --------------------: |
 | phase 3 (`6efdeb84e2 + ⚠`)       |           5,480 ms |        9,532 ms |              8,732 ms |     — (not captured)  |
-| **phase 3.5** (`<TBD> + ⚠`)      |           6,316 ms |       10,289 ms |              9,418 ms |              5,808 ms |
+| **phase 3.5** (`562d20e31c + ⚠`)      |           6,316 ms |       10,289 ms |              9,418 ms |              5,808 ms |
 | delta                            |   +836 ms (noise)  | +757 ms (noise) |     +686 ms (noise)   |          first warm   |
 
 **Change:** [`packages/apps/composer-app/src/main.tsx`](src/main.tsx) — `useApp({
@@ -615,3 +615,44 @@ because there's no longer a perceptible "ready but still fading" beat). Net:
 worth keeping. The harness numbers are within run-to-run noise (±~10% on
 cold), so the headline metric move is illegible — keep an eye on the trend
 in BENCHMARKS.md rather than any single run.
+
+### Phase 4 — activation-graph hygiene (commit `<TBD>`)
+
+|                                | Cold profilerTotal | Cold navToReady | Cold firstInteractive | Warm profilerTotal |
+| ------------------------------ | -----------------: | --------------: | --------------------: | -----------------: |
+| phase 3.5 (`562d20e31c + ⚠`)   |           6,316 ms |       10,289 ms |              9,418 ms |           3,499 ms |
+| **phase 4** (`<TBD> + ⚠`)      |       **5,633 ms** |    **8,940 ms** |          **8,181 ms** |           3,526 ms |
+| delta                          |       −683 ms      |  **−1,349 ms**  |     **−1,237 ms**     | flat (noise)       |
+
+**Changes** (in [`packages/sdk/app-framework/src/core/plugin-manager.ts`](../../sdk/app-framework/src/core/plugin-manager.ts)):
+
+- **4a. Bound `_loadCapabilitiesForModules` concurrency to 8** (was
+  `'unbounded'`). Today's largest cluster is 8 modules (composer-app's
+  `*.AppGraphBuilder`s on `ClientReady`); 8 preserves that fan-out's
+  parallelism while protecting future fan-outs of 50+ modules from starving
+  the JS event loop.
+- **4b. `Effect.yieldNow()` between events**, not between modules. Inserted
+  inside `_activateModulesForEvent` after `_contributeCapabilitiesForModules`
+  resolves but before `_activateRelatedEvents('after')` runs. An earlier
+  attempt (yield between *modules*, inside `_contributeCapabilitiesForModules`)
+  made the warm scenario fail with a System Error dialog — same `allOf`
+  resolver race the existing TODO warned about. Yielding only at event
+  boundaries gives React's reconciler a paint slot without interrupting an
+  event mid-flight.
+
+**Why it works:** before phase 4, the 8-module `*.AppGraphBuilder` fan-out
+on `ClientReady` ran with no yields, so React's setStartupProgress (and
+later, the Placeholder unmount) couldn't paint until the entire cascade
+finished. With a yield at every event boundary, React gets a render slot
+between events; the wall-clock from `Startup` activated to user-account
+testid drops by ~1.3 s on cold.
+
+**Complexity vs. benefit:** small diff in framework code (one yield, one
+literal in concurrency option), but the change is in a hot path with known
+race-prone semantics — phase 4 includes a debug history of *one failed
+attempt*, captured as comments in [`_contributeCapabilitiesForModules`](../../sdk/app-framework/src/core/plugin-manager.ts).
+The fix landed on the second try after the warm-scenario regression.
+Benefit is the largest single wall-clock win since phase 1 (−1.3 s cold
+navToReady). Net: clearly worth it, but *only because the harness caught
+the regression*; without that, this would have shipped broken on warm
+loads.
