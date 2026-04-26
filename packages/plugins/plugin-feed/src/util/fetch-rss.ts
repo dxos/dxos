@@ -48,7 +48,7 @@ export const fetchRss: FeedFetcher = async (url: string, { corsProxy }: FetchOpt
     // which can blow past fast-xml-parser's default 100-tag nesting cap.
     maxNestedTags: 10_000,
     // Treat known HTML-bearing fields as opaque text so embedded markup isn't parsed as XML.
-    stopNodes: ['*.description', '*.summary', '*.content', '*.content:encoded', '*.encoded'],
+    stopNodes: ['*.description', '*.summary', '*.content', '*.content:encoded'],
   });
   const parsed = parser.parse(xml);
 

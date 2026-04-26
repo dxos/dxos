@@ -2,23 +2,28 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
+import React from 'react';
 
 import { Icon, Toolbar, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
 export type MagazineSort = 'date' | 'rank';
 
+/**
+ * Tile filter mode. Mutually exclusive — `default` shows everything except archived,
+ * `starred` filters to starred posts, `archived` shows only archived posts.
+ */
+export type MagazineView = 'default' | 'starred' | 'archived';
+
 export type CurateState = 'idle' | 'syncing' | 'curating';
 
-export type MagazineToolbarProps = ComponentPropsWithoutRef<typeof Toolbar.Root> & {
+export type MagazineToolbarProps = {
   sort: MagazineSort;
   onSortChange: (sort: MagazineSort) => void;
-  onlyStarred: boolean;
-  onOnlyStarredChange: (value: boolean) => void;
-  showArchived: boolean;
-  onShowArchivedChange: (value: boolean) => void;
+  view: MagazineView;
+  onViewChange: (view: MagazineView) => void;
   state: CurateState;
   curateDisabled: boolean;
   curateTooltip?: string;
@@ -26,26 +31,13 @@ export type MagazineToolbarProps = ComponentPropsWithoutRef<typeof Toolbar.Root>
   onCurate: () => void;
 };
 
-// Forwards ref + spreads passthrough props so this component composes under `Panel.Toolbar asChild`.
-export const MagazineToolbar = forwardRef<HTMLDivElement, MagazineToolbarProps>((props, forwardedRef) => {
-  const {
-    sort,
-    onSortChange,
-    onlyStarred,
-    onOnlyStarredChange,
-    showArchived,
-    onShowArchivedChange,
-    state,
-    curateDisabled,
-    curateTooltip,
-    onClear,
-    onCurate,
-    ...rest
-  } = props;
+export const MagazineToolbar = composable<HTMLDivElement, MagazineToolbarProps>((props, forwardedRef) => {
+  const { sort, onSortChange, view, onViewChange, state, curateDisabled, curateTooltip, onClear, onCurate, ...rest } =
+    props;
   const { t } = useTranslation(meta.id);
 
   return (
-    <Toolbar.Root {...rest} ref={forwardedRef}>
+    <Toolbar.Root {...composableProps(rest)} ref={forwardedRef}>
       <Toolbar.ToggleGroup
         type='single'
         value={sort}
@@ -64,19 +56,28 @@ export const MagazineToolbar = forwardRef<HTMLDivElement, MagazineToolbarProps>(
       </Toolbar.ToggleGroup>
       <Toolbar.ToggleGroup
         type='single'
-        value={onlyStarred ? 'on' : ''}
-        onValueChange={(value) => onOnlyStarredChange(value === 'on')}
+        value={view}
+        // Radix returns '' when the user toggles the active item off; treat that as 'default'.
+        onValueChange={(value) => {
+          if (value === 'starred' || value === 'archived') {
+            onViewChange(value);
+          } else {
+            onViewChange('default');
+          }
+        }}
       >
-        <Toolbar.ToggleGroupItem value='on' aria-label={t('only-starred.label')} title={t('only-starred.label')}>
-          <Icon icon={onlyStarred ? 'ph--star--fill' : 'ph--star--regular'} size={4} />
+        <Toolbar.ToggleGroupItem
+          value='starred'
+          aria-label={t('only-starred.label')}
+          title={t('only-starred.label')}
+        >
+          <Icon icon={view === 'starred' ? 'ph--star--fill' : 'ph--star--regular'} size={4} />
         </Toolbar.ToggleGroupItem>
-      </Toolbar.ToggleGroup>
-      <Toolbar.ToggleGroup
-        type='single'
-        value={showArchived ? 'show' : ''}
-        onValueChange={(value) => onShowArchivedChange(value === 'show')}
-      >
-        <Toolbar.ToggleGroupItem value='show' aria-label={t('show-archived.label')} title={t('show-archived.label')}>
+        <Toolbar.ToggleGroupItem
+          value='archived'
+          aria-label={t('show-archived.label')}
+          title={t('show-archived.label')}
+        >
           <Icon icon='ph--archive--regular' size={4} />
         </Toolbar.ToggleGroupItem>
       </Toolbar.ToggleGroup>

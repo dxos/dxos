@@ -20,7 +20,7 @@ import { type Magazine, Subscription } from '#types';
 
 import { fetchArticle, findStarTag, hasMetaTag, useStarTag } from '../../util';
 import { MagazineTile, formatPublished } from './MagazineTile';
-import { MagazineToolbar } from './MagazineToolbar';
+import { MagazineToolbar, type MagazineView } from './MagazineToolbar';
 
 export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
 
@@ -31,16 +31,18 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const id = attendableId ?? Obj.getDXN(subject).toString();
   const currentId = useSelected(id, 'single');
   const [sort, setSort] = useState<'date' | 'rank'>('date');
-  const [showArchived, setShowArchived] = useState(false);
-  const [onlyStarred, setOnlyStarred] = useState(false);
+  const [view, setView] = useState<MagazineView>('default');
   const db = Obj.getDatabase(subject);
   const starTag = useStarTag(db);
+
   // Sync feeds → curate magazine → apply per-feed keep, plus state/error
   // tracking. See `useCurate` at the bottom of the file.
   const { state, error, curate: handleCurate } = useCurate(subject, db);
+
   // Reactive query of every Subscription.Feed in the space — used to render the source
   // feed name on each tile without each tile having to subscribe to its own ref.
   const allFeeds = useQuery(db, Filter.type(Subscription.Feed));
+
   // Index feeds by bare object id (last DXN segment) — `Obj.getDXN(feed)`
   // returns the space-scoped form (`dxn:echo:<spaceId>:<id>`), but
   // `post.feed.dxn` from a `Ref.make` carries the local-id form
@@ -131,10 +133,17 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       resolved.push(target);
     }
 
-    // Filter archived unless explicitly shown, then optionally filter to starred only.
-    let visible = showArchived ? resolved : resolved.filter((post) => !post.archived);
-    if (onlyStarred) {
-      visible = visible.filter((post) => hasMetaTag(post, starTag));
+    // View mode determines which posts the tile grid shows.
+    // - 'archived'  → only archived posts.
+    // - 'starred'   → only starred (non-archived) posts.
+    // - 'default'   → everything except archived.
+    let visible: Subscription.Post[];
+    if (view === 'archived') {
+      visible = resolved.filter((post) => post.archived);
+    } else if (view === 'starred') {
+      visible = resolved.filter((post) => !post.archived && hasMetaTag(post, starTag));
+    } else {
+      visible = resolved.filter((post) => !post.archived);
     }
 
     if (sort === 'rank') {
@@ -167,8 +176,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     subject.posts.length,
     subject.posts.map((ref) => ref.dxn.toString()).join(),
     sort,
-    showArchived,
-    onlyStarred,
+    view,
     starTag,
   ]);
 
@@ -273,10 +281,8 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         <MagazineToolbar
           sort={sort}
           onSortChange={setSort}
-          onlyStarred={onlyStarred}
-          onOnlyStarredChange={setOnlyStarred}
-          showArchived={showArchived}
-          onShowArchivedChange={setShowArchived}
+          view={view}
+          onViewChange={setView}
           state={state}
           curateDisabled={curateDisabled}
           curateTooltip={curateTooltip}
