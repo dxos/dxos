@@ -6,7 +6,7 @@ import React, { type MouseEvent, useCallback } from 'react';
 
 import { Obj, type Tag } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { Card, Icon } from '@dxos/react-ui';
+import { Card, IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type Subscription } from '#types';
@@ -48,8 +48,8 @@ export const MagazineTile = ({ post, current, feedName, starTag, onOpen }: Magaz
   }, [onOpen, post]);
 
   const handleToggleStar = useCallback(
-    (event: MouseEvent<HTMLElement>) => {
-      // Prevent the parent tile-button's `onOpen` from firing.
+    (event: MouseEvent<HTMLButtonElement>) => {
+      // Prevent the parent Card's `onClick` from firing the open action.
       event.stopPropagation();
       const db = Obj.getDatabase(post);
       if (!db) {
@@ -64,57 +64,43 @@ export const MagazineTile = ({ post, current, feedName, starTag, onOpen }: Magaz
   );
 
   return (
-    <Card.Root asChild fullWidth>
-      <button
-        type='button'
-        aria-current={current ? 'true' : undefined}
-        onClick={handleClick}
-        className={mx(
-          'dx-current dx-hover text-start cursor-pointer transition-opacity',
-          read && !current && 'opacity-60',
+    <Card.Root
+      fullWidth
+      onClick={handleClick}
+      aria-current={current ? 'true' : undefined}
+      classNames={mx(
+        'dx-current dx-hover cursor-pointer transition-opacity',
+        read && !current && 'opacity-60',
+      )}
+    >
+      {post.imageUrl && <Card.Poster alt={post.title ?? 'Article'} image={post.imageUrl} />}
+      <Card.Toolbar>
+        {post.title ? <Card.Title classNames='line-clamp-2'>{post.title}</Card.Title> : <div className='grow' />}
+        <Card.IconBlock padding>
+          <IconButton
+            iconOnly
+            variant='ghost'
+            size={4}
+            label={starred ? 'Unstar' : 'Star'}
+            icon={starred ? 'ph--star--fill' : 'ph--star--regular'}
+            onClick={handleToggleStar}
+          />
+        </Card.IconBlock>
+      </Card.Toolbar>
+      <Card.Content>
+        {post.snippet && (
+          <Card.Row>
+            <Card.Text variant='description' classNames='line-clamp-3'>
+              {post.snippet}
+            </Card.Text>
+          </Card.Row>
         )}
-      >
-        {post.imageUrl && <Card.Poster alt={post.title ?? 'Article'} image={post.imageUrl} />}
-        <Card.Toolbar>
-          {post.title ? <Card.Title classNames='line-clamp-2'>{post.title}</Card.Title> : <div className='grow' />}
-          {/* Star toggle. A nested <span role="button"> avoids the
-              button-in-button HTML invalidity since the parent Card.Root is
-              rendered as a <button> via `asChild`. `stopPropagation` keeps
-              the parent's onOpen from firing. */}
-          <Card.IconBlock padding>
-            <span
-              role='button'
-              tabIndex={0}
-              aria-label={starred ? 'Unstar' : 'Star'}
-              title={starred ? 'Unstar' : 'Star'}
-              onClick={handleToggleStar}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  handleToggleStar(event as unknown as MouseEvent<HTMLElement>);
-                }
-              }}
-              className='grid place-items-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-accentSurface rounded-sm'
-            >
-              <Icon icon={starred ? 'ph--star--fill' : 'ph--star--regular'} size={4} />
-            </span>
-          </Card.IconBlock>
-        </Card.Toolbar>
-        <Card.Content>
-          {post.snippet && (
-            <Card.Row>
-              <Card.Text variant='description' classNames='line-clamp-3'>
-                {post.snippet}
-              </Card.Text>
-            </Card.Row>
-          )}
-          {metaParts.length > 0 && (
-            <Card.Row>
-              <Card.Text variant='description'>{metaParts.join(' · ')}</Card.Text>
-            </Card.Row>
-          )}
-        </Card.Content>
-      </button>
+        {metaParts.length > 0 && (
+          <Card.Row>
+            <Card.Text variant='description'>{metaParts.join(' · ')}</Card.Text>
+          </Card.Row>
+        )}
+      </Card.Content>
     </Card.Root>
   );
 };
