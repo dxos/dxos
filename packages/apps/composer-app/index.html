@@ -11,8 +11,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="msapplication-TileColor" content="#003E70" />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f8f9" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#252529" />
+    <!-- Match the boot loader and `@dxos/ui-theme`'s `--color-base-surface`
+         (Tailwind `neutral-50` / `neutral-950`) so the mobile-browser chrome
+         tints match what the app renders. -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fafafa" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0a" />
 
     <title>Composer</title>
 
