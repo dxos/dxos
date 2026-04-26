@@ -275,21 +275,16 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     [posts, currentId, handleOpen, feedNamesById, starTag],
   );
 
-  const curateDisabled = state !== 'idle' || subject.feeds.length === 0;
-  const curateTooltip =
-    subject.feeds.length === 0 ? t('no-feeds.label') : state === 'busy' ? t('refreshing-magazine.label') : undefined;
-
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <MagazineToolbar
+          hasFeeds={subject.feeds.length > 0}
+          state={state}
           sort={sort}
           onSortChange={setSort}
           view={view}
           onViewChange={setView}
-          state={state}
-          curateDisabled={curateDisabled}
-          curateTooltip={curateTooltip}
           onClear={handleClear}
           onCurate={handleCurate}
         />
