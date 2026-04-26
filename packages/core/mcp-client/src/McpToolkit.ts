@@ -9,8 +9,8 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import * as Effect from 'effect/Effect';
 import type { UnknownException } from 'effect/Cause';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { OpaqueToolkit } from '@dxos/ai';
