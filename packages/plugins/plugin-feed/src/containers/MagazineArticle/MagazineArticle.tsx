@@ -414,8 +414,7 @@ const publishedTimestamp = (post: Subscription.Post): number => {
 const applyPerFeedKeep = (magazine: Magazine.Magazine, db: Database.Database | undefined): void => {
   const tag = db ? findStarTag(db) : undefined;
   const tagDxn = tag ? Obj.getDXN(tag).toString() : undefined;
-  const isStarred = (post: Subscription.Post) =>
-    tagDxn ? (Obj.getMeta(post).tags?.includes(tagDxn) ?? false) : false;
+  const isStarred = (post: Subscription.Post) => (tagDxn ? (Obj.getMeta(post).tags?.includes(tagDxn) ?? false) : false);
 
   // Build feed-id → keep map by walking magazine.feeds.
   const feedKeepById = new Map<string, number>();
@@ -440,10 +439,7 @@ const applyPerFeedKeep = (magazine: Magazine.Magazine, db: Database.Database | u
   // Group resolved posts by their source feed id. Posts without a known
   // source feed (e.g. older posts from before `Post.feed` was added) end up
   // in the `undefined` bucket and are kept unconditionally.
-  const byFeedId = new Map<
-    string | undefined,
-    Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }>
-  >();
+  const byFeedId = new Map<string | undefined, Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }>>();
   for (const pair of resolvedPairs) {
     const feedRefDxn = pair.post.feed?.dxn.toString();
     const feedId = feedRefDxn ? dxnTailId(feedRefDxn) : undefined;
