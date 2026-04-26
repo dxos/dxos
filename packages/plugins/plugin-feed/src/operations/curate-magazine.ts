@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 
 import { type Magazine, Subscription } from '../types';
-import { extractImageUrls, makeSnippet, stripHtml } from '../util';
+import { extractImageUrls, htmlToMarkdown, makeSnippet } from '../util';
 import { CurateMagazine } from './definitions';
 
 /** Minimal queue surface needed by {@link curateMagazine}; exposed for testability. */
@@ -101,11 +101,11 @@ export const curateMagazine = async (
         continue;
       }
       const source = queuePost.description ?? '';
-      const text = stripHtml(source);
-      if (!text) {
+      const markdown = htmlToMarkdown(source);
+      if (!markdown) {
         continue;
       }
-      const snippet = makeSnippet(text);
+      const snippet = makeSnippet(markdown);
       const imageUrl = extractImageUrls(source)[0];
 
       // Resolve to the canonical space.db proxy (or register if new) so

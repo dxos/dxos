@@ -61,11 +61,9 @@ export const MagazineTile = ({ post, current, feedName, published, starTag, onOp
           <Card.Poster alt={post.title ?? 'Article'} image={post.imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
         <Card.Toolbar>
-          {post.title ? (
-            <Card.Title classNames='line-clamp-2 col-span-3 px-2'>{post.title}</Card.Title>
-          ) : (
-            <div className='col-span-3' />
-          )}
+          <Card.IconBlock />
+          {post.title ? <Card.Title classNames='line-clamp-2'>{post.title}</Card.Title> : <div />}
+          <Card.IconBlock />
         </Card.Toolbar>
         <Card.Content>
           {post.snippet && (
@@ -86,10 +84,10 @@ export const MagazineTile = ({ post, current, feedName, published, starTag, onOp
                 onClick={handleToggleStar}
               />
             </Card.IconBlock>
-            <Card.Text variant='description' classNames='grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2'>
+            <div className='grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 py-1.5 text-sm text-description overflow-hidden'>
               <span className='truncate'>{feedName ?? ''}</span>
               <span className='text-end shrink-0'>{published ?? ''}</span>
-            </Card.Text>
+            </div>
           </div>
         </Card.Content>
       </Card.Root>

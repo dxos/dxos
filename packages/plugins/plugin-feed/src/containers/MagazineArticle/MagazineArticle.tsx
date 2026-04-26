@@ -48,9 +48,11 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const feedNamesById = useMemo(() => {
     const map = new Map<string, string>();
     for (const feed of allFeeds) {
-      const name = feed.name;
-      if (name) {
-        map.set((feed as { id: string }).id, name);
+      // Fall back to URL when sync hasn't populated `name` yet (or the source RSS has no
+      // `<title>`) so each tile still shows provenance.
+      const label = feed.name ?? feed.url;
+      if (label) {
+        map.set((feed as { id: string }).id, label);
       }
     }
     return map;
@@ -73,8 +75,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   }, [subject.posts]);
 
   // When the user removes a feed from the magazine via ObjectProperties, prune any
-  // curated posts whose source feed is no longer present. Posts without a known
-  // source feed (e.g. synced before `Post.feed` was added) are left alone.
+  // curated posts whose source feed is no longer present.
   useEffect(() => {
     const feedDxns = new Set(subject.feeds.map((ref) => ref.dxn.toString()));
     const orphanIds = new Set<string>();
@@ -96,7 +97,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     });
   }, [subject, subject.feeds, subject.posts]);
 
-  const posts = useMemo(() => {
+  const posts = useMemo<TileData[]>(() => {
     const resolved: Subscription.Post[] = [];
     const seenDxn = new Set<string>();
     const seenLink = new Set<string>();
@@ -237,10 +238,11 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     [id, showItem],
   );
 
-  const tileItems = useMemo(
+  const tileItems = useMemo<TileData[]>(
     () =>
       posts.map((post) => {
-        // Match the post's source feed by bare object id; `post.feed.dxn` is  local-id form, while `feedNamesById` is keyed by id directly.
+        // Match the post's source feed by bare object id; `post.feed.dxn` is local-id form,
+        // while `feedNamesById` is keyed by id directly.
         const feedId = post.feed ? (post.feed.dxn.toString().split(':').pop() ?? '') : '';
         return {
           post,
@@ -436,9 +438,7 @@ const applyPerFeedKeep = (magazine: Magazine.Magazine, db: Database.Database | u
     }
   }
 
-  // Group resolved posts by their source feed id. Posts without a known
-  // source feed (e.g. older posts from before `Post.feed` was added) end up
-  // in the `undefined` bucket and are kept unconditionally.
+  // Group resolved posts by their source feed id.
   const byFeedId = new Map<string | undefined, Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }>>();
   for (const pair of resolvedPairs) {
     const feedRefDxn = pair.post.feed?.dxn.toString();

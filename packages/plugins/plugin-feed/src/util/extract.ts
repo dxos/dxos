@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import TurndownService from 'turndown';
+
 /**
  * Lightweight HTML helpers used by the Magazine curation flow.
  * Regex-based; deliberately avoids a parser dependency. Good enough for
@@ -51,6 +53,30 @@ export const stripHtml = (html: string): string => {
     .replace(/ *\n */g, '\n') // Trim spaces around newlines.
     .replace(/\n{3,}/g, '\n\n') // Collapse 3+ blank lines to a single blank line.
     .trim();
+};
+
+// Reused across calls — turndown's constructor isn't free.
+const turndownService = new TurndownService({
+  headingStyle: 'atx',
+  codeBlockStyle: 'fenced',
+  emDelimiter: '_',
+  bulletListMarker: '-',
+});
+
+/**
+ * Convert an HTML fragment to Markdown.
+ *
+ * RSS `<description>` payloads are usually entity-encoded HTML (`&lt;p&gt;...`); under
+ * fast-xml-parser stopNodes the entities aren't decoded at parse time, so they reach us
+ * as literal `&lt;p&gt;` and the like. Decode first, then run turndown — that way we
+ * preserve paragraph structure and links rather than spilling raw `<p>...</p>` into
+ * snippets and content. Returns an empty string on falsy input.
+ */
+export const htmlToMarkdown = (html: string): string => {
+  if (!html) {
+    return '';
+  }
+  return turndownService.turndown(decodeEntities(html)).trim();
 };
 
 /** Produce a snippet of approximately `length` characters, cut on a word boundary. */
