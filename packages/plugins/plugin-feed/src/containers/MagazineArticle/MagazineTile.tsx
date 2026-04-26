@@ -104,7 +104,12 @@ export const MagazineTile = ({ post, current, feedName, published, starTag, onOp
         read && !current && 'opacity-60',
       )}
     >
-      {post.imageUrl && <Card.Poster alt={post.title ?? 'Article'} image={post.imageUrl} />}
+      {post.imageUrl && (
+        // `rounded-t-xs` matches `Card.Root`'s `rounded-xs` corner. Without
+        // it the image's square top-corners poke through the card's rounded
+        // outline and visually clip the focus + selection rings at the top.
+        <Card.Poster alt={post.title ?? 'Article'} image={post.imageUrl} classNames='rounded-t-xs' />
+      )}
       <Card.Toolbar>
         {/* Empty col-1 placeholder so the title lands in the center column
             of the toolbar's 3-col subgrid (matching the snippet/last-row
