@@ -73,12 +73,12 @@ export const Shimmer = ({ classNames, children, duration = 2000 }: ShimmerProps)
 /* In animation.css, sibling of the existing @theme block. */
 @keyframes shimmer-text {
   from {
-    mask-position-x: 0%;
-    -webkit-mask-position-x: 0%;
-  }
-  to {
     mask-position-x: 100%;
     -webkit-mask-position-x: 100%;
+  }
+  to {
+    mask-position-x: -100%;
+    -webkit-mask-position-x: -100%;
   }
 }
 
@@ -86,19 +86,19 @@ export const Shimmer = ({ classNames, children, duration = 2000 }: ShimmerProps)
 @utility shimmer-text {
   mask-image: linear-gradient(
     90deg,
-    rgba(0, 0, 0, 0.35) 0%,
-    rgba(0, 0, 0, 0.35) 25%,
+    rgba(0, 0, 0, 0.4) 0%,
+    rgba(0, 0, 0, 0.4) 30%,
     rgba(0, 0, 0, 1) 50%,
-    rgba(0, 0, 0, 0.35) 75%,
-    rgba(0, 0, 0, 0.35) 100%
+    rgba(0, 0, 0, 0.4) 70%,
+    rgba(0, 0, 0, 0.4) 100%
   );
   -webkit-mask-image: linear-gradient(
     90deg,
-    rgba(0, 0, 0, 0.35) 0%,
-    rgba(0, 0, 0, 0.35) 25%,
+    rgba(0, 0, 0, 0.4) 0%,
+    rgba(0, 0, 0, 0.4) 30%,
     rgba(0, 0, 0, 1) 50%,
-    rgba(0, 0, 0, 0.35) 75%,
-    rgba(0, 0, 0, 0.35) 100%
+    rgba(0, 0, 0, 0.4) 70%,
+    rgba(0, 0, 0, 0.4) 100%
   );
   mask-size: 200% 100%;
   -webkit-mask-size: 200% 100%;
@@ -117,9 +117,27 @@ export const Shimmer = ({ classNames, children, duration = 2000 }: ShimmerProps)
 }
 ```
 
-**Mask geometry — why this combination is correct.** `mask-position` percentages do not translate by N% as you might expect; they resolve to `(containerSize − imageSize) × percentage`. With `mask-size: 200% 100%` the mask image is 2× the element width, so `mask-position-x: 0%` resolves to offset `0` (image spans `[0%, 200%]` of the element) and `mask-position-x: 100%` resolves to offset `−100%` (image spans `[−100%, 100%]`). With `mask-repeat: repeat-x`, the gradient is tiled horizontally, so the element is covered at every position. As the keyframe slides the offset from `0` to `−100%`, the element sees the gradient pattern shift continuously to the right by exactly one half-tile. The loop is seamless because the gradient is symmetric end-to-end (both endpoints sit at `0.35`, matching the next tile's starting point). No "translate via pseudo-element" trick needed; one element, pure CSS.
+**Mask geometry — derivation.** `mask-position-x: P%` resolves to an offset of `(W − I) × P%` where `W` is element width and `I` is mask-image width. With `mask-size: 200% 100%` we have `I = 2W`, so the offset is `−W × P%` (negative offset means the image shifts left). The keyframe runs `P` from `100%` to `−100%`, so offset travels `−W → 0 → +W`. With `mask-repeat: repeat-x`, the periodic mask tiles the entire x-axis, so every element-x is always covered.
+
+For the loop to be visually seamless under translation, the translation distance per cycle must equal the tile period (the image width, `2W`). Our keyframe translates by exactly `2W` (`+W − (−W) = 2W`), so rendering at `P = 100%` is identical to rendering at `P = −100%`: at both endpoints the element samples gradient fractions `[0.5, 1.0]` (wrapping into `[0, 0.5]` past the seam), with the peak (gradient stop `50%: 1.0`) at element-x = 0 (left edge). The animation then snaps from `−100%` back to `100%` — but because the rendering at both endpoints is identical, the snap is invisible.
+
+**Pulse trajectory.** Tracking the peak as `P` decreases from `100%` to `−100%`:
+
+| P    | offset | tile-0 peak at element-x | tile-1 peak at element-x | visible peaks |
+| ---- | ------ | ------------------------ | ------------------------ | ------------- |
+| 100% | −W     | 0 (left edge)            | 2W (off-right)           | left edge     |
+| 50%  | −0.5W  | 0.5W (center)            | 2.5W (off)               | center        |
+| 0%   | 0      | W (right edge)           | 3W (off)                 | right edge    |
+| −50% | +0.5W  | 1.5W (off-right)         | 3.5W (off)               | none (calm)   |
+| −100% | +W    | 2W (off)                 | 4W (off); tile-(−1) at 0 | left edge     |
+
+So a single pulse transits left → right during the first half of each cycle, followed by a brief calm interval (alpha `0.4` everywhere) during the second half, then the next pulse begins at the left edge — same direction every cycle. This matches the spec's "animating opacity from left to right" requirement and is visually equivalent to the Claude desktop / Cursor / Vercel "thinking" shimmer cadence.
+
+The previous draft of this spec animated `0% → 100%` (translation `W`, half-period). That was visually wrong: at the seam the gradient pattern was a mirror image of the start, so the pulse's bright spot teleported from right edge to left edge once per cycle. The corrected `100% → −100%` keyframe (full-period translation) eliminates that snap.
 
 **Why no `--animate-shimmer-text` token.** Tailwind v4 hoists `@keyframes` declared inside `@theme` only when paired with a matching `--animate-*` token. Since the keyframe lives at the top level here (not inside `@theme`), it is preserved as-is by the CSS bundler regardless of token presence. The existing `--animate-shimmer` token (skeleton-overlay translateX, unused) is left untouched.
+
+**Verification fallback.** No existing keyframe in this project lives outside `@theme`, so the top-level placement is the new path. If the storybook build does not pick up the keyframe by name on first compile (i.e. the `animation: shimmer-text …` line in `@utility shimmer-text` resolves to `unset`), the rollback is to move `@keyframes shimmer-text` inside the `@theme` block paired with `--animate-shimmer-text: shimmer-text 2s linear infinite`, drop the `animation` line from `@utility shimmer-text`, and have the component apply both classes (`shimmer-text animate-shimmer-text`). Functionally identical; the "single class" preference is purely ergonomic.
 
 ### 2. Stopwatch
 
