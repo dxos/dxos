@@ -25,7 +25,7 @@ export type FeedType = Schema.Schema.Type<typeof FeedType>;
  * syncing a {@link Feed} or curating a Magazine. Applied when the object
  * has no explicit `keep` value.
  */
-export const DEFAULT_KEEP = 3;
+export const DEFAULT_KEEP = 10;
 
 /**
  * Subscription feed schema: an RSS/Atom/AT Protocol subscription.
