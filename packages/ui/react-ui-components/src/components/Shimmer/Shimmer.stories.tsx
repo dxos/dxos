@@ -28,9 +28,19 @@ export const Default: Story = {
   },
 };
 
+/**
+ * Demonstrates the default truncate behavior — long text in a constrained parent
+ * stays on a single line and ellipsizes rather than wrapping.
+ */
 export const LongText: Story = {
+  decorators: [
+    (Story) => (
+      <div className='w-[20rem] border border-separator p-2'>
+        <Story />
+      </div>
+    ),
+  ],
   args: {
-    classNames: 'block max-w-[24rem] text-center leading-relaxed',
     children:
       'Establishing a secure peer connection, exchanging schemas, and reconciling the object graph before the next frame.',
   },

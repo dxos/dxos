@@ -25,7 +25,7 @@ export const Shimmer = ({ classNames, children, duration = 2_000 }: ShimmerProps
     <span
       role='status'
       style={{ animationDuration: `${duration}ms` }}
-      className={mx('inline-block shimmer-text', classNames)}
+      className={mx('inline-block max-w-full truncate shimmer-text', classNames)}
     >
       {children}
     </span>
