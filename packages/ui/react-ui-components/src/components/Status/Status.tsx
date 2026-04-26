@@ -18,8 +18,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { formatElapsed } from './formatElapsed';
 
-const SECOND = 1_000;
-const TICK_MS = 500;
+const TICK_MS = 1_000;
 
 //
 // Context
@@ -28,6 +27,8 @@ const TICK_MS = 500;
 type StatusContextValue = {
   /** Wall-clock time (epoch ms). Updated every 500ms by Status.Root while running. */
   time: number;
+  /** Whether the Status.Root tick is currently active. Toggled via the StatusController. */
+  running: boolean;
 };
 
 const [StatusProvider, useStatusContext] = createContext<StatusContextValue>('Status');
@@ -85,7 +86,7 @@ const Root = forwardRef<StatusController, RootProps>(
     );
 
     return (
-      <StatusProvider time={time}>
+      <StatusProvider time={time} running={running}>
         <span
           role='status'
           className={mx('inline-flex items-center gap-2 text-description font-mono tabular-nums', classNames)}
