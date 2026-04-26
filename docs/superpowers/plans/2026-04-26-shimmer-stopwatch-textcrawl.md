@@ -11,6 +11,7 @@
 **Spec:** [docs/superpowers/specs/2026-04-26-shimmer-stopwatch-textcrawl-design.md](../specs/2026-04-26-shimmer-stopwatch-textcrawl-design.md)
 
 **Conventions to honor (from CLAUDE.md):**
+
 - All `.ts`/`.tsx` files start with `// Copyright 2025 DXOS.org //` header (3-line comment block).
 - Single quotes, arrow function components, named React imports (`useState`, not `React.useState`).
 - `forwardRef` variable name is `forwardedRef`.
@@ -29,6 +30,7 @@ This chunk adds the `shimmer-text` keyframe + utility plus the global reduced-mo
 ### Task 1.1: Add `@keyframes shimmer-text` to animation.css
 
 **Files:**
+
 - Modify: `packages/ui/ui-theme/src/css/theme/animation.css` (append at end of file, after closing `}` of `@theme` block)
 
 - [ ] **Step 1: Read the current file**
@@ -40,7 +42,6 @@ Read `packages/ui/ui-theme/src/css/theme/animation.css`. Confirm the file ends w
 Append the following block immediately after the closing `}` of the `@theme` block. Place a blank line before it for readability:
 
 ```css
-
 /**
  * Shimmer (text)
  * Sweeps a brighter band across text via mask alpha — preserves the consumer's color.
@@ -73,6 +74,7 @@ git commit -m "feat(ui-theme): add shimmer-text keyframe"
 ### Task 1.2: Add the global reduced-motion fallback to animation.css
 
 **Files:**
+
 - Modify: `packages/ui/ui-theme/src/css/theme/animation.css` (append after the `@keyframes shimmer-text` block from Task 1.1)
 
 - [ ] **Step 1: Append the reduced-motion media block**
@@ -80,7 +82,6 @@ git commit -m "feat(ui-theme): add shimmer-text keyframe"
 After the `@keyframes shimmer-text` block, append:
 
 ```css
-
 /**
  * Honor user reduced-motion preference for decorative animations.
  * Functional transitions (fade/slide/toast/blink) are intentionally excluded —
@@ -112,6 +113,7 @@ git commit -m "feat(ui-theme): honor prefers-reduced-motion for decorative anima
 ### Task 1.3: Add `@utility shimmer-text` and its reduced-motion fallback to utilities.css
 
 **Files:**
+
 - Modify: `packages/ui/ui-theme/src/css/utilities.css` (append at end of file)
 
 - [ ] **Step 1: Read the current file**
@@ -123,7 +125,6 @@ Read `packages/ui/ui-theme/src/css/utilities.css`. Confirm the existing pattern 
 Append at the very end of the file:
 
 ```css
-
 /**
  * Shimmer text — animates opacity left → right across the contained text.
  * See @keyframes shimmer-text in theme/animation.css for the keyframe definition.
@@ -218,6 +219,7 @@ The component is intentionally tiny — a single `<span>` that applies the `shim
 ### Task 2.1: Create the Shimmer source file
 
 **Files:**
+
 - Create: `packages/ui/react-ui-components/src/components/Shimmer/Shimmer.tsx`
 
 - [ ] **Step 1: Write the component**
@@ -268,6 +270,7 @@ Expected: success. (The component isn't exported yet, so this confirms isolated 
 ### Task 2.2: Create the Shimmer barrel
 
 **Files:**
+
 - Create: `packages/ui/react-ui-components/src/components/Shimmer/index.ts`
 
 - [ ] **Step 1: Write the barrel**
@@ -311,6 +314,7 @@ Expected: success.
 ### Task 2.3: Create the Shimmer storybook
 
 **Files:**
+
 - Create: `packages/ui/react-ui-components/src/components/Shimmer/Shimmer.stories.tsx`
 
 - [ ] **Step 1: Write the stories file**
@@ -429,6 +433,7 @@ The Stopwatch has two parts: a pure `formatElapsed` helper (covered by unit test
 `formatElapsed` lives in its own module so the TDD chunk produces a clean atomic commit (test + helper, no scaffolding).
 
 **Files:**
+
 - Create: `packages/ui/react-ui-components/src/components/Stopwatch/formatElapsed.test.ts`
 
 - [ ] **Step 1: Write the failing test**
@@ -492,6 +497,7 @@ Expected: FAIL — module `./formatElapsed` does not exist.
 ### Task 3.2: Implement formatElapsed (minimum to pass)
 
 **Files:**
+
 - Create: `packages/ui/react-ui-components/src/components/Stopwatch/formatElapsed.ts`
 
 - [ ] **Step 1: Implement and export**
@@ -541,6 +547,7 @@ git commit -m "feat(react-ui-components): add formatElapsed helper with tiered d
 ### Task 3.3: Create the Stopwatch component
 
 **Files:**
+
 - Create: `packages/ui/react-ui-components/src/components/Stopwatch/Stopwatch.tsx`
 
 - [ ] **Step 1: Write the component**
@@ -628,6 +635,7 @@ Expected: success.
 ### Task 3.4: Create the Stopwatch barrel + register
 
 **Files:**
+
 - Create: `packages/ui/react-ui-components/src/components/Stopwatch/index.ts`
 - Modify: `packages/ui/react-ui-components/src/components/index.ts`
 
@@ -671,6 +679,7 @@ Expected: success.
 ### Task 3.5: Create the Stopwatch storybook
 
 **Files:**
+
 - Create: `packages/ui/react-ui-components/src/components/Stopwatch/Stopwatch.stories.tsx`
 
 - [ ] **Step 1: Write the stories file**
@@ -774,6 +783,7 @@ Three behavior-preserving cleanups, each landing in a separate commit so any reg
 ### Task 4.1: Honor `prefers-reduced-motion`
 
 **Files:**
+
 - Modify: `packages/ui/react-ui-components/src/components/TextCrawl/TextCrawl.tsx`
 
 - [ ] **Step 1: Read the current TextCrawl**
@@ -781,7 +791,7 @@ Three behavior-preserving cleanups, each landing in a separate commit so any reg
 Read `packages/ui/react-ui-components/src/components/TextCrawl/TextCrawl.tsx` end-to-end. Note:
 
 - `setPosition` at line ~208 sets `transition: transform Xms ease-in-out` directly on `containerRef.current.style`.
-- `Line` at line ~247 uses `style={{ transitionDuration: \`${transition / 3}ms\` }}` and `transition-opacity`.
+- `Line` at line ~247 uses `style={{ transitionDuration: \`${transition / 3}ms\` }}`and`transition-opacity`.
 
 - [ ] **Step 2: Add the reduced-motion subscription**
 
@@ -825,9 +835,7 @@ const setPosition = useCallback<TextRibbonController['setPosition']>(
   (index, animate = false) => {
     if (containerRef.current) {
       const shouldAnimate = animate && !reducedMotion;
-      containerRef.current.style.transition = shouldAnimate
-        ? `transform ${transition}ms ease-in-out`
-        : 'transform 0ms';
+      containerRef.current.style.transition = shouldAnimate ? `transform ${transition}ms ease-in-out` : 'transform 0ms';
       containerRef.current.style.transform = `translateY(-${index * lineHeight}px)`;
     }
   },
@@ -840,25 +848,29 @@ const setPosition = useCallback<TextRibbonController['setPosition']>(
 Pass `reducedMotion` from `TextRibbon` to each `Line`:
 
 ```tsx
-{lines.map((line, i) => (
-  <Line
-    key={i}
-    line={lines[i]}
-    active={index === i || (i === 0 && index === lines.length)}
-    transition={transition}
-    reducedMotion={reducedMotion}
-    classNames={[className, textClassNames]}
-  />
-))}
-{cyclic && (
-  <Line
-    line={lines[0]}
-    active={index === lines.length || index === 0}
-    transition={transition}
-    reducedMotion={reducedMotion}
-    classNames={[className, textClassNames]}
-  />
-)}
+{
+  lines.map((line, i) => (
+    <Line
+      key={i}
+      line={lines[i]}
+      active={index === i || (i === 0 && index === lines.length)}
+      transition={transition}
+      reducedMotion={reducedMotion}
+      classNames={[className, textClassNames]}
+    />
+  ));
+}
+{
+  cyclic && (
+    <Line
+      line={lines[0]}
+      active={index === lines.length || index === 0}
+      transition={transition}
+      reducedMotion={reducedMotion}
+      classNames={[className, textClassNames]}
+    />
+  );
+}
 ```
 
 Update the `Line` props type and body:
@@ -897,7 +909,7 @@ Navigate to **ui/react-ui-components/TextCrawl** and confirm:
 Then enable reduced-motion (macOS: **System Settings → Accessibility → Display → Reduce motion**, or via the browser DevTools' "Emulate CSS media feature prefers-reduced-motion") and reload. Confirm:
 
 - The auto-advance cadence (`minDuration`) is unchanged — lines still progress at the same rate.
-- The *visual* transition between lines is now instant: lines snap into place with no scroll animation, and the active-line opacity flips abruptly with no fade.
+- The _visual_ transition between lines is now instant: lines snap into place with no scroll animation, and the active-line opacity flips abruptly with no fade.
 
 - [ ] **Step 7: Commit**
 
@@ -909,6 +921,7 @@ git commit -m "fix(react-ui-components): honor prefers-reduced-motion in TextCra
 ### Task 4.2: Extract `LINE_FADE_RATIO` constant
 
 **Files:**
+
 - Modify: `packages/ui/react-ui-components/src/components/TextCrawl/TextCrawl.tsx`
 
 - [ ] **Step 1: Add the constant**
@@ -946,6 +959,7 @@ git commit -m "refactor(react-ui-components): extract LINE_FADE_RATIO constant i
 ### Task 4.3: Remove the rAF TODO from TextCrawl stories
 
 **Files:**
+
 - Modify: `packages/ui/react-ui-components/src/components/TextCrawl/TextCrawl.stories.tsx`
 
 - [ ] **Step 1: Remove the TODO comment**

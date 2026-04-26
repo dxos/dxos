@@ -47,10 +47,12 @@ import React, { type PropsWithChildren } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-export type ShimmerProps = ThemedClassName<PropsWithChildren<{
-  /** Animation duration in ms. */
-  duration?: number;
-}>>;
+export type ShimmerProps = ThemedClassName<
+  PropsWithChildren<{
+    /** Animation duration in ms. */
+    duration?: number;
+  }>
+>;
 
 export const Shimmer = ({ classNames, children, duration = 2000 }: ShimmerProps) => {
   return (
@@ -67,7 +69,7 @@ export const Shimmer = ({ classNames, children, duration = 2000 }: ShimmerProps)
 
 **Why a `mask-image` gradient (not `background-clip: text`)** — the user's spec is "animates opacity from left to right across the text". A mask gradient modulates true alpha, so the consumer's `color` / theme tokens are preserved. Vercel `ai-elements` shimmer uses `background-clip: text` with two stacked gradients ([reference](https://github.com/vercel/ai-elements/blob/main/packages/elements/src/shimmer.tsx)), which forces a hard-coded color into the gradient and loses the consumer's `text-fg-*` token during the highlight pulse. Mask is the cleaner primitive and the better fit for a generic component.
 
-**CSS additions** are split across the two files that already serve these concerns in the project (`animation.css` for keyframes; `utilities.css` for `@utility` blocks). One new `@keyframes` block goes in [animation.css](../../../packages/ui/ui-theme/src/css/theme/animation.css) at the **top level of the file** (sibling of the existing `@theme { ... }` block). One new `@utility shimmer-text` block, plus the `prefers-reduced-motion` rule, goes in [utilities.css](../../../packages/ui/ui-theme/src/css/utilities.css) alongside the existing `dx-*` utilities. The keyframe is **not** placed inside `@theme` and there is no matching `--animate-shimmer-text` token, because we want a single source of truth — the `@utility shimmer-text` block — that bundles the keyframe reference together with the `mask-*` declarations and the reduced-motion fallback. Adding a `--animate-*` token would create a parallel `animate-shimmer-text` utility that does *only* `animation:`, leading to two ways to invoke the same effect. We pick one path: the consumer applies `shimmer-text`.
+**CSS additions** are split across the two files that already serve these concerns in the project (`animation.css` for keyframes; `utilities.css` for `@utility` blocks). One new `@keyframes` block goes in [animation.css](../../../packages/ui/ui-theme/src/css/theme/animation.css) at the **top level of the file** (sibling of the existing `@theme { ... }` block). One new `@utility shimmer-text` block, plus the `prefers-reduced-motion` rule, goes in [utilities.css](../../../packages/ui/ui-theme/src/css/utilities.css) alongside the existing `dx-*` utilities. The keyframe is **not** placed inside `@theme` and there is no matching `--animate-shimmer-text` token, because we want a single source of truth — the `@utility shimmer-text` block — that bundles the keyframe reference together with the `mask-*` declarations and the reduced-motion fallback. Adding a `--animate-*` token would create a parallel `animate-shimmer-text` utility that does _only_ `animation:`, leading to two ways to invoke the same effect. We pick one path: the consumer applies `shimmer-text`.
 
 ```css
 /* In animation.css, sibling of the existing @theme block. */
@@ -123,13 +125,13 @@ For the loop to be visually seamless under translation, the translation distance
 
 **Pulse trajectory.** Tracking the peak as `P` decreases from `100%` to `−100%`:
 
-| P    | offset | tile-0 peak at element-x | tile-1 peak at element-x | visible peaks |
-| ---- | ------ | ------------------------ | ------------------------ | ------------- |
-| 100% | −W     | 0 (left edge)            | 2W (off-right)           | left edge     |
-| 50%  | −0.5W  | 0.5W (center)            | 2.5W (off)               | center        |
-| 0%   | 0      | W (right edge)           | 3W (off)                 | right edge    |
-| −50% | +0.5W  | 1.5W (off-right)         | 3.5W (off)               | none (calm)   |
-| −100% | +W    | 2W (off)                 | 4W (off); tile-(−1) at 0 | left edge     |
+| P     | offset | tile-0 peak at element-x | tile-1 peak at element-x | visible peaks |
+| ----- | ------ | ------------------------ | ------------------------ | ------------- |
+| 100%  | −W     | 0 (left edge)            | 2W (off-right)           | left edge     |
+| 50%   | −0.5W  | 0.5W (center)            | 2.5W (off)               | center        |
+| 0%    | 0      | W (right edge)           | 3W (off)                 | right edge    |
+| −50%  | +0.5W  | 1.5W (off-right)         | 3.5W (off)               | none (calm)   |
+| −100% | +W     | 2W (off)                 | 4W (off); tile-(−1) at 0 | left edge     |
 
 So a single pulse transits left → right during the first half of each cycle, followed by a brief calm interval (alpha `0.4` everywhere) during the second half, then the next pulse begins at the left edge — same direction every cycle. This matches the spec's "animating opacity from left to right" requirement and is visually equivalent to the Claude desktop / Cursor / Vercel "thinking" shimmer cadence.
 
@@ -172,9 +174,7 @@ export const Stopwatch: FC<StopwatchProps>;
 **Default icon** — a small dot using the existing `--animate-halo-pulse` token:
 
 ```tsx
-const DefaultIcon = () => (
-  <span className='inline-block size-2 rounded-full bg-current animate-halo-pulse' />
-);
+const DefaultIcon = () => <span className='inline-block size-2 rounded-full bg-current animate-halo-pulse' />;
 ```
 
 Consumers can pass any `ReactNode` (e.g. a Phosphor `Spinner` with `animate-spin-slow`).
