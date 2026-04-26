@@ -541,12 +541,12 @@ unchanged from phase 1 — the 8 `*.AppGraphBuilder` modules clustering at
 1,128–1,168 ms each are the next target (phase 4: bound concurrency in
 `_loadCapabilitiesForModules` + insert `Effect.yieldNow()`).
 
-### Phase 3 — small wins bundle (commit `<TBD>`)
+### Phase 3 — small wins bundle (commit `2560fb5afb`)
 
 |                                | Cold profilerTotal | Cold navToReady | Cold firstInteractive | Warm profilerTotal |
 | ------------------------------ | -----------------: | --------------: | --------------------: | -----------------: |
 | phase 2 (`697d645631 + ⚠`)     |           5,664 ms |        9,780 ms |     — (not captured)  |           3,568 ms |
-| **phase 3** (`<TBD> + ⚠`)      |       **5,480 ms** |    **9,532 ms** |          **8,732 ms** |           3,555 ms |
+| **phase 3** (`2560fb5afb + ⚠`)      |       **5,480 ms** |    **9,532 ms** |          **8,732 ms** |           3,555 ms |
 | delta                          |   −184 ms (noise)  | −248 ms (noise) |        first capture  |  −13 ms (noise)    |
 
 Phase 3 is mostly hygiene + new instrumentation, not a perf win. The four
