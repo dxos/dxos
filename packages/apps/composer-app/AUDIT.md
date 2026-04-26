@@ -7,31 +7,39 @@ points at code so the reader can verify or push back.
 
 ## 0. Baseline numbers (chromium, production preview build)
 
-Captured by the new harness in [`src/playwright/startup.spec.ts`](src/playwright/startup.spec.ts) on a developer laptop. Treat as one data point — re-run before/after each follow-up to see deltas. Bytes are uncompressed (PWA disabled, no SW cache); first paint is when the inline boot loader is on screen.
+Captured by the harness in [`src/playwright/startup.spec.ts`](src/playwright/startup.spec.ts) on a developer laptop. Treat any single number as one data point — the auto-recorded ledger at [`BENCHMARKS.md`](BENCHMARKS.md) is the source of truth for trend.
 
-| Scenario | First Paint | profilerTotal (`main:start` → `Startup` activated) | navigation → user-account | Modules activated | Bytes / responses |
-| ---: | ---: | ---: | ---: | ---: | ---: |
-| Cold (cleared storage) | **264 ms** | **11,118 ms** | 18,054 ms | 263 | 43.4 MB / 953 |
-| Warm (reload, IDB warm) | 172 ms | 3,166 ms | 7,677 ms | 257 | 43.1 MB / 952 |
+| Phase | Cold profilerTotal | Cold navToReady | Warm profilerTotal | Warm navToReady | Top cold module |
+| --- | ---: | ---: | ---: | ---: | --- |
+| 0. baseline (`f1cda8f`) | 11,118 ms | 18,054 ms | 3,166 ms | 7,677 ms | `welcome.onboarding` (5,948 ms) |
+| 0. baseline re-run (`f1cda8f2f8`) | 8,554 ms | 13,485 ms | 3,210 ms | 7,405 ms | `welcome.onboarding` (4,917 ms) |
+| **1. defer `OnboardingManager.initialize()`** (`e7f390ae3e` + ⚠) | **4,704 ms** | **9,596 ms** | 3,163 ms | 7,364 ms | `plugin.client.module.Client` (1,783 ms) |
 
-Top hotspots on the cold load:
+Cold dropped 45% from the closer baseline (8.5 → 4.7 s). Warm is unchanged within noise — expected, because warm has the identity persisted and `initialize()` short-circuits. The cold-vs-warm gap shrank from ~5.4 s to ~1.5 s; what's left is mostly module-graph evaluation, not identity creation.
+
+Updated cold top-10 after phase 1 (everything below is what's left to chase):
 
 | Module | Cold ms |
 | --- | ---: |
-| `plugin.welcome.module.onboarding` | **5,948** |
-| `plugin.client.module.Client` | 2,322 |
-| `plugin.observability.module.ClientReady` | 1,851 |
-| `plugin.space.module.AppGraphBuilder` | 1,573 |
-| 6× `*.AppGraphBuilder` modules (transcription, pipeline, outliner, assistant, daily-summary, thread) | 1,557–1,568 each |
+| `plugin.client.module.Client` | 1,783 |
+| `plugin.transcription.module.transcription` | 1,141 |
+| 7× `*.AppGraphBuilder` modules (pipeline, outliner, space, meeting, daily-summary, assistant) | 1,128–1,139 each |
+| `plugin.assistant.module.LocalModelResolver` | 1,137 |
+| `plugin.assistant.module.EdgeModelResolver` | 1,136 |
+
+The 1,128–1,141 ms cluster is suspicious — those modules likely all activate on the same upstream signal (probably `ClientReady` from `plugin.client.module.Client` at 1,783 ms) and fan out simultaneously. Reducing concurrency or sequencing them is recommendation #5.
+
+Production bundle, `out/composer/assets`: **2,558 JS chunk files**, **71 MB total**, with
+`main-*.js` at **8.5 MB raw / 2.39 MB gzip**, `react-surface-*.js` at 5.7 MB raw, `dedicated-worker-*.js` at 3.5 MB raw.
 
 Production bundle, `out/composer/assets`: **2,558 JS chunk files**, **71 MB total**, with
 `main-*.js` at **8.5 MB raw / 2.39 MB gzip**, `react-surface-*.js` at 5.7 MB raw, `dedicated-worker-*.js` at 3.5 MB raw.
 
 Three things jump out from these numbers and are reflected in §5:
 
-1. **`welcome.onboarding` alone is 5.9 s — over half the cold `profilerTotal`.** It blocks the `Startup` event from completing. Profile and split it before chasing anything else.
-2. **`navigationToReady` exceeds `profilerTotal` by ~7 s on cold.** `Startup` activated ≠ user-account testid mounted. We need an extra mark for "first interactive surface rendered" and to bake that into the harness.
-3. **The first `await import` doesn't even *start* until +4.9 s on cold** — the entire eager `import` chain in `plugin-defs.tsx` is paid synchronously before `main()`'s body runs. Lazy loading of non-core plugins is the largest single lever.
+1. ~~**`welcome.onboarding` alone is 5.9 s — over half the cold `profilerTotal`.**~~ **Resolved by phase 1** — `initialize()` is no longer awaited inside the module's activation; the manager is contributed synchronously and identity setup runs as a background side-effect. Cold dropped 45%.
+2. **`navigationToReady` exceeds `profilerTotal` by ~5 s on cold (post-phase-1).** `Startup` activated ≠ user-account testid mounted. The gap shrank but didn't disappear with phase 1. Still want the extra `startup:user-account-mounted` mark.
+3. **The first `await import` doesn't even *start* until +2.9 s on cold (post-phase-1; was +4.9 s)** — the eager `import` chain in `plugin-defs.tsx` is still paid synchronously before `main()`'s body runs. Lazy loading of non-core plugins is the next-largest lever.
 
 ## 1. The pipeline today
 
@@ -268,11 +276,17 @@ A bounded concurrency (e.g. 4–8) plus a single batched render via
 Ordering rewritten after running the harness — the welcome onboarding cost was
 not visible from static reading.
 
-1. **Investigate `plugin.welcome.module.onboarding` (5.9 s cold).** It's
-   blocking the `Startup` event. Likely awaiting first space/identity creation
-   inside an activation effect; either split that work into a post-startup
-   `firesAfterActivation` event, or short-circuit when the user is already
-   onboarded. This single fix is worth every other item on this list combined.
+1. ✅ **Phase 1 (shipped):** Defer `OnboardingManager.initialize()` so it is
+   not awaited inside the welcome.onboarding module's activation. The manager
+   is contributed synchronously and identity creation continues as a
+   background side-effect. Cold profilerTotal dropped 45% (8.5 → 4.7 s).
+   See [`src/plugins/welcome/capabilities/onboarding.ts`](src/plugins/welcome/capabilities/onboarding.ts).
+   *Caveat:* on a true first-run user (skipAuth path), the app shell now
+   renders before identity exists — downstream code that reads
+   `WelcomeCapabilities.Onboarding` already obtains the manager and observes
+   identity state via existing `client.halo.identity` subscriptions, so this
+   is OK. The first-run UX flash is unverified at the time of this writing
+   (the e2e suite still passes, but no real first-run user has tested it).
 2. **Lazy-load non-core plugins.** Convert `plugin-defs.tsx` from `import {
    FooPlugin } from '@dxos/plugin-foo'` to a record like
    `{ id: '@dxos/plugin-foo', activate: () => import('@dxos/plugin-foo').then(...)
