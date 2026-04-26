@@ -11,6 +11,7 @@ import React, {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from 'react';
 
 import { type ClassNameValue, type ThemedClassName } from '@dxos/react-ui';
@@ -18,7 +19,7 @@ import { mx } from '@dxos/ui-theme';
 
 const emptyLines: string[] = [];
 
-// TODO(burdon): Factor out? Effect literal.
+// TODO(burdon): Factor out to theme?
 export type Size = 'sm' | 'md' | 'lg';
 export const sizes: Size[] = ['sm', 'md', 'lg'];
 
@@ -204,15 +205,19 @@ export const TextRibbon = forwardRef<TextRibbonController, TextRibbonProps>(
   ) => {
     const { className, lineHeight } = sizeClassNames[size];
     const containerRef = useRef<HTMLDivElement>(null);
+    const reducedMotion = useReducedMotion();
 
     const setPosition = useCallback<TextRibbonController['setPosition']>(
       (index, animate = false) => {
         if (containerRef.current) {
-          containerRef.current.style.transition = animate ? `transform ${transition}ms ease-in-out` : 'transform 0ms';
+          const shouldAnimate = animate && !reducedMotion;
+          containerRef.current.style.transition = shouldAnimate
+            ? `transform ${transition}ms ease-in-out`
+            : 'transform 0ms';
           containerRef.current.style.transform = `translateY(-${index * lineHeight}px)`;
         }
       },
-      [lineHeight, transition],
+      [lineHeight, transition, reducedMotion],
     );
 
     // Controller.
@@ -227,6 +232,7 @@ export const TextRibbon = forwardRef<TextRibbonController, TextRibbonProps>(
               line={lines[i]}
               active={index === i || (i === 0 && index === lines.length)}
               transition={transition}
+              reducedMotion={reducedMotion}
               classNames={[className, textClassNames]}
             />
           ))}
@@ -235,6 +241,7 @@ export const TextRibbon = forwardRef<TextRibbonController, TextRibbonProps>(
               line={lines[0]}
               active={index === lines.length || index === 0}
               transition={transition}
+              reducedMotion={reducedMotion}
               classNames={[className, textClassNames]}
             />
           )}
@@ -249,14 +256,34 @@ const Line = ({
   line,
   active,
   transition,
-}: ThemedClassName<{ line: string; active: boolean; transition: number }>) => {
+  reducedMotion,
+}: ThemedClassName<{ line: string; active: boolean; transition: number; reducedMotion: boolean }>) => {
   return (
     <div
       role='none'
-      style={{ transitionDuration: `${transition / 3}ms` }}
+      style={{ transitionDuration: reducedMotion ? '0ms' : `${transition / 3}ms` }}
       className={mx('flex items-center truncate transition-opacity', active ? 'opacity-100' : 'opacity-50', classNames)}
     >
       {line}
     </div>
   );
 };
+
+const subscribeReducedMotion = (onChange: () => void): (() => void) => {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return () => {};
+  }
+  const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
+};
+
+const getReducedMotionSnapshot = (): boolean => {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return false;
+  }
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+};
+
+const useReducedMotion = (): boolean =>
+  useSyncExternalStore(subscribeReducedMotion, getReducedMotionSnapshot, () => false);
