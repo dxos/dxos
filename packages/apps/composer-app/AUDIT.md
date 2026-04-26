@@ -362,3 +362,45 @@ jq '.profilerTotal, .profile.slowestModules[:5]' \
   collect numbers from every devloop without remembering the flag.
 - Can `profiler.snapshot()` be exposed via `BroadcastChannel` so devtools can
   read it without polling localStorage?
+
+## 9. Phase log
+
+One subsection per phase in this branch. The first table in each subsection is
+the cold/warm/delta against the previous row in [`BENCHMARKS.md`](BENCHMARKS.md).
+All numbers are chromium, prod preview, my laptop — see the ledger for the raw
+recorded rows; there's run-to-run noise (~10%) so deltas under that bar should
+be treated as flat.
+
+### Phase 1 — defer `OnboardingManager.initialize()` (commit `9db4acdb1f`)
+
+| | Cold profilerTotal | Cold navToReady | Warm profilerTotal | Warm navToReady |
+| --- | ---: | ---: | ---: | ---: |
+| baseline (`f1cda8f2f8`) | 8,554 ms | 13,485 ms | 3,210 ms | 7,405 ms |
+| **phase 1** (`e7f390ae3e + ⚠`) | **4,704 ms** | **9,596 ms** | 3,163 ms | 7,364 ms |
+| delta | **−45%** | **−29%** | unchanged (noise) | unchanged (noise) |
+
+**Change:** [`src/plugins/welcome/capabilities/onboarding.ts`](src/plugins/welcome/capabilities/onboarding.ts) —
+replaced `yield* Effect.tryPromise(() => manager.initialize())` with
+`void manager.initialize().catch(log.catch)`. The manager is now contributed
+synchronously to `WelcomeCapabilities.Onboarding`; identity creation, agent
+provisioning, and credential queries run as a background side-effect.
+
+**Why it works:** the `welcome.onboarding` module activates on
+`allOf(AppGraphReady, OperationInvokerReady, LayoutReady, ClientReady)` and was
+the largest single child of the `Startup` activation cascade (5,948 ms cold).
+With `initialize()` no longer awaited, the module activates as soon as the
+manager is constructed (microseconds), and `Startup` completes ~4 s sooner.
+
+**Caveat:** in the skipAuth code path (`!DX_HUB_URL`), the app shell renders
+before HALO identity exists. No external code reads
+`WelcomeCapabilities.Onboarding` synchronously today (verified by grep), and
+identity state is observed via the constructor's `client.halo.identity` /
+`client.halo.credentials` subscriptions, so existing reactive consumers see
+the eventual identity. The basic e2e suite still passes, but a real first-run
+user has not clicked through it — flag for design review.
+
+**What's left on cold (top of the post-phase-1 profile):** `plugin.client.module.Client`
+(1,783 ms), `transcription` (1,141 ms), and a 7-module cluster of
+`*.AppGraphBuilder`s at 1,128–1,139 ms each — strong signal they all activate
+on `ClientReady` and fan out under `concurrency: 'unbounded'`. That cluster is
+the target of recommendation #5.
