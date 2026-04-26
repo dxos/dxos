@@ -183,6 +183,18 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     .flat();
 
 /**
+ * Optional progress callback fired as each plugin chunk's dynamic import
+ * resolves. Hosts can use this to drive a visible counter on the boot
+ * loader (`Loading plugins (3/55)…`) while the lazy chunks are pipelining.
+ * Resolution order is *not* the array order — these are dynamic imports
+ * resolving in parallel — so callers should treat `loaded` as a count, not
+ * an index.
+ */
+export type GetPluginsOptions = {
+  onPluginLoaded?: (loaded: number, total: number) => void;
+};
+
+/**
  * Constructs every plugin instance the host can offer (whether enabled or not).
  *
  * Phase 2 (lazy plugins): instead of `import { FooPlugin } from '@dxos/plugin-foo'`
@@ -199,20 +211,42 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
  * @returns A flat list of `Plugin.Plugin` instances, suitable for passing to
  *   `useApp({ plugins })`.
  */
-export const getPlugins = async ({
-  appKey,
-  config,
-  services,
-  observability,
-  logBuffer,
-  isDev,
-  isLocal,
-  isLabs,
-  isPwa,
-  isTauri,
-  isPopover,
-  isMobile,
-}: PluginConfig): Promise<Plugin.Plugin[]> => {
+export const getPlugins = async (
+  {
+    appKey,
+    config,
+    services,
+    observability,
+    logBuffer,
+    isDev,
+    isLocal,
+    isLabs,
+    isPwa,
+    isTauri,
+    isPopover,
+    isMobile,
+  }: PluginConfig,
+  { onPluginLoaded }: GetPluginsOptions = {},
+): Promise<Plugin.Plugin[]> => {
+  // Track per-plugin completion. The boot loader's status bar shows a counter
+  // ("Loading plugins (12/59)…") so the user has a visible signal that the
+  // lazy chunks are landing in parallel rather than the long Promise.all
+  // looking like a single frozen step. `track()` is generic so the tuple
+  // typing of `Promise.all([...])` survives — `.map()` would collapse the
+  // tuple into a homogeneous union and break the destructure below.
+  let total = 0;
+  let loaded = 0;
+  const track = <T,>(promise: Promise<T>): Promise<T> => {
+    // Bump synchronously during array construction so the final count is
+    // available before any resolution callback fires.
+    total += 1;
+    return promise.then((module) => {
+      loaded += 1;
+      onPluginLoaded?.(loaded, total);
+      return module;
+    });
+  };
+
   const [
     { AssistantPlugin },
     { AttentionPlugin },
@@ -275,66 +309,66 @@ export const getPlugins = async ({
     { YouTubePlugin },
     { ZenPlugin },
   ] = await Promise.all([
-    import('@dxos/plugin-assistant'),
-    import('@dxos/plugin-attention'),
-    import('@dxos/plugin-automation'),
-    import('@dxos/plugin-board'),
-    import('@dxos/plugin-chess'),
-    import('@dxos/plugin-client'),
-    import('@dxos/plugin-conductor'),
-    import('@dxos/plugin-crx'),
-    import('@dxos/plugin-crx-bridge'),
-    import('@dxos/plugin-daily-summary'),
-    import('@dxos/plugin-debug'),
-    import('@dxos/plugin-deck'),
-    import('@dxos/plugin-discord'),
-    import('@dxos/plugin-explorer'),
-    import('@dxos/plugin-feed'),
-    import('@dxos/plugin-graph'),
-    import('@dxos/plugin-help'),
-    import('@dxos/plugin-inbox'),
-    import('@dxos/plugin-iroh-beacon'),
-    import('@dxos/plugin-kanban'),
-    import('@dxos/plugin-map'),
-    import('@dxos/plugin-map-solid'),
-    import('@dxos/plugin-markdown'),
-    import('@dxos/plugin-masonry'),
-    import('@dxos/plugin-meeting'),
-    import('@dxos/plugin-mermaid'),
-    import('@dxos/plugin-native'),
-    import('@dxos/plugin-native-filesystem'),
-    import('@dxos/plugin-navtree'),
-    import('@dxos/plugin-observability'),
-    import('@dxos/plugin-outliner'),
-    import('@dxos/plugin-pipeline'),
-    import('@dxos/plugin-presenter'),
-    import('@dxos/plugin-preview'),
-    import('@dxos/plugin-pwa'),
-    import('@dxos/plugin-registry'),
-    import('@dxos/plugin-sample'),
-    import('@dxos/plugin-script'),
-    import('@dxos/plugin-search'),
-    import('@dxos/plugin-settings'),
-    import('@dxos/plugin-sheet'),
-    import('@dxos/plugin-sidekick'),
-    import('@dxos/plugin-simple-layout'),
-    import('@dxos/plugin-sketch'),
-    import('@dxos/plugin-space'),
-    import('@dxos/plugin-spacetime'),
-    import('@dxos/plugin-spec'),
-    import('@dxos/plugin-spotlight'),
-    import('@dxos/plugin-stack'),
-    import('@dxos/plugin-status-bar'),
-    import('@dxos/plugin-table'),
-    import('@dxos/plugin-theme'),
-    import('@dxos/plugin-thread'),
-    import('@dxos/plugin-tictactoe'),
-    import('@dxos/plugin-token-manager'),
-    import('@dxos/plugin-transcription'),
-    import('@dxos/plugin-voxel'),
-    import('@dxos/plugin-wnfs'),
-    import('@dxos/plugin-youtube'),
-    import('@dxos/plugin-zen'),
+    track(import('@dxos/plugin-assistant')),
+    track(import('@dxos/plugin-attention')),
+    track(import('@dxos/plugin-automation')),
+    track(import('@dxos/plugin-board')),
+    track(import('@dxos/plugin-chess')),
+    track(import('@dxos/plugin-client')),
+    track(import('@dxos/plugin-conductor')),
+    track(import('@dxos/plugin-crx')),
+    track(import('@dxos/plugin-crx-bridge')),
+    track(import('@dxos/plugin-daily-summary')),
+    track(import('@dxos/plugin-debug')),
+    track(import('@dxos/plugin-deck')),
+    track(import('@dxos/plugin-discord')),
+    track(import('@dxos/plugin-explorer')),
+    track(import('@dxos/plugin-feed')),
+    track(import('@dxos/plugin-graph')),
+    track(import('@dxos/plugin-help')),
+    track(import('@dxos/plugin-inbox')),
+    track(import('@dxos/plugin-iroh-beacon')),
+    track(import('@dxos/plugin-kanban')),
+    track(import('@dxos/plugin-map')),
+    track(import('@dxos/plugin-map-solid')),
+    track(import('@dxos/plugin-markdown')),
+    track(import('@dxos/plugin-masonry')),
+    track(import('@dxos/plugin-meeting')),
+    track(import('@dxos/plugin-mermaid')),
+    track(import('@dxos/plugin-native')),
+    track(import('@dxos/plugin-native-filesystem')),
+    track(import('@dxos/plugin-navtree')),
+    track(import('@dxos/plugin-observability')),
+    track(import('@dxos/plugin-outliner')),
+    track(import('@dxos/plugin-pipeline')),
+    track(import('@dxos/plugin-presenter')),
+    track(import('@dxos/plugin-preview')),
+    track(import('@dxos/plugin-pwa')),
+    track(import('@dxos/plugin-registry')),
+    track(import('@dxos/plugin-sample')),
+    track(import('@dxos/plugin-script')),
+    track(import('@dxos/plugin-search')),
+    track(import('@dxos/plugin-settings')),
+    track(import('@dxos/plugin-sheet')),
+    track(import('@dxos/plugin-sidekick')),
+    track(import('@dxos/plugin-simple-layout')),
+    track(import('@dxos/plugin-sketch')),
+    track(import('@dxos/plugin-space')),
+    track(import('@dxos/plugin-spacetime')),
+    track(import('@dxos/plugin-spec')),
+    track(import('@dxos/plugin-spotlight')),
+    track(import('@dxos/plugin-stack')),
+    track(import('@dxos/plugin-status-bar')),
+    track(import('@dxos/plugin-table')),
+    track(import('@dxos/plugin-theme')),
+    track(import('@dxos/plugin-thread')),
+    track(import('@dxos/plugin-tictactoe')),
+    track(import('@dxos/plugin-token-manager')),
+    track(import('@dxos/plugin-transcription')),
+    track(import('@dxos/plugin-voxel')),
+    track(import('@dxos/plugin-wnfs')),
+    track(import('@dxos/plugin-youtube')),
+    track(import('@dxos/plugin-zen')),
   ]);
 
   // `@dxos/plugin-map-solid` re-exports `MapPlugin` (alias-imported below).

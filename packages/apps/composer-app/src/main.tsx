@@ -355,13 +355,17 @@ const main = async () => {
   // Phase 2 (lazy plugins): `getPlugins` is now async — every plugin chunk is
   // dynamically imported in parallel. Run it concurrently with `UrlLoader.preload`
   // (network-bound) so the two waits overlap.
+  bootStatus('Loading plugins…');
   const [builtinPlugins, remotePluginsResult] = await Promise.all([
-    getPlugins(conf),
+    getPlugins(conf, {
+      onPluginLoaded: (loaded, total) => bootStatus(`Loading plugins (${loaded}/${total})…`),
+    }),
     UrlLoader.preload().catch((error) => {
       log.warn('failed to preload remote plugins', { error });
       return [] as Plugin.Plugin[];
     }),
   ]);
+  bootStatus('Almost ready…');
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins);

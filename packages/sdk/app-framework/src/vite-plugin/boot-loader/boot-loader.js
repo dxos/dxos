@@ -1,3 +1,7 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 // Inline driver script — injected into the host's `<body>` by `bootLoaderPlugin`.
 // Runs before the module bundle is fetched, so the host can observe `boot:html-parsed`
 // and update the visible status from `main.tsx` between phases.

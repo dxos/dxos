@@ -6,10 +6,9 @@ import React, { useLayoutEffect } from 'react';
 
 import { type PlaceholderProps } from '@dxos/app-framework/ui';
 import { Composer } from '@dxos/brand';
-import { Status, ThemeProvider } from '@dxos/react-ui';
+import { ThemeProvider } from '@dxos/react-ui';
 import { defaultTx, mx } from '@dxos/ui-theme';
 
-// TODO(burdon): Create native DOM placeholder and inject in index.html.
 export const Placeholder = ({ stage = 1, progress }: PlaceholderProps) => {
   // This is used to test the error boundary & reset dialog.
   if (location.search === '?throw') {
@@ -41,20 +40,12 @@ export const Placeholder = ({ stage = 1, progress }: PlaceholderProps) => {
               stage >= 2 && 'scale-50 opacity-0',
             )}
           />
-          {hasProgress && (
-            <p
-              className='flex justify-center absolute bottom-8 text-sm text-subdued mt-4 transition-opacity duration-300'
-              data-testid='composer.placeholder.progress'
-            >
-              {progress!.status} ({progress!.activated}/{progress!.total})
-            </p>
-          )}
         </div>
-        <Status
+        {/* <Status
           variant='main-bottom'
           aria-label='Initializing'
           {...(hasProgress ? { progress: progress!.progress } : { indeterminate: true })}
-        />
+        /> */}
       </div>
     </ThemeProvider>
   );
