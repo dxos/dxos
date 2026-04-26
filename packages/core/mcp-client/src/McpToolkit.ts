@@ -104,7 +104,7 @@ const connectWithFallback = (options: McpToolkitOptions): Effect.Effect<Client, 
       return primary.right;
     }
     if (is405(primary.left)) {
-      return yield* connectClient(options.url, fallbackKind, options.apiKey).pipe(Effect.orDie);
+      return yield* connectClient(options.url, fallbackKind, options.apiKey);
     }
     return yield* Effect.fail(primary.left);
   });
