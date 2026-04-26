@@ -19,13 +19,14 @@ import { mx } from '@dxos/ui-theme';
 import { formatElapsed } from './formatElapsed';
 
 const SECOND = 1_000;
+const TICK_MS = 500;
 
 //
 // Context
 //
 
 type StatusContextValue = {
-  /** Wall-clock time (epoch ms). Updated once per second by Status.Root while running. */
+  /** Wall-clock time (epoch ms). Updated every 500ms by Status.Root while running. */
   time: number;
 };
 
@@ -38,9 +39,9 @@ export { useStatusContext };
 //
 
 export type StatusController = {
-  /** Resume the 1Hz tick. No-op if already running. */
+  /** Resume the 2Hz tick. No-op if already running. */
   start: () => void;
-  /** Pause the 1Hz tick. The reported `time` freezes at its last value. */
+  /** Pause the 2Hz tick. The reported `time` freezes at its last value. */
   stop: () => void;
 };
 
@@ -68,9 +69,9 @@ const Root = forwardRef<StatusController, RootProps>(
       const tick = () => {
         const now = Date.now();
         setTime(now);
-        timeout = setTimeout(tick, SECOND - (now % SECOND));
+        timeout = setTimeout(tick, TICK_MS - (now % TICK_MS));
       };
-      timeout = setTimeout(tick, SECOND - (Date.now() % SECOND));
+      timeout = setTimeout(tick, TICK_MS - (Date.now() % TICK_MS));
       return () => clearTimeout(timeout);
     }, [running]);
 
@@ -129,7 +130,7 @@ export type StopwatchProps = ThemedClassName<{
 }>;
 
 /**
- * Elapsed-time display, driven by the Status.Root context tick (1Hz).
+ * Elapsed-time display, driven by the Status.Root context tick (2Hz).
  * Re-mount or change the `start` prop to reset.
  */
 const Stopwatch = ({ classNames, start: startProp }: StopwatchProps) => {
