@@ -24,6 +24,7 @@ Add an experimental `PathMorph` component to `@dxos/react-ui-sfx` that morphs a 
 
 **Package:** `@dxos/react-ui-sfx`
 **Files:**
+
 - `src/components/experimental/PathMorph.tsx`
 - `src/components/experimental/PathMorph.stories.tsx`
 
@@ -47,13 +48,7 @@ const CIRCLE_PATH =
  * Builds an n-point star SVG path with alternating outer/inner radii around (cx, cy).
  * First vertex sits at the top (angle = -π/2) so it matches the circle's anchor at (50, 10).
  */
-const buildStarPath = (
-  cx: number,
-  cy: number,
-  outerR: number,
-  innerR: number,
-  points: number,
-): string => {
+const buildStarPath = (cx: number, cy: number, outerR: number, innerR: number, points: number): string => {
   const cmds: string[] = [];
   for (let i = 0; i < points * 2; i++) {
     const angle = (Math.PI / points) * i - Math.PI / 2;
@@ -81,10 +76,7 @@ export type PathMorphProps = ThemedClassName<{
  */
 export const PathMorph = ({ classNames, size = 100, duration = 2 }: PathMorphProps) => {
   const progress = useMotionValue(0);
-  const interpolator = useMemo(
-    () => interpolate(CIRCLE_PATH, STAR_PATH, { maxSegmentLength: 2 }),
-    [],
-  );
+  const interpolator = useMemo(() => interpolate(CIRCLE_PATH, STAR_PATH, { maxSegmentLength: 2 }), []);
   const path = useTransform(progress, (t) => interpolator(t));
 
   useEffect(() => {
