@@ -428,6 +428,9 @@ DX_PWA=false moon run composer-app:e2e -- src/playwright/startup.spec.ts
 
 # Output:
 ls test-results/composer-app/startup-*.json
+
+# Run preview to check manually
+pnpm vite preview
 ```
 
 Each JSON file is one scenario × one browser, fields documented at the top of
@@ -545,9 +548,9 @@ unchanged from phase 1 — the 8 `*.AppGraphBuilder` modules clustering at
 
 |                                | Cold profilerTotal | Cold navToReady | Cold firstInteractive | Warm profilerTotal |
 | ------------------------------ | -----------------: | --------------: | --------------------: | -----------------: |
-| phase 2 (`697d645631 + ⚠`)     |           5,664 ms |        9,780 ms |     — (not captured)  |           3,568 ms |
-| **phase 3** (`2560fb5afb + ⚠`)      |       **5,480 ms** |    **9,532 ms** |          **8,732 ms** |           3,555 ms |
-| delta                          |   −184 ms (noise)  | −248 ms (noise) |        first capture  |  −13 ms (noise)    |
+| phase 2 (`697d645631 + ⚠`)     |           5,664 ms |        9,780 ms |      — (not captured) |           3,568 ms |
+| **phase 3** (`2560fb5afb + ⚠`) |       **5,480 ms** |    **9,532 ms** |          **8,732 ms** |           3,555 ms |
+| delta                          |    −184 ms (noise) | −248 ms (noise) |         first capture |     −13 ms (noise) |
 
 Phase 3 is mostly hygiene + new instrumentation, not a perf win. The four
 included changes are individually too small (or in 3d's case, too risky for
@@ -595,9 +598,9 @@ phase 4.
 
 |                                  | Cold profilerTotal | Cold navToReady | Cold firstInteractive | Warm firstInteractive |
 | -------------------------------- | -----------------: | --------------: | --------------------: | --------------------: |
-| phase 3 (`6efdeb84e2 + ⚠`)       |           5,480 ms |        9,532 ms |              8,732 ms |     — (not captured)  |
-| **phase 3.5** (`562d20e31c + ⚠`)      |           6,316 ms |       10,289 ms |              9,418 ms |              5,808 ms |
-| delta                            |   +836 ms (noise)  | +757 ms (noise) |     +686 ms (noise)   |          first warm   |
+| phase 3 (`6efdeb84e2 + ⚠`)       |           5,480 ms |        9,532 ms |              8,732 ms |      — (not captured) |
+| **phase 3.5** (`562d20e31c + ⚠`) |           6,316 ms |       10,289 ms |              9,418 ms |              5,808 ms |
+| delta                            |    +836 ms (noise) | +757 ms (noise) |       +686 ms (noise) |            first warm |
 
 **Change:** [`packages/apps/composer-app/src/main.tsx`](src/main.tsx) — `useApp({
 debounce: 200 })`. The boot loader covers the pre-React phase, so the longer
@@ -625,7 +628,7 @@ between events in `_activateModulesForEvent`. The first measurement (commit
 
 **Why we reverted:** subsequent phase 5 harness runs exposed that the warm
 scenario is genuinely flaky — the System Error dialog appears in 60–90% of
-warm reloads, *with or without* phase 4. Three full reverts and two retries
+warm reloads, _with or without_ phase 4. Three full reverts and two retries
 each on warm all failed. The flake is pre-existing in the warm-reload path
 and not caused by phase 4, but the yieldNow attempt clearly amplified it
 (every yield introduces a window where the activation cascade is
@@ -641,12 +644,12 @@ but did not root-cause it.
 
 ### Phase 5 — harness improvements (commit `ca88ace276`)
 
-| Scenario                        | Cold profilerTotal | Cold navToReady | Cold firstInteractive | Notes                                          |
-| ------------------------------- | -----------------: | --------------: | --------------------: | ---------------------------------------------- |
-| `cold` (cleared storage)        |           5,538 ms |        8,762 ms |              ~7,800 ms | (median of 3 runs) — first-time-user           |
-| `warm` (reload, IDB warm)       |           3,645 ms |        6,685 ms |             ~5,800 ms | flaky; passes ~30% of attempts ⚠               |
-| **`warm-cold`** (persistent ctx) |       **5,090 ms** |    **8,214 ms** |              ~7,300 ms | **NEW** — closer to real returning user        |
-| `throttled-cold` (Fast 3G + 2× CPU) | (not run by default) |  | | opt-in via `DX_HARNESS_THROTTLED=1`        |
+| Scenario                            |   Cold profilerTotal | Cold navToReady | Cold firstInteractive | Notes                                   |
+| ----------------------------------- | -------------------: | --------------: | --------------------: | --------------------------------------- |
+| `cold` (cleared storage)            |             5,538 ms |        8,762 ms |             ~7,800 ms | (median of 3 runs) — first-time-user    |
+| `warm` (reload, IDB warm)           |             3,645 ms |        6,685 ms |             ~5,800 ms | flaky; passes ~30% of attempts ⚠        |
+| **`warm-cold`** (persistent ctx)    |         **5,090 ms** |    **8,214 ms** |             ~7,300 ms | **NEW** — closer to real returning user |
+| `throttled-cold` (Fast 3G + 2× CPU) | (not run by default) |                 |                       | opt-in via `DX_HARNESS_THROTTLED=1`     |
 
 **Changes** (in [`src/playwright/startup.spec.ts`](src/playwright/startup.spec.ts)):
 
@@ -659,13 +662,13 @@ but did not root-cause it.
   cut; firefox/webkit persistent contexts have different semantics around
   OPFS that haven't been validated. Cleanup is best-effort `rmSync` in the
   test's `finally` block.
-- **5b. `throttled-cold` scenario via CDP `Network.emulateNetworkConditions`
-  + `Emulation.setCPUThrottlingRate`.** Fast 3G + 2× CPU. Not run by
-  default — composer's full asset graph is ~40 MB, so even Fast 3G can
-  take 5+ minutes per run (Slow 3G times out at any reasonable budget).
-  Set `DX_HARNESS_THROTTLED=1` to enable. This is the scenario that
-  reveals phase 2's bundle-reduction win on real-network conditions
-  (local-disk benchmarks underrepresent it).
+- \*\*5b. `throttled-cold` scenario via CDP `Network.emulateNetworkConditions`
+  - `Emulation.setCPUThrottlingRate`.\*\* Fast 3G + 2× CPU. Not run by
+    default — composer's full asset graph is ~40 MB, so even Fast 3G can
+    take 5+ minutes per run (Slow 3G times out at any reasonable budget).
+    Set `DX_HARNESS_THROTTLED=1` to enable. This is the scenario that
+    reveals phase 2's bundle-reduction win on real-network conditions
+    (local-disk benchmarks underrepresent it).
 - **5c. Cross-browser: documentation only.** `PLAYWRIGHT_BROWSER=all` is
   already supported by `e2ePreset`; CI just needs to set it. No code
   change needed.
@@ -678,7 +681,7 @@ but did not root-cause it.
 **Headline finding:** `warm-cold` (5,090 ms profilerTotal / 8,214 ms
 navToReady) is essentially indistinguishable from `cold` (~5,500 / ~8,700).
 Identity creation, which the cold scenario's first-run includes, is
-*not* the bottleneck for repeat users. Most of the cold cost is module
+_not_ the bottleneck for repeat users. Most of the cold cost is module
 graph evaluation + activation, which would still be paid by a returning
 user on a fresh tab. This validates phase 1's deferral choice (identity
 work is off the critical path for repeat users) and shows phase 4's
@@ -696,11 +699,11 @@ the test's comment).
 
 ### Phase 6 — production telemetry (commit `0b39281ade`)
 
-|                            | Cold profilerTotal | Cold navToReady | Warm profilerTotal | Warm-cold profilerTotal |
-| -------------------------- | -----------------: | --------------: | -----------------: | ----------------------: |
-| phase 5 (`ca88ace276 + ⚠`) |           5,538 ms |        8,762 ms |           3,645 ms |                5,090 ms |
-| **phase 6** (`0b39281ade + ⚠`)  |       **5,548 ms** |    **8,697 ms** |       **3,649 ms** |            **5,079 ms** |
-| delta                      |       flat (noise) |     flat (noise) |     flat (noise) |             flat (noise) |
+|                                | Cold profilerTotal | Cold navToReady | Warm profilerTotal | Warm-cold profilerTotal |
+| ------------------------------ | -----------------: | --------------: | -----------------: | ----------------------: |
+| phase 5 (`ca88ace276 + ⚠`)     |           5,538 ms |        8,762 ms |           3,645 ms |                5,090 ms |
+| **phase 6** (`0b39281ade + ⚠`) |       **5,548 ms** |    **8,697 ms** |       **3,649 ms** |            **5,079 ms** |
+| delta                          |       flat (noise) |    flat (noise) |       flat (noise) |            flat (noise) |
 
 **Changes:**
 
@@ -710,11 +713,11 @@ the test's comment).
   consumers register a one-shot listener and capture the summary themselves.
 - **composer-app — `main.tsx`:** subscribe to the new event, build a flat
   `Attributes`-compatible summary from `performance.getEntriesByType('measure')`
-  + `performance.getEntriesByType('resource')` + the `boot:html-parsed` and
-  `app-framework:first-interactive` marks, and emit
-  `obs.events.captureEvent('composer.startup', summary)` once observability
-  resolves. Top-5 slowest modules are flattened to `top1Module`/`top1Ms` …
-  `top5Module`/`top5Ms` keys for easier PostHog filtering.
+  - `performance.getEntriesByType('resource')` + the `boot:html-parsed` and
+    `app-framework:first-interactive` marks, and emit
+    `obs.events.captureEvent('composer.startup', summary)` once observability
+    resolves. Top-5 slowest modules are flattened to `top1Module`/`top1Ms` …
+    `top5Module`/`top5Ms` keys for easier PostHog filtering.
 
 **Why a CustomEvent and not a callback:** the natural alternative is to add
 an `onStartup?: (summary) => void` option to `useApp`. That couples
@@ -740,19 +743,19 @@ the implementation cost, valuable at the ops scale.
 
 ### Phase 7 — instrumentation completeness (commit `daf09cd61a`)
 
-|                            | Cold profilerTotal | Cold navToReady | Warm profilerTotal | Warm-cold profilerTotal |
-| -------------------------- | -----------------: | --------------: | -----------------: | ----------------------: |
-| phase 6 (`0b39281ade + ⚠`) |           5,548 ms |        8,697 ms |           3,649 ms |                5,079 ms |
-| **phase 7** (`daf09cd61a + ⚠`)  |       **5,425 ms** |    **8,806 ms** |       **3,497 ms** |            **5,118 ms** |
-| delta                      |       flat (noise) |     flat (noise) |     flat (noise) |             flat (noise) |
+|                                | Cold profilerTotal | Cold navToReady | Warm profilerTotal | Warm-cold profilerTotal |
+| ------------------------------ | -----------------: | --------------: | -----------------: | ----------------------: |
+| phase 6 (`0b39281ade + ⚠`)     |           5,548 ms |        8,697 ms |           3,649 ms |                5,079 ms |
+| **phase 7** (`daf09cd61a + ⚠`) |       **5,425 ms** |    **8,806 ms** |       **3,497 ms** |            **5,118 ms** |
+| delta                          |       flat (noise) |    flat (noise) |       flat (noise) |            flat (noise) |
 
 **Changes:**
 
 - **7a. `?profiler=1` default in dev builds.** [`main.tsx`](src/main.tsx) —
   `isTrue(url.searchParams.get(PARAM_PROFILER), Boolean(import.meta.env?.DEV))`.
   Every devloop now produces an auto-recorded ledger row + console table
-  + `composer.startup` PostHog event without remembering the flag.
-  Production explicitly opts in (or out) via the URL parameter as before.
+  - `composer.startup` PostHog event without remembering the flag.
+    Production explicitly opts in (or out) via the URL parameter as before.
 - **7b. `BroadcastChannel` snapshot.** [`profiler.ts`](src/profiler.ts) —
   `dump()` now also `postMessage`s the `ProfilerSnapshot` JSON on a
   `BroadcastChannel` named `org.dxos.composer.startup-profile` (exposed
@@ -776,11 +779,11 @@ cheap, additive, stays out of the way.
 
 ### Phase 8 — visual polish (commit `c2927574d5`)
 
-|                            | Cold profilerTotal | Cold navToReady | Warm profilerTotal | Warm-cold profilerTotal |
-| -------------------------- | -----------------: | --------------: | -----------------: | ----------------------: |
-| phase 7 (`daf09cd61a + ⚠`) |           5,425 ms |        8,806 ms |           3,497 ms |                5,118 ms |
-| **phase 8** (`c2927574d5 + ⚠`)  |       **5,427 ms** |    **8,544 ms** |       **3,444 ms** |            **5,844 ms** |
-| delta                      |       flat (noise) |     flat (noise) |     flat (noise) |             flat (noise) |
+|                                | Cold profilerTotal | Cold navToReady | Warm profilerTotal | Warm-cold profilerTotal |
+| ------------------------------ | -----------------: | --------------: | -----------------: | ----------------------: |
+| phase 7 (`daf09cd61a + ⚠`)     |           5,425 ms |        8,806 ms |           3,497 ms |                5,118 ms |
+| **phase 8** (`c2927574d5 + ⚠`) |       **5,427 ms** |    **8,544 ms** |       **3,444 ms** |            **5,844 ms** |
+| delta                          |       flat (noise) |    flat (noise) |       flat (noise) |            flat (noise) |
 
 **Changes:**
 
@@ -821,17 +824,79 @@ Net: clearly worth it for first-impression polish.
 
 ## 10. Summary of phases shipped
 
-| Phase | What                                                | Commit                | Headline metric move                       |
-| ---: | --------------------------------------------------- | --------------------- | ------------------------------------------ |
-|   1 | Defer `OnboardingManager.initialize()` to background | `9db4acdb1f`          | **−45% cold profilerTotal**                |
-|   2 | Lazy-load plugin chunks                              | `697d645631`          | **eager bundle −96%** (8.5 MB → 393 KB)    |
-|   3 | Small wins (Promise.all, PubSub progress, mark)      | `2560fb5afb`          | flat perf, new `firstInteractive` metric   |
-| 3.5 | `useLoading` debounce 1 s → 200 ms                   | `562d20e31c`          | UX cleanup (within noise)                  |
-|   4 | Activation-graph hygiene                             | (reverted in `c0e35cd1d2`) | shipping-blocked by warm flake             |
-|   5 | Harness: warm-cold + throttled scenarios             | `ca88ace276`          | first `warm-cold` measurement              |
-|   6 | Production telemetry (PostHog `composer.startup`)    | `0b39281ade`          | flat perf, new ops visibility              |
-|   7 | `?profiler=1` default in dev + `BroadcastChannel`    | `daf09cd61a`          | flat perf, dev ergonomics                  |
-|   8 | Boot-loader brand mark + handoff timing              | `c2927574d5`               | flat perf, visual polish                   |
+| Phase | What                                                 | Commit                     | Headline metric move                     |
+| ----: | ---------------------------------------------------- | -------------------------- | ---------------------------------------- |
+|     1 | Defer `OnboardingManager.initialize()` to background | `9db4acdb1f`               | **−45% cold profilerTotal**              |
+|     2 | Lazy-load plugin chunks                              | `697d645631`               | **eager bundle −96%** (8.5 MB → 393 KB)  |
+|     3 | Small wins (Promise.all, PubSub progress, mark)      | `2560fb5afb`               | flat perf, new `firstInteractive` metric |
+|   3.5 | `useLoading` debounce 1 s → 200 ms                   | `562d20e31c`               | UX cleanup (within noise)                |
+|     4 | Activation-graph hygiene                             | (reverted in `c0e35cd1d2`) | shipping-blocked by warm flake           |
+|     5 | Harness: warm-cold + throttled scenarios             | `ca88ace276`               | first `warm-cold` measurement            |
+|     6 | Production telemetry (PostHog `composer.startup`)    | `0b39281ade`               | flat perf, new ops visibility            |
+|     7 | `?profiler=1` default in dev + `BroadcastChannel`    | `daf09cd61a`               | flat perf, dev ergonomics                |
+|     8 | Boot-loader brand mark + handoff timing              | `c2927574d5`               | flat perf, visual polish                 |
 
 Headline cumulative: cold `profilerTotal` 11,118 ms → ~5,400 ms (−51%);
 cold `navToReady` 18,054 ms → ~8,700 ms (−52%); eager bundle −96%.
+
+## 11. Dev server load time
+
+The harness above measures the production preview (`vite preview`); none of
+phases 1–8 deliberately optimize the dev server (`vite serve`). Dev pays
+different costs:
+
+- **Per-file transformation.** Every source `.ts` / `.tsx` is served as
+  ESM, transformed on demand through SWC + the project's plugin chain
+  (`@dxos/swc-log-plugin`, the `import-source` redirect, etc.). Composer's
+  module graph is ~2,500 modules; every one of them is a separate request.
+- **Optimize-deps pre-bundling.** Vite scans `index.html` and pre-bundles
+  the deps it discovers via esbuild on first start. Composer has many
+  deeply-imported packages (`effect/Effect`, `@codemirror/*`, `@radix-ui/*`)
+  that aren't trivially auto-discoverable — when one shows up mid-load that
+  isn't in the pre-bundle, vite forces a **full page reload** with the
+  "Discovered new dependencies, reloading…" banner.
+- **No minification, no tree-shaking, no chunk-splitting.** Sourcemaps
+  inline; bytes per response are larger than prod.
+
+### Phase 9 — dev-server harness (commit `<TBD>`)
+
+| Scenario                            |        Cold profilerTotal |          Cold navToReady |     Bytes |   modules |
+| ----------------------------------- | ------------------------: | -----------------------: | --------: | --------: |
+| `cold` (prod preview, phase 8 ref)  |                  ~5,400 ms |                ~8,700 ms |    41 MB |       257 |
+| **`dev-cold`** (vite serve, fresh)  |              **6,269 ms** |          **17,586 ms**   | **123 MB** |       258 |
+
+**Dev cold pays ~9 s of pre-`main:start` time** (the gap between `navToReady`
+and `profilerTotal`). That's vite serving + transforming every source file
+on demand — exactly the cost phase 10 targets.
+
+**Changes:**
+
+- Extracted shared helpers (`trackNetwork`, `collectStartupReport`,
+  `appendBenchmarkRow`, etc.) from `startup.spec.ts` into
+  [`harness-helpers.ts`](src/playwright/harness-helpers.ts) so the new
+  spec can reuse them without duplication.
+- New [`dev-startup.spec.ts`](src/playwright/dev-startup.spec.ts) with one
+  scenario, `dev-cold`, that primes vite by navigating once, closes the
+  context, then measures a *fresh* browser context against the still-warm
+  vite serve. Captures the same `StartupReport` shape as the prod harness
+  so the BENCHMARKS row is uniform.
+- New [`playwright-dev.config.ts`](src/playwright/playwright-dev.config.ts)
+  with `webServer.command = 'pnpm vite --port 4173'` so the existing
+  `INITIAL_URL` keeps working. `testMatch: '**/dev-startup.spec.ts'`
+  scopes it.
+- New `composer-app:e2e-dev` moon task that runs the dev harness.
+
+**Complexity vs. benefit:** ~150 lines of test code (most of it the
+extracted helper module that's also used by the prod harness now). No
+behavioural change. Benefit: **first quantitative dev-server measurement
+on this branch.** Without it, all dev-server optimization talk is
+hand-waving; with it, phase 10 has a number to move.
+
+### Phase 10: planned (not yet shipped)
+
+- Make `optimizeDeps.include` (currently gated on `DX_FASTBUNDLE=1`)
+  permanent so the deeply-imported deps don't trigger mid-load reloads.
+- Add `server.warmup.clientFiles` for `src/main.tsx` and the worker
+  entrypoints so vite pre-transforms the critical paths on serve start.
+- Add `optimizeDeps.entries` for the auxiliary HTML entrypoints
+  (`internal.html`, `devtools.html`, `reset.html`, `script-frame/index.html`).
