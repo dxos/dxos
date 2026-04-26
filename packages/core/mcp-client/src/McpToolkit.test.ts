@@ -149,7 +149,7 @@ describe('Browser Automation', () => {
 
 describe('McpToolkit.make', () => {
   test('produces a failure (not a defect) when the server is unreachable', async ({ expect }) => {
-    const result = await Effect.runPromise(
+    const result = await runAndForwardErrors(
       McpToolkit.make({
         url: 'http://127.0.0.1:1/unreachable',
         kind: 'http',
