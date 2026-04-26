@@ -11,15 +11,15 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Matrix, type MatrixProps } from './Matrix';
 
 const DefaultStory = (props: MatrixProps) => {
-  const [tick, setTick] = useState(0);
+  const [active, setActive] = useState(props.active ?? true);
 
   return (
     <div className='flex flex-col grow'>
       <Toolbar.Root>
-        <Button onClick={() => setTick((t) => t + 1)}>Toggle</Button>
+        <Button onClick={() => setActive((a) => !a)}>{active ? 'Stop' : 'Start'}</Button>
       </Toolbar.Root>
       <div className='flex grow items-center justify-center'>
-        <Matrix {...props} time={tick} />
+        <Matrix {...props} active={active} />
       </div>
     </div>
   );

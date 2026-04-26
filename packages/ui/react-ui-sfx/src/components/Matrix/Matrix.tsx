@@ -3,7 +3,7 @@
 //
 
 import { AnimatePresence, motion } from 'motion/react';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { type Size, type ThemedClassName } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/ui-theme';
@@ -13,11 +13,21 @@ export type MatrixProps = ThemedClassName<{
   count?: number;
   size?: Size;
   dotSize?: number;
-  /** Re-randomization trigger. Dots animate to new positions whenever this value changes. */
-  time?: number;
+  /** When true, the matrix runs an internal interval loop and re-randomizes dot positions on every tick. */
+  active?: boolean;
+  /** Re-randomization interval in ms while `active`. Defaults to 500. */
+  interval?: number;
 }>;
 
-export const Matrix = ({ classNames, dim = 5, count = 20, size = 5, dotSize = 4, time }: MatrixProps) => {
+export const Matrix = ({
+  classNames,
+  dim = 5,
+  count = 20,
+  size = 5,
+  dotSize = 4,
+  active = false,
+  interval = 500,
+}: MatrixProps) => {
   const variants = useMemo(() => {
     const variants: Record<string, any> = {};
     for (let x = 0; x <= dim - 1; x++) {
@@ -32,9 +42,17 @@ export const Matrix = ({ classNames, dim = 5, count = 20, size = 5, dotSize = 4,
     return variants;
   }, [dim]);
 
-  // Random positions are recomputed whenever `time`, `count`, or `dim` changes.
-  // Without `time`, positions are stable across re-renders — pass a changing value
-  // (e.g. an epoch ms tick) to drive the animation.
+  // Internal tick — incremented every `interval` ms while `active`. Drives position randomization.
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    if (!active) {
+      return;
+    }
+    const id = setInterval(() => setTick((t) => t + 1), interval);
+    return () => clearInterval(id);
+  }, [active, interval]);
+
+  // Positions re-randomize whenever `count`, `dim`, or `tick` changes.
   const positions = useMemo(
     () =>
       Array.from({ length: count }, () => {
@@ -42,7 +60,7 @@ export const Matrix = ({ classNames, dim = 5, count = 20, size = 5, dotSize = 4,
         const y = Math.floor(Math.random() * dim);
         return `${x}-${y}`;
       }),
-    [count, dim, time],
+    [count, dim, tick],
   );
 
   return (

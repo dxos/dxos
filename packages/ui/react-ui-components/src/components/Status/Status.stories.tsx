@@ -50,17 +50,18 @@ export const WithMeta: Story = {
 };
 
 /**
- * Reads the 1Hz tick from Status context and forwards it to the Matrix as
- * the `time` prop, so each second triggers a re-randomization of dot positions.
+ * Reads the running flag from Status context and forwards it to the Matrix as
+ * the `active` prop, so the Matrix runs its own internal interval loop only
+ * while the Status tick is running. Pausing the Status freezes the dots.
  */
 const MatrixIcon = () => {
-  const { time } = useStatusContext('MatrixIcon');
-  return <Matrix classNames='mr-2' dim={4} size={3} dotSize={3} count={10} time={time} />;
+  const { running } = useStatusContext('MatrixIcon');
+  return <Matrix classNames='mr-2' dim={4} size={3} dotSize={3} count={10} active={running} />;
 };
 
 export const WithCustomIcon: Story = {
   render: () => (
-    <Status.Root>
+    <Status.Root classNames='text-sm'>
       <Status.Icon>
         <MatrixIcon />
       </Status.Icon>
