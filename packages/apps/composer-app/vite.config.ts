@@ -330,8 +330,16 @@ export default defineConfig((env) => ({
     //
     importMapPlugin(),
 
-    //
-    bootLoaderPlugin(),
+    // Phase 8b: hand the boot loader the Composer brand mark so the visual
+    // identity is established before any JS bundle parses. The SVG uses
+    // `fill="currentColor"`, so it picks up the loader's `prefers-color-scheme`
+    // text colour and ships as ~1.6 KB of inline markup.
+    bootLoaderPlugin({
+      markSvg: readFileSync(
+        path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon-monochrome.svg'),
+        'utf8',
+      ),
+    }),
 
     VitePWA({
       // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).

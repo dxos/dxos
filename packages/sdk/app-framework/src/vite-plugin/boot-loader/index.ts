@@ -18,6 +18,14 @@ export type BootLoaderOptions = {
    * @default "Loading…"
    */
   status?: string;
+
+  /**
+   * Inline SVG markup for an optional brand mark rendered above the progress bar.
+   * Use `currentColor` for fill so the mark inherits the loader's text colour
+   * (which itself follows `prefers-color-scheme`). Leave empty/undefined to
+   * render only the bar.
+   */
+  markSvg?: string;
 };
 
 /**
@@ -49,11 +57,18 @@ export type BootLoaderOptions = {
  * `--boot-loader-bg-dark`, etc.) defined in `boot-loader.css`, so consumers can
  * override them at the document level without us re-parameterizing this plugin.
  */
-// TODO(burdon): Reconcile with Placeholder.tsx.
-export const bootLoaderPlugin = ({ status = 'Loading…' }: BootLoaderOptions = {}): Plugin => {
+export const bootLoaderPlugin = ({ status = 'Loading…', markSvg }: BootLoaderOptions = {}): Plugin => {
   return {
     name: 'app-framework:boot-loader',
     transformIndexHtml() {
+      // The mark slot uses `children: <raw-svg>` (vite emits string children as
+      // raw HTML, not text-escaped) so the host can pass an SVG file's contents
+      // straight through. Falls back to a single-line empty `<div>` so the
+      // skeleton DOM stays predictable for the smoke-test selector.
+      const markChildren = markSvg
+        ? [{ tag: 'div', attrs: { id: 'boot-loader-mark' }, children: markSvg }]
+        : [];
+
       return [
         {
           tag: 'style',
@@ -70,6 +85,7 @@ export const bootLoaderPlugin = ({ status = 'Loading…' }: BootLoaderOptions = 
             'aria-label': 'Initializing',
           },
           children: [
+            ...markChildren,
             { tag: 'div', attrs: { id: 'boot-loader-bar' }, children: '' },
             { tag: 'div', attrs: { id: 'boot-loader-status' }, children: status },
           ],

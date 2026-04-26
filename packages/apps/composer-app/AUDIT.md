@@ -738,12 +738,12 @@ PostHog". The first time someone runs into a slow plugin in production,
 we'll see it in aggregate before any individual report. Net: cheap at
 the implementation cost, valuable at the ops scale.
 
-### Phase 7 — instrumentation completeness (commit `<TBD>`)
+### Phase 7 — instrumentation completeness (commit `daf09cd61a`)
 
 |                            | Cold profilerTotal | Cold navToReady | Warm profilerTotal | Warm-cold profilerTotal |
 | -------------------------- | -----------------: | --------------: | -----------------: | ----------------------: |
 | phase 6 (`0b39281ade + ⚠`) |           5,548 ms |        8,697 ms |           3,649 ms |                5,079 ms |
-| **phase 7** (`<TBD> + ⚠`)  |       **5,425 ms** |    **8,806 ms** |       **3,497 ms** |            **5,118 ms** |
+| **phase 7** (`daf09cd61a + ⚠`)  |       **5,425 ms** |    **8,806 ms** |       **3,497 ms** |            **5,118 ms** |
 | delta                      |       flat (noise) |     flat (noise) |     flat (noise) |             flat (noise) |
 
 **Changes:**
@@ -773,3 +773,65 @@ behavioural change at runtime. The harness numbers are flat. Benefit is
 small but real: dev productivity (no flag-remembering) plus a clean
 push-based subscription channel for any future devtools panel. Net:
 cheap, additive, stays out of the way.
+
+### Phase 8 — visual polish (commit `<TBD>`)
+
+|                            | Cold profilerTotal | Cold navToReady | Warm profilerTotal | Warm-cold profilerTotal |
+| -------------------------- | -----------------: | --------------: | -----------------: | ----------------------: |
+| phase 7 (`daf09cd61a + ⚠`) |           5,425 ms |        8,806 ms |           3,497 ms |                5,118 ms |
+| **phase 8** (`<TBD> + ⚠`)  |       **5,427 ms** |    **8,544 ms** |       **3,444 ms** |            **5,844 ms** |
+| delta                      |       flat (noise) |     flat (noise) |     flat (noise) |             flat (noise) |
+
+**Changes:**
+
+- **8b. Composer brand mark in the boot loader.** [`bootLoaderPlugin`](../../sdk/app-framework/src/vite-plugin/boot-loader/index.ts)
+  gained an optional `markSvg` parameter. When set, the plugin injects
+  a `<div id="boot-loader-mark">…inline SVG…</div>` above the progress
+  bar. composer-app's [`vite.config.ts`](vite.config.ts) reads
+  [`packages/ui/brand/assets/icons/composer-icon-monochrome.svg`](../../ui/brand/assets/icons/composer-icon-monochrome.svg)
+  via `node:fs/readFileSync` and passes it to the plugin. The SVG uses
+  `fill="currentColor"`, so it picks up the loader's text colour and
+  works in both light and dark mode. Added ~12 lines of CSS in
+  [`boot-loader.css`](../../sdk/app-framework/src/vite-plugin/boot-loader/boot-loader.css)
+  to size the mark and align with the bar.
+- **8a. Boot-loader handoff timing.** Removed the
+  `requestAnimationFrame(() => __bootLoader.dismiss())` from
+  [`main.tsx`](src/main.tsx) and replaced it with a `useLayoutEffect`
+  inside [`Placeholder.tsx`](src/components/Placeholder/Placeholder.tsx)
+  gated on `stage >= 1`. `useLayoutEffect` runs after DOM mutations but
+  before paint, so the dismiss is committed before the next frame; the
+  `stage >= 1` gate waits for the `useLoading` debounce to bring the
+  Placeholder's logo to `opacity-0.7`, so the user never sees a blank
+  Placeholder between the boot loader and the eventual logo fade-in.
+
+**Why not match the multi-color brand SVG:** the React `<Composer>`
+component in [`@dxos/brand`](../../ui/brand/src/components/icons/Composer.tsx)
+is a 4-layer multi-color brand mark with hard-coded blues that don't
+work in dark mode. The boot loader needs `currentColor` semantics so it
+can adapt to `prefers-color-scheme`. Using the monochrome icon
+preserves the silhouette identity and works in both schemes; the
+small visual transition into the colored brand mark is acceptable.
+
+**Complexity vs. benefit:** small diff (~30 lines across plugin,
+config, and component). No behavioural change at runtime. Benefit is
+qualitative: the boot loader establishes Composer's visual identity
+from the very first painted frame, and the handoff to React is now
+guaranteed to overlap visible content (no "blank Placeholder" beat).
+Net: clearly worth it for first-impression polish.
+
+## 10. Summary of phases shipped
+
+| Phase | What                                                | Commit                | Headline metric move                       |
+| ---: | --------------------------------------------------- | --------------------- | ------------------------------------------ |
+|   1 | Defer `OnboardingManager.initialize()` to background | `9db4acdb1f`          | **−45% cold profilerTotal**                |
+|   2 | Lazy-load plugin chunks                              | `697d645631`          | **eager bundle −96%** (8.5 MB → 393 KB)    |
+|   3 | Small wins (Promise.all, PubSub progress, mark)      | `2560fb5afb`          | flat perf, new `firstInteractive` metric   |
+| 3.5 | `useLoading` debounce 1 s → 200 ms                   | `562d20e31c`          | UX cleanup (within noise)                  |
+|   4 | Activation-graph hygiene                             | (reverted in `c0e35cd1d2`) | shipping-blocked by warm flake             |
+|   5 | Harness: warm-cold + throttled scenarios             | `ca88ace276`          | first `warm-cold` measurement              |
+|   6 | Production telemetry (PostHog `composer.startup`)    | `0b39281ade`          | flat perf, new ops visibility              |
+|   7 | `?profiler=1` default in dev + `BroadcastChannel`    | `daf09cd61a`          | flat perf, dev ergonomics                  |
+|   8 | Boot-loader brand mark + handoff timing              | `<TBD>`               | flat perf, visual polish                   |
+
+Headline cumulative: cold `profilerTotal` 11,118 ms → ~5,400 ms (−51%);
+cold `navToReady` 18,054 ms → ~8,700 ms (−52%); eager bundle −96%.

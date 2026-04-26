@@ -26,6 +26,21 @@
   }
 }
 
+#boot-loader-mark {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+}
+
+#boot-loader-mark svg {
+  width: 100%;
+  height: 100%;
+  /* `fill="currentColor"` on the host SVG inherits the loader's text colour. */
+}
+
 #boot-loader-bar {
   position: relative;
   width: min(240px, 50vw);

@@ -436,11 +436,9 @@ const main = async () => {
   } else {
     createRoot(root).render(<Main />);
   }
-  // Hand off from the native-DOM boot loader (injected by `bootLoaderPlugin`) to
-  // the React-rendered <Placeholder>. `requestAnimationFrame` defers removal
-  // until after the first React commit so the two overlap by one frame and the
-  // user never sees a blank background.
-  requestAnimationFrame(() => window.__bootLoader?.dismiss());
+  // Phase 8a: dismissal moved into `Placeholder.tsx`'s `useLayoutEffect` so
+  // the boot loader stays visible until React has committed its replacement.
+  // No more blank-frame between createRoot.render and the first paint.
 };
 
 void main();
