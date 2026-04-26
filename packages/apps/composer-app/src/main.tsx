@@ -54,8 +54,12 @@ declare global {
   var downloadLogs: () => void;
 
   interface Window {
-    /** Native-DOM boot loader status driver, defined inline in `index.html`. */
-    __composerBoot?: { status: (text: string) => void };
+    /**
+     * Native-DOM boot loader driver injected by `bootLoaderPlugin`
+     * (`@dxos/app-framework/vite-plugin`). `status()` updates the visible
+     * status line; `dismiss()` removes the loader after React mounts.
+     */
+    __bootLoader?: { status: (text: string) => void; dismiss: () => void };
   }
 }
 
@@ -64,7 +68,7 @@ declare global {
  * The CSS animation in `index.html` keeps painting on the compositor thread
  * regardless of main-thread work, so this is purely textual feedback.
  */
-const bootStatus = (text: string) => window.__composerBoot?.status(text);
+const bootStatus = (text: string) => window.__bootLoader?.status(text);
 
 const main = async () => {
   const url = new URL(window.location.href);
@@ -353,6 +357,11 @@ const main = async () => {
   } else {
     createRoot(root).render(<Main />);
   }
+  // Hand off from the native-DOM boot loader (injected by `bootLoaderPlugin`) to
+  // the React-rendered <Placeholder>. `requestAnimationFrame` defers removal
+  // until after the first React commit so the two overlap by one frame and the
+  // user never sees a blank background.
+  requestAnimationFrame(() => window.__bootLoader?.dismiss());
 };
 
 void main();

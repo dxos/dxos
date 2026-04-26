@@ -15,7 +15,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import solid from 'vite-plugin-solid';
 import wasm from 'vite-plugin-wasm';
 
-import { importMapPlugin } from '@dxos/app-framework/vite-plugin';
+import { bootLoaderPlugin, importMapPlugin } from '@dxos/app-framework/vite-plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
@@ -327,7 +327,11 @@ export default defineConfig((env) => ({
       ],
     }),
 
+    //
     importMapPlugin(),
+
+    //
+    bootLoaderPlugin(),
 
     VitePWA({
       // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).

@@ -208,7 +208,10 @@ test.describe.serial('Startup timing harness', () => {
     expect(report.profilerTotal).toBeGreaterThan(0);
     expect(report.profile.phases.length).toBeGreaterThan(0);
 
-    await testInfo.attach('startup-cold.json', { body: JSON.stringify(report, null, 2), contentType: 'application/json' });
+    await testInfo.attach('startup-cold.json', {
+      body: JSON.stringify(report, null, 2),
+      contentType: 'application/json',
+    });
 
     await context.close();
   });
@@ -257,7 +260,10 @@ test.describe.serial('Startup timing harness', () => {
 
     expect(report.profilerTotal).toBeGreaterThan(0);
 
-    await testInfo.attach('startup-warm.json', { body: JSON.stringify(report, null, 2), contentType: 'application/json' });
+    await testInfo.attach('startup-warm.json', {
+      body: JSON.stringify(report, null, 2),
+      contentType: 'application/json',
+    });
 
     await context.close();
   });
@@ -267,21 +273,21 @@ test.describe.serial('Startup timing harness', () => {
     // `main.tsx` finishes executing. We can't rely on locator-based waits here,
     // because by the time Playwright actuates them React may already have
     // replaced #root and torn the loader DOM down. Instead, capture both signals
-    // (`__composerBoot.status` defined; `#boot-loader` rendered) inside the same
+    // (`__bootLoader.status` defined; `#boot-loader` rendered) inside the same
     // initial-script block so the assertion runs *before* any user JS executes.
     const context = await browser.newContext();
     const page = await context.newPage();
 
     await page.addInitScript(() => {
-      (window as any).__composerBootSnapshot = () => ({
-        hasDriver: typeof (window as any).__composerBoot?.status === 'function',
+      (window as any).__bootLoaderSnapshot = () => ({
+        hasDriver: typeof (window as any).__bootLoader?.status === 'function',
         bootLoaderInDom: !!document.getElementById('boot-loader'),
         bootLoaderAriaLabel: document.getElementById('boot-loader')?.getAttribute('aria-label') ?? null,
       });
     });
     await page.goto(`${INITIAL_URL}/?profiler=1`, { waitUntil: 'domcontentloaded' });
 
-    const snapshot = await page.evaluate(() => (window as any).__composerBootSnapshot());
+    const snapshot = await page.evaluate(() => (window as any).__bootLoaderSnapshot());
     expect(snapshot.bootLoaderInDom).toBe(true);
     expect(snapshot.bootLoaderAriaLabel).toBe('Initializing');
     expect(snapshot.hasDriver).toBe(true);

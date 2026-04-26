@@ -9,6 +9,7 @@ import { Composer } from '@dxos/brand';
 import { Status, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx, mx } from '@dxos/ui-theme';
 
+// TODO(burdon): Create native DOM placeholder and inject in index.html.
 export const Placeholder = ({ stage = 1, progress }: PlaceholderProps) => {
   // This is used to test the error boundary & reset dialog.
   if (location.search === '?throw') {

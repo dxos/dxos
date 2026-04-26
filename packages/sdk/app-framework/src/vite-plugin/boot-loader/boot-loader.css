@@ -1,0 +1,62 @@
+/*
+ * Boot loader stylesheet — injected into the host's `<head>` by `bootLoaderPlugin`.
+ * The keyframe animation runs on the browser's compositor thread, so the bar
+ * keeps moving even while the JS main thread is busy parsing modules.
+ */
+
+#boot-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--boot-loader-bg-light, #f7f8f9);
+  color: var(--boot-loader-fg-light, #252529);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+}
+
+@media (prefers-color-scheme: dark) {
+  #boot-loader {
+    background: var(--boot-loader-bg-dark, #252529);
+    color: var(--boot-loader-fg-dark, #d6d6d8);
+  }
+}
+
+#boot-loader-bar {
+  position: relative;
+  width: min(240px, 50vw);
+  height: 2px;
+  overflow: hidden;
+  background: rgba(127, 127, 127, 0.18);
+  border-radius: 1px;
+}
+
+#boot-loader-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: currentColor;
+  opacity: 0.7;
+  border-radius: 1px;
+  animation: boot-loader-bar 1.4s ease-in-out infinite;
+}
+
+@keyframes boot-loader-bar {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+
+#boot-loader-status {
+  opacity: 0.7;
+  min-height: 1em;
+  letter-spacing: 0.01em;
+}
