@@ -7,14 +7,17 @@ import React, { useRef } from 'react';
 
 import { Button, Toolbar } from '@dxos/react-ui';
 import { Matrix } from '@dxos/react-ui-sfx';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme, withLayout } from '@dxos/react-ui/testing';
 
 import { Status, type StatusController, useStatusContext } from './Status';
 
 const meta = {
   title: 'ui/react-ui-components/Status',
   component: Status.Root,
-  decorators: [withTheme()],
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'centered', classNames: 'py-1 px-2 border border-separator rounded-sm' }),
+  ],
   parameters: {
     layout: 'centered',
   },
@@ -52,7 +55,7 @@ export const WithMeta: Story = {
  */
 const MatrixIcon = () => {
   const { time } = useStatusContext('MatrixIcon');
-  return <Matrix dim={4} size={4} dotSize={3} count={10} time={time} />;
+  return <Matrix classNames='mr-2' dim={4} size={3} dotSize={3} count={10} time={time} />;
 };
 
 export const WithCustomIcon: Story = {
@@ -62,6 +65,10 @@ export const WithCustomIcon: Story = {
         <MatrixIcon />
       </Status.Icon>
       <Status.Stopwatch />
+      <Status.Separator />
+      <Status.Text>↑ 234</Status.Text>
+      <Status.Separator />
+      <Status.Text>↓ 1.2k</Status.Text>
     </Status.Root>
   ),
 };
