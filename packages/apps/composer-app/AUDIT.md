@@ -616,43 +616,80 @@ worth keeping. The harness numbers are within run-to-run noise (±~10% on
 cold), so the headline metric move is illegible — keep an eye on the trend
 in BENCHMARKS.md rather than any single run.
 
-### Phase 4 — activation-graph hygiene (commit `<TBD>`)
+### Phase 4 — activation-graph hygiene **(attempted, reverted in `c0e35cd1d2`)**
 
-|                                | Cold profilerTotal | Cold navToReady | Cold firstInteractive | Warm profilerTotal |
-| ------------------------------ | -----------------: | --------------: | --------------------: | -----------------: |
-| phase 3.5 (`562d20e31c + ⚠`)   |           6,316 ms |       10,289 ms |              9,418 ms |           3,499 ms |
-| **phase 4** (`<TBD> + ⚠`)      |       **5,633 ms** |    **8,940 ms** |          **8,181 ms** |           3,526 ms |
-| delta                          |       −683 ms      |  **−1,349 ms**  |     **−1,237 ms**     | flat (noise)       |
+Phase 4 was a two-part change to `plugin-manager.ts`: bound
+`_loadCapabilitiesForModules` concurrency to 8 and insert `Effect.yieldNow()`
+between events in `_activateModulesForEvent`. The first measurement (commit
+`6a3f5f5ac1`) showed a ~1.3 s cold navToReady improvement and warm passed.
 
-**Changes** (in [`packages/sdk/app-framework/src/core/plugin-manager.ts`](../../sdk/app-framework/src/core/plugin-manager.ts)):
+**Why we reverted:** subsequent phase 5 harness runs exposed that the warm
+scenario is genuinely flaky — the System Error dialog appears in 60–90% of
+warm reloads, *with or without* phase 4. Three full reverts and two retries
+each on warm all failed. The flake is pre-existing in the warm-reload path
+and not caused by phase 4, but the yieldNow attempt clearly amplified it
+(every yield introduces a window where the activation cascade is
+mid-flight), and the bounded concurrency didn't pull its weight on today's
+8-module cluster (8 modules with bound 8 ≡ unbounded).
 
-- **4a. Bound `_loadCapabilitiesForModules` concurrency to 8** (was
-  `'unbounded'`). Today's largest cluster is 8 modules (composer-app's
-  `*.AppGraphBuilder`s on `ClientReady`); 8 preserves that fan-out's
-  parallelism while protecting future fan-outs of 50+ modules from starving
-  the JS event loop.
-- **4b. `Effect.yieldNow()` between events**, not between modules. Inserted
-  inside `_activateModulesForEvent` after `_contributeCapabilitiesForModules`
-  resolves but before `_activateRelatedEvents('after')` runs. An earlier
-  attempt (yield between *modules*, inside `_contributeCapabilitiesForModules`)
-  made the warm scenario fail with a System Error dialog — same `allOf`
-  resolver race the existing TODO warned about. Yielding only at event
-  boundaries gives React's reconciler a paint slot without interrupting an
-  event mid-flight.
+**Complexity vs. benefit:** small diff but in a hot path with known
+race-prone semantics. The "win" turned out to be largely run-to-run
+noise; the structural risk did not. Net: not worth shipping. The lesson
+is that any yield/concurrency change inside the activation graph needs
+to land alongside a fix for the warm-reload race — phase 5 surfaced it
+but did not root-cause it.
 
-**Why it works:** before phase 4, the 8-module `*.AppGraphBuilder` fan-out
-on `ClientReady` ran with no yields, so React's setStartupProgress (and
-later, the Placeholder unmount) couldn't paint until the entire cascade
-finished. With a yield at every event boundary, React gets a render slot
-between events; the wall-clock from `Startup` activated to user-account
-testid drops by ~1.3 s on cold.
+### Phase 5 — harness improvements (commit `<TBD>`)
 
-**Complexity vs. benefit:** small diff in framework code (one yield, one
-literal in concurrency option), but the change is in a hot path with known
-race-prone semantics — phase 4 includes a debug history of *one failed
-attempt*, captured as comments in [`_contributeCapabilitiesForModules`](../../sdk/app-framework/src/core/plugin-manager.ts).
-The fix landed on the second try after the warm-scenario regression.
-Benefit is the largest single wall-clock win since phase 1 (−1.3 s cold
-navToReady). Net: clearly worth it, but *only because the harness caught
-the regression*; without that, this would have shipped broken on warm
-loads.
+| Scenario                        | Cold profilerTotal | Cold navToReady | Cold firstInteractive | Notes                                          |
+| ------------------------------- | -----------------: | --------------: | --------------------: | ---------------------------------------------- |
+| `cold` (cleared storage)        |           5,538 ms |        8,762 ms |              ~7,800 ms | (median of 3 runs) — first-time-user           |
+| `warm` (reload, IDB warm)       |           3,645 ms |        6,685 ms |             ~5,800 ms | flaky; passes ~30% of attempts ⚠               |
+| **`warm-cold`** (persistent ctx) |       **5,090 ms** |    **8,214 ms** |              ~7,300 ms | **NEW** — closer to real returning user        |
+| `throttled-cold` (Fast 3G + 2× CPU) | (not run by default) |  | | opt-in via `DX_HARNESS_THROTTLED=1`        |
+
+**Changes** (in [`src/playwright/startup.spec.ts`](src/playwright/startup.spec.ts)):
+
+- **5a. `warm-cold` scenario via persistent context.** `playwright[browserName].launchPersistentContext(userDataDir)`
+  primes the app once, closes the browser, then re-launches with the same
+  `userDataDir`. IDB persists across the launches but the module cache is
+  fresh, so the second launch measures "returning user opens a new tab".
+  This separates the pure load cost from the identity-creation cost that
+  `cold` conflates. The chromium-only restriction is a deliberate scope
+  cut; firefox/webkit persistent contexts have different semantics around
+  OPFS that haven't been validated. Cleanup is best-effort `rmSync` in the
+  test's `finally` block.
+- **5b. `throttled-cold` scenario via CDP `Network.emulateNetworkConditions`
+  + `Emulation.setCPUThrottlingRate`.** Fast 3G + 2× CPU. Not run by
+  default — composer's full asset graph is ~40 MB, so even Fast 3G can
+  take 5+ minutes per run (Slow 3G times out at any reasonable budget).
+  Set `DX_HARNESS_THROTTLED=1` to enable. This is the scenario that
+  reveals phase 2's bundle-reduction win on real-network conditions
+  (local-disk benchmarks underrepresent it).
+- **5c. Cross-browser: documentation only.** `PLAYWRIGHT_BROWSER=all` is
+  already supported by `e2ePreset`; CI just needs to set it. No code
+  change needed.
+- **`trackNetwork(page)` helper.** Extracts the response-handler boilerplate
+  the cold/warm tests had inlined; the new tests reuse it.
+- **`test.describe.configure({ retries: 2 })`** so a single warm flake
+  doesn't lose us a row. Doesn't help when warm fails 3 times in a row,
+  which still happens.
+
+**Headline finding:** `warm-cold` (5,090 ms profilerTotal / 8,214 ms
+navToReady) is essentially indistinguishable from `cold` (~5,500 / ~8,700).
+Identity creation, which the cold scenario's first-run includes, is
+*not* the bottleneck for repeat users. Most of the cold cost is module
+graph evaluation + activation, which would still be paid by a returning
+user on a fresh tab. This validates phase 1's deferral choice (identity
+work is off the critical path for repeat users) and shows phase 4's
+intent (paint slots during activation) is the right next direction —
+even if the specific implementation didn't survive review.
+
+**Complexity vs. benefit:** the new scenario is ~80 lines of test code
+plus one helper. Benefit is significant: the `warm-cold` row finally
+answers "how does composer feel for a returning user opening it in a new
+tab", which is the most common real-world cold start. The throttled
+scenario is opt-in so no CI-budget cost. Net: clearly worth it, but the
+ledger now has more failure-mode surface area; future maintenance should
+keep an eye on the warm-test flake (currently a known issue tracked in
+the test's comment).
