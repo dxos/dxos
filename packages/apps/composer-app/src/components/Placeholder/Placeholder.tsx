@@ -15,7 +15,7 @@ export const Placeholder = ({ stage = 1, progress }: PlaceholderProps) => {
     throw new Error('Test error');
   }
 
-  const hasProgress = progress && progress.total > 0;
+  const hasProgress = !!progress && progress.total > 0;
 
   return (
     <ThemeProvider tx={defaultTx}>
@@ -28,18 +28,19 @@ export const Placeholder = ({ stage = 1, progress }: PlaceholderProps) => {
               stage >= 2 && 'scale-50 opacity-0',
             )}
           />
-          {/* TODO(burdon): Option to show progress. */}
-          {/* {hasProgress && (
-            <p className='flex justify-center absolute bottom-8 text-sm text-subdued mt-4 transition-opacity duration-300'>
-              {progress.status} ({Math.round(progress.progress * 100)}%)
+          {hasProgress && (
+            <p
+              className='flex justify-center absolute bottom-8 text-sm text-subdued mt-4 transition-opacity duration-300'
+              data-testid='composer.placeholder.progress'
+            >
+              {progress!.status} ({progress!.activated}/{progress!.total})
             </p>
-          )} */}
+          )}
         </div>
         <Status
           variant='main-bottom'
           aria-label='Initializing'
-          indeterminate
-          // {...(hasProgress ? { progress: progress.progress } : { indeterminate: true })}
+          {...(hasProgress ? { progress: progress!.progress } : { indeterminate: true })}
         />
       </div>
     </ThemeProvider>

@@ -23,9 +23,94 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
     <link rel="manifest" href="/site.webmanifest" />
+
+    <!--
+      Boot loader: paints on first frame, before any JS bundle is parsed.
+      The CSS animation runs on the compositor thread so it keeps moving
+      even while the JS main thread is busy parsing/evaluating modules.
+      `createRoot(...).render(...)` will replace this DOM when React mounts.
+    -->
+    <style>
+      #boot-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        background: #f7f8f9;
+        color: #252529;
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        font-size: 13px;
+      }
+      @media (prefers-color-scheme: dark) {
+        #boot-loader {
+          background: #252529;
+          color: #d6d6d8;
+        }
+      }
+      #boot-loader-bar {
+        position: relative;
+        width: min(240px, 50vw);
+        height: 2px;
+        overflow: hidden;
+        background: rgba(127, 127, 127, 0.18);
+        border-radius: 1px;
+      }
+      #boot-loader-bar::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        width: 40%;
+        background: currentColor;
+        opacity: 0.7;
+        border-radius: 1px;
+        animation: boot-loader-bar 1.4s ease-in-out infinite;
+      }
+      @keyframes boot-loader-bar {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(250%);
+        }
+      }
+      #boot-loader-status {
+        opacity: 0.7;
+        min-height: 1em;
+        letter-spacing: 0.01em;
+      }
+    </style>
   </head>
   <body>
-    <div id="root" class="contents"></div>
+    <div id="root" class="contents">
+      <div id="boot-loader" role="status" aria-live="polite" aria-label="Initializing">
+        <div id="boot-loader-bar"></div>
+        <div id="boot-loader-status">Loading…</div>
+      </div>
+    </div>
+    <script>
+      // Earliest possible mark, before the module graph is fetched.
+      performance.mark('boot:html-parsed');
+      // Tiny driver so `main.tsx` (and dynamically-imported plugins) can update
+      // the visible status without going through React. Calls are no-ops once
+      // React has replaced #root.
+      window.__composerBoot = {
+        status: function (text) {
+          var element = document.getElementById('boot-loader-status');
+          if (element) {
+            element.textContent = text;
+          }
+        },
+      };
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

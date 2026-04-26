@@ -52,7 +52,19 @@ declare global {
 
   // Debug hook: run `downloadLogs()` from devtools to save buffered logs (same as Reset dialog).
   var downloadLogs: () => void;
+
+  interface Window {
+    /** Native-DOM boot loader status driver, defined inline in `index.html`. */
+    __composerBoot?: { status: (text: string) => void };
+  }
 }
+
+/**
+ * Updates the native-DOM boot loader text. No-op once React has replaced #root.
+ * The CSS animation in `index.html` keeps painting on the compositor thread
+ * regardless of main-thread work, so this is purely textual feedback.
+ */
+const bootStatus = (text: string) => window.__composerBoot?.status(text);
 
 const main = async () => {
   const url = new URL(window.location.href);
@@ -94,6 +106,7 @@ const main = async () => {
   };
 
   profiler?.mark('dynamic-imports:start');
+  bootStatus('Loading framework…');
 
   const { Config, defs, SaveConfig } = await import('@dxos/config');
   const { createClientServices } = await import('@dxos/react-client');
@@ -109,6 +122,7 @@ const main = async () => {
   Migrations.define(APP_KEY, __COMPOSER_MIGRATIONS__);
 
   profiler?.mark('config:start');
+  bootStatus('Reading configuration…');
 
   let config = await setupConfig();
 
@@ -185,6 +199,7 @@ const main = async () => {
   const useSingleClientMode = isTauri && isMobile;
 
   profiler?.mark('services:start');
+  bootStatus('Starting services…');
 
   // Decide the deployment mode for client services. The factory is a dumb switch on
   // `runtime.client.services_mode` — the app is responsible for picking the right mode from its
@@ -249,6 +264,7 @@ const main = async () => {
   profiler?.measure('services', 'services:start', 'services:end');
 
   profiler?.mark('plugins:start');
+  bootStatus('Loading plugins…');
 
   const conf: PluginConfig = {
     appKey: APP_KEY,
