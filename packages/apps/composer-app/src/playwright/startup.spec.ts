@@ -3,7 +3,8 @@
 //
 
 import { type Page, expect, test } from '@playwright/test';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { execSync } from 'node:child_process';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -100,7 +101,68 @@ const collectStartupReport = async (page: Page, scenario: StartupReport['scenari
   };
 };
 
-test.describe('Startup timing harness', () => {
+/**
+ * Path to the human-readable benchmark ledger committed in the package root.
+ * Each harness run appends one row per scenario.
+ */
+const BENCHMARKS_FILE = path.join(here, '..', '..', 'BENCHMARKS.md');
+
+const BENCHMARKS_HEADER = [
+  '# Composer-app startup benchmarks',
+  '',
+  'Auto-recorded by `src/playwright/startup.spec.ts`. One row per scenario per harness run.',
+  '`profilerTotal` = `composer.profiler` (`main:start` → `Startup` activated).',
+  '`navToReady` = wall-clock from `page.goto` until the user-account testid is visible.',
+  '`fcp` = first contentful paint (the boot loader). `bytes` = sum of response bodies.',
+  '`top1` = slowest single module activation in this run.',
+  '',
+  '| timestamp (UTC) | git | dirty | scenario | browser | profilerTotal | navToReady | fcp | bytes (MB) | modules | top1 |',
+  '| --- | --- | :---: | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |',
+  '',
+].join('\n');
+
+const gitContext = (): { sha: string; dirty: boolean } => {
+  try {
+    const sha = execSync('git rev-parse --short HEAD', { cwd: here }).toString().trim();
+    const status = execSync('git status --porcelain', { cwd: here }).toString().trim();
+    return { sha, dirty: status.length > 0 };
+  } catch {
+    return { sha: '?', dirty: false };
+  }
+};
+
+const formatBenchmarkRow = (report: StartupReport): string => {
+  const top = report.profile.slowestModules[0];
+  const topLabel = top ? `\`${top.name}\` (${top.duration})` : '—';
+  const { sha, dirty } = gitContext();
+  return [
+    new Date().toISOString().replace(/\.\d+Z$/, 'Z'),
+    sha,
+    dirty ? '⚠' : '',
+    report.scenario,
+    process.env.PLAYWRIGHT_BROWSER || 'chromium',
+    report.profilerTotal,
+    report.navigationToReady,
+    report.firstContentfulPaint,
+    (report.transferredBytes / 1024 / 1024).toFixed(1),
+    report.profile.moduleCount,
+    topLabel,
+  ]
+    .map((value) => `${value}`)
+    .join(' | ');
+};
+
+const appendBenchmarkRow = (report: StartupReport): void => {
+  if (!existsSync(BENCHMARKS_FILE)) {
+    writeFileSync(BENCHMARKS_FILE, BENCHMARKS_HEADER);
+  }
+  const existing = readFileSync(BENCHMARKS_FILE, 'utf8');
+  // Re-create header if a previous version is missing the new columns.
+  const body = existing.startsWith('# Composer-app startup benchmarks') ? existing : BENCHMARKS_HEADER;
+  writeFileSync(BENCHMARKS_FILE, `${body.trimEnd()}\n| ${formatBenchmarkRow(report)} |\n`);
+};
+
+test.describe.serial('Startup timing harness', () => {
   // First-paint and module-graph evaluation each take real wall clock; webkit can be much slower.
   test.setTimeout(120_000);
 
@@ -138,6 +200,7 @@ test.describe('Startup timing harness', () => {
     report.responseCount = responses;
 
     writeReport(`startup-cold-${browserName}.json`, report);
+    appendBenchmarkRow(report);
     log.info('cold start report', { browser: browserName, navigationToReady, profilerTotal: report.profilerTotal });
 
     // Sanity assertions: keep regression-detection cheap. Tighten later as we collect baselines.
@@ -189,6 +252,7 @@ test.describe('Startup timing harness', () => {
     report.responseCount = responses;
 
     writeReport(`startup-warm-${browserName}.json`, report);
+    appendBenchmarkRow(report);
     log.info('warm start report', { browser: browserName, navigationToReady, profilerTotal: report.profilerTotal });
 
     expect(report.profilerTotal).toBeGreaterThan(0);
