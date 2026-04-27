@@ -3,8 +3,10 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
+import { Database } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ContextQueueService } from '@dxos/functions';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
@@ -63,7 +65,10 @@ describe('createMessageGenerator', () => {
     let updates = 0;
     queue.subscribe(() => updates++);
 
-    await runAndForwardErrors(createMessageGenerator()[1]!.pipe(Effect.provide(ContextQueueService.layer(queue))));
+    await runAndForwardErrors(
+      createMessageGenerator()
+        [1]!.pipe(Effect.provide(Layer.mergeAll(ContextQueueService.layer(queue), Database.notAvailable))),
+    );
 
     expect(queue.objects).toHaveLength(1);
     expect(updates).toBeGreaterThan(1);
