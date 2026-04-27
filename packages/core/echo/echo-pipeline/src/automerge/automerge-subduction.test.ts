@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Repo, generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
+import { Repo, generateAutomergeUrl, initSubduction, parseAutomergeUrl } from '@automerge/automerge-repo';
 import {
   AuthenticatedTransport,
   BlobMeta,
@@ -16,7 +16,9 @@ import {
   commitIdOfBase58Id,
   type PeerId as SubductionPeerId,
 } from '@automerge/automerge-subduction';
-import { describe, test } from 'vitest';
+import { afterEach, beforeAll, describe, test } from 'vitest';
+
+import { sleep } from '@dxos/async';
 
 class AsyncQueue<T> {
   private _items: T[] = [];
@@ -132,6 +134,10 @@ class SubductionServer {
 const commitIdOf = (seed: number): CommitId => CommitId.fromBytes(new Uint8Array(32).fill(seed));
 
 describe('automerge-subduction', () => {
+  beforeAll(async () => {
+    await initSubduction();
+  });
+
   test('creates signer and signs payloads', async ({ expect }) => {
     const signer = MemorySigner.generate();
     const signature = await signer.sign(new Uint8Array([1, 2, 3]));

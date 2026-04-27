@@ -20,10 +20,17 @@
  * The test drives the alarm loop manually to simulate Cloudflare DO alarm scheduling.
  */
 
-import { NetworkAdapter, Repo, type Message, type PeerId, type PeerMetadata } from '@automerge/automerge-repo';
+import {
+  NetworkAdapter,
+  Repo,
+  initSubduction,
+  type Message,
+  type PeerId,
+  type PeerMetadata,
+} from '@automerge/automerge-repo';
 import { DummyStorageAdapter } from '@automerge/automerge-repo/helpers/DummyStorageAdapter.js';
 import { MemorySigner, MemoryStorage, Subduction, type Transport } from '@automerge/automerge-subduction';
-import { describe, test } from 'vitest';
+import { beforeAll, describe, test } from 'vitest';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -428,6 +435,10 @@ class ServerPeer {
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('edge architecture: client Repo + Subduction ↔ server DO (KV + alarm queue)', () => {
+  beforeAll(async () => {
+    await initSubduction();
+  });
+
   test('syncs document from client Repo to server via alarm-dispatched Subduction transport', async ({ expect }) => {
     const CLIENT_PEER_ID = 'test-client-peer' as PeerId;
     const SERVER_PEER_ID = 'test-server-peer' as PeerId;
@@ -692,6 +703,14 @@ describe('edge architecture: client Repo + Subduction ↔ server DO (KV + alarm 
       // The client keeps sending periodic sync bytes (periodicSyncInterval = 200ms).
       serverPeer.hibernate();
 
+      // Make a post-hibernation change so the still-connected client enqueues bytes
+      // against the now-dead server transport. That queued data is what wakes the
+      // alarm path and causes it to request a reconnect.
+      const handle2 = clientRepo.create<{ seq: number }>();
+      handle2.change((doc) => {
+        doc.seq = 2;
+      });
+
       // Wait for alarm() to detect the stale-bytes-no-transport situation and
       // trigger _initiateReconnect(), which signals the client and completes the
       // new handshake in the background.
@@ -706,9 +725,11 @@ describe('edge architecture: client Repo + Subduction ↔ server DO (KV + alarm 
       expect(serverPeer.hasTransport, 'transport should be re-established after reconnect').toBe(true);
 
       // ── Phase 3: second document after reconnect ──
-      const handle2 = clientRepo.create<{ seq: number }>();
+      // The bytes that triggered reconnect were intentionally discarded as stale
+      // session data. Touch the same document after the fresh handshake so the
+      // resumed session has current data to send.
       handle2.change((doc) => {
-        doc.seq = 2;
+        doc.seq = 3;
       });
 
       const deadline3 = Date.now() + 15_000;
