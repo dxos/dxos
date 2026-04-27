@@ -15,7 +15,6 @@ import { Magazine, Subscription } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
-      // Main subscription feed list view.
       Surface.create({
         id: 'subscription-feed',
         filter: AppSurface.literal(AppSurface.Article, 'feeds-root'),
@@ -23,24 +22,6 @@ export default Capability.makeModule(() =>
           <SubscriptionsArticle role={role} attendableId={data.attendableId} subject={data.subject} />
         ),
       }),
-      // Companion view: FeedArticle shown alongside the feeds-root.
-      Surface.create({
-        id: 'feed-article',
-        filter: AppSurface.oneOf(
-          AppSurface.allOf(
-            AppSurface.object(AppSurface.Article, Subscription.Feed),
-            AppSurface.companion(AppSurface.Article, 'feeds-root'),
-          ),
-          AppSurface.allOf(
-            AppSurface.object(AppSurface.Section, Subscription.Feed),
-            AppSurface.companion(AppSurface.Section, 'feeds-root'),
-          ),
-        ),
-        component: ({ data, role }) => (
-          <FeedArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
-      }),
-      // Magazine article surface.
       Surface.create({
         id: 'magazine-article',
         filter: AppSurface.object(AppSurface.Article, Magazine.Magazine),
@@ -48,7 +29,13 @@ export default Capability.makeModule(() =>
           <MagazineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
-      // Post article surface — renders a single Post's detail view.
+      Surface.create({
+        id: 'feed-article',
+        filter: AppSurface.object(AppSurface.Article, Subscription.Feed),
+        component: ({ data, role }) => (
+          <FeedArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
+      }),
       Surface.create({
         id: 'post-article',
         filter: AppSurface.object(AppSurface.Article, Subscription.Post),

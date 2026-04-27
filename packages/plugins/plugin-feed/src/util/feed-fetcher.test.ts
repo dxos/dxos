@@ -172,6 +172,37 @@ describe('FeedFetcher', () => {
       expect(result.posts[0].link).toBe('https://example.com/post-3');
     });
 
+    test('handles deeply nested HTML in description without exceeding parser limits', async ({ expect }) => {
+      // Build nested HTML 200 levels deep — well past fast-xml-parser's default 100-tag cap.
+      let nested = 'leaf';
+      for (let index = 0; index < 200; index++) {
+        nested = `<div>${nested}</div>`;
+      }
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Nested HTML Feed</title>
+    <description>Feed.</description>
+    <item>
+      <title>Nested Post</title>
+      <link>https://example.com/nested</link>
+      <description>${nested}</description>
+      <guid>nested-1</guid>
+    </item>
+  </channel>
+</rss>`;
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        text: () => Promise.resolve(xml),
+      });
+
+      const result = await fetchRss('https://example.com/rss');
+
+      expect(result.posts).toHaveLength(1);
+      expect(result.posts[0].title).toBe('Nested Post');
+      expect(result.posts[0].guid).toBe('nested-1');
+    });
+
     test('uses CORS proxy when provided', async ({ expect }) => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
