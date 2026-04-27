@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { LayerStack, ProcessManager } from '@dxos/compute-runtime';
-import { Process, ServiceResolver, Trace } from '@dxos/functions';
+import { LayerSpec, Process, ServiceResolver, Trace } from '@dxos/functions';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import { ActivationEvents, Capabilities } from '../common';
@@ -49,7 +49,26 @@ export default Capability.makeModule(
     const handlerSets = yield* Capability.getAll(Capabilities.OperationHandler);
     const traceSinkFactories = yield* Capability.getAll(Capabilities.TraceSink);
 
-    const layerStack = new LayerStack.LayerStack({ layers: [...layerSpecs] });
+    // Expose the foundational app-framework services through the LayerStack so
+    // that operations declaring `services: [Capability.Service]` (and friends)
+    // can resolve them via the ServiceResolver. Without this, only consumers
+    // sitting on the same ManagedRuntime layer graph can see them — process
+    // executions go through ServiceResolver.resolveAll and would fail.
+    const ambientLayerSpec = LayerSpec.make(
+      {
+        affinity: 'application',
+        requires: [],
+        provides: [Capability.Service, Plugin.Service, Registry.AtomRegistry],
+      },
+      () =>
+        Layer.mergeAll(
+          Layer.succeed(Capability.Service, capabilityManager),
+          Layer.succeed(Plugin.Service, pluginManager),
+          Layer.succeed(Registry.AtomRegistry, atomRegistry),
+        ),
+    );
+
+    const layerStack = new LayerStack.LayerStack({ layers: [ambientLayerSpec, ...layerSpecs] });
     const serviceResolver = layerStack.getServiceResolver();
 
     const handlerSet = handlerSets.length === 0 ? OperationHandlerSet.empty : OperationHandlerSet.merge(...handlerSets);
