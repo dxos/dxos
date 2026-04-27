@@ -79,6 +79,15 @@ export const Agent = Schema.Struct({
     title: 'Filter events',
     description: 'Allow the agent to filter events.',
   }),
+
+  /**
+   * Cron expression for a timer trigger that invokes the agent worker on a schedule.
+   * The timer trigger bypasses the qualifier and goes straight to the agent worker.
+   */
+  cron: Schema.optional(Schema.String).annotations({
+    title: 'Cron',
+    description: 'Cron expression for a timer trigger that invokes the agent on a schedule.',
+  }),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.agent',

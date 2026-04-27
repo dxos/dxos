@@ -11,7 +11,7 @@ import { AiSession } from '@dxos/assistant';
 import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -29,6 +29,7 @@ import { trim } from '@dxos/util';
 import { Chat, Plan, Agent } from '../../types';
 import { MarkdownBlueprint, MarkdownHandlers } from '../markdown';
 import { PlanningBlueprint, PlanningHandlers } from '../planning';
+import { AgentWizardHandlers, SyncTriggers } from '../project-wizard';
 import AgentBlueprintDef from './blueprint';
 import { AgentWorker, AgentBlueprintHandlers } from './functions';
 
@@ -36,7 +37,12 @@ ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  operationHandlers: OperationHandlerSet.merge(AgentBlueprintHandlers, MarkdownHandlers, PlanningHandlers),
+  operationHandlers: OperationHandlerSet.merge(
+    AgentBlueprintHandlers,
+    AgentWizardHandlers,
+    MarkdownHandlers,
+    PlanningHandlers,
+  ),
   types: [
     Agent.Agent,
     Plan.Plan,
@@ -197,6 +203,44 @@ describe('Agent', () => {
       TestHelpers.provideTestContext,
     ),
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
+  );
+
+  it.scoped(
+    'cron field creates a timer trigger that invokes the agent worker',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const cron = '*/5 * * * *';
+        const agent = yield* Agent.makeInitialized(
+          {
+            name: 'Scheduled agent',
+            instructions: 'A scheduled agent that runs on a timer.',
+            blueprints: [Ref.make(MarkdownBlueprint.make())],
+            cron,
+          },
+          blueprint,
+        );
+        yield* Database.flush();
+
+        yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
+
+        const triggers = yield* Database.runQuery(Filter.type(Trigger.Trigger));
+        const timerTriggers = triggers.filter((trigger) => trigger.spec?.kind === 'timer');
+        expect(timerTriggers).toHaveLength(1);
+
+        const timerTrigger = timerTriggers[0];
+        invariant(timerTrigger.spec?.kind === 'timer');
+        expect(timerTrigger.spec.cron).toBe(cron);
+        expect(timerTrigger.enabled).toBe(true);
+
+        // Timer trigger bypasses the qualifier and points to the agent worker.
+        invariant(timerTrigger.function);
+        const operation = yield* Database.load(timerTrigger.function);
+        invariant(Obj.instanceOf(Operation.PersistentOperation, operation));
+        expect(operation.key).toBe(AgentWorker.meta.key);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
   );
 
   it.scoped(
