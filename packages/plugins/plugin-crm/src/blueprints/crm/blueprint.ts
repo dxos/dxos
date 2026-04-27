@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 
 import { AttachImage } from '#operations';
@@ -34,7 +33,7 @@ export const makeCrmBlueprint = (researchSources: ReadonlyArray<ResearchSource> 
 
 const make = () => makeCrmBlueprint();
 
-const blueprint: AppCapabilities.BlueprintDefinition = {
+const blueprint: Blueprint.Definition = {
   key: BLUEPRINT_KEY,
   make,
 };
