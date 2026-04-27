@@ -12,11 +12,7 @@ import { log } from '@dxos/log';
 import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import { AutomergeReplicator, type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
 
-import type {
-  AutomergeReplicatorConnection,
-  ShouldAdvertiseProps,
-  ShouldSyncCollectionProps,
-} from './echo-replicator';
+import type { AutomergeReplicatorConnection, ShouldAdvertiseProps, ShouldSyncCollectionProps } from './echo-replicator';
 
 const DEFAULT_FACTORY: AutomergeReplicatorFactory = (params) => new AutomergeReplicator(...params);
 
@@ -153,9 +149,8 @@ export class MeshReplicatorConnection extends Resource implements AutomergeRepli
 
 const logSendSync = (message: AutomergeProtocolMessage) => {
   log('sendSyncMessage', () => {
-    const decodedSyncMessage = message.type === 'sync' && (message as any).data
-      ? A.decodeSyncMessage((message as any).data)
-      : undefined;
+    const decodedSyncMessage =
+      message.type === 'sync' && (message as any).data ? A.decodeSyncMessage((message as any).data) : undefined;
     return {
       sync: decodedSyncMessage && {
         headsLength: decodedSyncMessage.heads.length,

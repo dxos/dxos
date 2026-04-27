@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Repo, generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 import {
   AuthenticatedTransport,
   BlobMeta,
@@ -15,11 +16,6 @@ import {
   commitIdOfBase58Id,
   type PeerId as SubductionPeerId,
 } from '@automerge/automerge-subduction';
-import {
-  Repo,
-  generateAutomergeUrl,
-  parseAutomergeUrl,
-} from '@automerge/automerge-repo';
 import { describe, test } from 'vitest';
 
 class AsyncQueue<T> {
@@ -78,10 +74,7 @@ class MemoryTransport {
 const createMemoryTransportPair = (): [MemoryTransport, MemoryTransport] => {
   const bytesAB = new AsyncQueue<Uint8Array>();
   const bytesBA = new AsyncQueue<Uint8Array>();
-  return [
-    new MemoryTransport(bytesAB, bytesBA),
-    new MemoryTransport(bytesBA, bytesAB),
-  ];
+  return [new MemoryTransport(bytesAB, bytesBA), new MemoryTransport(bytesBA, bytesAB)];
 };
 
 /**
