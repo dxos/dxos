@@ -401,6 +401,15 @@ jobs:
           command: upload
           working-directory: ./packages/apps/composer-app/src-tauri/
 
+      - name: Notify Discord on iOS build failure
+        if: failure()
+        run: |
+          curl -s -X POST "$DX_DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\": \":warning: **build_tauri_ios** failed on \`${{ github.ref_name }}\`\\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
+        env:
+          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
+
       # https://tauri.app/distribute/app-store/#ios
       - name: Upload assets to App Store Connect
         # TODO(wittjosiah): Switch to staging? Need to figure out TestFlight -> App Store release process.
