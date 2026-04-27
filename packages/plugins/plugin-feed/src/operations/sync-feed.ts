@@ -50,6 +50,20 @@ const handler: Operation.WithHandler<typeof SyncFeed> = SyncFeed.pipe(
         const newPosts = cursor ? posts.filter((post) => post.guid !== cursor) : posts;
 
         // Append new posts to the ECHO feed queue.
+        // NOTE: The `Subscription.Feed.keep` bound is currently NOT enforced
+        // here via `queue.delete()`. Doing so wipes the queue's `_objectCache`
+        // for the deleted posts, but those same Post objects persist in
+        // `space.db` (they were added there when first curated into a
+        // Magazine via `createRef` → `database.add`). On the next sync/curate,
+        // `queue.queryObjects()` returns fresh proxies for the kept items,
+        // and any magazine refs to *deleted* posts now reference proxies
+        // whose `_internals.database` link is unset — `createRef` then tries
+        // to re-add them, hitting the `!_objects.has(core.id)` invariant in
+        // `CoreDatabase.addCore`. Until queue/db lifecycle is reworked we
+        // leave the queue unbounded; the `Magazine.keep` bound (enforced in
+        // `MagazineArticle.handleCurate`) prevents the visible list from
+        // growing unboundedly.
+        const queue = space.queues.get(feedDxn);
         if (newPosts.length > 0) {
           const feedRef = Ref.make(subscriptionFeed);
           const postObjects = newPosts.map((post) =>
@@ -63,7 +77,6 @@ const handler: Operation.WithHandler<typeof SyncFeed> = SyncFeed.pipe(
               guid: post.guid,
             }),
           );
-          const queue = space.queues.get(feedDxn);
           await queue.append(postObjects);
         }
 

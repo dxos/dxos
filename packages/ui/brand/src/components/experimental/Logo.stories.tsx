@@ -146,35 +146,36 @@ export const Pacman: Story = {
 const SpinnerContainer = () => {
   const [spinning, setSpinning] = useState(false);
   return (
-    <div>
+    <div className='flex flex-col gap-20'>
       <div className='absolute left-4 top-4'>
         {(spinning && <Button onClick={() => setSpinning(false)}>Stop</Button>) || (
           <Button onClick={() => setSpinning(true)}>Start</Button>
         )}
       </div>
       <div className='grid grid-cols-3 gap-20'>
-        <>
-          <div className='flex justify-center items-center'>
-            <ComposerSpinner animate={spinning} gap={1} size={200} color={colors.blue} />
-          </div>
-          <div className='flex justify-center items-center'>
-            <ComposerSpinner animate={spinning} gap={1} size={200} color={colors.green} />
-          </div>
-          <div className='flex justify-center items-center'>
-            <ComposerSpinner animate={spinning} gap={1} size={200} color={colors.orange} />
-          </div>
-        </>
-        <>
-          <div className='flex justify-center items-center'>
-            <ComposerSpinner animate={spinning} gap={1} size={200} color={colors.blue} />
-          </div>
-          <div className='flex justify-center items-center'>
-            <ComposerSpinner animate={spinning} gap={1} size={100} color={colors.green} />
-          </div>
-          <div className='flex justify-center items-center'>
-            <ComposerSpinner animate={spinning} gap={1} size={40} color={colors.orange} />
-          </div>
-        </>
+        <div className='flex justify-center items-center'>
+          <ComposerSpinner animate={spinning} gap={1} size={200} color={colors.blue} />
+        </div>
+        <div className='flex justify-center items-center'>
+          <ComposerSpinner animate={spinning} gap={1} size={200} color={colors.green} />
+        </div>
+        <div className='flex justify-center items-center'>
+          <ComposerSpinner animate={spinning} gap={1} size={200} color={colors.orange} />
+        </div>
+      </div>
+      <div className='flex gap-20'>
+        <div className='flex justify-center items-center'>
+          <ComposerSpinner animate={spinning} gap={1} size={200} color={colors.blue} />
+        </div>
+        <div className='flex justify-center items-center'>
+          <ComposerSpinner animate={spinning} gap={1} size={100} color={colors.green} />
+        </div>
+        <div className='flex justify-center items-center'>
+          <ComposerSpinner animate={spinning} gap={1} size={40} color={colors.orange} />
+        </div>
+        <div className='flex justify-center items-center'>
+          <ComposerSpinner animate={spinning} gap={1} size={24} color={colors.orange} />
+        </div>
       </div>
     </div>
   );
