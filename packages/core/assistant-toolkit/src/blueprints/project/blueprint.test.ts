@@ -20,6 +20,8 @@ import { TriggerDispatcher } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
+import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
+import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
 import { WithProperties } from '@dxos/plugin-markdown/testing';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
@@ -27,7 +29,6 @@ import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { Chat, Plan, Agent } from '../../types';
-import { MarkdownBlueprint, MarkdownHandlers } from '../markdown';
 import { PlanningBlueprint, PlanningHandlers } from '../planning';
 import AgentBlueprintDef from './blueprint';
 import { AgentWorker, AgentBlueprintHandlers } from './functions';
@@ -36,7 +37,11 @@ ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  operationHandlers: OperationHandlerSet.merge(AgentBlueprintHandlers, MarkdownHandlers, PlanningHandlers),
+  operationHandlers: OperationHandlerSet.merge(
+    AgentBlueprintHandlers,
+    MarkdownOperationHandlerSet,
+    PlanningHandlers,
+  ),
   types: [
     Agent.Agent,
     Plan.Plan,

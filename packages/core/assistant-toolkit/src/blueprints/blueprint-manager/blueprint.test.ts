@@ -17,8 +17,8 @@ import { Operation } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
 import DatabaseBlueprint from '../database/blueprint';
-import MarkdownBlueprint from '../markdown/blueprint';
-import ResearchBlueprint from '../research/blueprint';
+import DiscordBlueprint from '../discord/blueprint';
+import MemoryBlueprint from '../memory/blueprint';
 import BlueprintManagerDefinition from './blueprint';
 import { BlueprintManagerHandlers, EnableBlueprints, QueryBlueprints } from './functions';
 
@@ -28,7 +28,7 @@ const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
   operationHandlers: BlueprintManagerHandlers,
   types: [Blueprint.Blueprint],
-  blueprints: [DatabaseBlueprint.make(), MarkdownBlueprint.make(), ResearchBlueprint.make()],
+  blueprints: [DatabaseBlueprint.make(), MemoryBlueprint.make(), DiscordBlueprint.make()],
   tracing: 'pretty',
 });
 
@@ -52,8 +52,8 @@ describe('Blueprint Manager', () => {
         expect(result).toHaveLength(3);
         const keys = result.map((blueprint: Blueprint.Blueprint) => blueprint.key);
         expect(keys).toContain('org.dxos.blueprint.database');
-        expect(keys).toContain('org.dxos.blueprint.markdown');
-        expect(keys).toContain('org.dxos.blueprint.research');
+        expect(keys).toContain('dxos.org/blueprint/memory');
+        expect(keys).toContain('org.dxos.blueprint.discord');
       },
       provideTestLayers,
       TestHelpers.provideTestContext,
@@ -92,16 +92,16 @@ describe('Blueprint Manager', () => {
         const conversation = yield* getConversationDxn;
         const { enabled, rejected } = yield* Operation.invoke(
           EnableBlueprints,
-          { keys: ['org.dxos.blueprint.research'] },
+          { keys: ['org.dxos.blueprint.discord'] },
           { conversation },
         );
         expect(enabled).toHaveLength(0);
         expect(rejected).toHaveLength(1);
-        expect(rejected[0].key).toBe('org.dxos.blueprint.research');
+        expect(rejected[0].key).toBe('org.dxos.blueprint.discord');
 
         const { binder } = yield* AiContextService;
         const bound = binder.getBlueprints();
-        expect(bound.some((bp: Blueprint.Blueprint) => bp.key === 'org.dxos.blueprint.research')).toBe(false);
+        expect(bound.some((bp: Blueprint.Blueprint) => bp.key === 'org.dxos.blueprint.discord')).toBe(false);
       },
       provideTestLayers,
       TestHelpers.provideTestContext,
@@ -116,15 +116,21 @@ describe('Blueprint Manager', () => {
         const conversation = yield* getConversationDxn;
         const { enabled, rejected } = yield* Operation.invoke(
           EnableBlueprints,
-          { keys: ['org.dxos.blueprint.database', 'org.dxos.blueprint.markdown', 'org.dxos.blueprint.research'] },
+          {
+            keys: [
+              'org.dxos.blueprint.database',
+              'dxos.org/blueprint/memory',
+              'org.dxos.blueprint.discord',
+            ],
+          },
           { conversation },
         );
         expect(enabled).toHaveLength(2);
         const enabledKeys = enabled.map((bp: Blueprint.Blueprint) => bp.key);
         expect(enabledKeys).toContain('org.dxos.blueprint.database');
-        expect(enabledKeys).toContain('org.dxos.blueprint.markdown');
+        expect(enabledKeys).toContain('dxos.org/blueprint/memory');
         expect(rejected).toHaveLength(1);
-        expect(rejected[0].key).toBe('org.dxos.blueprint.research');
+        expect(rejected[0].key).toBe('org.dxos.blueprint.discord');
       },
       provideTestLayers,
       TestHelpers.provideTestContext,
