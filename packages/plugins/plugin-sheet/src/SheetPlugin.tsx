@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { ActivationEvents, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
@@ -64,8 +64,7 @@ export const SheetPlugin = Plugin.define(meta).pipe(
     activate: SheetState,
   }),
   Plugin.addModule({
-    activatesOn: ClientEvents.ClientReady,
-    firesBeforeActivation: [ActivationEvents.ManagedRuntimeReady],
+    activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, ActivationEvents.ManagedRuntimeReady),
     activate: ComputeGraphRegistry,
   }),
   Plugin.addModule({
