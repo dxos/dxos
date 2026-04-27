@@ -418,7 +418,7 @@ jobs:
           APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_TEAM_ID }}
 
       - name: Notify Discord on iOS build failure
-        if: failure()
+        if: failure() || cancelled()
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
           REF_NAME: ${{ github.ref_name }}
