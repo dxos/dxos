@@ -69,7 +69,10 @@ export const resolvePersonalSpace = (client: {
     return undefined;
   }
 
-  const defaultSpaceId = defaultSpaceCredential.subject.assertion.spaceId;
+  const defaultSpaceId = defaultSpaceCredential?.subject?.assertion?.spaceId;
+  if (typeof defaultSpaceId !== 'string') {
+    return undefined;
+  }
   const space = client.spaces.get(defaultSpaceId);
   return space ? { space, fromCredential: true } : undefined;
 };

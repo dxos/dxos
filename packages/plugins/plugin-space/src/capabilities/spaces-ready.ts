@@ -60,9 +60,10 @@ export default Capability.makeModule(
       if (personalSpaceInitialized) {
         return;
       }
+      // Set before any await so concurrent subscribe callbacks don't start a second initialization.
+      personalSpaceInitialized = true;
 
       await personalSpace.waitUntilReady();
-      personalSpaceInitialized = true;
 
       if (fromCredential) {
         setPersonalSpace(personalSpace);
