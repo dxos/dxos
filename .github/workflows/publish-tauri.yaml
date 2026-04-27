@@ -293,6 +293,10 @@ jobs:
 
     runs-on: depot-macos-latest
 
+    timeout-minutes: 90
+
+    continue-on-error: true
+
     steps:
       - uses: actions/checkout@v5
         with:
@@ -389,12 +393,13 @@ jobs:
           NODE_OPTIONS: '--max_old_space_size=12288'
 
       - name: Upload assets to CN
+        timeout-minutes: 30
         uses: ./.github/actions/cn-release
         with:
           api-key: ${{ secrets.CN_API_KEY }}
           application: ${{ env.CN_APPLICATION }}
           command: upload
-          working-directory: ./packages/apps/composer-app/
+          working-directory: ./packages/apps/composer-app/src-tauri/
 
       # https://tauri.app/distribute/app-store/#ios
       - name: Upload assets to App Store Connect
