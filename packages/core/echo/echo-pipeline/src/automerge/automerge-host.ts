@@ -16,6 +16,7 @@ import {
   type DocHandle,
   type DocHandleChangePayload,
   type DocumentId,
+  type DocumentQuery,
   type PeerCandidatePayload,
   type PeerDisconnectedPayload,
   type PeerId,
@@ -44,6 +45,7 @@ import { type CollectionState, CollectionSynchronizer, diffCollectionState } fro
 import { type EchoDataMonitor } from './echo-data-monitor';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator';
+import { getHandleState } from './handle-state';
 import { HeadsStore } from './heads-store';
 import { type BeforeSaveProps, LevelDBStorageAdapter } from './leveldb-storage-adapter';
 
@@ -290,12 +292,6 @@ export class AutomergeHost extends Resource {
     this._collectionSynchronizer.remoteStateUpdated.on(this._ctx, ({ collectionId, peerId, newDocsAppeared }) => {
       this._onRemoteCollectionStateUpdated(collectionId, peerId);
       this.collectionStateUpdated.emit({ collectionId: collectionId as CollectionId });
-      // Under Subduction the adapter's `onConnectionAuthScopeChanged` tears the peer down
-      // and re-adds it, which interrupts the Subduction handshake and causes repeated
-      // close/reopen cycles. Subduction handles policy via its own signer / policy layer,
-      // so no automerge-repo share-policy update is needed there.
-      // For the classical sync path (useSubduction=false) we re-run the share-policy for
-      // newly-learned documents so the adapter advertises them on the next sync round.
       if (!this._useSubduction && newDocsAppeared) {
         updatingAuthScope = true;
         try {
@@ -326,10 +322,6 @@ export class AutomergeHost extends Resource {
     this._sharePolicyChangedTask = new DeferredTask(this._ctx, async () => {
       log('share policy changed');
       this._repo.shareConfigChanged();
-      // Under Subduction the classical share-policy machinery doesn't run, so we skip
-      // `shareConfigChanged()`. Subduction handles policy via its own signer / policy
-      // layer; the adapter's `documentRequested` path still wakes this task for parity
-      // with the main-branch wiring.
     });
 
     await this._echoNetworkAdapter.open();
@@ -339,14 +331,6 @@ export class AutomergeHost extends Resource {
 
   protected override async _close(ctx: Context): Promise<void> {
     await this._collectionSynchronizer.close(ctx);
-    // Shut down the Repo first so Subduction's background tasks (periodic sync, hydrate,
-    // heal scheduler) unwind before we close the storage adapter. Without this, those
-    // tasks race with the close and surface as unhandled `LEVEL_DATABASE_NOT_OPEN` /
-    // `HydrationError` rejections. `Repo.shutdown()` drains subduction sources cleanly.
-    //
-    // TODO(mykola): Historically this corrupted shared Subduction WASM state across
-    // sequential `new Repo(...)` calls with "memory access out of bounds". Revisit if
-    // that resurfaces in cross-file test runs.
     await this._repo.shutdown().catch((err) => log.warn('failed to shutdown repo', { err }));
     await this._storage.close?.();
     await this._echoNetworkAdapter.close();
@@ -379,10 +363,8 @@ export class AutomergeHost extends Resource {
 
   async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocHandle<T>> {
     invariant(this.isOpen, 'AutomergeHost is not open');
-    // Readiness lives on the `DocumentQuery`, not the `DocHandle`: in the
-    // subduction fork `DocHandle.isReady()` is hardcoded `true` and
-    // `DocHandle.whenReady()` is a no-op. Inspect the query's actual state
-    // before deciding whether to fast-return or await it.
+    // Readiness lives on the `DocumentQuery`, not the `DocHandle` — see
+    // {@link getHandleState}.
     const progress = this._repo.findWithProgress<T>(documentId as DocumentId);
     const state = progress.peek();
     if (state.state === 'ready') {
@@ -396,6 +378,19 @@ export class AutomergeHost extends Resource {
     return opts?.timeout
       ? await cancelWithContext(ctx, asyncTimeout(readyPromise, opts.timeout))
       : await cancelWithContext(ctx, readyPromise);
+  }
+
+  /**
+   * Returns the live {@link DocumentQuery} for a document — exposes the
+   * always-attached `DocHandle` and the actual readiness state
+   * (`'loading' | 'ready' | 'unavailable' | 'failed'`) via `peek()` /
+   * `subscribe()` / `whenReady()`. Use this to observe sync state without
+   * forcing a wait. See {@link getHandleState} for why callers must read
+   * liveness off the query rather than the `DocHandle` itself.
+   */
+  findWithProgress<T>(documentId: AnyDocumentId): DocumentQuery<T> {
+    invariant(this.isOpen, 'AutomergeHost is not open');
+    return this._repo.findWithProgress<T>(documentId as DocumentId) as DocumentQuery<T>;
   }
 
   async exportDoc(id: AnyDocumentId): Promise<Uint8Array> {
@@ -475,18 +470,19 @@ export class AutomergeHost extends Resource {
     }
 
     // Flush to disk handles loaded to memory also so that the indexer can pick up the changes.
-    await this._repo.flush(
-      documentIds.filter((documentId) => this._repo.handles[documentId] && this._repo.handles[documentId].isReady()),
-    );
+    await this._repo.flush(documentIds.filter((documentId) => getHandleState(this._repo, documentId) === 'ready'));
   }
 
   async reIndexHeads(documentIds: DocumentId[]): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     for (const documentId of documentIds) {
       log('re-indexing heads for document', { documentId });
-      const handle = await this._repo.find(documentId);
-      if (!handle.isReady()) {
-        log.warn('document is not available locally, skipping', { documentId });
+      // `Repo.find()` resolves on `'ready'` and rejects on `'unavailable'`,
+      // so the handle is guaranteed to hold data here.
+      try {
+        const handle = await this._repo.find(documentId);
+      } catch (err) {
+        log.error('failed to find document', { documentId, err });
         continue;
       }
 
@@ -505,12 +501,7 @@ export class AutomergeHost extends Resource {
    * Share policy for the Repo's classical automerge-repo sync path (CollectionSynchronizer /
    * DocSynchronizer — see `src/synchronizer/DocSynchronizer.ts#resolveSharePolicy`).
    *
-   * NOTE: Subduction replication does NOT consult `shareConfig`. It has its own policy
-   * layer via `Repo({ subductionPolicy })` (see `@automerge/automerge-subduction` `Policy`
-   * interface: `authorizeConnect`, `authorizeFetch`, `authorizePut`, `filterAuthorizedFetch`).
-   * This object only gates what we advertise over classical sync messages traveling through
-   * `networkSubsystem.send`. With the subduction-era `network: []` config, those messages
-   * go nowhere; this still matters for tests / downstream callers that register classical
+   * NOTE: Subduction replication does NOT consult `shareConfig`.
    * {@link AutomergeReplicator}s via {@link EchoNetworkAdapter}.
    */
   private readonly _shareConfig = {
@@ -551,28 +542,6 @@ export class AutomergeHost extends Resource {
 
   /**
    * Authorization policy consulted by the Subduction sedimentree protocol.
-   *
-   * Subduction replicates documents over a separate code path from the classical
-   * automerge-repo sync that `_shareConfig` gates (see `subduction-share-policy.test.ts`
-   * — `shareConfig.announce` / `.access` are never invoked for subduction-only peers).
-   * This object is the subduction-layer analogue of `_shareConfig`.
-   *
-   * Current implementation: allow-all on every hook.
-   *
-   * Rationale (empirically verified — see the git history of this file for the trace):
-   *   - `shareConfig.access: () => true` is DXOS's existing policy. Fetch-side hooks
-   *     (`authorizeFetch`, `filterAuthorizedFetch`) are called on BOTH peers during sync,
-   *     so they're the direct analogue of `access`. Both must allow-all.
-   *   - `shareConfig.announce` gates a DIFFERENT concern: which docs WE proactively
-   *     advertise. Subduction's advertisement is automatic — there is no hook in the
-   *     `Policy` interface that controls what we announce. The `OPTIMIZED_SHARE_POLICY`
-   *     optimization does not have a clean subduction analogue.
-   *   - `authorizePut` looks tempting as a "reject unwanted writes" gate, but DXOS's
-   *     tracking sets (`_createdDocuments`, `_documentsToSync`, `_documentsToRequest`)
-   *     are populated at request-time — later than when subduction pushes bytes. The
-   *     receiving peer doesn't yet know the doc is wanted, so gating here rejects
-   *     legitimate replication. A real port would require ahead-of-time population of
-   *     an authorized-docs set, or a new upstream `Policy.authorizeAdvertise` hook.
    */
   private readonly _subductionPolicy: SubductionPolicy = {
     authorizeConnect: async (_peerId) => {},
@@ -583,7 +552,7 @@ export class AutomergeHost extends Resource {
 
   private async _beforeSave({ path, batch }: BeforeSaveProps): Promise<void> {
     const handle = this._repo.handles[path[0] as DocumentId];
-    if (!handle || !handle.isReady()) {
+    if (!handle || getHandleState(this._repo, handle.documentId) !== 'ready') {
       return;
     }
     const doc = handle.doc();
@@ -612,7 +581,7 @@ export class AutomergeHost extends Resource {
 
     const documentId = path[0] as DocumentId;
     const handle = this._repo.handles[documentId];
-    if (!handle || !handle.isReady()) {
+    if (!handle) {
       return;
     }
     const document = handle.doc();
@@ -645,10 +614,15 @@ export class AutomergeHost extends Resource {
 
   private async _getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null> {
     const handle = this._repo.handles[documentId as any];
-    if (handle && handle.state === 'loading') {
-      await handle.whenReady();
-    }
-    if (handle && handle.isReady() && handle.doc()) {
+    if (handle) {
+      const progress = this._repo.findWithProgress(documentId as DocumentId);
+      if (progress.peek().state === 'loading') {
+        try {
+          await progress.whenReady();
+        } catch {
+          log.warn('failded to load document', { documentId });
+        }
+      }
       const spaceKeyHex = DatabaseDirectory.getSpaceKey(handle.doc());
       if (spaceKeyHex) {
         return PublicKey.from(spaceKeyHex);
@@ -672,10 +646,7 @@ export class AutomergeHost extends Resource {
   @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
   async flush(ctx: Context, { documentIds }: FlushRequest = {}): Promise<void> {
     const loadedDocuments = (documentIds ?? Object.keys(this._repo.handles)).filter(
-      (documentId): documentId is DocumentId => {
-        const handle = this._repo.handles[documentId as DocumentId];
-        return handle && handle.isReady();
-      },
+      (documentId): documentId is DocumentId => getHandleState(this._repo, documentId as DocumentId) === 'ready',
     );
     await this._repo.flush(loadedDocuments);
 
@@ -696,7 +667,7 @@ export class AutomergeHost extends Resource {
     const storeResultIndices: number[] = [];
     for (const documentId of documentIds) {
       const handle = this._repo.handles[documentId];
-      if (handle && handle.isReady() && handle.doc()) {
+      if (handle && getHandleState(this._repo, documentId) === 'ready' && handle.doc()) {
         result.push(getHeads(handle.doc()!));
       } else {
         storeRequestIds.push(documentId);
@@ -919,11 +890,11 @@ export class AutomergeHost extends Resource {
     }
 
     const docs = documentIds.map((documentId) => {
-      const handle = this._repo.handles[documentId];
-      if (!handle || !handle.isReady()) {
+      if (getHandleState(this._repo, documentId) !== 'ready') {
         log.warn('document not ready, skipping', { documentId });
         return;
       }
+      const handle = this._repo.handles[documentId];
       const doc = handle.doc();
       if (!doc) {
         log.warn('document not available, skipping', { documentId });
@@ -1023,15 +994,29 @@ export class AutomergeHost extends Resource {
 const waitForHeads = async (handle: DocHandle<DatabaseDirectory>, heads: Heads) => {
   const unavailableHeads = new Set(heads);
 
-  await handle.whenReady();
-  await Event.wrap<DocHandleChangePayload<DatabaseDirectory>>(handle, 'change').waitForCondition(() => {
-    // Check if unavailable heads became available.
+  // Check the current doc first, then subscribe to `change` to catch later
+  // updates. (We can't use `handle.whenReady()` to gate the subscription —
+  // see {@link getHandleState} for why `DocHandle.*` state is unusable in
+  // this fork.)
+  const checkPresentHeads = () => {
+    const doc = handle.doc();
+    if (!doc) {
+      return;
+    }
     for (const changeHash of unavailableHeads.values()) {
-      if (changeIsPresentInDoc(handle.doc()!, changeHash)) {
+      if (changeIsPresentInDoc(doc, changeHash)) {
         unavailableHeads.delete(changeHash);
       }
     }
+  };
 
+  checkPresentHeads();
+  if (unavailableHeads.size === 0) {
+    return;
+  }
+
+  await Event.wrap<DocHandleChangePayload<DatabaseDirectory>>(handle, 'change').waitForCondition(() => {
+    checkPresentHeads();
     return unavailableHeads.size === 0;
   });
 };

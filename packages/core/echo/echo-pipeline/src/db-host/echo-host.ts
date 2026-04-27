@@ -70,7 +70,7 @@ export class EchoHost extends Resource {
   private readonly _automergeHost: AutomergeHost;
   private readonly _queryService: QueryServiceImpl;
   private readonly _dataService: DataServiceImpl;
-  private readonly _spaceStateManager = new SpaceStateManager();
+  private readonly _spaceStateManager: SpaceStateManager;
   private readonly _echoDataMonitor: EchoDataMonitor;
 
   private readonly _automergeDataSource: AutomergeDataSource;
@@ -102,6 +102,7 @@ export class EchoHost extends Resource {
       peerIdProvider,
       getSpaceKeyByRootDocumentId,
     });
+    this._spaceStateManager = new SpaceStateManager();
 
     this._runtime = runtime;
     this._automergeDataSource = new AutomergeDataSource(this._automergeHost);
@@ -320,12 +321,12 @@ export class EchoHost extends Resource {
   // TODO(dmaretskyi): Change to document id.
   async openSpaceRoot(ctx: Context, spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, automergeUrl, {
+    await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, automergeUrl, {
       fetchFromNetwork: true,
     });
-    await handle.whenReady();
+    const query = this._automergeHost.findWithProgress<DatabaseDirectory>(handle.documentId);
 
-    return this._spaceStateManager.assignRootToSpace(spaceId, handle);
+    return this._spaceStateManager.assignRootToSpace(spaceId, query);
   }
 
   // TODO(dmaretskyi): Change to document id.

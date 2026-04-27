@@ -115,7 +115,6 @@ export class AutomergeReplicant {
       docIds.map(async (id) => {
         try {
           const handle = await this._repo!.find<DocStruct>(id);
-          await handle.whenReady();
           docsLoaded[id] = { length: handle.doc().text.length };
           return handle;
         } catch (error) {

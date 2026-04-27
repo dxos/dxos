@@ -20,14 +20,9 @@
  * The test drives the alarm loop manually to simulate Cloudflare DO alarm scheduling.
  */
 
-import {
-  MemorySigner,
-  MemoryStorage,
-  Subduction,
-  type Transport,
-} from '@automerge/automerge-subduction';
 import { NetworkAdapter, Repo, type Message, type PeerId, type PeerMetadata } from '@automerge/automerge-repo';
 import { DummyStorageAdapter } from '@automerge/automerge-repo/helpers/DummyStorageAdapter.js';
+import { MemorySigner, MemoryStorage, Subduction, type Transport } from '@automerge/automerge-subduction';
 import { describe, test } from 'vitest';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -400,11 +395,7 @@ class ServerPeer {
    */
   private _initiateReconnect(): void {
     this._reconnecting = true;
-    this._transport = new ServerSubductionTransport(
-      this._automergePeerId,
-      this._clientPeerId!,
-      this._clientAdapter!,
-    );
+    this._transport = new ServerSubductionTransport(this._automergePeerId, this._clientPeerId!, this._clientAdapter!);
     // Accept the handshake in the background.  Bytes arrive via future alarm cycles.
     const transport = this._transport;
     void Subduction.hydrate(this._signer, this.kv, this._serviceName).then((subduction) =>
@@ -437,317 +428,305 @@ class ServerPeer {
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('edge architecture: client Repo + Subduction ↔ server DO (KV + alarm queue)', () => {
-  test(
-    'syncs document from client Repo to server via alarm-dispatched Subduction transport',
-    async ({ expect }) => {
-      const CLIENT_PEER_ID = 'test-client-peer' as PeerId;
-      const SERVER_PEER_ID = 'test-server-peer' as PeerId;
+  test('syncs document from client Repo to server via alarm-dispatched Subduction transport', async ({ expect }) => {
+    const CLIENT_PEER_ID = 'test-client-peer' as PeerId;
+    const SERVER_PEER_ID = 'test-server-peer' as PeerId;
 
-      const clientSigner = MemorySigner.generate();
-      const serverSigner = MemorySigner.generate();
+    const clientSigner = MemorySigner.generate();
+    const serverSigner = MemorySigner.generate();
 
-      // Server peer: SERVER_PEER_ID is the automerge-repo PeerId (separate from the
-      // cryptographic Subduction PeerId derived from serverSigner).
-      const serverPeer = new ServerPeer(serverSigner, SERVICE_NAME, SERVER_PEER_ID);
+    // Server peer: SERVER_PEER_ID is the automerge-repo PeerId (separate from the
+    // cryptographic Subduction PeerId derived from serverSigner).
+    const serverPeer = new ServerPeer(serverSigner, SERVICE_NAME, SERVER_PEER_ID);
 
-      // Client adapter: send() → server queue, server delivers back via deliverInbound().
-      const clientAdapter = new DumbNetworkAdapter(SERVER_PEER_ID, (message) => {
-        serverPeer.enqueueMessage(message);
+    // Client adapter: send() → server queue, server delivers back via deliverInbound().
+    const clientAdapter = new DumbNetworkAdapter(SERVER_PEER_ID, (message) => {
+      serverPeer.enqueueMessage(message);
+    });
+
+    // Start server accept — blocks until the cryptographic handshake completes.
+    // The alarm loop below will feed inbound bytes to unblock it.
+    const acceptPromise = serverPeer.acceptConnection(CLIENT_PEER_ID, clientAdapter);
+
+    // Create client Repo with Subduction transport.
+    // AdapterConnections will call adapter.connect() synchronously, but emits
+    // peer-candidate via queueMicrotask, so connectTransport starts on the next tick.
+    const clientRepo = new Repo({
+      peerId: CLIENT_PEER_ID,
+      signer: clientSigner,
+      storage: new DummyStorageAdapter(),
+      network: [],
+      subductionAdapters: [{ adapter: clientAdapter, serviceName: SERVICE_NAME, role: 'connect' }],
+      sharePolicy: async () => true,
+      periodicSyncInterval: 200,
+      batchSyncInterval: 200,
+    });
+
+    // Alarm loop: simulates Cloudflare DO alarm scheduling.
+    // Runs continuously in the background, draining the server queue.
+    let alarmsDone = false;
+    let alarmCount = 0;
+    const alarmLoop = async () => {
+      while (!alarmsDone) {
+        await serverPeer.alarm();
+        alarmCount++;
+        await pause(10);
+      }
+    };
+    void alarmLoop();
+
+    try {
+      // Wait for the Subduction handshake to complete.
+      await acceptPromise;
+
+      // Create and mutate a document on the client.
+      const handle = clientRepo.create<{ title?: string }>();
+      handle.change((doc) => {
+        doc.title = 'synced-via-subduction';
       });
 
-      // Start server accept — blocks until the cryptographic handshake completes.
-      // The alarm loop below will feed inbound bytes to unblock it.
-      const acceptPromise = serverPeer.acceptConnection(CLIENT_PEER_ID, clientAdapter);
+      // Wait for the document to arrive at the server's KV store.
+      // The SubductionSource in automerge-repo triggers sync on document change.
+      const deadline = Date.now() + 15_000;
+      while (Date.now() < deadline) {
+        const ids = await serverPeer.kv.loadAllSedimentreeIds();
+        if (ids.length > 0) {
+          break;
+        }
+        await pause(50);
+      }
 
-      // Create client Repo with Subduction transport.
-      // AdapterConnections will call adapter.connect() synchronously, but emits
-      // peer-candidate via queueMicrotask, so connectTransport starts on the next tick.
-      const clientRepo = new Repo({
-        peerId: CLIENT_PEER_ID,
-        signer: clientSigner,
+      // Assertions.
+      const storedIds = await serverPeer.kv.loadAllSedimentreeIds();
+      expect(storedIds.length, 'server should have persisted at least one sedimentree').toBeGreaterThan(0);
+
+      expect(
+        serverPeer.observedTypes.some((t) => t === SUBDUCTION_MESSAGE_TYPE),
+        'server should have observed subduction-connection messages',
+      ).toBe(true);
+
+      expect(alarmCount, 'alarm should have been triggered').toBeGreaterThan(0);
+    } finally {
+      alarmsDone = true;
+      clientAdapter.disconnect();
+      await clientRepo.shutdown();
+    }
+  }, 20_000);
+
+  test('second client can load document stored by first client through server KV', async ({ expect }) => {
+    const CLIENT_A_PEER_ID = 'test-client-a' as PeerId;
+    const CLIENT_B_PEER_ID = 'test-client-b' as PeerId;
+    const SERVER_PEER_ID = 'test-server-peer' as PeerId;
+
+    const serverSigner = MemorySigner.generate();
+    const serverPeer = new ServerPeer(serverSigner, SERVICE_NAME, SERVER_PEER_ID);
+
+    // ── Client A: creates the document ──
+
+    const signerA = MemorySigner.generate();
+    const adapterA = new DumbNetworkAdapter(SERVER_PEER_ID, (message) => {
+      serverPeer.enqueueMessage(message);
+    });
+
+    const acceptA = serverPeer.acceptConnection(CLIENT_A_PEER_ID, adapterA);
+
+    const repoA = new Repo({
+      peerId: CLIENT_A_PEER_ID,
+      signer: signerA,
+      storage: new DummyStorageAdapter(),
+      network: [],
+      subductionAdapters: [{ adapter: adapterA, serviceName: SERVICE_NAME, role: 'connect' }],
+      sharePolicy: async () => true,
+      periodicSyncInterval: 200,
+      batchSyncInterval: 200,
+    });
+
+    let alarmsDone = false;
+    const alarmLoop = async () => {
+      while (!alarmsDone) {
+        await serverPeer.alarm();
+        await pause(10);
+      }
+    };
+    void alarmLoop();
+
+    try {
+      await acceptA;
+
+      const handleA = repoA.create<{ value: number }>();
+      handleA.change((doc) => {
+        doc.value = 42;
+      });
+      const docUrl = handleA.url;
+
+      // Wait for server to store the document.
+      const deadline = Date.now() + 15_000;
+      while (Date.now() < deadline) {
+        const ids = await serverPeer.kv.loadAllSedimentreeIds();
+        if (ids.length > 0) break;
+        await pause(50);
+      }
+
+      expect((await serverPeer.kv.loadAllSedimentreeIds()).length).toBeGreaterThan(0);
+
+      // Disconnect Client A.
+      adapterA.disconnect();
+      await repoA.shutdown();
+
+      // ── Client B: connects and loads the document ──
+
+      const signerB = MemorySigner.generate();
+
+      // Server accepts Client B — reuses the same server Subduction instance (same KV).
+      const adapterB = new DumbNetworkAdapter(SERVER_PEER_ID, (message) => {
+        serverPeer.enqueueMessage(message);
+      });
+      const acceptB = serverPeer.acceptConnection(CLIENT_B_PEER_ID, adapterB);
+
+      const repoB = new Repo({
+        peerId: CLIENT_B_PEER_ID,
+        signer: signerB,
         storage: new DummyStorageAdapter(),
         network: [],
-        subductionAdapters: [{ adapter: clientAdapter, serviceName: SERVICE_NAME, role: 'connect' }],
+        subductionAdapters: [{ adapter: adapterB, serviceName: SERVICE_NAME, role: 'connect' }],
         sharePolicy: async () => true,
         periodicSyncInterval: 200,
         batchSyncInterval: 200,
       });
 
-      // Alarm loop: simulates Cloudflare DO alarm scheduling.
-      // Runs continuously in the background, draining the server queue.
-      let alarmsDone = false;
-      let alarmCount = 0;
-      const alarmLoop = async () => {
-        while (!alarmsDone) {
-          await serverPeer.alarm();
-          alarmCount++;
-          await pause(10);
+      await acceptB;
+
+      // Client B requests the document.
+      const progress = repoB.findWithProgress<{ value: number }>(docUrl);
+
+      const deadline2 = Date.now() + 15_000;
+      while (Date.now() < deadline2) {
+        const state = progress.peek();
+        if (state.state === 'ready' && state.handle.doc()?.value === 42) {
+          break;
         }
-      };
-      void alarmLoop();
-
-      try {
-        // Wait for the Subduction handshake to complete.
-        await acceptPromise;
-
-        // Create and mutate a document on the client.
-        const handle = clientRepo.create<{ title?: string }>();
-        handle.change((doc) => {
-          doc.title = 'synced-via-subduction';
-        });
-
-        // Wait for the document to arrive at the server's KV store.
-        // The SubductionSource in automerge-repo triggers sync on document change.
-        const deadline = Date.now() + 15_000;
-        while (Date.now() < deadline) {
-          const ids = await serverPeer.kv.loadAllSedimentreeIds();
-          if (ids.length > 0) {
-            break;
-          }
-          await pause(50);
-        }
-
-        // Assertions.
-        const storedIds = await serverPeer.kv.loadAllSedimentreeIds();
-        expect(storedIds.length, 'server should have persisted at least one sedimentree').toBeGreaterThan(0);
-
-        expect(
-          serverPeer.observedTypes.some((t) => t === SUBDUCTION_MESSAGE_TYPE),
-          'server should have observed subduction-connection messages',
-        ).toBe(true);
-
-        expect(alarmCount, 'alarm should have been triggered').toBeGreaterThan(0);
-      } finally {
-        alarmsDone = true;
-        clientAdapter.disconnect();
-        await clientRepo.shutdown();
+        await pause(50);
       }
-    },
-    20_000,
-  );
 
-  test(
-    'second client can load document stored by first client through server KV',
-    async ({ expect }) => {
-      const CLIENT_A_PEER_ID = 'test-client-a' as PeerId;
-      const CLIENT_B_PEER_ID = 'test-client-b' as PeerId;
-      const SERVER_PEER_ID = 'test-server-peer' as PeerId;
-
-      const serverSigner = MemorySigner.generate();
-      const serverPeer = new ServerPeer(serverSigner, SERVICE_NAME, SERVER_PEER_ID);
-
-      // ── Client A: creates the document ──
-
-      const signerA = MemorySigner.generate();
-      const adapterA = new DumbNetworkAdapter(SERVER_PEER_ID, (message) => {
-        serverPeer.enqueueMessage(message);
-      });
-
-      const acceptA = serverPeer.acceptConnection(CLIENT_A_PEER_ID, adapterA);
-
-      const repoA = new Repo({
-        peerId: CLIENT_A_PEER_ID,
-        signer: signerA,
-        storage: new DummyStorageAdapter(),
-        network: [],
-        subductionAdapters: [{ adapter: adapterA, serviceName: SERVICE_NAME, role: 'connect' }],
-        sharePolicy: async () => true,
-        periodicSyncInterval: 200,
-        batchSyncInterval: 200,
-      });
-
-      let alarmsDone = false;
-      const alarmLoop = async () => {
-        while (!alarmsDone) {
-          await serverPeer.alarm();
-          await pause(10);
-        }
-      };
-      void alarmLoop();
-
-      try {
-        await acceptA;
-
-        const handleA = repoA.create<{ value: number }>();
-        handleA.change((doc) => {
-          doc.value = 42;
-        });
-        const docUrl = handleA.url;
-
-        // Wait for server to store the document.
-        const deadline = Date.now() + 15_000;
-        while (Date.now() < deadline) {
-          const ids = await serverPeer.kv.loadAllSedimentreeIds();
-          if (ids.length > 0) break;
-          await pause(50);
-        }
-
-        expect((await serverPeer.kv.loadAllSedimentreeIds()).length).toBeGreaterThan(0);
-
-        // Disconnect Client A.
-        adapterA.disconnect();
-        await repoA.shutdown();
-
-        // ── Client B: connects and loads the document ──
-
-        const signerB = MemorySigner.generate();
-
-        // Server accepts Client B — reuses the same server Subduction instance (same KV).
-        const adapterB = new DumbNetworkAdapter(SERVER_PEER_ID, (message) => {
-          serverPeer.enqueueMessage(message);
-        });
-        const acceptB = serverPeer.acceptConnection(CLIENT_B_PEER_ID, adapterB);
-
-        const repoB = new Repo({
-          peerId: CLIENT_B_PEER_ID,
-          signer: signerB,
-          storage: new DummyStorageAdapter(),
-          network: [],
-          subductionAdapters: [{ adapter: adapterB, serviceName: SERVICE_NAME, role: 'connect' }],
-          sharePolicy: async () => true,
-          periodicSyncInterval: 200,
-          batchSyncInterval: 200,
-        });
-
-        await acceptB;
-
-        // Client B requests the document.
-        const progress = repoB.findWithProgress<{ value: number }>(docUrl);
-
-        const deadline2 = Date.now() + 15_000;
-        while (Date.now() < deadline2) {
-          const state = progress.peek();
-          if (state.state === 'ready' && state.handle.doc()?.value === 42) {
-            break;
-          }
-          await pause(50);
-        }
-
-        const finalState = progress.peek();
-        expect(finalState.state).toBe('ready');
-        if (finalState.state === 'ready') {
-          expect(finalState.handle.doc()?.value).toBe(42);
-        }
-      } finally {
-        alarmsDone = true;
-        await serverPeer.kv.loadAllSedimentreeIds().catch(() => {});
+      const finalState = progress.peek();
+      expect(finalState.state).toBe('ready');
+      if (finalState.state === 'ready') {
+        expect(finalState.handle.doc()?.value).toBe(42);
       }
-    },
-    30_000,
-  );
+    } finally {
+      alarmsDone = true;
+      await serverPeer.kv.loadAllSedimentreeIds().catch(() => {});
+    }
+  }, 30_000);
 
-  test(
-    'server KV survives hard hibernation and alarm-driven reconnect resumes sync',
-    async ({ expect }) => {
-      // Hibernation model exercised here:
-      //
-      //  1. Initial session: acceptConnection() → handshake → doc1 synced to KV.
-      //  2. Hard hibernation: hibernate() kills _transport with NO callbacks/signals.
-      //     The client has no idea the server is gone; it keeps sending periodic sync bytes.
-      //  3. Wake-up: alarm() fires, finds queued bytes but no transport.
-      //     It discards the stale session bytes, pre-creates a fresh transport,
-      //     and signals the client via `peer-disconnected` + `peer-candidate`.
-      //     (In production CF DO this is an out-of-band WebSocket message.)
-      //  4. Reconnect: AdapterConnections sees `peer-candidate` and calls connectTransport.
-      //     Handshake bytes flow into the fresh transport; acceptTransport completes.
-      //  5. doc2 synced to KV.  Both docs present — continuity across hibernation proven.
+  test('server KV survives hard hibernation and alarm-driven reconnect resumes sync', async ({ expect }) => {
+    // Hibernation model exercised here:
+    //
+    //  1. Initial session: acceptConnection() → handshake → doc1 synced to KV.
+    //  2. Hard hibernation: hibernate() kills _transport with NO callbacks/signals.
+    //     The client has no idea the server is gone; it keeps sending periodic sync bytes.
+    //  3. Wake-up: alarm() fires, finds queued bytes but no transport.
+    //     It discards the stale session bytes, pre-creates a fresh transport,
+    //     and signals the client via `peer-disconnected` + `peer-candidate`.
+    //     (In production CF DO this is an out-of-band WebSocket message.)
+    //  4. Reconnect: AdapterConnections sees `peer-candidate` and calls connectTransport.
+    //     Handshake bytes flow into the fresh transport; acceptTransport completes.
+    //  5. doc2 synced to KV.  Both docs present — continuity across hibernation proven.
 
-      const CLIENT_PEER_ID = 'test-client-hibernate' as PeerId;
-      const SERVER_PEER_ID = 'test-server-hibernate' as PeerId;
+    const CLIENT_PEER_ID = 'test-client-hibernate' as PeerId;
+    const SERVER_PEER_ID = 'test-server-hibernate' as PeerId;
 
-      const serverPeer = new ServerPeer(MemorySigner.generate(), SERVICE_NAME, SERVER_PEER_ID);
+    const serverPeer = new ServerPeer(MemorySigner.generate(), SERVICE_NAME, SERVER_PEER_ID);
 
-      const clientAdapter = new DumbNetworkAdapter(SERVER_PEER_ID, (message) => {
-        serverPeer.enqueueMessage(message);
-      });
+    const clientAdapter = new DumbNetworkAdapter(SERVER_PEER_ID, (message) => {
+      serverPeer.enqueueMessage(message);
+    });
 
-      // acceptConnection is called only once here (initial session).
-      // After hibernation, _initiateReconnect() inside alarm() drives the re-handshake.
-      const initialAccept = serverPeer.acceptConnection(CLIENT_PEER_ID, clientAdapter);
+    // acceptConnection is called only once here (initial session).
+    // After hibernation, _initiateReconnect() inside alarm() drives the re-handshake.
+    const initialAccept = serverPeer.acceptConnection(CLIENT_PEER_ID, clientAdapter);
 
-      const clientRepo = new Repo({
-        peerId: CLIENT_PEER_ID,
-        signer: MemorySigner.generate(),
-        storage: new DummyStorageAdapter(),
-        network: [],
-        subductionAdapters: [{ adapter: clientAdapter, serviceName: SERVICE_NAME, role: 'connect' }],
-        sharePolicy: async () => true,
-        periodicSyncInterval: 200,
-        batchSyncInterval: 200,
-      });
+    const clientRepo = new Repo({
+      peerId: CLIENT_PEER_ID,
+      signer: MemorySigner.generate(),
+      storage: new DummyStorageAdapter(),
+      network: [],
+      subductionAdapters: [{ adapter: clientAdapter, serviceName: SERVICE_NAME, role: 'connect' }],
+      sharePolicy: async () => true,
+      periodicSyncInterval: 200,
+      batchSyncInterval: 200,
+    });
 
-      let alarmsDone = false;
-      const alarmLoop = async () => {
-        while (!alarmsDone) {
-          await serverPeer.alarm();
-          await pause(10);
-        }
-      };
-      void alarmLoop();
-
-      try {
-        // ── Phase 1: initial session ──
-        await initialAccept;
-
-        const handle1 = clientRepo.create<{ seq: number }>();
-        handle1.change((doc) => {
-          doc.seq = 1;
-        });
-
-        const deadline1 = Date.now() + 15_000;
-        while (Date.now() < deadline1) {
-          if ((await serverPeer.kv.loadAllSedimentreeIds()).length > 0) {
-            break;
-          }
-          await pause(50);
-        }
-        expect(
-          (await serverPeer.kv.loadAllSedimentreeIds()).length,
-          'doc1 should be in KV after session 1',
-        ).toBeGreaterThan(0);
-
-        // ── Phase 2: hard hibernation ──
-        // No callbacks, no graceful close — process is just killed.
-        // The client keeps sending periodic sync bytes (periodicSyncInterval = 200ms).
-        serverPeer.hibernate();
-
-        // Wait for alarm() to detect the stale-bytes-no-transport situation and
-        // trigger _initiateReconnect(), which signals the client and completes the
-        // new handshake in the background.
-        const deadline2 = Date.now() + 15_000;
-        while (Date.now() < deadline2) {
-          // _reconnecting flips back to false when acceptTransport completes.
-          if (!serverPeer.isReconnecting && serverPeer.hasTransport) {
-            break;
-          }
-          await pause(50);
-        }
-        expect(serverPeer.hasTransport, 'transport should be re-established after reconnect').toBe(true);
-
-        // ── Phase 3: second document after reconnect ──
-        const handle2 = clientRepo.create<{ seq: number }>();
-        handle2.change((doc) => {
-          doc.seq = 2;
-        });
-
-        const deadline3 = Date.now() + 15_000;
-        while (Date.now() < deadline3) {
-          if ((await serverPeer.kv.loadAllSedimentreeIds()).length >= 2) {
-            break;
-          }
-          await pause(50);
-        }
-
-        expect(
-          (await serverPeer.kv.loadAllSedimentreeIds()).length,
-          'both documents should be in KV after reconnect',
-        ).toBeGreaterThanOrEqual(2);
-      } finally {
-        alarmsDone = true;
-        clientAdapter.disconnect();
-        await clientRepo.shutdown();
+    let alarmsDone = false;
+    const alarmLoop = async () => {
+      while (!alarmsDone) {
+        await serverPeer.alarm();
+        await pause(10);
       }
-    },
-    40_000,
-  );
+    };
+    void alarmLoop();
+
+    try {
+      // ── Phase 1: initial session ──
+      await initialAccept;
+
+      const handle1 = clientRepo.create<{ seq: number }>();
+      handle1.change((doc) => {
+        doc.seq = 1;
+      });
+
+      const deadline1 = Date.now() + 15_000;
+      while (Date.now() < deadline1) {
+        if ((await serverPeer.kv.loadAllSedimentreeIds()).length > 0) {
+          break;
+        }
+        await pause(50);
+      }
+      expect(
+        (await serverPeer.kv.loadAllSedimentreeIds()).length,
+        'doc1 should be in KV after session 1',
+      ).toBeGreaterThan(0);
+
+      // ── Phase 2: hard hibernation ──
+      // No callbacks, no graceful close — process is just killed.
+      // The client keeps sending periodic sync bytes (periodicSyncInterval = 200ms).
+      serverPeer.hibernate();
+
+      // Wait for alarm() to detect the stale-bytes-no-transport situation and
+      // trigger _initiateReconnect(), which signals the client and completes the
+      // new handshake in the background.
+      const deadline2 = Date.now() + 15_000;
+      while (Date.now() < deadline2) {
+        // _reconnecting flips back to false when acceptTransport completes.
+        if (!serverPeer.isReconnecting && serverPeer.hasTransport) {
+          break;
+        }
+        await pause(50);
+      }
+      expect(serverPeer.hasTransport, 'transport should be re-established after reconnect').toBe(true);
+
+      // ── Phase 3: second document after reconnect ──
+      const handle2 = clientRepo.create<{ seq: number }>();
+      handle2.change((doc) => {
+        doc.seq = 2;
+      });
+
+      const deadline3 = Date.now() + 15_000;
+      while (Date.now() < deadline3) {
+        if ((await serverPeer.kv.loadAllSedimentreeIds()).length >= 2) {
+          break;
+        }
+        await pause(50);
+      }
+
+      expect(
+        (await serverPeer.kv.loadAllSedimentreeIds()).length,
+        'both documents should be in KV after reconnect',
+      ).toBeGreaterThanOrEqual(2);
+    } finally {
+      alarmsDone = true;
+      clientAdapter.disconnect();
+      await clientRepo.shutdown();
+    }
+  }, 40_000);
 });
