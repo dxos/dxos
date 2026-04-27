@@ -51,7 +51,6 @@ import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { createStreamer } from './stream';
-
 export interface MarkdownStreamController extends XmlWidgetStateManager {
   get length(): number | undefined;
   scrollToBottom: (behavior?: ScrollBehavior) => void;
@@ -85,17 +84,12 @@ export type MarkdownStreamProps = ThemedClassName<
  * Codemirror-based markdown editor with xml tag widtgets and streaming support.
  */
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
-  ({ classNames, debug, content, options, registry, onEvent, paragraphToWidgetGapRem = 1.125 }, forwardedRef) => {
+  ({ classNames, debug, content, options, registry, onEvent }, forwardedRef) => {
     // Store current content so that we can toggle debug mode.
     const contentRef = useRef(content);
 
     // Codemirror editor.
-    const { parentRef, view, viewRef, widgets } = useMarkdownStreamTextEditor(contentRef, {
-      debug,
-      registry,
-      options,
-      paragraphToWidgetGapRem,
-    });
+    const { parentRef, view, viewRef, widgets } = useMarkdownStreamTextEditor(contentRef, { debug, registry, options });
 
     // Streaming text queue.
     const [queue, setQueue, queueRef] = useStateWithRef(Effect.runSync(Queue.unbounded<string>()));
@@ -175,10 +169,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
   },
 );
 
-type MarkdownStreamTextEditorParams = Pick<
-  MarkdownStreamProps,
-  'debug' | 'registry' | 'options' | 'paragraphToWidgetGapRem'
->;
+type MarkdownStreamTextEditorParams = Pick<MarkdownStreamProps, 'debug' | 'registry' | 'options'>;
 
 type MarkdownStreamTextEditorResult = UseTextEditor & {
   viewRef: RefObject<EditorView | null>;
@@ -190,7 +181,7 @@ type MarkdownStreamTextEditorResult = UseTextEditor & {
  */
 const useMarkdownStreamTextEditor = (
   currentContent: RefObject<string | undefined>,
-  { debug, registry, options, paragraphToWidgetGapRem }: MarkdownStreamTextEditorParams,
+  { debug, registry, options }: MarkdownStreamTextEditorParams,
 ): MarkdownStreamTextEditorResult => {
   const { themeMode } = useThemeContext();
 
@@ -219,12 +210,7 @@ const useMarkdownStreamTextEditor = (
             skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
           }),
           preview(),
-          xmlTags({
-            registry,
-            setWidgets,
-            bookmarks: ['prompt'],
-            paragraphToWidgetGapRem,
-          }),
+          xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
           scroller({ overScroll: 64 }),
           ...(options?.autoScroll ? [autoScroll()] : []),
           ...(options?.wire
@@ -243,16 +229,7 @@ const useMarkdownStreamTextEditor = (
         ],
       ].filter(isTruthy),
     };
-  }, [
-    themeMode,
-    registry,
-    debug,
-    options?.autoScroll,
-    options?.wire,
-    options?.cursor,
-    options?.fader,
-    paragraphToWidgetGapRem,
-  ]);
+  }, [themeMode, registry, debug, options?.autoScroll, options?.wire, options?.cursor, options?.fader]);
 
   const viewRef = useDynamicRef(view);
   return { view, viewRef, parentRef, widgets };

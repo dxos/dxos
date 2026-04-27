@@ -9,14 +9,14 @@ import * as Layer from 'effect/Layer';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Database, Filter } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ContextQueueService } from '@dxos/functions';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { type Queue, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Queue, useSpaces } from '@dxos/react-client/echo';
 import { Card, Popover } from '@dxos/react-ui';
 import { EditorPreviewProvider, useEditorPreview } from '@dxos/react-ui-editor';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -36,7 +36,7 @@ type DefaultStoryProps = { generator?: MessageGenerator[]; delay?: number; wait?
 const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: DefaultStoryProps) => {
   const [space] = useSpaces();
   const queue = useMemo<Queue<Message.Message> | undefined>(() => space?.queues.create(), [space]);
-  const messages = useQuery(queue, Filter.type(Message.Message));
+  const messages = useQueueMessages(queue);
   const [done, setDone] = useState(false);
 
   // Generate messages.
@@ -61,7 +61,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: DefaultStor
     return () => {
       void runAndForwardErrors(Fiber.interrupt(fiber));
     };
-  }, [space, queue, generator]);
+  }, [space, queue, generator, delay]);
 
   if (wait && !done) {
     return <Loading data={{ wait, done }} />;
@@ -73,6 +73,23 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: DefaultStor
       <PreviewCard />
     </EditorPreviewProvider>
   );
+};
+
+const useQueueMessages = (queue?: Queue<Message.Message>) => {
+  const [messages, setMessages] = useState<Message.Message[]>([]);
+
+  useEffect(() => {
+    if (!queue) {
+      setMessages([]);
+      return;
+    }
+
+    const update = () => setMessages([...queue.objects]);
+    update();
+    return queue.subscribe(update);
+  }, [queue]);
+
+  return messages;
 };
 
 const PreviewCard = () => {

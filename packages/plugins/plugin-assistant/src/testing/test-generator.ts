@@ -45,14 +45,11 @@ export const createMessageGenerator = (): MessageGenerator[] => [
     const message = createMessage('assistant', [{ _tag: 'text', text: '', pending: true }]);
     yield* Effect.promise(() => queue.append([message]));
 
-    const fullText =
-      trim`
-      Streaming a response **word by word** through the queue:
-
-      ${random.lorem.paragraph()}
-
-      ${random.lorem.paragraph()}
-    ` + '\n';
+    const fullText = [
+      'Streaming a response **word by word** through the queue:',
+      random.lorem.paragraph(),
+      random.lorem.paragraph(),
+    ].join('\n\n');
 
     yield* Effect.promise(async () => {
       for await (const chunk of textStream(fullText, { wordsPerChunk: 2, chunkDelay: 60 })) {
@@ -60,11 +57,14 @@ export const createMessageGenerator = (): MessageGenerator[] => [
           const block = message.blocks[0] as Mutable<ContentBlock.Text>;
           block.text += chunk;
         });
+        // Queue queries only react to queue-level updates, not in-place object mutations.
+        await queue.append([]);
       }
       Obj.change(message, (message) => {
         const block = message.blocks[0] as Mutable<ContentBlock.Text>;
         block.pending = false;
       });
+      await queue.append([]);
     });
   }),
 

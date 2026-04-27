@@ -56,8 +56,10 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
     // Update document.
     const syncer = useMemo(() => controller && new MessageSyncer(controller, blockToMarkdown), [controller]);
     useEffect(() => {
-      const reset = syncer?.append(messages, true);
-      if (reset) {
+      if (!syncer) {
+        return;
+      }
+      if (syncer.update(messages)) {
         controller?.scrollToBottom('instant');
       }
     }, [controller, syncer, messages]);
