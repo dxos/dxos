@@ -23,6 +23,25 @@ export const createMessage = (role: Actor.Role, blocks: ContentBlock.Any[]): Mes
 
 export type MessageGenerator = Effect.Effect<void, never, Database.Service | ContextQueueService>;
 
+export const createMessageGenerator2 = (): MessageGenerator[] => [
+  Effect.gen(function* () {
+    const { queue } = yield* ContextQueueService;
+    const { db } = yield* Database.Service;
+    const obj1 = db.add(Obj.make(Organization.Organization, { name: 'DXOS' }));
+    yield* Effect.promise(() =>
+      queue.append([
+        createMessage('assistant', [
+          // Inline tag.
+          {
+            _tag: 'text',
+            text: ['This is a link', renderObjectLink(obj1), '.\n'].join(''),
+          },
+        ]),
+      ]),
+    );
+  }),
+];
+
 export const createMessageGenerator = (): MessageGenerator[] => [
   Effect.gen(function* () {
     const { queue } = yield* ContextQueueService;

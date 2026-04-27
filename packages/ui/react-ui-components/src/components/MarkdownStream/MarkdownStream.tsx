@@ -207,6 +207,10 @@ const useMarkdownStreamTextEditor = (
         !debug && [
           extendedMarkdown({ registry }),
           decorateMarkdown({
+            // `dxn:` links/images are reference widgets owned by `preview()` (PreviewInlineWidget /
+            // PreviewBlockWidget). Skipping them here avoids `decorateMarkdown` adding a
+            // non-functional `LinkButton` anchor on top of the same node — e.g. for
+            // `[DXOS](dxn:echo:BNPMIBEDJLRIILYUYZVM6GT64VWI6WPPZ:01KQ889PZBRNHAEECV0ANFAYX7)`.
             skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
           }),
           preview(),

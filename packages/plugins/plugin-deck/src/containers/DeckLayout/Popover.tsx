@@ -111,6 +111,8 @@ export const PopoverContent = () => {
     [handleClose],
   );
 
+  console.log('??', state);
+
   return (
     <Popover.Portal>
       <Popover.Content

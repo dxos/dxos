@@ -10,6 +10,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Database } from '@dxos/echo';
+// Side-effect import registers the `<dx-anchor>` custom element. The markdown `preview()`
+// extension renders `[Label](dxn:...)` references as `<dx-anchor>` elements, and `<dx-anchor>`
+// dispatches the `DxAnchorActivate` event that `EditorPreviewProvider` listens for to open the
+// popover. Without this import the element falls back to `HTMLUnknownElement`, no event fires,
+// and the popover never opens.
+import '@dxos/lit-ui';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ContextQueueService } from '@dxos/functions';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -24,6 +30,7 @@ import { Message, Organization, Person } from '@dxos/types';
 
 import { createMessageGenerator } from '#testing';
 
+import { createMessageGenerator2 } from '../../testing/test-generator';
 import { translations } from '../../translations';
 import { ChatThread, type ChatThreadProps } from './ChatThread';
 
@@ -142,7 +149,7 @@ type Story = StoryObj<DefaultStoryProps>;
 
 export const Default: Story = {
   args: {
-    generator: createMessageGenerator(),
+    generator: createMessageGenerator2(),
     wait: true,
   },
 };
