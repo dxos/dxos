@@ -13,25 +13,23 @@ import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 import { Pipeline } from '@dxos/types';
 
-import { PipelineContainer, PipelineObjectSettings } from '#containers';
+import { PipelineContainer, PipelineProperties } from '#containers';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'root',
-        role: 'article',
-        filter: AppSurface.objectArticle(Pipeline.Pipeline),
+        filter: AppSurface.object(AppSurface.Article, Pipeline.Pipeline),
         component: ({ data, role }) => (
           <PipelineContainer role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
         id: 'companion.invocations',
-        role: 'article',
-        filter: AppSurface.and(
-          AppSurface.literalArticle('invocations'),
-          AppSurface.companionArticle(Pipeline.Pipeline),
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'invocations'),
+          AppSurface.companion(AppSurface.Article, Pipeline.Pipeline),
         ),
         component: ({ data, role }) => {
           const db = Obj.getDatabase(data.companionTo);
@@ -46,10 +44,9 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'object-settings',
-        role: 'object-settings',
-        filter: AppSurface.objectSettings(Pipeline.Pipeline),
-        component: ({ data }) => <PipelineObjectSettings pipeline={data.subject} />,
+        id: 'object-properties',
+        filter: AppSurface.object(AppSurface.ObjectProperties, Pipeline.Pipeline),
+        component: ({ data }) => <PipelineProperties pipeline={data.subject} />,
       }),
     ]),
   ),

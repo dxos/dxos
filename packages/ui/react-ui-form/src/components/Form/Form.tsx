@@ -3,10 +3,12 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
+import { Annotation as EchoAnnotation } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import {
@@ -17,7 +19,7 @@ import {
   useMergeRefs,
   useTranslation,
 } from '@dxos/react-ui';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx, withColumn } from '@dxos/ui-theme';
 
 import {
   type FormHandler,
@@ -33,12 +35,28 @@ import {
   type FormFieldSetProps as NaturalFormFieldSetProps,
 } from './FormFieldSet';
 
-// TODO(burdon): Move to @dxos/schema (re-export here).
+// TODO(burdon): Move styles to form.ts (as with ui-theme).
+
+// TODO(burdon): Reconcile with @dxos/echo.
 export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
 
 // TODO(burdon): Move to @dxos/schema (re-export here).
 export const omitId = <S extends Schema.Schema.AnyNoContext>(schema: S): Schema.Schema<ExcludeId<S>, ExcludeId<S>> =>
   schema.pipe(Schema.omit('id')) as any;
+
+/**
+ * Drop fields annotated with `FormInputAnnotation.set(false)` from a schema so
+ * the form's validator doesn't trip on required-but-hidden fields. Used by
+ * the picker's inline create form, where a `FactoryAnnotation` typically
+ * supplies the hidden values (e.g. a backing-object Ref) outside the form.
+ */
+export const omitHiddenFormFields = <S extends Schema.Schema.AnyNoContext>(schema: S): S => {
+  const properties = SchemaAST.getPropertySignatures(schema.ast);
+  const hidden = properties
+    .filter((prop) => Option.getOrElse(EchoAnnotation.FormInputAnnotation.getFromAst(prop.type), () => true) === false)
+    .map((prop) => prop.name as string);
+  return hidden.length === 0 ? schema : (schema.pipe(Schema.omit(...(hidden as [string, ...string[]]))) as any);
+};
 
 //
 // Context
@@ -61,7 +79,7 @@ type FormContextValue<T extends AnyProperties = any> = {
   testId?: string;
 } & Pick<
   NaturalFormFieldSetProps<T>,
-  'readonly' | 'layout' | 'fieldMap' | 'fieldProvider' | 'projection' | 'createTypename' | 'createFieldMap'
+  'readonly' | 'layout' | 'fieldMap' | 'fieldProvider' | 'projection' | 'createTypename' | 'createFieldMap' | 'db'
 >;
 
 const [FormContextProvider, useFormContext] = createContext<FormContextValue>('Form');
@@ -192,7 +210,10 @@ const FormContent = composable<HTMLDivElement, FormContentProps>(({ children, ..
 
   return (
     <div
-      {...composableProps(props, { role: 'form', classNames: 'flex flex-col w-full pb-form-gap' })}
+      {...composableProps(props, {
+        role: 'form',
+        classNames: mx(withColumn.center(), 'flex flex-col w-full pb-form-gap'),
+      })}
       data-testid={testId}
       ref={mergedRef}
     >
@@ -238,11 +259,15 @@ const FormActions = ({ classNames }: FormActionsProps) => {
   if (readonly || layout === 'static') {
     return null;
   }
+
   // TODO(burdon): Currently onCancel is a no-op; implement "revert values".
   //   Deprecate FormSubmit ans use FormActions without Cancel button if no callback is supplied.
 
   return (
-    <div role='none' className={mx('grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding', classNames)}>
+    <div
+      role='none'
+      className={mx(withColumn.center(), 'grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding', classNames)}
+    >
       {onCancel && (
         <IconButton
           icon='ph--x--regular'
@@ -269,6 +294,31 @@ const FormActions = ({ classNames }: FormActionsProps) => {
 };
 
 FormActions.displayName = FORM_ACTIONS_NAME;
+
+//
+// Section
+//
+
+const FORM_SECTION_NAME = 'Form.Section';
+
+type FormSectionProps = ThemedClassName<{ label: string; description?: string }>;
+
+const FormSection = composable<HTMLDivElement, FormSectionProps>(
+  ({ children, label, description, ...props }, forwardedRef) => {
+    return (
+      <div
+        {...composableProps(props, { classNames: 'flex flex-col pt-form-section-gap first:pt-0' })}
+        ref={forwardedRef}
+      >
+        <h2 className='text-lg'>{label}</h2>
+        {description && <p className='text-description'>{description}</p>}
+        {children}
+      </div>
+    );
+  },
+);
+
+FormSection.displayName = FORM_SECTION_NAME;
 
 //
 // Submit
@@ -317,6 +367,7 @@ export const Form = {
   Root: FormRoot,
   Viewport: FormViewport,
   Content: FormContent,
+  Section: FormSection,
   FieldSet: FormFieldSet,
   Label: FormFieldLabel,
   Actions: FormActions,
@@ -329,6 +380,7 @@ export type {
   FormRootProps,
   FormViewportProps,
   FormContentProps,
+  FormSectionProps,
   FormFieldSetProps,
   FormFieldLabelProps,
   FormActionsProps,

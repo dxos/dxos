@@ -12,9 +12,9 @@ import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
 import { OperationHandlerSet } from '@dxos/operation';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -67,7 +67,7 @@ describe('Research', () => {
           }),
         );
         yield* Database.flush();
-        const result = yield* FunctionInvocationService.invokeFunction(research, {
+        const result = yield* Operation.invoke(research, {
           query: 'Founders and portfolio of BlueYard.',
         });
 
@@ -77,9 +77,8 @@ describe('Research', () => {
         yield* Database.flush();
         const researchGraph = yield* ResearchGraph.query();
         if (researchGraph) {
-          const data = yield* Database.load(researchGraph.queue).pipe(
-            Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects())),
-          );
+          const feed = yield* Database.load(researchGraph.queue);
+          const data = yield* Feed.runQuery(feed, Filter.everything());
           console.log(inspect(data, { depth: null, colors: true }));
         }
       },

@@ -90,12 +90,14 @@ export const translations = [
         'message-toolbar-reply-all.menu': 'Reply All',
         'message-toolbar-forward.menu': 'Forward',
 
+        'message-body.placeholder': 'Enter message text...',
+
         'mailbox-toolbar.title': 'Mailbox toolbar',
         'mailbox-toolbar-sort.menu': 'Sort messages',
         'mailbox-toolbar-filter.menu': 'Filter messages',
-
         'mailbox-toolbar-save-button.label': 'Save',
         'mailbox-toolbar-clear-button.label': 'Clear',
+
         'save-filter.placeholder': 'Filter name',
         'save-filter.button': 'Save',
         'delete-filter.label': 'Delete filter',
@@ -128,6 +130,10 @@ export const translations = [
         'open-calendar.button': 'Open calendar',
         'open-profile.button': 'Open profile',
         'saved-filter-name.label': 'Filter name',
+
+        'settings.title': 'Inbox settings',
+        'settings.threads.label': 'Group by thread',
+        'settings.threads.description': 'Group messages and responses that belong to the same conversation.',
       },
     },
   },

@@ -4,30 +4,21 @@
 
 import React from 'react';
 
-import { Obj } from '@dxos/echo';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Script } from '@dxos/functions';
-import { Input, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '#meta';
+import { BlueprintEditor } from './BlueprintEditor';
+import { FunctionBinding } from './FunctionBinding';
+import { FunctionPublishing } from './FunctionPublishing';
 
-export type ScriptPropertiesProps = {
-  object: Script.Script;
-};
+export type ScriptPropertiesProps = AppSurface.ObjectPropertiesProps<Script.Script>;
 
-export const ScriptProperties = ({ object }: ScriptPropertiesProps) => {
-  const { t } = useTranslation(meta.id);
+export const ScriptProperties = ({ subject: object }: ScriptPropertiesProps) => {
   return (
-    <Input.Root>
-      <Input.Label>{t('description.label')}</Input.Label>
-      <Input.TextInput
-        placeholder={t('description.placeholder')}
-        value={object.description ?? ''}
-        onChange={(event) => {
-          Obj.change(object, (object) => {
-            object.description = event.target.value;
-          });
-        }}
-      />
-    </Input.Root>
+    <div role='none' className='flex flex-col py-form-gap gap-form-section-gap'>
+      <FunctionBinding object={object} />
+      <BlueprintEditor object={object} />
+      <FunctionPublishing object={object} />
+    </div>
   );
 };

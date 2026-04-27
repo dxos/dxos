@@ -2,21 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
-import { type AiToolNotFoundError, GenericToolkit, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { type AiToolNotFoundError, OpaqueToolkit, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { isTruthy } from '@dxos/util';
 
 export type CreateToolkitProps = {
-  toolkit?: Toolkit.Any;
+  toolkit?: OpaqueToolkit.Any;
   blueprints?: readonly Blueprint.Blueprint[];
   /**
    * Self-contained with handlers toolkits.
    */
-  genericToolkits?: readonly GenericToolkit.GenericToolkit[];
+  opaqueToolkits?: readonly OpaqueToolkit.Any[];
 };
 
 /**
@@ -25,20 +25,23 @@ export type CreateToolkitProps = {
 export const createToolkit = ({
   toolkit: toolkitProp,
   blueprints = [],
-  genericToolkits = [],
+  opaqueToolkits = [],
 }: CreateToolkitProps): Effect.Effect<
-  Toolkit.WithHandler<any>,
+  OpaqueToolkit.OpaqueToolkit,
   AiToolNotFoundError,
-  ToolResolverService | ToolExecutionService | Tool.HandlersFor<any>
+  ToolResolverService | ToolExecutionService
 > =>
   Effect.gen(function* () {
     const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap(({ tools }) => tools));
     const blueprintToolHandler = yield* blueprintToolkit.toContext(ToolExecutionService.handlersFor(blueprintToolkit));
-    const genericToolkit = GenericToolkit.merge(...genericToolkits);
+    const opaqueToolkit = OpaqueToolkit.merge(...opaqueToolkits);
 
-    const toolkit = Toolkit.merge(...[toolkitProp, blueprintToolkit, genericToolkit.toolkit].filter(isTruthy));
-    return yield* toolkit.pipe(
-      Effect.provide(blueprintToolHandler),
-      Effect.provide(genericToolkit.layer),
-    ) as any as Effect.Effect<Toolkit.WithHandler<any>, never, Tool.HandlersFor<any>>;
-  });
+    const toolkitDefs = [toolkitProp?.toolkit, blueprintToolkit, opaqueToolkit.toolkit].filter(isTruthy);
+    const mergedToolkit = Toolkit.merge(...toolkitDefs);
+    const combinedHandlerLayer = Layer.mergeAll(
+      Layer.succeedContext(blueprintToolHandler),
+      toolkitProp?.layer ?? OpaqueToolkit.empty.layer,
+      opaqueToolkit.layer,
+    );
+    return OpaqueToolkit.make(mergedToolkit, combinedHandlerLayer as any) as OpaqueToolkit.OpaqueToolkit;
+  }) as Effect.Effect<OpaqueToolkit.OpaqueToolkit, AiToolNotFoundError, ToolResolverService | ToolExecutionService>;

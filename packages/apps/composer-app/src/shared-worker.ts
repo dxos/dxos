@@ -9,13 +9,16 @@
 
 onconnect = async (event) => {
   const { Effect } = await import('effect');
-  const { onconnect, getWorkerServiceHost } = await import('@dxos/client/worker');
+  const { onconnect, getWorkerServiceHost, getWorkerConfig } = await import('@dxos/client/worker');
   const { log } = await import('@dxos/log');
   const { ObservabilityProvider } = await import('@dxos/observability');
-  const { initializeObservability, setupConfig } = await import('./config');
+  const { initializeObservability } = await import('./config');
 
-  // Don't block on observability setup.
-  void setupConfig()
+  // Don't block on observability setup; the buffering backend in TRACE_PROCESSOR
+  // captures early spans and replays them once the real OTEL backend registers.
+  // Worker config comes from the main thread (seeded by the first connecting client) — the worker
+  // does not re-read Storage/Envs/Local/Defaults itself. See DX-930.
+  void getWorkerConfig()
     .then(async (config) => {
       const observability = await initializeObservability(config, false);
       const host = await getWorkerServiceHost();

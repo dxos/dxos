@@ -19,13 +19,14 @@ import { CalendarBlueprint, InboxBlueprint } from '#blueprints';
 import {
   AppGraphBuilder,
   BlueprintDefinition,
+  InboxSettings,
   NavigationResolver,
   OperationHandler,
   ReactSurface,
 } from '#capabilities';
 import { meta } from '#meta';
 import { InboxOperation } from '#operations';
-import { Calendar, Mailbox } from '#types';
+import { Calendar, InboxEvents, Mailbox } from '#types';
 
 import { translations } from './translations';
 import { CreateCalendarSchema } from './types/Calendar';
@@ -118,6 +119,11 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupSettings,
+    firesAfterActivation: [InboxEvents.SettingsReady],
+    activate: InboxSettings,
+  }),
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,

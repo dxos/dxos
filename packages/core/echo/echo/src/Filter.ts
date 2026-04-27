@@ -13,8 +13,8 @@ import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
-import type * as Entity from './Entity';
 import * as internal from './internal';
+import type * as Obj from './Obj';
 import * as Ref from './Ref';
 
 export interface Filter<T> {
@@ -346,14 +346,18 @@ export type ChildOfOptions = {
 
 /**
  * Filter objects that are children of the specified parent(s).
- * Accepts ECHO objects, DXN values, or arrays of either.
+ * Accepts ECHO objects, Refs, or arrays of either.
+ * Refs are resolved to DXNs without loading; objects use {@link Obj.getDXN}.
  * With transitive=true (default), also matches grandchildren and beyond.
  */
-export const childOf = (parents: Entity.Unknown | DXN | (Entity.Unknown | DXN)[], options?: ChildOfOptions): Any => {
+export const childOf = (
+  parents: Obj.Unknown | Ref.Unknown | readonly (Obj.Unknown | Ref.Unknown)[],
+  options?: ChildOfOptions,
+): Any => {
   const items = Array.isArray(parents) ? parents : [parents];
   const dxns = items.map((item) => {
-    if (item instanceof DXN) {
-      return item.toString();
+    if (Ref.isRef(item)) {
+      return item.dxn.toString();
     }
     return internal.getDXN(item).toString();
   });

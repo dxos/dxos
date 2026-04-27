@@ -4,12 +4,11 @@
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as HttpClient from '@effect/platform/HttpClient';
-import { type Context as OtelContext, propagation } from '@opentelemetry/api';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
 import { sleep } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -29,6 +28,7 @@ import {
   type ExportBundleResponse,
   type FeedProtocol,
   type GetAgentStatusResponseBody,
+  type GetPluginsResponseBody,
   type GetNotarizationResponseBody,
   type ImportBundleRequest,
   type InitiateOAuthFlowRequest,
@@ -46,12 +46,22 @@ import {
   type QueryRequest as QueryRequestProto,
   type QueryResponse as QueryResponseProto,
 } from '@dxos/protocols/proto/dxos/echo/query';
-import { TRACE_PROCESSOR, TRACE_SPAN_ATTRIBUTE } from '@dxos/tracing';
 import { createUrl } from '@dxos/util';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
 import { HttpConfig, encodeAuthHeader, withLogging, withRetryConfig } from './http-client';
 import { getEdgeUrlWithProtocol } from './utils';
+
+/**
+ * HTTP wire shape returned by `/queue/.../query`. Unlike `FeedProtocol.QueryResult`
+ * (the RPC proto type, which transports object payloads as JSON strings), the edge
+ * HTTP endpoint embeds each object directly in the response JSON.
+ */
+export type EdgeQueryQueueResponse = {
+  objects?: unknown[];
+  nextCursor?: string;
+  prevCursor?: string;
+};
 
 const DEFAULT_RETRY_TIMEOUT = 1500;
 const DEFAULT_RETRY_JITTER = 500;
@@ -239,7 +249,7 @@ export class EdgeHttpClient {
     spaceId: SpaceId,
     query: FeedProtocol.QueueQuery,
     args?: EdgeHttpCallArgs,
-  ): Promise<FeedProtocol.QueryResult> {
+  ): Promise<EdgeQueryQueueResponse> {
     const queueId = query.queueIds?.[0];
     invariant(queueId, 'queueId required');
     return this._call(
@@ -414,6 +424,18 @@ export class EdgeHttpClient {
   }
 
   //
+  // Registry
+  //
+
+  /**
+   * Fetches the hydrated plugin directory from the Edge registry service.
+   * Unauthenticated; safe to call without an identity.
+   */
+  public async getRegistryPlugins(ctx: Context, args?: EdgeHttpCallArgs): Promise<GetPluginsResponseBody> {
+    return this._call(ctx, new URL('/registry/plugins', this.baseUrl), { ...args, method: 'GET' });
+  }
+
+  //
   // Import/Export space.
   //
 
@@ -572,19 +594,16 @@ const createRequest = (
  * Extract W3C Trace Context headers (traceparent/tracestate) from a DXOS Context.
  */
 const getTraceHeaders = (ctx: Context): Record<string, string> | undefined => {
-  const spanId = ctx.getAttribute(TRACE_SPAN_ATTRIBUTE);
-  const otlpContext =
-    typeof spanId === 'number'
-      ? (TRACE_PROCESSOR.remoteTracing.getSpanContext(spanId) as OtelContext | undefined)
-      : undefined;
-
-  if (!otlpContext) {
+  const traceCtx = ctx.getAttribute(TRACE_SPAN_ATTRIBUTE) as TraceContextData | undefined;
+  if (!traceCtx) {
     return undefined;
   }
 
-  const headers: Record<string, string> = {};
-  propagation.inject(otlpContext, headers);
-  return Object.keys(headers).length > 0 ? headers : undefined;
+  const headers: Record<string, string> = { traceparent: traceCtx.traceparent };
+  if (traceCtx.tracestate) {
+    headers.tracestate = traceCtx.tracestate;
+  }
+  return headers;
 };
 
 /**

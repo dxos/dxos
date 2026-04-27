@@ -11,15 +11,15 @@ import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
-import { useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
 import { GraphBuilder, Node, NodeMatcher, useConnections } from '@dxos/plugin-graph';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Button, Icon, List, ListItem, Panel } from '@dxos/react-ui';
+import { Icon, List, ListItem, Panel } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { OperationHandler } from '#capabilities';
@@ -39,6 +39,9 @@ import { DeckLayout } from './DeckLayout';
 
 random.seed(1234);
 
+// TODO(burdon): Show/hide companions.
+// TODO(burdon): Companion width.
+
 // TODO(burdon): Factor out.
 const storyDeckSettings = Capability.makeModule(() =>
   Effect.sync(() => {
@@ -47,7 +50,7 @@ const storyDeckSettings = Capability.makeModule(() =>
       enableDeck: true,
       enableStatusbar: false,
       enableNativeRedirect: false,
-      encapsulatedPlanks: true,
+      encapsulatedPlanks: false,
     }).pipe(Atom.keepAlive);
 
     return [Capability.contributes(DeckCapabilities.Settings, settingsAtom)];
@@ -63,10 +66,10 @@ const storyDeckState = Capability.makeModule(() =>
       complementarySidebarPanel: undefined,
       activeDeck: 'default',
       previousDeck: 'default',
+      previousMode: {},
       decks: {
         default: { ...defaultDeck },
       },
-      previousMode: {},
     };
 
     const stateAtom = Atom.make<StoredDeckState>({ ...defaultStoredDeckState }).pipe(Atom.keepAlive);
@@ -170,35 +173,6 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
             component: ({ data, ref }) => <NavContainer current={data.current} ref={ref} />,
           }),
           Surface.create({
-            id: 'story-article-companion',
-            role: 'article',
-            filter: (data): data is Record<string, unknown> =>
-              typeof data === 'object' && data !== null && (data as { companionTo?: unknown }).companionTo != null,
-            component: ({ data }) => {
-              const subject = (data as any)?.subject;
-              const companionTo = (data as any)?.companionTo;
-              const properties = (data as any)?.properties;
-              const variant = (data as any)?.variant as string | undefined;
-
-              if (companionTo == null) {
-                return <Loading />;
-              }
-
-              const jsonPayload = {
-                primaryItem: companionTo,
-                companion: { data: subject, properties, variant },
-              };
-
-              return (
-                <Json.Root data={jsonPayload}>
-                  <Json.Content>
-                    <Json.Data />
-                  </Json.Content>
-                </Json.Root>
-              );
-            },
-          }),
-          Surface.create({
             id: 'story-article',
             role: 'article',
             filter: (data): data is Record<string, unknown> =>
@@ -206,7 +180,6 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
             component: ({ data }) => {
               const subject = (data as any)?.subject;
               const attendableId = (data as any)?.attendableId as string | undefined;
-
               if (subject == null) {
                 return <Loading />;
               }
@@ -215,13 +188,42 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                 <Panel.Root>
                   <Panel.Content className='grid grid-rows-[min-content_1fr]'>
                     {attendableId && <ItemComponent id={attendableId} />}
-                    <Json.Root data={subject}>
-                      <Json.Content>
-                        <Json.Data />
-                      </Json.Content>
-                    </Json.Root>
+                    <Syntax.Root data={subject}>
+                      <Syntax.Content>
+                        <Syntax.Filter />
+                        <Syntax.Viewport>
+                          <Syntax.Code />
+                        </Syntax.Viewport>
+                      </Syntax.Content>
+                    </Syntax.Root>
                   </Panel.Content>
                 </Panel.Root>
+              );
+            },
+          }),
+          Surface.create({
+            id: 'story-article-companion',
+            role: 'article',
+            filter: (data): data is AppSurface.ArticleData<unknown, {}, unknown> =>
+              typeof data === 'object' && data !== null && (data as { companionTo?: unknown }).companionTo != null,
+            component: ({ data: { subject, companionTo, properties, variant } }) => {
+              if (companionTo == null) {
+                return <Loading />;
+              }
+
+              return (
+                <Syntax.Root
+                  data={{
+                    primaryItem: companionTo,
+                    companion: { data: subject, properties, variant },
+                  }}
+                >
+                  <Syntax.Content>
+                    <Syntax.Viewport>
+                      <Syntax.Code />
+                    </Syntax.Viewport>
+                  </Syntax.Content>
+                </Syntax.Root>
               );
             },
           }),
@@ -308,36 +310,43 @@ type ItemComponentProps = {
 const ItemComponent = ({ id }: ItemComponentProps) => {
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
-
-  const plankConnections = useConnections(graph, id, 'child');
+  const connections = useConnections(graph, id, 'child');
   const items = useMemo(
-    () => plankConnections.filter((node) => !Node.isActionLike(node) && node.type !== PLANK_COMPANION_TYPE),
-    [plankConnections],
+    () => connections.filter((node) => !Node.isActionLike(node) && node.type !== PLANK_COMPANION_TYPE),
+    [connections],
   );
 
   return (
-    <Panel.Root>
-      <Panel.Content>
-        {items.map((node) => (
-          <Button
+    <List>
+      {items.map((node) => {
+        const open = () =>
+          void invokePromise(LayoutOperation.Open, { subject: [node.id], pivotId: id, navigation: 'immediate' });
+        return (
+          <ListItem.Root
             key={node.id}
-            variant='ghost'
-            onClick={() =>
-              void invokePromise(LayoutOperation.Open, {
-                subject: [node.id],
-                pivotId: id,
-                navigation: 'immediate',
-              })
-            }
+            classNames='dx-hover cursor-pointer'
+            role='button'
+            tabIndex={0}
+            onClick={open}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                open();
+              }
+            }}
           >
-            {node.properties.icon && <Icon icon={node.properties.icon} size={4} />}
-            <span className='truncate'>
+            {node.properties.icon && (
+              <ListItem.Endcap>
+                <Icon icon={node.properties.icon} size={4} />
+              </ListItem.Endcap>
+            )}
+            <ListItem.Heading classNames='truncate'>
               {typeof node.properties.label === 'string' ? node.properties.label : node.id}
-            </span>
-          </Button>
-        ))}
-      </Panel.Content>
-    </Panel.Root>
+            </ListItem.Heading>
+          </ListItem.Root>
+        );
+      })}
+    </List>
   );
 };
 
@@ -363,35 +372,26 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-const SoloStory = () => {
-  const { invokePromise } = useOperationInvoker();
-  useAsyncEffect(async () => {
-    await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
-    await invokePromise(LayoutOperation.SetLayoutMode, { mode: 'solo', subject: STORY_ITEMS[0].id });
-  });
-
-  return <DeckLayout />;
-};
-
 export const Solo: Story = {
-  render: () => <SoloStory />,
-};
-
-const MultiStory = () => {
-  const { invokePromise } = useOperationInvoker();
-  useAsyncEffect(async () => {
-    await invokePromise(LayoutOperation.Open, {
-      subject: [STORY_ITEMS[0].id],
-      navigation: 'immediate',
+  render: () => {
+    const { invokePromise } = useOperationInvoker();
+    useAsyncEffect(async () => {
+      await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
+      await invokePromise(LayoutOperation.SetLayoutMode, { mode: 'solo', subject: STORY_ITEMS[0].id });
     });
-    await invokePromise(LayoutOperation.SetLayoutMode, {
-      mode: 'multi',
-    });
-  });
 
-  return <DeckLayout />;
+    return <DeckLayout />;
+  },
 };
 
 export const Multi: Story = {
-  render: () => <MultiStory />,
+  render: () => {
+    const { invokePromise } = useOperationInvoker();
+    useAsyncEffect(async () => {
+      await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
+      await invokePromise(LayoutOperation.SetLayoutMode, { mode: 'multi' });
+    });
+
+    return <DeckLayout />;
+  },
 };

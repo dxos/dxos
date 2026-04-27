@@ -4,27 +4,25 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Column, type ThemedClassName } from '@dxos/react-ui';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { composableProps, slottable } from '@dxos/ui-theme';
 
-type TestLayoutProps = ThemedClassName<PropsWithChildren<{ json?: any }>>;
+type TestLayoutProps = PropsWithChildren<{ json?: any }>;
 
-export const TestLayout = ({ classNames, children, json }: TestLayoutProps) => {
+export const TestLayout = ({ children, json }: TestLayoutProps) => {
   return (
-    <div className='h-full w-full grid grid-cols-[1fr_1fr] p-4 gap-4 overflow-hidden'>
-      <TestPanel classNames={['dx-container', classNames]}>
-        <Column.Root classNames='dx-container' gutter='sm'>
-          {children}
-        </Column.Root>
-      </TestPanel>
-      <TestPanel classNames={'overflow-hidden'}>
-        <Json.Root data={json}>
-          <Json.Content classNames='h-full'>
-            <Json.Filter />
-            <Json.Data testId='debug' classNames='text-xs' />
-          </Json.Content>
-        </Json.Root>
+    <div role='none' className='dx-container grid grid-cols-[1fr_1fr] p-4 gap-4'>
+      <TestPanel>{children}</TestPanel>
+      <TestPanel>
+        <Syntax.Root data={json}>
+          <Syntax.Content>
+            <Syntax.Filter />
+            <Syntax.Viewport>
+              <Syntax.Code testId='debug' classNames='text-xs' />
+            </Syntax.Viewport>
+          </Syntax.Content>
+        </Syntax.Root>
       </TestPanel>
     </div>
   );
@@ -32,14 +30,15 @@ export const TestLayout = ({ classNames, children, json }: TestLayoutProps) => {
 
 type TestPanelProps = ThemedClassName<PropsWithChildren>;
 
-const TestPanel = ({ classNames, children }: TestPanelProps) => {
+const TestPanel = slottable<HTMLDivElement, TestPanelProps>(({ children }, forwardedRef) => {
   return (
-    <div role='none' className={mx(['dx-document h-full bg-modal-surface rounded-md', classNames])}>
+    <div {...composableProps({ classNames: 'dx-container bg-modal-surface rounded-md' })} ref={forwardedRef}>
       {children}
     </div>
   );
-};
+});
 
 // Symbol for accessing debug objects in tests.
 export const VIEW_EDITOR_DEBUG_SYMBOL = Symbol('viewEditorDebug');
 export const FIELD_EDITOR_DEBUG_SYMBOL = Symbol('fieldEditorDebug');
+export const OBJECT_PROPERTIES_DEBUG_SYMBOL = Symbol('objectPropertiesDebug');

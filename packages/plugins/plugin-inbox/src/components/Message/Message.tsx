@@ -11,6 +11,7 @@ import { useTextEditor } from '@dxos/react-ui-editor';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
 import {
+  compactSlots,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
@@ -149,7 +150,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
         <div role='none' className='flex flex-col gap-1 overflow-hidden'>
           <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
           <div role='none' className='whitespace-nowrap text-sm text-description'>
-            {message.created && formatDateTime(new Date(), new Date(message.created))}
+            {message.created && formatDateTime(new Date(message.created), new Date())}
           </div>
         </div>
       </div>
@@ -197,7 +198,7 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   const extensions = useMemo(() => {
     return [
       createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
-      createThemeExtensions({ themeMode, slots: { scroll: { className: 'p-3' } } }),
+      createThemeExtensions({ themeMode, slots: compactSlots }),
       createMarkdownExtensions(),
       decorateMarkdown({
         skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
@@ -211,9 +212,9 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   return (
     <div
       role='none'
-      ref={parentRef}
       className={mx('flex overflow-hidden', classNames)}
       data-popover-collision-boundary={true}
+      ref={parentRef}
     />
   );
 };

@@ -17,7 +17,6 @@ import { assertArgument } from '@dxos/invariant';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 import type { ObjectId } from '@dxos/protocols';
 
-import type { TracingService } from '../services/tracing';
 import * as Trace from '../Trace';
 
 //
@@ -80,7 +79,7 @@ export interface Callbacks<I, O, R> {
 /**
  * Services that are always available to all processes.
  */
-export type BaseServices = TracingService | Trace.TraceService;
+export type BaseServices = Trace.TraceService;
 
 export type ChildEvent<T> =
   | {
@@ -262,7 +261,9 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
               });
 
               const opHandler = yield* OperationHandlerSet.getHandler(handler, op).pipe(Effect.orDie);
-              const output = yield* opHandler.handler(input).pipe(Effect.orDie) as Effect.Effect<
+              const output = yield* opHandler
+                .handler(input)
+                .pipe(Effect.orDie, Effect.withSpan(op.meta.key)) as Effect.Effect<
                 Operation.Definition.Output<Op>,
                 never,
                 never

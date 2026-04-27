@@ -5,11 +5,13 @@
 import * as Registry from '@effect-atom/atom/Registry';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { TestSchema } from '@dxos/echo/testing';
+import { PublicKey } from '@dxos/keys';
 
+import * as AtomObj from './atom';
 import * as AtomRef from './ref-atom';
 
 describe('AtomRef - Basic Functionality', () => {
@@ -66,6 +68,38 @@ describe('AtomRef - Basic Functionality', () => {
 
     // Update count should still be 1 - ref atom doesn't subscribe to target changes.
     expect(updateCount).toBe(1);
+  });
+
+  // Sibling client (sharing services) creates a brand-new ref target. The atom
+  // must update once the target's document propagates and resolves.
+  test('atom resolves target created by sibling client', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await testBuilder.createPeer({
+      types: [TestSchema.Person, TestSchema.Container],
+    });
+    await using db1 = await peer.createDatabase(spaceKey);
+    const parent1 = db1.add(Obj.make(TestSchema.Container, { objects: [] }));
+    await db1.flush();
+
+    await using client2 = await peer.createClient();
+    await using db2 = await peer.openDatabase(spaceKey, db1.rootUrl!, { client: client2 });
+    const [parent2] = await db2.query(Filter.id(parent1.id)).run();
+
+    const newPerson = db2.add(
+      Obj.make(TestSchema.Person, { name: 'Alice', username: 'alice', email: 'alice@example.com' }),
+    );
+    Obj.change(parent2, (parent2) => {
+      parent2.objects = [...(parent2.objects ?? []), Ref.make(newPerson)];
+    });
+    await db2.flush();
+
+    await expect.poll(() => (parent1.objects ?? []).length).toBeGreaterThan(0);
+    const atom = AtomObj.make(parent1.objects![0]);
+
+    let lastValue: any;
+    registry.subscribe(atom, (value) => (lastValue = value), { immediate: true });
+
+    await expect.poll(() => lastValue?.name).toBe('Alice');
   });
 });
 

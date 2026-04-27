@@ -177,7 +177,7 @@ jobs:
       - uses: moonrepo/setup-toolchain@v0
         with:
           # IMPORTANT: Keep in-sync with .prototools
-          moon-version: '2.0.4'
+          moon-version: '2.2.3'
 
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -256,6 +256,11 @@ jobs:
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
 
+      # The Tauri build bypasses bundle-apps.sh (which performs this mapping for
+      # the web publish), so reproduce it here before the Vite bundle runs.
+      - name: Export DX_POSTHOG_API_KEY for Tauri bundle
+        run: echo "DX_POSTHOG_API_KEY=$COMPOSER_APP_POSTHOG_API_KEY" >> $GITHUB_ENV
+
       - name: Build Tauri app
         run: moon run composer-app:tauri-build
         env:
@@ -313,7 +318,7 @@ jobs:
       - uses: moonrepo/setup-toolchain@v0
         with:
           # IMPORTANT: Keep in-sync with .prototools
-          moon-version: '2.0.4'
+          moon-version: '2.2.3'
 
       - name: Install stable toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -343,6 +348,26 @@ jobs:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
 
+      - name: Set environment variables from secrets and env files
+        run: .github/workflows/scripts/populate-env.sh ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} >> $GITHUB_ENV
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
+          COMPOSER_APP_PROD_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+          COMPOSER_APP_TEST_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_API_KEY }}
+          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
+          DX_OTEL_ENDPOINT: ${{ secrets.DX_OTEL_ENDPOINT }}
+          DX_OTEL_HEADERS: ${{ secrets.DX_OTEL_HEADERS }}
+          DX_POSTHOG_API_HOST: ${{ secrets.DX_POSTHOG_API_HOST }}
+          IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
+          IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
+
+      # The Tauri build bypasses bundle-apps.sh (which performs this mapping for
+      # the web publish), so reproduce it here before the Vite bundle runs.
+      - name: Export DX_POSTHOG_API_KEY for Tauri bundle
+        run: echo "DX_POSTHOG_API_KEY=$COMPOSER_APP_POSTHOG_API_KEY" >> $GITHUB_ENV
+
       - name: Initialize iOS project
         run: |
           pnpm tauri ios init --ci
@@ -369,7 +394,7 @@ jobs:
           api-key: ${{ secrets.CN_API_KEY }}
           application: ${{ env.CN_APPLICATION }}
           command: upload
-          working-directory: ./packages/apps/composer-app/src-tauri/
+          working-directory: ./packages/apps/composer-app/
 
       # https://tauri.app/distribute/app-store/#ios
       - name: Upload assets to App Store Connect

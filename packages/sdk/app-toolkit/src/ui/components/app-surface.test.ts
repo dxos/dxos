@@ -6,6 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
+import { Surface as SurfaceInternals } from '@dxos/app-framework/ui';
 import { Obj, Type } from '@dxos/echo';
 
 import * as AppSurface from './app-surface';
@@ -19,28 +20,87 @@ const TypeB = Schema.Struct({ value: Schema.Number }).pipe(
 );
 
 describe('AppSurface', () => {
-  describe('anyObjectSection', () => {
-    test('matches any ECHO object', ({ expect }) => {
-      const filter = AppSurface.anyObjectSection();
-      const objectA = Obj.make(TypeA, { name: 'hello' });
-      expect(filter({ subject: objectA })).toBe(true);
-    });
+  //
+  // Typed role-binding API
+  //
 
-    test('rejects non-ECHO values', ({ expect }) => {
-      const filter = AppSurface.anyObjectSection();
-      expect(filter({ subject: 'string' })).toBe(false);
-      expect(filter({ subject: null })).toBe(false);
-      expect(filter({ subject: { id: '123' } })).toBe(false);
-      expect(filter({})).toBe(false);
+  describe('role tokens', () => {
+    test('expose their role string', ({ expect }) => {
+      expect(AppSurface.Article.role).toBe('article');
+      expect(AppSurface.Section.role).toBe('section');
+      expect(AppSurface.Card.role).toBe('card--content');
+      expect(AppSurface.Slide.role).toBe('slide');
+      expect(AppSurface.Dialog.role).toBe('dialog');
+      expect(AppSurface.Popover.role).toBe('popover');
+      expect(AppSurface.Navigation.role).toBe('navigation');
     });
   });
 
-  describe('settingsArticle', () => {
-    test('matches settings with correct prefix', ({ expect }) => {
-      const filter = AppSurface.settingsArticle('dxos.org/plugin/test');
+  describe('object(token, schema)', () => {
+    test('produces a single binding at the token role', ({ expect }) => {
+      const filter = AppSurface.object(AppSurface.Article, TypeA);
+      expect(filter.bindings).toHaveLength(1);
+      expect(filter.bindings[0].role).toBe('article');
+    });
+
+    test('article token preserves attendableId requirement', ({ expect }) => {
+      const filter = AppSurface.object(AppSurface.Article, TypeA);
+      const objectA = Obj.make(TypeA, { name: 'hello' });
+      expect(filter.bindings[0].guard({ subject: objectA, attendableId: 'id' })).toBe(true);
+      expect(filter.bindings[0].guard({ subject: objectA })).toBe(false);
+    });
+
+    test('section token also requires attendableId (sections render inside planks)', ({ expect }) => {
+      const filter = AppSurface.object(AppSurface.Section, TypeA);
+      const objectA = Obj.make(TypeA, { name: 'hello' });
+      expect(filter.bindings[0].guard({ subject: objectA, attendableId: 'id' })).toBe(true);
+      expect(filter.bindings[0].guard({ subject: objectA })).toBe(false);
+    });
+
+    test('card token does not require attendableId', ({ expect }) => {
+      const filter = AppSurface.object(AppSurface.Card, TypeA);
+      const objectA = Obj.make(TypeA, { name: 'hello' });
+      expect(filter.bindings[0].guard({ subject: objectA })).toBe(true);
+    });
+
+    test('accepts an array of schemas (union)', ({ expect }) => {
+      const filter = AppSurface.object(AppSurface.Card, [TypeA, TypeB]);
+      const objectA = Obj.make(TypeA, { name: 'hi' });
+      const objectB = Obj.make(TypeB, { value: 1 });
+      expect(filter.bindings[0].guard({ subject: objectA })).toBe(true);
+      expect(filter.bindings[0].guard({ subject: objectB })).toBe(true);
+    });
+
+    test('rejects mismatched subjects', ({ expect }) => {
+      const filter = AppSurface.object(AppSurface.Card, TypeA);
+      const objectB = Obj.make(TypeB, { value: 1 });
+      expect(filter.bindings[0].guard({ subject: objectB })).toBe(false);
+    });
+  });
+
+  describe('component(token, id)', () => {
+    test('matches on data.component equality', ({ expect }) => {
+      const filter = AppSurface.component(AppSurface.Dialog, 'my-dialog');
+      expect(filter.bindings[0].role).toBe('dialog');
+      expect(filter.bindings[0].guard({ component: 'my-dialog' })).toBe(true);
+      expect(filter.bindings[0].guard({ component: 'other' })).toBe(false);
+      expect(filter.bindings[0].guard({})).toBe(false);
+    });
+
+    test('works for popover token too', ({ expect }) => {
+      const filter = AppSurface.component(AppSurface.Popover, 'anchor-menu');
+      expect(filter.bindings[0].role).toBe('popover');
+      expect(filter.bindings[0].guard({ component: 'anchor-menu' })).toBe(true);
+    });
+  });
+
+  describe('settings(token, prefix)', () => {
+    test('matches article-role settings with prefix', ({ expect }) => {
+      const filter = AppSurface.settings(AppSurface.Article, 'dxos.org/plugin/test');
       const settingsAtom = Atom.make({});
+      expect(filter.bindings[0].role).toBe('article');
       expect(
-        filter({
+        filter.bindings[0].guard({
           subject: {
             prefix: 'dxos.org/plugin/test',
             schema: Schema.Struct({}),
@@ -48,13 +108,8 @@ describe('AppSurface', () => {
           },
         }),
       ).toBe(true);
-    });
-
-    test('rejects settings with wrong prefix', ({ expect }) => {
-      const filter = AppSurface.settingsArticle('dxos.org/plugin/test');
-      const settingsAtom = Atom.make({});
       expect(
-        filter({
+        filter.bindings[0].guard({
           subject: {
             prefix: 'dxos.org/plugin/other',
             schema: Schema.Struct({}),
@@ -63,258 +118,192 @@ describe('AppSurface', () => {
         }),
       ).toBe(false);
     });
+  });
 
-    test('rejects non-settings values', ({ expect }) => {
-      const filter = AppSurface.settingsArticle('dxos.org/plugin/test');
-      expect(filter({ subject: 'not-settings' })).toBe(false);
-      expect(filter({ subject: { prefix: 'test' } })).toBe(false);
+  describe('predicate(token, fn)', () => {
+    test('lifts an ad-hoc predicate into a SurfaceFilter', ({ expect }) => {
+      const filter = AppSurface.predicate(AppSurface.Article, (data: any) => data.custom === true);
+      expect(filter.bindings[0].role).toBe('article');
+      expect(filter.bindings[0].guard({ custom: true })).toBe(true);
+      expect(filter.bindings[0].guard({ custom: false })).toBe(false);
+    });
+
+    test('traps thrown errors and returns false', ({ expect }) => {
+      const filter = AppSurface.predicate(AppSurface.Article, () => {
+        throw new Error('boom');
+      });
+      expect(filter.bindings[0].guard({})).toBe(false);
     });
   });
 
-  describe('componentDialog', () => {
-    test('matches component identifier', ({ expect }) => {
-      const filter = AppSurface.componentDialog('my-dialog');
-      expect(filter({ component: 'my-dialog' })).toBe(true);
+  describe('oneOf', () => {
+    test('concatenates bindings across filters', ({ expect }) => {
+      const filter = AppSurface.oneOf(
+        AppSurface.object(AppSurface.Article, TypeA),
+        AppSurface.object(AppSurface.Section, TypeA),
+        AppSurface.object(AppSurface.Slide, TypeA),
+      );
+      expect(filter.bindings).toHaveLength(3);
+      expect(filter.bindings.map((binding) => binding.role)).toEqual(['article', 'section', 'slide']);
     });
 
-    test('rejects non-matching identifier', ({ expect }) => {
-      const filter = AppSurface.componentDialog('my-dialog');
-      expect(filter({ component: 'other-dialog' })).toBe(false);
-    });
-
-    test('rejects missing component field', ({ expect }) => {
-      const filter = AppSurface.componentDialog('my-dialog');
-      expect(filter({ subject: 'something' })).toBe(false);
+    test('preserves per-binding guard behavior', ({ expect }) => {
+      const filter = AppSurface.oneOf(
+        AppSurface.object(AppSurface.Article, TypeA),
+        AppSurface.object(AppSurface.Card, TypeB),
+      );
+      const objectA = Obj.make(TypeA, { name: 'hi' });
+      const objectB = Obj.make(TypeB, { value: 1 });
+      // Article binding requires attendableId; Card binding does not.
+      expect(filter.bindings[0].guard({ subject: objectA, attendableId: 'id' })).toBe(true);
+      expect(filter.bindings[0].guard({ subject: objectB, attendableId: 'id' })).toBe(false);
+      expect(filter.bindings[1].guard({ subject: objectB })).toBe(true);
+      expect(filter.bindings[1].guard({ subject: objectA })).toBe(false);
     });
   });
 
-  describe('companionArticle', () => {
-    test('matches typed companion', ({ expect }) => {
-      const filter = AppSurface.companionArticle(TypeA);
+  describe('allOf (typed form)', () => {
+    test('combines same-role filters with AND semantics', ({ expect }) => {
+      const filter = AppSurface.allOf(
+        AppSurface.object(AppSurface.Article, TypeA),
+        AppSurface.predicate(AppSurface.Article, (data: any) => data.extra === true),
+      );
+      expect(filter.bindings).toHaveLength(1);
+      expect(filter.bindings[0].role).toBe('article');
+      const objectA = Obj.make(TypeA, { name: 'hi' });
+      expect(filter.bindings[0].guard({ subject: objectA, attendableId: 'id', extra: true })).toBe(true);
+      expect(filter.bindings[0].guard({ subject: objectA, attendableId: 'id', extra: false })).toBe(false);
+    });
+
+    test('throws when filters have different role sets', ({ expect }) => {
+      expect(() =>
+        AppSurface.allOf(AppSurface.object(AppSurface.Article, TypeA), AppSurface.object(AppSurface.Section, TypeA)),
+      ).toThrow(/same role set/);
+    });
+
+    test('literal + companion compose via typed allOf', ({ expect }) => {
+      const filter = AppSurface.allOf(
+        AppSurface.literal(AppSurface.Article, 'chat'),
+        AppSurface.companion(AppSurface.Article, TypeA),
+      );
       const objectA = Obj.make(TypeA, { name: 'hello' });
-      expect(filter({ companionTo: objectA })).toBe(true);
+      expect(filter.bindings).toHaveLength(1);
+      expect(filter.bindings[0].role).toBe('article');
+      expect(filter.bindings[0].guard({ subject: 'chat', companionTo: objectA, attendableId: 'id' })).toBe(true);
+      expect(filter.bindings[0].guard({ subject: 'other', companionTo: objectA, attendableId: 'id' })).toBe(false);
+    });
+  });
+
+  describe('literal', () => {
+    test('matches subject string', ({ expect }) => {
+      const filter = AppSurface.literal(AppSurface.Article, 'chat');
+      expect(filter.bindings[0].guard({ subject: 'chat', attendableId: 'id' })).toBe(true);
+      expect(filter.bindings[0].guard({ subject: 'other', attendableId: 'id' })).toBe(false);
+    });
+
+    test('matches null subject', ({ expect }) => {
+      const filter = AppSurface.literal(AppSurface.Section, null);
+      expect(filter.bindings[0].guard({ subject: null, attendableId: 'id' })).toBe(true);
+      expect(filter.bindings[0].guard({ subject: 'chat', attendableId: 'id' })).toBe(false);
+    });
+  });
+
+  describe('companion', () => {
+    test('matches typed companion', ({ expect }) => {
+      const filter = AppSurface.companion(AppSurface.Article, TypeA);
+      const objectA = Obj.make(TypeA, { name: 'hello' });
+      expect(filter.bindings[0].guard({ companionTo: objectA })).toBe(true);
     });
 
     test('rejects wrong companion type', ({ expect }) => {
-      const filter = AppSurface.companionArticle(TypeA);
+      const filter = AppSurface.companion(AppSurface.Article, TypeA);
       const objectB = Obj.make(TypeB, { value: 42 });
-      expect(filter({ companionTo: objectB })).toBe(false);
+      expect(filter.bindings[0].guard({ companionTo: objectB })).toBe(false);
     });
 
     test('matches any companion (no args)', ({ expect }) => {
-      const filter = AppSurface.companionArticle();
+      const filter = AppSurface.companion(AppSurface.Article);
       const objectA = Obj.make(TypeA, { name: 'hello' });
-      expect(filter({ companionTo: objectA })).toBe(true);
-      expect(filter({})).toBe(false);
+      expect(filter.bindings[0].guard({ companionTo: objectA })).toBe(true);
+      expect(filter.bindings[0].guard({})).toBe(false);
     });
 
     test('matches string literal companion', ({ expect }) => {
-      const filter = AppSurface.companionArticle('feeds-root');
-      expect(filter({ companionTo: 'feeds-root' })).toBe(true);
-      expect(filter({ companionTo: 'other' })).toBe(false);
+      const filter = AppSurface.companion(AppSurface.Article, 'feeds-root');
+      expect(filter.bindings[0].guard({ companionTo: 'feeds-root' })).toBe(true);
+      expect(filter.bindings[0].guard({ companionTo: 'other' })).toBe(false);
     });
+  });
 
-    test('composes with objectArticle via and()', ({ expect }) => {
-      const filter = AppSurface.and(AppSurface.objectArticle(TypeA), AppSurface.companionArticle(TypeB));
+  describe('subject', () => {
+    test('matches any ECHO object via Obj.isObject', ({ expect }) => {
+      const filter = AppSurface.subject(AppSurface.Section, Obj.isObject);
       const objectA = Obj.make(TypeA, { name: 'hello' });
-      const objectB = Obj.make(TypeB, { value: 42 });
-      expect(filter({ subject: objectA, companionTo: objectB, attendableId: 'id' })).toBe(true);
-      expect(filter({ subject: objectA, companionTo: objectA, attendableId: 'id' })).toBe(false);
-    });
-
-    test('composes with literalArticle via and()', ({ expect }) => {
-      const filter = AppSurface.and(AppSurface.literalArticle('chat'), AppSurface.companionArticle(TypeA));
-      const objectA = Obj.make(TypeA, { name: 'hello' });
-      expect(filter({ subject: 'chat', companionTo: objectA, attendableId: 'id' })).toBe(true);
-      expect(filter({ subject: 'chat', attendableId: 'id' })).toBe(false);
+      expect(filter.bindings[0].guard({ subject: objectA, attendableId: 'id' })).toBe(true);
+      expect(filter.bindings[0].guard({ subject: 'string', attendableId: 'id' })).toBe(false);
+      expect(filter.bindings[0].guard({ subject: null, attendableId: 'id' })).toBe(false);
     });
   });
 
-  describe('literalArticle', () => {
-    test('matches literal subject', ({ expect }) => {
-      const filter = AppSurface.literalArticle('chat');
-      expect(filter({ subject: 'chat', attendableId: 'id' })).toBe(true);
-    });
-
-    test('rejects wrong literal', ({ expect }) => {
-      const filter = AppSurface.literalArticle('chat');
-      expect(filter({ subject: 'other', attendableId: 'id' })).toBe(false);
-    });
-
-    test('rejects missing attendableId', ({ expect }) => {
-      const filter = AppSurface.literalArticle('chat');
-      expect(filter({ subject: 'chat' })).toBe(false);
-    });
-  });
-
-  describe('literalSection', () => {
-    test('matches string literal', ({ expect }) => {
-      const filter = AppSurface.literalSection('chat');
-      expect(filter({ subject: 'chat' })).toBe(true);
-    });
-
-    test('rejects non-matching string', ({ expect }) => {
-      const filter = AppSurface.literalSection('chat');
-      expect(filter({ subject: 'comments' })).toBe(false);
-    });
-
-    test('matches null literal', ({ expect }) => {
-      const filter = AppSurface.literalSection(null);
-      expect(filter({ subject: null })).toBe(true);
-    });
-
-    test('rejects non-null when null expected', ({ expect }) => {
-      const filter = AppSurface.literalSection(null);
-      expect(filter({ subject: 'chat' })).toBe(false);
-    });
-
-    test('rejects ECHO objects', ({ expect }) => {
-      const filter = AppSurface.literalSection('chat');
-      const objectA = Obj.make(TypeA, { name: 'hello' });
-      expect(filter({ subject: objectA })).toBe(false);
-    });
-  });
-
-  describe('graphNodeSection', () => {
-    test('matches graph node', ({ expect }) => {
-      const filter = AppSurface.graphNodeSection();
-      const node = { id: 'test', type: 'test', properties: {}, data: {} };
-      expect(filter({ subject: node })).toBe(true);
-    });
-
-    test('rejects non-node values', ({ expect }) => {
-      const filter = AppSurface.graphNodeSection();
-      expect(filter({ subject: 'string' })).toBe(false);
-      expect(filter({ subject: { id: 'test' } })).toBe(false);
-      expect(filter({})).toBe(false);
-    });
-  });
-
-  describe('pluginSection', () => {
-    test('matches plugin descriptor', ({ expect }) => {
-      const filter = AppSurface.pluginSection();
-      const pluginObj = { [Symbol.for('@dxos/app-framework/Plugin')]: Symbol.for('@dxos/app-framework/Plugin') };
-      expect(filter({ subject: pluginObj })).toBe(true);
-    });
-
-    test('rejects non-plugin values', ({ expect }) => {
-      const filter = AppSurface.pluginSection();
-      expect(filter({ subject: 'string' })).toBe(false);
-      expect(filter({ subject: { meta: {} } })).toBe(false);
-      expect(filter({})).toBe(false);
-    });
-  });
-
-  describe('schemaSection', () => {
-    test('matches ECHO object schema', ({ expect }) => {
-      const filter = AppSurface.schemaSection();
-      expect(filter({ subject: TypeA })).toBe(true);
-      expect(filter({ subject: TypeB })).toBe(true);
-    });
-
-    test('rejects non-schema values', ({ expect }) => {
-      const filter = AppSurface.schemaSection();
-      expect(filter({ subject: 'string' })).toBe(false);
-      expect(filter({ subject: { typename: 'fake' } })).toBe(false);
-      expect(filter({})).toBe(false);
-    });
-
-    test('rejects ECHO object instances', ({ expect }) => {
-      const filter = AppSurface.schemaSection();
-      const objectA = Obj.make(TypeA, { name: 'hello' });
-      expect(filter({ subject: objectA })).toBe(false);
-    });
-  });
-
-  describe('snapshotSection', () => {
-    test('matches snapshot of correct type', ({ expect }) => {
-      const filter = AppSurface.snapshotSection(TypeA);
+  describe('snapshot', () => {
+    test('matches snapshot of correct schema', ({ expect }) => {
+      const filter = AppSurface.snapshot(AppSurface.Section, TypeA);
       const objectA = Obj.make(TypeA, { name: 'hello' });
       const snap = Obj.getSnapshot(objectA);
-      expect(filter({ subject: snap })).toBe(true);
+      expect(filter.bindings[0].guard({ subject: snap, attendableId: 'id' })).toBe(true);
     });
 
-    test('rejects snapshot of wrong type', ({ expect }) => {
-      const filter = AppSurface.snapshotSection(TypeA);
-      const objectB = Obj.make(TypeB, { value: 42 });
+    test('rejects snapshot of wrong schema', ({ expect }) => {
+      const filter = AppSurface.snapshot(AppSurface.Section, TypeA);
+      const objectB = Obj.make(TypeB, { value: 1 });
       const snap = Obj.getSnapshot(objectB);
-      expect(filter({ subject: snap })).toBe(false);
+      expect(filter.bindings[0].guard({ subject: snap, attendableId: 'id' })).toBe(false);
     });
 
     test('rejects live ECHO objects', ({ expect }) => {
-      const filter = AppSurface.snapshotSection(TypeA);
+      const filter = AppSurface.snapshot(AppSurface.Section, TypeA);
       const objectA = Obj.make(TypeA, { name: 'hello' });
-      expect(filter({ subject: objectA })).toBe(false);
-    });
-
-    test('rejects non-objects', ({ expect }) => {
-      const filter = AppSurface.snapshotSection(TypeA);
-      expect(filter({ subject: 'string' })).toBe(false);
-      expect(filter({})).toBe(false);
+      expect(filter.bindings[0].guard({ subject: objectA, attendableId: 'id' })).toBe(false);
     });
   });
 
-  describe('and', () => {
-    test('combines two section filters', ({ expect }) => {
-      const filter = AppSurface.and(AppSurface.objectSection(TypeA), AppSurface.literalSection('test'));
+  describe('object(ObjectProperties, Schema)', () => {
+    test('matches ECHO object subject (no attendableId requirement)', ({ expect }) => {
+      const filter = AppSurface.object(AppSurface.ObjectProperties, TypeA);
       const objectA = Obj.make(TypeA, { name: 'hello' });
-      expect(filter({ subject: objectA })).toBe(false);
+      expect(filter.bindings[0].role).toBe('object-properties');
+      expect(filter.bindings[0].guard({ subject: objectA })).toBe(true);
     });
   });
 
-  describe('objectArticle', () => {
-    test('matches with attendableId', ({ expect }) => {
-      const filter = AppSurface.objectArticle(TypeA);
-      const objectA = Obj.make(TypeA, { name: 'hello' });
-      expect(filter({ subject: objectA, attendableId: 'id' })).toBe(true);
+  describe('Surface.create + SurfaceFilter integration', () => {
+    test('derives role and runs guard on matching role', ({ expect }) => {
+      const definition = SurfaceInternals.create({
+        id: 'test/article',
+        filter: AppSurface.object(AppSurface.Article, TypeA),
+        component: () => null,
+      });
+      const objectA = Obj.make(TypeA, { name: 'hi' });
+      expect(definition.role).toBe('article');
+      expect(definition.filter!({ subject: objectA, attendableId: 'id' }, 'article')).toBe(true);
     });
 
-    test('rejects missing attendableId', ({ expect }) => {
-      const filter = AppSurface.objectArticle(TypeA);
-      const objectA = Obj.make(TypeA, { name: 'hello' });
-      expect(filter({ subject: objectA })).toBe(false);
-    });
-
-    test('rejects wrong schema', ({ expect }) => {
-      const filter = AppSurface.objectArticle(TypeA);
-      const objectB = Obj.make(TypeB, { value: 42 });
-      expect(filter({ subject: objectB, attendableId: 'id' })).toBe(false);
-    });
-
-    test('matches union', ({ expect }) => {
-      const filter = AppSurface.objectArticle([TypeA, TypeB]);
-      const objectB = Obj.make(TypeB, { value: 42 });
-      expect(filter({ subject: objectB, attendableId: 'id' })).toBe(true);
-    });
-  });
-
-  describe('objectCard', () => {
-    test('matches without attendableId', ({ expect }) => {
-      const filter = AppSurface.objectCard(TypeA);
-      const objectA = Obj.make(TypeA, { name: 'hello' });
-      expect(filter({ subject: objectA })).toBe(true);
-    });
-
-    test('rejects wrong schema', ({ expect }) => {
-      const filter = AppSurface.objectCard(TypeA);
-      const objectB = Obj.make(TypeB, { value: 42 });
-      expect(filter({ subject: objectB })).toBe(false);
-    });
-  });
-
-  describe('objectSection', () => {
-    test('matches without attendableId', ({ expect }) => {
-      const filter = AppSurface.objectSection(TypeA);
-      const objectA = Obj.make(TypeA, { name: 'hello' });
-      expect(filter({ subject: objectA })).toBe(true);
-    });
-  });
-
-  describe('objectSettings', () => {
-    test('matches', ({ expect }) => {
-      const filter = AppSurface.objectSettings(TypeA);
-      const objectA = Obj.make(TypeA, { name: 'hello' });
-      expect(filter({ subject: objectA })).toBe(true);
+    test('registers multi-role with role-scoped guards via oneOf', ({ expect }) => {
+      const definition = SurfaceInternals.create({
+        id: 'test/multi',
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, TypeA),
+          AppSurface.object(AppSurface.Section, TypeA),
+        ),
+        component: () => null,
+      });
+      expect(definition.role).toEqual(['article', 'section']);
+      const objectA = Obj.make(TypeA, { name: 'hi' });
+      // Article and Section both require attendableId.
+      expect(definition.filter!({ subject: objectA, attendableId: 'id' }, 'article')).toBe(true);
+      expect(definition.filter!({ subject: objectA }, 'article')).toBe(false);
+      expect(definition.filter!({ subject: objectA, attendableId: 'id' }, 'section')).toBe(true);
+      expect(definition.filter!({ subject: objectA }, 'section')).toBe(false);
     });
   });
 });

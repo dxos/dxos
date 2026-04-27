@@ -12,8 +12,8 @@ export const TextField = ({
   type,
   readonly,
   placeholder,
-  onValueChange,
   onBlur,
+  onValueChange,
   ...props
 }: FormFieldComponentProps<string>) => {
   const handleChange = useCallback<NonNullable<TextInputProps['onChange']>>(
@@ -29,8 +29,8 @@ export const TextField = ({
           disabled={!!readonly}
           placeholder={placeholder}
           value={value}
-          onChange={handleChange}
           onBlur={onBlur}
+          onChange={handleChange}
         />
       )}
     </FormFieldWrapper>

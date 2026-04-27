@@ -122,7 +122,7 @@ const OPTIMIZED_SHARE_POLICY = true;
  * level and never reach the Subduction sedimentree layer. Bundle sync remains available
  * for replicators that opt in.
  */
-@trace.resource()
+@trace.resource({ lifecycle: true })
 export class AutomergeHost extends Resource {
   private readonly _db: LevelDB;
   private readonly _echoNetworkAdapter: EchoNetworkAdapter;
@@ -669,7 +669,7 @@ export class AutomergeHost extends Resource {
   /**
    * Flush documents to disk.
    */
-  @trace.span({ showInBrowserTimeline: true })
+  @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
   async flush(ctx: Context, { documentIds }: FlushRequest = {}): Promise<void> {
     const loadedDocuments = (documentIds ?? Object.keys(this._repo.handles)).filter(
       (documentId): documentId is DocumentId => {

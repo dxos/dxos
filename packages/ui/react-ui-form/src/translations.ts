@@ -14,22 +14,25 @@ export const translations = [
         'hidden-fields.label': 'Hidden Fields',
         'empty-readonly-ref-field.label': '(none)',
 
-        'add-property-button.label': 'Add property',
         'field-property.label': 'Property',
         'field-property.placeholder': 'Property name',
         'field-format.label': 'Type',
         'field-path.label': 'Field path',
-        'add-field.button': 'Add field',
+
+        'add-item.button': 'Add item',
+        'add-property-button.label': 'Add property',
         'boolean-input-true.value': 'Yes',
         'boolean-input-false.value': 'No',
         'show-field.label': 'Show field',
         'hide-field.label': 'Hide field',
         'delete-field.label': 'Delete field',
+        'create-option.label': 'Create',
+        'add-tag.label': 'Add tag',
+
         'ref-field-combobox-input.placeholder': 'Search…',
         'ref-field.placeholder': 'Select…',
         'ref-field.placeholder_one': 'Select…',
         'ref-field.placeholder_other': 'Select items…',
-        'create-option.label': 'Create',
 
         'example.placeholder': 'Example',
         'latitude.placeholder': 'Latitude (e.g., 40.7128)',
@@ -37,6 +40,7 @@ export const translations = [
 
         'cancel-button.label': 'Cancel',
         'save-button.label': 'Save',
+        'create-text.label': 'Create text',
 
         // TypeFormat
         'format.boolean.label': 'Boolean',

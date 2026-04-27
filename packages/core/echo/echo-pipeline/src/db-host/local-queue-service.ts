@@ -6,6 +6,7 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
+import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { type ObjectJSON } from '@dxos/echo/internal';
@@ -58,8 +59,8 @@ export class LocalQueueServiceImpl implements QueueService {
           limit: query.limit,
         });
 
-        const objects = result.blocks.map(
-          (block: FeedProtocol.Block) => EchoFeedCodec.decode(block.data, block.position ?? undefined) as ObjectJSON,
+        const objects = result.blocks.map((block: FeedProtocol.Block) =>
+          JSON.stringify(EchoFeedCodec.decode(block.data, block.position ?? undefined) as ObjectJSON),
         );
 
         const lastBlock = result.blocks[result.blocks.length - 1];
@@ -86,11 +87,11 @@ export class LocalQueueServiceImpl implements QueueService {
     );
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(this, function* () {
-        const messages = objects!.map((obj) => ({
+        const messages = (objects ?? []).map((encoded) => ({
           spaceId: spaceId,
           feedId: queueId!,
           feedNamespace,
-          data: EchoFeedCodec.encode(obj as ObjectJSON),
+          data: EchoFeedCodec.encode(JSON.parse(encoded) as ObjectJSON),
         }));
 
         yield* this.#feedStore.appendLocal(messages);
@@ -120,7 +121,7 @@ export class LocalQueueServiceImpl implements QueueService {
     );
   }
 
-  async syncQueue(request: SyncQueueRequest): Promise<void> {
-    await this.#syncQueue?.(Context.default(), request);
+  async syncQueue(request: SyncQueueRequest, options?: RequestOptions): Promise<void> {
+    await this.#syncQueue?.(options?.ctx ?? Context.default(), request);
   }
 }

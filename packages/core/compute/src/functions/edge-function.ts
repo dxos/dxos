@@ -7,7 +7,6 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { Filter } from '@dxos/client/echo';
 import { JsonSchema, Obj } from '@dxos/echo';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { isNonNullable } from '@dxos/util';
@@ -68,11 +67,7 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
         } else {
           input = { args: args.filter(isNonNullable) };
         }
-        const result = runtime.runPromise(
-          Effect.gen(function* () {
-            return yield* FunctionInvocationService.invokeFunction(functionDef, input);
-          }).pipe(Effect.provide(TracingService.layerNoop)),
-        );
+        const result = runtime.runPromise(Operation.invoke(functionDef, input).pipe(Effect.orDie));
         return result as any;
       };
 

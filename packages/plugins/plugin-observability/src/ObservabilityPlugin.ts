@@ -31,7 +31,7 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule(({ namespace, observability }) => ({
+  Plugin.addModule(({ observability }) => ({
     id: 'observability',
     activatesOn: ActivationEvents.Startup,
     activate: () =>
@@ -47,7 +47,7 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
   Plugin.addModule(({ namespace }) => ({
     id: Capability.getModuleTag(ObservabilityState),
     activatesOn: ActivationEvents.Startup,
-    activatesAfter: [ObservabilityEvents.StateReady],
+    firesAfterActivation: [ObservabilityEvents.StateReady],
     activate: () => ObservabilityState({ namespace }),
   })),
   Plugin.addModule(({ namespace }) => ({

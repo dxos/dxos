@@ -17,10 +17,16 @@ export const translations = [
         'devtools-overview.label': 'Stats',
         'space-objects.label': 'Database',
         'debug.label': 'Debug',
+        'generate-objects.label': 'Generate Objects',
         'debug-app-graph.label': 'App Graph',
 
         'settings.wireframe.label': 'Show wireframes.',
         'settings.wireframe.description': 'Overlay wireframe outlines on UI components for debugging layout.',
+        'settings.trace-all.label': 'Trace all requests (100% sampling).',
+        'settings.trace-all.description':
+          'Override the default 30% sampling rate to capture all traces. Requires page reload to take effect.',
+        'settings.tracing-panel.label': 'Open tracing panel.',
+        'settings.tracing-panel.description': 'Open the tracing dashboard to inspect captured spans.',
         'settings.repair.label': 'Run repair tool.',
         'settings.repair.description': 'Attempt to detect and fix inconsistencies in local data storage.',
         'settings.download-diagnostics.label': 'Download diagnostics.',

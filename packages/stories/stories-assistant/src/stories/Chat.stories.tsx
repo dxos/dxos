@@ -540,7 +540,7 @@ export const WithResearch: Story = {
       };
     },
     config: config.remote,
-    types: [...ResearchDataTypes, ResearchGraph.ResearchGraph],
+    types: [...ResearchDataTypes, ResearchGraph.ResearchGraph, Feed.Feed],
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
       space.db.add(Obj.make(Organization.Organization, { name: 'BlueYard Capital' }));
@@ -590,10 +590,12 @@ export const WithTranscription: Story = {
     config: config.remote,
     types: [Transcript.Transcript],
     onInit: async ({ space }) => {
-      const queue = space.queues.create();
+      const feed = space.db.add(Feed.make());
+      const queueDxn = Feed.getQueueDxn(feed);
+      invariant(queueDxn);
       const messages = createTestTranscription();
-      await queue.append(messages);
-      space.db.add(Transcript.make(queue.dxn));
+      await space.queues.get(queueDxn).append(messages);
+      space.db.add(Transcript.make(Ref.make(feed)));
     },
     onChatCreated: async ({ space, binder }) => {
       const objects = await space.db.query(Filter.type(Transcript.Transcript)).run();
@@ -634,10 +636,7 @@ export const WithTriggers: Story = {
         Trigger.make({
           function: Ref.make(Operation.serialize(Reply)),
           enabled: true,
-          spec: {
-            kind: 'timer',
-            cron: '*/5 * * * * *', // Every 5 seconds.
-          },
+          spec: Trigger.specTimer('*/5 * * * * *'), // Every 5 seconds.
         }),
       );
     },
@@ -687,12 +686,7 @@ export const WithChessTrigger: Story = {
         Trigger.make({
           function: Ref.make(Operation.serialize(ChessFunctions.Play)),
           enabled: true,
-          spec: {
-            kind: 'subscription',
-            query: {
-              ast: Query.select(Filter.type(Chess.Game)).ast,
-            },
-          },
+          spec: Trigger.specSubscription(Query.select(Filter.type(Chess.Game))),
           input: {
             id: '{{event.changedObjectId}}',
             side: 'black', // NOTE: Removing it makes the bot play itself.
@@ -711,14 +705,15 @@ export const WithResearchQueue: Story = {
   decorators: getDecorators({
     plugins: [],
     config: config.remote,
-    types: [...ResearchDataTypes, ResearchGraph.ResearchGraph, ResearchInputQueue],
+    types: [...ResearchDataTypes, ResearchGraph.ResearchGraph, ResearchInputQueue, Feed.Feed],
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
-      const researchInputQueue = space.db.add(
-        Obj.make(ResearchInputQueue, { queue: Ref.fromDXN(space.queues.create().dxn) }),
-      );
+      const feed = space.db.add(Feed.make());
+      const researchInputQueue = space.db.add(Obj.make(ResearchInputQueue, { feed: Ref.make(feed) }));
       const orgs = organizations.map(({ id: _, ...org }) => Obj.make(Organization.Organization, org));
-      await researchInputQueue.queue.target!.append(orgs);
+      const feedQueueDxn = Feed.getQueueDxn(feed);
+      invariant(feedQueueDxn);
+      await space.queues.get(feedQueueDxn).append(orgs);
 
       const researchPrompt = space.db.add(
         Prompt.make({
@@ -738,10 +733,7 @@ export const WithResearchQueue: Story = {
         Trigger.make({
           function: Ref.make(Operation.serialize(AgentPrompt)),
           enabled: true,
-          spec: {
-            kind: 'queue',
-            queue: researchInputQueue.queue.dxn.toString(),
-          },
+          spec: Trigger.specQueue(Feed.getQueueDxn(feed)!.toString()),
           input: {
             prompt: Ref.make(researchPrompt),
             input: '{{event.item}}',
@@ -872,12 +864,7 @@ export const WithProject: Story = {
       const researchTrigger = Trigger.make({
         function: Ref.make(Operation.serialize(AgentPrompt)),
         enabled: true,
-        spec: {
-          kind: 'subscription',
-          query: {
-            ast: organizationsQuery.ast,
-          },
-        },
+        spec: Trigger.specSubscription(organizationsQuery),
         input: {
           prompt: Ref.make(researchPrompt),
           input: {

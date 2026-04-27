@@ -26,7 +26,7 @@ export type CollectionSynchronizerProps = {
 /**
  * Implements collection sync protocol.
  */
-@trace.resource()
+@trace.resource({ lifecycle: true })
 export class CollectionSynchronizer extends Resource {
   private readonly _sendCollectionState: CollectionSynchronizerProps['sendCollectionState'];
   private readonly _queryCollectionState: CollectionSynchronizerProps['queryCollectionState'];
@@ -124,10 +124,13 @@ export class CollectionSynchronizer extends Resource {
    */
   onConnectionOpen(peerId: PeerId): void {
     log('onConnectionOpen', { peerId });
-    const spanId = getSpanName(peerId);
-    trace.spanStart({
+    const spanId = getSpanId(peerId);
+    // Browser-timeline-only span; the derived ctx is intentionally discarded because
+    // the downstream `_queryCollectionState` hop is user-supplied callback land with
+    // no ctx plumbing.
+    void trace.spanStart({
       id: spanId,
-      methodName: spanId,
+      methodName: SYNC_SPAN_METHOD,
       instance: this,
       parentCtx: this._ctx,
       showInBrowserTimeline: true,
@@ -194,13 +197,14 @@ export class CollectionSynchronizer extends Resource {
     log('diffCollectionState', { collectionId, peerId });
     const localState = perCollectionState.localState ?? { documents: {} };
     const diff = diffCollectionState(localState, remoteState);
-    const spanId = getSpanName(peerId);
+    const spanId = getSpanId(peerId);
     if (diff.different.length === 0) {
       trace.spanEnd(spanId);
     } else {
-      trace.spanStart({
+      // Browser-timeline-only span; see note in onConnectionOpen.
+      void trace.spanStart({
         id: spanId,
-        methodName: spanId,
+        methodName: SYNC_SPAN_METHOD,
         instance: this,
         parentCtx: this._ctx,
         showInBrowserTimeline: true,
@@ -305,6 +309,8 @@ const isValidDocumentId = (documentId: DocumentId) => {
   return typeof documentId === 'string' && !documentId.includes(':');
 };
 
-const getSpanName = (peerId: PeerId) => {
+const SYNC_SPAN_METHOD = 'syncPeer';
+
+const getSpanId = (peerId: PeerId) => {
   return `collection-sync-${peerId}`;
 };

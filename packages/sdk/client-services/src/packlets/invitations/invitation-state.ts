@@ -31,12 +31,6 @@ export const createGuardedInvitationState = (
   invitation: Invitation,
   stream: PushStream<Invitation>,
 ): GuardedInvitationState => {
-  // the mutex guards invitation flow on host and guest side, making sure only one flow is currently active
-  // deadlocks seem very unlikely because hosts don't initiate multiple connections
-  // even if this somehow happens that there are 2 guests (A, B) and 2 hosts (1, 2) and:
-  //  A has lock for flow with 1, B has lock for flow with 2
-  //  1 has lock for flow with B, 2 has lock for flow with A
-  // there'll be a 10-second introduction timeout after which connection will be closed and deadlock broken
   const mutex = new Mutex();
   let lastActiveLockHolder: FlowLockHolder | null = null;
   let currentInvitation = { ...invitation };
@@ -44,9 +38,6 @@ export const createGuardedInvitationState = (
     if (ctx.disposed || (lockHolder !== null && mutex.isLocked() && !lockHolder.hasFlowLock())) {
       return false;
     }
-    // don't allow transitions from a terminal state unless a new extension acquired mutex
-    // handles a case when error occurs (e.g. connection is closed) after we completed the flow
-    // successfully or already reported another error
     return lockHolder == null || lastActiveLockHolder !== lockHolder || isNonTerminalState(currentInvitation.state);
   };
   return {
@@ -54,7 +45,6 @@ export const createGuardedInvitationState = (
     get current() {
       return currentInvitation;
     },
-    // disposing context prevents any further state updates
     complete: (newState: Partial<Invitation>) => {
       logStateUpdate(currentInvitation, undefined, invitation.state);
       currentInvitation = { ...currentInvitation, ...newState };

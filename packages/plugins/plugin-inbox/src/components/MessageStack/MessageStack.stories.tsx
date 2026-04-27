@@ -8,6 +8,8 @@ import React, { useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppActivationEvents } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Feed, Obj, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -21,15 +23,22 @@ import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
-import { Builder, LABELS, initializeMailbox } from '#testing';
+import { Builder, LABELS, MessagesOptions, initializeMailbox } from '#testing';
 import { Mailbox } from '#types';
 
 import { InboxPlugin } from '../../InboxPlugin';
-import { MessageStack as MessageStackComponent } from './MessageStack';
+import { MessageStack, MessageStackProps } from './MessageStack';
 
-const DefaultStory = () => {
-  const [messages] = useState(() => new Builder().createMessages(100).build().messages);
-  return <MessageStackComponent id='story' messages={messages} ignoreAttention labels={LABELS} />;
+const DefaultStory = ({
+  count = 0,
+  options,
+  ...props
+}: MessageStackProps & { count?: number; options?: MessagesOptions }) => {
+  const [messages] = useState(() =>
+    count ? new Builder().createMessages(count, options).build().messages : undefined,
+  );
+
+  return <MessageStack {...props} messages={messages} />;
 };
 
 const CompanionStory = () => {
@@ -45,8 +54,11 @@ const CompanionStory = () => {
     feed ? Query.select(selected ? Filter.id(selected) : Filter.nothing()).from(feed) : Query.select(Filter.nothing()),
   )[0];
 
-  const mailboxData = useMemo(() => ({ subject: mailbox, attendableId: mailbox?.id }), [mailbox]);
-  const companionData = useMemo(() => ({ subject: message ?? 'message', companionTo: feed }), [message, feed]);
+  const mailboxData = useMemo(() => ({ subject: mailbox, attendableId: mailbox?.id ?? 'story' }), [mailbox]);
+  const companionData = useMemo(
+    () => ({ subject: message ?? 'message', attendableId: 'story-companion', companionTo: feed }),
+    [message, feed],
+  );
 
   // NOTE: Attention required for scrolling.
   const attentionAttrs = useAttentionAttributes(feed ? Obj.getDXN(feed).toString() : undefined);
@@ -57,35 +69,58 @@ const CompanionStory = () => {
 
   return (
     <div role='none' {...attentionAttrs} className='grid grid-cols-[1fr_1fr]'>
-      <Surface.Surface role='article' data={mailboxData} />
-      <Surface.Surface role='article' data={companionData} />
+      <Surface.Surface type={AppSurface.Article} data={mailboxData} />
+      <Surface.Surface type={AppSurface.Article} data={companionData} />
     </div>
   );
 };
 
 const meta = {
   title: 'plugins/plugin-inbox/components/MessageStack',
-  component: MessageStackComponent as any,
+  component: MessageStack,
   render: DefaultStory,
-  decorators: [withLayout({ layout: 'column' }), withAttention(), withMosaic()],
+  decorators: [withTheme(), withLayout({ layout: 'column' }), withAttention(), withMosaic()],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof DefaultStory>;
+} satisfies Meta<typeof MessageStack>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  decorators: [withTheme()],
+  args: {
+    id: 'story',
+  },
 };
 
-export const WithCompanion: Story = {
+export const WithMessages: Story = {
+  args: {
+    id: 'story',
+    labels: LABELS,
+    count: 100,
+  },
+};
+
+export const WithThreads: Story = {
+  args: {
+    id: 'story',
+    labels: LABELS,
+    threads: true,
+    count: 100,
+    options: {
+      threads: 10,
+    },
+  },
+};
+
+export const WithCompanion = {
   render: CompanionStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
+      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({
@@ -98,7 +133,6 @@ export const WithCompanion: Story = {
               log.info('mailbox', { id: mailbox.id });
             }),
         }),
-
         StorybookPlugin({}),
         InboxPlugin(),
         PreviewPlugin(),

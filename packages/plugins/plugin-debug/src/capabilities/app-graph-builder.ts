@@ -44,19 +44,6 @@ export default Capability.makeModule(
                   position: 'fallback',
                 },
                 nodes: [
-                  ...(space && node.type === `${spaceMeta.id}.settings`
-                    ? [
-                        Node.make({
-                          id: 'debug',
-                          type: `${meta.id}.space`,
-                          data: { space, type: `${meta.id}.space` },
-                          properties: {
-                            label: ['debug.label', { ns: meta.id }],
-                            icon: 'ph--bug--regular',
-                          },
-                        }),
-                      ]
-                    : []),
                   Node.make({
                     id: 'app-graph',
                     type: `${meta.id}.app-graph`,
@@ -66,6 +53,19 @@ export default Capability.makeModule(
                       icon: 'ph--graph--regular',
                     },
                   }),
+                  ...(space && node.type === `${spaceMeta.id}.settings`
+                    ? [
+                        Node.make({
+                          id: 'debug',
+                          type: `${meta.id}.space`,
+                          data: { space, type: `${meta.id}.space` },
+                          properties: {
+                            label: ['generate-objects.label', { ns: meta.id }],
+                            icon: 'ph--dice-five--regular',
+                          },
+                        }),
+                      ]
+                    : []),
                   Node.make({
                     id: Devtools.Client.id,
                     data: null,
@@ -109,15 +109,6 @@ export default Capability.makeModule(
                         properties: {
                           label: ['diagnostics.label', { ns: meta.id }],
                           icon: 'ph--chart-line--regular',
-                        },
-                      }),
-                      Node.make({
-                        id: Devtools.Client.Tracing,
-                        data: Devtools.Client.Tracing,
-                        type: DEVTOOLS_TYPE,
-                        properties: {
-                          label: ['tracing.label', { ns: meta.id }],
-                          icon: 'ph--fire--regular',
                         },
                       }),
                     ],

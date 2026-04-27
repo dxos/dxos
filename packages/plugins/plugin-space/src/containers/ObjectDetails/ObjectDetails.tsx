@@ -5,17 +5,16 @@
 import React, { forwardRef, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Obj } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
+import { ObjectProperties } from '@dxos/react-ui-form';
 
-import { BaseObjectSettings } from '#components';
-
-export type ObjectDetailsProps = AppSurface.ObjectSettingsProps<Obj.Unknown>;
+export type ObjectDetailsProps = AppSurface.ObjectPropertiesProps<Obj.Unknown>;
 
 export const ObjectDetails = forwardRef<HTMLDivElement, ObjectDetailsProps>(
   ({ role, subject: object }, forwardedRef) => {
-    const data = useMemo<AppSurface.ObjectSettingsData>(() => ({ subject: object }), [object]);
+    const data = useMemo<AppSurface.ObjectPropertiesData>(() => ({ subject: object }), [object]);
 
     return (
       <Panel.Root role={role} className='dx-document' ref={forwardedRef}>
@@ -23,10 +22,9 @@ export const ObjectDetails = forwardRef<HTMLDivElement, ObjectDetailsProps>(
           <Toolbar.Root />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <BaseObjectSettings object={object}>
-            <Surface.Surface role='base-object-settings' data={data} />
-            <Surface.Surface role='object-settings' data={data} />
-          </BaseObjectSettings>
+          <ObjectProperties object={object}>
+            <Surface.Surface type={AppSurface.ObjectProperties} data={data} />
+          </ObjectProperties>
         </Panel.Content>
       </Panel.Root>
     );

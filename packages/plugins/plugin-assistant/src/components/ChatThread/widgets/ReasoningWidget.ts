@@ -37,7 +37,7 @@ export class ReasoningWidget extends WidgetType {
 
   override toDOM() {
     const root = Domino.of('div')
-      .classNames('pt-2 pb-4')
+      .classNames('pt-2 pb-2')
       .append(
         Domino.of('div')
           .classNames('relative overflow-hidden p-px rounded-sm border border-subdued-separator')

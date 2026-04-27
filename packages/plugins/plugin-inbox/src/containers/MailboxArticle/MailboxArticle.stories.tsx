@@ -6,8 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Feed } from '@dxos/echo';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -21,6 +24,23 @@ import { Mailbox } from '#types';
 
 import { InboxPlugin } from '../../InboxPlugin';
 import { MailboxArticle } from './MailboxArticle';
+
+// No-op handlers for layout operations invoked from article components; avoids pulling in DeckPlugin.
+const MockDeckOperationsPlugin = Plugin.define({ id: 'story.mock-deck-operations', name: 'Mock Deck Ops' }).pipe(
+  AppPlugin.addOperationHandlerModule({
+    activate: () =>
+      Effect.succeed(
+        Capability.contributes(
+          Capabilities.OperationHandler,
+          OperationHandlerSet.make(
+            Operation.withHandler(LayoutOperation.Select, () => Effect.void),
+            Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
+          ),
+        ),
+      ),
+  }),
+  Plugin.make,
+);
 
 type DefaultStoryProps = {
   count?: number;
@@ -43,6 +63,7 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager<DefaultStoryProps>(({ args: { count = 0 } }) => ({
+      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({
@@ -58,6 +79,7 @@ const meta = {
         StorybookPlugin({}),
         InboxPlugin(),
         PreviewPlugin(),
+        MockDeckOperationsPlugin(),
       ],
     })),
   ],

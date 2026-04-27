@@ -9,32 +9,27 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { AGENT_PROCESS_KEY, CompleteBlock } from '@dxos/assistant';
 import { Filter, Query } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { Trace } from '@dxos/functions';
 import { FeedTraceSink, Process } from '@dxos/functions-runtime';
-import { DXN, SpaceId } from '@dxos/keys';
-import { LogLevel } from '@dxos/log';
+import { DXN } from '@dxos/keys';
 import { useComputeRuntimeService } from '@dxos/plugin-automation/hooks';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
-import { mx } from '@dxos/ui-theme';
+import { composable, mx } from '@dxos/ui-theme';
 
 import { ProcessTree } from '../../components';
+import { buildExecutionGraph } from './execution-graph';
 
-export const TracePanel = ({ space }: { space: Space }) => {
+export type TracePanelProps = {
+  space: Space;
+};
+
+export const TracePanel = composable<HTMLDivElement, TracePanelProps>(({ space, ...props }, forwardedRef) => {
   const { invokePromise } = useOperationInvoker();
-  const activeProcesses = useActiveProcesses(space.id);
-  const runtime = useComputeRuntimeService(Process.ProcessMonitorService, space.id);
-
-  const { branches, commits } = useAtomValue(
-    useMemo(
-      () => getExecutionGraph(space, runtime?.processTreeAtom ?? Atom.make(() => [])),
-      [space, runtime?.processTreeAtom],
-    ),
-  );
+  const { branches, commits } = useExecutionGraph(space);
 
   const handleCommitClick = useCallback(
     (commit: Commit) => {
@@ -42,7 +37,9 @@ export const TracePanel = ({ space }: { space: Space }) => {
         const dxn = DXN.tryParse(commit.link)?.asEchoDXN();
         if (dxn?.spaceId && dxn.echoId) {
           // TODO(dmaretskyi): Navigates, but fails to open.
-          void invokePromise(LayoutOperation.Open, { subject: [`${dxn.spaceId}:${dxn.echoId}`] });
+          void invokePromise(LayoutOperation.Open, {
+            subject: [`${dxn.spaceId}:${dxn.echoId}`],
+          });
         }
       }
     },
@@ -50,256 +47,68 @@ export const TracePanel = ({ space }: { space: Space }) => {
   );
 
   return (
-    <Panel.Root>
+    <Panel.Root {...props} ref={forwardedRef}>
       <Panel.Content className='grid grid-rows-[min-content_1fr]'>
-        <ProcessTree
-          classNames={mx('max-h-[8lh] px-2', activeProcesses.length > 0 && 'border-b border-separator')}
-          processes={activeProcesses}
-        />
-        <Timeline classNames='py-1' branches={branches} commits={commits} compact onCommitClick={handleCommitClick} />
+        <ActiveProcessList spaceId={space.id} />
+        <Timeline branches={branches} commits={commits} compact onCommitClick={handleCommitClick} />
       </Panel.Content>
     </Panel.Root>
   );
+});
+
+/**
+ * Separated into its own component because useComputeRuntimeService uses React's use() which requires a Suspense boundary.
+ */
+const ActiveProcessList = ({ spaceId }: { spaceId: Space['id'] }) => {
+  const runtime = useComputeRuntimeService(Process.ProcessMonitorService, spaceId);
+  const activeProcesses = useAtomValue(runtime?.processTreeAtom ?? atomEmpty);
+  if (activeProcesses.length === 0) {
+    return <div />;
+  }
+
+  return <ProcessTree classNames={mx('max-h-[8lh] px-2 border-b border-separator')} processes={activeProcesses} />;
 };
 
-type InvocationInfo = {
-  eventLimit: number;
+// Stable ref.
+const atomEmpty = Atom.make(() => [] as const);
+
+type ExecutionGraph = {
+  branches: string[];
+  commits: Commit[];
+};
+
+type UseExecutionGraphOptions = {
+  eventLimit?: number;
+};
+
+const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOptions = {}): ExecutionGraph => {
+  const atom = useMemo(() => getExecutionGraph(space, { eventLimit }), [space, eventLimit]);
+  return useAtomValue(atom);
 };
 
 const getExecutionGraph = (
   space: Space,
-  processTreeAtom: Atom.Atom<readonly Process.Info[]>,
-  { eventLimit = 100 }: { eventLimit?: number } = {},
-): Atom.Atom<{
-  branches: string[];
-  commits: Commit[];
-}> => {
+  { eventLimit = 100 }: UseExecutionGraphOptions = {},
+): Atom.Atom<ExecutionGraph> => {
   return pipe(
     AtomQuery.make(space.db, FeedTraceSink.query),
     Atom.map((feeds) => {
       // TODO(dmaretskyi): This should be possible in a single query with properly working limit(1) and feed > feed contents traversal.
       return AtomQuery.make(
         space.db,
-        feeds.length > 0 ? Query.type(Trace.Message).from(feeds[0]) : Query.select(Filter.nothing()),
+        feeds.length > 0
+          ? Query.type(Trace.Message).from(feeds[0])
+          : (Query.select(Filter.nothing()) as Query.Query<never>),
       );
     }),
     (_) => Atom.make((get) => get(get(_))),
     (_) =>
-      Atom.make((get) => {
-        const builder = new GraphBuilder();
-
-        const events = get(_)
-          .slice(-eventLimit)
-          .flatMap((message) =>
-            message.events.map((event: Trace.Event) => ({
-              id: message.id,
-              meta: message.meta,
-              ...event,
-            })),
-          );
-
-        for (const event of events) {
-          if (Trace.isOfType(CompleteBlock, event)) {
-            switch (event.data.block._tag) {
-              case 'text': {
-                if (event.data.role === 'user') {
-                  builder.addUserMessage(
-                    event.id,
-                    event.meta.conversationId ?? 'unknown_conversation',
-                    event.data.block.text,
-                    event.timestamp,
-                  );
-                } else {
-                  builder.addAssistantMessage(
-                    event.id,
-                    event.meta.conversationId ?? 'unknown_conversation',
-                    event.data.block.text,
-                    event.timestamp,
-                  );
-                }
-                break;
-              }
-              case 'toolCall': {
-                builder.addToolCall(
-                  `${event.data.block.toolCallId}:call`,
-                  event.meta.conversationId ?? 'unknown_conversation',
-                  event.data.block.name,
-                  event.timestamp,
-                );
-                break;
-              }
-              case 'toolResult': {
-                builder.addToolResult(
-                  `${event.data.block.toolCallId}:result`,
-                  event.meta.conversationId ?? 'unknown_conversation',
-                  event.data.block.error,
-                  event.timestamp,
-                );
-                break;
-              }
-            }
-          }
-
-          // Process operation trace events.
-          if (Trace.isOfType(Trace.OperationStart, event)) {
-            builder.addOperationStart(
-              `${event.id}:${event.data.key}:start`,
-              event.data.name ?? event.data.key,
-              event.timestamp,
-            );
-          }
-          if (Trace.isOfType(Trace.OperationEnd, event)) {
-            builder.addOperationEnd(
-              `${event.id}:${event.data.key}:end`,
-              event.data.name ?? event.data.key,
-              event.data.outcome,
-              event.data.error,
-              event.timestamp,
-            );
-          }
-        }
-
-        const activeProcesses = get(processTreeAtom);
-        for (const process of activeProcesses) {
-          if (
-            process.key === AGENT_PROCESS_KEY &&
-            process.params.target &&
-            (process.state === Process.State.RUNNING || process.state === Process.State.HYBERNATING)
-          ) {
-            const conversationId = DXN.parse(process.params.target).asEchoDXN()?.echoId;
-            if (conversationId) {
-              builder.addRunningAgent(process.pid, conversationId, Date.now());
-            }
-          }
-        }
-        return builder.build();
-      }),
+      Atom.make((get) =>
+        buildExecutionGraph({
+          traceMessages: [...get(_)],
+          activeProcesses: [],
+          eventLimit,
+        }),
+      ),
   );
 };
-
-// Stable ref.
-const atomEmpty = Atom.make(() => [] as const);
-
-const useActiveProcesses = (id?: SpaceId) => {
-  const runtime = useComputeRuntimeService(Process.ProcessMonitorService, id);
-  return useAtomValue(runtime?.processTreeAtom ?? atomEmpty);
-};
-
-class GraphBuilder {
-  #commits: Commit[] = [];
-  #branches = new Set<string>();
-  #lastCommitByBranch = new Map<string, string>();
-
-  #addCommit(commit: Commit) {
-    this.#branches.add(commit.branch);
-    this.#commits.push(commit);
-    this.#lastCommitByBranch.set(commit.branch, commit.id);
-  }
-
-  #defaultParents(branch: string) {
-    return this.#lastCommitByBranch.get(branch) ? [this.#lastCommitByBranch.get(branch)!] : [];
-  }
-
-  build() {
-    return {
-      commits: this.#commits,
-      branches: [...this.#branches],
-    };
-  }
-
-  addUserMessage(id: string, coversationId: string, text: string, ts: number) {
-    this.#addCommit({
-      id,
-      branch: coversationId,
-      parents: this.#defaultParents(coversationId),
-      icon: 'ph--paper-plane-right--regular',
-      level: LogLevel.VERBOSE,
-      message: text.slice(0, 100),
-      timestamp: new Date(ts),
-    });
-  }
-
-  addAssistantMessage(id: string, coversationId: string, text: string, ts: number) {
-    this.#addCommit({
-      id,
-      branch: coversationId,
-      parents: this.#defaultParents(coversationId),
-      icon: 'ph--drone--regular',
-      level: LogLevel.VERBOSE,
-      message: text.slice(0, 100),
-      timestamp: new Date(ts),
-    });
-  }
-
-  addToolCall(id: string, coversationId: string, toolName: string, ts: number) {
-    this.#addCommit({
-      id,
-      branch: coversationId,
-      parents: this.#defaultParents(coversationId),
-      icon: 'ph--wrench--regular',
-      level: LogLevel.INFO,
-      message: toolName,
-      timestamp: new Date(ts),
-    });
-  }
-
-  addToolResult(id: string, coversationId: string, error: string | undefined, ts: number) {
-    this.#addCommit({
-      id,
-      branch: coversationId,
-      parents: this.#defaultParents(coversationId),
-      icon: error ? 'ph--x-circle--regular' : 'ph--check-circle--regular',
-      level: error ? LogLevel.ERROR : LogLevel.INFO,
-      message: error ? `Error: ${error}` : 'Success',
-      timestamp: new Date(ts),
-    });
-  }
-
-  addRunningAgent(pid: string, conversationId: string, ts: number) {
-    this.#addCommit({
-      id: pid,
-      branch: conversationId,
-      parents: this.#defaultParents(conversationId),
-      icon: 'ph--spinner-gap--regular',
-      level: LogLevel.INFO,
-      message: 'Generating...',
-      timestamp: new Date(ts),
-    });
-  }
-
-  addOperationStart(id: string, operationName: string, ts: number) {
-    this.#addCommit({
-      id,
-      branch: OPERATIONS_BRANCH,
-      parents: this.#defaultParents(OPERATIONS_BRANCH),
-      icon: 'ph--play--regular',
-      level: LogLevel.INFO,
-      message: operationName,
-      timestamp: new Date(ts),
-    });
-  }
-
-  addOperationEnd(
-    id: string,
-    operationName: string,
-    outcome: 'success' | 'failure',
-    error: string | undefined,
-    ts: number,
-  ) {
-    const isError = outcome === 'failure';
-    this.#addCommit({
-      id,
-      branch: OPERATIONS_BRANCH,
-      parents: this.#defaultParents(OPERATIONS_BRANCH),
-      icon: isError ? 'ph--x-circle--regular' : 'ph--check-circle--regular',
-      level: isError ? LogLevel.ERROR : LogLevel.INFO,
-      message: isError ? `${operationName}: ${error ?? 'Failed'}` : operationName,
-      timestamp: new Date(ts),
-    });
-  }
-}
-
-/**
- * Branch name for top-level operation invocations.
- */
-const OPERATIONS_BRANCH = 'operations';

@@ -21,7 +21,6 @@ import {
   Reply,
   ServiceResolver,
   Trace,
-  TracingService,
   Trigger,
 } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -50,7 +49,6 @@ const TestLayer = Layer.mergeAll(
   ),
   Layer.provideMerge(KeyValueStore.layerMemory),
   Layer.provideMerge(OperationHandlerSet.provide(ExampleHandlers)),
-  Layer.provideMerge(TracingService.layerNoop),
   Layer.provideMerge(Registry.layer),
   Layer.provideMerge(Trace.layerNoop),
 );
@@ -94,10 +92,7 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: {
-            kind: 'timer',
-            cron: '*/5 * * * *',
-          },
+          spec: Trigger.specTimer('*/5 * * * *'),
         });
         yield* Database.add(trigger);
         const dispatcher = yield* TriggerDispatcher;
@@ -120,10 +115,7 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: {
-            kind: 'timer',
-            cron: '* * * * *', // Every minute - should trigger immediately
-          },
+          spec: Trigger.specTimer('* * * * *'), // Every minute - should trigger immediately
         });
         yield* Database.add(trigger);
 
@@ -150,19 +142,13 @@ describe('TriggerDispatcher', () => {
         const enabledTrigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: {
-            kind: 'timer',
-            cron: '* * * * *',
-          },
+          spec: Trigger.specTimer('* * * * *'),
         });
 
         const disabledTrigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: false,
-          spec: {
-            kind: 'timer',
-            cron: '* * * * *',
-          },
+          spec: Trigger.specTimer('* * * * *'),
         });
 
         yield* Database.add(enabledTrigger);
@@ -192,10 +178,7 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: {
-            kind: 'timer',
-            cron: '*/5 * * * *',
-          },
+          spec: Trigger.specTimer('*/5 * * * *'),
         });
         yield* Database.add(trigger);
 
@@ -241,10 +224,7 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: {
-            kind: 'timer',
-            cron: '* * * * *', // Every minute
-          },
+          spec: Trigger.specTimer('* * * * *'), // Every minute
         });
         yield* Database.add(trigger);
 
@@ -277,10 +257,7 @@ describe('TriggerDispatcher', () => {
           const trigger = Trigger.make({
             function: Ref.make(functionObj),
             enabled: true,
-            spec: {
-              kind: 'timer',
-              cron,
-            },
+            spec: Trigger.specTimer(cron),
           });
           yield* Database.add(trigger);
 
@@ -300,10 +277,7 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: {
-            kind: 'timer',
-            cron: 'invalid-cron',
-          },
+          spec: Trigger.specTimer('invalid-cron'),
         });
         yield* Database.add(trigger);
 
@@ -341,10 +315,7 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: {
-            kind: 'queue',
-            queue: queue.dxn.toString(),
-          },
+          spec: Trigger.specQueue(queue.dxn.toString()),
         });
         yield* Database.add(trigger);
         yield* QueueService.append(queue, [
@@ -370,10 +341,7 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: {
-            kind: 'queue',
-            queue: queue.dxn.toString(),
-          },
+          spec: Trigger.specQueue(queue.dxn.toString()),
         });
         yield* Database.add(trigger);
         yield* QueueService.append(queue, [
@@ -417,10 +385,7 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: {
-            kind: 'queue',
-            queue: queue.dxn.toString(),
-          },
+          spec: Trigger.specQueue(queue.dxn.toString()),
           input: {
             instructions: 'Please process the queue item.',
             input: '{{event.item}}',
@@ -460,10 +425,7 @@ describe('TriggerDispatcher', () => {
           function: Ref.make(functionObj),
           enabled: true,
           concurrency: 2,
-          spec: {
-            kind: 'queue',
-            queue: queue.dxn.toString(),
-          },
+          spec: Trigger.specQueue(queue.dxn.toString()),
         });
         yield* Database.add(trigger);
         yield* QueueService.append(queue, [
@@ -506,12 +468,7 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: {
-            kind: 'subscription',
-            query: {
-              ast: Query.select(Filter.type(Person.Person)).ast,
-            },
-          },
+          spec: Trigger.specSubscription(Query.select(Filter.type(Person.Person))),
         });
         yield* Database.add(trigger);
 
@@ -550,12 +507,7 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: {
-            kind: 'subscription',
-            query: {
-              ast: Query.select(Filter.type(Person.Person)).ast,
-            },
-          },
+          spec: Trigger.specSubscription(Query.select(Filter.type(Person.Person))),
         });
         yield* Database.add(trigger);
 
@@ -590,12 +542,7 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: {
-            kind: 'subscription',
-            query: {
-              ast: Query.select(Filter.type(Person.Person)).ast,
-            },
-          },
+          spec: Trigger.specSubscription(Query.select(Filter.type(Person.Person))),
         });
         yield* Database.add(trigger);
 
@@ -642,12 +589,7 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: {
-            kind: 'subscription',
-            query: {
-              ast: Query.select(Filter.type(Task.Task)).ast,
-            },
-          },
+          spec: Trigger.specSubscription(Query.select(Filter.type(Task.Task))),
         });
         yield* Database.add(trigger);
 
@@ -691,12 +633,7 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: {
-            kind: 'subscription',
-            query: {
-              ast: Query.select(Filter.type(Person.Person)).ast,
-            },
-          },
+          spec: Trigger.specSubscription(Query.select(Filter.type(Person.Person))),
           input: {
             objectId: '{{event.changedObjectId}}',
             changeType: '{{event.type}}',

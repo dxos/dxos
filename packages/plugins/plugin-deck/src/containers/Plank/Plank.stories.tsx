@@ -14,7 +14,7 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Main } from '@dxos/react-ui';
 import { StackContext } from '@dxos/react-ui-stack';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading } from '@dxos/react-ui/testing';
 import { Organization } from '@dxos/types';
 
@@ -51,11 +51,13 @@ const storySurfaceExtension = Capability.contributes(
       }
 
       return (
-        <Json.Root data={subject}>
-          <Json.Content>
-            <Json.Data />
-          </Json.Content>
-        </Json.Root>
+        <Syntax.Root data={subject}>
+          <Syntax.Content>
+            <Syntax.Viewport>
+              <Syntax.Code />
+            </Syntax.Viewport>
+          </Syntax.Content>
+        </Syntax.Root>
       );
     },
   }),
@@ -94,6 +96,7 @@ const meta = {
     }),
   ],
   parameters: {
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;

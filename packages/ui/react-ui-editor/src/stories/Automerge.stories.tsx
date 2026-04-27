@@ -43,7 +43,7 @@ const Editor = ({ source, messenger, identity, autoFocus }: EditorProps) => {
       initialValue: DocAccessor.getValue(source),
       extensions: [
         createBasicExtensions({ placeholder: 'Type here...', search: true }),
-        createThemeExtensions({ themeMode, slots: { scroll: { className: 'p-2' } } }),
+        createThemeExtensions({ themeMode, slots: { scroller: { className: 'p-2' } } }),
         createDataExtensions({ id: 'test', text: source, messenger, identity }),
       ],
     }),

@@ -2,6 +2,4 @@
 // Copyright 2020 DXOS.org
 //
 
-import { FeedsPanel } from './FeedsPanel';
-
-export default FeedsPanel;
+export { FeedsPanel as default } from './FeedsPanel';

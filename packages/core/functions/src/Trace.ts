@@ -78,6 +78,7 @@ export const Meta = Schema.Struct({
   pid: Schema.optional(Schema.String), // NOTE: Not Process.ID to avoid circular dependency.
   parentPid: Schema.optional(Schema.String),
   processName: Schema.optional(Schema.String),
+
   /**
    * ID of the conversation feed object if present.
    */
@@ -87,6 +88,11 @@ export const Meta = Schema.Struct({
    * ID of the trigger object if invocation resulted from a trigger.
    */
   triggerId: Schema.optional(Obj.ID),
+
+  /**
+   * ID of the tool call that created the current process.
+   */
+  toolCallId: Schema.optional(Schema.String),
 });
 export interface Meta extends Schema.Schema.Type<typeof Meta> {}
 
@@ -200,3 +206,20 @@ export const OperationEnd = EventType('operation.end', {
   }),
   isEphemeral: false,
 });
+
+/**
+ * Human-readable status update emitted by an agent or operation.
+ */
+export const StatusUpdate = EventType('status.update', {
+  schema: Schema.Struct({
+    /** Human-readable status message. */
+    message: Schema.String,
+  }),
+  isEphemeral: true,
+});
+
+/**
+ * Emit the current human-readable execution status to the trace.
+ */
+export const emitStatus: (message: string) => Effect.Effect<void, never, TraceService> = (message) =>
+  write(StatusUpdate, { message });

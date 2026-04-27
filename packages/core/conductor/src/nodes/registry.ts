@@ -11,7 +11,7 @@ import { Database } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { isInstanceOf } from '@dxos/echo/internal';
-import { FunctionInvocationService, QueueService } from '@dxos/functions';
+import { QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
@@ -357,7 +357,7 @@ export const registry: Record<NodeType, Executable> = {
 
         const func = yield* Database.load(functionRef);
         const funcDefinition = Operation.deserialize(func);
-        return yield* FunctionInvocationService.invokeFunction(funcDefinition, input);
+        return yield* Operation.invoke(funcDefinition, input).pipe(Effect.orDie);
       }),
     ),
   }),

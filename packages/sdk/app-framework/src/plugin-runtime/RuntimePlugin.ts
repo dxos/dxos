@@ -11,8 +11,8 @@ const ManagedRuntimeCapability = Capability.lazy('ManagedRuntime', () => import(
 export const RuntimePlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: ActivationEvents.Startup,
-    activatesBefore: [ActivationEvents.SetupLayer],
-    activatesAfter: [ActivationEvents.ManagedRuntimeReady],
+    firesBeforeActivation: [ActivationEvents.SetupLayer],
+    firesAfterActivation: [ActivationEvents.ManagedRuntimeReady],
     activate: ManagedRuntimeCapability,
   }),
   Plugin.make,

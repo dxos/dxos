@@ -7,29 +7,26 @@ import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueS
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { AiService, GenericToolkit } from '@dxos/ai';
+import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import {
-  AgentService,
-  AiContextBinder,
-  AiContextService,
-  AiConversation,
-  AiConversationService,
-  ToolExecutionServices,
-} from '@dxos/assistant';
+import { AgentService, AiContextBinder, AiContextService, AiSession, AiSessionService } from '@dxos/assistant';
+import { McpServer } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
-import { SpaceProperties } from '@dxos/client/echo';
+import { SpaceProperties } from '@dxos/client-protocol';
 import { Resource } from '@dxos/context';
-import { Database, DXN, Feed, Obj, Query, Ref } from '@dxos/echo';
+import { Database, DXN, Feed, Filter, Obj } from '@dxos/echo';
+import { AtomObj } from '@dxos/echo-atom';
 import { createFeedServiceLayer } from '@dxos/echo-db';
-import { acquireReleaseResource } from '@dxos/effect';
+import { acquireReleaseResource, asyncTaskTaggingLayer } from '@dxos/effect';
 import {
   CredentialsService,
+  FunctionInvocationService,
   feedServiceFromQueueServiceLayer,
   QueueService,
   ServiceNotAvailableError,
@@ -41,13 +38,12 @@ import {
   ProcessManager,
   RemoteFunctionExecutionService,
   ServiceResolver,
-  TracingServiceExt,
   TriggerDispatcher,
   TriggerStateStore,
 } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
-import { OperationHandlerSet, OperationRegistry } from '@dxos/operation';
+import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { AutomationCapabilities } from '#types';
@@ -62,11 +58,30 @@ export default Capability.makeModule(
   }),
 );
 
+declare global {
+  interface ImportMeta {
+    env: ImportMetaEnv;
+  }
+
+  interface ImportMetaEnv {
+    DEV: boolean;
+  }
+}
+
+const isDev = import.meta.env.DEV ?? false;
+
+/** Node / test environments have no `localStorage`; browser keeps persistent trigger state. */
+const triggerStateStoreLayer =
+  typeof globalThis.localStorage !== 'undefined'
+    ? TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage))
+    : TriggerStateStore.layerMemory;
+
 /**
  * Adapts plugin capabilities to runtime layers.
  */
 class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilities.ComputeRuntimeProvider {
   readonly #runtimes = new Map<SpaceId, AutomationCapabilities.ComputeRuntime>();
+  readonly #subscriptions = new Map<SpaceId, () => void>();
   readonly #capabilities: CapabilityManager.CapabilityManager;
 
   constructor(capabilities: CapabilityManager.CapabilityManager) {
@@ -77,6 +92,10 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
   protected override async _open() {}
 
   protected override async _close() {
+    for (const unsubscribe of this.#subscriptions.values()) {
+      unsubscribe();
+    }
+    this.#subscriptions.clear();
     await Promise.all(Array.from(this.#runtimes.values()).map((rt) => rt.dispose()));
     this.#runtimes.clear();
   }
@@ -86,7 +105,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
       return this.#runtimes.get(spaceId)!;
     }
 
-    const layer = Layer.unwrapEffect(
+    const layer = Layer.unwrapScoped(
       Effect.gen(this, function* () {
         const client = this.#capabilities.get(ClientCapabilities.Client);
         const aiServiceLayer =
@@ -98,10 +117,10 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           ...this.#capabilities.getAll(Capabilities.OperationHandler),
         );
 
-        const genericToolkitProvider = Layer.succeed(GenericToolkit.GenericToolkitProvider, {
+        const opaqueToolkitProvider = Layer.succeed(OpaqueToolkit.OpaqueToolkitProvider, {
           getToolkit: () => {
             const toolkits = this.#capabilities.getAll(AppCapabilities.Toolkit);
-            return GenericToolkit.merge(...toolkits);
+            return OpaqueToolkit.merge(...toolkits);
           },
         });
 
@@ -113,111 +132,170 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         invariant(space, `Invalid space: ${spaceId}`);
         yield* Effect.promise(() => space.waitUntilReady());
 
-        return Layer.mergeAll(
-          TriggerDispatcher.layer({ timeControl: 'natural' }),
-          Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints)),
-        ).pipe(
-          Layer.provideMerge(AgentService.layer()),
-          Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
-          Layer.provideMerge(ProcessManager.layer()),
-          // TODO(dmaretskyi): Duped in assistant testing layer.
-          Layer.provideMerge(
-            // TODO(dmaretskyi): Refactor to be able to merge resovler layers, also consider service mesh achitecture.
-            Layer.effect(
-              ServiceResolver.ServiceResolver,
-              Effect.gen(function* () {
-                const services = yield* Effect.context<Database.Service | Feed.FeedService>().pipe(
-                  Effect.map(Context.pick(Database.Service, Feed.FeedService)),
-                  Effect.map(Layer.succeedContext),
-                );
-                // AiContextBinder.
-                return ServiceResolver.compose(
-                  ServiceResolver.succeed(AiContextService, (context) =>
-                    Effect.gen(function* () {
-                      if (!context.conversation) {
-                        return yield* Effect.fail(new ServiceNotAvailableError(AiContextService.key));
-                      }
-                      const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(
-                        Effect.orDie,
-                      );
-                      const runtime = yield* Effect.runtime<Feed.FeedService>();
-                      const binder = yield* acquireReleaseResource(
-                        () =>
-                          new AiContextBinder({
-                            feed,
-                            runtime,
-                          }),
-                      );
-                      return { binder };
-                    }).pipe(Effect.provide(services)),
-                  ),
-                  // AiConversationService.
-                  ServiceResolver.succeed(AiConversationService, (context) =>
-                    Effect.gen(function* () {
-                      if (!context.conversation) {
-                        return yield* Effect.fail(new ServiceNotAvailableError(AiConversationService.key));
-                      }
-                      const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(
-                        Effect.orDie,
-                      );
-                      const runtime = yield* Effect.runtime<Feed.FeedService>();
-                      const conversation = yield* acquireReleaseResource(
-                        () =>
-                          new AiConversation({
-                            feed,
-                            runtime,
-                          }),
-                      );
-                      return conversation;
-                    }).pipe(Effect.provide(services)),
-                  ),
-                  yield* ServiceResolver.fromRequirements(
-                    Database.Service,
-                    GenericToolkit.GenericToolkitProvider,
-                    Feed.FeedService,
-                    QueueService,
-                    AiService.AiService,
-                    OperationRegistry.Service,
-                    Blueprint.RegistryService,
-                  ),
-                );
+        // Maintain a live query of space-level MCP server configs.
+        const mcpQuery = space.db.query(Filter.type(McpServer.McpServer));
+        this.#subscriptions.set(spaceId, mcpQuery.subscribe());
+
+        return Layer.scopedDiscard(
+          Effect.gen(function* () {
+            const registry = yield* Registry.AtomRegistry;
+            const triggerDispatcher = yield* TriggerDispatcher;
+            // Track the in-flight start/stop so a new transition cancels the previous one
+            // (preserving ordering on rapid toggles) and surfaces failures via the Effect logger.
+            let inFlight: Fiber.RuntimeFiber<unknown, unknown> | undefined;
+            const transition = (effect: Effect.Effect<unknown, unknown>) => {
+              if (inFlight) {
+                Effect.runFork(Fiber.interrupt(inFlight));
+              }
+              inFlight = Effect.runFork(
+                effect.pipe(
+                  Effect.tapErrorCause((cause) => Effect.logError('trigger dispatcher transition failed', cause)),
+                ),
+              );
+            };
+            const unsubscribe = registry.subscribe(
+              AtomObj.make(space.properties),
+              (properties: Obj.Snapshot<SpaceProperties>) => {
+                const computeEnvironment = properties.computeEnvironment ?? 'local';
+                transition(computeEnvironment === 'local' ? triggerDispatcher.start() : triggerDispatcher.stop());
+              },
+              { immediate: true },
+            );
+            yield* Effect.addFinalizer(() =>
+              Effect.sync(() => {
+                unsubscribe();
+                if (inFlight) {
+                  Effect.runFork(Fiber.interrupt(inFlight));
+                }
+              }),
+            );
+          }),
+        )
+          .pipe(
+            Layer.provideMerge(TriggerDispatcher.layer({ timeControl: 'natural' })),
+            Layer.provideMerge(
+              AgentService.layer({
+                getMcpServers: () =>
+                  mcpQuery.results
+                    .filter(Obj.instanceOf(McpServer.McpServer))
+                    .filter((server) => server.enabled !== false)
+                    .map(({ url, protocol, apiKey }) => ({ url, protocol, apiKey })),
               }),
             ),
-          ),
-          Layer.provideMerge(Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints))),
-          Layer.provideMerge(OperationRegistry.layer),
-          Layer.provideMerge(Layer.succeed(Capability.Service, this.#capabilities)),
-          Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, registry)),
-          Layer.provideMerge(
-            Layer.mergeAll(
-              TracingServiceLive,
-              FeedTraceSink.layerLive,
-              TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
-              ToolExecutionServices,
-              KeyValueStore.layerMemory,
+            Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
+            Layer.provideMerge(ProcessManager.layer()),
+            // TODO(dmaretskyi): Duped in assistant testing layer.
+            Layer.provideMerge(
+              // TODO(dmaretskyi): Refactor to be able to merge resovler layers, also consider service mesh achitecture.
+              Layer.effect(
+                ServiceResolver.ServiceResolver,
+                Effect.gen(function* () {
+                  const services = yield* Effect.context<Database.Service | Feed.FeedService>().pipe(
+                    Effect.map(Context.pick(Database.Service, Feed.FeedService)),
+                    Effect.map(Layer.succeedContext),
+                  );
+                  // AiContextBinder.
+                  return ServiceResolver.compose(
+                    ServiceResolver.succeed(AiContextService, (context) =>
+                      Effect.gen(function* () {
+                        if (!context.conversation) {
+                          return yield* Effect.fail(new ServiceNotAvailableError(AiContextService.key));
+                        }
+                        const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(
+                          Effect.orDie,
+                        );
+                        const runtime = yield* Effect.runtime<Feed.FeedService>();
+                        const binder = yield* acquireReleaseResource(
+                          () =>
+                            new AiContextBinder({
+                              feed,
+                              runtime,
+                            }),
+                        );
+                        return { binder };
+                      }).pipe(Effect.provide(services)),
+                    ),
+                    // AiSessionService.
+                    ServiceResolver.succeed(AiSessionService, (context) =>
+                      Effect.gen(function* () {
+                        if (!context.conversation) {
+                          return yield* Effect.fail(new ServiceNotAvailableError(AiSessionService.key));
+                        }
+                        const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(
+                          Effect.orDie,
+                        );
+                        const runtime = yield* Effect.runtime<Feed.FeedService>();
+                        const session = yield* acquireReleaseResource(
+                          () =>
+                            new AiSession({
+                              feed,
+                              runtime,
+                            }),
+                        );
+                        return session;
+                      }).pipe(Effect.provide(services)),
+                    ),
+                    yield* ServiceResolver.fromRequirements(
+                      Database.Service,
+                      OpaqueToolkit.OpaqueToolkitProvider,
+                      Feed.FeedService,
+                      QueueService,
+                      AiService.AiService,
+                      OperationRegistry.Service,
+                      Blueprint.RegistryService,
+                      CredentialsService,
+                    ),
+                  );
+                }),
+              ),
             ),
-          ),
-          Layer.provideMerge(feedServiceFromQueueServiceLayer),
-          Layer.provideMerge(OperationHandlerSet.provide(operationHandlers)),
-          Layer.provideMerge(
-            FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
-              Layer.provideMerge(genericToolkitProvider),
-              Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: operationHandlers })),
-              Layer.provideMerge(
-                RemoteFunctionExecutionService.fromClient(
-                  client,
-                  client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
+            Layer.provideMerge(Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints))),
+            Layer.provideMerge(Layer.succeed(Capability.Service, this.#capabilities)),
+            Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, registry)),
+            Layer.provideMerge(
+              Layer.mergeAll(FeedTraceSink.layerLive, triggerStateStoreLayer, KeyValueStore.layerMemory),
+            ),
+            Layer.provideMerge(OperationRegistry.layer),
+            Layer.provideMerge(feedServiceFromQueueServiceLayer),
+            Layer.provideMerge(OperationHandlerSet.provide(operationHandlers)),
+            Layer.provideMerge(
+              Layer.effect(
+                Operation.Service,
+                Effect.gen(function* () {
+                  const fis = yield* FunctionInvocationService;
+                  return {
+                    invoke: (op: any, ...args: any[]) => (fis.invokeFunction as any)(op, args[0]),
+                    schedule: (op: any, ...args: any[]) =>
+                      (fis.invokeFunction as any)(op, args[0]).pipe(Effect.fork, Effect.asVoid),
+                    invokePromise: async () => ({ error: new Error('Not implemented') }),
+                  } as unknown as Operation.OperationService;
+                }),
+              ),
+            ),
+            Layer.provideMerge(
+              FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
+                Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: operationHandlers })),
+                Layer.provideMerge(
+                  client.config.values.runtime?.services?.edge?.url
+                    ? RemoteFunctionExecutionService.fromClient(
+                        client,
+                        client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
+                      )
+                    : RemoteFunctionExecutionService.layerMock,
                 ),
               ),
-              Layer.provideMerge(aiServiceLayer),
-              Layer.provideMerge(CredentialsService.layerFromDatabase()),
-              Layer.provideMerge(ClientService.fromClient(client)),
-              Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
-              Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
-              Layer.provideMerge(space ? createFeedServiceLayer(space.queues) : Feed.notAvailable),
             ),
-          ),
-        );
+            Layer.provideMerge(opaqueToolkitProvider),
+            Layer.provideMerge(aiServiceLayer),
+            Layer.provideMerge(CredentialsService.layerFromDatabase()),
+            Layer.provideMerge(ClientService.fromClient(client)),
+            Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
+          )
+          .pipe(
+            Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
+            Layer.provideMerge(space ? createFeedServiceLayer(space.queues) : Feed.notAvailable),
+            Layer.provideMerge(isDev ? asyncTaskTaggingLayer() : Layer.empty),
+          );
       }),
     );
 
@@ -226,22 +304,3 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
     return runtime;
   }
 }
-
-const TracingServiceLive = Layer.unwrapEffect(
-  Effect.gen(function* () {
-    const objects = yield* Database.runQuery(Query.type(SpaceProperties));
-    const [properties] = objects;
-    invariant(properties);
-    // TODO(burdon): Check ref target has loaded?
-    if (!properties.invocationTraceQueue || !properties.invocationTraceQueue.target) {
-      const queue = yield* QueueService.createQueue({ subspaceTag: 'trace' });
-      Obj.change(properties, (properties) => {
-        properties.invocationTraceQueue = Ref.fromDXN(queue.dxn);
-      });
-    }
-
-    const queue = properties.invocationTraceQueue!.target;
-    invariant(queue);
-    return TracingServiceExt.layerInvocationsQueue({ invocationTraceQueue: queue });
-  }),
-);

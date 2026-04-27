@@ -12,7 +12,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import { type Graph, type GraphModel, SelectionModel } from '@dxos/graph';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
-import { Json, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { getHashStyles, mx } from '@dxos/ui-theme';
@@ -260,11 +260,7 @@ const DefaultStory = ({
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
         <Popover.Viewport>
           <Card.Root>
-            <SyntaxHighlighter
-              language='json'
-              classNames='text-xs my-form-padding px-form-padding bg-transparent'
-              code={JSON.stringify(popover, null, 2)}
-            />
+            <JsonHighlighter data={popover} classNames='text-xs my-form-padding px-form-padding bg-transparent' />
           </Card.Root>
         </Popover.Viewport>
         <Popover.Arrow />
@@ -319,12 +315,14 @@ const Debug = ({
         <IconButton onClick={onDelete} label='Delete' icon='ph--x--regular' iconOnly />
         <IconButton onClick={onPing} label='Delete' icon='ph--crosshair-simple--regular' iconOnly />
       </Toolbar.Root>
-      <Json.Root data={data}>
-        <Json.Content>
-          <Json.Filter />
-          <Json.Data classNames='text-sm' />
-        </Json.Content>
-      </Json.Root>
+      <Syntax.Root data={data}>
+        <Syntax.Content>
+          <Syntax.Filter />
+          <Syntax.Viewport>
+            <Syntax.Code classNames='text-sm' />
+          </Syntax.Viewport>
+        </Syntax.Content>
+      </Syntax.Root>
     </div>
   );
 };

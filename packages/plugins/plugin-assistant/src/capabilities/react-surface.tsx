@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { type ComponentProps } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
@@ -13,7 +13,7 @@ import { Blueprint, Prompt } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
-import { Obj } from '@dxos/echo';
+import { Feed, Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { AssistantSettings } from '#components';
@@ -23,7 +23,7 @@ import {
   ChatContainer,
   ChatDialog,
   AgentArticle,
-  AgentSettings,
+  AgentProperties,
   PromptArticle,
   PromptList,
   TracePanel,
@@ -37,8 +37,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'plugin-settings',
-        role: 'article',
-        filter: AppSurface.settingsArticle(meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Assistant.Settings>(subject.atom);
           return <AssistantSettings settings={settings} onSettingsChange={updateSettings} />;
@@ -57,17 +56,15 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'agent',
-        role: 'article',
-        filter: AppSurface.objectArticle(Agent.Agent),
+        filter: AppSurface.object(AppSurface.Article, Agent.Agent),
         component: ({ data, role }) => (
           <AgentArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
-        id: 'agent.companion.settings',
-        role: 'object-settings',
-        filter: AppSurface.objectSettings(Agent.Agent),
-        component: ({ data }) => <AgentSettings subject={data.subject} />,
+        id: 'agent-properties',
+        filter: AppSurface.object(AppSurface.ObjectProperties, Agent.Agent),
+        component: ({ data }) => <AgentProperties subject={data.subject} />,
       }),
       Surface.create({
         id: 'companion-chat',
@@ -94,9 +91,11 @@ export default Capability.makeModule(() =>
           data.subject === 'invocations',
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
-          const queueDxn = space?.properties.invocationTraceQueue?.dxn;
+          const feed = space?.properties.invocationTraceFeed?.target;
+          const queueDxn = feed ? Feed.getQueueDxn(feed) : undefined;
           // TODO(wittjosiah): Support invocation filtering for prompts.
           const target = Obj.instanceOf(Prompt.Prompt, data.companionTo) ? undefined : data.companionTo;
+
           return (
             <Panel.Root role={role} className='dx-document'>
               <Panel.Content asChild>
@@ -108,30 +107,26 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'blueprint',
-        role: 'article',
-        filter: AppSurface.objectArticle(Blueprint.Blueprint),
+        filter: AppSurface.object(AppSurface.Article, Blueprint.Blueprint),
         component: ({ data, role }) => (
           <BlueprintArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
         id: 'prompt',
-        role: 'article',
-        filter: AppSurface.objectArticle(Prompt.Prompt),
+        filter: AppSurface.object(AppSurface.Article, Prompt.Prompt),
         component: ({ data, role }) => (
           <PromptArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
         id: ASSISTANT_DIALOG,
-        role: 'dialog',
-        filter: AppSurface.componentDialog(ASSISTANT_DIALOG),
+        filter: AppSurface.component<ComponentProps<typeof ChatDialog>>(AppSurface.Dialog, ASSISTANT_DIALOG),
         component: ({ data }) => <ChatDialog {...data.props} />,
       }),
       Surface.create({
         id: 'trace',
-        role: 'deck-companion--trace',
-        filter: AppSurface.literalSection('trace'),
+        filter: AppSurface.literal(Surface.makeType<{ subject: string }>('deck-companion--trace'), 'trace'),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -148,8 +143,10 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'prompts',
-        role: 'prompts',
-        filter: AppSurface.anyObjectSection(),
+        filter: AppSurface.subject(
+          Surface.makeType<{ subject: Obj.Any; attendableId: string }>('prompts'),
+          Obj.isObject,
+        ),
         component: ({ data }) => <PromptList subject={data.subject} />,
       }),
     ]),

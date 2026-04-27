@@ -9,7 +9,8 @@ import * as Schema from 'effect/Schema';
 export const Settings = Schema.mutable(
   Schema.Struct({
     wireframe: Schema.optional(Schema.Boolean),
+    traceAll: Schema.optional(Schema.Boolean),
   }),
 );
 
-export type Settings = Schema.Schema.Type<typeof Settings>;
+export interface Settings extends Schema.Schema.Type<typeof Settings> {}

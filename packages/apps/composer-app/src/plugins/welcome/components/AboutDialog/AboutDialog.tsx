@@ -34,7 +34,7 @@ export const AboutDialog = () => {
       </Dialog.Header>
       <Dialog.Body>
         {/* TODO(burdon): Reconcile with plugin-status-bar */}
-        <Column.Content classNames='flex flex-col text-sm'>
+        <Column.Center classNames='flex flex-col text-sm'>
           <div role='none' className='flex items-center'>
             {t('version.label', { version: v })}
           </div>
@@ -56,7 +56,7 @@ export const AboutDialog = () => {
               }}
             />
           </p>
-        </Column.Content>
+        </Column.Center>
       </Dialog.Body>
       <Dialog.ActionBar>
         <Dialog.Close asChild>

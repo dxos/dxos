@@ -90,10 +90,10 @@ export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): DXN 
  * Example: `org.dxos.type.message`
  */
 // TODO(wittjosiah): Factor out to DXN spec.
-// TODO(wittjosiah): Switch to atproto NSID regex once legacy typenames are fully migrated:
-//   /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/
 export const TypenameSchema = Schema.String.pipe(
-  Schema.pattern(/^[a-zA-Z][a-zA-Z0-9]*(\.[a-zA-Z][a-zA-Z0-9-]*){2,}$/),
+  Schema.pattern(
+    /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/,
+  ),
 ).annotations({
   description: 'Fully qualified globally unique typename in reverse-DNS form.',
   example: 'org.dxos.type.message',
@@ -443,7 +443,6 @@ export const setDescriptionWithSchema = <S extends Schema.Schema.Any>(
  * Identifies if a property should be included in a form or not.
  * By default, all properties are included in forms, so this is opt-out.
  */
-// TODO(burdon): UI concern.
 export const FormInputAnnotationId = Symbol.for('@dxos/schema/annotation/FormInput');
 export const FormInputAnnotation = createAnnotationHelper<boolean>(FormInputAnnotationId);
 

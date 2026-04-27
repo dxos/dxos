@@ -110,8 +110,64 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
 
     // NOTE: Assumes commits are in topological order.
     const getCommitIndex = (id: string) => commits.findIndex((c) => c.id === id);
-    const getBranchIndex = (branch: string): number => branches.findIndex((b) => b === branch);
     const getBranch = (id: string) => commits.find((c) => c.id === id)?.branch;
+
+    /**
+     * Assign branches to lanes, reusing lanes once a branch has been merged.
+     * Unmerged branches keep their lane active (they may still be in progress).
+     */
+    const { branchLane, laneCount } = useMemo(() => {
+      const visibleBranches = new Set(branches);
+
+      const commitBranch = new Map<string, string>();
+      for (const commit of commits) {
+        commitBranch.set(commit.id, commit.branch);
+      }
+
+      // Find the row at which each branch is merged by another branch.
+      const mergeRow = new Map<string, number>();
+      for (let row = 0; row < commits.length; row++) {
+        const commit = commits[row]!;
+        for (const parentId of commit.parents ?? []) {
+          const parentBranch = commitBranch.get(parentId);
+          if (parentBranch && parentBranch !== commit.branch && visibleBranches.has(parentBranch)) {
+            mergeRow.set(parentBranch, Math.max(mergeRow.get(parentBranch) ?? row, row));
+          }
+        }
+      }
+
+      const branchLane = new Map<string, number>();
+      if (branches.length > 0) {
+        branchLane.set(branches[0]!, 0);
+      }
+
+      const activeLanes = new Set<number>([0]);
+      let maxLane = 0;
+
+      for (let row = 0; row < commits.length; row++) {
+        const commit = commits[row]!;
+        if (visibleBranches.has(commit.branch) && !branchLane.has(commit.branch)) {
+          let lane = 1;
+          while (activeLanes.has(lane)) {
+            lane++;
+          }
+          branchLane.set(commit.branch, lane);
+          activeLanes.add(lane);
+          maxLane = Math.max(maxLane, lane);
+        }
+
+        // Release lanes for branches that have been merged at this row.
+        for (const [branch, endRow] of mergeRow) {
+          if (endRow === row && branch !== branches[0] && branchLane.has(branch)) {
+            activeLanes.delete(branchLane.get(branch)!);
+          }
+        }
+      }
+
+      return { branchLane, laneCount: maxLane + 1 };
+    }, [commits, branches]);
+
+    const getBranchIndex = (branch: string): number => branchLane.get(branch) ?? -1;
 
     /**
      * Create spans for each branch.
@@ -218,7 +274,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
 
     return (
       <ScrollContainer.Root pin ref={forwardedRef}>
-        <ScrollContainer.Content classNames={classNames} thin padding centered>
+        <ScrollContainer.Content classNames={classNames} thin>
           <ScrollContainer.Viewport>
             <div
               role='none'
@@ -264,7 +320,8 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                     >
                       <div role='none' className='px-1'>
                         <LineVector
-                          branches={branches}
+                          branchLane={branchLane}
+                          laneCount={laneCount}
                           spans={spans}
                           index={index}
                           commit={commit}
@@ -336,7 +393,8 @@ const levelColors: Record<LogLevel, string> = {
 };
 
 type LineVectorProps = {
-  branches: readonly string[];
+  branchLane: Map<string, number>;
+  laneCount: number;
   spans: Map<string, Span>;
   index: number;
   commit: Commit;
@@ -347,10 +405,10 @@ type LineVectorProps = {
 /**
  * SVG for node and connector paths.
  */
-const LineVector = ({ branches, spans, index, commit, currentCommit, options }: LineVectorProps) => {
+const LineVector = ({ branchLane, laneCount, spans, index, commit, currentCommit, options }: LineVectorProps) => {
   const halfHeight = options.lineHeight / 2;
   const cx = (c: number) => c * options.columnWidth + options.columnWidth / 2;
-  const getBranchIndex = (branch: string): number => branches.findIndex((b) => b === branch);
+  const getBranchIndex = (branch: string): number => branchLane.get(branch) ?? -1;
 
   // Create connector path.
   const createPath = (index: number, commit: Commit, branch: string, span: Span): string | undefined => {
@@ -387,7 +445,7 @@ const LineVector = ({ branches, spans, index, commit, currentCommit, options }: 
     }
   };
 
-  const col = branches.findIndex((branch) => branch === commit.branch);
+  const col = getBranchIndex(commit.branch);
   const color = colors[col % colors.length];
   const opacity = (branch: string | undefined) => [
     'duration-500 transition-opacity',
@@ -395,17 +453,22 @@ const LineVector = ({ branches, spans, index, commit, currentCommit, options }: 
   ];
 
   return (
-    <svg width={branches.length * options.columnWidth} height={options.lineHeight}>
+    <svg width={laneCount * options.columnWidth} height={options.lineHeight}>
       {/* Connectors */}
-      {branches.map((branch, col) => {
-        const color = colors[col % colors.length];
-        const span = spans.get(branch);
-        const path = span && createPath(index, commit, branch, span);
+      {[...spans.entries()].map(([branch, span]) => {
+        const lane = getBranchIndex(branch);
+        if (lane < 0) {
+          return null;
+        }
+        const color = colors[lane % colors.length];
+        const path = createPath(index, commit, branch, span);
         if (!path) {
           return null;
         }
 
-        return <path key={col} d={path} fill='none' className={mx(options.lineStyle, color.stroke, opacity(branch))} />;
+        return (
+          <path key={branch} d={path} fill='none' className={mx(options.lineStyle, color.stroke, opacity(branch))} />
+        );
       })}
 
       {/* Node */}

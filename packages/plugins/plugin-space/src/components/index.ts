@@ -6,8 +6,7 @@ import { type ComponentType, lazy } from 'react';
 
 export * from './AwaitingObject';
 export * from './CreateDialog';
-export * from './ObjectDetails';
-export * from './ObjectForm';
+export * from './ForeignKeys';
 export * from './SyncStatus';
 
-export const SpacePluginSettings: ComponentType<any> = lazy(() => import('./SpacePluginSettings'));
+export const SpaceSettings: ComponentType<any> = lazy(() => import('./SpaceSettings'));

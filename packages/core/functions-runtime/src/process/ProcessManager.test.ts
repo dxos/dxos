@@ -5,6 +5,7 @@
 import { Registry } from '@effect-atom/atom';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { describe, it } from '@effect/vitest';
+import * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -14,8 +15,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { Database } from '@dxos/echo';
-import { Process, ServiceResolver, TracingService } from '@dxos/functions';
-import { Trace } from '@dxos/functions';
+import { Process, ServiceResolver, Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Organization } from '@dxos/types';
@@ -55,7 +55,7 @@ const handlers = OperationHandlerSet.make(
   Failing.pipe(
     Operation.withHandler(
       Effect.fn(function* () {
-        return yield* Effect.die('Failed');
+        return yield* Effect.die('Test Error');
       }),
     ),
   ),
@@ -119,7 +119,6 @@ const TestLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
   ),
   Layer.provide(KeyValueStore.layerMemory),
   Layer.provide(OperationHandlerSet.provide(handlers)),
-  Layer.provide(TracingService.layerNoop),
   Layer.provideMerge(Registry.layer),
   Layer.provide(Trace.layerNoop),
 );
@@ -329,6 +328,44 @@ describe('ProcessManagerImpl', () => {
       }, Effect.provide(TestLayer)),
     );
   });
+
+  it.effect(
+    'runAndExit on successful operation',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.ProcessManagerService;
+      const handle = yield* manager.spawn(Process.fromOperation(Double, handlers));
+      const outputs = yield* handle.runAndExit({ inputs: [{ value: 11 }] }).pipe(Stream.runCollect);
+      expect(Chunk.toReadonlyArray(outputs)).toEqual([22]);
+      expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'runAndExit on failing operation',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.ProcessManagerService;
+      const handle = yield* manager.spawn(Process.fromOperation(Failing, handlers));
+      const exit = yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
+      expect(Exit.isFailure(exit)).toEqual(true);
+      expect(exit).toEqual(Exit.die('Error: Test Error'));
+      expect(handle.status.state).toEqual(Process.State.FAILED);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'runAndExit on interrupted operation',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.ProcessManagerService;
+      const handle = yield* manager.spawn(makeWaitingExecutable());
+      const collectFiber = yield* handle.runAndExit({ inputs: [] }).pipe(Stream.runCollect, Effect.fork);
+      yield* Fiber.interrupt(collectFiber);
+      const exit = yield* Fiber.join(collectFiber).pipe(Effect.exit);
+      expect(Exit.isFailure(exit)).toEqual(true);
+      if (Exit.isFailure(exit)) {
+        expect(Cause.isInterruptedOnly(exit.cause)).toEqual(true);
+      }
+    }, Effect.provide(TestLayer)),
+  );
 });
 
 describe('ProcessOperationInvoker', () => {
@@ -373,7 +410,7 @@ describe('ProcessOperationInvoker', () => {
       const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
       const fiber = yield* invoker.invokeFiber(Failing, undefined);
       const output = yield* fiber.await;
-      expect(output).toEqual(Exit.die('Failed'));
+      expect(output).toEqual(Exit.die('Test Error'));
     }, Effect.provide(TestLayer)),
   );
 });

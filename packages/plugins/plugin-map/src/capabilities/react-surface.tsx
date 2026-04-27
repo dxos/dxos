@@ -25,8 +25,10 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'surface.map',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section'],
-        filter: AppSurface.objectArticle(Map.Map),
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Map.Map),
+          AppSurface.object(AppSurface.Section, Map.Map),
+        ),
         component: ({ data, role }) => {
           const state = useAtomCapability(MapCapabilities.State);
           const [center, setCenter] = useState<LatLngLiteral | undefined>(undefined);
@@ -50,10 +52,9 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'surface.object-settings',
-        role: 'object-settings',
+        id: 'surface.object-properties',
         position: 'hoist',
-        filter: AppSurface.objectSettings(Map.Map),
+        filter: AppSurface.object(AppSurface.ObjectProperties, Map.Map),
         component: ({ data }) => <MapViewEditor object={data.subject} />,
       }),
       Surface.create({

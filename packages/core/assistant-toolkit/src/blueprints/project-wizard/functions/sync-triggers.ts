@@ -52,7 +52,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
     );
 
     // Remove all existing triggers — they will be recreated with the current config.
-    // This ensures operation and concurrency stay in sync when useQualifyingAgent is toggled.
+    // This ensures operation and concurrency stay in sync when filterEvents is toggled.
     for (const trigger of triggers) {
       yield* Database.remove(trigger);
     }
@@ -84,6 +84,8 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
         continue;
       }
 
+      const filterEvents = agent.filterEvents ?? true;
+
       yield* Database.add(
         Trigger.make({
           [Obj.Parent]: agent,
@@ -94,21 +96,18 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
             ],
           },
           enabled: true,
-          spec: {
-            kind: 'queue',
-            queue: queueDxn.toString(),
-          },
-          function: Ref.make(Operation.serialize(agent.useQualifyingAgent ? Qualifier : AgentWorker)),
+          spec: Trigger.specQueue(queueDxn.toString()),
+          function: Ref.make(Operation.serialize(filterEvents ? Qualifier : AgentWorker)),
           input: {
             agent: Ref.make(agent),
             event: '{{event}}',
           },
-          concurrency: agent.useQualifyingAgent ? 5 : undefined,
+          concurrency: filterEvents ? 5 : undefined,
         }),
       );
     }
 
-    if (agent.useQualifyingAgent && agent.queue) {
+    if ((agent.filterEvents ?? true) && agent.queue) {
       yield* Database.add(
         Trigger.make({
           [Obj.Parent]: agent,
@@ -123,10 +122,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
           },
           function: Ref.make(Operation.serialize(AgentWorker)),
           enabled: true,
-          spec: {
-            kind: 'queue',
-            queue: agent.queue.dxn.toString(),
-          },
+          spec: Trigger.specQueue(agent.queue.dxn.toString()),
           input: {
             agent: Ref.make(agent),
             event: '{{event}}',

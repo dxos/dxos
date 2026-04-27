@@ -5,13 +5,12 @@
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { useLayout, type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { AttentionOperation } from '@dxos/plugin-attention/operations';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
+import { invariant } from '@dxos/invariant';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -24,12 +23,12 @@ import { HasSubject, Message } from '@dxos/types';
 import { type MessageStackActionHandler, MessageStack } from '#components';
 import { meta } from '#meta';
 import { InboxOperation } from '#operations';
-import { type Mailbox } from '#types';
+import { InboxCapabilities, type Mailbox } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { getMailboxMessagePath } from '../../paths';
 import { sortByCreated } from '../../util';
-import { NewMailbox } from './NewMailbox';
+import { InitializeMailbox } from './InitializeMailbox';
 
 export type MailboxArticleProps = AppSurface.ObjectArticleProps<
   Mailbox.Mailbox,
@@ -41,11 +40,10 @@ export type MailboxArticleProps = AppSurface.ObjectArticleProps<
 export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
+  const settings = useAtomCapability(InboxCapabilities.Settings);
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
-  const db = Obj.getDatabase(mailbox);
-
-  // TODO(burdon): Review.
   const currentId = useSelected(id, 'single');
+  const db = Obj.getDatabase(mailbox);
 
   // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
   useObject(mailbox);
@@ -77,6 +75,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   }, [tags]);
   const parser = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
   useEffect(() => setFilter(parser.build(filterText).filter), [filterText, parser]);
+
+  const showItem = useShowItem();
+  const filterEditorRef = useRef<EditorController>(null);
+  const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
 
   // Build message-to-tags map from HasSubject relations incrementally.
   const messageTagsMap = useMessageTagsMap(db, feed);
@@ -122,40 +124,22 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     return () => clearTimeout(t);
   }, [sortedMessages]);
 
-  const layout = useLayout();
-  const filterEditorRef = useRef<EditorController>(null);
-  const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
-
   const handleAction = useCallback<MessageStackActionHandler>(
     (action) => {
       switch (action.type) {
-        case 'current': {
+        // 'current' fires when a specific message is clicked;
+        // 'current-thread' fires when the enclosing thread is clicked (with its latest message).
+        case 'current':
+        case 'current-thread': {
           const message = sortedMessages.find((message) => message.id === action.messageId);
-          void invokePromise(AttentionOperation.Select, {
+          invariant(message);
+          invariant(db);
+          void showItem({
             contextId: id,
-            selection: { mode: 'single', id: message?.id },
+            selectionId: message.id,
+            companion: linkedSegment('message'),
+            path: getMailboxMessagePath(db.spaceId, mailbox.id, message.id),
           });
-
-          const companion = linkedSegment('message');
-          if (layout.mode === 'simple') {
-            // Simple layout: open drawer with message companion.
-            void invokePromise(LayoutOperation.UpdateComplementary, {
-              subject: companion,
-              state: 'expanded',
-            });
-          } else if (layout.mode === 'multi' && message && db) {
-            // Multi deck: open the message plank beside this mailbox (pivot).
-            void invokePromise(LayoutOperation.Open, {
-              subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
-              pivotId: id,
-              navigation: 'immediate',
-            });
-          } else if (message) {
-            // Solo deck: show message in the companion panel.
-            void invokePromise(DeckOperation.ChangeCompanion, {
-              companion,
-            });
-          }
           break;
         }
 
@@ -165,9 +149,9 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             const tags = prevFilterText.split(/\s+/).filter(Boolean);
             if (tags.at(-1)?.toLowerCase() === '#' + action.label.toLowerCase()) {
               return prevFilterText;
+            } else {
+              return [prevFilterText.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ';
             }
-
-            return [prevFilterText.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ';
           });
           filterEditorRef.current?.focus();
           break;
@@ -185,7 +169,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         }
       }
     },
-    [db, id, layout.mode, mailbox, sortedMessages, invokePromise],
+    [db, id, mailbox, sortedMessages, invokePromise, showItem],
   );
 
   const handleClear = useCallback(() => {
@@ -201,25 +185,25 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             <Panel.Toolbar asChild>
               <Menu.Toolbar>
                 <QueryEditor
-                  ref={filterEditorRef}
                   classNames='grow min-w-0 ps-1'
                   db={db}
                   tags={tagMap}
                   value={filterText}
                   onChange={setFilterText}
+                  ref={filterEditorRef}
                 />
                 <IconButton
-                  ref={filterSaveButtonRef}
                   disabled={!filter}
-                  label={t('mailbox-toolbar-save-button.label')}
                   icon='ph--folder-plus--regular'
                   iconOnly
+                  label={t('mailbox-toolbar-save-button.label')}
                   onClick={() => filter && handleAction({ type: 'save', filter: filterText })}
+                  ref={filterSaveButtonRef}
                 />
                 <IconButton
-                  label={t('mailbox-toolbar-clear-button.label')}
                   icon='ph--x--regular'
                   iconOnly
+                  label={t('mailbox-toolbar-clear-button.label')}
                   onClick={() => handleClear()}
                 />
               </Menu.Toolbar>
@@ -229,13 +213,14 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       )}
       <Panel.Content asChild>
         {isEmpty ? (
-          <NewMailbox mailbox={mailbox} />
+          <InitializeMailbox mailbox={mailbox} />
         ) : (
           <MessageStack
             id={id}
             messages={messagesWithTags}
             currentId={currentId}
             labels={mergedLabels}
+            threads={settings.threads}
             onAction={handleAction}
           />
         )}

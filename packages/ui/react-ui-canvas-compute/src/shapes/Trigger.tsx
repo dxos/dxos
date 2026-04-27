@@ -114,21 +114,16 @@ const createTriggerSpec = (props: { triggerKind?: Trigger.Kind; spaceId?: SpaceI
   const kind = props.triggerKind ?? 'email';
   switch (kind) {
     case 'timer':
-      return { kind: 'timer', cron: '*/10 * * * * *' } satisfies Trigger.TimerSpec;
+      return Trigger.specTimer('*/10 * * * * *');
     case 'webhook':
-      return { kind: 'webhook', method: 'POST' } satisfies Trigger.WebhookSpec;
+      return Trigger.specWebhook({ method: 'POST' });
     case 'subscription':
-      return {
-        kind: 'subscription',
-        query: {
-          ast: Query.select(Filter.nothing()).ast,
-        },
-      } satisfies Trigger.SubscriptionSpec;
+      return Trigger.specSubscription(Query.select(Filter.nothing()));
     case 'email':
-      return { kind: 'email' } satisfies Trigger.EmailSpec;
+      return Trigger.specEmail();
     case 'queue': {
       const dxn = new DXN(DXN.kind.QUEUE, ['data', props.spaceId ?? SpaceId.random(), Obj.ID.random()]).toString();
-      return { kind: 'queue', queue: dxn } satisfies Trigger.QueueSpec;
+      return Trigger.specQueue(dxn);
     }
   }
 };

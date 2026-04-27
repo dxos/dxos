@@ -9,6 +9,7 @@ export { DXN } from '@dxos/keys';
 export * as Annotation from './Annotation';
 export * as Database from './Database';
 export * as Entity from './Entity';
+// TODO(burdon): Rename to Error (less problematic than Obj/Object).
 export * as Err from './Err';
 export * as Feed from './Feed';
 export * as Filter from './Filter';
@@ -16,6 +17,7 @@ export * as Format from './Format';
 export * as Hypergraph from './Hypergraph';
 export * as JsonSchema from './JsonSchema';
 export * as Key from './Key';
+export * as Migration from './Migration';
 export * as Obj from './Obj';
 export * as Order from './Order';
 export * as Query from './Query';

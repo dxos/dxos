@@ -7,6 +7,7 @@ tasks:
       - ^:compile
     inputs:
       - vite.config.ts
+      - '*.html'
       - '@group(production)'
       - $CONFIG_DYNAMIC
       - $DX_EDGE_BASE_URL
@@ -16,6 +17,8 @@ tasks:
       - $DX_IPDATA_API_KEY
       - $DX_LABS
       - $DX_MINIFY
+      - $DX_OTEL_ENDPOINT
+      - $DX_OTEL_HEADERS
       - $DX_PWA
       - $DX_POSTHOG_API_KEY
       - $DX_POSTHOG_API_HOST

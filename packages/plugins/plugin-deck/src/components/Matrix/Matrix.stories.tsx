@@ -9,7 +9,7 @@ import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { Graph } from '@dxos/app-graph';
-import { AppActivationEvents } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
@@ -18,12 +18,12 @@ import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { type MosaicTileProps, Mosaic } from '@dxos/react-ui-mosaic';
 import { StackContext } from '@dxos/react-ui-stack';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
-import { DeckState } from '#capabilities';
+import { DeckState, OperationHandler } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
 
 import { Plank } from '../../containers/Plank';
@@ -37,6 +37,9 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
     id: Capability.getModuleTag(DeckState),
     activatesOn: AppActivationEvents.AppGraphReady,
     activate: () => DeckState(),
+  }),
+  AppPlugin.addOperationHandlerModule({
+    activate: OperationHandler,
   }),
   Plugin.make,
 );
@@ -55,13 +58,15 @@ const StoryTile = (props: MosaicTileProps<Obj.Any>) => {
               <p>{Obj.getLabel(props.data)}</p>
             </Toolbar.Root>
           </Panel.Toolbar>
-          <Json.Root data={props.data}>
+          <Syntax.Root data={props.data}>
             <Panel.Content asChild>
-              <Json.Content>
-                <Json.Data />
-              </Json.Content>
+              <Syntax.Content>
+                <Syntax.Viewport>
+                  <Syntax.Code />
+                </Syntax.Viewport>
+              </Syntax.Content>
             </Panel.Content>
-          </Json.Root>
+          </Syntax.Root>
         </Panel.Root>
       </Focus.Item>
     </Mosaic.Tile>
@@ -106,11 +111,13 @@ const TestExtension = Capability.contributes(
       }
 
       return (
-        <Json.Root data={subject}>
-          <Json.Content>
-            <Json.Data />
-          </Json.Content>
-        </Json.Root>
+        <Syntax.Root data={subject}>
+          <Syntax.Content>
+            <Syntax.Viewport>
+              <Syntax.Code />
+            </Syntax.Viewport>
+          </Syntax.Content>
+        </Syntax.Root>
       );
     },
   }),

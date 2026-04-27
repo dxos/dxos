@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Event, synchronized } from '@dxos/async';
 import { type ClientServices, clientServiceBundle } from '@dxos/client-protocol';
-import { type Config } from '@dxos/config';
+import { type Config, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
@@ -27,7 +27,7 @@ import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
+import { trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 import { EdgeAgentServiceImpl } from '../agents';
@@ -86,8 +86,6 @@ export class ClientServicesHost {
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
   private readonly _systemService: SystemServiceImpl;
   private readonly _loggingService: LoggingServiceImpl;
-  private readonly _tracingService = TRACE_PROCESSOR.createTraceSender();
-
   private readonly _statusUpdate = new Event<void>();
 
   private _config?: Config;
@@ -175,7 +173,6 @@ export class ClientServicesHost {
 
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
       SystemService: this._systemService,
-      TracingService: this._tracingService,
     });
   }
 
@@ -258,7 +255,7 @@ export class ClientServicesHost {
 
     const endpoint = config?.get('runtime.services.edge.url');
     if (endpoint) {
-      const clientTag = config?.get('runtime.app.env.DX_EDGE_CLIENT_TAG');
+      const clientTag = resolveTelemetryTag(config);
       this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint, clientTag });
       this._edgeHttpClient = new EdgeHttpClient(endpoint, { clientTag });
     }
@@ -345,7 +342,7 @@ export class ClientServicesHost {
       this._serviceContext.identityManager,
       this._serviceContext.recoveryManager,
       this._serviceContext.keyring,
-      (params) => this._createIdentity(params),
+      (params, ctx) => this._createIdentity(params, ctx),
       (profile) => this._serviceContext.broadcastProfileUpdate(profile),
     );
 
@@ -365,6 +362,7 @@ export class ClientServicesHost {
       SpacesService: new SpacesServiceImpl(
         this._serviceContext.identityManager,
         this._serviceContext.spaceManager,
+        this._serviceContext.echoHost,
         dataSpaceManagerProvider,
       ),
 
@@ -379,7 +377,6 @@ export class ClientServicesHost {
       ),
 
       LoggingService: this._loggingService,
-      TracingService: this._tracingService,
 
       // TODO(burdon): Move to new protobuf definitions.
       DevtoolsHost: new DevtoolsServiceImpl({
@@ -461,8 +458,8 @@ export class ClientServicesHost {
     await this._callbacks?.onReset?.();
   }
 
-  private async _createIdentity(params: CreateIdentityOptions) {
-    const identity = await this._serviceContext.createIdentity(params);
+  private async _createIdentity(params: CreateIdentityOptions, ctx?: Context) {
+    const identity = await this._serviceContext.createIdentity(params, ctx);
     await this._serviceContext.initialized.wait();
     return identity;
   }
