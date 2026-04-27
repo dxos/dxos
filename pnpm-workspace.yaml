@@ -754,3 +754,4 @@ trustPolicyExclude:
   - rollup@3.30.0
   - mermaid@10.9.4
   - undici-types@6.20.0
+  - semver
