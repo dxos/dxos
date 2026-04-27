@@ -19,7 +19,6 @@ const make = () =>
         InboxOperation.ClassifyEmail,
         InboxOperation.DraftEmail,
         InboxOperation.ReadEmail,
-        InboxOperation.SummarizeMailbox,
         InboxOperation.GoogleMailSync,
       ],
       tools: [],

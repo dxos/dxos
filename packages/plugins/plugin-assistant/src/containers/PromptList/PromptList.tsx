@@ -6,7 +6,8 @@ import React from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { DatabaseBlueprint, MarkdownBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
+import { DatabaseBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
+import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';

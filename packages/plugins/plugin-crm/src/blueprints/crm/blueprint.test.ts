@@ -6,7 +6,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AgentService } from '@dxos/assistant';
-import { DatabaseBlueprint, DatabaseHandlers, ResearchBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
+import { DatabaseBlueprint, DatabaseHandlers, WebSearchBlueprint } from '@dxos/assistant-toolkit';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Feed, Obj } from '@dxos/echo';
@@ -42,7 +42,7 @@ const TestLayer = AssistantTestLayer({
     Person.Person,
     ProfileOf.ProfileOf,
   ],
-  blueprints: [CrmBlueprint.make(), DatabaseBlueprint.make(), ResearchBlueprint.make(), WebSearchBlueprint.make()],
+  blueprints: [CrmBlueprint.make(), DatabaseBlueprint.make(), WebSearchBlueprint.make()],
   tracing: 'pretty',
 });
 
@@ -56,7 +56,6 @@ describe('CRM Blueprint', () => {
             blueprints: [
               CrmBlueprint.make(),
               DatabaseBlueprint.make(),
-              ResearchBlueprint.make(),
               WebSearchBlueprint.make(),
             ],
           });
@@ -87,7 +86,6 @@ describe('CRM Blueprint', () => {
           blueprints: [
             CrmBlueprint.make(),
             DatabaseBlueprint.make(),
-            ResearchBlueprint.make(),
             WebSearchBlueprint.make(),
           ],
         });

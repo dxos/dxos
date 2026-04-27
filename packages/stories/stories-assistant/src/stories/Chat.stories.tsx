@@ -7,15 +7,8 @@ import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import {
-  AgentPrompt,
-  LinearBlueprint,
-  MarkdownBlueprint,
-  ResearchBlueprint,
-  ResearchDataTypes,
-  ResearchGraph,
-  WebSearchBlueprint,
-} from '@dxos/assistant-toolkit';
+import { AgentPrompt, LinearBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
+import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { View } from '@dxos/echo';
@@ -77,6 +70,9 @@ import {
   organizations,
   testTypes,
 } from '../testing';
+
+/** Echo types used by research-related stories (replaces removed ResearchDataTypes). */
+const researchStoryEchoTypes = [Person.Person, Organization.Organization, Message.Message];
 
 const storybook: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Chat',
@@ -540,7 +536,7 @@ export const WithResearch: Story = {
       };
     },
     config: config.remote,
-    types: [...ResearchDataTypes, ResearchGraph.ResearchGraph, Feed.Feed],
+    types: [...researchStoryEchoTypes, Feed.Feed],
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
       space.db.add(Obj.make(Organization.Organization, { name: 'BlueYard Capital' }));
@@ -558,7 +554,7 @@ export const WithResearch: Story = {
     blueprints: [
       // AssistantBlueprint.key
       // TODO(burdon): Too many open-ended tools (querying for tools, querying for schema) confuses the model.
-      ResearchBlueprint.key,
+      WebSearchBlueprint.key,
     ],
   },
 };
@@ -705,7 +701,7 @@ export const WithResearchQueue: Story = {
   decorators: getDecorators({
     plugins: [],
     config: config.remote,
-    types: [...ResearchDataTypes, ResearchGraph.ResearchGraph, ResearchInputQueue, Feed.Feed],
+    types: [...researchStoryEchoTypes, ResearchInputQueue, Feed.Feed],
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
       const feed = space.db.add(Feed.make());
@@ -725,7 +721,7 @@ export const WithResearchQueue: Story = {
           output: Schema.Any,
           instructions:
             'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
-          blueprints: [Ref.make(ResearchBlueprint.make())],
+          blueprints: [Ref.make(WebSearchBlueprint.make())],
         }),
       );
 
@@ -747,7 +743,7 @@ export const WithResearchQueue: Story = {
       [ResearchInputModule, ResearchOutputModule],
       [TriggersModule, InvocationsModule, PromptModule, GraphModule],
     ],
-    blueprints: [ResearchBlueprint.key],
+    blueprints: [WebSearchBlueprint.key],
   },
 };
 
@@ -857,7 +853,7 @@ export const WithProject: Story = {
 
             {{organization}}
           `,
-          blueprints: [Ref.make(ResearchBlueprint.make())],
+          blueprints: [Ref.make(WebSearchBlueprint.make())],
         }),
       );
 
@@ -1008,7 +1004,7 @@ export const WithPrompt: Story = {
           output: Schema.Any,
           instructions:
             'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
-          blueprints: [Ref.make(ResearchBlueprint.make())],
+          blueprints: [Ref.make(WebSearchBlueprint.make())],
         }),
       );
 
