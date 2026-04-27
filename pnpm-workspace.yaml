@@ -23,12 +23,12 @@ catalog:
   '@atlaskit/pragmatic-drag-and-drop-hitbox': 1.1.0
   '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator': 3.2.10
   '@atproto/api': ^0.19.5
-  '@automerge/automerge': 3.2.5
-  '@automerge/automerge-repo': 2.6.0-subduction.10
-  '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.10
-  '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.10
-  '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.10
-  '@automerge/automerge-subduction': 0.7.0
+  '@automerge/automerge': 3.2.6
+  '@automerge/automerge-repo': 2.6.0-subduction.14
+  '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.14
+  '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.14
+  '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.14
+  '@automerge/automerge-subduction': 0.8.1
   '@babel/core': ^7.18.13
   '@babel/runtime': ^7.9.6
   '@babylonjs/core': ^7.52.5
