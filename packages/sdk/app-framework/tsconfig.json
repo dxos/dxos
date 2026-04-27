@@ -54,9 +54,6 @@
       "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/operation"
-    },
-    {
       "path": "../../ui/react-primitives/react-error-boundary"
     },
     {

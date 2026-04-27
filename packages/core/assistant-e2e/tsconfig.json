@@ -31,16 +31,10 @@
       "path": "../assistant-toolkit"
     },
     {
-      "path": "../blueprints"
-    },
-    {
       "path": "../compute"
     },
     {
       "path": "../echo/echo"
-    },
-    {
-      "path": "../operation"
     }
   ]
 }

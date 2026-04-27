@@ -58,16 +58,10 @@
       "path": "../../core/assistant"
     },
     {
-      "path": "../../core/blueprints"
-    },
-    {
       "path": "../../core/compute"
     },
     {
       "path": "../../core/echo/echo"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"

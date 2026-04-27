@@ -51,9 +51,6 @@
       "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/operation"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {

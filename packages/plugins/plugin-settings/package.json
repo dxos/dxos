@@ -49,7 +49,6 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {

@@ -27,20 +27,6 @@ This single surface subsumes:
 The HyperFormula-based compute graph that previously lived here moved to
 [`@dxos/compute-hyperformula`](../compute-hyperformula).
 
-## Subpath imports
-
-For consumers that prefer per-primitive entry points, each primitive is also
-available as a subpath:
-
-```ts
-import { Blueprint } from '@dxos/compute/Blueprint';
-import { Operation } from '@dxos/compute/Operation';
-import * as Trace from '@dxos/compute/Trace';
-```
-
-Available subpaths: `Operation`, `Blueprint`, `Prompt`, `Template`, `Trigger`,
-`Script`, `Process`, `Trace`, `ServiceResolver`, `StorageService`.
-
 ## Roadmap
 
 - Stage 1 (current): re-exports — consumers depend only on `@dxos/compute`

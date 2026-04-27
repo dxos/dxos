@@ -30,19 +30,10 @@
       "path": "../../core/assistant"
     },
     {
-      "path": "../../core/blueprints"
-    },
-    {
       "path": "../../core/compute"
     },
     {
       "path": "../../core/echo/echo"
-    },
-    {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../ui/react-ui"

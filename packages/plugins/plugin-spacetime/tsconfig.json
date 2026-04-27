@@ -39,9 +39,6 @@
       "path": "../../core/echo/echo-react"
     },
     {
-      "path": "../../core/operation"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {

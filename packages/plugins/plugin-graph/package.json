@@ -40,7 +40,6 @@
     "@dxos/compute": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {

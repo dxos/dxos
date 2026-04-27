@@ -63,9 +63,6 @@
       "path": "../../core/assistant-toolkit"
     },
     {
-      "path": "../../core/blueprints"
-    },
-    {
       "path": "../../core/compute"
     },
     {
@@ -84,13 +81,7 @@
       "path": "../../core/echo/echo-query"
     },
     {
-      "path": "../../core/functions"
-    },
-    {
       "path": "../../core/functions-runtime"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"

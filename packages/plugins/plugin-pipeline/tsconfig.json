@@ -51,12 +51,6 @@
       "path": "../../core/echo/echo-query"
     },
     {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/operation"
-    },
-    {
       "path": "../../devtools/devtools"
     },
     {
