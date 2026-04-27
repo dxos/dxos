@@ -650,7 +650,7 @@ catalog:
   workbox-window: ^7.3.0
   workerize-loader: ^2.0.2
   wrangler: ^4.59.1
-  ws: ^8.18.3
+  ws: ^8.17.1
   wtfnode: ^0.10.0
   xstate: ^4.37.0
   yaml: ^2.8.2
