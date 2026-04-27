@@ -320,7 +320,7 @@ export class EchoHost extends Resource {
   // TODO(dmaretskyi): Change to document id.
   async openSpaceRoot(ctx: Context, spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, automergeUrl, {
+    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, automergeUrl, {
       fetchFromNetwork: true,
     });
     const query = this._automergeHost.findWithProgress<DatabaseDirectory>(handle.documentId);

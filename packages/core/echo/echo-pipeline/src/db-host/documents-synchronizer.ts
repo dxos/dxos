@@ -177,13 +177,13 @@ export class DocumentsSynchronizer extends Resource {
 
     const syncState = this._syncStates.get(documentId);
     invariant(syncState, 'Sync state for document not found');
-    const headsBefore = A.getHeads(syncState.handle.doc());
+    const headsBefore = A.getHeads(syncState.docQuery.handle.doc());
     // This will update corresponding handle in the repo.
     await this._params.automergeHost.createDoc(mutation, { documentId, preserveHistory: true });
 
     if (A.equals(headsBefore, syncState.lastSentHead)) {
       // No new mutations were discovered on network, so we do not need to send updates from worker to client.
-      syncState.lastSentHead = A.getHeads(syncState.handle.doc());
+      syncState.lastSentHead = A.getHeads(syncState.docQuery.handle.doc());
     }
   }
 }

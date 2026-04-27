@@ -479,8 +479,9 @@ export class AutomergeHost extends Resource {
       log('re-indexing heads for document', { documentId });
       // `Repo.find()` resolves on `'ready'` and rejects on `'unavailable'`,
       // so the handle is guaranteed to hold data here.
+      let handle: DocHandle<any>;
       try {
-        const handle = await this._repo.find(documentId);
+        handle = await this._repo.find(documentId);
       } catch (err) {
         log.error('failed to find document', { documentId, err });
         continue;
