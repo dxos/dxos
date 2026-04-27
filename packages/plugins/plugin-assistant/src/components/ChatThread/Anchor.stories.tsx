@@ -3,75 +3,89 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-// Side-effect import registers the `<dx-anchor>` custom element. Without this `<DxAnchor>`
-// renders as `HTMLUnknownElement` and never dispatches `DxAnchorActivate` on click.
-import '@dxos/lit-ui';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { Database, Filter, Obj } from '@dxos/echo';
 import { DxAnchor } from '@dxos/lit-ui/react';
-import { Card, Popover } from '@dxos/react-ui';
-import { EditorPreviewProvider, useEditorPreview } from '@dxos/react-ui-editor';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { PreviewPlugin } from '@dxos/plugin-preview';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { Organization } from '@dxos/types';
 
 /**
- * Minimal end-to-end demo of the click → popover flow that `EditorPreviewProvider` wires up.
+ * Production-style click → popover demo.
  *
- * Pieces:
- *  - `<DxAnchor dxn=…>label</DxAnchor>`: a React wrapper around the `<dx-anchor>` Lit element
- *    that fires `DxAnchorActivate` on click.
- *  - `<EditorPreviewProvider onLookup>`: owns the `Popover.Root`, listens for
- *    `DxAnchorActivate` events on its inner host, runs `onLookup(link)` to resolve target data,
- *    then opens the popover anchored to the clicked element.
- *  - `<PreviewCard>`: reads the resolved target via `useEditorPreview` and renders content
- *    into the same `Popover.Root` via `Popover.Portal`.
+ * Wires up the same chain Composer uses:
+ * - `<DxAnchor dxn=…>label</DxAnchor>` fires `DxAnchorActivate` on click.
+ * - `PreviewPlugin`'s `preview-popover` capability listens for the event, resolves the DXN
+ *   to a real ECHO object via `space.db.makeRef(dxn).load()`, then invokes
+ *   `LayoutOperation.UpdatePopover`.
+ * - `StorybookPlugin` provides both the `LayoutOperation.UpdatePopover` handler (mutating
+ *   the layout-state atom) and the `<Layout>` shell that renders the popover via
+ *   `<Surface.Surface type={AppSurface.Card} data={popoverContent}>`.
+ * - `PreviewPlugin` also registers Card-role surfaces (Organization, Person, Task, …); the
+ *   Surface system picks the matching one based on the resolved object's type.
+ *
+ * Click the anchor — the matching Card surface (from plugin-preview) renders inside the
+ * popover, anchored to the trigger.
  */
-const PreviewCard = () => {
-  const { target } = useEditorPreview('PreviewCard');
-  if (!target) {
-    return null;
+const DefaultStory = () => {
+  const [space] = useSpaces();
+  const [organization] = useQuery(space?.db, Filter.type(Organization.Organization));
+  if (!organization) {
+    return <Loading />;
   }
 
+  const dxn = Obj.getDXN(organization).toString();
   return (
-    <Popover.Portal>
-      <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
-        <Popover.Viewport classNames='dx-card-popover-width'>
-          <Card.Root>
-            <Card.Heading>{target.label}</Card.Heading>
-            {target.text && (
-              <Card.Text variant='description' classNames='line-clamp-3'>
-                {target.text}
-              </Card.Text>
-            )}
-          </Card.Root>
-        </Popover.Viewport>
-        <Popover.Arrow />
-      </Popover.Content>
-    </Popover.Portal>
-  );
-};
-
-const DefaultStory = () => {
-  return (
-    <EditorPreviewProvider onLookup={async ({ dxn, label }) => ({ label, text: dxn })}>
-      <div role='none' className='flex flex-col gap-2 p-4'>
-        <p>
-          Click{' '}
-          <DxAnchor rootclassname='dx-tag--anchor' dxn='dxn:echo:@:01KQ7W30T1ZG06DB56C45NTCEA'>
-            DXOS
-          </DxAnchor>{' '}
-          to open the popover.
-        </p>
-      </div>
-      <PreviewCard />
-    </EditorPreviewProvider>
+    <div role='none' className='flex flex-col gap-2 p-4'>
+      <p>
+        Click{' '}
+        <DxAnchor className='dx-tag--anchor' dxn={dxn}>
+          {organization.name}
+        </DxAnchor>{' '}
+        to open the popover.
+      </p>
+    </div>
   );
 };
 
 const meta = {
   title: 'plugins/plugin-assistant/components/ChatThread/Anchor',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'centered' })],
-  parameters: { layout: 'fullscreen' },
+  decorators: [
+    withLayout({ layout: 'centered' }),
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        StorybookPlugin({}),
+        PreviewPlugin(),
+        ClientPlugin({
+          types: [Organization.Organization],
+          onClientInitialized: Effect.fnUntraced(function* ({ client }) {
+            const { personalSpace } = yield* initializeIdentity(client);
+            yield* Effect.gen(function* () {
+              yield* Database.add(
+                Obj.make(Organization.Organization, {
+                  name: 'DXOS',
+                  website: 'https://dxos.org',
+                  description: 'A decentralized network for collaborative applications.',
+                }),
+              );
+            }).pipe(Effect.provide(Database.layer(personalSpace.db)));
+          }),
+        }),
+      ],
+    }),
+  ],
+  parameters: {
+    layout: 'centered',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

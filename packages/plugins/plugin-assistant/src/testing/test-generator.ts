@@ -23,25 +23,6 @@ export const createMessage = (role: Actor.Role, blocks: ContentBlock.Any[]): Mes
 
 export type MessageGenerator = Effect.Effect<void, never, Database.Service | ContextQueueService>;
 
-export const createMessageGenerator2 = (): MessageGenerator[] => [
-  Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
-    const { db } = yield* Database.Service;
-    const obj1 = db.add(Obj.make(Organization.Organization, { name: 'DXOS' }));
-    yield* Effect.promise(() =>
-      queue.append([
-        createMessage('assistant', [
-          // Inline tag.
-          {
-            _tag: 'text',
-            text: ['This is a link', renderObjectLink(obj1), '.\n'].join(''),
-          },
-        ]),
-      ]),
-    );
-  }),
-];
-
 export const createMessageGenerator = (): MessageGenerator[] => [
   Effect.gen(function* () {
     const { queue } = yield* ContextQueueService;
@@ -52,6 +33,41 @@ export const createMessageGenerator = (): MessageGenerator[] => [
             _tag: 'text',
             text: random.lorem.sentence(5),
           },
+        ]),
+      ]),
+    );
+  }),
+
+  Effect.gen(function* () {
+    const { queue } = yield* ContextQueueService;
+    const { db } = yield* Database.Service;
+    const obj1 = db.add(
+      Obj.make(Organization.Organization, {
+        name: 'DXOS',
+        website: 'https://dxos.org',
+        description: 'DXOS is a decentralized network for collaborative applications.',
+      }),
+    );
+    // const obj2 = db.add(Obj.make(Person.Person, { fullName: 'Alice' }));
+    // const obj3 = db.add(Obj.make(Person.Person, { fullName: 'Bob' }));
+    // const obj4 = db.add(Obj.make(Person.Person, { fullName: 'Charlie' }));
+    yield* Effect.promise(() =>
+      queue.append([
+        createMessage('assistant', [
+          // Inline tag.
+          {
+            _tag: 'text',
+            text: [random.lorem.paragraph(), renderObjectLink(obj1), random.lorem.paragraph(), '\n'].join(' '),
+          },
+
+          // Inline cards.
+          // ...[obj1, obj2, obj3, obj4].map(
+          //   (obj) =>
+          //     ({
+          //       _tag: 'text',
+          //       text: renderObjectLink(obj, true) + '\n',
+          //     }) satisfies ContentBlock.Text,
+          // ),
         ]),
       ]),
     );
@@ -189,35 +205,6 @@ export const createMessageGenerator = (): MessageGenerator[] => [
             _tag: 'text',
             text: random.lorem.sentence(5),
           },
-        ]),
-      ]),
-    );
-  }),
-
-  Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
-    const { db } = yield* Database.Service;
-    const obj1 = db.add(Obj.make(Organization.Organization, { name: 'DXOS' }));
-    // const obj2 = db.add(Obj.make(Person.Person, { fullName: 'Alice' }));
-    // const obj3 = db.add(Obj.make(Person.Person, { fullName: 'Bob' }));
-    // const obj4 = db.add(Obj.make(Person.Person, { fullName: 'Charlie' }));
-    yield* Effect.promise(() =>
-      queue.append([
-        createMessage('assistant', [
-          // Inline tag.
-          {
-            _tag: 'text',
-            text: [random.lorem.paragraph(), renderObjectLink(obj1), random.lorem.paragraph(), '\n'].join(' '),
-          },
-
-          // Inline cards.
-          // ...[obj1, obj2, obj3, obj4].map(
-          //   (obj) =>
-          //     ({
-          //       _tag: 'text',
-          //       text: renderObjectLink(obj, true) + '\n',
-          //     }) satisfies ContentBlock.Text,
-          // ),
         ]),
       ]),
     );
