@@ -66,8 +66,9 @@ describe('createMessageGenerator', () => {
     queue.subscribe(() => updates++);
 
     await runAndForwardErrors(
-      createMessageGenerator()
-        [1]!.pipe(Effect.provide(Layer.mergeAll(ContextQueueService.layer(queue), Database.notAvailable))),
+      createMessageGenerator()[1]!.pipe(
+        Effect.provide(Layer.mergeAll(ContextQueueService.layer(queue), Database.notAvailable)),
+      ),
     );
 
     expect(queue.objects).toHaveLength(1);
