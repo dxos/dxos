@@ -3,7 +3,7 @@
 //
 
 import { next as A, type Heads } from '@automerge/automerge';
-import { type DocHandle, type DocumentId } from '@automerge/automerge-repo';
+import { type DocumentId, type DocumentQuery } from '@automerge/automerge-repo';
 
 import { UpdateScheduler } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
@@ -23,7 +23,7 @@ export type DocumentsSynchronizerProps = {
 };
 
 interface DocSyncState {
-  handle: DocHandle<DatabaseDirectory>;
+  docQuery: DocumentQuery<DatabaseDirectory>;
   lastSentHead?: Heads;
   clearSubscriptions?: () => void;
 }
@@ -60,13 +60,11 @@ export class DocumentsSynchronizer extends Resource {
             async () => {
               try {
                 log('loading document', { documentId });
-                const doc = await this._params.automergeHost.loadDoc<DatabaseDirectory>(
-                  this._ctx,
+                const docQuery = this._params.automergeHost.findWithProgress<DatabaseDirectory>(
                   documentId as DocumentId,
-                  { fetchFromNetwork: true },
                 );
-                this._startSync(doc);
-                this._pendingUpdates.add(doc.documentId);
+                this._startSync(docQuery);
+                this._pendingUpdates.add(docQuery.documentId);
                 this._sendUpdatesJob!.trigger();
               } catch (err) {
                 log.warn('failed to load document', { err });
@@ -110,25 +108,25 @@ export class DocumentsSynchronizer extends Resource {
     });
   }
 
-  private _startSync(doc: DocHandle<DatabaseDirectory>) {
-    if (this._syncStates.has(doc.documentId)) {
-      log('Document already being synced', { documentId: doc.documentId });
+  private _startSync(docQuery: DocumentQuery<DatabaseDirectory>) {
+    if (this._syncStates.has(docQuery.documentId)) {
+      log('Document already being synced', { documentId: docQuery.documentId });
       return;
     }
 
-    const syncState: DocSyncState = { handle: doc };
+    const syncState: DocSyncState = { docQuery };
     this._subscribeForChanges(syncState);
-    this._syncStates.set(doc.documentId, syncState);
+    this._syncStates.set(docQuery.documentId, syncState);
     return syncState;
   }
 
   _subscribeForChanges(syncState: DocSyncState): void {
     const handler = () => {
-      this._pendingUpdates.add(syncState.handle.documentId);
+      this._pendingUpdates.add(syncState.docQuery.documentId);
       this._sendUpdatesJob!.trigger();
     };
-    syncState.handle.on('heads-changed', handler);
-    syncState.clearSubscriptions = () => syncState.handle.off('heads-changed', handler);
+    syncState.docQuery.handle.on('heads-changed', handler);
+    syncState.clearSubscriptions = () => syncState.docQuery.handle.off('heads-changed', handler);
   }
 
   private async _checkAndSendUpdates(): Promise<void> {
@@ -155,11 +153,14 @@ export class DocumentsSynchronizer extends Resource {
   private _getPendingChanges(documentId: DocumentId): Uint8Array | void {
     const syncState = this._syncStates.get(documentId);
     invariant(syncState, 'Sync state for document not found');
-    const handle = syncState.handle;
-    if (!handle || !handle.isReady() || !handle.doc()) {
+    const handle = syncState.docQuery.handle;
+    if (!handle || syncState.docQuery.peek().state !== 'ready') {
       return;
     }
     const doc = handle.doc();
+    if (!doc) {
+      return;
+    }
     const mutation = syncState.lastSentHead ? A.saveSince(doc, syncState.lastSentHead) : A.save(doc);
     if (mutation.length === 0) {
       return;

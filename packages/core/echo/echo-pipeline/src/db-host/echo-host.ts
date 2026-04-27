@@ -70,7 +70,7 @@ export class EchoHost extends Resource {
   private readonly _automergeHost: AutomergeHost;
   private readonly _queryService: QueryServiceImpl;
   private readonly _dataService: DataServiceImpl;
-  private readonly _spaceStateManager: SpaceStateManager;
+  private readonly _spaceStateManager = new SpaceStateManager();
   private readonly _echoDataMonitor: EchoDataMonitor;
 
   private readonly _automergeDataSource: AutomergeDataSource;
@@ -102,7 +102,6 @@ export class EchoHost extends Resource {
       peerIdProvider,
       getSpaceKeyByRootDocumentId,
     });
-    this._spaceStateManager = new SpaceStateManager();
 
     this._runtime = runtime;
     this._automergeDataSource = new AutomergeDataSource(this._automergeHost);
