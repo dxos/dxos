@@ -5,9 +5,9 @@
 import { type Plugin as VitePlugin } from 'vite';
 import cssInjectedByJs from 'vite-plugin-css-injected-by-js';
 
-import { type Plugin } from '../core';
-import { MANIFEST_ASSET_NAME, serializeManifest } from './manifest';
-import { DEFAULT_PACKAGES, isSharedPackage } from './packages';
+import { type Plugin } from '../../core';
+import { MANIFEST_ASSET_NAME, serializeManifest } from '../manifest';
+import { DEFAULT_PACKAGES, isSharedPackage } from '../packages';
 
 export { MANIFEST_ASSET_NAME, serializeManifest };
 

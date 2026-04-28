@@ -8,7 +8,7 @@ import { createRequire as nodeCreateRequire } from 'node:module';
 import path from 'node:path';
 import { type Plugin } from 'vite';
 
-import { DEFAULT_PACKAGES } from './packages';
+import { DEFAULT_PACKAGES } from '../packages';
 
 const require = nodeCreateRequire(import.meta.url);
 
