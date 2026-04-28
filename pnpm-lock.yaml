@@ -54,9 +54,6 @@ catalogs:
     '@automerge/automerge-repo-storage-indexeddb':
       specifier: 2.6.0-subduction.14
       version: 2.6.0-subduction.14
-    '@automerge/automerge-subduction':
-      specifier: 0.8.1
-      version: 0.8.1
     '@babel/core':
       specifier: ^7.18.13
       version: 7.28.0
@@ -1869,6 +1866,7 @@ catalogs:
 
 overrides:
   '@automerge/automerge': 3.2.6
+  '@automerge/automerge-subduction': 0.8.1
   '@grpc/grpc-js': '>=1.10.9'
   '@lezer/lr': ^1.4.2
   '@modelcontextprotocol/sdk': '>=1.26.0'
@@ -1914,6 +1912,9 @@ overrides:
 pnpmfileChecksum: sha256-cQVl+jrEHH0V4IgNkydwSKNmLoShP2mLkufXFXEHIjU=
 
 patchedDependencies:
+  '@automerge/automerge-subduction@0.8.1':
+    hash: aa267d92ac3d483e82e7e5f2db642bdd07995a3e25103e9eb70f516122ca4a99
+    path: patches/@automerge__automerge-subduction@0.8.1.patch
   random-access-idb@1.2.2:
     hash: 207ec2404ef8b5e9e6d9de8ce83586d215ef77b94a7d0cadced03125874a1d9e
     path: patches/random-access-idb@1.2.2.patch
@@ -5104,8 +5105,8 @@ importers:
         specifier: 'catalog:'
         version: 2.6.0-subduction.14
       '@automerge/automerge-subduction':
-        specifier: 'catalog:'
-        version: 0.8.1
+        specifier: 0.8.1
+        version: 0.8.1(patch_hash=aa267d92ac3d483e82e7e5f2db642bdd07995a3e25103e9eb70f516122ca4a99)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -21145,9 +21146,6 @@ packages:
 
   '@automerge/automerge-repo@2.6.0-subduction.14':
     resolution: {integrity: sha512-SLm0uRCXBD2pUaVHmb/VmtsXjsm440iy52qaKKK+eFBobHixs9MM9PR+6J1kMOn1l/tfAbQZ7PPtqnHHR0Id5w==}
-
-  '@automerge/automerge-subduction@0.7.0':
-    resolution: {integrity: sha512-I838jrX+j6zeLEIyszuA246OY1HnTyS+bXODJAVlBmXGM0QzasRePulNrzJtclvowzhY56SybUj4+j/PNCdBhA==}
 
   '@automerge/automerge-subduction@0.8.1':
     resolution: {integrity: sha512-xUiVrdDwGgkwUV6z3MS6iofkC6Ub13F5xf6egllA6xECzWj5pdUEI8TVAEi4vk4QExbOUqZg78iwAh53LI3wFA==}
@@ -39687,7 +39685,7 @@ snapshots:
   '@automerge/automerge-repo@2.6.0-subduction.14':
     dependencies:
       '@automerge/automerge': 3.2.6
-      '@automerge/automerge-subduction': 0.7.0
+      '@automerge/automerge-subduction': 0.8.1(patch_hash=aa267d92ac3d483e82e7e5f2db642bdd07995a3e25103e9eb70f516122ca4a99)
       bs58check: 3.0.1
       cbor-x: 1.5.4
       debug: 4.4.3
@@ -39702,9 +39700,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-subduction@0.7.0': {}
-
-  '@automerge/automerge-subduction@0.8.1': {}
+  '@automerge/automerge-subduction@0.8.1(patch_hash=aa267d92ac3d483e82e7e5f2db642bdd07995a3e25103e9eb70f516122ca4a99)': {}
 
   '@automerge/automerge@3.2.6': {}
 

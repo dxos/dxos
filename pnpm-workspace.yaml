@@ -691,6 +691,7 @@ onlyBuiltDependencies:
 
 overrides:
   '@automerge/automerge': 'catalog:'
+  '@automerge/automerge-subduction': 'catalog:'
   '@grpc/grpc-js': '>=1.10.9'
   '@lezer/lr': 'catalog:'
   '@modelcontextprotocol/sdk': '>=1.26.0'
@@ -734,6 +735,7 @@ overrides:
   ws: '>=8.17.1'
 
 patchedDependencies:
+  '@automerge/automerge-subduction@0.8.1': patches/@automerge__automerge-subduction@0.8.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
   uuid@8.3.2: patches/uuid@8.3.2.patch
 

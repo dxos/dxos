@@ -1,0 +1,25 @@
+diff --git a/dist/esm/bundler-slim.js b/dist/esm/bundler-slim.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..4326075893d3a456ef115dc215a5801192e1b3b9
+--- /dev/null
++++ b/dist/esm/bundler-slim.js
+@@ -0,0 +1,4 @@
++import * as bindings from '../wasm_bindgen/bundler/automerge_subduction_wasm_bg.js';
++
++export * from '../wasm_bindgen/bundler/automerge_subduction_wasm_bg.js';
++export default bindings;
+diff --git a/package.json b/package.json
+index 9d6330d9635e256a17757a3cb19f231813126950..0302f1d6ce585506968ccf20ace4a4db55817335 100644
+--- a/package.json
++++ b/package.json
+@@ -61,6 +61,10 @@
+     },
+     "./slim": {
+       "types": "./dist/index.d.ts",
++      "browser": {
++        "import": "./dist/esm/bundler-slim.js",
++        "require": "./dist/cjs/slim.cjs"
++      },
+       "import": "./dist/esm/slim.js",
+       "require": "./dist/cjs/slim.cjs"
+     },
