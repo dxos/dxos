@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type DocHandle, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
+import { type DocumentId, type DocumentQuery, interpretAsDocumentId } from '@automerge/automerge-repo';
 import isEqual from 'fast-deep-equal';
 
 import { Event, UpdateScheduler } from '@dxos/async';
@@ -53,13 +53,13 @@ export class SpaceStateManager extends Resource {
     return this._roots.get(documentId);
   }
 
-  async assignRootToSpace(spaceId: SpaceId, handle: DocHandle<DatabaseDirectory>): Promise<DatabaseRoot> {
+  async assignRootToSpace(spaceId: SpaceId, query: DocumentQuery<DatabaseDirectory>): Promise<DatabaseRoot> {
     let root: DatabaseRoot;
-    if (this._roots.has(handle.documentId)) {
-      root = this._roots.get(handle.documentId)!;
+    if (this._roots.has(query.documentId)) {
+      root = this._roots.get(query.documentId)!;
     } else {
-      root = new DatabaseRoot(handle);
-      this._roots.set(handle.documentId, root);
+      root = new DatabaseRoot(query);
+      this._roots.set(query.documentId, root);
     }
 
     if (this._rootBySpace.get(spaceId) === root.handle.documentId) {
@@ -76,8 +76,6 @@ export class SpaceStateManager extends Resource {
     const ctx = new Context();
 
     this._perRootContext.set(root.handle.documentId, ctx);
-
-    await root.handle.whenReady();
 
     const documentListCheckScheduler = new UpdateScheduler(
       ctx,

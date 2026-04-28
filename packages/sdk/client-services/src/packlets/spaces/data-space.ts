@@ -499,7 +499,6 @@ export class DataSpace {
               fetchFromNetwork: true,
             }),
           );
-          await cancelWithContext(this._ctx, handle.whenReady());
         });
         if (this._ctx.disposed) {
           return;

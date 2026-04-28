@@ -71,6 +71,32 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
     this._params.monitor?.recordStoreDuration(Date.now() - startMs);
   }
 
+  async saveBatch(entries: Array<[StorageKey, Uint8Array]>): Promise<void> {
+    if (!this.isOpen || entries.length === 0) {
+      return undefined;
+    }
+    const startMs = Date.now();
+    const batch = this._params.db.batch();
+
+    for (const [keyArray] of entries) {
+      await this._params.callbacks?.beforeSave?.({ path: keyArray, batch });
+    }
+    for (const [keyArray, binary] of entries) {
+      batch.put<StorageKey, Uint8Array>(keyArray, Buffer.from(binary), {
+        ...encodingOptions,
+      });
+    }
+    await batch.write();
+
+    let bytesStored = 0;
+    for (const [keyArray, binary] of entries) {
+      bytesStored += binary.byteLength;
+      await this._params.callbacks?.afterSave?.(keyArray);
+    }
+    this._params.monitor?.recordBytesStored(bytesStored);
+    this._params.monitor?.recordStoreDuration(Date.now() - startMs);
+  }
+
   async remove(keyArray: StorageKey): Promise<void> {
     if (!this.isOpen) {
       return undefined;

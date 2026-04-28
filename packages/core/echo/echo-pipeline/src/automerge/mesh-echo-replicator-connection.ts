@@ -25,6 +25,13 @@ export type MeshReplicatorConnectionProps = {
   replicatorFactory?: AutomergeReplicatorFactory;
 };
 
+/**
+ * Mesh-side replicator connection — carries both subduction byte frames and DXOS
+ * collection-sync (`sync-request` / `sync-state`) frames over the Teleport
+ * `AutomergeReplicator` extension. The two multiplex on the same wire; Subduction
+ * filters by `type === 'subduction-connection'` so collection-sync control frames
+ * never reach the sedimentree layer.
+ */
 export class MeshReplicatorConnection extends Resource implements AutomergeReplicatorConnection {
   public readable: ReadableStream<AutomergeProtocolMessage>;
   public writable: WritableStream<AutomergeProtocolMessage>;
@@ -142,7 +149,8 @@ export class MeshReplicatorConnection extends Resource implements AutomergeRepli
 
 const logSendSync = (message: AutomergeProtocolMessage) => {
   log('sendSyncMessage', () => {
-    const decodedSyncMessage = message.type === 'sync' && message.data ? A.decodeSyncMessage(message.data) : undefined;
+    const decodedSyncMessage =
+      message.type === 'sync' && (message as any).data ? A.decodeSyncMessage((message as any).data) : undefined;
     return {
       sync: decodedSyncMessage && {
         headsLength: decodedSyncMessage.heads.length,

@@ -187,7 +187,6 @@ export class DataSpaceManager extends Resource {
             const rootHandle = rootUrl
               ? await this._echoHost.loadDoc<Doc<DatabaseDirectory>>(this._ctx, rootUrl as AutomergeUrl)
               : undefined;
-            await rootHandle?.whenReady();
             const rootDoc = rootHandle?.doc();
 
             const properties = rootDoc && findInlineObjectOfType(rootDoc, Type.getTypename(SpaceProperties));

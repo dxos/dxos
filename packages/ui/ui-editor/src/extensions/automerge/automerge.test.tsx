@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type DocHandle, Repo } from '@automerge/automerge-repo';
+import { type DocHandle, Repo, initSubduction } from '@automerge/automerge-repo';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { render, screen } from '@testing-library/react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
-import { describe, test } from 'vitest';
+import { beforeAll, describe, test } from 'vitest';
 
 import { getDeep } from '@dxos/util';
 
@@ -59,6 +59,12 @@ const Test: FC<{ handle: DocHandle<TestObject>; generator: Generator }> = ({ han
 };
 
 describe('Automerge', () => {
+  // Subduction-fork `Repo` constructs a `MemorySigner` internally; WASM must be
+  // initialized first or the constructor throws `'set_subduction_logger' of undefined`.
+  beforeAll(async () => {
+    await initSubduction();
+  });
+
   test('basic sync', ({ expect }) => {
     const repo = new Repo({ network: [] });
     const handle = repo.create<TestObject>();

@@ -23,11 +23,12 @@ catalog:
   '@atlaskit/pragmatic-drag-and-drop-hitbox': 1.1.0
   '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator': 3.2.10
   '@atproto/api': ^0.19.5
-  '@automerge/automerge': 3.2.3
-  '@automerge/automerge-repo': 2.5.1
-  '@automerge/automerge-repo-network-broadcastchannel': 2.5.1
-  '@automerge/automerge-repo-network-websocket': 2.5.1
-  '@automerge/automerge-repo-storage-indexeddb': 2.5.1
+  '@automerge/automerge': 3.2.6
+  '@automerge/automerge-repo': 2.6.0-subduction.14
+  '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.14
+  '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.14
+  '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.14
+  '@automerge/automerge-subduction': 0.8.1
   '@babel/core': ^7.18.13
   '@babel/runtime': ^7.9.6
   '@babylonjs/core': ^7.52.5
@@ -331,6 +332,7 @@ catalog:
   blockstore-core: ^5.0.1
   blockstore-idb: ^2.0.0
   body-parser: ^1.20.3
+  bs58check: ^4.0.0
   buffer: ^6.0.3
   buffer-alloc: ^1.1.0
   buffer-from: ^0.1.1
@@ -732,7 +734,6 @@ overrides:
   ws: '>=8.17.1'
 
 patchedDependencies:
-  '@automerge/automerge-repo@2.5.1': patches/@automerge__automerge-repo@2.5.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
   uuid@8.3.2: patches/uuid@8.3.2.patch
 
@@ -753,3 +754,4 @@ trustPolicyExclude:
   - rollup@3.30.0
   - mermaid@10.9.4
   - undici-types@6.20.0
+  - semver

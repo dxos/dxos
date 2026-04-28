@@ -323,9 +323,9 @@ export class EchoHost extends Resource {
     const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, automergeUrl, {
       fetchFromNetwork: true,
     });
-    await handle.whenReady();
+    const query = this._automergeHost.findWithProgress<DatabaseDirectory>(handle.documentId);
 
-    return this._spaceStateManager.assignRootToSpace(spaceId, handle);
+    return this._spaceStateManager.assignRootToSpace(spaceId, query);
   }
 
   // TODO(dmaretskyi): Change to document id.

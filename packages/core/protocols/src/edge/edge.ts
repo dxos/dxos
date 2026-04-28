@@ -17,6 +17,7 @@ export const EDGE_CLIENT_TAG_HEADER = 'X-DXOS-Client-Tag';
 // If we would rename it, we need to be careful to not break composer production.
 export enum EdgeService {
   AUTOMERGE_REPLICATOR = 'automerge-replicator',
+  SUBDUCTION_REPLICATOR = 'subduction-replicator',
   /**
    * Control feed replicator (hypercore append only logs) for the space.
    */
