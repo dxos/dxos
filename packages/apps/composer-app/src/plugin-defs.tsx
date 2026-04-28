@@ -107,7 +107,6 @@ const ID = {
   TRANSCRIPTION: 'org.dxos.plugin.transcription',
   VOXEL: 'org.dxos.plugin.voxel',
   WNFS: 'org.dxos.plugin.wnfs',
-  YOUTUBE: 'org.dxos.plugin.youtube',
   ZEN: 'org.dxos.plugin.zen',
 } as const;
 
@@ -299,7 +298,6 @@ export const getPlugins = async (
     { TranscriptionPlugin },
     { VoxelPlugin },
     { WnfsPlugin },
-    { YouTubePlugin },
     { ZenPlugin },
   ] = await Promise.all([
     track(import('@dxos/plugin-assistant')),
@@ -360,7 +358,6 @@ export const getPlugins = async (
     track(import('@dxos/plugin-transcription')),
     track(import('@dxos/plugin-voxel')),
     track(import('@dxos/plugin-wnfs')),
-    track(import('@dxos/plugin-youtube')),
     track(import('@dxos/plugin-zen')),
   ]);
 
@@ -454,7 +451,6 @@ export const getPlugins = async (
     VoxelPlugin(),
     WelcomePlugin(),
     WnfsPlugin(),
-    YouTubePlugin(),
     ZenPlugin(),
   ]
     .filter(isTruthy)
