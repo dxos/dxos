@@ -208,14 +208,15 @@ const useMarkdownStreamTextEditor = (
       initialValue: content,
       selection: EditorSelection.cursor(content?.length ?? 0),
       extensions: [
-        createThemeExtensions({
-          themeMode,
-          syntaxHighlighting: true,
-          slots: documentSlots,
-        }),
         createBasicExtensions({
           lineWrapping: true,
           readOnly: true,
+          scrollPastEnd: true,
+        }),
+        createThemeExtensions({
+          slots: documentSlots,
+          syntaxHighlighting: true,
+          themeMode,
         }),
         !debug && [
           extendedMarkdown({ registry }),
@@ -228,7 +229,7 @@ const useMarkdownStreamTextEditor = (
           }),
           preview(),
           xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
-          scroller({ overScroll: 64 }),
+          scroller({ overScroll: 80 }),
           ...(options?.autoScroll ? [autoScroll()] : []),
           ...(options?.wire
             ? [

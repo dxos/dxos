@@ -150,9 +150,6 @@ export const scroller = ({ overScroll = 0 }: ScrollerOptions = {}) => {
 
     // Styles.
     EditorView.theme({
-      '.cm-content': {
-        paddingBottom: `${overScroll}px`,
-      },
       '.cm-scroller': {
         overflowY: 'scroll',
         // Browser scroll-anchoring: when widgets above the viewport resize (e.g. tool blocks
@@ -160,7 +157,6 @@ export const scroller = ({ overScroll = 0 }: ScrollerOptions = {}) => {
         // top and adjusts `scrollTop` so the user's view doesn't jump. Auto-scroll's pinning
         // logic still has the final word when pinned (forces scrollTop to scrollHeight).
         overflowAnchor: 'auto',
-        paddingBottom: '0',
       },
       '.cm-scroller.cm-hide-scrollbar::-webkit-scrollbar': {
         display: 'none',
@@ -171,6 +167,16 @@ export const scroller = ({ overScroll = 0 }: ScrollerOptions = {}) => {
       },
       '&:hover .cm-scroller::-webkit-scrollbar-thumb': {
         background: 'var(--color-scrollbar-thumb)',
+      },
+      // Spacer below the last text line. Implemented as a real block pseudo-element
+      // (rather than `padding-bottom` on `.cm-content`) so it materializes in the
+      // scroller's `scrollHeight` regardless of how `padding` is reset by the base
+      // theme or downstream classes — this is what gives auto-scroll its head-room
+      // so the last line stays `overScroll` px above the viewport bottom.
+      '.cm-content::after': {
+        content: '""',
+        display: 'block',
+        height: `${overScroll}px`,
       },
       '.cm-scroll-button': {
         position: 'absolute',
@@ -184,49 +190,48 @@ export const scroller = ({ overScroll = 0 }: ScrollerOptions = {}) => {
 /**
  * Creates a smooth crawler that follows the live bottom of a CodeMirror 6 EditorView.
  *
- * Uses a velocity-based approach with easing:
- * - Accelerates smoothly when content starts arriving.
- * - Maintains a steady cruise velocity during continuous streaming.
- * - Decelerates smoothly when content stops arriving.
+ * Uses a critically-damped spring: each frame applies a restoring force toward the
+ * target and a damping force opposing current velocity. With damping = 2·ω, the
+ * system is critically damped — fastest approach without overshoot. The spring
+ * naturally sprints when far behind and eases as it approaches, so streaming
+ * content is followed tightly without the jerk of explicit accel/decel state.
  *
- * @param accel Acceleration in px/frame^2 for ease-in/ease-out.
- * @param maxVelocity Maximum scroll velocity in px/frame.
- * @param snapThreshold Snap-to-target threshold in px.
+ * Integration uses real elapsed wall-clock time so the perceived speed stays
+ * constant when requestAnimationFrame is throttled (e.g. low-power mode dropping
+ * from 60Hz to 30Hz).
+ *
+ * @param omega Spring stiffness in rad/s. Higher = snappier follow. ~12–18 feels good.
+ * @param snapThreshold Snap-to-target distance threshold in px.
+ * @param snapVelocity Snap-to-target velocity threshold in px/s.
  */
-export function createCrawler(view: EditorView, accel = 0.15, maxVelocity = 1, snapThreshold = 0.5) {
+export function createCrawler(view: EditorView, omega = 5, snapThreshold = 5, snapVelocity = 50) {
   const el = view.scrollDOM;
 
   let currentTop = 0;
   let velocity = 0;
   let rafId: number | null = null;
+  let lastTime = 0;
 
-  function frame() {
+  function frame(now: number) {
+    // Clamp dt to handle long pauses (tab backgrounded) and the first frame.
+    const dt = lastTime === 0 ? 1 / 60 : Math.min(0.1, (now - lastTime) / 1000);
+    lastTime = now;
+
     const targetTop = el.scrollHeight - el.clientHeight;
     const delta = targetTop - currentTop;
-    const absDelta = Math.abs(delta);
-
-    if (absDelta < snapThreshold && Math.abs(velocity) < snapThreshold) {
+    if (Math.abs(delta) < snapThreshold && Math.abs(velocity) < snapVelocity) {
       el.scrollTop = targetTop;
       currentTop = targetTop;
       velocity = 0;
       rafId = null;
+      lastTime = 0;
       return;
     }
 
-    // Stopping distance at current velocity: v^2 / (2 * accel).
-    const stoppingDistance = (velocity * velocity) / (2 * accel);
-    const direction = Math.sign(delta);
-
-    if (velocity !== 0 && (absDelta <= stoppingDistance || direction !== Math.sign(velocity))) {
-      // Decelerate: close enough to target or moving the wrong way.
-      velocity -= Math.sign(velocity) * Math.min(accel, Math.abs(velocity));
-    } else {
-      // Accelerate toward target, capped at maxVelocity.
-      velocity += direction * accel;
-      velocity = Math.sign(velocity) * Math.min(Math.abs(velocity), maxVelocity);
-    }
-
-    currentTop += velocity;
+    // Critically-damped spring: a = ω²·delta − 2ω·v.
+    const accel = omega * omega * delta - 2 * omega * velocity;
+    velocity += accel * dt;
+    currentTop += velocity * dt;
     el.scrollTop = currentTop;
     rafId = requestAnimationFrame(frame);
   }
@@ -235,14 +240,16 @@ export function createCrawler(view: EditorView, accel = 0.15, maxVelocity = 1, s
     scroll: () => {
       if (rafId === null) {
         currentTop = el.scrollTop;
+        lastTime = 0;
         rafId = requestAnimationFrame(frame);
       }
     },
     cancel: () => {
       if (rafId !== null) {
         cancelAnimationFrame(rafId);
-        rafId = null;
         velocity = 0;
+        lastTime = 0;
+        rafId = null;
       }
     },
   };

@@ -196,7 +196,7 @@ export const Streaming: Story = {
       autoScroll: true,
       wire: true,
       fader: true,
-      cursor: true,
+      // cursor: true,
     },
   },
 };
