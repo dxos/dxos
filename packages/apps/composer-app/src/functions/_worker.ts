@@ -69,6 +69,82 @@ const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response>
   });
 };
 
+const RSS_MAX_BODY_SIZE = 8 * 1024 * 1024; // 8MB.
+const RSS_FETCH_TIMEOUT_MS = 15_000;
+
+/** Handle /api/rss?url=<feed-url> — server-side fetch to bypass CORS for RSS/Atom feeds. */
+const handleRssProxy = async (request: Request): Promise<Response> => {
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    return new Response('Method not allowed', { status: 405 });
+  }
+
+  // Restrict to same-origin / known origins to avoid being abused as an open proxy.
+  // Same-origin GETs typically omit Origin; allow when absent or when a known origin is set.
+  const origin = request.headers.get('Origin');
+  if (origin && !ALLOWED_ORIGINS.has(origin)) {
+    return new Response('Forbidden', { status: 403 });
+  }
+
+  const url = new URL(request.url);
+  const feedUrl = url.searchParams.get('url');
+  if (!feedUrl) {
+    return new Response('Missing url parameter', { status: 400 });
+  }
+
+  let parsedFeedUrl: URL;
+  try {
+    parsedFeedUrl = new URL(feedUrl);
+  } catch {
+    return new Response('Invalid url parameter', { status: 400 });
+  }
+  if (parsedFeedUrl.protocol !== 'http:' && parsedFeedUrl.protocol !== 'https:') {
+    return new Response('Invalid url protocol', { status: 400 });
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), RSS_FETCH_TIMEOUT_MS);
+  try {
+    const upstream = await fetch(parsedFeedUrl.toString(), {
+      headers: { Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*' },
+      signal: controller.signal,
+    });
+
+    const contentLength = Number(upstream.headers.get('content-length') ?? 0);
+    if (contentLength > RSS_MAX_BODY_SIZE) {
+      return new Response('Payload too large', { status: 413 });
+    }
+
+    // Cap response size during streaming as well, in case Content-Length is missing or false.
+    let byteCount = 0;
+    let sizeExceeded = false;
+    const sizeCap = new TransformStream<Uint8Array, Uint8Array>({
+      transform(chunk, sink) {
+        byteCount += chunk.byteLength;
+        if (byteCount > RSS_MAX_BODY_SIZE) {
+          sizeExceeded = true;
+          sink.error(new Error('Payload too large'));
+        } else {
+          sink.enqueue(chunk);
+        }
+      },
+    });
+
+    const contentType = upstream.headers.get('content-type') ?? 'application/xml';
+    const headers: Record<string, string> = { 'content-type': contentType };
+    if (upstream.body) {
+      upstream.body.pipeTo(sizeCap.writable).catch(() => {});
+    }
+    return new Response(upstream.body ? sizeCap.readable : null, {
+      status: sizeExceeded ? 413 : upstream.status,
+      headers,
+    });
+  } catch (error) {
+    return new Response(`Bad gateway: ${String(error)}`, { status: 502 });
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
 const OTEL_PREFIX = '/api/otel';
 const OTEL_SIGNALS = new Set(['/v1/traces', '/v1/logs', '/v1/metrics']);
 
@@ -171,6 +247,10 @@ const handler: ExportedHandler<Env> = {
     // API routes.
     if (url.pathname === '/api/feedback-logs') {
       return handleFeedbackLogs(request, env);
+    }
+
+    if (url.pathname === '/api/rss') {
+      return handleRssProxy(request);
     }
 
     // OTel ingestion proxy.
