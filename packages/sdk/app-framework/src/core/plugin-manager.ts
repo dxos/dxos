@@ -35,6 +35,12 @@ export type ManagerOptions = {
   core?: string[];
   enabled?: string[];
   registry?: Registry.Registry;
+  /**
+   * Hook called when a plugin is removed via {@link PluginManager.remove}. Used by the
+   * host app to clean up persisted state (e.g. evict offline-cached plugin assets).
+   * Errors are logged and swallowed; removal still succeeds even if the hook throws.
+   */
+  onRemove?: (id: string) => Promise<void>;
 };
 
 export type ActivationMessage = {
@@ -119,6 +125,7 @@ class ManagerImpl implements PluginManager {
   private readonly _eventsFiredAtom: Atom.Writable<string[]>;
   private readonly _pendingResetAtom: Atom.Writable<string[]>;
   private readonly _pluginLoader: ManagerOptions['pluginLoader'];
+  private readonly _onRemove: ManagerOptions['onRemove'];
   private readonly _capabilities = new Map<string, Capability.Any[]>();
   private readonly _moduleMemoMap = new Map<Plugin.PluginModule['id'], Deferred.Deferred<Capability.Any[], Error>>();
   private readonly _moduleSemaphores = new Map<Plugin.PluginModule['id'], Effect.Semaphore>();
@@ -134,6 +141,7 @@ class ManagerImpl implements PluginManager {
     core = plugins.map(({ meta }) => meta.id),
     enabled = [],
     registry,
+    onRemove,
   }: ManagerOptions) {
     this.registry = registry ?? Registry.make();
     this.capabilities = CapabilityManager.make({
@@ -141,6 +149,7 @@ class ManagerImpl implements PluginManager {
     });
 
     this._pluginLoader = pluginLoader;
+    this._onRemove = onRemove;
     this._pluginsAtom = Atom.make(plugins).pipe(Atom.keepAlive);
     this._coreAtom = Atom.make(core).pipe(Atom.keepAlive);
     this._enabledAtom = Atom.make(enabled).pipe(Atom.keepAlive);
@@ -278,6 +287,11 @@ class ManagerImpl implements PluginManager {
     }
 
     this._removePlugin(id);
+    if (this._onRemove) {
+      void this._onRemove(id).catch((error) => {
+        log.warn('plugin remove hook failed', { id, error });
+      });
+    }
     return true;
   }
 

@@ -432,6 +432,9 @@ const main = async () => {
       fallback: Fallback,
       placeholder: Placeholder,
       pluginLoader,
+      // Drop the persisted entry and evict cached assets when the user uninstalls a plugin
+      // so a re-install fetches fresh bytes and offline storage doesn't grow indefinitely.
+      onPluginRemove: (id) => UrlLoader.uninstall(id, { cache: assetCache }),
       plugins,
       core,
       defaults,
