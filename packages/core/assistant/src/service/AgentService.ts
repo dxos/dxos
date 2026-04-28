@@ -9,20 +9,21 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
+import { ModelName } from '@dxos/ai';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { type Trace } from '@dxos/functions';
 import { ProcessManager } from '@dxos/functions-runtime';
 
-import { AiContextBinder } from '../conversation';
+import { type McpServerConfig, AiContextBinder } from '../conversation';
 import { AgentProcess } from './agent-process';
 
 export interface Service {
   /**
    * Gets or creates a session for a feed.
    */
-  getSession: (feed: Feed.Feed) => Effect.Effect<Session>;
+  getSession: (feed: Feed.Feed, options?: GetSessionOptions) => Effect.Effect<Session>;
 }
 
 export class AgentService extends Context.Tag('@dxos/assistant/AgentService')<AgentService, Service>() {}
@@ -68,9 +69,14 @@ export interface Session {
  */
 export const getSession = Effect.serviceFunctionEffect(AgentService, (service) => service.getSession);
 
+export interface GetSessionOptions {
+  readonly model?: ModelName;
+}
+
 export interface CreateSessionOptions {
   readonly blueprints?: Blueprint.Blueprint[];
   readonly context?: Ref.Ref<Obj.Unknown>[];
+  readonly model?: ModelName;
 }
 
 export const createSession: (
@@ -95,11 +101,20 @@ export const createSession: (
     }),
   );
 
-  return yield* getSession(feed);
+  return yield* getSession(feed, { model: opts?.model });
 }, Effect.scoped);
 
 export const layer = (opts?: {
   systemPrompt?: string;
+  /**
+   * Default model used by sessions that don't specify one explicitly.
+   */
+  model?: ModelName;
+
+  /**
+   * Provider for space-level MCP server configs.
+   */
+  getMcpServers?: () => McpServerConfig[];
 }): Layer.Layer<AgentService, never, ProcessManager.ProcessManagerService> =>
   Layer.effect(
     AgentService,
@@ -108,7 +123,7 @@ export const layer = (opts?: {
       const sessionCache = new Map<string, Session>();
 
       return {
-        getSession: (feed: Feed.Feed) =>
+        getSession: (feed: Feed.Feed, options?: GetSessionOptions) =>
           Effect.gen(function* () {
             const cached = sessionCache.get(feed.id);
             if (cached) {
@@ -116,7 +131,11 @@ export const layer = (opts?: {
             }
 
             const target = Obj.getDXN(feed).toString();
-            const executable = AgentProcess({ systemPrompt: opts?.systemPrompt });
+            const executable = AgentProcess({
+              systemPrompt: opts?.systemPrompt,
+              model: options?.model ?? opts?.model,
+              getMcpServers: opts?.getMcpServers,
+            });
             const processes = yield* processManager.list({ target, key: executable.key });
 
             let handle: ProcessManager.Handle<string, void>;

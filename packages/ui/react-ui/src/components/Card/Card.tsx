@@ -251,15 +251,16 @@ const CARD_ROW_NAME = 'Card.Row';
 
 type CardRowProps = { icon?: string; fullWidth?: boolean };
 
-const CardRow = composable<HTMLDivElement, CardRowProps>(({ children, icon, ...props }, forwardedRef) => {
+const CardRow = slottable<HTMLDivElement, CardRowProps>(({ children, asChild, icon, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
+  const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();
 
   return (
-    <Column.Row {...rest} className={tx('card.row', {}, className)} ref={forwardedRef}>
+    <Comp {...rest} className={tx('card.row', {}, className)} ref={forwardedRef}>
       {(icon && <CardIcon classNames='text-subdued' icon={icon} size={4} />) || <div />}
       {children}
-    </Column.Row>
+    </Comp>
   );
 });
 
@@ -382,6 +383,13 @@ type CardPosterProps = ThemedClassName<
   {
     alt: string;
     aspect?: 'video' | 'auto';
+    /**
+     * How the image fills the poster box. `'contain'` (default) preserves
+     * aspect ratio and may letterbox; `'cover'` fills the box edge-to-edge,
+     * cropping as needed. Forwarded to the underlying `Image`'s
+     * `object-fit`.
+     */
+    fit?: 'contain' | 'cover';
   } & Partial<{ image: string; icon: string }>
 >;
 
@@ -392,7 +400,12 @@ const CardPoster = (props: CardPosterProps) => {
   if (props.image) {
     return (
       <div role='none' className='col-span-full'>
-        <Image classNames={[tx('card.poster', {}), aspect, props.classNames]} src={props.image} alt={props.alt} />
+        <Image
+          classNames={[tx('card.poster', {}), aspect, props.classNames]}
+          src={props.image}
+          alt={props.alt}
+          fit={props.fit}
+        />
       </div>
     );
   }

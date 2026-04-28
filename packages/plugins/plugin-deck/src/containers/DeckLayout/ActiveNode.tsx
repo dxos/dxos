@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useNode } from '@dxos/plugin-graph';
 import { useAttended } from '@dxos/react-ui-attention';
 
@@ -23,7 +23,7 @@ export const ActiveNode = () => {
       {/* TODO(wittjosiah): Weird that this is a surface, feel like it's not really render logic.
             Probably this lives in React-land currently in order to access translations? */}
       <Surface.Surface
-        role='document-title'
+        type={AppSurface.DocumentTitle}
         data={{ subject: activeNode } satisfies AppSurface.DocumentTitleData}
         limit={1}
       />

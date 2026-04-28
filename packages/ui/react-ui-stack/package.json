@@ -25,16 +25,6 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "playwright": [
-        "dist/types/src/playwright/index.d.ts"
-      ],
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"

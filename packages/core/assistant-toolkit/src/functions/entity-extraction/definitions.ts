@@ -6,9 +6,8 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Database, Obj } from '@dxos/echo';
-import { FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
-import { Trace } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { QueueService, Trace } from '@dxos/functions';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { Message } from '@dxos/types';
 
 export const EntityExtraction = Operation.make({
@@ -33,12 +32,5 @@ export const EntityExtraction = Operation.make({
       }),
     ),
   }),
-  services: [
-    AiService.AiService,
-    Database.Service,
-    TracingService,
-    FunctionInvocationService,
-    QueueService,
-    Trace.TraceService,
-  ],
+  services: [AiService.AiService, Database.Service, QueueService, Trace.TraceService, OperationRegistry.Service],
 });

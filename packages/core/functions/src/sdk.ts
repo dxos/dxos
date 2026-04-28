@@ -5,13 +5,9 @@
 import { type AiService } from '@dxos/ai';
 import { type Database, type Feed } from '@dxos/echo';
 import { type Trace } from '@dxos/functions';
+import type { Operation } from '@dxos/operation';
 
-import {
-  type CredentialsService,
-  type FunctionInvocationService,
-  type QueueService,
-  type TracingService,
-} from './services';
+import { type CredentialsService, type FunctionInvocationService, type QueueService } from './services';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
@@ -19,16 +15,10 @@ import {
 // https://www.npmjs.com/package/aws-lambda
 
 /**
- * Services that are provided at the function call site by the caller.
- */
-export type InvocationServices = TracingService;
-
-/**
  * Services that are available to invoked functions.
  * @deprecated
  */
 export type FunctionServices =
-  | InvocationServices
   | AiService.AiService
   | CredentialsService
   | Database.Service
@@ -36,4 +26,5 @@ export type FunctionServices =
   | QueueService
   | Feed.FeedService
   | Trace.TraceService
-  | FunctionInvocationService;
+  | FunctionInvocationService
+  | Operation.Service;

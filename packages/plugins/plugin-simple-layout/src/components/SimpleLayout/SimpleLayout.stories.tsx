@@ -45,7 +45,7 @@ const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
         Plugin.addModule(({ isPopover = false }) => ({
           id: Capability.getModuleTag(State),
           activatesOn: ActivationEvents.Startup,
-          activatesAfter: [SimpleLayoutEvents.StateReady, AppActivationEvents.LayoutReady],
+          firesAfterActivation: [SimpleLayoutEvents.StateReady, AppActivationEvents.LayoutReady],
           activate: () => State({ initialState: { isPopover } }),
         })),
         Plugin.addModule({

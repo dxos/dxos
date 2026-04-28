@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Obj, Relation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { AnchoredTo, Thread } from '@dxos/types';
 
@@ -38,8 +38,8 @@ const handler: Operation.WithHandler<typeof Create> = Create.pipe(
       });
 
       yield* Operation.invoke(Select, { current: Obj.getDXN(thread).toString() });
-      yield* Operation.invoke(DeckOperation.ChangeCompanion, {
-        companion: linkedSegment('comments'),
+      yield* Operation.invoke(LayoutOperation.UpdateCompanion, {
+        subject: linkedSegment('comments'),
       });
     }),
   ),

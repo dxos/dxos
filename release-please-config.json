@@ -485,6 +485,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/discord-worker/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/env-tests/package.json",
           "jsonpath": "$.version"
         },
@@ -530,6 +535,21 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-crm/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-crx/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-crx-bridge/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-daily-summary/package.json",
           "jsonpath": "$.version"
         },
@@ -545,12 +565,7 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-excalidraw/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-exemplar/package.json",
+          "path": "packages/plugins/plugin-discord/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -675,6 +690,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-sample/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-script/package.json",
           "jsonpath": "$.version"
         },
@@ -691,6 +711,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-sheet/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-sidekick/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -791,11 +816,6 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-wnfs/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-youtube/package.json",
           "jsonpath": "$.version"
         },
         {

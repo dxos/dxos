@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Feed, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { Transcript } from '@dxos/types';
 
@@ -12,8 +13,9 @@ import { Create } from './definitions';
 const handler: Operation.WithHandler<typeof Create> = Create.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ space }) {
+      const feed = space.db.add(Feed.make());
       return {
-        object: Transcript.make(space.queues.create().dxn),
+        object: Transcript.make(Ref.make(feed)),
       };
     }),
   ),

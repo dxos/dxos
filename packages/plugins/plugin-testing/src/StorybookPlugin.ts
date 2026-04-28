@@ -32,7 +32,7 @@ export const StorybookPlugin = Plugin.define<StorybookPluginOptions>(meta).pipe(
   Plugin.addModule(({ initialState }) => ({
     id: Capability.getModuleTag(State),
     activatesOn: ActivationEvents.Startup,
-    activatesAfter: [AppActivationEvents.LayoutReady],
+    firesAfterActivation: [AppActivationEvents.LayoutReady],
     activate: () => State({ initialState }),
   })),
   Plugin.make,

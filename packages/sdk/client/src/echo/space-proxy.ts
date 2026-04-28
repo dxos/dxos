@@ -16,6 +16,7 @@ import {
 } from '@dxos/async';
 import {
   type ClientServicesProvider,
+  type ExportSpaceOptions,
   LegacySpaceProperties,
   SPACE_TAG,
   type Space,
@@ -50,7 +51,7 @@ import {
   type Contact,
   CreateEpochRequest,
   Invitation,
-  type SpaceArchive,
+  SpaceArchive,
   type Space as SpaceData,
   type SpaceMember,
   SpaceState,
@@ -753,10 +754,10 @@ export class SpaceProxy implements Space, CustomInspectable {
     }
   }
 
-  private async _export(): Promise<SpaceArchive> {
+  private async _export(options?: ExportSpaceOptions): Promise<SpaceArchive> {
     await this._db.flush();
     const { archive } = await this._clientServices.services.SpacesService!.exportSpace(
-      { spaceId: this.id },
+      { spaceId: this.id, format: options?.format ?? SpaceArchive.Format.BINARY },
       { ctx: this._ctx },
     );
     return archive;

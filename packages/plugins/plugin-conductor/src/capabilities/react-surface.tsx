@@ -19,8 +19,10 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'root',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section'],
-        filter: AppSurface.objectArticle(CanvasBoard.CanvasBoard),
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, CanvasBoard.CanvasBoard),
+          AppSurface.object(AppSurface.Section, CanvasBoard.CanvasBoard),
+        ),
         component: ({ data, role }) => (
           <CanvasContainer role={role} subject={data.subject} attendableId={data.attendableId} />
         ),

@@ -47,7 +47,7 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
   Plugin.addModule(({ namespace }) => ({
     id: Capability.getModuleTag(ObservabilityState),
     activatesOn: ActivationEvents.Startup,
-    activatesAfter: [ObservabilityEvents.StateReady],
+    firesAfterActivation: [ObservabilityEvents.StateReady],
     activate: () => ObservabilityState({ namespace }),
   })),
   Plugin.addModule(({ namespace }) => ({

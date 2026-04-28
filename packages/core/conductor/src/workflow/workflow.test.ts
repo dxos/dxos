@@ -10,11 +10,12 @@ import { describe } from 'vitest';
 import { TestAiService } from '@dxos/ai/testing';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { ComputeEventLogger, CredentialsService, Trace, TracingService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { ComputeEventLogger, CredentialsService, Trace } from '@dxos/functions';
+import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { DXN } from '@dxos/keys';
+import { Operation, OperationRegistry } from '@dxos/operation';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import {
@@ -30,15 +31,23 @@ import {
 } from '../types';
 import { WorkflowLoader, type WorkflowLoaderProps } from './loader';
 
-const TestLayer = Layer.mergeAll(ComputeEventLogger.layerFromTracing).pipe(
-  Layer.provideMerge(FunctionInvocationServiceLayerTest()),
+const TestLayer = Layer.mergeAll(ComputeEventLogger.layerNoop).pipe(
+  Layer.provideMerge(
+    Layer.mergeAll(
+      Layer.succeed(Operation.Service, {
+        invoke: () => Effect.die('Operation.Service not available in test.'),
+        schedule: () => Effect.die('Operation.Service not available in test.'),
+        invokePromise: async () => ({ error: new Error('Not available') }),
+      } as any),
+      Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
+    ),
+  ),
   Layer.provideMerge(
     Layer.mergeAll(
       TestAiService(),
       TestDatabaseLayer(),
       CredentialsService.configuredLayer([]),
       Feed.notAvailable,
-      TracingService.layerNoop,
       Trace.writerLayerNoop,
     ),
   ),

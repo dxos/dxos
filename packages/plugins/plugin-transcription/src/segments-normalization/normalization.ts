@@ -26,16 +26,16 @@ export type NormalizationOutput = Schema.Schema.Type<typeof SentenceNormalizatio
 
 /**
  * Sentence normalization for transcription.
- * TODO(dmaretskyi): Reimplement using AiSession.run or LanguageModel.generateObject - runStructured was removed.
+ * TODO(dmaretskyi): Reimplement using AiRequest.run or LanguageModel.generateObject - runStructured was removed.
  */
 export const sentenceNormalization = SentenceNormalization.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ messages }) {
       log.info('input', { messages });
-      // TODO(dmaretskyi): runStructured was removed from AiSession. Reimplement using new API.
+      // TODO(dmaretskyi): runStructured was removed from AiRequest. Reimplement using new API.
       return yield* Effect.die(
         new Error(
-          'Sentence normalization needs to be reimplemented - runStructured was removed from AiSession. Use AiSession.run or LanguageModel.generateObject.',
+          'Sentence normalization needs to be reimplemented - runStructured was removed from AiRequest. Use AiRequest.run or LanguageModel.generateObject.',
         ),
       );
     }),

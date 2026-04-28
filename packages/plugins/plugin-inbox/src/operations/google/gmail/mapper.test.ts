@@ -71,4 +71,31 @@ describe('mapMessage', () => {
       expect(decoded._tag).toBe('Left');
     }, Effect.provide(InboxResolver.Mock())),
   );
+
+  it.effect(
+    'snippet and subject decode HTML entities from Gmail text',
+    Effect.fnUntraced(function* ({ expect }) {
+      const template = makeGmailMessage();
+      const result = yield* mapMessage({
+        ...template,
+        snippet: 'It&#39;s a &#x27;test&#x27; &amp; &quot;quoted&quot;',
+        payload: {
+          ...template.payload,
+          headers: [
+            { name: 'From', value: 'Alice <alice@unknown.com>' },
+            { name: 'Subject', value: 'O&#39;Reilly &amp; co.' },
+            { name: 'To', value: 'bob@example.com' },
+          ],
+          body: template.payload.body,
+        },
+      });
+      expect(result).toBeDefined();
+      const properties = result!.properties;
+      if (properties === undefined) {
+        throw new Error('expected message properties');
+      }
+      expect(properties.snippet).toBe("It's a 'test' & \"quoted\"");
+      expect(properties.subject).toBe("O'Reilly & co.");
+    }, Effect.provide(InboxResolver.Mock())),
+  );
 });

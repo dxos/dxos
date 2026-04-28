@@ -12,7 +12,7 @@ import { Operation } from '@dxos/operation';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Input, Toolbar } from '@dxos/react-ui';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { withComputeGraphDecorator } from '#testing';
@@ -75,9 +75,7 @@ const DefaultStory = () => {
         </Input.Root>
         <Button onClick={handleTest}>Test</Button>
       </Toolbar.Root>
-      <SyntaxHighlighter language='json'>
-        {JSON.stringify({ space: space?.id, graph: graph?.id, sheet: sheet?.id, model: model?.id, result }, null, 2)}
-      </SyntaxHighlighter>
+      <JsonHighlighter data={{ space: space?.id, graph: graph?.id, sheet: sheet?.id, model: model?.id, result }} />
     </div>
   );
 };

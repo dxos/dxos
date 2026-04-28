@@ -11,8 +11,8 @@ export class DiscordBot {
   constructor(private readonly _config: Config) {}
 
   async start(): Promise<void> {
-    const { value: token } = this._config.find('runtime.keys', { name: 'discord.com/token' }) ?? {};
     const { value: channelId } = this._config.find('runtime.keys', { name: 'discord.com/channel' }) ?? {};
+    const { value: token } = this._config.find('runtime.keys', { name: 'discord.com/token' }) ?? {};
     if (!token) {
       throw new Error('Missing token.');
     }
@@ -75,6 +75,7 @@ export class DiscordBot {
               if (!channel?.isTextBased()) {
                 return '';
               }
+
               const res = await channel.messages.fetch({ after: LAST_WEEK_SNOWFLAKE, limit: 100 });
               const messagesConcatenated = res
                 .filter((msg) => msg.content.trim().length > 0)

@@ -7,13 +7,14 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Feed } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
+import { Filter, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { Builder } from '#testing';
@@ -27,7 +28,8 @@ type DefaultStoryProps = {
 };
 
 const DefaultStory = (_: DefaultStoryProps) => {
-  const db = useDatabase();
+  const spaces = useSpaces();
+  const db = useDatabase(spaces[0].id);
   const calendars = useQuery(db, Filter.type(Calendar.Calendar));
   const calendar = calendars[0];
   if (!db || !calendar) {
@@ -43,6 +45,7 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<DefaultStoryProps>(({ args: { count = 0 } }) => ({
+      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

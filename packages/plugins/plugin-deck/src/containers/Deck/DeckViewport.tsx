@@ -49,7 +49,7 @@ export type DeckViewportProps = PropsWithChildren;
  */
 export const DeckViewport = ({ children }: DeckViewportProps) => {
   const {
-    deck: { active, solo, plankSizing },
+    deck: { active, plankSizing },
     state: { sidebarState, complementarySidebarState },
     settings,
     layoutMode,
@@ -393,8 +393,8 @@ const PlankContainer = memo(
       [invokePromise],
     );
 
-    const handleChangeCompanion = useCallback(
-      (companion: string | null) => invokePromise(DeckOperation.ChangeCompanion, { companion }),
+    const handleUpdateCompanion = useCallback(
+      (companion: string | null) => invokePromise(LayoutOperation.UpdateCompanion, { subject: companion }),
       [invokePromise],
     );
 
@@ -410,7 +410,7 @@ const PlankContainer = memo(
         onAdjust={handleAdjust}
         onResize={handleResize}
         onScrollIntoView={handleScrollIntoView}
-        onChangeCompanion={handleChangeCompanion}
+        onUpdateCompanion={handleUpdateCompanion}
       >
         <Plank.Content solo={part === 'solo'} companion={hasCompanion} encapsulate={!!settings?.encapsulatedPlanks}>
           <Plank.Component
@@ -440,12 +440,12 @@ const PlankContainer = memo(
               primary={node}
               {...(part === 'solo'
                 ? {
-                    part: 'solo-companion',
                     order,
+                    part: 'solo-companion',
                   }
                 : {
-                    part,
                     order: (order ?? 0) + 1,
+                    part,
                   })}
             />
           )}

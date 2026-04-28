@@ -141,24 +141,23 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <SearchList.Content classNames='gap-form-gap'>
-        <SearchList.Input
-          autoFocus
-          data-testid='create-object-form.schema-input'
-          placeholder={t('schema-input.placeholder')}
-        />
-        <SearchList.Viewport>
-          {results.map((option) => (
-            <SearchList.Item
-              key={option.id}
-              value={option.id}
-              label={option.label}
-              icon={option.icon ?? 'ph--placeholder--regular'}
-              onSelect={() => onChange(option.id)}
-            />
-          ))}
-        </SearchList.Viewport>
-      </SearchList.Content>
+      <SearchList.Input
+        classNames='mb-form-gap'
+        autoFocus
+        data-testid='create-object-form.schema-input'
+        placeholder={t('schema-input.placeholder')}
+      />
+      <SearchList.Viewport>
+        {results.map((option) => (
+          <SearchList.Item
+            key={option.id}
+            value={option.id}
+            label={option.label}
+            icon={option.icon ?? 'ph--placeholder--regular'}
+            onSelect={() => onChange(option.id)}
+          />
+        ))}
+      </SearchList.Viewport>
     </SearchList.Root>
   );
 };
@@ -203,25 +202,24 @@ const SelectSpace = ({ spaces, defaultSpaceId, onChange }: SelectSpaceProps) => 
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <SearchList.Content>
-        <SearchList.Input
-          autoFocus
-          data-testid='create-object-form.space-input'
-          placeholder={t('space-input.placeholder')}
-        />
-        <SearchList.Viewport>
-          {results.map((space) => {
-            return (
-              <SearchList.Item
-                key={space.id}
-                value={space.id}
-                label={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
-                onSelect={() => onChange?.(space.db)}
-              />
-            );
-          })}
-        </SearchList.Viewport>
-      </SearchList.Content>
+      <SearchList.Input
+        classNames='mb-form-gap'
+        autoFocus
+        data-testid='create-object-form.space-input'
+        placeholder={t('space-input.placeholder')}
+      />
+      <SearchList.Viewport>
+        {results.map((space) => {
+          return (
+            <SearchList.Item
+              key={space.id}
+              value={space.id}
+              label={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
+              onSelect={() => onChange?.(space.db)}
+            />
+          );
+        })}
+      </SearchList.Viewport>
     </SearchList.Root>
   );
 };

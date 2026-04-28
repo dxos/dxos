@@ -15,8 +15,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { Database } from '@dxos/echo';
-import { Process, ServiceResolver, TracingService } from '@dxos/functions';
-import { Trace } from '@dxos/functions';
+import { Process, ServiceResolver, Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Organization } from '@dxos/types';
@@ -120,7 +119,6 @@ const TestLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
   ),
   Layer.provide(KeyValueStore.layerMemory),
   Layer.provide(OperationHandlerSet.provide(handlers)),
-  Layer.provide(TracingService.layerNoop),
   Layer.provideMerge(Registry.layer),
   Layer.provide(Trace.layerNoop),
 );

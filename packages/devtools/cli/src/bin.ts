@@ -24,8 +24,18 @@ import { DEFAULT_PROFILE } from '@dxos/client-protocol';
 import { LogLevel, levels, log } from '@dxos/log';
 import { loadEnabledPlugins } from '@dxos/plugin-registry/cli';
 
-import { admin, chat, debug, dx, fn, hub, repl } from './commands';
+import { admin, chat, debug, dx, fn, hub, repl, reset } from './commands';
 import { getCore, getDefaults, getPlugins } from './commands/plugin-defs';
+import { setDispatcher } from './dispatcher';
+import { installStderrFilter } from './util';
+
+// Filter background `warnAfterTimeout` chatter out of stderr for the lifetime
+// of the process. The warnings come from eager space initialisation in
+// ClientPlugin and similar — they're noise to a user running e.g.
+// `dx space list`. Set DX_KEEP_WARNINGS=1 to opt out.
+if (!process.env.DX_KEEP_WARNINGS) {
+  installStderrFilter();
+}
 
 let filter = LogLevel.ERROR;
 const level = process.env.DX_DEBUG;
@@ -69,6 +79,7 @@ const program = Effect.gen(function* () {
     rootCommand: dx,
     subCommands: [
       repl,
+      reset,
 
       // TODO(wittjosiah): Factor out.
       //   Currently would require standalone plugins due to clash between solid & react compilation.
@@ -87,7 +98,23 @@ const program = Effect.gen(function* () {
     enabled,
   });
 
-  const layer = Layer.merge(pluginLayer, config ? ConfigService.fromConfig(config) : Layer.empty);
+  // Memoize the layer in the program scope so each `Effect.provide(layer)`
+  // — both the top-level command and every REPL dispatch — reuses the
+  // already-built services (ClientPlugin, Config, etc.) instead of rebuilding
+  // them per invocation.
+  const layer = yield* Layer.memoize(Layer.merge(pluginLayer, config ? ConfigService.fromConfig(config) : Layer.empty));
+
+  // Register in-process dispatcher so `repl` can reuse the already-built
+  // command tree and plugin layer instead of spawning a child `dx` process
+  // per command. See src/dispatcher.ts.
+  // NOTE: The final `as` matches the same Effect type-system workaround
+  // applied at the outer `program` scope — `Command.run`'s inferred
+  // `Requirements` channel becomes overly restrictive even when the layer
+  // provides everything.
+  setDispatcher(
+    (argv) => Command.run(command, CLI_CONFIG)(argv).pipe(Effect.provide(layer)) as Effect.Effect<void, unknown, never>,
+  );
+
   return yield* Command.run(command, CLI_CONFIG)(process.argv).pipe(Effect.provide(layer));
 }).pipe(
   Effect.provide(Layer.mergeAll(BunContext.layer, Logger.pretty)),

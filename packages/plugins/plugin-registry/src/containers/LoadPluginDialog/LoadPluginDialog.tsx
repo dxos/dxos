@@ -30,7 +30,8 @@ export const LoadPluginDialog = () => {
     setError(null);
 
     void Effect.gen(function* () {
-      yield* manager.add(url.trim());
+      const plugin = yield* manager.add(url.trim());
+      yield* manager.enable(plugin.meta.id);
       closeRef.current?.click();
     }).pipe(
       Effect.catchAll((err) =>

@@ -4,8 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, Obj } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
+import { Database, Feed, Filter } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { Message } from '@dxos/types';
 
@@ -16,11 +15,9 @@ const handler: Operation.WithHandler<typeof Open> = Open.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ transcript }) {
       const transcriptObj = yield* Database.load(transcript);
-      const { dxn } = yield* Effect.promise(() => transcriptObj.queue.load());
-      const queue = yield* QueueService.getQueue(dxn);
-      yield* Effect.promise(() => queue?.queryObjects());
-      const content = queue?.objects
-        .filter((message: unknown) => Obj.instanceOf(Message.Message, message))
+      const feed = yield* Database.load(transcriptObj.feed);
+      const messages = yield* Feed.runQuery(feed, Filter.type(Message.Message));
+      const content = messages
         .flatMap((message: Message.Message, index: number) => renderByline([])(message, index))
         .join('\n\n');
       return { content };

@@ -20,9 +20,6 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
   "files": [
     "dist",
     "src"
@@ -32,6 +29,7 @@
     "@antv/layout": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/blueprints": "workspace:*",

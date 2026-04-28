@@ -6,7 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { GenericToolkit } from '@dxos/ai';
+import { OpaqueToolkit } from '@dxos/ai';
 import { AgentService } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
@@ -32,7 +32,7 @@ const TestLayer = AssistantTestLayer({
 const TestLayerWithWebSearch = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
   operationHandlers: MemoryHandlers,
-  toolkits: [GenericToolkit.make(WebSearchToolkit, Layer.empty)],
+  toolkits: [OpaqueToolkit.make(WebSearchToolkit, Layer.empty)],
   types: [Memory, Blueprint.Blueprint, Feed.Feed],
   blueprints: [MemoryBlueprint.make(), WebSearchBlueprint.make()],
   tracing: 'pretty',

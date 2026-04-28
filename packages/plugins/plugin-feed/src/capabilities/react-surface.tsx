@@ -9,30 +9,45 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { FeedArticle, SubscriptionsArticle } from '#containers';
-import { Subscription } from '#types';
+import { FeedArticle, MagazineArticle, PostArticle, PostCard, SubscriptionsArticle } from '#containers';
+import { Magazine, Subscription } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
-      // Main subscription feed list view.
       Surface.create({
         id: 'subscription-feed',
-        role: ['article'],
-        filter: AppSurface.literalArticle('feeds-root'),
+        filter: AppSurface.literal(AppSurface.Article, 'feeds-root'),
         component: ({ data, role }) => (
           <SubscriptionsArticle role={role} attendableId={data.attendableId} subject={data.subject} />
         ),
       }),
-      // Companion view: FeedArticle shown alongside the feeds-root.
+      Surface.create({
+        id: 'magazine-article',
+        filter: AppSurface.object(AppSurface.Article, Magazine.Magazine),
+        component: ({ data, role }) => (
+          <MagazineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
+      }),
       Surface.create({
         id: 'feed-article',
-        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section'],
-        filter: AppSurface.and(AppSurface.objectArticle(Subscription.Feed), AppSurface.companionArticle('feeds-root')),
+        filter: AppSurface.object(AppSurface.Article, Subscription.Feed),
         component: ({ data, role }) => (
           <FeedArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
+      }),
+      Surface.create({
+        id: 'post-article',
+        filter: AppSurface.object(AppSurface.Article, Subscription.Post),
+        component: ({ data, role }) => (
+          <PostArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
+      }),
+      Surface.create({
+        id: 'post-card',
+        position: 'hoist',
+        filter: AppSurface.object(AppSurface.Card, Subscription.Post),
+        component: ({ data, role }) => <PostCard role={role} subject={data.subject} />,
       }),
     ]),
   ),

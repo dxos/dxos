@@ -5,13 +5,14 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { TemplateEditor } from '@dxos/plugin-assistant';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
-import { EditorContent, type EditorContentProps } from '@dxos/react-ui-editor';
+import { Editor, type EditorViewProps } from '@dxos/react-ui-editor';
 import {
   type BasicExtensionsOptions,
   createBasicExtensions,
@@ -122,7 +123,13 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
             value={cell.source.target.content}
             onChange={handleQueryChange}
           />
-          {explorerGraph && !dragging && <Surface.Surface role='section' limit={1} data={{ subject: explorerGraph }} />}
+          {explorerGraph && !dragging && (
+            <Surface.Surface
+              type={AppSurface.Section}
+              limit={1}
+              data={{ subject: explorerGraph, attendableId: cell.id }}
+            />
+          )}
         </div>
       );
 
@@ -195,7 +202,7 @@ const NotebookTextEditor = ({
   extensions: extensionsProp,
   readOnly,
   ...props
-}: EditorContentProps & Pick<BasicExtensionsOptions, 'readOnly'>) => {
+}: EditorViewProps & Pick<BasicExtensionsOptions, 'readOnly'>) => {
   const { t } = useTranslation(meta.id);
   const { themeMode } = useThemeContext();
   const extensions = useMemo(() => {
@@ -211,5 +218,9 @@ const NotebookTextEditor = ({
     ].filter(isNonNullable);
   }, [extensionsProp]);
 
-  return <EditorContent {...props} extensions={extensions} selectionEnd />;
+  return (
+    <Editor.Root>
+      <Editor.View {...props} extensions={extensions} selectionEnd />
+    </Editor.Root>
+  );
 };

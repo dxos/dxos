@@ -12,12 +12,13 @@ import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
 import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
-import { AiSession, GenerationObserver } from '@dxos/assistant';
-import { Ref } from '@dxos/echo';
+import { AiRequest, GenerationObserver } from '@dxos/assistant';
+import { Database, Ref } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
-import { ComputeEventLogger, FunctionInvocationService, QueueService, Trace, TracingService } from '@dxos/functions';
+import { ComputeEventLogger, QueueService, Trace } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { Message } from '@dxos/types';
 
 import { ValueBag, defineComputeNode } from '../../types';
@@ -142,7 +143,7 @@ export const gptNode = defineComputeNode({
         }),
     });
 
-    const session = new AiSession({ observer });
+    const request = new AiRequest({ observer });
     const fullPrompt = context != null ? `<context>\n${JSON.stringify(context)}\n</context>\n\n${prompt}` : prompt;
 
     const trace = yield* Trace.TraceService;
@@ -155,15 +156,16 @@ export const gptNode = defineComputeNode({
       // TODO(dmaretskyi): Move them out.
       ToolResolverService.layerEmpty,
       ToolExecutionService.layerEmpty,
-      TracingService.layerNoop,
-      FunctionInvocationService.layerNotAvailable,
       Layer.succeed(Trace.TraceService, trace),
+      Layer.succeed(Database.Service, yield* Database.Service),
+      Layer.succeed(Operation.Service, yield* Operation.Service),
+      Layer.succeed(OperationRegistry.Service, yield* OperationRegistry.Service),
     );
 
     // TODO(dmaretskyi): Should this use conversation instead?
     // TODO(dmaretskyi): Tools.
     const resultEffect = Effect.gen(function* () {
-      const messages = yield* session
+      const messages = yield* request
         .run({
           system: systemPrompt,
           prompt: fullPrompt,

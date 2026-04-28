@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Dialog, ErrorFallback, useAsyncEffect } from '@dxos/react-ui';
 import { isTauri } from '@dxos/util';
 
@@ -59,7 +60,7 @@ export const SpotlightLayout = () => {
   return (
     <div role='none' className='grid inset-0 overflow-hidden' data-spotlight>
       <Dialog.Root open={state.dialogOpen} modal={false}>
-        <Surface.Surface role='dialog' data={dialogContent} limit={1} fallback={ErrorFallback} />
+        <Surface.Surface type={AppSurface.Dialog} data={dialogContent} limit={1} fallback={ErrorFallback} />
       </Dialog.Root>
     </div>
   );
