@@ -69,6 +69,17 @@ const PLACEHOLDER_MARK = `
 
 const PHASES = ['Loading…', 'Loading framework…', 'Reading configuration…', 'Starting services…', 'Loading plugins…'];
 
+/**
+ * Approximate plugin count used by the `Determinate` story. Hardcoded here
+ * to keep the storybook self-contained — the production count comes from
+ * `composer-app/src/plugin-defs.tsx`'s dynamic-import list. Adjust if the
+ * story should mirror an updated count.
+ */
+const STORY_PLUGIN_COUNT = 59;
+
+/** Tick interval for the determinate-progress simulation, in ms. */
+const STORY_TICK_MS = 100;
+
 const CyclingStory = () => {
   const [index, setIndex] = useState(0);
   useEffect(() => {
@@ -81,21 +92,22 @@ const CyclingStory = () => {
 };
 
 const DeterminateStory = () => {
-  // Walk progress 0 → 1 over 6 s, mirroring composer's plugin counter.
+  // Walks progress 0 → 1 by ticking once every `STORY_TICK_MS`, mirroring
+  // composer's per-plugin counter in `getPlugins`.
   const [progress, setProgress] = useState(0);
   useEffect(() => {
-    const total = 59;
     let loaded = 0;
     const handle = setInterval(() => {
       loaded += 1;
-      setProgress(loaded / total);
-      if (loaded >= total) {
+      setProgress(loaded / STORY_PLUGIN_COUNT);
+      if (loaded >= STORY_PLUGIN_COUNT) {
         clearInterval(handle);
       }
-    }, 100);
+    }, STORY_TICK_MS);
     return () => clearInterval(handle);
   }, []);
-  const status = progress >= 1 ? 'Starting Composer…' : `Loading plugins (${Math.round(progress * 59)}/59)…`;
+  const loaded = Math.round(progress * STORY_PLUGIN_COUNT);
+  const status = progress >= 1 ? 'Starting Composer…' : `Loading plugins (${loaded}/${STORY_PLUGIN_COUNT})…`;
   return <BootLoader status={status} markSvg={PLACEHOLDER_MARK} progress={progress} />;
 };
 
