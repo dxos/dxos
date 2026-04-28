@@ -72,7 +72,20 @@ const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response>
 const RSS_MAX_BODY_SIZE = 8 * 1024 * 1024; // 8MB.
 const RSS_FETCH_TIMEOUT_MS = 15_000;
 
-/** Handle /api/rss?url=<feed-url> — server-side fetch to bypass CORS for RSS/Atom feeds. */
+/**
+ * Handle /api/rss?url=<feed-url> — server-side fetch to bypass CORS for RSS/Atom feeds.
+ *
+ * A proxy is required for the general case: the browser's same-origin policy blocks
+ * cross-origin `fetch()` of any response that doesn't send `Access-Control-Allow-Origin`,
+ * and RSS/Atom feeds are overwhelmingly served by CMSes (WordPress, Substack, news sites,
+ * etc.) that don't set CORS headers, so a direct browser fetch fails before the body is
+ * even read. Alternatives considered: (1) try direct, fall back to proxy — saves a hop
+ * for CORS-friendly feeds but every "no-CORS" feed pays a wasted round-trip and a console
+ * error before the fallback runs; (2) `mode: 'no-cors'` — the response becomes opaque, the
+ * body is unreadable; (3) move the fetcher out of the browser entirely (scheduled
+ * worker/edge function) — cleanest long-term but a much bigger change. We always proxy
+ * for simplicity; the cost is a hop and some Worker CPU.
+ */
 const handleRssProxy = async (request: Request): Promise<Response> => {
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     return new Response('Method not allowed', { status: 405 });
@@ -104,7 +117,9 @@ const handleRssProxy = async (request: Request): Promise<Response> => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), RSS_FETCH_TIMEOUT_MS);
   try {
+    // Forward the original method so HEAD probes don't download the full body upstream.
     const upstream = await fetch(parsedFeedUrl.toString(), {
+      method: request.method,
       headers: { Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*' },
       signal: controller.signal,
     });
@@ -114,28 +129,35 @@ const handleRssProxy = async (request: Request): Promise<Response> => {
       return new Response('Payload too large', { status: 413 });
     }
 
-    // Cap response size during streaming as well, in case Content-Length is missing or false.
-    let byteCount = 0;
-    let sizeExceeded = false;
-    const sizeCap = new TransformStream<Uint8Array, Uint8Array>({
-      transform(chunk, sink) {
-        byteCount += chunk.byteLength;
-        if (byteCount > RSS_MAX_BODY_SIZE) {
-          sizeExceeded = true;
-          sink.error(new Error('Payload too large'));
-        } else {
-          sink.enqueue(chunk);
-        }
-      },
-    });
-
     const contentType = upstream.headers.get('content-type') ?? 'application/xml';
     const headers: Record<string, string> = { 'content-type': contentType };
-    if (upstream.body) {
-      upstream.body.pipeTo(sizeCap.writable).catch(() => {});
+
+    // For HEAD or empty bodies, return immediately with the upstream status — no body to cap.
+    if (request.method === 'HEAD' || !upstream.body) {
+      return new Response(null, { status: upstream.status, headers });
     }
-    return new Response(upstream.body ? sizeCap.readable : null, {
-      status: sizeExceeded ? 413 : upstream.status,
+
+    // Buffer the body up to the cap so the response status can be decided deterministically
+    // (a TransformStream-based cap can't influence Response.status, since Response is
+    // constructed synchronously before any chunks have flowed through).
+    const reader = upstream.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let byteCount = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      byteCount += value.byteLength;
+      if (byteCount > RSS_MAX_BODY_SIZE) {
+        await reader.cancel();
+        return new Response('Payload too large', { status: 413 });
+      }
+      chunks.push(value);
+    }
+
+    return new Response(new Blob(chunks as BlobPart[]), {
+      status: upstream.status,
       headers,
     });
   } catch (error) {
