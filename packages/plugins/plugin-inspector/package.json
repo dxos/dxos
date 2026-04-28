@@ -63,8 +63,10 @@
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:"

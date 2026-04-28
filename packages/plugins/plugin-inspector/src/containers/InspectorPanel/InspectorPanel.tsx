@@ -7,6 +7,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import { pipe } from 'effect/Function';
 import React, { useCallback, useMemo } from 'react';
 
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { Trace } from '@dxos/functions';
@@ -17,14 +18,20 @@ import { Panel } from '@dxos/react-ui';
 import { ExecutionTimeline, InspectorToolbar } from '#components';
 import { useActiveAgentProcesses, useEphemeralSteps } from '#hooks';
 
-export type InspectorPanelProps = {
-  space: Space;
+/**
+ * Main Inspector container. Subscribes to trace events on the active space
+ * and renders the execution timeline. Rendered as a `deck-companion--inspector`
+ * surface; takes no props because the surface is panel-shaped (no subject).
+ */
+export const InspectorPanel = () => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+  return <InspectorPanelInner space={space} />;
 };
 
-/**
- * Main Inspector container. Subscribes to trace events and renders execution timeline.
- */
-export const InspectorPanel = ({ space }: InspectorPanelProps) => {
+const InspectorPanelInner = ({ space }: { space: Space }) => {
   const processes = useActiveAgentProcesses(space.id);
   const traceMessages = useTraceMessages(space);
   const steps = useEphemeralSteps(traceMessages);
