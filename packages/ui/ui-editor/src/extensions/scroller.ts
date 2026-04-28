@@ -196,10 +196,16 @@ export const scroller = ({ overScroll = 0 }: ScrollerOptions = {}) => {
  *
  * @param accel Acceleration in px/s^2 for ease-in/ease-out (defaults to ~0.15 px/frame^2 at 60Hz).
  * @param maxVelocity Maximum scroll velocity in px/s (defaults to ~1 px/frame at 60Hz).
- * @param snapThreshold Snap-to-target distance threshold in px.
  * @param snapVelocity Snap-to-target velocity threshold in px/s.
+ * @param snapThreshold Snap-to-target distance threshold in px.
  */
-export function createCrawler(view: EditorView, accel = 540, maxVelocity = 60, snapThreshold = 0.5, snapVelocity = 30) {
+export function createCrawler(
+  view: EditorView,
+  accel = 400,
+  maxVelocity = 100,
+  snapVelocity = 25,
+  snapThreshold = 0.5,
+) {
   const el = view.scrollDOM;
 
   let currentTop = 0;
@@ -215,7 +221,6 @@ export function createCrawler(view: EditorView, accel = 540, maxVelocity = 60, s
     const targetTop = el.scrollHeight - el.clientHeight;
     const delta = targetTop - currentTop;
     const absDelta = Math.abs(delta);
-
     if (absDelta < snapThreshold && Math.abs(velocity) < snapVelocity) {
       el.scrollTop = targetTop;
       currentTop = targetTop;
@@ -255,9 +260,9 @@ export function createCrawler(view: EditorView, accel = 540, maxVelocity = 60, s
     cancel: () => {
       if (rafId !== null) {
         cancelAnimationFrame(rafId);
-        rafId = null;
         velocity = 0;
         lastTime = 0;
+        rafId = null;
       }
     },
   };

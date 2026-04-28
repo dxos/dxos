@@ -119,15 +119,19 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
           class {
             private readonly observer: ResizeObserver;
             private firstObservation = true;
+            private destroyed = false;
             constructor(view: EditorView) {
               // Throttle so a continuous drag-resize (or a flurry of layout changes) coalesces
               // into a single re-pin per ~100ms instead of dispatching every frame.
               const onResize = throttle(() => {
-                if (!enabled) {
+                if (this.destroyed || !enabled) {
                   return;
                 }
                 setPinned(true);
                 requestAnimationFrame(() => {
+                  if (this.destroyed) {
+                    return;
+                  }
                   view.scrollDOM.scrollTop = view.scrollDOM.scrollHeight;
                   view.dispatch({ effects: scrollerCrawlEffect.of(true) });
                 });
@@ -143,6 +147,7 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
               this.observer.observe(view.scrollDOM);
             }
             destroy() {
+              this.destroyed = true;
               this.observer.disconnect();
             }
           },
