@@ -14,12 +14,22 @@ import { scrollerCrawlEffect, scrollerLineEffect } from './scroller';
 /** Enable or disable autoscroll. */
 export const autoScrollEffect = StateEffect.define<boolean>();
 
-export type AutoScrollProps = {};
+export type AutoScrollProps = {
+  /**
+   * If true, immediately jump to the bottom and re-pin whenever the size of the
+   * document view (the scroll container) changes — e.g. when a sidebar toggles
+   * or the window is resized. This avoids the visible "stuck near bottom" gap
+   * that otherwise appears because the previous `scrollTop` no longer reaches
+   * the new content height.
+   * @default true
+   */
+  scrollOnResize?: boolean;
+};
 
 /**
  * Extension that supports pinning the scroll position and automatically scrolls to the bottom when content is added.
  */
-export const autoScroll = (_: AutoScrollProps = {}) => {
+export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
   let buttonContainer: HTMLDivElement | undefined;
   let isPinned = true;
   let jumpPending = false;
@@ -100,6 +110,39 @@ export const autoScroll = (_: AutoScrollProps = {}) => {
         }
       }
     }),
+
+    // Re-pin and jump to bottom when the scroll container itself resizes (e.g. sidebar toggle,
+    // window resize). Doc-driven height changes are handled by the updateListener above; this
+    // observer covers the case where the viewport changes while the doc length is unchanged.
+    scrollOnResize
+      ? ViewPlugin.fromClass(
+          class {
+            private readonly observer: ResizeObserver;
+            private firstObservation = true;
+            constructor(view: EditorView) {
+              this.observer = new ResizeObserver(() => {
+                // Skip the initial fire that ResizeObserver emits on `observe()`.
+                if (this.firstObservation) {
+                  this.firstObservation = false;
+                  return;
+                }
+                if (!enabled) {
+                  return;
+                }
+                setPinned(true);
+                requestAnimationFrame(() => {
+                  view.scrollDOM.scrollTop = view.scrollDOM.scrollHeight;
+                  view.dispatch({ effects: scrollerCrawlEffect.of(true) });
+                });
+              });
+              this.observer.observe(view.scrollDOM);
+            }
+            destroy() {
+              this.observer.disconnect();
+            }
+          },
+        )
+      : [],
 
     // Detect user scroll and unpin (or re-pin if scrolled to the bottom).
     ViewPlugin.fromClass(

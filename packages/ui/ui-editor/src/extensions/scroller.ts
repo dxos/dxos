@@ -189,44 +189,63 @@ export const scroller = ({ overScroll = 0 }: ScrollerOptions = {}) => {
  * - Maintains a steady cruise velocity during continuous streaming.
  * - Decelerates smoothly when content stops arriving.
  *
- * @param accel Acceleration in px/frame^2 for ease-in/ease-out.
- * @param maxVelocity Maximum scroll velocity in px/frame.
- * @param snapThreshold Snap-to-target threshold in px.
+ * Velocity is normalized to pixels/second (rather than px/frame) so that the perceived
+ * scroll speed stays constant when the browser throttles requestAnimationFrame — for
+ * example on low-power/low-battery modes where the refresh rate drops from 60Hz to 30Hz
+ * or lower. Each frame integrates over the actual elapsed wall-clock time.
+ *
+ * @param accel Acceleration in px/s^2 for ease-in/ease-out (defaults to ~0.15 px/frame^2 at 60Hz).
+ * @param maxVelocity Maximum scroll velocity in px/s (defaults to ~1 px/frame at 60Hz).
+ * @param snapThreshold Snap-to-target distance threshold in px.
+ * @param snapVelocity Snap-to-target velocity threshold in px/s.
  */
-export function createCrawler(view: EditorView, accel = 0.15, maxVelocity = 1, snapThreshold = 0.5) {
+export function createCrawler(
+  view: EditorView,
+  accel = 540,
+  maxVelocity = 60,
+  snapThreshold = 0.5,
+  snapVelocity = 30,
+) {
   const el = view.scrollDOM;
 
   let currentTop = 0;
   let velocity = 0;
   let rafId: number | null = null;
+  let lastTime = 0;
 
-  function frame() {
+  function frame(now: number) {
+    // Clamp dt to handle long pauses (tab backgrounded) and the first frame.
+    const dt = lastTime === 0 ? 1 / 60 : Math.min(0.1, (now - lastTime) / 1000);
+    lastTime = now;
+
     const targetTop = el.scrollHeight - el.clientHeight;
     const delta = targetTop - currentTop;
     const absDelta = Math.abs(delta);
 
-    if (absDelta < snapThreshold && Math.abs(velocity) < snapThreshold) {
+    if (absDelta < snapThreshold && Math.abs(velocity) < snapVelocity) {
       el.scrollTop = targetTop;
       currentTop = targetTop;
       velocity = 0;
       rafId = null;
+      lastTime = 0;
       return;
     }
 
-    // Stopping distance at current velocity: v^2 / (2 * accel).
+    // Stopping distance at current velocity: v^2 / (2 * accel) — same formula in any consistent units.
     const stoppingDistance = (velocity * velocity) / (2 * accel);
     const direction = Math.sign(delta);
+    const dv = accel * dt;
 
     if (velocity !== 0 && (absDelta <= stoppingDistance || direction !== Math.sign(velocity))) {
       // Decelerate: close enough to target or moving the wrong way.
-      velocity -= Math.sign(velocity) * Math.min(accel, Math.abs(velocity));
+      velocity -= Math.sign(velocity) * Math.min(dv, Math.abs(velocity));
     } else {
       // Accelerate toward target, capped at maxVelocity.
-      velocity += direction * accel;
+      velocity += direction * dv;
       velocity = Math.sign(velocity) * Math.min(Math.abs(velocity), maxVelocity);
     }
 
-    currentTop += velocity;
+    currentTop += velocity * dt;
     el.scrollTop = currentTop;
     rafId = requestAnimationFrame(frame);
   }
@@ -235,6 +254,7 @@ export function createCrawler(view: EditorView, accel = 0.15, maxVelocity = 1, s
     scroll: () => {
       if (rafId === null) {
         currentTop = el.scrollTop;
+        lastTime = 0;
         rafId = requestAnimationFrame(frame);
       }
     },
@@ -243,6 +263,7 @@ export function createCrawler(view: EditorView, accel = 0.15, maxVelocity = 1, s
         cancelAnimationFrame(rafId);
         rafId = null;
         velocity = 0;
+        lastTime = 0;
       }
     },
   };
