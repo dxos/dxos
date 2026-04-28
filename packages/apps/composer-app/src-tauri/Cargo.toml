@@ -32,6 +32,12 @@ tauri-plugin-deep-link = "2.4"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = { version = "2", features = ["watch"] }
 
+# Plugin asset cache: shared between desktop and mobile (iOS).
+sha2 = "0.10"
+http = "1"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+tokio = { version = "1", features = ["rt", "fs", "net", "sync", "macros"] }
+
 [target.'cfg(unix)'.dependencies]
 xattr = "1"
 
@@ -46,9 +52,7 @@ tauri-plugin-localhost = "2"
 hyper = { version = "1", features = ["http1", "server"] }
 hyper-util = { version = "0.1", features = ["tokio"] }
 http-body-util = "0.1"
-tokio = { version = "1", features = ["rt", "net", "sync", "macros"] }
 url = "2"
-reqwest = { version = "0.12", features = ["json"] }
 tauri-plugin-updater = "2"
 tauri-plugin-global-shortcut = "2"
 

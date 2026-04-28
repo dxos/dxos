@@ -5,13 +5,13 @@
     "security": {
       "csp": {
         "child-src": "'none'",
-        "connect-src": "tauri: https: file: ipc: http://*.dxos.network wss://*.dxos.org ws://localhost:* http://localhost:* http://127.0.0.1:* wss://* http://localhost:21434",
+        "connect-src": "tauri: https: file: ipc: http://*.dxos.network wss://*.dxos.org ws://localhost:* http://localhost:* http://127.0.0.1:* wss://* http://localhost:21434 dxos-plugin:",
         "frame-src": "tauri: https: http://localhost:* composer: blob:",
-        "img-src": "tauri: https: data: file: socket://* http://localhost:* blob:",
+        "img-src": "tauri: https: data: file: socket://* http://localhost:* blob: dxos-plugin:",
         "object-src": "'none'",
-        "script-src": "'unsafe-eval' 'unsafe-inline' tauri: https: http://localhost:*",
-        "style-src": "'unsafe-inline' tauri: https: http://localhost:*",
-        "worker-src": "tauri: https: http://localhost:* blob:"
+        "script-src": "'unsafe-eval' 'unsafe-inline' tauri: https: http://localhost:* dxos-plugin:",
+        "style-src": "'unsafe-inline' tauri: https: http://localhost:* dxos-plugin:",
+        "worker-src": "tauri: https: http://localhost:* blob: dxos-plugin:"
       },
       "dangerousDisableAssetCspModification": true
     },

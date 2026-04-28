@@ -15,7 +15,7 @@ import React, { StrictMode, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { type Plugin, UrlLoader } from '@dxos/app-framework';
+import { type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -357,6 +357,21 @@ const main = async () => {
   // `getPlugins` dynamic-imports every plugin chunk in parallel.
   // Run it concurrently with `UrlLoader.preload` (network-bound) so the two waits overlap.
   bootStatus('Loading plugins…');
+  // Pick the platform-appropriate offline asset cache for third-party plugins. Web uses the
+  // service worker registered by `@dxos/plugin-pwa`; Tauri (desktop + iOS) uses the Rust-side
+  // filesystem cache exposed by `@dxos/plugin-native`. The no-op fallback keeps tests and
+  // unsupported environments running without offline support.
+  const assetCache: PluginAssetCache.Cache = await (async () => {
+    if (isTauri) {
+      const { createTauriAssetCache } = await import('@dxos/plugin-native');
+      return createTauriAssetCache();
+    }
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+      const { createServiceWorkerAssetCache } = await import('@dxos/plugin-pwa');
+      return createServiceWorkerAssetCache();
+    }
+    return PluginAssetCache.noop();
+  })();
   const [builtinPlugins, remotePluginsResult] = await Promise.all([
     getPlugins(conf, {
       onPluginLoaded: (loaded, total) => {
@@ -366,7 +381,7 @@ const main = async () => {
         window.__bootLoader?.progress(loaded / total);
       },
     }),
-    UrlLoader.preload().catch((error) => {
+    UrlLoader.preload({ cache: assetCache }).catch((error) => {
       log.warn('failed to preload remote plugins', { error });
       return [] as Plugin.Plugin[];
     }),
@@ -376,7 +391,7 @@ const main = async () => {
   window.__bootLoader?.progress(1);
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
-  const pluginLoader = UrlLoader.make(builtinPlugins);
+  const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
   const core = getCore(conf);
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];

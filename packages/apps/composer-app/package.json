@@ -123,7 +123,8 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-joyride": "catalog:",
-    "solid-js": "catalog:"
+    "solid-js": "catalog:",
+    "workbox-precaching": "catalog:"
   },
   "devDependencies": {
     "@babel/core": "catalog:",

@@ -378,7 +378,13 @@ export default defineConfig((env) => ({
       // NOTE: Check cached resources (on CF, and in the PWA).
       // curl -I --header "Cache-Control: no-cache" https://staging.composer.space/icons.svg
       selfDestroying: process.env.DX_PWA === 'false',
-      workbox: {
+      // injectManifest mode: bundle a custom service worker (src/sw.ts) so we can intercept
+      // fetches for third-party plugin assets and serve them from a dedicated cache when
+      // offline. The host shell still gets the same Workbox-managed precache.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: {
         maximumFileSizeToCacheInBytes: 30000000,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}'],
       },

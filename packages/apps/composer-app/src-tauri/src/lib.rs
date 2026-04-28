@@ -1,5 +1,6 @@
 //! Composer Tauri application entry point.
 
+mod asset_cache;
 #[cfg(desktop)]
 mod oauth;
 #[cfg(desktop)]
@@ -21,7 +22,17 @@ pub const LOCALHOST_PORT: u16 = 26777;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let builder = tauri::Builder::default();
+    let builder = tauri::Builder::default()
+        .manage(asset_cache::AssetCacheState::default())
+        // Custom URI scheme: serves cached third-party plugin assets so plugins keep
+        // working offline. Same scheme on desktop and mobile to share Rust code.
+        .register_asynchronous_uri_scheme_protocol(asset_cache::URI_SCHEME, |ctx, request, responder| {
+            let app = ctx.app_handle().clone();
+            tauri::async_runtime::spawn(async move {
+                let response = asset_cache::handle_uri(&app, &request);
+                responder.respond(response);
+            });
+        });
 
     // Serve bundled assets via localhost plugin on desktop only (needed for SharedWorker support).
     // Mobile uses Tauri's default asset protocol instead.
@@ -92,6 +103,10 @@ pub fn run() {
     // Configure invoke handler with platform-specific commands.
     #[cfg(desktop)]
     let builder = builder.invoke_handler(tauri::generate_handler![
+        asset_cache::cache_plugin_assets,
+        asset_cache::evict_plugin,
+        asset_cache::resolve_cached_url,
+        asset_cache::list_cached_plugins,
         oauth::start_oauth_server,
         oauth::stop_oauth_server,
         oauth::get_oauth_result,
@@ -107,7 +122,12 @@ pub fn run() {
     ]);
 
     #[cfg(mobile)]
-    let builder = builder.invoke_handler(tauri::generate_handler![]);
+    let builder = builder.invoke_handler(tauri::generate_handler![
+        asset_cache::cache_plugin_assets,
+        asset_cache::evict_plugin,
+        asset_cache::resolve_cached_url,
+        asset_cache::list_cached_plugins,
+    ]);
 
     #[cfg(desktop)]
     let builder = builder.manage(OAuthServerState::new());

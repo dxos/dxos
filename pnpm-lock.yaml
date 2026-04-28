@@ -1824,6 +1824,9 @@ catalogs:
     wnfs:
       specifier: 0.2.2
       version: 0.2.2
+    workbox-precaching:
+      specifier: ^7.3.0
+      version: 7.3.0
     workbox-window:
       specifier: ^7.3.0
       version: 7.3.0
@@ -2647,6 +2650,9 @@ importers:
       solid-js:
         specifier: 'catalog:'
         version: 1.9.11
+      workbox-precaching:
+        specifier: 'catalog:'
+        version: 7.3.0
     devDependencies:
       '@babel/core':
         specifier: 'catalog:'
