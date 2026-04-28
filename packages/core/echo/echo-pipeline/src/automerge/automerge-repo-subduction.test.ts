@@ -30,7 +30,7 @@ import {
 } from '@automerge/automerge-repo';
 import { beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { Trigger, sleep } from '@dxos/async';
 import { randomBytes } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';

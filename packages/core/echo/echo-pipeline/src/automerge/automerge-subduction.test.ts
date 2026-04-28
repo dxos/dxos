@@ -16,9 +16,7 @@ import {
   commitIdOfBase58Id,
   type PeerId as SubductionPeerId,
 } from '@automerge/automerge-subduction';
-import { afterEach, beforeAll, describe, test } from 'vitest';
-
-import { sleep } from '@dxos/async';
+import { beforeAll, describe, test } from 'vitest';
 
 class AsyncQueue<T> {
   private _items: T[] = [];
@@ -218,8 +216,6 @@ describe('automerge-subduction', () => {
     const repo = new Repo({
       network: [],
       signer,
-      periodicSyncInterval: 0,
-      batchSyncInterval: 0,
     });
 
     const handle = repo.create<{ title?: string }>();
