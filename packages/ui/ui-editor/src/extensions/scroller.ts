@@ -201,9 +201,9 @@ export const scroller = ({ overScroll = 0 }: ScrollerOptions = {}) => {
  */
 export function createCrawler(
   view: EditorView,
-  accel = 400,
-  maxVelocity = 100,
-  snapVelocity = 25,
+  accel = 300,
+  maxVelocity = 800,
+  snapVelocity = 200,
   snapThreshold = 0.5,
 ) {
   const el = view.scrollDOM;
