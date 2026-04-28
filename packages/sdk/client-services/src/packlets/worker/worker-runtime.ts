@@ -143,6 +143,11 @@ export class WorkerRuntime {
 
       await this._acquireLock();
       this._config = await this._configProvider();
+      this._signalTelemetryEnabled = this._config.get('runtime.client.signalTelemetryEnabled') ?? false;
+      const observabilityGroup = this._config.get('runtime.client.observabilityGroup');
+      if (observabilityGroup) {
+        this._signalMetadataTags.group = observabilityGroup;
+      }
       const signals = this._config.get('runtime.services.signaling');
       this._clientServices.initialize({
         config: this._config,
@@ -182,6 +187,30 @@ export class WorkerRuntime {
   }
 
   /**
+   * Update signaling telemetry tags from a client-supplied config overlay.
+   *
+   * The worker services outlive individual client connections, so the first client seeds the
+   * worker's core config (storage, signaling, edge features). For fields that can legitimately
+   * differ per tab — `observabilityGroup` and `signalTelemetryEnabled` — this method lets later
+   * connections refresh the signal metadata the worker attaches to its signaling requests
+   * (last-writer-wins, matching the pre-DX-930 per-session RPC behaviour).
+   */
+  updateSignalMetadata(config: Config): void {
+    const observabilityGroup = config.get('runtime.client.observabilityGroup');
+    if (observabilityGroup) {
+      this._signalMetadataTags.group = observabilityGroup;
+    } else {
+      // Clear stale group so a later config that removes observabilityGroup stops attributing
+      // telemetry to the previous client's group (last-writer-wins).
+      delete this._signalMetadataTags.group;
+    }
+    const signalTelemetryEnabled = config.get('runtime.client.signalTelemetryEnabled');
+    if (signalTelemetryEnabled !== undefined) {
+      this._signalTelemetryEnabled = signalTelemetryEnabled;
+    }
+  }
+
+  /**
    * Create a new session.
    */
   async createSession({ appPort, systemPort, shellPort, onClose }: CreateSessionProps): Promise<WorkerSession> {
@@ -213,10 +242,6 @@ export class WorkerRuntime {
       !this._signalMetadataTags.origin || this._signalMetadataTags.origin === session.origin,
       `worker origin changed from ${this._signalMetadataTags.origin} to ${session.origin}?`,
     );
-    if (session.observabilityGroup) {
-      this._signalMetadataTags.group = session.observabilityGroup;
-    }
-    this._signalTelemetryEnabled = session.signalTelemetryEnabled ?? false;
     this._signalMetadataTags.origin = session.origin;
     this._sessions.add(session);
 

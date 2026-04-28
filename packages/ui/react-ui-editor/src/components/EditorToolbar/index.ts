@@ -2,6 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './EditorToolbar';
+export * from './types';
 
-export { type EditorToolbarState, useEditorToolbar } from './useEditorToolbar';
+export * from './EditorToolbar';

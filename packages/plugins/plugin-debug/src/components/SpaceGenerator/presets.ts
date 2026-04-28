@@ -135,10 +135,7 @@ export const generator = () => ({
           space.db.add(
             Trigger.make({
               enabled: true,
-              spec: {
-                kind: 'timer',
-                cron: '* * * * *', // Every minute.
-              },
+              spec: Trigger.specTimer('* * * * *'), // Every minute.
               function: Ref.make(Operation.serialize(InboxOperation.GoogleMailSync)),
               input: {
                 mailbox: Ref.make(mailbox),
@@ -150,10 +147,7 @@ export const generator = () => ({
             Trigger.make({
               enabled: true,
               // TODO(wittjosiah): Queue trigger doesn't support matching query of the column.
-              spec: {
-                kind: 'queue',
-                queue: queueDxn,
-              },
+              spec: Trigger.specQueue(queueDxn),
               function: Ref.make(Operation.serialize(EntityExtraction)),
               input: {
                 source: '{{event.item}}',
@@ -184,12 +178,7 @@ export const generator = () => ({
           space.db.add(
             Trigger.make({
               enabled: true,
-              spec: {
-                kind: 'subscription',
-                query: {
-                  ast: organizationsQuery.ast,
-                },
-              },
+              spec: Trigger.specSubscription(organizationsQuery),
               function: Ref.make(Operation.serialize(AgentPrompt)),
               input: {
                 prompt: Ref.make(researchPrompt),

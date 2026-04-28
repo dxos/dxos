@@ -5,6 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Assistant, useContextBinder } from '@dxos/plugin-assistant';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 
@@ -15,10 +16,10 @@ export const CommentsModule = ({ space }: ComponentProps) => {
   const feedTarget = chats.at(-1)?.feed.target;
   const context = useContextBinder(space, feedTarget);
   const object = context?.getObjects()[0];
-  const data = useMemo(() => ({ subject: 'comments', companionTo: object }), [object]);
+  const data = useMemo(() => ({ attendableId: 'story', subject: 'comments', companionTo: object }), [object]);
   if (!object) {
     return null;
   }
 
-  return <Surface.Surface role='article' data={data} />;
+  return <Surface.Surface type={AppSurface.Article} data={data} />;
 };

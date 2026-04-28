@@ -13,7 +13,7 @@ import {
   DatabaseHandlers,
   WebSearchBlueprint,
   WebSearchHandlers,
-  WebSearchToolkitGeneric,
+  WebSearchToolkitOpaque,
 } from '@dxos/assistant-toolkit';
 import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
@@ -21,7 +21,6 @@ import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ExampleHandlers, Reply, Trace, Trigger } from '@dxos/functions';
 import { FeedTraceSink, TriggerDispatcher } from '@dxos/functions-runtime';
-import { failedInvariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { dbg } from '@dxos/log';
 import { Operation } from '@dxos/operation';
@@ -43,7 +42,7 @@ const TestLayer = AssistantTestLayerWithTriggers({
   types: [Organization.Organization, Person.Person],
   blueprints: [DatabaseBlueprint.make(), WebSearchBlueprint.make()],
   operationHandlers: [DatabaseHandlers, AgentHandlers, WebSearchHandlers, ExampleHandlers],
-  toolkits: [WebSearchToolkitGeneric],
+  toolkits: [WebSearchToolkitOpaque],
   tracing: 'feed',
   aiServicePreset: 'edge-remote',
 });
@@ -74,10 +73,12 @@ describe('Trace timeline', () => {
             ├──●  [user] Create an organization called "Cyberdyne Systems".
             │  ●  [check-circle] list-schemas - Success
             │  ●  [check-circle] create-object - Success
+            │  ●  [check-circle] add-to-context - Success
             ◆──╯  [check-circle] Agent completed request
             ●  │  [atom] Agent processing request...
             │  ●  [user] Create a person named "John Connor".
             │  ●  [check-circle] create-object - Success
+            │  ●  [check-circle] add-to-context - Success
             ◆──╯  [check-circle] Agent completed request
             "
           `);
@@ -187,10 +188,7 @@ describe('Trace timeline', () => {
             Trigger.make({
               function: Ref.make(Operation.serialize(AgentPrompt)),
               enabled: true,
-              spec: {
-                kind: 'queue',
-                queue: Feed.getQueueDxn(feed)?.toString() ?? failedInvariant('No queue DXN found'),
-              },
+              spec: Trigger.specFeed(feed),
               input: {
                 prompt: Ref.make(prompt),
                 input: '{{event.item}}',
@@ -208,14 +206,7 @@ describe('Trace timeline', () => {
           const graph = renderTimelineAscii(commits, branches);
           expect(`\n${graph}\n`).toMatchInlineSnapshot(`
             "
-            ●     [play] Agent
-            ├──●  [user] Research the given topic, or object.
-            │  ●  [check-circle] AnthropicWebSearch - Success
-            │  ●  [check-circle] AnthropicWebSearch - Success
-            │  ●  [check-circle] AnthropicWebSearch - Success
-            │  ●  [check-circle] AnthropicWebSearch - Success
-            │  ●  [check-circle] complete_job - Success
-            ◆──╯  [check-circle] Agent
+            ●  [check-circle] Agent
             "
           `);
         },

@@ -23,15 +23,16 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'root',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section'],
-        filter: AppSurface.objectArticle(Kanban.Kanban),
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Kanban.Kanban),
+          AppSurface.object(AppSurface.Section, Kanban.Kanban),
+        ),
         component: ({ data, role }) => <KanbanContainer role={role} subject={data.subject} />,
       }),
       Surface.create({
         id: 'object-properties',
-        role: 'object-properties',
         position: 'hoist',
-        filter: AppSurface.objectProperties(Kanban.Kanban),
+        filter: AppSurface.object(AppSurface.ObjectProperties, Kanban.Kanban),
         component: ({ data }) => <KanbanViewEditor subject={data.subject} />,
       }),
       Surface.create({

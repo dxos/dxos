@@ -18,7 +18,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { Obj } from '@dxos/echo';
-import { CredentialsService, TracingService } from '@dxos/functions';
+import { CredentialsService, Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { Message } from '@dxos/types';
@@ -82,7 +82,7 @@ export default FetchMessages.pipe(
           log.info('channel', { id: channel.id, name: 'name' in channel ? channel.name : undefined });
         }
 
-        yield* TracingService.emitStatus({ message: `Will fetch from channels: ${channels.length}` });
+        yield* Trace.emitStatus(`Will fetch from channels: ${channels.length}`);
 
         const threads = yield* Effect.forEach(
           channels,
@@ -122,7 +122,7 @@ export default FetchMessages.pipe(
               } else {
                 break;
               }
-              yield* TracingService.emitStatus({ message: `Fetched messages: ${allMessages.length}` });
+              yield* Trace.emitStatus(`Fetched messages: ${allMessages.length}`);
               if (allMessages.length >= limit) {
                 break;
               }

@@ -18,7 +18,7 @@ triggers:
   - function: chess
     # spaceKey: f1ed03
     subscription:
-      type: dxos.org/type/Chess
+      type: org.dxos.type.chess
 ```
 
 - Write function implementation at `src/functions/<name>.ts`:

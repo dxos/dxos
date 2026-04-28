@@ -1,6 +1,11 @@
 .worktrees/
 .claude/worktrees/
 
+# Claude Code harness session lock — per-machine runtime state, not source.
+.claude/scheduled_tasks.lock
+
+.dev.vars
+
 # Logs
 logs/
 npm-debug.log*

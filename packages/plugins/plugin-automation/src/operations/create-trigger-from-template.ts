@@ -41,16 +41,13 @@ const handler: Operation.WithHandler<typeof CreateTriggerFromTemplate> = CreateT
       switch (template.type) {
         case 'timer': {
           Obj.change(trigger, (trigger) => {
-            trigger.spec = { kind: 'timer', cron: template.cron };
+            trigger.spec = Trigger.specTimer(template.cron);
           });
           break;
         }
         case 'queue': {
           Obj.change(trigger, (trigger) => {
-            trigger.spec = {
-              kind: 'queue',
-              queue: (template.queueDXN as DXN).toString(),
-            };
+            trigger.spec = Trigger.specQueue((template.queueDXN as DXN).toString());
           });
           break;
         }

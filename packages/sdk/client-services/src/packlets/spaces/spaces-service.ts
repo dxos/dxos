@@ -15,7 +15,8 @@ import {
   getCredentialAssertion,
 } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
-import { type SpaceManager } from '@dxos/echo-pipeline';
+import { type EchoHost, type SpaceManager } from '@dxos/echo-pipeline';
+import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -23,6 +24,7 @@ import { log } from '@dxos/log';
 import {
   ApiError,
   AuthorizationError,
+  FeedProtocol,
   IdentityNotInitializedError,
   SpaceNotFoundError,
   encodeError,
@@ -42,6 +44,7 @@ import {
   type QueryCredentialsRequest,
   type QuerySpacesResponse,
   type Space,
+  SpaceArchive,
   SpaceMember,
   SpaceState,
   type SpacesService,
@@ -57,7 +60,14 @@ import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
 
 import { type IdentityManager } from '../identity';
-import { SpaceArchiveWriter, extractSpaceArchive } from '../space-export';
+import {
+  SpaceArchiveWriter,
+  detectSpaceArchiveFormat,
+  extractSpaceArchive,
+  readSerializedSpaceArchive,
+  writeSerializedSpaceArchive,
+  objJsonToObjectStructure,
+} from '../space-export';
 import { type DataSpace } from './data-space';
 import { type DataSpaceManager } from './data-space-manager';
 
@@ -65,6 +75,7 @@ export class SpacesServiceImpl implements SpacesService {
   constructor(
     private readonly _identityManager: IdentityManager,
     private readonly _spaceManager: SpaceManager,
+    private readonly _echoHost: EchoHost,
     private readonly _getDataSpaceManager: Provider<Promise<DataSpaceManager>>,
   ) {}
 
@@ -277,11 +288,18 @@ export class SpacesServiceImpl implements SpacesService {
   }
 
   async exportSpace(request: ExportSpaceRequest): Promise<ExportSpaceResponse> {
-    await using writer = await new SpaceArchiveWriter().open();
     assertArgument(SpaceId.isValid(request.spaceId), 'spaceId', 'Invalid space ID');
 
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.getSpaceById(request.spaceId) ?? raise(new Error('Space not found'));
+
+    const format = request.format ?? SpaceArchive.Format.BINARY;
+    if (format === SpaceArchive.Format.JSON) {
+      const archive = await writeSerializedSpaceArchive({ space, echoHost: this._echoHost });
+      return { archive };
+    }
+
+    await using writer = await new SpaceArchiveWriter().open();
     await writer.begin({ spaceId: space.id });
     const rootUrl = space.automergeSpaceState.lastEpoch?.subject.assertion.automergeRoot;
     assertState(rootUrl, 'Space does not have a root URL');
@@ -312,6 +330,16 @@ export class SpacesServiceImpl implements SpacesService {
   async importSpace(request: ImportSpaceRequest, options?: RequestOptions): Promise<ImportSpaceResponse> {
     const ctx = options?.ctx ?? Context.default();
     const dataSpaceManager = await this._getDataSpaceManager();
+
+    const format = request.archive.format ?? detectSpaceArchiveFormat(request.archive);
+    if (format === SpaceArchive.Format.JSON) {
+      const serialized = readSerializedSpaceArchive(request.archive);
+      const space = await dataSpaceManager.createSpace(ctx);
+      await this._hydrateSpaceFromSerialized(space, serialized);
+      await this._updateMetrics();
+      return { newSpaceId: space.id };
+    }
+
     const extracted = await extractSpaceArchive(request.archive);
     invariant(extracted.metadata.echo?.currentRootUrl, 'Space archive does not contain a root URL');
     const space = await dataSpaceManager.createSpace(ctx, {
@@ -320,6 +348,48 @@ export class SpacesServiceImpl implements SpacesService {
     });
     await this._updateMetrics();
     return { newSpaceId: space.id };
+  }
+
+  /**
+   * Populate a freshly-created space with the objects and feed messages described in a {@link SerializedSpace}.
+   *
+   * Objects are written directly into the space's automerge root document as inline
+   * {@link ObjectStructure} entries; feed messages are appended to the appropriate queue
+   * via {@link EchoHost.queuesService}.
+   */
+  private async _hydrateSpaceFromSerialized(
+    space: DataSpace,
+    serialized: ReturnType<typeof readSerializedSpaceArchive>,
+  ): Promise<void> {
+    const databaseRoot = space.databaseRoot;
+    assertState(databaseRoot, 'Space database root is not ready');
+
+    databaseRoot.handle.change((doc: DatabaseDirectory) => {
+      if (!doc.objects) {
+        doc.objects = {};
+      }
+      for (const obj of serialized.objects) {
+        doc.objects[obj.id] = objJsonToObjectStructure(obj);
+      }
+    });
+
+    for (const feed of serialized.feeds ?? []) {
+      if (feed.messages.length === 0) {
+        continue;
+      }
+      const namespace =
+        feed.namespace === 'trace' ? FeedProtocol.WellKnownNamespaces.trace : FeedProtocol.WellKnownNamespaces.data;
+      try {
+        await this._echoHost.queuesService.insertIntoQueue({
+          spaceId: space.id,
+          queueId: feed.feedObjectId,
+          subspaceTag: namespace,
+          objects: feed.messages.map((message) => JSON.stringify(message)),
+        });
+      } catch (err) {
+        log.warn('failed to import feed data', { feedObjectId: feed.feedObjectId, error: err });
+      }
+    }
   }
 
   private async _joinByAdmission(ctx: Context, { credential }: ContactAdmission): Promise<JoinSpaceResponse> {

@@ -150,7 +150,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
         <div role='none' className='flex flex-col gap-1 overflow-hidden'>
           <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
           <div role='none' className='whitespace-nowrap text-sm text-description'>
-            {message.created && formatDateTime(new Date(), new Date(message.created))}
+            {message.created && formatDateTime(new Date(message.created), new Date())}
           </div>
         </div>
       </div>

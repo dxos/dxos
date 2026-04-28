@@ -33,7 +33,7 @@ const toolCallAndResult: ContentBlock.Any[] = [
 ];
 
 const meta = {
-  title: 'plugins/plugin-assistant/components/ChatThread/widgets/ToolWidget',
+  title: 'plugins/plugin-assistant/components/ChatWidgets/ToolWidget',
   component: ToolWidget,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {

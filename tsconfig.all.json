@@ -277,6 +277,9 @@
       "path": "packages/experimental/discord-bot/tsconfig.json"
     },
     {
+      "path": "packages/experimental/discord-worker/tsconfig.json"
+    },
+    {
       "path": "packages/experimental/env-tests/tsconfig.json"
     },
     {
@@ -304,6 +307,15 @@
       "path": "packages/plugins/plugin-conductor/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-crm/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-crx/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-crx-bridge/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-daily-summary/tsconfig.json"
     },
     {
@@ -313,10 +325,7 @@
       "path": "packages/plugins/plugin-deck/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-excalidraw/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-exemplar/tsconfig.json"
+      "path": "packages/plugins/plugin-discord/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-explorer/tsconfig.json"
@@ -391,6 +400,9 @@
       "path": "packages/plugins/plugin-registry/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-sample/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-script/tsconfig.json"
     },
     {
@@ -401,6 +413,9 @@
     },
     {
       "path": "packages/plugins/plugin-sheet/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-sidekick/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-simple-layout/tsconfig.json"

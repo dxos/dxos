@@ -6,8 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { SpaceSchema } from '@dxos/client/echo';
-import { Database, Ref } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
+import { Database, Feed, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { Message, Transcript } from '@dxos/types';
 
@@ -51,7 +50,7 @@ export const Open = Operation.make({
   output: Schema.Struct({
     content: Schema.String,
   }),
-  services: [Database.Service, QueueService],
+  services: [Database.Service, Feed.FeedService],
 });
 
 export const Summarize = Operation.make({

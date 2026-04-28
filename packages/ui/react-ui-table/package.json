@@ -39,19 +39,6 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "deprecated": [
-        "dist/types/src/deprecated/index.d.ts"
-      ],
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ],
-      "types": [
-        "dist/types/src/types/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"

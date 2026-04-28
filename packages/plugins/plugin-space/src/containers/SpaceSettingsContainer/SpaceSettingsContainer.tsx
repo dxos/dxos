@@ -9,10 +9,20 @@ import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { getPersonalSpace, getSpacePath, isPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
-import { Button, Input, useFileDownload, useMulticastObservable, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  DropdownMenu,
+  Icon,
+  IconButton,
+  Input,
+  useFileDownload,
+  useMulticastObservable,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Form, type FormFieldMap, Settings } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
@@ -175,8 +185,12 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
   );
 
   const download = useFileDownload();
-  const handleBackup = useCallback(async () => {
-    const archive = await space.internal.export();
+  const handleBackupBinary = useCallback(async () => {
+    const archive = await space.internal.export({ format: SpaceArchive.Format.BINARY });
+    download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
+  }, [space, download]);
+  const handleBackupJson = useCallback(async () => {
+    const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
     download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
   }, [space, download]);
 
@@ -201,9 +215,38 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
           <Form.FieldSet />
         </Form.Root>
       </Settings.Section>
+
       <Settings.Section title={t('space-controls.title')} description={t('space-controls.description')}>
+        <Settings.Item title={t('space-key.title')} description={t('space-key.description')}>
+          <div className='flex items-center gap-2'>
+            <Input.Root>
+              <Input.TextInput value={space.key.toHex()} disabled classNames='flex-1 font-mono text-xs' />
+            </Input.Root>
+            <IconButton
+              icon='ph--copy--regular'
+              iconOnly
+              label={t('copy-space-key.label')}
+              onClick={() => {
+                void navigator.clipboard.writeText(space.key.toHex());
+              }}
+            />
+          </div>
+        </Settings.Item>
         <Settings.Item title={t('backup-space.title')} description={t('backup-space.description')}>
-          <Button onClick={handleBackup}>{t('download-backup.label')}</Button>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <Button>
+                {t('download-backup.label')}
+                <Icon icon='ph--caret-down--regular' size={4} classNames='mis-2' />
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              <DropdownMenu.Viewport>
+                <DropdownMenu.Item onClick={handleBackupBinary}>{t('download-backup-binary.label')}</DropdownMenu.Item>
+                <DropdownMenu.Item onClick={handleBackupJson}>{t('download-backup-json.label')}</DropdownMenu.Item>
+              </DropdownMenu.Viewport>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
         </Settings.Item>
         <Settings.Item title={t('repair-space.title')} description={t('repair-space.description')}>
           <Button onClick={handleRepair}>{t('repair-space.label')}</Button>

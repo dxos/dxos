@@ -3,6 +3,7 @@
 //
 
 export * from './Chaos';
+export * from './Hello';
 export * from './Matrix';
 export * from './Oscilloscope';
 export * from './Spinner';

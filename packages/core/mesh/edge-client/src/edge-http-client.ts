@@ -28,6 +28,7 @@ import {
   type ExportBundleResponse,
   type FeedProtocol,
   type GetAgentStatusResponseBody,
+  type GetPluginsResponseBody,
   type GetNotarizationResponseBody,
   type ImportBundleRequest,
   type InitiateOAuthFlowRequest,
@@ -50,6 +51,17 @@ import { createUrl } from '@dxos/util';
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
 import { HttpConfig, encodeAuthHeader, withLogging, withRetryConfig } from './http-client';
 import { getEdgeUrlWithProtocol } from './utils';
+
+/**
+ * HTTP wire shape returned by `/queue/.../query`. Unlike `FeedProtocol.QueryResult`
+ * (the RPC proto type, which transports object payloads as JSON strings), the edge
+ * HTTP endpoint embeds each object directly in the response JSON.
+ */
+export type EdgeQueryQueueResponse = {
+  objects?: unknown[];
+  nextCursor?: string;
+  prevCursor?: string;
+};
 
 const DEFAULT_RETRY_TIMEOUT = 1500;
 const DEFAULT_RETRY_JITTER = 500;
@@ -237,7 +249,7 @@ export class EdgeHttpClient {
     spaceId: SpaceId,
     query: FeedProtocol.QueueQuery,
     args?: EdgeHttpCallArgs,
-  ): Promise<FeedProtocol.QueryResult> {
+  ): Promise<EdgeQueryQueueResponse> {
     const queueId = query.queueIds?.[0];
     invariant(queueId, 'queueId required');
     return this._call(
@@ -409,6 +421,18 @@ export class EdgeHttpClient {
     args?: EdgeHttpCallArgs,
   ): Promise<QueryResponseProto> {
     return this._call(ctx, new URL(`/spaces/${spaceId}/exec-query`, this.baseUrl), { ...args, body, method: 'POST' });
+  }
+
+  //
+  // Registry
+  //
+
+  /**
+   * Fetches the hydrated plugin directory from the Edge registry service.
+   * Unauthenticated; safe to call without an identity.
+   */
+  public async getRegistryPlugins(ctx: Context, args?: EdgeHttpCallArgs): Promise<GetPluginsResponseBody> {
+    return this._call(ctx, new URL('/registry/plugins', this.baseUrl), { ...args, method: 'GET' });
   }
 
   //

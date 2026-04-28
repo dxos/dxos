@@ -20,7 +20,7 @@ const make = () =>
     name: 'Agent blueprint',
     instructions: Template.make({
       source: trim`
-        You work on an agent. Each agent has a spec - the goal of the agent.
+        You work on an agent. Each agent has instructions - the goal of the agent.
         The agent plan shows the current progress of the agent.
         Agent has a number of associated artifacts you can read/write.
         You can edit them if necessary.
@@ -29,9 +29,9 @@ const make = () =>
 
         {{#with agent}}
         <agent id="{{id}}" name="{{name}}">
-          <spec>
-            {{spec}}
-          </spec>
+          <instructions>
+            {{instructions}}
+          </instructions>
           <plan>
             {{plan}}
           </plan>

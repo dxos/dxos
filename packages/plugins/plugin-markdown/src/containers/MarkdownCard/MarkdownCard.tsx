@@ -8,6 +8,7 @@ import { Obj } from '@dxos/echo';
 import { Card, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
+import { mx } from '@dxos/ui-theme';
 
 import { MarkdownEditor, MarkdownEditorProvider } from '#components';
 import { meta } from '#meta';
@@ -21,13 +22,13 @@ export type MarkdownCardProps = { subject: Markdown.Document | Text.Text };
 export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   const { t } = useTranslation(meta.id);
   const snippet = useMemo(() => getSnippet(subject), [subject]);
-  const extensions = useMemo(() => [snippetExtension({ height: 240, scale: 0.8 })], []);
+  const extensions = useMemo(() => [snippetExtension({ height: 300, scale: 0.8 })], []);
   const info = getInfo(subject);
 
   return (
     <Card.Content>
       {snippet && (
-        <Card.Section className='px-1'>
+        <Card.Section className='relative px-1'>
           <MarkdownEditorProvider id={subject.id} viewMode='readonly' extensions={extensions}>
             {(editorRootProps) => (
               <Editor.Root {...editorRootProps}>
@@ -35,6 +36,13 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
               </Editor.Root>
             )}
           </MarkdownEditorProvider>
+          <div
+            role='none'
+            className={mx(
+              'z-10 absolute bottom-0 inset-x-0 h-12 w-full',
+              'bg-gradient-to-b from-transparent to-(--surface-bg) pointer-events-none',
+            )}
+          />
         </Card.Section>
       )}
       <Card.Section>
@@ -46,13 +54,11 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   );
 };
 
-const MAX_LINES = 5;
-
-const getSnippet = (subject: Markdown.Document | Text.Text, fallback?: string) => {
+const getSnippet = (subject: Markdown.Document | Text.Text, fallback?: string, maxLines = 16) => {
   if (Obj.instanceOf(Markdown.Document, subject)) {
-    return Obj.getDescription(subject) || getContentSnippet(subject.content?.target?.content ?? fallback, MAX_LINES);
+    return Obj.getDescription(subject) || getContentSnippet(subject.content?.target?.content ?? fallback, maxLines);
   } else if (Obj.instanceOf(Text.Text, subject)) {
-    return getContentSnippet(subject.content ?? fallback, MAX_LINES);
+    return getContentSnippet(subject.content ?? fallback, maxLines);
   }
 };
 
