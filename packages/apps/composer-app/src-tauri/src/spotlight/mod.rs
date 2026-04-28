@@ -8,10 +8,16 @@ mod config;
 
 pub use config::SpotlightConfig;
 
+use std::sync::Mutex;
+
 use tauri::{AppHandle, LogicalSize, Manager, Runtime, Size, WebviewUrl};
 use tauri_nspanel::{
     tauri_panel, CollectionBehavior, ManagerExt, PanelBuilder, PanelHandle, PanelLevel, StyleMask,
 };
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
+
+/// Tracks the spotlight shortcut currently bound to the OS so updates can swap it cleanly.
+pub struct SpotlightShortcut(pub Mutex<String>);
 
 use crate::LOCALHOST_PORT;
 
@@ -137,6 +143,45 @@ fn center_panel_on_screen(app: &AppHandle, panel: &PanelHandle<tauri::Wry>) -> R
 
     ns_panel.setFrame_display(rect, true);
 
+    Ok(())
+}
+
+/// Update the global keyboard shortcut bound to the spotlight panel.
+///
+/// Tries to bind the new shortcut first; only on success does it unregister the previously bound
+/// shortcut. This guarantees that if the new shortcut is invalid or already taken, the previous
+/// shortcut keeps working.
+#[tauri::command]
+pub fn set_spotlight_shortcut(app: AppHandle, shortcut: String) -> Result<(), String> {
+    let state = app.state::<SpotlightShortcut>();
+    let manager = app.global_shortcut();
+
+    let mut current = state
+        .0
+        .lock()
+        .map_err(|err| format!("Spotlight shortcut state poisoned: {err}"))?;
+
+    if *current == shortcut {
+        return Ok(());
+    }
+
+    let handler_config = SpotlightConfig::default();
+    manager
+        .on_shortcut(shortcut.as_str(), move |app, _shortcut, event| {
+            if event.state == ShortcutState::Pressed {
+                if let Err(err) = toggle_spotlight(app, &handler_config) {
+                    log::error!("[spotlight] toggle failed: {err}");
+                }
+            }
+        })
+        .map_err(|err| format!("Failed to register spotlight shortcut '{shortcut}': {err}"))?;
+
+    if let Err(err) = manager.unregister(current.as_str()) {
+        log::warn!("[spotlight] failed to unregister previous shortcut '{}': {err}", *current);
+    }
+
+    log::info!("[spotlight] shortcut updated '{}' -> '{}'", *current, shortcut);
+    *current = shortcut;
     Ok(())
 }
 
