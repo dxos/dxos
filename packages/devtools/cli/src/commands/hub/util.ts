@@ -50,12 +50,11 @@ export const hubApiRequest = <T>(
       request = yield* HttpClientRequest.bodyJson(options.body)(request);
     }
 
-    const response = yield* withRetry(HttpClient.execute(request), { timeout: Duration.seconds(30) }).pipe(
+    const result = yield* withRetry(HttpClient.execute(request), { timeout: Duration.seconds(30) }).pipe(
       Effect.provide(FetchHttpClient.layer),
     );
 
-    const body = yield* response.json;
-    const envelope = body as EdgeEnvelope<T>;
+    const envelope = result as unknown as EdgeEnvelope<T>;
     if (!envelope.success) {
       yield* Effect.fail(new HubApiError({ message: envelope.message }));
     }
