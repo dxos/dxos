@@ -7435,6 +7435,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
+      '@dxos/assistant-toolkit':
+        specifier: workspace:*
+        version: link:../../core/assistant-toolkit
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../../core/blueprints
