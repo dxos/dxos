@@ -24,6 +24,8 @@
   ],
   "dependencies": {
     "@dxos/ai": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/blueprints": "workspace:*",
@@ -32,6 +34,7 @@
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*"
   },

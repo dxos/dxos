@@ -4546,6 +4546,12 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../assistant
@@ -4570,6 +4576,9 @@ importers:
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../../plugins/plugin-inbox
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-testing
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types

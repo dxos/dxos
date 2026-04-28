@@ -19,6 +19,15 @@
       "path": "../../plugins/plugin-inbox"
     },
     {
+      "path": "../../plugins/plugin-testing"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
       "path": "../../sdk/types"
     },
     {

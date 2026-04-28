@@ -5,7 +5,15 @@
 import { Capability } from '@dxos/app-framework';
 import { OperationHandlerSet } from '@dxos/operation';
 
+// Capability exports mirror `index.ts`. All capabilities are `Capability.lazy`,
+// so browser-only ones (react-surface, navigation-resolver, app-graph-builder,
+// settings) never execute in a node context unless their activation event fires.
+export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
+export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
+export const NavigationResolver = Capability.lazy('NavigationResolver', () => import('./navigation-resolver'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),
 );
+export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const InboxSettings = Capability.lazy('InboxSettings', () => import('./settings'));

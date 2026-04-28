@@ -120,6 +120,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
+    id: 'inbox-settings',
     activatesOn: AppActivationEvents.SetupSettings,
     firesAfterActivation: [InboxEvents.SettingsReady],
     activate: InboxSettings,

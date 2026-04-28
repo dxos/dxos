@@ -4,11 +4,14 @@
 
 import { describe, it } from '@effect/vitest';
 
+import { BlueprintManagerBlueprint, DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
-import { Obj } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
+import { InboxPlugin } from '@dxos/plugin-inbox';
 import { trim } from '@dxos/util';
 
-import { agentTest, DEFAULT_TEST_TIMEOUT, getDefaultBlueprints } from '../harness';
+import { agentTest, DEFAULT_TEST_TIMEOUT } from '../harness';
+import { AssistantTestFixturePlugin } from './fixture-plugin';
 
 Obj.ID.dangerouslyDisableRandomness();
 
@@ -16,6 +19,9 @@ describe('InboxBlueprintEnable', () => {
   it.effect(
     'enables the inbox blueprint and queries emails',
     agentTest(
+      {
+        plugins: [AssistantTestFixturePlugin(), InboxPlugin()],
+      },
       Prompt.make({
         instructions: trim`
           The database starts empty.
@@ -31,7 +37,7 @@ describe('InboxBlueprintEnable', () => {
           - The inbox blueprint is successfully enabled, or you report the exact tool error if it cannot be enabled.
           - You have called [read-email] and it completes successfully.
         `,
-        blueprints: getDefaultBlueprints(),
+        blueprints: [Ref.make(BlueprintManagerBlueprint.make()), Ref.make(DatabaseBlueprint.make())],
       }),
     ),
     { timeout: DEFAULT_TEST_TIMEOUT },
