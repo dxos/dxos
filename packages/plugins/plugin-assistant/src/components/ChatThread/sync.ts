@@ -15,22 +15,6 @@ import { rehydrateToolWidgetsFromMessages } from './tool-widget-state';
 export type TextModel = Pick<MarkdownStreamController, 'length' | 'setContent' | 'append' | 'updateWidget'>;
 
 /**
- * Thread context passed to renderer.
- */
-export class MessageThreadContext implements Pick<MarkdownStreamController, 'updateWidget'> {
-  constructor(private readonly _widgetState?: XmlWidgetStateManager) {}
-
-  updateWidget<T>(id: string, value: StateDispatch<T>) {
-    this._widgetState?.updateWidget(id, value);
-  }
-
-  // TODO(burdon): Resolve from hypergraph.
-  getObjectLabel(_id: DXN) {
-    return 'Object';
-  }
-}
-
-/**
  * Renders a block to markdown.
  *
  * Contract: for any block whose lifetime spans multiple invocations (i.e. a streaming block
@@ -46,6 +30,22 @@ export type BlockRenderer = (
 ) => string | undefined;
 
 /**
+ * Thread context passed to renderer.
+ */
+export class MessageThreadContext implements Pick<MarkdownStreamController, 'updateWidget'> {
+  constructor(private readonly _widgetState?: XmlWidgetStateManager) {}
+
+  updateWidget<T>(id: string, value: StateDispatch<T>) {
+    this._widgetState?.updateWidget(id, value);
+  }
+
+  // TODO(burdon): Resolve name from hypergraph.
+  getObjectLabel(_id: DXN) {
+    return 'Object';
+  }
+}
+
+/**
  * Syncs messages with the editor.
  *
  * Reflects the AI streaming contract:
@@ -55,26 +55,26 @@ export type BlockRenderer = (
  * - The document is read-only outside this syncer.
  *
  * Under those rules the syncer needs only:
- * - `#completed`: the flat-block index past which everything has been fully appended.
- * - `#trailing`: chars of the in-flight block (at index `#completed`) already appended.
- * - `#threadId`: identity sentinel; if `messages[0]?.id` changes, the document is replaced.
+ * - `_completed`: the flat-block index past which everything has been fully appended.
+ * - `_trailing`: chars of the in-flight block (at index `_completed`) already appended.
+ * - `_threadId`: identity sentinel; if `messages[0]?.id` changes, the document is replaced.
  */
 export class MessageSyncer {
-  #threadId?: string;
-  #completed = 0;
-  #trailing = 0;
+  private _threadId?: string;
+  private _completed = 0;
+  private _trailing = 0;
 
-  readonly #context: MessageThreadContext;
+  private readonly _context: MessageThreadContext;
 
   constructor(
     private readonly _document: TextModel,
     private readonly _renderer: BlockRenderer,
   ) {
-    this.#context = new MessageThreadContext(this._document);
+    this._context = new MessageThreadContext(this._document);
   }
 
   get context() {
-    return this.#context;
+    return this._context;
   }
 
   /**
@@ -82,12 +82,12 @@ export class MessageSyncer {
    * and from {@link update} when it detects an identity change in `messages[0]`.
    */
   reset(messages: Message.Message[] = []): void {
-    this.#threadId = messages[0]?.id;
-    this.#completed = 0;
-    this.#trailing = 0;
-    const buffer = this.#walk(messages);
+    this._threadId = messages[0]?.id;
+    this._completed = 0;
+    this._trailing = 0;
+    const buffer = this._walk(messages);
     void this._document.setContent(buffer).then(() => {
-      rehydrateToolWidgetsFromMessages(this.#context, messages);
+      rehydrateToolWidgetsFromMessages(this._context, messages);
     });
   }
 
@@ -97,11 +97,11 @@ export class MessageSyncer {
    * if the call was a streaming append (or a no-op).
    */
   update(messages: Message.Message[]): boolean {
-    if (messages[0]?.id !== this.#threadId) {
+    if (messages[0]?.id !== this._threadId) {
       this.reset(messages);
       return true;
     }
-    const buffer = this.#walk(messages);
+    const buffer = this._walk(messages);
     if (buffer.length > 0) {
       void this._document.append(buffer);
     }
@@ -109,33 +109,33 @@ export class MessageSyncer {
   }
 
   /**
-   * Walk flat blocks starting at `#completed`, advancing the cursors and returning the chars
-   * to append. Blocks before `#completed` are skipped — their renderer is never re-invoked,
+   * Walk flat blocks starting at `_completed`, advancing the cursors and returning the chars
+   * to append. Blocks before `_completed` are skipped — their renderer is never re-invoked,
    * which preserves single-shot side effects (e.g. tool widget state mutation).
    */
-  #walk(messages: Message.Message[]): string {
+  _walk(messages: Message.Message[]): string {
     let buffer = '';
     let index = 0;
     outer: for (const message of messages) {
       for (const block of message.blocks) {
-        if (index < this.#completed) {
+        if (index < this._completed) {
           index++;
           continue;
         }
-        const rendered = this._renderer(this.#context, message, block) ?? '';
-        if (rendered.length > this.#trailing) {
-          buffer += rendered.slice(this.#trailing);
+        const rendered = this._renderer(this._context, message, block) ?? '';
+        if (rendered.length > this._trailing) {
+          buffer += rendered.slice(this._trailing);
         }
         if (block.pending) {
           // Stay on this block; record how far we've appended so the next call can resume.
           // `Math.max`-style guard against a non-monotonic renderer output without shrinking the doc.
-          if (rendered.length > this.#trailing) {
-            this.#trailing = rendered.length;
+          if (rendered.length > this._trailing) {
+            this._trailing = rendered.length;
           }
           break outer;
         }
-        this.#completed = index + 1;
-        this.#trailing = 0;
+        this._completed = index + 1;
+        this._trailing = 0;
         index++;
       }
     }

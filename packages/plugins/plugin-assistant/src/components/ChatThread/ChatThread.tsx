@@ -20,6 +20,9 @@ const defaultOptions: MarkdownStreamProps['options'] = {
   autoScroll: true,
   // wire: true,
   cursor: true,
+  // Word-by-word cadence so the visible typewriter effect doesn't depend on the AI service's
+  // chunk size. Each whitespace boundary becomes its own CM dispatch; XML widgets remain atomic.
+  streamCadence: 'word',
 };
 
 export type ChatThreadProps = ThemedClassName<

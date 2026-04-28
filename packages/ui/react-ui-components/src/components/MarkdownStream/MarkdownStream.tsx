@@ -50,7 +50,7 @@ import {
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { createStreamer } from './stream';
+import { type StreamerOptions, createStreamer } from './stream';
 export interface MarkdownStreamController extends XmlWidgetStateManager {
   get length(): number | undefined;
   scrollToBottom: (behavior?: ScrollBehavior) => void;
@@ -75,6 +75,16 @@ export type MarkdownStreamProps = ThemedClassName<
       wire?: boolean;
       cursor?: boolean;
       fader?: boolean;
+      /**
+       * Streaming cadence. See {@link StreamerOptions}.
+       * Use `'word'` or `'character'` to break large source chunks into smaller CM dispatches —
+       * useful when the AI service emits big partial blocks but you want a smoother typewriter
+       * effect. Combine with `streamDelayMs` to add a per-token sleep.
+       * Default: `'span'` (one CM dispatch per source chunk; current behaviour).
+       */
+      streamCadence?: StreamerOptions['chunkSize'];
+      /** Per-token delay (ms) for the streaming queue. Default `0`. */
+      streamDelayMs?: number;
     };
     onEvent?: (event: MarkdownStreamEvent) => void;
   } & (XmlTagsOptions & AutoScrollProps)
@@ -142,7 +152,10 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     }, [view, parentRef, onEvent]);
 
     // Consume queue and update document.
-    useMarkdownStreamQueue(view, queue);
+    useMarkdownStreamQueue(view, queue, {
+      chunkSize: options?.streamCadence,
+      delayMs: options?.streamDelayMs,
+    });
 
     // Cleanup.
     useEffect(() => {
@@ -242,7 +255,13 @@ const useMarkdownStreamTextEditor = (
 /**
  * Consumes streaming text from the queue and appends it to the editor document.
  */
-const useMarkdownStreamQueue = (view: EditorView | null, queue: Queue.Queue<string>) => {
+const useMarkdownStreamQueue = (
+  view: EditorView | null,
+  queue: Queue.Queue<string>,
+  streamerOptions?: StreamerOptions,
+) => {
+  const chunkSize = streamerOptions?.chunkSize;
+  const delayMs = streamerOptions?.delayMs;
   useEffect(() => {
     if (!view) {
       return;
@@ -250,7 +269,7 @@ const useMarkdownStreamQueue = (view: EditorView | null, queue: Queue.Queue<stri
 
     // Consume queue and update document.
     const fork = Stream.fromQueue(queue).pipe(
-      createStreamer,
+      (source) => createStreamer(source, { chunkSize, delayMs }),
       Stream.runForEach((text) =>
         Effect.sync(() => {
           const scrollTop = view.scrollDOM.scrollTop;
@@ -272,7 +291,7 @@ const useMarkdownStreamQueue = (view: EditorView | null, queue: Queue.Queue<stri
     return () => {
       void runAndForwardErrors(Fiber.interrupt(fork));
     };
-  }, [view, queue]);
+  }, [view, queue, chunkSize, delayMs]);
 };
 
 type MarkdownStreamControllerDeps = {
