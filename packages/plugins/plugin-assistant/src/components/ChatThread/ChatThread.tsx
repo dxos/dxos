@@ -23,6 +23,12 @@ const defaultOptions: MarkdownStreamProps['options'] = {
   // Word-by-word cadence so the visible typewriter effect doesn't depend on the AI service's
   // chunk size. Each whitespace boundary becomes its own CM dispatch; XML widgets remain atomic.
   streamCadence: 'word',
+  // Per-token delay so the typewriter is visibly streaming. Without a delay, the splitter
+  // emits all tokens as microtasks and the browser coalesces ~hundreds of CM dispatches into
+  // a handful of rAF frames — looks instant even though the AI is actually streaming. ~30ms
+  // gives roughly one word per frame: visible flow without making long responses sluggish.
+  // (Verified empirically: 20ms is imperceptible, 200ms is comfortably visible but slow.)
+  streamDelayMs: 30,
 };
 
 export type ChatThreadProps = ThemedClassName<
