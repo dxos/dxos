@@ -50,8 +50,7 @@ import {
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { createStreamer } from './stream';
-
+import { type StreamerOptions, createStreamer } from './stream';
 export interface MarkdownStreamController extends XmlWidgetStateManager {
   get length(): number | undefined;
   scrollToBottom: (behavior?: ScrollBehavior) => void;
@@ -76,6 +75,16 @@ export type MarkdownStreamProps = ThemedClassName<
       wire?: boolean;
       cursor?: boolean;
       fader?: boolean;
+      /**
+       * Streaming cadence. See {@link StreamerOptions}.
+       * Use `'word'` or `'character'` to break large source chunks into smaller CM dispatches —
+       * useful when the AI service emits big partial blocks but you want a smoother typewriter
+       * effect. Combine with `streamDelayMs` to add a per-token sleep.
+       * Default: `'span'` (one CM dispatch per source chunk; current behaviour).
+       */
+      streamCadence?: StreamerOptions['chunkSize'];
+      /** Per-token delay (ms) for the streaming queue. Default `0`. */
+      streamDelayMs?: number;
     };
     onEvent?: (event: MarkdownStreamEvent) => void;
   } & (XmlTagsOptions & AutoScrollProps)
@@ -85,17 +94,12 @@ export type MarkdownStreamProps = ThemedClassName<
  * Codemirror-based markdown editor with xml tag widtgets and streaming support.
  */
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
-  ({ classNames, debug, content, options, registry, onEvent, paragraphToWidgetGapRem = 1.125 }, forwardedRef) => {
+  ({ classNames, debug, content, options, registry, onEvent }, forwardedRef) => {
     // Store current content so that we can toggle debug mode.
     const contentRef = useRef(content);
 
     // Codemirror editor.
-    const { parentRef, view, viewRef, widgets } = useMarkdownStreamTextEditor(contentRef, {
-      debug,
-      registry,
-      options,
-      paragraphToWidgetGapRem,
-    });
+    const { parentRef, view, viewRef, widgets } = useMarkdownStreamTextEditor(contentRef, { debug, registry, options });
 
     // Streaming text queue.
     const [queue, setQueue, queueRef] = useStateWithRef(Effect.runSync(Queue.unbounded<string>()));
@@ -148,7 +152,10 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     }, [view, parentRef, onEvent]);
 
     // Consume queue and update document.
-    useMarkdownStreamQueue(view, queue);
+    useMarkdownStreamQueue(view, queue, {
+      chunkSize: options?.streamCadence,
+      delayMs: options?.streamDelayMs,
+    });
 
     // Cleanup.
     useEffect(() => {
@@ -175,10 +182,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
   },
 );
 
-type MarkdownStreamTextEditorParams = Pick<
-  MarkdownStreamProps,
-  'debug' | 'registry' | 'options' | 'paragraphToWidgetGapRem'
->;
+type MarkdownStreamTextEditorParams = Pick<MarkdownStreamProps, 'debug' | 'registry' | 'options'>;
 
 type MarkdownStreamTextEditorResult = UseTextEditor & {
   viewRef: RefObject<EditorView | null>;
@@ -190,7 +194,7 @@ type MarkdownStreamTextEditorResult = UseTextEditor & {
  */
 const useMarkdownStreamTextEditor = (
   currentContent: RefObject<string | undefined>,
-  { debug, registry, options, paragraphToWidgetGapRem }: MarkdownStreamTextEditorParams,
+  { debug, registry, options }: MarkdownStreamTextEditorParams,
 ): MarkdownStreamTextEditorResult => {
   const { themeMode } = useThemeContext();
 
@@ -216,15 +220,14 @@ const useMarkdownStreamTextEditor = (
         !debug && [
           extendedMarkdown({ registry }),
           decorateMarkdown({
+            // `dxn:` links/images are reference widgets owned by `preview()` (PreviewInlineWidget /
+            // PreviewBlockWidget). Skipping them here avoids `decorateMarkdown` adding a
+            // non-functional `LinkButton` anchor on top of the same node — e.g. for
+            // `[DXOS](dxn:echo:BNPMIBEDJLRIILYUYZVM6GT64VWI6WPPZ:01KQ889PZBRNHAEECV0ANFAYX7)`.
             skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
           }),
           preview(),
-          xmlTags({
-            registry,
-            setWidgets,
-            bookmarks: ['prompt'],
-            paragraphToWidgetGapRem,
-          }),
+          xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
           scroller({ overScroll: 64 }),
           ...(options?.autoScroll ? [autoScroll()] : []),
           ...(options?.wire
@@ -243,16 +246,7 @@ const useMarkdownStreamTextEditor = (
         ],
       ].filter(isTruthy),
     };
-  }, [
-    themeMode,
-    registry,
-    debug,
-    options?.autoScroll,
-    options?.wire,
-    options?.cursor,
-    options?.fader,
-    paragraphToWidgetGapRem,
-  ]);
+  }, [themeMode, registry, debug, options?.autoScroll, options?.wire, options?.cursor, options?.fader]);
 
   const viewRef = useDynamicRef(view);
   return { view, viewRef, parentRef, widgets };
@@ -261,7 +255,13 @@ const useMarkdownStreamTextEditor = (
 /**
  * Consumes streaming text from the queue and appends it to the editor document.
  */
-const useMarkdownStreamQueue = (view: EditorView | null, queue: Queue.Queue<string>) => {
+const useMarkdownStreamQueue = (
+  view: EditorView | null,
+  queue: Queue.Queue<string>,
+  streamerOptions?: StreamerOptions,
+) => {
+  const chunkSize = streamerOptions?.chunkSize;
+  const delayMs = streamerOptions?.delayMs;
   useEffect(() => {
     if (!view) {
       return;
@@ -269,7 +269,7 @@ const useMarkdownStreamQueue = (view: EditorView | null, queue: Queue.Queue<stri
 
     // Consume queue and update document.
     const fork = Stream.fromQueue(queue).pipe(
-      createStreamer,
+      (source) => createStreamer(source, { chunkSize, delayMs }),
       Stream.runForEach((text) =>
         Effect.sync(() => {
           const scrollTop = view.scrollDOM.scrollTop;
@@ -291,7 +291,7 @@ const useMarkdownStreamQueue = (view: EditorView | null, queue: Queue.Queue<stri
     return () => {
       void runAndForwardErrors(Fiber.interrupt(fork));
     };
-  }, [view, queue]);
+  }, [view, queue, chunkSize, delayMs]);
 };
 
 type MarkdownStreamControllerDeps = {
@@ -349,9 +349,12 @@ const createMarkdownStreamController = ({
     /** Append to queue (and stream). */
     append: async (text: string) => {
       contentRef.current += text;
-      if (viewRef.current?.state.doc.length === 0) {
-        await onReset(text);
-      } else if (text.length) {
+      if (text.length) {
+        // Always go through the streaming queue, even when the doc starts empty. Skipping the
+        // queue in that case (via `onReset`) bypasses the `wire` extension's transaction filter
+        // and the first chunk lands in one CM dispatch — defeating the typewriter for any
+        // consumer (e.g. ChatThread) where the first delta is large because upstream batching
+        // collected several streaming partials before React rendered.
         const queue = queueRef.current;
         if (queue) {
           await runAndForwardErrors(Queue.offer(queue, text));

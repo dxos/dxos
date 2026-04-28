@@ -155,7 +155,11 @@ export const scroller = ({ overScroll = 0 }: ScrollerOptions = {}) => {
       },
       '.cm-scroller': {
         overflowY: 'scroll',
-        overflowAnchor: 'none',
+        // Browser scroll-anchoring: when widgets above the viewport resize (e.g. tool blocks
+        // expanding their TogglePanel), the browser picks a stable element near the viewport
+        // top and adjusts `scrollTop` so the user's view doesn't jump. Auto-scroll's pinning
+        // logic still has the final word when pinned (forces scrollTop to scrollHeight).
+        overflowAnchor: 'auto',
         paddingBottom: '0',
       },
       '.cm-scroller.cm-hide-scrollbar::-webkit-scrollbar': {
