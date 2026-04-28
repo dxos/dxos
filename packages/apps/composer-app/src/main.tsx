@@ -354,9 +354,8 @@ const main = async () => {
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
 
-  // `getPlugins` dynamic-imports every plugin chunk in parallel. Run it
-  // concurrently with `UrlLoader.preload` (network-bound) so the two waits
-  // overlap.
+  // `getPlugins` dynamic-imports every plugin chunk in parallel.
+  // Run it concurrently with `UrlLoader.preload` (network-bound) so the two waits overlap.
   bootStatus('Loading plugins…');
   const [builtinPlugins, remotePluginsResult] = await Promise.all([
     getPlugins(conf, {
@@ -372,7 +371,8 @@ const main = async () => {
       return [] as Plugin.Plugin[];
     }),
   ]);
-  bootStatus('Almost ready…');
+
+  bootStatus('Starting Composer…');
   window.__bootLoader?.progress(1);
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
@@ -423,11 +423,9 @@ const main = async () => {
       setupEvents,
       cacheEnabled: true,
       safeMode,
-      // The useLoading state machine ticks every `debounce` ms (Loading →
-      // FadeIn → FadeOut → Done), so the gap between `Startup` activated and
-      // `<Placeholder>` dismissed is at least 2× debounce. The boot loader
-      // covers the pre-React phase, so we don't need a longer fade to hide
-      // a flash.
+      // The useLoading state machine ticks every `debounce` ms (Loading → FadeIn → FadeOut → Done),
+      // so the gap between `Startup` activated and `<Placeholder>` dismissed is at least 2× debounce.
+      // The boot loader covers the pre-React phase, so we don't need a longer fade to hide a flash.
       debounce: 200,
     });
 
@@ -444,9 +442,8 @@ const main = async () => {
   } else {
     createRoot(root).render(<Main />);
   }
-  // The boot loader is dismissed from `Placeholder.tsx`'s `useLayoutEffect`
-  // (gated on `stage >= 1`), so it stays visible until React has actually
-  // committed its replacement.
+  // The boot loader is dismissed from `Placeholder.tsx`'s `useLayoutEffect` (gated on `stage >= 1`),
+  // so it stays visible until React has actually committed its replacement.
 };
 
 void main();

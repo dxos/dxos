@@ -95,7 +95,7 @@ const DeterminateStory = () => {
     }, 100);
     return () => clearInterval(handle);
   }, []);
-  const status = progress >= 1 ? 'Almost ready…' : `Loading plugins (${Math.round(progress * 59)}/59)…`;
+  const status = progress >= 1 ? 'Starting Composer…' : `Loading plugins (${Math.round(progress * 59)}/59)…`;
   return <BootLoader status={status} markSvg={PLACEHOLDER_MARK} progress={progress} />;
 };
 
