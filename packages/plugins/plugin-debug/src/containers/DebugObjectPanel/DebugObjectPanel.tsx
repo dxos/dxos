@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { ObjectsTree } from '@dxos/devtools';
-import { Filter, Obj, Query } from '@dxos/echo';
+import { Filter, Json, Obj, Query } from '@dxos/echo';
 import type { ObjectId } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
-import { Clipboard, Grid, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Clipboard, Grid, Input, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 
 export type DebugObjectPanelProps = Pick<
@@ -20,10 +20,12 @@ export type DebugObjectPanelProps = Pick<
 export const DebugObjectPanel = ({ role, companionTo }: DebugObjectPanelProps) => {
   const db = Obj.getDatabase(companionTo);
   const [selectedId, setSelectedId] = useState<ObjectId | null>(null);
+  const [depth, setDepth] = useState(0);
   const [selectedObject] = useQuery(
     db,
     Query.select(Filter.id(selectedId ?? companionTo.id)).options({ deleted: 'include' }),
   );
+  const refReplacer = useMemo(() => (db ? Json.createRefReplacer({ db, depth }) : undefined), [db, depth]);
 
   return (
     <Clipboard.Provider>
@@ -40,13 +42,30 @@ export const DebugObjectPanel = ({ role, companionTo }: DebugObjectPanelProps) =
                 </ScrollArea.Viewport>
               </ScrollArea.Root>
             )}
-            <Syntax.Root data={selectedObject}>
-              <Syntax.Content>
-                <Syntax.Filter />
-                <Syntax.Viewport>
-                  <Syntax.Code />
-                </Syntax.Viewport>
-              </Syntax.Content>
+            <Syntax.Root data={selectedObject} replacer={refReplacer}>
+              <Panel.Root>
+                <Panel.Toolbar asChild>
+                  <Toolbar.Root classNames='grid grid-cols-[1fr_3rem]'>
+                    <Syntax.Filter />
+                    <Input.Root>
+                      <Input.TextInput
+                        variant='subdued'
+                        type='number'
+                        min={0}
+                        step={1}
+                        aria-label='Ref depth'
+                        value={depth}
+                        onChange={(event) => setDepth(Math.max(0, Number(event.target.value) || 0))}
+                      />
+                    </Input.Root>
+                  </Toolbar.Root>
+                </Panel.Toolbar>
+                <Panel.Content asChild>
+                  <Syntax.Viewport>
+                    <Syntax.Code />
+                  </Syntax.Viewport>
+                </Panel.Content>
+              </Panel.Root>
             </Syntax.Root>
           </Grid>
         </Panel.Content>

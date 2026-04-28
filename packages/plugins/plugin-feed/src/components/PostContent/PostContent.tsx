@@ -56,6 +56,10 @@ export const dedupeImagesInMarkdown = (markdown: string, excluded: ReadonlyArray
   return dedupe(dedupe(markdown, markdownImg), htmlImg);
 };
 
+/** Returns true if the markdown contains at least one Markdown or inline HTML image. */
+export const contentHasImage = (markdown: string): boolean =>
+  /!\[[^\]]*\]\(\s*[^)\s]+/.test(markdown) || /<img\b[^>]*\bsrc=["'][^"']+["']/i.test(markdown);
+
 /**
  * Shared presentational layout for an article-style post.
  * Render order: title → hero image → Markdown body (`post.content` /
@@ -78,11 +82,19 @@ export const PostContent = composable<HTMLDivElement, PostContentProps>(
       return dedupeImagesInMarkdown(source, [post.imageUrl]);
     }, [post.content, post.snippet, post.imageUrl]);
 
+    // Suppress the hero when the article body already carries imagery — RSS feeds often
+    // duplicate the lead image inside `<content>` under a different URL than `imageUrl`,
+    // and rendering both stacks the same picture twice (see e.g. Guardian galleries).
+    const showHero = useMemo(
+      () => Boolean(post.imageUrl?.startsWith('http')) && !contentHasImage(content),
+      [post.imageUrl, content],
+    );
+
     return (
       <ScrollArea.Root {...props} orientation='vertical' thin ref={forwardedRef}>
         <ScrollArea.Viewport classNames='flex flex-col gap-3 p-4'>
           {title && <h1 className='text-xl font-semibold'>{title}</h1>}
-          {post.imageUrl?.startsWith('http') && (
+          {showHero && (
             <img src={post.imageUrl} alt='' className='rounded w-full object-cover max-h-72' loading='lazy' />
           )}
           {content && <MarkdownViewer content={content} />}
