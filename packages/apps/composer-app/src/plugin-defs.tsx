@@ -38,16 +38,15 @@ export type PluginConfig = State & {
 /**
  * Plugin IDs (kept in sync with each plugin's `meta.id`).
  *
- * Phase 2 (lazy plugins): the actual plugin factories are dynamically imported in
- * {@link getPlugins} so the main bundle does not pull every plugin's transitive
- * graph at module-evaluation time. Hardcoding the ids here lets `getCore` and
- * `getDefaults` enumerate enabled plugins without paying that cost — they only
- * need the string ids.
+ * The plugin factories themselves are dynamically imported in {@link getPlugins}
+ * so the main bundle does not pull every plugin's transitive graph at
+ * module-evaluation time. Hardcoding the ids here lets `getCore` and
+ * `getDefaults` enumerate enabled plugins without loading the full chunks.
  *
- * If a plugin renames its `meta.id`, this constant must be updated. There is no
- * guard for drift today; a future improvement is to expose `meta` from each
- * plugin via a `./meta` subpath export so we can import it without dragging the
- * whole plugin chunk along.
+ * If a plugin renames its `meta.id`, this constant must be updated by hand —
+ * there is no compile-time guard for drift. A future improvement is to expose
+ * `meta` from each plugin via a `./meta` subpath export so we can import it
+ * without dragging the whole plugin chunk along.
  */
 const ID = {
   ASSISTANT: 'org.dxos.plugin.assistant',
@@ -197,16 +196,10 @@ export type GetPluginsOptions = {
 /**
  * Constructs every plugin instance the host can offer (whether enabled or not).
  *
- * Phase 2 (lazy plugins): instead of `import { FooPlugin } from '@dxos/plugin-foo'`
- * at the top of the file — which would force every plugin's transitive module
- * graph into the main bundle at parse time — each plugin is requested via a
- * dynamic `import()` here. Rollup emits a separate chunk per import; the network
- * and parser can pipeline all of them in parallel via {@link Promise.all}.
- *
- * The host (`main.tsx`) calls this once during the `plugins` profiler phase, so
- * the cost shifts from "module-graph evaluation before main() runs" (4.9 s of
- * blank screen on cold load) to a parallel fetch+parse during `plugins-init`
- * (where the boot loader is already on screen and animating).
+ * Each plugin is requested via a dynamic `import()` so the main bundle doesn't
+ * pull every plugin's transitive module graph at parse time. Rollup emits a
+ * separate chunk per import; network and parser pipeline them in parallel via
+ * {@link Promise.all}. The boot loader is already on screen during this phase.
  *
  * @returns A flat list of `Plugin.Plugin` instances, suitable for passing to
  *   `useApp({ plugins })`.

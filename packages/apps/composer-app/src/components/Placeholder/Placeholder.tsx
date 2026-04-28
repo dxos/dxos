@@ -15,12 +15,11 @@ export const Placeholder = ({ stage = 1, progress }: PlaceholderProps) => {
     throw new Error('Test error');
   }
 
-  // Phase 8a: hand off from the native-DOM boot loader once the React
-  // placeholder is *visible*. We delay dismiss until `stage >= 1` because the
-  // Composer logo here is `opacity-0` at `stage = 0` (Loading) and only
-  // becomes visible at `FadeIn` and beyond. Dismissing on mount would expose
-  // a blank-with-status-bar frame for one debounce tick. `useLayoutEffect`
-  // ensures the dismiss is committed before the next paint.
+  // Hand off from the native-DOM boot loader once the React placeholder is
+  // *visible*. The Composer logo here is `opacity-0` at `stage = 0` (Loading)
+  // and only becomes visible at `FadeIn` and beyond — dismissing on mount
+  // would expose a blank-with-status-bar frame for one debounce tick.
+  // `useLayoutEffect` ensures the dismiss is committed before the next paint.
   useLayoutEffect(() => {
     if (stage >= 1) {
       window.__bootLoader?.dismiss();

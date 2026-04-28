@@ -32,13 +32,13 @@ export default Capability.makeModule(
       spaceInvitationCode: searchProps.get('spaceInvitationCode') ?? undefined,
     });
 
-    // Phase 1: don't block the `Startup` activation event on `initialize()`.
-    // The manager is contributed synchronously so the framework treats this
-    // module as activated immediately; identity creation, agent provisioning,
-    // and credential queries continue in the background. Anything reading
-    // `WelcomeCapabilities.Onboarding` already obtains a manager whose state
-    // is observable via `client.halo.identity` / `client.halo.credentials`
-    // subscriptions wired up in the constructor.
+    // Don't block the `Startup` activation event on `initialize()`. The manager
+    // is contributed synchronously so the framework treats this module as
+    // activated immediately; identity creation, agent provisioning, and
+    // credential queries continue in the background. Consumers reading
+    // `WelcomeCapabilities.Onboarding` get a manager whose state is observable
+    // via the `client.halo.identity` / `client.halo.credentials` subscriptions
+    // wired up in the constructor.
     void manager.initialize().catch((error) => log.catch(error));
 
     return Capability.contributes(WelcomeCapabilities.Onboarding, manager, () => Effect.sync(() => manager.destroy()));

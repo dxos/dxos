@@ -22,9 +22,8 @@ export const here = path.dirname(fileURLToPath(import.meta.url));
  *   - `warm-cold`: persistent context primed once, closed, then re-launched.
  *     IDB persists across launches but module cache is fresh — closest to a
  *     real returning user opening Composer in a new tab. (chromium-only)
- *   - `throttled-cold`: cold scenario with Slow-3G + 4× CPU emulated via CDP.
- *     Reveals the wins from phase 2's bundle reduction that local-disk loads
- *     don't see. (chromium-only)
+ *   - `throttled-cold`: cold scenario with Fast 3G + 2× CPU emulated via CDP.
+ *     Reveals bundle-size wins that local-disk loads don't expose. (chromium-only)
  *   - `dev-cold`: vite dev server, fresh browser context, but with the vite
  *     optimize-deps cache and module graph already primed by a previous
  *     navigation in the same `vite serve` process. Measures the inner-loop

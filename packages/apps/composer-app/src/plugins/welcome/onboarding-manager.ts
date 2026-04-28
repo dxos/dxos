@@ -52,9 +52,10 @@ export class OnboardingManager {
   /**
    * Set by {@link destroy}. `initialize` checks this at every `await` boundary
    * so it bails out instead of mutating state after the manager has been torn
-   * down — a real risk now that `WelcomeCapabilities.Onboarding` contributes
-   * the manager synchronously and runs `initialize()` as a fire-and-forget
-   * background side-effect (phase 1).
+   * down. Necessary because `WelcomeCapabilities.Onboarding` contributes the
+   * manager synchronously and runs `initialize()` as a fire-and-forget
+   * background side-effect — `destroy()` can fire while async work is still
+   * in flight.
    */
   private _destroyed = false;
 

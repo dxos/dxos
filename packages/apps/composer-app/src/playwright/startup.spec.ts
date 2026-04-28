@@ -24,11 +24,11 @@ test.beforeAll(() => {
 test.describe.serial('Startup timing harness', () => {
   // First-paint and module-graph evaluation each take real wall clock; webkit can be much slower.
   test.setTimeout(120_000);
-  // The warm-reload scenario hits an intermittent composer-app race that opens the
-  // ResetDialog ("System Error") instead of mounting the user account. The race is
-  // pre-existing (reproducible on phase 0 and on every phase since), independent
-  // of plugin-manager changes, and not yet root-caused. Until it is fixed the
-  // benchmark scenarios get up to two retries so a flake doesn't lose us a row.
+  // The warm-reload scenario hits an intermittent composer-app race that opens
+  // the ResetDialog ("System Error") instead of mounting the user account. The
+  // race is independent of plugin-manager changes and not yet root-caused;
+  // until then the benchmark scenarios get up to two retries so a flake
+  // doesn't lose us a row.
   test.describe.configure({ retries: 2 });
 
   test('cold start (cleared storage)', async ({ browser, browserName }, testInfo) => {
@@ -102,9 +102,9 @@ test.describe.serial('Startup timing harness', () => {
   test('warm-cold start (persisted identity, fresh tab)', async ({ playwright, browserName }, testInfo) => {
     test.skip(browserName !== 'chromium', 'persistent context flow currently exercised only on chromium');
 
-    // Phase 5a: closer to a real returning user — IDB persists in `userDataDir`
-    // across launches, but the module cache is cleared because the browser
-    // process has fully closed. Separates "load app" from "create new identity",
+    // Closer to a real returning user — IDB persists in `userDataDir` across
+    // launches, but the module cache is cleared because the browser process
+    // has fully closed. Separates "load app" from "create new identity",
     // which the regular `cold` scenario conflates.
     const userDataDir = path.join(os.tmpdir(), `composer-harness-${process.pid}-${Date.now()}`);
     const browserType = playwright[browserName as 'chromium' | 'firefox' | 'webkit'];
@@ -161,22 +161,18 @@ test.describe.serial('Startup timing harness', () => {
 
   test('throttled cold start (Fast 3G + 2× CPU)', async ({ browser, browserName }, testInfo) => {
     // Opt-in: composer's full asset graph is ~40 MB, so even Fast 3G + 2× CPU
-    // can take 5+ minutes. Useful when validating phase 2 (lazy plugins) on
+    // can take 5+ minutes. Useful for validating bundle-size optimizations on
     // real-network conditions, but too slow for the regular dev-loop. Set
     // `DX_HARNESS_THROTTLED=1` to enable.
     test.skip(!process.env.DX_HARNESS_THROTTLED, 'set DX_HARNESS_THROTTLED=1 to run');
     test.skip(browserName !== 'chromium', 'CDP emulation is chromium-only');
     test.setTimeout(600_000);
 
-    // Phase 5b: emulate a slow real-world client. Reveals the wins from phase 2's
-    // bundle reduction that local-disk loads don't see — the smaller eager
-    // chunk parses much faster on a throttled CPU, and the 60 lazy plugin
-    // chunks parallelize over a high-latency connection.
-    //
-    // Profile choice: Fast 3G + 2× CPU (not Slow 3G + 4× CPU) because
-    // composer's full asset graph is ~40 MB; Slow 3G blew past the test's
-    // 150 s waitForReady budget. Fast 3G + 2× CPU is closer to a coffee-shop
-    // wi-fi user on an older laptop and still measurably stresses the bundle.
+    // Emulate a slow real-world client. Profile is Fast 3G + 2× CPU (not Slow
+    // 3G + 4× CPU): composer's full asset graph is ~40 MB and Slow 3G blew
+    // past any reasonable `waitForReady` budget. Fast 3G + 2× CPU approximates
+    // a coffee-shop wi-fi user on an older laptop and still measurably
+    // stresses the bundle.
     const context = await browser.newContext();
     const page = await context.newPage();
 

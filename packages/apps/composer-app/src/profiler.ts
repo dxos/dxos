@@ -7,10 +7,9 @@
 const STORAGE_KEY = 'org.dxos.composer.startup-profile';
 
 /**
- * Phase 7b: BroadcastChannel name on which `dump()` publishes the snapshot.
- * A devtools panel (or another tab) can `new BroadcastChannel('org.dxos.composer.startup-profile')`
- * and listen for `'message'` events to receive the JSON snapshot without
- * polling localStorage.
+ * BroadcastChannel name on which `dump()` publishes the snapshot. A devtools
+ * panel or another tab can subscribe to `'message'` events on this channel to
+ * receive the JSON snapshot without polling localStorage.
  */
 export const BROADCAST_CHANNEL_NAME = STORAGE_KEY;
 
@@ -123,9 +122,9 @@ export const startupProfiler = (): Profiler => {
       );
       console.groupEnd();
 
-      // Phase 7b: publish the snapshot on a BroadcastChannel so a devtools
-      // panel (or another tab) can subscribe without polling localStorage.
-      // Best-effort: BroadcastChannel is missing in some embedded webviews.
+      // Publish the snapshot on a BroadcastChannel so a devtools panel or
+      // another tab can subscribe without polling localStorage. Best-effort —
+      // `BroadcastChannel` is missing in some embedded webviews.
       try {
         if (typeof BroadcastChannel !== 'undefined') {
           const channel = new BroadcastChannel(BROADCAST_CHANNEL_NAME);

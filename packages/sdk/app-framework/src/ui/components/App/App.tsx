@@ -22,11 +22,9 @@ export const App = ({ placeholder: Placeholder, ready, error, debounce, progress
   const stage = useLoading(ready, debounce);
   const placeholderDismissed = stage >= LoadingState.Done;
 
-  // Phase 3c: emit a once-per-app `app-framework:first-interactive` mark the
-  // first time the placeholder is dismissed and the real app shell renders.
-  // Closes the gap between the profiler's `Startup` activated mark and what
-  // Playwright actually waits on (`treeView.userAccount`); helps quantify the
-  // remaining wall-clock cost of post-`Startup` reconciliation work.
+  // Emit a once-per-app `app-framework:first-interactive` mark the first time
+  // the placeholder is dismissed and the real app shell renders. Closes the
+  // gap between `Startup` activated and the first interactive paint.
   useEffect(() => {
     if (placeholderDismissed && performance.getEntriesByName(FIRST_INTERACTIVE_MARK).length === 0) {
       performance.mark(FIRST_INTERACTIVE_MARK);

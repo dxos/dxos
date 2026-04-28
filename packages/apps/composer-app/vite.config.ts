@@ -82,10 +82,9 @@ export default defineConfig((env) => ({
         rootDir,
       ],
     },
-    // Phase 10: pre-transform the critical-path source files when `vite serve`
-    // starts, before any browser request. The first navigation finds them
-    // already in the transform cache, shaving a chunk of wall-clock off the
-    // dev cold-load.
+    // Pre-transform the critical-path source files when `vite serve` starts,
+    // before any browser request. The first navigation finds them already
+    // in the transform cache.
     warmup: {
       clientFiles: [
         './src/main.tsx',
@@ -125,13 +124,12 @@ export default defineConfig((env) => ({
   },
   optimizeDeps: {
     exclude: ['@dxos/wa-sqlite'],
-    // Phase 10: list deeply-imported dep entrypoints unconditionally so vite's
-    // optimize-deps phase pre-bundles them up front. Without this, vite
-    // discovers them mid-load (when a dynamic import unwraps a new subpath),
-    // which forces a full page reload with the "Discovered new dependencies"
-    // banner — easily ~10 s of wasted dev time per discovery cycle. Was
-    // previously gated on `DX_FASTBUNDLE=1`; now it's always on because the
-    // pre-bundle cost is amortized after the first `vite serve`.
+    // List deeply-imported dep entrypoints so vite's optimize-deps phase
+    // pre-bundles them up front. Without this, vite discovers them mid-load
+    // (when a dynamic import unwraps a new subpath), which forces a full
+    // page reload with the "Discovered new dependencies" banner — ~10 s of
+    // wasted dev time per discovery cycle. The pre-bundle cost is amortized
+    // after the first `vite serve`.
     include: [
       // React.
       'react',
@@ -200,8 +198,8 @@ export default defineConfig((env) => ({
       '@atlaskit/pragmatic-drag-and-drop',
       '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator',
     ],
-    // Phase 10: scan the auxiliary HTML entrypoints during pre-bundle so
-    // navigations to `internal.html` / `devtools.html` / `reset.html` /
+    // Scan the auxiliary HTML entrypoints during pre-bundle so navigations
+    // to `internal.html` / `devtools.html` / `reset.html` /
     // `script-frame/index.html` don't trip a "discovered new dependencies"
     // reload mid-session.
     entries: ['./index.html', './internal.html', './devtools.html', './reset.html', './script-frame/index.html'],
@@ -353,12 +351,12 @@ export default defineConfig((env) => ({
     // ???
     importMapPlugin(),
 
-    // Phase 8b: hand the boot loader the Composer brand mark so the visual
-    // identity is established before any JS bundle parses. The SVG uses
-    // `fill="currentColor"`, so it picks up the loader's `prefers-color-scheme`
+    // Hand the boot loader the Composer brand mark so the visual identity
+    // is established before any JS bundle parses. The SVG uses
+    // `fill="currentColor"` so it picks up the loader's `prefers-color-scheme`
     // text colour and ships as ~1.6 KB of inline markup. Wrapped in try/catch
-    // so an asset rename or move only loses the brand mark — the loader still
-    // renders the bar + status without it.
+    // so an asset rename or move only loses the brand mark — the loader
+    // still renders the bar + status without it.
     bootLoaderPlugin({
       markSvg: (() => {
         const markPath = path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon-monochrome.svg');

@@ -86,9 +86,9 @@ const main = async () => {
     setSafeModeUrl(false);
   }
 
-  // Phase 7a: enable the profiler by default in dev builds so every devloop
-  // produces ledger-able numbers without remembering the `?profiler=1` flag.
-  // Production explicitly opts in (or out) via the URL parameter.
+  // The startup profiler is on by default in dev so every devloop produces
+  // a BENCHMARKS row without remembering `?profiler=1`. Production explicitly
+  // opts in (or out) via the URL parameter.
   const profilerEnabled = isTrue(url.searchParams.get(PARAM_PROFILER), Boolean(import.meta.env?.DEV));
   const profiler = profilerEnabled ? startupProfiler() : undefined;
 
@@ -124,9 +124,8 @@ const main = async () => {
   profiler?.mark('dynamic-imports:start');
   bootStatus('Loading framework…');
 
-  // Phase 3a: load these in parallel rather than serially. With HTTP/2
-  // multiplexing the four chunks pipeline; even on local-disk the parser
-  // can interleave parses, so wall-clock for this phase drops noticeably.
+  // Load these in parallel; HTTP/2 multiplexes the four chunks and even on
+  // local-disk the parser can interleave parses.
   const [{ Config, defs, SaveConfig }, { createClientServices }, { Migrations }, { __COMPOSER_MIGRATIONS__ }] =
     await Promise.all([
       import('@dxos/config'),
@@ -183,13 +182,11 @@ const main = async () => {
   // early spans and replays them once the real OTEL backend registers.
   const observability = initializeObservability(config, isTauri, logBuffer);
 
-  // Phase 6: capture a one-shot `composer.startup` event when the framework
-  // dispatches `app-framework:startup-activated`. Includes total ms,
-  // dynamic-imports / config / services / plugins-init phase durations, the
-  // top-5 slowest modules, transferred bytes (best-effort from
-  // PerformanceResourceTiming), and the boot-loader visibility mark. Uses
-  // PerformanceResourceTiming directly so production builds (without the
-  // opt-in `?profiler=1` flag) still get the data.
+  // Capture a one-shot `composer.startup` event when the framework dispatches
+  // `app-framework:startup-activated`. Includes total ms, per-phase ms, top-5
+  // slowest modules, transferred bytes (best-effort), and the boot-loader
+  // visibility mark. Reads `performance.getEntriesByType` directly so production
+  // builds without `?profiler=1` still get data.
   const captureStartupSummary = (): Record<string, string | number | boolean | undefined> => {
     const measures = performance.getEntriesByType('measure');
     const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
@@ -359,9 +356,9 @@ const main = async () => {
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
 
-  // Phase 2 (lazy plugins): `getPlugins` is now async — every plugin chunk is
-  // dynamically imported in parallel. Run it concurrently with `UrlLoader.preload`
-  // (network-bound) so the two waits overlap.
+  // `getPlugins` dynamic-imports every plugin chunk in parallel. Run it
+  // concurrently with `UrlLoader.preload` (network-bound) so the two waits
+  // overlap.
   bootStatus('Loading plugins…');
   const [builtinPlugins, remotePluginsResult] = await Promise.all([
     getPlugins(conf, {
@@ -428,11 +425,11 @@ const main = async () => {
       setupEvents,
       cacheEnabled: true,
       safeMode,
-      // Phase 3.5: dropped from 1000ms to 200ms. The useLoading state machine
-      // ticks every `debounce` ms (Loading → FadeIn → FadeOut → Done), so the
-      // gap between `Startup` activated and `<Placeholder>` dismissed is at
-      // least 2× debounce. The boot loader covers the pre-React phase, so we
-      // don't need the longer fade to hide a flash.
+      // The useLoading state machine ticks every `debounce` ms (Loading →
+      // FadeIn → FadeOut → Done), so the gap between `Startup` activated and
+      // `<Placeholder>` dismissed is at least 2× debounce. The boot loader
+      // covers the pre-React phase, so we don't need a longer fade to hide
+      // a flash.
       debounce: 200,
     });
 
@@ -449,9 +446,9 @@ const main = async () => {
   } else {
     createRoot(root).render(<Main />);
   }
-  // Phase 8a: dismissal moved into `Placeholder.tsx`'s `useLayoutEffect` so
-  // the boot loader stays visible until React has committed its replacement.
-  // No more blank-frame between createRoot.render and the first paint.
+  // The boot loader is dismissed from `Placeholder.tsx`'s `useLayoutEffect`
+  // (gated on `stage >= 1`), so it stays visible until React has actually
+  // committed its replacement.
 };
 
 void main();

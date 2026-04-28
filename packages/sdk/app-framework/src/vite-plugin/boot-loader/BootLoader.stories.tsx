@@ -131,11 +131,10 @@ export const WithMark: Story = {
 };
 
 /**
- * Cycles through the phase strings the host typically calls
- * `window.__bootLoader.status(...)` with. Used to verify that the progress
- * bar's vertical position is stable across status changes (the regression
- * fixed in 6397799b77 was that `min-height: 1em` on the status box let the
- * line-box's resolved height shift between phases, reflowing the column).
+ * Cycles through the strings the host typically passes to
+ * `window.__bootLoader.status(...)`. Useful for verifying that the progress
+ * bar's vertical position is stable across status changes — `#boot-loader-status`
+ * has a fixed height so the line-box can't reflow the flex column.
  */
 export const Cycling: Story = {
   render: () => <CyclingStory />,
