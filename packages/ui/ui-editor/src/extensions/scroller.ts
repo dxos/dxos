@@ -199,13 +199,7 @@ export const scroller = ({ overScroll = 0 }: ScrollerOptions = {}) => {
  * @param snapThreshold Snap-to-target distance threshold in px.
  * @param snapVelocity Snap-to-target velocity threshold in px/s.
  */
-export function createCrawler(
-  view: EditorView,
-  accel = 540,
-  maxVelocity = 60,
-  snapThreshold = 0.5,
-  snapVelocity = 30,
-) {
+export function createCrawler(view: EditorView, accel = 540, maxVelocity = 60, snapThreshold = 0.5, snapVelocity = 30) {
   const el = view.scrollDOM;
 
   let currentTop = 0;
