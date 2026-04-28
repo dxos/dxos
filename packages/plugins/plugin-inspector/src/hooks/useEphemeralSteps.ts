@@ -63,7 +63,6 @@ export const useEphemeralSteps = (traceMessages: readonly Trace.Message[]): Insp
     }
   }, [traceMessages]);
 
-
   return steps;
 };
 

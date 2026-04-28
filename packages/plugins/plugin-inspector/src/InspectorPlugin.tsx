@@ -7,6 +7,7 @@ import { AppPlugin } from '@dxos/app-toolkit';
 
 import { AppGraphBuilder, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
+
 import { translations } from './translations';
 
 export const InspectorPlugin = Plugin.define(meta).pipe(

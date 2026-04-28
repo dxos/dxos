@@ -18,9 +18,9 @@ const stepConfig: Record<InspectorStepType, { icon: string; color?: string; labe
   'assistant-message': { icon: 'ph--robot--regular', color: 'text-primary' },
   'tool-call': { icon: 'ph--lightning--regular', color: 'text-amber-500' },
   'tool-result': { icon: 'ph--check-circle--regular', color: 'text-green-500' },
-  'reasoning': { icon: 'ph--brain--regular', color: 'text-purple-400' },
-  'stats': { icon: 'ph--chart-bar--regular', color: 'text-description' },
-  'running': { icon: 'ph--spinner-gap--regular', color: 'text-primary' },
+  reasoning: { icon: 'ph--brain--regular', color: 'text-purple-400' },
+  stats: { icon: 'ph--chart-bar--regular', color: 'text-description' },
+  running: { icon: 'ph--spinner-gap--regular', color: 'text-primary' },
   'turn-start': { icon: 'ph--play--regular', color: 'text-description', label: 'Turn' },
   'turn-completed': { icon: 'ph--check--regular', color: 'text-green-500', label: 'Done' },
   'input-received': { icon: 'ph--arrow-square-down--regular', color: 'text-blue-400' },
@@ -161,7 +161,13 @@ const StepItem = ({ step, isLast, expanded, onToggle }: StepItemProps) => {
                 )}
               />
 
-              <span className={mx('flex-1 truncate', isError && 'text-error', step.type === 'reasoning' && 'italic text-description')}>
+              <span
+                className={mx(
+                  'flex-1 truncate',
+                  isError && 'text-error',
+                  step.type === 'reasoning' && 'italic text-description',
+                )}
+              >
                 {step.type === 'tool-call' && step.toolName
                   ? step.toolName
                   : step.type === 'stats'
@@ -169,9 +175,7 @@ const StepItem = ({ step, isLast, expanded, onToggle }: StepItemProps) => {
                     : step.label}
               </span>
 
-              <span className='text-[10px] text-description shrink-0 tabular-nums'>
-                {formatTime(step.timestamp)}
-              </span>
+              <span className='text-[10px] text-description shrink-0 tabular-nums'>{formatTime(step.timestamp)}</span>
 
               {expandable && (
                 <Icon
@@ -194,7 +198,9 @@ const StepItem = ({ step, isLast, expanded, onToggle }: StepItemProps) => {
                 {step.toolResult && (
                   <div className='mb-2'>
                     <div className='text-[10px] text-description uppercase tracking-wider mb-0.5'>Result</div>
-                    <pre className='whitespace-pre-wrap break-all text-foreground'>{step.toolResult.slice(0, 2000)}</pre>
+                    <pre className='whitespace-pre-wrap break-all text-foreground'>
+                      {step.toolResult.slice(0, 2000)}
+                    </pre>
                   </div>
                 )}
                 {step.error && (

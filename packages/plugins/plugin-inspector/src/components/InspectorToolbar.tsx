@@ -90,9 +90,7 @@ export const InspectorToolbar = ({ processes, steps, onStop, onClear }: Inspecto
               {formatTokens(totalTokens)}
             </span>
           )}
-          {totalDuration > 0 && (
-            <span>{(totalDuration / 1000).toFixed(1)}s</span>
-          )}
+          {totalDuration > 0 && <span>{(totalDuration / 1000).toFixed(1)}s</span>}
         </div>
       )}
 
