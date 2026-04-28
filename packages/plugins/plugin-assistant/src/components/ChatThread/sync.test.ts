@@ -55,13 +55,13 @@ describe('reducers', () => {
         createMessage('assistant', [{ _tag: 'text', text: 'Hi there!' }]),
       ];
 
-      syncer.append(messages);
+      syncer.update(messages);
       expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!', ''].join('\n'));
 
       Obj.change(messages[1], (obj) => {
         obj.blocks.push({ _tag: 'text', text: 'How can I help?' });
       });
-      syncer.append(messages);
+      syncer.update(messages);
       expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!', 'How can I help?', ''].join('\n'));
     }),
   );
@@ -77,7 +77,7 @@ describe('reducers', () => {
         createMessage('assistant', [{ _tag: 'text', text: 'Hi there!', pending: true }]),
       ];
 
-      syncer.append(messages);
+      syncer.update(messages);
       expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!'].join('\n'));
 
       Obj.change(messages[1], (obj) => {
@@ -85,12 +85,12 @@ describe('reducers', () => {
         block.text = 'Hi there! How are you?';
         block.pending = false;
       });
-      syncer.append(messages);
+      syncer.update(messages);
 
       Obj.change(messages[1], (obj) => {
         obj.blocks.push({ _tag: 'text', text: 'How can I help?' });
       });
-      syncer.append(messages);
+      syncer.update(messages);
       expect(doc.content).toEqual(
         ['<prompt>Hello</prompt>', 'Hi there! How are you?', 'How can I help?', ''].join('\n'),
       );
@@ -118,23 +118,23 @@ describe('reducers', () => {
       const messages = [createMessage('assistant', [{ _tag: 'reasoning', reasoningText: 'abc\n1', pending: true }])];
 
       // Tick 1: `"abc\n1"` — `\d+[.)]\s` regex does not match (no dot/space yet).
-      syncer.append(messages);
+      syncer.update(messages);
 
       // Tick 2: `"abc\n1."` — still no match (no trailing whitespace).
       setReasoning(messages[0], 'abc\n1.', true);
-      syncer.append(messages);
+      syncer.update(messages);
 
       // Tick 3: `"abc\n1. "` — line `"1. "` matches and is stripped to empty.
       setReasoning(messages[0], 'abc\n1. ', true);
-      syncer.append(messages);
+      syncer.update(messages);
 
       // Tick 4: `"abc\n1. foo"` — list item with content.
       setReasoning(messages[0], 'abc\n1. foo', true);
-      syncer.append(messages);
+      syncer.update(messages);
 
       // Tick 5: finalize.
       setReasoning(messages[0], 'abc\n1. foo', false);
-      syncer.append(messages);
+      syncer.update(messages);
 
       const openTagCount = (doc.content.match(/<reasoning>/g) ?? []).length;
       const closeTagCount = (doc.content.match(/<\/reasoning>/g) ?? []).length;
@@ -144,7 +144,7 @@ describe('reducers', () => {
   );
 
   // Direct test of `MessageSyncer`'s tolerance for non-monotonic renderer output —
-  // any renderer that produces a shorter string for the same streaming block (e.g. due
+  // any renderer that produces a shorter string for the same streaming block (e.g., due
   // to whitespace normalisation or future transforms) must not produce duplicate output.
   it.effect(
     'non-monotonic renderer output does not duplicate previously-emitted content',
@@ -169,18 +169,18 @@ describe('reducers', () => {
 
       const messages = [createMessage('assistant', [{ _tag: 'reasoning', reasoningText: 'abc\n1.', pending: true }])];
 
-      syncer.append(messages);
+      syncer.update(messages);
       Obj.change(messages[0], (obj) => {
         const block = obj.blocks[0] as Mutable<ContentBlock.Reasoning>;
         block.reasoningText = 'abc\n1. ';
       });
-      syncer.append(messages);
+      syncer.update(messages);
       Obj.change(messages[0], (obj) => {
         const block = obj.blocks[0] as Mutable<ContentBlock.Reasoning>;
         block.reasoningText = 'abc\n1. tail';
         block.pending = false;
       });
-      syncer.append(messages);
+      syncer.update(messages);
 
       const openTagCount = (doc.content.match(/<reasoning>/g) ?? []).length;
       const closeTagCount = (doc.content.match(/<\/reasoning>/g) ?? []).length;
