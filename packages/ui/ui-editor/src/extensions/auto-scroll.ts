@@ -120,12 +120,9 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
             private readonly observer: ResizeObserver;
             private firstObservation = true;
             constructor(view: EditorView) {
-              this.observer = new ResizeObserver(() => {
-                // Skip the initial fire that ResizeObserver emits on `observe()`.
-                if (this.firstObservation) {
-                  this.firstObservation = false;
-                  return;
-                }
+              // Throttle so a continuous drag-resize (or a flurry of layout changes) coalesces
+              // into a single re-pin per ~100ms instead of dispatching every frame.
+              const onResize = throttle(() => {
                 if (!enabled) {
                   return;
                 }
@@ -134,6 +131,14 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
                   view.scrollDOM.scrollTop = view.scrollDOM.scrollHeight;
                   view.dispatch({ effects: scrollerCrawlEffect.of(true) });
                 });
+              }, 100);
+              this.observer = new ResizeObserver(() => {
+                // Skip the initial fire that ResizeObserver emits on `observe()`.
+                if (this.firstObservation) {
+                  this.firstObservation = false;
+                  return;
+                }
+                onResize();
               });
               this.observer.observe(view.scrollDOM);
             }
