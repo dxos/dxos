@@ -59,21 +59,21 @@ export default Capability.makeModule(
             },
             nodes: [
               Node.make({
-                id: Account.Account,
-                data: Account.Account,
-                type: meta.id,
-                properties: {
-                  label: ['account panel label', { ns: meta.id }],
-                  icon: 'ph--identification-card--regular',
-                },
-              }),
-              Node.make({
                 id: Account.Profile,
                 data: Account.Profile,
                 type: meta.id,
                 properties: {
                   label: ['profile.label', { ns: meta.id }],
                   icon: 'ph--user--regular',
+                },
+              }),
+              Node.make({
+                id: Account.Account,
+                data: Account.Account,
+                type: meta.id,
+                properties: {
+                  label: ['account panel label', { ns: meta.id }],
+                  icon: 'ph--identification-card--regular',
                 },
               }),
               Node.make({
