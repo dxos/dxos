@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
 
 import { type PlaceholderProps } from '@dxos/app-framework/ui';
 import { Composer } from '@dxos/brand';
-import { Status, ThemeProvider } from '@dxos/react-ui';
+import { ThemeProvider } from '@dxos/react-ui';
 import { defaultTx, mx } from '@dxos/ui-theme';
 
 export const Placeholder = ({ stage = 1, progress }: PlaceholderProps) => {
@@ -15,12 +15,23 @@ export const Placeholder = ({ stage = 1, progress }: PlaceholderProps) => {
     throw new Error('Test error');
   }
 
-  const hasProgress = progress && progress.total > 0;
+  // Hand off from the native-DOM boot loader once the React placeholder is
+  // *visible*. The Composer logo here is `opacity-0` at `stage = 0` (Loading)
+  // and only becomes visible at `FadeIn` and beyond — dismissing on mount
+  // would expose a blank-with-status-bar frame for one debounce tick.
+  // `useLayoutEffect` ensures the dismiss is committed before the next paint.
+  useLayoutEffect(() => {
+    if (stage >= 1) {
+      window.__bootLoader?.dismiss();
+    }
+  }, [stage]);
+
+  const hasProgress = !!progress && progress.total > 0;
 
   return (
     <ThemeProvider tx={defaultTx}>
-      <div className='relative dx-container h-dvh flex flex-col'>
-        <div className='flex flex-col grow justify-center items-center'>
+      <div role='none' className='relative dx-container h-dvh flex flex-col'>
+        <div role='none' className='flex flex-col grow justify-center items-center'>
           <Composer
             className={mx(
               'h-[300px] w-[300px] scale-600 transition-all duration-500 ease-in-out filter grayscale opacity-0',
@@ -28,19 +39,12 @@ export const Placeholder = ({ stage = 1, progress }: PlaceholderProps) => {
               stage >= 2 && 'scale-50 opacity-0',
             )}
           />
-          {/* TODO(burdon): Option to show progress. */}
-          {/* {hasProgress && (
-            <p className='flex justify-center absolute bottom-8 text-sm text-subdued mt-4 transition-opacity duration-300'>
-              {progress.status} ({Math.round(progress.progress * 100)}%)
-            </p>
-          )} */}
         </div>
-        <Status
+        {/* <Status
           variant='main-bottom'
           aria-label='Initializing'
-          indeterminate
-          // {...(hasProgress ? { progress: progress.progress } : { indeterminate: true })}
-        />
+          {...(hasProgress ? { progress: progress!.progress } : { indeterminate: true })}
+        /> */}
       </div>
     </ThemeProvider>
   );

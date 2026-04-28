@@ -727,8 +727,12 @@ class ManagerImpl implements PluginManager {
       modules,
       Array.zip(capabilities),
       Array.map(([module, capabilitySet]) => this._contributeCapabilities(module, capabilitySet)),
-      // TODO(wittjosiah): This currently can't be run in parallel.
-      //   Running this with concurrency causes races with `allOf` activation events.
+      // TODO(wittjosiah): This currently can't be run in parallel, and inserting
+      //   any yield between contributions (`Effect.yieldNow()`, `Effect.sleep(0)`)
+      //   races the `allOf` activation-event resolver — observed as a System
+      //   Error dialog on warm reloads. Contributions must stay strictly
+      //   synchronous within an event; React paint slots have to be found at
+      //   event boundaries higher up the call chain.
       Effect.all,
       Effect.asVoid,
     );

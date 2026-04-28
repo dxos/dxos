@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { FeedArticle, MagazineArticle, PostArticle, SubscriptionsArticle } from '#containers';
+import { FeedArticle, MagazineArticle, PostArticle, PostCard, SubscriptionsArticle } from '#containers';
 import { Magazine, Subscription } from '#types';
 
 export default Capability.makeModule(() =>
@@ -42,6 +42,12 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => (
           <PostArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
+      }),
+      Surface.create({
+        id: 'post-card',
+        position: 'hoist',
+        filter: AppSurface.object(AppSurface.Card, Subscription.Post),
+        component: ({ data, role }) => <PostCard role={role} subject={data.subject} />,
       }),
     ]),
   ),

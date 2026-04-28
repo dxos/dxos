@@ -478,9 +478,6 @@
       "path": "packages/plugins/plugin-wnfs/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-youtube/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-zen/tsconfig.json"
     },
     {

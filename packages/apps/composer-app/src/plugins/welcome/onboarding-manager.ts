@@ -49,6 +49,15 @@ export class OnboardingManager {
 
   private _identity: Identity | null = null;
   private _credential: Credential | null = null;
+  /**
+   * Set by {@link destroy}. `initialize` checks this at every `await` boundary
+   * so it bails out instead of mutating state after the manager has been torn
+   * down. Necessary because `WelcomeCapabilities.Onboarding` contributes the
+   * manager synchronously and runs `initialize()` as a fire-and-forget
+   * background side-effect — `destroy()` can fire while async work is still
+   * in flight.
+   */
+  private _destroyed = false;
 
   constructor({
     invokePromise,
@@ -74,6 +83,9 @@ export class OnboardingManager {
 
     this._subscriptions.add(
       this._client.halo.identity.subscribe((identity) => {
+        if (this._destroyed) {
+          return;
+        }
         this._identity = identity;
 
         // If joining an existing identity, optimistically assume that credential will be found and close welcome.
@@ -85,26 +97,43 @@ export class OnboardingManager {
 
     this._subscriptions.add(
       this._client.halo.credentials.subscribe((credentials) => {
+        if (this._destroyed) {
+          return;
+        }
         this._setCredential(credentials);
       }).unsubscribe,
     );
   }
 
   async initialize(): Promise<void> {
+    // Helper used between every async step so a `destroy()` issued mid-flight
+    // (e.g. plugin reset, HMR) short-circuits before any state mutation. We
+    // can't actually cancel the in-flight RPC, but bailing here prevents
+    // post-destroy writes to `this._identity` / `this._credential` and stops
+    // the cascade of dependent steps.
+    const aborted = () => this._destroyed;
+
     await this._fetchBetaCredential();
+    if (aborted()) return;
+
     if (this._credential && this._hubUrl) {
       // Don't block app loading on network request.
       void this._upgradeCredential();
       // Automatically start join space flow if already authed.
-      this._spaceInvitationCode && (await this._openJoinSpace());
+      if (this._spaceInvitationCode) {
+        await this._openJoinSpace();
+        if (aborted()) return;
+      }
       // Ensure that recovery credential is present.
       await this._setupRecovery();
+      if (aborted()) return;
       // Ensure that agent is present.
       await this._createAgent();
       return;
     } else if (!this._skipAuth) {
       // Show welcome screen if no credential found and not skipping auth.
       await this._showWelcome();
+      if (aborted()) return;
     }
 
     if (this._deviceInvitationCode !== undefined) {
@@ -116,9 +145,13 @@ export class OnboardingManager {
     } else if (!this._identity && ((this._token && this._tokenType === 'verify') || this._skipAuth)) {
       // If there's no existing identity and a verification token (or if skipping auth), setup a new identity.
       await this._createIdentity();
+      if (aborted()) return;
       await this._setupRecovery();
+      if (aborted()) return;
       await this._startHelp();
+      if (aborted()) return;
       await this._createAgent();
+      if (aborted()) return;
       await this._activateAccount();
     } else if (!this._identity && this._token && this._tokenType === 'login') {
       // If there's no existing identity and a login token, recover the identity.
@@ -127,6 +160,7 @@ export class OnboardingManager {
       // If there's an existing identity and a verification token, activate the account.
       await this._activateAccount();
     }
+    if (aborted()) return;
 
     if (this._skipAuth && this._spaceInvitationCode) {
       // If skipping auth and a space invitation code is present, open join space flow.
@@ -135,6 +169,7 @@ export class OnboardingManager {
   }
 
   async destroy(): Promise<void> {
+    this._destroyed = true;
     await this._ctx.dispose();
   }
 
@@ -175,6 +210,9 @@ export class OnboardingManager {
   }
 
   private _setCredential(credentials: Credential[]): void {
+    if (this._destroyed) {
+      return;
+    }
     const credential = credentials
       .toSorted((a, b) => b.issuanceDate.getTime() - a.issuanceDate.getTime())
       .find(matchServiceCredential(['composer:beta']));
