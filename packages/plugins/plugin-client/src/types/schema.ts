@@ -135,4 +135,6 @@ export namespace Account {
   export const Profile = `${_id}.profile`;
   export const Devices = `${_id}.devices`;
   export const Security = `${_id}.security`;
+  export const Account = `${_id}.account`;
+  export const Invitations = `${_id}.invitations`;
 }

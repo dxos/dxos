@@ -27,6 +27,51 @@ export type SignupResult = {
 };
 
 /**
+ * POST `/account/invitation-code/redeem` on hub-service. Unauthenticated.
+ * Used directly from the welcome form (for test emails) and from the orchestrator.
+ *
+ * The server interprets request shape per email kind:
+ * - Test email: code is ignored. Returns `{ loginToken }` (existing account, recover),
+ *   `{ needsIdentity: true }` (new, no identityKey provided), or
+ *   `{ accountId, emailVerificationSent }` (new, identityKey provided -> account created).
+ * - Non-test email: code + identityKey required.
+ */
+export type RedeemResult =
+  | { accountId: string; emailVerificationSent: boolean }
+  | { loginToken: string }
+  | { needsIdentity: true };
+
+export const redeemAccountInvitation = async ({
+  hubUrl,
+  email,
+  identityKey,
+  code,
+}: {
+  hubUrl: string;
+  email: string;
+  identityKey?: string;
+  code?: string;
+}): Promise<RedeemResult> => {
+  const response = await fetch(new URL('/account/invitation-code/redeem', hubUrl), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, identityKey, code }),
+  });
+  let envelope: { success: boolean; message?: string; data?: any };
+  try {
+    envelope = await response.json();
+  } catch (parseErr) {
+    throw new Error(`Account redemption failed: HTTP ${response.status} (non-JSON response)`);
+  }
+  if (!envelope.success) {
+    const error: any = new Error(`Account redemption failed: ${envelope.message ?? 'unknown error'}`);
+    error.data = envelope.data;
+    throw error;
+  }
+  return envelope.data as RedeemResult;
+};
+
+/**
  * Magic link sign-up.
  */
 export const signup = async ({

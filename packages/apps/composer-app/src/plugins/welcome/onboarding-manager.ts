@@ -12,6 +12,7 @@ import { ClientOperation } from '@dxos/plugin-client/operations';
 import { Account } from '@dxos/plugin-client/types';
 import { HelpOperation } from '@dxos/plugin-help/operations';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { isTestEmail } from '@dxos/protocols';
 import { type Client } from '@dxos/react-client';
 import { type Credential, DeviceType, type Identity } from '@dxos/react-client/halo';
 import { osTranslations } from '@dxos/ui-theme';
@@ -32,6 +33,14 @@ export type OnboardingManagerProps = {
   recoverIdentity?: boolean;
   deviceInvitationCode?: string;
   spaceInvitationCode?: string;
+  /**
+   * Account invitation code redeemed during signup. Drives the new account-gated
+   * flow: identity is created locally only after the code validates, then the
+   * code + identity + email are bound to a Hub Account.
+   */
+  accountInvitationCode?: string;
+  /** Email associated with the new account; required when accountInvitationCode is set. */
+  email?: string;
 };
 
 export class OnboardingManager {
@@ -46,6 +55,8 @@ export class OnboardingManager {
   private readonly _recoverIdentity?: boolean;
   private readonly _deviceInvitationCode?: string;
   private readonly _spaceInvitationCode?: string;
+  private readonly _accountInvitationCode?: string;
+  private readonly _email?: string;
 
   private _identity: Identity | null = null;
   private _credential: Credential | null = null;
@@ -59,6 +70,8 @@ export class OnboardingManager {
     recoverIdentity,
     deviceInvitationCode,
     spaceInvitationCode,
+    accountInvitationCode,
+    email,
   }: OnboardingManagerProps) {
     this._ctx.onDispose(() => this._subscriptions.clear());
 
@@ -71,13 +84,17 @@ export class OnboardingManager {
     this._recoverIdentity = recoverIdentity || false;
     this._deviceInvitationCode = deviceInvitationCode;
     this._spaceInvitationCode = spaceInvitationCode;
+    this._accountInvitationCode = accountInvitationCode;
+    this._email = email;
 
     this._subscriptions.add(
       this._client.halo.identity.subscribe((identity) => {
+        const wasNull = this._identity === null;
         this._identity = identity;
 
-        // If joining an existing identity, optimistically assume that credential will be found and close welcome.
-        if (this._deviceInvitationCode !== undefined || this._recoverIdentity) {
+        // The gate is identity-presence: the moment a local identity exists, dismiss
+        // the welcome dialog. Account binding / activation can complete asynchronously.
+        if (identity && wasNull) {
           void this._closeWelcome();
         }
       }).unsubscribe,
@@ -92,9 +109,23 @@ export class OnboardingManager {
 
   async initialize(): Promise<void> {
     await this._fetchBetaCredential();
-    if (this._credential && this._hubUrl) {
-      // Don't block app loading on network request.
-      void this._upgradeCredential();
+
+    // Gate: a local identity grants access. Account binding / authed-services access
+    // is checked separately on the profile page (where users without an account see
+    // a "no edge access" warning + request-access form).
+    if (this._identity) {
+      // Test-email binding for users who already have a local identity (e.g. legacy
+      // users from before account-gating, or anyone who created an identity via the
+      // verify-token path). Bind the existing identity to a test Account by calling
+      // the redeem endpoint with the current identityKey + email. Idempotent:
+      // server returns email_already_registered if already bound.
+      if (this._email && isTestEmail(this._email) && this._hubUrl) {
+        await this._bindExistingIdentityToTestAccount();
+      }
+      // Best-effort beta credential upgrade for legacy users.
+      if (this._credential && this._hubUrl) {
+        void this._upgradeCredential();
+      }
       // Automatically start join space flow if already authed.
       this._spaceInvitationCode && (await this._openJoinSpace());
       // Ensure that recovery credential is present.
@@ -103,7 +134,7 @@ export class OnboardingManager {
       await this._createAgent();
       return;
     } else if (!this._skipAuth) {
-      // Show welcome screen if no credential found and not skipping auth.
+      // No identity yet: show welcome screen.
       await this._showWelcome();
     }
 
@@ -113,6 +144,14 @@ export class OnboardingManager {
     } else if (this._recoverIdentity) {
       // If recovery flag is present, open recover identity flow.
       await this._openRecoverIdentity();
+    } else if (!this._identity && this._email && (this._accountInvitationCode || isTestEmail(this._email))) {
+      // Account creation: either invitation-code-driven (regular users) or auto-admit (test emails).
+      // The server's redeem endpoint handles both: test emails skip code validation, and the
+      // server may return a login token for existing test accounts (recovery instead of create).
+      await this._redeemAccountInvitation();
+      await this._setupRecovery();
+      await this._startHelp();
+      await this._createAgent();
     } else if (!this._identity && ((this._token && this._tokenType === 'verify') || this._skipAuth)) {
       // If there's no existing identity and a verification token (or if skipping auth), setup a new identity.
       await this._createIdentity();
@@ -225,6 +264,131 @@ export class OnboardingManager {
     await this._invokePromise(ClientOperation.RedeemToken, { token: this._token });
     this._token && removeQueryParamByValue(this._token);
     this._tokenType && removeQueryParamByValue(this._tokenType);
+  }
+
+  /**
+   * Account creation via `/account/invitation-code/redeem` on hub-service. The endpoint
+   * is unauthenticated, so we hit it with plain fetch using `_hubUrl`. Handles both
+   * regular (code-required) and test-email (code-bypassed) signups:
+   *
+   * - Test email + existing Account → server returns `{ loginToken }`; we redeem it
+   *   to recover the existing identity (no local identity is created beforehand).
+   * - Test email + new → server returns `{ needsIdentity: true }` on the first probe,
+   *   we create an identity locally, then call again with `identityKey` so the server
+   *   binds a fresh test Account.
+   * - Non-test email → we create an identity locally and call once with code+identityKey;
+   *   server validates the code and binds the Account.
+   */
+  private async _redeemAccountInvitation(): Promise<void> {
+    invariant(this._email);
+    invariant(this._hubUrl, 'hubUrl required for redemption');
+    const isTest = isTestEmail(this._email);
+
+    // For test emails, probe first (no identityKey) to detect the recovery case.
+    if (isTest) {
+      const probe = await this._postRedeem({ email: this._email });
+      if ('loginToken' in probe) {
+        // Existing test Account: redeem the login token to recover the identity.
+        await this._invokePromise(ClientOperation.RedeemToken, { token: probe.loginToken });
+        removeQueryParamByValue(this._email);
+        return;
+      }
+      // Otherwise probe responded with `needsIdentity: true` -- fall through to create+bind.
+    } else {
+      invariant(this._accountInvitationCode, 'accountInvitationCode required for non-test signup');
+    }
+
+    await this._createIdentity();
+    invariant(this._identity, 'identity should exist after create');
+
+    const result = await this._postRedeem({
+      email: this._email,
+      identityKey: this._identity.identityKey.toHex(),
+      code: this._accountInvitationCode,
+    });
+
+    if ('loginToken' in result) {
+      // Race: the server saw an existing account between our probe and the bind call.
+      await this._invokePromise(ClientOperation.RedeemToken, { token: result.loginToken });
+    } else if ('accountId' in result) {
+      log.info('account redeemed', { accountId: result.accountId });
+    } else {
+      log.warn('unexpected redeem response', { result });
+    }
+
+    this._accountInvitationCode && removeQueryParamByValue(this._accountInvitationCode);
+    removeQueryParamByValue(this._email);
+  }
+
+  /**
+   * Bind an already-existing local identity to a test Account. Used when a legacy user
+   * (identity created before account-gating) wants to register with a test email,
+   * or to manually re-bind an unbound identity.
+   *
+   * Idempotent: if the email already maps to this identity (or any identity), the
+   * server returns `email_already_registered` / `identity_already_associated`; we
+   * swallow those since the resulting state is what we wanted.
+   */
+  private async _bindExistingIdentityToTestAccount(): Promise<void> {
+    invariant(this._email);
+    invariant(this._identity);
+    invariant(this._hubUrl);
+
+    try {
+      const result = await this._postRedeem({
+        email: this._email,
+        identityKey: this._identity.identityKey.toHex(),
+      });
+      if ('accountId' in result) {
+        log.info('test account bound to existing identity', { accountId: result.accountId });
+      } else if ('loginToken' in result) {
+        log.warn('test email already bound to a different identity; ignoring login token', {
+          email: this._email,
+        });
+      }
+    } catch (err: any) {
+      const code = err?.data?.type;
+      if (code === 'email_already_registered' || code === 'identity_already_associated') {
+        log.info('test account already bound', { email: this._email, code });
+        return;
+      }
+      log.error('failed to bind existing identity to test account', { error: err });
+    }
+    removeQueryParamByValue(this._email);
+  }
+
+  private async _postRedeem(body: {
+    email: string;
+    code?: string;
+    identityKey?: string;
+  }): Promise<
+    | { accountId: string; emailVerificationSent: boolean }
+    | { loginToken: string }
+    | { needsIdentity: true }
+  > {
+    invariant(this._hubUrl);
+    const url = new URL('/account/invitation-code/redeem', this._hubUrl);
+    log.info('redeeming account invitation', { url: url.href, email: body.email, hasCode: !!body.code, hasIdentity: !!body.identityKey });
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    let envelope: { success: boolean; message?: string; data?: any };
+    try {
+      envelope = (await response.json()) as { success: boolean; message?: string; data?: any };
+    } catch (parseErr) {
+      log.error('redeem response was not JSON', { status: response.status, statusText: response.statusText });
+      throw new Error(`Account redemption failed: HTTP ${response.status} (non-JSON response)`);
+    }
+    if (!envelope.success) {
+      log.error('account redemption failed', { status: response.status, message: envelope.message, data: envelope.data });
+      const error: any = new Error(`Account redemption failed: ${envelope.message ?? 'unknown error'}`);
+      error.data = envelope.data;
+      throw error;
+    }
+    log.info('account redemption ok', { data: envelope.data });
+    return envelope.data;
   }
 
   private async _showWelcome(): Promise<void> {

@@ -29,6 +29,8 @@ export default Capability.makeModule(
       recoverIdentity: searchProps.get('recoverIdentity') === 'true',
       deviceInvitationCode: searchProps.get('deviceInvitationCode') ?? undefined,
       spaceInvitationCode: searchProps.get('spaceInvitationCode') ?? undefined,
+      accountInvitationCode: searchProps.get('accountInvitationCode') ?? undefined,
+      email: searchProps.get('email') ?? undefined,
     });
 
     yield* Effect.tryPromise(() => manager.initialize());

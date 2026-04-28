@@ -6,15 +6,17 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientOperation } from '@dxos/plugin-client/operations';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { isTestEmail } from '@dxos/protocols';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
 
 import { removeQueryParamByValue } from '../../../util';
-import { activateAccount, signup } from '../credentials';
+import { activateAccount, redeemAccountInvitation, signup } from '../credentials';
 import { meta } from '../meta';
 import { Welcome, WelcomeState } from './Welcome';
 
@@ -46,6 +48,49 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       try {
         // Prevent multiple signups.
         pendingRef.current = true;
+
+        // Test-email path: skip the legacy /account/signup magic-link flow and use the
+        // new redeem endpoint. For new test emails this creates an Account in the
+        // gated model with `invitationsRemaining: 0`. For existing test emails it
+        // returns a login token we redeem to recover the prior identity.
+        if (isTestEmail(email)) {
+          const ensureIdentity = async () => {
+            if (identity) {
+              return identity;
+            }
+            await invokePromise(ClientOperation.CreateIdentity, {
+              displayName: email.split('@')[0],
+              data: { emoji: '🧪', hue: 'amber' },
+            });
+            return client.halo.identity.get();
+          };
+
+          // Probe first (no identityKey) so we can recover an existing test Account
+          // without burning a fresh local identity.
+          const probe = await redeemAccountInvitation({ hubUrl, email });
+          if ('loginToken' in probe) {
+            await invokePromise(ClientOperation.RedeemToken, { token: probe.loginToken });
+            await invokePromise(LayoutOperation.UpdateDialog, { state: false });
+            return;
+          }
+
+          const resolvedIdentity = await ensureIdentity();
+          invariant(resolvedIdentity, 'identity should exist after create');
+          const result = await redeemAccountInvitation({
+            hubUrl,
+            email,
+            identityKey: resolvedIdentity.identityKey.toHex(),
+          });
+          if ('loginToken' in result) {
+            await invokePromise(ClientOperation.RedeemToken, { token: result.loginToken });
+          } else if ('accountId' in result) {
+            log.info('test account created', { accountId: result.accountId });
+            void invokePromise(ClientOperation.CreateAgent);
+          }
+          await invokePromise(LayoutOperation.UpdateDialog, { state: false });
+          return;
+        }
+
         const result = await signup({
           hubUrl,
           email,
@@ -53,7 +98,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
           redirectUrl: location.origin,
         });
 
-        // Test path: Hub returned a token immediately.
+        // Auto-admit path: Hub returned a token immediately (legacy convenience for some envs).
         if (result.token && result.type === 'verify') {
           const ensureIdentity = async () => {
             if (identity) {
