@@ -5,10 +5,43 @@
 import { assert, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import * as PluginAssetCache from './plugin-asset-cache';
 import * as Plugin from './plugin';
 import * as UrlLoader from './url-loader';
 
 const testMeta = { id: 'org.dxos.plugin.test', name: 'Test' };
+
+const memoryStorage = (initial: string | null = null): UrlLoader.Storage => {
+  let value = initial;
+  return {
+    get: () => value,
+    set: (_key, next) => {
+      value = next;
+    },
+  };
+};
+
+type CacheCall = { method: 'cache' | 'evict' | 'resolve'; pluginId: string; urls?: readonly string[]; url?: string };
+
+const recordingCache = (): { cache: PluginAssetCache.Cache; calls: CacheCall[] } => {
+  const calls: CacheCall[] = [];
+  return {
+    calls,
+    cache: {
+      cache: async (pluginId, urls) => {
+        calls.push({ method: 'cache', pluginId, urls });
+      },
+      evict: async (pluginId) => {
+        calls.push({ method: 'evict', pluginId });
+      },
+      resolve: async (pluginId, url) => {
+        calls.push({ method: 'resolve', pluginId, url });
+        return url;
+      },
+      list: async () => [],
+    },
+  };
+};
 
 describe('UrlLoader', () => {
   describe('isLocalUrl', () => {
@@ -107,6 +140,30 @@ describe('UrlLoader', () => {
       };
       const result = await UrlLoader.preload({ storage });
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('uninstall', () => {
+    it('removes the persisted entry and evicts cached assets', async ({ expect }) => {
+      const storage = memoryStorage('[{"id":"p1","url":"https://x/p1.json"},{"id":"p2","url":"https://x/p2.json"}]');
+      const { cache, calls } = recordingCache();
+      await UrlLoader.uninstall('p1', { storage, cache });
+      expect(UrlLoader.getRemoteEntries({ storage })).toEqual([{ id: 'p2', url: 'https://x/p2.json' }]);
+      expect(calls).toEqual([{ method: 'evict', pluginId: 'p1' }]);
+    });
+
+    it('still removes entry when cache eviction fails', async ({ expect }) => {
+      const storage = memoryStorage('[{"id":"p1","url":"https://x/p1.json"}]');
+      const cache: PluginAssetCache.Cache = {
+        cache: async () => {},
+        evict: async () => {
+          throw new Error('boom');
+        },
+        resolve: async (_id, url) => url,
+        list: async () => [],
+      };
+      await UrlLoader.uninstall('p1', { storage, cache });
+      expect(UrlLoader.getRemoteEntries({ storage })).toEqual([]);
     });
   });
 });

@@ -12,9 +12,34 @@ import { type Plugin } from '../core';
 export const MANIFEST_ASSET_NAME = 'manifest.json';
 
 /**
- * Serializes a plugin's public metadata into the format consumed by the community registry.
- * Exported from a vite-free module so tests and tooling can validate manifests without
- * paying the cost of loading vite + esbuild.
+ * Plugin metadata required to emit a manifest at build time.
+ *
+ * Extends `Plugin.Meta` with a build-time `version` field that is not
+ * relevant to the runtime plugin definition itself.
  */
-export const serializeManifest = (meta: Plugin.Meta, { moduleFile }: { moduleFile: string }): string =>
-  JSON.stringify({ ...meta, moduleFile }, null, 2);
+export type BuildMeta = Plugin.Meta & { version: string };
+
+/**
+ * Serializes a plugin's public metadata + bundle layout into the format consumed
+ * by the host loader (see `UrlLoader.make` and `PluginManifest.parse`).
+ *
+ * The host fetches this manifest, resolves every entry in `assets` against the
+ * manifest URL, and persists them via the platform `PluginAssetCache` so the
+ * plugin works offline.
+ *
+ * Exported from a vite-free module so tests and tooling can validate manifests
+ * without paying the cost of loading vite + esbuild.
+ */
+export const serializeManifest = (
+  meta: BuildMeta,
+  { entry, assets }: { entry: string; assets: readonly string[] },
+): string =>
+  JSON.stringify(
+    {
+      ...meta,
+      entry,
+      assets,
+    },
+    null,
+    2,
+  );

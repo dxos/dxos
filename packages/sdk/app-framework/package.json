@@ -109,8 +109,7 @@
     "@dxos/web-context": "workspace:*",
     "@dxos/web-context-react": "workspace:*",
     "@effect/cli": "catalog:",
-    "cjs-module-lexer": "catalog:",
-    "vite-plugin-css-injected-by-js": "catalog:"
+    "cjs-module-lexer": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",

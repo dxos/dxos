@@ -3,13 +3,12 @@
 //
 
 import { type Plugin as VitePlugin } from 'vite';
-import cssInjectedByJs from 'vite-plugin-css-injected-by-js';
 
-import { type Plugin } from '../../core';
-import { MANIFEST_ASSET_NAME, serializeManifest } from '../manifest';
+import { type BuildMeta, MANIFEST_ASSET_NAME, serializeManifest } from '../manifest';
 import { DEFAULT_PACKAGES, isSharedPackage } from '../packages';
 
 export { MANIFEST_ASSET_NAME, serializeManifest };
+export type { BuildMeta };
 
 const JSX_DEV_RUNTIME = 'react/jsx-dev-runtime';
 
@@ -74,10 +73,10 @@ export type ComposerPluginOptions = {
   port?: number;
   /**
    * Plugin metadata. When provided, a `manifest.json` asset is emitted alongside the bundle
-   * so the output directory can be uploaded directly as a GitHub Release and picked up by
-   * the DXOS community registry.
+   * listing every emitted file. The host fetches this manifest at install time and persists
+   * the declared assets in its offline cache so the plugin works without network.
    */
-  meta?: Plugin.Meta;
+  meta?: BuildMeta;
   /** Filename of the built module asset that the registry will load. Defaults to `plugin.mjs`. */
   moduleFile?: string;
 };
@@ -88,13 +87,14 @@ export type ComposerPluginOptions = {
  * provides at runtime via import map.
  *
  * Handles:
- * 1. Build config — lib mode entry point, ES format output, rollup externals.
+ * 1. Build config — lib mode entry point, ES format output, rollup externals, code-split chunks.
  * 2. Dev externalization — marks shared deps as external during `vite serve` and strips
  *    the `/@id/` prefix that Vite's import analysis adds to external bare specifiers.
  * 3. JSX dev runtime shim — bridges `react/jsx-dev-runtime` (used by React refresh in dev)
  *    to `react/jsx-runtime` (which is what the externalized React provides).
- * 4. Optional manifest emit — when `meta` is supplied, writes `manifest.json` next to the
- *    bundled module so a GitHub Release can carry both artifacts.
+ * 4. Manifest emit — when `meta` is supplied, writes `manifest.json` next to the bundled
+ *    module listing every emitted asset (entry, CSS, chunks, etc.) so the host can eagerly
+ *    cache them for offline use.
  */
 export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] => {
   const entry = options?.entry ?? 'src/plugin.tsx';
@@ -105,15 +105,6 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
   let base = '/';
 
   const plugins: VitePlugin[] = [
-    // Inline every imported stylesheet into the bundled module. Each community plugin
-    // is distributed as a single GitHub Release asset (per {@link moduleFile}); a sibling
-    // `.css` file would silently be dropped at runtime because Composer only fetches the
-    // module URL the registry advertises.
-    // TODO(wittjosiah): Once the registry supports multi-asset releases, move CSS (and
-    // fonts/images/wasm) back to sibling assets so plugins don't ship stylesheets inside
-    // their JS bundle.
-    ...cssInjectedByJs(),
-
     // Configure vite for library-mode builds with externalized deps.
     {
       name: 'composer-plugin',
@@ -134,17 +125,11 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
             formats: ['es'],
             fileName: () => moduleFile,
           },
-          // Inline every asset as a data URL. GitHub Releases sign each asset with a
-          // per-file URL, so sibling-file imports from the plugin module can't resolve.
-          // TODO(wittjosiah): Drop once the registry can serve multi-asset releases and
-          // plugins can ship fonts/images/wasm as siblings of plugin.mjs.
-          assetsInlineLimit: () => true,
           rolldownOptions: {
             external: (id: string) => isExternal(id),
             output: {
-              // Produce a single bundle per plugin for GitHub Release distribution.
-              // TODO(wittjosiah): Drop once the registry can serve multi-asset releases.
-              inlineDynamicImports: true,
+              chunkFileNames: 'chunks/[name]-[hash].js',
+              assetFileNames: 'assets/[name]-[hash][extname]',
               // Install the CJS require shim at the top of plugin.mjs so transitively
               // bundled CJS helpers (that call `require('react')` et al. at runtime) can
               // resolve against the host-provided externals instead of throwing.
@@ -265,16 +250,21 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
   ];
 
   if (meta) {
-    // Emit `manifest.json` alongside the built module so the dist output can be uploaded as-is
-    // to a GitHub Release for the DXOS community registry to pick up.
+    // Emit `manifest.json` alongside the built module listing every emitted asset, so the
+    // dist directory can be uploaded as-is to a GitHub Release for the DXOS community
+    // registry to pick up. The host loader fetches this file at install time and eagerly
+    // caches every listed asset for offline use.
     plugins.push({
       name: 'composer-plugin:emit-manifest',
       apply: 'build',
-      generateBundle() {
+      generateBundle(_options, bundle) {
+        const assets = Object.keys(bundle)
+          .filter((name) => name !== MANIFEST_ASSET_NAME)
+          .sort();
         this.emitFile({
           type: 'asset',
           fileName: MANIFEST_ASSET_NAME,
-          source: serializeManifest(meta, { moduleFile }),
+          source: serializeManifest(meta, { entry: moduleFile, assets }),
         });
       },
     });

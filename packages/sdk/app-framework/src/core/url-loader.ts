@@ -6,6 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { log } from '@dxos/log';
 
+import * as PluginAssetCache from './plugin-asset-cache';
+import * as PluginManifest from './plugin-manifest';
 import * as Plugin from './plugin';
 
 const DEFAULT_KEY = 'org.dxos.composer.remote-plugins';
@@ -24,10 +26,16 @@ export type Storage = {
 export type Options = {
   storage?: Storage;
   key?: string;
+  /**
+   * Per-platform offline asset cache. Defaults to a no-op cache (no offline support).
+   */
+  cache?: PluginAssetCache.Cache;
 };
 
 /**
  * Persisted record of a remote plugin that has been loaded previously.
+ *
+ * `url` is the URL of the plugin manifest (`plugin.json`), not the entry module.
  */
 export type RemotePluginEntry = {
   id: string;
@@ -61,6 +69,15 @@ const persistRemotePlugin = (storage: Storage, key: string, entry: RemotePluginE
     storage.set(key, JSON.stringify(entries));
   } catch (error) {
     log.warn('failed to persist remote plugin entry', { entry, error });
+  }
+};
+
+const removePersistedRemotePlugin = (storage: Storage, key: string, pluginId: string): void => {
+  try {
+    const entries = getPersistedRemotePlugins(storage, key).filter((existing) => existing.id !== pluginId);
+    storage.set(key, JSON.stringify(entries));
+  } catch (error) {
+    log.warn('failed to remove remote plugin entry', { pluginId, error });
   }
 };
 
@@ -111,14 +128,25 @@ const normalizePluginExport = (mod: Record<string, unknown>): Plugin.Plugin => {
   throw new Error('Remote module default export is not a Plugin or a zero-arg plugin factory.');
 };
 
-const loadRemotePlugin = async (url: string): Promise<Plugin.Plugin> => {
-  log.info('loading remote plugin', { url });
-  const mod = await import(/* @vite-ignore */ url);
+const loadFromManifest = async (
+  manifestUrl: string,
+  cache: PluginAssetCache.Cache,
+): Promise<{ plugin: Plugin.Plugin; manifest: PluginManifest.ResolvedManifest }> => {
+  log.info('loading remote plugin', { manifestUrl });
+  const manifest = await PluginManifest.fetchManifest(manifestUrl);
+  await cache.cache(manifest.id, manifest.assetUrls);
+  const entryUrl = await cache.resolve(manifest.id, manifest.entryUrl);
+  const mod = await import(/* @vite-ignore */ entryUrl);
   const plugin = normalizePluginExport(mod);
   if (!plugin.meta.id || !plugin.meta.name) {
-    throw new Error(`Remote plugin at ${url} is missing required meta.id or meta.name.`);
+    throw new Error(`Remote plugin at ${manifestUrl} is missing required meta.id or meta.name.`);
   }
-  return plugin;
+  if (plugin.meta.id !== manifest.id) {
+    throw new Error(
+      `Plugin meta.id (${plugin.meta.id}) does not match manifest id (${manifest.id}) at ${manifestUrl}.`,
+    );
+  }
+  return { plugin, manifest };
 };
 
 /**
@@ -127,18 +155,19 @@ const loadRemotePlugin = async (url: string): Promise<Plugin.Plugin> => {
 export const preload = async (options: Options = {}): Promise<Plugin.Plugin[]> => {
   const storage = options.storage ?? defaultStorage();
   const key = options.key ?? DEFAULT_KEY;
+  const cache = options.cache ?? PluginAssetCache.noop();
 
   const entries = getPersistedRemotePlugins(storage, key);
   if (entries.length === 0) {
     return [];
   }
   log.info('preloading remote plugins', { count: entries.length });
-  const results = await Promise.allSettled(entries.map((entry) => loadRemotePlugin(entry.url)));
+  const results = await Promise.allSettled(entries.map((entry) => loadFromManifest(entry.url, cache)));
   const plugins: Plugin.Plugin[] = [];
   for (let index = 0; index < results.length; index++) {
     const result = results[index];
     if (result.status === 'fulfilled') {
-      plugins.push(result.value);
+      plugins.push(result.value.plugin);
     } else {
       log.warn('failed to preload remote plugin', { entry: entries[index], error: result.reason });
     }
@@ -148,10 +177,15 @@ export const preload = async (options: Options = {}): Promise<Plugin.Plugin[]> =
 
 /**
  * Creates a plugin loader that resolves built-in plugins by ID or loads remote plugins from URLs.
+ *
+ * Remote URLs must point at a plugin manifest (`plugin.json`). The loader fetches the manifest,
+ * eagerly persists every declared asset via the configured `PluginAssetCache`, then dynamic-imports
+ * the entry module.
  */
 export const make = (builtinPlugins: Plugin.Plugin[], options: Options = {}) => {
   const storage = options.storage ?? defaultStorage();
   const key = options.key ?? DEFAULT_KEY;
+  const cache = options.cache ?? PluginAssetCache.noop();
 
   return (locator: string): Effect.Effect<Plugin.Plugin, Error> =>
     Effect.gen(function* () {
@@ -162,10 +196,11 @@ export const make = (builtinPlugins: Plugin.Plugin[], options: Options = {}) => 
       if (!isUrl(locator)) {
         return yield* Effect.fail(new Error(`Plugin not found and locator is not a URL: ${locator}`));
       }
-      const plugin = yield* Effect.tryPromise({
-        try: () => loadRemotePlugin(locator),
+      const result = yield* Effect.tryPromise({
+        try: () => loadFromManifest(locator, cache),
         catch: (error) => new Error(`Failed to load remote plugin from ${locator}: ${error}`),
       });
+      const { plugin } = result;
       const duplicate = builtinPlugins.find((existing) => existing.meta.id === plugin.meta.id);
       if (duplicate) {
         return yield* Effect.fail(
@@ -175,4 +210,20 @@ export const make = (builtinPlugins: Plugin.Plugin[], options: Options = {}) => 
       persistRemotePlugin(storage, key, { id: plugin.meta.id, url: locator });
       return plugin;
     });
+};
+
+/**
+ * Removes a previously installed remote plugin: drops the persisted entry and evicts cached assets.
+ */
+export const uninstall = async (pluginId: string, options: Options = {}): Promise<void> => {
+  const storage = options.storage ?? defaultStorage();
+  const key = options.key ?? DEFAULT_KEY;
+  const cache = options.cache ?? PluginAssetCache.noop();
+
+  removePersistedRemotePlugin(storage, key, pluginId);
+  try {
+    await cache.evict(pluginId);
+  } catch (error) {
+    log.warn('failed to evict plugin assets', { pluginId, error });
+  }
 };
