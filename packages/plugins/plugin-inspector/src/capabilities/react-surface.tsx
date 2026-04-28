@@ -16,8 +16,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'inspector',
-        role: 'deck-companion--inspector',
-        filter: AppSurface.literalSection('inspector'),
+        filter: AppSurface.literal(Surface.makeType<{ subject: string }>('deck-companion--inspector'), 'inspector'),
         component: () => {
           const space = useActiveSpace();
           if (!space) {

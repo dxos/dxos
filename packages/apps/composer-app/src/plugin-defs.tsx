@@ -67,6 +67,7 @@ const ID = {
   GRAPH: 'org.dxos.plugin.graph',
   HELP: 'org.dxos.plugin.help',
   INBOX: 'org.dxos.plugin.inbox',
+  INSPECTOR: 'org.dxos.plugin.inspector',
   IROH_BEACON: 'org.dxos.plugin.iroh-beacon',
   KANBAN: 'org.dxos.plugin.kanban',
   MAP: 'org.dxos.plugin.map',
@@ -159,6 +160,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
 
     // Dev
     isDev && ID.DEBUG,
+    isDev && ID.INSPECTOR,
 
     // Local
     isLocal && ID.SAMPLE,
@@ -259,6 +261,7 @@ export const getPlugins = async (
     { GraphPlugin },
     { HelpPlugin },
     { InboxPlugin },
+    { InspectorPlugin },
     { IrohBeaconPlugin },
     { KanbanPlugin },
     { MapPlugin },
@@ -320,6 +323,7 @@ export const getPlugins = async (
     track(import('@dxos/plugin-graph')),
     track(import('@dxos/plugin-help')),
     track(import('@dxos/plugin-inbox')),
+    track(import('@dxos/plugin-inspector')),
     track(import('@dxos/plugin-iroh-beacon')),
     track(import('@dxos/plugin-kanban')),
     track(import('@dxos/plugin-map')),
@@ -402,6 +406,7 @@ export const getPlugins = async (
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),
+    isDev && InspectorPlugin(),
     IrohBeaconPlugin(),
     OperationPlugin(),
     KanbanPlugin(),
