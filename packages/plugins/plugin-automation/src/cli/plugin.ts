@@ -16,7 +16,7 @@ export const AutomationPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCommandModule({ commands: [trigger] }),
   Plugin.addModule({
     activatesOn: ClientEvents.ClientReady,
-    activatesAfter: [AutomationEvents.ComputeRuntimeReady],
+    firesAfterActivation: [AutomationEvents.ComputeRuntimeReady],
     activate: ComputeRuntime,
   }),
   Plugin.make,

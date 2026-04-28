@@ -9,3 +9,4 @@ export * from './dx';
 export * from './function';
 export * from './hub';
 export * from './repl';
+export * from './reset';

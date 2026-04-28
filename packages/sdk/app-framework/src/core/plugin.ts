@@ -89,16 +89,33 @@ export interface PluginModule {
   activatesOn: ActivationEvent.Events;
 
   /**
-   * Events which the plugin depends on being activated.
-   * Plugin is marked as needing reset a plugin activated by a dependent event is removed.
-   * Events are automatically activated before activation of the plugin.
+   * Events that this module fires *before* its own activation runs.
+   *
+   * When this module is asked to activate (via {@link activatesOn}), the
+   * plugin manager first activates every event listed here, ensuring any
+   * other modules that contribute to those events have completed before
+   * this module's {@link activate} body executes. These events are fired
+   * by the framework on this module's behalf — the module does not need
+   * to wait for some other code to fire them.
+   *
+   * The module is marked as needing reset if a module activated by one
+   * of these events is later removed.
+   *
+   * Read as: "this module fires these events before [its] activation".
    */
-  activatesBefore?: ActivationEvent.ActivationEvent[];
+  firesBeforeActivation?: ActivationEvent.ActivationEvent[];
 
   /**
-   * Events which this plugin triggers upon activation.
+   * Events that this module fires *after* its own activation completes.
+   *
+   * Once this module's {@link activate} body has finished executing, the
+   * plugin manager activates every event listed here, causing any modules
+   * listening on those events to run. These events are fired by the
+   * framework on this module's behalf as part of this module's lifecycle.
+   *
+   * Read as: "this module fires these events after [its] activation".
    */
-  activatesAfter?: ActivationEvent.ActivationEvent[];
+  firesAfterActivation?: ActivationEvent.ActivationEvent[];
 
   /**
    * Called when the module is activated.
@@ -116,15 +133,15 @@ class PluginModuleImpl implements PluginModule {
   readonly [PluginModuleTypeId]: PluginModuleTypeId = PluginModuleTypeId;
   readonly id: PluginModule['id'];
   readonly activatesOn: PluginModule['activatesOn'];
-  readonly activatesBefore?: PluginModule['activatesBefore'];
-  readonly activatesAfter?: PluginModule['activatesAfter'];
+  readonly firesBeforeActivation?: PluginModule['firesBeforeActivation'];
+  readonly firesAfterActivation?: PluginModule['firesAfterActivation'];
   readonly activate: PluginModule['activate'];
 
   constructor(options: Omit<PluginModule, typeof PluginModuleTypeId>) {
     this.id = options.id;
     this.activatesOn = options.activatesOn;
-    this.activatesBefore = options.activatesBefore;
-    this.activatesAfter = options.activatesAfter;
+    this.firesBeforeActivation = options.firesBeforeActivation;
+    this.firesAfterActivation = options.firesAfterActivation;
     this.activate = options.activate;
   }
 }
@@ -148,6 +165,11 @@ export type Meta = {
    * Short description of plugin functionality.
    */
   description?: string;
+
+  /**
+   * Name of the author or organization that created the plugin.
+   */
+  author?: string;
 
   /**
    * URL of home page.

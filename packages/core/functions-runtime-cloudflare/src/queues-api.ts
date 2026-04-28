@@ -4,9 +4,15 @@
 
 import { type AnyEntity } from '@dxos/echo/internal';
 import type { DXN, SpaceId } from '@dxos/keys';
-import { type FeedProtocol } from '@dxos/protocols';
+import { log } from '@dxos/log';
 
 import type { ServiceContainer } from './internal';
+
+export interface QueuesQueryResult {
+  objects: AnyEntity[];
+  nextCursor: string | null;
+  prevCursor: string | null;
+}
 
 // TODO(dmaretskyi): Temporary API to get the queues working.
 // TODO(dmaretskyi): To be replaced with integrating queues into echo.
@@ -14,7 +20,7 @@ import type { ServiceContainer } from './internal';
  * @deprecated
  */
 export interface QueuesAPI {
-  queryQueue(queue: DXN, options?: {}): Promise<FeedProtocol.QueryResult>;
+  queryQueue(queue: DXN, options?: {}): Promise<QueuesQueryResult>;
   insertIntoQueue(queue: DXN, objects: AnyEntity[]): Promise<void>;
 }
 
@@ -27,8 +33,21 @@ export class QueuesAPIImpl implements QueuesAPI {
     private readonly _spaceId: SpaceId,
   ) {}
 
-  queryQueue(queue: DXN, options?: {}): Promise<FeedProtocol.QueryResult> {
-    return this._serviceContainer.queryQueue(queue);
+  async queryQueue(queue: DXN, options?: {}): Promise<QueuesQueryResult> {
+    const result = await this._serviceContainer.queryQueue(queue);
+    const objects = (result.objects ?? []).flatMap((encoded): AnyEntity[] => {
+      try {
+        return [JSON.parse(encoded) as AnyEntity];
+      } catch (err) {
+        log.verbose('queue object JSON parse failed; object ignored', { encoded, error: err });
+        return [];
+      }
+    });
+    return {
+      objects,
+      nextCursor: result.nextCursor ?? null,
+      prevCursor: result.prevCursor ?? null,
+    };
   }
 
   insertIntoQueue(queue: DXN, objects: AnyEntity[]): Promise<void> {

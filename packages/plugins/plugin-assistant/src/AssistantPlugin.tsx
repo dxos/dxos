@@ -7,6 +7,7 @@ import * as Option from 'effect/Option';
 
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { ContextBinding } from '@dxos/assistant';
 import { Agent, AgentBlueprint, Chat, McpServer, Memory, Plan, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
@@ -19,7 +20,8 @@ import { DeckEvents } from '@dxos/plugin-deck/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
-import { HasSubject } from '@dxos/types';
+import { Text } from '@dxos/schema';
+import { HasSubject, Message } from '@dxos/types';
 
 import {
   AiService,
@@ -146,8 +148,10 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       Chat.Chat,
       Chat.CompanionTo,
       Blueprint.Blueprint,
+      ContextBinding,
       Feed.Feed,
       HasSubject.HasSubject,
+      Message.Message,
       Prompt.Prompt,
       ResearchGraph.ResearchGraph,
       Agent.Agent,
@@ -155,12 +159,13 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       Plan.Plan,
       Sequence,
       Memory.Memory,
+      Text.Text,
     ],
   }),
   AppPlugin.addSettingsModule({ activate: Settings }),
   AppPlugin.addSurfaceModule({
     activate: ReactSurface,
-    activatesBefore: [AppActivationEvents.SetupArtifactDefinition],
+    firesBeforeActivation: [AppActivationEvents.SetupArtifactDefinition],
   }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
@@ -194,7 +199,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     activate: LocalModelResolver,
   }),
   Plugin.addModule({
-    activatesBefore: [AssistantEvents.SetupAiServiceProviders],
+    firesBeforeActivation: [AssistantEvents.SetupAiServiceProviders],
     // TODO(dmaretskyi): This should activate lazily when the AI chat is used.
     activatesOn: ActivationEvents.Startup,
     activate: AiService,

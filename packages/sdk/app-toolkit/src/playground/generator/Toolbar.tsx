@@ -8,6 +8,7 @@ import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { runAndForwardErrors } from '@dxos/effect';
 import { Button } from '@dxos/react-ui';
 
 import { Number, createAlertOperation, createPluginId } from './generator';
@@ -17,10 +18,15 @@ export const Toolbar = () => {
   const plugins = useAtomValue(manager.plugins);
   const { invokePromise } = useOperationInvoker();
 
-  const handleAdd = useCallback(async () => {
-    const id = createPluginId(Math.random().toString(16).substring(2, 8));
-    await manager.add(id);
-  }, [manager]);
+  const handleAdd = useCallback(
+    () =>
+      Effect.gen(function* () {
+        const id = createPluginId(Math.random().toString(16).substring(2, 8));
+        yield* manager.add(id);
+        yield* manager.enable(id);
+      }).pipe(runAndForwardErrors),
+    [manager],
+  );
 
   const count = (useCapabilities(Number) as number[]).reduce((acc, curr) => acc + curr, 0);
 

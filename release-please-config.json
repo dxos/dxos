@@ -535,6 +535,21 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-crm/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-crx/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-crx-bridge/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-daily-summary/package.json",
           "jsonpath": "$.version"
         },
@@ -551,11 +566,6 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-discord/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-excalidraw/package.json",
           "jsonpath": "$.version"
         },
         {

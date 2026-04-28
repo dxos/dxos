@@ -1,0 +1,122 @@
+---
+id: org.dxos.plugin.crx
+name: CrxPlugin
+version: 0.1.0
+---
+
+Manages how the Composer app coordinates with the `@dxos/composer-crx` browser
+extension. Owns the user-facing settings surface (master toggle, default space
+behavior, etc.) and the capability that exposes those settings to other
+plugins.
+
+Scope is deliberately narrow: this plugin does **not** receive clippings from
+the extension — that responsibility lives in `@dxos/plugin-crx-bridge`, which
+will in a future pass consult the settings contributed here before
+materializing an object.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term   | URI                            |
+|--------|--------------------------------|
+| `type` | `org.dxos.mdl.type@1.0`        |
+| `feat` | `org.dxos.mdl.feat@1.0`        |
+| `test` | `org.dxos.mdl.test@1.0`        |
+
+## Types
+
+```mdl
+type Settings
+  desc: |
+    User preferences that govern extension ↔ Composer coordination. Persisted
+    via the app-framework settings store. All fields are optional; defaults
+    are documented per field.
+  fields:
+    enabled?: boolean            # default: true. Master switch: when false, the
+                                 # bridge ignores incoming clips.
+    autoOpenAfterClip?: boolean  # default: false. Navigate to the created
+                                 # object after a successful clip.
+```
+
+## Features
+
+```mdl
+feat F-1: Settings Capability
+
+  req F-1.1:
+    when: plugin is activated
+    then: |
+      a single `Settings` atom is registered under a plugin-scoped capability
+      and contributed to `AppCapabilities.Settings` so the standard settings
+      UI surfaces it.
+
+  req F-1.2:
+    when: another plugin (e.g., plugin-crx-bridge) reads the capability
+    then: it receives the current Settings with defaults applied
+```
+
+```mdl
+feat F-2: Settings Surface
+
+  req F-2.1:
+    when: the app-framework settings panel renders the CRX section
+    then: |
+      a form is shown with switches for `enabled` and `autoOpenAfterClip`,
+      wired to the Settings atom and persisted on change.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Settings atom registered
+  given: plugin activated
+  then:
+    - the Settings capability is available via Capability.get
+    - the default atom value is { enabled: true, autoOpenAfterClip: false }
+      (applied through the schema's optional defaults)
+```
+
+```mdl
+test T-2: Toggling enabled persists
+  given: settings surface rendered
+  when: user toggles the `enabled` switch off
+  then: subsequent reads of the atom observe enabled === false
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: dxos.spec/ext/type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: dxos.spec/ext/feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: dxos.spec/ext/test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```

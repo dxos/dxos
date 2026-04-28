@@ -51,10 +51,9 @@ export const make = ({ canvas: canvasProps, ...props }: SketchProps = {}) => {
 };
 
 /**
- * Type guard for {@link Sketch} objects. Delegates to `Schema.is(Sketch)(object)`.
- * The `_schema` parameter is intentionally ignored pending reconciliation with the Excalidraw plugin.
+ * Type guard for {@link Sketch} objects. `Obj.instanceOf` is typename-aware so
+ * another plugin can share the structural shape (`name` + `canvas` ref — e.g. the
+ * excalidraw plugin's own `Excalidraw` type) without false-positively matching
+ * as a Sketch at the surface filter.
  */
-// TODO(wittjosiah): Reconcile canvas schema check with Excalidraw plugin.
-// export const isSketch = (object: any, schema: string): object is Sketch =>
-//   Schema.is(Sketch)(object) && object.canvas.target?.schema === schema;
-export const isSketch = (object: any, _schema: string): object is Sketch => Schema.is(Sketch)(object);
+export const isSketch = (object: any, _schema?: string): object is Sketch => Obj.instanceOf(Sketch, object);

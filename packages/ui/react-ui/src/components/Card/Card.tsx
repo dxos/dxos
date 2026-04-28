@@ -383,6 +383,13 @@ type CardPosterProps = ThemedClassName<
   {
     alt: string;
     aspect?: 'video' | 'auto';
+    /**
+     * How the image fills the poster box. `'contain'` (default) preserves
+     * aspect ratio and may letterbox; `'cover'` fills the box edge-to-edge,
+     * cropping as needed. Forwarded to the underlying `Image`'s
+     * `object-fit`.
+     */
+    fit?: 'contain' | 'cover';
   } & Partial<{ image: string; icon: string }>
 >;
 
@@ -393,7 +400,12 @@ const CardPoster = (props: CardPosterProps) => {
   if (props.image) {
     return (
       <div role='none' className='col-span-full'>
-        <Image classNames={[tx('card.poster', {}), aspect, props.classNames]} src={props.image} alt={props.alt} />
+        <Image
+          classNames={[tx('card.poster', {}), aspect, props.classNames]}
+          src={props.image}
+          alt={props.alt}
+          fit={props.fit}
+        />
       </div>
     );
   }

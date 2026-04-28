@@ -74,3 +74,45 @@
   @apply relative after:content-[""] after:absolute after:inset-0 after:rounded-[inherit]
     after:pointer-events-none after:ring after:ring-inset after:ring-transparent;
 }
+
+/**
+ * Shimmer text — animates opacity left → right across the contained text.
+ * See @keyframes shimmer-text in theme/animation.css for the keyframe definition.
+ * Geometry: mask-size 200% 100% with mask-repeat: repeat-x means each tile is
+ * 2× the element width; the keyframe slides mask-position-x by 200% (one full
+ * tile period), giving a seamless loop. The 5-stop gradient (0.4 → 1.0 → 0.4)
+ * produces a single bright pulse per cycle that traverses left → right during
+ * the first half, with a brief calm interval during the second half.
+ */
+@utility shimmer-text {
+  mask-image: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.4) 0%,
+    rgba(0, 0, 0, 0.4) 30%,
+    rgba(0, 0, 0, 1) 50%,
+    rgba(0, 0, 0, 0.4) 70%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.4) 0%,
+    rgba(0, 0, 0, 0.4) 30%,
+    rgba(0, 0, 0, 1) 50%,
+    rgba(0, 0, 0, 0.4) 70%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+  mask-size: 200% 100%;
+  -webkit-mask-size: 200% 100%;
+  mask-repeat: repeat-x;
+  -webkit-mask-repeat: repeat-x;
+  animation: shimmer-text 2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-text {
+    animation: none;
+    mask-image: none;
+    -webkit-mask-image: none;
+    opacity: 0.6;
+  }
+}

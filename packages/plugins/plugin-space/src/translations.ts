@@ -13,17 +13,6 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [Collection.Collection.typename]: {
-        'typename.label': 'Collection',
-        'typename.label_zero': 'Collections',
-        'typename.label_one': 'Collection',
-        'typename.label_other': 'Collections',
-        'object-name.placeholder': 'New collection',
-        'add-object.label': 'Add collection',
-        'rename-object.label': 'Rename collection',
-        'delete-object.label': 'Delete collection',
-        'object-deleted.label': 'Collection deleted',
-      },
       [Type.getTypename(Type.PersistentType)]: {
         'typename.label': 'Type',
         'typename.label_zero': 'Types',
@@ -34,6 +23,17 @@ export const translations = [
         'rename-object.label': 'Rename type',
         'delete-object.label': 'Delete type',
         'object-deleted.label': 'Type deleted',
+      },
+      [Collection.Collection.typename]: {
+        'typename.label': 'Collection',
+        'typename.label_zero': 'Collections',
+        'typename.label_one': 'Collection',
+        'typename.label_other': 'Collections',
+        'object-name.placeholder': 'New collection',
+        'add-object.label': 'Add collection',
+        'rename-object.label': 'Rename collection',
+        'delete-object.label': 'Delete collection',
+        'object-deleted.label': 'Collection deleted',
       },
       [Event.Event.typename]: {
         'typename.label': 'Event',
@@ -262,8 +262,9 @@ export const translations = [
         'backup-space.title': 'Backup Space',
         'backup-space.description':
           'Download a backup of the space. Contains all data in the space in an unencrypted format.',
-        'download-backup-binary.label': 'Download (.tar)',
-        'download-backup-json.label': 'Download (.dx.json)',
+        'download-backup.label': 'Download backup',
+        'download-backup-binary.label': 'Binary (.tar)',
+        'download-backup-json.label': 'JSON (.dx.json)',
         'repair-space.title': 'Repair Space',
         'repair-space.description': 'Run repair operations on the space.',
         'repair-space.label': 'Run repairs',
@@ -275,7 +276,7 @@ export const translations = [
         'sync-upload.label': 'Upload',
         'sync-download.label': 'Download',
 
-        'types-section.label': 'Types',
+        'types-section.label': 'Database',
         'collections-section.label': 'Collections',
         'type-collection-all.label': 'All',
 

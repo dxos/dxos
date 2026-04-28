@@ -91,46 +91,6 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "ActivationEvent": [
-        "dist/types/src/activation-event/index.d.ts"
-      ],
-      "ActivationEvents": [
-        "dist/types/src/common/activation-events.d.ts"
-      ],
-      "Capabilities": [
-        "dist/types/src/common/capabilities.d.ts"
-      ],
-      "Capability": [
-        "dist/types/src/capability/index.d.ts"
-      ],
-      "Plugin": [
-        "dist/types/src/plugin/index.d.ts"
-      ],
-      "PluginManager": [
-        "dist/types/src/plugin-manager/index.d.ts"
-      ],
-      "UrlLoader": [
-        "dist/types/src/url-loader/index.d.ts"
-      ],
-      "vite-plugin": [
-        "dist/types/src/vite-plugin/index.d.ts"
-      ],
-      "cli": [
-        "dist/types/src/cli/index.d.ts"
-      ],
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ],
-      "testing-react": [
-        "dist/types/src/testing/react.d.ts"
-      ],
-      "ui": [
-        "dist/types/src/ui/index.d.ts"
-      ]
-    }
-  },
   "scripts": {
     "typedoc": "typedoc --out typedoc"
   },
@@ -149,7 +109,8 @@
     "@dxos/web-context": "workspace:*",
     "@dxos/web-context-react": "workspace:*",
     "@effect/cli": "catalog:",
-    "cjs-module-lexer": "catalog:"
+    "cjs-module-lexer": "catalog:",
+    "vite-plugin-css-injected-by-js": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",

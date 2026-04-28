@@ -3,10 +3,12 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
+import { Annotation as EchoAnnotation } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import {
@@ -42,6 +44,20 @@ export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema
 export const omitId = <S extends Schema.Schema.AnyNoContext>(schema: S): Schema.Schema<ExcludeId<S>, ExcludeId<S>> =>
   schema.pipe(Schema.omit('id')) as any;
 
+/**
+ * Drop fields annotated with `FormInputAnnotation.set(false)` from a schema so
+ * the form's validator doesn't trip on required-but-hidden fields. Used by
+ * the picker's inline create form, where a `FactoryAnnotation` typically
+ * supplies the hidden values (e.g. a backing-object Ref) outside the form.
+ */
+export const omitHiddenFormFields = <S extends Schema.Schema.AnyNoContext>(schema: S): S => {
+  const properties = SchemaAST.getPropertySignatures(schema.ast);
+  const hidden = properties
+    .filter((prop) => Option.getOrElse(EchoAnnotation.FormInputAnnotation.getFromAst(prop.type), () => true) === false)
+    .map((prop) => prop.name as string);
+  return hidden.length === 0 ? schema : (schema.pipe(Schema.omit(...(hidden as [string, ...string[]]))) as any);
+};
+
 //
 // Context
 //
@@ -63,7 +79,7 @@ type FormContextValue<T extends AnyProperties = any> = {
   testId?: string;
 } & Pick<
   NaturalFormFieldSetProps<T>,
-  'readonly' | 'layout' | 'fieldMap' | 'fieldProvider' | 'projection' | 'createTypename' | 'createFieldMap'
+  'readonly' | 'layout' | 'fieldMap' | 'fieldProvider' | 'projection' | 'createTypename' | 'createFieldMap' | 'db'
 >;
 
 const [FormContextProvider, useFormContext] = createContext<FormContextValue>('Form');
