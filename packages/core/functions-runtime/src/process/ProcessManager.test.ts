@@ -20,7 +20,7 @@ import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Organization } from '@dxos/types';
 
-import { TestDatabaseLayer } from '../testing';
+import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import * as ProcessManager from './ProcessManager';
 import * as StorageService from './StorageService';
 

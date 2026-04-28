@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiContextService, AiSessionService } from '@dxos/assistant';
-import { AssistantTestLayer } from '@dxos/assistant/testing';
+import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';

@@ -14,10 +14,10 @@ import {
   type AiSession,
   createSystemPrompt,
   formatSystemPrompt,
-  AgentService,
   PartialBlock,
   ToolExecutionServices,
 } from '@dxos/assistant';
+import { AgentService } from '@dxos/functions-runtime';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
 import { type Database, Feed, Obj, Ref } from '@dxos/echo';

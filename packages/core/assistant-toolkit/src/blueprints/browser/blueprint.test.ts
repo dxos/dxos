@@ -6,8 +6,8 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AgentService } from '@dxos/assistant';
-import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
+import { AgentService } from '@dxos/functions-runtime';
+import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Collection, Database, Feed, Query } from '@dxos/echo';

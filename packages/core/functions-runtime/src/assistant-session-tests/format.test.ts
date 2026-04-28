@@ -6,6 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import { createSystemPrompt, formatSystemPrompt } from '@dxos/assistant';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Database, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -14,9 +15,7 @@ import { Text } from '@dxos/schema';
 import { Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { createSystemPrompt } from '../templates/system';
 import { AssistantTestLayer } from '../testing';
-import { formatSystemPrompt } from './format';
 
 const OrganizationList = Operation.make({
   meta: {

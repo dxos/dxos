@@ -6,7 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { ContextBinding } from '@dxos/assistant';
-import { AssistantTestLayer } from '@dxos/assistant/testing';
+import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { Prompt } from '@dxos/blueprints';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';

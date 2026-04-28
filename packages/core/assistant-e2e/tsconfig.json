@@ -37,6 +37,9 @@
       "path": "../echo/echo"
     },
     {
+      "path": "../functions-runtime"
+    },
+    {
       "path": "../operation"
     }
   ]

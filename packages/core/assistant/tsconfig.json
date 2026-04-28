@@ -65,9 +65,6 @@
       "path": "../functions"
     },
     {
-      "path": "../functions-runtime"
-    },
-    {
       "path": "../mcp-client"
     },
     {

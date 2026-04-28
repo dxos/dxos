@@ -16,7 +16,7 @@ import { Feed } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, Trace } from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/operation';
 

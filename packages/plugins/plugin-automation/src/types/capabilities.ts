@@ -6,7 +6,7 @@ import type * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { type AiService, type OpaqueToolkit } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
-import { AgentService } from '@dxos/assistant';
+import { AgentService } from '@dxos/functions-runtime';
 import type { Blueprint } from '@dxos/blueprints';
 import { type Database, type Feed } from '@dxos/echo';
 import type { CredentialsService, Process, QueueService } from '@dxos/functions';

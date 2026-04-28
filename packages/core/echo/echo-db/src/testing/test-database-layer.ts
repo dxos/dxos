@@ -8,14 +8,17 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Database, Feed, Type, View } from '@dxos/echo';
-import { type EchoDatabaseImpl, type QueueFactory } from '@dxos/echo-db';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { acquireReleaseResource } from '@dxos/effect';
-import { feedServiceFromQueueServiceLayer, QueueService } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
+
+import { feedServiceFromQueueServiceLayer, QueueService } from '../effect-queue-service';
+import type { EchoDatabaseImpl } from '../proxy-db';
+import type { QueueFactory } from '../queue/queue-factory';
+
+import { EchoTestBuilder } from './echo-test-builder';
 
 const testBuilder = acquireReleaseResource(() => new EchoTestBuilder());
 
@@ -59,8 +62,6 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
           if (storagePath) {
             kv = createTestLevel(storagePath);
             yield* Effect.promise(() => kv!.open());
-            // const keyCount = yield* Effect.promise(async () => (await kv!.iterator({ values: false }).all()).length);
-            // log.info('opened test db', { storagePath, keyCount });
           }
           const peer = yield* Effect.promise(() => builder.createPeer({ types, kv, assignQueuePositions: true }));
 
@@ -115,11 +116,6 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
           yield* Effect.addFinalizer(() =>
             Effect.promise(async () => {
               if (kv) {
-                // {
-                //   const keyCount = (await kv.iterator({ values: false }).all()).length;
-                //   log.info('closing persistant test db', { storagePath, keyCount });
-                // }
-
                 await kv.close();
               }
             }),

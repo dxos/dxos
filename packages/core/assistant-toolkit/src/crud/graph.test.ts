@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import { AiRequest, ToolExecutionServices } from '@dxos/assistant';
-import { AssistantTestLayer } from '@dxos/assistant/testing';
+import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { Pipeline } from '@dxos/types';

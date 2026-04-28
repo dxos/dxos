@@ -4479,9 +4479,6 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../functions
-      '@dxos/functions-runtime':
-        specifier: workspace:*
-        version: link:../functions-runtime
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -4561,6 +4558,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../functions-runtime
       '@dxos/operation':
         specifier: workspace:*
         version: link:../operation
@@ -5526,6 +5526,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../blueprints
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -5629,6 +5632,9 @@ importers:
       '@aws-sdk/client-s3':
         specifier: 3.955.0
         version: 3.955.0
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../assistant
       chess.js:
         specifier: 'catalog:'
         version: 1.4.0
@@ -8532,6 +8538,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -17618,6 +17627,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client

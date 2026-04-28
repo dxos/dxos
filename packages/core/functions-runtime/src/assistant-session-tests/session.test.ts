@@ -6,12 +6,11 @@ import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import { describe, expect } from 'vitest';
 
+import { AiSession, ContextBinding } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 
-import { ContextBinding } from './context';
-import { AiSession } from './session';
+import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 
 describe('AiSession', () => {
   const TestLayer = TestDatabaseLayer({

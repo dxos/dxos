@@ -9,19 +9,20 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import { expect } from 'vitest';
 
+import { PartialBlock } from '@dxos/assistant';
+import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Trace } from '@dxos/functions';
-import { Process } from '@dxos/functions-runtime';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { AssistantTestLayer } from '../testing';
-import { PartialBlock } from '../tracing';
+import { Process } from '../process';
+
 import * as AgentService from './AgentService';
 
 ObjectId.dangerouslyDisableRandomness();

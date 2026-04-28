@@ -10,14 +10,13 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { OpaqueToolkit } from '@dxos/ai';
+import { AiRequest, ToolExecutionServices } from '@dxos/assistant';
 import { Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { ToolExecutionServices } from '../functions';
 import { AssistantTestLayer } from '../testing';
-import { AiRequest } from './request';
 
 // Define a calendar event artifact schema.
 const CalendarEventSchema = Schema.Struct({

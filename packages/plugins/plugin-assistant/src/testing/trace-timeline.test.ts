@@ -5,7 +5,7 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { AgentService } from '@dxos/assistant';
+import { AgentService } from '@dxos/functions-runtime';
 import {
   AgentHandlers,
   AgentPrompt,
@@ -15,7 +15,7 @@ import {
   WebSearchHandlers,
   WebSearchToolkitOpaque,
 } from '@dxos/assistant-toolkit';
-import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
+import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';

@@ -13,32 +13,28 @@ import * as Match from 'effect/Match';
 
 import { AiService, ConsolePrinter, OpaqueToolkit, type ModelName } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
+import { AiContextBinder, AiContextService, AiSession, AiSessionService, CompleteBlock } from '@dxos/assistant';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Database, DXN, Feed, Tag, Type } from '@dxos/echo';
+import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { acquireReleaseResource } from '@dxos/effect';
 import type { TestContextService } from '@dxos/effect/testing';
 import {
   CredentialsService,
+  Process,
   QueueService,
+  ServiceResolver,
   type ServiceCredential,
   ServiceNotAvailableError,
   Trace,
   Trigger,
 } from '@dxos/functions';
-import {
-  FeedTraceSink,
-  Process,
-  ProcessManager,
-  ServiceResolver,
-  TriggerDispatcher,
-  TriggerStateStore,
-} from '@dxos/functions-runtime';
-import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 
-import { AiContextBinder, AiContextService, AiSession, AiSessionService } from '../conversation';
-import { AgentService } from '../service';
-import { CompleteBlock } from '../tracing';
+import * as FeedTraceSink from '../FeedTraceSink';
+import { AgentService } from '../agent-service';
+import * as ProcessManager from '../process/ProcessManager';
+import { TriggerDispatcher, TriggerStateStore } from '../triggers';
 
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
@@ -48,6 +44,7 @@ interface TestLayerOptions {
   types?: Type.AnyEntity[];
   blueprints?: Blueprint.Blueprint[];
   credentials?: ServiceCredential[];
+
   /**
    * Tracing configuration.
    * - `'feed'` persists trace events to a FeedTraceSink (queryable from the database).
@@ -64,7 +61,6 @@ interface TestLayerOptions {
 }
 
 export type AssistantTestServices =
-  // Convinience
   | LanguageModel.LanguageModel
   | Feed.FeedService
   | CredentialsService
@@ -72,16 +68,13 @@ export type AssistantTestServices =
   | AiService.AiService
   | Database.Service
   | QueueService
-  // Registries
   | Blueprint.RegistryService
   | OperationRegistry.Service
   | OpaqueToolkit.OpaqueToolkitProvider
   | Operation.Service
-  // Core
   | ProcessManager.ProcessManagerService
   | Process.ProcessMonitorService
   | Registry.AtomRegistry
-  // Should those be here?
   | OperationHandlerSet.OperationHandlerProvider
   | KeyValueStore.KeyValueStore
   | ServiceResolver.ServiceResolver
@@ -116,7 +109,6 @@ export const AssistantTestLayer = ({
     Layer.provideMerge(AgentService.layer({ systemPrompt, model: resolvedModel })),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
     Layer.provideMerge(
-      // TODO(dmaretskyi): Refactor to be able to merge resovler layers, also consider service mesh achitecture.
       Layer.effect(
         ServiceResolver.ServiceResolver,
         Effect.gen(function* () {
@@ -124,7 +116,6 @@ export const AssistantTestLayer = ({
             Effect.map(Context.pick(Database.Service, Feed.FeedService)),
             Effect.map(Layer.succeedContext),
           );
-          // AiContextBinder.
           return ServiceResolver.compose(
             ServiceResolver.succeed(AiContextService, (context) =>
               Effect.gen(function* () {
@@ -143,7 +134,6 @@ export const AssistantTestLayer = ({
                 return { binder };
               }).pipe(Effect.provide(services)),
             ),
-            // AiSessionService.
             ServiceResolver.succeed(AiSessionService, (context) =>
               Effect.gen(function* () {
                 if (!context.conversation) {

@@ -14,17 +14,25 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AiService, OpaqueToolkit, type ModelName } from '@dxos/ai';
+import {
+  type McpServerConfig,
+  AiSession,
+  AgentRequestBegin,
+  AgentRequestEnd,
+  getOperationFromTool,
+  makeToolExecutionService,
+  makeToolResolverFromOperations,
+} from '@dxos/assistant';
 import { Database, DXN, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { Trace } from '@dxos/functions';
-import { Process, ProcessManager, StorageService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
-import { type McpServerConfig, AiSession } from '../conversation';
-import { getOperationFromTool, makeToolExecutionService, makeToolResolverFromOperations } from '../functions';
-import { AgentRequestBegin, AgentRequestEnd } from '../tracing';
+import { Process } from '../process';
+import * as ProcessManager from '../process/ProcessManager';
+import * as StorageService from '../process/StorageService';
 
 interface AgentProcessOptions {
   systemPrompt?: string;
@@ -314,7 +322,7 @@ class AsynchronousExectionToolkit extends Toolkit.make(
         description: 'The IDs of the jobs to inspect.',
       }),
       wait: Schema.optional(Schema.Boolean).annotations({
-        description: 'Whether to wait for the job to complete before returning.',
+        description: 'Whether to wait for the tool call to complete before returning.',
         default: false,
       }),
       timeout: Schema.optional(Schema.Number).annotations({

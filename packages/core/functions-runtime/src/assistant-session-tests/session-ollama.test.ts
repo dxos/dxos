@@ -6,15 +6,14 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { OpaqueToolkit } from '@dxos/ai';
 import { CalculatorLayer, CalculatorToolkit } from '@dxos/ai/testing';
+import { OpaqueToolkit } from '@dxos/ai';
+import { AiRequest, ToolExecutionServices } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect/testing';
 import { dbg, log } from '@dxos/log';
 import { ContentBlock } from '@dxos/types';
 
-import { ToolExecutionServices } from '../functions';
 import { AssistantTestLayer } from '../testing';
-import { AiRequest } from './request';
 
 /**
  * Exercises the full AiRequest tool-call loop against a local Ollama instance.
@@ -24,7 +23,7 @@ import { AiRequest } from './request';
  *
  * Run with:
  * ```bash
- * DX_TEST_TAGS=llm pnpm --filter @dxos/assistant exec vitest run session.ollama
+ * DX_TEST_TAGS=llm pnpm --filter @dxos/functions-runtime exec vitest run session-ollama
  * ```
  */
 

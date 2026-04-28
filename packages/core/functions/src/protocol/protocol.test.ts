@@ -13,7 +13,7 @@ describe('wrapFunctionHandler', () => {
   test('wraps reply function and executes handler', async ({ expect }) => {
     const wrapped = wrapFunctionHandler(replyFunc);
 
-    expect(wrapped.meta.key).toBe('example.org/function/reply');
+    expect(wrapped.meta.key).toBe('org.example.function.reply');
     expect(wrapped.meta.name).toBe('Reply');
 
     const testData = { message: 'hello' };
@@ -30,7 +30,7 @@ describe('wrapFunctionHandler', () => {
   test('wraps fibonacci function with valid input', async ({ expect }) => {
     const wrapped = wrapFunctionHandler(fibFunc);
 
-    expect(wrapped.meta.key).toBe('example.org/function/fib');
+    expect(wrapped.meta.key).toBe('org.example.function.fib');
     expect(wrapped.meta.name).toBe('Fibonacci');
 
     const result = await wrapped.handler({

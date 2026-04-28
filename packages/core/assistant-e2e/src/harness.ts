@@ -21,7 +21,7 @@ import {
   WebSearchHandlers,
   WebSearchToolkitOpaque,
 } from '@dxos/assistant-toolkit';
-import { AssistantTestLayer } from '@dxos/assistant/testing';
+import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
 import { TestHelpers, type TestTag } from '@dxos/effect/testing';

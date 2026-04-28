@@ -11,7 +11,7 @@ import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { Trace } from '@dxos/functions';
 
 import * as FeedTraceSink from './FeedTraceSink';
-import { TestDatabaseLayer } from './testing';
+import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 
 const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),

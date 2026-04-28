@@ -14,7 +14,7 @@ import { Feed, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { logCustomEvent, Trace } from '@dxos/functions';
 import { CredentialsService } from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { DXN } from '@dxos/keys';
 import { Operation, OperationRegistry } from '@dxos/operation';
 
