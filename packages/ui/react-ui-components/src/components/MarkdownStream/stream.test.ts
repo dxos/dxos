@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import * as TestContext from 'effect/TestContext';
 
-import { createStreamer, splitFragments, splitSentences, splitSpans } from './stream';
+import { type StreamerOptions, createStreamer, splitFragments, splitSentences, splitSpans } from './stream';
 
 describe('stream', () => {
   it.effect('tokenize tags', ({ expect }) =>
@@ -84,15 +84,41 @@ describe('stream', () => {
       expect(result).toEqual(['Hello ', '<div class="test']);
     }).pipe(Effect.provide(TestContext.TestContext)),
   );
+
+  // chunkSize: 'word' subdivides plain-text spans at whitespace boundaries while keeping XML
+  // fragments atomic, so widgets still mount on a single CM dispatch.
+  it.effect('chunkSize "word" splits text spans into words and whitespace runs', ({ expect }) =>
+    Effect.gen(function* () {
+      const result = yield* testStreamer('Hello brave new <b>world</b>!', { chunkSize: 'word' });
+      expect(result).toEqual(['Hello', ' ', 'brave', ' ', 'new', ' ', '<b>world</b>', '!']);
+    }).pipe(Effect.provide(TestContext.TestContext)),
+  );
+
+  // chunkSize: 'character' is the smallest cadence — one CM dispatch per character of plain
+  // text. XML fragments are still atomic.
+  it.effect('chunkSize "character" splits text spans char-by-char and keeps tags atomic', ({ expect }) =>
+    Effect.gen(function* () {
+      const result = yield* testStreamer('Hi <b>X</b>!', { chunkSize: 'character' });
+      expect(result).toEqual(['H', 'i', ' ', '<b>X</b>', '!']);
+    }).pipe(Effect.provide(TestContext.TestContext)),
+  );
+
+  // Default `chunkSize: 'span'` preserves the original behaviour — tests above already cover it.
+  it.effect('chunkSize defaults to "span"', ({ expect }) =>
+    Effect.gen(function* () {
+      const result = yield* testStreamer('Hello world');
+      expect(result).toEqual(['Hello world']);
+    }).pipe(Effect.provide(TestContext.TestContext)),
+  );
 });
 
-const testStreamer = (text: string) =>
+const testStreamer = (text: string, options?: StreamerOptions) =>
   Effect.gen(function* () {
     const result: string[] = [];
 
     // Create a stream from the single text value.
     yield* Stream.make(text).pipe(
-      createStreamer,
+      (source) => createStreamer(source, options),
       Stream.runForEach((text) => Effect.sync(() => result.push(text))),
     );
 

@@ -4,22 +4,44 @@
 
 import React from 'react';
 
-import { type Database } from '@dxos/echo';
-import { Input, useTranslation } from '@dxos/react-ui';
+import { type ComputeEnvironment } from '@dxos/client-protocol';
+import { useObject } from '@dxos/echo-react';
+import { type Space } from '@dxos/react-client/echo';
+import { DropdownMenu, IconButton, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
-import { useTriggerRuntimeControls } from '#hooks';
 import { meta } from '#meta';
 
-export const TriggersSettings = ({ db }: { db: Database.Database }) => {
-  const { state, start, stop } = useTriggerRuntimeControls(db);
-  const isRunning = state?.enabled ?? false;
+export const TriggersSettings = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
+  const [properties, changeProperties] = useObject(space.properties);
+  const selected = properties.computeEnvironment ?? 'local';
+
+  const handleUpdate = (option: ComputeEnvironment) => {
+    changeProperties((draft) => {
+      draft.computeEnvironment = option;
+    });
+  };
 
   return (
     <div className='grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
       <Settings.Item title={t('runtime.label')} description={t('runtime.description')}>
-        <Input.Switch classNames='justify-self-end' checked={isRunning} onCheckedChange={isRunning ? stop : start} />
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <IconButton iconEnd icon='ph--caret-down--regular' size={4} label={t(`runtime.${selected}.label`)} />
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content side='bottom'>
+              <DropdownMenu.Viewport>
+                <DropdownMenu.Item onClick={() => handleUpdate('disabled')}>
+                  {t(`runtime.disabled.label`)}
+                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={() => handleUpdate('local')}>{t(`runtime.local.label`)}</DropdownMenu.Item>
+                <DropdownMenu.Item onClick={() => handleUpdate('edge')}>{t(`runtime.edge.label`)}</DropdownMenu.Item>
+              </DropdownMenu.Viewport>
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
       </Settings.Item>
     </div>
   );

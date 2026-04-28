@@ -6,6 +6,7 @@ import { XMLParser } from 'fast-xml-parser';
 
 import { Subscription } from '#types';
 
+import { decodeEntities } from './extract';
 import { type FeedFetcher, type FetchOptions, type FetchResult } from './feed-fetcher';
 
 /**
@@ -13,13 +14,19 @@ import { type FeedFetcher, type FetchOptions, type FetchResult } from './feed-fe
  * fast-xml-parser yields objects like `{'#text': 'foo', '@_type': 'html'}` for
  * elements with attributes, and plain strings/numbers for text-only elements.
  * Returns undefined for nullish values.
+ *
+ * Entities are decoded explicitly: stopNode'd nodes (description / content /
+ * summary / content:encoded) are returned as raw text by fast-xml-parser,
+ * skipping its built-in entity decoding. Decoding here keeps callers from
+ * having to special-case those fields. For non-stopped nodes the decode is a
+ * no-op (the parser has already decoded entities).
  */
 const text = (value: unknown): string | undefined => {
   if (value == null) {
     return undefined;
   }
   if (typeof value === 'string') {
-    return value;
+    return decodeEntities(value);
   }
   if (typeof value === 'number' || typeof value === 'boolean') {
     return String(value);
@@ -27,7 +34,7 @@ const text = (value: unknown): string | undefined => {
   if (typeof value === 'object') {
     const t = (value as { '#text'?: unknown })['#text'];
     if (typeof t === 'string') {
-      return t;
+      return decodeEntities(t);
     }
     if (typeof t === 'number' || typeof t === 'boolean') {
       return String(t);
@@ -41,7 +48,15 @@ export const fetchRss: FeedFetcher = async (url: string, { corsProxy }: FetchOpt
   const fetchUrl = corsProxy ? `${corsProxy}${encodeURIComponent(url)}` : url;
   const response = await fetch(fetchUrl);
   const xml = await response.text();
-  const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
+  const parser = new XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: '@_',
+    // RSS/Atom feeds frequently embed HTML (sometimes un-escaped, without CDATA) in content fields,
+    // which can blow past fast-xml-parser's default 100-tag nesting cap.
+    maxNestedTags: 10_000,
+    // Treat known HTML-bearing fields as opaque text so embedded markup isn't parsed as XML.
+    stopNodes: ['*.description', '*.summary', '*.content', '*.content:encoded'],
+  });
   const parsed = parser.parse(xml);
 
   const channel = parsed.rss?.channel ?? parsed.feed;

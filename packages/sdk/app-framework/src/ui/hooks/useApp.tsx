@@ -164,38 +164,39 @@ export const useApp = ({
       module: 'org.dxos.app-framework.atom-registry',
     });
 
-    // Poll manager atoms for progress (avoids PubSub subscription race).
-    const progressInterval = setInterval(() => {
-      if (readyRef.current) {
-        clearInterval(progressInterval);
-        return;
-      }
-      const active = manager.getActive();
-      const modules = manager.getModules();
-      const total = modules.length;
-      const activated = active.length;
-      const lastModule = active.length > 0 ? active[active.length - 1] : undefined;
-      setStartupProgress({
-        activated,
-        total,
-        progress: total > 0 ? activated / total : 0,
-        status: lastModule ? humanizeModuleId(lastModule) : undefined,
-      });
-    }, 100);
-
     const fiber = Effect.gen(function* () {
       const queue = yield* PubSub.subscribe(manager.activation);
       const listener = yield* Effect.forkDaemon(
         Queue.take(queue).pipe(
-          Effect.tap(({ event, state, error: error$ }) =>
+          Effect.tap(({ event, state, module, error: error$ }) =>
             Effect.sync(() => {
               if (event === ActivationEvents.Startup.id && state === 'activated') {
                 clearTimeout(timeoutId);
-                clearInterval(progressInterval);
                 setReady(true);
                 readyRef.current = true;
                 // Trigger startup profiler dump if available.
                 (globalThis as any).composer?.profiler?.dump();
+                // Notify any host observability layer that startup completed.
+                // A `CustomEvent` keeps this generic — app-framework doesn't
+                // import a provider, and consumers can capture the startup
+                // summary without us picking one.
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('app-framework:startup-activated'));
+                }
+                return;
+              }
+              // Update progress on every module-level `activated` message.
+              // Driven by the activation event itself rather than a poll, so
+              // the placeholder UI updates as soon as a module commits.
+              if (module && state === 'activated' && !readyRef.current) {
+                const active = manager.getActive();
+                const total = manager.getModules().length;
+                setStartupProgress({
+                  activated: active.length,
+                  total,
+                  progress: total > 0 ? active.length / total : 0,
+                  status: humanizeModuleId(module),
+                });
               }
               if (error$ && !readyRef.current) {
                 setError(error$);
@@ -232,7 +233,6 @@ export const useApp = ({
     return () => {
       log('useApp: effect cleanup');
       clearTimeout(timeoutId);
-      clearInterval(progressInterval);
       void runAndForwardErrors(Fiber.interrupt(fiber));
       if (!isExternalManager) {
         void runAndForwardErrors(manager.shutdown());

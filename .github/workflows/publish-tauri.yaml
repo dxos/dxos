@@ -293,6 +293,10 @@ jobs:
 
     runs-on: depot-macos-latest
 
+    timeout-minutes: 90
+
+    continue-on-error: true
+
     steps:
       - uses: actions/checkout@v5
         with:
@@ -389,12 +393,13 @@ jobs:
           NODE_OPTIONS: '--max_old_space_size=12288'
 
       - name: Upload assets to CN
+        timeout-minutes: 30
         uses: ./.github/actions/cn-release
         with:
           api-key: ${{ secrets.CN_API_KEY }}
           application: ${{ env.CN_APPLICATION }}
           command: upload
-          working-directory: ./packages/apps/composer-app/
+          working-directory: ./packages/apps/composer-app/src-tauri/
 
       # https://tauri.app/distribute/app-store/#ios
       - name: Upload assets to App Store Connect
@@ -411,6 +416,19 @@ jobs:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Notify Discord on iOS build failure
+        if: failure() || cancelled()
+        env:
+          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
+          REF_NAME: ${{ github.ref_name }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          payload=$(jq -nc --arg ref "$REF_NAME" --arg url "$RUN_URL" \
+            '{content: (":warning: **build_tauri_ios** failed on `" + $ref + "`\nRun: " + $url)}')
+          curl -sS -X POST "$DX_DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "$payload"
 
   publish_tauri:
     needs:

@@ -4,19 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Space, getSpace } from '@dxos/client/echo';
-import { DXN, type Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { getSpace, type Space } from '@dxos/client/echo';
+import { type Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 
 import { type Magazine, Subscription } from '../types';
 import { extractImageUrls, makeSnippet, stripHtml } from '../util';
 import { CurateMagazine } from './definitions';
-
-/** Minimal queue surface needed by {@link curateMagazine}; exposed for testability. */
-export type QueueAccess = {
-  queryObjects: () => Promise<readonly unknown[] | undefined>;
-};
 
 /**
  * Extracts the bare ECHO object id from a DXN. Robust to DXN form differences
@@ -53,6 +48,7 @@ const reuseOrAdd = async (db: Database.Database, post: Subscription.Post): Promi
   if (existing) {
     return existing as Subscription.Post;
   }
+
   return db.add(post);
 };
 
@@ -61,20 +57,16 @@ const reuseOrAdd = async (db: Database.Database, post: Subscription.Post): Promi
  * be exercised directly from unit tests without an Operation runtime.
  *
  * For every uncurated candidate Post in the Magazine's referenced feeds,
- * derives a snippet and image from the Post's existing `description` (no HTTP
- * fetch). Appends each enriched Post's ref to `magazine.posts`. Skips Posts
- * with empty descriptions.
+ * derives a snippet and image from the Post's existing `description` (no HTTP fetch).
+ * Appends each enriched Post's ref to `magazine.posts`.
+ * Skips Posts with empty descriptions.
  *
  * The Magazine-level `keep` bound is enforced separately by the Clear button
  * (and the post-curate prune in `MagazineArticle.handleCurate`) so curate
  * stays purely additive — making it safe to re-run without pruning
  * previously-curated items the user may want to keep.
  */
-export const curateMagazine = async (
-  magazine: Magazine.Magazine,
-  db: Database.Database,
-  getQueue: (feedDxn: DXN) => QueueAccess,
-): Promise<{ added: number }> => {
+export const curateMagazine = async (space: Space, magazine: Magazine.Magazine): Promise<{ added: number }> => {
   const seenIds = new Set(magazine.posts.map((ref) => dxnToObjectId(ref.dxn)));
   const added: Ref.Ref<Subscription.Post>[] = [];
 
@@ -88,19 +80,24 @@ export const curateMagazine = async (
     if (!feedDxn) {
       continue;
     }
-    const queue = getQueue(feedDxn);
+
+    const queue = space.queues.get(feedDxn);
     const items = (await queue.queryObjects()) ?? [];
 
     for (const item of items) {
       if (!Obj.instanceOf(Subscription.Post, item)) {
         continue;
       }
+
       const queuePost = item;
       const postId = (queuePost as { id: string }).id;
       if (seenIds.has(postId)) {
         continue;
       }
+
       const source = queuePost.description ?? '';
+      // Snippet is rendered as plain text on the magazine tile, so strip HTML rather than
+      // converting to markdown — otherwise `**bold**` / `[link](url)` syntax leaks through.
       const text = stripHtml(source);
       if (!text) {
         continue;
@@ -113,7 +110,7 @@ export const curateMagazine = async (
       // link. Without this, a re-curate after Clear (or any path that
       // re-encounters a post already in space.db via a fresh queue proxy)
       // trips `addCore`'s `!_objects.has(core.id)` invariant.
-      const post = await reuseOrAdd(db, queuePost);
+      const post = await reuseOrAdd(space.db, queuePost);
 
       Obj.change(post, (post) => {
         const mutable = post as Obj.Mutable<typeof post>;
@@ -147,9 +144,9 @@ const handler: Operation.WithHandler<typeof CurateMagazine> = CurateMagazine.pip
   Operation.withHandler(
     Effect.fnUntraced(function* ({ magazine: magazineRef }) {
       const magazine = yield* Effect.promise(() => magazineRef.load());
-      const space: Space | undefined = getSpace(magazine);
+      const space = getSpace(magazine);
       invariant(space, 'Space not found.');
-      return yield* Effect.promise(() => curateMagazine(magazine, space.db, (feedDxn) => space.queues.get(feedDxn)));
+      return yield* Effect.promise(() => curateMagazine(space, magazine));
     }),
   ),
 );
