@@ -4,11 +4,11 @@
 
 import React, { useMemo } from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type InvocationsState } from '@dxos/functions-runtime';
 import { useTriggerRuntimeControls } from '@dxos/plugin-automation/hooks';
 import { StatusBar } from '@dxos/plugin-status-bar';
-import { useObject, type Space } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/react-client/echo';
 import { IconButton, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -41,16 +41,9 @@ const getIconClassNames = (state: TriggerStatusState): string | undefined => {
   }
 };
 
-export const TriggerStatus = () => {
-  const space = useActiveSpace();
-  if (!space) {
-    return null;
-  }
+export type SpaceStatusProps = AppSurface.SpaceArticleProps;
 
-  return <SpaceStatusMain space={space} />;
-};
-
-const SpaceStatusMain = ({ space }: { space: Space }) => {
+export const SpaceStatus = ({ space }: SpaceStatusProps) => {
   const { t } = useTranslation(meta.id);
   const { state } = useTriggerRuntimeControls(space.db);
   const isEnabled = state?.enabled ?? false;
@@ -134,5 +127,3 @@ const TriggerStatusPopover = ({
     </div>
   );
 };
-
-export default TriggerStatus;

@@ -6,6 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj, Type } from '@dxos/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { type ProjectionModel } from '@dxos/schema';
 
 import { AppCapabilities } from '../../capabilities';
@@ -242,7 +243,7 @@ export const Article: Surface.RoleToken<ArticleData<any>> = Surface.makeType('ar
 export type ArticleData<Subject = unknown, Props extends {} = {}, CompanionTo = unknown> = {
   attendableId: string;
   subject: Subject;
-  properties?: Record<string, any>;
+  properties?: Record<string, any>; // TODO(burdon): What is this for?
   variant?: string;
   path?: string[];
   popoverAnchorId?: string;
@@ -291,6 +292,32 @@ export const settings = (
     return AppCapabilities.isSettings(subject) && subject.prefix === prefix;
   };
   return { bindings: [{ role: token.role, guard }] };
+};
+
+//
+// SpaceArticle
+//
+
+/**
+ * Role token for the `space-article` role. Article-shaped surface whose subject
+ * is a Space (not an ECHO object). Renders inside a plank; `attendableId` is
+ * the Space id.
+ */
+export const SpaceArticle: Surface.RoleToken<SpaceArticleData> = Surface.makeType('space-article');
+
+/** Surface data for space-article role. */
+export type SpaceArticleData<Props extends {} = {}> = {
+  attendableId: string;
+  space: Space;
+  properties?: Record<string, any>;
+  variant?: string;
+  path?: string[];
+  popoverAnchorId?: string;
+} & Props;
+
+/** Component props for space-article role. */
+export type SpaceArticleProps<Props extends {} = {}> = SpaceArticleData<Props> & {
+  role: 'article' | (string & {});
 };
 
 //
