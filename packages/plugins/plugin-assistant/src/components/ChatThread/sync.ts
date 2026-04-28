@@ -86,9 +86,24 @@ export class MessageSyncer {
     this._completed = 0;
     this._trailing = 0;
     const buffer = this._walk(messages);
-    void this._document.setContent(buffer).then(() => {
+    const hadContent = (this._document.length ?? 0) > 0;
+    // Clear stale content + widget state via `setContent('')` (instant, wireBypass) only when
+    // there was something to clear. The fresh content always goes through `append` so the
+    // `wire` extension's transaction filter can intercept and drip the text char-by-char —
+    // calling `setContent(buffer)` here would bypass `wire` and the typewriter effect.
+    if (hadContent) {
+      void this._document.setContent('').then(() => {
+        if (buffer.length > 0) {
+          void this._document.append(buffer);
+        }
+        rehydrateToolWidgetsFromMessages(this._context, messages);
+      });
+    } else {
+      if (buffer.length > 0) {
+        void this._document.append(buffer);
+      }
       rehydrateToolWidgetsFromMessages(this._context, messages);
-    });
+    }
   }
 
   /**

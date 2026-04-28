@@ -349,9 +349,12 @@ const createMarkdownStreamController = ({
     /** Append to queue (and stream). */
     append: async (text: string) => {
       contentRef.current += text;
-      if (viewRef.current?.state.doc.length === 0) {
-        await onReset(text);
-      } else if (text.length) {
+      if (text.length) {
+        // Always go through the streaming queue, even when the doc starts empty. Skipping the
+        // queue in that case (via `onReset`) bypasses the `wire` extension's transaction filter
+        // and the first chunk lands in one CM dispatch — defeating the typewriter for any
+        // consumer (e.g. ChatThread) where the first delta is large because upstream batching
+        // collected several streaming partials before React rendered.
         const queue = queueRef.current;
         if (queue) {
           await runAndForwardErrors(Queue.offer(queue, text));

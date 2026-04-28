@@ -65,8 +65,11 @@ describe('createMessageGenerator', () => {
     let updates = 0;
     queue.subscribe(() => updates++);
 
+    // The streaming step is the third entry (index 2) — earlier indices are the initial
+    // user prompt and an assistant message with an Organization link (which requires
+    // `Database.Service`, unavailable in this unit-test layer).
     await runAndForwardErrors(
-      createMessageGenerator()[1]!.pipe(
+      createMessageGenerator()[2]!.pipe(
         Effect.provide(Layer.mergeAll(ContextQueueService.layer(queue), Database.notAvailable)),
       ),
     );

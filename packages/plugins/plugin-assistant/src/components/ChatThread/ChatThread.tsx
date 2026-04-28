@@ -18,17 +18,12 @@ import { MessageSyncer } from './sync';
 
 const defaultOptions: MarkdownStreamProps['options'] = {
   autoScroll: true,
-  // wire: true,
+  // The `wire` extension intercepts append transactions, buffers the text, and drips it into
+  // the editor one character at a time (200 chars/sec by default) while keeping XML elements,
+  // markdown links and images atomic. It's what gives the smooth char-by-char typewriter you
+  // see in the MarkdownStream/Reasoning story.
+  wire: true,
   cursor: true,
-  // Word-by-word cadence so the visible typewriter effect doesn't depend on the AI service's
-  // chunk size. Each whitespace boundary becomes its own CM dispatch; XML widgets remain atomic.
-  streamCadence: 'word',
-  // Per-token delay so the typewriter is visibly streaming. Without a delay, the splitter
-  // emits all tokens as microtasks and the browser coalesces ~hundreds of CM dispatches into
-  // a handful of rAF frames — looks instant even though the AI is actually streaming. ~30ms
-  // gives roughly one word per frame: visible flow without making long responses sluggish.
-  // (Verified empirically: 20ms is imperceptible, 200ms is comfortably visible but slow.)
-  streamDelayMs: 30,
 };
 
 export type ChatThreadProps = ThemedClassName<
