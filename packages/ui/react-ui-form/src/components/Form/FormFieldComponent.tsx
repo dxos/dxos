@@ -13,6 +13,7 @@ import React, {
   type ReactNode,
 } from 'react';
 
+import { type Database } from '@dxos/echo';
 import { type Format } from '@dxos/echo/internal';
 import { Icon, Input, Tooltip } from '@dxos/react-ui';
 import { inputTextLabel } from '@dxos/ui-theme';
@@ -50,6 +51,8 @@ export type FormFieldComponentProps<T = any> = {
   placeholder?: string;
   autoFocus?: boolean;
   layout?: Presentation;
+  /** Database the form is editing against; populated for fields whose value is an ECHO object/Ref. */
+  db?: Database.Database;
 } & FormFieldStateProps<T>;
 
 /**

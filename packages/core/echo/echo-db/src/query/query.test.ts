@@ -1505,6 +1505,29 @@ describe('Query', () => {
       expect(parentChildren).toHaveLength(1);
       expect(parentChildren[0]).toMatchObject({ name: 'Child' });
     });
+
+    test('traverse to children of a feed returns feed queue items', async () => {
+      const feedPeer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
+      const feedDb = await feedPeer.createDatabase();
+      const queues = feedPeer.client.constructQueueFactory(feedDb.spaceId);
+
+      const feed = feedDb.add(Feed.make({ name: 'test-feed' }));
+      const feedDxn = Feed.getQueueDxn(feed)!;
+      const queue = queues.get(feedDxn);
+
+      // Space-only task (should NOT appear as a child of the feed).
+      feedDb.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
+      await queue.append([
+        Obj.make(TestSchema.Task, { title: 'Feed Task 1' }),
+        Obj.make(TestSchema.Task, { title: 'Feed Task 2' }),
+      ]);
+      await feedDb.flush();
+
+      const objects = await feedDb.query(Query.select(Filter.id(feed.id)).children()).run();
+      expect(objects).toHaveLength(2);
+      const titles = objects.map((obj: any) => obj.title).sort();
+      expect(titles).toEqual(['Feed Task 1', 'Feed Task 2']);
+    });
   });
 
   describe.skip('text search (old indexer)', () => {

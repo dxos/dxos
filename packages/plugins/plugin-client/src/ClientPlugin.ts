@@ -33,18 +33,18 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
     return {
       id: Capability.getModuleTag(Client),
       activatesOn: ActivationEvent.oneOf(ActivationEvents.Startup, AppActivationEvents.SetupAppGraph),
-      activatesAfter: [ClientEvents.ClientReady],
+      firesAfterActivation: [ClientEvents.ClientReady],
       activate: () => Client(options),
     };
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.ClientReady,
-    activatesBefore: [AppActivationEvents.SetupSchema],
+    firesBeforeActivation: [AppActivationEvents.SetupSchema],
     activate: SchemaDefs,
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.ClientReady,
-    activatesBefore: [ClientEvents.SetupMigration],
+    firesBeforeActivation: [ClientEvents.SetupMigration],
     activate: Migrations,
   }),
   Plugin.addModule(

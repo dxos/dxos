@@ -25,8 +25,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'welcome',
-        role: 'dialog',
-        filter: AppSurface.componentDialog(WELCOME_SCREEN),
+        filter: AppSurface.component(AppSurface.Dialog, WELCOME_SCREEN),
         component: () => {
           const client = useClient();
           const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
@@ -36,14 +35,12 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'native-redirect',
-        role: 'dialog',
-        filter: AppSurface.componentDialog(NATIVE_REDIRECT_DIALOG),
+        filter: AppSurface.component<{ onOpenHere: () => void }>(AppSurface.Dialog, NATIVE_REDIRECT_DIALOG),
         component: ({ data }) => <NativeRedirectDialog {...data.props} />,
       }),
       Surface.create({
         id: ABOUT_DIALOG,
-        role: 'dialog',
-        filter: AppSurface.componentDialog(ABOUT_DIALOG),
+        filter: AppSurface.component(AppSurface.Dialog, ABOUT_DIALOG),
         component: () => <AboutDialog />,
       }),
     ]),

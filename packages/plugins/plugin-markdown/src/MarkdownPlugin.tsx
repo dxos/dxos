@@ -76,7 +76,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),
   AppPlugin.addSurfaceModule({
     activate: ReactSurface,
-    activatesBefore: [MarkdownEvents.SetupExtensions],
+    firesBeforeActivation: [MarkdownEvents.SetupExtensions],
   }),
   AppPlugin.addTranslationsModule({ translations: [...translations, ...editorTranslations] }),
   Plugin.addModule({

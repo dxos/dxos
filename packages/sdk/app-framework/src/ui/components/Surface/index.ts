@@ -12,7 +12,18 @@ import {
   useSurfaceProfilerEntries,
   useSurfaceProfilerStats,
 } from './SurfaceProfilerContext';
-import { type Definition as SurfaceDefinition, create as createSurface, createWeb as createWebSurface } from './types';
+import {
+  type Definition as SurfaceDefinition,
+  type RoleToken as SurfaceRoleToken,
+  type SurfaceBinding as SurfaceBindingType,
+  type SurfaceFilter as SurfaceFilterType,
+  type TokenData as SurfaceTokenData,
+  type TypedProps as SurfaceTypedProps,
+  create as createSurface,
+  createWeb as createWebSurface,
+  isSurfaceFilter as isSurfaceFilterFn,
+  makeType as makeTypeFn,
+} from './types';
 
 export namespace Surface {
   export type Definition = SurfaceDefinition;
@@ -24,6 +35,14 @@ export namespace Surface {
 
   export const Surface = SurfaceComponent;
   export const isAvailable = isSurfaceAvailable;
+
+  export type RoleToken<TData> = SurfaceRoleToken<TData>;
+  export type Binding = SurfaceBindingType;
+  export type Filter<TData> = SurfaceFilterType<TData>;
+  export type TokenData<T> = SurfaceTokenData<T>;
+  export type TypedProps<TToken extends SurfaceRoleToken<any>> = SurfaceTypedProps<TToken>;
+  export const makeType = makeTypeFn;
+  export const isFilter = isSurfaceFilterFn;
 
   export const ProfilerProvider = SurfaceProfilerProvider;
   export const useProfilerCallback = useSurfaceProfilerCallback;

@@ -7,11 +7,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { useLayout, type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { AttentionOperation } from '@dxos/plugin-attention/operations';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
+import { invariant } from '@dxos/invariant';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -29,7 +28,7 @@ import { InboxCapabilities, type Mailbox } from '#types';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { getMailboxMessagePath } from '../../paths';
 import { sortByCreated } from '../../util';
-import { NewMailbox } from './NewMailbox';
+import { InitializeMailbox } from './InitializeMailbox';
 
 export type MailboxArticleProps = AppSurface.ObjectArticleProps<
   Mailbox.Mailbox,
@@ -77,7 +76,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const parser = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
   useEffect(() => setFilter(parser.build(filterText).filter), [filterText, parser]);
 
-  const layout = useLayout();
+  const showItem = useShowItem();
   const filterEditorRef = useRef<EditorController>(null);
   const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -128,54 +127,19 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const handleAction = useCallback<MessageStackActionHandler>(
     (action) => {
       switch (action.type) {
+        // 'current' fires when a specific message is clicked;
+        // 'current-thread' fires when the enclosing thread is clicked (with its latest message).
+        case 'current':
         case 'current-thread': {
           const message = sortedMessages.find((message) => message.id === action.messageId);
-          void invokePromise(AttentionOperation.Select, {
+          invariant(message);
+          invariant(db);
+          void showItem({
             contextId: id,
-            selection: { mode: 'single', id: message?.id },
+            selectionId: message.id,
+            companion: linkedSegment('message'),
+            path: getMailboxMessagePath(db.spaceId, mailbox.id, message.id),
           });
-
-          const companion = linkedSegment('message');
-          if (layout.mode === 'simple') {
-            void invokePromise(LayoutOperation.UpdateComplementary, {
-              subject: companion,
-              state: 'expanded',
-            });
-          } else if (message) {
-            void invokePromise(DeckOperation.ChangeCompanion, {
-              companion,
-            });
-          }
-          break;
-        }
-
-        case 'current': {
-          const message = sortedMessages.find((message) => message.id === action.messageId);
-          void invokePromise(AttentionOperation.Select, {
-            contextId: id,
-            selection: { mode: 'single', id: message?.id },
-          });
-
-          const companion = linkedSegment('message');
-          if (layout.mode === 'simple') {
-            // Simple layout: open drawer with message companion.
-            void invokePromise(LayoutOperation.UpdateComplementary, {
-              subject: companion,
-              state: 'expanded',
-            });
-          } else if (layout.mode === 'multi' && message && db) {
-            // Multi deck: open the message plank beside this mailbox (pivot).
-            void invokePromise(LayoutOperation.Open, {
-              subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
-              pivotId: id,
-              navigation: 'immediate',
-            });
-          } else if (message) {
-            // Solo deck: show message in the companion panel.
-            void invokePromise(DeckOperation.ChangeCompanion, {
-              companion,
-            });
-          }
           break;
         }
 
@@ -185,9 +149,9 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             const tags = prevFilterText.split(/\s+/).filter(Boolean);
             if (tags.at(-1)?.toLowerCase() === '#' + action.label.toLowerCase()) {
               return prevFilterText;
+            } else {
+              return [prevFilterText.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ';
             }
-
-            return [prevFilterText.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ';
           });
           filterEditorRef.current?.focus();
           break;
@@ -205,7 +169,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         }
       }
     },
-    [db, id, layout.mode, mailbox, sortedMessages, invokePromise],
+    [db, id, mailbox, sortedMessages, invokePromise, showItem],
   );
 
   const handleClear = useCallback(() => {
@@ -249,7 +213,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       )}
       <Panel.Content asChild>
         {isEmpty ? (
-          <NewMailbox mailbox={mailbox} />
+          <InitializeMailbox mailbox={mailbox} />
         ) : (
           <MessageStack
             id={id}

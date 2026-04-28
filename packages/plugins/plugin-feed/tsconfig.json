@@ -33,10 +33,16 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/blueprints"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-atom"
+    },
+    {
+      "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../core/operation"
@@ -63,7 +69,19 @@
       "path": "../../ui/react-ui-attention"
     },
     {
+      "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-markdown"
+    },
+    {
+      "path": "../../ui/react-ui-masonry"
+    },
+    {
       "path": "../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../../ui/ui-theme"

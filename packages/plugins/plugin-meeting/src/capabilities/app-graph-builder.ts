@@ -6,13 +6,12 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { Obj, Type } from '@dxos/echo';
+import { AppCapabilities, AppNode, LayoutOperation } from '@dxos/app-toolkit';
+import { Feed, Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Channel, ThreadCapabilities } from '@dxos/plugin-thread/types';
@@ -159,10 +158,13 @@ export default Capability.makeModule(
 
                 const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
                 const transcript = yield* Effect.promise(() => meeting.transcript.load());
+                const transcriptFeed = yield* Effect.promise(() => transcript.feed.load());
+                const transcriptQueueDxn = Feed.getQueueDxn(transcriptFeed);
+                invariant(transcriptQueueDxn, 'Transcript feed has no queue DXN');
                 const transcriptionEnabled = !enabled;
                 callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
                   meetingId: Obj.getDXN(meeting).toString(),
-                  transcriptDxn: transcript.queue.dxn.toString(),
+                  transcriptDxn: transcriptQueueDxn.toString(),
                   transcriptionEnabled,
                 });
 
@@ -170,7 +172,7 @@ export default Capability.makeModule(
                   log.warn('transcription disabled');
                 } else {
                   const companion = linkedSegment('transcript');
-                  yield* Operation.invoke(DeckOperation.ChangeCompanion, { companion });
+                  yield* Operation.invoke(LayoutOperation.UpdateCompanion, { subject: companion });
                 }
               }),
               properties: {

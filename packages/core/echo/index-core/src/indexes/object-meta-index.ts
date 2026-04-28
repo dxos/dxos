@@ -453,6 +453,10 @@ export class ObjectMetaIndex implements Index {
 
   /**
    * Query children by parent object ids.
+   * Matches both:
+   * - Objects whose `parent` field references one of the given parent ids (standard parent/child hierarchy).
+   * - Queue items whose `queueId` equals one of the parent ids (e.g. items inside a Feed, since a feed's queue
+   *   DXN uses the feed's object id as its queue id — see `Feed.getQueueDxn`).
    */
   queryChildren = Effect.fn('ObjectMetaIndex.queryChildren')(
     (query: {
@@ -465,8 +469,9 @@ export class ObjectMetaIndex implements Index {
         }
 
         const sql = yield* SqlClient.SqlClient;
+        const parentDxns = query.parentIds.map((id) => DXN.fromLocalObjectId(id).toString());
         const rows =
-          yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId IN ${sql.in(query.spaceId)} AND parent IN ${sql.in(query.parentIds.map((id) => DXN.fromLocalObjectId(id).toString()))}`;
+          yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', query.spaceId)} AND (${sql.in('parent', parentDxns)} OR ${sql.in('queueId', query.parentIds)})`;
 
         return rows.map((row) => ({
           ...row,

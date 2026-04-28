@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { random } from '@dxos/random';
@@ -53,3 +54,50 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+const TestViewModes = ['preview', 'readonly', 'source'] as const;
+const TestViewMode = Schema.Union(...TestViewModes.map((mode) => Schema.Literal(mode)));
+
+const TestSettings = Schema.mutable(
+  Schema.Struct({
+    viewMode: TestViewMode.annotations({ title: 'View mode', description: 'Default document view mode.' }),
+    toolbar: Schema.optional(
+      Schema.Boolean.annotations({ title: 'Show toolbar', description: 'Display formatting toolbar.' }),
+    ),
+    fontSize: Schema.optional(
+      Schema.Number.annotations({ title: 'Font size', description: 'Editor font size in pixels.' }),
+    ),
+    placeholder: Schema.optional(
+      Schema.String.annotations({ title: 'Placeholder', description: 'Default placeholder text.' }),
+    ),
+    debug: Schema.optional(Schema.Boolean.annotations({ title: 'Debug mode', description: 'Enable debug features.' })),
+  }),
+);
+
+type TestSettings = Schema.Schema.Type<typeof TestSettings>;
+
+const FieldSetStory = () => {
+  const [values, setValues] = React.useState<TestSettings>({
+    viewMode: 'preview',
+    toolbar: true,
+    fontSize: 14,
+    debug: false,
+  });
+
+  return (
+    <Settings.Viewport>
+      <Settings.Section title='Plugin Settings (Auto-generated)'>
+        <Settings.FieldSet
+          schema={TestSettings}
+          values={values}
+          onValuesChanged={setValues}
+          visible={(path, values) => path !== 'placeholder' || !!values.debug}
+        />
+      </Settings.Section>
+    </Settings.Viewport>
+  );
+};
+
+export const FieldSet: Story = {
+  render: FieldSetStory,
+};

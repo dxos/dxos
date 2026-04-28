@@ -108,7 +108,7 @@ const meta = {
             Obj.make(Trigger.Trigger, {
               [Obj.Parent]: fn,
               enabled: random.datatype.boolean(),
-              spec: { kind: 'timer', cron: '0 0 * * *' },
+              spec: Trigger.specTimer('0 0 * * *'),
             }),
           );
         });

@@ -73,6 +73,11 @@
       "types": "./dist/types/src/Key.d.ts",
       "default": "./dist/lib/neutral/Key.mjs"
     },
+    "./Migration": {
+      "source": "./src/Migration.ts",
+      "types": "./dist/types/src/Migration.d.ts",
+      "default": "./dist/lib/neutral/Migration.mjs"
+    },
     "./Obj": {
       "source": "./src/Obj.ts",
       "types": "./dist/types/src/Obj.d.ts",

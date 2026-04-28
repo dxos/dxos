@@ -17,17 +17,17 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'game',
-        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section'],
-        filter: AppSurface.objectArticle(Chess.Game),
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Chess.Game),
+          AppSurface.object(AppSurface.Section, Chess.Game),
+        ),
         component: ({ data, role }) => (
           <ChessArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
         id: 'game-card',
-        role: ['card--content'],
-        filter: AppSurface.objectCard(Chess.Game),
+        filter: AppSurface.object(AppSurface.Card, Chess.Game),
         component: ({ data, role }) => <ChessCard role={role} subject={data.subject} />,
       }),
     ]),

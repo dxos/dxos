@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type CSSProperties, forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
@@ -18,7 +18,11 @@ import { MessageSyncer } from './sync';
 
 const defaultOptions: MarkdownStreamProps['options'] = {
   autoScroll: true,
-  // wire: true,
+  // The `wire` extension intercepts append transactions, buffers the text, and drips it into
+  // the editor one character at a time (200 chars/sec by default) while keeping XML elements,
+  // markdown links and images atomic. It's what gives the smooth char-by-char typewriter you
+  // see in the MarkdownStream/Reasoning story.
+  wire: true,
   cursor: true,
 };
 
@@ -56,8 +60,10 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
     // Update document.
     const syncer = useMemo(() => controller && new MessageSyncer(controller, blockToMarkdown), [controller]);
     useEffect(() => {
-      const reset = syncer?.append(messages, true);
-      if (reset) {
+      if (!syncer) {
+        return;
+      }
+      if (syncer.update(messages)) {
         controller?.scrollToBottom('instant');
       }
     }, [controller, syncer, messages]);
@@ -78,12 +84,8 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
     return (
       <div
         role='none'
+        data-hue={userHue}
         className={mx('flex h-full w-full justify-center overflow-hidden', classNames)}
-        style={
-          {
-            '--user-fill': `var(--color-${userHue}-fill)`,
-          } as CSSProperties
-        }
       >
         <MarkdownStream
           registry={componentRegistry}

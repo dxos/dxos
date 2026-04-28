@@ -38,22 +38,64 @@
       "path": "../../../tools/vite-plugin-log"
     },
     {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
       "path": "../../common/context"
+    },
+    {
+      "path": "../../common/crypto"
     },
     {
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/display-name"
+    },
+    {
       "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/effect-atom-solid"
+    },
+    {
+      "path": "../../common/errors"
+    },
+    {
+      "path": "../../common/feed-store"
+    },
+    {
+      "path": "../../common/graph"
+    },
+    {
+      "path": "../../common/hypercore"
     },
     {
       "path": "../../common/invariant"
     },
     {
+      "path": "../../common/keyboard"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/kv-store"
+    },
+    {
       "path": "../../common/log"
     },
     {
+      "path": "../../common/merkle-search-tree"
+    },
+    {
       "path": "../../common/random"
+    },
+    {
+      "path": "../../common/random-access-storage"
     },
     {
       "path": "../../common/storybook-utils"
@@ -62,19 +104,118 @@
       "path": "../../common/test-utils"
     },
     {
+      "path": "../../common/timeframe"
+    },
+    {
       "path": "../../common/tracing"
     },
     {
       "path": "../../common/util"
     },
     {
+      "path": "../../common/web-context"
+    },
+    {
+      "path": "../../common/web-context-react"
+    },
+    {
+      "path": "../../common/web-context-solid"
+    },
+    {
+      "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/assistant"
+    },
+    {
+      "path": "../../core/assistant-toolkit"
+    },
+    {
+      "path": "../../core/blueprints"
+    },
+    {
+      "path": "../../core/compute"
+    },
+    {
+      "path": "../../core/conductor"
+    },
+    {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-atom"
     },
     {
       "path": "../../core/echo/echo-db"
     },
     {
+      "path": "../../core/echo/echo-pipeline"
+    },
+    {
+      "path": "../../core/echo/echo-protocol"
+    },
+    {
+      "path": "../../core/echo/echo-query"
+    },
+    {
+      "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/echo/echo-solid"
+    },
+    {
+      "path": "../../core/echo/feed"
+    },
+    {
+      "path": "../../core/echo/index-core"
+    },
+    {
+      "path": "../../core/functions"
+    },
+    {
+      "path": "../../core/functions-runtime"
+    },
+    {
+      "path": "../../core/halo/credentials"
+    },
+    {
+      "path": "../../core/halo/keyring"
+    },
+    {
+      "path": "../../core/mcp-client"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
+    },
+    {
+      "path": "../../core/mesh/messaging"
+    },
+    {
+      "path": "../../core/mesh/network-manager"
+    },
+    {
+      "path": "../../core/mesh/rpc"
+    },
+    {
       "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
+      "path": "../../core/mesh/teleport"
+    },
+    {
+      "path": "../../core/mesh/teleport-extension-automerge-replicator"
+    },
+    {
+      "path": "../../core/mesh/teleport-extension-gossip"
+    },
+    {
+      "path": "../../core/mesh/teleport-extension-object-sync"
+    },
+    {
+      "path": "../../core/mesh/teleport-extension-replicator"
+    },
+    {
+      "path": "../../core/mesh/websocket-rpc"
     },
     {
       "path": "../../core/operation"
@@ -107,6 +248,12 @@
       "path": "../../plugins/plugin-conductor"
     },
     {
+      "path": "../../plugins/plugin-crx"
+    },
+    {
+      "path": "../../plugins/plugin-crx-bridge"
+    },
+    {
       "path": "../../plugins/plugin-daily-summary"
     },
     {
@@ -116,7 +263,7 @@
       "path": "../../plugins/plugin-deck"
     },
     {
-      "path": "../../plugins/plugin-excalidraw"
+      "path": "../../plugins/plugin-discord"
     },
     {
       "path": "../../plugins/plugin-explorer"
@@ -194,6 +341,9 @@
       "path": "../../plugins/plugin-registry"
     },
     {
+      "path": "../../plugins/plugin-sample"
+    },
+    {
       "path": "../../plugins/plugin-script"
     },
     {
@@ -204,6 +354,9 @@
     },
     {
       "path": "../../plugins/plugin-sheet"
+    },
+    {
+      "path": "../../plugins/plugin-sidekick"
     },
     {
       "path": "../../plugins/plugin-simple-layout"
@@ -257,9 +410,6 @@
       "path": "../../plugins/plugin-wnfs"
     },
     {
-      "path": "../../plugins/plugin-youtube"
-    },
-    {
       "path": "../../plugins/plugin-zen"
     },
     {
@@ -267,6 +417,9 @@
     },
     {
       "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../../sdk/app-solid"
     },
     {
       "path": "../../sdk/app-toolkit"
@@ -293,6 +446,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/react-edge-client"
+    },
+    {
       "path": "../../sdk/schema"
     },
     {
@@ -305,22 +461,121 @@
       "path": "../../ui/brand"
     },
     {
+      "path": "../../ui/lit-grid"
+    },
+    {
       "path": "../../ui/lit-ui"
+    },
+    {
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-board"
+    },
+    {
+      "path": "../../ui/react-ui-calendar"
+    },
+    {
+      "path": "../../ui/react-ui-canvas"
+    },
+    {
+      "path": "../../ui/react-ui-canvas-compute"
+    },
+    {
+      "path": "../../ui/react-ui-canvas-editor"
+    },
+    {
+      "path": "../../ui/react-ui-chat"
+    },
+    {
+      "path": "../../ui/react-ui-components"
+    },
+    {
+      "path": "../../ui/react-ui-dnd"
+    },
+    {
       "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-gameboard"
+    },
+    {
+      "path": "../../ui/react-ui-geo"
+    },
+    {
+      "path": "../../ui/react-ui-graph"
+    },
+    {
+      "path": "../../ui/react-ui-grid"
+    },
+    {
+      "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-markdown"
+    },
+    {
+      "path": "../../ui/react-ui-masonry"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../ui/react-ui-pickers"
+    },
+    {
+      "path": "../../ui/react-ui-search"
+    },
+    {
+      "path": "../../ui/react-ui-sfx"
     },
     {
       "path": "../../ui/react-ui-stack"
     },
     {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
       "path": "../../ui/react-ui-table"
     },
     {
+      "path": "../../ui/react-ui-tabs"
+    },
+    {
+      "path": "../../ui/react-ui-text-tooltip"
+    },
+    {
+      "path": "../../ui/react-ui-thread"
+    },
+    {
+      "path": "../../ui/solid-ui"
+    },
+    {
+      "path": "../../ui/solid-ui-geo"
+    },
+    {
+      "path": "../../ui/ui"
+    },
+    {
+      "path": "../../ui/ui-editor"
+    },
+    {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
     }
   ]
 }

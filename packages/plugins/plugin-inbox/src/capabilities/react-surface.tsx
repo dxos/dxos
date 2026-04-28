@@ -17,8 +17,8 @@ import { InboxSettings } from '#components';
 import {
   CalendarArticle,
   CalendarProperties,
-  DraftMessageArticle,
   DraftsArticle,
+  EditMessageArticle,
   EventArticle,
   EventCard,
   MailboxArticle,
@@ -40,8 +40,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'plugin-settings',
-        role: 'article',
-        filter: AppSurface.settingsArticle(meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <InboxSettings settings={settings} onSettingsChange={updateSettings} />;
@@ -72,8 +71,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'mailbox',
-        role: ['article'],
-        filter: AppSurface.objectArticle(Mailbox.Mailbox),
+        filter: AppSurface.object(AppSurface.Article, Mailbox.Mailbox),
         component: ({ data }) => {
           return (
             <MailboxArticle subject={data.subject} filter={data.properties?.filter} attendableId={data.attendableId} />
@@ -85,7 +83,7 @@ export default Capability.makeModule(() =>
         role: ['article'],
         filter: (data): data is { subject: Message.Message } => DraftMessage.instanceOf(data.subject),
         component: ({ data: { subject }, role }) => {
-          return <DraftMessageArticle role={role} subject={subject} />;
+          return <EditMessageArticle role={role} subject={subject} />;
         },
       }),
       Surface.create({
@@ -120,9 +118,16 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'event',
-        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section'],
-        filter: AppSurface.and(AppSurface.objectArticle(Event.Event), AppSurface.companionArticle(Calendar.Calendar)),
+        filter: AppSurface.oneOf(
+          AppSurface.allOf(
+            AppSurface.object(AppSurface.Article, Event.Event),
+            AppSurface.companion(AppSurface.Article, Calendar.Calendar),
+          ),
+          AppSurface.allOf(
+            AppSurface.object(AppSurface.Section, Event.Event),
+            AppSurface.companion(AppSurface.Section, Calendar.Calendar),
+          ),
+        ),
         component: ({ data, role }) => {
           if (!data?.subject || !data?.companionTo) return null;
           return <EventArticle role={role} subject={data.subject} companionTo={data.companionTo} />;
@@ -130,22 +135,19 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'calendar',
-        role: ['article'],
-        filter: AppSurface.objectArticle(Calendar.Calendar),
+        filter: AppSurface.object(AppSurface.Article, Calendar.Calendar),
         component: ({ data, role }) => (
           <CalendarArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
         id: 'message-card',
-        role: 'card--content',
-        filter: AppSurface.objectCard(Message.Message),
+        filter: AppSurface.object(AppSurface.Card, Message.Message),
         component: ({ data: { subject }, role }) => <MessageCard subject={subject} role={role} />,
       }),
       Surface.create({
         id: 'event-card',
-        role: 'card--content',
-        filter: AppSurface.objectCard(Event.Event),
+        filter: AppSurface.object(AppSurface.Card, Event.Event),
         component: ({ data: { subject }, role }) => <EventCard subject={subject} role={role} />,
       }),
       Surface.create({
@@ -163,14 +165,12 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'mailbox-properties',
-        role: 'object-properties',
-        filter: AppSurface.objectProperties(Mailbox.Mailbox),
+        filter: AppSurface.object(AppSurface.ObjectProperties, Mailbox.Mailbox),
         component: ({ data }) => <MailboxProperties subject={data.subject} />,
       }),
       Surface.create({
         id: 'calendar-properties',
-        role: 'object-properties',
-        filter: AppSurface.objectProperties(Calendar.Calendar),
+        filter: AppSurface.object(AppSurface.ObjectProperties, Calendar.Calendar),
         component: ({ data }) => <CalendarProperties subject={data.subject} />,
       }),
 
@@ -178,14 +178,12 @@ export default Capability.makeModule(() =>
       // TODO(wittjosiah): Generalize the mess below.
       Surface.create({
         id: 'contact-related',
-        role: 'related',
-        filter: AppSurface.objectSection(Person.Person),
+        filter: AppSurface.object(AppSurface.Related, Person.Person),
         component: ({ data: { subject } }) => <RelatedToContact subject={subject} />,
       }),
       Surface.create({
         id: 'organization-related',
-        role: 'related',
-        filter: AppSurface.objectSection(Organization.Organization),
+        filter: AppSurface.object(AppSurface.Related, Organization.Organization),
         component: ({ data: { subject } }) => <RelatedToOrganization subject={subject} />,
       }),
     ]),

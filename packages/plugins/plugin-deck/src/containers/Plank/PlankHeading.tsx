@@ -5,7 +5,7 @@
 import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
@@ -37,6 +37,7 @@ export type PlankHeadingProps = {
   companioned?: 'primary' | 'companion';
   companions?: Node.Node[];
   actions?: StackItemSigilAction[];
+  debug?: boolean;
 };
 
 export const PlankHeading = memo(
@@ -54,9 +55,10 @@ export const PlankHeading = memo(
     companions,
     layoutMode,
     actions = [],
+    debug = false,
   }: PlankHeadingProps) => {
     const { t } = useTranslation(meta.id);
-    const { graph, onAdjust, onChangeCompanion } = usePlankContext('PlankHeading');
+    const { graph, onAdjust, onUpdateCompanion } = usePlankContext('PlankHeading');
     const runAction = useActionRunner();
     const breakpoint = useBreakpoints();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
@@ -129,10 +131,10 @@ export const PlankHeading = memo(
         const target = (event.target as HTMLElement).closest('[data-id]') as HTMLElement | null;
         const tabId = target?.dataset?.id;
         if (tabId) {
-          onChangeCompanion?.(tabId);
+          onUpdateCompanion?.(tabId);
         }
       },
-      [onChangeCompanion],
+      [onUpdateCompanion],
     );
 
     return (
@@ -185,7 +187,7 @@ export const PlankHeading = memo(
                   onAction={handleAction}
                 >
                   <Surface.Surface
-                    role='menu-footer'
+                    type={AppSurface.MenuFooter}
                     data={{ subject: node.data } satisfies AppSurface.MenuFooterData}
                   />
                 </StackItem.Sigil>
@@ -208,8 +210,16 @@ export const PlankHeading = memo(
             </TextTooltip>
           </>
         )}
+        {debug && (
+          <div role='none' className='flex items-center text-sm text-info-text'>
+            {layoutMode}:{part}:{companioned}
+          </div>
+        )}
         {node && part !== 'complementary' && (
-          <Surface.Surface role='navbar-end' data={{ subject: node.data } satisfies AppSurface.NavbarEndData} />
+          <Surface.Surface
+            type={AppSurface.NavbarEnd}
+            data={{ subject: node.data } satisfies AppSurface.NavbarEndData}
+          />
         )}
         {companioned === 'companion' ? (
           <PlankCompanionControls primary={primaryId} />

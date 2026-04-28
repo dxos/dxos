@@ -5,8 +5,9 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Annotation, Obj, QueryAST, Ref, Type } from '@dxos/echo';
+import { Annotation, Feed, Obj, QueryAST, Ref, Type, type Query } from '@dxos/echo';
 import { OptionsAnnotationId, SystemTypeAnnotation } from '@dxos/echo/internal';
+import { failedInvariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 /**
@@ -24,6 +25,11 @@ export const EmailSpec = Schema.Struct({
 });
 export type EmailSpec = Schema.Schema.Type<typeof EmailSpec>;
 
+/**
+ * Construct an Email trigger spec.
+ */
+export const specEmail = (): EmailSpec => ({ kind: 'email' });
+
 // TODO(burdon): Change to Feed.
 // TODO(wittjosiah): Remove. Migrate to Subscription triggers once EDGE supports them for feed queries.
 export const QueueSpec = Schema.Struct({
@@ -33,6 +39,20 @@ export const QueueSpec = Schema.Struct({
   queue: DXN.Schema,
 });
 export type QueueSpec = Schema.Schema.Type<typeof QueueSpec>;
+
+/**
+ * Construct a Queue trigger spec from a queue DXN string.
+ */
+export const specQueue = (queueDxn: string): QueueSpec => ({
+  kind: 'queue',
+  queue: queueDxn,
+});
+
+/**
+ * Construct a Queue trigger spec from a Feed object.
+ */
+export const specFeed = (feed: Feed.Feed): QueueSpec =>
+  specQueue(Feed.getQueueDxn(feed)?.toString() ?? failedInvariant(new Error('Could not extract DXN from feed')));
 
 /**
  * Subscription.
@@ -55,6 +75,25 @@ export const SubscriptionSpec = Schema.Struct({
 export type SubscriptionSpec = Schema.Schema.Type<typeof SubscriptionSpec>;
 
 /**
+ * Construct a Subscription trigger spec from a Query object.
+ */
+export const specSubscription = (
+  query: Query.Query<any>,
+  options?: { deep?: boolean; delay?: number },
+): SubscriptionSpec => ({
+  kind: 'subscription',
+  query: {
+    ast: query.ast,
+  },
+  options: options
+    ? {
+        deep: options.deep,
+        delay: options.delay,
+      }
+    : undefined,
+});
+
+/**
  * Cron timer.
  */
 export const TimerSpec = Schema.Struct({
@@ -65,6 +104,11 @@ export const TimerSpec = Schema.Struct({
   }),
 });
 export type TimerSpec = Schema.Schema.Type<typeof TimerSpec>;
+
+/**
+ * Construct a Timer trigger spec from a cron string.
+ */
+export const specTimer = (cron: string): TimerSpec => ({ kind: 'timer', cron });
 
 /**
  * Webhook.
@@ -84,6 +128,15 @@ export const WebhookSpec = Schema.Struct({
   ),
 });
 export type WebhookSpec = Schema.Schema.Type<typeof WebhookSpec>;
+
+/**
+ * Construct a Webhook trigger spec from a method and port.
+ */
+export const specWebhook = (opts?: { method?: string; port?: number }): WebhookSpec => ({
+  kind: 'webhook',
+  method: opts?.method,
+  port: opts?.port,
+});
 
 /**
  * Trigger schema.

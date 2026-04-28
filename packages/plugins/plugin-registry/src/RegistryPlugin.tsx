@@ -4,8 +4,9 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { ClientEvents } from '@dxos/plugin-client/types';
 
-import { AppGraphBuilder, OperationHandler, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, OperationHandler, ReactSurface, RegistryState } from '#capabilities';
 import { meta } from '#meta';
 
 import { translations } from './translations';
@@ -15,5 +16,9 @@ export const RegistryPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.ClientReady,
+    activate: RegistryState,
+  }),
   Plugin.make,
 );

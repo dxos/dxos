@@ -29,7 +29,7 @@ export const NativeFilesystemPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'state',
     activatesOn: ClientEvents.ClientReady,
-    activatesAfter: [StateReady],
+    firesAfterActivation: [StateReady],
     activate: State,
   }),
   Plugin.addModule({

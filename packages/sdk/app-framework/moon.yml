@@ -20,6 +20,7 @@ tasks:
       - '--entryPoint=src/common/activation-events.ts'
       - '--entryPoint=src/ui/index.ts'
       - '--entryPoint=src/testing/index.ts'
+      - '--entryPoint=src/testing/react.tsx'
       - '--entryPoint=src/core/url-loader.ts'
     deps:
       - compile-plugin

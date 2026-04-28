@@ -45,6 +45,9 @@
       "path": "../../core/assistant"
     },
     {
+      "path": "../../core/assistant-toolkit"
+    },
+    {
       "path": "../../core/blueprints"
     },
     {
@@ -58,6 +61,9 @@
     },
     {
       "path": "../../core/echo/echo-db"
+    },
+    {
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../core/functions"
@@ -79,6 +85,9 @@
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-protocol"
     },
     {
       "path": "../../sdk/react-client"

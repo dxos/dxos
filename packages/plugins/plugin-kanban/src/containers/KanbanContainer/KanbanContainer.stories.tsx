@@ -10,6 +10,7 @@ import { expect, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, type QueryAST, Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
@@ -22,7 +23,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Filter, type Space, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout } from '@dxos/react-ui/testing';
 import { ViewModel, getTypenameFromQuery } from '@dxos/schema';
 // TODO(wittjosiah): Replace with echo/testing.
@@ -91,7 +92,7 @@ const DefaultComponent = () => {
   const schema = useSchema(space?.db, typename);
   const projection = useProjectionModel(schema, kanban, registry);
 
-  const data = useMemo(() => (kanban ? { subject: kanban, attendableId: 'story' } : {}), [kanban]);
+  const data = useMemo(() => (kanban ? { subject: kanban, attendableId: 'story' } : undefined), [kanban]);
 
   const handleUpdateQuery = useCallback(
     (newQuery: QueryAST.Query) => {
@@ -122,7 +123,7 @@ const DefaultComponent = () => {
 
   return (
     <div className='grow grid grid-cols-[1fr_350px] overflow-hidden h-full w-full'>
-      <Surface.Surface role='article' data={data} limit={1} />
+      <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
       <div className='flex flex-col h-full overflow-hidden border-l border-separator'>
         <ViewEditor
           registry={space?.db.schemaRegistry}
@@ -131,12 +132,14 @@ const DefaultComponent = () => {
           onQueryChanged={handleUpdateQuery}
           onDelete={schema && Type.isMutable(schema) ? handleDeleteField : undefined}
         />
-        <Json.Root data={{ view: kanban.view.target, schema }}>
-          <Json.Content>
-            <Json.Filter />
-            <Json.Data classNames='text-xs' />
-          </Json.Content>
-        </Json.Root>
+        <Syntax.Root data={{ view: kanban.view.target, schema }}>
+          <Syntax.Content>
+            <Syntax.Filter />
+            <Syntax.Viewport>
+              <Syntax.Code classNames='text-xs' />
+            </Syntax.Viewport>
+          </Syntax.Content>
+        </Syntax.Root>
       </div>
     </div>
   );

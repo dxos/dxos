@@ -1,0 +1,117 @@
+/*
+ * Boot loader stylesheet — injected into the host's `<head>` by `bootLoaderPlugin`.
+ * The keyframe animation runs on the browser's compositor thread, so the bar
+ * keeps moving even while the JS main thread is busy parsing modules.
+ */
+
+/*
+ * Defaults match `@dxos/ui-theme`'s `--color-base-surface`, which resolves to
+ * Tailwind's `neutral-50` / `neutral-950` in light / dark mode respectively
+ * (see `packages/ui/ui-theme/src/css/theme/semantic.css`). Hosts can override
+ * with the `--boot-loader-bg-*` / `--boot-loader-fg-*` custom properties on
+ * `:root` if they need a different palette. Keeping the boot loader's
+ * background identical to the app's `body` eliminates the flash on handoff
+ * to React's `<Placeholder>`.
+ */
+#boot-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--boot-loader-bg-light, #fafafa);
+  color: var(--boot-loader-fg-light, #0a0a0a);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  font-size: 13px;
+}
+
+@media (prefers-color-scheme: dark) {
+  #boot-loader {
+    background: var(--boot-loader-bg-dark, #0a0a0a);
+    color: var(--boot-loader-fg-dark, #fafafa);
+  }
+}
+
+#boot-loader-mark {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.1;
+}
+
+#boot-loader-mark svg {
+  width: 100%;
+  height: 100%;
+  /* `fill="currentColor"` on the host SVG inherits the loader's text colour. */
+}
+
+#boot-loader-bar {
+  position: relative;
+  width: min(240px, 50vw);
+  height: 2px;
+  overflow: hidden;
+  background: rgba(127, 127, 127, 0.18);
+  border-radius: 1px;
+}
+
+#boot-loader-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: currentcolor;
+  opacity: 0.7;
+  border-radius: 1px;
+  animation: boot-loader-bar 1.4s ease-in-out infinite;
+}
+
+@keyframes boot-loader-bar {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+
+/*
+ * Determinate state — host called `window.__bootLoader.progress(fraction)`.
+ * Cancel the slide animation and pin the fill to whatever percentage the
+ * driver wrote into `--boot-loader-bar-progress` (0–100). The transition on
+ * `width` smooths the transitions between counter ticks so the fill grows
+ * continuously rather than snapping.
+ */
+#boot-loader-bar[data-determinate]::before {
+  width: calc(var(--boot-loader-bar-progress, 0) * 1%);
+  animation: none;
+  transform: none;
+  transition: width 240ms ease-out;
+}
+
+#boot-loader-status {
+  opacity: 0.7;
+  /*
+   * Pin both `line-height` and `height` so the status box stays exactly the
+   * same size regardless of which phase string is currently displayed. With
+   * only `min-height: 1em`, the browser's `line-height: normal` resolved to
+   * slightly different rendered heights as the text changed, which reflowed
+   * the flex column and bumped the progress bar a few pixels each time.
+   * `white-space: nowrap` makes sure long phase strings ("Loading
+   * framework…") never wrap to a second line.
+   */
+  height: 1.5em;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}

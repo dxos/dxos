@@ -6,11 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Predicate from 'effect/Predicate';
 
-import { AiService } from '@dxos/ai';
-import { GenericToolkit } from '@dxos/ai';
-import { AiSession, ToolExecutionServices } from '@dxos/assistant';
+import { AiService, OpaqueToolkit } from '@dxos/ai';
+import { AiRequest, ToolExecutionServices } from '@dxos/assistant';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
-import { FunctionInvocationService } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
@@ -37,11 +35,11 @@ export default EntityExtraction.pipe(
           const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit, {
             onAppend: (dxns) => created.push(...dxns),
           });
-          const toolkit = yield* GraphWriterToolkit.pipe(
+          const toolkit = yield* OpaqueToolkit.fromContext(GraphWriterToolkit).pipe(
             Effect.provide(GraphWriterHandler.pipe(Layer.provide(ResearchGraph.contextQueueLayer))),
           );
 
-          yield* new AiSession().run({
+          yield* new AiRequest().run({
             system: trim`
               Extract the sender's organization from the email. If you are not sure, do nothing.
               The extracted organization URL must match the sender's email domain.
@@ -74,8 +72,7 @@ export default EntityExtraction.pipe(
         Layer.mergeAll(
           AiService.model('@anthropic/claude-sonnet-4-0'), // TODO(dmaretskyi): Extract.
           ToolExecutionServices,
-          FunctionInvocationService.layerNotAvailable,
-        ).pipe(Layer.provide(GenericToolkit.providerEmpty)),
+        ).pipe(Layer.provide(OpaqueToolkit.providerEmpty)),
       ),
     ),
   ),

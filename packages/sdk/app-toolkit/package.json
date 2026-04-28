@@ -33,16 +33,6 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "query": [
-        "dist/types/src/query.d.ts"
-      ],
-      "ui": [
-        "dist/types/src/ui/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"

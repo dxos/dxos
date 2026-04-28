@@ -31,7 +31,7 @@ export const CreateAgent = Operation.make({
     name: Schema.String.annotations({
       description: 'The name of the agent to create.',
     }),
-    spec: Schema.String.annotations({
+    instructions: Schema.String.annotations({
       description:
         'The goal of the agent. Be specific but not too verbose. The agent will use this as a core objective and set of rules to follow.',
     }),

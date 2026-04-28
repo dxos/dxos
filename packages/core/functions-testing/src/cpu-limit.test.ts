@@ -51,7 +51,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '* */30 * * * *' },
+        spec: Trigger.specTimer('* */30 * * * *'),
         input: { iterations: 100 },
       }),
     );
@@ -72,7 +72,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '* */30 * * * *' },
+        spec: Trigger.specTimer('* */30 * * * *'),
         input: { iterations: 1_000_000_000 },
       }),
     );
@@ -109,7 +109,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '* * * * * *' },
+        spec: Trigger.specTimer('* * * * * *'),
         input: { iterations: 1_000_000 },
       }),
     );
@@ -129,7 +129,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '* * * * * *' },
+        spec: Trigger.specTimer('* * * * * *'),
         input: { iterations: 100 },
       }),
     );

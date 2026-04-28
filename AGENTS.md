@@ -89,6 +89,10 @@ Examples:
 - If the Check workflow fails, inspect the failure with `gh run view <run-id>` and `gh run view <run-id> --log-failed`, identify the failing job/test, and fix it.
 - When the user asks "what is the CI status" or similar, always check the **Check** workflow specifically.
 
+## Committing and Pushing
+
+- **IMPORTANT**: Before every `git commit` and `git push`, run `git status` and check for ALL modified, staged, and untracked files. Every changed file must either be committed or explicitly acknowledged with the user. Never leave unstaged changes behind silently — if a file was modified during your work, it must be included in the commit or you must ask the user whether to include it.
+
 ## Submitting PRs
 
 - When the user asks you to submit a PR:
@@ -97,6 +101,7 @@ Examples:
   - Format code with `pnpm format` and check that `moon run :lint -- --fix` succeeds.
   - Check `moon run :test` succeeds.
   - Commit and push all pending changes.
+  - **IMPORTANT**: Verify `git status` shows a clean working tree after the final push. If any files remain modified or untracked, either commit them or confirm with the user before proceeding.
   - Monitor CI (every 5 minutes): `gh run list --branch <branch> --limit 3 --workflow "Check"` and `pnpm -w gh-action --verify --watch`.
   - You must attempt to diagnose and if possible fix all CI errors -- regardless of whether they relate to the current branch
   - **IMPORTANT**: Address and RESPOND to all PR review comments.

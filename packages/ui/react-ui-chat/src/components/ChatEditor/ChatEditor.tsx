@@ -50,7 +50,7 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
     // TODO(burdon): Popover.
     return (
       <Editor.Root ref={forwardRef}>
-        <Editor.Content classNames={classNames} autoFocus={autoFocus} extensions={extensions} />
+        <Editor.View classNames={classNames} autoFocus={autoFocus} extensions={extensions} />
       </Editor.Root>
     );
   },

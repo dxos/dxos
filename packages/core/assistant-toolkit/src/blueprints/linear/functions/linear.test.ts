@@ -9,7 +9,7 @@ import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionInvocationService } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { OperationHandlerSet } from '@dxos/operation';
 import { Person, Pipeline, Task } from '@dxos/types';
 
@@ -29,7 +29,7 @@ describe.skip('Linear', { timeout: 600_000 }, () => {
       function* (_) {
         yield* Database.flush();
 
-        yield* FunctionInvocationService.invokeFunction(fetchLinearIssues, {
+        yield* Operation.invoke(fetchLinearIssues, {
           team: '1127c63a-6f77-4725-9229-50f6cd47321c',
         });
 

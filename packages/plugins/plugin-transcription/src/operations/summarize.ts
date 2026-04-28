@@ -9,10 +9,10 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { AiSession, GenerationObserver } from '@dxos/assistant';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
+import { AiRequest, GenerationObserver } from '@dxos/assistant';
+import { Database } from '@dxos/echo';
 import * as Trace from '@dxos/functions/Trace';
-import { Operation } from '@dxos/operation';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
 import { Summarize } from './definitions';
@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof Summarize> = Summarize.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ transcript, notes }) {
-        const result = yield* new AiSession({
+        const result = yield* new AiRequest({
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
         }).run({
           prompt: `Transcript: ${transcript}\n\nNotes: ${notes}`,
@@ -52,9 +52,14 @@ const handler: Operation.WithHandler<typeof Summarize> = Summarize.pipe(
           AiService.model('@anthropic/claude-sonnet-4-0'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
-          TracingService.layerNoop,
-          FunctionInvocationService.layerNotAvailable,
           Trace.writerLayerNoop,
+          Database.notAvailable,
+          Layer.succeed(Operation.Service, {
+            invoke: () => Effect.die('Not available.'),
+            schedule: () => Effect.die('Not available.'),
+            invokePromise: async () => ({ error: new Error('Not available.') }),
+          } as any),
+          Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
         ),
       ),
     ),

@@ -6,16 +6,16 @@ import * as Match from 'effect/Match';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ResearchGraph } from '@dxos/assistant-toolkit';
-import { Filter, Query } from '@dxos/echo';
+import { Feed, Filter, Query } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useFlush } from '@dxos/plugin-assistant';
 import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery, useQueue } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { StackItem } from '@dxos/react-ui-stack';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { type ComponentProps } from './types';
@@ -25,7 +25,8 @@ export const GraphModule = ({ space }: ComponentProps) => {
   const [open, setOpen] = useState(false);
 
   const [researchGraph] = useQuery(space.db, Query.type(ResearchGraph.ResearchGraph));
-  const queue = researchGraph?.queue.target;
+  const feed = researchGraph?.queue.target;
+  const queue = useQueue(feed ? Feed.getQueueDxn(feed) : undefined);
 
   // TODO(burdon): Clean-up API.
   const model = useGraphModel(space, undefined, undefined, queue);
@@ -56,7 +57,7 @@ export const GraphModule = ({ space }: ComponentProps) => {
             'overflow-hidden bg-base-surface border border-subdued-separator opacity-80',
           )}
         >
-          <Json.Data classNames='text-sm' data={filter} />
+          <JsonHighlighter classNames='text-sm' data={filter} />
         </div>
       )}
 
