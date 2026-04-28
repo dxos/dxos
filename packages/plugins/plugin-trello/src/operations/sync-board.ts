@@ -41,10 +41,10 @@ const handler: Operation.WithHandler<typeof SyncBoard> = SyncBoard.pipe(
       log('fetched remote data', { lists: remoteLists.length, cards: remoteCards.length });
 
       // Update board metadata.
-      Obj.change(board, (mutable) => {
-        mutable.name = boardInfo.name;
-        mutable.url = boardInfo.url;
-        mutable.closed = boardInfo.closed;
+      Obj.change(board, (board) => {
+        board.name = boardInfo.name;
+        board.url = boardInfo.url;
+        board.closed = boardInfo.closed;
       });
 
       const db = Obj.getDatabase(board);
@@ -93,23 +93,23 @@ const handler: Operation.WithHandler<typeof SyncBoard> = SyncBoard.pipe(
 
         const existing = existingCardsByTrelloId.get(remoteCard.id);
         if (existing) {
-          Obj.change(existing, (mutable) => {
-            mutable.name = remoteCard.name;
-            mutable.description = remoteCard.desc;
+          Obj.change(existing, (existing) => {
+            existing.name = remoteCard.name;
+            existing.description = remoteCard.desc;
             // Keep the back-reference current in case we upgraded an older card.
-            if (!mutable.board) {
-              mutable.board = Ref.make(board);
+            if (!existing.board) {
+              existing.board = Ref.make(board);
             }
-            mutable.trelloListId = remoteCard.idList;
-            mutable.listName = listName;
-            mutable.position = remoteCard.pos;
-            mutable.dueDate = remoteCard.due ?? undefined;
-            mutable.dueComplete = remoteCard.dueComplete;
-            mutable.labels = labels;
-            mutable.members = members;
-            mutable.url = remoteCard.url;
-            mutable.closed = remoteCard.closed;
-            mutable.lastActivityAt = remoteCard.dateLastActivity;
+            existing.trelloListId = remoteCard.idList;
+            existing.listName = listName;
+            existing.position = remoteCard.pos;
+            existing.dueDate = remoteCard.due ?? undefined;
+            existing.dueComplete = remoteCard.dueComplete;
+            existing.labels = labels;
+            existing.members = members;
+            existing.url = remoteCard.url;
+            existing.closed = remoteCard.closed;
+            existing.lastActivityAt = remoteCard.dateLastActivity;
           });
           cardsUpdated++;
         } else {
@@ -141,16 +141,16 @@ const handler: Operation.WithHandler<typeof SyncBoard> = SyncBoard.pipe(
       let cardsRemoved = 0;
       for (const [trelloId, existing] of existingCardsByTrelloId) {
         if (!remoteCardIds.has(trelloId) && !existing.closed) {
-          Obj.change(existing, (mutable) => {
-            mutable.closed = true;
+          Obj.change(existing, (existing) => {
+            existing.closed = true;
           });
           cardsRemoved++;
         }
       }
 
       // Update sync timestamp.
-      Obj.change(board, (mutable) => {
-        mutable.lastSyncedAt = new Date().toISOString();
+      Obj.change(board, (board) => {
+        board.lastSyncedAt = new Date().toISOString();
       });
 
       // Create a Kanban view on first sync. The view is scoped to cards whose
@@ -177,8 +177,8 @@ const handler: Operation.WithHandler<typeof SyncBoard> = SyncBoard.pipe(
             arrangement: { order: listOrder, columns: {} },
           });
           db.add(kanban);
-          Obj.change(board, (mutable) => {
-            mutable.kanbanId = kanban.id;
+          Obj.change(board, (board) => {
+            board.kanbanId = kanban.id;
           });
           log('created kanban board', { kanbanId: kanban.id });
         } catch (error) {

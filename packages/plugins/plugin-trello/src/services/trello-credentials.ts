@@ -23,8 +23,8 @@ export type TrelloAuth = { apiKey: string; apiToken: string };
 export class TrelloCredentials extends Context.Tag('TrelloCredentials')<
   TrelloCredentials,
   {
-    /** Returns the Trello auth credentials (apiKey + apiToken). */
-    get: () => Effect.Effect<TrelloAuth>;
+    /** Returns the Trello auth credentials (apiKey + apiToken), or fails if no access token is configured on the board. */
+    get: () => Effect.Effect<TrelloAuth, Error>;
   }
 >() {
   /**

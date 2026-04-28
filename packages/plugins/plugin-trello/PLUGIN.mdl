@@ -1,0 +1,188 @@
+---
+id: org.dxos.plugin.trello
+name: TrelloPlugin
+version: 0.1.0
+---
+
+Trello board and card sync for Composer. Reads boards/lists/cards via the Trello
+REST API, writes them as `TrelloBoard` and `TrelloCard` ECHO objects, and views
+them through the existing Kanban plugin.
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `op`        | `org.dxos.mdl.op@1.0`          |
+| `service`   | `org.dxos.mdl.service@1.0`     |
+| `component` | `org.dxos.mdl.component@1.0`   |
+
+## Types
+
+```mdl
+type Label
+  fields:
+    trelloId: string
+    name?: string
+    color?: string         # red | yellow | green | blue | orange | purple | pink | sky | lime | black
+```
+
+```mdl
+type Member
+  fields:
+    trelloId: string
+    username?: string
+    fullName?: string
+    avatarUrl?: string
+```
+
+```mdl
+type TrelloCard
+  meta:
+    keys: [{ source: 'trello.com', id: trelloCardId }]
+  fields:
+    name: string
+    description?: string
+    board?: ref<TrelloBoard>
+    trelloListId: string
+    listName?: string
+    position?: number
+    dueDate?: string                 # ISO timestamp
+    dueComplete?: boolean
+    url?: string                     # https://trello.com/c/...
+    closed?: boolean
+    lastActivityAt?: string
+    labels?: Label[]
+    members?: Member[]
+```
+
+```mdl
+type TrelloBoard
+  meta:
+    keys: [{ source: 'trello.com', id: trelloBoardId }]
+  fields:
+    name: string
+    url?: string
+    accessToken?: ref<AccessToken>   # Trello API key + token; see service below
+    kanbanId?: string                # Id of the Kanban view rendered for this board
+    pollIntervalMs?: number          # advisory; sync is currently manual
+```
+
+## Services
+
+```mdl
+service TrelloCredentials
+  desc: Effect Layer that resolves the Trello {apiKey, apiToken} pair from a board's AccessToken ref. Modeled on plugin-mailbox's GoogleCredentials.
+  ops:
+    fromBoard(boardRef): Layer<TrelloCredentials>
+    get(): Effect<TrelloAuth, Error>
+```
+
+## Operations
+
+```mdl
+op SyncBoard
+  desc: Pulls boards/lists/cards from Trello and reconciles them with ECHO. Idempotent on Obj.Meta.keys.
+  input:
+    board: ref<TrelloBoard>
+  output:
+    cardsCreated: number
+    cardsUpdated: number
+    cardsClosed: number
+```
+
+```mdl
+op PushCard
+  desc: Pushes a single TrelloCard's name/description back to Trello via the REST API.
+  input:
+    board: ref<TrelloBoard>
+    card: ref<TrelloCard>
+  output:
+    pushed: boolean
+```
+
+## Components
+
+```mdl
+component TrelloCardArticle
+  desc: Article-shaped editor for a TrelloCard. Read/write fields (name, description) plus read-only computed fields (listName, dueDate, members) plus a "Push to Trello" toolbar action.
+  props:
+    subject: TrelloCard
+    role?: string
+    attendableId?: string
+```
+
+```mdl
+component TrelloCard
+  desc: Inline card-content renderer used by Kanban tiles and search hits. Title + listName + open-in-Trello link.
+  props:
+    card: TrelloCard
+```
+
+## Features
+
+```mdl
+feat F-1: Board sync
+  req F-1.1: SyncBoard reconciles cards by Obj.Meta.keys[source='trello.com'] — never by sequence position.
+  req F-1.2: Cards absent from the remote board are marked closed (not deleted).
+  req F-1.3: Reconciliation is scoped to the board being synced; it never touches cards owned by another board.
+```
+
+```mdl
+feat F-2: Card push
+  req F-2.1: PushCard targets the card's owning board (via `card.board` ref) — never picks an unrelated board with credentials.
+  req F-2.2: PushCard surfaces success/failure via the operation invoker's toast pipeline.
+```
+
+```mdl
+feat F-3: Native Kanban view
+  req F-3.1: A TrelloBoard renders as a Kanban view via plugin-kanban — no custom board-level UI in plugin-trello.
+  req F-3.2: TrelloCard contributes a `card--content` surface so Kanban tiles can render Trello specifics (list, link).
+  req F-3.3: TrelloCard contributes `article` and `section` surfaces for the planks/sidebars.
+```
+
+## Acceptance
+
+```mdl
+test T-1: idempotent sync
+  given: a board with N cards already synced
+  then: re-running SyncBoard creates 0, updates 0, and closes 0 cards
+```
+
+```mdl
+test T-2: scoped reconciliation
+  given: two boards A and B in the same space, and SyncBoard is invoked on board A
+  then: cards owned by board B are unchanged regardless of A's remote response
+```
+
+```mdl
+test T-3: kanban renders trello cards
+  given: a TrelloBoard with a Kanban view and TrelloCards attached
+  then: each card tile is rendered by the TrelloCard `card--content` surface
+```
+
+## Roadmap (out of scope for the initial PR)
+
+See `DESIGN.md` for the proposed evolution to a generic `Sync` object that can
+factor out into a core plugin so other connectors (Linear, GitHub) can reuse the
+mechanics.
+
+```mdl
+feat F-4: Generic Sync object [planned]
+  req F-4.1: Define a `Sync` ECHO type with { endpoint, kanban: ref<Kanban>, lastSyncAt }; one Sync per connected board.
+  req F-4.2: Move sync scheduling + auth resolution out of plugin-trello into a shared `plugin-sync` (or core) so plugin-trello becomes a pure mapper.
+```
+
+```mdl
+feat F-5: Two-way labels [planned]
+  req F-5.1: Map Trello labels to Composer Tags using the cross-cutting Tag ontology (open issue tracked separately).
+```
+
+```mdl
+feat F-6: Read-only fields via Form [planned]
+  req F-6.1: Migrate TrelloCardArticle to `@dxos/react-ui-form`'s Form component; add a "computed/read-only" annotation for fields like listName, dueDate, members.
+```

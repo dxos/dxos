@@ -97,8 +97,8 @@ export const TrelloCardArticle = ({ role, subject: card }: TrelloCardArticleProp
           <Input.TextInput
             value={card.name}
             onChange={(event) =>
-              Obj.change(card, (mutable) => {
-                mutable.name = event.target.value;
+              Obj.change(card, (card) => {
+                card.name = event.target.value;
               })
             }
           />
@@ -110,8 +110,8 @@ export const TrelloCardArticle = ({ role, subject: card }: TrelloCardArticleProp
             value={card.description ?? ''}
             rows={8}
             onChange={(event) =>
-              Obj.change(card, (mutable) => {
-                mutable.description = event.target.value;
+              Obj.change(card, (card) => {
+                card.description = event.target.value;
               })
             }
           />
