@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
 
 import { Process } from '@dxos/functions-runtime';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';

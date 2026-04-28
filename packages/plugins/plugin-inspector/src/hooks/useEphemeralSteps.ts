@@ -2,17 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import {
-  PartialBlock,
-  CompleteBlock,
-  AgentTurnStarted,
-  AgentTurnCompleted,
-  ToolCallStarted,
-  ToolCallCompleted,
-  AgentInputReceived,
-} from '@dxos/assistant';
+import { AgentRequestBegin, AgentRequestEnd, CompleteBlock, PartialBlock } from '@dxos/assistant';
 import { Trace } from '@dxos/functions';
 
 import { type InspectorStep } from '#types';
@@ -144,57 +136,22 @@ const normalizeEvent = (event: Trace.Event, message: Trace.Message): InspectorSt
     }
   }
 
-  if (Trace.isOfType(AgentTurnStarted, event)) {
+  if (Trace.isOfType(AgentRequestBegin, event)) {
     return {
       id: `${baseId}-turn-start`,
       timestamp: event.timestamp,
       type: 'turn-start',
-      label: `Turn started (${event.data.historyLength} messages in context)`,
+      label: 'Turn started',
       pending: false,
     };
   }
 
-  if (Trace.isOfType(AgentTurnCompleted, event)) {
+  if (Trace.isOfType(AgentRequestEnd, event)) {
     return {
       id: `${baseId}-turn-completed`,
       timestamp: event.timestamp,
       type: 'turn-completed',
-      label: event.data.done ? 'Turn completed' : `Turn completed (${event.data.messageCount} messages, continuing)`,
-      pending: false,
-    };
-  }
-
-  if (Trace.isOfType(ToolCallStarted, event)) {
-    return {
-      id: `${baseId}-tcs-${event.data.toolCallId}`,
-      timestamp: event.timestamp,
-      type: 'tool-call',
-      label: event.data.name,
-      pending: true,
-      toolName: event.data.name,
-      toolCallId: event.data.toolCallId,
-    };
-  }
-
-  if (Trace.isOfType(ToolCallCompleted, event)) {
-    return {
-      id: `${baseId}-tcc-${event.data.toolCallId}`,
-      timestamp: event.timestamp,
-      type: 'tool-result',
-      label: event.data.name,
-      pending: false,
-      toolName: event.data.name,
-      toolCallId: event.data.toolCallId,
-      error: event.data.isError ? 'Error' : undefined,
-    };
-  }
-
-  if (Trace.isOfType(AgentInputReceived, event)) {
-    return {
-      id: `${baseId}-input`,
-      timestamp: event.timestamp,
-      type: 'input-received',
-      label: `Received ${event.data.inputType} (${event.data.contentLength} chars)`,
+      label: 'Turn completed',
       pending: false,
     };
   }
