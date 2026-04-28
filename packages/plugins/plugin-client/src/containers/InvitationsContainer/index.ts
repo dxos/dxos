@@ -3,4 +3,3 @@
 //
 
 export { InvitationsContainer as default } from './InvitationsContainer';
-export type { InvitationsContainerProps } from './InvitationsContainer';

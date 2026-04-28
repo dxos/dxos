@@ -3,4 +3,3 @@
 //
 
 export { AccountContainer as default } from './AccountContainer';
-export type { AccountContainerProps } from './AccountContainer';
