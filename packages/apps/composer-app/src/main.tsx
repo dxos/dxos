@@ -146,7 +146,6 @@ const main = async () => {
   bootStatus('Reading configuration…');
 
   let config = await setupConfig();
-
   if (shouldRunStorageResetMigration(config.values.runtime?.app?.env?.DX_ENVIRONMENT)) {
     await runStorageResetMigration();
     window.location.replace(window.location.href);
@@ -338,7 +337,6 @@ const main = async () => {
   profiler?.measure('services', 'services:start', 'services:end');
 
   profiler?.mark('plugins:start');
-  bootStatus('Loading plugins…');
 
   const conf: PluginConfig = {
     appKey: APP_KEY,
@@ -363,7 +361,7 @@ const main = async () => {
   const [builtinPlugins, remotePluginsResult] = await Promise.all([
     getPlugins(conf, {
       onPluginLoaded: (loaded, total) => {
-        bootStatus(`Loading plugins (${loaded}/${total})…`);
+        bootStatus(`Loading plugins (${loaded}/${total})`);
         // Drive the determinate progress bar — flips the bar out of its
         // indeterminate slide animation and grows it as chunks land.
         window.__bootLoader?.progress(loaded / total);
