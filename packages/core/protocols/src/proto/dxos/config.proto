@@ -145,6 +145,8 @@ message Runtime {
     message EdgeFeatures {
       optional bool feed_replicator = 1;
       optional bool echo_replicator = 2;
+      /// Enables Subduction sedimentree transport for Automerge document replication.
+      optional bool subduction_replicator = 5;
       optional bool signaling = 3;
       optional bool agents = 4;
     }

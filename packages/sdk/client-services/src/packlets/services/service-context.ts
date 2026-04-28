@@ -169,6 +169,7 @@ export class ServiceContext extends Resource {
       peerIdProvider: () => this.identityManager.identity?.deviceKey?.toHex(),
       getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
       runtime: this._runtime,
+      useSubduction: this._edgeFeatures?.subductionReplicator,
       syncQueue: async (ctx, request) => {
         return this._feedSyncer?.syncBlocking(ctx, {
           spaceId: request.spaceId as SpaceId,

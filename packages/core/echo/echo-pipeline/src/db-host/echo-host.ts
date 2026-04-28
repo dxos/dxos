@@ -58,6 +58,12 @@ export type EchoHostProps = {
    * Callback to run blocking queue sync.
    */
   syncQueue?: (ctx: Context, request: SyncQueueRequest) => Promise<void>;
+
+  /**
+   * Enable Subduction sedimentree transport for Automerge document replication.
+   * @default false
+   */
+  useSubduction?: boolean;
 };
 
 /**
@@ -92,6 +98,7 @@ export class EchoHost extends Resource {
     runtime,
     assignQueuePositions = false,
     syncQueue,
+    useSubduction,
   }: EchoHostProps) {
     super();
 
@@ -101,6 +108,7 @@ export class EchoHost extends Resource {
       dataMonitor: this._echoDataMonitor,
       peerIdProvider,
       getSpaceKeyByRootDocumentId,
+      useSubduction,
     });
 
     this._runtime = runtime;
