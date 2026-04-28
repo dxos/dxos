@@ -258,8 +258,10 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
       name: 'composer-plugin:emit-manifest',
       apply: 'build',
       generateBundle(_options, bundle) {
+        // Source maps are large and only fetched when devtools opens — exclude them
+        // from the manifest so the host doesn't precache megabytes of debug data.
         const assets = Object.keys(bundle)
-          .filter((name) => name !== MANIFEST_ASSET_NAME)
+          .filter((name) => name !== MANIFEST_ASSET_NAME && !name.endsWith('.map'))
           .sort();
         this.emitFile({
           type: 'asset',
