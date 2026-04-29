@@ -42,7 +42,7 @@ export const sentenceNormalization = SentenceNormalization.pipe(
   ),
 );
 
-const _unusedPrompt = trim`
+const _unused = trim`
   You are observing a real-time transcript of a single person speaking.
   The transcription is delivered in chunks of 10 seconds or less. As a result, individual sentences may be split across multiple messages, or multiple sentences may appear within a single message. Additionally, because this is real-time transcription, punctuation and capitalization may be incorrect or missing.
 

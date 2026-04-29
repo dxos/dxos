@@ -25,10 +25,21 @@ export const App = ({ placeholder: Placeholder, ready, error, debounce, progress
   // Emit a once-per-app `app-framework:first-interactive` mark the first time
   // the placeholder is dismissed and the real app shell renders. Closes the
   // gap between `Startup` activated and the first interactive paint.
+  //
+  // Also dismisses the native-DOM boot loader from
+  // `@dxos/app-framework/vite-plugin` here — the framework owns the
+  // handoff-complete signal, so dismissing in `App` covers both hosts that
+  // wire in a `Placeholder` (which may have its own dismiss path) and hosts
+  // that don't (the loader would otherwise sit forever as a `z-index: 10`
+  // overlay covering the rendered shell).
   useEffect(() => {
-    if (placeholderDismissed && performance.getEntriesByName(FIRST_INTERACTIVE_MARK).length === 0) {
+    if (!placeholderDismissed) {
+      return;
+    }
+    if (performance.getEntriesByName(FIRST_INTERACTIVE_MARK).length === 0) {
       performance.mark(FIRST_INTERACTIVE_MARK);
     }
+    (window as { __bootLoader?: { dismiss?: () => void } }).__bootLoader?.dismiss?.();
   }, [placeholderDismissed]);
 
   if (error) {

@@ -15,7 +15,7 @@ export const JoinDialog: ComponentType<any> = lazy(() => import('./JoinDialog'))
 export const MembersContainer: ComponentType<any> = lazy(() => import('./MembersContainer'));
 export const MenuFooter: ComponentType<any> = lazy(() => import('./MenuFooter'));
 export const ObjectCardStack: ComponentType<any> = lazy(() => import('./ObjectCardStack'));
-export const ObjectDetails: ComponentType<any> = lazy(() => import('./ObjectDetails'));
+export const ObjectProperties: ComponentType<any> = lazy(() => import('./ObjectProperties'));
 export const ObjectRenamePopover: ComponentType<any> = lazy(() => import('./ObjectRenamePopover'));
 export const RecordArticle: ComponentType<any> = lazy(() => import('./RecordArticle'));
 export const RelatedArticle: ComponentType<any> = lazy(() => import('./RelatedArticle'));
