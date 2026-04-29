@@ -14,14 +14,20 @@
  * to React's `<Placeholder>`.
  */
 #boot-loader {
+  /*
+   * Tunable sizes — change these in one place and every derived calc()
+   * (mark size, dot orbit radius, status offset, …) follows.
+   */
+  --boot-loader-disc-size: 384px;
+  --boot-loader-mark-size: 384px;
+  --boot-loader-dot-size: 4px;
+  --boot-loader-line-thickness: 1px;
+  --boot-loader-line-feather: 2px;
+  --boot-loader-status-gap: 24px;
+
   position: fixed;
   inset: 0;
   z-index: 2147483647;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
   background: var(--boot-loader-bg-light, #fafafa);
   color: var(--boot-loader-fg-light, #0a0a0a);
   font-family:
@@ -62,11 +68,14 @@
  * mask (the mask would otherwise clip the SVG to the 1px-thick arc shape).
  */
 #boot-loader-disc {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
   display: grid;
   place-items: center;
-  width: 384px;
-  height: 384px;
+  width: var(--boot-loader-disc-size);
+  height: var(--boot-loader-disc-size);
+  transform: translate(-50%, -50%);
   transition: --boot-loader-bar-progress 240ms ease-out;
 }
 
@@ -80,8 +89,8 @@
  * during boot; the brand palette swaps in on hover for a small reveal moment.
  */
 #boot-loader-mark {
-  width: 256px;
-  height: 256px;
+  width: var(--boot-loader-mark-size);
+  height: var(--boot-loader-mark-size);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -120,13 +129,23 @@
   background: rgba(127, 127, 127, 0.18);
   opacity: 0.2;
   /*
-   * Feather the inner edge over 2px so the thin line gets soft anti-aliased
-   * edges instead of a hard pixel cutoff (which can look stair-stepped on
+   * Feather the inner edge so the thin line gets soft anti-aliased edges
+   * instead of a hard pixel cutoff (which can look stair-stepped on
    * non-retina screens). The outer edge is clipped by `border-radius: 50%`,
-   * so only the inner side of the ring needs the gradient feather.
+   * so only the inner side of the ring needs the gradient feather. The
+   * solid line lives in the outermost `--boot-loader-line-thickness` of the
+   * disc; the feather extends `--boot-loader-line-feather` further inward.
    */
-  mask: radial-gradient(circle closest-side, transparent calc(100% - 2px), #000 100%);
-  -webkit-mask: radial-gradient(circle closest-side, transparent calc(100% - 2px), #000 100%);
+  mask: radial-gradient(
+    circle closest-side,
+    transparent calc(100% - var(--boot-loader-line-thickness) - var(--boot-loader-line-feather)),
+    #000 calc(100% - var(--boot-loader-line-thickness))
+  );
+  -webkit-mask: radial-gradient(
+    circle closest-side,
+    transparent calc(100% - var(--boot-loader-line-thickness) - var(--boot-loader-line-feather)),
+    #000 calc(100% - var(--boot-loader-line-thickness))
+  );
 }
 
 /*
@@ -158,13 +177,14 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 4px;
-  height: 4px;
-  margin: -2px 0 0 -2px;
+  width: var(--boot-loader-dot-size);
+  height: var(--boot-loader-dot-size);
+  margin: calc(var(--boot-loader-dot-size) / -2) 0 0 calc(var(--boot-loader-dot-size) / -2);
   border-radius: 50%;
   background: currentcolor;
   opacity: 0;
-  transform: rotate(calc(var(--boot-loader-bar-progress, 0) * -3.6deg)) translateY(-192px);
+  transform: rotate(calc(var(--boot-loader-bar-progress, 0) * -3.6deg))
+    translateY(calc(var(--boot-loader-disc-size) / -2));
   transition: opacity 200ms ease-out;
 }
 
@@ -179,7 +199,12 @@
 }
 
 #boot-loader-status {
-  opacity: 0.7;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* Sit just below the centered disc — half the disc plus the configured gap. */
+  transform: translate(-50%, calc(var(--boot-loader-disc-size) / 2 + var(--boot-loader-status-gap)));
+  opacity: 0.5;
   /*
    * Pin both `line-height` and `height` so the status box stays exactly the
    * same size regardless of which phase string is currently displayed. With
