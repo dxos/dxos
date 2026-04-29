@@ -8,7 +8,6 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useLayout } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { type Space } from '@dxos/react-client/echo';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
@@ -21,7 +20,10 @@ import { DraftMessage, type Mailbox } from '#types';
 import { getMailboxMessagePath } from '../../paths';
 import { sortByCreated } from '../../util';
 
-export type DraftsArticleProps = AppSurface.ArticleProps<unknown, { space?: Space; mailbox: Mailbox.Mailbox }>;
+export type DraftsArticleProps = AppSurface.SpaceArticleProps<{
+  attendableId?: string;
+  mailbox: Mailbox.Mailbox;
+}>;
 
 /**
  * Drafts list for a mailbox. Query matches the same mailbox-scoped draft messages as the former per-draft nav nodes.
@@ -34,7 +36,7 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
   const currentId = useSelected(id, 'single');
 
-  const db = space?.db ?? Obj.getDatabase(mailbox);
+  const db = space.db;
   const mailboxDxn = Obj.getDXN(mailbox).toString();
 
   const draftsFilter = useMemo(

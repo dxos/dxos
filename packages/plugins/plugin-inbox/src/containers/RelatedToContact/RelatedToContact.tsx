@@ -8,19 +8,22 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
-import { useActiveSpace, type AppSurface } from '@dxos/app-toolkit/ui';
-import { type Feed, Filter, Query } from '@dxos/echo';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type Feed, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Event, Message, type Person } from '@dxos/types';
 
 import { RelatedEvents, RelatedMessages } from '#components';
 import { Calendar, Mailbox } from '#types';
 
-export const RelatedToContact = ({ subject: contact }: AppSurface.ObjectArticleProps<Person.Person>) => {
+export type RelatedToContactProps = AppSurface.ObjectArticleProps<Person.Person>;
+
+export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) => {
   const { invokePromise } = useOperationInvoker();
-  const space = useActiveSpace();
-  const mailboxes = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
-  const calendars = useQuery(space?.db, Filter.type(Calendar.Calendar));
+  const db = Obj.getDatabase(contact);
+  const workspace = db ? getSpacePath(db.spaceId) : undefined;
+  const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
+  const calendars = useQuery(db, Filter.type(Calendar.Calendar));
   const mailbox = mailboxes[0];
   const calendar = calendars[0];
   // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
@@ -30,11 +33,11 @@ export const RelatedToContact = ({ subject: contact }: AppSurface.ObjectArticleP
   const calendarFeed = calendar?.feed?.target as Feed.Feed | undefined;
   // TODO(wittjosiah): Way to structure this query that does not require type assertions?
   const messages: Message.Message[] = useQuery(
-    space?.db,
+    db,
     mailboxFeed ? Query.select(Filter.type(Message.Message)).from(mailboxFeed) : Query.select(Filter.nothing()),
   ) as Message.Message[];
   const events: Event.Event[] = useQuery(
-    space?.db,
+    db,
     calendarFeed ? Query.select(Filter.type(Event.Event)).from(calendarFeed) : Query.select(Filter.nothing()),
   ) as Event.Event[];
   const relatedMessages = messages
@@ -68,18 +71,16 @@ export const RelatedToContact = ({ subject: contact }: AppSurface.ObjectArticleP
       if (!mailbox) {
         return;
       }
+
       const mailboxPath = getObjectPathFromObject(mailbox);
       await invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
-      await invokePromise(LayoutOperation.Open, {
-        subject: [mailboxPath],
-        workspace: space ? getSpacePath(space.id) : undefined,
-      });
+      await invokePromise(LayoutOperation.Open, { subject: [mailboxPath], workspace });
       await invokePromise(LayoutOperation.Select, {
         contextId: mailboxPath,
         subject: { mode: 'single', id: message.id },
       });
     },
-    [invokePromise, space, mailbox],
+    [invokePromise, db, mailbox],
   );
 
   const handleEventClick = useCallback(
@@ -87,18 +88,16 @@ export const RelatedToContact = ({ subject: contact }: AppSurface.ObjectArticleP
       if (!calendar) {
         return;
       }
+
       const calendarPath = getObjectPathFromObject(calendar);
       await invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
-      await invokePromise(LayoutOperation.Open, {
-        subject: [calendarPath],
-        workspace: space ? getSpacePath(space.id) : undefined,
-      });
+      await invokePromise(LayoutOperation.Open, { subject: [calendarPath], workspace });
       await invokePromise(LayoutOperation.Select, {
         contextId: calendarPath,
         subject: { mode: 'single', id: event.id },
       });
     },
-    [invokePromise, space, calendar],
+    [invokePromise, db, calendar],
   );
 
   return (
