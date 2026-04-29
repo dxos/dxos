@@ -355,8 +355,10 @@ const main = async () => {
     getPlugins(conf, {
       onPluginLoaded: (loaded, total) => {
         bootStatus(`Loading plugins (${loaded}/${total})`);
-        // Grow the determinate progress arc as plugin chunks land.
-        window.__bootLoader?.progress(loaded / total);
+        // The ring spans two phases — plugin chunks (0 → 50%) and module
+        // activation (50 → 100%, driven from `Placeholder` once React mounts).
+        // Splitting the range keeps it monotonic across the boundary.
+        window.__bootLoader?.progress((loaded / total) * 0.5);
       },
     }),
     UrlLoader.preload().catch((error) => {
@@ -366,7 +368,8 @@ const main = async () => {
   ]);
 
   bootStatus('Starting Composer…');
-  window.__bootLoader?.progress(1);
+  // Park the ring at 50% — chunks done, activation about to take over.
+  window.__bootLoader?.progress(0.5);
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins);

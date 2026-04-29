@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type ReactNode, useLayoutEffect } from 'react';
+import React, { type ReactNode, useEffect, useLayoutEffect } from 'react';
 
 import { ThemeProvider } from '@dxos/react-ui';
 import { defaultTx, mx } from '@dxos/ui-theme';
@@ -39,32 +39,61 @@ export type PlaceholderComponentProps = PlaceholderSlotProps & {
 
 /**
  * React placeholder rendered while plugins activate. Hands off from the
- * native-DOM boot loader (injected by `bootLoaderPlugin`) once the React
- * tree is *visible* — `useLayoutEffect` fires before the next paint so the
- * loader DOM is removed in the same frame the placeholder commits, avoiding
- * a blank-with-status-bar flash on handoff.
+ * native-DOM boot loader (injected by `bootLoaderPlugin`) only once the
+ * placeholder is *fading out* — until then we keep the loader alive and
+ * feed it the module-activation progress so the ring is a single
+ * continuous indicator across both phases (chunks + activation):
+ *
+ *   - composer-app fills `0 → 50%` from `getPlugins`'s per-chunk counter.
+ *   - the placeholder takes over at 50% and fills `50 → 100%` from
+ *     `useApp`'s `startupProgress.progress` (`activated / total` modules).
+ *   - the boot loader is dismissed once `stage >= 2` (FadeOut) and the
+ *     placeholder mark cross-fades from underneath.
  *
  * Stage progression (driven by `useApp`):
  *   - `0` — Loading: logo hidden (opacity 0), pre-fade scale.
  *   - `1` — FadeIn: logo at full opacity, identity scale.
  *   - `2` — FadeOut: logo shrinks and fades as the real shell mounts.
  */
-export const Placeholder = ({ stage = 1, logo }: PlaceholderComponentProps) => {
+export const Placeholder = ({ stage = 1, progress, logo }: PlaceholderComponentProps) => {
   // Used in tests to exercise the error boundary & reset dialog.
   if (location.search === '?throw') {
     throw new Error('Test error');
   }
 
-  // Hand off from the native-DOM boot loader once the React placeholder is
-  // *visible*. The logo here is `opacity-0` at `stage = 0` (Loading) and only
-  // becomes visible at `FadeIn` and beyond — dismissing on mount would expose
-  // a blank-with-status-bar frame for one debounce tick. `useLayoutEffect`
-  // ensures the dismiss is committed before the next paint.
+  // Phase B: feed activation progress to the still-visible boot loader. Maps
+  // `[0, 1]` activation → `[0.5, 1]` of the ring. No-op once the loader has
+  // been dismissed (its `progress()` early-returns when the disc element is
+  // gone). Skipping `stage >= 2` lets the dismissal run uncontended.
+  useEffect(() => {
+    if (stage >= 2) {
+      return;
+    }
+    const fraction = progress?.progress ?? 0;
+    window.__bootLoader?.progress(0.5 + fraction * 0.5);
+  }, [stage, progress?.progress]);
+
+  // Hand off from the native-DOM boot loader once the placeholder starts
+  // fading out — keeping the loader visible through `stage 0` and `stage 1`
+  // means the ring stays the visible source of truth for activation
+  // progress. `useLayoutEffect` runs before the next paint so the loader
+  // DOM is removed in the same frame the cross-fade begins.
   useLayoutEffect(() => {
-    if (stage >= 1) {
+    if (stage >= 2) {
       window.__bootLoader?.dismiss();
     }
   }, [stage]);
+
+  // Backstop: `useLoading` can skip straight from stage 0 to `Done` when
+  // `ready` is true on the first debounce tick. The stage-driven effect
+  // above never sees `stage >= 2` in that case (the placeholder unmounts
+  // while still at stage 0), so the loader would otherwise stay alive.
+  // Dismissing on unmount covers the fast-load path.
+  useEffect(() => {
+    return () => {
+      window.__bootLoader?.dismiss();
+    };
+  }, []);
 
   const logoClassName = mx(
     'h-[300px] w-[300px] scale-600 transition-all duration-500 ease-in-out filter grayscale opacity-0',
