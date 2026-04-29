@@ -127,6 +127,12 @@ class ManagerImpl implements PluginManager {
   private readonly _inFlightFibers = Effect.runSync(Ref.make<Array<Fiber.Fiber<unknown, unknown>>>([]));
   private readonly _shutdownSemaphore = Effect.runSync(Effect.makeSemaphore(1));
   private readonly _shuttingDown = Effect.runSync(Ref.make(false));
+  // Tracks the constructor-launched core/enabled `enable()` calls so that
+  // `activate` can wait for module registration before dispatching events.
+  // Lazy plugins make `enable` asynchronous (a dynamic `import()` happens
+  // inside it), so without this synchronization an `activate` triggered
+  // immediately after `make` could fire on an empty module set.
+  private readonly _initialization = Effect.runSync(Deferred.make<void, Error>());
 
   constructor({
     pluginLoader,
@@ -149,7 +155,12 @@ class ManagerImpl implements PluginManager {
     this._eventsFiredAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
     this._pendingResetAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
     plugins.forEach((plugin) => this._addPlugin(plugin));
-    void Effect.all([...core, ...enabled].map((id) => this.enable(id))).pipe(runAndForwardErrors);
+    void Effect.all([...core, ...enabled].map((id) => this.enable(id)))
+      .pipe(
+        Effect.tap(() => Deferred.succeed(this._initialization, undefined)),
+        Effect.tapErrorCause((cause) => Deferred.failCause(this._initialization, cause as Cause.Cause<Error>)),
+      )
+      .pipe(runAndForwardErrors);
   }
 
   get plugins(): Atom.Atom<readonly Plugin.Plugin[]> {
@@ -340,6 +351,12 @@ class ManagerImpl implements PluginManager {
         log('skipping activation during shutdown', { key, ...params });
         return false;
       }
+
+      // Wait for the constructor's core/enabled `enable()` chain — including
+      // any async dynamic imports for lazy plugins — to finish registering
+      // modules. Without this, dispatching to an empty module set is the
+      // observable symptom of the race.
+      yield* Deferred.await(this._initialization);
 
       return yield* Effect.withFiberRuntime<boolean, Error>((fiber) =>
         this._activateEvent(key, params, fiber).pipe(
