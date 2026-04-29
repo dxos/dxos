@@ -35,21 +35,31 @@ export type PluginHealth = Schema.Schema.Type<typeof PluginHealthSchema>;
 /**
  * Shape of the manifest-asset JSON the registry service fetches from each plugin's latest release.
  *
- * Emitted at build time by `@dxos/app-framework/vite-plugin`'s `composerPlugin` (see
- * `MANIFEST_ASSET_NAME`). Lists every file the plugin needs at runtime — the entry module
- * plus any sibling CSS, code-split chunks, fonts, etc. — so the host can eagerly precache
- * the whole bundle for offline use.
+ * Two flavours are accepted, distinguished by which fields are populated:
  *
- * Paths in `entry` and `assets` are relative to the manifest's URL.
+ *  - **Multi-asset (current)** — emitted by `@dxos/app-framework/vite-plugin`'s
+ *    `composerPlugin` (see `MANIFEST_ASSET_NAME`). Has `version` + `entry` + `assets[]`
+ *    listing every file the plugin needs at runtime. Lets the host precache the whole
+ *    bundle for offline use. Paths in `entry`/`assets` are relative to the manifest URL.
+ *
+ *  - **Legacy single-file** — predates multi-asset. Has only the entry filename in
+ *    `moduleFile` (defaults to `plugin.mjs`); CSS and other sibling assets are inlined.
+ *    Kept here so the registry service can continue hydrating already-published plugins
+ *    while the catalog migrates.
+ *
+ *  Consumers should look at `assets` to decide which flavour they're parsing — its
+ *  presence implies the multi-asset shape.
  */
 export const PluginManifestSchema = Schema.Struct({
   ...PluginMetaSchema.fields,
-  /** Plugin version (semver). Sourced from the publishing project's `package.json`. */
-  version: Schema.String.pipe(Schema.nonEmptyString()),
-  /** Relative path to the entry module dynamic-imported by the host (e.g. `plugin.mjs`). */
-  entry: Schema.String.pipe(Schema.nonEmptyString()),
-  /** Relative paths of every file the plugin needs at runtime, including the entry. */
-  assets: Schema.Array(Schema.String).pipe(Schema.minItems(1)),
+  /** Plugin version (semver). Multi-asset only; sourced from the publisher's `package.json`. */
+  version: Schema.optional(Schema.String),
+  /** Relative path to the entry module dynamic-imported by the host. Multi-asset only. */
+  entry: Schema.optional(Schema.String),
+  /** Relative paths of every file the plugin needs at runtime, including the entry. Multi-asset only. */
+  assets: Schema.optional(Schema.Array(Schema.String)),
+  /** Legacy override for the single-file bundle filename (default `plugin.mjs`). */
+  moduleFile: Schema.optional(Schema.String),
 });
 export type PluginManifest = Schema.Schema.Type<typeof PluginManifestSchema>;
 
