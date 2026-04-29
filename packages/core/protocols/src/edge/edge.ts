@@ -320,6 +320,7 @@ export enum OAuthProvider {
   GITHUB = 'github',
   GOOGLE = 'google',
   LINEAR = 'linear',
+  SLACK = 'slack',
   TRELLO = 'trello',
 }
 

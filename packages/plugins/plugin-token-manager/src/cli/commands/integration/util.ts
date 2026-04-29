@@ -42,6 +42,12 @@ export const OAUTH_PRESETS: OAuthPreset[] = [
     scopes: ['read', 'write'],
   },
   {
+    provider: OAuthProvider.SLACK,
+    source: 'slack.com',
+    label: 'Slack',
+    scopes: ['channels:read', 'chat:write', 'users:read'],
+  },
+  {
     provider: OAuthProvider.TRELLO,
     source: 'trello.com',
     label: 'Trello',
