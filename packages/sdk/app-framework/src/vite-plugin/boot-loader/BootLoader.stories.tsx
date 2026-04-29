@@ -94,26 +94,52 @@ const STORY_PLUGIN_COUNT = 80;
 const STORY_TICK_MS = 100;
 
 const DefaultStory = () => {
-  // Walks progress 0 → 1 by ticking once every `STORY_TICK_MS`, mirroring Composer's per-plugin counter in `getPlugins`.
   const [progress, setProgress] = useState(0);
+  const [running, setRunning] = useState(true);
+
   useEffect(() => {
-    let loaded = 0;
+    if (!running) {
+      return;
+    }
+    // Resume from the current progress on un-pause so the bar doesn't jump.
+    let loaded = progress * STORY_PLUGIN_COUNT;
     const handle = setInterval(() => {
       loaded += Math.abs(Math.random());
       setProgress(loaded / STORY_PLUGIN_COUNT);
       if (loaded >= STORY_PLUGIN_COUNT) {
         clearInterval(handle);
+        setRunning(false);
       }
     }, STORY_TICK_MS);
     return () => clearInterval(handle);
-  }, []);
+    // `progress` is intentionally read once per effect-run as the resume point,
+    // not tracked — the interval owns its own counter from there.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running]);
+
+  const handleToggle = () => {
+    if (progress >= 1) {
+      // Finished — restart from zero on the next click.
+      setProgress(0);
+      setRunning(true);
+    } else {
+      setRunning((current) => !current);
+    }
+  };
 
   const loaded = Math.round(progress * STORY_PLUGIN_COUNT);
   const status = progress >= 1 ? 'Starting Composer…' : `Loading plugins (${loaded}/${STORY_PLUGIN_COUNT})`;
 
   return (
     <>
-      <Toolbar.Root>{/* <Toolbar.IconButton icon='ph--play--regular' iconOnly /> */}</Toolbar.Root>
+      <Toolbar.Root>
+        <Toolbar.IconButton
+          icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
+          label={running ? 'Pause' : progress >= 1 ? 'Restart' : 'Start'}
+          iconOnly
+          onClick={handleToggle}
+        />
+      </Toolbar.Root>
       <BootLoader status={status} markSvg={PLACEHOLDER_MARK} progress={progress} />
     </>
   );
