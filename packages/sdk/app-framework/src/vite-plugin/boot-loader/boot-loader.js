@@ -36,13 +36,18 @@
   // so it eases gently toward a low asymptote.
   var STATE_1_RATE = 0.04;
   var STATE_1_ASYMPTOTE = 20;
-  // State 2 creep bridges the gap between sparse `progress()` calls — it
-  // can be more confident (faster rate, larger lead bump) because we know
-  // real progress is coming. Tune `STATE_2_RATE` up to make the ring race
-  // ahead between host updates; tune `STATE_2_BUMP` to set how far ahead
-  // of the latest `progress()` call the creep is allowed to travel.
-  var STATE_2_RATE = 0.5;
-  var STATE_2_BUMP = 50;
+  // State 2 creep bridges the gap between sparse `progress()` calls.
+  // Tuning is a trade-off:
+  //   - Larger `STATE_2_RATE` → fills faster, but reaches the ceiling
+  //     sooner and then sits idle (looks "paused").
+  //   - Larger `STATE_2_BUMP` → ring leads further ahead of the host's
+  //     last reported value, so subsequent host updates feel "behind"
+  //     until they cross the lead.
+  // Current values aim for continuous-but-modest motion through a ~5 s
+  // activation silence: 50 % → ~64 % over 5 s, ceiling at host + 15 % so
+  // real progress can catch up via `Math.max` without big jumps.
+  var STATE_2_RATE = 0.05;
+  var STATE_2_BUMP = 15;
   // Ring never auto-creeps past this — keeps the user from interpreting the
   // ring as "almost done" while the host hasn't actually said so.
   var ABSOLUTE_CEILING = 90;

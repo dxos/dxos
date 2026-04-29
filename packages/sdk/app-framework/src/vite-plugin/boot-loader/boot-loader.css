@@ -111,7 +111,7 @@
   align-items: center;
   justify-content: center;
   filter: grayscale(100%);
-  transition: filter 600ms ease-out;
+  transition: filter 1000ms ease-out;
 }
 
 #boot-loader-disc[data-host-driven] #boot-loader-mark,
