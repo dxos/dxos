@@ -97,7 +97,12 @@
 
 /*
  * Default to grayscale so the mark reads as a quiet monochrome silhouette
- * during boot; the brand palette swaps in on hover for a small reveal moment.
+ * before any host-driven progress lands; the brand palette swaps in once
+ * the driver flips `data-host-driven` on the disc (state-2 entry — the
+ * first `__bootLoader.progress()` call). Hover keeps a parallel reveal
+ * affordance for inspection in the storybook. The 600ms ease lets the
+ * grayscale → color transition play through the activation phase rather
+ * than snapping.
  */
 #boot-loader-mark {
   width: var(--boot-loader-mark-size);
@@ -106,9 +111,10 @@
   align-items: center;
   justify-content: center;
   filter: grayscale(100%);
-  transition: filter 200ms ease-out;
+  transition: filter 600ms ease-out;
 }
 
+#boot-loader-disc[data-host-driven] #boot-loader-mark,
 #boot-loader-mark:hover {
   filter: none;
 }

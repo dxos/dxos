@@ -49,6 +49,7 @@ const BootLoader = ({ status = 'Loading…', markSvg, progress = 0 }: BootLoader
           id='boot-loader-disc'
           style={{ ['--boot-loader-bar-progress' as string]: String(clamped * 100) }}
           {...(clamped > 0 && clamped < 1 ? { 'data-progress-active': '' } : {})}
+          {...(clamped > 0 ? { 'data-host-driven': '' } : {})}
         >
           <div id='boot-loader-bar' />
           <div id='boot-loader-dot' />

@@ -114,6 +114,11 @@
       if (!element) {
         return;
       }
+      // Flip into "host-driven" mode the first time `progress()` lands —
+      // CSS keys the brand mark's grayscale→color transition off this
+      // attribute, so the mark eases from monochrome to full palette as
+      // real progress starts arriving.
+      element.setAttribute('data-host-driven', '');
       var clamped = typeof fraction !== 'number' || !isFinite(fraction) || fraction < 0 ? 0 : Math.min(1, fraction);
       var requestedPct = clamped * 100;
       var currentPct = parseFloat(element.style.getPropertyValue('--boot-loader-bar-progress')) || 0;
