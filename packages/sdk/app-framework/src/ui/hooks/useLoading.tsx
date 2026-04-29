@@ -58,7 +58,13 @@ export const useLoading = (ready: boolean, debounce = 0) => {
     }, debounce);
 
     return () => clearInterval(i);
-  }, [debounce]);
+    // `ready` is in deps so the interval's closure refreshes when the host
+    // flips it true — without this, the `setStage` callback keeps reading
+    // the initial `ready=false` and the FSM sticks at `FadeIn` forever
+    // (the previous behaviour was masked when the boot loader was dismissed
+    // at `stage >= 1`; now that hand-off only happens at `stage >= 2`, the
+    // stuck-at-FadeIn case becomes visible as a hung placeholder).
+  }, [debounce, ready]);
 
   if (!debounce) {
     return ready ? LoadingState.Done : LoadingState.Loading;
