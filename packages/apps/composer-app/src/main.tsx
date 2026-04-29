@@ -16,8 +16,9 @@ import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { type Plugin, UrlLoader } from '@dxos/app-framework';
-import { useApp } from '@dxos/app-framework/ui';
+import { Placeholder, type PlaceholderComponentProps, useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
+import { Composer } from '@dxos/brand';
 import { runAndForwardErrors } from '@dxos/effect';
 import { LogBuffer, LogLevel, log } from '@dxos/log';
 import { Observability } from '@dxos/observability';
@@ -27,7 +28,7 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { defaultTx } from '@dxos/ui-theme';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
-import { Placeholder, ResetDialog } from './components';
+import { ResetDialog } from './components';
 import { initializeObservability, PARAM_PROFILER, setupConfig } from './config';
 import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
 import { APP_KEY } from './constants';
@@ -53,22 +54,10 @@ declare global {
 
   // Debug hook: run `downloadLogs()` from devtools to save buffered logs (same as Reset dialog).
   var downloadLogs: () => void;
-
-  interface Window {
-    /**
-     * Native-DOM boot loader driver injected by `bootLoaderPlugin`
-     * (`@dxos/app-framework/vite-plugin`). `status()` updates the visible
-     * status line; `progress(fraction)` updates the determinate ring at
-     * `fraction` ∈ [0, 1] (invalid / negative values clamp to 0, leaving the
-     * ring empty); `dismiss()` removes the loader after React mounts.
-     */
-    __bootLoader?: {
-      status: (text: string) => void;
-      progress: (fraction?: number) => void;
-      dismiss: () => void;
-    };
-  }
 }
+
+// `window.__bootLoader` is declared globally by `@dxos/app-framework/ui`
+// (alongside the React `Placeholder` that calls `dismiss()`).
 
 /**
  * Updates the native-DOM boot loader text. No-op once React has replaced #root.
@@ -410,10 +399,14 @@ const main = async () => {
     );
   };
 
+  const ComposerPlaceholder = (props: PlaceholderComponentProps) => (
+    <Placeholder {...props} logo={(logoProps) => <Composer {...logoProps} />} />
+  );
+
   const Main = () => {
     const App = useApp({
       fallback: Fallback,
-      placeholder: Placeholder,
+      placeholder: ComposerPlaceholder,
       pluginLoader,
       plugins,
       core,
