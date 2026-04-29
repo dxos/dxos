@@ -6,13 +6,14 @@
 // Runs before the module bundle is fetched, so the host can observe `boot:html-parsed`
 // and update the visible status from `main.tsx` between phases.
 //
-// The loader has three runtime states:
-//   - State 0 (idle):       no motion. Disc sits empty. Default on script load.
-//   - State 1 (slow tick):  asymptotic creep toward `CREEP_ASYMPTOTE`%. Entered by `start()`.
+// The loader has two host-driven states (plus an unobserved idle state on
+// script entry that's promoted automatically — there's no API to opt out of
+// motion on cold load, by design):
+//   - State 1 (slow tick):  auto-entered the moment the inline script runs;
+//                           asymptotic creep toward `CREEP_ASYMPTOTE`%.
 //   - State 2 (progress):   host-driven, value supplied to `progress(fraction)`.
 //
 // `window.__bootLoader.status(text)`        updates the visible status line.
-// `window.__bootLoader.start()`             enter state 1 (start the slow creep).
 // `window.__bootLoader.progress(fraction)`  enter state 2 with `fraction` ∈ [0, 1].
 // `window.__bootLoader.dismiss()`           remove the loader DOM (terminal).
 //
@@ -29,7 +30,8 @@
   var CREEP_RATE = 0.04;
   var CREEP_TICK_MS = 100;
 
-  // 0 = idle, 1 = slow tick, 2 = host-driven progress.
+  // 0 = idle (transient — auto-promoted to 1 immediately below),
+  // 1 = slow tick, 2 = host-driven progress.
   var state = 0;
   var creepHandle = null;
 
@@ -59,19 +61,6 @@
       if (element) {
         element.textContent = text;
       }
-    },
-
-    /**
-     * Enter state 1 (slow tick) — the disc creeps asymptotically toward
-     * `CREEP_ASYMPTOTE`% so the loader reads as alive while the host has
-     * nothing concrete to report yet. No-op if already in state 1 or 2.
-     */
-    start: function () {
-      if (state !== 0) {
-        return;
-      }
-      state = 1;
-      startCreep();
     },
 
     /**
@@ -110,4 +99,10 @@
       }
     },
   };
+
+  // Auto-promote idle → slow tick the moment this inline script executes,
+  // so the disc starts moving on the very first frame the loader paints.
+  // The host calls `progress()` later to take over.
+  state = 1;
+  startCreep();
 })();

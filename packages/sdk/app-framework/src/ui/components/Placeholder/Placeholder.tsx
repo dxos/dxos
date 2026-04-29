@@ -19,7 +19,6 @@ declare global {
      */
     __bootLoader?: {
       status: (text: string) => void;
-      start: () => void;
       progress: (fraction?: number) => void;
       dismiss: () => void;
     };

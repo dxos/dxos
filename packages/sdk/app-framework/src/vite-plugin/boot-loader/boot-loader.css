@@ -18,13 +18,19 @@
    * Tunable sizes — change these in one place and every derived calc()
    * (mark size, dot orbit radius, status offset, …) follows.
    */
-  --boot-loader-disc-size: 384px;
+  /*
+   * Caps the disc / mark at the design pixel sizes on roomy viewports while
+   * shrinking proportionally on narrow ones (`vmin` follows the smaller of
+   * width / height) so neither the ring nor the mark crops on phones.
+   */
+  --boot-loader-disc-size: min(384px, 80vmin);
   /*
    * Match the React `Placeholder`'s logo box (`h-[300px] w-[300px]` at the
    * `stage >= 1` keyframe) so the brand mark doesn't visibly jump size when
-   * the loader hands off.
+   * the loader hands off — the responsive cap keeps the same 300/384 ratio
+   * (≈78%) at any viewport width.
    */
-  --boot-loader-mark-size: 300px;
+  --boot-loader-mark-size: min(300px, 62.5vmin);
   --boot-loader-dot-size: 6px;
   --boot-loader-line-thickness: 1px;
   --boot-loader-line-feather: 2px;

@@ -59,12 +59,6 @@ declare global {
 // `window.__bootLoader` is declared globally by `@dxos/app-framework/ui`
 // (alongside the React `Placeholder` that calls `dismiss()`).
 
-// Flip the boot loader from state 0 (idle) to state 1 (slow tick) the moment
-// this module's top-level code starts running — i.e. as soon as the JS
-// bundle has parsed enough to execute. The disc creeps until the host
-// reaches `progress()` below.
-window.__bootLoader?.start();
-
 /**
  * Updates the native-DOM boot loader text. No-op once React has replaced #root.
  * The CSS animation in `index.html` keeps painting on the compositor thread
