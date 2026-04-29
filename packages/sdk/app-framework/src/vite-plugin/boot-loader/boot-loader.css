@@ -114,9 +114,15 @@
   transition: filter 1000ms ease-out;
 }
 
+/*
+ * `grayscale(0%)` (identity) rather than `none` — `filter: none` changes
+ * the filter function list and most engines treat that as a discrete
+ * transition (snap, not ease). Keeping `grayscale(...)` on both sides of
+ * the rule lets the browser interpolate the percentage smoothly.
+ */
 #boot-loader-disc[data-host-driven] #boot-loader-mark,
 #boot-loader-mark:hover {
-  filter: none;
+  filter: grayscale(0%);
 }
 
 #boot-loader-mark svg {
