@@ -54,6 +54,9 @@
       "path": "../../core/operation"
     },
     {
+      "path": "../../ui/brand"
+    },
+    {
       "path": "../../ui/react-primitives/react-error-boundary"
     },
     {
