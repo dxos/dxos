@@ -29,7 +29,9 @@ window.__bootLoader = {
    * CSS would treat as invalid and silently reset to the 0% var() default.
    */
   progress: function (fraction) {
-    var element = document.getElementById('boot-loader-bar');
+    // Set the var on the disc so both the masked ring and the orbiting dot
+    // (siblings inside #boot-loader-disc) inherit the same progress value.
+    var element = document.getElementById('boot-loader-disc');
     if (!element) {
       return;
     }

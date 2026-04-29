@@ -102,6 +102,7 @@
   height: 100%;
   border-radius: 50%;
   background: rgba(127, 127, 127, 0.18);
+  opacity: 0.2;
   /*
    * Feather the inner edge over 2px so the thin line gets soft anti-aliased
    * edges instead of a hard pixel cutoff (which can look stair-stepped on
@@ -129,6 +130,27 @@
   transform: scaleX(-1);
   opacity: 0.9;
   transition: background 240ms ease-out;
+}
+
+/*
+ * A small dot at the leading edge of the arc. Lives as a sibling of the
+ * masked ring (inside `#boot-loader-disc`) so the radial-gradient mask
+ * doesn't clip it. The `rotate(...) translateY(-50%)` recipe orbits the
+ * dot around the disc centre: at progress 0 it sits at 12 o'clock; the
+ * negative rotation grows it anticlockwise to match the arc.
+ */
+#boot-loader-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: currentcolor;
+  opacity: 0.9;
+  transform: rotate(calc(var(--boot-loader-bar-progress, 0) * -3.6deg)) translateY(-192px);
+  transition: transform 240ms ease-out;
 }
 
 #boot-loader-status {

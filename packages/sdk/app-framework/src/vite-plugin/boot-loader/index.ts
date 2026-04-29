@@ -90,7 +90,11 @@ export const bootLoaderPlugin = ({ status = 'Loading…', markSvg }: BootLoaderO
             {
               tag: 'div',
               attrs: { id: 'boot-loader-disc' },
-              children: [{ tag: 'div', attrs: { id: 'boot-loader-bar' }, children: '' }, ...markChildren],
+              children: [
+                { tag: 'div', attrs: { id: 'boot-loader-bar' }, children: '' },
+                { tag: 'div', attrs: { id: 'boot-loader-dot' }, children: '' },
+                ...markChildren,
+              ],
             },
             { tag: 'div', attrs: { id: 'boot-loader-status' }, children: status },
           ],

@@ -40,8 +40,9 @@ const BootLoader = ({ status = 'Loading…', markSvg, progress = 0 }: BootLoader
     <>
       <style>{css}</style>
       <div id='boot-loader' role='status' aria-live='polite' aria-label='Initializing'>
-        <div id='boot-loader-disc'>
-          <div id='boot-loader-bar' style={{ ['--boot-loader-bar-progress' as string]: String(clamped * 100) }} />
+        <div id='boot-loader-disc' style={{ ['--boot-loader-bar-progress' as string]: String(clamped * 100) }}>
+          <div id='boot-loader-bar' />
+          <div id='boot-loader-dot' />
           {markSvg ? <div id='boot-loader-mark' dangerouslySetInnerHTML={{ __html: markSvg }} /> : null}
         </div>
         <div id='boot-loader-status'>{status}</div>
