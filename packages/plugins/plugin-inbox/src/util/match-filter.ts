@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Filter, type Tag } from '@dxos/echo';
+import { type Filter, Obj, type Tag } from '@dxos/echo';
 import { type Message } from '@dxos/types';
 
 /**
@@ -28,8 +28,20 @@ const matchesAst = (ast: any, message: Message.Message, tags: Tag.Tag[]): boolea
     case 'text-search':
       return matchesText(ast.text ?? '', message);
     case 'object': {
-      // Filter.everything() and Filter.typename() emit `{ type: 'object', props: {} }`;
-      // typename pre-filtering happens at the query layer, so here an empty props means match-all.
+      // ast.typename is null for Filter.everything() / Filter.props() (match any type).
+      // For Filter.typename()/Filter.type() it's a fully-qualified DXN string we compare
+      // against the message's DXN-qualified typename.
+      if (ast.typename) {
+        let messageTypeDxn: string | undefined;
+        try {
+          messageTypeDxn = Obj.getTypeDXN(message).toString();
+        } catch {
+          messageTypeDxn = undefined;
+        }
+        if (messageTypeDxn !== ast.typename) {
+          return false;
+        }
+      }
       if (ast.props) {
         for (const [key, predicate] of Object.entries(ast.props)) {
           const path = resolvePropertyAlias(key);

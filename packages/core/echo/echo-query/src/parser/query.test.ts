@@ -438,6 +438,15 @@ describe('query', () => {
       { input: '(foo bar)', expected: '("foo" "bar")' },
       { input: 'x = ( foo )', expected: 'x = ( "foo" )' },
       { input: '{ name: "DXOS" }', expected: '{ name: "DXOS" }' },
+      // Apostrophes inside barewords don't open a quoted string.
+      { input: "don't", expected: '"don\'t"' },
+      { input: "O'Connor", expected: '"O\'Connor"' },
+      { input: "don't worry", expected: '"don\'t" "worry"' },
+      // Unmatched closing brace/bracket — passed through, no infinite loop.
+      { input: 'foo}', expected: '"foo"}' },
+      { input: 'foo]bar', expected: '"foo"]"bar"' },
+      // Genuine single-quoted string still works.
+      { input: "'foo bar'", expected: "'foo bar'" },
     ];
 
     for (const { input, expected } of tests) {

@@ -553,115 +553,131 @@ const NUMBER_LITERAL = /^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
  */
 export const normalizeInput = (input: string): string => {
   const out: string[] = [];
-  let i = 0;
-  while (i < input.length) {
-    const c = input[i];
+  let pos = 0;
+  while (pos < input.length) {
+    const currentChar = input[pos];
 
     // Whitespace.
-    if (/\s/.test(c)) {
-      out.push(c);
-      i++;
+    if (/\s/.test(currentChar)) {
+      out.push(currentChar);
+      pos++;
       continue;
     }
 
     // Quoted string (already a valid TextFilter / Value).
-    if (c === '"' || c === "'") {
-      const quote = c;
-      let j = i + 1;
-      while (j < input.length && input[j] !== quote) {
-        if (input[j] === '\\' && j + 1 < input.length) {
-          j += 2;
+    // Single-quote only opens a string if the previous char isn't a word-char,
+    // so apostrophes inside barewords (e.g. `don't`, `O'Connor`) stay attached.
+    const prevChar = pos > 0 ? input[pos - 1] : '';
+    const isStringOpener =
+      currentChar === '"' || (currentChar === "'" && (pos === 0 || !/[a-zA-Z0-9_]/.test(prevChar)));
+    if (isStringOpener) {
+      const quoteChar = currentChar;
+      let scanIndex = pos + 1;
+      while (scanIndex < input.length && input[scanIndex] !== quoteChar) {
+        if (input[scanIndex] === '\\' && scanIndex + 1 < input.length) {
+          scanIndex += 2;
         } else {
-          j++;
+          scanIndex++;
         }
       }
-      out.push(input.slice(i, Math.min(j + 1, input.length)));
-      i = j + 1;
+      out.push(input.slice(pos, Math.min(scanIndex + 1, input.length)));
+      pos = scanIndex + 1;
       continue;
     }
 
     // Object/array literals: pass through (contents already structured).
-    if (c === '{' || c === '[') {
-      const close = c === '{' ? '}' : ']';
+    if (currentChar === '{' || currentChar === '[') {
+      const closeChar = currentChar === '{' ? '}' : ']';
       let depth = 1;
-      let j = i + 1;
-      while (j < input.length && depth > 0) {
-        const ch = input[j];
-        if (ch === '"' || ch === "'") {
-          const q = ch;
-          j++;
-          while (j < input.length && input[j] !== q) {
-            if (input[j] === '\\' && j + 1 < input.length) {
-              j += 2;
+      let scanIndex = pos + 1;
+      while (scanIndex < input.length && depth > 0) {
+        const innerChar = input[scanIndex];
+        if (innerChar === '"' || innerChar === "'") {
+          const quoteChar = innerChar;
+          scanIndex++;
+          while (scanIndex < input.length && input[scanIndex] !== quoteChar) {
+            if (input[scanIndex] === '\\' && scanIndex + 1 < input.length) {
+              scanIndex += 2;
             } else {
-              j++;
+              scanIndex++;
             }
           }
-          j++;
-        } else if (ch === c) {
+          scanIndex++;
+        } else if (innerChar === currentChar) {
           depth++;
-          j++;
-        } else if (ch === close) {
+          scanIndex++;
+        } else if (innerChar === closeChar) {
           depth--;
-          j++;
+          scanIndex++;
         } else {
-          j++;
+          scanIndex++;
         }
       }
-      out.push(input.slice(i, j));
-      i = j;
+      out.push(input.slice(pos, scanIndex));
+      pos = scanIndex;
       continue;
     }
 
-    // Single-char structural tokens.
-    if (c === '(' || c === ')' || c === '=' || c === ',') {
-      out.push(c);
-      i++;
+    // Single-char structural tokens. `}` / `]` only reach here when unmatched —
+    // pass them through so the lezer parser can produce a clear error rather than spinning.
+    if (
+      currentChar === '(' ||
+      currentChar === ')' ||
+      currentChar === '=' ||
+      currentChar === ',' ||
+      currentChar === '}' ||
+      currentChar === ']'
+    ) {
+      out.push(currentChar);
+      pos++;
       continue;
     }
 
     // Relations.
-    if ((c === '-' && input[i + 1] === '>') || (c === '<' && input[i + 1] === '-')) {
-      out.push(input.slice(i, i + 2));
-      i += 2;
+    if ((currentChar === '-' && input[pos + 1] === '>') || (currentChar === '<' && input[pos + 1] === '-')) {
+      out.push(input.slice(pos, pos + 2));
+      pos += 2;
       continue;
     }
 
     // NOT prefix (`!`) — single token.
-    if (c === '!') {
-      out.push(c);
-      i++;
+    if (currentChar === '!') {
+      out.push(currentChar);
+      pos++;
       continue;
     }
 
     // Tag.
-    if (c === '#') {
-      let j = i + 1;
-      while (j < input.length && /[a-zA-Z0-9_-]/.test(input[j])) {
-        j++;
+    if (currentChar === '#') {
+      let scanIndex = pos + 1;
+      while (scanIndex < input.length && /[a-zA-Z0-9_-]/.test(input[scanIndex])) {
+        scanIndex++;
       }
-      out.push(input.slice(i, j));
-      i = j;
+      out.push(input.slice(pos, scanIndex));
+      pos = scanIndex;
       continue;
     }
 
     // Bareword: scan until next whitespace or special char.
-    let j = i;
-    while (j < input.length) {
-      const ch = input[j];
-      if (SPECIAL_CHARS.test(ch)) break;
-      if (ch === '-' && input[j + 1] === '>') break;
-      if (ch === '<' && input[j + 1] === '-') break;
-      j++;
+    let scanIndex = pos;
+    while (scanIndex < input.length) {
+      const innerChar = input[scanIndex];
+      if (innerChar === '"') break;
+      if (innerChar === "'" && scanIndex > pos && !/[a-zA-Z0-9_]/.test(input[scanIndex - 1])) break;
+      if (innerChar === "'" && scanIndex === pos) break;
+      if (innerChar !== "'" && SPECIAL_CHARS.test(innerChar)) break;
+      if (innerChar === '-' && input[scanIndex + 1] === '>') break;
+      if (innerChar === '<' && input[scanIndex + 1] === '-') break;
+      scanIndex++;
     }
-    const token = input.slice(i, j);
-    i = j;
-
-    // NOT prefix `!`.
-    if (token === '!') {
-      out.push(token);
+    // Defensive: if no characters were consumed, advance one to avoid infinite loops.
+    if (scanIndex === pos) {
+      out.push(currentChar);
+      pos++;
       continue;
     }
+    const token = input.slice(pos, scanIndex);
+    pos = scanIndex;
 
     // Operators.
     if (KEYWORDS.has(token.toUpperCase())) {
@@ -687,13 +703,13 @@ export const normalizeInput = (input: string): string => {
           out.push(token);
           continue;
         }
-        const first = rest[0];
-        if (first === '"' || first === "'") {
+        const firstValueChar = rest[0];
+        if (firstValueChar === '"' || firstValueChar === "'") {
           // Already quoted.
           out.push(token);
           continue;
         }
-        if (first === '{' || first === '[') {
+        if (firstValueChar === '{' || firstValueChar === '[') {
           // Object/array literal value.
           out.push(token);
           continue;
@@ -712,9 +728,11 @@ export const normalizeInput = (input: string): string => {
 
     // Identifier followed by `=` is the LHS of an Assignment — keep as-is.
     if (PROPERTY_KEY.test(token)) {
-      let k = i;
-      while (k < input.length && /\s/.test(input[k])) k++;
-      if (input[k] === '=') {
+      let lookahead = pos;
+      while (lookahead < input.length && /\s/.test(input[lookahead])) {
+        lookahead++;
+      }
+      if (input[lookahead] === '=') {
         out.push(token);
         continue;
       }
