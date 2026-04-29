@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type ReactNode, useEffect, useLayoutEffect } from 'react';
+import React, { type ReactNode, useEffect, useLayoutEffect, useRef } from 'react';
 
 import { ThemeProvider } from '@dxos/react-ui';
 import { defaultTx, mx } from '@dxos/ui-theme';
@@ -37,22 +37,23 @@ export type PlaceholderComponentProps = PlaceholderSlotProps & {
 };
 
 /**
- * React placeholder rendered while plugins activate. Hands off from the
- * native-DOM boot loader (injected by `bootLoaderPlugin`) only once the
- * placeholder is *fading out* — until then we keep the loader alive and
- * feed it the module-activation progress so the ring is a single
- * continuous indicator across both phases (chunks + activation):
+ * React placeholder. The native-DOM boot loader is the visible UI through
+ * stages 0 (Loading) and 1 (FadeIn): we render `null` until `stage >= 2`
+ * (FadeOut) and instead feed activation progress + status into the still-
+ * alive boot loader. At stage 2 the loader dismisses and the React mark
+ * appears for the cross-fade to the real shell:
  *
  *   - composer-app fills `0 → 50%` from `getPlugins`'s per-chunk counter.
- *   - the placeholder takes over at 50% and fills `50 → 100%` from
- *     `useApp`'s `startupProgress.progress` (`activated / total` modules).
- *   - the boot loader is dismissed once `stage >= 2` (FadeOut) and the
- *     placeholder mark cross-fades from underneath.
+ *   - this component fills `50 → 100%` from `useApp`'s
+ *     `startupProgress.progress` (`activated / total` modules) and pushes
+ *     the per-module status text to the loader's status line.
+ *   - at `stage >= 2` the boot loader is dismissed and the React mark
+ *     starts its `FadeOut → Done` shrink-and-fade.
  *
  * Stage progression (driven by `useApp`):
- *   - `0` — Loading: logo hidden (opacity 0), pre-fade scale.
- *   - `1` — FadeIn: logo at full opacity, identity scale.
- *   - `2` — FadeOut: logo shrinks and fades as the real shell mounts.
+ *   - `0` — Loading: native-DOM boot loader visible. Placeholder renders nothing.
+ *   - `1` — FadeIn: same — boot loader still owns the screen.
+ *   - `2` — FadeOut: boot loader dismissed, React mark visible at full opacity then shrinks.
  */
 export const Placeholder = ({ stage = 1, progress, logo }: PlaceholderComponentProps) => {
   // Used in tests to exercise the error boundary & reset dialog.
@@ -90,16 +91,31 @@ export const Placeholder = ({ stage = 1, progress, logo }: PlaceholderComponentP
     }
   }, [stage]);
 
-  // Backstop: `useLoading` can skip straight from stage 0 to `Done` when
-  // `ready` is true on the first debounce tick. The stage-driven effect
-  // above never sees `stage >= 2` in that case (the placeholder unmounts
-  // while still at stage 0), so the loader would otherwise stay alive.
-  // Dismissing on unmount covers the fast-load path.
+  // Backstop for the fast-load path where `useLoading` can skip straight
+  // from stage 0 to `Done` (ready=true at the first debounce tick) — the
+  // stage-driven effect above never sees `stage >= 2`, so dismiss on
+  // unmount instead. The `stageRef` guard is what keeps StrictMode's
+  // synthetic mount → cleanup → remount cycle from prematurely dismissing
+  // the loader: the synthetic cleanup runs while `stageRef.current === 0`,
+  // skips the dismiss, and the real unmount (later, at stage `Done`)
+  // performs it.
+  const stageRef = useRef(stage);
+  stageRef.current = stage;
   useEffect(() => {
     return () => {
-      window.__bootLoader?.dismiss();
+      if (stageRef.current >= 3 /* Done */) {
+        window.__bootLoader?.dismiss();
+      }
     };
   }, []);
+
+  // Defer rendering anything until the FadeOut stage. The boot loader owns
+  // the screen during stages 0 and 1, so any DOM we render here would just
+  // sit invisibly behind it — and rendering null avoids paint cost during
+  // the longest part of the loading sequence (plugin activation).
+  if (stage < 2) {
+    return null;
+  }
 
   const logoClassName = mx(
     'h-[300px] w-[300px] scale-600 transition-all duration-500 ease-in-out filter grayscale opacity-0',
