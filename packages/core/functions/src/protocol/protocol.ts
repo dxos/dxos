@@ -64,7 +64,7 @@ export const wrapFunctionHandler = (func: Operation.WithHandler<Operation.Defini
             Schema.validateSync(func.input, { onExcessProperty: 'error' })(data);
           } catch (error: any) {
             throw new InvalidOperationInputError({
-              message: `Operation input did not match schema: ${error.message}`,
+              message: `Operation input did not match schema (${func.meta.key}): ${error.message}`,
               cause: error,
             });
           }
@@ -98,7 +98,7 @@ export const wrapFunctionHandler = (func: Operation.WithHandler<Operation.Defini
             Schema.validateSync(func.output, { onExcessProperty: 'error' })(result);
           } catch (error: any) {
             throw new InvalidOperationOutputError({
-              message: `Operation output did not match schema: ${error.message}`,
+              message: `Operation output did not match schema (${func.meta.key}): ${error.message}`,
               cause: error,
             });
           }

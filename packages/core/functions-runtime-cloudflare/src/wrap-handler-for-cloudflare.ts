@@ -97,7 +97,7 @@ const handleFunctionMetaCall = (functionDefinition: FunctionProtocol.Func, reque
   });
 };
 
-const createFunctionContext = async ({
+export const createFunctionContext = async ({
   serviceContainer,
   contextSpaceId,
 }: {
