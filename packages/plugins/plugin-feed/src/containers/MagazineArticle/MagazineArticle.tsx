@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { getObjectPathFromObject } from '@dxos/app-toolkit';
+import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref, type Tag } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -256,6 +256,27 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     },
     [id, showItem, invokePromise],
   );
+
+  // Auto-curate when the set of subscribed feeds changes so the post list reflects
+  // the new selection without requiring a manual Curate click.
+  const feedCount = subject.feeds.length;
+  const previousFeedCount = useRef(feedCount);
+  useEffect(() => {
+    if (previousFeedCount.current !== feedCount) {
+      previousFeedCount.current = feedCount;
+      void invokePromise(FeedOperation.CurateMagazine, { magazine: Ref.make(subject) }).catch((err) => log.catch(err));
+    }
+  }, [feedCount, subject, invokePromise]);
+
+  // Open the ObjectProperties companion when the magazine has no posts so the user
+  // can configure subscription feeds without an empty pane staring back at them.
+  useEffect(() => {
+    if (posts.length === 0) {
+      void invokePromise(LayoutOperation.UpdateCompanion, {
+        subject: linkedSegment('settings'),
+      }).catch((err) => log.catch(err));
+    }
+  }, [posts.length, invokePromise]);
 
   const tileItems = useMemo<TileData[]>(
     () =>
