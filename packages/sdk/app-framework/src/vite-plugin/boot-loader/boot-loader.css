@@ -42,6 +42,21 @@
 }
 
 /*
+ * Register the progress var as a typed custom property so the browser can
+ * interpolate it. Both the conic-gradient arc and the orbiting dot derive
+ * their angle from `--boot-loader-bar-progress`, so animating the var (rather
+ * than the resulting `background` / `transform`) keeps them in lockstep —
+ * `transition: background` on a conic-gradient doesn't interpolate smoothly
+ * in all engines, which previously caused the head of the arc to flicker
+ * against the dot during each progress step.
+ */
+@property --boot-loader-bar-progress {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+/*
  * Stack the ring and the brand mark in the same square so the mark sits
  * centered inside the circle. Grid stacking keeps the mark outside the ring's
  * mask (the mask would otherwise clip the SVG to the 1px-thick arc shape).
@@ -52,6 +67,7 @@
   place-items: center;
   width: 384px;
   height: 384px;
+  transition: --boot-loader-bar-progress 240ms ease-out;
 }
 
 #boot-loader-disc > * {
@@ -129,7 +145,6 @@
   background: conic-gradient(currentcolor calc(var(--boot-loader-bar-progress, 0) * 1%), transparent 0);
   transform: scaleX(-1);
   opacity: 0.9;
-  transition: background 240ms ease-out;
 }
 
 /*
@@ -150,7 +165,6 @@
   background: currentcolor;
   opacity: 0.9;
   transform: rotate(calc(var(--boot-loader-bar-progress, 0) * -3.6deg)) translateY(-192px);
-  transition: transform 240ms ease-out;
 }
 
 #boot-loader-status {
