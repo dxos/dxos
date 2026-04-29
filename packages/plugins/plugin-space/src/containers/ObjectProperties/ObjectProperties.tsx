@@ -8,11 +8,11 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Obj } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
-import { ObjectProperties } from '@dxos/react-ui-form';
+import { ObjectProperties as NaturalObjectProperties } from '@dxos/react-ui-form';
 
-export type ObjectDetailsProps = AppSurface.ObjectPropertiesProps<Obj.Unknown>;
+export type ObjectPropertiesProps = AppSurface.ObjectPropertiesProps<Obj.Unknown>;
 
-export const ObjectDetails = forwardRef<HTMLDivElement, ObjectDetailsProps>(
+export const ObjectProperties = forwardRef<HTMLDivElement, ObjectPropertiesProps>(
   ({ role, subject: object }, forwardedRef) => {
     const data = useMemo<AppSurface.ObjectPropertiesData>(() => ({ subject: object }), [object]);
 
@@ -22,9 +22,9 @@ export const ObjectDetails = forwardRef<HTMLDivElement, ObjectDetailsProps>(
           <Toolbar.Root />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <ObjectProperties object={object}>
+          <NaturalObjectProperties object={object}>
             <Surface.Surface type={AppSurface.ObjectProperties} data={data} />
-          </ObjectProperties>
+          </NaturalObjectProperties>
         </Panel.Content>
       </Panel.Root>
     );
