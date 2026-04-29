@@ -272,7 +272,10 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   // magazine with the same feeds still triggers curation for the new magazine.
   const previousCurateKey = useRef({ subject, feedFingerprint });
   useEffect(() => {
-    if (previousCurateKey.current.subject !== subject || previousCurateKey.current.feedFingerprint !== feedFingerprint) {
+    if (
+      previousCurateKey.current.subject !== subject ||
+      previousCurateKey.current.feedFingerprint !== feedFingerprint
+    ) {
       previousCurateKey.current = { subject, feedFingerprint };
       void invokePromise(FeedOperation.CurateMagazine, { magazine: Ref.make(subject) }).catch((err) => log.catch(err));
     }
