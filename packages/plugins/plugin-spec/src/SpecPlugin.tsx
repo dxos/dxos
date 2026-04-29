@@ -20,7 +20,7 @@ import { translations } from './translations';
 
 const iconAnnotation = Annotation.IconAnnotation.get(Spec.Spec).pipe(Option.getOrThrow);
 
-export const SpecPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: {
       id: Spec.Spec.typename,

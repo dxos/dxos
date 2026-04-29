@@ -13,7 +13,7 @@ import { meta } from '#meta';
 import { installClipListener } from './listener';
 import { translations } from './translations';
 
-export const CrxBridgePlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'install-crx-bridge',

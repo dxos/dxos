@@ -13,7 +13,7 @@ import { translations } from './translations';
 // TODO(burdon): Only scale markdown content.
 // TODO(burdon): Map stack content; Slide content type (e.g., markdown, sketch, IPFS image, table, etc.)
 
-export const PresenterPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addSettingsModule({ activate: PresenterSettings }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),

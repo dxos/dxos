@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './meta';
+import { Plugin } from '@dxos/app-framework';
 
-export * from './TransformerPlugin';
+import { meta } from './meta';
+
+export { meta };
+export const TransformerPlugin = Plugin.lazy(meta, () => import('./TransformerPlugin'));

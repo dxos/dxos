@@ -10,7 +10,7 @@ import { meta } from '#meta';
 
 import { translations } from './translations';
 
-export const CrxPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addSettingsModule({ activate: CrxSettings }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

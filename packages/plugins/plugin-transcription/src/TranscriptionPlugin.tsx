@@ -16,7 +16,7 @@ import { meta } from '#meta';
 import { translations } from './translations';
 import { renderByline } from './util';
 
-export const TranscriptionPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addMetadataModule({
     metadata: {

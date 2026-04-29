@@ -6,5 +6,9 @@
 // Only export what external consumers need: the plugin factory and metadata.
 // Types and operations are available via the `./types` and `./operations` subpath exports.
 
-export { meta } from './meta';
-export { SamplePlugin } from './SamplePlugin';
+import { Plugin } from '@dxos/app-framework';
+
+import { meta } from './meta';
+
+export { meta };
+export const SamplePlugin = Plugin.lazy(meta, () => import('./SamplePlugin'));

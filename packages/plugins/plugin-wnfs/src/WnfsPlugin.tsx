@@ -21,7 +21,7 @@ import { WnfsAction, WnfsCapabilities, WnfsFile } from '#types';
 
 import { translations } from './translations';
 
-export const WnfsPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: {
       id: WnfsFile.File.typename,

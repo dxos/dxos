@@ -2,5 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-export { meta } from './meta';
-export { IrohBeaconPlugin } from './IrohBeaconPlugin';
+import { Plugin } from '@dxos/app-framework';
+
+import { meta } from './meta';
+
+export { meta };
+export const IrohBeaconPlugin = Plugin.lazy(meta, () => import('./IrohBeaconPlugin'));

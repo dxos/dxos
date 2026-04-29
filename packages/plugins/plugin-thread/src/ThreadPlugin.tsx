@@ -39,7 +39,7 @@ import { translations } from './translations';
 // TODO(wittjosiah): Rename to ChatPlugin.
 // TODO(wittjosiah): Enabling comments should likely be factored out of this plugin but depend on it's capabilities.
 
-export const ThreadPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addMetadataModule({

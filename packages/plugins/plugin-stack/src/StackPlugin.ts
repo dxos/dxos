@@ -12,7 +12,7 @@ import { StackViewType } from '#types';
 
 import { translations } from './translations';
 
-export const StackPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: {
       id: SECTION_IDENTIFIER,

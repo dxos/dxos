@@ -23,7 +23,7 @@ import { Message, Organization, Person } from '@dxos/types';
 
 import { createMessage } from '#testing';
 
-import { AssistantPlugin } from '../../AssistantPlugin';
+import AssistantPlugin from '../../AssistantPlugin';
 import { translations } from '../../translations';
 import { AgentArticle } from './AgentArticle';
 

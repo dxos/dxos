@@ -10,7 +10,7 @@ import { meta } from '#meta';
 
 import { translations } from './translations';
 
-export const StatusBarPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,

@@ -10,7 +10,7 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client/cli';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { ChessPlugin } from './ChessPlugin';
+import ChessPlugin from './ChessPlugin';
 import { meta } from './meta';
 import { Print } from './operations';
 

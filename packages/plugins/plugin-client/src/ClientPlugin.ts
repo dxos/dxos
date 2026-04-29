@@ -21,7 +21,7 @@ import { type ClientPluginOptions } from '#types';
 
 import { translations } from './translations';
 
-export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
+export default Plugin.define<ClientPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
     activate: () => NavigationHandler({ invitationProp }),

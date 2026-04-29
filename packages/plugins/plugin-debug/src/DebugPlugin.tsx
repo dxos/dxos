@@ -21,7 +21,7 @@ export type DebugPluginOptions = {
 
 // TODO(wittjosiah): Factor out DevtoolsPlugin?
 
-export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
+export default Plugin.define<DebugPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addReactContextModule({ activate: ReactContext }),
   AppPlugin.addSettingsModule({ activate: DebugSettings }),

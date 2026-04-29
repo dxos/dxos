@@ -19,7 +19,7 @@ import { Discord, DiscordEvents } from '#types';
 
 import { translations } from './translations';
 
-export const DiscordPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addMetadataModule({

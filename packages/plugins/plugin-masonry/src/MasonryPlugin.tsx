@@ -19,7 +19,7 @@ import { Masonry, MasonryAction } from '#types';
 
 import { translations } from './translations';
 
-export const MasonryPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: {
       id: Type.getTypename(Masonry.Masonry),

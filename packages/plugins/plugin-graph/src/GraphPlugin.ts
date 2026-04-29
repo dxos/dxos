@@ -14,7 +14,7 @@ const Graph = Capability.lazy('Graph', () => import('./graph'));
  * Enables other plugins to register node builders to add nodes to the graph.
  * This includes actions and annotation each other's nodes.
  */
-export const GraphPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: ActivationEvents.Startup,
     firesBeforeActivation: [AppActivationEvents.SetupAppGraph, AppActivationEvents.SetupMetadata],

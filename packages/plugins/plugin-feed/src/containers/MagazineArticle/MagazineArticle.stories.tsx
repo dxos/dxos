@@ -21,7 +21,7 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { generateCuratedPost, generateFeed, generateMagazine } from '#testing';
 import { Magazine, Subscription } from '#types';
 
-import { FeedPlugin } from '../../FeedPlugin';
+import FeedPlugin from '../../FeedPlugin';
 import { translations } from '../../translations';
 import { MagazineArticle } from './MagazineArticle';
 

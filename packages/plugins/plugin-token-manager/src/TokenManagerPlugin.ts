@@ -11,7 +11,7 @@ import { meta } from '#meta';
 
 import { translations } from './translations';
 
-export const TokenManagerPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addSchemaModule({ schema: [AccessToken.AccessToken] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),

@@ -22,7 +22,7 @@ import { Message, Person } from '@dxos/types';
 import { initializeMailbox } from '#testing';
 import { Mailbox } from '#types';
 
-import { InboxPlugin } from '../../InboxPlugin';
+import InboxPlugin from '../../InboxPlugin';
 import { MailboxArticle } from './MailboxArticle';
 
 // No-op handlers for layout operations invoked from article components; avoids pulling in DeckPlugin.

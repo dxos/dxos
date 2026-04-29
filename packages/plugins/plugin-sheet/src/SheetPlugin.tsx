@@ -31,7 +31,7 @@ import { Sheet } from '#types';
 import { serializer } from './serializer';
 import { translations } from './translations';
 
-export const SheetPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: {
       id: Sheet.Sheet.typename,

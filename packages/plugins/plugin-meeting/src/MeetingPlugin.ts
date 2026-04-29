@@ -24,7 +24,7 @@ import { translations } from './translations';
 const StateReady = AppActivationEvents.createStateEvent(meta.id);
 const SettingsReady = AppActivationEvents.createSettingsEvent(MeetingCapabilities.Settings.identifier);
 
-export const MeetingPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addMetadataModule({
     metadata: {

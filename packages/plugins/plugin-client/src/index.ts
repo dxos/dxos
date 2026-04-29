@@ -2,5 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-export { ClientPlugin } from './ClientPlugin';
-export { meta } from './meta';
+import { Plugin } from '@dxos/app-framework';
+
+import { meta } from './meta';
+
+export { meta };
+export const ClientPlugin = Plugin.lazy(meta, () => import('./ClientPlugin'));

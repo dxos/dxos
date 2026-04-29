@@ -24,7 +24,7 @@ export type SimpleLayoutPluginOptions = {
   isPopover?: boolean;
 };
 
-export const SimpleLayoutPlugin = Plugin.define<SimpleLayoutPluginOptions>(meta).pipe(
+export default Plugin.define<SimpleLayoutPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addTranslationsModule({ translations }),

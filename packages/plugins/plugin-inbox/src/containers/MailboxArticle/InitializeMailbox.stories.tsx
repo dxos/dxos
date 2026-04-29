@@ -22,7 +22,7 @@ import { AccessToken, Message, Person } from '@dxos/types';
 import { initializeMailbox } from '#testing';
 import { Mailbox } from '#types';
 
-import { InboxPlugin } from '../../InboxPlugin';
+import InboxPlugin from '../../InboxPlugin';
 import { InitializeMailbox } from './InitializeMailbox';
 
 // Contributes a stub `integration--auth` surface so stories can exercise the

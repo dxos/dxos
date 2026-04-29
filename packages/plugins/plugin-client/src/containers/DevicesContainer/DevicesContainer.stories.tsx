@@ -12,7 +12,7 @@ import { translations as shellTranslations } from '@dxos/shell/react';
 
 import { initializeIdentity } from '#testing';
 
-import { ClientPlugin } from '../../ClientPlugin';
+import ClientPlugin from '../../ClientPlugin';
 import { translations } from '../../translations';
 import { DevicesContainer } from './DevicesContainer';
 

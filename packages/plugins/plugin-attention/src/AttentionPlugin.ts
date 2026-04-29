@@ -13,7 +13,7 @@ import { meta } from '#meta';
 import { AttentionEvents } from '#types';
 import { AttentionCapabilities } from '#types';
 
-export const AttentionPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   Plugin.addModule({
     id: 'attention',

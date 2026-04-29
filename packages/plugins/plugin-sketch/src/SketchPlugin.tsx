@@ -18,7 +18,7 @@ import { Sketch } from '#types';
 import { translations } from './translations';
 import { serializer } from './util';
 
-export const SketchPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: {
       id: Sketch.Sketch.typename,

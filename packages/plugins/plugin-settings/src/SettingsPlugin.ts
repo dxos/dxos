@@ -10,7 +10,7 @@ import { meta } from '#meta';
 
 import { translations } from './translations';
 
-export const SettingsPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: SettingsAppGraphBuilder }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addTranslationsModule({ translations }),

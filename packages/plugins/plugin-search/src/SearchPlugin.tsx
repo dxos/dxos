@@ -11,7 +11,7 @@ import { type SearchResult } from '#types';
 
 import { translations } from './translations';
 
-export const SearchPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addMetadataModule({
     metadata: {

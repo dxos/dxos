@@ -21,7 +21,7 @@ import { Magazine, Subscription } from '#types';
 
 import { translations } from './translations';
 
-export const FeedPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({
     activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
     activate: AppGraphBuilder,

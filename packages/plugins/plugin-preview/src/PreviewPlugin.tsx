@@ -11,7 +11,7 @@ import { meta } from '#meta';
 
 import { translations } from './translations';
 
-export const PreviewPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [Person.Person, Organization.Organization], id: 'schema' }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

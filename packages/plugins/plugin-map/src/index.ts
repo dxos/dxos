@@ -2,8 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './components';
-export * from './meta';
-export * from './types';
+import { Plugin } from '@dxos/app-framework';
 
-export * from './MapPlugin';
+import { meta } from './meta';
+
+export { meta };
+export const MapPlugin = Plugin.lazy(meta, () => import('./MapPlugin'));
+
+export * from './components';
+export * from './types';

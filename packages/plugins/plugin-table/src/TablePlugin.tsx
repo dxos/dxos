@@ -22,7 +22,7 @@ import { CreateTableSchema, TableOperation } from '#operations';
 
 import { translations } from './translations';
 
-export const TablePlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addMetadataModule({
     metadata: {

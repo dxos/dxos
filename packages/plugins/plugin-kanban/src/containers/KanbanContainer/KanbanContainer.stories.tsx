@@ -32,7 +32,7 @@ import { Organization, Person } from '@dxos/types';
 import { useProjectionModel } from '#hooks';
 import { Kanban } from '#types';
 
-import { KanbanPlugin } from '../../KanbanPlugin';
+import KanbanPlugin from '../../KanbanPlugin';
 import { translations } from '../../translations';
 
 random.seed(0);

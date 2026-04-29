@@ -2,5 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './ConductorPlugin';
-export * from './meta';
+import { Plugin } from '@dxos/app-framework';
+
+import { meta } from './meta';
+
+export { meta };
+export const ConductorPlugin = Plugin.lazy(meta, () => import('./ConductorPlugin'));

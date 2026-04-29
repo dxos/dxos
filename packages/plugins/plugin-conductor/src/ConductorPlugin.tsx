@@ -19,7 +19,7 @@ import { meta } from '#meta';
 
 import { translations } from './translations';
 
-export const ConductorPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: {
       id: CanvasBoard.CanvasBoard.typename,

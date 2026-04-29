@@ -10,7 +10,7 @@ import { meta } from '#meta';
 
 import { translations } from './translations';
 
-export const DailySummaryPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),

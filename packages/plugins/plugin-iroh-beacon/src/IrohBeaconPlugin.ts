@@ -11,7 +11,7 @@ import { meta } from '#meta';
 
 import { translations } from './translations';
 
-export const IrohBeaconPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   // Beacon service: creates transport + starts broadcasting.
   Plugin.addModule({
     activatesOn: ClientEvents.SpacesReady,

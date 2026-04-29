@@ -18,7 +18,7 @@ import { Model, Scene } from '#types';
 
 import { translations } from './translations';
 
-export const SpacetimePlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: {
       id: Scene.Scene.typename,
