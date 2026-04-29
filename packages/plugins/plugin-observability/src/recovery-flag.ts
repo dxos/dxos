@@ -3,30 +3,20 @@
 //
 
 /**
- * Cross-plugin signal: a recovery flow is in progress, so the privacy notice
- * shouldn't fire when an identity becomes available.
+ * Consumer side of the cross-plugin "recovery in progress" signal: the
+ * privacy notice should be skipped for users *recovering* an existing
+ * identity (rather than creating a new one and consenting for the first
+ * time). The producer (plugin-client's recovery operation handlers) sets
+ * this same `sessionStorage` key before invoking
+ * `IdentityService.recoverIdentity`. The flag is read-and-cleared on the
+ * first call, so any later identity-creation event (from a different flow)
+ * fires the notice as usual.
  *
- * The privacy notice is targeted at users *creating* a new identity (the
- * first time they share data with us); recovering an existing identity isn't
- * a new consent moment. Plugin-client's recovery operation handlers
- * (`RedeemToken`, `RedeemPasskey`) call `markRecoveryInProgress()` before
- * invoking `IdentityService.recoverIdentity`; the privacy-notice handler
- * calls `consumeRecoveryFlag()` to read-and-clear the flag once.
- *
- * Scoped to `sessionStorage` so the flag clears on tab close, never persists
- * across sessions, and isn't shared between tabs (each tab decides
- * independently whether its current identity arrived via recovery).
+ * Lives here, not in the producer plugin, to keep the import edge from
+ * plugin-client → plugin-observability one-directional. The contract
+ * between the two sides is the storage key string, not a shared module.
  */
 const KEY = 'dxos.identity.recovering';
-
-export const markRecoveryInProgress = (): void => {
-  try {
-    sessionStorage.setItem(KEY, '1');
-  } catch {
-    // sessionStorage may be unavailable (SSR, sandbox); the flag is a
-    // best-effort UX hint, not a correctness invariant.
-  }
-};
 
 export const consumeRecoveryFlag = (): boolean => {
   try {

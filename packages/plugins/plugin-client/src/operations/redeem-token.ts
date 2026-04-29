@@ -7,10 +7,10 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
-import { markRecoveryInProgress } from '@dxos/plugin-observability';
 
 import { ClientCapabilities } from '../types';
 import { RedeemToken } from './definitions';
+import { markRecoveryInProgress } from './recovery-flag';
 
 const handler: Operation.WithHandler<typeof RedeemToken> = RedeemToken.pipe(
   Operation.withHandler(

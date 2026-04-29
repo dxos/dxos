@@ -10,10 +10,10 @@ import { decodeUrlSafeBase64, supportsNativePasskeys, loginNativePasskey } from 
 import { PublicKey } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
-import { markRecoveryInProgress } from '@dxos/plugin-observability';
 
 import { ClientCapabilities } from '../types';
 import { RedeemPasskey } from './definitions';
+import { markRecoveryInProgress } from './recovery-flag';
 
 const handler: Operation.WithHandler<typeof RedeemPasskey> = RedeemPasskey.pipe(
   Operation.withHandler(
