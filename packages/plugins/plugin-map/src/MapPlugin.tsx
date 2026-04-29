@@ -19,7 +19,7 @@ import { Map, MapAction } from '#types';
 
 import { translations } from './translations';
 
-export const MapPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addMetadataModule({

@@ -2,8 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './blueprints';
-export * from './meta';
-export * from './types';
+import { Plugin } from '@dxos/app-framework';
 
-export * from './DiscordPlugin';
+import { meta } from './meta';
+
+export { meta };
+export const DiscordPlugin = Plugin.lazy(meta, () => import('./DiscordPlugin'));
+
+export * from './blueprints';
+export * from './types';

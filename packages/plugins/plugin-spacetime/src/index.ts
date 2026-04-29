@@ -2,5 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './meta';
-export * from './SpacetimePlugin';
+import { Plugin } from '@dxos/app-framework';
+
+import { meta } from './meta';
+
+export { meta };
+export const SpacetimePlugin = Plugin.lazy(meta, () => import('./SpacetimePlugin'));

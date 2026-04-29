@@ -12,7 +12,7 @@ import { Config } from '@dxos/react-client';
 
 import { Channel } from '#types';
 
-import { ThreadPlugin } from '../ThreadPlugin';
+import ThreadPlugin from '../ThreadPlugin';
 
 export const createThreadPlugins = async (): Promise<Array<Plugin.Plugin>> => [
   ...corePlugins(),

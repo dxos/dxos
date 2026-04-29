@@ -20,7 +20,7 @@ import { Panel } from '@dxos/react-ui';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Organization } from '@dxos/types';
 
-import { AssistantPlugin } from '../../AssistantPlugin';
+import AssistantPlugin from '../../AssistantPlugin';
 import { translations } from '../../translations';
 import { TracePanel } from '../TracePanel';
 import { PromptList } from './PromptList';

@@ -354,27 +354,20 @@ const main = async () => {
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
 
-  // `getPlugins` dynamic-imports every plugin chunk in parallel.
-  // Run it concurrently with `UrlLoader.preload` (network-bound) so the two waits overlap.
+  // `getPlugins` is synchronous: each plugin's main entry exposes only
+  // `meta` + a `Plugin.lazy(...)` stub, so building the plugin array doesn't
+  // pull any plugin's body. The plugin manager loads the real plugin
+  // (separate Rollup chunk) on first `enable`. Remote plugins still need a
+  // network round-trip, so we run that in parallel.
   bootStatus('Loading plugins…');
-  const [builtinPlugins, remotePluginsResult] = await Promise.all([
-    getPlugins(conf, {
-      onPluginLoaded: (loaded, total) => {
-        bootStatus(`Loading plugins (${loaded}/${total})`);
-        // Drive the determinate progress bar — flips the bar out of its
-        // indeterminate slide animation and grows it as chunks land.
-        window.__bootLoader?.progress(loaded / total);
-      },
-    }),
-    UrlLoader.preload().catch((error) => {
-      log.warn('failed to preload remote plugins', { error });
-      return [] as Plugin.Plugin[];
-    }),
-  ]);
+  const builtinPlugins = getPlugins(conf);
+  const remotePlugins: Plugin.Plugin[] = await UrlLoader.preload().catch((error) => {
+    log.warn('failed to preload remote plugins', { error });
+    return [] as Plugin.Plugin[];
+  });
 
   bootStatus('Starting Composer…');
   window.__bootLoader?.progress(1);
-  const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins);
   const core = getCore(conf);

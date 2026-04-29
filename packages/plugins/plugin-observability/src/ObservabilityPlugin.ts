@@ -27,7 +27,7 @@ export type ObservabilityPluginOptions = {
   observability: () => Promise<Observability.Observability>;
 };
 
-export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
+export default Plugin.define<ObservabilityPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

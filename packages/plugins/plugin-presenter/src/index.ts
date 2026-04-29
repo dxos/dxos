@@ -2,7 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './components';
+import { Plugin } from '@dxos/app-framework';
 
-export * from './meta';
-export * from './PresenterPlugin';
+import { meta } from './meta';
+
+export { meta };
+export const PresenterPlugin = Plugin.lazy(meta, () => import('./PresenterPlugin'));
+
+export * from './components';

@@ -24,7 +24,7 @@ import { SampleItem } from '#types';
 
 import { translations } from './translations';
 
-export const SamplePlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   // Registers graph builder extensions (actions, connectors, companions).
   // Activates during `SetupAppGraph` event.
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

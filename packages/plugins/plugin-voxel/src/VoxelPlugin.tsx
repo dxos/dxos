@@ -18,7 +18,7 @@ import { Voxel } from '#types';
 
 import { translations } from './translations';
 
-export const VoxelPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: {
       id: Voxel.World.typename,

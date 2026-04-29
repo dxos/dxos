@@ -10,7 +10,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Dialog } from '@dxos/react-ui';
 import { withLayout } from '@dxos/react-ui/testing';
 
-import { NavTreePlugin } from '../../NavTreePlugin';
+import NavTreePlugin from '../../NavTreePlugin';
 import { translations } from '../../translations';
 import { CommandsDialogContent } from './CommandsDialogContent';
 

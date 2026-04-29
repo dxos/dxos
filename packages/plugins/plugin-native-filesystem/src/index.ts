@@ -2,6 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './meta';
-export * from './NativeFilesystemPlugin';
+import { Plugin } from '@dxos/app-framework';
+
+import { meta } from './meta';
+
+export { meta };
+export const NativeFilesystemPlugin = Plugin.lazy(meta, () => import('./NativeFilesystemPlugin'));
+
 export * from './types';

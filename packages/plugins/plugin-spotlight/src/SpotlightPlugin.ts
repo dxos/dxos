@@ -11,7 +11,7 @@ import { SpotlightEvents } from '#types';
 
 import { translations } from './translations';
 
-export const SpotlightPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({

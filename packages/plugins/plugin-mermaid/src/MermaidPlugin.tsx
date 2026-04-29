@@ -5,13 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Plugin } from '@dxos/app-framework';
-import { MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
+import { MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown/types';
 
 import { meta } from '#meta';
 
 import { mermaid } from './extensions';
 
-export const MermaidPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'markdown',
     activatesOn: MarkdownEvents.SetupExtensions,

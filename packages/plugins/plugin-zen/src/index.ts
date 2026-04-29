@@ -2,7 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './meta';
-export * from './types';
+import { Plugin } from '@dxos/app-framework';
 
-export * from './ZenPlugin';
+import { meta } from './meta';
+
+export { meta };
+export const ZenPlugin = Plugin.lazy(meta, () => import('./ZenPlugin'));
+
+export * from './types';

@@ -1139,4 +1139,139 @@ describe('PluginManager', () => {
       assert.strictEqual(manager.capabilities.getAll(String).length, 1);
     }),
   );
+
+  describe('Plugin.lazy', () => {
+    const lazyMeta = { id: 'org.dxos.plugin.lazy', name: 'Lazy' };
+
+    it('exposes meta synchronously without invoking the loader', () => {
+      let loaderCalls = 0;
+      const Real = Plugin.make(Plugin.define<void>(lazyMeta));
+      const LazyTest = Plugin.lazy(lazyMeta, () => {
+        loaderCalls++;
+        return Promise.resolve({ default: Real });
+      });
+
+      assert.strictEqual(LazyTest.meta.id, lazyMeta.id);
+      assert.strictEqual(LazyTest.meta.name, 'Lazy');
+      assert.strictEqual(loaderCalls, 0);
+
+      const stub = LazyTest();
+      assert.strictEqual(stub.meta.id, lazyMeta.id);
+      assert.deepStrictEqual([...stub.modules], []);
+      assert.isTrue(Plugin.isLazy(stub));
+      assert.strictEqual(loaderCalls, 0);
+    });
+
+    it.effect('resolves the loader on enable and registers the real plugin modules', () =>
+      Effect.gen(function* () {
+        let loaderCalls = 0;
+        const Real = Plugin.define(lazyMeta).pipe(
+          Plugin.addModule({
+            id: 'Hello',
+            activatesOn: ActivationEvents.Startup,
+            activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
+          }),
+          Plugin.make,
+        );
+        const LazyTest = Plugin.lazy(lazyMeta, () => {
+          loaderCalls++;
+          return Promise.resolve({ default: Real });
+        });
+
+        const lazyStub = LazyTest();
+        plugins = [lazyStub];
+
+        const manager = PluginManager.make({ pluginLoader });
+        yield* manager.add(lazyMeta.id);
+        // Loader has not been invoked yet — only meta is exposed.
+        assert.strictEqual(loaderCalls, 0);
+        assert.deepStrictEqual(manager.getModules(), []);
+
+        yield* manager.enable(lazyMeta.id);
+        assert.strictEqual(loaderCalls, 1);
+        // After enable the registered plugin should be the real one (not the stub),
+        // and its modules should be registered with the manager.
+        const registered = manager.getPlugins().find((p) => p.meta.id === lazyMeta.id);
+        assert.isDefined(registered);
+        assert.isFalse(Plugin.isLazy(registered!));
+        assert.strictEqual(registered!.modules.length, 1);
+
+        yield* manager.activate(ActivationEvents.Startup);
+        assert.strictEqual(manager.capabilities.getAll(String).length, 1);
+      }),
+    );
+
+    it.effect('does not invoke the loader if the plugin is never enabled', () =>
+      Effect.gen(function* () {
+        let loaderCalls = 0;
+        const Real = Plugin.make(Plugin.define<void>(lazyMeta));
+        const LazyTest = Plugin.lazy(lazyMeta, () => {
+          loaderCalls++;
+          return Promise.resolve({ default: Real });
+        });
+        const lazyStub = LazyTest();
+        plugins = [lazyStub];
+
+        const manager = PluginManager.make({ pluginLoader });
+        yield* manager.add(lazyMeta.id);
+
+        // Activate an event that has no listeners — the lazy plugin must not load.
+        yield* manager.activate(ActivationEvents.Startup);
+        assert.strictEqual(loaderCalls, 0);
+      }),
+    );
+
+    it.effect('forwards factory options to the real plugin factory', () =>
+      Effect.gen(function* () {
+        type Opts = { greeting: string };
+        const RealFactory = (opts: Opts) =>
+          Plugin.define(lazyMeta).pipe(
+            Plugin.addModule({
+              id: 'Hello',
+              activatesOn: ActivationEvents.Startup,
+              activate: () => Effect.succeed(Capability.contributes(String, { string: opts.greeting })),
+            }),
+            Plugin.make,
+          )(undefined as void);
+
+        const RealFactoryWithMeta = Object.assign(RealFactory, { meta: lazyMeta });
+
+        const LazyTest = Plugin.lazy<Opts>(lazyMeta, () => Promise.resolve({ default: RealFactoryWithMeta }));
+        const lazyStub = LazyTest({ greeting: 'hola' });
+        plugins = [lazyStub];
+
+        const manager = PluginManager.make({ pluginLoader });
+        yield* manager.add(lazyMeta.id);
+        yield* manager.enable(lazyMeta.id);
+        yield* manager.activate(ActivationEvents.Startup);
+
+        const all = manager.capabilities.getAll(String);
+        assert.strictEqual(all.length, 1);
+        assert.strictEqual(all[0].string, 'hola');
+      }),
+    );
+
+    it.effect('wraps loader rejections in a descriptive error', () =>
+      Effect.gen(function* () {
+        const LazyTest = Plugin.lazy(lazyMeta, () =>
+          Promise.reject<{ default: Plugin.PluginFactory }>(new Error('boom')),
+        );
+        const lazyStub = LazyTest();
+        plugins = [lazyStub];
+
+        const manager = PluginManager.make({ pluginLoader });
+        yield* manager.add(lazyMeta.id);
+
+        const exit = yield* Effect.exit(manager.enable(lazyMeta.id));
+        assert.isTrue(Exit.isFailure(exit));
+        if (Exit.isFailure(exit)) {
+          const failure = Cause.failureOption(exit.cause);
+          assert.isTrue(failure._tag === 'Some');
+          if (failure._tag === 'Some') {
+            assert.match(failure.value.message, /lazy plugin org\.dxos\.plugin\.lazy/);
+          }
+        }
+      }),
+    );
+  });
 });

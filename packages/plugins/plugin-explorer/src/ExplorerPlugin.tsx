@@ -19,7 +19,7 @@ import { ExplorerAction, Graph } from '#types';
 
 import { translations } from './translations';
 
-export const ExplorerPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: {
       id: Type.getTypename(Graph.Graph),

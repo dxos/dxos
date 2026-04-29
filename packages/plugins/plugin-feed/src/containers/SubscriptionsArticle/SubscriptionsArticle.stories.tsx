@@ -19,7 +19,7 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { Subscription } from '#types';
 
-import { FeedPlugin } from '../../FeedPlugin';
+import FeedPlugin from '../../FeedPlugin';
 import { translations } from '../../translations';
 import { SubscriptionsArticle } from './SubscriptionsArticle';
 

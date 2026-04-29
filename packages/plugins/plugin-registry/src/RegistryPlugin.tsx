@@ -11,7 +11,7 @@ import { meta } from '#meta';
 
 import { translations } from './translations';
 
-export const RegistryPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),

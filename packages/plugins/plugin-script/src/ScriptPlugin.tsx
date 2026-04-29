@@ -28,7 +28,7 @@ import { Notebook } from '#types';
 
 import { translations } from './translations';
 
-export const ScriptPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addMetadataModule({

@@ -29,7 +29,7 @@ import { TestItem } from '#testing';
 
 import { MessageNormalizer, getActorId } from '../../segments-normalization';
 import { type MediaStreamRecorderProps, type TranscriberProps } from '../../transcriber';
-import { TranscriptionPlugin } from '../../TranscriptionPlugin';
+import TranscriptionPlugin from '../../TranscriptionPlugin';
 import { renderByline } from '../../util';
 import { TranscriptionStory } from './TranscriptionStory';
 import { useIsSpeaking } from './useIsSpeaking';

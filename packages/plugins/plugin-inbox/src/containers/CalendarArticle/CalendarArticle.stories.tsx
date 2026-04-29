@@ -20,7 +20,7 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Builder } from '#testing';
 import { Calendar } from '#types';
 
-import { InboxPlugin } from '../../InboxPlugin';
+import InboxPlugin from '../../InboxPlugin';
 import { CalendarArticle } from './CalendarArticle';
 
 type DefaultStoryProps = {

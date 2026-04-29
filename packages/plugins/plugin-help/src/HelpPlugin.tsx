@@ -13,7 +13,7 @@ import { translations } from './translations';
 
 export type HelpPluginOptions = { steps?: Step[] };
 
-export const HelpPlugin = Plugin.define<HelpPluginOptions>(meta).pipe(
+export default Plugin.define<HelpPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),

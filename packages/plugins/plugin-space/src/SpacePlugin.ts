@@ -53,7 +53,7 @@ import { type CreateObject, type SpacePluginOptions } from '#types';
 
 import { translations } from './translations';
 
-export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
+export default Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: [
       {

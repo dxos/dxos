@@ -19,7 +19,7 @@ import { CreateKanbanSchema, Kanban } from '#types';
 
 import { translations } from './translations';
 
-export const KanbanPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addMetadataModule({
     metadata: {

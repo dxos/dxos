@@ -26,7 +26,7 @@ import { Message, Person } from '@dxos/types';
 import { Builder, LABELS, MessagesOptions, initializeMailbox } from '#testing';
 import { Mailbox } from '#types';
 
-import { InboxPlugin } from '../../InboxPlugin';
+import InboxPlugin from '../../InboxPlugin';
 import { MessageStack, MessageStackProps } from './MessageStack';
 
 const DefaultStory = ({

@@ -32,7 +32,7 @@ import { translations } from './translations';
 import { CreateCalendarSchema } from './types/Calendar';
 import { CreateMailboxSchema } from './types/Mailbox';
 
-export const InboxPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({
     activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
     activate: AppGraphBuilder,

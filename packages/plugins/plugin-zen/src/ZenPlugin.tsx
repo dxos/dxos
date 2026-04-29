@@ -18,7 +18,7 @@ import { Dream } from '#types';
 
 import { translations } from './translations';
 
-export const ZenPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: {
       id: Dream.Dream.typename,

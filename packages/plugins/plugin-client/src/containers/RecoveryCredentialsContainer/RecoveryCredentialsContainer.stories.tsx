@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { initializeIdentity } from '#testing';
 
-import { ClientPlugin } from '../../ClientPlugin';
+import ClientPlugin from '../../ClientPlugin';
 import { translations } from '../../translations';
 import { RecoveryCredentialsContainer } from './RecoveryCredentialsContainer';
 

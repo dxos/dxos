@@ -353,3 +353,83 @@ export function make<T>(builder: PluginBuilder<T>): PluginFactory<T> {
 
   return Object.assign(factory, { meta });
 }
+
+//
+// Lazy plugin loading
+//
+
+/**
+ * Symbol used to tag lazy plugin stubs with their loader closure.
+ * Hidden from enumeration so plugin manager iteration / serialization paths
+ * don't trip over it.
+ */
+const LazyTag: unique symbol = Symbol.for('@dxos/app-framework/Plugin/Lazy');
+
+/**
+ * Async loader for a lazy plugin's real implementation.
+ * The default export of the loaded module must be a `PluginFactory<T>` —
+ * i.e. the same shape `Plugin.make` produces.
+ */
+export type LazyLoader<T = void> = () => Promise<{ default: PluginFactory<T> }>;
+
+/** Internal: payload carried on a lazy stub. */
+type LazyPayload = { loader: LazyLoader<any>; options: unknown };
+
+/**
+ * Defines a lazy plugin whose body is loaded on first enable.
+ *
+ * The returned factory produces a stub `Plugin` that exposes `meta`
+ * synchronously (so callers can read `Plugin.meta.id` for free) but defers
+ * loading the real plugin's modules until the manager calls
+ * `Plugin.resolveLazy`. This lets the plugin's main entry point ship as a
+ * tiny meta-only chunk — the heavy capabilities, schema, React surfaces,
+ * etc. live behind the dynamic `import()` and become a separate Rollup
+ * chunk that is only fetched when the plugin is enabled.
+ *
+ * @example
+ * ```ts
+ * // plugin-markdown/src/index.ts
+ * import { Plugin } from '@dxos/app-framework';
+ * import { meta } from './meta';
+ *
+ * export const MarkdownPlugin = Plugin.lazy(meta, () => import('./MarkdownPlugin'));
+ *
+ * // plugin-markdown/src/MarkdownPlugin.tsx
+ * export default () => Plugin.define(meta).pipe(...heavy modules..., Plugin.make);
+ * ```
+ */
+export const lazy = <T = void>(meta: Meta, loader: LazyLoader<T>): PluginFactory<T> => {
+  const factory = (options: T): Plugin => {
+    const stub = new PluginImpl(meta, []);
+    Object.defineProperty(stub, LazyTag, {
+      value: { loader, options } satisfies LazyPayload,
+      enumerable: false,
+    });
+    return stub;
+  };
+  return Object.assign(factory, { meta });
+};
+
+/**
+ * Type guard for lazy plugin stubs produced by {@link lazy}.
+ */
+export const isLazy = (plugin: Plugin): boolean => LazyTag in plugin;
+
+/**
+ * Resolves a lazy plugin stub to its real plugin.
+ * Returns the plugin unchanged if it is not lazy. Errors from the loader
+ * (network failure, missing default export, etc.) are wrapped with the
+ * plugin's id for debuggability.
+ */
+export const resolveLazy = (plugin: Plugin): Effect.Effect<Plugin, Error> =>
+  Effect.gen(function* () {
+    if (!isLazy(plugin)) {
+      return plugin;
+    }
+    const { loader, options } = (plugin as unknown as { [LazyTag]: LazyPayload })[LazyTag];
+    const mod = yield* Effect.tryPromise({
+      try: loader,
+      catch: (error) => new Error(`Failed to load lazy plugin ${plugin.meta.id}: ${error}`),
+    });
+    return mod.default(options);
+  });

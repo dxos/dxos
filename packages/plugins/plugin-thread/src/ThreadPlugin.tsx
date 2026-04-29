@@ -10,7 +10,7 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, Ref, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client/types';
-import { MarkdownEvents } from '@dxos/plugin-markdown';
+import { MarkdownEvents } from '@dxos/plugin-markdown/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { SpaceCapabilities, SpaceEvents, type CreateObject } from '@dxos/plugin-space/types';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
@@ -39,7 +39,7 @@ import { translations } from './translations';
 // TODO(wittjosiah): Rename to ChatPlugin.
 // TODO(wittjosiah): Enabling comments should likely be factored out of this plugin but depend on it's capabilities.
 
-export const ThreadPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addMetadataModule({

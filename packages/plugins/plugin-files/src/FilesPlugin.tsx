@@ -19,7 +19,7 @@ import { translations } from './translations';
 
 const SettingsReady = AppActivationEvents.createSettingsEvent(FileCapabilities.Settings.identifier);
 
-export const FilesPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSettingsModule({ activate: FileSettings, firesAfterActivation: [SettingsReady] }),

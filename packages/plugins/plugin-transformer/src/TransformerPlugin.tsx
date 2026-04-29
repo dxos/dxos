@@ -10,7 +10,7 @@ import { meta } from '#meta';
 
 import { translations } from './translations';
 
-export const TransformerPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [], id: 'schema' }),
   AppPlugin.addTranslationsModule({ translations }),
   // Plugin.addModule({
