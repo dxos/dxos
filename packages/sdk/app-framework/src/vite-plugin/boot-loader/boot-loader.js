@@ -41,8 +41,8 @@
   // real progress is coming. Tune `STATE_2_RATE` up to make the ring race
   // ahead between host updates; tune `STATE_2_BUMP` to set how far ahead
   // of the latest `progress()` call the creep is allowed to travel.
-  var STATE_2_RATE = 0.2;
-  var STATE_2_BUMP = 25;
+  var STATE_2_RATE = 0.5;
+  var STATE_2_BUMP = 50;
   // Ring never auto-creeps past this — keeps the user from interpreting the
   // ring as "almost done" while the host hasn't actually said so.
   var ABSOLUTE_CEILING = 90;
