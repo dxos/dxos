@@ -50,8 +50,8 @@
   position: relative;
   display: grid;
   place-items: center;
-  width: 192px;
-  height: 192px;
+  width: 384px;
+  height: 384px;
 }
 
 #boot-loader-disc > * {
@@ -59,12 +59,22 @@
   grid-row: 1;
 }
 
+/*
+ * Default to grayscale so the mark reads as a quiet monochrome silhouette
+ * during boot; the brand palette swaps in on hover for a small reveal moment.
+ */
 #boot-loader-mark {
-  width: 128px;
-  height: 128px;
+  width: 256px;
+  height: 256px;
   display: flex;
   align-items: center;
   justify-content: center;
+  filter: grayscale(100%);
+  transition: filter 200ms ease-out;
+}
+
+#boot-loader-mark:hover {
+  filter: none;
 }
 
 #boot-loader-mark svg {
@@ -92,8 +102,14 @@
   height: 100%;
   border-radius: 50%;
   background: rgba(127, 127, 127, 0.18);
-  mask: radial-gradient(circle, transparent calc(50% - 1px), #000 calc(50% - 1px));
-  -webkit-mask: radial-gradient(circle, transparent calc(50% - 1px), #000 calc(50% - 1px));
+  /*
+   * Feather the inner edge over 2px so the thin line gets soft anti-aliased
+   * edges instead of a hard pixel cutoff (which can look stair-stepped on
+   * non-retina screens). The outer edge is clipped by `border-radius: 50%`,
+   * so only the inner side of the ring needs the gradient feather.
+   */
+  mask: radial-gradient(circle closest-side, transparent calc(100% - 2px), #000 100%);
+  -webkit-mask: radial-gradient(circle closest-side, transparent calc(100% - 2px), #000 100%);
 }
 
 /*
