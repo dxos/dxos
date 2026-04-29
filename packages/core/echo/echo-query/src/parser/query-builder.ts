@@ -356,8 +356,8 @@ export class QueryBuilder {
     cursor.firstChild(); // Move to String node.
     const text = this._getNodeText(cursor, input);
     cursor.parent(); // Go back to TextFilter.
-    // Remove quotes.
-    return Filter.text(text.slice(1, -1));
+    // Remove quotes and decode escapes.
+    return Filter.text(unescapeStringLiteral(text.slice(1, -1)));
   }
 
   /**
@@ -480,9 +480,9 @@ export class QueryBuilder {
 
     switch (valueType) {
       case 'String': {
-        // Remove quotes.
+        // Remove quotes and decode escapes.
         const str = this._getNodeText(cursor, input);
-        return str.slice(1, -1);
+        return unescapeStringLiteral(str.slice(1, -1));
       }
 
       case 'Number':
@@ -544,6 +544,25 @@ const VALUE_LITERALS = new Set(['true', 'false', 'null']);
 const SPECIAL_CHARS = /[\s(){}\[\],"']/;
 const PROPERTY_KEY = /^[a-zA-Z_][a-zA-Z0-9_.]*$/;
 const NUMBER_LITERAL = /^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
+
+// Common URL schemes — `http://...`, `mailto:rich@...` etc. should be searched as text,
+// not auto-promoted to property filters.
+const URL_SCHEMES = new Set([
+  'http',
+  'https',
+  'ftp',
+  'ftps',
+  'file',
+  'mailto',
+  'tel',
+  'sms',
+  'data',
+  'javascript',
+  'ws',
+  'wss',
+  'ssh',
+  'git',
+]);
 
 /**
  * Normalize raw user input into a form the lezer grammar can parse.
@@ -697,7 +716,10 @@ export const normalizeInput = (input: string): string => {
         continue;
       }
 
-      if (PROPERTY_KEY.test(key)) {
+      // URLs (`http://...`, `mailto:rich@...`) and URL-paths starting with `//`
+      // are searched as text rather than auto-promoted to property filters.
+      const isUrlScheme = URL_SCHEMES.has(key.toLowerCase()) || rest.startsWith('//');
+      if (!isUrlScheme && PROPERTY_KEY.test(key)) {
         if (rest.length === 0) {
           // Trailing colon while typing — pass through.
           out.push(token);
@@ -719,11 +741,11 @@ export const normalizeInput = (input: string): string => {
           out.push(token);
           continue;
         }
-        out.push(`${key}:"${rest.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
+        out.push(`${key}:"${escapeStringLiteral(rest)}"`);
         continue;
       }
 
-      // Unknown key shape — fall through to text.
+      // URL or unknown key shape — fall through to text.
     }
 
     // Identifier followed by `=` is the LHS of an Assignment — keep as-is.
@@ -739,8 +761,26 @@ export const normalizeInput = (input: string): string => {
     }
 
     // Bare text fragment: quote so it parses as TextFilter.
-    out.push(`"${token.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
+    out.push(`"${escapeStringLiteral(token)}"`);
   }
 
   return out.join('');
+};
+
+/** Escape a raw value into a string literal body (without surrounding quotes). */
+const escapeStringLiteral = (value: string): string => value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+
+/** Decode `\\` and `\"` escapes inside a string literal body. */
+const unescapeStringLiteral = (literalBody: string): string => {
+  let out = '';
+  for (let i = 0; i < literalBody.length; i++) {
+    const ch = literalBody[i];
+    if (ch === '\\' && i + 1 < literalBody.length) {
+      out += literalBody[i + 1];
+      i++;
+    } else {
+      out += ch;
+    }
+  }
+  return out;
 };

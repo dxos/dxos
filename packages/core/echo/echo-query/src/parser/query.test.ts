@@ -447,6 +447,12 @@ describe('query', () => {
       { input: 'foo]bar', expected: '"foo"]"bar"' },
       // Genuine single-quoted string still works.
       { input: "'foo bar'", expected: "'foo bar'" },
+      // URLs are searched as text rather than auto-promoted to property filters.
+      { input: 'https://dxos.org', expected: '"https://dxos.org"' },
+      { input: 'http://example.com/foo', expected: '"http://example.com/foo"' },
+      { input: 'mailto:rich@dxos.org', expected: '"mailto:rich@dxos.org"' },
+      // Escapes round-trip: backslashes are escaped in the literal body.
+      { input: 'foo\\bar', expected: '"foo\\\\bar"' },
     ];
 
     for (const { input, expected } of tests) {
@@ -498,6 +504,20 @@ describe('query', () => {
         expected: {
           filter: Filter.and(Filter.text('a'), Filter.text('b'), Filter.text('c')),
         },
+      },
+      // URLs are text-searched, not promoted to property filters.
+      {
+        input: 'https://dxos.org',
+        expected: { filter: Filter.text('https://dxos.org') },
+      },
+      {
+        input: 'mailto:rich@dxos.org',
+        expected: { filter: Filter.text('mailto:rich@dxos.org') },
+      },
+      // Escapes decode back to the original input.
+      {
+        input: 'foo\\bar',
+        expected: { filter: Filter.text('foo\\bar') },
       },
     ];
 
