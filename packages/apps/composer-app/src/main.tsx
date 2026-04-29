@@ -63,7 +63,7 @@ declare global {
 // this module's top-level code starts running — i.e. as soon as the JS
 // bundle has parsed enough to execute. The disc creeps until the host
 // reaches `progress()` below.
-window.__bootLoader?.tick();
+window.__bootLoader?.start();
 
 /**
  * Updates the native-DOM boot loader text. No-op once React has replaced #root.

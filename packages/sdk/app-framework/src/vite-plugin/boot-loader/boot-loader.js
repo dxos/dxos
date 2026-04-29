@@ -8,11 +8,11 @@
 //
 // The loader has three runtime states:
 //   - State 0 (idle):       no motion. Disc sits empty. Default on script load.
-//   - State 1 (slow tick):  asymptotic creep toward ~12%. Entered by `tick()`.
+//   - State 1 (slow tick):  asymptotic creep toward `CREEP_ASYMPTOTE`%. Entered by `start()`.
 //   - State 2 (progress):   host-driven, value supplied to `progress(fraction)`.
 //
 // `window.__bootLoader.status(text)`        updates the visible status line.
-// `window.__bootLoader.tick()`              enter state 1 (start the slow creep).
+// `window.__bootLoader.start()`             enter state 1 (start the slow creep).
 // `window.__bootLoader.progress(fraction)`  enter state 2 with `fraction` ∈ [0, 1].
 // `window.__bootLoader.dismiss()`           remove the loader DOM (terminal).
 //
@@ -25,7 +25,7 @@
   // `CREEP_ASYMPTOTE` percent so the disc visibly *moves* without ever
   // implying real progress. The 240ms `transition` on the disc smooths each
   // tick and the eventual jump into state 2.
-  var CREEP_ASYMPTOTE = 12;
+  var CREEP_ASYMPTOTE = 20;
   var CREEP_RATE = 0.04;
   var CREEP_TICK_MS = 100;
 
@@ -66,7 +66,7 @@
      * `CREEP_ASYMPTOTE`% so the loader reads as alive while the host has
      * nothing concrete to report yet. No-op if already in state 1 or 2.
      */
-    tick: function () {
+    start: function () {
       if (state !== 0) {
         return;
       }
