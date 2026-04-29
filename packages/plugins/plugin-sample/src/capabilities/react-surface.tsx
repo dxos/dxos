@@ -13,7 +13,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 
 import { SampleStatusIndicator } from '#components';
 import {
@@ -107,7 +107,13 @@ export default Capability.makeModule(() =>
           Surface.makeType<{ subject: string }>('deck-companion--sample-panel'),
           'sample-panel',
         ),
-        component: () => <SampleDeckCompanion />,
+        component: () => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+          return <SampleDeckCompanion role='deck-companion--sample-panel' space={space} attendableId={space.id} />;
+        },
       }),
     ]),
   ),
