@@ -5,6 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
+import { Composer } from '@dxos/brand';
+import { Toolbar } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
+
+import { Placeholder } from '../../ui';
 import css from './boot-loader.css?raw';
 
 /**
@@ -88,20 +93,8 @@ const STORY_PLUGIN_COUNT = 80;
 /** Tick interval for the determinate-progress simulation, in ms. */
 const STORY_TICK_MS = 100;
 
-const CyclingStory = () => {
-  const [index, setIndex] = useState(0);
-  useEffect(() => {
-    const handle = setInterval(() => {
-      setIndex((current) => (current + 1) % PHASES.length);
-    }, 1_500);
-    return () => clearInterval(handle);
-  }, []);
-  return <BootLoader status={PHASES[index]} markSvg={PLACEHOLDER_MARK} />;
-};
-
-const DeterminateStory = () => {
-  // Walks progress 0 → 1 by ticking once every `STORY_TICK_MS`, mirroring
-  // composer's per-plugin counter in `getPlugins`.
+const DefaultStory = () => {
+  // Walks progress 0 → 1 by ticking once every `STORY_TICK_MS`, mirroring Composer's per-plugin counter in `getPlugins`.
   const [progress, setProgress] = useState(0);
   useEffect(() => {
     let loaded = 0;
@@ -114,14 +107,23 @@ const DeterminateStory = () => {
     }, STORY_TICK_MS);
     return () => clearInterval(handle);
   }, []);
+
   const loaded = Math.round(progress * STORY_PLUGIN_COUNT);
   const status = progress >= 1 ? 'Starting Composer…' : `Loading plugins (${loaded}/${STORY_PLUGIN_COUNT})`;
-  return <BootLoader status={status} markSvg={PLACEHOLDER_MARK} progress={progress} />;
+
+  return (
+    <>
+      <Toolbar.Root>{/* <Toolbar.IconButton icon='ph--play--regular' iconOnly /> */}</Toolbar.Root>
+      <BootLoader status={status} markSvg={PLACEHOLDER_MARK} progress={progress} />
+    </>
+  );
 };
 
 const meta: Meta<typeof BootLoader> = {
   title: 'sdk/app-framework/vite-plugin/BootLoader',
   component: BootLoader,
+  render: DefaultStory,
+  decorators: [withTheme({})],
   parameters: {
     layout: 'fullscreen',
   },
@@ -135,36 +137,14 @@ export default meta;
 
 type Story = StoryObj<typeof BootLoader>;
 
-/** Static loader exactly as it ships in `composer-app` (without the brand SVG). */
-export const Default: Story = {
-  args: {
-    status: 'Loading…',
-  },
-};
-
-/** Same loader plus an inline brand mark — verify currentColor inheritance. */
-export const WithMark: Story = {
-  args: {
-    status: 'Loading…',
-    markSvg: PLACEHOLDER_MARK,
-  },
-};
+export const Default: Story = {};
 
 /**
- * Cycles through the strings the host typically passes to
- * `window.__bootLoader.status(...)`. Useful for verifying that the ring's
- * vertical position is stable across status changes — `#boot-loader-status`
- * has a fixed height so the line-box can't reflow the flex column.
+ * Renders the React `Placeholder` from `@dxos/app-framework/ui` on its own —
+ * useful for eyeballing the handoff target the boot loader dismisses to,
+ * with the same `<Composer />` brand mark the loader paints during cold load.
  */
-export const Cycling: Story = {
-  render: () => <CyclingStory />,
-};
-
-/**
- * Determinate progress driven by `__bootLoader.progress(fraction)`. Mirrors
- * composer-app's behaviour during the `getPlugins` phase — the arc grows
- * 0 → 100% around the brand mark as plugin chunks resolve.
- */
-export const Determinate: Story = {
-  render: () => <DeterminateStory />,
+export const PlaceholderHandoff: Story = {
+  name: 'Placeholder',
+  render: () => <Placeholder stage={1} logo={(logoProps) => <Composer {...logoProps} />} />,
 };
