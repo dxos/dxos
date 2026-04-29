@@ -622,7 +622,7 @@ catalog:
   uuid: ^9.0.0
   varint: 6.0.0
   versor: ^0.2.0
-  vite: ^7.1.11
+  vite: ^7.3.2
   vite-node: ^3.2.4
   vite-plugin-css-injected-by-js: ^5.0.1
   vite-plugin-devtools-json: ^0.4.1
