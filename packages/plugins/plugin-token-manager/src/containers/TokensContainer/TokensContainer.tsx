@@ -5,7 +5,8 @@
 import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type Database, Filter, Obj } from '@dxos/echo';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Filter, Obj } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { useQuery } from '@dxos/react-client/echo';
 import { AccessToken } from '@dxos/types';
@@ -13,12 +14,9 @@ import { AccessToken } from '@dxos/types';
 import { TokensPanel } from '#components';
 import { TokenManagerOperation } from '#operations';
 
-export type TokensContainerProps = {
-  db: Database.Database;
-};
-
-export const TokensContainer = ({ db }: TokensContainerProps) => {
+export const TokensContainer = ({ space }: AppSurface.SpaceArticleProps) => {
   const { invokePromise } = useOperationInvoker();
+  const db = space.db;
   const tokens = useQuery(db, Filter.type(AccessToken.AccessToken));
   const [adding, setAdding] = useState(false);
 

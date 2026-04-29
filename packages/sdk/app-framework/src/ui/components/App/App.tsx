@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { Capabilities } from '../../../common';
 import { topologicalSort } from '../../../helpers';
@@ -14,10 +14,22 @@ export type AppProps = Pick<UseAppOptions, 'placeholder' | 'debounce'> & {
   progress?: StartupProgress;
 };
 
+const FIRST_INTERACTIVE_MARK = 'app-framework:first-interactive';
+
 export const App = ({ placeholder: Placeholder, ready, error, debounce, progress }: AppProps) => {
   const reactContexts = useCapabilities(Capabilities.ReactContext);
   const reactRoots = useCapabilities(Capabilities.ReactRoot);
   const stage = useLoading(ready, debounce);
+  const placeholderDismissed = stage >= LoadingState.Done;
+
+  // Emit a once-per-app `app-framework:first-interactive` mark the first time
+  // the placeholder is dismissed and the real app shell renders. Closes the
+  // gap between `Startup` activated and the first interactive paint.
+  useEffect(() => {
+    if (placeholderDismissed && performance.getEntriesByName(FIRST_INTERACTIVE_MARK).length === 0) {
+      performance.mark(FIRST_INTERACTIVE_MARK);
+    }
+  }, [placeholderDismissed]);
 
   if (error) {
     // This triggers the error boundary to provide UI feedback for the startup error.
@@ -25,7 +37,7 @@ export const App = ({ placeholder: Placeholder, ready, error, debounce, progress
   }
 
   // TODO(wittjosiah): Consider using Suspense instead.
-  if (stage < LoadingState.Done) {
+  if (!placeholderDismissed) {
     if (!Placeholder) {
       return null;
     }

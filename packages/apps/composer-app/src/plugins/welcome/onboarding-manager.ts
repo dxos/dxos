@@ -57,6 +57,15 @@ export class OnboardingManager {
   private readonly _email?: string;
 
   private _identity: Identity | null = null;
+  /**
+   * Set by {@link destroy}. `initialize` checks this at every `await` boundary
+   * so it bails out instead of mutating state after the manager has been torn
+   * down. Necessary because `WelcomeCapabilities.Onboarding` contributes the
+   * manager synchronously and runs `initialize()` as a fire-and-forget
+   * background side-effect — `destroy()` can fire while async work is still
+   * in flight.
+   */
+  private _destroyed = false;
 
   constructor({
     invokePromise,
@@ -86,6 +95,9 @@ export class OnboardingManager {
 
     this._subscriptions.add(
       this._client.halo.identity.subscribe((identity) => {
+        if (this._destroyed) {
+          return;
+        }
         const wasNull = this._identity === null;
         this._identity = identity;
 
@@ -99,6 +111,13 @@ export class OnboardingManager {
   }
 
   async initialize(): Promise<void> {
+    // Helper used between every async step so a `destroy()` issued mid-flight
+    // (e.g. plugin reset, HMR) short-circuits before any state mutation. We
+    // can't actually cancel the in-flight RPC, but bailing here prevents
+    // post-destroy writes to `this._identity` and stops the cascade of
+    // dependent steps.
+    const aborted = () => this._destroyed;
+
     // Gate: a local identity grants access. Account binding / authed-services access
     // is checked separately on the profile page (where users without an account see
     // a "no edge access" warning + request-access form).
@@ -109,17 +128,23 @@ export class OnboardingManager {
       // failures since the resulting state is what we wanted).
       if (this._email && this._hubUrl) {
         await this._bindExistingIdentityIfPossible();
+        if (aborted()) return;
       }
       // Automatically start join space flow if already authed.
-      this._spaceInvitationCode && (await this._openJoinSpace());
+      if (this._spaceInvitationCode) {
+        await this._openJoinSpace();
+        if (aborted()) return;
+      }
       // Ensure that recovery credential is present.
       await this._setupRecovery();
+      if (aborted()) return;
       // Ensure that agent is present.
       await this._createAgent();
       return;
     } else if (!this._skipAuth) {
       // No identity yet: show welcome screen.
       await this._showWelcome();
+      if (aborted()) return;
     }
 
     if (this._deviceInvitationCode !== undefined) {
@@ -139,8 +164,11 @@ export class OnboardingManager {
     } else if (!this._identity && this._skipAuth) {
       // Auth disabled (e.g. integration tests): just bring up a fresh identity.
       await this._createIdentity();
+      if (aborted()) return;
       await this._setupRecovery();
+      if (aborted()) return;
       await this._startHelp();
+      if (aborted()) return;
       await this._createAgent();
     } else if (!this._identity && this._token && this._tokenType === 'login') {
       // Login flow: redeem the recovery token from `/account/login` to restore
@@ -150,6 +178,7 @@ export class OnboardingManager {
       await this._login();
       await this._setupRecovery();
     }
+    if (aborted()) return;
 
     if (this._skipAuth && this._spaceInvitationCode) {
       // If skipping auth and a space invitation code is present, open join space flow.
@@ -158,6 +187,7 @@ export class OnboardingManager {
   }
 
   async destroy(): Promise<void> {
+    this._destroyed = true;
     await this._ctx.dispose();
   }
 

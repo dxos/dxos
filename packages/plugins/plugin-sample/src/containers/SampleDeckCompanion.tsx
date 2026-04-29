@@ -9,22 +9,21 @@
 
 import React from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Panel, Toolbar } from '@dxos/react-ui';
 
 import { ActiveSpacePanel } from '#components';
 
-export const SampleDeckCompanion = () => {
-  // `useActiveSpace` returns the currently focused space in the deck layout.
-  const space = useActiveSpace();
+export type SampleDeckCompanionProps = AppSurface.SpaceArticleProps;
 
+export const SampleDeckCompanion = ({ space }: SampleDeckCompanionProps) => {
   return (
     <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root />
       </Panel.Toolbar>
       <Panel.Content>
-        <ActiveSpacePanel spaceName={space?.properties.name ?? space?.id} />
+        <ActiveSpacePanel spaceName={space.properties.name ?? space.id} />
       </Panel.Content>
     </Panel.Root>
   );

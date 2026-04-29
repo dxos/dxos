@@ -29,7 +29,7 @@ export default Capability.makeModule(() =>
             return null;
           }
 
-          return <TokensContainer db={space.db} />;
+          return <TokensContainer space={space} />;
         },
       }),
       Surface.create({
