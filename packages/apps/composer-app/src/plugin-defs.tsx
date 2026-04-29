@@ -410,7 +410,7 @@ export const getPlugins = async (
     MeetingPlugin(),
     MermaidPlugin(),
     isTauri && !isMobile && !isPopover && NativePlugin(),
-    NativeFilesystemPlugin(),
+    isTauri && !isMobile && !isPopover && NativeFilesystemPlugin(),
     NavTreePlugin(),
     ObservabilityPlugin({
       namespace: appKey,
