@@ -10,6 +10,7 @@ import { decodeUrlSafeBase64, supportsNativePasskeys, loginNativePasskey } from 
 import { PublicKey } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
+import { markRecoveryInProgress } from '@dxos/plugin-observability';
 
 import { ClientCapabilities } from '../types';
 import { RedeemPasskey } from './definitions';
@@ -19,6 +20,9 @@ const handler: Operation.WithHandler<typeof RedeemPasskey> = RedeemPasskey.pipe(
     Effect.fnUntraced(function* () {
       const client = yield* Capability.get(ClientCapabilities.Client);
       invariant(client.services.services.IdentityService, 'IdentityService not available');
+      // Suppress the privacy notice for this session: the user is recovering
+      // an existing identity, not creating a new one.
+      markRecoveryInProgress();
       const { deviceKey, controlFeedKey, challenge } = yield* Effect.promise(() =>
         client.services.services.IdentityService!.requestRecoveryChallenge(),
       );

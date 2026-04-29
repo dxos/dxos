@@ -39,6 +39,8 @@ import {
   type JoinSpaceRequest,
   type JoinSpaceResponseBody,
   type ListAccountInvitationsResponse,
+  type LoginRequest,
+  type LoginResponse,
   type ObjectId,
   type PostNotarizationRequestBody,
   type RecoverIdentityRequest,
@@ -259,6 +261,24 @@ export class EdgeHttpClient {
     args?: EdgeHttpCallArgs,
   ): Promise<RedeemInvitationCodeResponse> {
     return this._call(ctx, new URL('/account/invitation-code/redeem', this.baseUrl), {
+      ...args,
+      body,
+      method: 'POST',
+    });
+  }
+
+  /**
+   * Existing-account email login. Server inlines `token` for test emails (and
+   * as a fallback when no email transport is configured); regular emails are
+   * delivered out-of-band and the response is `{}`. Response is identical
+   * for unknown emails (enumeration-safe).
+   */
+  public async login(
+    ctx: Context,
+    body: LoginRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<LoginResponse> {
+    return this._call(ctx, new URL('/account/login', this.baseUrl), {
       ...args,
       body,
       method: 'POST',

@@ -3,12 +3,9 @@
 //
 
 import { useAtom, useAtomSet } from '@effect-atom/atom-react';
-import React, { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type FormEvent, useCallback, useEffect, useState } from 'react';
 
-import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context } from '@dxos/context';
-import { EdgeHttpClient } from '@dxos/edge-client';
-import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
@@ -16,6 +13,7 @@ import { Settings } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 
 import { accountCacheAtom } from '../../state/account-cache';
+import { useHubHttpClient } from '../../state/use-hub-http';
 
 type AccountState = 'loading' | 'present' | 'missing' | 'error';
 
@@ -28,7 +26,6 @@ type AccountState = 'loading' | 'present' | 'missing' | 'error';
  */
 export const AccountContainer = () => {
   const { t } = useTranslation(meta.id);
-  const client = useClient();
   const identity = useIdentity();
   const [cache] = useAtom(accountCacheAtom);
   const setCache = useAtomSet(accountCacheAtom);
@@ -37,18 +34,10 @@ export const AccountContainer = () => {
   const [requestEmail, setRequestEmail] = useState('');
   const [requestSubmitted, setRequestSubmitted] = useState(false);
 
-  // Hub HTTP client (separate from `client.edge.http` because account/invitation
-  // routes live on hub-service, not the edge worker). Uses VP auth via the
-  // signed-in identity.
-  const hubHttp = useMemo(() => {
-    const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
-    if (!hubUrl || !identity) {
-      return undefined;
-    }
-    const httpClient = new EdgeHttpClient(hubUrl);
-    httpClient.setIdentity(createEdgeIdentity(client));
-    return httpClient;
-  }, [client, identity]);
+  // Shared hub HTTP client. The single instance lets the VP-auth handshake
+  // (request → 401 challenge → signed retry) run once for the session
+  // instead of once per profile panel.
+  const hubHttp = useHubHttpClient();
 
   // Background refresh on mount.
   useEffect(() => {

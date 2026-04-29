@@ -19,7 +19,8 @@ export default Capability.makeModule(
 
     const token = searchProps.get('token') ?? undefined;
     const type = searchProps.get('type');
-    const tokenType = !token ? undefined : type === 'login' ? 'login' : 'verify';
+    // Only login tokens drive an automated client flow; ignore unknown types.
+    const tokenType = token && type === 'login' ? 'login' : undefined;
     const manager = new OnboardingManager({
       invokePromise,
       client,

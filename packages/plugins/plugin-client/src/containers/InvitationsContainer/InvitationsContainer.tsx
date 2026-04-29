@@ -3,19 +3,16 @@
 //
 
 import { useAtom, useAtomSet } from '@effect-atom/atom-react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context } from '@dxos/context';
-import { EdgeHttpClient } from '@dxos/edge-client';
-import { useClient } from '@dxos/react-client';
-import { useIdentity } from '@dxos/react-client/halo';
 import { Button, Clipboard, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 
 import { type AccountCacheInvitation, accountCacheAtom } from '../../state/account-cache';
+import { useHubHttpClient } from '../../state/use-hub-http';
 
 const formatStatus = (row: AccountCacheInvitation, t: (key: string, opts?: any) => string): string => {
   if (row.redeemedByIdentityKey) {
@@ -30,22 +27,13 @@ const formatStatus = (row: AccountCacheInvitation, t: (key: string, opts?: any) 
  */
 export const InvitationsContainer = () => {
   const { t } = useTranslation(meta.id);
-  const client = useClient();
-  const identity = useIdentity();
   const [cache] = useAtom(accountCacheAtom);
   const setCache = useAtomSet(accountCacheAtom);
   const [pending, setPending] = useState(false);
 
-  // Hub HTTP client (account/invitation routes live on hub-service, not edge).
-  const hubHttp = useMemo(() => {
-    const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
-    if (!hubUrl || !identity) {
-      return undefined;
-    }
-    const httpClient = new EdgeHttpClient(hubUrl);
-    httpClient.setIdentity(createEdgeIdentity(client));
-    return httpClient;
-  }, [client, identity]);
+  // Shared hub HTTP client (see `useHubHttpClient`). Account/invitation
+  // routes live on hub-service, not the edge worker.
+  const hubHttp = useHubHttpClient();
 
   useEffect(() => {
     if (!hubHttp) {
@@ -75,9 +63,14 @@ export const InvitationsContainer = () => {
     setPending(true);
     try {
       const result = await hubHttp.issueAccountInvitation(new Context());
-      // Optimistically push the new code; the next refresh reconciles with the server.
+      // Optimistically push the new code and decrement the remaining quota --
+      // the server consumes one invitation slot at issue time. The next
+      // refresh reconciles with authoritative state.
       setCache((prev) => ({
         ...prev,
+        account: prev.account
+          ? { ...prev.account, invitationsRemaining: Math.max(0, prev.account.invitationsRemaining - 1) }
+          : prev.account,
         invitations: [{ code: result.code, createdAt: new Date().toISOString() }, ...(prev.invitations ?? [])],
       }));
     } finally {

@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
+import { markRecoveryInProgress } from '@dxos/plugin-observability';
 
 import { ClientCapabilities } from '../types';
 import { RedeemToken } from './definitions';
@@ -16,6 +17,9 @@ const handler: Operation.WithHandler<typeof RedeemToken> = RedeemToken.pipe(
     Effect.fnUntraced(function* (data) {
       const client = yield* Capability.get(ClientCapabilities.Client);
       invariant(client.services.services.IdentityService, 'IdentityService not available');
+      // Suppress the privacy notice for this session: the user is recovering
+      // an existing identity, not creating a new one.
+      markRecoveryInProgress();
       yield* Effect.promise(() =>
         client.services.services.IdentityService!.recoverIdentity(
           { token: data.token },

@@ -12,6 +12,8 @@ import { meta } from '#meta';
 import { ObservabilityOperation } from '#operations';
 import { ClientCapability, ObservabilityCapabilities } from '#types';
 
+import { consumeRecoveryFlag } from '../recovery-flag';
+
 export type ClientReadyOptions = {
   namespace: string;
   observability: Observability.Observability;
@@ -30,6 +32,13 @@ export default Capability.makeModule(
       const notify =
         environment && environment !== 'ci' && !environment.endsWith('.local') && !environment.endsWith('.lan');
       const state = registry.get(stateAtom);
+      // Privacy notice is for users *creating* a new identity. If the
+      // current session arrived via a recovery flow (RedeemToken,
+      // RedeemPasskey, ...), suppress it -- recovering isn't a new
+      // consent moment.
+      if (consumeRecoveryFlag()) {
+        return;
+      }
       if (!state.notified && notify) {
         await invokePromise(LayoutOperation.AddToast, {
           id: `${meta.id}.notice`,

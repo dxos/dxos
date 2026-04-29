@@ -2,44 +2,65 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type PublicKey } from '@dxos/client';
-import { type Credential, type Identity, type Presentation } from '@dxos/client/halo';
-
-import { codec } from './codec';
-
-// TODO(burdon): Factor out to @dxos/hub-protocol.
-
-export const matchServiceCredential =
-  (capabilities: string[] = []) =>
-  (credential: Credential) => {
-    if (credential.subject.assertion['@type'] !== 'dxos.halo.credentials.ServiceAccess') {
-      return false;
-    }
-
-    const { capabilities: credentialCapabilities } = credential.subject.assertion;
-    return capabilities.every((capability) => credentialCapabilities.includes(capability));
-  };
-
-export type SignupResult = {
-  login: boolean;
-  token?: string;
-  type?: string;
-};
-
 /**
  * POST `/account/invitation-code/redeem` on hub-service. Unauthenticated.
- * Used directly from the welcome form (for test emails) and from the orchestrator.
- *
- * The server interprets request shape per email kind:
- * - Test email: code is ignored. Returns `{ loginToken }` (existing account, recover),
- *   `{ needsIdentity: true }` (new, no identityKey provided), or
- *   `{ accountId, emailVerificationSent }` (new, identityKey provided -> account created).
- * - Non-test email: code + identityKey required.
+ * Two-step signup: the redeemer supplies the invitation code + their identity
+ * key + the email they want to register with (codes are anonymous at issue
+ * time). Optional fields are accepted because the server overloads this
+ * endpoint with internal handling for some addresses; standard callers should
+ * always pass all three.
  */
 export type RedeemResult =
   | { accountId: string; emailVerificationSent: boolean }
   | { loginToken: string }
   | { needsIdentity: true };
+
+/**
+ * POST `/account/invitation-code/validate` on hub-service. Returns true if the code
+ * exists, isn't revoked, and hasn't been redeemed yet.
+ */
+export const validateInvitationCode = async ({
+  hubUrl,
+  code,
+}: {
+  hubUrl: string;
+  code: string;
+}): Promise<boolean> => {
+  try {
+    const response = await fetch(new URL('/account/invitation-code/validate', hubUrl), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: code.replace(/-/g, '').toUpperCase() }),
+    });
+    const envelope = (await response.json()) as { success: boolean; data?: { valid: boolean } };
+    return !!envelope.success && !!envelope.data?.valid;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * POST `/account/request-access` on hub-service. Adds an email to the waitlist
+ * and (if configured server-side) pings Discord + Kit. Always reports success
+ * back to the client to avoid leaking whether the email was already on the list.
+ */
+export const joinWaitlist = async ({
+  hubUrl,
+  email,
+  identityKey,
+  message,
+}: {
+  hubUrl: string;
+  email: string;
+  identityKey?: string;
+  message?: string;
+}): Promise<void> => {
+  await fetch(new URL('/account/request-access', hubUrl), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, identityKey, message }),
+  });
+};
 
 export const redeemAccountInvitation = async ({
   hubUrl,
@@ -72,130 +93,34 @@ export const redeemAccountInvitation = async ({
 };
 
 /**
- * Magic link sign-up.
+ * POST `/account/login` on hub-service. Existing-account email recovery only;
+ * never creates new accounts (other than the test-email carve-out). Server
+ * inlines `token` for test emails; regular emails are delivered out-of-band
+ * and the response is `{}`. The response shape is identical for unknown
+ * emails (enumeration-safe).
+ *
+ * Test-email carve-out: when a test address has no Account yet, the server
+ * returns `{ needsIdentity: true }`. The caller creates a local identity and
+ * retries with `identityKey`; the retry creates a fresh test Account and
+ * returns `{ admitted: true }` (no token, since there's nothing to recover).
  */
-export const signup = async ({
+export const login = async ({
   hubUrl,
   email,
-  redirectUrl,
-  identity,
+  identityKey,
 }: {
   hubUrl: string;
   email: string;
-  redirectUrl?: string;
-  identity: Identity | null;
-}): Promise<SignupResult> => {
-  const response = await fetch(new URL('/account/signup', hubUrl), {
+  identityKey?: string;
+}): Promise<{ token?: string; needsIdentity?: boolean; admitted?: boolean }> => {
+  const response = await fetch(new URL('/account/login', hubUrl), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      email,
-      identityDid: identity ? `did:key:${identity.identityKey.toHex()}` : undefined,
-      redirectUrl,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error('signup failed', { cause: response.statusText });
-  }
-
-  const { token, type } = await response.json();
-  if (token) {
-    // Debugging link.
-    const activationLink = new URL('/', window.location.href);
-    activationLink.searchParams.set('token', token);
-    activationLink.searchParams.set('type', type);
-    // eslint-disable-next-line
-    console.log(activationLink.href);
-  }
-
-  return { login: type === 'login', token, type };
-};
-
-/**
- * Activate account.
- * @param params.hubUrl
- * @param params.identity
- * @param params.token
- */
-export const activateAccount = async ({
-  hubUrl,
-  identity,
-  token,
-  referrer,
-}: {
-  hubUrl: string;
-  identity: Identity;
-  token?: string;
-  referrer?: PublicKey;
-}): Promise<Credential> => {
-  const response = await fetch(new URL('/account/activate', hubUrl), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      identityDid: `did:key:${identity.identityKey.toHex()}`,
-      referrerDid: referrer ? `did:key:${referrer.toHex()}` : undefined,
-      token,
-    }),
+    body: JSON.stringify({ email, identityKey }),
   });
   if (!response.ok) {
-    throw new Error('activation failed', { cause: response.statusText });
+    throw new Error('login failed', { cause: response.statusText });
   }
-
-  // Decode and save credential in HALO.
-  const { credential } = await response.json();
-  return credential && codec.decode<Credential>(credential);
-};
-
-type ProfileResponse = {
-  identityDid: string;
-  email?: string;
-  capabilities: string[];
-};
-
-/**
- * Get profile.
- *
- * @param params.hubUrl
- * @param params.credential
- */
-export const getProfile = async ({
-  hubUrl,
-  presentation,
-}: {
-  hubUrl: string;
-  presentation: Presentation;
-}): Promise<ProfileResponse> => {
-  const response = await fetch(new URL('/account/profile', hubUrl), {
-    headers: { Authorization: `Bearer ${codec.encode(presentation)}` },
-  });
-  if (!response.ok) {
-    throw new Error('profile fetch failed', { cause: response.statusText });
-  }
-
   return response.json();
 };
 
-/**
- * Upgrade  credential.
- *
- * @param params.hubUrl
- * @param params.credential
- */
-export const upgradeCredential = async ({
-  hubUrl,
-  presentation,
-}: {
-  hubUrl: string;
-  presentation: Presentation;
-}): Promise<Credential> => {
-  const response = await fetch(new URL('/account/upgrade', hubUrl), {
-    headers: { Authorization: `Bearer ${codec.encode(presentation)}` },
-  });
-  if (!response.ok) {
-    throw new Error('upgrade failed', { cause: response.statusText });
-  }
-
-  const { credential: upgradedCredential } = await response.json();
-  return upgradedCredential && codec.decode<Credential>(upgradedCredential);
-};

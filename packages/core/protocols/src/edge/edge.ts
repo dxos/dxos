@@ -629,13 +629,47 @@ export const ValidateInvitationCodeRequestSchema = Schema.Struct({
 export type ValidateInvitationCodeRequest = Schema.Schema.Type<typeof ValidateInvitationCodeRequestSchema>;
 export type ValidateInvitationCodeResponse = { valid: boolean };
 
-// Both `code` and `identityKey` are optional at the schema level because the
-// server interprets them differently per email kind:
-// - Non-test email: `code` and `identityKey` required; server validates code and binds Account.
-// - Test email (matches TEST_EMAIL_PATTERN): `code` is ignored.
-//   - If email already maps to an Account → response is `{ loginToken }` (recovery; no identityKey needed).
-//   - If new + identityKey provided → server creates a test Account (invitationsRemaining: 0).
-//   - If new + identityKey omitted → response is `{ needsIdentity: true }` so the client creates an identity and retries.
+/**
+ * Body of `POST /account/login`. Existing-account email recovery only --
+ * unlike `/account/signup`, this never creates new identities or waitlist rows.
+ *
+ * `identityKey` is optional and only meaningful for the test-email carve-out
+ * (see {@link LoginResponseSchema}): the server uses it to bind a fresh test
+ * Account after a `needsIdentity: true` probe.
+ */
+export const LoginRequestSchema = Schema.Struct({
+  email: Schema.String,
+  identityKey: Schema.optional(Schema.String),
+});
+export type LoginRequest = Schema.Schema.Type<typeof LoginRequestSchema>;
+
+/**
+ * Response from `POST /account/login`. The shape is identical regardless of
+ * whether the email is registered, so the endpoint is safe against
+ * enumeration. The server inlines `token` for test emails; regular emails are
+ * delivered out-of-band and the response is `{}`.
+ *
+ * Test-email carve-out: when a test address has no Account yet, the server
+ * returns `{ needsIdentity: true }` on the probe. The caller creates a local
+ * identity and retries with `identityKey`; the retry creates a fresh test
+ * Account and returns `{ admitted: true }` (no token, since the caller
+ * already has the identity locally and there's nothing to recover).
+ */
+export const LoginResponseSchema = Schema.Struct({
+  token: Schema.optional(Schema.String),
+  needsIdentity: Schema.optional(Schema.Boolean),
+  admitted: Schema.optional(Schema.Boolean),
+});
+export type LoginResponse = Schema.Schema.Type<typeof LoginResponseSchema>;
+
+// Two-step signup: invitation code + identity + email. The code is anonymous
+// at issue time so it can be freely shared; the redeemer registers with
+// whatever email they want.
+//
+// `code` and `identityKey` are optional at the schema level because the edge
+// worker overloads this endpoint with internal handling for special-case
+// emails (e.g. always-allow logins for development). External clients should
+// always send all three for the regular redemption path.
 export const RedeemInvitationCodeRequestSchema = Schema.Struct({
   code: Schema.optional(InvitationCodeSchema),
   identityKey: Schema.optional(Schema.String),
