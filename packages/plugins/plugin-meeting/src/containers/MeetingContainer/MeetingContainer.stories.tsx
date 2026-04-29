@@ -46,7 +46,6 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'plugins/plugin-meeting/containers/MeetingContainer',
-  component: MeetingContainer,
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
