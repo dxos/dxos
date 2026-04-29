@@ -58,10 +58,9 @@ declare global {
     /**
      * Native-DOM boot loader driver injected by `bootLoaderPlugin`
      * (`@dxos/app-framework/vite-plugin`). `status()` updates the visible
-     * status line; `progress(fraction)` switches the bar from the
-     * indeterminate slide to a determinate fill at `fraction` ∈ [0, 1] (or
-     * pass a negative value / omit to revert to indeterminate); `dismiss()`
-     * removes the loader after React mounts.
+     * status line; `progress(fraction)` updates the determinate ring at
+     * `fraction` ∈ [0, 1] (invalid / negative values clamp to 0, leaving the
+     * ring empty); `dismiss()` removes the loader after React mounts.
      */
     __bootLoader?: {
       status: (text: string) => void;
@@ -361,8 +360,7 @@ const main = async () => {
     getPlugins(conf, {
       onPluginLoaded: (loaded, total) => {
         bootStatus(`Loading plugins (${loaded}/${total})`);
-        // Drive the determinate progress bar — flips the bar out of its
-        // indeterminate slide animation and grows it as chunks land.
+        // Grow the determinate progress arc as plugin chunks land.
         window.__bootLoader?.progress(loaded / total);
       },
     }),

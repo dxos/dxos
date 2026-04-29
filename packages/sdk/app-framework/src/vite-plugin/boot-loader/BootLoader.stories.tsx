@@ -28,29 +28,22 @@ type BootLoaderProps = {
    */
   markSvg?: string;
   /**
-   * Optional progress fraction in [0, 1]. When set, switches the bar from
-   * the default indeterminate slide animation to a determinate fill.
+   * Determinate progress fraction in [0, 1]. The ring is always determinate —
+   * defaults to 0 (empty ring) until the host calls `__bootLoader.progress(...)`.
    */
   progress?: number;
 };
 
-const BootLoader = ({ status = 'Loading…', markSvg, progress }: BootLoaderProps) => {
-  const determinate = typeof progress === 'number' && progress >= 0;
-  const clamped = determinate ? Math.max(0, Math.min(1, progress!)) : 0;
+const BootLoader = ({ status = 'Loading…', markSvg, progress = 0 }: BootLoaderProps) => {
+  const clamped = Math.max(0, Math.min(1, progress));
   return (
     <>
       <style>{css}</style>
       <div id='boot-loader' role='status' aria-live='polite' aria-label='Initializing'>
-        {markSvg ? <div id='boot-loader-mark' dangerouslySetInnerHTML={{ __html: markSvg }} /> : null}
-        <div
-          id='boot-loader-bar'
-          {...(determinate
-            ? {
-                'data-determinate': '',
-                style: { ['--boot-loader-bar-progress' as string]: String(clamped * 100) },
-              }
-            : {})}
-        />
+        <div id='boot-loader-disc'>
+          <div id='boot-loader-bar' style={{ ['--boot-loader-bar-progress' as string]: String(clamped * 100) }} />
+          {markSvg ? <div id='boot-loader-mark' dangerouslySetInnerHTML={{ __html: markSvg }} /> : null}
+        </div>
         <div id='boot-loader-status'>{status}</div>
       </div>
     </>
@@ -154,8 +147,8 @@ export const WithMark: Story = {
 
 /**
  * Cycles through the strings the host typically passes to
- * `window.__bootLoader.status(...)`. Useful for verifying that the progress
- * bar's vertical position is stable across status changes — `#boot-loader-status`
+ * `window.__bootLoader.status(...)`. Useful for verifying that the ring's
+ * vertical position is stable across status changes — `#boot-loader-status`
  * has a fixed height so the line-box can't reflow the flex column.
  */
 export const Cycling: Story = {
@@ -163,9 +156,9 @@ export const Cycling: Story = {
 };
 
 /**
- * Determinate progress bar driven by `__bootLoader.progress(fraction)`.
- * Mirrors composer-app's behaviour during the `getPlugins` phase — the bar
- * fills 0 → 100% as plugin chunks resolve.
+ * Determinate progress driven by `__bootLoader.progress(fraction)`. Mirrors
+ * composer-app's behaviour during the `getPlugins` phase — the arc grows
+ * 0 → 100% around the brand mark as plugin chunks resolve.
  */
 export const Determinate: Story = {
   render: () => <DeterminateStory />,

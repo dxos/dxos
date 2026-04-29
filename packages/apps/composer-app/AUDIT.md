@@ -168,7 +168,7 @@ id="boot-loader">` _inside_ `#root`. Crucially:
   `Loading plugins…`).
 - When `createRoot(document.getElementById('root')).render(<Main />)` runs,
   React replaces the boot-loader DOM with the Placeholder. The transition
-  is unbroken: CSS-animated bar → React-rendered Placeholder.
+  is unbroken: CSS-animated determinate ring → React-rendered Placeholder.
 
 This addresses the symptom for the **pre-React** window, which is the longest
 blank screen on a cold load (every other phase happens _after_ React is
@@ -410,7 +410,7 @@ optimization). Instrumentation gaps obscure first-time-user vs returning-user.
 
 | File                                         | Why                                                                                                                                   |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.html`                                 | Native-DOM boot loader (CSS-animated, paints on first frame, status driver on `window.__bootLoader`).                                 |
+| `index.html`                                 | Native-DOM boot loader (brand mark in a determinate ring, paints on first frame, status + progress driver on `window.__bootLoader`).  |
 | `src/main.tsx`                               | Calls `bootStatus(...)` at each profiler phase; wires the boot driver.                                                                |
 | `src/profiler.ts`                            | Adds `Profiler.snapshot()` returning `ProfilerSnapshot` JSON; persists to `localStorage` on `dump()`.                                 |
 | `src/components/Placeholder/Placeholder.tsx` | Renders the determinate progress indicator (un-comments the disabled block, threads `progress.activated`/`progress.total`).           |

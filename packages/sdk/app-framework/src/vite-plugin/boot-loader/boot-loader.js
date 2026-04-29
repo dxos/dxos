@@ -22,28 +22,18 @@ window.__bootLoader = {
     }
   },
   /**
-   * Switch the progress bar from the default indeterminate slide animation
-   * to a determinate fill at `fraction` ∈ [0, 1]. Calling this once flips the
-   * `[data-determinate]` flag; subsequent calls just update the percentage.
-   * Pass a value < 0 (or omit) to revert to indeterminate.
+   * Update the determinate progress arc to `fraction` ∈ [0, 1]. The ring is
+   * always determinate — it sits empty at 0% until the first call. Invalid /
+   * negative / non-finite values clamp to 0 (i.e. the empty ring) rather than
+   * letting `NaN`/`Infinity` slip into `--boot-loader-bar-progress`, which
+   * CSS would treat as invalid and silently reset to the 0% var() default.
    */
   progress: function (fraction) {
     var element = document.getElementById('boot-loader-bar');
     if (!element) {
       return;
     }
-    // `Number.isFinite` rejects NaN and Infinity; without this guard
-    // `NaN < 0` is false, so NaN slips past and ends up in
-    // `--boot-loader-bar-progress`, which CSS treats as invalid and silently
-    // resets the bar to the var() default (0%) — surprising visual snap if a
-    // caller ever passes `0/0` or a parsed-but-invalid value.
-    if (typeof fraction !== 'number' || !isFinite(fraction) || fraction < 0) {
-      element.removeAttribute('data-determinate');
-      element.style.removeProperty('--boot-loader-bar-progress');
-      return;
-    }
-    var clamped = Math.max(0, Math.min(1, fraction));
-    element.setAttribute('data-determinate', '');
+    var clamped = typeof fraction !== 'number' || !isFinite(fraction) || fraction < 0 ? 0 : Math.min(1, fraction);
     element.style.setProperty('--boot-loader-bar-progress', String(clamped * 100));
   },
   dismiss: function () {

@@ -35,13 +35,15 @@ export type BootLoaderOptions = {
  *
  * The loader paints on the very first frame, before any JS bundle is fetched —
  * so the user sees something immediately on cold load instead of staring at a
- * blank document while the compiled module graph is parsed. The CSS-only
- * keyframe animation runs on the browser's compositor thread, so it keeps
- * moving even while the JS main thread is fully busy.
+ * blank document while the compiled module graph is parsed. The brand mark
+ * sits centred inside a thin determinate progress ring; both layers are
+ * composited so the ring's fill stays visually smooth even while the JS main
+ * thread is busy.
  *
  * The host app drives the loader from `main.tsx`:
  *
  *   - `window.__bootLoader.status(text)` updates the status line per phase.
+ *   - `window.__bootLoader.progress(fraction)` grows the determinate ring (0–1).
  *   - `window.__bootLoader.dismiss()` removes the loader once React has mounted.
  *
  * Inject order:
@@ -64,8 +66,9 @@ export const bootLoaderPlugin = ({ status = 'Loading…', markSvg }: BootLoaderO
     transformIndexHtml() {
       // The mark slot uses `children: <raw-svg>` (vite emits string children as
       // raw HTML, not text-escaped) so the host can pass an SVG file's contents
-      // straight through. Falls back to a single-line empty `<div>` so the
-      // skeleton DOM stays predictable for the smoke-test selector.
+      // straight through. The mark and ring are siblings inside `#boot-loader-disc`
+      // so CSS grid-stacking can centre the mark inside the ring without the ring's
+      // radial-gradient mask clipping the SVG.
       const markChildren = markSvg ? [{ tag: 'div', attrs: { id: 'boot-loader-mark' }, children: markSvg }] : [];
 
       return [
@@ -84,8 +87,11 @@ export const bootLoaderPlugin = ({ status = 'Loading…', markSvg }: BootLoaderO
             'aria-label': 'Initializing',
           },
           children: [
-            ...markChildren,
-            { tag: 'div', attrs: { id: 'boot-loader-bar' }, children: '' },
+            {
+              tag: 'div',
+              attrs: { id: 'boot-loader-disc' },
+              children: [{ tag: 'div', attrs: { id: 'boot-loader-bar' }, children: '' }, ...markChildren],
+            },
             { tag: 'div', attrs: { id: 'boot-loader-status' }, children: status },
           ],
         },

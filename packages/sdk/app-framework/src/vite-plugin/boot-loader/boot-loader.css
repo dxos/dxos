@@ -41,6 +41,24 @@
   }
 }
 
+/*
+ * Stack the ring and the brand mark in the same square so the mark sits
+ * centered inside the circle. Grid stacking keeps the mark outside the ring's
+ * mask (the mask would otherwise clip the SVG to the 1px-thick arc shape).
+ */
+#boot-loader-disc {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 192px;
+  height: 192px;
+}
+
+#boot-loader-disc > * {
+  grid-column: 1;
+  grid-row: 1;
+}
+
 #boot-loader-mark {
   width: 128px;
   height: 128px;
@@ -59,47 +77,40 @@
    */
 }
 
+/*
+ * Circular determinate progress — a 1px-thick ring carved out of a filled
+ * disc by a radial-gradient mask. The mask applies to the element and its
+ * descendants so the `::before` progress arc is clipped to the ring shape
+ * too. There is no indeterminate state: the ring sits empty (0%) until the
+ * host calls `__bootLoader.progress(fraction)`, then the arc grows in place.
+ * The fill repaints on the compositor thread so progress remains visually
+ * smooth even while the JS main thread is busy parsing modules.
+ */
 #boot-loader-bar {
   position: relative;
-  width: min(240px, 50vw);
-  height: 2px;
-  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
   background: rgba(127, 127, 127, 0.18);
-  border-radius: 1px;
+  mask: radial-gradient(circle, transparent calc(50% - 1px), #000 calc(50% - 1px));
+  -webkit-mask: radial-gradient(circle, transparent calc(50% - 1px), #000 calc(50% - 1px));
 }
 
+/*
+ * The host writes 0–100 into `--boot-loader-bar-progress` via
+ * `__bootLoader.progress(fraction)`. The `transition: background` smooths
+ * the transitions between counter ticks so the arc grows continuously
+ * rather than snapping; starting orientation (12 o'clock) is the default
+ * for `conic-gradient`.
+ */
 #boot-loader-bar::before {
   content: '';
   position: absolute;
   inset: 0;
-  width: 40%;
-  background: currentcolor;
-  opacity: 0.7;
-  border-radius: 1px;
-  animation: boot-loader-bar 1.4s ease-in-out infinite;
-}
-
-@keyframes boot-loader-bar {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(250%);
-  }
-}
-
-/*
- * Determinate state — host called `window.__bootLoader.progress(fraction)`.
- * Cancel the slide animation and pin the fill to whatever percentage the
- * driver wrote into `--boot-loader-bar-progress` (0–100). The transition on
- * `width` smooths the transitions between counter ticks so the fill grows
- * continuously rather than snapping.
- */
-#boot-loader-bar[data-determinate]::before {
-  width: calc(var(--boot-loader-bar-progress, 0) * 1%);
-  animation: none;
-  transform: none;
-  transition: width 240ms ease-out;
+  border-radius: 50%;
+  background: conic-gradient(currentcolor calc(var(--boot-loader-bar-progress, 0) * 1%), transparent 0);
+  opacity: 0.9;
+  transition: background 240ms ease-out;
 }
 
 #boot-loader-status {
