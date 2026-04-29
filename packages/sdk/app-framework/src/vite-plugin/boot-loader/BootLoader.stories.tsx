@@ -132,7 +132,10 @@ const DefaultStory = () => {
 
   return (
     <>
-      <Toolbar.Root>
+      {/* `relative` opens a positioned context so `z-20` actually applies — */}
+      {/* the boot loader is `position: fixed; z-index: 10` so anything above */}
+      {/* must (a) be positioned and (b) outrank 10. */}
+      <Toolbar.Root classNames='relative z-20'>
         <Toolbar.IconButton
           icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
           label={running ? 'Pause' : progress >= 1 ? 'Restart' : 'Start'}
