@@ -246,6 +246,23 @@ const useBootLoaderSim = ({
   return { progress, stage, status, running, toggle };
 };
 
+/**
+ * Story-only toolbar exposing the `useBootLoaderSim` toggle. `relative`
+ * opens a positioned context so `z-20` actually applies — the boot loader
+ * is `position: fixed; z-index: 10`, so anything above must be both
+ * positioned and outrank 10.
+ */
+const SimToolbar = ({ running, progress, toggle }: Pick<BootLoaderSimState, 'running' | 'progress' | 'toggle'>) => (
+  <Toolbar.Root classNames='relative z-20'>
+    <Toolbar.IconButton
+      icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
+      label={running ? 'Pause' : progress >= 1 ? 'Restart' : 'Start'}
+      iconOnly
+      onClick={toggle}
+    />
+  </Toolbar.Root>
+);
+
 const DefaultStory = () => {
   // Start paused so the disc auto-creeps while the toolbar reads "Start".
   // Pressing the button kicks off the random-walk from whatever value the
@@ -254,17 +271,7 @@ const DefaultStory = () => {
 
   return (
     <>
-      {/* `relative` opens a positioned context so `z-20` actually applies — */}
-      {/* the boot loader is `position: fixed; z-index: 10` so anything above */}
-      {/* must (a) be positioned and (b) outrank 10. */}
-      <Toolbar.Root classNames='relative z-20'>
-        <Toolbar.IconButton
-          icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
-          label={running ? 'Pause' : progress >= 1 ? 'Restart' : 'Start'}
-          iconOnly
-          onClick={toggle}
-        />
-      </Toolbar.Root>
+      <SimToolbar running={running} progress={progress} toggle={toggle} />
       <BootLoader status={status} markSvg={PLACEHOLDER_MARK} progress={progress} />
     </>
   );
@@ -311,9 +318,14 @@ export const PlaceholderHandoff: Story = {
  */
 export const Handoff: Story = {
   render: () => {
-    const { progress, stage, status } = useBootLoaderSim({ autoStart: 2_000, withHandoff: true, loop: true });
+    const { progress, stage, status, running, toggle } = useBootLoaderSim({
+      autoStart: 2_000,
+      withHandoff: true,
+      loop: true,
+    });
     return (
       <>
+        <SimToolbar running={running} progress={progress} toggle={toggle} />
         {/* Placeholder underneath — `stage = 0` keeps the logo at opacity 0 */}
         {/* until the BootLoader unmounts, then it fades in. */}
         <Placeholder stage={stage} logo={(logoProps) => <Composer {...logoProps} />} />
