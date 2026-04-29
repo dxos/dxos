@@ -8,7 +8,7 @@ import { describe, it } from 'vitest';
 import { Filter, Tag } from '@dxos/echo';
 
 import { QueryDSL } from './gen';
-import { type BuildResult, QueryBuilder } from './query-builder';
+import { type BuildResult, QueryBuilder, normalizeInput } from './query-builder';
 
 // TODO(burdon): Ref/Relation traversal.
 
@@ -406,6 +406,90 @@ describe('query', () => {
       //     .targetOf(Relation.of('org.dxos.relation.hasSubject')) // TODO(burdon): Invert?
       //     .source(),
       // },
+    ];
+
+    tests.forEach(({ input, expected }) => {
+      const result = queryBuilder.build(input);
+      expect(result, JSON.stringify({ input, result, expected }, null, 2)).toEqual(expected);
+    });
+  });
+
+  it('normalizeInput', ({ expect }) => {
+    type Test = { input: string; expected: string };
+    const tests: Test[] = [
+      { input: 'foo', expected: '"foo"' },
+      { input: 'foo bar', expected: '"foo" "bar"' },
+      { input: 'foo  bar', expected: '"foo"  "bar"' },
+      { input: '"already" bare', expected: '"already" "bare"' },
+      { input: 'from:rich@dxos.org', expected: 'from:"rich@dxos.org"' },
+      { input: 'from:rich@dxos.org urgent', expected: 'from:"rich@dxos.org" "urgent"' },
+      { input: 'name:DXOS', expected: 'name:"DXOS"' },
+      { input: 'count:42', expected: 'count:42' },
+      { input: 'active:true', expected: 'active:true' },
+      { input: 'value:null', expected: 'value:null' },
+      { input: 'name:"DXOS"', expected: 'name:"DXOS"' },
+      { input: 'type:org.dxos.type.person', expected: 'type:org.dxos.type.person' },
+      { input: '#tag', expected: '#tag' },
+      { input: '#tag foo', expected: '#tag "foo"' },
+      { input: 'foo AND bar', expected: '"foo" AND "bar"' },
+      { input: 'foo OR bar', expected: '"foo" OR "bar"' },
+      { input: 'NOT foo', expected: 'NOT "foo"' },
+      { input: '!foo', expected: '!"foo"' },
+      { input: '(foo bar)', expected: '("foo" "bar")' },
+      { input: 'x = ( foo )', expected: 'x = ( "foo" )' },
+      { input: '{ name: "DXOS" }', expected: '{ name: "DXOS" }' },
+    ];
+
+    for (const { input, expected } of tests) {
+      expect(normalizeInput(input), input).toEqual(expected);
+    }
+  });
+
+  it('build with property and text fragments', ({ expect }) => {
+    const queryBuilder = new QueryBuilder({
+      tag_1: Tag.make({ label: 'foo' }),
+    });
+
+    type Test = { input: string; expected: BuildResult };
+    const tests: Test[] = [
+      // Property filter from `key:value` text input.
+      {
+        input: 'from:rich@dxos.org',
+        expected: { filter: Filter.props({ from: 'rich@dxos.org' }) },
+      },
+      {
+        input: 'name:DXOS',
+        expected: { filter: Filter.props({ name: 'DXOS' }) },
+      },
+      // Bare text fragment becomes text search.
+      {
+        input: 'urgent',
+        expected: { filter: Filter.text('urgent') },
+      },
+      // Multiple bare fragments are AND-joined.
+      {
+        input: 'urgent review',
+        expected: { filter: Filter.and(Filter.text('urgent'), Filter.text('review')) },
+      },
+      // Mixed property + text fragment.
+      {
+        input: 'from:rich@dxos.org urgent',
+        expected: {
+          filter: Filter.and(Filter.props({ from: 'rich@dxos.org' }), Filter.text('urgent')),
+        },
+      },
+      // Tag + text fragment.
+      {
+        input: '#foo bar',
+        expected: { filter: Filter.and(Filter.tag('tag_1'), Filter.text('bar')) },
+      },
+      // Three fragments AND-joined.
+      {
+        input: 'a b c',
+        expected: {
+          filter: Filter.and(Filter.text('a'), Filter.text('b'), Filter.text('c')),
+        },
+      },
     ];
 
     tests.forEach(({ input, expected }) => {
