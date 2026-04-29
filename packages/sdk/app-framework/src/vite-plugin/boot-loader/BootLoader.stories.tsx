@@ -177,3 +177,65 @@ export const PlaceholderHandoff: Story = {
   name: 'Placeholder',
   render: () => <Placeholder stage={1} logo={(logoProps) => <Composer {...logoProps} />} />,
 };
+
+/**
+ * End-to-end handoff sim: the `BootLoader` ticks 0 → 100% then unmounts and
+ * the `Placeholder` underneath fades its mark in (`stage 0 → 1`) and back
+ * out (`stage 1 → 2`), mirroring the production sequence where the native
+ * loader paints first, the React placeholder mounts beneath, and the
+ * placeholder's `useLayoutEffect` dismisses the loader the moment the mark
+ * becomes visible. The story restarts on a loop so the transition can be
+ * eyeballed repeatedly.
+ */
+const HandoffStory = () => {
+  const [progress, setProgress] = useState(0);
+  const [stage, setStage] = useState(0);
+  const [tick, setTick] = useState(0);
+
+  // Phase 1 — animate progress 0 → 1 every `tick` cycle.
+  useEffect(() => {
+    let loaded = 0;
+    const handle = setInterval(() => {
+      loaded += Math.abs(Math.random());
+      setProgress(Math.min(1, loaded / STORY_PLUGIN_COUNT));
+      if (loaded >= STORY_PLUGIN_COUNT) {
+        clearInterval(handle);
+      }
+    }, STORY_TICK_MS);
+    return () => clearInterval(handle);
+  }, [tick]);
+
+  // Phase 2 — at 100%, walk the placeholder stage and then loop back.
+  useEffect(() => {
+    if (progress < 1) {
+      return;
+    }
+    const handles: ReturnType<typeof setTimeout>[] = [];
+    handles.push(setTimeout(() => setStage(1), 200)); // FadeIn — placeholder mark visible.
+    handles.push(setTimeout(() => setStage(2), 2_000)); // FadeOut — mark shrinks.
+    handles.push(
+      setTimeout(() => {
+        setStage(0);
+        setProgress(0);
+        setTick((current) => current + 1);
+      }, 3_500),
+    );
+    return () => handles.forEach(clearTimeout);
+  }, [progress]);
+
+  const loaded = Math.round(progress * STORY_PLUGIN_COUNT);
+  const status = progress >= 1 ? 'Starting Composer…' : `Loading plugins (${loaded}/${STORY_PLUGIN_COUNT})`;
+
+  return (
+    <>
+      {/* Placeholder underneath — `stage = 0` keeps the logo at opacity 0 */}
+      {/* until the BootLoader unmounts, then it fades in. */}
+      <Placeholder stage={stage} logo={(logoProps) => <Composer {...logoProps} />} />
+      {stage < 1 && <BootLoader status={status} markSvg={PLACEHOLDER_MARK} progress={progress} />}
+    </>
+  );
+};
+
+export const Handoff: Story = {
+  render: () => <HandoffStory />,
+};
