@@ -317,16 +317,13 @@ export const PlaceholderHandoff: Story = {
  * out (`stage 1 → 2`), mirroring the production sequence where the native
  * loader paints first, the React placeholder mounts beneath, and the
  * placeholder's `useLayoutEffect` dismisses the loader the moment the mark
- * becomes visible. The story restarts on a loop so the transition can be
- * eyeballed repeatedly.
+ * becomes visible. The runtime state machine is fully manual: the story
+ * starts in state 0 and the toolbar steps it through `Tick → Start → Reset`,
+ * so the handoff can be eyeballed at the user's pace.
  */
 export const Handoff: Story = {
   render: () => {
-    const { state, progress, stage, status, advance } = useBootLoaderSim({
-      autoAdvanceMs: 1_500,
-      withHandoff: true,
-      loop: true,
-    });
+    const { state, progress, stage, status, advance } = useBootLoaderSim({ withHandoff: true });
     return (
       <>
         <SimToolbar state={state} progress={progress} advance={advance} />
