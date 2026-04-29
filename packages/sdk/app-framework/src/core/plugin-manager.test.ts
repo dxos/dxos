@@ -1236,9 +1236,7 @@ describe('PluginManager', () => {
 
         const RealFactoryWithMeta = Object.assign(RealFactory, { meta: lazyMeta });
 
-        const LazyTest = Plugin.lazy<Opts>(lazyMeta, () =>
-          Promise.resolve({ default: RealFactoryWithMeta }),
-        );
+        const LazyTest = Plugin.lazy<Opts>(lazyMeta, () => Promise.resolve({ default: RealFactoryWithMeta }));
         const lazyStub = LazyTest({ greeting: 'hola' });
         plugins = [lazyStub];
 
