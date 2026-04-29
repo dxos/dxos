@@ -26,7 +26,7 @@ runs:
       if: github.ref_name != 'labs'
       id: release-channel
 
-    - uses: FabianLars-crabnebula/cloud-release@e0bb6ccebcb78f71883ebde2320f76aae6b9eb92
+    - uses: crabnebula-dev/cloud-release@e0bb6ccebcb78f71883ebde2320f76aae6b9eb92
       with:
         # TODO(wittjosiah): Switch to production.
         command: release ${{ inputs.command }} ${{ inputs.application }} --framework ${{ inputs.framework }}${{ github.ref_name != 'labs' && format(' --channel {0}', steps.release-channel.outputs.channel) || '' }}
