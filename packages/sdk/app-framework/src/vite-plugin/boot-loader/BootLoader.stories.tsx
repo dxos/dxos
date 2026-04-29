@@ -102,13 +102,15 @@ const CREEP_TICK_MS = 100;
 type BootLoaderSimOptions = {
   progress?: number;
   /**
-   * Run the inline-driver auto-creep for this many ms before the main random-
-   * walk takes over. Mirrors the `boot-loader.js` Phase 0 — the disc visibly
-   * moves before any host-driven `progress()` call lands. The random-walk
-   * resumes from whatever value the creep reached, smoothed by the disc's
-   * `transition: --boot-loader-bar-progress`.
+   * Whether the random-walk starts running on mount.
+   *  - `true` (default): start running immediately, skip the creep.
+   *  - `false`: start paused — the disc auto-creeps toward
+   *    `CREEP_ASYMPTOTE` until `toggle()` is called.
+   *  - `<number>`: start paused, then auto-flip to running after this many
+   *    ms. Mirrors a host whose first `progress()` call lands `<number>`
+   *    ms after the page paints.
    */
-  creepMs?: number;
+  autoStart?: boolean | number;
   /**
    * Walk the placeholder through `stage 0 → 1 → 2` after progress hits 1
    * (the production handoff sequence). Without this, the sim stops at 100%.
@@ -139,45 +141,56 @@ type BootLoaderSimState = {
  */
 const useBootLoaderSim = ({
   progress: progressProp = 0,
-  creepMs = 0,
+  autoStart = true,
   withHandoff = false,
   loop = false,
 }: BootLoaderSimOptions = {}): BootLoaderSimState => {
   const [progress, setProgress] = useState(progressProp);
   const [stage, setStage] = useState(0);
-  const [running, setRunning] = useState(true);
+  // The creep runs whenever `running === false`, so a paused initial state
+  // gives the disc the auto-creep look until `toggle()` (or `autoStart` as a
+  // number) flips it on.
+  const [running, setRunning] = useState(autoStart === true);
   const [tick, setTick] = useState(0);
-  // While `creeping`, Phase 1 stays paused and the auto-creep effect drives
-  // the var. Reset to `creepMs > 0` whenever the sim restarts.
-  const [creeping, setCreeping] = useState(creepMs > 0);
 
-  // Phase 0 — auto-creep (Pre-host-progress). Asymptotic ease toward
-  // `CREEP_ASYMPTOTE` for `creepMs` ms, then yield to Phase 1.
+  // Optional auto-flip from paused → running after a delay. Re-arms on every
+  // `tick` bump so the handoff loop sees a fresh creep window per cycle.
   useEffect(() => {
-    if (!creeping || !running) {
+    if (typeof autoStart !== 'number') {
+      return;
+    }
+    setRunning(false);
+    const handle = setTimeout(() => setRunning(true), autoStart);
+    return () => clearTimeout(handle);
+  }, [autoStart, tick]);
+
+  // Phase 0 — auto-creep while paused. Asymptotic ease toward
+  // `CREEP_ASYMPTOTE` so the disc reads as alive before the random-walk
+  // starts. Once the asymptote is approached the timer ticks become no-ops
+  // (cheap idle); we don't bother stopping the interval.
+  useEffect(() => {
+    if (running) {
       return;
     }
     const handle = setInterval(() => {
       setProgress((current) => {
         const fraction = current * 100;
-        const next = fraction + (CREEP_ASYMPTOTE - fraction) * CREEP_RATE;
-        return next / 100;
+        if (fraction >= CREEP_ASYMPTOTE - 0.1) {
+          return current;
+        }
+        return (fraction + (CREEP_ASYMPTOTE - fraction) * CREEP_RATE) / 100;
       });
     }, CREEP_TICK_MS);
-    const stop = setTimeout(() => setCreeping(false), creepMs);
-    return () => {
-      clearInterval(handle);
-      clearTimeout(stop);
-    };
-  }, [creeping, running, creepMs]);
+    return () => clearInterval(handle);
+  }, [running]);
 
-  // Phase 1 — animate progress 0 → 1 (random walk; resumes from creep value).
+  // Phase 1 — random-walk while running. Resumes from the current progress
+  // (e.g. the creep value) so the bar doesn't jump when running flips on.
   useEffect(() => {
-    if (!running || creeping || progress >= 1) {
+    if (!running || progress >= 1) {
       return;
     }
 
-    // Resume from the current progress on un-pause / post-creep so the bar doesn't jump.
     let loaded = progress * STORY_PLUGIN_COUNT;
     const handle = setInterval(() => {
       loaded += Math.abs(Math.random());
@@ -192,7 +205,7 @@ const useBootLoaderSim = ({
       }
     }, STORY_TICK_MS);
     return () => clearInterval(handle);
-  }, [running, tick, withHandoff, creeping]);
+  }, [running, tick, withHandoff]);
 
   // Phase 2 — at 100%, walk the placeholder stage and (optionally) loop back.
   useEffect(() => {
@@ -216,12 +229,12 @@ const useBootLoaderSim = ({
 
   const toggle = () => {
     if (progress >= 1) {
-      // Finished — restart from zero (and re-arm the creep) on the next click.
+      // Finished — drop back to the paused / creeping state. The next click
+      // (or `autoStart` timer) starts the random-walk again.
       setProgress(0);
       setStage(0);
-      setCreeping(creepMs > 0);
+      setRunning(false);
       setTick((current) => current + 1);
-      setRunning(true);
     } else {
       setRunning((current) => !current);
     }
@@ -234,10 +247,10 @@ const useBootLoaderSim = ({
 };
 
 const DefaultStory = () => {
-  // 2 s of auto-creep mirrors a slow JS-bundle parse before the host wires
-  // the first `progress()` call — useful for confirming the disc reads as
-  // alive during the otherwise-empty startup window.
-  const { progress, status, running, toggle } = useBootLoaderSim({ creepMs: 2_000 });
+  // Start paused so the disc auto-creeps while the toolbar reads "Start".
+  // Pressing the button kicks off the random-walk from whatever value the
+  // creep had reached.
+  const { progress, status, running, toggle } = useBootLoaderSim({ autoStart: false });
 
   return (
     <>
@@ -298,7 +311,7 @@ export const PlaceholderHandoff: Story = {
  */
 export const Handoff: Story = {
   render: () => {
-    const { progress, stage, status } = useBootLoaderSim({ creepMs: 2_000, withHandoff: true, loop: true });
+    const { progress, stage, status } = useBootLoaderSim({ autoStart: 2_000, withHandoff: true, loop: true });
     return (
       <>
         {/* Placeholder underneath — `stage = 0` keeps the logo at opacity 0 */}
