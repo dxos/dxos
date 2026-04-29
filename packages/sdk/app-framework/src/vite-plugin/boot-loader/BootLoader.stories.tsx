@@ -186,6 +186,8 @@ const useBootLoaderSim = ({
 
   // State 2 — random-walk progress. Resumes from the current progress (e.g.
   // the creep value) so the bar doesn't jump when entering from state 1.
+  // `Math.max(current, …)` mirrors the driver's no-regress clamp so the
+  // ring's motion stays monotonic across the boundary.
   useEffect(() => {
     if (state !== 2 || progress >= 1) {
       return;
@@ -193,7 +195,7 @@ const useBootLoaderSim = ({
     let loaded = progress * STORY_PLUGIN_COUNT;
     const handle = setInterval(() => {
       loaded += Math.abs(Math.random());
-      setProgress(Math.min(1, loaded / STORY_PLUGIN_COUNT));
+      setProgress((current) => Math.max(current, Math.min(1, loaded / STORY_PLUGIN_COUNT)));
       if (loaded >= STORY_PLUGIN_COUNT) {
         clearInterval(handle);
       }
