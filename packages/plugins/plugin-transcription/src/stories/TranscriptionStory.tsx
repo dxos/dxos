@@ -9,8 +9,8 @@ import React, { type Dispatch, type FC, type RefObject, type SetStateAction } fr
 import { IconButton, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
-import { type SerializationModel } from '../../model';
-import { Transcription } from '../Transcription';
+import { Transcription } from '../components';
+import { type SerializationModel } from '../model';
 
 export const TranscriptionStory: FC<{
   model: SerializationModel<Message.Message>;

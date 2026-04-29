@@ -2,10 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-//
-// Copyright 2025 DXOS.org
-//
-
 import { DeferredTask, asyncTimeout } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { type Queue } from '@dxos/echo-db';
@@ -31,9 +27,9 @@ export type QueueCursor = {
   timestamp: string;
 };
 
-// TODO(mykola): .
 export class MessageNormalizer extends Resource {
   private readonly _functionExecutor: FunctionExecutor;
+
   private _queue: Queue<Message.Message>;
   private _cursor: QueueCursor;
   private _messagesToProcess: MessageWithRangeId[] = [];
