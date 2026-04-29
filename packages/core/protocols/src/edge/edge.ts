@@ -315,8 +315,10 @@ export type EdgeAuthChallenge = {
 
 export enum OAuthProvider {
   GOOGLE = 'google',
+  /** @deprecated Use ATPROTO instead. */
   BLUESKY = 'bluesky',
   TRELLO = 'trello',
+  ATPROTO = 'atproto',
 }
 
 export const InitiateOAuthFlowRequestSchema = Schema.Struct({
