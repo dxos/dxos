@@ -93,34 +93,93 @@ const STORY_PLUGIN_COUNT = 80;
 /** Tick interval for the determinate-progress simulation, in ms. */
 const STORY_TICK_MS = 100;
 
-const DefaultStory = () => {
-  const [progress, setProgress] = useState(0);
-  const [running, setRunning] = useState(true);
+type BootLoaderSimOptions = {
+  /**
+   * Walk the placeholder through `stage 0 → 1 → 2` after progress hits 1
+   * (the production handoff sequence). Without this, the sim stops at 100%.
+   */
+  withHandoff?: boolean;
+  /**
+   * Reset progress and stage back to 0 after the handoff fade-out and start
+   * a new cycle. Only meaningful with `withHandoff`. Useful for stories
+   * that want the transition to repeat for visual review.
+   */
+  loop?: boolean;
+};
 
+type BootLoaderSimState = {
+  progress: number;
+  stage: number;
+  status: string;
+  running: boolean;
+  /** Toggle pause / resume; restart from zero once progress has hit 1. */
+  toggle: () => void;
+};
+
+/**
+ * Shared simulation guts driving the `BootLoader` stories — animates the
+ * progress var via `STORY_PLUGIN_COUNT` random-walk ticks and (optionally)
+ * walks the React `Placeholder` stage afterwards. Both `Default` and
+ * `Handoff` use this hook so the Phase 1 / Phase 2 timing stays consistent.
+ */
+const useBootLoaderSim = ({ withHandoff = false, loop = false }: BootLoaderSimOptions = {}): BootLoaderSimState => {
+  const [progress, setProgress] = useState(0);
+  const [stage, setStage] = useState(0);
+  const [running, setRunning] = useState(true);
+  const [tick, setTick] = useState(0);
+
+  // Phase 1 — animate progress 0 → 1.
   useEffect(() => {
-    if (!running) {
+    if (!running || progress >= 1) {
       return;
     }
     // Resume from the current progress on un-pause so the bar doesn't jump.
     let loaded = progress * STORY_PLUGIN_COUNT;
     const handle = setInterval(() => {
       loaded += Math.abs(Math.random());
-      setProgress(loaded / STORY_PLUGIN_COUNT);
+      setProgress(Math.min(1, loaded / STORY_PLUGIN_COUNT));
       if (loaded >= STORY_PLUGIN_COUNT) {
         clearInterval(handle);
-        setRunning(false);
+        // Without a handoff there's nothing to do once the bar fills, so
+        // flip `running` off and let `toggle()` decide what comes next.
+        if (!withHandoff) {
+          setRunning(false);
+        }
       }
     }, STORY_TICK_MS);
     return () => clearInterval(handle);
-    // `progress` is intentionally read once per effect-run as the resume point,
-    // not tracked — the interval owns its own counter from there.
+    // `progress` is read once per effect-run as the resume point, not
+    // tracked — the interval owns its own counter from there. `tick` forces
+    // a fresh effect-run when the loop variant restarts.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [running]);
+  }, [running, tick, withHandoff]);
 
-  const handleToggle = () => {
+  // Phase 2 — at 100%, walk the placeholder stage and (optionally) loop back.
+  useEffect(() => {
+    if (!withHandoff || progress < 1) {
+      return;
+    }
+    const handles: ReturnType<typeof setTimeout>[] = [];
+    handles.push(setTimeout(() => setStage(1), 200)); // FadeIn — placeholder mark visible.
+    handles.push(setTimeout(() => setStage(2), 2_000)); // FadeOut — mark shrinks.
+    if (loop) {
+      handles.push(
+        setTimeout(() => {
+          setStage(0);
+          setProgress(0);
+          setTick((current) => current + 1);
+        }, 3_500),
+      );
+    }
+    return () => handles.forEach(clearTimeout);
+  }, [progress, withHandoff, loop]);
+
+  const toggle = () => {
     if (progress >= 1) {
       // Finished — restart from zero on the next click.
       setProgress(0);
+      setStage(0);
+      setTick((current) => current + 1);
       setRunning(true);
     } else {
       setRunning((current) => !current);
@@ -130,6 +189,11 @@ const DefaultStory = () => {
   const loaded = Math.round(progress * STORY_PLUGIN_COUNT);
   const status = progress >= 1 ? 'Starting Composer…' : `Loading plugins (${loaded}/${STORY_PLUGIN_COUNT})`;
 
+  return { progress, stage, status, running, toggle };
+};
+
+const DefaultStory = () => {
+  const { progress, status, running, toggle } = useBootLoaderSim();
   return (
     <>
       {/* `relative` opens a positioned context so `z-20` actually applies — */}
@@ -140,7 +204,7 @@ const DefaultStory = () => {
           icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
           label={running ? 'Pause' : progress >= 1 ? 'Restart' : 'Start'}
           iconOnly
-          onClick={handleToggle}
+          onClick={toggle}
         />
       </Toolbar.Root>
       <BootLoader status={status} markSvg={PLACEHOLDER_MARK} progress={progress} />
@@ -188,44 +252,7 @@ export const PlaceholderHandoff: Story = {
  * eyeballed repeatedly.
  */
 const HandoffStory = () => {
-  const [progress, setProgress] = useState(0);
-  const [stage, setStage] = useState(0);
-  const [tick, setTick] = useState(0);
-
-  // Phase 1 — animate progress 0 → 1 every `tick` cycle.
-  useEffect(() => {
-    let loaded = 0;
-    const handle = setInterval(() => {
-      loaded += Math.abs(Math.random());
-      setProgress(Math.min(1, loaded / STORY_PLUGIN_COUNT));
-      if (loaded >= STORY_PLUGIN_COUNT) {
-        clearInterval(handle);
-      }
-    }, STORY_TICK_MS);
-    return () => clearInterval(handle);
-  }, [tick]);
-
-  // Phase 2 — at 100%, walk the placeholder stage and then loop back.
-  useEffect(() => {
-    if (progress < 1) {
-      return;
-    }
-    const handles: ReturnType<typeof setTimeout>[] = [];
-    handles.push(setTimeout(() => setStage(1), 200)); // FadeIn — placeholder mark visible.
-    handles.push(setTimeout(() => setStage(2), 2_000)); // FadeOut — mark shrinks.
-    handles.push(
-      setTimeout(() => {
-        setStage(0);
-        setProgress(0);
-        setTick((current) => current + 1);
-      }, 3_500),
-    );
-    return () => handles.forEach(clearTimeout);
-  }, [progress]);
-
-  const loaded = Math.round(progress * STORY_PLUGIN_COUNT);
-  const status = progress >= 1 ? 'Starting Composer…' : `Loading plugins (${loaded}/${STORY_PLUGIN_COUNT})`;
-
+  const { progress, stage, status } = useBootLoaderSim({ withHandoff: true, loop: true });
   return (
     <>
       {/* Placeholder underneath — `stage = 0` keeps the logo at opacity 0 */}
