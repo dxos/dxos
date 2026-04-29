@@ -93,7 +93,22 @@ const STORY_PLUGIN_COUNT = 80;
 /** Tick interval for the determinate-progress simulation, in ms. */
 const STORY_TICK_MS = 100;
 
+// Mirrors the inline driver's auto-creep constants in `boot-loader.js` so the
+// pre-host-progress phase animates identically in storybook and production.
+const CREEP_ASYMPTOTE = 12;
+const CREEP_RATE = 0.04;
+const CREEP_TICK_MS = 100;
+
 type BootLoaderSimOptions = {
+  progress?: number;
+  /**
+   * Run the inline-driver auto-creep for this many ms before the main random-
+   * walk takes over. Mirrors the `boot-loader.js` Phase 0 — the disc visibly
+   * moves before any host-driven `progress()` call lands. The random-walk
+   * resumes from whatever value the creep reached, smoothed by the disc's
+   * `transition: --boot-loader-bar-progress`.
+   */
+  creepMs?: number;
   /**
    * Walk the placeholder through `stage 0 → 1 → 2` after progress hits 1
    * (the production handoff sequence). Without this, the sim stops at 100%.
@@ -122,18 +137,47 @@ type BootLoaderSimState = {
  * walks the React `Placeholder` stage afterwards. Both `Default` and
  * `Handoff` use this hook so the Phase 1 / Phase 2 timing stays consistent.
  */
-const useBootLoaderSim = ({ withHandoff = false, loop = false }: BootLoaderSimOptions = {}): BootLoaderSimState => {
-  const [progress, setProgress] = useState(0);
+const useBootLoaderSim = ({
+  progress: progressProp = 0,
+  creepMs = 0,
+  withHandoff = false,
+  loop = false,
+}: BootLoaderSimOptions = {}): BootLoaderSimState => {
+  const [progress, setProgress] = useState(progressProp);
   const [stage, setStage] = useState(0);
   const [running, setRunning] = useState(true);
   const [tick, setTick] = useState(0);
+  // While `creeping`, Phase 1 stays paused and the auto-creep effect drives
+  // the var. Reset to `creepMs > 0` whenever the sim restarts.
+  const [creeping, setCreeping] = useState(creepMs > 0);
 
-  // Phase 1 — animate progress 0 → 1.
+  // Phase 0 — auto-creep (Pre-host-progress). Asymptotic ease toward
+  // `CREEP_ASYMPTOTE` for `creepMs` ms, then yield to Phase 1.
   useEffect(() => {
-    if (!running || progress >= 1) {
+    if (!creeping || !running) {
       return;
     }
-    // Resume from the current progress on un-pause so the bar doesn't jump.
+    const handle = setInterval(() => {
+      setProgress((current) => {
+        const fraction = current * 100;
+        const next = fraction + (CREEP_ASYMPTOTE - fraction) * CREEP_RATE;
+        return next / 100;
+      });
+    }, CREEP_TICK_MS);
+    const stop = setTimeout(() => setCreeping(false), creepMs);
+    return () => {
+      clearInterval(handle);
+      clearTimeout(stop);
+    };
+  }, [creeping, running, creepMs]);
+
+  // Phase 1 — animate progress 0 → 1 (random walk; resumes from creep value).
+  useEffect(() => {
+    if (!running || creeping || progress >= 1) {
+      return;
+    }
+
+    // Resume from the current progress on un-pause / post-creep so the bar doesn't jump.
     let loaded = progress * STORY_PLUGIN_COUNT;
     const handle = setInterval(() => {
       loaded += Math.abs(Math.random());
@@ -148,11 +192,7 @@ const useBootLoaderSim = ({ withHandoff = false, loop = false }: BootLoaderSimOp
       }
     }, STORY_TICK_MS);
     return () => clearInterval(handle);
-    // `progress` is read once per effect-run as the resume point, not
-    // tracked — the interval owns its own counter from there. `tick` forces
-    // a fresh effect-run when the loop variant restarts.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [running, tick, withHandoff]);
+  }, [running, tick, withHandoff, creeping]);
 
   // Phase 2 — at 100%, walk the placeholder stage and (optionally) loop back.
   useEffect(() => {
@@ -176,9 +216,10 @@ const useBootLoaderSim = ({ withHandoff = false, loop = false }: BootLoaderSimOp
 
   const toggle = () => {
     if (progress >= 1) {
-      // Finished — restart from zero on the next click.
+      // Finished — restart from zero (and re-arm the creep) on the next click.
       setProgress(0);
       setStage(0);
+      setCreeping(creepMs > 0);
       setTick((current) => current + 1);
       setRunning(true);
     } else {
@@ -193,7 +234,11 @@ const useBootLoaderSim = ({ withHandoff = false, loop = false }: BootLoaderSimOp
 };
 
 const DefaultStory = () => {
-  const { progress, status, running, toggle } = useBootLoaderSim();
+  // 2 s of auto-creep mirrors a slow JS-bundle parse before the host wires
+  // the first `progress()` call — useful for confirming the disc reads as
+  // alive during the otherwise-empty startup window.
+  const { progress, status, running, toggle } = useBootLoaderSim({ creepMs: 2_000 });
+
   return (
     <>
       {/* `relative` opens a positioned context so `z-20` actually applies — */}
@@ -251,18 +296,16 @@ export const PlaceholderHandoff: Story = {
  * becomes visible. The story restarts on a loop so the transition can be
  * eyeballed repeatedly.
  */
-const HandoffStory = () => {
-  const { progress, stage, status } = useBootLoaderSim({ withHandoff: true, loop: true });
-  return (
-    <>
-      {/* Placeholder underneath — `stage = 0` keeps the logo at opacity 0 */}
-      {/* until the BootLoader unmounts, then it fades in. */}
-      <Placeholder stage={stage} logo={(logoProps) => <Composer {...logoProps} />} />
-      {stage < 1 && <BootLoader status={status} markSvg={PLACEHOLDER_MARK} progress={progress} />}
-    </>
-  );
-};
-
 export const Handoff: Story = {
-  render: () => <HandoffStory />,
+  render: () => {
+    const { progress, stage, status } = useBootLoaderSim({ creepMs: 2_000, withHandoff: true, loop: true });
+    return (
+      <>
+        {/* Placeholder underneath — `stage = 0` keeps the logo at opacity 0 */}
+        {/* until the BootLoader unmounts, then it fades in. */}
+        <Placeholder stage={stage} logo={(logoProps) => <Composer {...logoProps} />} />
+        {stage < 1 && <BootLoader status={status} markSvg={PLACEHOLDER_MARK} progress={progress} />}
+      </>
+    );
+  },
 };
