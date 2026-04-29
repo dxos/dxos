@@ -3,7 +3,7 @@
 //
 
 import { type Tree } from '@lezer/common';
-import { describe, it } from 'vitest';
+import { describe, it, test } from 'vitest';
 
 import { Filter, Tag } from '@dxos/echo';
 
@@ -414,7 +414,7 @@ describe('query', () => {
     });
   });
 
-  it('normalizeInput', ({ expect }) => {
+  test('normalizeInput', ({ expect }) => {
     type Test = { input: string; expected: string };
     const tests: Test[] = [
       { input: 'foo', expected: '"foo"' },
@@ -445,7 +445,7 @@ describe('query', () => {
     }
   });
 
-  it('build with property and text fragments', ({ expect }) => {
+  test('build with property and text fragments', ({ expect }) => {
     const queryBuilder = new QueryBuilder({
       tag_1: Tag.make({ label: 'foo' }),
     });

@@ -28,7 +28,7 @@ export class QueryBuilder {
    */
   validate(input: string): boolean {
     try {
-      const tree = this._parser.parse(input);
+      const tree = this._parser.parse(normalizeInput(input));
       return tree.cursor().node.name === 'Query';
     } catch {
       return false;

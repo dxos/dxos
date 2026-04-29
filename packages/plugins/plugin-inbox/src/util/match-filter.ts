@@ -28,6 +28,8 @@ const matchesAst = (ast: any, message: Message.Message, tags: Tag.Tag[]): boolea
     case 'text-search':
       return matchesText(ast.text ?? '', message);
     case 'object': {
+      // Filter.everything() and Filter.typename() emit `{ type: 'object', props: {} }`;
+      // typename pre-filtering happens at the query layer, so here an empty props means match-all.
       if (ast.props) {
         for (const [key, predicate] of Object.entries(ast.props)) {
           const path = resolvePropertyAlias(key);
@@ -39,7 +41,8 @@ const matchesAst = (ast: any, message: Message.Message, tags: Tag.Tag[]): boolea
       return true;
     }
     default:
-      return true;
+      // Unknown / unsupported AST node — fail closed so unhandled filters never silently broaden results.
+      return false;
   }
 };
 
