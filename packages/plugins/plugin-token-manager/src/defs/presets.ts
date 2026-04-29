@@ -26,4 +26,10 @@ export const OAUTH_PRESETS: OAuthPreset[] = [
       'https://www.googleapis.com/auth/youtube.force-ssl',
     ],
   },
+  {
+    provider: OAuthProvider.TRELLO,
+    source: 'trello.com',
+    label: 'Trello',
+    scopes: ['read', 'write'],
+  },
 ];

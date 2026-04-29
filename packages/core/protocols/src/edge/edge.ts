@@ -316,6 +316,7 @@ export type EdgeAuthChallenge = {
 export enum OAuthProvider {
   GOOGLE = 'google',
   BLUESKY = 'bluesky',
+  TRELLO = 'trello',
 }
 
 export const InitiateOAuthFlowRequestSchema = Schema.Struct({
