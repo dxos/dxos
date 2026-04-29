@@ -71,6 +71,12 @@
      * silently reset to the 0% var() default. State 1's creep timer (if
      * any) is cancelled; the inline-style write takes over smoothly via
      * the 240ms `transition: --boot-loader-bar-progress`.
+     *
+     * The ring never regresses: if the requested value is below the
+     * current var (e.g. the host's first call is `progress(0)` while the
+     * creep had already reached ~12%), the existing value is held. The
+     * host's progress catches up once it exceeds the held floor, so the
+     * ring's motion stays monotonic across the state-1 → state-2 boundary.
      */
     progress: function (fraction) {
       stopCreep();
@@ -82,9 +88,12 @@
         return;
       }
       var clamped = typeof fraction !== 'number' || !isFinite(fraction) || fraction < 0 ? 0 : Math.min(1, fraction);
-      element.style.setProperty('--boot-loader-bar-progress', String(clamped * 100));
+      var requestedPct = clamped * 100;
+      var currentPct = parseFloat(element.style.getPropertyValue('--boot-loader-bar-progress')) || 0;
+      var nextPct = Math.max(currentPct, requestedPct);
+      element.style.setProperty('--boot-loader-bar-progress', String(nextPct));
       // Toggle the leading-edge dot only while progress is strictly in (0, 1).
-      if (clamped > 0 && clamped < 1) {
+      if (nextPct > 0 && nextPct < 100) {
         element.setAttribute('data-progress-active', '');
       } else {
         element.removeAttribute('data-progress-active');
