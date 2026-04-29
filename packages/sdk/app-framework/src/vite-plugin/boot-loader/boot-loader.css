@@ -42,18 +42,21 @@
 }
 
 #boot-loader-mark {
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.1;
 }
 
 #boot-loader-mark svg {
   width: 100%;
   height: 100%;
-  /* `fill="currentColor"` on the host SVG inherits the loader's text colour. */
+  /*
+   * The host SVG carries its own brand-palette fills, so we don't apply a
+   * `color` cascade here. SVGs that intentionally use `fill="currentColor"`
+   * still pick up the loader's text colour via `#boot-loader`'s `color`.
+   */
 }
 
 #boot-loader-bar {

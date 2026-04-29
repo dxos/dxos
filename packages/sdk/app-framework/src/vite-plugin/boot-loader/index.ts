@@ -21,9 +21,10 @@ export type BootLoaderOptions = {
 
   /**
    * Inline SVG markup for an optional brand mark rendered above the progress bar.
-   * Use `currentColor` for fill so the mark inherits the loader's text colour
-   * (which itself follows `prefers-color-scheme`). Leave empty/undefined to
-   * render only the bar.
+   * The mark renders at full opacity with whatever fills the SVG declares, so
+   * pass a colour-palette logo for the strongest visual identity. SVGs that use
+   * `fill="currentColor"` still inherit the loader's `prefers-color-scheme`
+   * text colour. Leave empty/undefined to render only the bar.
    */
   markSvg?: string;
 };
