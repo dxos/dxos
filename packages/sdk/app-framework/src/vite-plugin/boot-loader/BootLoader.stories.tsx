@@ -91,7 +91,7 @@ const PHASES = ['Loading…', 'Loading framework…', 'Reading configuration…'
 const STORY_PLUGIN_COUNT = 80;
 
 /** Tick interval for the determinate-progress simulation, in ms. */
-const STORY_TICK_MS = 100;
+const STORY_TICK_MS = 50;
 
 // Mirrors the inline driver's auto-creep constants in `boot-loader.js` so the
 // pre-host-progress phase animates identically in storybook and production.
@@ -99,18 +99,18 @@ const CREEP_ASYMPTOTE = 12;
 const CREEP_RATE = 0.04;
 const CREEP_TICK_MS = 100;
 
+/** Boot loader runtime state — mirrors the driver's `state` machine. */
+type BootLoaderRuntimeState = 0 | 1 | 2;
+
 type BootLoaderSimOptions = {
-  progress?: number;
+  /** Initial state on mount. Default `0` (idle, no motion). */
+  initialState?: BootLoaderRuntimeState;
   /**
-   * Whether the random-walk starts running on mount.
-   *  - `true` (default): start running immediately, skip the creep.
-   *  - `false`: start paused — the disc auto-creeps toward
-   *    `CREEP_ASYMPTOTE` until `toggle()` is called.
-   *  - `<number>`: start paused, then auto-flip to running after this many
-   *    ms. Mirrors a host whose first `progress()` call lands `<number>`
-   *    ms after the page paints.
+   * If set, auto-advance through states with this delay between transitions
+   * (`0 → 1 → 2`). Once the random-walk begins (state 2) the timer stops.
+   * Without this, the user advances manually via the toolbar.
    */
-  autoStart?: boolean | number;
+  autoAdvanceMs?: number;
   /**
    * Walk the placeholder through `stage 0 → 1 → 2` after progress hits 1
    * (the production handoff sequence). Without this, the sim stops at 100%.
@@ -125,51 +125,51 @@ type BootLoaderSimOptions = {
 };
 
 type BootLoaderSimState = {
+  state: BootLoaderRuntimeState;
   progress: number;
   stage: number;
   status: string;
-  running: boolean;
-  /** Toggle pause / resume; restart from zero once progress has hit 1. */
-  toggle: () => void;
+  /** Step the state machine: `0 → 1 → 2 → reset → 0`. */
+  advance: () => void;
 };
 
 /**
- * Shared simulation guts driving the `BootLoader` stories — animates the
- * progress var via `STORY_PLUGIN_COUNT` random-walk ticks and (optionally)
- * walks the React `Placeholder` stage afterwards. Both `Default` and
- * `Handoff` use this hook so the Phase 1 / Phase 2 timing stays consistent.
+ * Shared simulation guts driving the `BootLoader` stories. Models the same
+ * three runtime states as the inline driver (`boot-loader.js`):
+ *  - `0` idle: disc empty, no motion.
+ *  - `1` slow tick: asymptotic creep toward `CREEP_ASYMPTOTE`%.
+ *  - `2` progress: random-walk (stand-in for host-driven `progress(x)`).
+ * Plus the placeholder stage walk (Phase 2) when `withHandoff` is set.
  */
 const useBootLoaderSim = ({
-  progress: progressProp = 0,
-  autoStart = true,
+  initialState = 0,
+  autoAdvanceMs,
   withHandoff = false,
   loop = false,
 }: BootLoaderSimOptions = {}): BootLoaderSimState => {
-  const [progress, setProgress] = useState(progressProp);
+  const [state, setState] = useState<BootLoaderRuntimeState>(initialState);
+  const [progress, setProgress] = useState(0);
   const [stage, setStage] = useState(0);
-  // The creep runs whenever `running === false`, so a paused initial state
-  // gives the disc the auto-creep look until `toggle()` (or `autoStart` as a
-  // number) flips it on.
-  const [running, setRunning] = useState(autoStart === true);
   const [tick, setTick] = useState(0);
 
-  // Optional auto-flip from paused → running after a delay. Re-arms on every
-  // `tick` bump so the handoff loop sees a fresh creep window per cycle.
+  // Auto-advance timer: schedules `state + 1` after `autoAdvanceMs`. Resets
+  // on each `tick` so the handoff loop sees a fresh schedule per cycle.
   useEffect(() => {
-    if (typeof autoStart !== 'number') {
+    if (autoAdvanceMs == null || state === 2) {
       return;
     }
-    setRunning(false);
-    const handle = setTimeout(() => setRunning(true), autoStart);
+    const handle = setTimeout(
+      () => setState((current) => (current === 0 ? 1 : current === 1 ? 2 : current)),
+      autoAdvanceMs,
+    );
     return () => clearTimeout(handle);
-  }, [autoStart, tick]);
+  }, [autoAdvanceMs, state, tick]);
 
-  // Phase 0 — auto-creep while paused. Asymptotic ease toward
-  // `CREEP_ASYMPTOTE` so the disc reads as alive before the random-walk
-  // starts. Once the asymptote is approached the timer ticks become no-ops
-  // (cheap idle); we don't bother stopping the interval.
+  // State 1 — slow tick. Asymptotic ease toward `CREEP_ASYMPTOTE` so the
+  // disc reads as alive while the host has nothing concrete to report.
+  // Once the asymptote is approached the timer ticks become no-ops.
   useEffect(() => {
-    if (running) {
+    if (state !== 1) {
       return;
     }
     const handle = setInterval(() => {
@@ -182,32 +182,26 @@ const useBootLoaderSim = ({
       });
     }, CREEP_TICK_MS);
     return () => clearInterval(handle);
-  }, [running]);
+  }, [state]);
 
-  // Phase 1 — random-walk while running. Resumes from the current progress
-  // (e.g. the creep value) so the bar doesn't jump when running flips on.
+  // State 2 — random-walk progress. Resumes from the current progress (e.g.
+  // the creep value) so the bar doesn't jump when entering from state 1.
   useEffect(() => {
-    if (!running || progress >= 1) {
+    if (state !== 2 || progress >= 1) {
       return;
     }
-
     let loaded = progress * STORY_PLUGIN_COUNT;
     const handle = setInterval(() => {
       loaded += Math.abs(Math.random());
       setProgress(Math.min(1, loaded / STORY_PLUGIN_COUNT));
       if (loaded >= STORY_PLUGIN_COUNT) {
         clearInterval(handle);
-        // Without a handoff there's nothing to do once the bar fills, so
-        // flip `running` off and let `toggle()` decide what comes next.
-        if (!withHandoff) {
-          setRunning(false);
-        }
       }
     }, STORY_TICK_MS);
     return () => clearInterval(handle);
-  }, [running, tick, withHandoff]);
+  }, [state, tick]);
 
-  // Phase 2 — at 100%, walk the placeholder stage and (optionally) loop back.
+  // Handoff phase — at 100%, walk the placeholder stage and (optionally) loop.
   useEffect(() => {
     if (!withHandoff || progress < 1) {
       return;
@@ -220,6 +214,7 @@ const useBootLoaderSim = ({
         setTimeout(() => {
           setStage(0);
           setProgress(0);
+          setState(0);
           setTick((current) => current + 1);
         }, 3_500),
       );
@@ -227,51 +222,60 @@ const useBootLoaderSim = ({
     return () => handles.forEach(clearTimeout);
   }, [progress, withHandoff, loop]);
 
-  const toggle = () => {
-    if (progress >= 1) {
-      // Finished — drop back to the paused / creeping state. The next click
-      // (or `autoStart` timer) starts the random-walk again.
+  const advance = () => {
+    if (progress >= 1 || state === 2) {
+      // Reset back to the idle state. From there the user (or autoAdvance)
+      // can step through the states again.
       setProgress(0);
       setStage(0);
-      setRunning(false);
+      setState(0);
       setTick((current) => current + 1);
-    } else {
-      setRunning((current) => !current);
+    } else if (state === 0) {
+      setState(1);
+    } else if (state === 1) {
+      setState(2);
     }
   };
 
+  // Status text — states 0 / 1 use the generic "Loading…" placeholder; state 2
+  // shows the per-plugin counter the production host wires through.
   const loaded = Math.round(progress * STORY_PLUGIN_COUNT);
-  const status = progress >= 1 ? 'Starting Composer…' : `Loading plugins (${loaded}/${STORY_PLUGIN_COUNT})`;
+  const status =
+    state < 2 ? 'Loading…' : progress >= 1 ? 'Starting Composer…' : `Loading plugins (${loaded}/${STORY_PLUGIN_COUNT})`;
 
-  return { progress, stage, status, running, toggle };
+  return { state, progress, stage, status, advance };
 };
 
 /**
- * Story-only toolbar exposing the `useBootLoaderSim` toggle. `relative`
- * opens a positioned context so `z-20` actually applies — the boot loader
- * is `position: fixed; z-index: 10`, so anything above must be both
- * positioned and outrank 10.
+ * Story-only toolbar exposing the `useBootLoaderSim` state machine. The
+ * single button steps `0 → 1 → 2 → reset → 0`. `relative` opens a positioned
+ * context so `z-20` actually applies — the boot loader is `position: fixed;
+ * z-index: 10`, so anything above must be both positioned and outrank 10.
  */
-const SimToolbar = ({ running, progress, toggle }: Pick<BootLoaderSimState, 'running' | 'progress' | 'toggle'>) => (
-  <Toolbar.Root classNames='relative z-20'>
-    <Toolbar.IconButton
-      icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
-      label={running ? 'Pause' : progress >= 1 ? 'Restart' : 'Start'}
-      iconOnly
-      onClick={toggle}
-    />
-  </Toolbar.Root>
-);
+const SimToolbar = ({ state, progress, advance }: Pick<BootLoaderSimState, 'state' | 'progress' | 'advance'>) => {
+  const isDone = progress >= 1;
+  const button =
+    isDone || state === 2
+      ? { icon: 'ph--arrow-counter-clockwise--regular', label: 'Reset' }
+      : state === 1
+        ? { icon: 'ph--play--regular', label: 'Start' }
+        : { icon: 'ph--dots-three--regular', label: 'Tick' };
+  return (
+    <Toolbar.Root classNames='relative z-20'>
+      <Toolbar.IconButton icon={button.icon} label={button.label} iconOnly onClick={advance} />
+      <Toolbar.Text>{`State ${state}`}</Toolbar.Text>
+    </Toolbar.Root>
+  );
+};
 
 const DefaultStory = () => {
-  // Start paused so the disc auto-creeps while the toolbar reads "Start".
-  // Pressing the button kicks off the random-walk from whatever value the
-  // creep had reached.
-  const { progress, status, running, toggle } = useBootLoaderSim({ autoStart: false });
+  // Start in state 0 (idle) so the user can step `Tick → Start → Reset`
+  // through the three runtime states themselves.
+  const { state, progress, status, advance } = useBootLoaderSim();
 
   return (
     <>
-      <SimToolbar running={running} progress={progress} toggle={toggle} />
+      <SimToolbar state={state} progress={progress} advance={advance} />
       <BootLoader status={status} markSvg={PLACEHOLDER_MARK} progress={progress} />
     </>
   );
@@ -318,14 +322,14 @@ export const PlaceholderHandoff: Story = {
  */
 export const Handoff: Story = {
   render: () => {
-    const { progress, stage, status, running, toggle } = useBootLoaderSim({
-      autoStart: 2_000,
+    const { state, progress, stage, status, advance } = useBootLoaderSim({
+      autoAdvanceMs: 1_500,
       withHandoff: true,
       loop: true,
     });
     return (
       <>
-        <SimToolbar running={running} progress={progress} toggle={toggle} />
+        <SimToolbar state={state} progress={progress} advance={advance} />
         {/* Placeholder underneath — `stage = 0` keeps the logo at opacity 0 */}
         {/* until the BootLoader unmounts, then it fades in. */}
         <Placeholder stage={stage} logo={(logoProps) => <Composer {...logoProps} />} />
