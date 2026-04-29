@@ -258,25 +258,34 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   );
 
   // Auto-curate when the set of subscribed feeds changes so the post list reflects
-  // the new selection without requiring a manual Curate click.
-  const feedCount = subject.feeds.length;
-  const previousFeedCount = useRef(feedCount);
+  // the new selection without requiring a manual Curate click. Fingerprint by sorted
+  // DXN so swaps that preserve `feeds.length` still trigger.
+  const feedFingerprint = useMemo(
+    () =>
+      subject.feeds
+        .map((ref) => ref.dxn.toString())
+        .sort()
+        .join(),
+    [subject.feeds],
+  );
+  const previousFeedFingerprint = useRef(feedFingerprint);
   useEffect(() => {
-    if (previousFeedCount.current !== feedCount) {
-      previousFeedCount.current = feedCount;
+    if (previousFeedFingerprint.current !== feedFingerprint) {
+      previousFeedFingerprint.current = feedFingerprint;
       void invokePromise(FeedOperation.CurateMagazine, { magazine: Ref.make(subject) }).catch((err) => log.catch(err));
     }
-  }, [feedCount, subject, invokePromise]);
+  }, [feedFingerprint, subject, invokePromise]);
 
   // Open the ObjectProperties companion when the magazine has no posts so the user
   // can configure subscription feeds without an empty pane staring back at them.
+  // Depend on `subject` so switching between two empty magazines also reopens it.
   useEffect(() => {
     if (posts.length === 0) {
       void invokePromise(LayoutOperation.UpdateCompanion, {
         subject: linkedSegment('settings'),
       }).catch((err) => log.catch(err));
     }
-  }, [posts.length, invokePromise]);
+  }, [subject, posts.length, invokePromise]);
 
   const tileItems = useMemo<TileData[]>(
     () =>
