@@ -20,7 +20,7 @@ export type KanbanViewEditorProps = AppSurface.ObjectPropertiesProps<Kanban.Kanb
 export const KanbanViewEditor = ({ subject: object }: KanbanViewEditorProps) => {
   const registry = useContext(RegistryContext);
   const db = Obj.getDatabase(object);
-  const [view, updateView] = useObject(object.view);
+  const [view, updateView] = useObject(object.spec.kind === 'view' ? object.spec.view : undefined);
   const currentTypename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(db, currentTypename);
   const projection = useProjectionModel(schema, object, registry);

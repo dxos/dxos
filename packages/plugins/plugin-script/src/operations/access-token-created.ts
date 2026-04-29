@@ -7,15 +7,15 @@ import * as Predicate from 'effect/Predicate';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
-import { TokenManagerOperation } from '@dxos/plugin-token-manager/operations';
+import { IntegrationOperation } from '@dxos/plugin-integration/operations';
 
 import { defaultScriptsForIntegration } from '#meta';
 
 import { DEPLOYMENT_DIALOG } from '../constants';
 import { templates } from '../templates';
 
-const handler: Operation.WithHandler<typeof TokenManagerOperation.AccessTokenCreated> =
-  TokenManagerOperation.AccessTokenCreated.pipe(
+const handler: Operation.WithHandler<typeof IntegrationOperation.AccessTokenCreated> =
+  IntegrationOperation.AccessTokenCreated.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ accessToken }) {
         const scriptTemplates = (defaultScriptsForIntegration[accessToken.source] ?? [])

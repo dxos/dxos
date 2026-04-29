@@ -94,7 +94,7 @@ export const KanbanBoardRoot = ({
   const { t } = useTranslation(meta.id);
   const model = useKanbanBoardModel(kanban, projection, items, registry);
   const columns = model?.getColumns?.() ?? [];
-  const view = kanban?.view?.target;
+  const view = kanban?.spec.kind === 'view' ? kanban.spec.view.target : undefined;
   const pivotFieldId = view?.projection?.pivotFieldId;
   const columnFieldPath = useMemo(() => {
     if (pivotFieldId === undefined || !projection) {

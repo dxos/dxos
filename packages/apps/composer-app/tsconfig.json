@@ -284,6 +284,9 @@
       "path": "../../plugins/plugin-inbox"
     },
     {
+      "path": "../../plugins/plugin-integration"
+    },
+    {
       "path": "../../plugins/plugin-iroh-beacon"
     },
     {
@@ -395,10 +398,10 @@
       "path": "../../plugins/plugin-tictactoe"
     },
     {
-      "path": "../../plugins/plugin-token-manager"
+      "path": "../../plugins/plugin-transcription"
     },
     {
-      "path": "../../plugins/plugin-transcription"
+      "path": "../../plugins/plugin-trello"
     },
     {
       "path": "../../plugins/plugin-voxel"

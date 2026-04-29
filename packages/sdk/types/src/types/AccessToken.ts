@@ -24,29 +24,28 @@ export const LegacyAccessToken = Schema.Struct({
 
 export interface LegacyAccessToken extends Schema.Schema.Type<typeof LegacyAccessToken> {}
 
-// TODO(burdon): Add scopes.
 export const AccessToken = Schema.Struct({
   source: Format.Hostname.annotations({
     title: 'Source',
     description: 'The domain name of the service that issued the token.',
     examples: ['github.com'],
   }),
-  account: Schema.optional(
-    Schema.String.annotations({
-      title: 'Account',
-      description: 'The account associated with the token.',
-    }),
-  ),
+  account: Schema.String.annotations({
+    title: 'Account',
+    description: 'The account associated with the token.',
+  }).pipe(Schema.optional),
   token: Schema.String.annotations({
     title: 'Token',
     description: 'The token provided by the service.',
   }),
-  note: Schema.optional(
-    Schema.String.annotations({
-      title: 'Note',
-      description: 'User-provided note about the token.',
-    }),
-  ),
+  note: Schema.String.annotations({
+    title: 'Note',
+    description: 'User-provided note about the token.',
+  }).pipe(Schema.optional),
+  scopes: Schema.Array(Schema.String).annotations({
+    title: 'Scopes',
+    description: 'The scopes granted to this token by the service.',
+  }).pipe(Schema.optional),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.accessToken',

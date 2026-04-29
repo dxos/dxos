@@ -13,7 +13,7 @@ import { ObservabilityPlugin } from '@dxos/plugin-observability/cli';
 import { RegistryPlugin } from '@dxos/plugin-registry/cli';
 import { SamplePlugin } from '@dxos/plugin-sample/cli';
 import { SpacePlugin } from '@dxos/plugin-space/cli';
-import { TokenManagerPlugin } from '@dxos/plugin-token-manager/cli';
+import { IntegrationPlugin } from '@dxos/plugin-integration/cli';
 
 export type PluginConfig = {
   config?: Config;
@@ -30,7 +30,7 @@ export const getCore = (): string[] => [
   RegistryPlugin.meta.id,
   RuntimePlugin.meta.id,
   SpacePlugin.meta.id,
-  TokenManagerPlugin.meta.id,
+  IntegrationPlugin.meta.id,
 ];
 
 export const getDefaults = (): string[] => [
@@ -53,6 +53,6 @@ export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {
     RegistryPlugin(),
     RuntimePlugin(),
     SpacePlugin({}),
-    TokenManagerPlugin(),
+    IntegrationPlugin(),
   ];
 };
