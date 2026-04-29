@@ -16,13 +16,16 @@ export const matchesFilter = (filter: Filter.Any, message: Message.Message, tags
 };
 
 const matchesAst = (ast: any, message: Message.Message, tags: Tag.Tag[]): boolean => {
+  if (!ast || typeof ast !== 'object') {
+    return false;
+  }
   switch (ast.type) {
     case 'and':
-      return (ast.filters as any[]).every((f) => matchesAst(f, message, tags));
+      return Array.isArray(ast.filters) && ast.filters.every((sub: any) => matchesAst(sub, message, tags));
     case 'or':
-      return (ast.filters as any[]).some((f) => matchesAst(f, message, tags));
+      return Array.isArray(ast.filters) && ast.filters.some((sub: any) => matchesAst(sub, message, tags));
     case 'not':
-      return !matchesAst(ast.filter, message, tags);
+      return ast.filter != null && !matchesAst(ast.filter, message, tags);
     case 'tag':
       return tags.some((tag) => tag.id === ast.tag);
     case 'text-search':
