@@ -14,6 +14,12 @@ export type OAuthPreset = {
 
 export const OAUTH_PRESETS: OAuthPreset[] = [
   {
+    provider: OAuthProvider.GITHUB,
+    source: 'github.com',
+    label: 'GitHub',
+    scopes: ['repo', 'read:user'],
+  },
+  {
     provider: OAuthProvider.GOOGLE,
     source: 'google.com',
     label: 'Google',
@@ -25,6 +31,12 @@ export const OAUTH_PRESETS: OAuthPreset[] = [
       'https://www.googleapis.com/auth/youtube.readonly',
       'https://www.googleapis.com/auth/youtube.force-ssl',
     ],
+  },
+  {
+    provider: OAuthProvider.LINEAR,
+    source: 'linear.app',
+    label: 'Linear',
+    scopes: ['read', 'write'],
   },
   {
     provider: OAuthProvider.TRELLO,
