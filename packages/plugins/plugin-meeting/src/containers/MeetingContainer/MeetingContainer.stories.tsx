@@ -36,8 +36,8 @@ const MarkdownExtensionsPlugin = Plugin.define({ id: 'story-markdown-extensions'
 
 const DefaultStory = () => {
   const [space] = useSpaces();
-  const [meeting] = useQuery(space.db, Query.type(Meeting.Meeting));
-  if (!meeting) {
+  const [meeting] = useQuery(space?.db, Query.type(Meeting.Meeting));
+  if (!space || !meeting) {
     return <Loading />;
   }
 

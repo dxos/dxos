@@ -43,7 +43,7 @@ export const useSpace = (spaceId?: SpaceId | PublicKey): Space | undefined => {
  * @param spaceId the id of the space to look for.
  * @deprecated Use useSpace.
  */
-export const useDatabase = (spaceId: SpaceId | undefined): Space['db'] | undefined => {
+export const useDatabase = (spaceId?: SpaceId): Space['db'] | undefined => {
   const space = useSpace(spaceId);
   return space?.db;
 };
