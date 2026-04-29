@@ -158,13 +158,24 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 8px;
-  height: 8px;
-  margin: -4px 0 0 -4px;
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
   border-radius: 50%;
   background: currentcolor;
-  opacity: 0.9;
+  opacity: 0;
   transform: rotate(calc(var(--boot-loader-bar-progress, 0) * -3.6deg)) translateY(-192px);
+  transition: opacity 200ms ease-out;
+}
+
+/*
+ * The driver sets `data-progress-active` on `#boot-loader-disc` while
+ * progress is strictly between 0 and 1, hiding the dot at the empty (0%)
+ * and full (100%) ring states where it would either sit on a bare ring or
+ * coincide with the start of the arc.
+ */
+#boot-loader-disc[data-progress-active] #boot-loader-dot {
+  opacity: 0.9;
 }
 
 #boot-loader-status {

@@ -40,7 +40,11 @@ const BootLoader = ({ status = 'Loading…', markSvg, progress = 0 }: BootLoader
     <>
       <style>{css}</style>
       <div id='boot-loader' role='status' aria-live='polite' aria-label='Initializing'>
-        <div id='boot-loader-disc' style={{ ['--boot-loader-bar-progress' as string]: String(clamped * 100) }}>
+        <div
+          id='boot-loader-disc'
+          style={{ ['--boot-loader-bar-progress' as string]: String(clamped * 100) }}
+          {...(clamped > 0 && clamped < 1 ? { 'data-progress-active': '' } : {})}
+        >
           <div id='boot-loader-bar' />
           <div id='boot-loader-dot' />
           {markSvg ? <div id='boot-loader-mark' dangerouslySetInnerHTML={{ __html: markSvg }} /> : null}
@@ -102,7 +106,7 @@ const DeterminateStory = () => {
   useEffect(() => {
     let loaded = 0;
     const handle = setInterval(() => {
-      loaded += 1;
+      loaded += Math.abs(Math.random());
       setProgress(loaded / STORY_PLUGIN_COUNT);
       if (loaded >= STORY_PLUGIN_COUNT) {
         clearInterval(handle);

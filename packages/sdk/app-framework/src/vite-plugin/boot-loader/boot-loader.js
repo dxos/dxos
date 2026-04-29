@@ -37,7 +37,14 @@ window.__bootLoader = {
     }
     var clamped = typeof fraction !== 'number' || !isFinite(fraction) || fraction < 0 ? 0 : Math.min(1, fraction);
     element.style.setProperty('--boot-loader-bar-progress', String(clamped * 100));
+    // Toggle the leading-edge dot only while progress is strictly in (0, 1).
+    if (clamped > 0 && clamped < 1) {
+      element.setAttribute('data-progress-active', '');
+    } else {
+      element.removeAttribute('data-progress-active');
+    }
   },
+
   dismiss: function () {
     var element = document.getElementById('boot-loader');
     if (element && element.parentNode) {
