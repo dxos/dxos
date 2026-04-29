@@ -7,7 +7,7 @@ import React, { type FormEvent, useCallback, useEffect, useState } from 'react';
 
 import { Context } from '@dxos/context';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button, Input, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, IconButton, Input, Message, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -17,13 +17,6 @@ import { useHubHttpClient } from '../../state/use-hub-http';
 
 type AccountState = 'loading' | 'present' | 'missing' | 'error';
 
-/**
- * Profile-page Account panel. Self-contained: fetches via `client.edge.http`,
- * caches in localStorage via `accountCacheAtom`, and renders one of three states:
- * - `present`: signed-in identity is bound to a Hub Account; show email/role/quota.
- * - `missing`: identity has no Account binding; show "no edge access" warning + request-access form.
- * - `error`: network/unknown error; surface a brief offline notice while keeping cached state.
- */
 export const AccountContainer = () => {
   const { t } = useTranslation(meta.id);
   const identity = useIdentity();
@@ -34,12 +27,10 @@ export const AccountContainer = () => {
   const [requestEmail, setRequestEmail] = useState('');
   const [requestSubmitted, setRequestSubmitted] = useState(false);
 
-  // Shared hub HTTP client. The single instance lets the VP-auth handshake
-  // (request → 401 challenge → signed retry) run once for the session
-  // instead of once per profile panel.
+  // Single shared instance keeps the VP-auth handshake (request → 401 → signed
+  // retry) at one round-trip per session instead of one per panel.
   const hubHttp = useHubHttpClient();
 
-  // Background refresh on mount.
   useEffect(() => {
     if (!hubHttp) {
       return;
@@ -99,7 +90,7 @@ export const AccountContainer = () => {
         const identityKey = identity?.identityKey.toHex();
         await hubHttp.requestAccess(new Context(), { email, identityKey });
       } catch {
-        // Surface a generic confirmation -- we don't want to leak failure details.
+        // Surface a generic confirmation; failure details would leak signal.
       }
       setRequestSubmitted(true);
     },
@@ -110,17 +101,18 @@ export const AccountContainer = () => {
 
   return (
     <Settings.Viewport>
-      <Settings.Section title={t('account-section.title')}>
-        {accountState === 'loading' ? (
-          <Settings.Item title={t('account-loading.message')} />
-        ) : accountState === 'missing' ? (
+      <Settings.Section title={t('account-section.title')} description={t('account-section.description')}>
+        {accountState === 'loading' ? null : accountState === 'missing' ? (
           <>
-            <Settings.Item title={t('no-edge-access.title')} description={t('no-edge-access.description')} />
-            <Settings.Item title={t('request-access.button')}>
+            <Message.Root valence='warning'>
+              <Message.Title icon='ph--warning--duotone'>{t('no-edge-access.title')}</Message.Title>
+              <Message.Content>{t('no-edge-access.description')}</Message.Content>
+            </Message.Root>
+            <Settings.Item title={t('request-access.label')} description={t('request-access.description')}>
               {requestSubmitted ? (
-                <span className='text-sm'>{t('access-request-submitted.message')}</span>
+                <span className='text-sm text-description'>{t('access-request-submitted.message')}</span>
               ) : (
-                <form onSubmit={handleRequestAccess} className='flex gap-2 items-center'>
+                <form onSubmit={handleRequestAccess} className='flex gap-2 items-center justify-end'>
                   <Input.Root>
                     <Input.TextInput
                       type='email'
@@ -132,35 +124,34 @@ export const AccountContainer = () => {
                     />
                   </Input.Root>
                   <Button type='submit' density='fine'>
-                    {t('request-access.button')}
+                    {t('request-access.label')}
                   </Button>
                 </form>
               )}
             </Settings.Item>
           </>
+        ) : accountState === 'error' && !account ? (
+          <Message.Root valence='error'>
+            <Message.Title icon='ph--cloud-x--duotone'>{t('account-offline.title')}</Message.Title>
+            <Message.Content>{t('account-offline.description')}</Message.Content>
+          </Message.Root>
         ) : account ? (
-          <>
-            <Settings.Item title={t('email.label')} description={account.email}>
-              {!account.emailVerified ? (
-                <div className='flex flex-col gap-1 items-end'>
-                  <Button onClick={handleResend} density='fine'>
-                    {t('resend-verification.label')}
-                  </Button>
-                  {resendStatus ? <span className='text-xs'>{resendStatus}</span> : null}
-                </div>
-              ) : (
-                <span className='text-sm'>✓</span>
-              )}
-            </Settings.Item>
-            <Settings.Item title={t('role.label')} description={account.role} />
-            <Settings.Item
-              title={t('invitations-remaining.label')}
-              description={String(account.invitationsRemaining)}
-            />
-          </>
-        ) : (
-          <Settings.Item title={t('account-offline.message')} />
-        )}
+          <Settings.Item title={t('email.label')} description={account.email}>
+            {account.emailVerified ? (
+              <Icon icon='ph--check-circle--duotone' size={5} classNames='text-success-text justify-self-end' />
+            ) : (
+              <div className='flex flex-col gap-1 items-end'>
+                <IconButton
+                  icon='ph--paper-plane-tilt--regular'
+                  label={t('resend-verification.label')}
+                  onClick={handleResend}
+                  density='fine'
+                />
+                {resendStatus ? <span className='text-xs text-description'>{resendStatus}</span> : null}
+              </div>
+            )}
+          </Settings.Item>
+        ) : null}
       </Settings.Section>
     </Settings.Viewport>
   );

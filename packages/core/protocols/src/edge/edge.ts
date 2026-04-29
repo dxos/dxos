@@ -681,15 +681,12 @@ export type RedeemInvitationCodeResponse =
   | { loginToken: string }
   | { needsIdentity: true };
 
-export type AccountRole = 'user' | 'admin';
-
 export const GetAccountResponseSchema = Schema.Struct({
   identityKey: Schema.String,
   email: Schema.String,
   emailVerified: Schema.Boolean,
   /** ISO timestamp. */
   createdAt: Schema.String,
-  role: Schema.Literal('user', 'admin'),
   invitationsRemaining: Schema.Number,
 });
 export type GetAccountResponse = Schema.Schema.Type<typeof GetAccountResponseSchema>;

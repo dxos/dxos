@@ -33,7 +33,7 @@ export const list = Command.make(
       const verified = account.emailVerified ? 'verified' : 'unverified';
       const created = new Date(account.createdAt).toLocaleString();
       yield* Console.log(
-        `  ${account.identityKey}  ${account.email.padEnd(36)} ${verified.padEnd(11)} role=${account.role.padEnd(5)} invites=${account.invitationsRemaining}  ${created}`,
+        `  ${account.identityKey}  ${account.email.padEnd(36)} ${verified.padEnd(11)} invites=${account.invitationsRemaining}  ${created}`,
       );
     }
   }),

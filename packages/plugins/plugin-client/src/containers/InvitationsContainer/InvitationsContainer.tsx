@@ -6,7 +6,7 @@ import { useAtom, useAtomSet } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { Context } from '@dxos/context';
-import { Button, Clipboard, useTranslation } from '@dxos/react-ui';
+import { Clipboard, Icon, IconButton, List, ListItem, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -14,25 +14,13 @@ import { meta } from '#meta';
 import { type AccountCacheInvitation, accountCacheAtom } from '../../state/account-cache';
 import { useHubHttpClient } from '../../state/use-hub-http';
 
-const formatStatus = (row: AccountCacheInvitation, t: (key: string, opts?: any) => string): string => {
-  if (row.redeemedByIdentityKey) {
-    return t('invitation-redeemed.label');
-  }
-  return t('invitation-available.label');
-};
-
-/**
- * Profile-page Invitations panel. Self-contained: fetches via `client.edge.http`,
- * lazily issues new codes on demand, and renders the list with copy-to-clipboard.
- */
 export const InvitationsContainer = () => {
   const { t } = useTranslation(meta.id);
   const [cache] = useAtom(accountCacheAtom);
   const setCache = useAtomSet(accountCacheAtom);
   const [pending, setPending] = useState(false);
 
-  // Shared hub HTTP client (see `useHubHttpClient`). Account/invitation
-  // routes live on hub-service, not the edge worker.
+  // Account/invitation routes live on hub-service, not the edge worker.
   const hubHttp = useHubHttpClient();
 
   useEffect(() => {
@@ -63,9 +51,8 @@ export const InvitationsContainer = () => {
     setPending(true);
     try {
       const result = await hubHttp.issueAccountInvitation(new Context());
-      // Optimistically push the new code and decrement the remaining quota --
-      // the server consumes one invitation slot at issue time. The next
-      // refresh reconciles with authoritative state.
+      // Optimistically push the new code and decrement the remaining quota; the
+      // server consumes one slot at issue time. Next refresh reconciles.
       setCache((prev) => ({
         ...prev,
         account: prev.account
@@ -80,32 +67,77 @@ export const InvitationsContainer = () => {
 
   const remaining = cache.account?.invitationsRemaining ?? 0;
   const list = cache.invitations ?? [];
+  const available = list.filter((row) => !row.redeemedByIdentityKey);
+  const redeemed = list.filter((row) => Boolean(row.redeemedByIdentityKey));
 
   return (
     <Clipboard.Provider>
       <Settings.Viewport>
-        <Settings.Section title={t('invitations-section.title')}>
-          <Settings.Item title={t('invitations-remaining.label')} description={String(remaining)}>
-            <Button onClick={handleIssue} disabled={pending || remaining <= 0} density='fine'>
-              {t('generate-invitation.label')}
-            </Button>
+        <Settings.Section title={t('invitations-section.title')} description={t('invitations-section.description')}>
+          <Settings.Item
+            title={t('generate-invitation.label')}
+            description={t('generate-invitation.description', { count: remaining })}
+          >
+            <IconButton
+              icon='ph--plus--regular'
+              label={t('generate-invitation.label')}
+              variant='primary'
+              onClick={handleIssue}
+              disabled={pending || remaining <= 0}
+            />
           </Settings.Item>
-
-          {list.length === 0 ? (
-            <Settings.Item title={t('no-invitations.title')} />
-          ) : (
-            list.map((row) => (
-              <Settings.Item
-                key={row.code}
-                title={row.code}
-                description={`${formatStatus(row, t)} · ${new Date(row.createdAt).toLocaleString()}`}
-              >
-                {!row.redeemedByIdentityKey ? <Clipboard.IconButton value={row.code} /> : null}
-              </Settings.Item>
-            ))
-          )}
         </Settings.Section>
+
+        {available.length > 0 ? (
+          <Settings.Section title={t('available-invitations.title')}>
+            <List>
+              {available.map((row) => (
+                <AvailableInvitationItem key={row.code} row={row} />
+              ))}
+            </List>
+          </Settings.Section>
+        ) : null}
+
+        {redeemed.length > 0 ? (
+          <Settings.Section title={t('redeemed-invitations.title')}>
+            <List>
+              {redeemed.map((row) => (
+                <RedeemedInvitationItem key={row.code} row={row} />
+              ))}
+            </List>
+          </Settings.Section>
+        ) : null}
       </Settings.Viewport>
     </Clipboard.Provider>
+  );
+};
+
+const AvailableInvitationItem = ({ row }: { row: AccountCacheInvitation }) => (
+  <ListItem.Root classNames='grid grid-cols-[min-content_1fr_min-content] items-center gap-2'>
+    <ListItem.Endcap>
+      <Icon icon='ph--paper-plane-tilt--duotone' size={5} classNames='text-description' />
+    </ListItem.Endcap>
+    <div className='flex flex-col min-w-0'>
+      <ListItem.Heading classNames='font-mono truncate'>{row.code}</ListItem.Heading>
+      <p className='text-description text-xs'>{new Date(row.createdAt).toLocaleString()}</p>
+    </div>
+    <ListItem.Endcap>
+      <Clipboard.IconButton value={row.code} />
+    </ListItem.Endcap>
+  </ListItem.Root>
+);
+
+const RedeemedInvitationItem = ({ row }: { row: AccountCacheInvitation }) => {
+  const date = row.redeemedAt ?? row.createdAt;
+  return (
+    <ListItem.Root classNames='grid grid-cols-[min-content_1fr] items-center gap-2'>
+      <ListItem.Endcap>
+        <Icon icon='ph--check-circle--duotone' size={5} classNames='text-success-text' />
+      </ListItem.Endcap>
+      <div className='flex flex-col min-w-0'>
+        <ListItem.Heading classNames='font-mono truncate'>{row.code}</ListItem.Heading>
+        <p className='text-description text-xs'>{new Date(date).toLocaleString()}</p>
+      </div>
+    </ListItem.Root>
   );
 };

@@ -12,7 +12,6 @@ const AccountCacheValue = Schema.Struct({
   emailVerified: Schema.Boolean,
   /** ISO timestamp. */
   createdAt: Schema.String,
-  role: Schema.Literal('user', 'admin'),
   invitationsRemaining: Schema.Number,
 });
 type AccountCacheValue = Schema.Schema.Type<typeof AccountCacheValue>;
