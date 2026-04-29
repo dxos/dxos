@@ -62,11 +62,13 @@
 
 ## Workflow
 
-- Never work on main; if not already in a worktree, create a new git worktree for the branch you are working on.
-- IMPORTANT: Do not change the branch or worktree after you have started unless you are instructed to directly by the user.
-- **IMPORTANT**: Always work in the worktree directory the harness assigned to you — do NOT `cd` into other worktrees or create parallel worktrees on the side. The harness UI tracks progress by watching that directory; working elsewhere makes changes invisible to the user. If the user asks you to continue a different branch, check out that branch in the assigned worktree (clean up the old branch first if needed); do not switch to another worktree path.
-- When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
-- Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
+- Never work on `main`
+  - Before working on code, suggest to the user a worktree name then create the worktree using this or the name provided by the user (adding the agent-name prefix, e.g., `claude/`).
+  - When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
+  - Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
+  - If there are unstaged changes, stash these and move them into the worktree.
+  - IMPORTANT: Do not change the branch or worktree name after you have started unless you are instructed to directly by the user.
+  - **IMPORTANT**: Always work in the worktree directory the harness assigned to you — do NOT `cd` into other worktrees or create parallel worktrees on the side. The harness UI tracks progress by watching that directory; working elsewhere makes changes invisible to the user. If the user asks you to continue a different branch, check out that branch in the assigned worktree (clean up the old branch first if needed); do not switch to another worktree path.
 - Check `moon.yml` for available package tasks
 - Run linter at natural stopping points
 - Confirm work complete before final build/lint check

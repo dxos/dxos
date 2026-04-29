@@ -6,10 +6,10 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useLayout } from '@dxos/app-toolkit/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Entity, Obj, Query } from '@dxos/echo';
-import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
+import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
@@ -18,21 +18,18 @@ import { useGlobalSearch, useGlobalSearchResults } from '#hooks';
 import { meta } from '#meta';
 import { type SearchResult } from '#types';
 
-export type SearchDialogProps = {
+export type SearchDialogProps = AppSurface.SpaceArticleProps<{
   pivotId?: string;
-  space?: Space;
-};
+}>;
 
-export const SearchDialog = ({ pivotId: pivotIdProp, space: spaceProp }: SearchDialogProps) => {
+export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps) => {
   const { t } = useTranslation(meta.id);
-  const layout = useLayout();
-  const pivotId = pivotIdProp ?? layout.active[layout.active.length - 1];
   const { invokePromise } = useOperationInvoker();
   const { setMatch } = useGlobalSearch();
+  const layout = useLayout();
+  const pivotId = pivotIdProp ?? layout.active[layout.active.length - 1];
   const [query, setQuery] = useState<string>();
 
-  const activeSpace = useActiveSpace();
-  const space = spaceProp ?? activeSpace;
   // TODO(burdon): Re-enable full-text search when indexer is available in all environments.
   const objects = useQuery(
     space?.db,
