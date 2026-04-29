@@ -45,7 +45,7 @@ export const AccountContainer = () => {
       return;
     }
     let cancelled = false;
-    (async () => {
+    void (async () => {
       try {
         const account = await hubHttp.getAccount(new Context());
         if (cancelled) {
@@ -77,14 +77,14 @@ export const AccountContainer = () => {
     try {
       const result = await hubHttp.resendVerificationEmail(new Context());
       if (result.sent) {
-        setResendStatus(t('verification email sent'));
+        setResendStatus(t('verification-sent.message'));
       } else if (result.cooldownSecondsRemaining) {
-        setResendStatus(t('verification cooldown', { seconds: result.cooldownSecondsRemaining }));
+        setResendStatus(t('verification-cooldown.message', { seconds: result.cooldownSecondsRemaining }));
       } else {
-        setResendStatus(t('verification not sent'));
+        setResendStatus(t('verification-failed.message'));
       }
     } catch {
-      setResendStatus(t('verification not sent'));
+      setResendStatus(t('verification-failed.message'));
     }
   }, [hubHttp, t]);
 
@@ -110,29 +110,29 @@ export const AccountContainer = () => {
 
   return (
     <Settings.Viewport>
-      <Settings.Section title={t('account section title')}>
+      <Settings.Section title={t('account-section.title')}>
         {accountState === 'loading' ? (
-          <Settings.Item title={t('account loading')} />
+          <Settings.Item title={t('account-loading.message')} />
         ) : accountState === 'missing' ? (
           <>
-            <Settings.Item title={t('no edge access title')} description={t('no edge access description')} />
-            <Settings.Item title={t('request access button')}>
+            <Settings.Item title={t('no-edge-access.title')} description={t('no-edge-access.description')} />
+            <Settings.Item title={t('request-access.button')}>
               {requestSubmitted ? (
-                <span className='text-sm'>{t('access request submitted')}</span>
+                <span className='text-sm'>{t('access-request-submitted.message')}</span>
               ) : (
                 <form onSubmit={handleRequestAccess} className='flex gap-2 items-center'>
                   <Input.Root>
                     <Input.TextInput
                       type='email'
                       required
-                      placeholder={t('access request email placeholder')}
+                      placeholder={t('access-request-email.placeholder')}
                       value={requestEmail}
                       onChange={(event) => setRequestEmail(event.target.value)}
                       classNames='min-w-64'
                     />
                   </Input.Root>
                   <Button type='submit' density='fine'>
-                    {t('request access button')}
+                    {t('request-access.button')}
                   </Button>
                 </form>
               )}
@@ -140,11 +140,11 @@ export const AccountContainer = () => {
           </>
         ) : account ? (
           <>
-            <Settings.Item title={t('email label')} description={account.email}>
+            <Settings.Item title={t('email.label')} description={account.email}>
               {!account.emailVerified ? (
                 <div className='flex flex-col gap-1 items-end'>
                   <Button onClick={handleResend} density='fine'>
-                    {t('resend verification')}
+                    {t('resend-verification.label')}
                   </Button>
                   {resendStatus ? <span className='text-xs'>{resendStatus}</span> : null}
                 </div>
@@ -152,14 +152,14 @@ export const AccountContainer = () => {
                 <span className='text-sm'>✓</span>
               )}
             </Settings.Item>
-            <Settings.Item title={t('role label')} description={account.role} />
+            <Settings.Item title={t('role.label')} description={account.role} />
             <Settings.Item
-              title={t('invitations remaining label')}
+              title={t('invitations-remaining.label')}
               description={String(account.invitationsRemaining)}
             />
           </>
         ) : (
-          <Settings.Item title={t('account offline')} />
+          <Settings.Item title={t('account-offline.message')} />
         )}
       </Settings.Section>
     </Settings.Viewport>

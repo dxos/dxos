@@ -273,11 +273,7 @@ export class EdgeHttpClient {
    * delivered out-of-band and the response is `{}`. Response is identical
    * for unknown emails (enumeration-safe).
    */
-  public async login(
-    ctx: Context,
-    body: LoginRequest,
-    args?: EdgeHttpCallArgs,
-  ): Promise<LoginResponse> {
+  public async login(ctx: Context, body: LoginRequest, args?: EdgeHttpCallArgs): Promise<LoginResponse> {
     return this._call(ctx, new URL('/account/login', this.baseUrl), {
       ...args,
       body,
@@ -297,7 +293,6 @@ export class EdgeHttpClient {
     });
   }
 
-
   // Account-bound endpoints below: do NOT set `auth: true`. That option pre-fetches
   // `/auth` to grab a challenge before sending the body (an optimization for large
   // POSTs). Hub-service has no `/auth` VP-challenge endpoint -- it has an admin login
@@ -308,10 +303,7 @@ export class EdgeHttpClient {
     return this._call(ctx, new URL('/account/me', this.baseUrl), { ...args, method: 'GET' });
   }
 
-  public async listAccountInvitations(
-    ctx: Context,
-    args?: EdgeHttpCallArgs,
-  ): Promise<ListAccountInvitationsResponse> {
+  public async listAccountInvitations(ctx: Context, args?: EdgeHttpCallArgs): Promise<ListAccountInvitationsResponse> {
     return this._call(ctx, new URL('/account/invitations', this.baseUrl), { ...args, method: 'GET' });
   }
 

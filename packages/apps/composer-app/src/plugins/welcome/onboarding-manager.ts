@@ -268,9 +268,7 @@ export class OnboardingManager {
     code?: string;
     identityKey?: string;
   }): Promise<
-    | { accountId: string; emailVerificationSent: boolean }
-    | { loginToken: string }
-    | { needsIdentity: true }
+    { accountId: string; emailVerificationSent: boolean } | { loginToken: string } | { needsIdentity: true }
   > {
     invariant(this._hubUrl);
     const url = new URL('/account/invitation-code/redeem', this._hubUrl);
@@ -288,7 +286,11 @@ export class OnboardingManager {
       throw new Error(`Account redemption failed: HTTP ${response.status} (non-JSON response)`);
     }
     if (!envelope.success) {
-      log.error('account redemption failed', { status: response.status, message: envelope.message, data: envelope.data });
+      log.error('account redemption failed', {
+        status: response.status,
+        message: envelope.message,
+        data: envelope.data,
+      });
       const error: any = new Error(`Account redemption failed: ${envelope.message ?? 'unknown error'}`);
       error.data = envelope.data;
       throw error;

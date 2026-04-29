@@ -19,13 +19,7 @@ export type RedeemResult =
  * POST `/account/invitation-code/validate` on hub-service. Returns true if the code
  * exists, isn't revoked, and hasn't been redeemed yet.
  */
-export const validateInvitationCode = async ({
-  hubUrl,
-  code,
-}: {
-  hubUrl: string;
-  code: string;
-}): Promise<boolean> => {
+export const validateInvitationCode = async ({ hubUrl, code }: { hubUrl: string; code: string }): Promise<boolean> => {
   try {
     const response = await fetch(new URL('/account/invitation-code/validate', hubUrl), {
       method: 'POST',
@@ -123,4 +117,3 @@ export const login = async ({
   }
   return response.json();
 };
-

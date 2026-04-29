@@ -43,9 +43,7 @@ export const hubApiRequest = <T>(
       }
     }
 
-    let request = HttpClientRequest.make(method)(url.toString()).pipe(
-      HttpClientRequest.setHeader('x-api-key', apiKey),
-    );
+    let request = HttpClientRequest.make(method)(url.toString()).pipe(HttpClientRequest.setHeader('x-api-key', apiKey));
     if (options?.body !== undefined) {
       request = yield* HttpClientRequest.bodyJson(options.body)(request);
     }

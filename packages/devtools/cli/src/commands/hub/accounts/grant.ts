@@ -16,14 +16,15 @@ export const grant = Command.make(
   'grant',
   {
     identityKey: Args.text({ name: 'identity-key' }).pipe(Args.withDescription('Account identity key.')),
-    count: Options.integer('count').pipe(Options.withDescription('Number of invitations to add.'), Options.withAlias('n')),
+    count: Options.integer('count').pipe(
+      Options.withDescription('Number of invitations to add.'),
+      Options.withAlias('n'),
+    ),
   },
   Effect.fn(function* ({ identityKey, count }) {
-    const result = yield* hubApiRequest<GetAccountResponse>(
-      'POST',
-      `/api/accounts/${identityKey}/invitations/grant`,
-      { body: { count } },
-    ).pipe(Effect.catchAll((error) => Effect.fail(new Error(formatHubError(error)))));
+    const result = yield* hubApiRequest<GetAccountResponse>('POST', `/api/accounts/${identityKey}/invitations/grant`, {
+      body: { count },
+    }).pipe(Effect.catchAll((error) => Effect.fail(new Error(formatHubError(error)))));
 
     yield* Console.log(`Granted ${count} invitations. Account now has ${result.invitationsRemaining} remaining.`);
   }),

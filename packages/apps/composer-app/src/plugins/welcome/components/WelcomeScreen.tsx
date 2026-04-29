@@ -126,7 +126,6 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       if (identityCreated) {
         await invokePromise(ClientOperation.CreateAgent);
       }
-
     };
 
     await invokePromise(SpaceOperation.Join, {

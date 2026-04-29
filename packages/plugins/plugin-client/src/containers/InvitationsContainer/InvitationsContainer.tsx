@@ -16,9 +16,9 @@ import { useHubHttpClient } from '../../state/use-hub-http';
 
 const formatStatus = (row: AccountCacheInvitation, t: (key: string, opts?: any) => string): string => {
   if (row.redeemedByIdentityKey) {
-    return t('invitation redeemed');
+    return t('invitation-redeemed.label');
   }
-  return t('invitation available');
+  return t('invitation-available.label');
 };
 
 /**
@@ -84,15 +84,15 @@ export const InvitationsContainer = () => {
   return (
     <Clipboard.Provider>
       <Settings.Viewport>
-        <Settings.Section title={t('invitations section title')}>
-          <Settings.Item title={t('invitations remaining label')} description={String(remaining)}>
+        <Settings.Section title={t('invitations-section.title')}>
+          <Settings.Item title={t('invitations-remaining.label')} description={String(remaining)}>
             <Button onClick={handleIssue} disabled={pending || remaining <= 0} density='fine'>
-              {t('generate invitation')}
+              {t('generate-invitation.label')}
             </Button>
           </Settings.Item>
 
           {list.length === 0 ? (
-            <Settings.Item title={t('no invitations issued')} />
+            <Settings.Item title={t('no-invitations.title')} />
           ) : (
             list.map((row) => (
               <Settings.Item

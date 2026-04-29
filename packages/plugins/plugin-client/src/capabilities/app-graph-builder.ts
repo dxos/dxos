@@ -72,7 +72,7 @@ export default Capability.makeModule(
                 data: Account.Account,
                 type: meta.id,
                 properties: {
-                  label: ['account panel label', { ns: meta.id }],
+                  label: ['account-panel.label', { ns: meta.id }],
                   icon: 'ph--identification-card--regular',
                 },
               }),
@@ -100,7 +100,7 @@ export default Capability.makeModule(
                 data: Account.Invitations,
                 type: meta.id,
                 properties: {
-                  label: ['invitations panel label', { ns: meta.id }],
+                  label: ['invitations-panel.label', { ns: meta.id }],
                   icon: 'ph--ticket--regular',
                 },
               }),

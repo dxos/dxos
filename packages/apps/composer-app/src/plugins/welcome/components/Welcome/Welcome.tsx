@@ -4,14 +4,7 @@
 
 import '@fontsource/poiret-one';
 
-import React, {
-  type ChangeEvent,
-  type KeyboardEvent,
-  type ReactNode,
-  useCallback,
-  useRef,
-  useState,
-} from 'react';
+import React, { type KeyboardEvent, type ReactNode, useCallback, useRef, useState } from 'react';
 
 import { supportsNativePasskeys } from '@dxos/app-toolkit';
 import { DXOSHorizontalType } from '@dxos/brand';
@@ -99,7 +92,7 @@ export const Welcome = ({
 
   const handleValidateCode = useCallback(async () => {
     if (!validInvitationCode(code)) {
-      setCodeError(t('invitation-code-format-error'));
+      setCodeError(t('invitation-code-format-error.message'));
       codeRef.current?.focus();
       return;
     }
@@ -108,7 +101,7 @@ export const Welcome = ({
     try {
       const ok = (await onValidateInvitationCode?.(code)) ?? false;
       if (!ok) {
-        setCodeError(t('invitation-code-invalid-error'));
+        setCodeError(t('invitation-code-invalid-error.message'));
         codeRef.current?.focus();
         return;
       }
@@ -253,9 +246,7 @@ export const Welcome = ({
                   onSubmit={handleValidateCode}
                   validation={codeError}
                 />
-                <SwapLink onClick={() => setSignupMode('waitlist')}>
-                  {t('no-invitation-code-link')}
-                </SwapLink>
+                <SwapLink onClick={() => setSignupMode('waitlist')}>{t('no-invitation-code-link.label')}</SwapLink>
               </div>
             )}
 
@@ -277,9 +268,7 @@ export const Welcome = ({
                   submitDisabled={!validEmail(waitlistEmail) || pending}
                   onSubmit={handleJoinWaitlist}
                 />
-                <SwapLink onClick={() => setSignupMode('code')}>
-                  {t('have-invitation-code-link')}
-                </SwapLink>
+                <SwapLink onClick={() => setSignupMode('code')}>{t('have-invitation-code-link.label')}</SwapLink>
               </div>
             )}
 
@@ -303,9 +292,7 @@ export const Welcome = ({
                   onSubmit={handleCreateAccount}
                   validation={error ? t('email-error.message') : null}
                 />
-                <SwapLink onClick={() => setSignupStep('collect')}>
-                  {t('use-different-code-link')}
-                </SwapLink>
+                <SwapLink onClick={() => setSignupStep('collect')}>{t('use-different-code-link.label')}</SwapLink>
               </div>
             )}
           </div>
@@ -369,15 +356,7 @@ export const Welcome = ({
 // Sub-components
 //
 
-const TabButton = ({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) => (
+const TabButton = ({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) => (
   <button
     type='button'
     onClick={onClick}
@@ -538,7 +517,7 @@ const LoginTab = ({
             onClick={() => setMoreOpen(!moreOpen)}
             className='flex items-center justify-center gap-1 text-sm text-description hover:text-white underline underline-offset-4'
           >
-            <span>{t('more-ways-to-sign-in')}</span>
+            <span>{t('more-ways-to-sign-in.label')}</span>
             <Icon icon={moreOpen ? 'ph--caret-up--regular' : 'ph--caret-down--regular'} size={4} />
           </button>
 
@@ -595,11 +574,7 @@ const InlineForm = ({
   return (
     <Input.Root>
       <div className='flex flex-col gap-2 sm:flex-row sm:gap-0 sm:items-stretch'>
-        <Input.TextInput
-          ref={ref}
-          classNames={mx('bg-black! flex-1 sm:rounded-r-none', inputClasses)}
-          {...rest}
-        />
+        <Input.TextInput ref={ref} classNames={mx('bg-black! flex-1 sm:rounded-r-none', inputClasses)} {...rest} />
         <Button
           variant='primary'
           classNames='disabled:bg-neutral-800 sm:rounded-l-none'
