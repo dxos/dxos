@@ -10,8 +10,15 @@
 // script entry that's promoted automatically — there's no API to opt out of
 // motion on cold load, by design):
 //   - State 1 (slow tick):  auto-entered the moment the inline script runs;
-//                           asymptotic creep toward `CREEP_ASYMPTOTE`%.
+//                           asymptotic creep toward `STATE_1_ASYMPTOTE`%.
 //   - State 2 (progress):   host-driven, value supplied to `progress(fraction)`.
+//                           The creep stays alive in state 2 too, with a
+//                           ceiling that climbs `STATE_2_BUMP` percent ahead
+//                           of the most recent `progress()` call (capped at
+//                           `ABSOLUTE_CEILING`). Between sparse host updates
+//                           the ring keeps inching forward toward that
+//                           ceiling, so a long activation gap doesn't read
+//                           as a frozen disc.
 //
 // `window.__bootLoader.status(text)`        updates the visible status line.
 // `window.__bootLoader.progress(fraction)`  enter state 2 with `fraction` ∈ [0, 1].
@@ -22,29 +29,44 @@
 (function () {
   performance.mark('boot:html-parsed');
 
-  // State 1 (slow tick) constants. The creep is an asymptotic ease toward
-  // `CREEP_ASYMPTOTE` percent so the disc visibly *moves* without ever
-  // implying real progress. The 240ms `transition` on the disc smooths each
-  // tick and the eventual jump into state 2.
-  var CREEP_ASYMPTOTE = 20;
+  // Asymptotic creep — `next = raw + (ceiling - raw) * CREEP_RATE` per tick,
+  // so the var eases toward `ceiling` and never quite reaches it.
   var CREEP_RATE = 0.04;
   var CREEP_TICK_MS = 100;
+  var STATE_1_ASYMPTOTE = 20;
+  // How far ahead of the latest `progress()` call the creep can run on its
+  // own. Larger values bridge longer host-silent stretches but risk passing
+  // the host before it reports.
+  var STATE_2_BUMP = 15;
+  // Ring never auto-creeps past this — keeps the user from interpreting the
+  // ring as "almost done" while the host hasn't actually said so.
+  var ABSOLUTE_CEILING = 90;
 
   // 0 = idle (transient — auto-promoted to 1 immediately below),
   // 1 = slow tick, 2 = host-driven progress.
   var state = 0;
   var creepHandle = null;
+  var creepCeiling = STATE_1_ASYMPTOTE;
 
-  function startCreep() {
+  function ensureCreep() {
+    if (creepHandle != null) {
+      return;
+    }
     creepHandle = setInterval(function () {
       var element = document.getElementById('boot-loader-disc');
       if (!element) {
         return;
       }
       var raw = parseFloat(element.style.getPropertyValue('--boot-loader-bar-progress')) || 0;
-      var next = raw + (CREEP_ASYMPTOTE - raw) * CREEP_RATE;
+      // Already at (or above) the ceiling — nothing to do this tick.
+      if (raw >= creepCeiling - 0.1) {
+        return;
+      }
+      var next = raw + (creepCeiling - raw) * CREEP_RATE;
       element.style.setProperty('--boot-loader-bar-progress', String(next));
-      element.setAttribute('data-progress-active', '');
+      if (next > 0 && next < 100) {
+        element.setAttribute('data-progress-active', '');
+      }
     }, CREEP_TICK_MS);
   }
 
@@ -68,9 +90,9 @@
      * `fraction` ∈ [0, 1]. Invalid / negative / non-finite values clamp to
      * 0 (the empty ring) rather than letting `NaN`/`Infinity` slip into
      * `--boot-loader-bar-progress`, which CSS would treat as invalid and
-     * silently reset to the 0% var() default. State 1's creep timer (if
-     * any) is cancelled; the inline-style write takes over smoothly via
-     * the 240ms `transition: --boot-loader-bar-progress`.
+     * silently reset to the 0% var() default. The state-1 creep timer is
+     * left running with a new ceiling so the ring keeps inching forward
+     * between host updates.
      *
      * The ring never regresses: if the requested value is below the
      * current var (e.g. the host's first call is `progress(0)` while the
@@ -79,7 +101,6 @@
      * ring's motion stays monotonic across the state-1 → state-2 boundary.
      */
     progress: function (fraction) {
-      stopCreep();
       state = 2;
       // Set the var on the disc so both the masked ring and the orbiting
       // dot (siblings inside `#boot-loader-disc`) inherit the same value.
@@ -92,6 +113,13 @@
       var currentPct = parseFloat(element.style.getPropertyValue('--boot-loader-bar-progress')) || 0;
       var nextPct = Math.max(currentPct, requestedPct);
       element.style.setProperty('--boot-loader-bar-progress', String(nextPct));
+      // Move the creep ceiling forward (monotonic) so a long gap before the
+      // next `progress()` call still inches the ring toward the new ceiling.
+      var newCeiling = Math.min(nextPct + STATE_2_BUMP, ABSOLUTE_CEILING);
+      if (newCeiling > creepCeiling) {
+        creepCeiling = newCeiling;
+      }
+      ensureCreep();
       // Toggle the leading-edge dot only while progress is strictly in (0, 1).
       if (nextPct > 0 && nextPct < 100) {
         element.setAttribute('data-progress-active', '');
@@ -113,5 +141,5 @@
   // so the disc starts moving on the very first frame the loader paints.
   // The host calls `progress()` later to take over.
   state = 1;
-  startCreep();
+  ensureCreep();
 })();

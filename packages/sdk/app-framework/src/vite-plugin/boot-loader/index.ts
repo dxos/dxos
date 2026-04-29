@@ -14,8 +14,6 @@ export type BootLoaderOptions = {
   /**
    * Initial status text rendered by the loader (replaced via
    * `window.__bootLoader.status(...)` once the host starts firing phase callbacks).
-   *
-   * @default "Loading…"
    */
   status?: string;
 
@@ -60,7 +58,7 @@ export type BootLoaderOptions = {
  * `--boot-loader-bg-dark`, etc.) defined in `boot-loader.css`, so consumers can
  * override them at the document level without us re-parameterizing this plugin.
  */
-export const bootLoaderPlugin = ({ status = 'Loading…', markSvg }: BootLoaderOptions = {}): Plugin => {
+export const bootLoaderPlugin = ({ status, markSvg }: BootLoaderOptions = {}): Plugin => {
   return {
     name: 'app-framework:boot-loader',
     transformIndexHtml() {
