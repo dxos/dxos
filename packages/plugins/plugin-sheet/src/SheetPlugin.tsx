@@ -11,7 +11,7 @@ import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AutomationEvents } from '@dxos/plugin-automation/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
-import { MarkdownEvents } from '@dxos/plugin-markdown';
+import { MarkdownEvents } from '@dxos/plugin-markdown/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
 

@@ -244,9 +244,23 @@ class ManagerImpl implements PluginManager {
   enable(id: string): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       log('enable plugin', { id });
-      const plugin = this._getPlugin(id);
+      let plugin = this._getPlugin(id);
       if (!plugin) {
         return false;
+      }
+
+      // If the plugin is a lazy stub (Plugin.lazy), resolve its loader before
+      // registering modules. The stub carries `meta` synchronously but has an
+      // empty `modules` array until the dynamic import resolves. We swap the
+      // registered plugin in place so that subsequent `enable`/`disable`
+      // operations see the real plugin.
+      if (Plugin.isLazy(plugin)) {
+        log('resolving lazy plugin', { id });
+        yield* PubSub.publish(this.activation, { event: '', state: 'activating', module: `lazy:${id}` });
+        const real = yield* Plugin.resolveLazy(plugin);
+        this._update(this._pluginsAtom, (plugins) => plugins.map((p) => (p.meta.id === id ? real : p)));
+        yield* PubSub.publish(this.activation, { event: '', state: 'activated', module: `lazy:${id}` });
+        plugin = real;
       }
 
       this._update(this._enabledAtom, (enabled) => (enabled.includes(id) ? enabled : [...enabled, id]));

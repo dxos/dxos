@@ -2,13 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-export { MarkdownCapabilities, MarkdownEvents } from './types';
+import { Plugin } from '@dxos/app-framework';
 
-export * from './meta';
-export * from './types';
-export * from './util';
+import { meta } from './meta';
 
-export * from './MarkdownPlugin';
-
-export { MarkdownEditor, MarkdownEditorProvider } from './components';
-export type { MarkdownEditorEditorRootProps } from './components';
+export { meta };
+export const MarkdownPlugin = Plugin.lazy(meta, () => import('./MarkdownPlugin'));

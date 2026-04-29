@@ -5,7 +5,7 @@
 import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { ClientEvents } from '@dxos/plugin-client/types';
-import { MarkdownEvents } from '@dxos/plugin-markdown';
+import { MarkdownEvents } from '@dxos/plugin-markdown/types';
 
 import { AppGraphBuilder, Markdown, OperationHandler, ReactSurface, State } from '#capabilities';
 import { meta } from '#meta';

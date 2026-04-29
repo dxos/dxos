@@ -27,7 +27,7 @@ import { Organization, Person } from '@dxos/types';
 
 import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
 
-import { MarkdownPlugin } from '../../MarkdownPlugin';
+import MarkdownPlugin from '../../MarkdownPlugin';
 import { translations } from '../../translations';
 
 random.seed(1);

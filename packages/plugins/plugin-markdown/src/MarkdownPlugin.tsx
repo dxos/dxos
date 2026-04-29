@@ -32,7 +32,7 @@ import { Markdown, MarkdownEvents } from '#types';
 import { translations } from './translations';
 import { serializer } from './util';
 
-export const MarkdownPlugin = Plugin.define(meta).pipe(
+export default Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addMetadataModule({
     metadata: {
