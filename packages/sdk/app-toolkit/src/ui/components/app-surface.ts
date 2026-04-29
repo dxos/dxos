@@ -297,25 +297,23 @@ export const settings = (
 //
 // SpaceArticle
 //
+// Article-shaped surface whose container resolves a Space (typically via
+// `useActiveSpace()` in the surface callback). Reuses the `Article` role token
+// — the deck plugin keeps passing standard `ArticleData` — and only specializes
+// the props the consumer expects by adding a non-null `space` field synthesized
+// at the surface boundary.
+//
 
-/**
- * Role token for the `space-article` role. Article-shaped surface whose subject
- * is a Space (not an ECHO object). Renders inside a plank; `attendableId` is
- * the Space id.
- */
-export const SpaceArticle: Surface.RoleToken<SpaceArticleData> = Surface.makeType('space-article');
-
-/** Surface data for space-article role. */
-export type SpaceArticleData<Props extends {} = {}> = {
-  attendableId: string;
+/** Surface data for an article whose container receives a resolved Space.
+ *  `subject` from `ArticleData` is widened to optional — Space-scoped articles
+ *  often render at routes whose subject is a literal id rather than an object,
+ *  and the container reads `space` (synthesized at the surface boundary) instead. */
+export type SpaceArticleData<Props extends {} = {}> = Omit<ArticleData<unknown>, 'subject'> & {
+  subject?: unknown;
   space: Space;
-  properties?: Record<string, any>;
-  variant?: string;
-  path?: string[];
-  popoverAnchorId?: string;
 } & Props;
 
-/** Component props for space-article role. */
+/** Component props for an article whose container receives a resolved Space. */
 export type SpaceArticleProps<Props extends {} = {}> = SpaceArticleData<Props> & {
   role: 'article' | (string & {});
 };

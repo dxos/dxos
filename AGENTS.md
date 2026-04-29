@@ -62,7 +62,7 @@
 ## Workflow
 
 - Never work on `main`
-  - Before working on code, suggest to the user a worktree name then create the worktree using this or the name provided by the user (adding the `claude/` prefix).
+  - Before working on code, suggest to the user a worktree name then create the worktree using this or the name provided by the user (adding the agent-name prefix, e.g., `claude/`).
   - When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
   - Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
   - If there are unstaged changes, stash these and move them into the worktree.

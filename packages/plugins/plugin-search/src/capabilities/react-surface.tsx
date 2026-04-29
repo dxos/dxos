@@ -29,7 +29,7 @@ export default Capability.makeModule(() =>
 
           return (
             <SearchContextProvider>
-              <SearchDialog space={space} {...data.props} />
+              <SearchDialog {...data.props} space={space} />
             </SearchContextProvider>
           );
         },

@@ -112,7 +112,7 @@ export default Capability.makeModule(() =>
           if (!space) {
             return null;
           }
-          return <SampleDeckCompanion role='deck-companion--sample-panel' space={space} />;
+          return <SampleDeckCompanion role='deck-companion--sample-panel' space={space} attendableId={space.id} />;
         },
       }),
     ]),
