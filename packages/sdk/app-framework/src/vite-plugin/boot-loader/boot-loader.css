@@ -19,7 +19,12 @@
    * (mark size, dot orbit radius, status offset, …) follows.
    */
   --boot-loader-disc-size: 384px;
-  --boot-loader-mark-size: 256px;
+  /*
+   * Match the React `Placeholder`'s logo box (`h-[300px] w-[300px]` at the
+   * `stage >= 1` keyframe) so the brand mark doesn't visibly jump size when
+   * the loader hands off.
+   */
+  --boot-loader-mark-size: 300px;
   --boot-loader-dot-size: 5px;
   --boot-loader-line-thickness: 1px;
   --boot-loader-line-feather: 2px;
