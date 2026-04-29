@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export enum LoadingState {
   Loading = 0,
@@ -23,6 +23,14 @@ export enum LoadingState {
  */
 export const useLoading = (ready: boolean, debounce = 0) => {
   const [stage, setStage] = useState<LoadingState>(LoadingState.Loading);
+  // Mirror `ready` into a ref so the interval's `setStage` callback can read
+  // the latest value without depending on the effect re-running. The pure
+  // closure-capture pattern (with `ready` in deps) sticks the FSM at
+  // `FadeIn` whenever HMR doesn't propagate the dep change end-to-end —
+  // a ref sidesteps that entirely and fires the read on every tick.
+  const readyRef = useRef(ready);
+  readyRef.current = ready;
+
   useEffect(() => {
     if (!debounce) {
       return;
@@ -30,18 +38,18 @@ export const useLoading = (ready: boolean, debounce = 0) => {
 
     const i = setInterval(() => {
       setStage((stage) => {
+        const isReady = readyRef.current;
         switch (stage) {
           case LoadingState.Loading: {
-            if (!ready) {
+            if (!isReady) {
               return LoadingState.FadeIn;
-            } else {
-              clearInterval(i);
-              return LoadingState.Done;
             }
+            clearInterval(i);
+            return LoadingState.Done;
           }
 
           case LoadingState.FadeIn: {
-            if (ready) {
+            if (isReady) {
               return LoadingState.FadeOut;
             }
             break;
@@ -58,13 +66,7 @@ export const useLoading = (ready: boolean, debounce = 0) => {
     }, debounce);
 
     return () => clearInterval(i);
-    // `ready` is in deps so the interval's closure refreshes when the host
-    // flips it true — without this, the `setStage` callback keeps reading
-    // the initial `ready=false` and the FSM sticks at `FadeIn` forever
-    // (the previous behaviour was masked when the boot loader was dismissed
-    // at `stage >= 1`; now that hand-off only happens at `stage >= 2`, the
-    // stuck-at-FadeIn case becomes visible as a hung placeholder).
-  }, [debounce, ready]);
+  }, [debounce]);
 
   if (!debounce) {
     return ready ? LoadingState.Done : LoadingState.Loading;
