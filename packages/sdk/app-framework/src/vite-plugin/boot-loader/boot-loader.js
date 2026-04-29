@@ -29,15 +29,20 @@
 (function () {
   performance.mark('boot:html-parsed');
 
-  // Asymptotic creep — `next = raw + (ceiling - raw) * CREEP_RATE` per tick,
+  // Asymptotic creep — `next = raw + (ceiling - raw) * creepRate` per tick,
   // so the var eases toward `ceiling` and never quite reaches it.
-  var CREEP_RATE = 0.04;
   var CREEP_TICK_MS = 100;
+  // State 1 creep is a "we're alive" hint before any real progress lands,
+  // so it eases gently toward a low asymptote.
+  var STATE_1_RATE = 0.04;
   var STATE_1_ASYMPTOTE = 20;
-  // How far ahead of the latest `progress()` call the creep can run on its
-  // own. Larger values bridge longer host-silent stretches but risk passing
-  // the host before it reports.
-  var STATE_2_BUMP = 15;
+  // State 2 creep bridges the gap between sparse `progress()` calls — it
+  // can be more confident (faster rate, larger lead bump) because we know
+  // real progress is coming. Tune `STATE_2_RATE` up to make the ring race
+  // ahead between host updates; tune `STATE_2_BUMP` to set how far ahead
+  // of the latest `progress()` call the creep is allowed to travel.
+  var STATE_2_RATE = 0.2;
+  var STATE_2_BUMP = 25;
   // Ring never auto-creeps past this — keeps the user from interpreting the
   // ring as "almost done" while the host hasn't actually said so.
   var ABSOLUTE_CEILING = 90;
@@ -47,6 +52,7 @@
   var state = 0;
   var creepHandle = null;
   var creepCeiling = STATE_1_ASYMPTOTE;
+  var creepRate = STATE_1_RATE;
 
   function ensureCreep() {
     if (creepHandle != null) {
@@ -62,7 +68,7 @@
       if (raw >= creepCeiling - 0.1) {
         return;
       }
-      var next = raw + (creepCeiling - raw) * CREEP_RATE;
+      var next = raw + (creepCeiling - raw) * creepRate;
       element.style.setProperty('--boot-loader-bar-progress', String(next));
       if (next > 0 && next < 100) {
         element.setAttribute('data-progress-active', '');
@@ -113,8 +119,11 @@
       var currentPct = parseFloat(element.style.getPropertyValue('--boot-loader-bar-progress')) || 0;
       var nextPct = Math.max(currentPct, requestedPct);
       element.style.setProperty('--boot-loader-bar-progress', String(nextPct));
-      // Move the creep ceiling forward (monotonic) so a long gap before the
-      // next `progress()` call still inches the ring toward the new ceiling.
+      // Switch the ongoing creep to its state-2 cadence — faster ease and
+      // a larger lead bump so the ring keeps moving while the host is
+      // silent (e.g. composer-app's "Starting Composer…" stretch while the
+      // first slow plugin module activates).
+      creepRate = STATE_2_RATE;
       var newCeiling = Math.min(nextPct + STATE_2_BUMP, ABSOLUTE_CEILING);
       if (newCeiling > creepCeiling) {
         creepCeiling = newCeiling;
