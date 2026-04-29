@@ -268,24 +268,27 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         .join(),
     [subject.feeds],
   );
-  const previousFeedFingerprint = useRef(feedFingerprint);
+  // Key on both magazine identity and feed fingerprint so switching to a different
+  // magazine with the same feeds still triggers curation for the new magazine.
+  const previousCurateKey = useRef({ subject, feedFingerprint });
   useEffect(() => {
-    if (previousFeedFingerprint.current !== feedFingerprint) {
-      previousFeedFingerprint.current = feedFingerprint;
+    if (previousCurateKey.current.subject !== subject || previousCurateKey.current.feedFingerprint !== feedFingerprint) {
+      previousCurateKey.current = { subject, feedFingerprint };
       void invokePromise(FeedOperation.CurateMagazine, { magazine: Ref.make(subject) }).catch((err) => log.catch(err));
     }
   }, [feedFingerprint, subject, invokePromise]);
 
   // Open the ObjectProperties companion when the magazine has no posts so the user
   // can configure subscription feeds without an empty pane staring back at them.
-  // Depend on `subject` so switching between two empty magazines also reopens it.
+  // Use `subject.posts.length` (the unfiltered set) so view filters like 'archived'
+  // or 'starred' don't trigger this when the magazine actually still has posts.
   useEffect(() => {
-    if (posts.length === 0) {
+    if (subject.posts.length === 0) {
       void invokePromise(LayoutOperation.UpdateCompanion, {
         subject: linkedSegment('settings'),
       }).catch((err) => log.catch(err));
     }
-  }, [subject, posts.length, invokePromise]);
+  }, [subject, subject.posts.length, invokePromise]);
 
   const tileItems = useMemo<TileData[]>(
     () =>
