@@ -83,7 +83,7 @@ const PHASES = ['Loading…', 'Loading framework…', 'Reading configuration…'
  * `composer-app/src/plugin-defs.tsx`'s dynamic-import list. Adjust if the
  * story should mirror an updated count.
  */
-const STORY_PLUGIN_COUNT = 59;
+const STORY_PLUGIN_COUNT = 80;
 
 /** Tick interval for the determinate-progress simulation, in ms. */
 const STORY_TICK_MS = 100;
@@ -115,7 +115,7 @@ const DeterminateStory = () => {
     return () => clearInterval(handle);
   }, []);
   const loaded = Math.round(progress * STORY_PLUGIN_COUNT);
-  const status = progress >= 1 ? 'Starting Composer…' : `Loading plugins (${loaded}/${STORY_PLUGIN_COUNT})…`;
+  const status = progress >= 1 ? 'Starting Composer…' : `Loading plugins (${loaded}/${STORY_PLUGIN_COUNT})`;
   return <BootLoader status={status} markSvg={PLACEHOLDER_MARK} progress={progress} />;
 };
 

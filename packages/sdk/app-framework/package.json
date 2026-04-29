@@ -115,6 +115,7 @@
     "vite-plugin-css-injected-by-js": "catalog:"
   },
   "devDependencies": {
+    "@dxos/brand": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
