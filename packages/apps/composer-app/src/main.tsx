@@ -20,7 +20,8 @@ import { Placeholder, type PlaceholderComponentProps, useApp } from '@dxos/app-f
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Composer } from '@dxos/brand';
 import { runAndForwardErrors } from '@dxos/effect';
-import { LogBuffer, LogLevel, log } from '@dxos/log';
+import { LogLevel, log } from '@dxos/log';
+import { IdbLogStore } from '@dxos/log-store-idb';
 import { Observability } from '@dxos/observability';
 import { observabilityTranslations } from '@dxos/plugin-observability';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
@@ -31,7 +32,8 @@ import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dx
 import { ResetDialog } from './components';
 import { initializeObservability, PARAM_PROFILER, setupConfig } from './config';
 import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
-import { APP_KEY } from './constants';
+import { APP_KEY, LOG_STORE_DB_NAME } from './constants';
+import { downloadLogs } from './log-download';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
 import { startupProfiler } from './profiler';
 import { translations } from './translations';
@@ -53,7 +55,7 @@ declare global {
   }
 
   // Debug hook: run `downloadLogs()` from devtools to save buffered logs (same as Reset dialog).
-  var downloadLogs: () => void;
+  var downloadLogs: () => Promise<void>;
 }
 
 // `window.__bootLoader` is declared globally by `@dxos/app-framework/ui`
@@ -88,26 +90,11 @@ const main = async () => {
 
   TRACE_PROCESSOR.setInstanceTag('app');
 
-  const logBuffer = new LogBuffer();
-  log.addProcessor(logBuffer.logProcessor);
+  const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME });
+  log.addProcessor(logStore.processor);
 
-  // Mirrors `useFileDownload` from `@dxos/react-ui` (used by `ResetDialog`).
-  const downloadFile = (data: Blob | string, filename: string) => {
-    const url = typeof data === 'string' ? data : URL.createObjectURL(data);
-    const element = document.createElement('a');
-    element.setAttribute('href', url);
-    element.setAttribute('download', filename);
-    element.setAttribute('target', 'download');
-    element.click();
-  };
-
-  // TODO(dmaretskyi): Hookup to a button in the sidebar/devtools.
-  globalThis.downloadLogs = () => {
-    const ndjson = logBuffer.serialize();
-    const file = new Blob([ndjson], { type: 'application/x-ndjson' });
-    const fileName = `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson`;
-    downloadFile(file, fileName);
-  };
+  // Devtools convenience — also surfaced via the help panel and ResetDialog UI.
+  globalThis.downloadLogs = () => downloadLogs(logStore);
 
   profiler?.mark('dynamic-imports:start');
   bootStatus('Loading framework…');
@@ -167,7 +154,7 @@ const main = async () => {
 
   // Intentionally do not await; the buffering backend in TRACE_PROCESSOR captures
   // early spans and replays them once the real OTEL backend registers.
-  const observability = initializeObservability(config, isTauri, logBuffer);
+  const observability = initializeObservability(config, isTauri, logStore);
 
   // Capture a one-shot `composer.startup` event when the framework dispatches
   // `app-framework:startup-activated`. Includes total ms, per-phase ms, top-5
@@ -331,7 +318,7 @@ const main = async () => {
     config,
     services,
     observability,
-    logBuffer,
+    logStore,
 
     isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
     isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA),
@@ -391,7 +378,7 @@ const main = async () => {
         <Tooltip.Provider>
           <ResetDialog
             error={error}
-            logBuffer={logBuffer}
+            logStore={logStore}
             observability={observability}
             needRefresh={needRefresh}
             onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}

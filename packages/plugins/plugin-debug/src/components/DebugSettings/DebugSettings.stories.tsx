@@ -30,6 +30,6 @@ export const Default: Story = {
     settings: {
       wireframe: false,
     },
-    logBuffer: { serialize: () => '' } as any,
+    logStore: { export: async () => '' } as any,
   },
 };
