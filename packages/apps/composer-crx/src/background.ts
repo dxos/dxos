@@ -5,6 +5,7 @@
 import { onMessage } from 'webext-bridge/background';
 import browser from 'webextension-polyfill';
 
+import { installDevtoolsRouter } from '@dxos/composer-devtools-protocol/bridge';
 import { log } from '@dxos/log';
 
 import { createThumbnail } from './actions';
@@ -63,6 +64,8 @@ const handleIncomingClip = async (clip: Clip) => {
  * Background worker.
  */
 const main = async () => {
+  installDevtoolsRouter();
+
   onMessage('config', ({ data }) => {
     return { debug: data.debug ?? false };
   });

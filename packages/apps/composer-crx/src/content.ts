@@ -5,6 +5,7 @@
 import { onMessage, sendMessage } from 'webext-bridge/content-script';
 import browser from 'webextension-polyfill';
 
+import { installDevtoolsBridge } from '@dxos/composer-devtools-protocol/bridge';
 import { log } from '@dxos/log';
 
 import { CLIP_ACK_EVENT, CLIP_EVENT, type Clip, type ClipAck } from './clip/types';
@@ -88,6 +89,7 @@ const main = async () => {
   log.info('content-script');
 
   installBridge();
+  installDevtoolsBridge();
 
   onMessage('ping', async ({ sender, data }) => {
     log.info('ping', { sender, data });

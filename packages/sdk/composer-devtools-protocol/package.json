@@ -1,0 +1,47 @@
+{
+  "name": "@dxos/composer-devtools-protocol",
+  "version": "0.8.3",
+  "private": true,
+  "description": "Composer devtools protocol — schema-driven panels over a CustomEvent + Comlink bridge.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./bridge": {
+      "source": "./src/bridge.ts",
+      "types": "./dist/types/src/bridge.d.ts",
+      "browser": "./dist/lib/browser/bridge.mjs",
+      "node": "./dist/lib/node-esm/bridge.mjs"
+    },
+    "./panel": {
+      "source": "./src/panel.ts",
+      "types": "./dist/types/src/panel.d.ts",
+      "browser": "./dist/lib/browser/panel.mjs",
+      "node": "./dist/lib/node-esm/panel.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "comlink": "catalog:"
+  },
+  "devDependencies": {
+    "@types/chrome": "catalog:"
+  }
+}
