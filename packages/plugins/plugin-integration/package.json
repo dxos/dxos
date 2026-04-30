@@ -71,6 +71,7 @@
     "@dxos/effect": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/operation": "workspace:*",

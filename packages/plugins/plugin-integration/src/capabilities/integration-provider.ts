@@ -64,6 +64,11 @@ export type IntegrationProvider = {
   /** Matches `AccessToken.source` (e.g. `'trello.com'`). */
   source: string;
   /**
+   * User-facing label shown in the integration source selector
+   * (e.g. `'Trello'`, `'Linear'`). Defaults to `source` when omitted.
+   */
+  label?: string;
+  /**
    * Operation definition for discovery + idempotent materialization.
    * Signature: `(input: { integration: Ref<Integration> }) => { targets: RemoteTarget[] }`.
    * When omitted, "Change sync targets" is unavailable.

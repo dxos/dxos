@@ -4,6 +4,4 @@
 
 import { lazy } from 'react';
 
-export * from './TokensPanel';
-
 export const IntegrationAuthButton = lazy(() => import('./IntegrationAuthButton'));

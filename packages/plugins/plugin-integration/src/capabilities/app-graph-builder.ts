@@ -6,12 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, createObjectNode } from '@dxos/app-toolkit';
+import { AppCapabilities, createObjectNode } from '@dxos/app-toolkit';
 import { type Space, getSpace, isSpace } from '@dxos/client/echo';
 import { Filter } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { meta as spaceMeta } from '@dxos/plugin-space/meta';
+import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SPACE_TYPE } from '@dxos/plugin-space/types';
 
 import { meta } from '#meta';
@@ -29,41 +28,33 @@ export default Capability.makeModule(
       capabilities.getAll(AppCapabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
     const extensions = yield* Effect.all([
-      // Existing: contribute an Integrations panel into space settings.
-      GraphBuilder.createExtension({
-        id: 'space-settings',
-        match: NodeMatcher.whenNodeType(`${spaceMeta.id}.settings`),
-        connector: (node) =>
-          Effect.succeed([
-            AppNode.makeSettingsPanel({
-              id: 'integrations',
-              type: `${meta.id}.space-settings`,
-              label: ['space-panel.name', { ns: meta.id }],
-              icon: 'ph--plugs--regular',
-            }),
-          ]),
-      }),
-
-      // Surface Integration objects as nodes under each space.
+      // Single "Integrations" branch directly under each Space, replacing the
+      // earlier split between a settings-sub-panel entry and a separate
+      // top-level branch. Always rendered (even when no Integration objects
+      // exist) so the user has a stable place to add one. Sits in the
+      // unpositioned middle band — General Settings hoists above, Database
+      // falls back below.
       GraphBuilder.createExtension({
         id: 'integrations',
         match: whenSpace,
         connector: (space, get) => {
           const integrations = get(AtomQuery.make(space.db, Filter.type(Integration.Integration)));
-          if (integrations.length === 0) {
-            return Effect.succeed([]);
-          }
-
           return Effect.succeed([
             Node.make({
               id: 'integrations',
-              type: 'integrations',
-              data: 'integrations-root',
+              type: `${meta.id}.space-settings`,
+              // Pure container node — clicking just expands the children
+              // (each Integration object). The legacy "Manage integrations"
+              // article was removed; per-Integration management lives on
+              // each Integration's own article surface.
+              data: null,
               properties: {
-                label: ['integrations-branch.label', { ns: meta.id }],
-                icon: 'ph--plugs-connected--regular',
+                label: ['space-panel.name', { ns: meta.id }],
+                icon: 'ph--plugs--regular',
                 role: 'branch',
-                position: 'hoist',
+                draggable: false,
+                droppable: false,
+                space,
               },
               nodes: integrations
                 .map((integration) =>

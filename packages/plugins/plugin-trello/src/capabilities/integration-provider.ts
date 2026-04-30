@@ -49,6 +49,7 @@ export default Capability.makeModule(
     return Capability.contributes(IntegrationProviderCapability, [
       {
         source: TRELLO_SOURCE,
+        label: 'Trello',
         getSyncTargets: GetTrelloBoards,
         sync: SyncTrelloBoard,
         onTokenCreated,
