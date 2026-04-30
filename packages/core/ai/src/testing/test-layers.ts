@@ -98,10 +98,13 @@ export const AiServiceTestingPreset = (preset: AiServicePreset): AiServiceLayer 
 /**
  * AiService for testing.
  * Refer to {@link MemoizedAiService} documentation for details on how memoization works.
+ *
+ * Defaults to the `edge-remote` preset so cache regeneration (`ALLOW_LLM_GENERATION=1`)
+ * works without requiring `ANTHROPIC_API_KEY` — the DXOS edge worker proxies the request.
  */
 export const TestAiService = ({
   disableMemoization = false,
-  preset = 'direct',
+  preset = 'edge-remote',
 }: { disableMemoization?: boolean; preset?: AiServicePreset } = {}) => {
   if (disableMemoization) {
     return AiServiceTestingPreset(preset);

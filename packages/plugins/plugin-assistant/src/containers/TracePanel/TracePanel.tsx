@@ -9,6 +9,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { Trace } from '@dxos/functions';
@@ -23,9 +24,7 @@ import { composable, mx } from '@dxos/ui-theme';
 import { ProcessTree } from '../../components';
 import { buildExecutionGraph } from './execution-graph';
 
-export type TracePanelProps = {
-  space: Space;
-};
+export type TracePanelProps = AppSurface.SpaceArticleProps;
 
 export const TracePanel = composable<HTMLDivElement, TracePanelProps>(({ space, ...props }, forwardedRef) => {
   const { invokePromise } = useOperationInvoker();

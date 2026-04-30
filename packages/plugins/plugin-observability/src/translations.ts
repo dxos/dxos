@@ -28,6 +28,7 @@ export const translations = [
         'feedback-textarea.placeholder': 'Please enter your feedback, technical issue, or feature request.',
         'include-debug-logs.label': 'Include debug logs',
         'send-feedback.label': 'Send Feedback',
+        'download-logs.label': 'Download logs',
         'feedback-toast.label': 'Thank you for your feedback!',
         'feedback-toast.description': 'We will review your feedback and get back to you as soon as possible.',
       },
