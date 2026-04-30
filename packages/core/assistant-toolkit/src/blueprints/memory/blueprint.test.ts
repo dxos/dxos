@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import { OpaqueToolkit } from '@dxos/ai';
 import { AgentService } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ObjectId } from '@dxos/keys';

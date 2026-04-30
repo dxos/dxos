@@ -275,6 +275,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute-hyperformula/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/conductor/package.json",
           "jsonpath": "$.version"
         },

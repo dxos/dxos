@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { meta } from '#meta';
 import { HelpOperation } from '#operations';

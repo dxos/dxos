@@ -2,7 +2,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { Table } from '@dxos/react-ui-table/types';
 import { ViewModel } from '@dxos/schema';
 

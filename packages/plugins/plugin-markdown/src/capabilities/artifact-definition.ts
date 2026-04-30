@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import { ToolResult, createTool } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ArtifactId, createArtifactElement } from '@dxos/assistant';
-import { defineArtifact } from '@dxos/blueprints';
+import { defineArtifact } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space/operations';

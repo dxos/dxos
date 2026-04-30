@@ -5,8 +5,8 @@
 import { type Decorator } from '@storybook/react';
 import React, { useState } from 'react';
 
-import { type ComputeGraph, type ComputeGraphOptions, ComputeGraphRegistry } from '@dxos/compute';
-import { createMockedComputeRuntimeProvider } from '@dxos/compute/testing';
+import { type ComputeGraph, type ComputeGraphOptions, ComputeGraphRegistry } from '@dxos/compute-hyperformula';
+import { createMockedComputeRuntimeProvider } from '@dxos/compute-hyperformula/testing';
 import { type Space } from '@dxos/react-client/echo';
 import { useAsyncState } from '@dxos/react-hooks';
 

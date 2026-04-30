@@ -3,7 +3,7 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/operation';
+import { OperationHandlerSet } from '@dxos/compute';
 
 export const Blockstore = Capability.lazy('Blockstore', () => import('./blockstore'));
 export const FileUploader = Capability.lazy('FileUploader', () => import('./file-uploader'));

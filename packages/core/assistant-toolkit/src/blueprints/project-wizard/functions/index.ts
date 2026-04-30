@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/operation';
+import { OperationHandlerSet } from '@dxos/compute';
 
 export * from './definitions';
 

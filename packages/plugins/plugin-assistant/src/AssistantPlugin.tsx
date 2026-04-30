@@ -9,11 +9,11 @@ import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { ContextBinding } from '@dxos/assistant';
 import { Agent, AgentBlueprint, Chat, McpServer, Memory, Plan, ResearchGraph } from '@dxos/assistant-toolkit';
-import { Blueprint, Routine } from '@dxos/blueprints';
+import { Blueprint, Routine } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Annotation, Feed, Obj, Type } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { DeckEvents } from '@dxos/plugin-deck/types';

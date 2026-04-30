@@ -5,10 +5,10 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useRef } from 'react';
 
+import { Script } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { AnyOutput, FunctionInput } from '@dxos/conductor';
 import { Ref, getSnapshot, isInstanceOf } from '@dxos/echo/internal';
-import { Script } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { useClient } from '@dxos/react-client';
 import { Filter, parseId } from '@dxos/react-client/echo';
 import {

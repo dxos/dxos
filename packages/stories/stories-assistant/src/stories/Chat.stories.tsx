@@ -16,12 +16,12 @@ import {
   ResearchGraph,
   WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
-import { Blueprint, Routine, Template } from '@dxos/blueprints';
+import { Blueprint, Routine, Template } from '@dxos/compute';
+import { Reply, Script, Trigger } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { View } from '@dxos/echo';
-import { Reply, Script, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 import { AssistantBlueprint, translations } from '@dxos/plugin-assistant';
 import { ChessBlueprint, ChessFunctions } from '@dxos/plugin-chess/blueprints';
 import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
