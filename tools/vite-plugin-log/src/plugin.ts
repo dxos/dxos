@@ -165,7 +165,7 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
       order: 'pre' as const,
       filter: {
         id: {
-          exclude: tr.excludeId,
+          exclude: tr.excludeId ?? /node_modules|\\0/,
         },
         moduleType: {
           include: ['js', 'jsx', 'ts', 'tsx'],
