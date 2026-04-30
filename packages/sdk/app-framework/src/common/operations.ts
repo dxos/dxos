@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import { Operation } from '@dxos/operation';
 
 import { Capability } from '../core';
 import { Label } from './translations';

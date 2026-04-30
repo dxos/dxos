@@ -20,7 +20,7 @@ import { AiService } from '@dxos/ai';
 import { useOperationInvoker, useSpaceCallback } from '@dxos/app-framework/ui';
 import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
-import { type Operation } from '@dxos/operation';
+import { type Operation } from '@dxos/compute';
 import {
   Button,
   ButtonGroup,

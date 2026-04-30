@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Operation } from '@dxos/compute';
+import type { Operation } from '@dxos/operation';
 
 import type * as UndoMapping from './undo-mapping';
 

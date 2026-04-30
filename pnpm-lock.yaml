@@ -4446,6 +4446,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../blueprints
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../compute
       '@dxos/compute-runtime':
         specifier: workspace:*
         version: link:../compute-runtime
@@ -6502,6 +6505,9 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../sdk/client-services
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/compute-runtime':
         specifier: workspace:*
         version: link:../../core/compute-runtime
@@ -7581,6 +7587,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../../core/blueprints
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -7626,6 +7635,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/functions-runtime':
         specifier: workspace:*
         version: link:../../core/functions-runtime
@@ -7644,6 +7656,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -14974,6 +14989,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/react-error-boundary':
         specifier: workspace:*
         version: link:../../ui/react-primitives/react-error-boundary
@@ -17403,6 +17421,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../../core/blueprints
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/compute-runtime':
         specifier: workspace:*
         version: link:../../core/compute-runtime

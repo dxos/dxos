@@ -5,9 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { ServiceResolver } from '@dxos/functions';
+import { Operation, ServiceResolver } from '@dxos/compute';
 import { type SpaceId } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
 
 import { SheetCapabilities } from '#types';
 
@@ -22,7 +21,7 @@ export default Capability.makeModule(
     const processManagerRuntime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
 
     // Async import removes direct dependency on hyperformula.
-    const { defaultPlugins, ComputeGraphRegistry } = yield* Effect.tryPromise(() => import('@dxos/compute'));
+    const { defaultPlugins, ComputeGraphRegistry } = yield* Effect.tryPromise(() => import('@dxos/compute-hyperformula'));
 
     const computeGraphRegistry = new ComputeGraphRegistry({
       plugins: defaultPlugins,
