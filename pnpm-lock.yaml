@@ -1961,9 +1961,6 @@ importers:
       '@dxos/signal':
         specifier: workspace:*
         version: link:packages/core/mesh/signal
-      '@dxos/swc-log-plugin':
-        specifier: workspace:*
-        version: link:tools/swc-log-plugin
       '@dxos/toolbox':
         specifier: workspace:*
         version: link:tools/toolbox
@@ -3325,6 +3322,9 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
+      '@dxos/vite-plugin-log':
+        specifier: workspace:*
+        version: link:../../../tools/vite-plugin-log
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.7
@@ -20503,8 +20503,6 @@ importers:
       vite-plugin-solid:
         specifier: 'catalog:'
         version: 2.11.12(@testing-library/jest-dom@6.9.1)(solid-js@1.9.11)(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
-
-  tools/swc-log-plugin: {}
 
   tools/toolbox:
     dependencies:

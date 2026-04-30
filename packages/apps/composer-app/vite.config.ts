@@ -55,7 +55,6 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
       ],
     }),
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
-  // Replaces the legacy `@dxos/swc-log-plugin` that previously ran inside `react()` below.
   DxosLogPlugin(),
   wasm(),
   // sourcemaps(),

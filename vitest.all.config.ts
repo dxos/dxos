@@ -38,7 +38,6 @@ export default defineConfig(async () => ({
     await import('@dxos/vite-plugin-import-source').then((m) => m.default()),
 
     // Log-meta injection only — no dev file sink (vitest is a test runner, not a dev server).
-    // Replaces the legacy `@dxos/swc-log-plugin` that used to run inside `react()` below.
     DxosLogPlugin({ logToFile: false }),
 
     // We don't care about react but we want the SWC transformers.

@@ -182,7 +182,6 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       PluginImportSource({ include: ['@dxos/**', '#*'] }),
       process.env.VITE_INSPECT ? Inspect() : undefined,
       // Log-meta injection only — no dev file sink (vitest is a test runner, not a dev server).
-      // Replaces the legacy `@dxos/swc-log-plugin` that used to run inside `react()`.
       DxosLogPlugin({ logToFile: false }),
       // Add react plugin to enable SWC transforms.
       react({

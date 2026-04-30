@@ -14,6 +14,7 @@ import { UserConfig } from 'vitest/config';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import PluginImportSource from '@dxos/vite-plugin-import-source';
+import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
@@ -122,6 +123,9 @@ export default defineConfig(
             ],
           }),
 
+        // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
+        DxosLogPlugin(),
+
         ConfigPlugin({
           root: dirname,
           env: ['DX_VAULT'],
@@ -130,47 +134,6 @@ export default defineConfig(
         WasmPlugin(),
         ReactPlugin({
           tsDecorators: true,
-          plugins: [
-            [
-              '@dxos/swc-log-plugin',
-              {
-                to_transform: [
-                  {
-                    name: 'log',
-                    package: '@dxos/log',
-                    param_index: 2,
-                    include_args: false,
-                    include_call_site: true,
-                    include_scope: true,
-                  },
-                  {
-                    name: 'dbg',
-                    package: '@dxos/log',
-                    param_index: 1,
-                    include_args: true,
-                    include_call_site: false,
-                    include_scope: false,
-                  },
-                  {
-                    name: 'invariant',
-                    package: '@dxos/invariant',
-                    param_index: 2,
-                    include_args: true,
-                    include_call_site: false,
-                    include_scope: true,
-                  },
-                  {
-                    name: 'Context',
-                    package: '@dxos/context',
-                    param_index: 1,
-                    include_args: false,
-                    include_call_site: false,
-                    include_scope: false,
-                  },
-                ],
-              },
-            ],
-          ],
         }),
         // https://www.bundle-buddy.com/rollup
         {

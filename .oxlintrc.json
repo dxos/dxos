@@ -115,9 +115,7 @@
     "docs",
     "templates/**",
     "scripts/**",
-    "docs/legacy/**",
-    "tools/swc-log-plugin/tests/__swc_snapshots__/**",
-    "tools/swc-log-plugin/test-rig/**"
+    "docs/legacy/**"
   ],
   "jsPlugins": [
     "@dxos/eslint-plugin-rules",

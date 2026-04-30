@@ -755,7 +755,7 @@ trustPolicyExclude:
   - rollup@3.30.0
   - mermaid@10.9.4
   - undici-types@6.20.0
-  # @swc/core is used by @dxos/swc-log-plugin tooling without provenance attestation pnpm expects.
+  # @swc/core ships without provenance attestation pnpm expects (used by dx-compile's SWC transpiler).
   - '@swc/core@1.13.5'
   # Transitive deps without provenance.
   - semver@6.3.1

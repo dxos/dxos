@@ -3,7 +3,9 @@
 //
 
 /**
- * Same shape as `@dxos/swc-log-plugin` / `to_transform` in Vitest and Vite React configs.
+ * Specifies how `to_transform` shapes the meta literal for a given callee. Inputs are matched by
+ * `name` + `package` against module imports; matched call sites are rewritten to inject `__dxlog_file`,
+ * line number, and (optionally) scope/args/call-site indirection.
  */
 export interface LogMetaTransformSpec {
   name: string;

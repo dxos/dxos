@@ -1165,11 +1165,6 @@
         },
         {
           "type": "json",
-          "path": "tools/swc-log-plugin/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "tools/toolbox/package.json",
           "jsonpath": "$.version"
         },

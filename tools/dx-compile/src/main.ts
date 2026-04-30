@@ -3,12 +3,8 @@
 //
 
 import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
-import { createRequire } from 'node:module';
 import { basename, dirname, join } from 'node:path';
 
-const require = createRequire(import.meta.url);
-
-import type * as Swc from '@swc/core';
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
 import { type Format, type Platform, type Plugin, build, formatMessages } from 'esbuild';
@@ -73,6 +69,9 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
   }
   const { jsx, jsxImportSource, jsxFactory, jsxFragmentFactory } = tsConfig.compilerOptions || {};
 
+  // Log-meta injection (`__dxlog_file`, `{F,L,S,...}`) is now handled at app build time by
+  // `@dxos/vite-plugin-log` (Rolldown transform), which runs over compiled `dist/` output too.
+  // dx-compile no longer ships a SWC log plugin step.
   const swcTransformPlugin = new SwcTransformPlugin({
     isVerbose: options.verbose,
     getTranspilerOptions: ({ filePath }) => ({
@@ -92,52 +91,6 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
             pragma: jsxFactory,
             pragmaFrag: jsxFragmentFactory,
           },
-        },
-        experimental: {
-          plugins: [
-            ...(function* (): Iterable<Swc.WasmPlugin> {
-              yield [
-                require.resolve('@dxos/swc-log-plugin'),
-                {
-                  filename: filePath,
-                  to_transform: [
-                    {
-                      name: 'log',
-                      package: '@dxos/log',
-                      param_index: 2,
-                      include_args: false,
-                      include_call_site: true,
-                      include_scope: true,
-                    },
-                    {
-                      name: 'dbg',
-                      package: '@dxos/log',
-                      param_index: 1,
-                      include_args: true,
-                      include_call_site: false,
-                      include_scope: false,
-                    },
-                    {
-                      name: 'invariant',
-                      package: '@dxos/invariant',
-                      param_index: 2,
-                      include_args: true,
-                      include_call_site: false,
-                      include_scope: true,
-                    },
-                    {
-                      name: 'Context',
-                      package: '@dxos/context',
-                      param_index: 1,
-                      include_args: false,
-                      include_call_site: false,
-                      include_scope: false,
-                    },
-                  ],
-                },
-              ];
-            })(),
-          ],
         },
         target: 'esnext',
       },
