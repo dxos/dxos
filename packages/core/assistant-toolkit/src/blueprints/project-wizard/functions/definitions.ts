@@ -52,7 +52,7 @@ export const SyncTriggers = Operation.make({
     key: 'org.dxos.function.agent.sync-triggers',
     name: 'Sync triggers',
     description:
-      'Synchronizes triggers in the database with the agent subscriptions. Call this after editing the subscriptions array.',
+      'Synchronizes triggers with the agent: subscriptions, cron, filter-events, and enabled (copied to every trigger). Call after editing those fields.',
   },
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotations({

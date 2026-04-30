@@ -252,7 +252,11 @@ export class IndexQuerySource implements QuerySource {
           database,
         });
       } catch (err) {
-        log.warn('object failed schema validation', { type: json[ATTR_TYPE], error: err });
+        const typeDxn = json[ATTR_TYPE] as string;
+        if (!emittedSchemaValidationWarnings.has(typeDxn)) {
+          emittedSchemaValidationWarnings.add(typeDxn);
+          log.warn('object failed schema validation', { type: typeDxn, error: err });
+        }
         return null;
       }
       const queryResult: QueryResult.EntityEntry = {
@@ -296,3 +300,8 @@ export class IndexQuerySource implements QuerySource {
  * Used for logging.
  */
 let nextQueryId = 1;
+
+/**
+ * Keyed by the type DXN.
+ */
+const emittedSchemaValidationWarnings = new Set<string>();
