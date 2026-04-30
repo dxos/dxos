@@ -9,7 +9,7 @@ import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
-import { AtomQuery } from '@dxos/echo-atom';
+import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { useObject, useSchema } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
@@ -113,20 +113,36 @@ const ItemsKanbanContainer = ({ role, subject: object }: ItemsKanbanContainerPro
   const projection = useItemsProjection(object);
   const change = useEchoChangeCallback(object);
 
-  // Items atom: dereference each ref's `target` snapshot, filtering out
-  // closed/tombstoned cards (the pull pass marks `closed=true` for cards
-  // deleted upstream — they shouldn't render). Re-derived when the kanban's
-  // items array changes.
+  // Items atom: dereference each ref via `AtomObj.make(ref)` so the atom
+  // re-runs reactively when refs hydrate (e.g. on initial open of a synced
+  // kanban — items load async). Filters out closed/tombstoned cards (pull
+  // marks `closed=true` for cards deleted upstream).
+  //
+  // TODO(wittjosiah): pass refs (not loaded objects) through to the kanban
+  //   board and let `KanbanCard` subscribe to its own ref via `useObject`.
+  //   Today this atom subscribes to *every* item — any one changing causes the
+  //   container (and the model's per-column atoms) to recompute. With cards
+  //   subscribing themselves, the container only needs the refs and the
+  //   per-card render is independent. Requires:
+  //     - `KanbanCard` to accept `Ref<Obj.Unknown>` as `data` and call
+  //       `useObject(ref)` internally.
+  //     - The model to handle a ref-bearing item shape (id from
+  //       `ref.dxn.asEchoDXN()?.echoId`) and use arrangement-only ordering
+  //       for items-variant (no pivot-value fallback, since refs don't expose
+  //       the pivot field without loading).
+  //     - `Mosaic.isItem` to accept the ref wrapper alongside `Obj.isObject`.
   const itemsAtom = useMemo(
     () =>
-      Atom.make(() =>
-        (object.spec.items as ReadonlyArray<Ref.Ref<Obj.Unknown>>)
-          .map((ref) => ref.target)
-          .filter(
-            (target): target is Obj.Unknown =>
-              target != null && (target as unknown as { closed?: unknown }).closed !== true,
-          ),
-      ),
+      Atom.make((get) => {
+        const out: Obj.Unknown[] = [];
+        for (const ref of object.spec.items as ReadonlyArray<Ref.Ref<Obj.Unknown>>) {
+          const target = get(AtomObj.make(ref));
+          if (target == null) continue;
+          if ((target as unknown as { closed?: unknown }).closed === true) continue;
+          out.push(target as unknown as Obj.Unknown);
+        }
+        return out;
+      }),
     [object.spec.items],
   );
 
