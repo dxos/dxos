@@ -81,9 +81,7 @@ export class ComputeNodeContext extends Context.Tag('@dxos/conductor/ComputeNode
  * Records a custom event on the trace tagged with the current compute node id.
  * Must be called from within a node compute function so that {@link ComputeNodeContext} is available.
  */
-export const logCustomEvent = (
-  data: unknown,
-): Effect.Effect<void, never, Trace.TraceService | ComputeNodeContext> =>
+export const logCustomEvent = (data: unknown): Effect.Effect<void, never, Trace.TraceService | ComputeNodeContext> =>
   Effect.gen(function* () {
     const { nodeId } = yield* ComputeNodeContext;
     yield* Trace.write(ComputeCustomEvent, { nodeId, event: data });
