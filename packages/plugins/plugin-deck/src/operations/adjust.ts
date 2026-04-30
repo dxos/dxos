@@ -16,7 +16,7 @@ import { byPosition } from '@dxos/util';
 import { incrementPlank } from '../layout';
 import { DeckCapabilities, PLANK_COMPANION_TYPE } from '../types';
 import { computeActiveUpdates } from '../util';
-import { Adjust, ChangeCompanion } from './definitions';
+import { Adjust } from './definitions';
 import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof Adjust> = Adjust.pipe(
@@ -73,7 +73,7 @@ const handler: Operation.WithHandler<typeof Adjust> = Adjust.pipe(
         );
 
         if (Option.isSome(companion)) {
-          yield* Operation.invoke(ChangeCompanion, { companion: companion.value.id });
+          yield* Operation.invoke(LayoutOperation.UpdateCompanion, { subject: companion.value.id });
         }
       }
     }),

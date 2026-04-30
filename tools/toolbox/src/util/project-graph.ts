@@ -26,9 +26,9 @@ export type PackageJson = {
   browser?: Record<string, string>;
   types?: string;
   typesVersions?: Record<string, Record<string, string[]>>;
-  dependencies: Record<string, string>;
-  devDependencies: Record<string, string>;
-  peerDependencies: Record<string, string>;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
 };
 
 export class ProjectGraph {

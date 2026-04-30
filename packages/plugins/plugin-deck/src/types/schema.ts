@@ -140,11 +140,4 @@ export namespace DeckAction {
     }),
     output: Schema.Void,
   }) {}
-
-  export class ChangeCompanion extends Schema.TaggedClass<ChangeCompanion>()(`${meta.id}.action.change-companion`, {
-    input: Schema.Struct({
-      companion: Schema.Union(Schema.String, Schema.Null),
-    }),
-    output: Schema.Void,
-  }) {}
 }

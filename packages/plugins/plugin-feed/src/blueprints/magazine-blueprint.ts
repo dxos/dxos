@@ -23,8 +23,7 @@ const make = () =>
     tools: Blueprint.toolDefinitions({ operations }),
     instructions: Template.make({
       source: trim`
-        You curate articles for a Magazine from its referenced Feeds, following
-        the Magazine's instructions text closely.
+        You curate articles for a Magazine from its referenced Feeds, following the Magazine's instructions text closely.
 
         Workflow:
         1. Call listCandidatePosts with the Magazine's ref to get uncurated Posts.

@@ -13,17 +13,6 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [Collection.Collection.typename]: {
-        'typename.label': 'Collection',
-        'typename.label_zero': 'Collections',
-        'typename.label_one': 'Collection',
-        'typename.label_other': 'Collections',
-        'object-name.placeholder': 'New collection',
-        'add-object.label': 'Add collection',
-        'rename-object.label': 'Rename collection',
-        'delete-object.label': 'Delete collection',
-        'object-deleted.label': 'Collection deleted',
-      },
       [Type.getTypename(Type.PersistentType)]: {
         'typename.label': 'Type',
         'typename.label_zero': 'Types',
@@ -34,6 +23,17 @@ export const translations = [
         'rename-object.label': 'Rename type',
         'delete-object.label': 'Delete type',
         'object-deleted.label': 'Type deleted',
+      },
+      [Collection.Collection.typename]: {
+        'typename.label': 'Collection',
+        'typename.label_zero': 'Collections',
+        'typename.label_one': 'Collection',
+        'typename.label_other': 'Collections',
+        'object-name.placeholder': 'New collection',
+        'add-object.label': 'Add collection',
+        'rename-object.label': 'Rename collection',
+        'delete-object.label': 'Delete collection',
+        'object-deleted.label': 'Collection deleted',
       },
       [Event.Event.typename]: {
         'typename.label': 'Event',
@@ -276,7 +276,7 @@ export const translations = [
         'sync-upload.label': 'Upload',
         'sync-download.label': 'Download',
 
-        'types-section.label': 'Types',
+        'types-section.label': 'Database',
         'collections-section.label': 'Collections',
         'type-collection-all.label': 'All',
 

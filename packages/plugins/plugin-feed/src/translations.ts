@@ -3,11 +3,13 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
+import { translations as formTranslations } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { Magazine, Subscription } from '#types';
 
 export const translations = [
+  ...formTranslations,
   {
     'en-US': {
       [Subscription.Feed.typename]: {
@@ -47,8 +49,8 @@ export const translations = [
         'sync-feed-error.title': 'Failed to sync feed',
         'add-feed.label': 'Add feed',
         'curate.label': 'Curate',
-        'syncing-feeds.label': 'Syncing feeds...',
-        'curating-articles.label': 'Curating articles...',
+        'clear-magazine.label': 'Clear (preserves starred)',
+        'refreshing-magazine.label': 'Refreshing magazine...',
         'no-feeds.label': 'Add at least one feed first',
         'empty-magazine.message': 'No articles yet. Add feeds and press Curate.',
         'curate-error.message': 'Failed to curate magazine.',
@@ -56,6 +58,16 @@ export const translations = [
         'post-title.placeholder': 'Untitled',
         'open-original.label': 'Open original',
         'mark-unread.label': 'Mark as unread',
+        'refresh-content.label': 'Refresh content',
+        'refresh-content-pending.label': 'Refreshing…',
+        'archive-post.label': 'Archive',
+        'unarchive-post.label': 'Unarchive',
+        'star-post.label': 'Star',
+        'unstar-post.label': 'Unstar',
+        'sort-by-date.label': 'Sort by date',
+        'sort-by-rank.label': 'Sort by rank',
+        'show-archived.label': 'Show archived',
+        'only-starred.label': 'Show starred only',
         'close.label': 'Close',
       },
     },
