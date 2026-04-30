@@ -18,16 +18,14 @@ const SpecRenderer = ({
   onDispatch: (handlerId: string, payload?: unknown) => void;
 }) => {
   switch (node.type) {
-    case 'stack': {
-      const direction = node.props.direction === 'horizontal' ? 'row' : 'column';
+    case 'stack':
       return (
-        <div style={{ display: 'flex', flexDirection: direction, gap: 8 }}>
+        <div className={node.props.direction === 'horizontal' ? 'flex flex-row gap-2' : 'flex flex-col gap-2'}>
           {node.children.map((child, index) => (
             <SpecRenderer key={index} node={child} onDispatch={onDispatch} />
           ))}
         </div>
       );
-    }
     case 'action':
       return (
         <button disabled={node.props.disabled} onClick={() => onDispatch(node.id)}>
@@ -36,14 +34,14 @@ const SpecRenderer = ({
       );
     case 'debug':
       return (
-        <div style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>
-          {node.props.label && <div style={{ opacity: 0.6 }}>{node.props.label}</div>}
+        <div className='font-mono whitespace-pre-wrap'>
+          {node.props.label && <div className='opacity-60'>{node.props.label}</div>}
           <pre>{JSON.stringify(node.props.value, null, 2)}</pre>
         </div>
       );
     case 'input':
       return (
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <label className='flex flex-col gap-1'>
           <span>{node.props.name}</span>
           <input
             type='text'
@@ -55,7 +53,7 @@ const SpecRenderer = ({
       );
     case 'select':
       return (
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <label className='flex flex-col gap-1'>
           <span>{node.props.name}</span>
           <select value={node.props.value} onChange={(e) => onDispatch(node.id, e.target.value)}>
             {node.props.options.map((option) => (
@@ -81,6 +79,10 @@ const PanelView = ({ remote, panel }: { remote: Comlink.Remote<DevtoolsHostApi>;
       }
     });
     void remote.subscribe(panel.id, onChange).then((id) => {
+      if (cancelled) {
+        void remote.unsubscribe(id);
+        return;
+      }
       subscriptionId = id;
     });
     return () => {
@@ -115,15 +117,24 @@ const Root = () => {
     setRemote(connected);
 
     let subscriptionId: number | undefined;
+    let cancelled = false;
     const onPanels = Comlink.proxy((next: PanelInfo[]) => {
+      if (cancelled) {
+        return;
+      }
       setPanels(next);
       setActive((current) => current ?? next[0]?.id);
     });
     void connected.subscribePanels(onPanels).then((id) => {
+      if (cancelled) {
+        void connected.unsubscribe(id);
+        return;
+      }
       subscriptionId = id;
     });
 
     return () => {
+      cancelled = true;
       if (subscriptionId !== undefined) {
         void connected.unsubscribe(subscriptionId);
       }
@@ -139,19 +150,19 @@ const Root = () => {
   }
   const activePanel = panels.find((panel) => panel.id === active) ?? panels[0];
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 8 }}>
-      <div style={{ display: 'flex', gap: 4 }}>
+    <div className='flex flex-col gap-2 p-2'>
+      <div className='flex gap-1'>
         {panels.map((panel) => (
           <button
             key={panel.id}
             onClick={() => setActive(panel.id)}
-            style={{ fontWeight: panel.id === activePanel.id ? 'bold' : 'normal' }}
+            className={panel.id === activePanel.id ? 'font-bold' : undefined}
           >
             {panel.name}
           </button>
         ))}
       </div>
-      <PanelView remote={remote} panel={activePanel} />
+      <PanelView key={activePanel.id} remote={remote} panel={activePanel} />
     </div>
   );
 };

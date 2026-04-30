@@ -182,6 +182,7 @@ class DevtoolsHost implements DevtoolsHostApi {
 }
 
 let installed: DevtoolsHost | undefined;
+let installedChannel: string | undefined;
 
 export type ComposerDevtoolsApi = {
   showPanel: (definition: PanelDefinition) => void;
@@ -211,6 +212,9 @@ export const installDevtools = (channel = DEFAULT_CHANNEL): ComposerDevtoolsApi 
     announce();
     window.addEventListener(names.probe, announce);
     installed = host;
+    installedChannel = channel;
+  } else if (installedChannel !== channel) {
+    throw new Error(`installDevtools already initialized with channel '${installedChannel}', got '${channel}'.`);
   }
 
   return {

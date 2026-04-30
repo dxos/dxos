@@ -4,15 +4,25 @@
 
 import { CONTENT_PORT_NAME, DEFAULT_CHANNEL, PANEL_PORT_NAME, eventNames } from './api';
 
+type BindMessage = { __bind: number };
+
+const installedBridges = new Set<string>();
+let routerInstalled = false;
+
 /**
  * Content-script side of the bridge. Relays messages between the page
  * (CustomEvents on `window`) and the panel (a long-lived
  * `chrome.runtime.Port` to the background worker).
  *
  * Call once from a content script that runs at `document_start` on pages
- * the devtools panel should be able to inspect. Idempotent.
+ * the devtools panel should be able to inspect. Idempotent per channel.
  */
 export const installDevtoolsBridge = (channel = DEFAULT_CHANNEL): void => {
+  if (installedBridges.has(channel)) {
+    return;
+  }
+  installedBridges.add(channel);
+
   const names = eventNames(channel);
 
   // Connect to the background; the background pairs us with any panel
@@ -20,13 +30,16 @@ export const installDevtoolsBridge = (channel = DEFAULT_CHANNEL): void => {
   let port: chrome.runtime.Port | undefined;
 
   const connect = () => {
-    port = chrome.runtime.connect({ name: CONTENT_PORT_NAME });
-    port.onMessage.addListener((data: unknown) => {
+    const next = chrome.runtime.connect({ name: CONTENT_PORT_NAME });
+    next.onMessage.addListener((data: unknown) => {
       window.dispatchEvent(new CustomEvent(names.extensionToPage, { detail: data }));
     });
-    port.onDisconnect.addListener(() => {
-      port = undefined;
+    next.onDisconnect.addListener(() => {
+      if (port === next) {
+        port = undefined;
+      }
     });
+    port = next;
   };
   connect();
 
@@ -63,6 +76,11 @@ export const installDevtoolsBridge = (channel = DEFAULT_CHANNEL): void => {
  * Call once from the extension's background service worker. Idempotent.
  */
 export const installDevtoolsRouter = (): void => {
+  if (routerInstalled) {
+    return;
+  }
+  routerInstalled = true;
+
   type Pair = { content?: chrome.runtime.Port; panel?: chrome.runtime.Port };
   const pairs = new Map<number, Pair>();
 
@@ -85,8 +103,11 @@ export const installDevtoolsRouter = (): void => {
       pair.content = port;
       port.onMessage.addListener((msg) => pair.panel?.postMessage(msg));
       port.onDisconnect.addListener(() => {
-        pair.content = undefined;
-        if (!pair.panel) {
+        // Only clear if a newer port hasn't reconnected and replaced us.
+        if (pair.content === port) {
+          pair.content = undefined;
+        }
+        if (!pair.content && !pair.panel) {
           pairs.delete(tabId);
         }
       });
@@ -94,9 +115,9 @@ export const installDevtoolsRouter = (): void => {
       // The panel posts its target tabId in the first message because
       // `port.sender.tab` is undefined for devtools-page connections.
       let tabId: number | undefined;
-      port.onMessage.addListener((msg: any) => {
-        if (tabId === undefined && msg && typeof msg.__bind === 'number') {
-          const bound = msg.__bind as number;
+      port.onMessage.addListener((msg: BindMessage | unknown) => {
+        if (tabId === undefined && msg && typeof (msg as BindMessage).__bind === 'number') {
+          const bound = (msg as BindMessage).__bind;
           tabId = bound;
           const pair = ensurePair(bound);
           pair.panel = port;
@@ -110,8 +131,10 @@ export const installDevtoolsRouter = (): void => {
         if (tabId !== undefined) {
           const pair = pairs.get(tabId);
           if (pair) {
-            pair.panel = undefined;
-            if (!pair.content) {
+            if (pair.panel === port) {
+              pair.panel = undefined;
+            }
+            if (!pair.content && !pair.panel) {
               pairs.delete(tabId);
             }
           }
