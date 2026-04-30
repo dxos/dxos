@@ -13,7 +13,7 @@ import { TestAiService } from '@dxos/ai/testing';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { Feed, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { logCustomEvent, Trace } from '@dxos/functions';
+import { Trace } from '@dxos/functions';
 import { CredentialsService } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
 import { Operation, OperationRegistry } from '@dxos/operation';
@@ -27,6 +27,7 @@ import {
   ValueBag,
   VoidOutput,
   defineComputeNode,
+  logCustomEvent,
   synchronizedComputeFunction,
 } from '../types';
 

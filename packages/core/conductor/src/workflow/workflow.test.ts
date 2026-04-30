@@ -11,7 +11,7 @@ import { TestAiService } from '@dxos/ai/testing';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { ComputeEventLogger, CredentialsService, Trace } from '@dxos/functions';
+import { CredentialsService, Trace } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { DXN } from '@dxos/keys';
@@ -24,6 +24,7 @@ import {
   ComputeGraph,
   ComputeGraphModel,
   type ComputeNode,
+  ComputeNodeContext,
   type ComputeResult,
   type Executable,
   ValueBag,
@@ -31,17 +32,15 @@ import {
 } from '../types';
 import { WorkflowLoader, type WorkflowLoaderProps } from './loader';
 
-const TestLayer = Layer.mergeAll(ComputeEventLogger.layerNoop).pipe(
-  Layer.provideMerge(
-    Layer.mergeAll(
-      Layer.succeed(Operation.Service, {
-        invoke: () => Effect.die('Operation.Service not available in test.'),
-        schedule: () => Effect.die('Operation.Service not available in test.'),
-        invokePromise: async () => ({ error: new Error('Not available') }),
-      } as any),
-      Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
-    ),
-  ),
+const TestLayer = Layer.mergeAll(
+  ComputeNodeContext.layerNoop,
+  Layer.succeed(Operation.Service, {
+    invoke: () => Effect.die('Operation.Service not available in test.'),
+    schedule: () => Effect.die('Operation.Service not available in test.'),
+    invokePromise: async () => ({ error: new Error('Not available') }),
+  } as any),
+  Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
+).pipe(
   Layer.provideMerge(
     Layer.mergeAll(
       TestAiService(),

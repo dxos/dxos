@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 import * as Exit from 'effect/Exit';
@@ -12,6 +11,12 @@ import * as Scope from 'effect/Scope';
 import type { AiService } from '@dxos/ai';
 import { Event, synchronized } from '@dxos/async';
 import {
+  ComputeBeginEvent,
+  ComputeCustomEvent,
+  ComputeEndEvent,
+  ComputeInputEvent,
+  ComputeNodeContext,
+  ComputeOutputEvent,
   type ComputeEdge,
   type ComputeGraphModel,
   type ComputeNode,
@@ -26,13 +31,7 @@ import {
 import { Resource } from '@dxos/context';
 import type { Database, Feed } from '@dxos/echo';
 import { unwrapExit } from '@dxos/effect';
-import {
-  ComputeEventLogger,
-  type ComputeEventPayload,
-  type CredentialsService,
-  type QueueService,
-  Trace,
-} from '@dxos/functions';
+import { type CredentialsService, type QueueService, Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
 import type { Operation, OperationRegistry } from '@dxos/operation';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
@@ -80,6 +79,16 @@ type ComputeOutputEvent = {
   property: string;
   value: RuntimeValue;
 };
+
+/**
+ * Event emitted by the compute graph during execution.
+ */
+export type ComputeEvent =
+  | { type: 'begin-compute'; nodeId: string; inputs: ReadonlyArray<string> }
+  | { type: 'end-compute'; nodeId: string; outputs: ReadonlyArray<string> }
+  | { type: 'compute-input'; nodeId: string; property: string; value: any }
+  | { type: 'compute-output'; nodeId: string; property: string; value: any }
+  | { type: 'custom'; nodeId: string; event: any };
 
 // TODO(dmaretskyi): Re-use function servies definition.
 export type ComputeServices =
@@ -143,7 +152,7 @@ export class ComputeGraphController extends Resource {
   /** Computed result. */
   public readonly output = new Event<ComputeOutputEvent>();
 
-  public readonly events = new Event<ComputeEventPayload>();
+  public readonly events = new Event<ComputeEvent>();
 
   constructor(
     private readonly _computeRuntime: ComputeGraphRuntime,
@@ -273,7 +282,12 @@ export class ComputeGraphController extends Resource {
           const effect = (computingOutputs ? executor.computeOutputs(nodeId) : executor.computeInputs(nodeId)).pipe(
             Effect.withSpan('runGraph'),
             Scope.extend(scope),
-            Effect.provide(Layer.mergeAll(ComputeEventLogger.layerNoop, Trace.writerLayerNoop)),
+            Effect.provide(
+              Layer.mergeAll(
+                Layer.succeed(Trace.TraceService, this._createTraceWriter()),
+                ComputeNodeContext.layerNoop,
+              ),
+            ),
             Effect.flatMap(computeValueBag),
             Effect.withSpan('test'),
             Effect.tap((values) => {
@@ -336,7 +350,12 @@ export class ComputeGraphController extends Resource {
               Effect.withSpan('runGraph'),
               Scope.extend(scope),
               Effect.flatMap(computeValueBag),
-              Effect.provide(Layer.mergeAll(ComputeEventLogger.layerNoop, Trace.writerLayerNoop)),
+              Effect.provide(
+                Layer.mergeAll(
+                  Layer.succeed(Trace.TraceService, this._createTraceWriter()),
+                  ComputeNodeContext.layerNoop,
+                ),
+              ),
 
               Effect.withSpan('test'),
               Effect.tap((values) => {
@@ -365,16 +384,18 @@ export class ComputeGraphController extends Resource {
     this.update.emit();
   }
 
-  private _createLogger(): Context.Tag.Service<ComputeEventLogger> {
+  private _createTraceWriter(): Trace.TraceWriter {
     return {
-      log: (event) => {
-        this._handleEvent(event);
+      write: (eventType, payload) => {
+        const event = traceEventToComputeEvent(eventType.key, payload);
+        if (event) {
+          this._handleEvent(event);
+        }
       },
-      nodeId: undefined, // Not in a context of a specific node.
     };
   }
 
-  private _handleEvent(event: ComputeEventPayload): void {
+  private _handleEvent(event: ComputeEvent): void {
     log('handleEvent', { event });
     switch (event.type) {
       case 'compute-input': {
@@ -403,6 +424,23 @@ export class ComputeGraphController extends Resource {
     this.output.emit({ nodeId, property, value });
   }
 }
+
+const traceEventToComputeEvent = (key: string, payload: unknown): ComputeEvent | undefined => {
+  switch (key) {
+    case ComputeBeginEvent.key:
+      return { type: 'begin-compute', ...(payload as { nodeId: string; inputs: ReadonlyArray<string> }) };
+    case ComputeEndEvent.key:
+      return { type: 'end-compute', ...(payload as { nodeId: string; outputs: ReadonlyArray<string> }) };
+    case ComputeInputEvent.key:
+      return { type: 'compute-input', ...(payload as { nodeId: string; property: string; value: any }) };
+    case ComputeOutputEvent.key:
+      return { type: 'compute-output', ...(payload as { nodeId: string; property: string; value: any }) };
+    case ComputeCustomEvent.key:
+      return { type: 'custom', ...(payload as { nodeId: string; event: any }) };
+    default:
+      return undefined;
+  }
+};
 
 /**
  * Waits for all effects in the bag to complete and returns the `RuntimeValue` for each property.

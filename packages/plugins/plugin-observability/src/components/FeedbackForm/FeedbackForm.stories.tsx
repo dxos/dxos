@@ -30,3 +30,14 @@ export const Default: Story = {
     },
   },
 };
+
+export const WithDownloadLogs: Story = {
+  args: {
+    onSave: (values) => {
+      console.log(values);
+    },
+    onDownloadLogs: () => {
+      console.log('download logs clicked');
+    },
+  },
+};
