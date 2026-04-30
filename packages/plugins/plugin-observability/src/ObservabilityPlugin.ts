@@ -24,6 +24,11 @@ import { ObservabilityCapabilities } from '#types';
 export type ObservabilityPluginOptions = {
   namespace: string;
   observability: () => Promise<Observability.Observability>;
+  /**
+   * Optional callback invoked by the help/feedback UI to download captured logs.
+   * When omitted the "Download logs" action is hidden.
+   */
+  downloadLogs?: () => void | Promise<void>;
 };
 
 export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
@@ -53,6 +58,14 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
     id: 'namespace',
     activatesOn: ActivationEvents.Startup,
     activate: () => Effect.succeed(Capability.contributes(ObservabilityCapabilities.Namespace, namespace)),
+  })),
+  Plugin.addModule(({ downloadLogs }) => ({
+    id: 'log-downloader',
+    activatesOn: ActivationEvents.Startup,
+    activate: () =>
+      Effect.succeed(
+        downloadLogs !== undefined ? Capability.contributes(ObservabilityCapabilities.LogDownloader, downloadLogs) : [],
+      ),
   })),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   Plugin.addModule(({ namespace, observability }) => ({

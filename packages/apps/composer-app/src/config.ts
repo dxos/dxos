@@ -8,7 +8,7 @@ import * as Match from 'effect/Match';
 
 import { DXOS_VERSION, Remote } from '@dxos/client';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
-import { type LogBuffer } from '@dxos/log';
+import { type IdbLogStore } from '@dxos/log-store-idb';
 import { Observability, ObservabilityExtension, ObservabilityProvider } from '@dxos/observability';
 import { getHostPlatform } from '@dxos/util';
 
@@ -54,7 +54,7 @@ const platformProvider = (isTauri: boolean): Observability.DataProvider =>
   });
 
 /** Initialize observability extensions and data providers for Composer. */
-export const initializeObservability = async (config: Config, isTauri: boolean, logBuffer?: LogBuffer) =>
+export const initializeObservability = async (config: Config, isTauri: boolean, logStore?: IdbLogStore) =>
   Function.pipe(
     Observability.make(),
     Observability.addExtension(
@@ -74,7 +74,7 @@ export const initializeObservability = async (config: Config, isTauri: boolean, 
         config,
         release: DXOS_VERSION,
         environment: config.values.runtime?.app?.env?.DX_ENVIRONMENT ?? 'unknown',
-        logBuffer,
+        logStore,
       }),
     ),
     Observability.addDataProvider(ObservabilityProvider.IPData.provider(config)),

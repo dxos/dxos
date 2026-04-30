@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Prompt } from '@dxos/blueprints';
+import { Routine } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
 import { createObject } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
@@ -45,7 +45,7 @@ export const createNotebook = (): Notebook.Notebook =>
         type: 'prompt',
         prompt: Ref.make(
           createObject(
-            Prompt.make({
+            Routine.make({
               instructions: 'Very briefly, what colors are associated with the numbers {{a}} and {{b}}.',
             }),
           ),
@@ -61,7 +61,7 @@ export const createNotebook = (): Notebook.Notebook =>
         type: 'prompt',
         prompt: Ref.make(
           createObject(
-            Prompt.make({
+            Routine.make({
               instructions: 'Very briefly, summarize the documents: {{docs}}',
             }),
           ),

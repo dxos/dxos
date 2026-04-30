@@ -66,7 +66,7 @@
       "path": "../assistant"
     },
     {
-      "path": "../blueprints"
+      "path": "../compute"
     },
     {
       "path": "../conductor"
@@ -81,16 +81,10 @@
       "path": "../echo/echo-protocol"
     },
     {
-      "path": "../functions"
-    },
-    {
       "path": "../functions-runtime"
     },
     {
       "path": "../mesh/edge-client"
-    },
-    {
-      "path": "../operation"
     }
   ]
 }

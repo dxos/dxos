@@ -16,12 +16,12 @@ import {
   ResearchGraph,
   WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
-import { Blueprint, Prompt, Template } from '@dxos/blueprints';
+import { Blueprint, Routine, Template } from '@dxos/compute';
+import { Reply, Script, Trigger } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { View } from '@dxos/echo';
-import { Reply, Script, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 import { AssistantBlueprint } from '@dxos/plugin-assistant/blueprints';
 import { translations } from '@dxos/plugin-assistant/translations';
 import { ChessBlueprint, ChessFunctions } from '@dxos/plugin-chess/blueprints';
@@ -58,7 +58,7 @@ import {
   InboxModule,
   InvocationsModule,
   ProjectModule,
-  PromptModule,
+  RoutineModule,
   ResearchInputModule,
   ResearchOutputModule,
   ScriptModule,
@@ -728,7 +728,7 @@ export const WithResearchQueue: Story = {
       await space.queues.get(feedQueueDxn).append(orgs);
 
       const researchPrompt = space.db.add(
-        Prompt.make({
+        Routine.make({
           name: 'Research',
           description: 'Research organization',
           input: Schema.Struct({
@@ -757,7 +757,7 @@ export const WithResearchQueue: Story = {
   args: {
     modules: [
       [ResearchInputModule, ResearchOutputModule],
-      [TriggersModule, InvocationsModule, PromptModule, GraphModule],
+      [TriggersModule, InvocationsModule, RoutineModule, GraphModule],
     ],
     blueprints: [ResearchBlueprint.key],
   },
@@ -855,7 +855,7 @@ export const WithProject: Story = {
       const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDxn));
 
       const researchPrompt = space.db.add(
-        Prompt.make({
+        Routine.make({
           name: 'Research',
           description: 'Research organization',
           input: Schema.Struct({
@@ -1011,7 +1011,7 @@ export const WithPrompt: Story = {
     onInit: async ({ space }) => {
       space.db.add(Operation.serialize(AgentPrompt));
       space.db.add(
-        Prompt.make({
+        Routine.make({
           name: 'Research',
           description: 'Research organization',
           input: Schema.Struct({
@@ -1028,6 +1028,6 @@ export const WithPrompt: Story = {
     },
   }),
   args: {
-    modules: [[PromptModule], [InvocationsModule]],
+    modules: [[RoutineModule], [InvocationsModule]],
   },
 };

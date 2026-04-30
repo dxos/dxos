@@ -3,7 +3,7 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { JOIN_DIALOG } from '../constants';
 import { type JoinDialogProps } from '../containers/JoinDialog';

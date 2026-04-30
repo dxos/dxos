@@ -8,7 +8,7 @@ import { pipe } from 'effect/Function';
 
 import { ConsolePrinter } from '@dxos/ai';
 import { AiContextService, type AiSession, type AiSessionRunProps, GenerationObserver } from '@dxos/assistant';
-import type { Blueprint } from '@dxos/blueprints';
+import type { Blueprint } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
