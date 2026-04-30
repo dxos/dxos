@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { AiService } from '@dxos/ai';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 const Anthropic = Operation.make({
   meta: {

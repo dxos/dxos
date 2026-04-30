@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Routine, Blueprint } from '@dxos/blueprints';
+import { Routine, Blueprint } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Database, Feed, JsonSchema, Type, View } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 
 import { SchemaList } from './definitions';
 

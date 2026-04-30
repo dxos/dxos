@@ -9,10 +9,10 @@ import * as Effect from 'effect/Effect';
 
 import { CommandConfig, Common, printList, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Database, Filter } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
-import { Operation } from '@dxos/operation';
 
 import { getFunctionStatus, printFunction } from './util';
 

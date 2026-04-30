@@ -5,7 +5,7 @@
 import { describe, it } from '@effect/vitest';
 
 import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
-import { Routine } from '@dxos/blueprints';
+import { Routine } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 

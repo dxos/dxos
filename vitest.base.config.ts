@@ -116,7 +116,10 @@ const createBrowserProject = ({
           ...(nodeExternal ? [NodeExternalPlugin({ injectGlobals, nodeStd: true })] : []),
         ],
       },
-      exclude: ['@dxos/wa-sqlite'],
+      // `@anthropic-ai/tokenizer` re-exports `tiktoken/lite` via `require`, but
+      // tiktoken's wasm has top-level await which esbuild can't put behind a
+      // require(). Skip prebundling for the wasm dep so vite serves it as ESM.
+      exclude: ['@dxos/wa-sqlite', 'tiktoken', 'tiktoken/lite'],
     },
     esbuild: {
       target: 'esnext',

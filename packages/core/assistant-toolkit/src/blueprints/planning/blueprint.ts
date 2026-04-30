@@ -3,7 +3,7 @@
 //
 
 import { type AppCapabilities } from '@dxos/app-toolkit';
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/compute';
 
 import { UpdateTasks } from './functions';
 

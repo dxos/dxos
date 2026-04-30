@@ -50,7 +50,7 @@
       "path": "../ai"
     },
     {
-      "path": "../blueprints"
+      "path": "../compute"
     },
     {
       "path": "../compute-runtime"
@@ -65,16 +65,10 @@
       "path": "../echo/echo-protocol"
     },
     {
-      "path": "../functions"
-    },
-    {
       "path": "../functions-runtime"
     },
     {
       "path": "../mcp-client"
-    },
-    {
-      "path": "../operation"
     }
   ]
 }

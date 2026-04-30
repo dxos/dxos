@@ -3,7 +3,7 @@
 //
 
 import { type AppCapabilities } from '@dxos/app-toolkit';
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 

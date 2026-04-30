@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
 import {

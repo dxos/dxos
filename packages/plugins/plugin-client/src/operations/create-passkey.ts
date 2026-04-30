@@ -8,8 +8,8 @@ import * as Match from 'effect/Match';
 import { Capability } from '@dxos/app-framework';
 import { supportsNativePasskeys, createNativePasskey, extractPublicKeyFromAttestation } from '@dxos/app-toolkit';
 import { PublicKey } from '@dxos/client';
+import { Operation } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 
 import { ClientCapabilities } from '../types';
 import { CreatePasskey } from './definitions';
