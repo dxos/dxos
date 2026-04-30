@@ -7,19 +7,19 @@ import React from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { DatabaseBlueprint, MarkdownBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
-import { Prompt } from '@dxos/blueprints';
+import { Routine } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton } from '@dxos/react-ui';
 
 import { AssistantOperation } from '#operations';
 
-export type PromptListProps = AppSurface.ObjectSectionProps<Obj.Unknown>;
+export type RoutineListProps = AppSurface.ObjectSectionProps<Obj.Unknown>;
 
-export const PromptList = ({ subject }: PromptListProps) => {
+export const RoutineList = ({ subject }: RoutineListProps) => {
   const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(subject);
-  const prompts = useQuery(db, Filter.type(Prompt.Prompt));
+  const prompts = useQuery(db, Filter.type(Routine.Routine));
   if (!db) {
     return null;
   }

@@ -204,7 +204,7 @@ export const whenAll: {
  * // Match nodes that are either Sequences or Prompts
  * const whenInvocable = NodeMatcher.whenAny(
  *   NodeMatcher.whenEchoTypeMatches(Sequence),
- *   NodeMatcher.whenEchoTypeMatches(Prompt.Prompt),
+ *   NodeMatcher.whenEchoTypeMatches(Routine.Routine),
  * );
  * ```
  */

@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
-import { Prompt } from '@dxos/blueprints';
+import { Routine } from '@dxos/blueprints';
 import { SpaceSchema } from '@dxos/client/echo';
 import { Collection, Database, DXN, Feed, Obj, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
@@ -69,7 +69,7 @@ export const RunPromptInNewChat = Operation.make({
     /** Blueprint keys to look up and bind to the new chat. */
     blueprints: Schema.optional(Schema.Array(Schema.String)),
     /** Raw instructions or an existing Prompt object reference (e.g. from the prompts surface). */
-    prompt: Schema.Union(Schema.String, Ref.Ref(Prompt.Prompt)),
+    prompt: Schema.Union(Schema.String, Ref.Ref(Routine.Routine)),
     /**
      * When true, skips opening the chat: runs the Agent prompt operation against the new chat via the compute runtime (traced).
      */
