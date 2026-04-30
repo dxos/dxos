@@ -127,10 +127,10 @@ export const ResetDialog = ({
       <AlertDialog.Overlay>
         <AlertDialog.Content size='md' data-testid='resetDialog'>
           <AlertDialog.Header>
-            <AlertDialog.Title>{t(error ? error.title : 'reset dialog label')}</AlertDialog.Title>
+            <AlertDialog.Title>{t(error ? error.title : 'reset-dialog.label')}</AlertDialog.Title>
           </AlertDialog.Header>
           <AlertDialog.Body>
-            <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
+            <AlertDialog.Description>{t(error ? error.message : 'reset-dialog.message')}</AlertDialog.Description>
             {error && (
               <>
                 <div role='none'>
