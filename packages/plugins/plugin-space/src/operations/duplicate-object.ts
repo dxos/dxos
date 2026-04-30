@@ -4,9 +4,9 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 
 import { cloneObject } from '../util';
 import { SpaceOperation } from './definitions';

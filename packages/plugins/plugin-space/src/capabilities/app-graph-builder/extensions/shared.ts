@@ -6,10 +6,10 @@ import { type Atom } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
 
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
+import { type Operation } from '@dxos/compute';
 import { Filter, Obj, type Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { Migrations } from '@dxos/migrations';
-import { type Operation } from '@dxos/operation';
 import { type Node } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
 import { ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';

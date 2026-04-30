@@ -5,7 +5,7 @@
 import { type Meta } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
-import { Blueprint, Template } from '@dxos/blueprints';
+import { Blueprint, Template } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';

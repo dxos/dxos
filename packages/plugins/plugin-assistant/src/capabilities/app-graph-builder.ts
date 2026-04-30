@@ -9,12 +9,12 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, getActiveSpace, getPersonalSpace } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
-import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Blueprint, Routine } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { DXN, Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -128,7 +128,7 @@ export default Capability.makeModule(
         id: 'invocations',
         match: NodeMatcher.whenAny(
           NodeMatcher.whenEchoTypeMatches(Sequence),
-          NodeMatcher.whenEchoTypeMatches(Prompt.Prompt),
+          NodeMatcher.whenEchoTypeMatches(Routine.Routine),
         ),
         connector: () =>
           Effect.succeed([

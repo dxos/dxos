@@ -13,46 +13,46 @@ import * as Template from '../template';
  * Executable instructions, which may use Blueprints.
  * May reference additional context.
  */
-export const Prompt = Schema.Struct({
+export const Routine = Schema.Struct({
   /**
-   * Name of the prompt.
+   * Name of the routine.
    */
   name: Schema.optional(Schema.String),
 
   /**
-   * Description of the prompt's purpose and functionality.
-   * Allows AI agents to execute prompts automatically as tools.
+   * Description of the routine's purpose and functionality.
+   * Allows AI agents to execute routines automatically as tools.
    */
   description: Schema.optional(Schema.String),
 
   /**
-   * Input schema of the prompt.
+   * Input schema of the routine.
    */
   input: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)),
 
   /**
-   * Output schema of the prompt.
+   * Output schema of the routine.
    */
   output: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)),
 
   /**
-   * Natural language instructions for the prompt.
+   * Natural language instructions for the routine.
    * These should provide concrete course of action for the AI to follow.
    */
   instructions: Template.Template.pipe(Annotation.FormInputAnnotation.set(false)),
 
   /**
-   * Blueprints that the prompt may utilize.
+   * Blueprints that the routine may utilize.
    */
   blueprints: Schema.Array(Ref.Ref(Blueprint)),
 
   /**
-   * Additional context that the prompt may utilize.
+   * Additional context that the routine may utilize.
    */
   context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'org.dxos.type.prompt',
+    typename: 'org.dxos.type.routine',
     version: '0.1.0',
   }),
   Annotation.LabelAnnotation.set(['name']),
@@ -62,7 +62,7 @@ export const Prompt = Schema.Struct({
   }),
 );
 
-export interface Prompt extends Schema.Schema.Type<typeof Prompt> {}
+export interface Routine extends Schema.Schema.Type<typeof Routine> {}
 
 export const make = (params: {
   name?: string;
@@ -72,8 +72,8 @@ export const make = (params: {
   instructions?: string;
   blueprints?: Ref.Ref<Blueprint>[];
   context?: any[];
-}): Prompt =>
-  Obj.make(Prompt, {
+}): Routine =>
+  Obj.make(Routine, {
     name: params.name,
     description: params.description,
     input: JsonSchema.toJsonSchema(params.input ?? Schema.Void),

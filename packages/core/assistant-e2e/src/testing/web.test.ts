@@ -4,7 +4,7 @@
 
 import { describe, it } from '@effect/vitest';
 
-import { Prompt } from '@dxos/blueprints';
+import { Routine } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
@@ -17,7 +17,7 @@ describe('Web', () => {
     // TODO(dmaretskyi): Agent unable to activate blueprints.
     'search the web',
     agentTest(
-      Prompt.make({
+      Routine.make({
         instructions: trim`
           Search 5 richest people in the world and create Person objects in the database.
 

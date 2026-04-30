@@ -2,9 +2,9 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { getTypenameFromQuery } from '@dxos/schema';
 

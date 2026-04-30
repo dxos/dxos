@@ -12,7 +12,7 @@ import { type BlockRenderer, type MessageThreadContext } from './sync';
 import { applyToolBlockToWidgetState } from './tool-widget-state';
 import {
   FallbackWidget,
-  PromptWidget,
+  RoutineWidget,
   ReasoningWidget,
   ReferenceWidget,
   SelectWidget,
@@ -35,7 +35,7 @@ export const componentRegistry: XmlWidgetRegistry = {
     block: true,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
-      return text ? new PromptWidget(text) : null;
+      return text ? new RoutineWidget(text) : null;
     },
   },
   synthetic: {

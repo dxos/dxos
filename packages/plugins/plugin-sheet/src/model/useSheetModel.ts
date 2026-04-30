@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { type ComputeGraph } from '@dxos/compute';
+import { type ComputeGraph } from '@dxos/compute-hyperformula';
 
 import { type Sheet } from '#types';
 

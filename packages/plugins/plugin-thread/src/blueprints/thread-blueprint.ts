@@ -3,7 +3,7 @@
 //
 
 import { type AppCapabilities } from '@dxos/app-toolkit';
-import { Blueprint, Template } from '@dxos/blueprints';
+import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 import { ThreadOperation } from '#operations';

@@ -9,9 +9,9 @@ import React, { useCallback, useMemo, useRef } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
+import { Process, Trace } from '@dxos/compute';
 import { Feed } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
-import { Process, Trace } from '@dxos/functions';
 import { FeedTraceSink, ProcessManager } from '@dxos/functions-runtime';
 import { ObjectId } from '@dxos/keys';
 import { dbg } from '@dxos/log';
