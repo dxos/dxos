@@ -7,8 +7,8 @@ export * from './api';
 export { stack, action, debug, input, select } from './builders';
 export { installDevtools, type ComposerDevtoolsApi } from './host';
 
-import { installDevtools } from './host';
 import { stack, action, debug, input, select } from './builders';
+import { installDevtools } from './host';
 
 /**
  * Convenience namespace mirroring the documented API:

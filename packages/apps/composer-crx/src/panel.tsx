@@ -6,8 +6,8 @@ import * as Comlink from 'comlink';
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { connectDevtools } from '@dxos/composer-devtools-protocol/panel';
 import type { DevtoolsHostApi, PanelInfo, SpecNode } from '@dxos/composer-devtools-protocol';
+import { connectDevtools } from '@dxos/composer-devtools-protocol/panel';
 import { log } from '@dxos/log';
 
 const SpecRenderer = ({
@@ -69,13 +69,7 @@ const SpecRenderer = ({
   }
 };
 
-const PanelView = ({
-  remote,
-  panel,
-}: {
-  remote: Comlink.Remote<DevtoolsHostApi>;
-  panel: PanelInfo;
-}) => {
+const PanelView = ({ remote, panel }: { remote: Comlink.Remote<DevtoolsHostApi>; panel: PanelInfo }) => {
   const [tree, setTree] = useState<SpecNode | undefined>();
 
   useEffect(() => {

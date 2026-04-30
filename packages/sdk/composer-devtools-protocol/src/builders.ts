@@ -44,19 +44,13 @@ const requireContext = (): RenderContext => {
   return currentContext;
 };
 
-export const stack = (
-  props: { direction: StackDirection },
-  children: SpecNode[],
-): StackNode => ({
+export const stack = (props: { direction: StackDirection }, children: SpecNode[]): StackNode => ({
   type: 'stack',
   props,
   children,
 });
 
-export const action = (
-  props: { name: string; disabled?: boolean },
-  handler: () => void,
-): ActionNode => ({
+export const action = (props: { name: string; disabled?: boolean }, handler: () => void): ActionNode => ({
   type: 'action',
   id: requireContext().registerAction(handler),
   props,
