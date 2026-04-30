@@ -28,6 +28,8 @@ name: Release
 on:
   push:
     tags: ['v*']
+permissions:
+  contents: write
 jobs:
   release:
     runs-on: ubuntu-latest

@@ -14,7 +14,7 @@ The default audience for plugins is **community/external authors** (own repo, Vi
 
 ## Method
 
-1. Run `git status` and `git diff main...HEAD` (or against the appropriate base) to see what changed.
+1. Run `git status` and diff against the **PR's actual base branch** (do not hardcode `main`). If you know the base, use `git diff <base>...HEAD`; otherwise infer it (e.g. via `gh pr view --json baseRefName -q .baseRefName`) or fall back to the merge-base: `git diff $(git merge-base origin/HEAD HEAD)..HEAD`. Reviewing the wrong base will surface unrelated changes.
 2. Walk the plugin tree (or just changed files for a PR review) and check each category:
    - **Layout** — `directory-structure.md`.
    - **Components vs containers** — `components-vs-containers.md`. Treat any `@dxos/app-framework`/`@dxos/app-toolkit` import in `src/components/` as **critical**.

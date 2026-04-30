@@ -37,6 +37,7 @@ moon run plugin-foo:test-storybook
 For optional server-side functions (e.g. webhooks, scheduled jobs) add a `deploy-functions` task pointing to the Operation file:
 
 ```yaml
+tasks:
   deploy-functions:
     command: $workspaceRoot/scripts/dxnext --profile main function deploy --runtime worker-loader $workspaceRoot/packages/plugins/plugin-foo/src/operations/my-fn.ts
     preset: server

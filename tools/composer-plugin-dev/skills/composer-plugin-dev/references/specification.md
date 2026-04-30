@@ -20,12 +20,13 @@ Do **not** write a separate design doc. The `PLUGIN.mdl` is the source of truth 
 
 ## Minimal shape
 
-```mdl
+```yaml
 ---
 id: org.dxos.plugin.foo
 name: FooPlugin
 version: 0.1.0
 ---
+```
 
 A short prose description of the plugin.
 
@@ -59,7 +60,6 @@ test T-1:
   given: a Space with no Things
   when: the user clicks "Add thing"
   then: a new Thing is created with default name
-```
 ```
 
 ## Workflow

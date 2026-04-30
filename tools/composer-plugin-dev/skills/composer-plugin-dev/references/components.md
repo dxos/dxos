@@ -7,7 +7,7 @@ Presentational UI primitives in `src/components/`. **No DXOS framework deps.**
 - **Forbidden imports:** `@dxos/app-framework`, `@dxos/app-toolkit`, capability barrels, `useQuery`/`useObject`. If you need them, you're writing a container.
 - **Allowed:** `@dxos/react-ui`, `@dxos/ui-theme`, plain React, libraries owned by the component.
 - One subdirectory per component:
-  ```
+  ```text
   components/
     index.ts                # barrel: export * from './Thing';
     Thing/

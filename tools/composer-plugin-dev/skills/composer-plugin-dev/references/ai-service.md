@@ -58,7 +58,7 @@ export const Summarize = Operation.make({
   meta: { key: 'com.example.function.foo.summarize', name: 'Summarize', description: '...' },
   input: Schema.Struct({ text: Schema.String }),
   output: Schema.Struct({ summary: Schema.String }),
-  services: [AiService],
+  services: [AiService.AiService],
 });
 ```
 

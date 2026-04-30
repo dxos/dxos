@@ -4,7 +4,7 @@ A community plugin lives in **its own GitHub repo** and ships a single bundled m
 
 ## Minimum files
 
-```
+```text
 my-plugin/
   package.json
   vite.config.ts          # composerPlugin({ entry: 'src/plugin.tsx', meta })

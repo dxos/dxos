@@ -26,21 +26,21 @@ Two flavors: **community** (your own repo, single bundle) and **monorepo** (mult
     "#types": "./src/types/index.ts"
   },
   "dependencies": {
-    "@dxos/app-framework": "0.8.4-main.fcfe5033a5",
-    "@dxos/app-toolkit": "0.8.4-main.fcfe5033a5",
-    "@dxos/echo": "0.8.4-main.fcfe5033a5",
-    "@dxos/operation": "0.8.4-main.fcfe5033a5",
-    "@dxos/blueprints": "0.8.4-main.fcfe5033a5",
-    "@dxos/react-ui": "0.8.4-main.fcfe5033a5",
-    "@dxos/types": "0.8.4-main.fcfe5033a5",
-    "@dxos/util": "0.8.4-main.fcfe5033a5",
+    "@dxos/app-framework": "<COMPOSER_HOST_MAIN_DIST_TAG>",
+    "@dxos/app-toolkit":   "<COMPOSER_HOST_MAIN_DIST_TAG>",
+    "@dxos/echo":          "<COMPOSER_HOST_MAIN_DIST_TAG>",
+    "@dxos/operation":     "<COMPOSER_HOST_MAIN_DIST_TAG>",
+    "@dxos/blueprints":    "<COMPOSER_HOST_MAIN_DIST_TAG>",
+    "@dxos/react-ui":      "<COMPOSER_HOST_MAIN_DIST_TAG>",
+    "@dxos/types":         "<COMPOSER_HOST_MAIN_DIST_TAG>",
+    "@dxos/util":          "<COMPOSER_HOST_MAIN_DIST_TAG>",
     "effect": "^3.x",
     "react": "^19.x"
   }
 }
 ```
 
-**All `@dxos/*` deps must be pinned to the Composer host's main dist-tag.** Pin them in lockstep — see [publishing.md](./publishing.md).
+**Replace `<COMPOSER_HOST_MAIN_DIST_TAG>` with the actual version that Composer is shipping** — look it up via `npm dist-tag ls @dxos/app-framework` or follow the steps in [publishing.md](./publishing.md). Pinning to a stale hash here causes runtime mismatches; all `@dxos/*` deps must move in lockstep with the Composer host.
 
 The community build emits **one file**: `dist/plugin.mjs` (plus `dist/manifest.json`). No `exports` map needed; Composer dynamically imports the module.
 

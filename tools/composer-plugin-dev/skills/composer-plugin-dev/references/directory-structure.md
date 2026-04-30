@@ -2,7 +2,7 @@
 
 Standard layout for `src/`. Same shape inside and outside the monorepo; only the build wiring around it differs.
 
-```
+```text
 src/
   plugin.tsx              # Plugin.define(meta).pipe(...)   (FooPlugin.tsx in-repo)
   meta.ts                 # Plugin.Meta

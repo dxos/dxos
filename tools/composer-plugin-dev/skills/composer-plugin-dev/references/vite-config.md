@@ -31,7 +31,7 @@ export default defineConfig({
 
 ## Output
 
-```
+```text
 dist/
   plugin.mjs       # ES module, imported by Composer
   manifest.json    # Composer reads this to register the plugin
