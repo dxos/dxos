@@ -3921,6 +3921,12 @@ importers:
         specifier: 'catalog:'
         version: 4.6.7
 
+  packages/common/log-store-idb:
+    dependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../log
+
   packages/common/merkle-search-tree:
     dependencies:
       '@dxos/invariant':

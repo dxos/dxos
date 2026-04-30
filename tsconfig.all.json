@@ -79,6 +79,9 @@
       "path": "packages/common/log/tsconfig.json"
     },
     {
+      "path": "packages/common/log-store-idb/tsconfig.json"
+    },
+    {
       "path": "packages/common/merkle-search-tree/tsconfig.json"
     },
     {
