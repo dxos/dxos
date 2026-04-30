@@ -11,11 +11,15 @@ import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
 import { AssistantPlugin } from './AssistantPlugin';
 
 describe('AssistantPlugin', () => {
+  // Browser-only first run: Vite cold-loads `@effect/ai-openai/OpenAiClient`
+  // (pulled in transitively by the AssistantPlugin's activation chain). On a
+  // warm cache this completes in ~50ms; on first run it can take 5–7s, which
+  // exceeds the default 5s test timeout.
   test('activates and contributes expected capabilities', async ({ expect }) => {
     await using harness = await createTestApp({ plugins: [AssistantPlugin()] });
     const surfaces = harness.getAll(Capabilities.ReactSurface).flat();
     expect(surfaces.length).toBeGreaterThan(0);
-  });
+  }, 30_000);
 
   test('fires activation events explicitly with autoStart: false', async ({ expect }) => {
     await using harness = await createTestApp({ plugins: [AssistantPlugin()], autoStart: false });
