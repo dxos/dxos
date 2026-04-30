@@ -88,14 +88,17 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           AtomQuery.fromQuery(space.db.schemaRegistry.query({ location: ['database', 'runtime'] })),
         );
 
+        // View-annotated schemas (e.g. Kanban) are NOT excluded outright —
+        // they may have non-view instances (e.g. items-variant Kanban whose
+        // `view` ref is unset). Those instances should surface in the
+        // database subgraph as regular objects of the schema. View instances
+        // (path resolves to a real ref) appear under their target typename
+        // via `schema-children` instead.
         const userSchemas = allSchemas.filter((schema) => {
           if (getTypeAnnotation(schema)?.kind === EntityKind.Relation) {
             return false;
           }
           if (SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
-            return false;
-          }
-          if (ViewAnnotation.has(schema)) {
             return false;
           }
           if (Type.getTypename(schema) === Collection.Collection.typename) {
@@ -112,6 +115,12 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           }
           const typename = Type.getTypename(schema);
           const objects = get(AtomQuery.make(space.db, Filter.typename(typename)));
+          if (ViewAnnotation.has(schema)) {
+            // For view-annotated schemas, only show the type entry when
+            // there are non-view instances. Pure views are surfaced under
+            // their target typename, not under their own schema entry.
+            return objects.some((obj) => !viewIndex.isView(obj));
+          }
           return objects.length > 0 || viewIndex.typenamesWithViews.has(typename);
         });
 
@@ -185,7 +194,17 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         return Option.some({ space: node.data.space as Space, typename: node.data.typename as string });
       },
       connector: ({ space, typename }, get) => {
-        const objects = get(AtomQuery.make(space.db, Filter.typename(typename)));
+        const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
+        const schemas = client
+          ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
+          : [];
+        const viewIndex = buildViewIndex(get, space, schemas);
+        const objects = get(AtomQuery.make(space.db, Filter.typename(typename)))
+          // Drop view instances — they appear under their target typename
+          // (via `schema-children` view nodes), not duplicated under their
+          // own schema's {All} list. No-op for non-view-annotated schemas
+          // since `isView` always returns false there.
+          .filter((object: Obj.Unknown) => !viewIndex.isView(object));
 
         return Effect.succeed(
           objects

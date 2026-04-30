@@ -135,6 +135,14 @@ export type ViewIndex = {
   typenamesWithViews: Set<string>;
   /** View objects targeting a specific typename. */
   getViewsForTypename: (typename: string) => Obj.Any[];
+  /**
+   * Whether `object` is a view, defined as: its schema's `ViewAnnotation` path
+   * resolves to a non-null value on the object. Returns `false` for objects of
+   * non-view-annotated schemas, and `false` for view-annotated objects whose
+   * path resolves to `null`/`undefined` (e.g. an items-variant `Kanban` whose
+   * `view` ref is unset — that's a regular object, not a view).
+   */
+  isView: (object: Obj.Any) => boolean;
 };
 
 /**
@@ -147,6 +155,10 @@ export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.An
   const viewSchemas = schemas.filter((schema) => ViewAnnotation.has(schema));
 
   const viewsByTypename = new Map<string, Obj.Any[]>();
+  // Object IDs whose `ViewAnnotation` path resolves to a non-null value.
+  // Used by `isView` to distinguish view instances from regular instances of
+  // the same schema (e.g. items-variant Kanban vs view-variant Kanban).
+  const viewObjectIds = new Set<string>();
 
   if (viewSchemas.length > 0) {
     const filter = Filter.or(...viewSchemas.map((schema) => Filter.type(schema)));
@@ -170,6 +182,13 @@ export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.An
             ? undefined
             : (holder as Record<string, unknown>)[segment];
       }
+      // Path resolved to a non-null value → this instance is a "view". Path
+      // resolved to null/undefined → it's a regular object that happens to
+      // be of a view-annotated schema.
+      if (holder != null) {
+        viewObjectIds.add(viewObject.id);
+      }
+
       const viewTarget = holder !== undefined ? get(AtomObj.make(holder as Obj.Any)) : undefined;
       const typename = getTypenameFromQuery(viewTarget?.query?.ast);
       if (typename) {
@@ -183,5 +202,6 @@ export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.An
   return {
     typenamesWithViews: new Set(viewsByTypename.keys()),
     getViewsForTypename: (typename) => viewsByTypename.get(typename) ?? [],
+    isView: (object) => viewObjectIds.has(object.id),
   };
 };
