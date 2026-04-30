@@ -110,7 +110,6 @@ describe('Trace timeline', () => {
             ├──●  [user] Search for all organizations. How many are there?
             │  ●  [check-circle] list-schemas - Success
             │  ●  [check-circle] query - Success
-            │  ●  [check-circle] query - Success
             ◆──╯  [check-circle] Agent completed request
             "
           `);
@@ -206,15 +205,7 @@ describe('Trace timeline', () => {
           const graph = renderTimelineAscii(commits, branches);
           expect(`\n${graph}\n`).toMatchInlineSnapshot(`
             "
-            ●     [play] Agent
-            ├──●  [user] Research the given topic, or object.
-            │  ●  [check-circle] AnthropicWebSearch - Success
-            │  ●  [check-circle] AnthropicWebSearch - Success
-            │  ●  [check-circle] AnthropicWebSearch - Success
-            │  ●  [check-circle] AnthropicWebSearch - Success
-            │  ●  [check-circle] AnthropicWebSearch - Success
-            │  ●  [check-circle] complete_job - Success
-            ◆──╯  [check-circle] Agent
+            ●  [check-circle] Agent
             "
           `);
         },
