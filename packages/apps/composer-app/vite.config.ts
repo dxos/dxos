@@ -54,7 +54,9 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
         '@dxos/lit-*',
       ],
     }),
-  env.command === 'serve' && DxosLogPlugin({ transform: false }),
+  // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
+  // Replaces the legacy `@dxos/swc-log-plugin` that previously ran inside `react()` below.
+  DxosLogPlugin(),
   wasm(),
   // sourcemaps(),
 ];
@@ -288,47 +290,8 @@ export default defineConfig((env) => ({
         options.jsc ??= {};
         options.jsc.target = 'esnext';
       },
-      plugins: [
-        [
-          '@dxos/swc-log-plugin',
-          {
-            to_transform: [
-              {
-                name: 'log',
-                package: '@dxos/log',
-                param_index: 2,
-                include_args: false,
-                include_call_site: true,
-                include_scope: true,
-              },
-              {
-                name: 'dbg',
-                package: '@dxos/log',
-                param_index: 1,
-                include_args: true,
-                include_call_site: false,
-                include_scope: false,
-              },
-              {
-                name: 'invariant',
-                package: '@dxos/invariant',
-                param_index: 2,
-                include_args: true,
-                include_call_site: false,
-                include_scope: true,
-              },
-              {
-                name: 'Context',
-                package: '@dxos/context',
-                param_index: 1,
-                include_args: false,
-                include_call_site: false,
-                include_scope: false,
-              },
-            ],
-          },
-        ],
-      ],
+      // Log-meta injection is handled by `DxosLogPlugin` (Rolldown transform hook) above —
+      // it runs on all js/ts/jsx/tsx modules pre-pass, so the SWC log plugin is no longer needed here.
     }),
 
     importMapPlugin(),

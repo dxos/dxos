@@ -15,6 +15,7 @@ import { defineProject, UserWorkspaceConfig, type ViteUserConfig } from 'vitest/
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import { MODULES } from '@dxos/node-std/_/config';
 import PluginImportSource from '@dxos/vite-plugin-import-source';
+import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 
 const isDebug = !!process.env.VITEST_DEBUG;
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
@@ -180,7 +181,10 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       ...plugins,
       PluginImportSource({ include: ['@dxos/**', '#*'] }),
       process.env.VITE_INSPECT ? Inspect() : undefined,
-      // Add react plugin to enable SWC transfors.
+      // Log-meta injection only — no dev file sink (vitest is a test runner, not a dev server).
+      // Replaces the legacy `@dxos/swc-log-plugin` that used to run inside `react()`.
+      DxosLogPlugin({ logToFile: false }),
+      // Add react plugin to enable SWC transforms.
       react({
         tsDecorators: true,
         useAtYourOwnRisk_mutateSwcOptions: (options) => {
@@ -188,47 +192,6 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
           options.jsc ??= {};
           options.jsc.target = 'esnext';
         },
-        plugins: [
-          [
-            '@dxos/swc-log-plugin',
-            {
-              to_transform: [
-                {
-                  name: 'log',
-                  package: '@dxos/log',
-                  param_index: 2,
-                  include_args: false,
-                  include_call_site: true,
-                  include_scope: true,
-                },
-                {
-                  name: 'dbg',
-                  package: '@dxos/log',
-                  param_index: 1,
-                  include_args: true,
-                  include_call_site: false,
-                  include_scope: false,
-                },
-                {
-                  name: 'invariant',
-                  package: '@dxos/invariant',
-                  param_index: 2,
-                  include_args: true,
-                  include_call_site: false,
-                  include_scope: true,
-                },
-                {
-                  name: 'Context',
-                  package: '@dxos/context',
-                  param_index: 1,
-                  include_args: false,
-                  include_call_site: false,
-                  include_scope: false,
-                },
-              ],
-            },
-          ],
-        ],
       }),
     ],
   });
