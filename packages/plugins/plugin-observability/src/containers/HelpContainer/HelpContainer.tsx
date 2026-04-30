@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useState } from 'react';
 
-import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
 import { useAsyncEffect } from '@dxos/react-hooks';
@@ -20,6 +20,7 @@ import { ObservabilityCapabilities } from '#types';
 export const HelpContainer = () => {
   const { invokePromise } = useOperationInvoker();
   const observability = useCapability(ObservabilityCapabilities.Observability);
+  const [downloadLogs] = useCapabilities(ObservabilityCapabilities.LogDownloader);
   const [feedbackAvailable, setFeedbackAvailable] = useState(false);
 
   useAsyncEffect(
@@ -52,5 +53,5 @@ export const HelpContainer = () => {
     [invokePromise],
   );
 
-  return <FeedbackForm onSave={handleSave} disabled={!feedbackAvailable} />;
+  return <FeedbackForm onSave={handleSave} disabled={!feedbackAvailable} onDownloadLogs={downloadLogs} />;
 };

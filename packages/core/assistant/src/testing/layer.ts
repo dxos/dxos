@@ -13,7 +13,7 @@ import * as Match from 'effect/Match';
 
 import { AiService, ConsolePrinter, OpaqueToolkit, type ModelName } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
-import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Blueprint, Routine } from '@dxos/blueprints';
 import { Database, DXN, Feed, Tag, Type } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import type { TestContextService } from '@dxos/effect/testing';
@@ -90,7 +90,7 @@ export type AssistantTestServices =
   | FeedTraceSink.FeedTraceSink;
 
 export const AssistantTestLayer = ({
-  aiServicePreset = 'direct',
+  aiServicePreset = 'edge-remote',
   model,
   operationHandlers = [],
   toolkits = [],
@@ -107,7 +107,7 @@ export const AssistantTestLayer = ({
   const operationHandlersSet = Array.isArray(operationHandlers)
     ? OperationHandlerSet.merge(...operationHandlers)
     : operationHandlers;
-  types.push(Blueprint.Blueprint, Prompt.Prompt, Operation.PersistentOperation, Feed.Feed, Trigger.Trigger, Tag.Tag);
+  types.push(Blueprint.Blueprint, Routine.Routine, Operation.PersistentOperation, Feed.Feed, Trigger.Trigger, Tag.Tag);
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
   return Layer.empty.pipe(

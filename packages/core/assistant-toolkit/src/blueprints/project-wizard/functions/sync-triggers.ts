@@ -131,5 +131,27 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
       );
     }
 
+    // Timer trigger bypasses the qualifier and invokes the agent worker directly on a schedule.
+    if (agent.cron) {
+      yield* Database.add(
+        Trigger.make({
+          [Obj.Parent]: agent,
+          [Obj.Meta]: {
+            keys: [
+              { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
+              { source: AGENT_TRIGGER_TARGET_EXTENSION_KEY, id: `timer:${agent.cron}` },
+            ],
+          },
+          enabled: true,
+          spec: Trigger.specTimer(agent.cron),
+          function: Ref.make(Operation.serialize(AgentWorker)),
+          input: {
+            agent: Ref.make(agent),
+            event: '{{event}}',
+          },
+        }),
+      );
+    }
+
     yield* Database.flush();
   });

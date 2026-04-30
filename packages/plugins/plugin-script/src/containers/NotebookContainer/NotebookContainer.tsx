@@ -11,7 +11,7 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Blueprint, Routine } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
@@ -165,7 +165,7 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
             const blueprints = objects
               .filter((blueprint) => INCLUDE_BLUEPRINTS.includes(blueprint.key))
               .map((blueprint) => Ref.make(blueprint));
-            cell.prompt = Ref.make(Prompt.make({ instructions: '', blueprints }));
+            cell.prompt = Ref.make(Routine.make({ instructions: '', blueprints }));
           }
           break;
         }
@@ -233,7 +233,7 @@ const runPrompt = Effect.fn(function* ({
   input,
   onResult,
 }: {
-  prompt: Ref.Ref<Prompt.Prompt>;
+  prompt: Ref.Ref<Routine.Routine>;
   input: Record<string, any>;
   onResult: (result: string) => void;
 }) {

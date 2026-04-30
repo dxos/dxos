@@ -35,6 +35,7 @@
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/log-store-idb": "workspace:*",
     "@dxos/migrations": "workspace:*",
     "@dxos/observability": "workspace:*",
     "@dxos/operation": "workspace:*",

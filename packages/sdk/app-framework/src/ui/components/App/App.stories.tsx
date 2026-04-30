@@ -67,7 +67,7 @@ const DefaultStory = ({ plugins }: DefaultStoryProps) => {
 };
 
 const meta = {
-  title: 'sdk/app-framework/App',
+  title: 'sdk/app-framework/components/App',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: {

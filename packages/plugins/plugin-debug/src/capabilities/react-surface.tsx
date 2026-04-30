@@ -37,8 +37,8 @@ import {
 } from '@dxos/devtools';
 import { Feed, Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
-import { type LogBuffer } from '@dxos/log';
 import { log } from '@dxos/log';
+import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Graph } from '@dxos/plugin-graph';
 import { ScriptOperation } from '@dxos/plugin-script/operations';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
@@ -76,11 +76,11 @@ const isGraphDebug = (data: any): data is GraphDebug => {
 };
 
 type ReactSurfaceOptions = {
-  logBuffer: LogBuffer;
+  logStore: IdbLogStore;
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ logBuffer }: ReactSurfaceOptions) {
+  Effect.fnUntraced(function* ({ logStore }: ReactSurfaceOptions) {
     const capabilities = yield* Capability.Service;
     const registry = capabilities.get(Capabilities.AtomRegistry);
     const settingsAtom = capabilities.get(DebugCapabilities.Settings);
@@ -96,7 +96,7 @@ export default Capability.makeModule(
             <DebugSettings
               settings={settings}
               onSettingsChange={updateSettings}
-              logBuffer={logBuffer}
+              logStore={logStore}
               onUpload={fileUploader}
             />
           );
