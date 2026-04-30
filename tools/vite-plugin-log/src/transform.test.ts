@@ -6,16 +6,20 @@ import { RolldownMagicString } from 'rolldown';
 import { parseAst } from 'rolldown/parseAst';
 import { describe, test } from 'vitest';
 
-import { DEFAULT_LOG_META_TRANSFORM_SPEC } from './definitions.ts';
+import { DEFAULT_LOG_META_TRANSFORM_SPEC, type LogMetaTransformSpec } from './definitions.ts';
 import { transform } from './transform.ts';
 
 /**
  * Core transform only (no Rolldown id / moduleType / exclude filters): `meta.ast` + MagicString.
  */
-const runTransform = (filename: string, code: string): string => {
+const runTransform = (
+  filename: string,
+  code: string,
+  specs: LogMetaTransformSpec[] = DEFAULT_LOG_META_TRANSFORM_SPEC,
+): string => {
   const program = parseAst(code, { astType: 'ts', lang: 'ts' });
   const magicString = new RolldownMagicString(code);
-  transform(magicString, program, filename, { specs: DEFAULT_LOG_META_TRANSFORM_SPEC });
+  transform(magicString, program, filename, { specs });
   return magicString.toString();
 };
 
@@ -52,7 +56,7 @@ describe('transform', () => {
       "import { log } from '@dxos/log';
       var __dxlog_file="src/module.ts";
 
-      log("hello",void 0,{F:__dxlog_file,L:2,S:this,C:(f,a)=>f(...a)});
+      log("hello",void 0,{"~LogMeta":"~LogMeta",F:__dxlog_file,L:2,S:this});
       "
     `);
   });
@@ -90,7 +94,7 @@ describe('transform', () => {
       "import { log as dxosLog } from '@dxos/log';
       var __dxlog_file="src/module.ts";
 
-      dxosLog('hi',void 0,{F:__dxlog_file,L:2,S:this,C:(f,a)=>f(...a)});
+      dxosLog('hi',void 0,{"~LogMeta":"~LogMeta",F:__dxlog_file,L:2,S:this});
       "
     `);
   });
@@ -104,7 +108,7 @@ describe('transform', () => {
       "import { log } from '@dxos/log';
       var __dxlog_file="src/module.ts";
 
-      log('hi',void 0,{F:__dxlog_file,L:2,S:this,C:(f,a)=>f(...a)});
+      log('hi',void 0,{"~LogMeta":"~LogMeta",F:__dxlog_file,L:2,S:this});
       "
     `);
   });
@@ -118,7 +122,7 @@ describe('transform', () => {
       "import { log } from '@dxos/log';
       var __dxlog_file="src/module.ts";
 
-      log.debug('d',void 0,{F:__dxlog_file,L:2,S:this,C:(f,a)=>f(...a)});
+      log.debug('d',void 0,{"~LogMeta":"~LogMeta",F:__dxlog_file,L:2,S:this});
       "
     `);
   });
@@ -146,7 +150,7 @@ describe('transform', () => {
       "import { dbg } from '@dxos/log';
       var __dxlog_file="src/module.ts";
 
-      dbg('probe',{F:__dxlog_file,L:2,A:["'probe'"]});
+      dbg('probe',{"~LogMeta":"~LogMeta",F:__dxlog_file,L:2,A:["'probe'"]});
       "
     `);
   });
@@ -160,7 +164,7 @@ describe('transform', () => {
       "import { Context } from '@dxos/context';
       var __dxlog_file="src/module.ts";
 
-      new Context(void 0,{F:__dxlog_file,L:2});
+      new Context(void 0,{"~LogMeta":"~LogMeta",F:__dxlog_file,L:2});
       "
     `);
   });
@@ -174,7 +178,7 @@ describe('transform', () => {
       "import { invariant } from '@dxos/invariant';
       var __dxlog_file="src/module.ts";
 
-      invariant(true,void 0,{F:__dxlog_file,L:2,S:this,A:["true",""]});
+      invariant(true,void 0,{"~LogMeta":"~LogMeta",F:__dxlog_file,L:2,S:this,A:["true",""]});
       "
     `);
   });
@@ -196,7 +200,7 @@ describe('transform', () => {
       invariant(
         condition,
         'message',
-      {F:__dxlog_file,L:2,S:this,A:["condition","'message'"]});
+      {"~LogMeta":"~LogMeta",F:__dxlog_file,L:2,S:this,A:["condition","'message'"]});
       "
     `);
   });
@@ -210,7 +214,7 @@ describe('transform', () => {
       "import { log } from '@dxos/log';
       var __dxlog_file="virtual.ts";
 
-      log(1,void 0,{F:__dxlog_file,L:2,S:this,C:(f,a)=>f(...a)});
+      log(1,void 0,{"~LogMeta":"~LogMeta",F:__dxlog_file,L:2,S:this});
       "
     `);
   });
@@ -233,10 +237,111 @@ describe('transform', () => {
       var __dxlog_file="src/module.ts";
 
 
-      log('x',void 0,{F:__dxlog_file,L:5,S:this,C:(f,a)=>f(...a)});
-      dbg({ k: 1 },{F:__dxlog_file,L:6,A:["{ k: 1 }"]});
-      invariant(cond,void 0,{F:__dxlog_file,L:7,S:this,A:["cond",""]});
-      new Context(void 0,{F:__dxlog_file,L:8});
+      log('x',void 0,{"~LogMeta":"~LogMeta",F:__dxlog_file,L:5,S:this});
+      dbg({ k: 1 },{"~LogMeta":"~LogMeta",F:__dxlog_file,L:6,A:["{ k: 1 }"]});
+      invariant(cond,void 0,{"~LogMeta":"~LogMeta",F:__dxlog_file,L:7,S:this,A:["cond",""]});
+      new Context(void 0,{"~LogMeta":"~LogMeta",F:__dxlog_file,L:8});
+      "
+    `);
+  });
+});
+
+describe('param_index: last', () => {
+  const lastSpec: LogMetaTransformSpec[] = [
+    {
+      name: 'trace',
+      package: '@dxos/log',
+      param_index: 'last',
+      include_args: false,
+      include_call_site: false,
+      include_scope: true,
+    },
+  ];
+
+  test('appends meta after a single argument', ({ expect }) => {
+    const code = sourceCode`
+    import { trace } from '@dxos/log';
+    trace('hi');
+    `;
+    expect(runTransform('src/module.ts', code, lastSpec)).toMatchInlineSnapshot(`
+      "import { trace } from '@dxos/log';
+      var __dxlog_file="src/module.ts";
+
+      trace('hi',{"~LogMeta":"~LogMeta",F:__dxlog_file,L:2,S:this});
+      "
+    `);
+  });
+
+  test('appends meta after multiple arguments (no skip on arity)', ({ expect }) => {
+    const code = sourceCode`
+    import { trace } from '@dxos/log';
+    trace('a', 'b', 'c');
+    `;
+    expect(runTransform('src/module.ts', code, lastSpec)).toMatchInlineSnapshot(`
+      "import { trace } from '@dxos/log';
+      var __dxlog_file="src/module.ts";
+
+      trace('a', 'b', 'c',{"~LogMeta":"~LogMeta",F:__dxlog_file,L:2,S:this});
+      "
+    `);
+  });
+
+  test('appends meta on zero-argument call', ({ expect }) => {
+    const code = sourceCode`
+    import { trace } from '@dxos/log';
+    trace();
+    `;
+    expect(runTransform('src/module.ts', code, lastSpec)).toMatchInlineSnapshot(`
+      "import { trace } from '@dxos/log';
+      var __dxlog_file="src/module.ts";
+
+      trace({"~LogMeta":"~LogMeta",F:__dxlog_file,L:2,S:this});
+      "
+    `);
+  });
+
+  test('preserves trailing comma without adding a duplicate', ({ expect }) => {
+    const code = sourceCode`
+    import { trace } from '@dxos/log';
+    trace(
+      'x',
+      'y',
+    );
+    `;
+    const result = runTransform('src/module.ts', code, lastSpec);
+    expect(result).not.toContain(',,');
+    expect(result).toMatchInlineSnapshot(`
+      "import { trace } from '@dxos/log';
+      var __dxlog_file="src/module.ts";
+
+      trace(
+        'x',
+        'y',
+      {"~LogMeta":"~LogMeta",F:__dxlog_file,L:2,S:this});
+      "
+    `);
+  });
+
+  test('captures all args when include_args is true', ({ expect }) => {
+    const variadicSpec: LogMetaTransformSpec[] = [
+      {
+        name: 'trace',
+        package: '@dxos/log',
+        param_index: 'last',
+        include_args: true,
+        include_call_site: false,
+        include_scope: false,
+      },
+    ];
+    const code = sourceCode`
+    import { trace } from '@dxos/log';
+    trace(a, b, c);
+    `;
+    expect(runTransform('src/module.ts', code, variadicSpec)).toMatchInlineSnapshot(`
+      "import { trace } from '@dxos/log';
+      var __dxlog_file="src/module.ts";
+
+      trace(a, b, c,{"~LogMeta":"~LogMeta",F:__dxlog_file,L:2,A:["a","b","c"]});
       "
     `);
   });

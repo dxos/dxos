@@ -8,7 +8,14 @@
 export interface LogMetaTransformSpec {
   name: string;
   package: string;
-  param_index: number;
+  /**
+   * Where to insert the meta literal in the call's argument list.
+   * - A number `N` pads with `void 0` up to slot `N`, then injects meta there
+   *   (only applied when the call has at most `N` arguments). Same semantics as the SWC plugin.
+   * - `'last'` always appends meta as the final argument, regardless of how many user args were passed.
+   *   Use this for variadic / forwarded callees; relies on the runtime `isLogMeta` marker for detection.
+   */
+  param_index: number | 'last';
   include_args: boolean;
   include_call_site: boolean;
   include_scope: boolean;
@@ -23,7 +30,9 @@ export const DEFAULT_LOG_META_TRANSFORM_SPEC: LogMetaTransformSpec[] = [
     package: '@dxos/log',
     param_index: 2,
     include_args: false,
-    include_call_site: true,
+    // The `C:(f,a)=>f(...a)` indirection only repositions the browser DevTools source link;
+    // `F:` + `L:` already carry the accurate call site for the log entry itself.
+    include_call_site: false,
     include_scope: true,
   },
   {

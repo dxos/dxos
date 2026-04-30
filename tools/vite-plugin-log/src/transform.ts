@@ -120,7 +120,7 @@ function argumentSnippet(code: string, arg: Argument): string {
 
 function buildMetaLiteral(options: { line: number; spec: LogMetaTransformSpec; argSnippets: string[] }): string {
   const { line, spec, argSnippets } = options;
-  const parts: string[] = [`F:__dxlog_file`, `L:${line}`];
+  const parts: string[] = [`"~LogMeta":"~LogMeta"`, `F:__dxlog_file`, `L:${line}`];
   if (spec.include_scope) {
     parts.push(`S:this`);
   }
@@ -157,11 +157,27 @@ function buildCallInsertion(
   expr: CallExpression | NewExpression,
   spec: LogMetaTransformSpec,
 ): string | null {
-  if (closingParenIndex(code, expr) < 0) {
+  const closeParen = closingParenIndex(code, expr);
+  if (closeParen < 0) {
     return null;
   }
 
   const args = expr.arguments;
+  const hasTrailingComma = args.length > 0 && hasCommaBeforeOffset(code, args[args.length - 1].end, closeParen);
+  const leadingComma = args.length > 0 && !hasTrailingComma ? ',' : '';
+
+  // 'last' always appends meta after all user-supplied args; no padding, no skipping by arity.
+  // Detection at runtime relies on the `~LogMeta` marker injected by `buildMetaLiteral`.
+  if (spec.param_index === 'last') {
+    const snippetsForMeta = spec.include_args ? args.map((a) => argumentSnippet(code, a)) : [];
+    const meta = buildMetaLiteral({
+      line: lineAtOffset(code, expr.start),
+      spec,
+      argSnippets: snippetsForMeta,
+    });
+    return leadingComma + meta;
+  }
+
   if (spec.param_index < args.length) {
     return null;
   }
@@ -186,12 +202,8 @@ function buildCallInsertion(
     slotPieces.push('void 0');
   }
   slotPieces.push(meta);
-  const tail = slotPieces.join(',');
 
-  const closeParen = closingParenIndex(code, expr);
-  const hasTrailingComma = args.length > 0 && hasCommaBeforeOffset(code, args[args.length - 1].end, closeParen);
-
-  return (args.length > 0 && !hasTrailingComma ? ',' : '') + tail;
+  return leadingComma + slotPieces.join(',');
 }
 
 /** After hashbang and any leading `import` declarations (valid ESM). */
