@@ -14,7 +14,7 @@ import { createTestServices } from '@dxos/functions-runtime/testing';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { ValueBag } from '../../types';
+import { ComputeNodeContext, ValueBag } from '../../types';
 import { type GptInput, gptNode } from './gpt';
 
 const ENABLE_LOGGING = true;
@@ -54,7 +54,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
         log.info('output', { output });
         expect(typeof output.text).toBe('string');
         expect(output.text.length).toBeGreaterThan(10);
-      }, Effect.provide(Trace.writerLayerNoop)),
+      }, Effect.provide(Trace.writerLayerNoop), Effect.provide(ComputeNodeContext.layerNoop)),
       60_000,
     );
 
@@ -90,7 +90,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
         );
         log.info('conversationMessages', { conversationMessages });
         expect(conversationMessages.at(-1)?.sender.role).toEqual('assistant');
-      }, Effect.provide(Trace.writerLayerNoop)),
+      }, Effect.provide(Trace.writerLayerNoop), Effect.provide(ComputeNodeContext.layerNoop)),
       60_000,
     );
   });

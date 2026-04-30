@@ -10,13 +10,18 @@ import * as Scope from 'effect/Scope';
 import { AiService } from '@dxos/ai';
 import { raise } from '@dxos/debug';
 import { Database, Feed } from '@dxos/echo';
-import { ComputeEventLogger, CredentialsService, QueueService, Trace, createDefectLogger } from '@dxos/functions';
+import { CredentialsService, QueueService, Trace } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { Operation, OperationRegistry } from '@dxos/operation';
 import { isNonNullable } from '@dxos/util';
 
 import { ComputeNodeError, InvalidValueError } from '../errors';
 import {
+  ComputeBeginEvent,
+  ComputeEndEvent,
+  ComputeInputEvent,
+  ComputeNodeContext,
+  ComputeOutputEvent,
   type ComputeGraphModel,
   type ComputeNode,
   type ComputeNodeMeta,
@@ -27,6 +32,7 @@ import {
   ValueBag,
   isNotExecuted,
 } from '../types';
+import { createDefectLogger } from '../util';
 import {
   type GraphDiagnostic,
   InputKind,
@@ -124,15 +130,14 @@ export const compile = async ({
           invariant(ValueBag.isValueBag(input));
 
           const instance = executor.clone();
-          const logger = yield* ComputeEventLogger;
 
           // TODO(dmaretskyi): At the start we log a synthetic end-compute event for the input node to capture it's inputs.
-          logger.log({ type: 'end-compute', nodeId: inputNodeId, outputs: Object.keys(input.values) });
+          yield* Trace.write(ComputeEndEvent, { nodeId: inputNodeId, outputs: Object.keys(input.values) });
           instance.setOutputs(inputNodeId, Effect.succeed(input));
           const outputs = yield* instance.computeInputs(outputNodeId);
 
           // Log the output node inputs.
-          logger.log({ type: 'begin-compute', nodeId: outputNodeId, inputs: Object.keys(outputs.values) });
+          yield* Trace.write(ComputeBeginEvent, { nodeId: outputNodeId, inputs: Object.keys(outputs.values) });
           return outputs;
         },
         (effect) => effect.pipe(createDefectLogger()),
@@ -316,9 +321,7 @@ export class GraphExecutor {
         ),
       );
 
-      const logger = yield* ComputeEventLogger;
-      logger.log({
-        type: 'compute-input',
+      yield* Trace.write(ComputeInputEvent, {
         nodeId,
         property: input.name,
         value,
@@ -353,7 +356,6 @@ export class GraphExecutor {
       return Layer.mergeAll(
         Layer.succeed(AiService.AiService, yield* AiService.AiService),
         Layer.succeed(Scope.Scope, yield* Scope.Scope),
-        Layer.succeed(ComputeEventLogger, yield* ComputeEventLogger),
         Layer.succeed(CredentialsService, yield* CredentialsService),
         Layer.succeed(Database.Service, yield* Database.Service),
         Layer.succeed(QueueService, yield* QueueService),
@@ -379,9 +381,7 @@ export class GraphExecutor {
       const value = yield* ValueBag.get(output, prop);
       invariant(!Effect.isEffect(value));
 
-      const logger = yield* ComputeEventLogger;
-      logger.log({
-        type: 'compute-output',
+      yield* Trace.write(ComputeOutputEvent, {
         nodeId,
         property: prop,
         value,
@@ -416,9 +416,7 @@ export class GraphExecutor {
           throw new Error(`No compute function for node type: ${node.graphNode.type}`);
         }
 
-        const logger = yield* ComputeEventLogger;
-        logger.log({
-          type: 'begin-compute',
+        yield* Trace.write(ComputeBeginEvent, {
           nodeId: node.id,
           inputs: Object.keys(inputValues.values),
         });
@@ -433,10 +431,7 @@ export class GraphExecutor {
               : new ComputeNodeError({ cause, context: { nodeId } }),
           ),
           Effect.withSpan('call-node'),
-          Effect.provideService(ComputeEventLogger, {
-            log: logger.log,
-            nodeId: node.id,
-          }),
+          Effect.provideService(ComputeNodeContext, { nodeId: node.id }),
         );
         invariant(ValueBag.isValueBag(outputBag), 'Output must be a value bag');
 
@@ -473,8 +468,7 @@ export class GraphExecutor {
         }
         const resBag = ValueBag.make(res);
 
-        logger.log({
-          type: 'end-compute',
+        yield* Trace.write(ComputeEndEvent, {
           nodeId: node.id,
           outputs: Object.keys(resBag.values),
         });
