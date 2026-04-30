@@ -155,32 +155,62 @@ export const CreateFeed: Story = {
     const saveButton = await within(form).findByTestId('save-button');
     await userEvent.click(saveButton);
 
-    // Allow any async state updates to flush.
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    // ECHO writes settle asynchronously; poll the assertions instead of racing
+    // a fixed `setTimeout`. Storybook's `expect` is chai-based and has no
+    // `poll`, so we wait inline.
+    const waitFor = async <T,>(
+      label: string,
+      probe: () => T | Promise<T>,
+      predicate: (value: T) => boolean = (value) => Boolean(value),
+      { timeout = 10_000, interval = 100 }: { timeout?: number; interval?: number } = {},
+    ): Promise<T> => {
+      const deadline = Date.now() + timeout;
+      let last: T | undefined;
+      while (Date.now() < deadline) {
+        last = await probe();
+        if (predicate(last)) {
+          return last;
+        }
+        await new Promise((resolve) => setTimeout(resolve, interval));
+      }
+      throw new Error(`waitFor timed out: ${label} (last value: ${JSON.stringify(last)})`);
+    };
 
     // After Save: the create form is dismissed.
-    await expect(body.queryByTestId('create-referenced-object-form')).not.toBeInTheDocument();
+    await waitFor(
+      'create form is dismissed',
+      () => body.queryByTestId('create-referenced-object-form'),
+      (node) => node === null,
+    );
 
     // First diagnose: the new Feed must exist in space.db. If this passes
     // but the magazine.feeds assertion below fails, the bug is in the
     // RefField → form → ObjectProperties.handleChange wiring (the user-
     // reported "feed created but not linked" symptom).
     const space = (globalThis as any).__feedTestSpace;
-    const allFeeds = await space.db.query(Filter.type(Subscription.Feed)).run();
-    const newFeed = allFeeds.find((feed: Subscription.Feed) => feed.name === 'My Brand New Blog');
-    await expect(newFeed, 'new Feed with name "My Brand New Blog" should be in the database').toBeDefined();
+    const newFeed = (await waitFor('new Feed appears in space.db', async () => {
+      const allFeeds = await space.db.query(Filter.type(Subscription.Feed)).run();
+      return allFeeds.find((feed: Subscription.Feed) => feed.name === 'My Brand New Blog');
+    })) as Subscription.Feed;
 
     // Second: the magazine.feeds array must contain a Ref to that new Feed.
     const magazine = (globalThis as any).__feedTestMagazine as Magazine.Magazine | undefined;
     await expect(magazine).toBeDefined();
-    await expect(magazine!.feeds.length, 'magazine.feeds should grow by 1 after Create + Save').toBe(1);
+    await waitFor(
+      'magazine.feeds grew by 1',
+      () => magazine!.feeds.length,
+      (length) => length === 1,
+    );
 
     // Third: that Ref must point to the new Feed (not some other pre-seeded
     // one — guards against an off-by-one bug in the create flow that would
     // overwrite the slot with a stale ref).
-    const linkedId = magazine!.feeds[0]?.dxn.toString().split(':').pop();
     const newId = (newFeed as any).id;
-    await expect(linkedId, 'magazine.feeds[0] should reference the newly-created Feed').toBe(newId);
+    await waitFor(
+      'magazine.feeds[0] references the new Feed',
+      () => magazine!.feeds[0]?.dxn.toString().split(':').pop(),
+      (id) => id === newId,
+    );
 
     // Fourth: the slot's visible display value must show the new feed's
     // name. This is the user-reported visual symptom — even with the data
@@ -188,8 +218,10 @@ export const CreateFeed: Story = {
     // its empty-state placeholder because RefField.handleGetValue compared
     // option.id (space-scoped DXN) to ref.dxn (local-id DXN), which never
     // matched. The fix is dedup-by-bare-object-id in `handleGetValue`.
-    const slotInputs = Array.from(canvasElement.querySelectorAll('input[readonly]')) as HTMLInputElement[];
-    const newFeedSlotInput = slotInputs.find((input) => input.value === 'My Brand New Blog');
-    await expect(newFeedSlotInput, 'the array slot must visibly show the new feed name').toBeDefined();
+    await waitFor('array slot shows the new feed name', () =>
+      (Array.from(canvasElement.querySelectorAll('input[readonly]')) as HTMLInputElement[]).find(
+        (input) => input.value === 'My Brand New Blog',
+      ),
+    );
   },
 };
