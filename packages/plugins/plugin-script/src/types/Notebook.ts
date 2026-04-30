@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Prompt } from '@dxos/compute';
+import { Routine } from '@dxos/compute';
 import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { LabelAnnotation } from '@dxos/echo/internal';
@@ -19,7 +19,7 @@ export const Cell = Schema.Struct({
   name: Schema.optional(Schema.String),
   // TODO(burdon): Union type.
   source: Schema.optional(Ref.Ref(Text.Text)),
-  prompt: Schema.optional(Ref.Ref(Prompt.Prompt)),
+  prompt: Schema.optional(Ref.Ref(Routine.Routine)),
   graph: Schema.optional(Ref.Ref(Graph.Graph)),
 });
 

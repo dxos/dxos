@@ -11,7 +11,7 @@ import {
   OperationInvoker,
   OperationRegistry,
   Process,
-  Prompt,
+  Routine,
   Script,
   ServiceResolver,
   StorageService,
@@ -32,7 +32,7 @@ describe('umbrella re-exports', () => {
     // Blueprint primitives.
     expect(Blueprint).toBeDefined();
     expect(Blueprint.make).toBeTypeOf('function');
-    expect(Prompt).toBeDefined();
+    expect(Routine).toBeDefined();
     expect(Template).toBeDefined();
 
     // Function primitives.

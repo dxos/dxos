@@ -22,7 +22,7 @@ import {
   WebSearchToolkitOpaque,
 } from '@dxos/assistant-toolkit';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
-import { Blueprint, Prompt } from '@dxos/compute';
+import { Blueprint, Routine } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
 import { TestHelpers, type TestTag } from '@dxos/effect/testing';
@@ -66,9 +66,9 @@ interface AgentTestOptions {
 }
 
 export const agentTest: {
-  (options: AgentTestOptions, prompt: Prompt.Prompt): (ctx: TestContext) => Effect.Effect<void, any>;
-  (prompt: Prompt.Prompt): (ctx: TestContext) => Effect.Effect<void, any>;
-} = (...args: [AgentTestOptions, Prompt.Prompt] | [Prompt.Prompt]) => {
+  (options: AgentTestOptions, prompt: Routine.Routine): (ctx: TestContext) => Effect.Effect<void, any>;
+  (prompt: Routine.Routine): (ctx: TestContext) => Effect.Effect<void, any>;
+} = (...args: [AgentTestOptions, Routine.Routine] | [Routine.Routine]) => {
   const [options = {}, prompt] = args.length === 1 ? [undefined, args[0]] : args;
 
   const model =

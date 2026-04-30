@@ -8,11 +8,11 @@ import type * as Scope from 'effect/Scope';
 
 import type { AiService } from '@dxos/ai';
 import type { Database, Feed } from '@dxos/echo';
-import { type ComputeEventLogger } from '@dxos/functions';
 import type { CredentialsService, QueueService, Trace } from '@dxos/functions';
 import type { Operation, OperationRegistry } from '@dxos/operation';
 import { mapValues } from '@dxos/util';
 
+import { type ComputeNodeContext } from './compute-events';
 import { type ComputeNode, type ComputeNodeMeta } from './graph';
 
 //
@@ -107,7 +107,7 @@ export type ComputeRequirements =
   | QueueService
   | Feed.FeedService
   | Trace.TraceService
-  | ComputeEventLogger
+  | ComputeNodeContext
   | Scope.Scope
   | Operation.Service
   | OperationRegistry.Service;

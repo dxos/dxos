@@ -8,7 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContextBinder } from '@dxos/assistant';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Prompt, Template } from '@dxos/compute';
+import { Blueprint, Routine, Template } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
@@ -64,7 +64,7 @@ const handler: Operation.WithHandler<typeof RunPromptInNewChat> = RunPromptInNew
           const promptRef =
             typeof prompt === 'string'
               ? Ref.make(
-                  Prompt.make({
+                  Routine.make({
                     instructions: prompt,
                     blueprints: [],
                     context: [],

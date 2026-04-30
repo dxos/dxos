@@ -9,7 +9,7 @@ source packages. Namespaces preserve their nesting — there is no extra wrappin
 or unwrapping:
 
 ```ts
-import { Blueprint, Operation, Prompt, Process, Script, Trace, Trigger } from '@dxos/compute';
+import { Blueprint, Operation, Routine, Process, Script, Trace, Trigger } from '@dxos/compute';
 
 Blueprint.make({ /* ... */ });
 Operation.lazy(() => /* ... */);
@@ -21,7 +21,7 @@ This single surface subsumes:
 | Re-exported from   | Includes                                                        |
 | ------------------ | --------------------------------------------------------------- |
 | `@dxos/operation`  | `Operation`, `OperationInvoker`, `OperationHandlerSet`, `OperationRegistry`, errors |
-| `@dxos/blueprints` | `Blueprint`, `Prompt`, `Template`                               |
+| `@dxos/blueprints` | `Blueprint`, `Routine`, `Template`                              |
 | `@dxos/functions`  | `Process`, `Trigger`, `TriggerEvent`, `Script`, `Trace`, `ServiceResolver`, `StorageService`, `CredentialsService`, `ExampleHandlers`, services, errors, sdk |
 
 The HyperFormula-based compute graph that previously lived here moved to

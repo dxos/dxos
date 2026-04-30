@@ -4,7 +4,7 @@
 
 import { describe, it } from '@effect/vitest';
 
-import { Prompt } from '@dxos/compute';
+import { Routine } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
@@ -16,7 +16,7 @@ describe('Database', () => {
   it.effect(
     'create and query',
     agentTest(
-      Prompt.make({
+      Routine.make({
         instructions: trim`
           Create a new organization called "Cyberdyne Systems".
           Query the database to confirm that the organization is created and the query tool is working.

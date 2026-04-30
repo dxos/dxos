@@ -27,7 +27,7 @@ import {
   PlanningHandlers,
 } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
-import { Blueprint, Prompt } from '@dxos/compute';
+import { Blueprint, Routine } from '@dxos/compute';
 import { ExampleHandlers, Trigger } from '@dxos/compute';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Obj, Ref } from '@dxos/echo';
@@ -103,7 +103,7 @@ const buildPluginManagerOptions = ({
         Blueprint.Blueprint,
         Operation.PersistentOperation,
         Markdown.Document,
-        Prompt.Prompt,
+        Routine.Routine,
         Trigger.Trigger,
         ...types,
       ],

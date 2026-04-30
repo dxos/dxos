@@ -89,6 +89,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/log-store-idb"
+    },
+    {
       "path": "../../common/merkle-search-tree"
     },
     {
