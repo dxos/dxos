@@ -31,6 +31,13 @@ type CardSnapshot = Partial<Record<MappedField, unknown>>;
 
 type BoardSnapshot = {
   name?: string;
+  /**
+   * Canonical column order at last pull (Trello list `pos` order). Display
+   * reads this instead of `Object.keys(arrangement.columns)` because ECHO /
+   * Automerge does not preserve insertion order across reload — keys come
+   * back in canonical (alphabetical) order.
+   */
+  order?: string[];
   columns?: Record<string, { ids: string[] }>;
 };
 
@@ -231,31 +238,44 @@ export const reconcileBoardCards: (
     });
   }
 
-  // Build remote-derived arrangement: per Trello-list, cards sorted by pos,
-  // mapped to local Obj.IDs (skipping cards whose local item we don't have).
+  // Build remote-derived arrangement: iterate `lists` sorted by `pos` (canonical
+  // Trello list order, independent of the order cards happen to come back in),
+  // and emit a column entry per list — even empty ones — so all columns show up.
+  //
+  // Iteration order matters. ECHO/Automerge does NOT preserve the insertion
+  // order of `Object.keys(arrangement.columns)` across reload (canonical map
+  // order is alphabetical). The display layer reads `arrangement.order` —
+  // populated below — to get a stable canonical ordering instead.
   const cardsByList = new Map<string, TrelloCard[]>();
   for (const card of remoteCards) {
     const ln = listName(card.idList);
     if (!cardsByList.has(ln)) cardsByList.set(ln, []);
     cardsByList.get(ln)!.push(card);
   }
+  const sortedLists = [...lists].sort((a, b) => a.pos - b.pos);
+  const orderedListNames = sortedLists.map((l) => l.name);
   const remoteColumns: Record<string, { ids: string[] }> = {};
-  for (const [ln, cards] of cardsByList) {
+  for (const list of sortedLists) {
+    const cards = cardsByList.get(list.name) ?? [];
     const sorted = [...cards].sort((a, b) => a.pos - b.pos);
     const ids = sorted
       .map((card) => localByForeignId.get(card.id))
       .filter((obj): obj is Obj.Unknown => obj != null)
       .map((obj) => obj.id);
-    remoteColumns[ln] = { ids };
+    remoteColumns[list.name] = { ids };
   }
 
-  // Board-level three-way merge: name + arrangement.columns. Local-wins outputs
-  // are left in place but currently NOT pushed back to Trello — board name
-  // doesn't have a local-edit UI, and per-card `pos`/`idList` push for
-  // arrangement reorders is a separate scope.
+  // Board-level three-way merge: name + arrangement.order + arrangement.columns.
+  // Local-wins outputs are left in place but currently NOT pushed back to
+  // Trello — board rename and arrangement reorder push aren't implemented yet.
   const boardSnapshot = readSnapshot<BoardSnapshot>(integration, remoteBoard.id) ?? {};
   const nameMerge = mergeField<string | undefined>(kanban.name, remoteBoard.name, boardSnapshot.name);
-  const arrMerge = mergeDeep<Record<string, { ids: string[] }>>(
+  const orderMerge = mergeDeep<string[]>(
+    [...kanban.arrangement.order],
+    orderedListNames,
+    boardSnapshot.order,
+  );
+  const columnsMerge = mergeDeep<Record<string, { ids: string[] }>>(
     kanban.arrangement.columns as Record<string, { ids: string[] }>,
     remoteColumns,
     boardSnapshot.columns,
@@ -267,19 +287,33 @@ export const reconcileBoardCards: (
       m.name = nameMerge.value;
     });
   }
-  if (arrMerge.source === 'remote') {
+  if (orderMerge.source === 'remote') {
     Obj.change(kanban, (kanban) => {
       const m = kanban as Obj.Mutable<typeof kanban>;
-      m.arrangement.columns = arrMerge.value;
+      m.arrangement.order = orderMerge.value;
     });
-  } else if (arrMerge.source === 'local') {
-    log.warn('trello pull: local arrangement diverged from snapshot; push of reorders is not yet implemented', {
+  } else if (orderMerge.source === 'local') {
+    log.warn('trello pull: local column order diverged from snapshot; push of reorders is not yet implemented', {
+      boardId: remoteBoard.id,
+    });
+  }
+  if (columnsMerge.source === 'remote') {
+    Obj.change(kanban, (kanban) => {
+      const m = kanban as Obj.Mutable<typeof kanban>;
+      m.arrangement.columns = columnsMerge.value;
+    });
+  } else if (columnsMerge.source === 'local') {
+    log.warn('trello pull: local per-column ids diverged from snapshot; push of reorders is not yet implemented', {
       boardId: remoteBoard.id,
     });
   }
 
   // Refresh the board snapshot to what's currently on Trello (post-merge).
-  writeSnapshot(integration, remoteBoard.id, { name: remoteBoard.name, columns: remoteColumns });
+  writeSnapshot(integration, remoteBoard.id, {
+    name: remoteBoard.name,
+    order: orderedListNames,
+    columns: remoteColumns,
+  });
 
   return { added, updated, removed };
 });
