@@ -6,7 +6,8 @@ import React from 'react';
 
 import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { Feed, Filter } from '@dxos/echo';
-import { Assistant, Chat, useBlueprintRegistry, useChatProcessor, useOnline, usePresets } from '@dxos/plugin-assistant';
+import { Chat, useBlueprintRegistry, useChatProcessor, useOnline, usePresets } from '@dxos/plugin-assistant';
+import { Assistant } from '@dxos/plugin-assistant/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, Popover, Toolbar } from '@dxos/react-ui';
 
