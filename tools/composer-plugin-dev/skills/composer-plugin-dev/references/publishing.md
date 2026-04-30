@@ -47,7 +47,7 @@ jobs:
             dist/manifest.json
 ```
 
-Tag a release: `git tag v0.1.0 && git push --tags`. The workflow attaches the assets.
+Tag a release: `git tag v0.1.0 && git push origin v0.1.0` (push the single tag — avoid `git push --tags` so unrelated local tags don't trigger releases). The workflow attaches the assets.
 
 ## 3. Local testing before release
 
@@ -59,11 +59,7 @@ Fork [`dxos/community-plugins`](https://github.com/dxos/community-plugins), add 
 
 ```json
 {
-  "plugins": [
-    { "repo": "dxos/plugin-excalidraw" },
-    { "repo": "dxos/plugin-youtube" },
-    { "repo": "owner/your-plugin" }
-  ]
+  "plugins": [{ "repo": "dxos/plugin-excalidraw" }, { "repo": "dxos/plugin-youtube" }, { "repo": "owner/your-plugin" }]
 }
 ```
 

@@ -9,18 +9,12 @@ A capability is a lazy module that contributes some functionality to the framewo
 import { Capability } from '@dxos/app-framework';
 import { OperationHandlerSet } from '@dxos/operation';
 
-export const BlueprintDefinition = Capability.lazy(
-  'BlueprintDefinition',
-  () => import('./blueprint-definition'),
-);
+export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),
 );
-export const ReactSurface = Capability.lazy(
-  'ReactSurface',
-  () => import('./react-surface'),
-);
+export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 ```
 
 **Do not** add eager exports here. The barrel is consumed during plugin definition before the framework has decided whether to activate each module.
@@ -36,7 +30,9 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [/* surfaces */]),
+    Capability.contributes(Capabilities.ReactSurface, [
+      /* surfaces */
+    ]),
   ),
 );
 ```

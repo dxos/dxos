@@ -7,13 +7,7 @@ Run LLM calls **inside operations**, never from React. `AiService` from `@dxos/a
 ```ts
 // src/operations/summarize.ts
 import * as Effect from 'effect/Effect';
-import {
-  AiService,
-  ConsolePrinter,
-  OpaqueToolkit,
-  ToolExecutionService,
-  ToolResolverService,
-} from '@dxos/ai';
+import { AiService, ConsolePrinter, OpaqueToolkit, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { Operation } from '@dxos/operation';
 
 import { Summarize } from './definitions';

@@ -13,7 +13,7 @@ export const Thing = Schema.Struct({
   notes: Schema.optional(Schema.String).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'com.example.type.thing',   // dotted, namespaced — globally unique.
+    typename: 'com.example.type.thing', // dotted, namespaced — globally unique.
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
@@ -25,8 +25,7 @@ export const Thing = Schema.Struct({
 
 export interface Thing extends Schema.Schema.Type<typeof Thing> {}
 
-export const make = ({ name, notes }: { name?: string; notes?: string } = {}) =>
-  Obj.make(Thing, { name, notes });
+export const make = ({ name, notes }: { name?: string; notes?: string } = {}) => Obj.make(Thing, { name, notes });
 ```
 
 ## Conventions

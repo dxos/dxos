@@ -4,17 +4,17 @@ Containers render surfaces. They **must** use standard `@dxos/react-ui` primitiv
 
 ## Primitives
 
-| Primitive                                                | Use for                                  |
-| -------------------------------------------------------- | ---------------------------------------- |
-| `Panel.Root` / `Panel.Toolbar` / `Panel.Content`         | Article / section structure              |
-| `ScrollArea.Root` + `ScrollArea.Viewport`                | Scrollable content (inside `Panel.Content asChild`) |
-| `Input.Root` / `Input.Label` / `Input.TextInput`         | Form fields                              |
-| `Button` (with `variant`)                                | Actions                                  |
-| `Clipboard.IconButton`                                   | Copy-to-clipboard                        |
-| `Toolbar.Root` / `Toolbar.IconButton`                    | Toolbar actions                          |
-| `Card.Root` / `Card.Toolbar` / `Card.Content`            | Card surfaces                            |
-| `Icon`                                                   | Phosphor icons                           |
-| `useTranslation(meta.id)`                                | i18n strings                             |
+| Primitive                                        | Use for                                             |
+| ------------------------------------------------ | --------------------------------------------------- |
+| `Panel.Root` / `Panel.Toolbar` / `Panel.Content` | Article / section structure                         |
+| `ScrollArea.Root` + `ScrollArea.Viewport`        | Scrollable content (inside `Panel.Content asChild`) |
+| `Input.Root` / `Input.Label` / `Input.TextInput` | Form fields                                         |
+| `Button` (with `variant`)                        | Actions                                             |
+| `Clipboard.IconButton`                           | Copy-to-clipboard                                   |
+| `Toolbar.Root` / `Toolbar.IconButton`            | Toolbar actions                                     |
+| `Card.Root` / `Card.Toolbar` / `Card.Content`    | Card surfaces                                       |
+| `Icon`                                           | Phosphor icons                                      |
+| `useTranslation(meta.id)`                        | i18n strings                                        |
 
 The **only** acceptable classNames are functional layout hints on `ScrollArea.Viewport` (e.g. `p-4 space-y-4`) or responsive `@container` queries.
 
@@ -33,9 +33,7 @@ export const FooArticle = ({ role, subject }: FooArticleProps) => {
       </Panel.Toolbar>
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='p-4 space-y-4'>
-            {/* Input.Root, Button, etc. */}
-          </ScrollArea.Viewport>
+          <ScrollArea.Viewport classNames='p-4 space-y-4'>{/* Input.Root, Button, etc. */}</ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Content>
     </Panel.Root>

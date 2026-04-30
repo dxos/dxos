@@ -23,7 +23,7 @@ These rules keep plugins consistent and avoid recurring review nits.
 ## Comments
 
 - Default to **no comments**.
-- Add a comment when the *why* is non-obvious — a hidden constraint, a workaround, a subtle invariant.
+- Add a comment when the _why_ is non-obvious — a hidden constraint, a workaround, a subtle invariant.
 - All JSDoc/code comments end with a period.
 
 ## General rules

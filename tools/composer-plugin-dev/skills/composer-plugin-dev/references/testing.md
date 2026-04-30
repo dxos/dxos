@@ -32,11 +32,7 @@ describe('FooPlugin', () => {
 
     // Active after a normal startup.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([
-        moduleId('metadata'),
-        moduleId('schema'),
-        moduleId('ReactSurface'),
-      ]),
+      expect.arrayContaining([moduleId('metadata'), moduleId('schema'), moduleId('ReactSurface')]),
     );
 
     // Blueprint definitions activate when SetupArtifactDefinition fires

@@ -27,13 +27,13 @@ Two flavors: **community** (your own repo, single bundle) and **monorepo** (mult
   },
   "dependencies": {
     "@dxos/app-framework": "<COMPOSER_HOST_MAIN_DIST_TAG>",
-    "@dxos/app-toolkit":   "<COMPOSER_HOST_MAIN_DIST_TAG>",
-    "@dxos/echo":          "<COMPOSER_HOST_MAIN_DIST_TAG>",
-    "@dxos/operation":     "<COMPOSER_HOST_MAIN_DIST_TAG>",
-    "@dxos/blueprints":    "<COMPOSER_HOST_MAIN_DIST_TAG>",
-    "@dxos/react-ui":      "<COMPOSER_HOST_MAIN_DIST_TAG>",
-    "@dxos/types":         "<COMPOSER_HOST_MAIN_DIST_TAG>",
-    "@dxos/util":          "<COMPOSER_HOST_MAIN_DIST_TAG>",
+    "@dxos/app-toolkit": "<COMPOSER_HOST_MAIN_DIST_TAG>",
+    "@dxos/echo": "<COMPOSER_HOST_MAIN_DIST_TAG>",
+    "@dxos/operation": "<COMPOSER_HOST_MAIN_DIST_TAG>",
+    "@dxos/blueprints": "<COMPOSER_HOST_MAIN_DIST_TAG>",
+    "@dxos/react-ui": "<COMPOSER_HOST_MAIN_DIST_TAG>",
+    "@dxos/types": "<COMPOSER_HOST_MAIN_DIST_TAG>",
+    "@dxos/util": "<COMPOSER_HOST_MAIN_DIST_TAG>",
     "effect": "^3.x",
     "react": "^19.x"
   }
@@ -53,26 +53,28 @@ Multiple `exports` subpaths so other in-repo plugins, the assistant, and the CLI
   "name": "@dxos/plugin-foo",
   "private": true,
   "type": "module",
-  "imports": { /* same #aliases as community */ },
+  "imports": {
+    /* same #aliases as community */
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "node": "./dist/lib/node-esm/index.mjs",
     },
-    "./blueprints": { "source": "./src/blueprints/index.ts", /* ... */ },
-    "./cli":        { "source": "./src/cli/index.ts",        /* ... */ },
-    "./operations": { "source": "./src/operations/index.ts", /* ... */ },
-    "./types":      { "source": "./src/types/index.ts",      /* ... */ }
+    "./blueprints": { "source": "./src/blueprints/index.ts" /* ... */ },
+    "./cli": { "source": "./src/cli/index.ts" /* ... */ },
+    "./operations": { "source": "./src/operations/index.ts" /* ... */ },
+    "./types": { "source": "./src/types/index.ts" /* ... */ },
   },
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
-    "@dxos/app-toolkit":   "workspace:*",
-    "@dxos/echo":          "workspace:*",
-    "effect":              "catalog:",
-    "react":               "catalog:"
-  }
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "effect": "catalog:",
+    "react": "catalog:",
+  },
 }
 ```
 
@@ -108,7 +110,14 @@ import { meta } from '#meta';
 import { Foo } from '#types';
 
 export const FooPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addMetadataModule({ metadata: { id: Foo.Thing.typename, metadata: { /* createObject only */ } } }),
+  AppPlugin.addMetadataModule({
+    metadata: {
+      id: Foo.Thing.typename,
+      metadata: {
+        /* createObject only */
+      },
+    },
+  }),
   AppPlugin.addSchemaModule({ schema: [Foo.Thing] }),
   Plugin.make,
 );

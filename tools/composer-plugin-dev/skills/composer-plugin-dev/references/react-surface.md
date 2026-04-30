@@ -37,14 +37,14 @@ export default Capability.makeModule(() =>
 
 ## Common roles
 
-| Role                  | Usage                                                  |
-| --------------------- | ------------------------------------------------------ |
-| `article`             | Full-width object editor.                              |
-| `section`             | Smaller embedded form.                                 |
-| `card--content`       | Card preview.                                          |
-| `object-properties`   | Sidebar property panel.                                |
-| `form-input`          | Custom form input for a schema field.                  |
-| `dialog` / `popover`  | Modal surfaces.                                        |
+| Role                 | Usage                                 |
+| -------------------- | ------------------------------------- |
+| `article`            | Full-width object editor.             |
+| `section`            | Smaller embedded form.                |
+| `card--content`      | Card preview.                         |
+| `object-properties`  | Sidebar property panel.               |
+| `form-input`         | Custom form input for a schema field. |
+| `dialog` / `popover` | Modal surfaces.                       |
 
 ## Filters
 

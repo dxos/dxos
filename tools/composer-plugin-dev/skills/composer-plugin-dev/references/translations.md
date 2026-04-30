@@ -48,5 +48,5 @@ Object-shaped strings (`typename.label`, `add-object.label`, etc.) are resolved 
 ## Registration
 
 ```tsx
-AppPlugin.addTranslationsModule({ translations })
+AppPlugin.addTranslationsModule({ translations });
 ```

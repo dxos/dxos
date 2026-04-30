@@ -53,10 +53,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { FooBlueprint } from '#blueprints';
 
-export default Capability.makeModule<
-  [],
-  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
->(() =>
+export default Capability.makeModule<[], Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]>(() =>
   Effect.succeed([Capability.contributes(AppCapabilities.BlueprintDefinition, FooBlueprint)]),
 );
 ```
@@ -64,7 +61,7 @@ export default Capability.makeModule<
 Then in the plugin file:
 
 ```ts
-AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition })
+AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition });
 ```
 
 And on the **type's metadata**, attach the blueprint key so the assistant knows the blueprint applies when working with that type:
@@ -75,7 +72,7 @@ AppPlugin.addMetadataModule({
     id: Foo.Thing.typename,
     metadata: { /* ... */ blueprints: [FooBlueprint.key] },
   },
-})
+});
 ```
 
 ## Writing instructions

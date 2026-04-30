@@ -5,6 +5,7 @@ When your plugin integrates with a third-party API (Gmail, GitHub, Slack, custom
 ## Pattern
 
 1. **Reference an `AccessToken`** from your domain object.
+
    ```ts
    // src/types/Foo.ts
    import { Ref, Schema } from '@dxos/echo';
@@ -24,10 +25,7 @@ When your plugin integrates with a third-party API (Gmail, GitHub, Slack, custom
    import { Database, Ref } from '@dxos/echo';
    import { type AccessToken } from '@dxos/types';
 
-   export const loadAccessToken = (
-     accessTokenRef: Ref.Ref<AccessToken.AccessToken> | undefined,
-     label: string,
-   ) =>
+   export const loadAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken> | undefined, label: string) =>
      Effect.gen(function* () {
        if (!accessTokenRef) return yield* Effect.fail(new Error(`Missing ${label} access token`));
        const token = yield* Database.load(accessTokenRef);
@@ -44,9 +42,10 @@ When your plugin integrates with a third-party API (Gmail, GitHub, Slack, custom
          const mailbox = yield* Database.load(ref);
          const token = yield* loadAccessToken(mailbox.accessToken, 'mailbox');
          const res = yield* Effect.tryPromise({
-           try: () => fetch('https://gmail.googleapis.com/...', {
-             headers: { Authorization: `Bearer ${token}` },
-           }),
+           try: () =>
+             fetch('https://gmail.googleapis.com/...', {
+               headers: { Authorization: `Bearer ${token}` },
+             }),
            catch: (e) => new Error(`Gmail API failed: ${e}`),
          });
          // ...
