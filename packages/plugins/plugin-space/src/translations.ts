@@ -235,7 +235,7 @@ export const translations = [
 
         'settings.panel.label': 'Space Settings',
         'open-current-space-settings.label': 'Open current space settings',
-        'space-settings-properties.label': 'General settings',
+        'space-settings-properties.label': 'Settings',
         'space-properties-settings-verbose.label': 'Manage space properties',
         'space-properties-settings.description': 'You can configure how this space is displayed in the app here.',
         'space-settings-schema.label': 'Types',

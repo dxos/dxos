@@ -3,23 +3,30 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
+import { type Space, isSpace } from '@dxos/client/echo';
 import { Script } from '@dxos/functions';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { meta as spaceMeta } from '@dxos/plugin-space/meta';
+import { GraphBuilder, type Node } from '@dxos/plugin-graph';
+import { SPACE_TYPE } from '@dxos/plugin-space/types';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 
+const whenSpace = (node: Node.Node): Option.Option<Space> =>
+  node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none();
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
+      // Automations + Functions entries attach directly under each Space
+      // (formerly under the alternate-tree settings panel).
       GraphBuilder.createExtension({
         id: 'space-settings-automation',
-        match: NodeMatcher.whenNodeType(`${spaceMeta.id}.settings`),
-        connector: (node) =>
+        match: whenSpace,
+        connector: () =>
           Effect.succeed([
             AppNode.makeSettingsPanel({
               id: 'automations',
@@ -31,8 +38,8 @@ export default Capability.makeModule(
       }),
       GraphBuilder.createExtension({
         id: 'space-settings-functions',
-        match: NodeMatcher.whenNodeType(`${spaceMeta.id}.settings`),
-        connector: (node) =>
+        match: whenSpace,
+        connector: () =>
           Effect.succeed([
             AppNode.makeSettingsPanel({
               id: 'functions',

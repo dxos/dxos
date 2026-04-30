@@ -26,7 +26,6 @@ import {
   CREATE_OBJECT_IN_SPACE_LABEL,
   MIGRATE_SPACE_LABEL,
   RENAME_SPACE_LABEL,
-  SETTINGS_PANEL_LABEL,
   checkPendingMigration,
   spaceActionsCache,
   spaceRearrangeCache,
@@ -258,19 +257,6 @@ const constructSpaceNode = ({
       onRearrange,
       canDrop: CAN_DROP_SPACE,
     },
-    nodes: [
-      Node.make({
-        id: 'settings',
-        type: `${meta.id}.settings`,
-        data: null,
-        properties: {
-          label: SETTINGS_PANEL_LABEL,
-          icon: 'ph--faders--regular',
-          disposition: 'alternate-tree',
-          space,
-        },
-      }),
-    ],
   });
 };
 

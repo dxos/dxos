@@ -67,6 +67,9 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
             label: ['types-section.label', { ns: meta.id }],
             icon: 'ph--shapes--regular',
             space,
+            // Pin to the bottom of each Space's children, below user objects,
+            // collections, integrations, and the like.
+            position: 'fallback',
             testId: 'spacePlugin.typesSection',
           }),
         ]);
@@ -274,7 +277,7 @@ const createSchemaNode = ({
       };
     }),
     Match.orElse(() => ({
-      label: getDynamicLabel('typename.label', typename, { count: 2, default: typename }),
+      label: getDynamicLabel('typename.label', typename, { count: 2, defaultValue: typename }),
       nodeId: typename,
     })),
   );

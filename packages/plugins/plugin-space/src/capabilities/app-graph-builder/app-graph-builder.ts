@@ -19,12 +19,15 @@ import {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ shareableLinkOrigin = window.location.origin }: SpacePluginOptions = {}) {
+    // Within a position bucket (hoist/static/fallback) the navtree preserves
+    // emission order. Settings (hoist) is registered before Collections (also
+    // hoist) so General settings + Members render above Collections.
     const extensions = yield* Effect.all([
       createSpaceExtensions(),
       createTypeExtensions(),
+      createSettingsExtensions(),
       createCollectionExtensions({ shareableLinkOrigin }),
       createCompanionExtensions(),
-      createSettingsExtensions(),
     ]);
 
     return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());

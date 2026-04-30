@@ -166,7 +166,6 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     // Labs
     (isDev || isLabs) && [
       ID.ASSISTANT,
-      ID.DAILY_SUMMARY,
       ID.DISCORD,
       ID.FEED,
       ID.IROH_BEACON,

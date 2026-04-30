@@ -78,6 +78,8 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
               icon: 'ph--folder--regular',
               iconHue: 'neutral',
               role: 'branch',
+              // Hoisted to the top, but registered AFTER `createSettingsExtensions`
+              // in `app-graph-builder.ts` so it lands beneath General settings + Members.
               position: 'hoist',
               testId: 'spacePlugin.collectionsSection',
               draggable: false,
