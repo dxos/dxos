@@ -6,7 +6,7 @@ import * as Predicate from 'effect/Predicate';
 
 import { Event, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Obj, type QueryResult } from '@dxos/echo';
+import { type Obj, type QueryResult, type Ref } from '@dxos/echo';
 import { filterMatchObject } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { type ObjectId } from '@dxos/keys';
@@ -16,11 +16,7 @@ import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
 import { prohibitSignalActions } from '../guarded-scope';
 import { type EchoDatabaseImpl } from '../proxy-db';
 import { type QueryContext } from './query-context';
-import {
-  type SchemaResolvers,
-  assertQueryTypenamesResolvable,
-  filterEntriesWithResolvableSchema,
-} from './schema-validation';
+import { assertQueryTypenamesResolvable, filterEntriesWithResolvableSchema } from './schema-validation';
 import { getTargetSpacesForQuery, isSimpleSelectionQuery } from './util';
 
 export type GraphQueryContextProps = {
@@ -28,10 +24,10 @@ export type GraphQueryContextProps = {
   onStart: () => void;
   onStop: () => void;
   /**
-   * Optional schema resolvers for validating typenames referenced by the query and filtering
+   * Optional schema resolver for validating typenames referenced by the query and filtering
    * out results whose schema cannot be resolved. When absent, no schema validation is performed.
    */
-  schemaResolvers?: SchemaResolvers;
+  schemaResolver?: Ref.Resolver;
 };
 
 /**
@@ -151,16 +147,16 @@ export class GraphQueryContext implements QueryContext {
   }
 
   private _assertTypenamesResolvable(query: QueryAST.Query): void {
-    if (this._params.schemaResolvers == null) return;
-    assertQueryTypenamesResolvable(query, this._params.schemaResolvers);
+    if (this._params.schemaResolver == null) return;
+    assertQueryTypenamesResolvable(query, this._params.schemaResolver);
   }
 
   private _filterResolvable(
     entries: QueryResult.EntityEntry[],
     query: QueryAST.Query | undefined = this._query,
   ): QueryResult.EntityEntry[] {
-    if (this._params.schemaResolvers == null || query == null) return entries;
-    return filterEntriesWithResolvableSchema(query, entries, this._params.schemaResolvers);
+    if (this._params.schemaResolver == null || query == null) return entries;
+    return filterEntriesWithResolvableSchema(query, entries, this._params.schemaResolver);
   }
 
   update(query: QueryAST.Query): void {

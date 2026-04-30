@@ -7,14 +7,13 @@ import * as Function from 'effect/Function';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Entity, type QueryResult } from '@dxos/echo';
+import { Entity, type QueryResult, type Ref } from '@dxos/echo';
 import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
 import {
   type QueryContext,
-  type SchemaResolvers,
   assertQueryTypenamesResolvable,
   filterEntriesWithResolvableSchema,
   isSimpleSelectionQuery,
@@ -24,7 +23,7 @@ import { type QueueImpl } from './queue';
 export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implements QueryContext<T> {
   readonly #queue: QueueImpl;
   readonly #parentCtx: Context;
-  readonly #schemaResolvers?: SchemaResolvers;
+  readonly #schemaResolver?: Ref.Resolver;
   #runCtx: Context | null = null;
 
   // Extracted from query.
@@ -33,10 +32,10 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
 
   readonly changed = new Event();
 
-  constructor(queue: QueueImpl<T>, parentCtx: Context, schemaResolvers?: SchemaResolvers) {
+  constructor(queue: QueueImpl<T>, parentCtx: Context, schemaResolver?: Ref.Resolver) {
     this.#queue = queue;
     this.#parentCtx = parentCtx;
-    this.#schemaResolvers = schemaResolvers;
+    this.#schemaResolver = schemaResolver;
   }
 
   /**
@@ -119,15 +118,15 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
   }
 
   #assertTypenamesResolvable(query: QueryAST.Query): void {
-    if (this.#schemaResolvers == null) return;
-    assertQueryTypenamesResolvable(query, this.#schemaResolvers);
+    if (this.#schemaResolver == null) return;
+    assertQueryTypenamesResolvable(query, this.#schemaResolver);
   }
 
   #filterResolvable(
     entries: QueryResult.EntityEntry<T>[],
     query: QueryAST.Query | undefined,
   ): QueryResult.EntityEntry<T>[] {
-    if (this.#schemaResolvers == null || query == null) return entries;
-    return filterEntriesWithResolvableSchema(query, entries, this.#schemaResolvers);
+    if (this.#schemaResolver == null || query == null) return entries;
+    return filterEntriesWithResolvableSchema(query, entries, this.#schemaResolver);
   }
 }

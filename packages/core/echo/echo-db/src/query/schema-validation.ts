@@ -2,24 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
-
-import { Entity, type QueryResult } from '@dxos/echo';
+import { Entity, type QueryResult, type Ref } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { DXN } from '@dxos/keys';
-
-/**
- * Minimal schema resolver interface used by query-level schema validation.
- * Avoids coupling to the concrete RuntimeSchemaRegistry / DatabaseSchemaRegistry classes.
- */
-export interface SchemaByDXNResolver {
-  getSchemaByDXN(dxn: DXN): Schema.Schema.AnyNoContext | undefined;
-}
-
-export type SchemaResolvers = {
-  runtime: SchemaByDXNResolver;
-  persistent?: SchemaByDXNResolver;
-};
 
 /**
  * Returns true if the query opts out of schema validation.
@@ -30,25 +15,19 @@ export const isSchemaValidationSkipped = (query: QueryAST.Query): boolean => {
 };
 
 /**
- * Returns true if the given typename DXN can be resolved in either registry.
+ * Returns true if the given typename DXN can be resolved by the resolver.
  */
-export const canResolveSchema = (dxn: DXN, resolvers: SchemaResolvers): boolean => {
-  if (resolvers.runtime.getSchemaByDXN(dxn) != null) {
-    return true;
-  }
-  if (resolvers.persistent != null && resolvers.persistent.getSchemaByDXN(dxn) != null) {
-    return true;
-  }
-  return false;
+export const canResolveSchema = (dxn: DXN, resolver: Ref.Resolver): boolean => {
+  return resolver.resolveSchemaSync(dxn) != null;
 };
 
 /**
- * Validates that every typename referenced by the query can be resolved either in the runtime or
- * persistent schema registry.
+ * Validates that every typename referenced by the query can be resolved through the supplied
+ * resolver (which combines runtime + persistent schema registries).
  *
  * Throws an error listing the unresolvable typenames.
  */
-export const assertQueryTypenamesResolvable = (query: QueryAST.Query, resolvers: SchemaResolvers): void => {
+export const assertQueryTypenamesResolvable = (query: QueryAST.Query, resolver: Ref.Resolver): void => {
   if (isSchemaValidationSkipped(query)) {
     return;
   }
@@ -58,7 +37,7 @@ export const assertQueryTypenamesResolvable = (query: QueryAST.Query, resolvers:
   for (const typename of typenames) {
     // Use tryParse so malformed typenames surface as "unknown" rather than aborting validation.
     const dxn = DXN.tryParse(typename);
-    if (dxn == null || !canResolveSchema(dxn, resolvers)) {
+    if (dxn == null || !canResolveSchema(dxn, resolver)) {
       unresolved.push(typename);
     }
   }
@@ -68,26 +47,26 @@ export const assertQueryTypenamesResolvable = (query: QueryAST.Query, resolvers:
   }
 };
 
-const hasResolvableSchema = (entity: Entity.Unknown | null | undefined, resolvers: SchemaResolvers): boolean => {
+const hasResolvableSchema = (entity: Entity.Unknown | null | undefined, resolver: Ref.Resolver): boolean => {
   if (entity == null) return false;
   const typeDxn = Entity.getTypeDXN(entity);
   if (typeDxn == null) return true;
-  return canResolveSchema(typeDxn, resolvers);
+  return canResolveSchema(typeDxn, resolver);
 };
 
 /**
- * Filter objects whose schema can't be resolved from the runtime or persistent registry.
- * Objects without a type DXN or whose type is not present in either registry are dropped.
+ * Filter objects whose schema can't be resolved by the resolver.
+ * Objects without a type DXN or whose type is not resolvable are dropped.
  */
 export const filterObjectsWithResolvableSchema = <T extends Entity.Unknown>(
   query: QueryAST.Query,
   entities: readonly T[],
-  resolvers: SchemaResolvers,
+  resolver: Ref.Resolver,
 ): T[] => {
   if (isSchemaValidationSkipped(query)) {
     return entities as T[];
   }
-  return entities.filter((entity) => hasResolvableSchema(entity, resolvers));
+  return entities.filter((entity) => hasResolvableSchema(entity, resolver));
 };
 
 /**
@@ -97,13 +76,13 @@ export const filterObjectsWithResolvableSchema = <T extends Entity.Unknown>(
 export const filterEntriesWithResolvableSchema = <T extends Entity.Unknown, E extends QueryResult.Entry<T>>(
   query: QueryAST.Query,
   entries: readonly E[],
-  resolvers: SchemaResolvers,
+  resolver: Ref.Resolver,
 ): E[] => {
   if (isSchemaValidationSkipped(query)) {
     return entries as E[];
   }
   return entries.filter((entry) => {
     if (entry.result == null) return true;
-    return hasResolvableSchema(entry.result, resolvers);
+    return hasResolvableSchema(entry.result, resolver);
   });
 };

@@ -235,10 +235,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     }
 
     const context = this._coreDatabase.graph._createQueryContext({
-      schemaResolvers: {
-        runtime: this.graph.schemaRegistry,
-        persistent: this._schemaRegistry,
-      },
+      schemaResolver: this.graph.createRefResolver({ context: { space: this.spaceId } }),
     });
     return new QueryResultImpl(context, query);
   }
