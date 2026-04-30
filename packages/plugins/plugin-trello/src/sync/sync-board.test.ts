@@ -8,21 +8,28 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
+import { Integration } from '@dxos/plugin-integration/types';
 import { Kanban } from '@dxos/plugin-kanban/types';
 import { Expando } from '@dxos/schema';
+import { AccessToken } from '@dxos/types';
 
 import { TRELLO_SOURCE } from '../constants';
-import { type TrelloCard, type TrelloList } from '../services/trello-api';
+import { type TrelloBoard, type TrelloCard, type TrelloList } from '../services/trello-api';
 import { pushBoardCards, reconcileBoardCards } from './sync-board';
 
 /**
- * Tests the pull and push reconcilers against a real ECHO database.
+ * Tests the snapshot-driven three-way merge in pull and push reconcilers
+ * against a real ECHO database.
  *
- * These mirror the user-visible Sync flow against a real database, no UI:
- *  - Pull adds cards on first run, idempotent on second run.
- *  - Pull soft-closes cards absent remotely.
- *  - Push creates locally-created cards in Trello + writes the foreign key back.
- *  - Push skips items pull just touched (no bouncing remote data back).
+ * Coverage:
+ *  - Pull: first run seeds snapshots; second run is a no-op.
+ *  - Pull: remote-only change → take remote.
+ *  - Pull: local-only change → keep local (don't clobber).
+ *  - Pull: both changed → remote wins (conflict policy).
+ *  - Pull: soft-close cards absent remotely.
+ *  - Push: locally-created card → POST + writeback + seed snapshot.
+ *  - Push: locally-edited card → PUT only diverged fields.
+ *  - Push: snapshot-equal items don't push (no bouncing).
  */
 describe('reconcileBoardCards (pull)', () => {
   let builder: EchoTestBuilder;
@@ -37,8 +44,22 @@ describe('reconcileBoardCards (pull)', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([Kanban.Kanban, Expando.Expando]);
-    return { db };
+    await graph.schemaRegistry.register([
+      AccessToken.AccessToken,
+      Integration.Integration,
+      Kanban.Kanban,
+      Expando.Expando,
+    ]);
+    const token = db.add(
+      Obj.make(AccessToken.AccessToken, {
+        source: TRELLO_SOURCE,
+        token: 'apikey:usertoken',
+      }),
+    );
+    const integration = db.add(
+      Obj.make(Integration.Integration, { accessToken: Ref.make(token), targets: [] }),
+    );
+    return { db, integration };
   };
 
   const makeKanban = (db: any) =>
@@ -50,6 +71,15 @@ describe('reconcileBoardCards (pull)', () => {
         spec: { kind: 'items' as const, pivotField: 'listName', items: [] },
       }),
     );
+
+  const makeRemoteBoard = (id = 'board1', name = 'Test Board'): TrelloBoard => ({
+    id,
+    name,
+    closed: false,
+    url: `https://trello.com/b/${id}`,
+    shortUrl: `https://trello.com/b/${id}`,
+    dateLastActivity: '2026-04-29T00:00:00Z',
+  });
 
   const makeRemoteCard = (id: string, idList: string, name: string, desc = '', closed = false): TrelloCard => ({
     id,
@@ -70,11 +100,12 @@ describe('reconcileBoardCards (pull)', () => {
     pos: 0,
   });
 
-  test('first run adds remote cards with foreign keys', async ({ expect }) => {
-    const { db } = await setup();
-    const testLayer = Database.layer(db);
+  test('first run adds remote cards and seeds snapshots', async ({ expect }) => {
+    const { db, integration } = await setup();
+    const layer = Database.layer(db);
     const kanban = makeKanban(db);
 
+    const board = makeRemoteBoard();
     const lists = [makeRemoteList('list1', 'To Do'), makeRemoteList('list2', 'Done')];
     const cards = [
       makeRemoteCard('card1', 'list1', 'Task A'),
@@ -82,72 +113,190 @@ describe('reconcileBoardCards (pull)', () => {
     ];
 
     const result = await Effect.gen(function* () {
-      return yield* reconcileBoardCards(kanban, cards, lists);
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+      return yield* reconcileBoardCards(integration, kanban, board, cards, lists);
+    }).pipe(Effect.provide(layer), runAndForwardErrors);
 
     expect(result.added).toBe(2);
     expect(result.updated).toBe(0);
     expect(result.removed).toBe(0);
-    expect(kanban.spec.kind === 'items' ? kanban.spec.items.length : 0).toBe(2);
 
-    const items = (kanban.spec.kind === 'items' ? kanban.spec.items : [])
-      .map((ref: Ref.Ref<Obj.Unknown>) => ref.target)
-      .filter((o: Obj.Unknown | undefined): o is Obj.Unknown => o != null);
-    const fields0 = items[0] as unknown as Record<string, unknown>;
-    expect(fields0.name).toBe('Task A');
-    expect(fields0.listName).toBe('To Do');
-    expect(Obj.getMeta(items[0]).keys.find((k) => k.source === TRELLO_SOURCE)?.id).toBe('card1');
-
+    // Card snapshots seeded.
+    const snapshots = (integration.snapshots ?? {}) as Record<string, any>;
+    expect(snapshots.card1?.name).toBe('Task A');
+    expect(snapshots.card1?.listName).toBe('To Do');
+    expect(snapshots.card2?.name).toBe('Task B');
+    // Board snapshot seeded.
+    expect(snapshots.board1?.name).toBe('Test Board');
+    expect(snapshots.board1?.columns?.['To Do']?.ids).toHaveLength(1);
+    expect(snapshots.board1?.columns?.['Done']?.ids).toHaveLength(1);
   });
 
-  test('second run is idempotent (no duplicates, no new refs)', async ({ expect }) => {
-    const { db } = await setup();
-    const testLayer = Database.layer(db);
+  test('second run is idempotent (snapshot equals remote → no writes)', async ({ expect }) => {
+    const { db, integration } = await setup();
+    const layer = Database.layer(db);
     const kanban = makeKanban(db);
 
+    const board = makeRemoteBoard();
     const lists = [makeRemoteList('list1', 'To Do')];
     const cards = [makeRemoteCard('card1', 'list1', 'Task A')];
 
-    const first = await Effect.gen(function* () {
-      return yield* reconcileBoardCards(kanban, cards, lists);
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
-
-    expect(first.added).toBe(1);
+    await Effect.gen(function* () {
+      return yield* reconcileBoardCards(integration, kanban, board, cards, lists);
+    }).pipe(Effect.provide(layer), runAndForwardErrors);
 
     const second = await Effect.gen(function* () {
-      return yield* reconcileBoardCards(kanban, cards, lists);
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+      return yield* reconcileBoardCards(integration, kanban, board, cards, lists);
+    }).pipe(Effect.provide(layer), runAndForwardErrors);
 
-    // Idempotent: no new refs, no soft-close, no duplicate Expandos, no writes
-    // (field-equality skip). `touchedByPull` still includes the card so push
-    // skips it.
     expect(second.added).toBe(0);
     expect(second.updated).toBe(0);
     expect(second.removed).toBe(0);
-    expect(second.touchedByPull.size).toBe(1);
     expect(kanban.spec.kind === 'items' ? kanban.spec.items.length : 0).toBe(1);
   });
 
-  test('soft-closes cards absent remotely', async ({ expect }) => {
-    const { db } = await setup();
-    const testLayer = Database.layer(db);
+  test('remote-only change pulls into local', async ({ expect }) => {
+    const { db, integration } = await setup();
+    const layer = Database.layer(db);
     const kanban = makeKanban(db);
 
+    const board = makeRemoteBoard();
     const lists = [makeRemoteList('list1', 'To Do')];
 
-    // First run: add card1 + card2.
+    // First sync establishes the snapshot.
+    await Effect.gen(function* () {
+      return yield* reconcileBoardCards(
+        integration,
+        kanban,
+        board,
+        [makeRemoteCard('card1', 'list1', 'Task A')],
+        lists,
+      );
+    }).pipe(Effect.provide(layer), runAndForwardErrors);
+
+    // Remote rename — local untouched.
+    const result = await Effect.gen(function* () {
+      return yield* reconcileBoardCards(
+        integration,
+        kanban,
+        board,
+        [makeRemoteCard('card1', 'list1', 'Task A renamed')],
+        lists,
+      );
+    }).pipe(Effect.provide(layer), runAndForwardErrors);
+
+    expect(result.updated).toBe(1);
+    const item = (kanban.spec.kind === 'items' ? kanban.spec.items[0]?.target : undefined) as
+      | Record<string, unknown>
+      | undefined;
+    expect(item?.name).toBe('Task A renamed');
+  });
+
+  test('local-only change is preserved on pull (not clobbered)', async ({ expect }) => {
+    const { db, integration } = await setup();
+    const layer = Database.layer(db);
+    const kanban = makeKanban(db);
+
+    const board = makeRemoteBoard();
+    const lists = [makeRemoteList('list1', 'To Do')];
+
+    // First sync.
+    await Effect.gen(function* () {
+      return yield* reconcileBoardCards(
+        integration,
+        kanban,
+        board,
+        [makeRemoteCard('card1', 'list1', 'Task A', 'remote desc')],
+        lists,
+      );
+    }).pipe(Effect.provide(layer), runAndForwardErrors);
+
+    // User edits the description locally.
+    const localItem = (kanban.spec.kind === 'items' ? kanban.spec.items[0]?.target : undefined) as Obj.Unknown;
+    Obj.change(localItem, (m) => {
+      (m as unknown as Record<string, unknown>).description = 'local edit';
+    });
+
+    // Pull again with unchanged remote — local edit must survive.
+    const result = await Effect.gen(function* () {
+      return yield* reconcileBoardCards(
+        integration,
+        kanban,
+        board,
+        [makeRemoteCard('card1', 'list1', 'Task A', 'remote desc')],
+        lists,
+      );
+    }).pipe(Effect.provide(layer), runAndForwardErrors);
+
+    expect(result.updated).toBe(0);
+    const item = localItem as unknown as Record<string, unknown>;
+    expect(item.description).toBe('local edit');
+  });
+
+  test('both-changed → remote wins (conflict policy)', async ({ expect }) => {
+    const { db, integration } = await setup();
+    const layer = Database.layer(db);
+    const kanban = makeKanban(db);
+
+    const board = makeRemoteBoard();
+    const lists = [makeRemoteList('list1', 'To Do')];
+
+    await Effect.gen(function* () {
+      return yield* reconcileBoardCards(
+        integration,
+        kanban,
+        board,
+        [makeRemoteCard('card1', 'list1', 'Task A', 'original')],
+        lists,
+      );
+    }).pipe(Effect.provide(layer), runAndForwardErrors);
+
+    const localItem = (kanban.spec.kind === 'items' ? kanban.spec.items[0]?.target : undefined) as Obj.Unknown;
+    Obj.change(localItem, (m) => {
+      (m as unknown as Record<string, unknown>).description = 'local edit';
+    });
+
+    // Remote also changed. Remote wins.
+    await Effect.gen(function* () {
+      return yield* reconcileBoardCards(
+        integration,
+        kanban,
+        board,
+        [makeRemoteCard('card1', 'list1', 'Task A', 'remote edit')],
+        lists,
+      );
+    }).pipe(Effect.provide(layer), runAndForwardErrors);
+
+    const item = localItem as unknown as Record<string, unknown>;
+    expect(item.description).toBe('remote edit');
+  });
+
+  test('soft-closes cards absent remotely and updates snapshot', async ({ expect }) => {
+    const { db, integration } = await setup();
+    const layer = Database.layer(db);
+    const kanban = makeKanban(db);
+
+    const board = makeRemoteBoard();
+    const lists = [makeRemoteList('list1', 'To Do')];
+
     await Effect.gen(function* () {
       yield* reconcileBoardCards(
+        integration,
         kanban,
+        board,
         [makeRemoteCard('card1', 'list1', 'A'), makeRemoteCard('card2', 'list1', 'B')],
         lists,
       );
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(layer), runAndForwardErrors);
 
-    // Second run: card2 absent remotely.
     const result = await Effect.gen(function* () {
-      return yield* reconcileBoardCards(kanban, [makeRemoteCard('card1', 'list1', 'A')], lists);
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+      return yield* reconcileBoardCards(
+        integration,
+        kanban,
+        board,
+        [makeRemoteCard('card1', 'list1', 'A')],
+        lists,
+      );
+    }).pipe(Effect.provide(layer), runAndForwardErrors);
 
     expect(result.removed).toBe(1);
     const items = (kanban.spec.kind === 'items' ? kanban.spec.items : [])
@@ -157,7 +306,9 @@ describe('reconcileBoardCards (pull)', () => {
       (item: Obj.Unknown) => Obj.getMeta(item).keys.find((k) => k.source === TRELLO_SOURCE)?.id === 'card2',
     );
     expect((card2 as unknown as Record<string, unknown>)?.closed).toBe(true);
-
+    // Snapshot's `closed` flag is updated so push won't bounce it back.
+    const snapshots = (integration.snapshots ?? {}) as Record<string, any>;
+    expect(snapshots.card2?.closed).toBe(true);
   });
 });
 
@@ -172,12 +323,29 @@ describe('pushBoardCards (push)', () => {
     await builder.close();
   });
 
-  test('creates locally-created cards remotely and writes back the foreign key', async ({ expect }) => {
+  const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([Kanban.Kanban, Expando.Expando]);
-    const testLayer = Database.layer(db);
+    await graph.schemaRegistry.register([
+      AccessToken.AccessToken,
+      Integration.Integration,
+      Kanban.Kanban,
+      Expando.Expando,
+    ]);
+    const token = db.add(
+      Obj.make(AccessToken.AccessToken, {
+        source: TRELLO_SOURCE,
+        token: 'apikey:usertoken',
+      }),
+    );
+    const integration = db.add(
+      Obj.make(Integration.Integration, { accessToken: Ref.make(token), targets: [] }),
+    );
+    return { db, integration };
+  };
 
-    // Create a local card without a foreign key (simulating user-created).
+  test('creates locally-created cards remotely + writes back foreign key + seeds snapshot', async ({ expect }) => {
+    const { db, integration } = await setup();
+
     const localCard = db.add(Obj.make(Expando.Expando, { name: 'New local', description: '', listName: 'To Do' }));
     const kanban = db.add(
       Obj.make(Kanban.Kanban, {
@@ -199,7 +367,7 @@ describe('pushBoardCards (push)', () => {
     const stubUpdate = () => Effect.succeed(undefined);
 
     const result = await Effect.gen(function* () {
-      return yield* pushBoardCards(kanban, lists, new Set(), {
+      return yield* pushBoardCards(integration, kanban, lists, {
         create: stubCreate,
         update: stubUpdate,
       });
@@ -207,20 +375,74 @@ describe('pushBoardCards (push)', () => {
 
     expect(result.created).toBe(1);
     expect(createCalled).toBe(1);
-    // Foreign key should now be on the local card.
     const fk = Obj.getMeta(localCard).keys.find((k) => k.source === TRELLO_SOURCE);
     expect(fk?.id).toBe('remote-new');
+    // Snapshot seeded for the newly-created card.
+    const snapshots = (integration.snapshots ?? {}) as Record<string, any>;
+    expect(snapshots['remote-new']?.name).toBe('New local');
   });
 
-  test('skips items in touchedByPull set (no bouncing)', async ({ expect }) => {
-    const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([Kanban.Kanban, Expando.Expando]);
-    const testLayer = Database.layer(db);
+  test('locally-edited card with foreign key → PUT only diverged fields', async ({ expect }) => {
+    const { db, integration } = await setup();
+
+    // Seed a snapshot so we can detect a local divergence on `description` only.
+    Obj.change(integration, (m) => {
+      const mut = m as Obj.Mutable<typeof m>;
+      mut.snapshots = {
+        card1: { name: 'Task A', description: 'orig', listName: 'To Do', url: '', closed: false },
+      };
+    });
 
     const card = db.add(
       Obj.make(Expando.Expando, {
         [Obj.Meta]: { keys: [{ source: TRELLO_SOURCE, id: 'card1' }] },
-        name: 'Pulled card',
+        name: 'Task A',
+        description: 'edited locally',
+        listName: 'To Do',
+      }),
+    );
+    const kanban = db.add(
+      Obj.make(Kanban.Kanban, {
+        [Obj.Meta]: { keys: [{ source: TRELLO_SOURCE, id: 'board1' }] },
+        arrangement: { order: [], columns: {} },
+        spec: { kind: 'items' as const, pivotField: 'listName', items: [Ref.make(card)] },
+      }),
+    );
+
+    const lists: TrelloList[] = [{ id: 'list1', name: 'To Do', closed: false, pos: 0 }];
+
+    let updatePayload: { name?: string; desc?: string; listId?: string } | undefined;
+    const result = await Effect.gen(function* () {
+      return yield* pushBoardCards(integration, kanban, lists, {
+        create: () => Effect.succeed({ id: 'never' }),
+        update: (_id, payload) => {
+          updatePayload = payload;
+          return Effect.succeed(undefined);
+        },
+      });
+    }).pipe(runAndForwardErrors);
+
+    expect(result.updated).toBe(1);
+    expect(updatePayload).toEqual({ desc: 'edited locally' });
+    // Snapshot refreshed with the pushed value so a subsequent push is a no-op.
+    const snapshots = (integration.snapshots ?? {}) as Record<string, any>;
+    expect(snapshots.card1?.description).toBe('edited locally');
+  });
+
+  test('snapshot-equal item is not pushed (no bouncing)', async ({ expect }) => {
+    const { db, integration } = await setup();
+
+    Obj.change(integration, (m) => {
+      const mut = m as Obj.Mutable<typeof m>;
+      mut.snapshots = {
+        card1: { name: 'Pulled', description: '', listName: 'To Do', url: '', closed: false },
+      };
+    });
+
+    const card = db.add(
+      Obj.make(Expando.Expando, {
+        [Obj.Meta]: { keys: [{ source: TRELLO_SOURCE, id: 'card1' }] },
+        name: 'Pulled',
         description: '',
         listName: 'To Do',
       }),
@@ -234,11 +456,10 @@ describe('pushBoardCards (push)', () => {
     );
 
     const lists: TrelloList[] = [{ id: 'list1', name: 'To Do', closed: false, pos: 0 }];
-    const touchedByPull = new Set<string>([Obj.getDXN(card).toString()]);
 
     let updateCalled = 0;
     const result = await Effect.gen(function* () {
-      return yield* pushBoardCards(kanban, lists, touchedByPull, {
+      return yield* pushBoardCards(integration, kanban, lists, {
         create: () => Effect.succeed({ id: 'never' }),
         update: () => {
           updateCalled++;

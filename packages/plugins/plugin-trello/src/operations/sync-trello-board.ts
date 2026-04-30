@@ -13,6 +13,7 @@ import { TRELLO_SOURCE } from '../constants';
 import {
   createCard,
   credentialsFromAccessToken,
+  fetchBoards,
   fetchCards,
   fetchLists,
   updateCard,
@@ -58,6 +59,13 @@ const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.p
         const accessToken = yield* Database.load(integrationObj.accessToken);
         const creds = credentialsFromAccessToken(accessToken);
 
+      // Fetch the user's boards once so each target can look up its remote
+      // `TrelloBoard` (for board-level fields like `name`). One round-trip
+      // regardless of target count, and we already know `fetchBoards` is part
+      // of the surface area used by `GetTrelloBoards`.
+      const allBoards = yield* fetchBoards(creds);
+      const boardsById = new Map(allBoards.map((b) => [b.id, b]));
+
       // Determine which target entries to process: items-variant Kanbans with a
       // Trello foreign key. The integration mechanism only ever creates this shape
       // for Trello, so view-variant Kanbans here would be a programmer error; we
@@ -70,12 +78,14 @@ const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.p
         if (!Kanban.isKanbanItems(targetObj)) return [];
         const foreignId = Obj.getMeta(targetObj).keys.find((k) => k.source === TRELLO_SOURCE)?.id;
         if (foreignId === undefined) return [];
-        return [{ entry: target, kanban: targetObj, boardId: foreignId }];
+        const remoteBoard = boardsById.get(foreignId);
+        if (!remoteBoard) return [];
+        return [{ entry: target, kanban: targetObj, boardId: foreignId, remoteBoard }];
       });
 
       const perTarget = yield* Effect.forEach(
         targetEntries,
-        ({ entry: target, kanban: targetKanban, boardId }) =>
+        ({ entry: target, kanban: targetKanban, boardId, remoteBoard }) =>
           Effect.gen(function* () {
             const result = yield* Effect.either(
               Effect.gen(function* () {
@@ -86,16 +96,26 @@ const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.p
                 // `target.cursor` here.
                 const lists = yield* fetchLists(boardId, creds);
                 const cards = yield* fetchCards(boardId, creds);
-                const reconcileResult = yield* reconcileBoardCards(targetKanban, cards, lists);
+                const reconcileResult = yield* reconcileBoardCards(
+                  integrationObj,
+                  targetKanban,
+                  remoteBoard,
+                  cards,
+                  lists,
+                );
 
-                const pushResult = yield* pushBoardCards(targetKanban, lists, reconcileResult.touchedByPull, {
+                const pushResult = yield* pushBoardCards(integrationObj, targetKanban, lists, {
                   create: ({ listId, name, desc }) =>
                     createCard(creds, { idList: listId, name, desc }).pipe(
                       Effect.map((card) => ({ id: card.id })),
                       Effect.mapError((error) => (error instanceof Error ? error : new Error(String(error)))),
                     ),
-                  update: (foreignId, { name, desc, listId }) =>
-                    updateCard(creds, foreignId, { name, desc, idList: listId }).pipe(
+                  update: (foreignId, payload) =>
+                    updateCard(creds, foreignId, {
+                      name: payload.name,
+                      desc: payload.desc,
+                      idList: payload.listId,
+                    }).pipe(
                       Effect.map(() => undefined),
                       Effect.mapError((error) => (error instanceof Error ? error : new Error(String(error)))),
                     ),

@@ -46,6 +46,23 @@ export const Integration = Schema.Struct({
   accessToken: Ref.Ref(AccessToken.AccessToken),
   /** Root local objects this Integration populates. */
   targets: Schema.Array(IntegrationTarget),
+  /**
+   * Per-item snapshots of last-pulled remote state, keyed by `foreignId`
+   * (the remote identifier, also stored in each item's `Obj.Meta.keys`).
+   * The inner record is a service-defined map of fields — for Trello a card
+   * snapshot stores `{ name, description, listName, url, closed }`; a board
+   * snapshot stores `{ name, columns: { [listName]: { ids } } }`. Trello's
+   * id namespace is unified, so a single flat map covers both granularities.
+   *
+   * Used to drive a three-way merge on pull: comparing `(local, remote, snapshot)`
+   * per field lets us distinguish "user changed this locally" from "remote
+   * changed this since the last sync" without writing the snapshot to the
+   * SDK layer. On both-changed conflicts the policy is remote-wins.
+   */
+  snapshots: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(
+    FormInputAnnotation.set(false),
+    Schema.optional,
+  ),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.integration',
