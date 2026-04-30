@@ -4,6 +4,7 @@
 
 import type { Plugin } from 'vite';
 import { defineConfig } from 'vite';
+import Inspect from 'vite-plugin-inspect';
 
 import { DxosLogPlugin } from '../src/plugin.ts';
 
@@ -57,7 +58,7 @@ const transformMetaProbe = (): Plugin => {
 
 export default defineConfig({
   root: __dirname,
-  plugins: [transformMetaProbe(), DxosLogPlugin()],
+  plugins: [transformMetaProbe(), DxosLogPlugin(), Inspect()],
   server: {
     port: 3000,
   },
