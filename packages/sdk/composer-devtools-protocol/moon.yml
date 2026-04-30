@@ -8,6 +8,4 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/bridge.ts'
-      - '--entryPoint=src/panel.ts'
       - '--platform=browser'

@@ -5,12 +5,12 @@
 import { onMessage } from 'webext-bridge/background';
 import browser from 'webextension-polyfill';
 
-import { installDevtoolsRouter } from '@dxos/composer-devtools-protocol/bridge';
 import { log } from '@dxos/log';
 
 import { createThumbnail } from './actions';
 import { deliverClip, openComposerTab } from './bridge';
 import type { Clip } from './clip/types';
+import { installDevtoolsRouter } from './devtools/bridge';
 
 const NOTIFY_ICON = 'assets/img/icon-128.png';
 

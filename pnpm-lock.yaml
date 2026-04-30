@@ -15674,10 +15674,6 @@ importers:
       comlink:
         specifier: 'catalog:'
         version: 4.4.2
-    devDependencies:
-      '@types/chrome':
-        specifier: 'catalog:'
-        version: 0.0.125
 
   packages/sdk/config:
     dependencies:

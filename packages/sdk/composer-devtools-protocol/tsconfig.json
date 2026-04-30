@@ -1,10 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "compilerOptions": {
-    "types": [
-      "chrome"
-    ]
-  },
+  "compilerOptions": {},
   "include": [
     "src"
   ],

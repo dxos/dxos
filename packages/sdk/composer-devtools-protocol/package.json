@@ -19,18 +19,6 @@
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
-    },
-    "./bridge": {
-      "source": "./src/bridge.ts",
-      "types": "./dist/types/src/bridge.d.ts",
-      "browser": "./dist/lib/browser/bridge.mjs",
-      "node": "./dist/lib/node-esm/bridge.mjs"
-    },
-    "./panel": {
-      "source": "./src/panel.ts",
-      "types": "./dist/types/src/panel.d.ts",
-      "browser": "./dist/lib/browser/panel.mjs",
-      "node": "./dist/lib/node-esm/panel.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -41,7 +29,5 @@
   "dependencies": {
     "comlink": "catalog:"
   },
-  "devDependencies": {
-    "@types/chrome": "catalog:"
-  }
+  "devDependencies": {}
 }

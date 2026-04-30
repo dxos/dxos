@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { CONTENT_PORT_NAME, DEFAULT_CHANNEL, PANEL_PORT_NAME, eventNames } from './api';
+import { CONTENT_PORT_NAME, DEFAULT_CHANNEL, PANEL_PORT_NAME, eventNames } from '@dxos/composer-devtools-protocol';
 
 type BindMessage = { __bind: number };
 

@@ -7,8 +7,9 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import type { DevtoolsHostApi, PanelInfo, SpecNode } from '@dxos/composer-devtools-protocol';
-import { connectDevtools } from '@dxos/composer-devtools-protocol/panel';
 import { log } from '@dxos/log';
+
+import { connectDevtools } from './devtools/connect';
 
 const SpecRenderer = ({
   node,
