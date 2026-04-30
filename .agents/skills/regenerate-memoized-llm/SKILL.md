@@ -7,7 +7,7 @@ description: Regenerate cached LLM responses for tests that use memoized convers
 
 Tests in this repo use **memoized LLM responses** stored in `*.conversations.json` files committed to git. When prompts or behavior change, the cache can be stale and tests fail with:
 
-```
+```text
 No memoized conversation found for the given prompt.
 Re-run test with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.
 ```
