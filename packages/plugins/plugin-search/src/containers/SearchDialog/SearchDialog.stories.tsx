@@ -38,7 +38,7 @@ const DefaultStory = () => {
     <SearchContextProvider>
       <Dialog.Root defaultOpen>
         <Dialog.Overlay>
-          <SearchDialog pivotId='storybook' space={space} />
+          <SearchDialog role='article' space={space} attendableId={space.id} pivotId='storybook' />
         </Dialog.Overlay>
       </Dialog.Root>
     </SearchContextProvider>
@@ -47,7 +47,6 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'plugins/plugin-search/containers/SearchDialog',
-  component: SearchDialog,
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
@@ -78,7 +77,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof SearchDialog>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

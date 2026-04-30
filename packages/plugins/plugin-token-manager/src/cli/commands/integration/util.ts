@@ -17,6 +17,12 @@ export type OAuthPreset = {
 // TODO(wittjosiah): Copied from plugin-token-manager.
 export const OAUTH_PRESETS: OAuthPreset[] = [
   {
+    provider: OAuthProvider.GITHUB,
+    source: 'github.com',
+    label: 'GitHub',
+    scopes: ['repo', 'read:user'],
+  },
+  {
     provider: OAuthProvider.GOOGLE,
     source: 'google.com',
     label: 'Google',
@@ -28,6 +34,24 @@ export const OAUTH_PRESETS: OAuthPreset[] = [
       'https://www.googleapis.com/auth/youtube.readonly',
       'https://www.googleapis.com/auth/youtube.force-ssl',
     ],
+  },
+  {
+    provider: OAuthProvider.LINEAR,
+    source: 'linear.app',
+    label: 'Linear',
+    scopes: ['read', 'write'],
+  },
+  {
+    provider: OAuthProvider.SLACK,
+    source: 'slack.com',
+    label: 'Slack',
+    scopes: ['channels:read', 'chat:write', 'users:read'],
+  },
+  {
+    provider: OAuthProvider.TRELLO,
+    source: 'trello.com',
+    label: 'Trello',
+    scopes: ['read', 'write'],
   },
 ];
 

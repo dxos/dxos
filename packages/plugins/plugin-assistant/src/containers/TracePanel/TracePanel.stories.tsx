@@ -195,7 +195,7 @@ const DefaultStory = () => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <TracePanel space={space} />
+        <TracePanel role='article' space={space} attendableId={space.id} />
       </Panel.Content>
     </Panel.Root>
   );
