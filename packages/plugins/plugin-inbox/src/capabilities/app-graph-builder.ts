@@ -64,6 +64,9 @@ export default Capability.makeModule(
               type: MAILBOXES_SECTION_TYPE,
               label: ['mailboxes-section.label', { ns: meta.id }],
               icon: 'ph--tray--regular',
+              // Match the per-Mailbox node hue so the section reads as part
+              // of the same "mail" colorway.
+              iconHue: 'rose',
               space,
               position: 'hoist',
             }),

@@ -76,7 +76,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             properties: {
               label: ['collections-section.label', { ns: meta.id }],
               icon: 'ph--folder--regular',
-              iconHue: 'neutral',
+              iconHue: 'amber',
               role: 'branch',
               // Hoisted to the top, but registered AFTER `createSettingsExtensions`
               // in `app-graph-builder.ts` so it lands beneath General settings + Members.

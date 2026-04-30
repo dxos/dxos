@@ -22,7 +22,9 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       // Automations + Functions entries attach directly under each Space
-      // (formerly under the alternate-tree settings panel).
+      // (formerly under the alternate-tree settings panel). `fallback`
+      // sinks them to the bottom of the Space's children alongside Database
+      // and Devtools, away from the user's day-to-day content.
       GraphBuilder.createExtension({
         id: 'space-settings-automation',
         match: whenSpace,
@@ -33,6 +35,7 @@ export default Capability.makeModule(
               type: `${meta.id}.space-settings-automation`,
               label: ['automation-panel.label', { ns: meta.id }],
               icon: 'ph--lightning--regular',
+              position: 'fallback',
             }),
           ]),
       }),
@@ -46,6 +49,7 @@ export default Capability.makeModule(
               type: `${meta.id}.space-settings-functions`,
               label: ['functions-panel.label', { ns: meta.id }],
               icon: 'ph--function--regular',
+              position: 'fallback',
             }),
           ]),
       }),

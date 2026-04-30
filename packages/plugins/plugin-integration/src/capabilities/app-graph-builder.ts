@@ -56,6 +56,9 @@ export default Capability.makeModule(
               properties: {
                 label: ['space-panel.name', { ns: meta.id }],
                 icon: 'ph--plugs--regular',
+                // Match the Integration type's hue so the section reads as
+                // part of the same "integrations" colorway.
+                iconHue: 'cyan',
                 role: 'branch',
                 draggable: false,
                 droppable: false,

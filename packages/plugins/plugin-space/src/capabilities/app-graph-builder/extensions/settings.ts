@@ -43,6 +43,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
           properties: {
             label: ['space-settings-properties.label', { ns: meta.id }],
             icon: 'ph--sliders--regular',
+            iconHue: 'indigo',
             position: 'hoist',
             space,
             testId: 'spacePlugin.general',
@@ -57,6 +58,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
                 properties: {
                   label: ['members-panel.label', { ns: meta.id }],
                   icon: 'ph--users--regular',
+                  iconHue: 'lime',
                   position: 'hoist',
                   space,
                   testId: 'spacePlugin.members',
