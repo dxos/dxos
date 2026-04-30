@@ -201,6 +201,39 @@ const DefaultStory = () => {
   );
 };
 
+const meta = {
+  title: 'plugins/plugin-assistant/containers/TracePanel',
+  render: DefaultStory,
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'column' }),
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [Feed.Feed, Trace.Message],
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* initializeIdentity(client);
+              const [space] = client.spaces.get();
+              yield* Effect.promise(() => space.waitUntilReady());
+            }),
+        }),
+      ],
+    }),
+  ],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
+} satisfies Meta;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+
 export const WithSnapshot: Story = {
   render: () => {
     const [space] = useSpaces();
@@ -237,36 +270,3 @@ export const WithSnapshot: Story = {
     }),
   ],
 };
-
-const meta = {
-  title: 'plugins/plugin-assistant/containers/TracePanel',
-  render: DefaultStory,
-  decorators: [
-    withTheme(),
-    withLayout({ layout: 'column' }),
-    withPluginManager({
-      plugins: [
-        ...corePlugins(),
-        ClientPlugin({
-          types: [Feed.Feed, Trace.Message],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              yield* initializeIdentity(client);
-              const [space] = client.spaces.get();
-              yield* Effect.promise(() => space.waitUntilReady());
-            }),
-        }),
-      ],
-    }),
-  ],
-  parameters: {
-    layout: 'fullscreen',
-    translations,
-  },
-} satisfies Meta;
-
-export default meta;
-
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {};

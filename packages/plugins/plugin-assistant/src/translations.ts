@@ -18,7 +18,6 @@ export const translations: Resource[] = [
   ...formTranslations,
   {
     'en-US': {
-      // TODO(burdon): From assistant.
       [Blueprint.Blueprint.typename]: {
         'typename.label': 'Blueprint',
         'typename.label_zero': 'Blueprints',
@@ -41,7 +40,6 @@ export const translations: Resource[] = [
         'delete-object.label': 'Delete prompt',
         'object-deleted.label': 'Prompt deleted',
       },
-      // TODO(burdon): From conductor.
       [Sequence.typename]: {
         'typename.label': 'Sequence',
         'typename.label_zero': 'Sequences',
