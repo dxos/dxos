@@ -87,17 +87,20 @@ const PanelView = ({ remote, panel }: { remote: Comlink.Remote<DevtoolsHostApi>;
         setTree(next);
       }
     });
-    void remote.subscribe(panel.id, onChange).then((id) => {
-      if (cancelled) {
-        void remote.unsubscribe(id);
-        return;
-      }
-      subscriptionId = id;
-    });
+    remote
+      .subscribe(panel.id, onChange)
+      .then((id) => {
+        if (cancelled) {
+          remote.unsubscribe(id).catch((error) => log.warn('unsubscribe failed', { error }));
+          return;
+        }
+        subscriptionId = id;
+      })
+      .catch((error) => log.warn('subscribe failed', { panelId: panel.id, error }));
     return () => {
       cancelled = true;
       if (subscriptionId !== undefined) {
-        void remote.unsubscribe(subscriptionId);
+        remote.unsubscribe(subscriptionId).catch((error) => log.warn('unsubscribe failed', { error }));
       }
     };
   }, [remote, panel.id]);
@@ -109,7 +112,9 @@ const PanelView = ({ remote, panel }: { remote: Comlink.Remote<DevtoolsHostApi>;
     <SpecRenderer
       node={tree}
       onDispatch={(handlerId, payload) => {
-        void remote.dispatch(panel.id, handlerId, payload);
+        remote
+          .dispatch(panel.id, handlerId, payload)
+          .catch((error) => log.warn('dispatch failed', { panelId: panel.id, handlerId, error }));
       }}
     />
   );
@@ -134,18 +139,21 @@ const Root = () => {
       setPanels(next);
       setActive((current) => current ?? next[0]?.id);
     });
-    void connected.subscribePanels(onPanels).then((id) => {
-      if (cancelled) {
-        void connected.unsubscribe(id);
-        return;
-      }
-      subscriptionId = id;
-    });
+    connected
+      .subscribePanels(onPanels)
+      .then((id) => {
+        if (cancelled) {
+          connected.unsubscribe(id).catch((error) => log.warn('unsubscribe failed', { error }));
+          return;
+        }
+        subscriptionId = id;
+      })
+      .catch((error) => log.warn('subscribePanels failed', { error }));
 
     return () => {
       cancelled = true;
       if (subscriptionId !== undefined) {
-        void connected.unsubscribe(subscriptionId);
+        connected.unsubscribe(subscriptionId).catch((error) => log.warn('unsubscribe failed', { error }));
       }
       disconnect();
     };
