@@ -10,8 +10,7 @@ import { ClientEvents } from '@dxos/plugin-client/types';
 
 import { AppGraphBuilder, LayerSpecs, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
-
-import { translations } from './translations';
+import { translations } from '#translations';
 
 export const AutomationPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

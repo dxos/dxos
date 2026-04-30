@@ -5,7 +5,7 @@
 import { Capabilities, type CapabilityManager } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { sleep } from '@dxos/async';
-import { type Step } from '@dxos/plugin-help';
+import { type Step } from '@dxos/plugin-help/types';
 
 const ensureSidebar: Step['before'] = async (capabilities: CapabilityManager.CapabilityManager) => {
   const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);

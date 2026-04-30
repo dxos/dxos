@@ -11,10 +11,11 @@ import { Button, IconButton } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
+import { translations } from '#translations';
+
 import { Menu, useMenu } from '../components';
 import { type ActionGraphProps, useMenuActions } from '../hooks';
 import { createActions } from '../testing';
-import { translations } from '../translations';
 import { type MenuItem } from '../types';
 import { createMenuAction } from '../util';
 

@@ -20,6 +20,7 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#testing": "./src/testing/index.ts",
+    "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
   },
   "exports": {
@@ -27,6 +28,12 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "browser": "./dist/lib/browser/translations.mjs",
+      "node": "./dist/lib/node-esm/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

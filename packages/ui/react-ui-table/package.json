@@ -13,23 +13,29 @@
   "sideEffects": false,
   "type": "module",
   "exports": {
-    "./deprecated": {
-      "source": "./src/deprecated/index.ts",
-      "types": "./dist/types/src/deprecated/index.d.ts",
-      "browser": "./dist/lib/browser/deprecated/index.mjs",
-      "node": "./dist/lib/node-esm/deprecated/index.mjs"
-    },
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./deprecated": {
+      "source": "./src/deprecated/index.ts",
+      "types": "./dist/types/src/deprecated/index.d.ts",
+      "browser": "./dist/lib/browser/deprecated/index.mjs",
+      "node": "./dist/lib/node-esm/deprecated/index.mjs"
+    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "browser": "./dist/lib/browser/translations.mjs",
+      "node": "./dist/lib/node-esm/translations.mjs"
     },
     "./types": {
       "source": "./src/types/index.ts",
@@ -110,5 +116,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "imports": {
+    "#translations": "./src/translations.ts"
   }
 }

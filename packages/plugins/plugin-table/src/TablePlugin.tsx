@@ -11,16 +11,15 @@ import { Operation } from '@dxos/compute';
 import { Annotation, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { SpaceCapabilities, SpaceEvents, type CreateObject } from '@dxos/plugin-space/types';
-import { translations as formTranslations } from '@dxos/react-ui-form';
-import { translations as tableTranslations } from '@dxos/react-ui-table';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { translations as tableTranslations } from '@dxos/react-ui-table/translations';
 import { Table } from '@dxos/react-ui-table/types';
 import { ViewModel } from '@dxos/schema';
 
 import { BlueprintDefinition, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { CreateTableSchema, TableOperation } from '#operations';
-
-import { translations } from './translations';
+import { translations } from '#translations';
 
 export const TablePlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),

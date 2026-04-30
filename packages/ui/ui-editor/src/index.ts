@@ -10,5 +10,4 @@ export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 export * from './defaults';
 export * from './extensions';
-export * from './types';
 export * from './util';

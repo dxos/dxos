@@ -18,7 +18,7 @@ import { type SpaceId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { DeckEvents } from '@dxos/plugin-deck/types';
-import { MarkdownEvents } from '@dxos/plugin-markdown';
+import { MarkdownEvents } from '@dxos/plugin-markdown/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { Text } from '@dxos/schema';
@@ -41,9 +41,8 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { AssistantOperation } from '#operations';
+import { translations } from '#translations';
 import { AssistantEvents } from '#types';
-
-import { translations } from './translations';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

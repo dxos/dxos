@@ -20,8 +20,8 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { createScript } from '#testing';
+import { translations } from '#translations';
 
-import { translations } from '../../translations';
 import { ScriptContainer } from './ScriptContainer';
 
 type DefaultStoryProps = {};

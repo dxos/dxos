@@ -19,9 +19,9 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { ComputeGraphContext, useComputeGraph } from '#components';
 import { SheetOperation } from '#operations';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '#testing';
+import { translations } from '#translations';
 import { Sheet } from '#types';
 
-import { translations } from '../../translations';
 import RangeList from '../RangeList';
 import { SheetContainer } from './SheetContainer';
 

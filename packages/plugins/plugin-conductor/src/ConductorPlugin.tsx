@@ -16,8 +16,7 @@ import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
 
 import { ReactSurface } from '#capabilities';
 import { meta } from '#meta';
-
-import { translations } from './translations';
+import { translations } from '#translations';
 
 export const ConductorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
