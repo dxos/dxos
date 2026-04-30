@@ -12,7 +12,7 @@ import { type Database } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { type Operation } from '@dxos/operation';
-import { type Label } from '@dxos/ui-types';
+import { type Label } from '@dxos/ui-types/translations';
 import { type ComplexMap, type Position } from '@dxos/util';
 
 import { meta } from '#meta';

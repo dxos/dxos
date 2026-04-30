@@ -23,8 +23,8 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { createMessageGenerator } from '#testing';
+import { translations } from '#translations';
 
-import { translations } from '../../translations';
 import { ChatThread, type ChatThreadProps } from './ChatThread';
 
 random.seed(1);

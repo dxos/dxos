@@ -15,9 +15,8 @@ import { ViewModel } from '@dxos/schema';
 
 import { ReactSurface } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { Masonry, MasonryAction } from '#types';
-
-import { translations } from './translations';
 
 export const MasonryPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({

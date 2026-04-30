@@ -30,7 +30,8 @@ import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { Timeline } from '@dxos/react-ui-components';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { buildExecutionGraph } from './execution-graph';
 import { TracePanel } from './TracePanel';
 

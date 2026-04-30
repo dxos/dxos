@@ -17,9 +17,8 @@ import { MagazineBlueprint } from '#blueprints';
 import { AppGraphBuilder, BlueprintDefinition, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { FeedOperation } from '#operations';
+import { translations } from '#translations';
 import { Magazine, Subscription } from '#types';
-
-import { translations } from './translations';
 
 export const FeedPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({

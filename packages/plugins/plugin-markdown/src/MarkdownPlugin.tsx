@@ -12,7 +12,7 @@ import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
 import { Operation } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
-import { translations as editorTranslations } from '@dxos/react-ui-editor';
+import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 import { Text } from '@dxos/schema';
 
 import { MarkdownBlueprint } from '#blueprints';
@@ -27,9 +27,9 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { MarkdownOperation } from '#operations';
+import { translations } from '#translations';
 import { Markdown, MarkdownEvents } from '#types';
 
-import { translations } from './translations';
 import { serializer } from './util';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(

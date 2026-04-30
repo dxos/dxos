@@ -10,16 +10,15 @@ import { AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client/types';
-import { MarkdownEvents } from '@dxos/plugin-markdown';
+import { MarkdownEvents } from '@dxos/plugin-markdown/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { Blockstore, FileUploader, Markdown, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { WnfsOperation } from '#operations';
+import { translations } from '#translations';
 import { WnfsAction, WnfsCapabilities, WnfsFile } from '#types';
-
-import { translations } from './translations';
 
 export const WnfsPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({

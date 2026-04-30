@@ -14,8 +14,9 @@ import { ObjectProperties } from '@dxos/react-ui-form';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
+import { translations } from '#translations';
+
 import { generateFeed } from '../testing';
-import { translations } from '../translations';
 import { Magazine, Subscription } from '../types';
 
 const DefaultStory = () => {

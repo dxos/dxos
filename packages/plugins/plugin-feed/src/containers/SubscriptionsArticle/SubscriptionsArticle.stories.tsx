@@ -17,10 +17,10 @@ import { random } from '@dxos/random';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
+import { translations } from '#translations';
 import { Subscription } from '#types';
 
 import { FeedPlugin } from '../../FeedPlugin';
-import { translations } from '../../translations';
 import { SubscriptionsArticle } from './SubscriptionsArticle';
 
 const DefaultStory = () => {

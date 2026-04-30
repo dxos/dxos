@@ -14,9 +14,8 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { ReactSurface, SpacetimeSettings } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { Model, Scene } from '#types';
-
-import { translations } from './translations';
 
 export const SpacetimePlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({

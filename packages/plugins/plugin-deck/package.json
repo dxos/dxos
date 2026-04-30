@@ -19,6 +19,7 @@
     "#hooks": "./src/hooks/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
   },
   "exports": {
@@ -32,6 +33,12 @@
       "types": "./dist/types/src/operations/index.d.ts",
       "browser": "./dist/lib/browser/operations/index.mjs",
       "node": "./dist/lib/node-esm/operations/index.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "browser": "./dist/lib/browser/translations.mjs",
+      "node": "./dist/lib/node-esm/translations.mjs"
     },
     "./types": {
       "source": "./src/types/index.ts",

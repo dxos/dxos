@@ -9,8 +9,7 @@ import { Format } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
 import { meta } from '#meta';
-
-import { translations } from '../translations';
+import { translations } from '#translations';
 
 const t = translations[0]['en-US'][meta.id];
 

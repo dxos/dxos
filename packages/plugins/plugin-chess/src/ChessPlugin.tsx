@@ -15,9 +15,8 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 import { ChessBlueprint } from '#blueprints';
 import { BlueprintDefinition, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { Chess } from '#types';
-
-import { translations } from './translations';
 
 export const ChessPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),

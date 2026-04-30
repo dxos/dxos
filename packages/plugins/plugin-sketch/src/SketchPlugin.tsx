@@ -13,9 +13,9 @@ import { RefArray } from '@dxos/react-client/echo';
 
 import { AppGraphSerializer, OperationHandler, ReactSurface, SketchSettings } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { Sketch } from '#types';
 
-import { translations } from './translations';
 import { serializer } from './util';
 
 export const SketchPlugin = Plugin.define(meta).pipe(

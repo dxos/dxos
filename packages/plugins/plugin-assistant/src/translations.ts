@@ -7,8 +7,8 @@ import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
-import { translations as componentsTranslations } from '@dxos/react-ui-components';
-import { translations as formTranslations } from '@dxos/react-ui-form';
+import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 
 import { meta } from '#meta';
 
