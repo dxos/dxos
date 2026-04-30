@@ -12,6 +12,7 @@ import { type Observability } from '@dxos/observability';
 import { isTruthy } from '@dxos/util';
 
 import { steps } from './help';
+import { downloadLogs } from './log-download';
 import { WelcomePlugin } from './plugins';
 
 const APP_LINK_ORIGIN = new URL('https://' + APP_DOMAIN).origin;
@@ -415,6 +416,7 @@ export const getPlugins = async (
     ObservabilityPlugin({
       namespace: appKey,
       observability: () => observability,
+      downloadLogs: () => downloadLogs(logStore),
     }),
     OutlinerPlugin(),
     PipelinePlugin(),

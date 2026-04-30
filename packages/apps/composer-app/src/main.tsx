@@ -33,6 +33,7 @@ import { ResetDialog } from './components';
 import { initializeObservability, PARAM_PROFILER, setupConfig } from './config';
 import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
 import { APP_KEY, LOG_STORE_DB_NAME } from './constants';
+import { downloadLogs } from './log-download';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
 import { startupProfiler } from './profiler';
 import { translations } from './translations';
@@ -92,23 +93,8 @@ const main = async () => {
   const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME });
   log.addProcessor(logStore.processor);
 
-  // Mirrors `useFileDownload` from `@dxos/react-ui` (used by `ResetDialog`).
-  const downloadFile = (data: Blob | string, filename: string) => {
-    const url = typeof data === 'string' ? data : URL.createObjectURL(data);
-    const element = document.createElement('a');
-    element.setAttribute('href', url);
-    element.setAttribute('download', filename);
-    element.setAttribute('target', 'download');
-    element.click();
-  };
-
-  // TODO(dmaretskyi): Hookup to a button in the sidebar/devtools.
-  globalThis.downloadLogs = async () => {
-    const ndjson = await logStore.export();
-    const file = new Blob([ndjson], { type: 'application/x-ndjson' });
-    const fileName = `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson`;
-    downloadFile(file, fileName);
-  };
+  // Devtools convenience — also surfaced via the help panel and ResetDialog UI.
+  globalThis.downloadLogs = () => downloadLogs(logStore);
 
   profiler?.mark('dynamic-imports:start');
   bootStatus('Loading framework…');

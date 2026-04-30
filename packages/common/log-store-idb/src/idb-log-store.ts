@@ -14,8 +14,10 @@ import { trimJsonlToSize } from './trim';
 
 const DEFAULT_STORE_NAME = 'logs';
 const DEFAULT_FLUSH_INTERVAL = 250;
-const DEFAULT_FLUSH_BATCH_SIZE = 50;
-const DEFAULT_MAX_RECORDS = 5_000;
+const DEFAULT_FLUSH_BATCH_SIZE = 500;
+// Sized for ~50 MB on disk at the observed Composer average of ~350 bytes per JSONL line.
+// Adjust `maxRecords` if your workload's per-entry size differs significantly.
+const DEFAULT_MAX_RECORDS = 150_000;
 const DEFAULT_EVICTION_INTERVAL = 30_000;
 const EVICTION_LOCK_NAME = '@dxos/log-store-idb:evictor';
 
@@ -36,9 +38,13 @@ export type IdbLogStoreOptions = {
   storeName?: string;
   /** Auto-flush interval in milliseconds. Default `250`. */
   flushInterval?: number;
-  /** Auto-flush when in-memory queue reaches this size. Default `50`. */
+  /** Auto-flush when in-memory queue reaches this size. Default `500`. */
   flushBatchSize?: number;
-  /** Soft cap on retained records. Older rows are evicted past this. Default `5_000`. */
+  /**
+   * Soft cap on retained records. Older rows are evicted past this. Default `150_000`,
+   * sized for roughly 50 MB on disk at typical JSONL line sizes (~350 bytes average
+   * observed in the Composer app).
+   */
   maxRecords?: number;
   /** Eviction sweep interval in milliseconds. Default `30_000`. */
   evictionInterval?: number;
