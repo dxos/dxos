@@ -16,6 +16,7 @@ import {
   ComputeCustomEvent,
   ComputeEndEvent,
   ComputeInputEvent,
+  ComputeNodeContext,
   ComputeOutputEvent,
   type ComputeEdge,
   type ComputeGraphModel,
@@ -86,9 +87,9 @@ type ComputeOutputEvent = {
 export type ComputeEvent =
   | { type: 'begin-compute'; nodeId: string; inputs: ReadonlyArray<string> }
   | { type: 'end-compute'; nodeId: string; outputs: ReadonlyArray<string> }
-  | { type: 'compute-input'; nodeId: string; property: string; value: unknown }
-  | { type: 'compute-output'; nodeId: string; property: string; value: unknown }
-  | { type: 'custom'; nodeId: string; event: unknown };
+  | { type: 'compute-input'; nodeId: string; property: string; value: any }
+  | { type: 'compute-output'; nodeId: string; property: string; value: any }
+  | { type: 'custom'; nodeId: string; event: any };
 
 // TODO(dmaretskyi): Re-use function servies definition.
 export type ComputeServices =
@@ -272,7 +273,12 @@ export class ComputeGraphController extends Resource {
           const effect = (computingOutputs ? executor.computeOutputs(nodeId) : executor.computeInputs(nodeId)).pipe(
             Effect.withSpan('runGraph'),
             Scope.extend(scope),
-            Effect.provide(Layer.succeed(Trace.TraceService, this._createTraceWriter())),
+            Effect.provide(
+              Layer.mergeAll(
+                Layer.succeed(Trace.TraceService, this._createTraceWriter()),
+                ComputeNodeContext.layerNoop,
+              ),
+            ),
             Effect.flatMap(computeValueBag),
             Effect.withSpan('test'),
             Effect.tap((values) => {
@@ -335,7 +341,12 @@ export class ComputeGraphController extends Resource {
               Effect.withSpan('runGraph'),
               Scope.extend(scope),
               Effect.flatMap(computeValueBag),
-              Effect.provide(Layer.succeed(Trace.TraceService, this._createTraceWriter())),
+              Effect.provide(
+                Layer.mergeAll(
+                  Layer.succeed(Trace.TraceService, this._createTraceWriter()),
+                  ComputeNodeContext.layerNoop,
+                ),
+              ),
 
               Effect.withSpan('test'),
               Effect.tap((values) => {
@@ -412,11 +423,11 @@ const traceEventToComputeEvent = (key: string, payload: unknown): ComputeEvent |
     case ComputeEndEvent.key:
       return { type: 'end-compute', ...(payload as { nodeId: string; outputs: ReadonlyArray<string> }) };
     case ComputeInputEvent.key:
-      return { type: 'compute-input', ...(payload as { nodeId: string; property: string; value: unknown }) };
+      return { type: 'compute-input', ...(payload as { nodeId: string; property: string; value: any }) };
     case ComputeOutputEvent.key:
-      return { type: 'compute-output', ...(payload as { nodeId: string; property: string; value: unknown }) };
+      return { type: 'compute-output', ...(payload as { nodeId: string; property: string; value: any }) };
     case ComputeCustomEvent.key:
-      return { type: 'custom', ...(payload as { nodeId: string; event: unknown }) };
+      return { type: 'custom', ...(payload as { nodeId: string; event: any }) };
     default:
       return undefined;
   }

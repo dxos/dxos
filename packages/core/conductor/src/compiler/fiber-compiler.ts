@@ -431,7 +431,6 @@ export class GraphExecutor {
               : new ComputeNodeError({ cause, context: { nodeId } }),
           ),
           Effect.withSpan('call-node'),
-          Effect.provideService(ComputeNodeContext, { nodeId: node.id }),
         );
         invariant(ValueBag.isValueBag(outputBag), 'Output must be a value bag');
 
@@ -473,7 +472,10 @@ export class GraphExecutor {
           outputs: Object.keys(resBag.values),
         });
         return resBag;
-      }).pipe(Effect.withSpan('node-compute', { attributes: { nodeId } }));
+      }).pipe(
+        Effect.withSpan('node-compute', { attributes: { nodeId } }),
+        Effect.provideService(ComputeNodeContext, { nodeId: node.id }),
+      );
 
       const cachedCompute = yield* compute.pipe(Effect.cached);
       this._computeCache.set(node.id, cachedCompute);

@@ -89,7 +89,7 @@ export const createTestServices = ({
     // ai: createAiService(ai),
     credentials: createCredentialsService(credentials),
     database: space || db ? Database.makeService(space?.db || db!) : undefined,
-    trace: (logging?.trace ?? logging?.enabled) ? consoleTraceWriter : noopTraceWriter,
+    trace: logging?.trace ?? (logging?.enabled ? consoleTraceWriter : noopTraceWriter),
     queues: space || queues ? QueueService.make(space?.queues || queues!, undefined) : undefined,
   });
 };

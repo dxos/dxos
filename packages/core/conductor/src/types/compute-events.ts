@@ -38,7 +38,7 @@ export const ComputeInputEvent = Trace.EventType('compute.input', {
   schema: Schema.Struct({
     nodeId: Schema.String,
     property: Schema.String,
-    value: Schema.Unknown,
+    value: Schema.Any,
   }),
   isEphemeral: true,
 });
@@ -50,7 +50,7 @@ export const ComputeOutputEvent = Trace.EventType('compute.output', {
   schema: Schema.Struct({
     nodeId: Schema.String,
     property: Schema.String,
-    value: Schema.Unknown,
+    value: Schema.Any,
   }),
   isEphemeral: true,
 });
@@ -61,7 +61,7 @@ export const ComputeOutputEvent = Trace.EventType('compute.output', {
 export const ComputeCustomEvent = Trace.EventType('compute.custom', {
   schema: Schema.Struct({
     nodeId: Schema.String,
-    event: Schema.Unknown,
+    event: Schema.Any,
   }),
   isEphemeral: true,
 });
