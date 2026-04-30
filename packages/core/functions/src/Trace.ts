@@ -10,6 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Obj, Type } from '@dxos/echo';
+import { log } from '@dxos/log';
 
 /**
  * Writes ephemeral or persistent events to the trace.
@@ -28,8 +29,16 @@ export class TraceService extends Context.Tag('@dxos/functions/TraceService')<Tr
 /**
  * Writes an event to the trace.
  */
-export const write: <T>(eventType: EventType<T>, payload: NoInfer<T>) => Effect.Effect<void, never, TraceService> =
-  Effect.serviceFunction(TraceService, (_) => _.write);
+export function write<T>(
+  eventType: EventType<T>,
+  payload: NoInfer<T>,
+): Effect.Effect<void, never, TraceService> {
+  return Effect.gen(function* () {
+    log('trace write', { key: eventType.key, isEphemeral: eventType.isEphemeral });
+    const writer = yield* TraceService;
+    writer.write(eventType, payload);
+  });
+}
 
 /**
  * Defines an event type for the trace.

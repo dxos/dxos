@@ -18,8 +18,7 @@ const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'Agent Wizard',
-    description:
-      'Help the user create a new agent (subscriptions, optional cron timer, sync-triggers after edits).',
+    description: 'Help the user create a new agent (subscriptions, optional cron timer, sync-triggers after edits).',
     agentCanEnable: true,
     instructions: Template.make({
       source: trim`

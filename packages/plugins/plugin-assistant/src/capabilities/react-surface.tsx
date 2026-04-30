@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { type ComponentProps } from 'react';
+import React, { type ComponentProps, useEffect } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
@@ -14,6 +14,7 @@ import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed, Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { Panel } from '@dxos/react-ui';
 
 import { AssistantSettings } from '#components';
@@ -129,6 +130,10 @@ export default Capability.makeModule(() =>
         filter: AppSurface.literal(Surface.makeType<{ subject: string }>('deck-companion--trace'), 'trace'),
         component: () => {
           const space = useActiveSpace();
+          useEffect(() => {
+            log('trace panel surface', { hasSpace: Boolean(space), spaceId: space?.id });
+          }, [space?.id]);
+
           if (!space) {
             // TODO(dmaretskyi): Not really part of UX, but so we know what the error is.
             return <span>No active space</span>;

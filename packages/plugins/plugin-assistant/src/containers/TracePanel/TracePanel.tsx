@@ -5,7 +5,7 @@
 import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
 import { pipe } from 'effect/Function';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -15,6 +15,7 @@ import { AtomQuery } from '@dxos/echo-atom';
 import { Trace } from '@dxos/functions';
 import { FeedTraceSink, Process } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { useComputeRuntimeService } from '@dxos/plugin-automation/hooks';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -29,6 +30,10 @@ export type TracePanelProps = AppSurface.SpaceArticleProps;
 export const TracePanel = composable<HTMLDivElement, TracePanelProps>(({ space, ...props }, forwardedRef) => {
   const { invokePromise } = useOperationInvoker();
   const { branches, commits } = useExecutionGraph(space);
+
+  useEffect(() => {
+    log('trace panel render graph', { spaceId: space.id, branchCount: branches.length, commitCount: commits.length });
+  }, [space.id, branches.length, commits.length]);
 
   const handleCommitClick = useCallback(
     (commit: Commit) => {
@@ -61,6 +66,11 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(({ space, 
 const ActiveProcessList = ({ spaceId }: { spaceId: Space['id'] }) => {
   const runtime = useComputeRuntimeService(Process.ProcessMonitorService, spaceId);
   const activeProcesses = useAtomValue(runtime?.processTreeAtom ?? atomEmpty);
+
+  useEffect(() => {
+    log('trace panel process tree', { spaceId, processCount: activeProcesses.length });
+  }, [spaceId, activeProcesses.length]);
+
   if (activeProcesses.length === 0) {
     return <div />;
   }
@@ -92,6 +102,7 @@ const getExecutionGraph = (
   return pipe(
     AtomQuery.make(space.db, FeedTraceSink.query),
     Atom.map((feeds) => {
+      log('trace panel query trace feeds', { spaceId: space.id, feedCount: feeds.length });
       // TODO(dmaretskyi): This should be possible in a single query with properly working limit(1) and feed > feed contents traversal.
       return AtomQuery.make(
         space.db,

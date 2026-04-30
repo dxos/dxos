@@ -265,8 +265,8 @@ describe('Agent', () => {
         expect(triggers.length).toBeGreaterThan(0);
         expect(triggers.every((trigger) => trigger.enabled === false)).toBe(true);
 
-        Obj.change(agent, (draft) => {
-          draft.enabled = true;
+        Obj.change(agent, (agent) => {
+          agent.enabled = true;
         });
         yield* Database.flush();
         yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
