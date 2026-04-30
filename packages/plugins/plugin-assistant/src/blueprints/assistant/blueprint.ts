@@ -4,7 +4,7 @@
 
 import { LayoutOperation, type AppCapabilities } from '@dxos/app-toolkit';
 import { templates } from '@dxos/assistant';
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/compute';
 
 import { AssistantOperation } from '#operations';
 

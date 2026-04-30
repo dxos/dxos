@@ -78,7 +78,7 @@ For each handler module (e.g. `sync.ts`, `handler-a.ts`):
 
 Small handlers with no helpers are just imports + default export.
 
-Reference: `packages/plugins/plugin-youtube/src/functions/sync.ts`
+Reference: `packages/plugins/plugin-script/src/blueprints/functions/deploy.ts`
 
 ### Pattern 1: Deployable handlers (one file per handler)
 

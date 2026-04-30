@@ -9,13 +9,13 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
 import { AiContextBinder, AiContextService } from '@dxos/assistant';
-import { type Blueprint } from '@dxos/blueprints';
+import { type Blueprint } from '@dxos/compute';
+import { QueueService } from '@dxos/compute';
 import { Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { acquireReleaseResource } from '@dxos/effect';
-import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { QueueAnnotation, Text } from '@dxos/schema';
 
@@ -78,6 +78,15 @@ export const Agent = Schema.Struct({
   filterEvents: Schema.optional(Schema.Boolean).annotations({
     title: 'Filter events',
     description: 'Allow the agent to filter events.',
+  }),
+
+  /**
+   * Cron expression for a timer trigger that invokes the agent worker on a schedule.
+   * The timer trigger bypasses the qualifier and goes straight to the agent worker.
+   */
+  cron: Schema.optional(Schema.String).annotations({
+    title: 'Cron',
+    description: 'Cron expression for a timer trigger that invokes the agent on a schedule.',
   }),
 }).pipe(
   Type.object({

@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { getSpace, type Space } from '@dxos/client/echo';
+import { Operation } from '@dxos/compute';
 import { type Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 
 import { type Magazine, Subscription } from '../types';
 import { extractImageUrls, makeSnippet, stripHtml } from '../util';

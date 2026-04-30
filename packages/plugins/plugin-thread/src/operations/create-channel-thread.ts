@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { Thread } from '@dxos/types';
 
 import { CreateChannelThread } from './definitions';

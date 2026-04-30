@@ -11,7 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { Feed } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
-import { Process, Trace } from '@dxos/functions';
+import { Process, Trace } from '@dxos/compute';
 import { FeedTraceSink, ProcessManager } from '@dxos/functions-runtime';
 import { ObjectId } from '@dxos/keys';
 import { dbg } from '@dxos/log';
