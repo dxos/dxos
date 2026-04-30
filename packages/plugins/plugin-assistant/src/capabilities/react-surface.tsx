@@ -130,7 +130,8 @@ export default Capability.makeModule(() =>
         component: () => {
           const space = useActiveSpace();
           if (!space) {
-            return null;
+            // TODO(dmaretskyi): Not really part of UX, but so we know what the error is.
+            return <span>No active space</span>;
           }
 
           return <TracePanel space={space} />;
