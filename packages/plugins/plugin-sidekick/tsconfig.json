@@ -60,10 +60,16 @@
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-outliner"
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

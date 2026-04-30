@@ -15,7 +15,7 @@ describe('plugin meta', () => {
     expect(meta.name).toBe('Daily Summary');
     expect(meta.description).toBeTruthy();
     expect(meta.icon).toBe('ph--calendar-check--regular');
-    expect(meta.iconHue).toBe('amber');
+    expect(meta.iconHue).toBe('sky');
     expect(meta.source).toContain('plugin-daily-summary');
   });
 });

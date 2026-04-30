@@ -65,6 +65,7 @@
   },
   "devDependencies": {
     "@dxos/app-graph": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "react": "catalog:",
     "vite": "catalog:"

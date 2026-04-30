@@ -45,6 +45,7 @@
     "@tauri-apps/api": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",

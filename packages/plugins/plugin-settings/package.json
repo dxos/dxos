@@ -45,6 +45,7 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
+    "@dxos/plugin-graph": "workspace:*",
     "@types/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:"

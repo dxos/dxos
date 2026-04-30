@@ -68,6 +68,8 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
