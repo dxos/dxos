@@ -116,6 +116,7 @@ export const AssistantTestLayer = ({
     Feed.Feed,
     Trigger.Trigger,
     Tag.Tag,
+    Trace.Message,
     ContextBinding,
     Message.Message,
     Text.Text,
