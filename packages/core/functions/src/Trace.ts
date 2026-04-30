@@ -29,10 +29,7 @@ export class TraceService extends Context.Tag('@dxos/functions/TraceService')<Tr
 /**
  * Writes an event to the trace.
  */
-export function write<T>(
-  eventType: EventType<T>,
-  payload: NoInfer<T>,
-): Effect.Effect<void, never, TraceService> {
+export function write<T>(eventType: EventType<T>, payload: NoInfer<T>): Effect.Effect<void, never, TraceService> {
   return Effect.gen(function* () {
     log('trace write', { key: eventType.key, isEphemeral: eventType.isEphemeral });
     const writer = yield* TraceService;
