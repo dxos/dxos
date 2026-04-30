@@ -9,7 +9,10 @@
       "DOM",
       "ES6"
     ],
-    "rootDir": "src"
+    "rootDir": "src",
+    "types": [
+      "chrome"
+    ]
   },
   "include": [
     "src"
