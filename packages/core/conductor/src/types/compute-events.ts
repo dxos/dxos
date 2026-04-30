@@ -84,5 +84,8 @@ export class ComputeNodeContext extends Context.Tag('@dxos/conductor/ComputeNode
 export const logCustomEvent = (data: unknown): Effect.Effect<void, never, Trace.TraceService | ComputeNodeContext> =>
   Effect.gen(function* () {
     const { nodeId } = yield* ComputeNodeContext;
+    if (nodeId === '') {
+      return;
+    }
     yield* Trace.write(ComputeCustomEvent, { nodeId, event: data });
   });
