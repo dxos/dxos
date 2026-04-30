@@ -28,8 +28,24 @@ const handler: Operation.WithHandler<typeof SetIntegrationTargets> = SetIntegrat
 
       return yield* Effect.gen(function* () {
         const obj = (yield* Database.load(integration)) as Integration.Integration;
-        const selectedIds = new Set(selectedRefs.map((ref) => ref.dxn.toString()));
-        const currentByDxn = new Map(obj.targets.map((t) => [t.object.dxn.toString(), t]));
+
+        // Compare refs by echo id, not by full DXN string. Stored target refs
+        // are serialised in space-relative form (`dxn:echo:@:...`) by ECHO,
+        // while the `selectedRefs` coming from the checklist UI may be
+        // absolute (`dxn:echo:<spaceId>:...`). A naive string compare would
+        // treat the same object as two different refs and silently re-add /
+        // remove every target on every submit, losing cursor/lastSyncAt.
+        const refEchoId = (ref: typeof selectedRefs[number]): string | undefined =>
+          ref.dxn.asEchoDXN()?.echoId;
+        const targetEchoId = (target: typeof obj.targets[number]): string | undefined =>
+          target.object.dxn.asEchoDXN()?.echoId;
+
+        const selectedIds = new Set(
+          selectedRefs.map(refEchoId).filter((id): id is string => id !== undefined),
+        );
+        const currentIds = new Set(
+          obj.targets.map(targetEchoId).filter((id): id is string => id !== undefined),
+        );
 
         let added = 0;
         let removed = 0;
@@ -42,14 +58,16 @@ const handler: Operation.WithHandler<typeof SetIntegrationTargets> = SetIntegrat
           // and append fresh entries for newly-selected refs.
           const next: Array<{ object: typeof selectedRefs[number]; cursor?: string; lastSyncAt?: string; lastError?: string }> = [];
           for (const target of obj.targets) {
-            if (selectedIds.has(target.object.dxn.toString())) {
+            const id = targetEchoId(target);
+            if (id !== undefined && selectedIds.has(id)) {
               next.push({ ...target });
             } else {
               removed++;
             }
           }
           for (const ref of selectedRefs) {
-            if (!currentByDxn.has(ref.dxn.toString())) {
+            const id = refEchoId(ref);
+            if (id !== undefined && !currentIds.has(id)) {
               next.push({ object: ref });
               added++;
             }
