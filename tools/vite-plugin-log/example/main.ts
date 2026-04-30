@@ -6,25 +6,29 @@
 // Keeps the dependency graph small so the plugin transform fires against
 // plain user code, not pre-built dist artifacts.
 
-const log = (...args: unknown[]) => console.log(...args);
+import { log } from '@dxos/log';
 
 class TestThing {
   info() {
-    log('Info message from example app', { timestamp: Date.now() });
+    log.info('Info message from example app', { timestamp: Date.now() });
   }
 
   warn() {
-    log('Warning message from example app', { level: 'warn' });
+    log.warn('Warning message from example app', { level: 'warn' });
   }
 
   error() {
     const error = new Error('Test error');
     (error as any).context = { custom: 'custom context' };
-    log('Error message from example app', { error });
+    log.error('Error message from example app', { error });
+  }
+
+  catch() {
+    log.catch(new Error('Test error', { cause: new Error('Cause') }));
   }
 
   debug() {
-    log('Debug message from example app', { debug: true });
+    log.debug('Debug message from example app', { debug: true });
   }
 }
 
@@ -44,7 +48,11 @@ const setupButtons = () => {
   document.getElementById('btn-debug')?.addEventListener('click', () => {
     new TestThing().debug();
   });
+
+  document.getElementById('btn-catch')?.addEventListener('click', () => {
+    new TestThing().catch();
+  });
 };
 
-log('Example app initialized');
+log.info('Example app initialized');
 setupButtons();
