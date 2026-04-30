@@ -80,16 +80,31 @@ class DevtoolsHost implements DevtoolsHostApi {
       throw new Error(`Unknown panel: ${panelId}`);
     }
     const id = this.#nextSubscriptionId++;
+    const wasMounted = panel.mounted;
     panel.treeSubscribers.set(id, onChange);
 
-    if (!panel.mounted) {
-      panel.mounted = true;
-      panel.definition.onMount?.({
-        update: () => this.#renderAndPush(panelId),
-      });
+    try {
+      if (!panel.mounted) {
+        panel.mounted = true;
+        panel.definition.onMount?.({
+          update: () => this.#renderAndPush(panelId),
+        });
+      }
+      this.#renderAndPush(panelId);
+      return id;
+    } catch (error) {
+      panel.treeSubscribers.delete(id);
+      if (!wasMounted && panel.mounted) {
+        try {
+          panel.definition.onUnmount?.();
+        } catch {
+          /* ignored — original error takes precedence. */
+        }
+        panel.mounted = false;
+        panel.dispatchTable.clear();
+      }
+      throw error;
     }
-    this.#renderAndPush(panelId);
-    return id;
   };
 
   unsubscribe = async (subscriptionId: number): Promise<void> => {
