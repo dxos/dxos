@@ -86,7 +86,7 @@ export type AssistantTestServices =
   | FeedTraceSink.FeedTraceSink;
 
 export const AssistantTestLayer = ({
-  aiServicePreset = 'direct',
+  aiServicePreset = 'edge-remote',
   model,
   operationHandlers = [],
   toolkits = [],

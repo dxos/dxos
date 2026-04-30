@@ -113,6 +113,8 @@
     "@dxos/operation": "workspace:*",
     "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/web-context": "workspace:*",
     "@dxos/web-context-react": "workspace:*",
@@ -123,12 +125,11 @@
     "vite-plugin-css-injected-by-js": "catalog:"
   },
   "devDependencies": {
+    "@dxos/brand": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "@effect/vitest": "catalog:",

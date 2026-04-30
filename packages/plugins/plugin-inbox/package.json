@@ -105,6 +105,7 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-calendar": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
