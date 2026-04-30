@@ -67,7 +67,7 @@ Open a PR. After it merges, Composer's Community section lists the plugin within
 
 ## `manifest.json` shape
 
-`composerPlugin` emits this for you. It should look like:
+`composerPlugin` emits this for you — the manifest is your `Plugin.Meta` plus `moduleFile`. It should look like:
 
 ```json
 {
@@ -76,8 +76,7 @@ Open a PR. After it merges, Composer's Community section lists the plugin within
   "description": "...",
   "icon": "ph--cube--regular",
   "iconHue": "indigo",
-  "moduleFile": "plugin.mjs",
-  "version": "0.1.0"
+  "moduleFile": "plugin.mjs"
 }
 ```
 
