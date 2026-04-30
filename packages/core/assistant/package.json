@@ -30,16 +30,6 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "types": [
-        "dist/types/src/types/index.d.ts"
-      ],
-      "extraction": [
-        "dist/types/src/extraction/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"
@@ -51,7 +41,7 @@
     "@automerge/automerge": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/blueprints": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -59,7 +49,6 @@
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
-    "@dxos/functions": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -67,7 +56,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/mcp-client": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",

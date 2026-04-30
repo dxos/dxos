@@ -11,18 +11,18 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
+import { CredentialsService } from '@dxos/compute';
+import { Operation, OperationRegistry } from '@dxos/compute';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
-import { CredentialsService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
-import { Operation, OperationRegistry } from '@dxos/operation';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Editor, type EditorController, type EditorRootProps, ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 import { Container, useSelection } from '@dxos/react-ui-canvas-editor/testing';
 import { Form } from '@dxos/react-ui-form';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { DiagnosticOverlay } from './components';
@@ -179,12 +179,14 @@ const DefaultStory = ({
                 </Form.Viewport>
               </Form.Root>
             )}
-            <Json.Root data={json}>
-              <Json.Content>
-                <Json.Filter />
-                <Json.Data />
-              </Json.Content>
-            </Json.Root>
+            <Syntax.Root data={json}>
+              <Syntax.Content>
+                <Syntax.Filter />
+                <Syntax.Viewport>
+                  <Syntax.Code />
+                </Syntax.Viewport>
+              </Syntax.Content>
+            </Syntax.Root>
           </div>
         </Container>
       )}

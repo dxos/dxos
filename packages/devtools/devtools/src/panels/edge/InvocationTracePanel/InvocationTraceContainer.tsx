@@ -16,7 +16,7 @@ import { DXN } from '@dxos/keys';
 import { type SerializedError } from '@dxos/protocols';
 import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
@@ -225,8 +225,8 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
           {span.error && <Tabs.Tab value='failure'>Failure</Tabs.Tab>}
           {contents === 'execution-graph' && <Tabs.Tab value='execution-graph'>Execution Graph</Tabs.Tab>}
         </Tabs.Tablist>
-        <Tabs.Panel value='input'>
-          <SyntaxHighlighter language='json'>{JSON.stringify(span.input, null, 2)}</SyntaxHighlighter>
+        <Tabs.Panel value='input' classNames='min-h-0 min-w-0 w-full overflow-auto'>
+          <JsonHighlighter data={span.input} />
         </Tabs.Panel>
         {isLogQueue && (
           <Tabs.Panel value='logs'>

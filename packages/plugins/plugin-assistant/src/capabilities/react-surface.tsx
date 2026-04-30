@@ -9,8 +9,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Chat, Agent } from '@dxos/assistant-toolkit';
-import { Blueprint, Prompt } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
+import { Blueprint, Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed, Obj } from '@dxos/echo';
@@ -24,8 +24,8 @@ import {
   ChatDialog,
   AgentArticle,
   AgentProperties,
-  PromptArticle,
-  PromptList,
+  RoutineArticle,
+  RoutineList,
   TracePanel,
   TriggerStatus,
 } from '#containers';
@@ -87,14 +87,14 @@ export default Capability.makeModule(() =>
         id: 'companion-invocations',
         role: 'article',
         filter: (data): data is { companionTo: Sequence } =>
-          (Obj.instanceOf(Sequence, data.companionTo) || Obj.instanceOf(Prompt.Prompt, data.companionTo)) &&
+          (Obj.instanceOf(Sequence, data.companionTo) || Obj.instanceOf(Routine.Routine, data.companionTo)) &&
           data.subject === 'invocations',
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
           const feed = space?.properties.invocationTraceFeed?.target;
           const queueDxn = feed ? Feed.getQueueDxn(feed) : undefined;
           // TODO(wittjosiah): Support invocation filtering for prompts.
-          const target = Obj.instanceOf(Prompt.Prompt, data.companionTo) ? undefined : data.companionTo;
+          const target = Obj.instanceOf(Routine.Routine, data.companionTo) ? undefined : data.companionTo;
 
           return (
             <Panel.Root role={role} className='dx-document'>
@@ -114,9 +114,9 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'prompt',
-        filter: AppSurface.object(AppSurface.Article, Prompt.Prompt),
+        filter: AppSurface.object(AppSurface.Article, Routine.Routine),
         component: ({ data, role }) => (
-          <PromptArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+          <RoutineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
@@ -139,7 +139,14 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'status',
         role: 'status-indicator',
-        component: () => <TriggerStatus />,
+        component: () => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          return <TriggerStatus role='status-indicator' space={space} />;
+        },
       }),
       Surface.create({
         id: 'prompts',
@@ -147,7 +154,7 @@ export default Capability.makeModule(() =>
           Surface.makeType<{ subject: Obj.Any; attendableId: string }>('prompts'),
           Obj.isObject,
         ),
-        component: ({ data }) => <PromptList subject={data.subject} />,
+        component: ({ data }) => <RoutineList subject={data.subject} />,
       }),
     ]),
   ),

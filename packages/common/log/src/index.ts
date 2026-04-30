@@ -8,6 +8,8 @@ export { omit, pick };
 
 export * from './config';
 export * from './context';
+export * from './environment';
+export * from './jsonl';
 export * from './log';
 export { parseFilter } from './options';
 export * from './processors';

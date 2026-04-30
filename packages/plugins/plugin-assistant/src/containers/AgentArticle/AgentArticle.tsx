@@ -11,9 +11,9 @@ import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
+import { QueueService } from '@dxos/compute';
 import { Annotation, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
-import { QueueService } from '@dxos/functions';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -111,7 +111,9 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
             )}
 
             <Masonry.Root Tile={MasonryArtifactTile}>
-              <Masonry.Content items={artifacts} getId={(item: Obj.Unknown) => item.id} padding thin centered />
+              <Masonry.Content padding thin centered>
+                <Masonry.Viewport items={artifacts} getId={(item: Obj.Unknown) => item.id} />
+              </Masonry.Content>
             </Masonry.Root>
           </>
         )}

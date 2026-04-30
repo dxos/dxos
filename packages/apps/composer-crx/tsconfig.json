@@ -73,6 +73,9 @@
       "path": "../../ui/react-ui-markdown"
     },
     {
+      "path": "../../ui/ui"
+    },
+    {
       "path": "../../ui/ui-theme"
     }
   ]

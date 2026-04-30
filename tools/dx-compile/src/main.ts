@@ -69,9 +69,11 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
   }
   const { jsx, jsxImportSource, jsxFactory, jsxFragmentFactory } = tsConfig.compilerOptions || {};
 
-  // Log-meta injection (`__dxlog_file`, `{F,L,S,...}`) is now handled at app build time by
-  // `@dxos/vite-plugin-log` (Rolldown transform), which runs over compiled `dist/` output too.
-  // dx-compile no longer ships a SWC log plugin step.
+  // Log-meta injection (`__dxlog_file`, `{F,L,S,...}`) is also applied here on the
+  // post-SWC output via `@dxos/vite-plugin-log`'s `transformLogMeta`. The Rolldown
+  // app-build pass still runs at the consumer side, but doing it here too means
+  // packages that ship pre-compiled `dist/` (e.g. e2e fixtures, library consumers
+  // that don't go through Rolldown) keep the same call-site metadata.
   const swcTransformPlugin = new SwcTransformPlugin({
     isVerbose: options.verbose,
     getTranspilerOptions: ({ filePath }) => ({

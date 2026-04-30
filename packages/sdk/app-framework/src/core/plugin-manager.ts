@@ -70,7 +70,12 @@ export interface PluginManager {
   getEventsFired(): readonly string[];
   getPendingReset(): readonly string[];
 
-  add(id: string): Effect.Effect<boolean, Error>;
+  /**
+   * Loads a plugin via the plugin loader and registers it without enabling it.
+   * Returns the loaded plugin so callers can enable it by its canonical id
+   * (which may differ from the locator used to load it, e.g. URL loaders).
+   */
+  add(id: string): Effect.Effect<Plugin.Plugin, Error>;
   enable(id: string): Effect.Effect<boolean, Error>;
   remove(id: string): boolean;
   disable(id: string): Effect.Effect<boolean, Error>;
@@ -220,14 +225,15 @@ class ManagerImpl implements PluginManager {
 
   /**
    * Adds a plugin to the manager via the plugin loader.
+   * The plugin is registered but not enabled; call `enable` separately to activate it.
    * @param id The id of the plugin.
    */
-  add(id: string): Effect.Effect<boolean, Error> {
+  add(id: string): Effect.Effect<Plugin.Plugin, Error> {
     return Effect.gen(this, function* () {
       log('add plugin', { id });
       const plugin = yield* this._pluginLoader(id);
       this._addPlugin(plugin);
-      return yield* this.enable(plugin.meta.id);
+      return plugin;
     });
   }
 
@@ -721,8 +727,12 @@ class ManagerImpl implements PluginManager {
       modules,
       Array.zip(capabilities),
       Array.map(([module, capabilitySet]) => this._contributeCapabilities(module, capabilitySet)),
-      // TODO(wittjosiah): This currently can't be run in parallel.
-      //   Running this with concurrency causes races with `allOf` activation events.
+      // TODO(wittjosiah): This currently can't be run in parallel, and inserting
+      //   any yield between contributions (`Effect.yieldNow()`, `Effect.sleep(0)`)
+      //   races the `allOf` activation-event resolver — observed as a System
+      //   Error dialog on warm reloads. Contributions must stay strictly
+      //   synchronous within an event; React paint slots have to be found at
+      //   event boundaries higher up the call chain.
       Effect.all,
       Effect.asVoid,
     );

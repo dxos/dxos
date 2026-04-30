@@ -6,7 +6,7 @@ import type { Program } from '@oxc-project/types';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { Plugin as RolldownPlugin, RolldownMagicString } from 'rolldown';
+import { RolldownMagicString, type Plugin as RolldownPlugin } from 'rolldown';
 import { parseSync, type ConfigEnv, type IndexHtmlTransformContext, type Plugin, type UserConfig } from 'vite';
 
 import {

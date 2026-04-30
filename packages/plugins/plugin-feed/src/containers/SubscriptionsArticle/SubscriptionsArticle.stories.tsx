@@ -27,11 +27,11 @@ const DefaultStory = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const feeds = useQuery(space?.db, Filter.type(Subscription.Feed));
-  if (feeds.length === 0) {
+  if (!space || feeds.length === 0) {
     return <Loading />;
   }
 
-  return <SubscriptionsArticle role='article' subject='feeds-root' attendableId='story' />;
+  return <SubscriptionsArticle role='article' space={space} attendableId='story' />;
 };
 
 const meta: Meta<typeof DefaultStory> = {

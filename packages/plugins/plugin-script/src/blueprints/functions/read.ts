@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
+import { type Script } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
-import { type Script } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 
 import { Read } from './definitions';
 

@@ -79,6 +79,9 @@
       "path": "packages/common/log/tsconfig.json"
     },
     {
+      "path": "packages/common/log-store-idb/tsconfig.json"
+    },
+    {
       "path": "packages/common/merkle-search-tree/tsconfig.json"
     },
     {
@@ -149,6 +152,9 @@
     },
     {
       "path": "packages/core/compute/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute-hyperformula/tsconfig.json"
     },
     {
       "path": "packages/core/conductor/tsconfig.json"
@@ -305,6 +311,15 @@
     },
     {
       "path": "packages/plugins/plugin-conductor/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-crm/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-crx/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-crx-bridge/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-daily-summary/tsconfig.json"
@@ -464,9 +479,6 @@
     },
     {
       "path": "packages/plugins/plugin-wnfs/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-youtube/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-zen/tsconfig.json"

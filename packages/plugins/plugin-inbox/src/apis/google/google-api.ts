@@ -7,7 +7,7 @@ import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';
 import * as Schedule from 'effect/Schedule';
 
-import { withAuthorization } from '@dxos/functions';
+import { withAuthorization } from '@dxos/compute';
 import { log } from '@dxos/log';
 
 import { GoogleCredentials } from '../../services/google-credentials';
@@ -49,7 +49,7 @@ export const makeGoogleApiRequest = Effect.fn('makeGoogleApiRequest')(function* 
     HttpClientRequest.setHeader('accept', 'application/json'),
     httpClientWithTracerDisabled.execute,
     Effect.flatMap((res) => res.json),
-    Effect.timeout('1 second'),
+    Effect.timeout('10 second'),
     Effect.retry(Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)))),
     Effect.scoped,
     Effect.withSpan('GoogleApiRequest'),

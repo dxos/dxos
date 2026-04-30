@@ -6,14 +6,14 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Template } from '@dxos/blueprints';
+import { Template } from '@dxos/compute';
+import { type FunctionNotFoundError } from '@dxos/compute';
+import { type Operation, type OperationRegistry } from '@dxos/compute';
 import { type Database, Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
 import type { ObjectNotFoundError } from '@dxos/echo/Err';
-import { type FunctionNotFoundError } from '@dxos/functions';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Operation, type OperationRegistry } from '@dxos/operation';
 import { type ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -115,7 +115,7 @@ export const formatUserPrompt = ({
     return Obj.make(Message.Message, {
       created: new Date().toISOString(),
       sender: { role: 'user' },
-      blocks: [...blocks, { _tag: 'text', text: prompt }],
+      blocks: typeof prompt === 'string' ? [...blocks, { _tag: 'text', text: prompt }] : [...blocks, ...prompt],
     });
   }).pipe(Effect.withSpan('formatUserPrompt'));
 
@@ -138,7 +138,7 @@ const createArtifactUpdateBlock = (
   return {
     _tag: 'text',
     // TODO(dmaretskyi): Does this need to be a special content-block?
-    disposition: 'artifact-update',
+    disposition: 'synthetic',
     text: trim`
       The following artifacts have been updated since the last message:
       ${[...artifactDiff.entries()]

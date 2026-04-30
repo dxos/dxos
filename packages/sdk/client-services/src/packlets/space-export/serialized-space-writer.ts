@@ -230,7 +230,14 @@ const collectQueueMessages = async (echoHost: EchoHost, queueDxn: DXN): Promise<
         after: cursor,
       },
     });
-    const batch = (result.objects ?? []) as Obj.JSON[];
+    const batch = (result.objects ?? []).flatMap((encoded): Obj.JSON[] => {
+      try {
+        return [JSON.parse(encoded) as Obj.JSON];
+      } catch (err) {
+        log.verbose('queue object JSON parse failed; object ignored', { encoded, error: err });
+        return [];
+      }
+    });
     if (batch.length === 0) {
       break;
     }

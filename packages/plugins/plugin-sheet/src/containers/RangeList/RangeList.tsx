@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { rangeToA1Notation } from '@dxos/compute';
+import { rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { Obj } from '@dxos/echo';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';

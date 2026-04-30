@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { Operation } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { EditorViewMode } from '@dxos/ui-editor/types';
 import { trim } from '@dxos/util';
 

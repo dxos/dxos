@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { Graph } from '@dxos/plugin-graph';
 import { byPosition } from '@dxos/util';
@@ -16,7 +16,7 @@ import { byPosition } from '@dxos/util';
 import { incrementPlank } from '../layout';
 import { DeckCapabilities, PLANK_COMPANION_TYPE } from '../types';
 import { computeActiveUpdates } from '../util';
-import { Adjust, ChangeCompanion } from './definitions';
+import { Adjust } from './definitions';
 import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof Adjust> = Adjust.pipe(
@@ -73,7 +73,7 @@ const handler: Operation.WithHandler<typeof Adjust> = Adjust.pipe(
         );
 
         if (Option.isSome(companion)) {
-          yield* Operation.invoke(ChangeCompanion, { companion: companion.value.id });
+          yield* Operation.invoke(LayoutOperation.UpdateCompanion, { subject: companion.value.id });
         }
       }
     }),

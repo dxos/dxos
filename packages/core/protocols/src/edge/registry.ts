@@ -15,6 +15,7 @@ export const PluginMetaSchema = Schema.Struct({
   id: Schema.String.pipe(Schema.nonEmptyString()),
   name: Schema.String.pipe(Schema.nonEmptyString()),
   description: Schema.optional(Schema.String),
+  author: Schema.optional(Schema.String),
   homePage: Schema.optional(Schema.String),
   source: Schema.optional(Schema.String),
   screenshots: Schema.optional(Schema.Array(Schema.String)),

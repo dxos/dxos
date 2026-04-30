@@ -2,19 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { useLayout, type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
-import { AttentionOperation } from '@dxos/plugin-attention/operations';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
+import { useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { useSelected } from '@dxos/react-ui-attention';
@@ -30,7 +28,7 @@ import { InboxCapabilities, type Mailbox } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { getMailboxMessagePath } from '../../paths';
-import { sortByCreated } from '../../util';
+import { matchesFilter, sortByCreated } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
 
 export type MailboxArticleProps = AppSurface.ObjectArticleProps<
@@ -47,44 +45,52 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
   const currentId = useSelected(id, 'single');
   const db = Obj.getDatabase(mailbox);
+  const showItem = useShowItem();
 
   // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
   useObject(mailbox);
   const feed = mailbox.feed?.target as Feed.Feed | undefined;
 
+  const filterEditorRef = useRef<EditorController>(null);
+  const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
+
   // Menu state.
   const sortDescending = useAtomState(true);
   const menuActions = useMailboxActions({ db, mailbox, sortDescending: sortDescending.atom });
 
-  // Filter and messages.
-  const [filter, setFilter] = useState<Filter.Any>();
-  const [filterText, setFilterText] = useState<string>(filterProp ?? '');
-  const messages: Message.Message[] = useQuery(
-    db,
-    feed ? Query.select(filter ?? Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
-  ) as Message.Message[];
-  const sortedMessages = useMemo(
-    () => [...messages].sort(sortByCreated('created', sortDescending.value)),
-    [messages, sortDescending.value],
-  );
-
-  // Parse filter.
-  const tags = useQuery(db, Filter.type(Tag.Tag));
-  const tagMap = useMemo(() => {
-    return tags.reduce((acc, tag) => {
-      acc[tag.id] = tag;
-      return acc;
-    }, {} as Tag.Map);
-  }, [tags]);
-  const parser = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
-  useEffect(() => setFilter(parser.build(filterText).filter), [filterText, parser]);
-
-  const layout = useLayout();
-  const filterEditorRef = useRef<EditorController>(null);
-  const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
-
   // Build message-to-tags map from HasSubject relations incrementally.
   const messageTagsMap = useMessageTagsMap(db, feed);
+  const tags = useTags(db);
+
+  // Filter.
+  const builder = useMemo(() => new QueryBuilder(tags), [tags]);
+  const [filterText, setFilterText] = useState<string>(filterProp ?? '');
+  const [filter, setFilter] = useState<Filter.Any>();
+  useEffect(() => {
+    const { filter } = builder.build(filterText);
+    setFilter(filter);
+  }, [filterText, builder]);
+
+  // Messages.
+  const messages: Message.Message[] = useQuery(
+    db,
+    feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
+  ) as Message.Message[];
+
+  // Feed/queue queries don't yet support text-search and complex filter combinations,
+  // so query Messages by type only and apply the parsed filter client-side.
+  const filteredMessages = useMemo(
+    () =>
+      filter
+        ? messages.filter((message) => matchesFilter(filter, message, messageTagsMap[message.id] ?? []))
+        : messages,
+    [messages, filter, messageTagsMap],
+  );
+
+  const sortedMessages = useMemo(
+    () => [...filteredMessages].sort(sortByCreated('created', sortDescending.value)),
+    [filteredMessages, sortDescending.value],
+  );
 
   // Merge tags into mailbox labels.
   const mergedLabels = useMemo(() => {
@@ -95,7 +101,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       }
     }
     return labels;
-  }, [mailbox.labels, messageTagsMap]);
+  }, [messageTagsMap, mailbox.labels]);
 
   // Update message properties to include tag IDs in labels array.
   const messagesWithTags = useMemo(() => {
@@ -122,86 +128,32 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const [isEmpty, setEmpty] = useState<boolean>(false);
   useEffect(() => {
     const t = setTimeout(() => {
-      setEmpty(sortedMessages.length === 0);
+      setEmpty(messages.length === 0);
     }, 1_000);
     return () => clearTimeout(t);
-  }, [sortedMessages]);
+  }, [messages]);
+
+  const handleClear = useCallback(() => {
+    setFilterText(filterProp ?? '');
+    setFilter(builder.build(filterProp ?? '').filter);
+  }, [filterProp, builder]);
 
   const handleAction = useCallback<MessageStackActionHandler>(
     (action) => {
-      log.debug('handleAction', { action, mode: layout.mode });
       switch (action.type) {
+        // 'current' fires when a specific message is clicked;
+        // 'current-thread' fires when the enclosing thread is clicked (with its latest message).
+        case 'current':
         case 'current-thread': {
           const message = sortedMessages.find((message) => message.id === action.messageId);
           invariant(message);
-
-          void invokePromise(AttentionOperation.Select, {
-            contextId: id,
-            selection: { mode: 'single', id: message.id },
-          });
-
-          const companion = linkedSegment('message');
-          switch (layout.mode) {
-            case 'simple':
-              // Open drawer with message companion.
-              void invokePromise(LayoutOperation.UpdateComplementary, {
-                subject: companion,
-                state: 'expanded',
-              });
-              break;
-            case 'multi': {
-              invariant(db);
-              void invokePromise(LayoutOperation.Open, {
-                subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
-                pivotId: id,
-                navigation: 'immediate',
-              });
-              break;
-            }
-            default:
-              // Show message in the companion panel.
-              void invokePromise(DeckOperation.ChangeCompanion, {
-                companion,
-              });
-              break;
-          }
-          break;
-        }
-
-        case 'current': {
-          const message = sortedMessages.find((message) => message.id === action.messageId);
-          invariant(message);
           invariant(db);
-
-          void invokePromise(AttentionOperation.Select, {
+          void showItem({
             contextId: id,
-            selection: { mode: 'single', id: message.id },
+            selectionId: message.id,
+            companion: linkedSegment('message'),
+            path: getMailboxMessagePath(db.spaceId, mailbox.id, message.id),
           });
-
-          const companion = linkedSegment('message');
-          switch (layout.mode) {
-            case 'simple':
-              // Open drawer with message companion.
-              void invokePromise(LayoutOperation.UpdateComplementary, {
-                subject: companion,
-                state: 'expanded',
-              });
-              break;
-            case 'multi':
-              // Open the message plank beside this mailbox (pivot).
-              void invokePromise(LayoutOperation.Open, {
-                subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)],
-                pivotId: id,
-                navigation: 'immediate',
-              });
-              break;
-            default:
-              // Show message in the companion panel.
-              void invokePromise(DeckOperation.ChangeCompanion, {
-                companion,
-              });
-              break;
-          }
           break;
         }
 
@@ -231,13 +183,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         }
       }
     },
-    [db, id, layout.mode, mailbox, sortedMessages, invokePromise],
+    [db, id, mailbox, sortedMessages, invokePromise, showItem],
   );
-
-  const handleClear = useCallback(() => {
-    setFilterText(filterProp ?? '');
-    setFilter(parser.build(filterProp ?? '').filter);
-  }, [filterProp, parser]);
 
   return (
     <Panel.Root>
@@ -249,7 +196,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
                 <QueryEditor
                   classNames='grow min-w-0 ps-1'
                   db={db}
-                  tags={tagMap}
+                  tags={tags}
                   value={filterText}
                   onChange={setFilterText}
                   ref={filterEditorRef}
@@ -292,17 +239,34 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 };
 
 /**
+ * Return map of tags;
+ */
+// TODO(burdon): Factor out.
+const useTags = (db: Database.Database | undefined): Tag.Map => {
+  const tags = useQuery(db, Filter.type(Tag.Tag));
+  return useMemo(
+    () =>
+      tags.reduce<Tag.Map>((acc, tag) => {
+        acc[tag.id] = tag;
+        return acc;
+      }, {}),
+    [tags],
+  );
+};
+
+/**
  * Hook that builds an object mapping message IDs to tags from HasSubject relations.
  */
 const useMessageTagsMap = (
   db: Database.Database | undefined,
   feed: Feed.Feed | undefined,
 ): Record<string, Tag.Tag[]> => {
+  const [messageTagsMap, setMessageTagsMap] = useState<Record<string, Tag.Tag[]>>({});
+
   const hasSubjectRelations = useQuery(
     db,
     feed ? Query.select(Filter.type(HasSubject.HasSubject)).from(feed) : Query.select(Filter.nothing()),
   );
-  const [messageTagsMap, setMessageTagsMap] = useState<Record<string, Tag.Tag[]>>({});
 
   useEffect(() => {
     const map: Record<string, Tag.Tag[]> = {};
@@ -352,15 +316,13 @@ const useMessageTagsMap = (
   return messageTagsMap;
 };
 
-const useMailboxActions = ({
-  db,
-  mailbox,
-  sortDescending,
-}: {
+type UseMailboxActionsProps = {
   db?: Database.Database;
   mailbox?: Mailbox.Mailbox;
   sortDescending: Atom.Writable<boolean>;
-}) => {
+};
+
+const useMailboxActions = ({ db, mailbox, sortDescending }: UseMailboxActionsProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
 
@@ -395,18 +357,4 @@ const useMailboxActions = ({
   );
 
   return useMenuActions(menu);
-};
-
-// TODO(wittjosiah): Factor out.
-type AtomState<T> = {
-  atom: Atom.Writable<T>;
-  value: T;
-  set: (value: T | ((value: T) => T)) => void;
-};
-
-const useAtomState = <T,>(initialValue: T): AtomState<T> => {
-  const atom = useMemo(() => Atom.make(initialValue), [initialValue]);
-  const value = useAtomValue(atom);
-  const set = useAtomSet(atom);
-  return useMemo(() => ({ atom, value, set }), [atom, value, set]);
 };

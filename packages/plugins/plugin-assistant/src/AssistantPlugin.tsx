@@ -7,19 +7,21 @@ import * as Option from 'effect/Option';
 
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { ContextBinding } from '@dxos/assistant';
 import { Agent, AgentBlueprint, Chat, McpServer, Memory, Plan, ResearchGraph } from '@dxos/assistant-toolkit';
-import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Blueprint, Routine } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Annotation, Feed, Obj, Type } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { DeckEvents } from '@dxos/plugin-deck/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
-import { HasSubject } from '@dxos/types';
+import { Text } from '@dxos/schema';
+import { HasSubject, Message } from '@dxos/types';
 
 import {
   AiService,
@@ -86,13 +88,13 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         },
       },
       {
-        id: Type.getTypename(Prompt.Prompt),
+        id: Type.getTypename(Routine.Routine),
         metadata: {
-          icon: Annotation.IconAnnotation.get(Prompt.Prompt).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Prompt.Prompt).pipe(Option.getOrThrow).hue ?? 'white',
+          icon: Annotation.IconAnnotation.get(Routine.Routine).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Routine.Routine).pipe(Option.getOrThrow).hue ?? 'white',
           createObject: ((props, options) =>
             Effect.gen(function* () {
-              const object = Prompt.make(props);
+              const object = Routine.make(props);
               return yield* Operation.invoke(SpaceOperation.AddObject, {
                 object,
                 target: options.target,
@@ -146,15 +148,18 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       Chat.Chat,
       Chat.CompanionTo,
       Blueprint.Blueprint,
+      ContextBinding,
       Feed.Feed,
       HasSubject.HasSubject,
-      Prompt.Prompt,
+      Message.Message,
+      Routine.Routine,
       ResearchGraph.ResearchGraph,
       Agent.Agent,
       McpServer.McpServer,
       Plan.Plan,
       Sequence,
       Memory.Memory,
+      Text.Text,
     ],
   }),
   AppPlugin.addSettingsModule({ activate: Settings }),

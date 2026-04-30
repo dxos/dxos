@@ -13,15 +13,15 @@ import * as Record from 'effect/Record';
 import * as Runtime from 'effect/Runtime';
 
 import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { type Blueprint } from '@dxos/blueprints';
+import { type Blueprint } from '@dxos/compute';
+import { Operation, type OperationRegistry } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
-import { Operation, type OperationRegistry } from '@dxos/operation';
-import { Message } from '@dxos/types';
+import { Message, type ContentBlock } from '@dxos/types';
 
 import { ToolExecutionServices } from '../functions';
 import {
@@ -41,7 +41,7 @@ export interface McpServerConfig {
 }
 
 export interface AiSessionRunProps<R = never> {
-  prompt: string;
+  prompt: string | ContentBlock.Any[];
   system?: string;
   observer?: GenerationObserver;
   toolkit?: OpaqueToolkit.OpaqueToolkit<R>;

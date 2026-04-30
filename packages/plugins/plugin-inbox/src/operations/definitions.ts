@@ -7,9 +7,9 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client/echo';
+import { CredentialsService, QueueService, Trace } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
-import { CredentialsService, QueueService } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { Actor, Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -143,7 +143,7 @@ export const GoogleMailSync = Operation.make({
   output: Schema.Struct({
     newMessages: Schema.Number,
   }),
-  services: [Database.Service, Feed.FeedService, CredentialsService],
+  services: [Database.Service, Feed.FeedService, CredentialsService, Trace.TraceService],
 });
 
 // TODO(wittjosiah): Factor out notify of failures to invocation option.

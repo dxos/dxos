@@ -11,10 +11,11 @@ import type {
   NewExpression,
   Program,
 } from '@oxc-project/types';
-import type { RolldownMagicString } from 'rolldown';
+import { RolldownMagicString } from 'rolldown';
+import { parseAst } from 'rolldown/parseAst';
 import { Visitor } from 'rolldown/utils';
 
-import type { LogMetaTransformSpec } from './definitions.ts';
+import { DEFAULT_LOG_META_TRANSFORM_SPEC, type LogMetaTransformSpec } from './definitions.ts';
 
 /**
  * Applies meta transformations to the magic string in `code`.
@@ -32,6 +33,37 @@ export function transform(
     code.appendLeft(pos, text);
   }
 }
+
+/**
+ * Self-contained log-meta transform for callers that don't already have a Rolldown
+ * `meta.ast` / `meta.magicString` (e.g. esbuild-driven `dx-compile`). Parses the
+ * source with the Oxc parser, runs the same edit pass as the Rolldown plugin, and
+ * returns the transformed code (or `null` when nothing changed — the caller can
+ * then short-circuit and reuse the original buffer).
+ */
+export const transformLogMeta = (
+  code: string,
+  filename: string,
+  options: { specs?: LogMetaTransformSpec[]; lang?: 'ts' | 'tsx' | 'js' | 'jsx' } = {},
+): string | null => {
+  const lang = options.lang ?? langFromFilename(filename);
+  if (lang === undefined) {
+    return null;
+  }
+  const ast = parseAst(code, { astType: lang.includes('ts') ? 'ts' : 'js', lang });
+  const ms = new RolldownMagicString(code);
+  transform(ms, ast, filename, { specs: options.specs ?? DEFAULT_LOG_META_TRANSFORM_SPEC });
+  const next = ms.toString();
+  return next === code ? null : next;
+};
+
+const langFromFilename = (filename: string): 'ts' | 'tsx' | 'js' | 'jsx' | undefined => {
+  if (filename.endsWith('.tsx')) return 'tsx';
+  if (filename.endsWith('.ts')) return 'ts';
+  if (filename.endsWith('.jsx')) return 'jsx';
+  if (filename.endsWith('.mjs') || filename.endsWith('.cjs') || filename.endsWith('.js')) return 'js';
+  return undefined;
+};
 
 function collectImportBindings(program: Program, specs: LogMetaTransformSpec[]): Map<string, LogMetaTransformSpec> {
   const byPackage = new Map<string, LogMetaTransformSpec[]>();

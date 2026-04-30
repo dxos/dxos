@@ -25,9 +25,6 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
   "files": [
     "dist",
     "src"
@@ -37,9 +34,9 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {

@@ -150,6 +150,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/log-store-idb/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/merkle-search-tree/package.json",
           "jsonpath": "$.version"
         },
@@ -266,6 +271,11 @@
         {
           "type": "json",
           "path": "packages/core/compute/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute-hyperformula/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -535,6 +545,21 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-crm/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-crx/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-crx-bridge/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-daily-summary/package.json",
           "jsonpath": "$.version"
         },
@@ -796,11 +821,6 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-wnfs/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-youtube/package.json",
           "jsonpath": "$.version"
         },
         {

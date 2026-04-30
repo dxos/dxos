@@ -7,10 +7,11 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { AiSession, ToolExecutionServices } from '@dxos/assistant';
+import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
+import { ContentBlock } from '@dxos/types';
 
 import { Agent } from '../../../types';
 import { AgentWorker } from './definitions';
@@ -42,12 +43,12 @@ export default AgentWorker.pipe(
         throw new Error('Either prompt or event must be provided.');
       }
 
-      let input = '';
+      let input: ContentBlock.Any[] = [];
       if (prompt) {
-        input += `${prompt}\n\n`;
+        input.push({ _tag: 'text', text: prompt, disposition: 'synthetic' });
       }
       if (event) {
-        input += `<event>\n${JSON.stringify(event, null, 2)}\n</event>\n\n`;
+        input.push({ _tag: 'text', text: JSON.stringify(event), disposition: 'synthetic' });
       }
 
       yield* session

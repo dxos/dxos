@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { type LogBuffer } from '@dxos/log';
+import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
 import { FeedbackForm } from '@dxos/plugin-observability';
 import { type UserFeedback } from '@dxos/plugin-observability/operations';
@@ -47,7 +47,7 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
 
 export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
   error?: Error;
-  logBuffer: LogBuffer;
+  logStore: IdbLogStore;
   observability?: Promise<Observability.Observability>;
   needRefresh?: boolean;
   onRefresh?: () => void;
@@ -56,7 +56,7 @@ export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open'
 
 export const ResetDialog = ({
   error: propsError,
-  logBuffer,
+  logStore,
   observability: observabilityProp,
   needRefresh,
   defaultOpen,
@@ -85,12 +85,12 @@ export const ResetDialog = ({
     void navigator.clipboard.writeText(JSON.stringify(error));
   }, [error]);
 
-  const handleDownloadLogs = useCallback(() => {
-    const ndjson = logBuffer.serialize();
+  const handleDownloadLogs = useCallback(async () => {
+    const ndjson = await logStore.export();
     const file = new Blob([ndjson], { type: 'application/x-ndjson' });
     const fileName = `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson`;
     download(file, fileName);
-  }, [download, logBuffer]);
+  }, [download, logStore]);
 
   const handleSaveFeedback = useCallback(
     async (values: UserFeedback) => {

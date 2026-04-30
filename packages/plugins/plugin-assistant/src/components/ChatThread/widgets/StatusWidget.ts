@@ -5,7 +5,6 @@
 import { WidgetType } from '@codemirror/view';
 
 import { Domino } from '@dxos/ui';
-import { XML_WIDGET_DATA_ATTR } from '@dxos/ui-editor';
 
 /**
  * Props used to derive a stable key for a reasoning block across CodeMirror widget rebuilds.
@@ -39,7 +38,6 @@ export class StatusWidget extends WidgetType {
   override toDOM() {
     return Domino.of('div')
       .classNames('py-0.5')
-      .attributes({ [XML_WIDGET_DATA_ATTR]: '' })
       .append(
         Domino.of('div')
           .classNames('relative overflow-hidden rounded-sm')

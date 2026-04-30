@@ -6,7 +6,7 @@ import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import { describe, expect } from 'vitest';
 
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 

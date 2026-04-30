@@ -33,13 +33,6 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "types": [
-        "dist/types/src/types/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"
@@ -48,7 +41,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/operation": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {

@@ -6,6 +6,27 @@ import * as Swc from '@swc/core';
 import { type Plugin } from 'esbuild';
 import { readFile } from 'fs/promises';
 
+// Resolved lazily so dx-compile doesn't take a build-time package dep on
+// @dxos/vite-plugin-log (which would create a moon cycle:
+//   dx-compile:compile -> ^:build -> vite-plugin-log:build -> ts-build's
+//   compile -> dx-compile:compile).
+type LogMetaTransformFn = (code: string, filename: string) => string | null;
+let _logMetaTransform: LogMetaTransformFn | null | undefined;
+
+const loadLogMetaTransform = async (): Promise<LogMetaTransformFn | null> => {
+  if (_logMetaTransform !== undefined) {
+    return _logMetaTransform;
+  }
+  try {
+    const mod = (await import('@dxos/vite-plugin-log')) as { transformLogMeta?: LogMetaTransformFn };
+    _logMetaTransform = mod.transformLogMeta ?? null;
+  } catch {
+    // vite-plugin-log not yet built (e.g. self-bootstrap); skip the transform.
+    _logMetaTransform = null;
+  }
+  return _logMetaTransform;
+};
+
 /**
  * Factory so that plugins can share the transform cache.
  *
@@ -26,6 +47,20 @@ export class SwcTransformPlugin {
 
     const begin = performance.now();
     const output = await Swc.transform(source, this._options.getTranspilerOptions({ filePath: filename }));
+    let code = output.code;
+
+    // Apply @dxos/log call-site meta injection so consumers' dist/ has the
+    // same `__dxlog_file` / `{F,L,S,...}` data that the Rolldown plugin emits
+    // at app build time. Resolving lazily means dx-compile remains usable
+    // before vite-plugin-log itself has been built.
+    const transformLogMeta = await loadLogMetaTransform();
+    if (transformLogMeta) {
+      const next = transformLogMeta(code, filename);
+      if (next != null) {
+        code = next;
+      }
+    }
+
     const end = performance.now();
 
     if (this._options.isVerbose) {
@@ -36,7 +71,7 @@ export class SwcTransformPlugin {
       );
     }
 
-    return output.code;
+    return code;
   }
 
   private async _transformCached(filename: string): Promise<string> {

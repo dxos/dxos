@@ -57,6 +57,7 @@
     "typescript/no-this-alias": "off",
     "typescript/no-unnecessary-parameter-property-assignment": "off",
     "typescript/no-unsafe-unary-minus": "off",
+    "typescript/no-useless-default-assignment": "off",
     "typescript/no-useless-empty-export": "off",
     "typescript/require-array-sort-compare": "off",
     "typescript/restrict-template-expressions": "off",
@@ -106,16 +107,18 @@
   "globals": {},
   "ignorePatterns": [
     "*.d.ts",
+    "**/*.astro",
     "**/tailwind.ts",
     "**/gen/*",
     "**/typings/**",
     ".idea/**",
     ".vscode/**",
     ".claude/**",
-    "docs",
     "templates/**",
     "scripts/**",
-    "docs/legacy/**"
+    "docs/legacy/**",
+    "docs/public/webflow/**",
+    "docs/scripts/**"
   ],
   "jsPlugins": [
     "@dxos/eslint-plugin-rules",

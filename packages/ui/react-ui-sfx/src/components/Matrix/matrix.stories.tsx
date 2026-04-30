@@ -11,15 +11,15 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Matrix, type MatrixProps } from './Matrix';
 
 const DefaultStory = (props: MatrixProps) => {
-  const [, forceUpdate] = useState({});
+  const [active, setActive] = useState(props.active ?? true);
 
   return (
     <div className='flex flex-col grow'>
       <Toolbar.Root>
-        <Button onClick={() => forceUpdate({})}>Toggle</Button>
+        <Button onClick={() => setActive((a) => !a)}>{active ? 'Stop' : 'Start'}</Button>
       </Toolbar.Root>
       <div className='flex grow items-center justify-center'>
-        <Matrix {...props} />
+        <Matrix {...props} active={active} />
       </div>
     </div>
   );
@@ -45,5 +45,14 @@ export const Default: Story = {
     size: 16,
     dotSize: 6,
     count: 32,
+  },
+};
+
+export const Small: Story = {
+  args: {
+    dim: 4,
+    size: 4,
+    dotSize: 3,
+    count: 10,
   },
 };
