@@ -2,13 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import {
-  type LogConfig,
-  type LogEntry,
-  type LogProcessor,
-  inferEnvironmentName,
-  serializeToJsonl,
-} from '@dxos/log';
+import { type LogConfig, type LogEntry, type LogProcessor, inferEnvironmentName, serializeToJsonl } from '@dxos/log';
 
 import { trimJsonlToSize } from './trim';
 
@@ -301,9 +295,7 @@ export class IdbLogStore {
       return;
     }
 
-    const count = await runTransaction(db, this.#storeName, 'readonly', (store) =>
-      promisifyRequest(store.count()),
-    );
+    const count = await runTransaction(db, this.#storeName, 'readonly', (store) => promisifyRequest(store.count()));
     if (count <= this.#maxRecords) {
       return;
     }

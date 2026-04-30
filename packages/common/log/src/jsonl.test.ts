@@ -84,9 +84,7 @@ describe('serializeToJsonl', () => {
   });
 
   test('flattens nested objects in context (one level)', ({ expect }) => {
-    const record = parseLine(
-      serializeToJsonl(createEntry({ context: { nested: { a: 1, b: 2 } } })),
-    );
+    const record = parseLine(serializeToJsonl(createEntry({ context: { nested: { a: 1, b: 2 } } })));
     const ctx = JSON.parse(record.c as string);
     // computedContext converts nested objects to JSON strings via stringifyOneLevel.
     expect(typeof ctx.nested).toBe('string');

@@ -44,11 +44,7 @@ class FakeSharedWorkerGlobalScope {}
 class FakeDedicatedWorkerGlobalScope {}
 class FakeServiceWorkerGlobalScope {}
 
-const makeWorkerScope = (
-  Ctor: new () => object,
-  ctorName: string,
-  name?: string,
-): Record<string, unknown> => {
+const makeWorkerScope = (Ctor: new () => object, ctorName: string, name?: string): Record<string, unknown> => {
   const scope = Object.create(Ctor.prototype) as Record<string, unknown>;
   scope[ctorName] = Ctor;
   if (name !== undefined) {
