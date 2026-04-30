@@ -26,6 +26,7 @@ import { mapEvent } from './mapper';
 type BaseSyncProps<T = unknown> = {
   googleCalendarId: string;
   pageSize: number;
+  filter: string | undefined;
   newEvents: Ref.Ref<Event.Event[]>;
   nextPage: Ref.Ref<string | undefined>;
   latestUpdate: Ref.Ref<string | undefined>;
@@ -39,6 +40,7 @@ export default GoogleCalendarSync.pipe(
       syncBackDays = 30,
       syncForwardDays = 365,
       pageSize = 100,
+      filter,
     }) =>
       Effect.gen(function* () {
         log('syncing google calendar', {
@@ -47,6 +49,7 @@ export default GoogleCalendarSync.pipe(
           syncBackDays,
           syncForwardDays,
           pageSize,
+          filter,
         });
 
         const calendar = yield* Database.load(calendarRef);
@@ -63,6 +66,7 @@ export default GoogleCalendarSync.pipe(
             syncBackDays,
             syncForwardDays,
             pageSize,
+            filter,
             newEvents,
             nextPage,
             latestUpdate,
@@ -72,6 +76,7 @@ export default GoogleCalendarSync.pipe(
             googleCalendarId,
             updatedMin: calendar.lastSyncedUpdate!,
             pageSize,
+            filter,
             newEvents,
             nextPage,
             latestUpdate,
@@ -112,6 +117,7 @@ export default GoogleCalendarSync.pipe(
 const performInitialSync = Effect.fn(function* ({
   googleCalendarId,
   pageSize,
+  filter,
   newEvents,
   nextPage,
   latestUpdate,
@@ -121,7 +127,7 @@ const performInitialSync = Effect.fn(function* ({
   syncBackDays: number;
   syncForwardDays: number;
 }>) {
-  log('performing initial sync', { syncBackDays, syncForwardDays });
+  log('performing initial sync', { syncBackDays, syncForwardDays, filter });
   const now = new Date();
   const timeMin = addDays(now, -syncBackDays).toISOString();
   const timeMax = addDays(now, syncForwardDays).toISOString();
@@ -130,13 +136,14 @@ const performInitialSync = Effect.fn(function* ({
 
   do {
     const pageToken = yield* Ref.get(nextPage);
-    log('requesting events by start time', { timeMin, timeMax, pageToken });
+    log('requesting events by start time', { timeMin, timeMax, pageToken, filter });
     const { items = [], nextPageToken } = yield* GoogleCalendar.listEventsByStartTime(
       googleCalendarId,
       timeMin,
       timeMax,
       pageSize,
       pageToken,
+      filter,
     );
     yield* Ref.update(nextPage, () => nextPageToken);
     yield* processEvents({ items, newEvents, latestUpdate, seenRecurringEventIds });
@@ -146,6 +153,7 @@ const performInitialSync = Effect.fn(function* ({
 const performIncrementalSync = Effect.fn(function* ({
   googleCalendarId,
   pageSize,
+  filter,
   newEvents,
   nextPage,
   latestUpdate,
@@ -153,16 +161,17 @@ const performIncrementalSync = Effect.fn(function* ({
 }: BaseSyncProps<{
   updatedMin: string;
 }>) {
-  log('performing incremental sync', { updatedMin });
+  log('performing incremental sync', { updatedMin, filter });
 
   do {
     const pageToken = yield* Ref.get(nextPage);
-    log('requesting events by updated time', { updatedMin, pageToken });
+    log('requesting events by updated time', { updatedMin, pageToken, filter });
     const { items = [], nextPageToken } = yield* GoogleCalendar.listEventsByUpdated(
       googleCalendarId,
       updatedMin,
       pageSize,
       pageToken,
+      filter,
     );
     yield* Ref.update(nextPage, () => nextPageToken);
 

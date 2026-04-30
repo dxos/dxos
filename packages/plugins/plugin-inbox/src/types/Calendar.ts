@@ -9,6 +9,8 @@ import { FormInputAnnotation } from '@dxos/echo/internal';
 import { FeedAnnotation } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
+import { CalendarSyncOptions } from './SyncOptions';
+
 /** Calendar object schema. */
 export const Calendar = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
@@ -19,6 +21,12 @@ export const Calendar = Schema.Struct({
     Ref.Ref(AccessToken.AccessToken).annotations({
       title: 'Account',
       description: 'Google account credentials for syncing this calendar.',
+    }),
+  ),
+  sync: Schema.optional(
+    CalendarSyncOptions.annotations({
+      title: 'Sync',
+      description: 'Configures how events are synced from the upstream provider.',
     }),
   ),
 }).pipe(

@@ -133,6 +133,13 @@ export const GoogleMailSync = Operation.make({
       }),
       Schema.optional,
     ),
+    filter: Schema.String.pipe(
+      Schema.annotations({
+        description:
+          'Optional Gmail search expression appended to the query (e.g., `label:important OR label:investor`).',
+      }),
+      Schema.optional,
+    ),
     restrictedMode: Schema.Boolean.pipe(
       Schema.annotations({
         description: 'Use restricted mode to limit to single date range and max 20 messages. Reduces subrequests.',
@@ -175,6 +182,12 @@ export const GoogleCalendarSync = Operation.make({
     syncBackDays: Schema.optional(Schema.Number),
     syncForwardDays: Schema.optional(Schema.Number),
     pageSize: Schema.optional(Schema.Number),
+    filter: Schema.String.pipe(
+      Schema.annotations({
+        description: 'Optional Google Calendar free-text search query (passed as `q`).',
+      }),
+      Schema.optional,
+    ),
   }),
   output: Schema.Struct({
     newEvents: Schema.Number,
