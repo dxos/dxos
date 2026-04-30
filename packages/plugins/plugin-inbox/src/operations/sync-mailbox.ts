@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { runInSpace } from '@dxos/app-framework/plugin-runtime';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/compute';
 
 import { meta } from '#meta';
 

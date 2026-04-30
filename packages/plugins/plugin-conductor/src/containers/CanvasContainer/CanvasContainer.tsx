@@ -10,9 +10,9 @@ import { AiService } from '@dxos/ai';
 import { Capabilities } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { CredentialsService, Operation, OperationRegistry, QueueService, ServiceResolver } from '@dxos/compute';
 import { ComputeGraphModel } from '@dxos/conductor';
 import { Database, Feed, Obj } from '@dxos/echo';
-import { CredentialsService, Operation, OperationRegistry, QueueService, ServiceResolver } from '@dxos/compute';
 import { useObject } from '@dxos/react-client/echo';
 import { Flex, type FlexProps } from '@dxos/react-ui';
 import {

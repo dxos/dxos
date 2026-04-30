@@ -21,7 +21,9 @@ export default Capability.makeModule(
     const processManagerRuntime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
 
     // Async import removes direct dependency on hyperformula.
-    const { defaultPlugins, ComputeGraphRegistry } = yield* Effect.tryPromise(() => import('@dxos/compute-hyperformula'));
+    const { defaultPlugins, ComputeGraphRegistry } = yield* Effect.tryPromise(
+      () => import('@dxos/compute-hyperformula'),
+    );
 
     const computeGraphRegistry = new ComputeGraphRegistry({
       plugins: defaultPlugins,
