@@ -11,6 +11,14 @@ import { log } from '@dxos/log';
 
 import { connectDevtools } from './devtools/connect';
 
+const stringifyDebugValue = (value: unknown): string => {
+  try {
+    return JSON.stringify(value, (_key, next) => (typeof next === 'bigint' ? `${next}n` : next), 2) ?? String(value);
+  } catch {
+    return String(value);
+  }
+};
+
 const SpecRenderer = ({
   node,
   onDispatch,
@@ -37,7 +45,7 @@ const SpecRenderer = ({
       return (
         <div className='font-mono whitespace-pre-wrap'>
           {node.props.label && <div className='opacity-60'>{node.props.label}</div>}
-          <pre>{JSON.stringify(node.props.value, null, 2)}</pre>
+          <pre>{stringifyDebugValue(node.props.value)}</pre>
         </div>
       );
     case 'input':
