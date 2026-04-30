@@ -26,7 +26,7 @@ import {
   PlanningBlueprint,
   PlanningHandlers,
 } from '@dxos/assistant-toolkit';
-import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Blueprint, Routine } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
@@ -103,7 +103,7 @@ const buildPluginManagerOptions = ({
         Blueprint.Blueprint,
         Operation.PersistentOperation,
         Markdown.Document,
-        Prompt.Prompt,
+        Routine.Routine,
         Trigger.Trigger,
         ...types,
       ],
