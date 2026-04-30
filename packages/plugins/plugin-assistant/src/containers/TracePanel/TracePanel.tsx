@@ -19,16 +19,27 @@ import { DXN } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
-import { composable, mx } from '@dxos/ui-theme';
+import { composable } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
-import { ProcessTree } from '../../components';
+import { ProcessTree } from '#components';
+
 import { buildExecutionGraph } from './execution-graph';
+
+// Stable ref.
+const atomEmpty = Atom.make(() => [] as const);
 
 export type TracePanelProps = AppSurface.SpaceArticleProps;
 
 export const TracePanel = composable<HTMLDivElement, TracePanelProps>(({ space, ...props }, forwardedRef) => {
   const { invokePromise } = useOperationInvoker();
   const { branches, commits } = useExecutionGraph(space);
+
+  const monitor = useCapability(Capabilities.ProcessMonitor);
+  const activeProcesses = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
+  if (activeProcesses.length === 0) {
+    return <div />;
+  }
 
   const handleCommitClick = useCallback(
     (commit: Commit) => {
@@ -48,30 +59,12 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(({ space, 
   return (
     <Panel.Root {...props} ref={forwardedRef}>
       <Panel.Content className='grid grid-rows-[min-content_1fr]'>
-        <ActiveProcessList spaceId={space.id} />
+        <ProcessTree classNames={mx('max-h-[8lh] px-2 border-b border-separator')} processes={activeProcesses} />
         <Timeline branches={branches} commits={commits} compact onCommitClick={handleCommitClick} />
       </Panel.Content>
     </Panel.Root>
   );
 });
-
-/**
- * ProcessMonitor is contributed as a shared application-affinity capability
- * by the process-manager-capability module (see `@dxos/app-framework/plugin-runtime`).
- * It's a singleton across spaces — no per-space runtime lookup needed.
- */
-const ActiveProcessList = (_props: { spaceId: Space['id'] }) => {
-  const monitor = useCapability(Capabilities.ProcessMonitor);
-  const activeProcesses = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
-  if (activeProcesses.length === 0) {
-    return <div />;
-  }
-
-  return <ProcessTree classNames={mx('max-h-[8lh] px-2 border-b border-separator')} processes={activeProcesses} />;
-};
-
-// Stable ref.
-const atomEmpty = Atom.make(() => [] as const);
 
 type ExecutionGraph = {
   branches: string[];
