@@ -43,7 +43,6 @@ import { type Graph } from '@dxos/plugin-graph';
 import { ScriptOperation } from '@dxos/plugin-script/operations';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
 
 import { DebugSettings } from '#components';
 import {
@@ -75,8 +74,6 @@ const isGraphDebug = (data: any): data is GraphDebug => {
     graph != null && typeof graph === 'object' && typeof graph.json === 'function' && typeof data?.root === 'string'
   );
 };
-
-const useCurrentSpace = useActiveSpace;
 
 type ReactSurfaceOptions = {
   logBuffer: LogBuffer;
@@ -135,13 +132,7 @@ export default Capability.makeModule(
             [data.subject.space, invokePromise],
           );
 
-          return (
-            <Panel.Root role={role} className='dx-document'>
-              <Panel.Content asChild>
-                <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />
-              </Panel.Content>
-            </Panel.Root>
-          );
+          return <SpaceGenerator role={role} space={data.subject.space} onCreateObjects={handleCreateObject} />;
         },
       }),
       Surface.create({
@@ -169,7 +160,7 @@ export default Capability.makeModule(
           AppSurface.literal(AppSurface.Article, 'debug'),
           AppSurface.companion(AppSurface.Article),
         ),
-        component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
+        component: ({ role, data }) => <DebugObjectPanel role={role} companionTo={data.companionTo} />,
       }),
       Surface.create({
         id: 'devtools-overview',
@@ -182,7 +173,14 @@ export default Capability.makeModule(
           Surface.makeType<{ subject: string }>('deck-companion--space-objects'),
           'space-objects',
         ),
-        component: () => <DebugSpaceObjectsPanel />,
+        component: () => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          return <DebugSpaceObjectsPanel space={space} />;
+        },
       }),
 
       Surface.create({
@@ -191,6 +189,7 @@ export default Capability.makeModule(
         position: 'hoist',
         component: () => <DebugStatus />,
       }),
+
       //
       // Devtools
       //
@@ -234,7 +233,11 @@ export default Capability.makeModule(
         id: 'halo.credentials',
         filter: AppSurface.literal(AppSurface.Article, Devtools.Halo.Credentials),
         component: () => {
-          const space = useCurrentSpace();
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
           return <CredentialsPanel space={space} />;
         },
       }),
@@ -254,12 +257,16 @@ export default Capability.makeModule(
         id: 'echo.space',
         filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Space),
         component: () => {
-          const space = useCurrentSpace();
+          const space = useActiveSpace();
           const { invokePromise } = useOperationInvoker();
           const handleSelect = useCallback(
             () => invokePromise(LayoutOperation.Open, { subject: [Devtools.Echo.Feeds] }),
             [invokePromise],
           );
+          if (!space) {
+            return null;
+          }
+
           return <SpaceInfoPanel space={space} onSelectFeed={handleSelect} onSelectPipeline={handleSelect} />;
         },
       }),
@@ -267,7 +274,11 @@ export default Capability.makeModule(
         id: 'echo.feeds',
         filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Feeds),
         component: () => {
-          const space = useCurrentSpace();
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
           return <FeedsPanel space={space} />;
         },
       }),
@@ -275,7 +286,11 @@ export default Capability.makeModule(
         id: 'echo.objects',
         filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Objects),
         component: () => {
-          const space = useCurrentSpace();
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
           return <ObjectsPanel space={space} />;
         },
       }),
@@ -283,7 +298,11 @@ export default Capability.makeModule(
         id: 'echo.schema',
         filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Schema),
         component: () => {
-          const space = useCurrentSpace();
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
           return <SchemaPanel space={space} />;
         },
       }),
@@ -291,7 +310,11 @@ export default Capability.makeModule(
         id: 'echo.automerge',
         filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Automerge),
         component: () => {
-          const space = useCurrentSpace();
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
           return <AutomergePanel space={space} />;
         },
       }),
@@ -304,7 +327,11 @@ export default Capability.makeModule(
         id: 'echo.members',
         filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Members),
         component: () => {
-          const space = useCurrentSpace();
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
           return <MembersPanel space={space} />;
         },
       }),
@@ -327,7 +354,11 @@ export default Capability.makeModule(
         id: 'mesh.network',
         filter: AppSurface.literal(AppSurface.Article, Devtools.Mesh.Network),
         component: () => {
-          const space = useCurrentSpace();
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
           return <NetworkPanel space={space} />;
         },
       }),
@@ -340,7 +371,11 @@ export default Capability.makeModule(
         id: 'edge.workflows',
         filter: AppSurface.literal(AppSurface.Article, Devtools.Edge.Workflows),
         component: () => {
-          const space = useCurrentSpace();
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
           return <WorkflowPanel space={space} />;
         },
       }),
@@ -348,10 +383,14 @@ export default Capability.makeModule(
         id: 'edge.traces',
         filter: AppSurface.literal(AppSurface.Article, Devtools.Edge.Traces),
         component: () => {
-          const space = useCurrentSpace();
-          const feed = space?.properties.invocationTraceFeed?.target;
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          const feed = space.properties.invocationTraceFeed?.target;
           const queueDxn = feed ? Feed.getQueueDxn(feed) : undefined;
-          return <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} detailAxis='block' />;
+          return <InvocationTraceContainer db={space.db} queueDxn={queueDxn} detailAxis='block' />;
         },
       }),
       Surface.create({

@@ -6,13 +6,12 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, LayoutOperation } from '@dxos/app-toolkit';
 import { Feed, Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/compute';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Channel, ThreadCapabilities } from '@dxos/plugin-thread/types';
@@ -173,7 +172,7 @@ export default Capability.makeModule(
                   log.warn('transcription disabled');
                 } else {
                   const companion = linkedSegment('transcript');
-                  yield* Operation.invoke(DeckOperation.ChangeCompanion, { companion });
+                  yield* Operation.invoke(LayoutOperation.UpdateCompanion, { subject: companion });
                 }
               }),
               properties: {

@@ -30,7 +30,7 @@ import {
   MembersContainer,
   MenuFooter,
   ObjectCardStack,
-  ObjectDetails,
+  ObjectProperties,
   ObjectRenamePopover,
   RecordArticle,
   RelatedArticle,
@@ -103,7 +103,7 @@ export default Capability.makeModule(
           AppSurface.literal(AppSurface.Article, 'settings'),
           AppSurface.companion(AppSurface.Article),
         ),
-        component: ({ ref, data, role }) => <ObjectDetails role={role} subject={data.companionTo} ref={ref} />,
+        component: ({ ref, data, role }) => <ObjectProperties role={role} subject={data.companionTo} ref={ref} />,
       }),
       Surface.create({
         id: 'companion.related',

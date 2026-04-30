@@ -442,6 +442,7 @@ export class ServiceContext extends Resource {
           await this.dataSpaceManager.acceptSpace(this._ctx, {
             spaceKey: assertion.spaceKey,
             genesisFeedKey: assertion.genesisFeedKey,
+            tags: assertion.tags,
           });
         } catch (err) {
           log.catch(err);

@@ -5,10 +5,10 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute-hyperformula';
 import { Obj, Relation } from '@dxos/echo';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { ThreadOperation } from '@dxos/plugin-thread/operations';
 import { Filter, Query, useQuery } from '@dxos/react-client/echo';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -59,8 +59,8 @@ export const useSelectThreadOnCellFocus = () => {
       if (closestThread) {
         void (async () => {
           await invokePromise(ThreadOperation.Select, { current: Relation.getDXN(closestThread).toString() });
-          await invokePromise(DeckOperation.ChangeCompanion, {
-            companion: linkedSegment('comments'),
+          await invokePromise(LayoutOperation.UpdateCompanion, {
+            subject: linkedSegment('comments'),
           });
         })();
       }

@@ -63,7 +63,7 @@ const DefaultStory = () => {
         <PromptList subject={subject} role='toolbar-input' attendableId='story' />
       </Panel.Toolbar>
       <Panel.Content>
-        <TracePanel space={space} />
+        <TracePanel role='article' space={space} attendableId={space.id} />
       </Panel.Content>
     </Panel.Root>
   );

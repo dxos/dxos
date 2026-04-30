@@ -62,7 +62,7 @@ export type AiRequestOptions = {
 };
 
 export type AiRequestRunProps<R = never> = {
-  prompt: string;
+  prompt: string | ContentBlock.Any[];
   // TODO(wittjosiah): Rename to systemPrompt.
   system?: string;
   history?: Message.Message[];
@@ -72,7 +72,7 @@ export type AiRequestRunProps<R = never> = {
 };
 
 export type AiRequestBeginProps = {
-  prompt: string;
+  prompt: string | ContentBlock.Any[];
   system?: string;
   history?: Message.Message[];
   objects?: Obj.Unknown[];

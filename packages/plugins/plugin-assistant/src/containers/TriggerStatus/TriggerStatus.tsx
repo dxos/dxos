@@ -4,22 +4,24 @@
 
 import React, { useMemo } from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type InvocationsState } from '@dxos/functions-runtime';
 import { useTriggerRuntimeControls } from '@dxos/plugin-automation/hooks';
 import { StatusBar } from '@dxos/plugin-status-bar';
-import { type Database } from '@dxos/react-client/echo';
-import { IconButton, Input, Popover, useTranslation } from '@dxos/react-ui';
+import { useObject } from '@dxos/react-client/echo';
+import { IconButton, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-type TriggerStatusState = 'disabled' | 'idle' | 'running' | 'error';
+type TriggerStatusState = 'disabled' | 'idle' | 'running' | 'edge' | 'error';
 
 const getIcon = (state: TriggerStatusState): string => {
   switch (state) {
     case 'disabled':
       return 'ph--lightning-slash--regular';
     case 'idle':
+      return 'ph--lightning--regular';
+    case 'edge':
       return 'ph--lightning--regular';
     case 'running':
       return 'ph--lightning--fill';
@@ -39,24 +41,22 @@ const getIconClassNames = (state: TriggerStatusState): string | undefined => {
   }
 };
 
-export const TriggerStatus = () => {
-  const space = useActiveSpace();
-  const db = space?.db;
-  if (!db) {
-    return null;
-  }
+export type SpaceStatusProps = AppSurface.SpaceArticleProps;
 
-  return <SpaceStatusMain db={db} />;
-};
-
-const SpaceStatusMain = ({ db }: { db: Database.Database }) => {
+export const SpaceStatus = ({ space }: SpaceStatusProps) => {
   const { t } = useTranslation(meta.id);
-  const { state, start, stop } = useTriggerRuntimeControls(db);
-  const isRunning = state?.enabled ?? false;
+  const { state } = useTriggerRuntimeControls(space.db);
+  const isEnabled = state?.enabled ?? false;
+  const [properties] = useObject(space.properties);
+  const computeEnvironment = properties.computeEnvironment ?? 'local';
 
   // Determine the current trigger status state.
   const triggerState: TriggerStatusState = useMemo(() => {
-    if (!isRunning) {
+    if (computeEnvironment === 'edge') {
+      return 'edge';
+    }
+
+    if (!isEnabled) {
       return 'disabled';
     }
 
@@ -73,7 +73,7 @@ const SpaceStatusMain = ({ db }: { db: Database.Database }) => {
     }
 
     return 'idle';
-  }, [isRunning, state?.invocations]);
+  }, [computeEnvironment, isEnabled, state?.invocations]);
 
   return (
     <Popover.Root>
@@ -90,13 +90,11 @@ const SpaceStatusMain = ({ db }: { db: Database.Database }) => {
       <Popover.Portal>
         <Popover.Content side='left'>
           <TriggerStatusPopover
-            isRunning={isRunning}
             state={triggerState}
             currentFunctionName={
               state?.invocations.at(-1)?.function?.meta.name ?? state?.invocations.at(-1)?.function?.meta.key
             }
             lastInvocation={state?.invocations.at(-1)}
-            onToggle={isRunning ? stop : start}
           />
           <Popover.Arrow />
         </Popover.Content>
@@ -106,31 +104,20 @@ const SpaceStatusMain = ({ db }: { db: Database.Database }) => {
 };
 
 type TriggerStatusPopoverProps = {
-  isRunning: boolean;
   state: TriggerStatusState;
   currentFunctionName?: string;
   lastInvocation?: InvocationsState;
-  onToggle: () => void;
 };
 
 const TriggerStatusPopover = ({
-  isRunning,
   state,
   currentFunctionName,
   lastInvocation, // TODO(burdon): Show.
-  onToggle,
 }: TriggerStatusPopoverProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
     <div className='flex flex-col gap-2 p-2 w-[240px]'>
-      <Input.Root>
-        <div className='flex items-center gap-2'>
-          <Input.Switch checked={isRunning} onCheckedChange={onToggle} />
-          <Input.Label>{t('trigger-runtime.label')}</Input.Label>
-        </div>
-      </Input.Root>
-
       <div className='flex flex-col gap-1'>
         <div className='text-sm'>{t(`trigger-status-${state}.label`)}</div>
         {currentFunctionName && state === 'running' && (
@@ -140,5 +127,3 @@ const TriggerStatusPopover = ({
     </div>
   );
 };
-
-export default TriggerStatus;

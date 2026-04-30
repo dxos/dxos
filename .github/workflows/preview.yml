@@ -1,0 +1,65 @@
+name: Preview Build
+
+# Builds the composer-app bundle for PR previews and uploads it as an artifact.
+# NO secrets are exposed here — this workflow runs untrusted PR code safely.
+# The artifact is picked up by preview-deploy.yml (workflow_run) which runs
+# from the base branch with secrets and performs the Cloudflare Pages deploy.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: preview-build-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    # Skip forks (per project policy) — not required for safety (no secrets are
+    # used here), but fork previews are intentionally unsupported.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Bundle composer-app
+        run: moon run composer-app:bundle
+        env:
+          NODE_ENV: production
+          NODE_OPTIONS: '--max_old_space_size=12288'
+          LOG_FILTER: error
+
+      - name: Delete source maps
+        run: find packages/apps/composer-app/out/composer -name '*.map' -delete
+
+      - name: Write deploy metadata
+        run: |
+          mkdir -p preview-meta
+          echo "${{ github.event.pull_request.number }}" > preview-meta/pr-number
+          echo "${{ github.event.pull_request.head.sha }}" > preview-meta/head-sha
+
+      - name: Upload bundle artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: composer-preview-bundle
+          path: |
+            packages/apps/composer-app/out/composer
+            preview-meta
+          retention-days: 3
+          if-no-files-found: error

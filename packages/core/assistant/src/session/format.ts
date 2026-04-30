@@ -115,7 +115,7 @@ export const formatUserPrompt = ({
     return Obj.make(Message.Message, {
       created: new Date().toISOString(),
       sender: { role: 'user' },
-      blocks: [...blocks, { _tag: 'text', text: prompt }],
+      blocks: typeof prompt === 'string' ? [...blocks, { _tag: 'text', text: prompt }] : [...blocks, ...prompt],
     });
   }).pipe(Effect.withSpan('formatUserPrompt'));
 
@@ -138,7 +138,7 @@ const createArtifactUpdateBlock = (
   return {
     _tag: 'text',
     // TODO(dmaretskyi): Does this need to be a special content-block?
-    disposition: 'artifact-update',
+    disposition: 'synthetic',
     text: trim`
       The following artifacts have been updated since the last message:
       ${[...artifactDiff.entries()]

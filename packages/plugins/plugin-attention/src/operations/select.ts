@@ -6,16 +6,16 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
 import { Capability } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 
 import { AttentionCapabilities } from '../types';
-import { Select } from './definitions';
 
-const handler: Operation.WithHandler<typeof Select> = Select.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.Select> = LayoutOperation.Select.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const selection = yield* Capability.get(AttentionCapabilities.Selection);
-      Match.value(input.selection).pipe(
+      Match.value(input.subject).pipe(
         Match.when({ mode: 'single', id: undefined }, () => {
           selection.clearSelection(input.contextId);
         }),

@@ -6,23 +6,21 @@ import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, getActiveSpace, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities, AppNode, getActiveSpace, getPersonalSpace } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { DXN, Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
-import { Operation, type OperationInvoker } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { Query } from '@dxos/react-client/echo';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
-import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
+import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
 import { AssistantOperation } from '#operations';
 import { AssistantCapabilities } from '#types';
 
@@ -68,39 +66,6 @@ export default Capability.makeModule(
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
-            Node.makeAction({
-              id: `${LayoutOperation.UpdateDialog.meta.key}.assistant.open`,
-              data: Effect.fnUntraced(function* () {
-                const capabilities = yield* Capability.Service;
-                const client = yield* Capability.get(ClientCapabilities.Client);
-                const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
-                const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
-                if (!space) {
-                  return;
-                }
-                const chat = yield* Effect.tryPromise(() => getOrCreateChat(operationInvoker.invokePromise, space.db));
-                if (!chat) {
-                  return;
-                }
-
-                yield* Operation.invoke(LayoutOperation.UpdateDialog, {
-                  subject: ASSISTANT_DIALOG,
-                  state: true,
-                  blockAlign: 'end',
-                  props: { chat },
-                });
-              }),
-              properties: {
-                label: ['open-assistant.label', { ns: meta.id }],
-                icon: 'ph--sparkle--regular',
-                disposition: 'pin-end',
-                position: 'hoist',
-                keyBinding: {
-                  macos: 'shift+meta+k',
-                  windows: 'shift+ctrl+k',
-                },
-              },
-            }),
             Node.makeAction({
               id: 'reset-blueprints',
               data: Effect.fnUntraced(function* () {
@@ -195,23 +160,3 @@ export default Capability.makeModule(
     return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );
-
-// TODO(burdon): Factor out.
-const getOrCreateChat = async (
-  invokePromise: OperationInvoker.OperationInvoker['invokePromise'],
-  db: Database.Database,
-): Promise<Chat.Chat | undefined> => {
-  // TODO(wittjosiah): This should be possible with a single query.
-  const allChats = await db.query(Query.type(Chat.Chat)).run();
-  const relatedChats = await db.query(Query.type(Chat.Chat).sourceOf(Chat.CompanionTo).source()).run();
-
-  const chats = allChats.filter((chat) => !relatedChats.includes(chat));
-  if (chats.length > 0) {
-    return chats.at(-1);
-  }
-
-  const { data } = await invokePromise(AssistantOperation.CreateChat, { db });
-  invariant(Obj.instanceOf(Chat.Chat, data?.object));
-  await invokePromise(SpaceOperation.AddObject, { target: db, object: data.object });
-  return data.object;
-};

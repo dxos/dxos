@@ -4,7 +4,7 @@
 
 import { WidgetType } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import '@dxos/lit-ui';
 import { PublicKey } from '@dxos/keys';
@@ -129,7 +129,7 @@ const DefaultStory = ({
   }, [controller]);
 
   return (
-    <Panel.Root style={{ '--user-fill': `var(--color-${userHue}-fill)` } as CSSProperties}>
+    <Panel.Root data-hue={userHue}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Toolbar.IconButton
@@ -196,7 +196,7 @@ export const Streaming: Story = {
       autoScroll: true,
       wire: true,
       fader: true,
-      cursor: true,
+      // cursor: true,
     },
   },
 };

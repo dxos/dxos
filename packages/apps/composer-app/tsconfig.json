@@ -236,6 +236,12 @@
       "path": "../../plugins/plugin-conductor"
     },
     {
+      "path": "../../plugins/plugin-crx"
+    },
+    {
+      "path": "../../plugins/plugin-crx-bridge"
+    },
+    {
       "path": "../../plugins/plugin-daily-summary"
     },
     {
@@ -387,9 +393,6 @@
     },
     {
       "path": "../../plugins/plugin-wnfs"
-    },
-    {
-      "path": "../../plugins/plugin-youtube"
     },
     {
       "path": "../../plugins/plugin-zen"

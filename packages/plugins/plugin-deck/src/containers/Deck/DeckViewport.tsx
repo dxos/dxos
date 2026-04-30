@@ -31,8 +31,8 @@ import { getMode } from '#types';
 import { layoutAppliesTopbar } from '../../util';
 import { Plank, PlankRootProps, type PlankComponentProps } from '../Plank';
 import {
-  ToggleComplementarySidebarButton as NativeToggleComplementarySidebarButton,
-  ToggleSidebarButton as NativeToggleSidebarButton,
+  ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
+  ToggleSidebarButton as NaturalToggleSidebarButton,
 } from '../Sidebar';
 import { useDeckContext } from './DeckRoot';
 
@@ -272,9 +272,9 @@ export const DeckMultiMode = () => {
 
 const sidebarToggleStyles = 'h-(--dx-rail-item) w-(--dx-rail-item) absolute bottom-2 z-[1] bg-deck-surface! lg:hidden';
 
-const ToggleSidebarButton = () => <NativeToggleSidebarButton classNames={mx(sidebarToggleStyles, 'left-2')} />;
+const ToggleSidebarButton = () => <NaturalToggleSidebarButton classNames={mx(sidebarToggleStyles, 'left-2')} />;
 const ToggleComplementarySidebarButton = () => (
-  <NativeToggleComplementarySidebarButton classNames={mx(sidebarToggleStyles, 'right-2')} />
+  <NaturalToggleComplementarySidebarButton classNames={mx(sidebarToggleStyles, 'right-2')} />
 );
 
 const ExitFullscreenButton = ({ onExit }: { onExit: () => void }) => {
@@ -393,8 +393,8 @@ const PlankContainer = memo(
       [invokePromise],
     );
 
-    const handleChangeCompanion = useCallback(
-      (companion: string | null) => invokePromise(DeckOperation.ChangeCompanion, { companion }),
+    const handleUpdateCompanion = useCallback(
+      (companion: string | null) => invokePromise(LayoutOperation.UpdateCompanion, { subject: companion }),
       [invokePromise],
     );
 
@@ -410,7 +410,7 @@ const PlankContainer = memo(
         onAdjust={handleAdjust}
         onResize={handleResize}
         onScrollIntoView={handleScrollIntoView}
-        onChangeCompanion={handleChangeCompanion}
+        onUpdateCompanion={handleUpdateCompanion}
       >
         <Plank.Content solo={part === 'solo'} companion={hasCompanion} encapsulate={!!settings?.encapsulatedPlanks}>
           <Plank.Component

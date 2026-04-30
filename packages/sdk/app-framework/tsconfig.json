@@ -54,6 +54,9 @@
       "path": "../../core/echo/echo-db"
     },
     {
+      "path": "../../ui/brand"
+    },
+    {
       "path": "../../ui/react-primitives/react-error-boundary"
     },
     {

@@ -5,7 +5,6 @@
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { getPersonalSpace } from '@dxos/app-toolkit';
@@ -44,16 +43,25 @@ export const spaceLayer = (
   const getSpace = Effect.fn(function* () {
     const client = yield* ClientService;
 
-    const spaceId = Match.value(fallbackToPersonalSpace).pipe(
-      Match.when(true, () => spaceId$.pipe(Option.orElse(() => Option.fromNullable(getPersonalSpace(client)?.id)))),
-      Match.when(false, () => spaceId$),
-      Match.exhaustive,
-    );
+    // Resolution order when fallbackToPersonalSpace is true:
+    //   1. the explicit spaceId arg (if provided);
+    //   2. the space tagged `org.dxos.space.personal`;
+    //   3. the first available space.
+    // This keeps profiles created outside composer-app (which is what creates
+    // the personal-space tag on identity creation) usable — the alternative
+    // is a "Space not found" throw deep inside CredentialsService.
+    const resolveSpace = () => {
+      if (!fallbackToPersonalSpace) {
+        return spaceId$.pipe(Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))));
+      }
+      return spaceId$.pipe(
+        Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
+        Option.orElse(() => Option.fromNullable(getPersonalSpace(client))),
+        Option.orElse(() => Option.fromNullable(client.spaces.get()[0])),
+      );
+    };
 
-    const space = spaceId.pipe(
-      Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
-      Option.getOrUndefined,
-    );
+    const space = resolveSpace().pipe(Option.getOrUndefined);
 
     if (space) {
       yield* Effect.promise(() => space.waitUntilReady());
@@ -61,21 +69,27 @@ export const spaceLayer = (
     return space;
   });
 
+  // When no space can be resolved we install a stub whose `db` getter throws
+  // on access — preserves the existing semantics for commands that *do* need
+  // a db — but the release callback must NOT touch `db` or it will throw
+  // during teardown (e.g. after a command emits a friendly error and
+  // returns early). A shared sentinel object short-circuits the release.
+  const NO_DB_STUB = {
+    get db(): Database.Database {
+      throw new Error('Space not found');
+    },
+  };
   const db = Layer.scoped(
     Database.Service,
     Effect.acquireRelease(
       Effect.gen(function* () {
         const space = yield* getSpace();
         if (!space) {
-          return {
-            get db(): Database.Database {
-              throw new Error('Space not found');
-            },
-          };
+          return NO_DB_STUB;
         }
         return { db: space.db };
       }),
-      ({ db }) => Effect.promise(() => db.flush()),
+      (holder) => (holder === NO_DB_STUB ? Effect.void : Effect.promise(() => holder.db.flush())),
     ),
   );
 

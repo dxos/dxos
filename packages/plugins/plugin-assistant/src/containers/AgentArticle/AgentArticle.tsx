@@ -111,7 +111,9 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
             )}
 
             <Masonry.Root Tile={MasonryArtifactTile}>
-              <Masonry.Content items={artifacts} getId={(item: Obj.Unknown) => item.id} padding thin centered />
+              <Masonry.Content padding thin centered>
+                <Masonry.Viewport items={artifacts} getId={(item: Obj.Unknown) => item.id} />
+              </Masonry.Content>
             </Masonry.Root>
           </>
         )}

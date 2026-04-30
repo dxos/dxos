@@ -139,7 +139,14 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'status',
         role: 'status-indicator',
-        component: () => <TriggerStatus />,
+        component: () => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          return <TriggerStatus role='status-indicator' space={space} />;
+        },
       }),
       Surface.create({
         id: 'prompts',

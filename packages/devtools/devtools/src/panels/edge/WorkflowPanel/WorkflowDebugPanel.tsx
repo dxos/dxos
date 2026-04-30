@@ -22,7 +22,7 @@ import { LogLevel, log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Avatar, Input, type ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { useDevtoolsState } from '../../../hooks';
@@ -221,11 +221,7 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
         </div>
       )}
 
-      {data && (
-        <SyntaxHighlighter language='json' className={mx(wrapper, 'text-xs')}>
-          {JSON.stringify(data, null, 2)}
-        </SyntaxHighlighter>
-      )}
+      {data && <JsonHighlighter data={data} classNames={mx(wrapper, 'text-xs')} />}
     </div>
   );
 };
