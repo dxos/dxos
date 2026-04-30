@@ -58,6 +58,10 @@
   var creepHandle = null;
   var creepCeiling = STATE_1_ASYMPTOTE;
   var creepRate = STATE_1_RATE;
+  var trace = /(?:^|[?&])trace=1(?:&|$)/.test(window.location.search);
+  var start = Date.now();
+  var last = Date.now();
+  var timings = [];
 
   function ensureCreep() {
     if (creepHandle != null) {
@@ -89,10 +93,41 @@
   }
 
   window.__bootLoader = {
-    status: function (text) {
+    /**
+     * Update the visible status line. The caller owns formatting — the
+     * loader just renders `humanized` and records the structured fields
+     * for the trace. Idempotent on `humanized`: equal back-to-back values
+     * are a no-op for timings and the DOM update.
+     *
+     * Payload: `{ event?, module?, humanized }`.
+     *   - `humanized`: the exact string to display (e.g. "Loading framework…",
+     *     "Activating Observability: react-surface").
+     *   - `event` / `module`: optional raw ids for the trace, when the
+     *     update originates from an activation transition.
+     */
+    status: function (payload) {
+      if (!payload || typeof payload !== 'object') {
+        return;
+      }
+      var humanized = payload.humanized || '';
       var element = document.getElementById('boot-loader-status');
+      if (element && element.textContent === humanized) {
+        return;
+      }
+      if (timings.length > 0) {
+        timings[timings.length - 1].duration = Date.now() - last;
+      }
+      var entry = { text: humanized };
+      if (payload.event) {
+        entry.event = payload.event;
+      }
+      if (payload.module) {
+        entry.module = payload.module;
+      }
+      timings.push(entry);
+      last = Date.now();
       if (element) {
-        element.textContent = text;
+        element.textContent = humanized;
       }
     },
 
@@ -152,6 +187,13 @@
       var element = document.getElementById('boot-loader');
       if (element && element.parentNode) {
         element.parentNode.removeChild(element);
+      }
+
+      if (trace) {
+        if (timings.length > 0) {
+          timings[timings.length - 1].duration = Date.now() - last;
+        }
+        console.log(JSON.stringify({ total: Date.now() - start, timings }, null, 2));
       }
     },
   };

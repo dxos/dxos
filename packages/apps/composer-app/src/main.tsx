@@ -64,7 +64,7 @@ declare global {
  * The CSS animation in `index.html` keeps painting on the compositor thread
  * regardless of main-thread work, so this is purely textual feedback.
  */
-const bootStatus = (text: string) => window.__bootLoader?.status(text);
+const bootStatus = (text: string) => window.__bootLoader?.status({ humanized: text });
 
 const main = async () => {
   const url = new URL(window.location.href);
