@@ -4,7 +4,7 @@
 
 import { describe, it } from '@effect/vitest';
 
-import { Routine } from '@dxos/blueprints';
+import { Routine } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 

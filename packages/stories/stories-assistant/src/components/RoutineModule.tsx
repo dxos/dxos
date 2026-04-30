@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Routine } from '@dxos/blueprints';
+import { Routine } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 

@@ -5,7 +5,7 @@
 import * as Predicate from 'effect/Predicate';
 
 import { AGENT_PROCESS_KEY, AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
-import { Trace } from '@dxos/functions';
+import { Trace } from '@dxos/compute';
 import { Process } from '@dxos/functions-runtime';
 import { LogLevel } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';

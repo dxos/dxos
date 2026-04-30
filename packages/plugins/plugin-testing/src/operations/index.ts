@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/operation';
+import { OperationHandlerSet } from '@dxos/compute';
 
 export const TestingOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./add-toast'),

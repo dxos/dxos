@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Database, Entity, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 
 import { RelationCreate } from './definitions';
 

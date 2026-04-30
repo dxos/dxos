@@ -10,10 +10,10 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { useCallback, useEffect, useState } from 'react';
 
+import { withAuthorization } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { type Key, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type OAuthFlowResult } from '@dxos/protocols';
 import { useEdgeClient } from '@dxos/react-edge-client';

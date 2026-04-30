@@ -10,7 +10,7 @@ import * as Function from 'effect/Function';
 import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
 
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { DXN, Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';

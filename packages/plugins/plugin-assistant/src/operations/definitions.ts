@@ -7,10 +7,10 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
-import { Routine } from '@dxos/blueprints';
 import { SpaceSchema } from '@dxos/client/echo';
+import { Routine } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Collection, Database, DXN, Feed, Obj, Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 
 import { meta } from '#meta';
 

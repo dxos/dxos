@@ -6,7 +6,7 @@ import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import React from 'react';
 
-import { type Template } from '@dxos/blueprints';
+import { type Template } from '@dxos/compute';
 import { createDocAccessor } from '@dxos/echo-db';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';

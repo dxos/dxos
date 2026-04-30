@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { AiSessionService, ToolExecutionServices } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
