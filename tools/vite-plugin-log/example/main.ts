@@ -50,6 +50,7 @@ const setupButtons = () => {
   });
 
   document.getElementById('btn-catch')?.addEventListener('click', () => {
+    // eslint-disable-next-line @dxos/rules/no-empty-promise-catch
     new TestThing().catch();
   });
 };
