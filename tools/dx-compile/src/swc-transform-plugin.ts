@@ -18,7 +18,13 @@ const loadLogMetaTransform = async (): Promise<LogMetaTransformFn | null> => {
     return _logMetaTransform;
   }
   try {
-    const mod = (await import('@dxos/vite-plugin-log')) as { transformLogMeta?: LogMetaTransformFn };
+    // Specifier built dynamically so TypeScript's bundler resolution doesn't try
+    // to type-check the package at dx-compile build time. dx-compile must build
+    // standalone (no vite-plugin-log dep on its compile graph) — but at run time
+    // the package is always available because every consumer that runs dx-compile
+    // already has @dxos/vite-plugin-log resolved (root devDependency).
+    const specifier = ['@dxos', 'vite-plugin-log'].join('/');
+    const mod = (await import(specifier)) as { transformLogMeta?: LogMetaTransformFn };
     _logMetaTransform = mod.transformLogMeta ?? null;
   } catch {
     // vite-plugin-log not yet built (e.g. self-bootstrap); skip the transform.
