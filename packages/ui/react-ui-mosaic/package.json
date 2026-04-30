@@ -30,6 +30,12 @@
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "browser": "./dist/lib/browser/translations.mjs",
+      "node": "./dist/lib/node-esm/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -96,5 +102,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "imports": {
+    "#translations": "./src/translations.ts"
   }
 }

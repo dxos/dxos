@@ -10,8 +10,9 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { composable } from '@dxos/ui-theme';
 
+import { translations } from '#translations';
+
 import { PostContent } from '../components';
-import { translations } from '../translations';
 import { Subscription } from '../types';
 import { type ExtractedArticle, extractArticle } from '../util';
 

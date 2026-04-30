@@ -12,8 +12,9 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/ui-theme';
 
+import { translations } from '#translations';
+
 import { meta } from './meta';
-import { translations } from './translations';
 
 export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'noCache' | 'resourceExtensions'>> & {
   appName?: string;

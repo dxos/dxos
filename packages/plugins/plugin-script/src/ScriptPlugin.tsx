@@ -23,10 +23,9 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { ScriptOperation } from '#operations';
+import { translations } from '#translations';
 import { ScriptEvents } from '#types';
 import { Notebook } from '#types';
-
-import { translations } from './translations';
 
 export const ScriptPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

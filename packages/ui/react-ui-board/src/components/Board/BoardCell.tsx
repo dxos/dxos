@@ -11,7 +11,8 @@ import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { useBoardContext } from './Board';
 import { getBoardRect } from './geometry';
 import { type CellLayout, type Position } from './types';

@@ -5,7 +5,6 @@
 export { MarkdownCapabilities, MarkdownEvents } from './types';
 
 export * from './meta';
-export * from './types';
 export * from './util';
 
 export * from './MarkdownPlugin';

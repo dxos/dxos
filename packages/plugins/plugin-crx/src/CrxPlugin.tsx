@@ -7,8 +7,7 @@ import { AppPlugin } from '@dxos/app-toolkit';
 
 import { CrxSettings, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
-
-import { translations } from './translations';
+import { translations } from '#translations';
 
 export const CrxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSettingsModule({ activate: CrxSettings }),

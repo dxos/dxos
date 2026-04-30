@@ -14,9 +14,9 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { DeckSettings, DeckState } from '#capabilities';
 import { useDeckState } from '#hooks';
 import { meta as pluginMeta } from '#meta';
+import { translations } from '#translations';
 import { DeckCapabilities, getMode } from '#types';
 
-import { translations } from '../../translations';
 import { Deck } from './Deck';
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
