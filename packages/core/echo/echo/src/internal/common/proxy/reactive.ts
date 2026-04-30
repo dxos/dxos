@@ -3,7 +3,7 @@
 //
 
 import { type RefTypeId } from '../../Ref/ref';
-import { getProxyTarget } from './proxy-utils';
+import { getProxyTarget, isProxy } from './proxy-utils';
 import { ChangeId, EventId } from './symbols';
 
 /**
@@ -14,6 +14,15 @@ import { ChangeId, EventId } from './symbols';
  */
 // TODO(wittjosiah): Consider throwing if obj doesn't have EventId instead of returning no-op.
 export const subscribe = (obj: unknown, callback: () => void): (() => void) => {
+  // Guard against non-reactive inputs (queue-stored typed objects, snapshots, plain shapes
+  // with branded symbols) before `getProxyTarget`'s `ProxyHandlerSlot` invariant kicks in.
+  // `Obj.isObject` (KindId-based) is satisfied by these inputs, so callers like
+  // `Atom.family((obj) => Atom.make((get) => Obj.subscribe(obj, ...)))` legitimately reach
+  // here with a non-proxy. Falling back to a no-op preserves the documented contract that
+  // values without subscription support get a no-op unsubscribe.
+  if (!isProxy(obj)) {
+    return () => {};
+  }
   const target = getProxyTarget(obj as any);
   if (target && EventId in target) {
     return (target as any)[EventId].on(callback);

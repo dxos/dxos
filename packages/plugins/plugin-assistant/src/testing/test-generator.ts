@@ -38,6 +38,41 @@ export const createMessageGenerator = (): MessageGenerator[] => [
     );
   }),
 
+  Effect.gen(function* () {
+    const { queue } = yield* ContextQueueService;
+    const { db } = yield* Database.Service;
+    const obj1 = db.add(
+      Obj.make(Organization.Organization, {
+        name: 'DXOS',
+        website: 'https://dxos.org',
+        description: 'DXOS is a decentralized network for collaborative applications.',
+      }),
+    );
+    // const obj2 = db.add(Obj.make(Person.Person, { fullName: 'Alice' }));
+    // const obj3 = db.add(Obj.make(Person.Person, { fullName: 'Bob' }));
+    // const obj4 = db.add(Obj.make(Person.Person, { fullName: 'Charlie' }));
+    yield* Effect.promise(() =>
+      queue.append([
+        createMessage('assistant', [
+          // Inline tag.
+          {
+            _tag: 'text',
+            text: [random.lorem.paragraph(), renderObjectLink(obj1), random.lorem.paragraph(), '\n'].join(' '),
+          },
+
+          // Inline cards.
+          // ...[obj1, obj2, obj3, obj4].map(
+          //   (obj) =>
+          //     ({
+          //       _tag: 'text',
+          //       text: renderObjectLink(obj, true) + '\n',
+          //     }) satisfies ContentBlock.Text,
+          // ),
+        ]),
+      ]),
+    );
+  }),
+
   // Streaming text block: appends a pending text block, then mutates `text` in chunks
   // so the syncer renders progressive deltas through the queue (not via the controller).
   Effect.gen(function* () {
@@ -45,14 +80,11 @@ export const createMessageGenerator = (): MessageGenerator[] => [
     const message = createMessage('assistant', [{ _tag: 'text', text: '', pending: true }]);
     yield* Effect.promise(() => queue.append([message]));
 
-    const fullText =
-      trim`
-      Streaming a response **word by word** through the queue:
-
-      ${random.lorem.paragraph()}
-
-      ${random.lorem.paragraph()}
-    ` + '\n';
+    const fullText = [
+      'Streaming a response **word by word** through the queue:',
+      random.lorem.paragraph(),
+      random.lorem.paragraph(),
+    ].join('\n\n');
 
     yield* Effect.promise(async () => {
       for await (const chunk of textStream(fullText, { wordsPerChunk: 2, chunkDelay: 60 })) {
@@ -60,11 +92,14 @@ export const createMessageGenerator = (): MessageGenerator[] => [
           const block = message.blocks[0] as Mutable<ContentBlock.Text>;
           block.text += chunk;
         });
+        // Queue queries only react to queue-level updates, not in-place object mutations.
+        await queue.append([]);
       }
       Obj.change(message, (message) => {
         const block = message.blocks[0] as Mutable<ContentBlock.Text>;
         block.pending = false;
       });
+      await queue.append([]);
     });
   }),
 
@@ -170,35 +205,6 @@ export const createMessageGenerator = (): MessageGenerator[] => [
             _tag: 'text',
             text: random.lorem.sentence(5),
           },
-        ]),
-      ]),
-    );
-  }),
-
-  Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
-    const { db } = yield* Database.Service;
-    const obj1 = db.add(Obj.make(Organization.Organization, { name: 'DXOS' }));
-    // const obj2 = db.add(Obj.make(Person.Person, { fullName: 'Alice' }));
-    // const obj3 = db.add(Obj.make(Person.Person, { fullName: 'Bob' }));
-    // const obj4 = db.add(Obj.make(Person.Person, { fullName: 'Charlie' }));
-    yield* Effect.promise(() =>
-      queue.append([
-        createMessage('assistant', [
-          // Inline tag.
-          {
-            _tag: 'text',
-            text: [random.lorem.paragraph(), renderObjectLink(obj1), random.lorem.paragraph(), '\n'].join(' '),
-          },
-
-          // Inline cards.
-          // ...[obj1, obj2, obj3, obj4].map(
-          //   (obj) =>
-          //     ({
-          //       _tag: 'text',
-          //       text: renderObjectLink(obj, true) + '\n',
-          //     }) satisfies ContentBlock.Text,
-          // ),
         ]),
       ]),
     );

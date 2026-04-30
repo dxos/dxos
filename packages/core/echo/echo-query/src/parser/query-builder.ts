@@ -28,7 +28,7 @@ export class QueryBuilder {
    */
   validate(input: string): boolean {
     try {
-      const tree = this._parser.parse(input);
+      const tree = this._parser.parse(normalizeInput(input));
       return tree.cursor().node.name === 'Query';
     } catch {
       return false;
@@ -40,8 +40,9 @@ export class QueryBuilder {
    */
   build(input: string): BuildResult {
     try {
-      const tree = this._parser.parse(input);
-      return this.buildQuery(tree, input);
+      const normalized = normalizeInput(input);
+      const tree = this._parser.parse(normalized);
+      return this.buildQuery(tree, normalized);
     } catch {
       return {};
     }
@@ -355,8 +356,8 @@ export class QueryBuilder {
     cursor.firstChild(); // Move to String node.
     const text = this._getNodeText(cursor, input);
     cursor.parent(); // Go back to TextFilter.
-    // Remove quotes.
-    return Filter.text(text.slice(1, -1));
+    // Remove quotes and decode escapes.
+    return Filter.text(unescapeStringLiteral(text.slice(1, -1)));
   }
 
   /**
@@ -479,9 +480,9 @@ export class QueryBuilder {
 
     switch (valueType) {
       case 'String': {
-        // Remove quotes.
+        // Remove quotes and decode escapes.
         const str = this._getNodeText(cursor, input);
-        return str.slice(1, -1);
+        return unescapeStringLiteral(str.slice(1, -1));
       }
 
       case 'Number':
@@ -537,3 +538,249 @@ export class QueryBuilder {
     return input.slice(cursor.from, cursor.to);
   }
 }
+
+const KEYWORDS = new Set(['AND', 'OR', 'NOT']);
+const VALUE_LITERALS = new Set(['true', 'false', 'null']);
+const SPECIAL_CHARS = /[\s(){}\[\],"']/;
+const PROPERTY_KEY = /^[a-zA-Z_][a-zA-Z0-9_.]*$/;
+const NUMBER_LITERAL = /^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
+
+// Common URL schemes — `http://...`, `mailto:rich@...` etc. should be searched as text,
+// not auto-promoted to property filters.
+const URL_SCHEMES = new Set([
+  'http',
+  'https',
+  'ftp',
+  'ftps',
+  'file',
+  'mailto',
+  'tel',
+  'sms',
+  'data',
+  'javascript',
+  'ws',
+  'wss',
+  'ssh',
+  'git',
+]);
+
+/**
+ * Normalize raw user input into a form the lezer grammar can parse.
+ * - Bare text fragments (e.g. `foo`) are wrapped in quotes so they parse as TextFilter.
+ * - Property values that aren't already quoted/numeric/boolean (e.g. `from:rich@dxos.org`) are quoted.
+ * - Tags, type filters, operators, parens, braces, quoted strings, and assignments pass through unchanged.
+ */
+export const normalizeInput = (input: string): string => {
+  const out: string[] = [];
+  let pos = 0;
+  while (pos < input.length) {
+    const currentChar = input[pos];
+
+    // Whitespace.
+    if (/\s/.test(currentChar)) {
+      out.push(currentChar);
+      pos++;
+      continue;
+    }
+
+    // Quoted string (already a valid TextFilter / Value).
+    // Single-quote only opens a string if the previous char isn't a word-char,
+    // so apostrophes inside barewords (e.g. `don't`, `O'Connor`) stay attached.
+    const prevChar = pos > 0 ? input[pos - 1] : '';
+    const isStringOpener =
+      currentChar === '"' || (currentChar === "'" && (pos === 0 || !/[a-zA-Z0-9_]/.test(prevChar)));
+    if (isStringOpener) {
+      const quoteChar = currentChar;
+      let scanIndex = pos + 1;
+      while (scanIndex < input.length && input[scanIndex] !== quoteChar) {
+        if (input[scanIndex] === '\\' && scanIndex + 1 < input.length) {
+          scanIndex += 2;
+        } else {
+          scanIndex++;
+        }
+      }
+      out.push(input.slice(pos, Math.min(scanIndex + 1, input.length)));
+      pos = scanIndex + 1;
+      continue;
+    }
+
+    // Object/array literals: pass through (contents already structured).
+    if (currentChar === '{' || currentChar === '[') {
+      const closeChar = currentChar === '{' ? '}' : ']';
+      let depth = 1;
+      let scanIndex = pos + 1;
+      while (scanIndex < input.length && depth > 0) {
+        const innerChar = input[scanIndex];
+        if (innerChar === '"' || innerChar === "'") {
+          const quoteChar = innerChar;
+          scanIndex++;
+          while (scanIndex < input.length && input[scanIndex] !== quoteChar) {
+            if (input[scanIndex] === '\\' && scanIndex + 1 < input.length) {
+              scanIndex += 2;
+            } else {
+              scanIndex++;
+            }
+          }
+          scanIndex++;
+        } else if (innerChar === currentChar) {
+          depth++;
+          scanIndex++;
+        } else if (innerChar === closeChar) {
+          depth--;
+          scanIndex++;
+        } else {
+          scanIndex++;
+        }
+      }
+      out.push(input.slice(pos, scanIndex));
+      pos = scanIndex;
+      continue;
+    }
+
+    // Single-char structural tokens. `}` / `]` only reach here when unmatched —
+    // pass them through so the lezer parser can produce a clear error rather than spinning.
+    if (
+      currentChar === '(' ||
+      currentChar === ')' ||
+      currentChar === '=' ||
+      currentChar === ',' ||
+      currentChar === '}' ||
+      currentChar === ']'
+    ) {
+      out.push(currentChar);
+      pos++;
+      continue;
+    }
+
+    // Relations.
+    if ((currentChar === '-' && input[pos + 1] === '>') || (currentChar === '<' && input[pos + 1] === '-')) {
+      out.push(input.slice(pos, pos + 2));
+      pos += 2;
+      continue;
+    }
+
+    // NOT prefix (`!`) — single token.
+    if (currentChar === '!') {
+      out.push(currentChar);
+      pos++;
+      continue;
+    }
+
+    // Tag.
+    if (currentChar === '#') {
+      let scanIndex = pos + 1;
+      while (scanIndex < input.length && /[a-zA-Z0-9_-]/.test(input[scanIndex])) {
+        scanIndex++;
+      }
+      out.push(input.slice(pos, scanIndex));
+      pos = scanIndex;
+      continue;
+    }
+
+    // Bareword: scan until next whitespace or special char.
+    let scanIndex = pos;
+    while (scanIndex < input.length) {
+      const innerChar = input[scanIndex];
+      if (innerChar === '"') break;
+      if (innerChar === "'" && scanIndex > pos && !/[a-zA-Z0-9_]/.test(input[scanIndex - 1])) break;
+      if (innerChar === "'" && scanIndex === pos) break;
+      if (innerChar !== "'" && SPECIAL_CHARS.test(innerChar)) break;
+      if (innerChar === '-' && input[scanIndex + 1] === '>') break;
+      if (innerChar === '<' && input[scanIndex + 1] === '-') break;
+      scanIndex++;
+    }
+    // Defensive: if no characters were consumed, advance one to avoid infinite loops.
+    if (scanIndex === pos) {
+      out.push(currentChar);
+      pos++;
+      continue;
+    }
+    const token = input.slice(pos, scanIndex);
+    pos = scanIndex;
+
+    // Operators.
+    if (KEYWORDS.has(token.toUpperCase())) {
+      out.push(token);
+      continue;
+    }
+
+    // Property/type filter (`key:value`).
+    const colonIdx = token.indexOf(':');
+    if (colonIdx > 0) {
+      const key = token.slice(0, colonIdx);
+      const rest = token.slice(colonIdx + 1);
+
+      // type:typename — leave for grammar's TypeFilter (Identifier value).
+      if (key === 'type') {
+        out.push(token);
+        continue;
+      }
+
+      // URLs (`http://...`, `mailto:rich@...`) and URL-paths starting with `//`
+      // are searched as text rather than auto-promoted to property filters.
+      const isUrlScheme = URL_SCHEMES.has(key.toLowerCase()) || rest.startsWith('//');
+      if (!isUrlScheme && PROPERTY_KEY.test(key)) {
+        if (rest.length === 0) {
+          // Trailing colon while typing — pass through.
+          out.push(token);
+          continue;
+        }
+        const firstValueChar = rest[0];
+        if (firstValueChar === '"' || firstValueChar === "'") {
+          // Already quoted.
+          out.push(token);
+          continue;
+        }
+        if (firstValueChar === '{' || firstValueChar === '[') {
+          // Object/array literal value.
+          out.push(token);
+          continue;
+        }
+        if (VALUE_LITERALS.has(rest) || NUMBER_LITERAL.test(rest)) {
+          // Boolean / null / number literal.
+          out.push(token);
+          continue;
+        }
+        out.push(`${key}:"${escapeStringLiteral(rest)}"`);
+        continue;
+      }
+
+      // URL or unknown key shape — fall through to text.
+    }
+
+    // Identifier followed by `=` is the LHS of an Assignment — keep as-is.
+    if (PROPERTY_KEY.test(token)) {
+      let lookahead = pos;
+      while (lookahead < input.length && /\s/.test(input[lookahead])) {
+        lookahead++;
+      }
+      if (input[lookahead] === '=') {
+        out.push(token);
+        continue;
+      }
+    }
+
+    // Bare text fragment: quote so it parses as TextFilter.
+    out.push(`"${escapeStringLiteral(token)}"`);
+  }
+
+  return out.join('');
+};
+
+/** Escape a raw value into a string literal body (without surrounding quotes). */
+const escapeStringLiteral = (value: string): string => value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+
+/** Decode `\\` and `\"` escapes inside a string literal body. */
+const unescapeStringLiteral = (literalBody: string): string => {
+  let out = '';
+  for (let i = 0; i < literalBody.length; i++) {
+    const ch = literalBody[i];
+    if (ch === '\\' && i + 1 < literalBody.length) {
+      out += literalBody[i + 1];
+      i++;
+    } else {
+      out += ch;
+    }
+  }
+  return out;
+};

@@ -6,6 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj, Type } from '@dxos/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { type ProjectionModel } from '@dxos/schema';
 
 import { AppCapabilities } from '../../capabilities';
@@ -242,7 +243,7 @@ export const Article: Surface.RoleToken<ArticleData<any>> = Surface.makeType('ar
 export type ArticleData<Subject = unknown, Props extends {} = {}, CompanionTo = unknown> = {
   attendableId: string;
   subject: Subject;
-  properties?: Record<string, any>;
+  properties?: Record<string, any>; // TODO(burdon): What is this for?
   variant?: string;
   path?: string[];
   popoverAnchorId?: string;
@@ -291,6 +292,30 @@ export const settings = (
     return AppCapabilities.isSettings(subject) && subject.prefix === prefix;
   };
   return { bindings: [{ role: token.role, guard }] };
+};
+
+//
+// SpaceArticle
+//
+// Article-shaped surface whose container resolves a Space (typically via
+// `useActiveSpace()` in the surface callback). Reuses the `Article` role token
+// — the deck plugin keeps passing standard `ArticleData` — and only specializes
+// the props the consumer expects by adding a non-null `space` field synthesized
+// at the surface boundary.
+//
+
+/** Surface data for an article whose container receives a resolved Space.
+ *  `subject` from `ArticleData` is widened to optional — Space-scoped articles
+ *  often render at routes whose subject is a literal id rather than an object,
+ *  and the container reads `space` (synthesized at the surface boundary) instead. */
+export type SpaceArticleData<Props extends {} = {}> = Omit<ArticleData<unknown>, 'subject'> & {
+  subject?: unknown;
+  space: Space;
+} & Props;
+
+/** Component props for an article whose container receives a resolved Space. */
+export type SpaceArticleProps<Props extends {} = {}> = SpaceArticleData<Props> & {
+  role: 'article' | (string & {});
 };
 
 //

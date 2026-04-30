@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import type { Space } from '@dxos/client/echo';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Ref } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
@@ -15,11 +15,7 @@ import { Settings } from '@dxos/react-ui-form';
 import { GenerateSummary } from '#blueprints';
 import { meta } from '#meta';
 
-export type DailySummarySettingsProps = {
-  space: Space;
-};
-
-export const DailySummarySettings = ({ space }: DailySummarySettingsProps) => {
+export const DailySummarySettings = ({ space }: AppSurface.SpaceArticleProps) => {
   const { t } = useTranslation(meta.id);
 
   const triggers = useQuery(space.db, Filter.type(Trigger.Trigger));

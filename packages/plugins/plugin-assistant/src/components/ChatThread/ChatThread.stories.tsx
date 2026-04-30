@@ -9,16 +9,16 @@ import * as Layer from 'effect/Layer';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Database, Filter } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ContextQueueService } from '@dxos/functions';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import { PreviewPlugin } from '@dxos/plugin-preview';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { type Queue, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { Card, Popover } from '@dxos/react-ui';
-import { EditorPreviewProvider, useEditorPreview } from '@dxos/react-ui-editor';
+import { type Queue, useSpaces } from '@dxos/react-client/echo';
+import { EditorPreviewProvider } from '@dxos/react-ui-editor';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Organization, Person } from '@dxos/types';
 
@@ -36,7 +36,7 @@ type DefaultStoryProps = { generator?: MessageGenerator[]; delay?: number; wait?
 const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: DefaultStoryProps) => {
   const [space] = useSpaces();
   const queue = useMemo<Queue<Message.Message> | undefined>(() => space?.queues.create(), [space]);
-  const messages = useQuery(queue, Filter.type(Message.Message));
+  const messages = useQueueMessages(queue);
   const [done, setDone] = useState(false);
 
   // Generate messages.
@@ -61,7 +61,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: DefaultStor
     return () => {
       void runAndForwardErrors(Fiber.interrupt(fiber));
     };
-  }, [space, queue, generator]);
+  }, [space, queue, generator, delay]);
 
   if (wait && !done) {
     return <Loading data={{ wait, done }} />;
@@ -70,27 +70,25 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: DefaultStor
   return (
     <EditorPreviewProvider onLookup={async ({ dxn, label }) => ({ label, text: dxn })}>
       <ChatThread {...props} messages={messages} />
-      <PreviewCard />
     </EditorPreviewProvider>
   );
 };
 
-const PreviewCard = () => {
-  const { target } = useEditorPreview('PreviewCard');
+const useQueueMessages = (queue?: Queue<Message.Message>) => {
+  const [messages, setMessages] = useState<Message.Message[]>([]);
 
-  return (
-    <Popover.Portal>
-      <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
-        <Popover.Viewport>
-          <Card.Root>
-            <Card.Heading>{target?.label}</Card.Heading>
-            {target && <Card.Text classNames='truncate line-clamp-3'>{target.text}</Card.Text>}
-          </Card.Root>
-        </Popover.Viewport>
-        <Popover.Arrow />
-      </Popover.Content>
-    </Popover.Portal>
-  );
+  useEffect(() => {
+    if (!queue) {
+      setMessages([]);
+      return;
+    }
+
+    const update = () => setMessages([...queue.objects]);
+    update();
+    return queue.subscribe(update);
+  }, [queue]);
+
+  return messages;
 };
 
 const meta = {
@@ -103,6 +101,8 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
+        StorybookPlugin({}),
+        PreviewPlugin(),
         ClientPlugin({
           types: [Organization.Organization, Person.Person],
           onClientInitialized: ({ client }) =>

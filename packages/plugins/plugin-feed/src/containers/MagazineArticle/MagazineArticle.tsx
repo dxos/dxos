@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { getObjectPathFromObject } from '@dxos/app-toolkit';
+import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref, type Tag } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -256,6 +256,42 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     },
     [id, showItem, invokePromise],
   );
+
+  // Auto-curate when the set of subscribed feeds changes so the post list reflects
+  // the new selection without requiring a manual Curate click. Fingerprint by sorted
+  // DXN so swaps that preserve `feeds.length` still trigger.
+  const feedFingerprint = useMemo(
+    () =>
+      subject.feeds
+        .map((ref) => ref.dxn.toString())
+        .sort()
+        .join(),
+    [subject.feeds],
+  );
+  // Key on both magazine identity and feed fingerprint so switching to a different
+  // magazine with the same feeds still triggers curation for the new magazine.
+  const previousCurateKey = useRef({ subject, feedFingerprint });
+  useEffect(() => {
+    if (
+      previousCurateKey.current.subject !== subject ||
+      previousCurateKey.current.feedFingerprint !== feedFingerprint
+    ) {
+      previousCurateKey.current = { subject, feedFingerprint };
+      void invokePromise(FeedOperation.CurateMagazine, { magazine: Ref.make(subject) }).catch((err) => log.catch(err));
+    }
+  }, [feedFingerprint, subject, invokePromise]);
+
+  // Open the ObjectProperties companion when the magazine has no posts so the user
+  // can configure subscription feeds without an empty pane staring back at them.
+  // Use `subject.posts.length` (the unfiltered set) so view filters like 'archived'
+  // or 'starred' don't trigger this when the magazine actually still has posts.
+  useEffect(() => {
+    if (subject.posts.length === 0) {
+      void invokePromise(LayoutOperation.UpdateCompanion, {
+        subject: linkedSegment('settings'),
+      }).catch((err) => log.catch(err));
+    }
+  }, [subject, subject.posts.length, invokePromise]);
 
   const tileItems = useMemo<TileData[]>(
     () =>
