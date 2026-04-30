@@ -19,8 +19,7 @@ import { useComputeRuntimeService } from '@dxos/plugin-automation/hooks';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
-import { composable } from '@dxos/ui-theme';
-import { mx } from '@dxos/ui-theme';
+import { composable, mx } from '@dxos/ui-theme';
 
 import { ProcessTree } from '#components';
 
