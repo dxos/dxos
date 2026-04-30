@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
+import { Operation } from '@dxos/operation';
 import { Kanban } from '@dxos/plugin-kanban/types';
 import { Integration } from '@dxos/plugin-integration/types';
 import { Expando } from '@dxos/schema';
@@ -117,6 +118,21 @@ vi.mock('../services/trello-api', async () => {
 });
 
 /**
+ * Stub `Operation.Service` for tests that bypass the OperationInvoker.
+ *
+ * In production the invoker provides this service to handlers; here we call
+ * handlers directly, so we provide a no-op service so any nested
+ * `Operation.invoke` call (e.g. the toast emission inside `SyncTrelloBoard`)
+ * succeeds silently. The handler under test isn't asserting anything about
+ * the toast; the toast is UX-only.
+ */
+const stubOperationService = Effect.provideService(Operation.Service, {
+  invoke: () => Effect.succeed(undefined as any),
+  schedule: () => Effect.succeed(undefined),
+  invokePromise: () => Promise.resolve({ data: undefined as any }),
+});
+
+/**
  * Light end-to-end stitching of the three operation handlers:
  *  - `GetTrelloBoards` materializes Kanban placeholders + returns descriptors.
  *  - `SetIntegrationTargets` selects a subset of those.
@@ -180,6 +196,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
 
     // 3. Sync: reconciles cards for board A only.
     const result = await syncTrelloBoardHandler.handler({ integration: Ref.make(integration) }).pipe(
+      stubOperationService,
       Effect.provide(layer),
       runAndForwardErrors,
     );
@@ -221,6 +238,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     });
 
     await syncTrelloBoardHandler.handler({ integration: Ref.make(integration) }).pipe(
+      stubOperationService,
       Effect.provide(layer),
       runAndForwardErrors,
     );

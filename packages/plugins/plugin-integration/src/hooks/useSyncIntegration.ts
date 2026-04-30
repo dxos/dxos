@@ -5,12 +5,9 @@
 import { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
 import { Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-
-import { meta } from '#meta';
 
 import { useIntegrationProvider } from '../capabilities/integration-provider';
 import { type Integration } from '../types';
@@ -32,7 +29,9 @@ export type UseSyncIntegrationResult = {
 
 /**
  * Trigger a full integration sync — calls `provider.sync({ integration })` and
- * surfaces the result via toast. Per-target `lastSyncAt`/`lastError` updates
+ * tracks in-flight / error state. Toasts are emitted by the sync operation
+ * itself so every caller (this hook, graph actions, scheduled triggers, …)
+ * gets the same user feedback. Per-target `lastSyncAt`/`lastError` updates
  * are written by the operation handler and show up reactively in the
  * `IntegrationArticle` surface.
  */
@@ -56,21 +55,9 @@ export const useSyncIntegration = (
       if (result.error) {
         throw result.error;
       }
-      void invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.id}.sync-success.${integration.id}`,
-        icon: 'ph--check--regular',
-        title: ['sync-toast.success.label', { ns: meta.id, defaultValue: 'Sync complete' }],
-      });
     } catch (err) {
       log.catch(err);
-      const message = String((err as Error).message ?? err);
-      setError(message);
-      void invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.id}.sync-error.${integration.id}`,
-        icon: 'ph--warning--regular',
-        title: ['sync-toast.error.label', { ns: meta.id, defaultValue: 'Sync failed' }],
-        description: message,
-      });
+      setError(String((err as Error).message ?? err));
     } finally {
       setSyncing(false);
     }

@@ -5,9 +5,12 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Database, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { Kanban } from '@dxos/plugin-kanban/types';
+
+import { meta } from '#meta';
 
 import { TRELLO_SOURCE } from '../constants';
 import {
@@ -54,7 +57,19 @@ const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.p
         return yield* Effect.fail(new Error('No database for integration ref'));
       }
 
-      return yield* Effect.gen(function* () {
+      const integrationId = integration.dxn.asEchoDXN()?.echoId ?? 'unknown';
+      const toastIdSuffix = kanbanRef
+        ? `${integrationId}.${kanbanRef.dxn.asEchoDXN()?.echoId ?? 'unknown'}`
+        : integrationId;
+
+      // Wrap the body in `Effect.either` so we can emit a toast on either path
+      // before returning. Per-target failures stay silent at the toast level
+      // (they're surfaced via `lastError` on each target row instead); the
+      // toast only distinguishes "the whole sync ran" from "the whole sync
+      // crashed before per-target work began" (e.g. credential parse, fetch
+      // boards, no db).
+      const outcome = yield* Effect.either(
+        Effect.gen(function* () {
         const integrationObj = yield* Database.load(integration);
         const accessToken = yield* Database.load(integrationObj.accessToken);
         const creds = credentialsFromAccessToken(accessToken);
@@ -70,10 +85,14 @@ const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.p
       // Trello foreign key. The integration mechanism only ever creates this shape
       // for Trello, so view-variant Kanbans here would be a programmer error; we
       // filter them out rather than cast past the union later.
+      // Stored target refs use the space-relative form (`dxn:echo:@:...`); the
+      // input `kanbanRef` may be absolute. Compare by echo id to be tolerant.
+      const kanbanFilterId = kanbanRef?.dxn.asEchoDXN()?.echoId;
       const targetEntries = integrationObj.targets.flatMap((target) => {
         const targetObj = target.object.target;
+        const targetEchoId = target.object.dxn.asEchoDXN()?.echoId;
         if (!targetObj) return [];
-        if (kanbanRef && target.object.dxn.toString() !== kanbanRef.dxn.toString()) return [];
+        if (kanbanFilterId && targetEchoId !== kanbanFilterId) return [];
         if (!Obj.instanceOf(Kanban.Kanban, targetObj)) return [];
         if (!Kanban.isKanbanItems(targetObj)) return [];
         const foreignId = Obj.getMeta(targetObj).keys.find((k) => k.source === TRELLO_SOURCE)?.id;
@@ -166,7 +185,33 @@ const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.p
       }
 
         return { pulled, pushed };
-      }).pipe(Effect.provide(Database.layer(db)));
+        }).pipe(Effect.provide(Database.layer(db))),
+      );
+
+      // Toasting is UX-only and the layout/capability service isn't always
+      // present (tests, server-side invocations). `Effect.ignore` swallows
+      // missing-service errors so they don't fail the sync.
+      if (outcome._tag === 'Right') {
+        yield* Effect.ignore(
+          Operation.invoke(LayoutOperation.AddToast, {
+            id: `${meta.id}.sync-success.${toastIdSuffix}`,
+            icon: 'ph--check--regular',
+            title: ['sync-toast.success.label', { ns: meta.id }],
+          }),
+        );
+        return outcome.right;
+      } else {
+        const message = String((outcome.left as Error)?.message ?? outcome.left);
+        yield* Effect.ignore(
+          Operation.invoke(LayoutOperation.AddToast, {
+            id: `${meta.id}.sync-error.${toastIdSuffix}`,
+            icon: 'ph--warning--regular',
+            title: ['sync-toast.error.label', { ns: meta.id }],
+            description: message,
+          }),
+        );
+        return yield* Effect.fail(outcome.left);
+      }
     }, Effect.provide(FetchHttpClient.layer)),
   ),
 );
