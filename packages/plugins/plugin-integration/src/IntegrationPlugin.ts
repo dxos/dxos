@@ -3,10 +3,10 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AccessToken } from '@dxos/types';
 
-import { AppGraphBuilder, OperationHandler, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, BuiltinProviders, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 
 import { translations } from './translations';
@@ -18,5 +18,9 @@ export const IntegrationPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [AccessToken.AccessToken, Integration.Integration] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupAppGraph,
+    activate: BuiltinProviders,
+  }),
   Plugin.make,
 );

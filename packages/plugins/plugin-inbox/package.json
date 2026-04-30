@@ -98,6 +98,7 @@
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-integration": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",

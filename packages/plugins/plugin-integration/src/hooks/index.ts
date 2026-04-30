@@ -3,3 +3,5 @@
 //
 
 export * from './useOAuth';
+export * from './useSyncIntegration';
+export * from './useSyncTargetsChecklist';

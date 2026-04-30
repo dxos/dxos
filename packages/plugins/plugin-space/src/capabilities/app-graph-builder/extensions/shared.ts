@@ -12,6 +12,7 @@ import { Migrations } from '@dxos/migrations';
 import { type Operation } from '@dxos/operation';
 import { type Node } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
+import type { EchoViewRefPath } from '@dxos/schema';
 import { ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
 import { type Label } from '@dxos/ui-types';
 
@@ -143,7 +144,7 @@ export type ViewIndex = {
  */
 // TODO(wittjosiah): Make reactive to schema registry changes (currently only object/view mutations trigger updates).
 export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.AnyEntity[]): ViewIndex => {
-  const viewSchemas = schemas.filter((schema) => ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false)));
+  const viewSchemas = schemas.filter((schema) => ViewAnnotation.has(schema));
 
   const viewsByTypename = new Map<string, Obj.Any[]>();
 
@@ -152,9 +153,24 @@ export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.An
     const viewObjects = get(AtomQuery.make(space.db, filter));
 
     for (const viewObject of viewObjects) {
+      const holderSchema = Obj.getSchema(viewObject);
+      const path = holderSchema
+        ? ViewAnnotation.get(holderSchema).pipe(Option.getOrElse(() => [] as EchoViewRefPath))
+        : ([] as EchoViewRefPath);
+
+      if (path.length === 0) {
+        continue;
+      }
+
       const viewSnapshot = get(AtomObj.make(viewObject));
-      const viewRef = viewSnapshot.view;
-      const viewTarget = viewRef ? get(AtomObj.make(viewRef)) : undefined;
+      let holder: unknown = viewSnapshot;
+      for (const segment of path) {
+        holder =
+          holder == null || typeof holder !== 'object'
+            ? undefined
+            : (holder as Record<string, unknown>)[segment];
+      }
+      const viewTarget = holder !== undefined ? get(AtomObj.make(holder as Obj.Any)) : undefined;
       const typename = getTypenameFromQuery(viewTarget?.query?.ast);
       if (typename) {
         const existing = viewsByTypename.get(typename) ?? [];

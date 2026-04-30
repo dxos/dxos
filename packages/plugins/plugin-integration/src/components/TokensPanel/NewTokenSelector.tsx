@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
+import { useCapabilities } from '@dxos/app-framework/ui';
 import { type Key } from '@dxos/echo';
 import { DropdownMenu, IconButton, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
@@ -11,6 +12,7 @@ import { AccessToken } from '@dxos/types';
 import { useOAuth } from '#hooks';
 import { meta } from '#meta';
 
+import { IntegrationProvider } from '../../capabilities';
 import { OAUTH_PRESETS, type OAuthPreset } from '../../defs';
 
 type NewTokenSelectorProps = {
@@ -22,6 +24,16 @@ type NewTokenSelectorProps = {
 export const NewTokenSelector = ({ spaceId, onAddAccessToken, onCustomToken }: NewTokenSelectorProps) => {
   const { t } = useTranslation(meta.id);
   const { startOAuthFlow } = useOAuth({ spaceId, onAddAccessToken });
+  const providers = useCapabilities(IntegrationProvider).flat();
+
+  // Only show OAuth presets that have a contributed IntegrationProvider for
+  // their source. Without a provider, the preset would produce an Integration
+  // that nothing can act on. Sources without providers (or before their plugin
+  // loads) are simply hidden from the menu.
+  const visiblePresets = useMemo(() => {
+    const sources = new Set(providers.map((p) => p.source));
+    return OAUTH_PRESETS.filter((preset) => sources.has(preset.source));
+  }, [providers]);
 
   const createOauthPreset = async (preset?: OAuthPreset) => {
     if (!preset) {
@@ -41,7 +53,7 @@ export const NewTokenSelector = ({ spaceId, onAddAccessToken, onCustomToken }: N
       <DropdownMenu.Portal>
         <DropdownMenu.Content sideOffset={4} collisionPadding={8}>
           <DropdownMenu.Viewport>
-            {OAUTH_PRESETS.map((preset) => (
+            {visiblePresets.map((preset) => (
               <TokenMenuItem key={preset.label} preset={preset} onSelect={createOauthPreset} />
             ))}
             <TokenMenuItem onSelect={createOauthPreset} />

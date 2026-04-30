@@ -92,7 +92,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           if (SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
             return false;
           }
-          if (ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
+          if (ViewAnnotation.has(schema)) {
             return false;
           }
           if (Type.getTypename(schema) === Collection.Collection.typename) {

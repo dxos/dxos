@@ -5,7 +5,6 @@
 import { OperationHandlerSet } from '@dxos/operation';
 
 const Handlers = OperationHandlerSet.lazy(
-  () => import('./access-token-created'),
   () => import('./get-trello-boards'),
   () => import('./sync-trello-board'),
 );

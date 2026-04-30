@@ -105,6 +105,7 @@ const ID = {
   TICTACTOE: 'org.dxos.plugin.tictactoe',
   TOKEN_MANAGER: 'org.dxos.plugin.token-manager',
   TRANSCRIPTION: 'org.dxos.plugin.transcription',
+  TRELLO: 'org.dxos.plugin.trello',
   VOXEL: 'org.dxos.plugin.voxel',
   WNFS: 'org.dxos.plugin.wnfs',
   ZEN: 'org.dxos.plugin.zen',
@@ -174,6 +175,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       ID.PIPELINE,
       ID.SIDEKICK,
       ID.TRANSCRIPTION,
+      ID.TRELLO,
       ID.ZEN,
     ],
   ]

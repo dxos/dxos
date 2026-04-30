@@ -126,7 +126,11 @@ const shouldRetry = (error: HttpClientError.HttpClientError | Cause.TimeoutExcep
 
 /**
  * Common pipeline for Trello requests:
- *  - execute via the injected HttpClient
+ *  - execute via the injected HttpClient with its tracer disabled (Effect's
+ *    tracer adds a `traceparent` header which trips CORS preflight on
+ *    api.trello.com — Trello answers the GET fine but doesn't handle the
+ *    preflight OPTIONS, so the browser blocks the response. Same workaround
+ *    we use for Google's userinfo endpoint).
  *  - parse JSON body
  *  - 15s timeout
  *  - exponential retry with jitter, up to 3 attempts, only on transient failures
@@ -134,16 +138,19 @@ const shouldRetry = (error: HttpClientError.HttpClientError | Cause.TimeoutExcep
  *  - scope the response so its body stream is released even on failure
  */
 const runRequest = <T>(request: HttpClientRequest.HttpClientRequest): TrelloEffect<T> =>
-  request.pipe(
-    HttpClient.execute,
-    Effect.flatMap((res) => res.json as Effect.Effect<T, HttpClientError.HttpClientError>),
-    Effect.timeout('15 seconds'),
-    Effect.retry({
-      schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
-      while: shouldRetry,
-    }),
-    Effect.scoped,
-  ) as TrelloEffect<T>;
+  Effect.gen(function* () {
+    const httpClient = yield* HttpClient.HttpClient;
+    const clientNoTracer = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    return yield* clientNoTracer.execute(request).pipe(
+      Effect.flatMap((res) => res.json as Effect.Effect<T, HttpClientError.HttpClientError>),
+      Effect.timeout('15 seconds'),
+      Effect.retry({
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+        while: shouldRetry,
+      }),
+      Effect.scoped,
+    );
+  }) as TrelloEffect<T>;
 
 /** Returns the authenticated member's identity. */
 export const fetchMember = (creds: TrelloCredentials): TrelloEffect<TrelloMember> =>

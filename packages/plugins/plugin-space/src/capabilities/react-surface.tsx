@@ -5,13 +5,14 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import React, { type ComponentProps, useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
-import { Database, Obj, type Ref } from '@dxos/echo';
-import { Collection, type View } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type Space, SpaceState, getSpace, isSpace, useSpace, useSpaces } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
@@ -155,27 +156,34 @@ export default Capability.makeModule(
         role: 'article',
         filter: (
           data,
-        ): data is { companionTo: Obj.OfShape<{ view: Ref.Ref<View.View> }>; subject: 'selected-objects' } => {
+        ): data is { companionTo: Obj.Unknown; subject: 'selected-objects' } => {
           if (data.subject !== 'selected-objects' || !Obj.isObject(data.companionTo)) {
             return false;
           }
 
-          // TODO(burdon): Check companionTo.view.target is valid.
           const schema = Obj.getSchema(data.companionTo);
-          return Option.fromNullable(schema).pipe(
-            Option.flatMap((schema) => ViewAnnotation.get(schema)),
-            Option.getOrElse(() => false),
-          );
+          const path = schema ? Option.getOrElse(ViewAnnotation.get(schema), () => [] as readonly string[]) : [];
+          const viewTarget = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.companionTo, path) : undefined;
+          return !!viewTarget;
         },
         // TODO(burdon): Replace with mosaic.
-        component: ({ data, ref }) => (
-          <ObjectCardStack
-            key={Obj.getDXN(data.companionTo).toString()}
-            objectId={Obj.getDXN(data.companionTo).toString()}
-            view={data.companionTo.view.target!}
-            ref={ref}
-          />
-        ),
+        component: ({ data, ref }) => {
+          const schema = Obj.getSchema(data.companionTo);
+          const path = schema ? Option.getOrElse(ViewAnnotation.get(schema), () => [] as readonly string[]) : [];
+          const view = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.companionTo, path) : undefined;
+          if (!view) {
+            return null;
+          }
+
+          return (
+            <ObjectCardStack
+              key={Obj.getDXN(data.companionTo).toString()}
+              objectId={Obj.getDXN(data.companionTo).toString()}
+              view={view}
+              ref={ref}
+            />
+          );
+        },
       }),
       Surface.create({
         id: JOIN_DIALOG,
@@ -198,14 +206,21 @@ export default Capability.makeModule(
       Surface.create({
         id: 'create-initial-space-form-[hue]',
         role: 'form-input',
-        filter: (data): data is { prop: string; schema: Schema.Schema<any> } => {
+        filter: (
+          data,
+        ): data is { prop: string; schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
           const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, HueAnnotationId);
           return !!annotation;
         },
-        component: ({ data: _, ...inputProps }) => {
-          const { label, readonly, type, getValue, onValueChange } = inputProps as any as FormFieldComponentProps;
-          const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange]);
-          const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange]);
+        component: ({ data, ...inputProps }) => {
+          const ast = data.fieldPropertyAst;
+          if (!ast) {
+            return null;
+          }
+
+          const { label, readonly, getValue, onValueChange } = inputProps as any as FormFieldComponentProps;
+          const handleChange = useCallback((nextHue: string) => onValueChange(ast, nextHue), [ast, onValueChange]);
+          const handleReset = useCallback(() => onValueChange(ast, undefined), [ast, onValueChange]);
           return (
             <Input.Root>
               <Input.Label>{label}</Input.Label>
@@ -217,14 +232,21 @@ export default Capability.makeModule(
       Surface.create({
         id: 'create-initial-space-form-[icon]',
         role: 'form-input',
-        filter: (data): data is { prop: string; schema: Schema.Schema<any> } => {
+        filter: (
+          data,
+        ): data is { prop: string; schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
           const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, IconAnnotationId);
           return !!annotation;
         },
-        component: ({ data: _, ...inputProps }) => {
-          const { label, readonly, type, getValue, onValueChange } = inputProps as any as FormFieldComponentProps;
-          const handleChange = useCallback((nextIcon: string) => onValueChange(type, nextIcon), [onValueChange]);
-          const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange]);
+        component: ({ data, ...inputProps }) => {
+          const ast = data.fieldPropertyAst;
+          if (!ast) {
+            return null;
+          }
+
+          const { label, readonly, getValue, onValueChange } = inputProps as any as FormFieldComponentProps;
+          const handleChange = useCallback((nextIcon: string) => onValueChange(ast, nextIcon), [ast, onValueChange]);
+          const handleReset = useCallback(() => onValueChange(ast, undefined), [ast, onValueChange]);
           return (
             <Input.Root>
               <Input.Label>{label}</Input.Label>
@@ -247,6 +269,7 @@ export default Capability.makeModule(
           prop: string;
           schema: Schema.Schema.Any;
           target: Database.Database | Collection.Collection | undefined;
+          fieldPropertyAst?: SchemaAST.AST;
         } => {
           if (data.prop !== 'typename') {
             return false;
@@ -255,8 +278,13 @@ export default Capability.makeModule(
           const annotation = findAnnotation((data.schema as Schema.Schema.All).ast, TypeInputOptionsAnnotationId);
           return !!annotation;
         },
-        component: ({ data: { schema, target }, ...inputProps }) => {
-          const props = inputProps as any as FormFieldComponentProps;
+        component: ({ data: { schema, target, fieldPropertyAst }, ...inputProps }) => {
+          const ast = fieldPropertyAst;
+          if (!ast) {
+            return null;
+          }
+
+          const props = { ...inputProps, type: ast } as any as FormFieldComponentProps;
           const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
           const space = useSpace(db?.spaceId);
           const annotation = findAnnotation<TypeInputOptions>(schema.ast, TypeInputOptionsAnnotationId)!;
@@ -268,19 +296,22 @@ export default Capability.makeModule(
       Surface.create({
         id: 'object-properties',
         role: 'object-properties',
-        filter: (data): data is { subject: { view: Ref.Ref<View.View> } } => {
+        filter: (data): data is { subject: Obj.Unknown } => {
           if (!Obj.isObject(data.subject)) {
             return false;
           }
 
           const schema = Obj.getSchema(data.subject);
-          return Option.fromNullable(schema).pipe(
-            Option.flatMap((schema) => ViewAnnotation.get(schema)),
-            Option.getOrElse(() => false),
-          );
+          const path = schema ? Option.getOrElse(ViewAnnotation.get(schema), () => [] as readonly string[]) : [];
+          const viewTarget = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.subject, path) : undefined;
+          return !!viewTarget;
         },
         component: ({ data }) => {
-          const view = data.subject.view.target;
+          const schema = Obj.getSchema(data.subject);
+          const path = schema ? Option.getOrElse(ViewAnnotation.get(schema), () => [] as readonly string[]) : [];
+          const view =
+            path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.subject, path) : undefined;
+
           if (!view) {
             return null;
           }

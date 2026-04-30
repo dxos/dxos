@@ -3,16 +3,17 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { type ComponentProps } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 
 import { IntegrationAuthButton } from '#components';
-import { IntegrationArticle, TokensContainer } from '#containers';
+import { IntegrationArticle, SyncTargetsChecklist, TokensContainer } from '#containers';
 import { meta } from '#meta';
 
+import { SYNC_TARGETS_DIALOG } from '../constants';
 import { OAUTH_PRESETS } from '../defs';
 import { Integration } from '../types';
 
@@ -52,6 +53,11 @@ export default Capability.makeModule(() =>
 
           return <IntegrationAuthButton source={data.source} db={space.db} />;
         },
+      }),
+      Surface.create({
+        id: SYNC_TARGETS_DIALOG,
+        filter: AppSurface.component<ComponentProps<typeof SyncTargetsChecklist>>(AppSurface.Dialog, SYNC_TARGETS_DIALOG),
+        component: ({ data }) => <SyncTargetsChecklist {...data.props} />,
       }),
     ]),
   ),

@@ -2,51 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Ref } from '@dxos/echo';
-import { log } from '@dxos/log';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { Obj } from '@dxos/echo';
+import { Button, Panel, useTranslation } from '@dxos/react-ui';
 
+import { useSyncTargetsChecklist } from '#hooks';
 import { meta } from '#meta';
 
-import { useIntegrationProvider, type RemoteTarget } from '../../capabilities/integration-provider';
+import { useIntegrationProvider } from '../../capabilities/integration-provider';
 import { type Integration } from '../../types';
-import { SyncTargetsChecklist } from '../SyncTargetsChecklist';
 
 export type IntegrationArticleProps = AppSurface.ObjectArticleProps<Integration.Integration>;
 
 export const IntegrationArticle = ({ subject }: IntegrationArticleProps) => {
   const { t } = useTranslation(meta.id);
-  const { invokePromise } = useOperationInvoker();
-
   const accessToken = subject.accessToken.target;
   const provider = useIntegrationProvider(accessToken?.source);
-
-  const [checklistOpen, setChecklistOpen] = useState(false);
-  const [availableTargets, setAvailableTargets] = useState<readonly RemoteTarget[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>();
-
-  const handleOpenChecklist = useCallback(async () => {
-    if (!provider) return;
-    setLoading(true);
-    setError(undefined);
-    try {
-      const result = (await invokePromise(provider.getSyncTargets as any, {
-        integration: Ref.make(subject),
-      })) as { targets: readonly RemoteTarget[] };
-      setAvailableTargets(result.targets);
-      setChecklistOpen(true);
-    } catch (err) {
-      log.catch(err);
-      setError(String((err as Error).message ?? err));
-    } finally {
-      setLoading(false);
-    }
-  }, [provider, subject, invokePromise]);
+  const { available: syncTargetsAvailable, loading, error, openChecklist } = useSyncTargetsChecklist(subject);
 
   return (
     <Panel.Root>
@@ -64,28 +38,30 @@ export const IntegrationArticle = ({ subject }: IntegrationArticleProps) => {
         <section className='flex flex-col gap-1'>
           <div className='flex items-center justify-between'>
             <h3 className='text-sm font-medium'>{t('targets.label', { defaultValue: 'Sync targets' })}</h3>
-            <button
-              type='button'
-              onClick={handleOpenChecklist}
-              disabled={!provider || loading}
-              className='text-sm px-2 py-1 border rounded'
-            >
+            <Button onClick={openChecklist} disabled={!syncTargetsAvailable || loading}>
               {loading
                 ? t('loading.label', { defaultValue: 'Loading…' })
-                : t('change targets.label', { defaultValue: 'Change sync targets' })}
-            </button>
+                : t('change-targets.label', { defaultValue: 'Change sync targets' })}
+            </Button>
           </div>
           {error && <div className='text-xs text-error'>{error}</div>}
           {!provider && (
             <div className='text-xs text-subdued'>
-              {t('no provider.message', {
+              {t('no-provider.message', {
                 defaultValue: 'No service plugin is registered for this integration.',
+              })}
+            </div>
+          )}
+          {provider && !syncTargetsAvailable && (
+            <div className='text-xs text-subdued'>
+              {t('no-sync-support.message', {
+                defaultValue: 'Sync targets aren’t supported by this integration yet.',
               })}
             </div>
           )}
           {(subject.targets ?? []).length === 0 ? (
             <div className='text-xs text-subdued'>
-              {t('no targets.message', {
+              {t('no-targets.message', {
                 defaultValue: 'No targets selected. Click "Change sync targets" to choose.',
               })}
             </div>
@@ -99,8 +75,8 @@ export const IntegrationArticle = ({ subject }: IntegrationArticleProps) => {
                     <div className='text-sm'>{label}</div>
                     <div className='text-xs text-subdued'>
                       {target.lastSyncAt
-                        ? `${t('last sync.label', { defaultValue: 'Last synced' })}: ${new Date(target.lastSyncAt).toLocaleString()}`
-                        : t('never synced.label', { defaultValue: 'Never synced' })}
+                        ? `${t('last-sync.label', { defaultValue: 'Last synced' })}: ${new Date(target.lastSyncAt).toLocaleString()}`
+                        : t('never-synced.label', { defaultValue: 'Never synced' })}
                     </div>
                     {target.lastError && <div className='text-xs text-error'>{target.lastError}</div>}
                   </li>
@@ -110,14 +86,6 @@ export const IntegrationArticle = ({ subject }: IntegrationArticleProps) => {
           )}
         </section>
       </Panel.Content>
-
-      {checklistOpen && provider && (
-        <SyncTargetsChecklist
-          integration={subject}
-          availableTargets={availableTargets}
-          onClose={() => setChecklistOpen(false)}
-        />
-      )}
     </Panel.Root>
   );
 };

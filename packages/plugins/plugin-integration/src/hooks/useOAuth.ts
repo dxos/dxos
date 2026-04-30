@@ -2,18 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
-import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 import { useCallback, useEffect, useState } from 'react';
 
 import { Context } from '@dxos/context';
 import { type Key, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type OAuthFlowResult } from '@dxos/protocols';
 import { useEdgeClient } from '@dxos/react-edge-client';
@@ -29,38 +23,6 @@ import {
   performMobileOAuthFlow,
   performOAuthFlow,
 } from '../oauth';
-
-const GoogleUserInfo = Schema.Struct({
-  email: Schema.optional(Schema.String),
-});
-
-/** Fetches the Google user's email and prepends it to the token's note. */
-export const enrichGoogleTokenWithEmail = (token: AccessToken.AccessToken) =>
-  Effect.gen(function* () {
-    if (token.source !== 'google.com' || !token.token) {
-      return;
-    }
-
-    const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token.token, 'Bearer')));
-
-    // TODO(wittjosiah): Without this, executing the request results in CORS errors when traced.
-    //  Is this an issue on Google's side or is it a bug in `@effect/platform`?
-    //  https://github.com/Effect-TS/effect/issues/4568
-    const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
-
-    const userInfo = yield* HttpClientRequest.get('https://www.googleapis.com/oauth2/v3/userinfo').pipe(
-      httpClientWithTracerDisabled.execute,
-      Effect.flatMap(HttpClientResponse.schemaBodyJson(GoogleUserInfo)),
-      Effect.scoped,
-    );
-
-    if (userInfo.email) {
-      Obj.change(token, (token) => (token.account = userInfo.email));
-    }
-  }).pipe(
-    Effect.provide(FetchHttpClient.layer),
-    Effect.catchAll((error) => Effect.sync(() => log.warn('failed to fetch google user info', { error }))),
-  );
 
 export type UseOAuthOptions = {
   spaceId: Key.SpaceId;
@@ -103,7 +65,6 @@ export const useOAuth = ({ spaceId, onAddAccessToken }: UseOAuthOptions) => {
           Obj.change(token, (token) => {
             token.token = data.accessToken;
           });
-          yield* enrichGoogleTokenWithEmail(token);
           onAddAccessToken(token);
         }),
       ).catch(log.catch);
@@ -118,7 +79,9 @@ export const useOAuth = ({ spaceId, onAddAccessToken }: UseOAuthOptions) => {
     async (preset: OAuthPreset) => {
       const token = Obj.make(AccessToken.AccessToken, {
         source: preset.source,
-        note: preset.note,
+        // Default note to the service label so `Obj.getLabel(token)` has a meaningful
+        // fallback before the provider's `onTokenCreated` fills in `account`.
+        note: preset.note ?? preset.label,
         token: '',
       });
 
@@ -149,7 +112,6 @@ export const useOAuth = ({ spaceId, onAddAccessToken }: UseOAuthOptions) => {
 
         await runAndForwardErrors(
           oauthEffect.pipe(
-            Effect.tap(() => enrichGoogleTokenWithEmail(token)),
             Effect.tap(() => onAddAccessToken(token)),
             Effect.catchAll((error) => Effect.sync(() => log.catch(error))),
           ),

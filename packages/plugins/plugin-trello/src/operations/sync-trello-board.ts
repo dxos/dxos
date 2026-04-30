@@ -43,9 +43,20 @@ const TARGET_CONCURRENCY = 3;
 const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ integration, kanban: kanbanRef }) {
-      const integrationObj = yield* Database.load(integration);
-      const accessToken = yield* Database.load(integrationObj.accessToken);
-      const creds = credentialsFromAccessToken(accessToken);
+      // TODO(wittjosiah): the operation should just depend on `Database.Service`
+      //   once the OperationInvoker has a `databaseResolver`. For now, derive
+      //   the db from the input ref's target and provide `Database.layer(db)`
+      //   for the handler body.
+      const integrationTarget = integration.target;
+      const db = integrationTarget ? Obj.getDatabase(integrationTarget) : undefined;
+      if (!db) {
+        return yield* Effect.fail(new Error('No database for integration ref'));
+      }
+
+      return yield* Effect.gen(function* () {
+        const integrationObj = yield* Database.load(integration);
+        const accessToken = yield* Database.load(integrationObj.accessToken);
+        const creds = credentialsFromAccessToken(accessToken);
 
       // Determine which target entries to process: items-variant Kanbans with a
       // Trello foreign key. The integration mechanism only ever creates this shape
@@ -134,7 +145,8 @@ const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.p
         };
       }
 
-      return { pulled, pushed };
+        return { pulled, pushed };
+      }).pipe(Effect.provide(Database.layer(db)));
     }, Effect.provide(FetchHttpClient.layer)),
   ),
 );

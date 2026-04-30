@@ -9824,6 +9824,9 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@dxos/plugin-integration':
+        specifier: workspace:*
+        version: link:../plugin-integration
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -9993,6 +9996,9 @@ importers:
       '@dxos/echo-atom':
         specifier: workspace:*
         version: link:../../core/echo/echo-atom
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client

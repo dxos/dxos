@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { Integration } from '@dxos/plugin-integration/types';
 
@@ -39,7 +39,11 @@ export const GetTrelloBoards = Operation.make({
   output: Schema.Struct({
     targets: Schema.Array(RemoteTarget),
   }),
-  services: [Database.Service],
+  // TODO(wittjosiah): declare `services: [Database.Service]` once composer's
+  //   OperationInvoker is wired with a `databaseResolver`. Today, declaring it
+  //   forces DynamicRuntime validation to fail before the handler runs because
+  //   the managed runtime doesn't carry per-space Database. The handler
+  //   provides `Database.layer(db)` itself.
 });
 
 /**
@@ -71,5 +75,7 @@ export const SyncTrelloBoard = Operation.make({
       updated: Schema.Number,
     }),
   }),
-  services: [Database.Service],
+  // TODO(wittjosiah): same as GetTrelloBoards above — declare
+  //   `services: [Database.Service]` once the OperationInvoker has a
+  //   `databaseResolver`. Handler provides the layer itself for now.
 });

@@ -20,6 +20,7 @@ import {
   AppGraphBuilder,
   BlueprintDefinition,
   InboxSettings,
+  IntegrationProvider,
   NavigationResolver,
   OperationHandler,
   ReactSurface,
@@ -133,6 +134,10 @@ export const InboxPlugin = Plugin.define(meta).pipe(
           Operation.invoke(InboxOperation.OnCreateSpace, params),
         ),
       ),
+  }),
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupAppGraph,
+    activate: IntegrationProvider,
   }),
   Plugin.make,
 );

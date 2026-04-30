@@ -6,10 +6,16 @@ import { Capability } from '@dxos/app-framework';
 import { OperationHandlerSet } from '@dxos/operation';
 
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
+export const BuiltinProviders = Capability.lazy('BuiltinProviders', () => import('./builtin-providers'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),
 );
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 
-export { IntegrationProvider, type RemoteTarget, useIntegrationProvider } from './integration-provider';
+export {
+  IntegrationProvider,
+  type OnTokenCreated,
+  type RemoteTarget,
+  useIntegrationProvider,
+} from './integration-provider';

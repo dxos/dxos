@@ -36,7 +36,7 @@ export const OAUTH_PRESETS: OAuthPreset[] = [
     provider: OAuthProvider.LINEAR,
     source: 'linear.app',
     label: 'Linear',
-    scopes: ['read', 'write'],
+    scopes: ['write'],
   },
   {
     provider: OAuthProvider.SLACK,

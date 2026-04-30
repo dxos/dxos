@@ -116,6 +116,9 @@ export const reconcileBoardCards: (
       });
       const persisted = yield* Database.add(obj);
       newRefs.push(Ref.make(persisted) as Ref.Ref<Obj.Unknown>);
+      // Index the new object so the per-column ordering pass below can find it
+      // alongside pre-existing locals.
+      localByForeignId.set(card.id, persisted);
       touchedByPull.add(Obj.getDXN(persisted).toString());
       added++;
     }
@@ -148,6 +151,30 @@ export const reconcileBoardCards: (
       }
     });
   }
+
+  // Per-column order: rebuild `kanban.arrangement.columns` from Trello's `pos`,
+  // since that's what the items-variant kanban renderer reads to order cards
+  // within a column. Remote wins on conflict — same policy as mapped fields.
+  // Closed cards stay in the order; the projection filters them at render time.
+  const cardsByList = new Map<string, TrelloCard[]>();
+  for (const card of remoteCards) {
+    const ln = listName(card.idList);
+    if (!cardsByList.has(ln)) cardsByList.set(ln, []);
+    cardsByList.get(ln)!.push(card);
+  }
+  const newColumns: Record<string, { ids: string[] }> = {};
+  for (const [ln, cards] of cardsByList) {
+    const sorted = [...cards].sort((a, b) => a.pos - b.pos);
+    const ids = sorted
+      .map((card) => localByForeignId.get(card.id))
+      .filter((obj): obj is Obj.Unknown => obj != null)
+      .map((obj) => obj.id);
+    newColumns[ln] = { ids };
+  }
+  Obj.change(kanban, (kanban) => {
+    const m = kanban as Obj.Mutable<typeof kanban>;
+    m.arrangement.columns = newColumns;
+  });
 
   return { added, updated, removed, touchedByPull };
 });

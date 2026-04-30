@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AccessToken } from '@dxos/types';
 
@@ -18,10 +18,12 @@ export const AccessTokenCreated = Operation.make({
   meta: { key: `${INTEGRATION_OPERATION}.access-token-created`, name: 'Access Token Created' },
   input: Schema.Struct({ accessToken: AccessToken.AccessToken }),
   output: Schema.Void,
-  // Some consumers (e.g. plugin-trello) auto-create an Integration when an OAuth
-  // token is added. Declaring Database.Service here makes that available without
-  // forcing handlers that don't need it to provide their own layer.
-  services: [Database.Service],
+  // TODO(wittjosiah): declare `services: [Database.Service]` once composer's
+  //   OperationInvoker is wired with a `databaseResolver`. Today, declaring it
+  //   forces DynamicRuntime validation to fail before any handler runs because
+  //   the managed runtime doesn't carry per-space Database. Handlers that need
+  //   Database derive it from input objects via `Obj.getDatabase` and provide
+  //   `Database.layer(db)` themselves.
 });
 
 /**
@@ -45,7 +47,8 @@ export const CreateIntegration = Operation.make({
     }).pipe(Schema.optional),
   }),
   output: Integration.Integration,
-  services: [Database.Service],
+  // TODO(wittjosiah): see AccessTokenCreated above. Handler should provide
+  //   `Database.layer(db)` itself for now.
 });
 
 /**
@@ -69,5 +72,6 @@ export const SetIntegrationTargets = Operation.make({
     added: Schema.Number,
     removed: Schema.Number,
   }),
-  services: [Database.Service],
+  // TODO(wittjosiah): see AccessTokenCreated above. Handler provides the
+  //   layer itself for now.
 });
