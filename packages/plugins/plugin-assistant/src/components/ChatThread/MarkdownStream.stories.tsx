@@ -15,7 +15,7 @@ import {
   type MarkdownStreamController,
   type MarkdownStreamProps,
   textStream,
-} from '@dxos/react-ui-components';
+} from '@dxos/react-ui-markdown';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ContentBlock } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';

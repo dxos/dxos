@@ -18,7 +18,7 @@ import { type Queue, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
-import { type MarkdownStreamController } from '@dxos/react-ui-components';
+import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
@@ -227,7 +227,24 @@ const ChatThread = (props: ChatThreadProps) => {
   const identity = useIdentity();
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
 
+  // When `Mod-d` fires from the document editor we are about to be re-instantiated
+  // (debug toggles the editor's extension stack). Mark this editor as the focus source so
+  // the post-rerender effect below restores focus to the new view.
+  const refocusAfterDebug = useRef(false);
+  const extensions = useChatKeymapExtensions({
+    event,
+    onToggleDebug: () => {
+      refocusAfterDebug.current = true;
+    },
+  });
+
   const controllerRef = useRef<MarkdownStreamController | null>(null);
+  useEffect(() => {
+    if (refocusAfterDebug.current) {
+      refocusAfterDebug.current = false;
+      controllerRef.current?.focus();
+    }
+  }, [debug]);
   useEffect(() => {
     return event.on((event) => {
       switch (event.type) {
@@ -263,6 +280,7 @@ const ChatThread = (props: ChatThreadProps) => {
       messages={messages}
       error={error}
       debug={debug}
+      extensions={extensions}
       onEvent={handleEvent}
       ref={controllerRef}
     />
@@ -290,6 +308,66 @@ type ChatPromptProps = ThemedClassName<
     }
 >;
 
+/**
+ * CodeMirror keymap shared by the chat document (Thread) and the prompt editor — pressing
+ * Mod-d, Mod-Arrow keys, etc. when either editor is focused emits the corresponding
+ * `ChatEvent` on the shared event bus.
+ *
+ * `onToggleDebug` runs synchronously in the keymap callback (before the event emits and
+ * any state updates), so the caller can mark its editor as the source and re-focus it
+ * after the rerender — debug mode toggling re-instantiates the document editor and would
+ * otherwise lose focus.
+ */
+const useChatKeymapExtensions = ({
+  event,
+  onToggleDebug,
+}: {
+  event: Event<ChatEvent>;
+  onToggleDebug?: () => void;
+}): Extension[] => {
+  return useMemo<Extension[]>(() => {
+    return [
+      Prec.highest(
+        keymap.of([
+          {
+            key: 'Mod-d',
+            preventDefault: true,
+            run: () => {
+              onToggleDebug?.();
+              event.emit({ type: 'toggle-debug' });
+              return true;
+            },
+          },
+          {
+            key: 'Mod-ArrowUp',
+            preventDefault: true,
+            run: () => {
+              event.emit({ type: 'nav-previous' });
+              return true;
+            },
+            shift: () => {
+              event.emit({ type: 'thread-open' });
+              return true;
+            },
+          },
+          {
+            key: 'Mod-ArrowDown',
+            preventDefault: true,
+            run: () => {
+              event.emit({ type: 'nav-next' });
+              return true;
+            },
+            shift: () => {
+              event.emit({ type: 'thread-close' });
+              return true;
+            },
+          },
+        ]),
+      ),
+    ].filter(isTruthy);
+  }, [event, onToggleDebug]);
+};
+
 const ChatPrompt = ({
   classNames,
   outline,
@@ -303,7 +381,7 @@ const ChatPrompt = ({
   onOnlineChange,
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.id);
-  const { db, processor, event } = useChatContext(CHAT_PROMPT_NAME);
+  const { db, debug, processor, event } = useChatContext(CHAT_PROMPT_NAME);
 
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(processor.streaming);
@@ -340,46 +418,21 @@ const ChatPrompt = ({
     },
   });
 
-  const extensions = useMemo<Extension[]>(() => {
-    return [
-      Prec.highest(
-        keymap.of([
-          {
-            key: 'Mod-d',
-            preventDefault: true,
-            run: () => {
-              event.emit({ type: 'toggle-debug' });
-              return true;
-            },
-          },
-          {
-            key: 'Mod-ArrowUp',
-            preventDefault: true,
-            run: () => {
-              event.emit({ type: 'nav-previous' });
-              return true;
-            },
-            shift: () => {
-              event.emit({ type: 'thread-open' });
-              return true;
-            },
-          },
-          {
-            key: 'Mod-ArrowDown',
-            preventDefault: true,
-            run: () => {
-              event.emit({ type: 'nav-next' });
-              return true;
-            },
-            shift: () => {
-              event.emit({ type: 'thread-close' });
-              return true;
-            },
-          },
-        ]),
-      ),
-    ].filter(isTruthy);
-  }, [event, expandable]);
+  // Mirror the document editor's pattern so focus is restored after a debug-mode toggle
+  // (idempotent if the prompt editor wasn't reinstantiated).
+  const refocusAfterDebug = useRef(false);
+  const extensions = useChatKeymapExtensions({
+    event,
+    onToggleDebug: () => {
+      refocusAfterDebug.current = true;
+    },
+  });
+  useEffect(() => {
+    if (refocusAfterDebug.current) {
+      refocusAfterDebug.current = false;
+      editorRef.current?.focus();
+    }
+  }, [debug]);
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {

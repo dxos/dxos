@@ -65,14 +65,25 @@ export const nodeToJson = (state: EditorState, node: SyntaxNode): Tag | undefine
       const children: any[] = [];
       let child = node.node.firstChild;
 
+      const appendText = (raw: string) => {
+        if (raw.length === 0) {
+          return;
+        }
+        const last = children[children.length - 1];
+        if (typeof last === 'string') {
+          children[children.length - 1] = last + raw;
+        } else {
+          children.push(raw);
+        }
+      };
+
       while (child) {
         // Skip the opening and closing tags.
         if (child.type.name !== 'OpenTag' && child.type.name !== 'CloseTag') {
           if (child.type.name === 'Text') {
-            const text = state.doc.sliceString(child.from, child.to).trim();
-            if (text) {
-              children.push(text);
-            }
+            appendText(state.doc.sliceString(child.from, child.to));
+          } else if (child.type.name === 'EntityReference' || child.type.name === 'CharacterReference') {
+            appendText(decodeXmlEntity(state.doc.sliceString(child.from, child.to)));
           } else if (child.type.name === 'Element') {
             const data = nodeToJson(state, child);
             if (data) {
@@ -83,11 +94,47 @@ export const nodeToJson = (state: EditorState, node: SyntaxNode): Tag | undefine
         child = child.nextSibling;
       }
 
-      if (children.length > 0) {
-        tag.children = children;
+      // Trim leading/trailing whitespace on string children but preserve structure.
+      const trimmed = children
+        .map((value) => (typeof value === 'string' ? value.trim() : value))
+        .filter((value) => typeof value !== 'string' || value.length > 0);
+
+      if (trimmed.length > 0) {
+        tag.children = trimmed;
       }
     }
 
     return tag;
   }
+};
+
+/**
+ * Decode the common XML named entities and numeric character references that
+ * Lezer XML produces as `EntityReference` / `CharacterReference` nodes.
+ */
+const XML_NAMED_ENTITIES: Record<string, string> = {
+  '&lt;': '<',
+  '&gt;': '>',
+  '&amp;': '&',
+  '&quot;': '"',
+  '&apos;': "'",
+};
+
+const decodeXmlEntity = (raw: string): string => {
+  const named = XML_NAMED_ENTITIES[raw];
+  if (named !== undefined) {
+    return named;
+  }
+  const numeric = /^&#(x?)([0-9a-fA-F]+);$/.exec(raw);
+  if (numeric) {
+    const code = parseInt(numeric[2], numeric[1] ? 16 : 10);
+    if (Number.isFinite(code)) {
+      try {
+        return String.fromCodePoint(code);
+      } catch {
+        // Fall through and return the raw text on out-of-range code points.
+      }
+    }
+  }
+  return raw;
 };

@@ -11,7 +11,7 @@ import browser from 'webextension-polyfill';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { IconButton, Input, ScrollContainer, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
-import { MarkdownViewer } from '@dxos/react-ui-markdown';
+import { MarkdownBlock } from '@dxos/react-ui-markdown';
 import { mx } from '@dxos/ui-theme';
 
 import { SPACE_ID_PROP, SPACE_MODE_PROP } from '../../config';
@@ -174,7 +174,7 @@ export const Chat = ({ classNames, host, url, onClip }: ChatProps) => {
                 {filteredMessages.map((message, i) => (
                   <div key={i} className={mx('flex', 'text-base', message.role === 'user' && 'justify-end my-3')}>
                     <p className={mx(message.role === 'user' ? 'bg-sky-500 px-2 py-1 rounded-sm' : 'text-description')}>
-                      <MarkdownViewer
+                      <MarkdownBlock
                         content={message.parts
                           .map((part) => (part.type === 'text' ? part.text : null))
                           .filter(Boolean)

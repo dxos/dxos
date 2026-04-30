@@ -13,6 +13,7 @@ import {
   createBasicExtensions,
   createThemeExtensions,
   submit,
+  xmlFormatting,
 } from '@dxos/ui-editor';
 import { isTruthy } from '@dxos/util';
 
@@ -36,6 +37,7 @@ export const useChatExtensions = ({ extensions, lineWrapping = false, placeholde
       [
         createThemeExtensions({ themeMode }),
         createBasicExtensions({ bracketMatching: false, lineWrapping, placeholder }),
+        xmlFormatting(),
         submit({ onSubmit }),
         extensions,
       ].filter(isTruthy),

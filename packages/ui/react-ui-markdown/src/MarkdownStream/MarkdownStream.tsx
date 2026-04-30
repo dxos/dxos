@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EditorSelection, Transaction } from '@codemirror/state';
+import { EditorSelection, type Extension, Transaction } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
@@ -40,12 +40,14 @@ import {
   fader,
   wire,
   wireBypass,
+  xmlBlockDecoration,
   xmlTagContextEffect,
   xmlTagResetEffect,
   xmlTagUpdateEffect,
   xmlTags,
   autoScroll,
   documentSlots,
+  xmlFormatting,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
@@ -53,6 +55,7 @@ import { isTruthy } from '@dxos/util';
 import { type StreamerOptions, createStreamer } from './stream';
 export interface MarkdownStreamController extends XmlWidgetStateManager {
   get length(): number | undefined;
+  focus: () => void;
   scrollToBottom: (behavior?: ScrollBehavior) => void;
   navigateNext: () => void;
   navigatePrevious: () => void;
@@ -86,6 +89,12 @@ export type MarkdownStreamProps = ThemedClassName<
       /** Per-token delay (ms) for the streaming queue. Default `0`. */
       streamDelayMs?: number;
     };
+    /**
+     * Extra CodeMirror extensions appended after the built-in stack — use for keymaps or
+     * other host-level behaviour (e.g. `Mod-d` to toggle debug) that should apply when the
+     * document is focused.
+     */
+    extensions?: Extension;
     onEvent?: (event: MarkdownStreamEvent) => void;
   } & (XmlTagsOptions & AutoScrollProps)
 >;
@@ -94,12 +103,17 @@ export type MarkdownStreamProps = ThemedClassName<
  * Codemirror-based markdown editor with xml tag widtgets and streaming support.
  */
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
-  ({ classNames, debug, content, options, registry, onEvent }, forwardedRef) => {
+  ({ classNames, debug, content, options, registry, extensions, onEvent }, forwardedRef) => {
     // Store current content so that we can toggle debug mode.
     const contentRef = useRef(content);
 
     // Codemirror editor.
-    const { parentRef, view, viewRef, widgets } = useMarkdownStreamTextEditor(contentRef, { debug, registry, options });
+    const { parentRef, view, viewRef, widgets } = useMarkdownStreamTextEditor(contentRef, {
+      debug,
+      registry,
+      options,
+      extensions,
+    });
 
     // Streaming text queue.
     const [queue, setQueue, queueRef] = useStateWithRef(Effect.runSync(Queue.unbounded<string>()));
@@ -182,7 +196,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
   },
 );
 
-type MarkdownStreamTextEditorParams = Pick<MarkdownStreamProps, 'debug' | 'registry' | 'options'>;
+type MarkdownStreamTextEditorParams = Pick<MarkdownStreamProps, 'debug' | 'registry' | 'options' | 'extensions'>;
 
 type MarkdownStreamTextEditorResult = UseTextEditor & {
   viewRef: RefObject<EditorView | null>;
@@ -194,7 +208,7 @@ type MarkdownStreamTextEditorResult = UseTextEditor & {
  */
 const useMarkdownStreamTextEditor = (
   currentContent: RefObject<string | undefined>,
-  { debug, registry, options }: MarkdownStreamTextEditorParams,
+  { debug, registry, options, extensions: extraExtensions }: MarkdownStreamTextEditorParams,
 ): MarkdownStreamTextEditorResult => {
   const { themeMode } = useThemeContext();
 
@@ -228,6 +242,17 @@ const useMarkdownStreamTextEditor = (
             skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
           }),
           preview(),
+          // xmlFormatting(),
+          // NOTE: An ancestor element must set `data-hue` so `.dx-panel` resolves to the user's
+          // hue tokens (see `packages/ui/ui-theme/src/css/components/panel.css`). Tailwind picks
+          // up these utility classes from this source file.
+          xmlBlockDecoration({
+            tag: 'prompt',
+            lineClass: 'cm-prompt-line flex justify-end my-2',
+            contentClass: 'cm-prompt-bubble dx-panel px-3 py-1.5 rounded-sm [&_*]:text-inherit!',
+            hideTags: true,
+          }),
+          xmlFormatting(),
           xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
           scroller({ overScroll: 80 }),
           ...(options?.autoScroll ? [autoScroll()] : []),
@@ -245,9 +270,19 @@ const useMarkdownStreamTextEditor = (
             : []),
           ...(options?.fader ? [fader()] : []),
         ],
+        extraExtensions,
       ].filter(isTruthy),
     };
-  }, [themeMode, registry, debug, options?.autoScroll, options?.wire, options?.cursor, options?.fader]);
+  }, [
+    themeMode,
+    registry,
+    debug,
+    options?.autoScroll,
+    options?.wire,
+    options?.cursor,
+    options?.fader,
+    extraExtensions,
+  ]);
 
   const viewRef = useDynamicRef(view);
   return { view, viewRef, parentRef, widgets };
@@ -314,6 +349,11 @@ const createMarkdownStreamController = ({
   return {
     get length() {
       return viewRef.current?.state.doc.length;
+    },
+
+    /** Focus the editor. */
+    focus: () => {
+      viewRef.current?.focus();
     },
 
     /** Scroll to bottom. */

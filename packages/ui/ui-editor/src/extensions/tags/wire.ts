@@ -33,8 +33,8 @@ export type WireOptions = {
 };
 
 /**
- * Extension that intercepts appended text and inserts it one character at a time,
- * except for XML tags, links, and images which are flushed atomically.
+ * Intercepts appended text and inserts it one character at a time, while flushing XML tags,
+ * markdown links, and images atomically for smooth typewriter-style streaming.
  */
 export const wire = (options: WireOptions = {}): Extension => {
   const rate = options.rate ?? DEFAULT_RATE;
