@@ -16,7 +16,7 @@ import { FeedTraceSink, ProcessManager } from '@dxos/functions-runtime';
 import { ObjectId } from '@dxos/keys';
 import { dbg } from '@dxos/log';
 import { AutomationPlugin } from '@dxos/plugin-automation';
-import { useComputeRuntime } from '@dxos/plugin-automation/hooks';
+import { useComputeRuntime, useComputeRuntimeService } from '@dxos/plugin-automation/hooks';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -126,21 +126,23 @@ const SimulatedAgent = Process.make(
 const DefaultStory = () => {
   const [space] = useSpaces();
   const runtime = useComputeRuntime(space?.id);
+  // ProcessManagerService is provided by the runtime layer but intentionally not exposed in
+  // ComputeServices; pulling it via the hook keeps story spawning out of typed app code.
+  const manager = useComputeRuntimeService(ProcessManager.ProcessManagerService, space?.id);
   const invokeCounterRef = useRef(0);
 
   const handleRunAgent = useCallback(() => {
-    if (!runtime) {
+    if (!runtime || !manager) {
       return;
     }
     const scenarioIndex = invokeCounterRef.current++;
     void runtime.runPromise(
       Effect.gen(function* () {
-        const manager = yield* ProcessManager.ProcessManagerService;
         const handle = yield* manager.spawn(SimulatedAgent);
         yield* handle.submitInput(scenarioIndex);
       }),
     );
-  }, [runtime]);
+  }, [runtime, manager]);
 
   if (!space || !runtime) {
     return <Loading />;

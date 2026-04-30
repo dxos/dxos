@@ -192,7 +192,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
             iconOnly
             label={toLocalizedString(primaryAction.properties?.label, t)}
             data-testid={primaryAction.properties?.testId}
-            onClick={() => onAction(primaryAction as Node.Action)}
+            onClick={() => onAction(primaryAction as Node.Action, { parent: item, caller: NAV_TREE_ITEM })}
           />
         )}
         <MenuActions item={item} menuActions={menuActions} onAction={onAction} />
@@ -216,16 +216,18 @@ const MenuActions = ({
   }
 
   if (menuActions.length === 1) {
+    const action = menuActions[0];
     return (
       <IconButton
         density='coarse'
         classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
         variant='ghost'
-        icon={menuActions[0].properties?.icon ?? 'ph--placeholder--regular'}
+        icon={action.properties?.icon ?? 'ph--placeholder--regular'}
         iconOnly
-        label={toLocalizedString(menuActions[0].properties?.label, t)}
-        data-testid={menuActions[0].properties?.testId}
-        onClick={() => onAction(menuActions[0] as Node.Action)}
+        label={toLocalizedString(action.properties?.label, t)}
+        data-testid={action.properties?.testId}
+        disabled={action.properties?.disabled}
+        onClick={() => onAction(action as Node.Action, { parent: item, caller: NAV_TREE_ITEM })}
       />
     );
   }

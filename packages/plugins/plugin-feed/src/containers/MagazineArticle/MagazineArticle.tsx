@@ -308,40 +308,19 @@ const useMagazinePosts = (
   view: MagazineView,
   starTag: Tag.Tag | undefined,
 ) => {
-  const postFingerprint = subject.posts.map((ref) => ref.dxn.toString()).join();
+  // Fingerprint depends on resolution status so the memo invalidates as refs settle and the
+  // posts they point to become available.
+  const postFingerprint = subject.posts
+    .map((ref) => `${ref.dxn.toString()}:${ref.target ? 'resolved' : 'pending'}`)
+    .join();
 
   return useMemo<Subscription.Post[]>(() => {
-    const seenDxn = new Set<string>();
-    const seenLink = new Set<string>();
-    const seenGuid = new Set<string>();
-
     const resolved: Subscription.Post[] = [];
     for (const ref of subject.posts) {
       const target = ref.target;
       if (!target) {
         continue;
       }
-
-      // Dedup by DXN, then by link, then by guid. Two different feeds can publish the
-      // same article (distinct Post objects, same `link` / `guid`); without secondary
-      // dedup the masonry shows them as duplicate tiles.
-      const dxn = Obj.getDXN(target).toString();
-      if (
-        seenDxn.has(dxn) ||
-        (target.link && seenLink.has(target.link)) ||
-        (target.guid && seenGuid.has(target.guid))
-      ) {
-        continue;
-      }
-
-      seenDxn.add(dxn);
-      if (target.link) {
-        seenLink.add(target.link);
-      }
-      if (target.guid) {
-        seenGuid.add(target.guid);
-      }
-
       resolved.push(target);
     }
 
@@ -361,6 +340,26 @@ const useMagazinePosts = (
         visible = resolved.filter((post) => !post.archived);
         break;
     }
+
+    // Dedup after view filtering so a duplicate kept by the dedup pass that gets filtered out
+    // (e.g. archived) doesn't suppress another visible duplicate.
+    const seenDxn = new Set<string>();
+    const seenLink = new Set<string>();
+    const seenGuid = new Set<string>();
+    visible = visible.filter((post) => {
+      const dxn = Obj.getDXN(post).toString();
+      if (seenDxn.has(dxn) || (post.link && seenLink.has(post.link)) || (post.guid && seenGuid.has(post.guid))) {
+        return false;
+      }
+      seenDxn.add(dxn);
+      if (post.link) {
+        seenLink.add(post.link);
+      }
+      if (post.guid) {
+        seenGuid.add(post.guid);
+      }
+      return true;
+    });
 
     if (sort === 'rank') {
       // Lower rank = more relevant; posts without rank fall to the bottom.

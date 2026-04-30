@@ -38,9 +38,6 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(({ space, 
 
   const runtime = useComputeRuntimeService(Process.ProcessMonitorService, space.id);
   const activeProcesses = useAtomValue(runtime?.processTreeAtom ?? atomEmpty);
-  if (activeProcesses.length === 0) {
-    return <div />;
-  }
 
   const handleCommitClick = useCallback(
     (commit: Commit) => {
@@ -57,10 +54,16 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(({ space, 
     [invokePromise],
   );
 
+  if (activeProcesses.length === 0 && commits.length === 0) {
+    return <div />;
+  }
+
   return (
     <Panel.Root {...props} ref={forwardedRef}>
       <Panel.Content className='grid grid-rows-[min-content_1fr]'>
-        <ProcessTree classNames={mx('max-h-[8lh] px-2 border-b border-separator')} processes={activeProcesses} />
+        {activeProcesses.length > 0 && (
+          <ProcessTree classNames={mx('max-h-[8lh] px-2 border-b border-separator')} processes={activeProcesses} />
+        )}
         <Timeline branches={branches} commits={commits} compact onCommitClick={handleCommitClick} />
       </Panel.Content>
     </Panel.Root>

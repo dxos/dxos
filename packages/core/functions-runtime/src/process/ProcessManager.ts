@@ -666,6 +666,11 @@ export class ProcessManagerImpl implements Manager {
     this.#monitor = {
       processTree: Effect.sync(() => this.#registry.get(this.#processTreeAtom)),
       processTreeAtom: this.#processTreeAtom,
+      terminate: (pid) =>
+        Effect.suspend(() => {
+          const handle = this.#handles.get(pid);
+          return handle ? handle.terminate() : Effect.void;
+        }),
     };
   }
 

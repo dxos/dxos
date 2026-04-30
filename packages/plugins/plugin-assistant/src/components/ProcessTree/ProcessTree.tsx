@@ -87,8 +87,11 @@ export const ProcessTree = composable<HTMLDivElement, ProcessTreeProps>(
                           iconOnly
                           variant='ghost'
                           size={4}
-                          label='Actions'
-                          onClick={() => onProcessTerminate?.(process)}
+                          label={`Terminate ${process.params.name ?? process.pid}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onProcessTerminate?.(process);
+                          }}
                         />
                       )}
                     </Treegrid.Cell>

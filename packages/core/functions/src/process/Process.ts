@@ -338,6 +338,12 @@ export interface Monitor {
    * Atom for the process tree.
    */
   processTreeAtom: Atom.Atom<readonly Info[]>;
+
+  /**
+   * Terminate a running process by id.
+   * No-op when the process is unknown or already in a terminal state.
+   */
+  terminate(pid: ID): Effect.Effect<void>;
 }
 
 export class ProcessMonitorService extends Context.Tag('@dxos/functions/ProcessMonitorService')<
