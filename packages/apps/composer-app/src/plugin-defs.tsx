@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework';
 import { APP_DOMAIN } from '@dxos/app-toolkit';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
-import { type LogBuffer } from '@dxos/log';
+import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
 import { isTruthy } from '@dxos/util';
 
@@ -21,7 +21,7 @@ export type State = {
   config: Config;
   services: ClientServicesProvider;
   observability: Promise<Observability.Observability>;
-  logBuffer: LogBuffer;
+  logStore: IdbLogStore;
 };
 
 export type PluginConfig = State & {
@@ -209,7 +209,7 @@ export const getPlugins = async (
     config,
     services,
     observability,
-    logBuffer,
+    logStore,
     isDev,
     isLocal,
     isLabs,
@@ -392,7 +392,7 @@ export const getPlugins = async (
     CrxPlugin(),
     CrxBridgePlugin(),
     DailySummaryPlugin(),
-    DebugPlugin({ logBuffer }),
+    DebugPlugin({ logStore }),
     DiscordPlugin(),
     ExplorerPlugin(),
     FeedPlugin(),

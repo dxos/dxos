@@ -2,9 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type LogConfig, type LogEntry, type LogProcessor } from '@dxos/log';
+import {
+  type LogConfig,
+  type LogEntry,
+  type LogProcessor,
+  inferEnvironmentName,
+  serializeToJsonl,
+} from '@dxos/log';
 
-import { encodeLogEntry, trimJsonlToSize } from './encode';
+import { trimJsonlToSize } from './trim';
 
 const DEFAULT_STORE_NAME = 'logs';
 const DEFAULT_FLUSH_INTERVAL = 250;
@@ -36,7 +42,10 @@ export type IdbLogStoreOptions = {
   maxRecords?: number;
   /** Eviction sweep interval in milliseconds. Default `30_000`. */
   evictionInterval?: number;
-  /** Optional tab identifier embedded in every record. Defaults to a random id. */
+  /**
+   * Identifier embedded in every record's `i` field.
+   * Defaults to a scope-aware id of the form `<scope>:<name>:<suffix>` — see {@link inferEnvironmentName}.
+   */
   tabId?: string;
 };
 
@@ -79,7 +88,7 @@ export class IdbLogStore {
     this.#flushBatchSize = options.flushBatchSize ?? DEFAULT_FLUSH_BATCH_SIZE;
     this.#maxRecords = options.maxRecords ?? DEFAULT_MAX_RECORDS;
     this.#evictionInterval = options.evictionInterval ?? DEFAULT_EVICTION_INTERVAL;
-    this.#tabId = options.tabId ?? generateTabId();
+    this.#tabId = options.tabId ?? inferEnvironmentName();
 
     this.#installLifecycleHandlers();
     this.#scheduleEviction();
@@ -92,7 +101,7 @@ export class IdbLogStore {
     if (this.#closed) {
       return;
     }
-    const line = encodeLogEntry(entry, this.#tabId);
+    const line = serializeToJsonl(entry, { env: this.#tabId });
     if (line === undefined) {
       return;
     }
@@ -332,14 +341,6 @@ export class IdbLogStore {
     }
   }
 }
-
-const generateTabId = (): string => {
-  const cryptoRef = (globalThis as any).crypto as Crypto | undefined;
-  if (cryptoRef?.randomUUID) {
-    return cryptoRef.randomUUID();
-  }
-  return `t-${Math.random().toString(36).slice(2, 10)}`;
-};
 
 const openDatabase = (name: string, storeName: string): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {

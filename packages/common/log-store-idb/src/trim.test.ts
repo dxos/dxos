@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { trimJsonlToSize } from './encode';
+import { trimJsonlToSize } from './trim';
 
 describe('trimJsonlToSize', () => {
   test('returns empty string when no input', ({ expect }) => {

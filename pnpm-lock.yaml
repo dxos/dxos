@@ -2383,6 +2383,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/log-store-idb':
+        specifier: workspace:*
+        version: link:../../common/log-store-idb
       '@dxos/migrations':
         specifier: workspace:*
         version: link:../../sdk/migrations
@@ -8808,6 +8811,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/log-store-idb':
+        specifier: workspace:*
+        version: link:../../common/log-store-idb
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
@@ -15852,6 +15858,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/log-store-idb':
+        specifier: workspace:*
+        version: link:../../common/log-store-idb
       '@dxos/network-manager':
         specifier: workspace:*
         version: link:../../core/mesh/network-manager
