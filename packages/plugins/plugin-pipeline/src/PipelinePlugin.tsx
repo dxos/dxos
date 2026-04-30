@@ -15,8 +15,7 @@ import { Pipeline } from '@dxos/types';
 
 import { AppGraphBuilder, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
-
-import { translations } from './translations';
+import { translations } from '#translations';
 
 export const PipelinePlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

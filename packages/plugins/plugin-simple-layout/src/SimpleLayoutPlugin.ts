@@ -15,9 +15,8 @@ import {
   UrlHandler,
 } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { SimpleLayoutEvents } from '#types';
-
-import { translations } from './translations';
 
 export type SimpleLayoutPluginOptions = {
   /** Determines if running in popover window context (hides mobile-specific UI). */

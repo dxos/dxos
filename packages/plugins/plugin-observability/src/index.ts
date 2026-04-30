@@ -7,4 +7,3 @@ export * from './components';
 export * from './meta';
 export * from './ObservabilityPlugin';
 export { consumeRecoveryFlag } from './recovery-flag';
-export { translations as observabilityTranslations } from './translations';

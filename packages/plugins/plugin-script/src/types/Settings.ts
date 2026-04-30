@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { EditorInputMode } from '@dxos/ui-editor';
+import { EditorInputMode } from '@dxos/ui-editor/types';
 
 export const Settings = Schema.mutable(
   Schema.Struct({

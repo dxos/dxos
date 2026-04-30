@@ -14,9 +14,8 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { ReactSurface } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { Spec } from '#types';
-
-import { translations } from './translations';
 
 const iconAnnotation = Annotation.IconAnnotation.get(Spec.Spec).pipe(Option.getOrThrow);
 

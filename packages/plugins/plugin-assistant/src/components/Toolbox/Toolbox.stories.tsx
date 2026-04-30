@@ -15,7 +15,8 @@ import { MapPlugin } from '@dxos/plugin-map';
 import { TablePlugin } from '@dxos/plugin-table';
 import { corePlugins } from '@dxos/plugin-testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { Toolbox, type ToolboxProps } from './Toolbox';
 
 const DefaultStory = (props: ToolboxProps) => {

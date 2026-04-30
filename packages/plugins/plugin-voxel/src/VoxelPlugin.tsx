@@ -14,9 +14,8 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { BlueprintDefinition, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { Voxel } from '#types';
-
-import { translations } from './translations';
 
 export const VoxelPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({

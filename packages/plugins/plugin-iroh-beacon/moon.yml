@@ -6,5 +6,6 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/translations.ts'
       - '--platform=browser'
       - '--platform=node'

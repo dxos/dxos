@@ -16,8 +16,9 @@ import { type SchemaPropertyDefinition } from '@dxos/schema';
 import { TestSchema } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
+import { translations } from '#translations';
+
 import { type TableFeatures } from '../../model';
-import { translations } from '../../translations';
 import { DynamicTable } from './DynamicTable';
 
 random.seed(0);

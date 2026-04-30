@@ -21,8 +21,8 @@ import { withRegistry } from '@dxos/storybook-utils';
 import { Person, Pipeline } from '@dxos/types';
 
 import { usePipelineBoardModel } from '#hooks';
+import { translations } from '#translations';
 
-import { translations } from '../../translations';
 import { type ItemProps, PipelineComponent } from './PipelineComponent';
 
 const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {

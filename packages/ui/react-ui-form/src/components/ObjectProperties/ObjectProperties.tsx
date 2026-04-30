@@ -15,7 +15,8 @@ import { FactoryAnnotation } from '@dxos/schema';
 import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { Form, type FormFieldMap, omitId } from '../Form';
 
 export type ObjectPropertiesProps = PropsWithChildren<{ object: Obj.Unknown }>;
