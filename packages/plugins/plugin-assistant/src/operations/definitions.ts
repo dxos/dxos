@@ -68,7 +68,7 @@ export const RunPromptInNewChat = Operation.make({
     objects: Schema.optional(Schema.Array(Obj.Unknown)),
     /** Blueprint keys to look up and bind to the new chat. */
     blueprints: Schema.optional(Schema.Array(Schema.String)),
-    /** Raw instructions or an existing Prompt object reference (e.g. from the prompts surface). */
+    /** Raw instructions or an existing Routine object reference. */
     prompt: Schema.Union(Schema.String, Ref.Ref(Routine.Routine)),
     /**
      * When true, skips opening the chat: runs the Agent prompt operation against the new chat via the compute runtime (traced).
