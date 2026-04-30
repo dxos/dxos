@@ -11,10 +11,10 @@ import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, flushAndSync, printList, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
-import { Operation } from '@dxos/compute';
 
 import { getFunctionStatus, printFunction, selectDeployedFunction } from './util';
 

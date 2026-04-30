@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Database, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Database, Ref } from '@dxos/echo';
 
 import { meta } from '#meta';
 

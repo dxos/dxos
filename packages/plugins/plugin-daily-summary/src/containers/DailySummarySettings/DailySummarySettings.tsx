@@ -5,9 +5,9 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Ref } from '@dxos/echo';
 import { Trigger } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
+import { Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';

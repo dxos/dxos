@@ -3,8 +3,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Plugin } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Obj } from '@dxos/echo';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 
 import { SpaceEvents, SpaceCapabilities } from '../types';

@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/compute';
 
 import { type Magazine, Subscription } from '../types';
 import { findStarTag } from '../util';

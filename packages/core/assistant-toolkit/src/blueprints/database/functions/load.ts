@@ -5,8 +5,8 @@
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 
-import { Database, Entity } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Database, Entity } from '@dxos/echo';
 
 import { Load } from './definitions';
 

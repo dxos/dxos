@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Database, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Database, Ref } from '@dxos/echo';
 
 import { type ModelType, MODEL_TYPES } from '../models';
 import { Voxel } from '../types';

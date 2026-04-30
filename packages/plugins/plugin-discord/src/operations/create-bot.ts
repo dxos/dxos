@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Database } from '@dxos/echo';
 
 import { Discord } from '../types';
 import { CreateBot } from './definitions';

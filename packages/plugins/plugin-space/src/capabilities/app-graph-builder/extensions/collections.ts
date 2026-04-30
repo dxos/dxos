@@ -8,10 +8,10 @@ import * as Option from 'effect/Option';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, Segments, getObjectPathFromObject, toUrlPath } from '@dxos/app-toolkit';
 import { SpaceState, getSpace, isSpace } from '@dxos/client/echo';
+import { Operation } from '@dxos/compute';
 import { Collection, Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/compute';
 import { CreateAtom, Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 

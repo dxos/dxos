@@ -6,9 +6,9 @@ import * as Schema from 'effect/Schema';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiContextService } from '@dxos/assistant';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { QueueService, Trace, TriggerEvent } from '@dxos/compute';
 import { Operation, OperationRegistry } from '@dxos/compute';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 
 import { Agent } from '../../../types';
 

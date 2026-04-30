@@ -7,8 +7,8 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { log } from '@dxos/log';
 import { Operation } from '@dxos/compute';
+import { log } from '@dxos/log';
 import { Graph } from '@dxos/plugin-graph';
 import { expandAttendableId } from '@dxos/react-ui-attention';
 

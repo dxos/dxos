@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Database, Obj } from '@dxos/echo';
 
 import { Plan, Agent } from '../../../types';
 import { GetContext } from './definitions';

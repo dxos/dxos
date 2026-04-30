@@ -8,10 +8,10 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
+import { type Operation } from '@dxos/compute';
 import { type Database } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
-import { type Operation } from '@dxos/compute';
 import { type Label } from '@dxos/ui-types';
 import { type ComplexMap, type Position } from '@dxos/util';
 

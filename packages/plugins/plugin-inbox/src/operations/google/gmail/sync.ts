@@ -12,10 +12,10 @@ import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 
-import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { Trace } from '@dxos/compute';
-import { log } from '@dxos/log';
 import { Operation } from '@dxos/compute';
+import { Database, Feed, Filter, Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';

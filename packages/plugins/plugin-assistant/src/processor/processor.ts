@@ -20,11 +20,11 @@ import {
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/compute';
+import { Trace, type CredentialsService, type QueueService } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { type Database, Feed, Obj, Ref } from '@dxos/echo';
 import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
-import { Trace, type CredentialsService, type QueueService } from '@dxos/compute';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/compute';
 import type { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Message } from '@dxos/types';
 

@@ -4,9 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Database, Obj, Ref } from '@dxos/echo';
 import { Trace } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 /**

@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { log } from '@dxos/log';
 import { Operation } from '@dxos/compute';
+import { log } from '@dxos/log';
 
 import { NativeFilesystemCapabilities } from '../types';
 import { loadWorkspace, openDirectoryPicker } from '../util';

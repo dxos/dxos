@@ -11,10 +11,10 @@ import { ConsolePrinter } from '@dxos/ai';
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiRequest, GenerationObserver, ToolExecutionServices, createToolkit } from '@dxos/assistant';
 import { Blueprint } from '@dxos/compute';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ObjectId } from '@dxos/keys';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Organization } from '@dxos/types';
 
 import { AssistantTestLayer } from './testing';

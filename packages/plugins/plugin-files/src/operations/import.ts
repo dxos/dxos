@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { log } from '@dxos/log';
 import { Operation } from '@dxos/compute';
+import { log } from '@dxos/log';
 import { type MaybePromise, byPosition } from '@dxos/util';
 
 import { Import } from './definitions';

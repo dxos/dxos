@@ -6,8 +6,8 @@ import * as Schema from 'effect/Schema';
 
 import { AiContextService } from '@dxos/assistant';
 import { Blueprint } from '@dxos/compute';
-import { Database } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Database } from '@dxos/echo';
 
 export const QueryBlueprints = Operation.make({
   meta: {

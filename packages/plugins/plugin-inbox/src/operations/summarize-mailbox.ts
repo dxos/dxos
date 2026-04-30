@@ -18,10 +18,10 @@ import {
   makeGraphWriterHandler,
   makeGraphWriterToolkit,
 } from '@dxos/assistant-toolkit';
-import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { QueueService } from '@dxos/compute';
 import { Trace } from '@dxos/compute';
 import { Operation, OperationRegistry } from '@dxos/compute';
+import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { trim } from '@dxos/util';
 

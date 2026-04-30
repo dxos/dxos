@@ -3,8 +3,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { DXN } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Filter, Query, parseId } from '@dxos/react-client/echo';
 import { type Message } from '@dxos/types';

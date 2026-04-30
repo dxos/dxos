@@ -7,8 +7,8 @@ import * as Schema from 'effect/Schema';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
-import { Collection, Database, Obj, QueryAST, Type, View } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Collection, Database, Obj, QueryAST, Type, View } from '@dxos/echo';
 
 import { meta } from '#meta';
 

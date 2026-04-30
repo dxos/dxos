@@ -7,9 +7,9 @@ import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Annotation, Ref } from '@dxos/echo';
 import { Script } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
+import { Annotation, Ref } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
 

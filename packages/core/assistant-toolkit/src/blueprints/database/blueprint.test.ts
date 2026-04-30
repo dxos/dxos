@@ -8,10 +8,10 @@ import * as Effect from 'effect/Effect';
 import { AgentService } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Database, Entity, Feed, Filter, Obj, Query, Ref, Relation, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ObjectId } from '@dxos/keys';
-import { Operation } from '@dxos/compute';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 

@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Database, Entity } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
-import { Operation } from '@dxos/compute';
 
 import { ObjectUpdate } from './definitions';
 

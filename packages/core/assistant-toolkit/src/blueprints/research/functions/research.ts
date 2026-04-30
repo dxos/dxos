@@ -14,10 +14,10 @@ import * as String from 'effect/String';
 import { AiService, ConsolePrinter, OpaqueToolkit } from '@dxos/ai';
 import { AiRequest, GenerationObserver, ToolExecutionServices, createToolkit } from '@dxos/assistant';
 import { Template } from '@dxos/compute';
-import { type DXN, Entity, Obj } from '@dxos/echo';
-import { Database } from '@dxos/echo';
 import { Trace } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
+import { type DXN, Entity, Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { type Message, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 

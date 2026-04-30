@@ -8,12 +8,12 @@ import * as Effect from 'effect/Effect';
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
+import { OperationHandlerSet } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ObjectId } from '@dxos/keys';
-import { Operation } from '@dxos/compute';
-import { OperationHandlerSet } from '@dxos/compute';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { ResearchGraph } from '../../blueprints';

@@ -10,13 +10,13 @@ import * as Stream from 'effect/Stream';
 import { expect } from 'vitest';
 
 import { Blueprint } from '@dxos/compute';
+import { Trace } from '@dxos/compute';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { Trace } from '@dxos/compute';
 import { Process } from '@dxos/functions-runtime';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 

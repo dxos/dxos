@@ -4,9 +4,9 @@ import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { getSpace } from '@dxos/client/echo';
+import { Operation } from '@dxos/compute';
 import { Collection, Obj, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/compute';
 
 import { SpaceOperation } from './definitions';
 

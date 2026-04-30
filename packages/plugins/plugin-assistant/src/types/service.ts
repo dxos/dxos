@@ -4,9 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Operation } from '@dxos/compute';
 import { ComputeGraph } from '@dxos/conductor';
 import { Ref, Type } from '@dxos/echo';
-import { Operation } from '@dxos/compute';
 
 // TODO(burdon): Factor out and reconcile with https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-token-manager/src/defs/presets.ts#L7
 

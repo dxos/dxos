@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AssistantTestLayer } from '@dxos/assistant/testing';
-import { Blueprint } from '@dxos/compute';
 import { SpaceProperties } from '@dxos/client-protocol';
+import { Blueprint } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Collection, DXN, Database, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ObjectId } from '@dxos/keys';
-import { Operation } from '@dxos/compute';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 

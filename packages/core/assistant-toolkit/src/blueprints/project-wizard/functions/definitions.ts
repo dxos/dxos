@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/compute';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { QueueService } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 
 import { Agent } from '../../../types';
 

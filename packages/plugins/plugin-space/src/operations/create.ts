@@ -3,9 +3,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Plugin } from '@dxos/app-framework';
+import { Operation } from '@dxos/compute';
 import { Collection, Obj, Ref } from '@dxos/echo';
 import { Migrations } from '@dxos/migrations';
-import { Operation } from '@dxos/compute';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';

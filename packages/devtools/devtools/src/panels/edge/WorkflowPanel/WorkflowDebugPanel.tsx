@@ -7,13 +7,13 @@ import type * as Layer from 'effect/Layer';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
+import { createEventLogger, Trace } from '@dxos/compute';
+import { QueueService } from '@dxos/compute';
 import { type ComputeGraph, ValueBag, type WorkflowLoader } from '@dxos/conductor';
 import { Context } from '@dxos/context';
 import { Database } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { runAndForwardErrors } from '@dxos/effect';
-import { createEventLogger, Trace } from '@dxos/compute';
-import { QueueService } from '@dxos/compute';
 import { type RuntimeServices, ServiceContainer } from '@dxos/functions-runtime';
 import { RemoteFunctionExecutionService } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';

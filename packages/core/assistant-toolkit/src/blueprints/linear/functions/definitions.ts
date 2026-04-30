@@ -4,9 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Database } from '@dxos/echo';
 import { CredentialsService } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
+import { Database } from '@dxos/echo';
 
 export const SyncIssues = Operation.make({
   meta: {

@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { Trigger } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { FeedAnnotation } from '@dxos/schema';
 
 import { Agent } from '../../../types';

@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { useCallback, useEffect, useState } from 'react';
 
-import type { ComputeNode, ComputeNodeMeta } from '@dxos/conductor';
 import type { ComputeEventPayload } from '@dxos/compute';
+import type { ComputeNode, ComputeNodeMeta } from '@dxos/conductor';
 import { invariant } from '@dxos/invariant';
 
 import { type RuntimeValue } from '../graph';

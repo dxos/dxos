@@ -14,9 +14,6 @@ import * as Match from 'effect/Match';
 import { AiService, ConsolePrinter, OpaqueToolkit, type ModelName } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { Blueprint, Prompt } from '@dxos/compute';
-import { Database, DXN, Feed, Tag, Type } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
-import type { TestContextService } from '@dxos/effect/testing';
 import {
   CredentialsService,
   QueueService,
@@ -25,6 +22,10 @@ import {
   Trace,
   Trigger,
 } from '@dxos/compute';
+import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
+import { Database, DXN, Feed, Tag, Type } from '@dxos/echo';
+import { acquireReleaseResource } from '@dxos/effect';
+import type { TestContextService } from '@dxos/effect/testing';
 import {
   FeedTraceSink,
   Process,
@@ -34,7 +35,6 @@ import {
   TriggerStateStore,
 } from '@dxos/functions-runtime';
 import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
-import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
 
 import { AiContextBinder, AiContextService, AiSession, AiSessionService } from '../conversation';
 import { AgentService } from '../service';

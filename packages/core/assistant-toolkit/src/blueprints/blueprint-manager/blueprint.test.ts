@@ -10,10 +10,10 @@ import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiContextService, AiSessionService } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ObjectId } from '@dxos/keys';
-import { Operation } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 import DatabaseBlueprint from '../database/blueprint';

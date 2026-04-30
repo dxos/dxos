@@ -5,8 +5,8 @@
 import { describe, expect, test } from 'vitest';
 
 import { Client } from '@dxos/client';
-import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Obj } from '@dxos/echo';
 
 // Part 2.
 // TODO(burdon): Cannot test outside of browser.

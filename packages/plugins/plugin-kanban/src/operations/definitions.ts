@@ -3,8 +3,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { View } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { View } from '@dxos/echo';
 
 import { meta } from '#meta';
 

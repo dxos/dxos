@@ -3,13 +3,13 @@
 //
 
 import { type Client } from '@dxos/client';
+import { type Script, getUserFunctionIdInMetadata } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
-import { type Script, getUserFunctionIdInMetadata } from '@dxos/compute';
 import { bundleFunction } from '@dxos/functions-runtime/bundler';
 import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/compute';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 import { type Space } from '@dxos/react-client/echo';
 

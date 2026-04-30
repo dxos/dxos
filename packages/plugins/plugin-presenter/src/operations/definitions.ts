@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Collection } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
 import { meta } from '#meta';

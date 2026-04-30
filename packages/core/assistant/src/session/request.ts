@@ -24,10 +24,10 @@ import {
   withoutToolCallParising,
 } from '@dxos/ai';
 import { type Blueprint } from '@dxos/compute';
-import { Database, Obj } from '@dxos/echo';
 import { Trace } from '@dxos/compute';
-import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/compute';
+import { Database, Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
 import { type AiAssistantError } from '../errors';

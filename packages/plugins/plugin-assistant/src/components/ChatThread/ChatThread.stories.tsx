@@ -9,9 +9,9 @@ import * as Layer from 'effect/Layer';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { ContextQueueService } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { ContextQueueService } from '@dxos/compute';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';

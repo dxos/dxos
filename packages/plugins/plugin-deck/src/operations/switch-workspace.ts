@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, isPinnedWorkspace, LayoutOperation } from '@dxos/app-toolkit';
-import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/compute';
+import { invariant } from '@dxos/invariant';
 import { Graph, Node } from '@dxos/plugin-graph';
 
 import { DeckCapabilities, defaultDeck } from '../types';

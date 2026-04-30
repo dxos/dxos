@@ -7,8 +7,8 @@ import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { SettingsOperation } from '@dxos/app-toolkit';
-import { Filter, Obj } from '@dxos/echo';
 import { type Script } from '@dxos/compute';
+import { Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, Clipboard, Message, useAsyncEffect, useTranslation } from '@dxos/react-ui';

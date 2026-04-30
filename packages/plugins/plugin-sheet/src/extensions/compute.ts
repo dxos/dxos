@@ -15,7 +15,13 @@ import {
 import { Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
 import { type CleanupFn, debounce } from '@dxos/async';
-import { type CellAddress, type CellScalarValue, type ComputeGraph, type ComputeNode, createSheetName } from '@dxos/compute-hyperformula';
+import {
+  type CellAddress,
+  type CellScalarValue,
+  type ComputeGraph,
+  type ComputeNode,
+  createSheetName,
+} from '@dxos/compute-hyperformula';
 import { invariant } from '@dxos/invariant';
 import { documentId, singleValueFacet } from '@dxos/ui-editor';
 

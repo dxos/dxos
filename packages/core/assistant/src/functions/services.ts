@@ -14,10 +14,10 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { OpaqueToolkit } from '@dxos/ai';
+import { Operation, OperationRegistry } from '@dxos/compute';
 import { todo } from '@dxos/debug';
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation, OperationRegistry } from '@dxos/compute';
 
 import { RefFromLLM } from '../types';
 

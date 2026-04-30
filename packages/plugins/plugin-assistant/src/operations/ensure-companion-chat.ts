@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
-import { Filter, Obj, Query } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Filter, Obj, Query } from '@dxos/echo';
 
 import { AssistantCapabilities } from '../types';
 import { CreateChat, EnsureCompanionChat, SetCurrentChat } from './definitions';

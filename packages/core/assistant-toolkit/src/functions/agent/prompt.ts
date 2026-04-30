@@ -20,12 +20,12 @@ import {
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
 import { Template } from '@dxos/compute';
+import { Trace } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { Trace } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 import { PromptError } from '../../errors';

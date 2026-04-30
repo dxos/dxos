@@ -2,7 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type CellAddress, type CellRange, type CompleteCellRange, addressFromA1Notation, addressToA1Notation, isFormula } from '@dxos/compute-hyperformula';
+import {
+  type CellAddress,
+  type CellRange,
+  type CompleteCellRange,
+  addressFromA1Notation,
+  addressToA1Notation,
+  isFormula,
+} from '@dxos/compute-hyperformula';
 import { randomBytes } from '@dxos/crypto';
 import { type Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

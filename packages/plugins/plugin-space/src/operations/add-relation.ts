@@ -2,8 +2,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, Relation } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Database, Relation } from '@dxos/echo';
 
 import { SpaceOperation } from './definitions';
 

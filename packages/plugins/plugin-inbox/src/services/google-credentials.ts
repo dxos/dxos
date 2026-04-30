@@ -6,8 +6,8 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Database, type Ref } from '@dxos/echo';
 import { CredentialsService } from '@dxos/compute';
+import { Database, type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type AccessToken } from '@dxos/types';
 

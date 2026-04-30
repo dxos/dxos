@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
+import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/compute';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Organization, Person } from '@dxos/types';

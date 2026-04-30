@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { AiContextService } from '@dxos/assistant';
-import { Database } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Database } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 import { Plan } from '../../../types';

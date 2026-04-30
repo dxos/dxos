@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Feed, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Feed, Ref } from '@dxos/echo';
 import { Transcript } from '@dxos/types';
 
 import { Create } from './definitions';

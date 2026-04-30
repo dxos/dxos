@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Database } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Database } from '@dxos/echo';
 
 /**
  * Generates a daily summary of recently modified objects using AI.

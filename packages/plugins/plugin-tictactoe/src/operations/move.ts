@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Database, Obj } from '@dxos/echo';
 
 import { checkWin, currentTurn, placeMarker } from '#components';
 import { type TicTacToe } from '#types';

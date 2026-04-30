@@ -7,10 +7,10 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { AiSession, ToolExecutionServices } from '@dxos/assistant';
+import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/compute';
 import { ContentBlock } from '@dxos/types';
 
 import { Agent } from '../../../types';

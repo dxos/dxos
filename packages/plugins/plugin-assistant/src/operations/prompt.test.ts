@@ -8,11 +8,11 @@ import { describe, test } from 'vitest';
 
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ObjectId } from '@dxos/keys';
-import { Operation } from '@dxos/compute';
 import { AutomationPlugin } from '@dxos/plugin-automation/cli';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { ClientPlugin } from '@dxos/plugin-client/cli';

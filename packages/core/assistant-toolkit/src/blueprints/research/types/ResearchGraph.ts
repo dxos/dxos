@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
+import { ContextQueueService, QueueService } from '@dxos/compute';
 import { Database, Feed, Migration, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
-import { ContextQueueService, QueueService } from '@dxos/compute';
 
 /** @deprecated Use ResearchGraph instead. */
 export const LegacyResearchGraph = Schema.Struct({

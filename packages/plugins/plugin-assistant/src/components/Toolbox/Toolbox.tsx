@@ -5,9 +5,9 @@
 import React, { Fragment, useEffect, useState } from 'react';
 
 import { type Blueprint } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { type Database, type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/compute';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';

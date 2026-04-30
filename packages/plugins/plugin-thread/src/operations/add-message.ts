@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { Operation } from '@dxos/compute';
 import { Obj, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/compute';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { AnchoredTo, Message, Thread } from '@dxos/types';

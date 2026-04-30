@@ -18,14 +18,14 @@ import {
   ToolExecutionServices,
 } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
-import { Blueprint } from '@dxos/compute';
 import { type Space } from '@dxos/client/echo';
+import { Blueprint } from '@dxos/compute';
+import { type OperationHandlerSet } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { FunctionImplementationResolver } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { type OperationHandlerSet } from '@dxos/compute';
 import { type Message } from '@dxos/types';
 import { isTruthy } from '@dxos/util';
 

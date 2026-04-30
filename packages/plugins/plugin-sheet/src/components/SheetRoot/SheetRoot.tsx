@@ -4,7 +4,12 @@
 
 import React, { type PropsWithChildren, createContext, useCallback, useContext, useState } from 'react';
 
-import { type CellAddress, type CellRange, type CompleteCellRange, type ComputeGraph } from '@dxos/compute-hyperformula';
+import {
+  type CellAddress,
+  type CellRange,
+  type CompleteCellRange,
+  type ComputeGraph,
+} from '@dxos/compute-hyperformula';
 import { raise } from '@dxos/debug';
 import {
   Grid,

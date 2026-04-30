@@ -4,9 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/compute';
 import { Message } from '@dxos/types';
 
 export const ExtractionInput = Schema.Struct({

@@ -7,8 +7,8 @@ import * as Option from 'effect/Option';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Annotation, Ref, Type } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Annotation, Ref, Type } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceOperation } from '@dxos/plugin-space/operations';

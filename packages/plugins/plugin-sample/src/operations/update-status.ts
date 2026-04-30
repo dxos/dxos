@@ -8,8 +8,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Obj } from '@dxos/echo';
 
 import { UpdateStatus } from './definitions';
 

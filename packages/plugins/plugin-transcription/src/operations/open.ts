@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, Feed, Filter } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Database, Feed, Filter } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
 import { renderByline } from '../util';

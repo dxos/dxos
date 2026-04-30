@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Database, Obj } from '@dxos/echo';
 
 import { DraftMessage } from '../types';
 import { DraftEmail } from './definitions';

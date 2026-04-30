@@ -6,8 +6,8 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
-import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
 import { renderMarkdown } from '../util';

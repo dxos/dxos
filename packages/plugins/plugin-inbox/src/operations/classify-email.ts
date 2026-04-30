@@ -10,11 +10,11 @@ import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Database, Feed, Filter, Obj, Ref, Relation, Tag, Type } from '@dxos/echo';
 import { Trace } from '@dxos/compute';
+import { Operation, OperationRegistry } from '@dxos/compute';
+import { Database, Feed, Filter, Obj, Ref, Relation, Tag, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Operation, OperationRegistry } from '@dxos/compute';
 import { HasSubject, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 

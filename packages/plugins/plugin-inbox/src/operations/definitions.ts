@@ -7,9 +7,9 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client/echo';
-import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { CredentialsService, QueueService, Trace } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
+import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { Actor, Message } from '@dxos/types';
 
 import { meta } from '#meta';

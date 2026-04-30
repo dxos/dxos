@@ -7,9 +7,9 @@ import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { ComputeGraph } from '@dxos/conductor';
 import { Annotation } from '@dxos/echo';
-import { Operation } from '@dxos/compute';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { CanvasBoard } from '@dxos/react-ui-canvas-editor';

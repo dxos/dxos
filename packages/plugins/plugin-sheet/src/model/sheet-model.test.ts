@@ -5,10 +5,10 @@
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
+import { Operation } from '@dxos/compute';
 import { type CellScalarValue, addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula';
 import { TestBuilder, testFunctionPlugins } from '@dxos/compute-hyperformula/testing';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/compute';
 
 import { Sheet, mapFormulaIndicesToRefs, mapFormulaRefsToIndices } from '#types';
 

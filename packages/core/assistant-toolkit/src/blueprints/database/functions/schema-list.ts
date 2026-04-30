@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Prompt, Blueprint } from '@dxos/compute';
-import { Database, Feed, JsonSchema, Type, View } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Database, Feed, JsonSchema, Type, View } from '@dxos/echo';
 
 import { SchemaList } from './definitions';
 

@@ -10,9 +10,9 @@ import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Database } from '@dxos/echo';
 import { Trace } from '@dxos/compute';
 import { Operation, OperationRegistry } from '@dxos/compute';
+import { Database } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 import { Summarize } from './definitions';

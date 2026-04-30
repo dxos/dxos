@@ -17,11 +17,11 @@ import {
   WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/compute';
+import { Reply, Script, Trigger } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { View } from '@dxos/echo';
-import { Reply, Script, Trigger } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/compute';
 import { AssistantBlueprint, translations } from '@dxos/plugin-assistant';
 import { ChessBlueprint, ChessFunctions } from '@dxos/plugin-chess/blueprints';
 import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
