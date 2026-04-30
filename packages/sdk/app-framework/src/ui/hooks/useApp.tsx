@@ -218,7 +218,12 @@ export const useApp = ({
               if (module && state === 'activating' && !readyRef.current) {
                 setStartupProgress((current) => ({
                   ...current,
-                  event: undefined,
+                  // `event` here is the activation event that first
+                  // triggered this module load (plumbed through
+                  // `_loadCapabilitiesForModules` → `_loadModule`).
+                  // Falsy/empty falls back to undefined so consumers can
+                  // tell "no parent context" from "parent context: <X>".
+                  event: event || undefined,
                   module,
                   humanizedName: humanizeModuleId(module),
                 }));

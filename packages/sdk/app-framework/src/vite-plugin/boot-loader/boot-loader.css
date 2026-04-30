@@ -232,7 +232,7 @@
   left: 50%;
   /* Sit just below the centered disc — half the disc plus the configured gap. */
   transform: translate(-50%, calc(var(--boot-loader-disc-size) / 2 + var(--boot-loader-status-gap)));
-  opacity: 0.5;
+  opacity: 0.3;
   /*
    * Pin both `line-height` and `height` so the status box stays exactly the
    * same size regardless of which phase string is currently displayed. With
