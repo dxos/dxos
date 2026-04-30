@@ -5,7 +5,6 @@ tasks:
     deps:
       - esbuild-plugins:compile
       - node-std:compile
-      - vite-plugin-log:compile
       - ^:compile
     inputs:
       - '@group(sources)'
@@ -28,7 +27,6 @@ tasks:
     deps:
       - esbuild-plugins:compile
       - node-std:compile
-      - vite-plugin-log:compile
       - ^:compile
     preset: server
 

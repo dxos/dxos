@@ -15,7 +15,12 @@ import { defineProject, UserWorkspaceConfig, type ViteUserConfig } from 'vitest/
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import { MODULES } from '@dxos/node-std/_/config';
 import PluginImportSource from '@dxos/vite-plugin-import-source';
-import { DxosLogPlugin } from '@dxos/vite-plugin-log';
+
+// NOTE: Imported by relative path on purpose. Going through `@dxos/vite-plugin-log`
+// would force every package's `:test`/`:test-browser`/`:test-storybook` task to
+// build the plugin first, which introduces a moon dep cycle through @dxos/log
+// (vite-plugin-log -> log -> ... -> log:test -> vite-plugin-log).
+import { DxosLogPlugin } from './tools/vite-plugin-log/src/plugin.ts';
 
 const isDebug = !!process.env.VITEST_DEBUG;
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
