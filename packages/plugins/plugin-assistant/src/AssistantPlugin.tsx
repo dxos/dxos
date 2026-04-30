@@ -10,7 +10,7 @@ import { provideSpaceServices } from '@dxos/app-framework/plugin-runtime';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { ContextBinding } from '@dxos/assistant';
 import { Agent, AgentBlueprint, Chat, McpServer, Memory, Plan, ResearchGraph } from '@dxos/assistant-toolkit';
-import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Blueprint, Routine } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Annotation, Database, Feed, Obj, Type } from '@dxos/echo';
 import { QueueService, type ServiceNotAvailableError } from '@dxos/functions';
@@ -89,13 +89,13 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         },
       },
       {
-        id: Type.getTypename(Prompt.Prompt),
+        id: Type.getTypename(Routine.Routine),
         metadata: {
-          icon: Annotation.IconAnnotation.get(Prompt.Prompt).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Prompt.Prompt).pipe(Option.getOrThrow).hue ?? 'white',
+          icon: Annotation.IconAnnotation.get(Routine.Routine).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Routine.Routine).pipe(Option.getOrThrow).hue ?? 'white',
           createObject: ((props, options) =>
             Effect.gen(function* () {
-              const object = Prompt.make(props);
+              const object = Routine.make(props);
               return yield* Operation.invoke(SpaceOperation.AddObject, {
                 object,
                 target: options.target,
@@ -153,7 +153,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       Feed.Feed,
       HasSubject.HasSubject,
       Message.Message,
-      Prompt.Prompt,
+      Routine.Routine,
       ResearchGraph.ResearchGraph,
       Agent.Agent,
       McpServer.McpServer,

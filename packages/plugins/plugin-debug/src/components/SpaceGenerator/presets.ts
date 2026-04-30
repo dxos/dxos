@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AgentPrompt, EntityExtraction, ResearchBlueprint } from '@dxos/assistant-toolkit';
-import { Prompt } from '@dxos/blueprints';
+import { Routine } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
@@ -156,7 +156,7 @@ export const generator = () => ({
           );
 
           const researchPrompt = space.db.add(
-            Prompt.make({
+            Routine.make({
               name: 'Research',
               description: 'Research organization',
               input: Schema.Struct({

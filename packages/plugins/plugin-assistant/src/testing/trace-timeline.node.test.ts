@@ -16,7 +16,7 @@ import {
   WebSearchToolkitOpaque,
 } from '@dxos/assistant-toolkit';
 import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
-import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Blueprint, Routine } from '@dxos/blueprints';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ExampleHandlers, Reply, Trace, Trigger } from '@dxos/functions';
@@ -178,7 +178,7 @@ describe('Trace timeline', () => {
             }),
           ]);
           const prompt = yield* Database.add(
-            Prompt.make({
+            Routine.make({
               name: 'Research',
               instructions: 'Research the given topic, or object.',
               blueprints: [Ref.make(yield* Blueprint.upsert(WebSearchBlueprint.key))],

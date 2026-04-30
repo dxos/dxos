@@ -9,7 +9,7 @@ import { runInSpace } from '@dxos/app-framework/plugin-runtime';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContextBinder } from '@dxos/assistant';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Prompt, Template } from '@dxos/blueprints';
+import { Blueprint, Routine, Template } from '@dxos/blueprints';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
@@ -64,7 +64,7 @@ const handler: Operation.WithHandler<typeof RunPromptInNewChat> = RunPromptInNew
           const promptRef =
             typeof prompt === 'string'
               ? Ref.make(
-                  Prompt.make({
+                  Routine.make({
                     instructions: prompt,
                     blueprints: [],
                     context: [],

@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 import { Capabilities } from '@dxos/app-framework';
 import { runInSpace } from '@dxos/app-framework/plugin-runtime';
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
-import { Prompt } from '@dxos/blueprints';
+import { Routine } from '@dxos/blueprints';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -55,7 +55,7 @@ describe('Agent prompt (composer plugin harness)', () => {
 
             const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
             const prompt = yield* Database.add(
-              Prompt.make({
+              Routine.make({
                 name: 'chat-mode-test',
                 instructions: 'Reply with a single word: ack.',
                 blueprints: [],
