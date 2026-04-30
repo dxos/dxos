@@ -6,7 +6,8 @@ import React, { useCallback } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Button, IconButton, Panel, useTranslation } from '@dxos/react-ui';
+import { Button, useTranslation } from '@dxos/react-ui';
+import { Settings } from '@dxos/react-ui-form';
 
 import { useSyncIntegration, useSyncTargetsChecklist } from '#hooks';
 import { meta } from '#meta';
@@ -32,95 +33,97 @@ export const IntegrationArticle = ({ subject }: IntegrationArticleProps) => {
   }, [subject]);
 
   const hasTargets = (subject.targets ?? []).length > 0;
+  const sourceLine = accessToken
+    ? `${accessToken.source}${accessToken.account ? ` · ${accessToken.account}` : ''}`
+    : undefined;
+  const headerTitle = subject.name ?? accessToken?.account ?? accessToken?.source ?? '';
 
   return (
-    <Panel.Root>
-      <Panel.Content classNames='p-4 flex flex-col gap-4'>
-        <header className='flex items-start justify-between gap-2'>
-          <div className='flex flex-col gap-1'>
-            <div className='text-lg font-medium'>
-              {subject.name ?? accessToken?.account ?? accessToken?.source ?? ''}
-            </div>
-            {accessToken && (
-              <div className='text-xs text-subdued'>
-                {accessToken.source}
-                {accessToken.account ? ` · ${accessToken.account}` : ''}
-              </div>
-            )}
-          </div>
-          <div className='flex gap-1 shrink-0'>
-            {syncAvailable && (
-              <IconButton
-                icon='ph--arrows-clockwise--regular'
-                iconOnly
-                disabled={syncing || !hasTargets}
-                label={t('sync-now.label', { defaultValue: 'Sync now' })}
-                onClick={() => void sync()}
-              />
-            )}
-            <IconButton
-              icon='ph--trash--regular'
-              iconOnly
-              variant='ghost'
-              label={t('delete-integration.label', { defaultValue: 'Delete integration' })}
-              onClick={handleDelete}
-            />
-          </div>
-        </header>
-
-        {syncError && <div className='text-xs text-error'>{syncError}</div>}
-
-        <section className='flex flex-col gap-1'>
-          <div className='flex items-center justify-between'>
-            <h3 className='text-sm font-medium'>{t('targets.label', { defaultValue: 'Sync targets' })}</h3>
-            <Button onClick={openChecklist} disabled={!syncTargetsAvailable || loading}>
-              {loading
-                ? t('loading.label', { defaultValue: 'Loading…' })
-                : t('change-targets.label', { defaultValue: 'Change sync targets' })}
-            </Button>
-          </div>
-          {error && <div className='text-xs text-error'>{error}</div>}
-          {!provider && (
-            <div className='text-xs text-subdued'>
+    <Settings.Viewport>
+      <Settings.Section title={headerTitle} description={sourceLine}>
+        {!provider && (
+          <Settings.Panel>
+            <p className='text-description'>
               {t('no-provider.message', {
                 defaultValue: 'No service plugin is registered for this integration.',
               })}
-            </div>
-          )}
-          {provider && !syncTargetsAvailable && (
-            <div className='text-xs text-subdued'>
-              {t('no-sync-support.message', {
-                defaultValue: 'Sync targets aren’t supported by this integration yet.',
-              })}
-            </div>
-          )}
+            </p>
+          </Settings.Panel>
+        )}
+
+        <Settings.Item
+          title={t('sync-now.label', { defaultValue: 'Sync now' })}
+          description={t('sync-now.description', {
+            defaultValue: 'Reconcile cards with the remote service.',
+          })}
+        >
+          <Button onClick={() => void sync()} disabled={!syncAvailable || syncing || !hasTargets}>
+            {syncing
+              ? t('syncing.label', { defaultValue: 'Syncing…' })
+              : t('sync-now.label', { defaultValue: 'Sync now' })}
+          </Button>
+        </Settings.Item>
+
+        <Settings.Item
+          title={t('change-targets.label', { defaultValue: 'Change sync targets' })}
+          description={t('change-targets.description', {
+            defaultValue: 'Pick which remote items this integration syncs into the space.',
+          })}
+        >
+          <Button onClick={openChecklist} disabled={!syncTargetsAvailable || loading}>
+            {loading
+              ? t('loading.label', { defaultValue: 'Loading…' })
+              : t('change-targets.label', { defaultValue: 'Change sync targets' })}
+          </Button>
+        </Settings.Item>
+
+        <Settings.Item
+          title={t('delete-integration.label', { defaultValue: 'Delete integration' })}
+          description={t('delete-integration.description', {
+            defaultValue: 'Removes the integration and its access token. Synced objects remain in the space.',
+          })}
+        >
+          <Button variant='destructive' onClick={handleDelete}>
+            {t('delete-integration.label', { defaultValue: 'Delete' })}
+          </Button>
+        </Settings.Item>
+
+        {(syncError || error) && (
+          <Settings.Panel>
+            <p className='text-error'>{syncError ?? error}</p>
+          </Settings.Panel>
+        )}
+      </Settings.Section>
+
+      <Settings.Section title={t('targets.label', { defaultValue: 'Sync targets' })}>
+        <Settings.Panel>
           {!hasTargets ? (
-            <div className='text-xs text-subdued'>
+            <p className='text-description'>
               {t('no-targets.message', {
                 defaultValue: 'No targets selected. Click "Change sync targets" to choose.',
               })}
-            </div>
+            </p>
           ) : (
-            <ul className='flex flex-col gap-1'>
+            <ul className='flex flex-col gap-2'>
               {subject.targets.map((target, idx) => {
                 const obj = target.object.target;
-                const label = obj ? (obj as any).name ?? Obj.getDXN(obj).toString() : '(unresolved)';
+                const label = obj ? ((obj as any).name ?? Obj.getDXN(obj).toString()) : '(unresolved)';
                 return (
-                  <li key={idx} className='flex flex-col p-2 border rounded'>
-                    <div className='text-sm'>{label}</div>
-                    <div className='text-xs text-subdued'>
+                  <li key={idx} className='flex flex-col'>
+                    <span className='text-base'>{label}</span>
+                    <span className='text-description text-sm'>
                       {target.lastSyncAt
                         ? `${t('last-sync.label', { defaultValue: 'Last synced' })}: ${new Date(target.lastSyncAt).toLocaleString()}`
                         : t('never-synced.label', { defaultValue: 'Never synced' })}
-                    </div>
-                    {target.lastError && <div className='text-xs text-error'>{target.lastError}</div>}
+                    </span>
+                    {target.lastError && <span className='text-error text-sm'>{target.lastError}</span>}
                   </li>
                 );
               })}
             </ul>
           )}
-        </section>
-      </Panel.Content>
-    </Panel.Root>
+        </Settings.Panel>
+      </Settings.Section>
+    </Settings.Viewport>
   );
 };
