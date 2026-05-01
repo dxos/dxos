@@ -12,6 +12,17 @@ import { type Message } from '@dxos/types';
 import { type AiChatProcessor } from '../../processor';
 import { type ChatEvent } from './events';
 
+/**
+ * Wall-clock timestamps for the most-recent (or in-flight) request, lifted out of
+ * `ChatStreamStatus` so the elapsed value survives across re-mounts triggered when wire's
+ * drip queue toggles `wireDrainingEffect` (which removes/restores the footer block widget).
+ * `endedAt` is `null` while the request is still active.
+ */
+export type ChatRequestTiming = {
+  startedAt: number;
+  endedAt: number | null;
+};
+
 export type ChatContextValue = {
   debug?: boolean;
   event: Event<ChatEvent>;
@@ -19,6 +30,7 @@ export type ChatContextValue = {
   chat?: ChatModule.Chat;
   messages: Message.Message[];
   processor: AiChatProcessor;
+  requestTiming: ChatRequestTiming | null;
 };
 
 // Internal: not re-exported from `Chat/index.ts`. Accessed by sibling components in this

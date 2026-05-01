@@ -194,7 +194,7 @@ export const Streaming: Story = {
     content: TEXT,
     options: {
       autoScroll: true,
-      wire: true,
+      typewriter: true,
       fader: true,
       cursor: true,
     },

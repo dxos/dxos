@@ -18,7 +18,7 @@ import { MessageSyncer } from './sync';
 
 const defaultOptions: MarkdownStreamProps['options'] = {
   autoScroll: true,
-  wire: true,
+  typewriter: true,
   cursor: false,
 };
 
@@ -39,9 +39,9 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
       messages = [],
       error,
       options = defaultOptions,
+      footer,
       debug = false,
       extensions,
-      footer,
       onEvent,
     },
     forwardedRef,
