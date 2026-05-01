@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
@@ -195,19 +195,143 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+/**
+ * Interval (ms) between auto-played trace messages.
+ */
+const PLAYBACK_INTERVAL_MS = 250;
+
+const SnapshotStory = () => {
+  const [space] = useSpaces();
+  const [feed] = useQuery(space?.db, FeedTraceSink.query);
+  const allMessages = useQuery(
+    space?.db,
+    feed ? Query.select(Filter.everything()).from(feed) : Query.select(Filter.nothing()),
+  );
+
+  // Sort by first event timestamp so playback order is chronological regardless of query ordering.
+  const sortedMessages = useMemo(
+    () =>
+      [...allMessages].sort(
+        (left, right) => (left.events[0]?.timestamp ?? 0) - (right.events[0]?.timestamp ?? 0),
+      ),
+    [allMessages],
+  );
+
+  const total = sortedMessages.length;
+  const [step, setStep] = useState(0);
+  const [playing, setPlaying] = useState(false);
+
+  // Start with all messages loaded once the snapshot first arrives; afterwards the user controls `step`.
+  const hasInitializedRef = useRef(false);
+  useEffect(() => {
+    if (!hasInitializedRef.current && total > 0) {
+      hasInitializedRef.current = true;
+      setStep(total);
+    }
+  }, [total]);
+
+  const visibleMessages = useMemo(() => sortedMessages.slice(0, step), [sortedMessages, step]);
+  const { commits, branches } = useMemo(
+    () => buildExecutionGraph({ traceMessages: visibleMessages }),
+    [visibleMessages],
+  );
+  dbg(commits);
+
+  const stepNext = useCallback(() => setStep((current) => Math.min(current + 1, total)), [total]);
+  const stepPrev = useCallback(() => setStep((current) => Math.max(current - 1, 0)), []);
+  const reset = useCallback(() => {
+    setStep(0);
+    setPlaying(false);
+  }, []);
+  const showAll = useCallback(() => {
+    setStep(total);
+    setPlaying(false);
+  }, [total]);
+  const togglePlay = useCallback(() => setPlaying((previous) => !previous), []);
+
+  // Auto-play steps forward until we reach the end.
+  useEffect(() => {
+    if (!playing) {
+      return;
+    }
+    const id = window.setInterval(() => {
+      setStep((current) => {
+        if (current >= total) {
+          setPlaying(false);
+          return current;
+        }
+        return current + 1;
+      });
+    }, PLAYBACK_INTERVAL_MS);
+    return () => window.clearInterval(id);
+  }, [playing, total]);
+
+  // Keyboard shortcuts: ←/h step back, →/l step forward, space play/pause, r reset, e/End show all.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable) {
+        return;
+      }
+      switch (event.key) {
+        case 'ArrowRight':
+        case 'l':
+          event.preventDefault();
+          stepNext();
+          break;
+        case 'ArrowLeft':
+        case 'h':
+          event.preventDefault();
+          stepPrev();
+          break;
+        case ' ':
+          event.preventDefault();
+          togglePlay();
+          break;
+        case 'r':
+          event.preventDefault();
+          reset();
+          break;
+        case 'e':
+        case 'End':
+          event.preventDefault();
+          showAll();
+          break;
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [stepNext, stepPrev, togglePlay, reset, showAll]);
+
+  return (
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <IconButton iconOnly icon='ph--skip-back--regular' label='Reset (R)' onClick={reset} />
+          <IconButton iconOnly icon='ph--caret-left--regular' label='Step back (← / H)' onClick={stepPrev} />
+          <IconButton
+            iconOnly
+            icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
+            label={playing ? 'Pause (Space)' : 'Play (Space)'}
+            onClick={togglePlay}
+          />
+          <IconButton iconOnly icon='ph--caret-right--regular' label='Step forward (→ / L)' onClick={stepNext} />
+          <IconButton iconOnly icon='ph--skip-forward--regular' label='Show all (E / End)' onClick={showAll} />
+          <Toolbar.Separator />
+          <span className='pli-2 text-sm tabular-nums opacity-70'>
+            {step} / {total}
+          </span>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <Timeline branches={branches} commits={commits} showTimestamp />
+      </Panel.Content>
+    </Panel.Root>
+  );
+};
+
 export const WithSnapshot: Story = {
-  render: () => {
-    const [space] = useSpaces();
-    const [feed] = useQuery(space?.db, FeedTraceSink.query);
-    const traceMessages = useQuery(
-      space?.db,
-      feed ? Query.select(Filter.everything()).from(feed) : Query.select(Filter.nothing()),
-    );
-    dbg(traceMessages);
-    const { commits, branches } = useMemo(() => buildExecutionGraph({ traceMessages }), [traceMessages]);
-    dbg(commits);
-    return <Timeline branches={branches} commits={commits} showTimestamp />;
-  },
+  render: () => <SnapshotStory />,
   decorators: [
     withTheme(),
     withLayout({ layout: 'column' }),

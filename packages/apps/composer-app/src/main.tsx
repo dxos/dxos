@@ -68,7 +68,20 @@ declare global {
  */
 const bootStatus = (text: string) => window.__bootLoader?.status(text);
 
+// Stamp every (re-)evaluation of this module so we can tell Vite HMR reloads
+// from a true page boot. Works for top-level imports and HMR re-evaluation.
+const BOOT_ID = Math.random().toString(36).slice(2, 10);
+const MODULE_EVAL_TIME = Date.now();
+log('composer main: module evaluated', { bootId: BOOT_ID, t: MODULE_EVAL_TIME });
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    log('composer main: hmr dispose', { bootId: BOOT_ID, ageMs: Date.now() - MODULE_EVAL_TIME });
+  });
+}
+
 const main = async () => {
+  log('composer main: main() running', { bootId: BOOT_ID });
   const url = new URL(window.location.href);
   const safeMode = isTrue(url.searchParams.get(PARAM_SAFE_MODE), false);
   if (safeMode) {
@@ -414,6 +427,7 @@ const main = async () => {
   };
 
   const root = document.getElementById('root')!;
+  log('composer main: rendering App', { bootId: BOOT_ID, strict: conf.isStrict });
   if (conf.isStrict) {
     createRoot(root).render(
       <StrictMode>
