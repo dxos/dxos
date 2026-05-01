@@ -85,30 +85,36 @@ export const IntegrationArticle = ({ subject }: IntegrationArticleProps) => {
 
       </Settings.Section>
 
-      <Settings.Section title={t('targets.label', { defaultValue: 'Sync targets' })}>
-        {!hasTargets ? (
-          <Settings.Panel>
-            <p className='text-description'>
-              {provider?.getSyncTargets
-                ? t('no-targets.message', {
-                    defaultValue: 'No targets selected. Click "Change sync targets" to choose.',
-                  })
-                : t('no-targets-yet.message', {
-                    defaultValue: 'No targets yet — finish OAuth to set up the default target.',
-                  })}
-            </p>
-          </Settings.Panel>
-        ) : (
-          subject.targets.map((_target, idx) => (
-            <TargetRow
-              key={idx}
-              integration={subject}
-              targetIndex={idx}
-              optionsSchema={provider?.optionsSchema}
-            />
-          ))
-        )}
-      </Settings.Section>
+      {/* Hide the entire Sync targets section for providers that don't sync
+          (e.g. the Custom Token provider). With no `sync` op there's nothing
+          to populate the list with — the section would just be a phantom
+          empty row. */}
+      {provider?.sync && (
+        <Settings.Section title={t('targets.label', { defaultValue: 'Sync targets' })}>
+          {!hasTargets ? (
+            <Settings.Panel>
+              <p className='text-description'>
+                {provider?.getSyncTargets
+                  ? t('no-targets.message', {
+                      defaultValue: 'No targets selected. Click "Change sync targets" to choose.',
+                    })
+                  : t('no-targets-yet.message', {
+                      defaultValue: 'No targets yet — finish OAuth to set up the default target.',
+                    })}
+              </p>
+            </Settings.Panel>
+          ) : (
+            subject.targets.map((_target, idx) => (
+              <TargetRow
+                key={idx}
+                integration={subject}
+                targetIndex={idx}
+                optionsSchema={provider?.optionsSchema}
+              />
+            ))
+          )}
+        </Settings.Section>
+      )}
     </Settings.Viewport>
   );
 };

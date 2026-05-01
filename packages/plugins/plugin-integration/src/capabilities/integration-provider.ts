@@ -74,8 +74,6 @@ export type OnTokenCreated = (input: {
 export type IntegrationOAuthSpec = {
   provider: OAuthProvider;
   scopes: readonly string[];
-  /** Default `note` written onto the AccessToken when first created. */
-  note?: string;
 };
 
 export type IntegrationProvider = {

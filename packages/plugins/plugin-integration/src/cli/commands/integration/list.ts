@@ -30,7 +30,7 @@ export const list = Command.make(
         const safeTokens = tokens.map((token) => ({
           id: token.id,
           source: token.source,
-          note: token.note,
+          account: token.account,
         }));
         yield* Console.log(JSON.stringify(safeTokens, null, 2));
       } else {

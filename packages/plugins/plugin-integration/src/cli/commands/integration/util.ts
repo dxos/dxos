@@ -11,7 +11,6 @@ export type OAuthPreset = {
   source: string;
   label: string;
   scopes: string[];
-  note?: string;
 };
 
 // TODO(wittjosiah): Copied from plugin-token-manager.
@@ -56,13 +55,12 @@ export const OAUTH_PRESETS: OAuthPreset[] = [
 ];
 
 /**
- * Pretty prints a token for display using FormBuilder (shows id, source, note - NO token value).
+ * Pretty prints a token for display using FormBuilder (shows id, source - NO token value).
  */
 export const printToken = (token: AccessToken.AccessToken) => {
-  return FormBuilder.make({ title: token.note || token.source }).pipe(
+  return FormBuilder.make({ title: token.account || token.source }).pipe(
     FormBuilder.set('id', token.id),
     FormBuilder.set('source', token.source),
-    FormBuilder.set('note', token.note || '<no note>'),
     FormBuilder.build,
   );
 };

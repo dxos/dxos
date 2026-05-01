@@ -48,7 +48,7 @@ export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
         const integration = yield* Database.load(integrationRef);
         const accessToken = yield* Database.load(integration.accessToken);
         if (accessToken?.token) {
-          log('using integration access token', { note: accessToken.note });
+          log('using integration access token', { source: accessToken.source, account: accessToken.account });
           return makeService(accessToken.token);
         }
         return makeService(undefined);

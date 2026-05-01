@@ -26,6 +26,11 @@ export const translations = [
         'get-sync-targets-error.title': 'Failed to load sync targets',
         'close.label': 'Close',
         'sync-integration.label': 'Sync now',
+        'custom-token-dialog.title': 'Add custom token',
+        'custom-token-dialog.description': 'Enter a static access token. No OAuth or sync runs for custom tokens.',
+        'cancel.label': 'Cancel',
+        'save.label': 'Save',
+        'submitting.label': 'Saving…',
       },
       [Integration.Integration.typename]: {
         'typename.label': 'Integration',

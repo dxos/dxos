@@ -158,7 +158,6 @@ const setup = async () => {
     Obj.make(AccessToken.AccessToken, {
       source: 'google.com',
       token: process.env.GOOGLE_ACCESS_TOKEN ?? failedInvariant('GOOGLE_ACCESS_TOKEN is not set'),
-      note: 'Email read access.',
     }),
   );
 

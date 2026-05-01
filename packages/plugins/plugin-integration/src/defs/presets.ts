@@ -18,5 +18,4 @@ export type OAuthPreset = {
   source: string;
   provider: OAuthProvider;
   scopes: string[];
-  note?: string;
 };

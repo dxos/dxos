@@ -14,9 +14,9 @@ import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 
 import { IntegrationAuthButton } from '#components';
-import { IntegrationArticle, SyncTargetsChecklist } from '#containers';
+import { CustomTokenDialog, IntegrationArticle, SyncTargetsChecklist } from '#containers';
 
-import { SYNC_TARGETS_DIALOG } from '../constants';
+import { CUSTOM_TOKEN_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
 import { Integration, IntegrationProviderAnnotationId } from '../types';
 
 import { IntegrationProvider, type IntegrationProvider as IntegrationProviderType } from './integration-provider';
@@ -53,6 +53,11 @@ export default Capability.makeModule(() =>
         filter: AppSurface.component<ComponentProps<typeof SyncTargetsChecklist>>(AppSurface.Dialog, SYNC_TARGETS_DIALOG),
         component: ({ data }) => <SyncTargetsChecklist {...data.props} />,
       }),
+      Surface.create({
+        id: CUSTOM_TOKEN_DIALOG,
+        filter: AppSurface.component<ComponentProps<typeof CustomTokenDialog>>(AppSurface.Dialog, CUSTOM_TOKEN_DIALOG),
+        component: ({ data }) => <CustomTokenDialog {...data.props} />,
+      }),
       // Form-input renderer for the Integration provider selector. The
       // create-Integration form's `providerId` field carries
       // `IntegrationProviderAnnotationId`; this surface filters by that and
@@ -71,12 +76,7 @@ export default Capability.makeModule(() =>
         component: ({ data: { fieldPropertyAst }, ...inputProps }) => {
           const providers = useCapabilities(IntegrationProvider).flat() as IntegrationProviderType[];
           const options = useMemo(
-            () =>
-              providers
-                // Only providers with an OAuth flow can be created from the
-                // dialog. Listing-only providers (no `oauth`) are filtered.
-                .filter((provider) => provider.oauth)
-                .map((provider) => ({ value: provider.id, label: provider.label ?? provider.id })),
+            () => providers.map((provider) => ({ value: provider.id, label: provider.label ?? provider.id })),
             [providers],
           );
           if (!fieldPropertyAst) {

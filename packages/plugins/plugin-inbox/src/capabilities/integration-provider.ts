@@ -134,7 +134,6 @@ export default Capability.makeModule(
             'https://www.googleapis.com/auth/gmail.send',
             'https://www.googleapis.com/auth/userinfo.email',
           ],
-          note: 'Gmail',
         },
         optionsSchema: SyncOptions,
         sync: SyncMailbox,
@@ -150,7 +149,6 @@ export default Capability.makeModule(
             'https://www.googleapis.com/auth/calendar.readonly',
             'https://www.googleapis.com/auth/userinfo.email',
           ],
-          note: 'Google Calendar',
         },
         optionsSchema: CalendarSyncOptions,
         getSyncTargets: GetGoogleCalendars,
@@ -168,7 +166,6 @@ export default Capability.makeModule(
             'https://www.googleapis.com/auth/youtube.force-ssl',
             'https://www.googleapis.com/auth/userinfo.email',
           ],
-          note: 'YouTube',
         },
         onTokenCreated: sharedOnTokenCreated,
         // TODO(integration-sync): wire `getSyncTargets` + `sync` for YouTube.

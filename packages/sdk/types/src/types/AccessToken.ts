@@ -13,7 +13,6 @@ import { Format, LabelAnnotation, SystemTypeAnnotation } from '@dxos/echo/intern
 export const LegacyAccessToken = Schema.Struct({
   source: Schema.String,
   token: Schema.String,
-  note: Schema.optional(Schema.String),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.access-token',
@@ -38,10 +37,6 @@ export const AccessToken = Schema.Struct({
     title: 'Token',
     description: 'The token provided by the service.',
   }),
-  note: Schema.String.annotations({
-    title: 'Note',
-    description: 'User-provided note about the token.',
-  }).pipe(Schema.optional),
   scopes: Schema.Array(Schema.String).annotations({
     title: 'Scopes',
     description: 'The scopes granted to this token by the service.',
@@ -54,7 +49,7 @@ export const AccessToken = Schema.Struct({
   Schema.annotations({
     description: 'A credential or token for accessing a service.',
   }),
-  LabelAnnotation.set(['account', 'note', 'source']), // Account first (e.g. email from /members/me); note as fallback (set to service label by the OAuth flow); source last.
+  LabelAnnotation.set(['account', 'source']), // Account first (e.g. email from /members/me); source as fallback.
   Annotation.IconAnnotation.set({
     icon: 'ph--key--regular',
     hue: 'yellow',

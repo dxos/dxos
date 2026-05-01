@@ -25,10 +25,10 @@ export const add = Command.make(
     spaceId: Common.spaceId.pipe(Options.optional),
     preset: Options.text('preset').pipe(Options.withDescription('OAuth preset name (e.g., google)'), Options.optional),
     source: Options.text('source').pipe(Options.withDescription('Token source'), Options.optional),
+    account: Options.text('account').pipe(Options.withDescription('Account associated with the token'), Options.optional),
     token: Options.text('token').pipe(Options.withDescription('Token value'), Options.optional),
-    note: Options.text('note').pipe(Options.withDescription('Token note'), Options.optional),
   },
-  ({ preset, source, token, note }) =>
+  ({ preset, source, account, token }) =>
     Effect.gen(function* () {
       const { json } = yield* CommandConfig;
 
@@ -69,7 +69,7 @@ export const add = Command.make(
         const customTokenData = {
           source: sourceValue,
           token: tokenValue,
-          note: Option.getOrUndefined(note),
+          account: Option.getOrUndefined(account),
         };
         yield* addCustomToken(customTokenData, json);
       }
@@ -105,15 +105,15 @@ const promptForCustomToken = Effect.fn(function* () {
     message: 'Source:',
   }).pipe(Prompt.run);
 
+  const account = yield* Prompt.text({
+    message: 'Account (optional):',
+  }).pipe(Prompt.run);
+
   const token = yield* Prompt.text({
     message: 'Token:',
   }).pipe(Prompt.run);
 
-  const note = yield* Prompt.text({
-    message: 'Note (optional):',
-  }).pipe(Prompt.run);
-
-  return { source, token, note };
+  return { source, account, token };
 });
 
 const resolvePresetFromCommandLine = (presetValue: string): Effect.Effect<OAuthPreset, Error> => {
@@ -138,7 +138,7 @@ const addOAuthPresetToken = Effect.fn(function* (preset: OAuthPreset, json: bool
 });
 
 const addCustomToken = Effect.fn(function* (
-  data: Pick<AccessToken.AccessToken, 'source' | 'token' | 'note'>,
+  data: Pick<AccessToken.AccessToken, 'source' | 'token' | 'account'>,
   json: boolean,
 ) {
   if (!data.source || !data.token) {
@@ -148,7 +148,7 @@ const addCustomToken = Effect.fn(function* (
   const accessToken = Obj.make(AccessToken.AccessToken, {
     source: data.source,
     token: data.token,
-    note: data.note,
+    account: data.account,
   });
 
   yield* Database.add(accessToken);
@@ -162,7 +162,7 @@ const printTokenResult = Effect.fn(function* (accessToken: AccessToken.AccessTok
         {
           id: accessToken.id,
           source: accessToken.source,
-          note: accessToken.note,
+          account: accessToken.account,
         },
         null,
         2,

@@ -20,7 +20,7 @@ import { AccessToken } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { SYNC_TARGETS_DIALOG } from '../constants';
+import { CUSTOM_TOKEN_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
 import { IntegrationOperation } from '../operations';
 import { Integration } from '../types';
 
@@ -52,19 +52,40 @@ import {
  */
 export type IntegrationCoordinator = {
   /**
-   * Build in-memory `AccessToken` + `Integration` stubs for the given
-   * provider, stash them, open the OAuth popup, and return. The stubs are
-   * persisted to the database only after the OAuth callback fires
-   * successfully. `providerId` selects an entry from the `IntegrationProvider`
-   * capability registry — its `oauth` spec drives the popup, and the
-   * resulting Integration records `providerId` so subsequent operations
-   * (sync, onTokenCreated, etc.) route back to the same provider.
+   * Entry point for the create-Integration flow. Branches on whether the
+   * provider has an OAuth spec:
+   *
+   *  - **OAuth providers**: builds in-memory `AccessToken` + `Integration`
+   *    stubs, stashes them, and opens the OAuth popup. The stubs are
+   *    persisted only after the OAuth callback fires successfully.
+   *  - **Non-OAuth providers** (e.g. the built-in `custom` token): opens
+   *    the `CUSTOM_TOKEN_DIALOG` and returns immediately. The dialog
+   *    collects `{ source, account?, token }` from the user and finishes
+   *    the flow via {@link createCustomIntegration}.
+   *
+   * `providerId` selects an entry from the `IntegrationProvider` capability
+   * registry. The resulting Integration records `providerId` so subsequent
+   * operations (sync, onTokenCreated, etc.) route back to the same provider.
    */
   createIntegration: (input: {
     db: Database.Database;
     spaceId: Key.SpaceId;
     providerId: string;
   }) => Effect.Effect<{ integrationId: string }, Error>;
+  /**
+   * Persist a manually-entered access token + Integration. Used by the
+   * `CUSTOM_TOKEN_DIALOG` after the user submits — there's no OAuth callback
+   * to wait on, so values are written directly. Runs the same finalization
+   * path as the OAuth flow (`AccessTokenCreated` dispatch, navigation).
+   */
+  createCustomIntegration: (input: {
+    db: Database.Database;
+    providerId: string;
+    source: string;
+    account?: string;
+    token: string;
+    name?: string;
+  }) => Promise<{ integrationId: string }>;
 };
 
 export const IntegrationCoordinator = Capability.make<IntegrationCoordinator>(
@@ -240,9 +261,31 @@ export default Capability.makeModule(
           if (!provider) {
             throw new Error(`No IntegrationProvider registered with id: ${providerId}`);
           }
+
+          // Non-OAuth provider — open the custom-token dialog and return.
+          // Persistence happens once the user submits the dialog via
+          // `createCustomIntegration`. No stub is created here because we
+          // don't yet have token values to fill in, and the user may cancel
+          // — leaving nothing in the database.
           if (!provider.oauth) {
-            throw new Error(`Provider '${providerId}' has no OAuth flow configured.`);
+            await invoker.invokePromise(LayoutOperation.UpdateDialog, {
+              subject: CUSTOM_TOKEN_DIALOG,
+              state: true,
+              // Match CreateObjectDialog so the manual-entry dialog appears
+              // in the same viewport position the user just clicked through.
+              blockAlign: 'start',
+              props: {
+                db,
+                providerId: provider.id,
+                providerLabel: provider.label ?? provider.id,
+              },
+            });
+            // Empty id — `createObject` returns `subject: []` so no caller
+            // navigates on this id. The dialog handles navigation itself
+            // once the user submits.
+            return { integrationId: '' };
           }
+
           const oauth = provider.oauth;
           const label = provider.label ?? provider.id;
 
@@ -251,7 +294,6 @@ export default Capability.makeModule(
           // happens later in `finalizePending` after the OAuth callback.
           const token = Obj.make(AccessToken.AccessToken, {
             source: provider.source,
-            note: oauth.note ?? label,
             scopes: [...oauth.scopes],
             token: '',
           });
@@ -279,9 +321,42 @@ export default Capability.makeModule(
         catch: (error) => (error instanceof Error ? error : new Error(String(error))),
       });
 
+    const createCustomIntegration: IntegrationCoordinator['createCustomIntegration'] = async ({
+      db,
+      providerId,
+      source,
+      account,
+      token: tokenValue,
+      name,
+    }) => {
+      const providers = pluginContext.getAll(IntegrationProvider).flat() as IntegrationProviderType[];
+      const provider = providers.find((p) => p.id === providerId);
+      if (!provider) {
+        throw new Error(`No IntegrationProvider registered with id: ${providerId}`);
+      }
+
+      // Build stubs with the user-supplied values, then run the same
+      // finalize path as the OAuth flow. No `pending` map entry needed —
+      // there's no callback to round-trip through.
+      const accessToken = Obj.make(AccessToken.AccessToken, {
+        source,
+        account,
+        token: tokenValue,
+      });
+      const integration = Obj.make(Integration.Integration, {
+        name: name ?? account ?? source,
+        providerId: provider.id,
+        accessToken: Ref.make(accessToken),
+        targets: [],
+      });
+
+      await finalizePending({ token: accessToken, integration, db, providerId: provider.id });
+      return { integrationId: integration.id };
+    };
+
     return Capability.contributes(
       IntegrationCoordinator,
-      { createIntegration },
+      { createIntegration, createCustomIntegration },
       () =>
         Effect.sync(() => {
           window.removeEventListener('message', handleMessage);

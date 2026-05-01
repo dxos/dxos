@@ -8,3 +8,6 @@ export const IntegrationArticle: ComponentType<any> = lazy(() => import('./Integ
 export const SyncTargetsChecklist: ComponentType<any> = lazy(() =>
   import('./SyncTargetsChecklist').then((m) => ({ default: m.SyncTargetsChecklist })),
 );
+export const CustomTokenDialog: ComponentType<any> = lazy(() =>
+  import('./CustomTokenDialog').then((m) => ({ default: m.CustomTokenDialog })),
+);

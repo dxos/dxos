@@ -44,7 +44,7 @@ export const remove = Command.make(
             }
 
             const choices = tokens.map((token) => ({
-              title: `${token.note || token.source} (${token.source})`,
+              title: `${token.account || token.source} (${token.source})`,
               value: token.id,
             }));
 
@@ -65,7 +65,7 @@ export const remove = Command.make(
             {
               removed: token.id,
               source: token.source,
-              note: token.note,
+              account: token.account,
             },
             null,
             2,
