@@ -170,7 +170,9 @@ export const layerConsole: Layer.Layer<TraceSink> = Layer.succeed(TraceSink, {
  * prevent downstream sinks from receiving the message.
  */
 export const mergeSinks = (sinks: readonly Sink[]): Sink => {
-  if (sinks.length === 0) return noopSink;
+  if (sinks.length === 0) {
+    return noopSink;
+  }
   // Intentionally no singleton fast path: the guarded wrapper is the
   // contract of `mergeSinks`, so a throwing sink is always caught and
   // logged regardless of how many sinks were passed in.
