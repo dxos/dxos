@@ -79,9 +79,10 @@ const main = async () => {
   );
   VERBOSE && console.log('Clean complete.');
 
-  // Run tsc after cleaning.
-  VERBOSE && console.log('Running tsc...');
-  const tsc = spawnSync(USE_TSGO ? 'tsgo' : 'tsc', [], { encoding: 'utf-8' });
+  // Run the compiler after cleaning.
+  const compiler = USE_TSGO ? 'tsgo' : 'tsc';
+  VERBOSE && console.log(`Running ${compiler}...`);
+  const tsc = spawnSync(compiler, [], { encoding: 'utf-8' });
 
   // Process output to prepend repo root to relative paths.
   const cwd = process.cwd();
@@ -103,7 +104,7 @@ const main = async () => {
     process.stderr.write(processedStderr);
   }
 
-  VERBOSE && console.log(`tsc exited with status ${tsc.status}`);
+  VERBOSE && console.log(`${compiler} exited with status ${tsc.status}`);
   process.exit(tsc.status ?? 1);
 };
 
