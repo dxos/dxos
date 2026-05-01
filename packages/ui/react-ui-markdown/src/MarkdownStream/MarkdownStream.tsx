@@ -273,9 +273,9 @@ const useMarkdownStreamTextEditor = (
               contentClass: 'cm-prompt-bubble dx-panel px-2 py-1.5 rounded-sm [&_*]:text-inherit!',
               hideTags: true,
             }),
-            xmlFormatting(),
+            xmlFormatting({ skip: ['prompt'] }),
             xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
-            streamFooter(setFooterRoot),
+            false ? streamFooter(setFooterRoot) : [],
             scroller({ overScroll: 160 }),
             ...(options?.autoScroll ? [autoScroll()] : []),
             ...(options?.wire

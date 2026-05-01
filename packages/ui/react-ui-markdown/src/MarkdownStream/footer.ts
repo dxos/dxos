@@ -34,13 +34,16 @@ class FooterWidget extends WidgetType {
   }
 
   override toDOM(): HTMLElement {
+    return document.createElement('div');
+
     // The outer block-widget element is `position: relative` with zero flow height so it
-    // does not push the document layout (autoScroll, line measurement, etc. ignore it). The
-    // inner element is `position: absolute`, taking the React subtree out of flow — it
+    // does not push the document layout (autoScroll, line measurement, etc. ignore it).
+    // The inner element is `position: absolute`, taking the React subtree out of flow — it
     // renders as a floating layer anchored to the doc tail without consuming space.
     const inner = Domino.of('div')
       .classNames('cm-stream-footer-content')
-      .style({ position: 'absolute', left: '0', top: '80px' });
+      .style({ position: 'absolute', left: '0', top: '80px' })
+      .text('###');
 
     const el = Domino.of('div')
       .classNames('cm-stream-footer')
@@ -48,7 +51,7 @@ class FooterWidget extends WidgetType {
       .append(inner);
 
     this._inner = inner.root;
-    this._setRoot(inner.root);
+    // this._setRoot(inner.root);
     return el.root;
   }
 
@@ -80,13 +83,15 @@ export const streamFooter = (setRoot: (el: HTMLElement | null) => void): Extensi
           return effect.value ? buildSet(tr.state.doc.length) : Decoration.none;
         }
       }
+
       // For doc edits, map the existing decoration through the change set so an insertion
-      // at the end translates the position from old `doc.length` to new `doc.length`. CM's
-      // diff treats the mapped decoration as identity-equal (per `widget.eq`), so the DOM
+      // at the end translates the position from old `doc.length` to new `doc.length`.
+      // CM's diff treats the mapped decoration as identity-equal (per `widget.eq`), so the DOM
       // and the portaled React tree stay mounted.
       if (tr.docChanged && decos.size > 0) {
         return decos.map(tr.changes);
       }
+
       return decos;
     },
     provide: (f) => EditorView.decorations.from(f),
