@@ -21,7 +21,7 @@ import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
-import { vitePluginLog } from '@dxos/vite-plugin-log';
+import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
@@ -54,7 +54,8 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
         '@dxos/lit-*',
       ],
     }),
-  env.command === 'serve' && vitePluginLog(),
+  // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
+  DxosLogPlugin(),
   wasm(),
   // sourcemaps(),
 ];
@@ -116,8 +117,12 @@ export default defineConfig((env) => ({
       },
       output: {
         chunkFileNames,
-        manualChunks: {
-          react: ['react', 'react-dom'],
+        // Rolldown (used by Vite 8) requires `manualChunks` to be a function — the
+        // record form that worked in Rollup is rejected at runtime.
+        manualChunks: (id: string) => {
+          if (id.includes('/node_modules/react/') || id.includes('/node_modules/react-dom/')) {
+            return 'react';
+          }
         },
       },
     },
@@ -305,47 +310,8 @@ export default defineConfig((env) => ({
         options.jsc ??= {};
         options.jsc.target = 'esnext';
       },
-      plugins: [
-        [
-          '@dxos/swc-log-plugin',
-          {
-            to_transform: [
-              {
-                name: 'log',
-                package: '@dxos/log',
-                param_index: 2,
-                include_args: false,
-                include_call_site: true,
-                include_scope: true,
-              },
-              {
-                name: 'dbg',
-                package: '@dxos/log',
-                param_index: 1,
-                include_args: true,
-                include_call_site: false,
-                include_scope: false,
-              },
-              {
-                name: 'invariant',
-                package: '@dxos/invariant',
-                param_index: 2,
-                include_args: true,
-                include_call_site: false,
-                include_scope: true,
-              },
-              {
-                name: 'Context',
-                package: '@dxos/context',
-                param_index: 1,
-                include_args: false,
-                include_call_site: false,
-                include_scope: false,
-              },
-            ],
-          },
-        ],
-      ],
+      // Log-meta injection is handled by `DxosLogPlugin` (Rolldown transform hook) above —
+      // it runs on all js/ts/jsx/tsx modules pre-pass, so the SWC log plugin is no longer needed here.
     }),
 
     // ???

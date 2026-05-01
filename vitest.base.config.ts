@@ -4,6 +4,7 @@
 
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import react from '@vitejs/plugin-react-swc';
+import { playwright } from '@vitest/browser-playwright';
 import path, { join } from 'node:path';
 import pkgUp from 'pkg-up';
 import { type Plugin } from 'vite';
@@ -14,6 +15,12 @@ import { defineProject, UserWorkspaceConfig, type ViteUserConfig } from 'vitest/
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import { MODULES } from '@dxos/node-std/_/config';
 import PluginImportSource from '@dxos/vite-plugin-import-source';
+
+// NOTE: Imported by relative path on purpose. Going through `@dxos/vite-plugin-log`
+// would force every package's `:test`/`:test-browser`/`:test-storybook` task to
+// build the plugin first, which introduces a moon dep cycle through @dxos/log
+// (vite-plugin-log -> log -> ... -> log:test -> vite-plugin-log).
+import { DxosLogPlugin } from './tools/vite-plugin-log/src/plugin.ts';
 
 const isDebug = !!process.env.VITEST_DEBUG;
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
@@ -59,7 +66,7 @@ const createStorybookProject = (dirname: string) =>
       browser: {
         enabled: true,
         headless: true,
-        provider: 'playwright',
+        provider: playwright(),
         instances: [{ browser: 'chromium' }],
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
@@ -150,8 +157,8 @@ const createBrowserProject = ({
         enabled: true,
         screenshotFailures: false,
         headless: !isDebug,
-        provider: 'playwright',
-        name: browserName,
+        provider: playwright(),
+        instances: [{ browser: browserName }],
         isolate: false,
       },
     },
@@ -196,7 +203,9 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       ...plugins,
       PluginImportSource({ include: ['@dxos/**', '#*'] }),
       process.env.VITE_INSPECT ? Inspect() : undefined,
-      // Add react plugin to enable SWC transfors.
+      // Log-meta injection only — no dev file sink (vitest is a test runner, not a dev server).
+      DxosLogPlugin({ logToFile: false }),
+      // Add react plugin to enable SWC transforms.
       react({
         tsDecorators: true,
         useAtYourOwnRisk_mutateSwcOptions: (options) => {
@@ -204,47 +213,6 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
           options.jsc ??= {};
           options.jsc.target = 'esnext';
         },
-        plugins: [
-          [
-            '@dxos/swc-log-plugin',
-            {
-              to_transform: [
-                {
-                  name: 'log',
-                  package: '@dxos/log',
-                  param_index: 2,
-                  include_args: false,
-                  include_call_site: true,
-                  include_scope: true,
-                },
-                {
-                  name: 'dbg',
-                  package: '@dxos/log',
-                  param_index: 1,
-                  include_args: true,
-                  include_call_site: false,
-                  include_scope: false,
-                },
-                {
-                  name: 'invariant',
-                  package: '@dxos/invariant',
-                  param_index: 2,
-                  include_args: true,
-                  include_call_site: false,
-                  include_scope: true,
-                },
-                {
-                  name: 'Context',
-                  package: '@dxos/context',
-                  param_index: 1,
-                  include_args: false,
-                  include_call_site: false,
-                  include_scope: false,
-                },
-              ],
-            },
-          ],
-        ],
       }),
     ],
   });
