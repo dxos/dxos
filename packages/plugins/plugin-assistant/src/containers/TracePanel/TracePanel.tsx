@@ -58,6 +58,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(({ space, 
     <Panel.Root {...props} ref={forwardedRef}>
       <Panel.Content className='grid grid-rows-[min-content_1fr]'>
         <ActiveProcessList spaceId={space.id} />
+
         <Timeline branches={branches} commits={commits} compact onCommitClick={handleCommitClick} />
       </Panel.Content>
     </Panel.Root>
@@ -92,13 +93,20 @@ type UseExecutionGraphOptions = {
 };
 
 const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOptions = {}): ExecutionGraph => {
-  const atom = useMemo(() => getExecutionGraph(space, { eventLimit }), [space, eventLimit]);
+  const runtime = useComputeRuntimeService(Process.ProcessMonitorService, space.id);
+  const activeProcesses = useAtomValue(runtime?.processTreeAtom ?? atomEmpty);
+
+  const atom = useMemo(
+    () => getExecutionGraph(space, activeProcesses, { eventLimit }),
+    [space, activeProcesses, eventLimit],
+  );
   return useAtomValue(atom);
 };
 
 const getExecutionGraph = (
   space: Space,
-  { eventLimit = 100 }: UseExecutionGraphOptions = {},
+  activeProcesses: readonly Process.Info[] = [],
+  { eventLimit = 300 }: UseExecutionGraphOptions = {},
 ): Atom.Atom<ExecutionGraph> => {
   return pipe(
     AtomQuery.make(space.db, FeedTraceSink.query),
@@ -117,7 +125,7 @@ const getExecutionGraph = (
       Atom.make((get) =>
         buildExecutionGraph({
           traceMessages: [...get(_)],
-          activeProcesses: [],
+          activeProcesses,
           eventLimit,
         }),
       ),
