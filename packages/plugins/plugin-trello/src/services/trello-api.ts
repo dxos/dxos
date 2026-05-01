@@ -10,8 +10,8 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ParseResult from 'effect/ParseResult';
-import * as Schema from 'effect/Schema';
 import * as Schedule from 'effect/Schedule';
+import * as Schema from 'effect/Schema';
 
 import { Database, type Ref } from '@dxos/echo';
 import { Integration } from '@dxos/plugin-integration/types';
@@ -305,7 +305,9 @@ export const createCard = (input: CreateCardInput): TrelloEffect<TrelloCard> =>
   trelloRequest(
     (creds) =>
       HttpClientRequest.post(`${TRELLO_API_BASE}/cards`).pipe(
-        HttpClientRequest.setUrlParams(authParams(creds, input as Record<string, string | number | boolean | undefined>)),
+        HttpClientRequest.setUrlParams(
+          authParams(creds, input as Record<string, string | number | boolean | undefined>),
+        ),
       ),
     TrelloCardSchema,
   );
@@ -315,7 +317,9 @@ export const updateCard = (cardId: string, input: UpdateCardInput): TrelloEffect
   trelloRequest(
     (creds) =>
       HttpClientRequest.put(`${TRELLO_API_BASE}/cards/${cardId}`).pipe(
-        HttpClientRequest.setUrlParams(authParams(creds, input as Record<string, string | number | boolean | undefined>)),
+        HttpClientRequest.setUrlParams(
+          authParams(creds, input as Record<string, string | number | boolean | undefined>),
+        ),
       ),
     TrelloCardSchema,
   );

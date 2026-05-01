@@ -5,7 +5,6 @@
 import React, { type ReactNode, useCallback, useState } from 'react';
 
 import { Surface, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { getSpacePath } from '@dxos/app-toolkit';
 import { Obj, Ref } from '@dxos/echo';
 import { Integration } from '@dxos/plugin-integration/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';

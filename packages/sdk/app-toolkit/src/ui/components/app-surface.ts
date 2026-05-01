@@ -397,13 +397,7 @@ export type CardData<Subject = unknown, Props extends {} = {}> = {
   subject: Subject;
   /** Optional projection model (set by form/kanban/pipeline consumers that pre-project the subject). */
   projection?: ProjectionModel;
-  /**
-   * Optional property paths to omit from the rendered card body. Generic
-   * passthrough — callers decide which fields are redundant in their
-   * context (e.g. a Kanban hides its pivot field because the column
-   * already conveys that value). Cards that render dynamic schemas
-   * (Expando) honor this; fixed-shape cards may ignore it.
-   */
+  /** Paths to omit from the card body (caller-defined redundancy; e.g. Kanban hides pivot). Dynamic-schema cards honor this; fixed-shape cards may ignore. */
   ignorePaths?: ReadonlyArray<string>;
 } & Props;
 

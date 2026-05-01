@@ -46,9 +46,6 @@ export const translations = [
         'no-available-targets.message': 'No remote targets available.',
         'custom-token-dialog.title': 'Add custom token',
         'custom-token-dialog.description': 'Enter a static access token. No OAuth or sync runs for custom tokens.',
-        'cancel.label': 'Cancel',
-        'save.label': 'Save',
-        'submitting.label': 'Saving…',
       },
       [Integration.Integration.typename]: {
         'typename.label': 'Integration',

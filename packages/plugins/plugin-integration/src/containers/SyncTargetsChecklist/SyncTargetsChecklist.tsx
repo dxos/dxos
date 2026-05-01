@@ -9,6 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { type Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Button, Dialog, Input, useTranslation } from '@dxos/react-ui';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import type { RemoteTarget } from '#types';
@@ -19,27 +20,12 @@ import { type Integration } from '../../types';
 export type SyncTargetsChecklistProps = {
   integration: Integration.Integration;
   availableTargets: ReadonlyArray<RemoteTarget>;
-  /**
-   * Existing local object to attach to the first newly-selected target —
-   * threaded through from the auth surface (e.g. a Calendar object the user
-   * was viewing when they kicked off OAuth). Forwarded to
-   * `SetIntegrationTargets`.
-   */
+  /** Existing local object to attach to the first newly-selected target. */
   existingTarget?: Ref.Ref<Obj.Unknown>;
 };
 
 /**
  * Dialog body for picking which remote targets are synced into an Integration.
- *
- * Pre-checks any rows whose `id` (foreign id) is already recorded on the
- * Integration as a target's `remoteId`. On submit invokes the generic
- * `SetIntegrationTargets` op with `{ remoteId, name }` entries — no local
- * objects are created here. The provider's `sync` op materializes local
- * placeholders on first run for each newly-selected target.
- *
- * Rendered as `Dialog.Content` inside the layout system's surrounding
- * `Dialog.Root` + `Dialog.Overlay` — opened via
- * `LayoutOperation.UpdateDialog({ subject: SYNC_TARGETS_DIALOG, ... })`.
  */
 export const SyncTargetsChecklist = ({ integration, availableTargets, existingTarget }: SyncTargetsChecklistProps) => {
   const { t } = useTranslation(meta.id);
@@ -106,33 +92,27 @@ export const SyncTargetsChecklist = ({ integration, availableTargets, existingTa
   return (
     <Dialog.Content>
       <Dialog.Header>
-        <Dialog.Title>{t('sync-targets-dialog.title', { defaultValue: 'Choose sync targets' })}</Dialog.Title>
+        <Dialog.Title>{t('sync-targets-dialog.title')}</Dialog.Title>
         <Dialog.Close asChild>
           <Dialog.CloseIconButton />
         </Dialog.Close>
       </Dialog.Header>
       <Dialog.Body>
-        <Dialog.Description>
-          {t('sync-targets-dialog.description', {
-            defaultValue: 'Pick which remote targets should be synced into this integration.',
-          })}
-        </Dialog.Description>
+        <Dialog.Description>{t('sync-targets-dialog.description')}</Dialog.Description>
 
         {availableTargets.length > 0 && (
           <div role='none' className='flex gap-2 mt-form-gap'>
             <Button onClick={selectAll} disabled={submitting}>
-              {t('select-all.label', { defaultValue: 'Select all' })}
+              {t('select-all.label')}
             </Button>
             <Button onClick={selectNone} disabled={submitting}>
-              {t('select-none.label', { defaultValue: 'Select none' })}
+              {t('select-none.label')}
             </Button>
           </div>
         )}
 
         {availableTargets.length === 0 ? (
-          <p className='mt-form-gap text-description'>
-            {t('no-available-targets.message', { defaultValue: 'No remote targets available.' })}
-          </p>
+          <p className='mt-form-gap text-description'>{t('no-available-targets.message')}</p>
         ) : (
           <div role='none' className='flex flex-col gap-1 mt-form-gap'>
             {availableTargets.map((target) => (
@@ -157,10 +137,10 @@ export const SyncTargetsChecklist = ({ integration, availableTargets, existingTa
       </Dialog.Body>
       <Dialog.ActionBar>
         <Dialog.Close asChild>
-          <Button disabled={submitting}>{t('cancel.label', { defaultValue: 'Cancel' })}</Button>
+          <Button disabled={submitting}>{t('cancel.label', { ns: osTranslations })}</Button>
         </Dialog.Close>
         <Button variant='primary' onClick={handleSubmit} disabled={submitting}>
-          {submitting ? t('submitting.label', { defaultValue: 'Saving…' }) : t('save.label', { defaultValue: 'Save' })}
+          {submitting ? t('saving.label', { ns: osTranslations }) : t('save.label', { ns: osTranslations })}
         </Button>
       </Dialog.ActionBar>
     </Dialog.Content>

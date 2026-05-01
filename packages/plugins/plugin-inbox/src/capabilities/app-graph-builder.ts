@@ -328,8 +328,6 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: 'sync-mailbox',
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
-        // Reactive: AtomQuery + the integration's `targets` field. Rebuilds
-        // when an integration referencing this mailbox is added or removed.
         actions: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
           if (!db) {

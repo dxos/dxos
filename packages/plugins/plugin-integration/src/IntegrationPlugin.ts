@@ -40,14 +40,21 @@ export const IntegrationPlugin = Plugin.define(meta).pipe(
               }
 
               const coordinator = yield* Capability.get(IntegrationCoordinator);
-              const { integrationId } = yield* coordinator.createIntegration({
+              const result = yield* coordinator.createIntegration({
                 db,
                 spaceId: db.spaceId,
                 providerId: props.providerId,
               });
 
+              const id =
+                result.kind === 'oauth-started'
+                  ? result.draftIntegrationId
+                  : result.kind === 'integration-created'
+                    ? result.integrationId
+                    : '';
+
               return {
-                id: integrationId,
+                id,
                 subject: [],
                 object: undefined as unknown as Obj.Unknown,
               };

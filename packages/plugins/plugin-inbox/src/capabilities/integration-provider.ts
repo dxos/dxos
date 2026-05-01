@@ -26,13 +26,10 @@ const GoogleUserInfo = Schema.Struct({
 });
 
 /**
- * Fetches the user's email from Google's `/oauth2/v3/userinfo` and returns it,
- * or `undefined` when there is no token, `account` is already set, or email is absent.
- * Callers persist it on the access token (e.g. via `Obj.change`). Tracer is disabled
- * around the request to work around a CORS issue with traced requests
- * (see https://github.com/Effect-TS/effect/issues/4568).
+ * Google `/oauth2/v3/userinfo` email, or `undefined` if missing token, `account` already set, or no email.
+ * Callers persist via e.g. `Obj.change`. Tracer disabled on the request (Effect + CORS: https://github.com/Effect-TS/effect/issues/4568).
  */
-const fillAccountEmail = (accessToken: { token: string; account?: string }) =>
+const getAccountEmail = (accessToken: { token: string; account?: string }) =>
   Effect.gen(function* () {
     if (!accessToken.token || accessToken.account) {
       return undefined;
@@ -51,18 +48,12 @@ const fillAccountEmail = (accessToken: { token: string; account?: string }) =>
   });
 
 /**
- * onTokenCreated for Gmail: fills the account email AND attaches the single
- * Mailbox target. Mail integrations have no `getSyncTargets` UI (there's
- * only one inbox per account), so the target is wired up here. When
- * `existingTarget` is provided (e.g. the auth flow was initiated from
- * `InitializeMailbox` on an existing Mailbox), the existing object is
- * reused — and given the same default name a freshly-created Mailbox would
- * have (`email ?? 'Inbox'`) when its `name` is unset. Otherwise a fresh
- * Mailbox is created.
+ * Gmail `onTokenCreated`: set account email; ensure one Mailbox (no `getSyncTargets` for mail).
+ * Reuses `existingTarget` (`InitializeMailbox`) and applies default name `email ?? 'Inbox'` when unnamed; else creates Mailbox.
  */
 const gmailOnTokenCreated: OnTokenCreated = ({ accessToken, integration, existingTarget }) =>
   Effect.gen(function* () {
-    const email = yield* fillAccountEmail(accessToken);
+    const email = yield* getAccountEmail(accessToken);
     if (email) {
       Obj.change(accessToken, (accessToken) => {
         accessToken.account = email;
@@ -103,7 +94,7 @@ const gmailOnTokenCreated: OnTokenCreated = ({ accessToken, integration, existin
 
 const calendarOnTokenCreated: OnTokenCreated = ({ accessToken }) =>
   Effect.gen(function* () {
-    const email = yield* fillAccountEmail(accessToken);
+    const email = yield* getAccountEmail(accessToken);
     if (email) {
       Obj.change(accessToken, (accessToken) => {
         accessToken.account = email;

@@ -44,10 +44,7 @@ export const getOrderByColumnFromArrangement = (
       Object.entries(columns).map(([key, entry]) => {
         const rawIds = entry.ids;
         const ids = Array.isArray(rawIds) ? [...rawIds] : [];
-        return [
-          key,
-          { ids, ...(entry.hidden !== undefined && { hidden: entry.hidden }) },
-        ];
+        return [key, { ids, ...(entry.hidden !== undefined && { hidden: entry.hidden }) }];
       }),
     );
   }

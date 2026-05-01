@@ -50,13 +50,7 @@ export class EmailTagNotFoundError extends BaseError.extend('EmailTagNotFoundErr
 }
 
 /** Message DXN is not a queue (feed) reference — cannot append classification relation. */
-export class MessageNotInFeedError extends BaseError.extend(
-  'MessageNotInFeedError',
-  'Message is not in a feed.',
-) {}
+export class MessageNotInFeedError extends BaseError.extend('MessageNotInFeedError', 'Message is not in a feed.') {}
 
 /** Assistant response did not contain summary text. */
-export class MailboxSummaryNotFoundError extends BaseError.extend(
-  'MailboxSummaryNotFoundError',
-  'No summary found.',
-) {}
+export class MailboxSummaryNotFoundError extends BaseError.extend('MailboxSummaryNotFoundError', 'No summary found.') {}

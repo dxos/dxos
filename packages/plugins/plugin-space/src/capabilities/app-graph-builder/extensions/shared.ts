@@ -126,13 +126,7 @@ export type ViewIndex = {
   typenamesWithViews: Set<string>;
   /** View objects targeting a specific typename. */
   getViewsForTypename: (typename: string) => Obj.Any[];
-  /**
-   * Whether `object` is a view, defined as: its schema's `ViewAnnotation` path
-   * resolves to a non-null value on the object. Returns `false` for objects of
-   * non-view-annotated schemas, and `false` for view-annotated objects whose
-   * path resolves to `null`/`undefined` (e.g. an items-variant `Kanban` whose
-   * `view` ref is unset — that's a regular object, not a view).
-   */
+  /** True when the schema has `ViewAnnotation` and that path resolves non-null on `object`; false otherwise (no annotation, or null/undefined path — e.g. Kanban with unset `view`). */
   isView: (object: Obj.Any) => boolean;
 };
 
