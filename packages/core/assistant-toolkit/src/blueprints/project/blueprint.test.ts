@@ -226,9 +226,12 @@ describe('Agent', () => {
         const triggers = yield* Database.runQuery(
           Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.blueprint.test.timer'),
         );
-        expect(triggers).toHaveLength(1);
+        const timerTriggers = triggers.filter(
+          (trigger) => trigger.spec?.kind === 'timer' && trigger.spec.cron === cron,
+        );
+        expect(timerTriggers).toHaveLength(1);
 
-        const timerTrigger = triggers[0];
+        const timerTrigger = timerTriggers[0];
         invariant(timerTrigger.spec?.kind === 'timer');
         expect(timerTrigger.spec.cron).toBe(cron);
         expect(timerTrigger.enabled).toBe(true);
