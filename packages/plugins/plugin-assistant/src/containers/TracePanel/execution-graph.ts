@@ -223,61 +223,6 @@ export const buildExecutionGraph = ({
           });
           break;
         }
-        // Handled by OperationStart and OperationEnd.
-        // case 'toolCall': {
-        //   builder.addCommit({
-        //     id: `${event.data.block.toolCallId}:call`,
-        //     branch: event.meta.pid ?? MAIN_BRANCH,
-        //     parents: builder.computeParents(
-        //       CommitSelector.branch(event.meta.pid ?? MAIN_BRANCH).pipe(
-        //         CommitSelector.compose(CommitSelector.last()),
-        //         CommitSelector.orElse(
-        //           CommitSelector.tag(event.meta.pid && tagStartMarker(event.meta.pid)).pipe(
-        //             CommitSelector.compose(CommitSelector.last()),
-        //           ),
-        //         ),
-        //       ),
-        //     ),
-        //     tags: getTags(event.meta),
-        //     timestamp: new Date(event.timestamp),
-        //     icon: ICONS.toolCall.icon,
-        //     level: ICONS.toolCall.level,
-        //     message: event.data.block.name,
-        //   });
-        //   break;
-        // }
-        // case 'toolResult': {
-        //   builder.addCommit(
-        //     {
-        //       id: `${event.data.block.toolCallId}:result`,
-        //       branch: event.meta.pid ?? MAIN_BRANCH,
-        //       parents: builder.computeParents(
-        //         CommitSelector.firstOf(
-        //           CommitSelector.branch(event.meta.pid ?? MAIN_BRANCH).pipe(
-        //             CommitSelector.compose(CommitSelector.last()),
-        //           ),
-        //           CommitSelector.tag(event.meta.pid && tagPid(event.meta.pid)).pipe(
-        //             CommitSelector.compose(CommitSelector.last()),
-        //           ),
-        //           CommitSelector.tag(event.meta.pid && tagStartMarker(event.meta.pid)).pipe(
-        //             CommitSelector.compose(CommitSelector.last()),
-        //           ),
-        //         ),
-        //       ),
-        //       tags: getTags(event.meta),
-        //       timestamp: new Date(event.timestamp),
-        //       icon: event.data.block.error ? ICONS.toolResultError.icon : ICONS.toolResultSuccess.icon,
-        //       level: event.data.block.error ? ICONS.toolResultError.level : ICONS.toolResultSuccess.level,
-        //       message: event.data.block.error
-        //         ? `${event.data.block.name} - Error: ${trimText(event.data.block.error)}`
-        //         : `${event.data.block.name} - Success`,
-        //     },
-        //     {
-        //       replace: CommitSelector.id(`${event.data.block.toolCallId}:call`),
-        //     },
-        //   );
-        //   break;
-        // }
       }
     } else if (Trace.isOfType(Trace.OperationStart, event)) {
       builder.addCommit({
