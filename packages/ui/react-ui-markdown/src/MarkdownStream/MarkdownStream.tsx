@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EditorSelection, Transaction } from '@codemirror/state';
+import { EditorSelection, type Extension, Transaction } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
@@ -10,6 +10,7 @@ import * as Queue from 'effect/Queue';
 import * as Stream from 'effect/Stream';
 import React, {
   forwardRef,
+  type ReactNode,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -38,21 +39,25 @@ import {
   scroller,
   scrollerLineEffect,
   fader,
-  wire,
-  wireBypass,
+  typewriter,
+  typewriterBypass,
   xmlTagContextEffect,
   xmlTagResetEffect,
   xmlTagUpdateEffect,
   xmlTags,
   autoScroll,
   documentSlots,
+  xmlFormatting,
+  xmlBlockDecoration,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
+import { setFooterVisibleEffect, footer } from './footer';
 import { type StreamerOptions, createStreamer } from './stream';
 export interface MarkdownStreamController extends XmlWidgetStateManager {
   get length(): number | undefined;
+  focus: () => void;
   scrollToBottom: (behavior?: ScrollBehavior) => void;
   navigateNext: () => void;
   navigatePrevious: () => void;
@@ -69,12 +74,17 @@ export type MarkdownStreamEvent = {
 export type MarkdownStreamProps = ThemedClassName<
   {
     debug?: boolean;
+
+    /** Initial content. */
     content?: string;
+
+    /** View options. */
     options?: {
       autoScroll?: boolean;
-      wire?: boolean;
+      typewriter?: boolean;
       cursor?: boolean;
       fader?: boolean;
+
       /**
        * Streaming cadence. See {@link StreamerOptions}.
        * Use `'word'` or `'character'` to break large source chunks into smaller CM dispatches —
@@ -83,9 +93,28 @@ export type MarkdownStreamProps = ThemedClassName<
        * Default: `'span'` (one CM dispatch per source chunk; current behaviour).
        */
       streamCadence?: StreamerOptions['chunkSize'];
-      /** Per-token delay (ms) for the streaming queue. Default `0`. */
+
+      /**
+       * Per-token delay (ms) for the streaming queue. Default `0`.
+       */
       streamDelayMs?: number;
     };
+
+    /**
+     * Optional React subtree rendered as a CodeMirror block-widget decoration anchored at
+     * `doc.length`. Scrolls with the document content (lives inside `cm-content`'s flow).
+     * Visibility tracks the truthiness of the prop.
+     */
+    footer?: ReactNode;
+
+    /**
+     * Extra CodeMirror extensions appended after the built-in stack — use for keymaps or
+     * other host-level behaviour (e.g. `Mod-d` to toggle debug) that should apply when the
+     * document is focused.
+     */
+    extensions?: Extension;
+
+    /** Event handler. */
     onEvent?: (event: MarkdownStreamEvent) => void;
   } & (XmlTagsOptions & AutoScrollProps)
 >;
@@ -94,12 +123,29 @@ export type MarkdownStreamProps = ThemedClassName<
  * Codemirror-based markdown editor with xml tag widtgets and streaming support.
  */
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
-  ({ classNames, debug, content, options, registry, onEvent }, forwardedRef) => {
-    // Store current content so that we can toggle debug mode.
-    const contentRef = useRef(content);
+  ({ classNames, debug, content, options, registry, extensions, footer, onEvent }, forwardedRef) => {
+    // Store current content so that we can toggle debug mode. Default to '' so the
+    // `append()` path (which does `contentRef.current += text`) doesn't concatenate
+    // against `undefined` and stamp `"undefined"` into the transcript snapshot.
+    const contentRef = useRef(content ?? '');
+
+    // DOM node for the footer block widget — populated when its decoration mounts.
+    const [footerRoot, setFooterRoot] = useState<HTMLElement | null>(null);
 
     // Codemirror editor.
-    const { parentRef, view, viewRef, widgets } = useMarkdownStreamTextEditor(contentRef, { debug, registry, options });
+    const { parentRef, view, viewRef, widgets } = useMarkdownStreamTextEditor(contentRef, {
+      debug,
+      registry,
+      options,
+      extensions,
+      setFooterRoot,
+    });
+
+    // Show the status footer.
+    const footerVisible = !!footer;
+    useEffect(() => {
+      view?.dispatch({ effects: setFooterVisibleEffect.of(footerVisible) });
+    }, [view, footerVisible]);
 
     // Streaming text queue.
     const [queue, setQueue, queueRef] = useStateWithRef(Effect.runSync(Queue.unbounded<string>()));
@@ -116,7 +162,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         viewRef.current.dispatch({
           effects: [xmlTagContextEffect.of(null), xmlTagResetEffect.of(null)],
           changes: [{ from: 0, to: viewRef.current.state.doc.length, insert: text }],
-          annotations: wireBypass.of(true),
+          annotations: typewriterBypass.of(true),
           selection: EditorSelection.cursor(text.length),
         });
 
@@ -176,13 +222,16 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
               {createPortal(<Component view={view} {...props} />, root)}
             </div>
           ))}
+          {footerRoot && footerVisible && createPortal(footer, footerRoot)}
         </ErrorBoundary>
       </>
     );
   },
 );
 
-type MarkdownStreamTextEditorParams = Pick<MarkdownStreamProps, 'debug' | 'registry' | 'options'>;
+type MarkdownStreamTextEditorParams = Pick<MarkdownStreamProps, 'debug' | 'registry' | 'options' | 'extensions'> & {
+  setFooterRoot?: (el: HTMLElement | null) => void;
+};
 
 type MarkdownStreamTextEditorResult = UseTextEditor & {
   viewRef: RefObject<EditorView | null>;
@@ -194,7 +243,7 @@ type MarkdownStreamTextEditorResult = UseTextEditor & {
  */
 const useMarkdownStreamTextEditor = (
   currentContent: RefObject<string | undefined>,
-  { debug, registry, options }: MarkdownStreamTextEditorParams,
+  { debug, registry, options, extensions: extraExtensions, setFooterRoot }: MarkdownStreamTextEditorParams,
 ): MarkdownStreamTextEditorResult => {
   const { themeMode } = useThemeContext();
 
@@ -218,36 +267,55 @@ const useMarkdownStreamTextEditor = (
           syntaxHighlighting: true,
           themeMode,
         }),
-        !debug && [
-          extendedMarkdown({ registry }),
-          decorateMarkdown({
-            // `dxn:` links/images are reference widgets owned by `preview()` (PreviewInlineWidget /
-            // PreviewBlockWidget). Skipping them here avoids `decorateMarkdown` adding a
-            // non-functional `LinkButton` anchor on top of the same node — e.g. for
-            // `[DXOS](dxn:echo:BNPMIBEDJLRIILYUYZVM6GT64VWI6WPPZ:01KQ889PZBRNHAEECV0ANFAYX7)`.
-            skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
-          }),
-          preview(),
-          xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
-          scroller({ overScroll: 80 }),
-          ...(options?.autoScroll ? [autoScroll()] : []),
-          ...(options?.wire
-            ? [
-                wire({
-                  cursor: options?.cursor,
-                  streamingTags: new Set(
-                    Object.entries(registry ?? {})
-                      .filter(([, def]) => def.streaming)
-                      .map(([tag]) => tag),
-                  ),
-                }),
-              ]
-            : []),
-          ...(options?.fader ? [fader()] : []),
-        ],
+        !debug &&
+          [
+            extendedMarkdown({ registry }),
+            decorateMarkdown({
+              // `dxn:` links/images are reference widgets owned by `preview()` (PreviewInlineWidget /
+              // PreviewBlockWidget). Skipping them here avoids `decorateMarkdown` adding a
+              // non-functional `LinkButton` anchor on top of the same node — e.g. for
+              // `[DXOS](dxn:echo:BNPMIBEDJLRIILYUYZVM6GT64VWI6WPPZ:01KQ889PZBRNHAEECV0ANFAYX7)`.
+              skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
+            }),
+            preview(),
+            // NOTE: An ancestor element must set `data-hue` so `.dx-panel` resolves to the user's
+            // hue tokens (see `packages/ui/ui-theme/src/css/components/panel.css`). Tailwind picks
+            // up these utility classes from this source file.
+            xmlBlockDecoration({
+              tag: 'prompt',
+              lineClass: 'cm-prompt-line my-8',
+              contentClass: 'cm-prompt-bubble dx-panel px-2 py-1.5 rounded-sm [&_*]:text-inherit!',
+              hideTags: true,
+            }),
+            xmlFormatting({ skip: ['prompt'] }),
+            xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
+            scroller({ overScroll: 160 }),
+            options?.autoScroll && autoScroll(),
+            options?.typewriter &&
+              typewriter({
+                cursor: options?.cursor,
+                streamingTags: new Set(
+                  Object.entries(registry ?? {})
+                    .filter(([, def]) => def.streaming)
+                    .map(([tag]) => tag),
+                ),
+              }),
+            options?.fader && fader(),
+            setFooterRoot && footer(setFooterRoot),
+          ].filter(isTruthy),
+        extraExtensions,
       ].filter(isTruthy),
     };
-  }, [themeMode, registry, debug, options?.autoScroll, options?.wire, options?.cursor, options?.fader]);
+  }, [
+    themeMode,
+    registry,
+    debug,
+    options?.autoScroll,
+    options?.typewriter,
+    options?.cursor,
+    options?.fader,
+    extraExtensions,
+  ]);
 
   const viewRef = useDynamicRef(view);
   return { view, viewRef, parentRef, widgets };
@@ -316,6 +384,11 @@ const createMarkdownStreamController = ({
       return viewRef.current?.state.doc.length;
     },
 
+    /** Focus the editor. */
+    focus: () => {
+      viewRef.current?.focus();
+    },
+
     /** Scroll to bottom. */
     scrollToBottom: (behavior?: ScrollBehavior) => {
       viewRef.current?.dispatch({
@@ -352,7 +425,7 @@ const createMarkdownStreamController = ({
       contentRef.current += text;
       if (text.length) {
         // Always go through the streaming queue, even when the doc starts empty. Skipping the
-        // queue in that case (via `onReset`) bypasses the `wire` extension's transaction filter
+        // queue in that case (via `onReset`) bypasses the `typewriter` extension's transaction filter
         // and the first chunk lands in one CM dispatch — defeating the typewriter for any
         // consumer (e.g. ChatThread) where the first delta is large because upstream batching
         // collected several streaming partials before React rendered.

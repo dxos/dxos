@@ -15,9 +15,8 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { AppGraphBuilder, Migrations, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { Journal, Outline } from '#types';
-
-import { translations } from './translations';
 
 export const OutlinerPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

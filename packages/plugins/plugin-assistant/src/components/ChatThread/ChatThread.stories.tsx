@@ -23,8 +23,8 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { createMessageGenerator } from '#testing';
+import { translations } from '#translations';
 
-import { translations } from '../../translations';
 import { ChatThread, type ChatThreadProps } from './ChatThread';
 
 random.seed(1);
@@ -136,7 +136,7 @@ export const Delayed: Story = {
     delay: 500,
     options: {
       autoScroll: true,
-      wire: true,
+      typewriter: true,
       cursor: true,
     },
   },

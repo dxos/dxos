@@ -8,7 +8,8 @@ import React, { type KeyboardEvent, forwardRef, useCallback, useState } from 're
 import { type Palette, Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Combobox, useSearchListInput, useSearchListResults } from '@dxos/react-ui-search';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { Form } from '../Form';
 import { type FormFieldMap } from '../Form/FormFieldComponent';
 

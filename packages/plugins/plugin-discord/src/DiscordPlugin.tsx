@@ -15,9 +15,8 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 import { DiscordBlueprint } from '#blueprints';
 import { BlueprintDefinition, DiscordSettings, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { Discord, DiscordEvents } from '#types';
-
-import { translations } from './translations';
 
 export const DiscordPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),

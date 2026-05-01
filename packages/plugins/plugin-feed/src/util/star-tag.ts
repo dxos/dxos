@@ -9,6 +9,8 @@ import { useQuery } from '@dxos/react-client/echo';
 
 import { Subscription } from '../types';
 
+// TODO(burdon): Factor out.
+
 /**
  * Returns the canonical "starred" {@link Tag.Tag} object for the given database, if one exists.
  * Reactively updates when a matching tag is added or removed from the space.

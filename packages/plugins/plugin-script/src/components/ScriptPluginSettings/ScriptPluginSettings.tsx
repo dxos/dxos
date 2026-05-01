@@ -7,7 +7,7 @@ import React from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Button, Select, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
-import { type EditorInputMode, EditorInputModes } from '@dxos/ui-editor';
+import { type EditorInputMode, EditorInputModes } from '@dxos/ui-editor/types';
 
 import { meta } from '#meta';
 import { type Settings } from '#types';

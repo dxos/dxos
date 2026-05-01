@@ -7,8 +7,8 @@ import { Blueprint, Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
-import { translations as componentsTranslations } from '@dxos/react-ui-components';
-import { translations as formTranslations } from '@dxos/react-ui-form';
+import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 
 import { meta } from '#meta';
 
@@ -18,7 +18,6 @@ export const translations: Resource[] = [
   ...formTranslations,
   {
     'en-US': {
-      // TODO(burdon): From assistant.
       [Blueprint.Blueprint.typename]: {
         'typename.label': 'Blueprint',
         'typename.label_zero': 'Blueprints',
@@ -41,7 +40,6 @@ export const translations: Resource[] = [
         'delete-object.label': 'Delete routine',
         'object-deleted.label': 'Routine deleted',
       },
-      // TODO(burdon): From conductor.
       [Sequence.typename]: {
         'typename.label': 'Sequence',
         'typename.label_zero': 'Sequences',

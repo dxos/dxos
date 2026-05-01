@@ -169,7 +169,7 @@ const DefaultStory = ({
 };
 
 const meta = {
-  title: 'ui/react-ui-components/MarkdownStream',
+  title: 'ui/react-ui-markdown/MarkdownStream',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: { layout: 'fullscreen' },
@@ -194,9 +194,9 @@ export const Streaming: Story = {
     content: TEXT,
     options: {
       autoScroll: true,
-      wire: true,
+      typewriter: true,
       fader: true,
-      // cursor: true,
+      cursor: true,
     },
   },
 };

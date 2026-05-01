@@ -12,7 +12,6 @@ import { type BlockRenderer, type MessageThreadContext } from './sync';
 import { applyToolBlockToWidgetState } from './tool-widget-state';
 import {
   FallbackWidget,
-  RoutineWidget,
   ReasoningWidget,
   ReferenceWidget,
   SelectWidget,
@@ -25,19 +24,16 @@ import {
 
 /**
  * Custom XML tags registry.
+ *
+ * NOTE: `<prompt>` is intentionally NOT registered here. It is rendered via mark + line
+ * decorations (`xmlBlockDecoration`) in MarkdownStream so the prompt text remains part of
+ * the document and can be highlighted by `xmlFormatting`.
  */
 export const componentRegistry: XmlWidgetRegistry = {
   //
   // DOM Widgets
   //
 
-  prompt: {
-    block: true,
-    factory: ({ children }) => {
-      const text = getXmlTextChild(children);
-      return text ? new RoutineWidget(text) : null;
-    },
-  },
   synthetic: {
     block: true,
     factory: ({ children, range }) => {
