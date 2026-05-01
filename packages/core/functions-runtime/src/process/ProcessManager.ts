@@ -443,7 +443,9 @@ class HandleImpl<I, O, R> implements Handle<I, O> {
 
   // TODO(dmaretskyi): Update to make it prefer the earliest alarm.
   requestAlarm(timeout?: number): void {
-    if (this.#finished) return;
+    if (this.#finished) {
+      return;
+    }
     this.#clearAlarm();
     const delay = timeout ?? 0;
     log('lifecycle: alarm scheduled', { delayMs: delay });
@@ -570,7 +572,9 @@ class HandleImpl<I, O, R> implements Handle<I, O> {
       this.#activeHandlers--;
       log('handler completed', { pid: this.pid, activeHandlers: this.#activeHandlers, finished: this.#finished });
 
-      if (this.#finished) return;
+      if (this.#finished) {
+        return;
+      }
 
       if (this.#failError !== null && this.#activeHandlers === 0) {
         this.#finished = true;

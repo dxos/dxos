@@ -61,8 +61,10 @@ export const translations = [
 
         'sync-mailbox.label': 'Sync mailbox',
         'sync-mailbox-error.title': 'Failed to sync mailbox',
+        'sync-mailbox-success.title': 'Mailbox sync complete',
         'sync-calendar.label': 'Sync calendar',
         'sync-calendar-error.title': 'Failed to sync calendar',
+        'sync-calendar-success.title': 'Calendar sync complete',
 
         'show-contact.label': 'Show contact',
         'create-contact.label': 'Create contact',

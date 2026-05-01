@@ -332,12 +332,12 @@ export const WithMail: Story = {
 export const WithGmail: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
-      const [{ InboxPlugin }, { TokenManagerPlugin }] = await Promise.all([
+      const [{ InboxPlugin }, { IntegrationPlugin }] = await Promise.all([
         import('@dxos/plugin-inbox'),
-        import('@dxos/plugin-token-manager'),
+        import('@dxos/plugin-integration'),
       ]);
       return {
-        plugins: [InboxPlugin(), TokenManagerPlugin()],
+        plugins: [InboxPlugin(), IntegrationPlugin()],
       };
     },
     config: config.persistent,
@@ -364,12 +364,12 @@ export const WithGmail: Story = {
 export const WithCalendar: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
-      const [{ InboxPlugin }, { TokenManagerPlugin }] = await Promise.all([
+      const [{ InboxPlugin }, { IntegrationPlugin }] = await Promise.all([
         import('@dxos/plugin-inbox'),
-        import('@dxos/plugin-token-manager'),
+        import('@dxos/plugin-integration'),
       ]);
       return {
-        plugins: [InboxPlugin(), TokenManagerPlugin()],
+        plugins: [InboxPlugin(), IntegrationPlugin()],
       };
     },
     config: config.remote,

@@ -3,7 +3,6 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
@@ -54,25 +53,6 @@ export const useAppBarProps = (): Omit<AppBarProps, 'classNames'> => {
           target: action.id,
           relation: 'child',
         }));
-
-        // Add alternate-tree action (e.g. Settings) from the workspace node.
-        const workspaceConnections = state.workspace ? get(graph.connections(state.workspace, 'child')) : [];
-        const alternateTreeNode = workspaceConnections.find(
-          (node: Node.Node) => node.properties.disposition === 'alternate-tree',
-        );
-        if (alternateTreeNode && activeId !== alternateTreeNode.id) {
-          const settingsAction = {
-            id: `appbar-settings-${alternateTreeNode.id}`,
-            type: Node.ActionType,
-            data: () => Effect.promise(() => invokePromise(LayoutOperation.Open, { subject: [alternateTreeNode.id] })),
-            properties: {
-              label: alternateTreeNode.properties.label ?? alternateTreeNode.id,
-              icon: alternateTreeNode.properties.icon ?? 'ph--placeholder--regular',
-            },
-          };
-          nodes.push(settingsAction);
-          edges.push({ source: 'root', target: settingsAction.id, relation: 'child' });
-        }
 
         return { nodes, edges };
       }),
