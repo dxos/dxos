@@ -16,6 +16,11 @@ export interface VitePluginLogOptions {
    * @default 'app.log'
    */
   logFilename?: string;
+  /**
+   * Same filter string as root `DX_LOG` / `parseFilter` from `@dxos/log` (e.g. `debug`, `info`).
+   * Entries below the minimum level are not forwarded. Default `debug` (TRACE omitted).
+   */
+  logFilter?: string;
 }
 
 const PLUGIN_NAME = 'dxos:vite-plugin-log';
@@ -26,6 +31,7 @@ const PLUGIN_NAME = 'dxos:vite-plugin-log';
  */
 export const vitePluginLog = (options: VitePluginLogOptions = {}): Plugin => {
   const logFilename = options.logFilename ?? 'app.log';
+  const logFilter = options.logFilter ?? 'debug';
 
   const runtimeAbsPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'runtime.js');
 
@@ -34,6 +40,13 @@ export const vitePluginLog = (options: VitePluginLogOptions = {}): Plugin => {
     apply: 'serve',
     enforce: 'pre',
 
+    config() {
+      return {
+        define: {
+          __DXOS_VITE_PLUGIN_LOG_FILTER__: JSON.stringify(logFilter),
+        },
+      };
+    },
     resolveId(id) {
       if (id === VITE_PLUGIN_LOG_RUNTIME_ID) {
         return runtimeAbsPath;

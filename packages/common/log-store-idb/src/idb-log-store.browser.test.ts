@@ -65,14 +65,29 @@ describe('IdbLogStore', () => {
     expect(second.l).toBe('W');
   });
 
-  test('skips TRACE entries', async ({ expect }) => {
+  test('skips TRACE entries (default logFilter is debug)', async ({ expect }) => {
     store = new IdbLogStore({ dbName, flushInterval: 10 });
     store.processor(fakeConfig, makeEntry(LogLevel.TRACE, 'noisy'));
+    store.processor(fakeConfig, makeEntry(LogLevel.DEBUG, 'debug-line'));
     store.processor(fakeConfig, makeEntry(LogLevel.INFO, 'kept'));
     await store.flush();
 
     const jsonl = await store.export();
-    expect(jsonl.split('\n')).toEqual([expect.stringContaining('"kept"')]);
+    const messages = jsonl.split('\n').filter(Boolean).map((line) => JSON.parse(line).m);
+    expect(messages).toHaveLength(2);
+    expect(messages).toContain('debug-line');
+    expect(messages).toContain('kept');
+    expect(messages).not.toContain('noisy');
+  });
+
+  test('logFilter tightens minimum level', async ({ expect }) => {
+    store = new IdbLogStore({ dbName, flushInterval: 10, logFilter: 'info' });
+    store.processor(fakeConfig, makeEntry(LogLevel.DEBUG, 'dropped'));
+    store.processor(fakeConfig, makeEntry(LogLevel.INFO, 'kept'));
+    await store.flush();
+    const jsonl = await store.export();
+    const messages = jsonl.split('\n').filter(Boolean).map((line) => JSON.parse(line).m);
+    expect(messages).toEqual(['kept']);
   });
 
   test('flushes when batch threshold is exceeded', async ({ expect }) => {
