@@ -6,19 +6,78 @@ import { type Extension, StateEffect, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 
 import { Domino } from '@dxos/ui';
+import { wireDrainingEffect } from '@dxos/ui-editor';
 
 /**
- * Toggles the footer's visibility.
+ * Host-controlled visibility intent. The footer block widget is rendered only when this is
+ * `true` AND wire is not actively draining its typewriter buffer — the latter is observed
+ * through {@link wireDrainingEffect}. Removing the decoration during a drip avoids the
+ * scroll-measure conflict between CM's view-line model and the floating absolute child.
  */
 export const setFooterVisibleEffect = StateEffect.define<boolean>();
+
+type FooterState = {
+  /** Host wants the footer rendered. */
+  wanted: boolean;
+  /** Wire is actively dripping into the document. */
+  draining: boolean;
+  decorations: DecorationSet;
+};
+
+/**
+ * Renders a host-supplied React subtree as a CodeMirror block widget anchored at
+ * `doc.length`. The widget lives inside the document, so it scrolls with content.
+ *
+ * Toggle the host-intent visibility via {@link setFooterVisibleEffect}. The widget is also
+ * automatically removed while {@link wireDrainingEffect} reports `true` and re-mounted
+ * once wire's buffer drains — this prevents the block widget from interfering with CM's
+ * view-line measurement during the typewriter drip.
+ *
+ * For pure doc edits (no visibility transition), the decoration's position is mapped
+ * through the change set so insertions at the end translate the anchor without destroying
+ * the widget's DOM.
+ */
+export const streamFooter = (setRoot: (el: HTMLElement | null) => void): Extension => {
+  const widget = new FooterWidget(setRoot);
+  const buildSet = (length: number): DecorationSet =>
+    Decoration.set([Decoration.widget({ widget, block: true, side: 1 }).range(length)]);
+
+  const field = StateField.define<FooterState>({
+    create: () => ({ wanted: false, draining: false, decorations: Decoration.none }),
+    update: (state, tr) => {
+      let { wanted, draining, decorations } = state;
+      for (const effect of tr.effects) {
+        if (effect.is(setFooterVisibleEffect)) {
+          wanted = effect.value;
+        }
+        if (effect.is(wireDrainingEffect)) {
+          draining = effect.value;
+        }
+      }
+
+      const visible = wanted && !draining;
+      const wasVisible = decorations.size > 0;
+      if (visible !== wasVisible) {
+        decorations = visible ? buildSet(tr.state.doc.length) : Decoration.none;
+      } else if (tr.docChanged && decorations.size > 0) {
+        // Position-map the existing decoration so insertions at the end translate the
+        // widget anchor without destroying the DOM (`widget.eq` is identity-true).
+        decorations = decorations.map(tr.changes);
+      }
+
+      return { wanted, draining, decorations };
+    },
+    provide: (f) => EditorView.decorations.from(f, (state) => state.decorations),
+  });
+
+  return [field];
+};
 
 /**
  * Block widget rendered at the end of the document. The DOM element is reported via
  * `setRoot` so the host React component can `createPortal` arbitrary content into it.
  */
 class FooterWidget extends WidgetType {
-  private _inner: HTMLDivElement | null = null;
-
   constructor(private readonly _setRoot: (el: HTMLElement | null) => void) {
     super();
   }
@@ -47,52 +106,11 @@ class FooterWidget extends WidgetType {
       .style({ position: 'relative', height: '0' })
       .append(inner);
 
-    this._inner = inner.root;
     this._setRoot(inner.root);
     return el.root;
   }
 
   override destroy(): void {
-    this._inner = null;
     this._setRoot(null);
   }
 }
-
-/**
- * Renders a host-supplied React subtree as a CodeMirror block widget anchored at
- * `doc.length`. The widget lives inside the document, so it scrolls with content. Toggle
- * visibility via {@link setFooterVisibleEffect}; the decoration's position is mapped
- * through subsequent transactions so insertions at the end translate the anchor without
- * destroying the widget's DOM.
- */
-export const streamFooter = (setRoot: (el: HTMLElement | null) => void): Extension => {
-  const widget = new FooterWidget(setRoot);
-  const buildSet = (length: number): DecorationSet =>
-    Decoration.set([Decoration.widget({ widget, block: true, side: 1 }).range(length)]);
-
-  const field = StateField.define<DecorationSet>({
-    create: () => Decoration.none,
-    update: (decos, tr) => {
-      // Visibility flips through the explicit effect — handle first so a hide+show round
-      // trip resets to a fresh decoration.
-      for (const effect of tr.effects) {
-        if (effect.is(setFooterVisibleEffect)) {
-          return effect.value ? buildSet(tr.state.doc.length) : Decoration.none;
-        }
-      }
-
-      // For doc edits, map the existing decoration through the change set so an insertion
-      // at the end translates the position from old `doc.length` to new `doc.length`.
-      // CM's diff treats the mapped decoration as identity-equal (per `widget.eq`), so the DOM
-      // and the portaled React tree stay mounted.
-      if (tr.docChanged && decos.size > 0) {
-        return decos.map(tr.changes);
-      }
-
-      return decos;
-    },
-    provide: (f) => EditorView.decorations.from(f),
-  });
-
-  return [field];
-};

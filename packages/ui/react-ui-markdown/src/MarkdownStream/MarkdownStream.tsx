@@ -129,8 +129,8 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
       setFooterRoot,
     });
 
-    // Toggle the footer decoration whenever the `footer` prop becomes truthy / falsy.
-    const footerVisible = footer != null && footer !== false;
+    // Show the status footer.
+    const footerVisible = !!footer;
     useEffect(() => {
       view?.dispatch({ effects: setFooterVisibleEffect.of(footerVisible) });
     }, [view, footerVisible]);
@@ -278,7 +278,7 @@ const useMarkdownStreamTextEditor = (
             xmlFormatting({ skip: ['prompt'] }),
             xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
             // TODO(burdon): Temporarily disable footer to avoid layout shift while scrolling.
-            false ? streamFooter(setFooterRoot) : [],
+            true ? streamFooter(setFooterRoot) : [],
             scroller({ overScroll: 160 }),
             ...(options?.autoScroll ? [autoScroll()] : []),
             ...(options?.wire

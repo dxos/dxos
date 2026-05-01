@@ -3,3 +3,4 @@
 //
 
 export * from './ChatStatus';
+export * from './format';

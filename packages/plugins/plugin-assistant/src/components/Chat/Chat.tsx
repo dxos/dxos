@@ -35,7 +35,7 @@ import {
 } from '../ChatPrompt';
 import { ChatThread as NaturalChatThread, type ChatThreadProps as NaturalChatThreadProps } from '../ChatThread';
 import { ChatStreamStatus } from './ChatStreamStatus';
-import { ChatContextProvider, type ChatContextValue, useChatContext } from './context';
+import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
 import { type ChatEvent } from './events';
 
 export { useChatContext };
@@ -55,7 +55,20 @@ const ChatRoot = ({ children, chat, queue, processor, onEvent, ...props }: ChatR
   const [debug, setDebug] = useState(false);
   const pending = useAtomValue(processor.messages);
   const streaming = useAtomValue(processor.streaming);
+  const active = useAtomValue(processor.active);
   const lastPrompt = useRef<string | undefined>(undefined);
+
+  // Track request start/end timestamps so the visible elapsed value in `ChatStreamStatus`
+  // can be derived from wall-clock time and survive the re-mounts that happen each time
+  // wire's drip queue toggles `wireDrainingEffect`.
+  const [requestTiming, setRequestTiming] = useState<ChatRequestTiming | null>(null);
+  useEffect(() => {
+    if (active) {
+      setRequestTiming({ startedAt: Date.now(), endedAt: null });
+    } else {
+      setRequestTiming((prev) => (prev && prev.endedAt == null ? { ...prev, endedAt: Date.now() } : prev));
+    }
+  }, [active]);
 
   // Messages.
   const storedMessages = useQuery(queue, Filter.type(Message.Message));
@@ -146,6 +159,7 @@ const ChatRoot = ({ children, chat, queue, processor, onEvent, ...props }: ChatR
       chat={chat}
       messages={messages}
       processor={processor}
+      requestTiming={requestTiming}
       {...props}
     >
       {children}
