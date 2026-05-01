@@ -12,6 +12,7 @@ import { readFile } from 'fs/promises';
 //   compile -> dx-compile:compile).
 type LogMetaTransformFn = (code: string, filename: string) => string | null;
 let _logMetaTransform: LogMetaTransformFn | null | undefined;
+let _didWarnLogMetaLoadFailure = false;
 
 const loadLogMetaTransform = async (): Promise<LogMetaTransformFn | null> => {
   if (_logMetaTransform !== undefined) {
@@ -26,8 +27,15 @@ const loadLogMetaTransform = async (): Promise<LogMetaTransformFn | null> => {
     const specifier = ['@dxos', 'vite-plugin-log'].join('/');
     const mod = (await import(specifier)) as { transformLogMeta?: LogMetaTransformFn };
     _logMetaTransform = mod.transformLogMeta ?? null;
-  } catch {
-    // vite-plugin-log not yet built (e.g. self-bootstrap); skip the transform.
+  } catch (err) {
+    // ERR_MODULE_NOT_FOUND is the expected case when vite-plugin-log itself is
+    // self-bootstrapping. Anything else is a real regression — warn once so we
+    // don't silently drop log-meta injection across the rest of the build.
+    const code = (err as NodeJS.ErrnoException | undefined)?.code;
+    if (code !== 'ERR_MODULE_NOT_FOUND' && !_didWarnLogMetaLoadFailure) {
+      _didWarnLogMetaLoadFailure = true;
+      console.warn('dx-compile: failed to load `@dxos/vite-plugin-log`; continuing without log-meta injection.', err);
+    }
     _logMetaTransform = null;
   }
   return _logMetaTransform;

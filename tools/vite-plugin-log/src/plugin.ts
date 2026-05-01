@@ -55,7 +55,7 @@ export function rolldownLogMetaTransform(
     console.warn('No program', ctx.id);
     return null;
   }
-  transform(ms, ctx.ast, ctx.id, { specs: options.to_transform });
+  transform(ms, ctx.ast, options.filename ?? ctx.id, { specs: options.to_transform });
   return { code: ms };
 }
 
@@ -176,7 +176,7 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
         const program =
           meta.ast ??
           parseSync(id, code, { astType: 'ts', lang: meta.moduleType as 'ts' | 'tsx' | 'js' | 'jsx' | 'dts' }).program;
-        transform(ms, program, id, { specs: metaOptions.to_transform });
+        transform(ms, program, metaOptions.filename ?? id, { specs: metaOptions.to_transform });
         return { code: ms.toString() };
       },
     } satisfies RolldownPlugin['transform'] as any;
