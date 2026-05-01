@@ -126,10 +126,10 @@ export const buildExecutionGraph = ({
 
   const events = traceMessages
     .flatMap((message) =>
-      message.events.map((event: Trace.Event) => ({
-        id: message.id,
-        meta: message.meta,
+      message.events.map((event: Trace.Event, index) => ({
         ...event,
+        meta: message.meta,
+        id: 'id' in event ? (event as any).id : `${message.id}:${index}`,
       })),
     )
     .slice(-eventLimit);
@@ -239,7 +239,7 @@ export const buildExecutionGraph = ({
         ),
         tags: [
           ...getTags(event.meta),
-          tagOperationBegin(event.meta.pid ?? 'unknown'),
+          tagOperationBegin(`${event.meta.pid ?? 'unknown'}:${event.data.key}`),
           event.meta.pid && tagStartMarker(event.meta.pid),
         ].filter(Predicate.isNotNullable),
         timestamp: new Date(event.timestamp),
@@ -261,7 +261,9 @@ export const buildExecutionGraph = ({
           parents: builder.computeParents(
             CommitSelector.branch(event.meta.parentPid ?? MAIN_BRANCH).pipe(
               CommitSelector.compose(
-                CommitSelector.not(CommitSelector.tag(tagOperationBegin(event.meta.pid ?? 'unknown'))),
+                CommitSelector.not(
+                  CommitSelector.tag(tagOperationBegin(`${event.meta.pid ?? 'unknown'}:${event.data.key}`)),
+                ),
               ),
               CommitSelector.orElse(CommitSelector.tag(event.meta.parentPid && tagStartMarker(event.meta.parentPid))),
               CommitSelector.compose(CommitSelector.last()),
@@ -271,7 +273,9 @@ export const buildExecutionGraph = ({
                   event.meta.pid && tagParentPid(event.meta.pid),
                 ]).pipe(
                   CommitSelector.compose(
-                    CommitSelector.not(CommitSelector.tag(tagOperationBegin(event.meta.pid ?? 'unknown'))),
+                    CommitSelector.not(
+                      CommitSelector.tag(tagOperationBegin(`${event.meta.pid ?? 'unknown'}:${event.data.key}`)),
+                    ),
                   ),
                   CommitSelector.compose(CommitSelector.last()),
                 ),
@@ -289,7 +293,7 @@ export const buildExecutionGraph = ({
             // TODO(dmaretskyi): Deduping events in subbranches brekas graph.
             !event.meta.parentPid || children.length > 1 // 1 is the operation begin commit.
               ? undefined
-              : CommitSelector.tag(tagOperationBegin(event.meta.pid ?? 'unknown')),
+              : CommitSelector.tag(tagOperationBegin(`${event.meta.pid ?? 'unknown'}:${event.data.key}`)),
         },
       );
     }
