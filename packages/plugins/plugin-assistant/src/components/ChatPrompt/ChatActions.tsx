@@ -36,15 +36,6 @@ export const ChatActions = ({
     <div className={mx('flex items-center me-1', classNames)}>
       {children}
 
-      <IconButton
-        disabled={!processing}
-        variant='ghost'
-        icon='ph--x--regular'
-        iconOnly
-        label={t('cancel-processing.button')}
-        onClick={() => onEvent?.({ type: 'cancel' })}
-      />
-
       {microphone && (
         <IconButton
           disabled={!processing}
@@ -70,6 +61,15 @@ export const ChatActions = ({
           onClick={() => onEvent?.({ type: 'toggle-debug' })}
         />
       )}
+
+      <IconButton
+        disabled={!processing}
+        variant='ghost'
+        icon='ph--x--regular'
+        iconOnly
+        label={t('cancel-processing.button')}
+        onClick={() => onEvent?.({ type: 'cancel' })}
+      />
     </div>
   );
 };

@@ -18687,18 +18687,33 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
+      '@dxos/ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../ui-editor
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../ui-theme
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -18736,6 +18751,9 @@ importers:
         specifier: 'catalog:'
         version: 4.0.1
     devDependencies:
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../lit-ui
@@ -18745,18 +18763,15 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
-      '@dxos/ui-theme':
-        specifier: workspace:*
-        version: link:../ui-theme
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 0.27.0(effect@3.20.0)(vitest@3.2.4)
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.7

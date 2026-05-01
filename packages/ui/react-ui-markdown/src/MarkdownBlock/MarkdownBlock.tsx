@@ -10,7 +10,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
-export type MarkdownViewerProps = ThemedClassName<
+export type MarkdownBlockProps = ThemedClassName<
   PropsWithChildren<{
     content?: string;
     components?: ReactMarkdownOptions['components'];
@@ -23,7 +23,7 @@ export type MarkdownViewerProps = ThemedClassName<
  * markdown -> remark -> [mdast -> remark plugins] -> [hast -> rehype plugins] -> components -> react elements.
  * Consider using @dxos/react-ui-editor.
  */
-export const MarkdownViewer = ({ classNames, children, components, content = '' }: MarkdownViewerProps) => {
+export const MarkdownBlock = ({ classNames, children, components, content = '' }: MarkdownBlockProps) => {
   return (
     <div className={mx(classNames)}>
       <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={{ ...defaultComponents, ...components }}>
@@ -45,7 +45,7 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
     return <h3 className='pt-1 pb-1 text-accent-text text-base'>{children}</h3>;
   },
   blockquote: ({ children, ...props }) => (
-    <blockquote className='ps-4 mt-2 mb-2 pt-2 pb-2 border-l-4 border-accent-text text-accent-text' {...props}>
+    <blockquote className='my-2 py-2 ps-4 border-l-4 border-accent-text text-accent-text' {...props}>
       {children}
     </blockquote>
   ),
