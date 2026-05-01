@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Label } from '#translations';
+
 import { type ClassNameValue } from './theme';
-import { type Label } from './translations';
 
 export type MenuActionProperties = {
   label: Label;

@@ -10,7 +10,7 @@ import { AgentService } from '@dxos/assistant';
 import type { Blueprint } from '@dxos/blueprints';
 import { type Database, type Feed } from '@dxos/echo';
 import type { CredentialsService, Process, QueueService } from '@dxos/functions';
-import type { TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
+import type { ProcessManager, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 import type { SpaceId } from '@dxos/keys';
 import type { Operation, OperationRegistry } from '@dxos/operation';
 
@@ -31,6 +31,7 @@ export namespace AutomationCapabilities {
     | Blueprint.RegistryService
     | AgentService.AgentService
     | Process.ProcessMonitorService
+    | ProcessManager.ProcessManagerService
     | Operation.Service
     | OperationRegistry.Service
     | OpaqueToolkit.OpaqueToolkitProvider;

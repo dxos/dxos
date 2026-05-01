@@ -3,7 +3,7 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
-import { translations as editorTranslations } from '@dxos/react-ui-editor';
+import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 
 import { meta } from '#meta';
 import { Markdown } from '#types';

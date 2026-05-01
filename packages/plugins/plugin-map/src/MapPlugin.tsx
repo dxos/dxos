@@ -15,9 +15,8 @@ import { ViewModel } from '@dxos/schema';
 
 import { AppGraphBuilder, BlueprintDefinition, MapState, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { Map, MapAction } from '#types';
-
-import { translations } from './translations';
 
 export const MapPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

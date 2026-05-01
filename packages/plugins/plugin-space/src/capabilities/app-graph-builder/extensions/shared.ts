@@ -13,7 +13,7 @@ import { Migrations } from '@dxos/migrations';
 import { type Node } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
 import { ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
-import { type Label } from '@dxos/ui-types';
+import { type Label } from '@dxos/ui-types/translations';
 
 import { meta } from '#meta';
 import { SPACE_TYPE } from '#types';

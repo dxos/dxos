@@ -26,9 +26,9 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { InboxOperation } from '#operations';
+import { translations } from '#translations';
 import { Calendar, InboxEvents, Mailbox } from '#types';
 
-import { translations } from './translations';
 import { CreateCalendarSchema } from './types/Calendar';
 import { CreateMailboxSchema } from './types/Mailbox';
 

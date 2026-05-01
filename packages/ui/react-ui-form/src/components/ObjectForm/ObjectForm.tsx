@@ -11,7 +11,8 @@ import { invariant } from '@dxos/invariant';
 import { HuePicker } from '@dxos/react-ui-pickers';
 import { isNonNullable } from '@dxos/util';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { Form, type FormFieldMap, omitId } from '../Form';
 
 export type ObjectFormProps = {

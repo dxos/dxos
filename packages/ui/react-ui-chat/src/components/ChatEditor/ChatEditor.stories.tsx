@@ -7,7 +7,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { log } from '@dxos/log';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { ChatEditor } from './ChatEditor';
 import { type ReferenceData } from './references';
 

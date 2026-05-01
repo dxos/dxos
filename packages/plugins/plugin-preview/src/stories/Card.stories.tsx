@@ -12,8 +12,9 @@ import { Card } from '@dxos/react-ui';
 import { withLayout } from '@dxos/react-ui/testing';
 import { type Organization, type Person, type Pipeline, type Task } from '@dxos/types';
 
+import { translations } from '#translations';
+
 import { FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
-import { translations } from '../translations';
 import { DefaultStory, createOrganization, createPerson, createProject, createTask } from './testing';
 
 random.seed(999);

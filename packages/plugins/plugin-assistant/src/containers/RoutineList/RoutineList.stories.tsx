@@ -20,8 +20,9 @@ import { Panel } from '@dxos/react-ui';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Organization } from '@dxos/types';
 
+import { translations } from '#translations';
+
 import { AssistantPlugin } from '../../AssistantPlugin';
-import { translations } from '../../translations';
 import { TracePanel } from '../TracePanel';
 import { RoutineList } from './RoutineList';
 

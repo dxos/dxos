@@ -14,9 +14,8 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { ReactSurface } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { Template } from '#types';
-
-import { translations } from './translations';
 
 export const TemplatePlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
