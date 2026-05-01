@@ -6,10 +6,9 @@ import { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Ref } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 
-import { useIntegrationProvider } from '../capabilities/integration-provider';
+import { useIntegrationProviderById } from '../capabilities/integration-provider';
 import { type Integration } from '../types';
 
 export type UseSyncIntegrationResult = {
@@ -17,8 +16,6 @@ export type UseSyncIntegrationResult = {
   readonly available: boolean;
   /** True while a sync is in flight. */
   readonly syncing: boolean;
-  /** Most recent error from `sync`, if any. */
-  readonly error: string | undefined;
   /**
    * Invokes `provider.sync` for the whole integration (no `kanban` arg).
    * Pops a toast with totals on success or an error message on failure.
@@ -39,15 +36,12 @@ export const useSyncIntegration = (
   integration: Integration.Integration | undefined,
 ): UseSyncIntegrationResult => {
   const { invokePromise } = useOperationInvoker();
-  const [accessToken] = useObject(integration?.accessToken);
-  const provider = useIntegrationProvider(accessToken?.source);
+  const provider = useIntegrationProviderById(integration?.providerId);
   const [syncing, setSyncing] = useState(false);
-  const [error, setError] = useState<string>();
 
   const sync = useCallback(async () => {
     if (!integration || !provider?.sync) return;
     setSyncing(true);
-    setError(undefined);
     try {
       const result = await invokePromise(provider.sync as any, {
         integration: Ref.make(integration),
@@ -57,7 +51,6 @@ export const useSyncIntegration = (
       }
     } catch (err) {
       log.catch(err);
-      setError(String((err as Error).message ?? err));
     } finally {
       setSyncing(false);
     }
@@ -66,7 +59,6 @@ export const useSyncIntegration = (
   return {
     available: !!provider?.sync,
     syncing,
-    error,
     sync,
   };
 };

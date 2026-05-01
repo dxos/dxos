@@ -4,48 +4,48 @@
 
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { usePluginManager } from '@dxos/app-framework/ui';
 import { type Database } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { runAndForwardErrors } from '@dxos/effect';
 import { Button, useTranslation } from '@dxos/react-ui';
-import { AccessToken } from '@dxos/types';
 
-import { getPresetBySource, useOAuth } from '#hooks';
 import { meta } from '#meta';
 
+import { IntegrationCoordinator, IntegrationProvider } from '../../capabilities';
+
 export type IntegrationAuthButtonProps = {
-  source: string;
+  /** Stable id of the `IntegrationProvider` capability entry to authenticate against. */
+  providerId: string;
   db: Database.Database;
 };
 
-/** Renders an OAuth connect button for the preset matching the given source. */
-export const IntegrationAuthButton = ({ source, db }: IntegrationAuthButtonProps) => {
+/**
+ * Inline OAuth connect button. Hands off to the long-lived
+ * {@link IntegrationCoordinator}, which builds the AccessToken + Integration
+ * stubs in memory, runs OAuth, and persists everything on success — same
+ * flow as the standard "Add Object → Integration" dialog. Used by callers
+ * (e.g. inbox / calendar) that detect a missing integration mid-flow.
+ */
+export const IntegrationAuthButton = ({ providerId, db }: IntegrationAuthButtonProps) => {
   const { t } = useTranslation(meta.id);
-  const { invokePromise } = useOperationInvoker();
-
-  const handleAddAccessToken = useCallback(
-    async (token: AccessToken.AccessToken) => {
-      await invokePromise(SpaceOperation.AddObject, {
-        object: token,
-        target: db,
-        hidden: true,
-      });
-    },
-    [db, invokePromise],
-  );
-
-  const { startOAuthFlow } = useOAuth({ spaceId: db.spaceId, onAddAccessToken: handleAddAccessToken });
-  const preset = getPresetBySource(source);
+  const manager = usePluginManager();
+  const provider = manager.capabilities
+    .getAll(IntegrationProvider)
+    .flat()
+    .find((p) => p.id === providerId);
 
   const handleClick = useCallback(async () => {
-    if (preset) {
-      await startOAuthFlow(preset);
-    }
-  }, [startOAuthFlow, preset]);
+    const coordinator = manager.capabilities.get(IntegrationCoordinator);
+    await runAndForwardErrors(coordinator.createIntegration({ db, spaceId: db.spaceId, providerId })).catch(
+      () => {},
+    );
+  }, [manager, db, providerId]);
 
-  if (!preset) {
+  if (!provider?.oauth) {
     return null;
   }
 
-  return <Button onClick={handleClick}>{t('connect-integration.label', { provider: preset.label })}</Button>;
+  return (
+    <Button onClick={handleClick}>{t('connect-integration.label', { provider: provider.label ?? provider.id })}</Button>
+  );
 };

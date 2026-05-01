@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AccessToken } from '@dxos/types';
 
@@ -53,10 +53,11 @@ export const CreateIntegration = Operation.make({
 
 /**
  * Generic, service-agnostic selection diff. Mechanically reconciles
- * `integration.targets` to match `selectedRefs`: appends entries for refs not
- * already present (preserving any cursor/status on existing ones) and removes
- * entries whose ref isn't in the new selection. Does not create or delete
- * underlying objects (those are owned by the provider's `getSyncTargets`).
+ * `integration.targets` to match `selected`: appends entries for `remoteId`s
+ * not already present (preserving any cursor/status/object on existing ones)
+ * and removes entries whose `remoteId` isn't in the new selection. Records
+ * only `{ remoteId, name }` — local objects are NOT created here. The
+ * provider's `sync` op materializes them lazily on first run.
  */
 export const SetIntegrationTargets = Operation.make({
   meta: {
@@ -66,7 +67,14 @@ export const SetIntegrationTargets = Operation.make({
   },
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration),
-    selectedRefs: Schema.Array(Ref.Ref(Obj.Unknown)),
+    selected: Schema.Array(
+      Schema.Struct({
+        /** Foreign id from the remote service. */
+        remoteId: Schema.String,
+        /** Cached display name. */
+        name: Schema.String.pipe(Schema.optional),
+      }),
+    ),
   }),
   output: Schema.Struct({
     added: Schema.Number,

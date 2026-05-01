@@ -14774,6 +14774,9 @@ importers:
       '@dxos/plugin-kanban':
         specifier: workspace:*
         version: link:../plugin-kanban
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema

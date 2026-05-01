@@ -8,13 +8,19 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, createObjectNode } from '@dxos/app-toolkit';
 import { type Space, isSpace } from '@dxos/client/echo';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
+import { Operation } from '@dxos/operation';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { SPACE_TYPE } from '@dxos/plugin-space/types';
 
 import { meta } from '#meta';
 
+import {
+  IntegrationProvider,
+  type IntegrationProvider as IntegrationProviderType,
+} from './integration-provider';
 import { Integration } from '../types';
 
 const whenSpace = (node: Node.Node): Option.Option<Space> =>
@@ -28,12 +34,62 @@ export default Capability.makeModule(
       capabilities.getAll(AppCapabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
     const extensions = yield* Effect.all([
-      // Single "Integrations" branch directly under each Space, replacing the
-      // earlier split between a settings-sub-panel entry and a separate
-      // top-level branch. Always rendered (even when no Integration objects
-      // exist) so the user has a stable place to add one. Sits in the
-      // unpositioned middle band — General Settings hoists above, Database
-      // falls back below.
+      // Generic per-Integration actions:
+      //  - "Sync now" — dispatched to the provider's `sync` op, runs across
+      //    every target on the integration. Mirrors Trello's
+      //    `trello-sync-integration` extension but works for any provider
+      //    that contributes a `sync`.
+      //  - "Delete integration" — the article doesn't host a Delete row,
+      //    so this graph action is the only deletion affordance.
+      GraphBuilder.createExtension({
+        id: 'integration-actions',
+        match: (node) =>
+          Integration.instanceOf(node.data) ? Option.some(node.data as Integration.Integration) : Option.none(),
+        actions: (integration) =>
+          Effect.gen(function* () {
+            const providers = (yield* Capability.Service).getAll(IntegrationProvider).flat() as IntegrationProviderType[];
+            const provider = providers.find((p) => p.id === integration.providerId);
+            const actions = [];
+            if (provider?.sync) {
+              actions.push(
+                Node.makeAction({
+                  id: `${meta.id}.sync-integration.${integration.id}`,
+                  data: () =>
+                    Operation.invoke(provider.sync as any, {
+                      integration: Ref.make(integration),
+                    }),
+                  properties: {
+                    label: ['sync-integration.label', { ns: meta.id }],
+                    icon: 'ph--arrows-clockwise--regular',
+                    disposition: 'list-item',
+                  },
+                }),
+              );
+            }
+            actions.push(
+              Node.makeAction({
+                id: `${meta.id}.delete-integration.${integration.id}`,
+                data: () =>
+                  Operation.invoke(SpaceOperation.RemoveObjects, {
+                    objects: [integration as unknown as Obj.Unknown],
+                  }),
+                properties: {
+                  label: ['delete-integration.label', { ns: meta.id }],
+                  icon: 'ph--trash--regular',
+                  disposition: 'list-item',
+                  testId: 'integrationPlugin.deleteIntegration',
+                },
+              }),
+            );
+            return actions;
+          }),
+      }),
+
+      // Single "Integrations" branch directly under each Space. Hidden when
+      // no Integration objects exist (mirrors the inbox plugin's
+      // mailboxes-section pattern) so empty spaces don't carry a phantom
+      // entry. Sits in the unpositioned middle band — General Settings
+      // hoists above, Database falls back below.
       //
       // Integration objects are listed as direct children. Their `targets`
       // (e.g. Trello kanbans) are NOT surfaced under the Integration node —
@@ -44,6 +100,9 @@ export default Capability.makeModule(
         match: whenSpace,
         connector: (space, get) => {
           const integrations = get(AtomQuery.make(space.db, Filter.type(Integration.Integration)));
+          if (integrations.length === 0) {
+            return Effect.succeed([]);
+          }
           return Effect.succeed([
             Node.make({
               id: 'integrations',

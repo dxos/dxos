@@ -133,10 +133,11 @@ const stubOperationService = Effect.provideService(Operation.Service, {
 });
 
 /**
- * Light end-to-end stitching of the three operation handlers:
- *  - `GetTrelloBoards` materializes Kanban placeholders + returns descriptors.
- *  - `SetIntegrationTargets` selects a subset of those.
- *  - `SyncTrelloBoard` populates cards for the selected targets only.
+ * Light end-to-end stitching:
+ *  - `GetTrelloBoards` returns descriptors only — read-only, no local Kanbans.
+ *  - The dialog records `{ remoteId, name }` entries on the Integration.
+ *  - `SyncTrelloBoard` materializes the local Kanban on first sync, then
+ *    populates its cards. Unselected boards leave no trace.
  */
 describe('Trello operation handlers (e2e with stubbed API)', () => {
   let builder: EchoTestBuilder;
@@ -170,13 +171,13 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     return { db, integration };
   };
 
-  test('full flow: GetTrelloBoards → SetIntegrationTargets → SyncTrelloBoard syncs only chosen boards', async ({
+  test('full flow: GetTrelloBoards (discovery) → SyncTrelloBoard (materializes selection) syncs only chosen boards', async ({
     expect,
   }) => {
     const { db, integration } = await setup();
     const layer = Database.layer(db);
 
-    // 1. Discovery: materializes a Kanban per remote board.
+    // 1. Discovery: descriptors only — NO local Kanbans created yet.
     const discovered = await getTrelloBoardsHandler.handler({ integration: Ref.make(integration) }).pipe(
       Effect.provide(layer),
       runAndForwardErrors,
@@ -185,16 +186,20 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     const boardA = discovered.targets.find((t) => t.id === 'board-a')!;
     expect(boardA.name).toBe('Board A');
 
-    // 2. Selection: pick only board A. (The generic SetIntegrationTargets diff is
-    // already covered by `plugin-integration/src/operations/set-integration-targets.test.ts`;
-    // here we just simulate selection by directly mutating the integration's targets.)
+    const kanbansAfterDiscovery = await db.query(Filter.type(Kanban.Kanban)).run();
+    expect(kanbansAfterDiscovery).toHaveLength(0);
+
+    // 2. Selection: record `{ remoteId, name }` for board A. The generic
+    // `SetIntegrationTargets` op is covered by its own test; here we just
+    // simulate the dialog's effect on `integration.targets`.
     Obj.change(integration, (mutable) => {
       const m = mutable as Obj.Mutable<typeof mutable>;
-      m.targets = [{ object: boardA.object }];
+      m.targets = [{ remoteId: boardA.id, name: boardA.name }];
     });
     expect(integration.targets).toHaveLength(1);
+    expect(integration.targets[0].object).toBeUndefined();
 
-    // 3. Sync: reconciles cards for board A only.
+    // 3. Sync: lazily materializes board A's Kanban + reconciles its cards.
     const result = await syncTrelloBoardHandler.handler({ integration: Ref.make(integration) }).pipe(
       stubOperationService,
       Effect.provide(layer),
@@ -202,17 +207,15 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     );
     expect(result.pulled.added).toBe(1);
 
-    // Board B's Kanban exists but isn't in the integration's targets, so its cards weren't synced.
+    // Only board A's Kanban exists — board B was never selected.
     const allKanbans = await db.query(Filter.type(Kanban.Kanban)).run();
-    expect(allKanbans).toHaveLength(2);
-    const boardAKanban = allKanbans.find((k) =>
-      Obj.getMeta(k).keys.find((key) => key.source === TRELLO_SOURCE)?.id === 'board-a',
-    );
-    const boardBKanban = allKanbans.find((k) =>
-      Obj.getMeta(k).keys.find((key) => key.source === TRELLO_SOURCE)?.id === 'board-b',
-    );
-    expect(boardAKanban?.spec.kind === 'items' ? boardAKanban.spec.items.length : -1).toBe(1);
-    expect(boardBKanban?.spec.kind === 'items' ? boardBKanban.spec.items.length : -1).toBe(0);
+    expect(allKanbans).toHaveLength(1);
+    const boardAKanban = allKanbans[0]!;
+    expect(Obj.getMeta(boardAKanban).keys.find((key) => key.source === TRELLO_SOURCE)?.id).toBe('board-a');
+    expect(boardAKanban.spec.kind === 'items' ? boardAKanban.spec.items.length : -1).toBe(1);
+
+    // Sync wrote the materialized ref back into the target.
+    expect(integration.targets[0].object?.target).toBeDefined();
   });
 
   test('failing fetch on one target writes lastError without affecting others', async ({ expect }) => {
@@ -231,10 +234,11 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
       Effect.provide(layer),
       runAndForwardErrors,
     );
-    // Select both boards.
+
+    // Select both boards by recording `{ remoteId, name }` entries.
     Obj.change(integration, (mutable) => {
       const m = mutable as Obj.Mutable<typeof mutable>;
-      m.targets = discovered.targets.map((t) => ({ object: t.object }));
+      m.targets = discovered.targets.map((t) => ({ remoteId: t.id, name: t.name }));
     });
 
     await syncTrelloBoardHandler.handler({ integration: Ref.make(integration) }).pipe(
@@ -243,12 +247,8 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
       runAndForwardErrors,
     );
 
-    const targetA = integration.targets.find((t) =>
-      discovered.targets.find((d) => d.id === 'board-a')?.object.dxn.toString() === t.object.dxn.toString(),
-    );
-    const targetB = integration.targets.find((t) =>
-      discovered.targets.find((d) => d.id === 'board-b')?.object.dxn.toString() === t.object.dxn.toString(),
-    );
+    const targetA = integration.targets.find((t) => t.remoteId === 'board-a');
+    const targetB = integration.targets.find((t) => t.remoteId === 'board-b');
     expect(targetA?.lastError).toBeUndefined();
     expect(targetA?.lastSyncAt).toBeDefined();
     expect(targetB?.lastError).toContain('boom');

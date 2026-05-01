@@ -12,10 +12,16 @@ import { SetIntegrationTargets } from './definitions';
 
 /**
  * Generic, service-agnostic selection diff. See definitions.ts.
+ *
+ * Diff key is `target.remoteId`. Existing entries with a matching `remoteId`
+ * are preserved (cursor/status/object/options carry over); entries whose
+ * `remoteId` isn't in the new selection are dropped. Auto-created entries
+ * that have an `object` but no `remoteId` (e.g. Gmail's single Mailbox) are
+ * always preserved — the dialog isn't responsible for them.
  */
 const handler: Operation.WithHandler<typeof SetIntegrationTargets> = SetIntegrationTargets.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ integration, selectedRefs }) {
+    Effect.fn(function* ({ integration, selected }) {
       // TODO(wittjosiah): the operation should just depend on `Database.Service`
       //   and have it provided by the OperationInvoker — composer's invoker is
       //   wired without a `databaseResolver`, so we derive the db from the input
@@ -29,22 +35,9 @@ const handler: Operation.WithHandler<typeof SetIntegrationTargets> = SetIntegrat
       return yield* Effect.gen(function* () {
         const obj = (yield* Database.load(integration)) as Integration.Integration;
 
-        // Compare refs by echo id, not by full DXN string. Stored target refs
-        // are serialised in space-relative form (`dxn:echo:@:...`) by ECHO,
-        // while the `selectedRefs` coming from the checklist UI may be
-        // absolute (`dxn:echo:<spaceId>:...`). A naive string compare would
-        // treat the same object as two different refs and silently re-add /
-        // remove every target on every submit, losing cursor/lastSyncAt.
-        const refEchoId = (ref: typeof selectedRefs[number]): string | undefined =>
-          ref.dxn.asEchoDXN()?.echoId;
-        const targetEchoId = (target: typeof obj.targets[number]): string | undefined =>
-          target.object.dxn.asEchoDXN()?.echoId;
-
-        const selectedIds = new Set(
-          selectedRefs.map(refEchoId).filter((id): id is string => id !== undefined),
-        );
-        const currentIds = new Set(
-          obj.targets.map(targetEchoId).filter((id): id is string => id !== undefined),
+        const selectedById = new Map(selected.map((s) => [s.remoteId, s] as const));
+        const currentRemoteIds = new Set(
+          obj.targets.map((t) => t.remoteId).filter((id): id is string => id !== undefined),
         );
 
         let added = 0;
@@ -53,22 +46,23 @@ const handler: Operation.WithHandler<typeof SetIntegrationTargets> = SetIntegrat
         Obj.change(obj, (mutableObj) => {
           const mutable = mutableObj as Obj.Mutable<typeof mutableObj>;
 
-          // Build the new targets array: keep currently-selected entries (preserving
-          // their cursor/status), drop entries whose ref isn't in the new selection,
-          // and append fresh entries for newly-selected refs.
-          const next: Array<{ object: typeof selectedRefs[number]; cursor?: string; lastSyncAt?: string; lastError?: string }> = [];
+          const next: typeof obj.targets[number][] = [];
           for (const target of obj.targets) {
-            const id = targetEchoId(target);
-            if (id !== undefined && selectedIds.has(id)) {
+            // Auto-created targets with no remoteId aren't touched by the
+            // dialog (the user has no way to deselect them) — keep as-is.
+            if (target.remoteId === undefined) {
+              next.push({ ...target });
+              continue;
+            }
+            if (selectedById.has(target.remoteId)) {
               next.push({ ...target });
             } else {
               removed++;
             }
           }
-          for (const ref of selectedRefs) {
-            const id = refEchoId(ref);
-            if (id !== undefined && !currentIds.has(id)) {
-              next.push({ object: ref });
+          for (const sel of selected) {
+            if (!currentRemoteIds.has(sel.remoteId)) {
+              next.push({ remoteId: sel.remoteId, name: sel.name });
               added++;
             }
           }

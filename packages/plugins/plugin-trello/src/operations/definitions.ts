@@ -17,21 +17,20 @@ const RemoteTarget = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
   description: Schema.String.pipe(Schema.optional),
-  object: Ref.Ref(Obj.Unknown),
 });
 
 /**
- * Discovery + idempotent materialization for Trello.
+ * Discovery only — list Trello boards reachable from the integration's token.
  *
- * Calls Trello's `GET /members/me/boards`, find-or-creates a `kind: 'items'` Kanban
- * for each remote board (foreign-keyed by board id), and returns descriptors. Picking
- * which targets to keep on the Integration is a separate, generic step in plugin-integration.
+ * Read-only: returns one descriptor per remote board, NEVER creates a local
+ * Kanban. Materialization happens lazily in `SyncTrelloBoard` on first sync
+ * of a target, so unselected boards leave no trace in the space.
  */
 export const GetTrelloBoards = Operation.make({
   meta: {
     key: `${TRELLO_OPERATION}.get-trello-boards`,
     name: 'Get Trello Boards',
-    description: 'Discover Trello boards reachable from an integration and materialize a Kanban per board.',
+    description: 'List Trello boards reachable from an integration without materializing local Kanbans.',
   },
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration),
@@ -45,6 +44,7 @@ export const GetTrelloBoards = Operation.make({
   //   the managed runtime doesn't carry per-space Database. The handler
   //   provides `Database.layer(db)` itself.
 });
+
 
 /**
  * Bidirectional reconcile of currently-selected Trello targets in an Integration.

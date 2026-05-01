@@ -22,29 +22,10 @@ import { SyncTrelloBoard } from '../operations';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      // "Sync now" action on Trello-typed Integration nodes.
-      GraphBuilder.createExtension({
-        id: 'trello-sync-integration',
-        match: (node) => {
-          if (!Integration.instanceOf(node.data)) return Option.none();
-          const integration = node.data as Integration.Integration;
-          const accessToken = integration.accessToken.target;
-          if (!accessToken || accessToken.source !== TRELLO_SOURCE) return Option.none();
-          return Option.some(integration);
-        },
-        actions: (integration) =>
-          Effect.succeed([
-            {
-              id: 'trello-sync-now',
-              data: () => Operation.invoke(SyncTrelloBoard, { integration: Ref.make(integration) }),
-              properties: {
-                label: ['sync now.label', { ns: meta.id }],
-                icon: 'ph--arrows-clockwise--regular',
-                disposition: 'list-item',
-              },
-            },
-          ]),
-      }),
+      // Per-Integration "Sync now" lives in plugin-integration's generic
+      // graph builder — it dispatches to the provider's `sync` op so every
+      // service plugin gets the action for free. Trello only contributes
+      // the per-board action below.
 
       // "Sync this board" action on each Trello-keyed items-Kanban.
       GraphBuilder.createExtension({
@@ -74,7 +55,7 @@ export default Capability.makeModule(
                   );
                   const parent = integrations.find((integration) =>
                     integration.targets.some(
-                      (target) => target.object.dxn.asEchoDXN()?.echoId === kanban.id,
+                      (target) => target.object?.dxn.asEchoDXN()?.echoId === kanban.id,
                     ),
                   );
                   if (!parent) return;

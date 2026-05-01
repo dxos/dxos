@@ -2,8 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OAuthProvider } from '@dxos/protocols';
+import { type OAuthProvider } from '@dxos/protocols';
 
+/**
+ * Shape of an OAuth flow descriptor used by the CLI and the
+ * `oauth/` helpers. Matches the runtime `IntegrationOAuthSpec` carried on
+ * `IntegrationProvider.oauth` plus a label/source for display.
+ *
+ * Provider lookup at runtime goes through the contributed
+ * `IntegrationProvider` capabilities; this type is kept only so the
+ * non-React OAuth helpers (Tauri/mobile/CLI flows) can stay generic.
+ */
 export type OAuthPreset = {
   label: string;
   source: string;
@@ -11,43 +20,3 @@ export type OAuthPreset = {
   scopes: string[];
   note?: string;
 };
-
-export const OAUTH_PRESETS: OAuthPreset[] = [
-  {
-    provider: OAuthProvider.GITHUB,
-    source: 'github.com',
-    label: 'GitHub',
-    scopes: ['repo', 'read:user'],
-  },
-  {
-    provider: OAuthProvider.GOOGLE,
-    source: 'google.com',
-    label: 'Google',
-    scopes: [
-      'https://www.googleapis.com/auth/calendar.readonly',
-      'https://www.googleapis.com/auth/gmail.readonly',
-      'https://www.googleapis.com/auth/gmail.send',
-      'https://www.googleapis.com/auth/userinfo.email',
-      'https://www.googleapis.com/auth/youtube.readonly',
-      'https://www.googleapis.com/auth/youtube.force-ssl',
-    ],
-  },
-  {
-    provider: OAuthProvider.LINEAR,
-    source: 'linear.app',
-    label: 'Linear',
-    scopes: ['write'],
-  },
-  {
-    provider: OAuthProvider.SLACK,
-    source: 'slack.com',
-    label: 'Slack',
-    scopes: ['channels:read', 'chat:write', 'users:read'],
-  },
-  {
-    provider: OAuthProvider.TRELLO,
-    source: 'trello.com',
-    label: 'Trello',
-    scopes: ['read', 'write'],
-  },
-];

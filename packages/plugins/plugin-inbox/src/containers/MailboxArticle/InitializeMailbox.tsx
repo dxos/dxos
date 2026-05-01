@@ -66,7 +66,7 @@ export const InitializeMailbox = composable<HTMLDivElement, InitializeMailboxPro
       );
     } else {
       message = t('no-integrations.label');
-      const data = { source: 'google.com' };
+      const data = { providerId: 'gmail' };
       action = Surface.isAvailable(pluginManager.capabilities, { role: 'integration--auth', data }) ? (
         <Surface.Surface role='integration--auth' data={data} limit={1} />
       ) : (

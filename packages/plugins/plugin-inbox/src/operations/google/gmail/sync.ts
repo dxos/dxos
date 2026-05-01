@@ -47,6 +47,7 @@ const STREAMING_CONFIG = {
 export default GoogleMailSync.pipe(
   Operation.withHandler(
     ({
+      integration: integrationRef,
       mailbox: mailboxRef,
       userId = 'me',
       label = 'inbox',
@@ -97,7 +98,7 @@ export default GoogleMailSync.pipe(
         };
       }).pipe(
         Effect.provide(
-          Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromMailbox(mailboxRef)),
+          Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromIntegration(integrationRef)),
         ),
       ),
   ),

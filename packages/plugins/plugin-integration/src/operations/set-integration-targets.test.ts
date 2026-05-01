@@ -38,98 +38,100 @@ describe('SetIntegrationTargets', () => {
     return { db, token };
   };
 
-  const invokeSet = (db: any, integration: Integration.Integration, refs: Array<Ref.Ref<Obj.Unknown>>) =>
+  const invokeSet = (
+    db: any,
+    integration: Integration.Integration,
+    selected: ReadonlyArray<{ remoteId: string; name?: string }>,
+  ) =>
     setIntegrationTargets
       .handler({
         integration: Ref.make(integration),
-        selectedRefs: refs,
+        selected,
       })
       .pipe(Effect.provide(Database.layer(db)), runAndForwardErrors);
 
-  test('appends refs not previously in targets', async ({ expect }) => {
+  test('appends remote-id selections not previously in targets', async ({ expect }) => {
     const { db, token } = await setup();
     const integration = db.add(
       Integration.make({ accessToken: Ref.make(token), targets: [] }),
     );
-    const obj = db.add(Obj.make(Expando.Expando, { name: 'foo' }));
 
-    const result = await invokeSet(db, integration, [Ref.make(obj)]);
+    const result = await invokeSet(db, integration, [{ remoteId: 'foo', name: 'Foo' }]);
     expect(result.added).toBe(1);
     expect(result.removed).toBe(0);
     expect(integration.targets.length).toBe(1);
-    expect(integration.targets[0].object.dxn.toString()).toBe(Ref.make(obj).dxn.toString());
+    expect(integration.targets[0].remoteId).toBe('foo');
+    expect(integration.targets[0].name).toBe('Foo');
+    expect(integration.targets[0].object).toBeUndefined();
   });
 
-  test('removes refs that drop out of the new selection', async ({ expect }) => {
+  test('removes selections that drop out of the new submission', async ({ expect }) => {
     const { db, token } = await setup();
-    const obj1 = db.add(Obj.make(Expando.Expando, { name: 'a' }));
-    const obj2 = db.add(Obj.make(Expando.Expando, { name: 'b' }));
     const integration = db.add(
       Integration.make({
         accessToken: Ref.make(token),
-        targets: [{ object: Ref.make(obj1) }, { object: Ref.make(obj2) }],
+        targets: [
+          { remoteId: 'a', name: 'A' },
+          { remoteId: 'b', name: 'B' },
+        ],
       }),
     );
 
-    const result = await invokeSet(db, integration, [Ref.make(obj1)]);
+    const result = await invokeSet(db, integration, [{ remoteId: 'a', name: 'A' }]);
     expect(result.added).toBe(0);
     expect(result.removed).toBe(1);
     expect(integration.targets.length).toBe(1);
-    expect(integration.targets[0].object.dxn.toString()).toBe(Ref.make(obj1).dxn.toString());
+    expect(integration.targets[0].remoteId).toBe('a');
   });
 
-  test('preserves cursor/lastSyncAt on already-present targets', async ({ expect }) => {
+  test('preserves cursor/lastSyncAt/object on already-present targets', async ({ expect }) => {
     const { db, token } = await setup();
     const obj = db.add(Obj.make(Expando.Expando, { name: 'kept' }));
     const lastSyncAt = '2026-04-01T00:00:00.000Z';
     const integration = db.add(
       Integration.make({
         accessToken: Ref.make(token),
-        targets: [{ object: Ref.make(obj), cursor: 'sentinel', lastSyncAt }],
+        targets: [
+          {
+            remoteId: 'kept',
+            name: 'Kept',
+            object: Ref.make(obj),
+            cursor: 'sentinel',
+            lastSyncAt,
+          },
+        ],
       }),
     );
 
-    const result = await invokeSet(db, integration, [Ref.make(obj)]);
+    const result = await invokeSet(db, integration, [{ remoteId: 'kept', name: 'Kept' }]);
     expect(result.added).toBe(0);
     expect(result.removed).toBe(0);
     expect(integration.targets.length).toBe(1);
     expect(integration.targets[0].cursor).toBe('sentinel');
     expect(integration.targets[0].lastSyncAt).toBe(lastSyncAt);
+    expect(integration.targets[0].object?.dxn.asEchoDXN()?.echoId).toBe(
+      Ref.make(obj).dxn.asEchoDXN()?.echoId,
+    );
   });
 
-  test('matches refs by echo id even when DXN string forms differ', async ({ expect }) => {
+  test('leaves auto-created targets (no remoteId) untouched on submit', async ({ expect }) => {
     const { db, token } = await setup();
-    const obj = db.add(Obj.make(Expando.Expando, { name: 'roundtrip' }));
-
-    // Simulate the production mismatch: stored target ref in space-relative
-    // form (`dxn:echo:@:...`), selected ref in absolute form
-    // (`dxn:echo:<spaceId>:...`). Both encode the same echo id; comparing by
-    // `toString()` would treat them as different refs and silently re-add the
-    // same target on every submit (losing cursor/lastSyncAt in the process).
-    const storedRef = Ref.make(obj);
+    // Auto-created at OAuth time (e.g. Gmail's single Mailbox): has `object`
+    // but no `remoteId`, and the dialog has no row for it. Submitting a
+    // selection of remote-id targets must not delete it.
+    const auto = db.add(Obj.make(Expando.Expando, { name: 'auto' }));
     const integration = db.add(
       Integration.make({
         accessToken: Ref.make(token),
-        targets: [{ object: storedRef, cursor: 'sentinel' }],
+        targets: [{ object: Ref.make(auto) }],
       }),
     );
 
-    // Synthesize a "selected" ref whose DXN string differs from the stored
-    // one. We force this by inspecting the stored DXN form and constructing a
-    // new ref with the same echo id but a different prefix (or vice versa).
-    // If both happen to already produce the same form, the test still
-    // exercises the equality path; either way, the fix should hold.
-    const echoId = storedRef.dxn.asEchoDXN()?.echoId;
-    expect(echoId).toBeDefined();
-
-    // Use a fresh `Ref.make(obj)` — depending on persistence state the form
-    // may or may not match the stored one. We assert by behaviour: idempotent
-    // resubmit must preserve cursor regardless of string form.
-    const result = await invokeSet(db, integration, [Ref.make(obj)]);
-    expect(result.added).toBe(0);
+    const result = await invokeSet(db, integration, [{ remoteId: 'new', name: 'New' }]);
+    expect(result.added).toBe(1);
     expect(result.removed).toBe(0);
-    expect(integration.targets.length).toBe(1);
-    expect(integration.targets[0].cursor).toBe('sentinel');
-    expect(integration.targets[0].object.dxn.asEchoDXN()?.echoId).toBe(echoId);
+    expect(integration.targets.length).toBe(2);
+    expect(integration.targets.find((t) => t.remoteId === undefined)?.object).toBeDefined();
+    expect(integration.targets.find((t) => t.remoteId === 'new')).toBeDefined();
   });
 });

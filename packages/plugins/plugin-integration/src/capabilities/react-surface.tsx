@@ -17,12 +17,9 @@ import { IntegrationAuthButton } from '#components';
 import { IntegrationArticle, SyncTargetsChecklist } from '#containers';
 
 import { SYNC_TARGETS_DIALOG } from '../constants';
-import { OAUTH_PRESETS } from '../defs';
-import { Integration, IntegrationSourceAnnotationId } from '../types';
+import { Integration, IntegrationProviderAnnotationId } from '../types';
 
-import { IntegrationProvider } from './integration-provider';
-
-const oauthSources = new Set(OAUTH_PRESETS.map((p) => p.source));
+import { IntegrationProvider, type IntegrationProvider as IntegrationProviderType } from './integration-provider';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -36,17 +33,19 @@ export default Capability.makeModule(() =>
       }),
       // Inline OAuth connect button used by inbox/calendar/etc. when they
       // detect a missing integration mid-flow. Independent of the
-      // create-Integration dialog path.
+      // create-Integration dialog path. Caller passes `providerId` to
+      // select a specific provider entry — needed because multiple
+      // providers can share the same OAuth domain (Gmail / Calendar).
       Surface.create({
         id: 'integration-auth',
         role: 'integration--auth',
-        filter: (data): data is { source: string } => typeof data.source === 'string' && oauthSources.has(data.source),
+        filter: (data): data is { providerId: string } => typeof (data as any).providerId === 'string',
         component: ({ data }) => {
           const space = useActiveSpace();
           if (!space) {
             return null;
           }
-          return <IntegrationAuthButton source={data.source} db={space.db} />;
+          return <IntegrationAuthButton providerId={data.providerId} db={space.db} />;
         },
       }),
       Surface.create({
@@ -54,25 +53,30 @@ export default Capability.makeModule(() =>
         filter: AppSurface.component<ComponentProps<typeof SyncTargetsChecklist>>(AppSurface.Dialog, SYNC_TARGETS_DIALOG),
         component: ({ data }) => <SyncTargetsChecklist {...data.props} />,
       }),
-      // Form-input renderer for the Integration source selector. The
-      // create-Integration form's `source` field carries
-      // `IntegrationSourceAnnotationId`; this surface filters by that and
+      // Form-input renderer for the Integration provider selector. The
+      // create-Integration form's `providerId` field carries
+      // `IntegrationProviderAnnotationId`; this surface filters by that and
       // renders a dropdown populated from currently-registered
       // `IntegrationProvider` capabilities — so adding/removing a service
       // plugin updates the form without rebuilding the schema.
       Surface.create({
-        id: 'integration-source-selector',
+        id: 'integration-provider-selector',
         role: 'form-input',
         filter: (data): data is { schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
           const fieldAst = (data as any)?.fieldPropertyAst as SchemaAST.AST | undefined;
           if (!fieldAst) return false;
-          const annotation = findAnnotation<boolean>(fieldAst, IntegrationSourceAnnotationId);
+          const annotation = findAnnotation<boolean>(fieldAst, IntegrationProviderAnnotationId);
           return !!annotation;
         },
         component: ({ data: { fieldPropertyAst }, ...inputProps }) => {
-          const providers = useCapabilities(IntegrationProvider).flat() as Array<{ source: string; label?: string }>;
+          const providers = useCapabilities(IntegrationProvider).flat() as IntegrationProviderType[];
           const options = useMemo(
-            () => providers.map((provider) => ({ value: provider.source, label: provider.label ?? provider.source })),
+            () =>
+              providers
+                // Only providers with an OAuth flow can be created from the
+                // dialog. Listing-only providers (no `oauth`) are filtered.
+                .filter((provider) => provider.oauth)
+                .map((provider) => ({ value: provider.id, label: provider.label ?? provider.id })),
             [providers],
           );
           if (!fieldPropertyAst) {

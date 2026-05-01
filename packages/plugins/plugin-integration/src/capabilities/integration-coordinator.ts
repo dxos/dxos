@@ -20,11 +20,15 @@ import { AccessToken } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { OAUTH_PRESETS } from '../defs';
+import { SYNC_TARGETS_DIALOG } from '../constants';
 import { IntegrationOperation } from '../operations';
 import { Integration } from '../types';
 
-import { IntegrationProvider, type IntegrationProvider as IntegrationProviderType } from './integration-provider';
+import {
+  IntegrationProvider,
+  type IntegrationProvider as IntegrationProviderType,
+  type RemoteTarget,
+} from './integration-provider';
 
 /**
  * Long-lived coordinator for integration creation + OAuth flows.
@@ -48,14 +52,18 @@ import { IntegrationProvider, type IntegrationProvider as IntegrationProviderTyp
  */
 export type IntegrationCoordinator = {
   /**
-   * Build in-memory `AccessToken` + `Integration` stubs for the given source,
-   * stash them, open the OAuth popup, and return. The stubs are persisted
-   * to the database only after the OAuth callback fires successfully.
+   * Build in-memory `AccessToken` + `Integration` stubs for the given
+   * provider, stash them, open the OAuth popup, and return. The stubs are
+   * persisted to the database only after the OAuth callback fires
+   * successfully. `providerId` selects an entry from the `IntegrationProvider`
+   * capability registry — its `oauth` spec drives the popup, and the
+   * resulting Integration records `providerId` so subsequent operations
+   * (sync, onTokenCreated, etc.) route back to the same provider.
    */
   createIntegration: (input: {
     db: Database.Database;
     spaceId: Key.SpaceId;
-    source: string;
+    providerId: string;
   }) => Effect.Effect<{ integrationId: string }, Error>;
 };
 
@@ -68,6 +76,10 @@ type Pending = {
   token: AccessToken.AccessToken;
   integration: Integration.Integration;
   db: Database.Database;
+  /** The provider id that initiated this flow — used at finalize time to
+   *  dispatch to the correct `onTokenCreated`. Source alone isn't enough
+   *  when multiple providers share an OAuth domain (Gmail/Calendar). */
+  providerId: string;
 };
 
 export default Capability.makeModule(
@@ -101,7 +113,7 @@ export default Capability.makeModule(
     let edgeOrigin: string | undefined;
 
     const finalizePending = async (entry: Pending): Promise<void> => {
-      const { token, integration, db } = entry;
+      const { token, integration, db, providerId } = entry;
       // Persist both via direct `db.add`. Direct add doesn't drop them into
       // the root collection (which is what `SpaceOperation.AddObject` with
       // `hidden: false` would do); the `Integrations` graph branch finds
@@ -121,15 +133,16 @@ export default Capability.makeModule(
       }
 
       // Run the matching service provider's hook (e.g. fetch `account`
-      // from the service's `/me` endpoint). Failures are logged, never
-      // thrown — a hook failure shouldn't prevent navigation.
+      // from the service's `/me` endpoint). Routes by `providerId` because
+      // multiple providers may share the same `source` (e.g. Gmail and
+      // Google Calendar both `'google.com'` with different scopes).
       const providers = pluginContext.getAll(IntegrationProvider).flat() as IntegrationProviderType[];
-      const provider = providers.find((p) => p.source === persistedToken.source);
+      const provider = providers.find((p) => p.id === providerId);
       if (provider?.onTokenCreated) {
         try {
           await runAndForwardErrors(
             provider
-              .onTokenCreated(persistedToken)
+              .onTokenCreated({ accessToken: persistedToken, integration: persistedIntegration })
               .pipe(
                 Effect.provide(FetchHttpClient.layer),
                 Effect.catchAll((error) =>
@@ -143,15 +156,42 @@ export default Capability.makeModule(
       }
 
       // Navigate to the new Integration under its space's `integrations`
-      // branch, NOT under the database/collections subtree.
-      try {
-        await invoker.invokePromise(LayoutOperation.Open, {
+      // branch, NOT under the database/collections subtree. Run navigation
+      // and the (optional) sync-targets dialog in parallel — both are
+      // independent UI dispatches and the user shouldn't have to wait for
+      // navigation to finish before the dialog appears.
+      const navigatePromise = invoker
+        .invokePromise(LayoutOperation.Open, {
           subject: [`${getSpacePath(db.spaceId)}/integrations/${persistedIntegration.id}`],
           navigation: 'immediate',
-        });
-      } catch (error) {
-        log.warn('navigate to new integration failed', { error });
-      }
+        })
+        .catch((error: unknown) => log.warn('navigate to new integration failed', { error }));
+
+      const dialogPromise = provider?.getSyncTargets
+        ? (async () => {
+            try {
+              const result = await invoker.invokePromise(provider.getSyncTargets as any, {
+                integration: Ref.make(persistedIntegration),
+              });
+              if (result.error) {
+                throw result.error;
+              }
+              const targets = (result.data as { targets: readonly RemoteTarget[] } | undefined)?.targets ?? [];
+              await invoker.invokePromise(LayoutOperation.UpdateDialog, {
+                subject: SYNC_TARGETS_DIALOG,
+                state: true,
+                props: {
+                  integration: persistedIntegration,
+                  availableTargets: targets,
+                },
+              });
+            } catch (error) {
+              log.warn('open sync-targets dialog after create failed', { error });
+            }
+          })()
+        : Promise.resolve();
+
+      await Promise.all([navigatePromise, dialogPromise]);
     };
 
     const handleMessage = (event: MessageEvent): void => {
@@ -192,35 +232,43 @@ export default Capability.makeModule(
 
     window.addEventListener('message', handleMessage);
 
-    const createIntegration: IntegrationCoordinator['createIntegration'] = ({ db, spaceId, source }) =>
+    const createIntegration: IntegrationCoordinator['createIntegration'] = ({ db, spaceId, providerId }) =>
       Effect.tryPromise({
         try: async () => {
-          const preset = OAUTH_PRESETS.find((p) => p.source === source);
-          if (!preset) {
-            throw new Error(`No OAuth preset registered for source: ${source}`);
+          const providers = pluginContext.getAll(IntegrationProvider).flat() as IntegrationProviderType[];
+          const provider = providers.find((p) => p.id === providerId);
+          if (!provider) {
+            throw new Error(`No IntegrationProvider registered with id: ${providerId}`);
           }
+          if (!provider.oauth) {
+            throw new Error(`Provider '${providerId}' has no OAuth flow configured.`);
+          }
+          const oauth = provider.oauth;
+          const label = provider.label ?? provider.id;
 
           // In-memory stubs only. They get IDs via `Obj.make`, which is what
           // `Ref.make` needs to construct the cross-reference; persistence
           // happens later in `finalizePending` after the OAuth callback.
           const token = Obj.make(AccessToken.AccessToken, {
-            source: preset.source,
-            note: preset.note ?? preset.label,
+            source: provider.source,
+            note: oauth.note ?? label,
+            scopes: [...oauth.scopes],
             token: '',
           });
           const integration = Obj.make(Integration.Integration, {
-            name: preset.label,
+            name: label,
+            providerId: provider.id,
             accessToken: Ref.make(token),
             targets: [],
           });
 
-          pending.set(token.id, { token, integration, db });
+          pending.set(token.id, { token, integration, db, providerId: provider.id });
 
           const edge = getEdgeClient();
           edgeOrigin = new URL(edge.baseUrl).origin;
           const { authUrl } = await edge.initiateOAuthFlow(DxContext.default(), {
-            provider: preset.provider,
-            scopes: preset.scopes,
+            provider: oauth.provider,
+            scopes: [...oauth.scopes],
             spaceId,
             accessTokenId: token.id,
           });

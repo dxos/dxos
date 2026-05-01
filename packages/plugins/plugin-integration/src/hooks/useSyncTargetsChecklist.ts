@@ -7,11 +7,12 @@ import { useCallback, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Ref } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 
+import { meta } from '#meta';
+
 import { SYNC_TARGETS_DIALOG } from '../constants';
-import { type RemoteTarget, useIntegrationProvider } from '../capabilities/integration-provider';
+import { type RemoteTarget, useIntegrationProviderById } from '../capabilities/integration-provider';
 import { type Integration } from '../types';
 
 export type UseSyncTargetsChecklistResult = {
@@ -19,8 +20,6 @@ export type UseSyncTargetsChecklistResult = {
   readonly available: boolean;
   /** True while `openChecklist` is awaiting the operation result. */
   readonly loading: boolean;
-  /** Most recent error from `openChecklist`, if any. */
-  readonly error: string | undefined;
   /**
    * Fetches the available targets via `provider.getSyncTargets` and opens the
    * dialog through the layout system. No-op when `available` is false.
@@ -41,15 +40,12 @@ export const useSyncTargetsChecklist = (
   integration: Integration.Integration | undefined,
 ): UseSyncTargetsChecklistResult => {
   const { invokePromise } = useOperationInvoker();
-  const [accessToken] = useObject(integration?.accessToken);
-  const provider = useIntegrationProvider(accessToken?.source);
+  const provider = useIntegrationProviderById(integration?.providerId);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>();
 
   const openChecklist = useCallback(async () => {
     if (!integration || !provider?.getSyncTargets) return;
     setLoading(true);
-    setError(undefined);
     try {
       const result = await invokePromise(provider.getSyncTargets as any, {
         integration: Ref.make(integration),
@@ -68,7 +64,14 @@ export const useSyncTargetsChecklist = (
       });
     } catch (err) {
       log.catch(err);
-      setError(String((err as Error).message ?? err));
+      void invokePromise(LayoutOperation.AddToast, {
+        id: `${meta.id}/get-sync-targets-error`,
+        icon: 'ph--warning--regular',
+        duration: 5_000,
+        title: ['get-sync-targets-error.title', { ns: meta.id }],
+        description: String((err as Error).message ?? err),
+        closeLabel: ['close.label', { ns: meta.id }],
+      });
     } finally {
       setLoading(false);
     }
@@ -77,7 +80,6 @@ export const useSyncTargetsChecklist = (
   return {
     available: !!provider?.getSyncTargets,
     loading,
-    error,
     openChecklist,
   };
 };

@@ -51,7 +51,7 @@ export const NewCalendar = composable<HTMLDivElement, NewCalendarProps>(({ calen
 
   const googleToken = tokens.find((token) => token.source.includes('google'));
   if (!googleToken) {
-    const authSurfaceData = { source: 'google.com' };
+    const authSurfaceData = { providerId: 'google-calendar' };
     const hasAuthSurface = Surface.isAvailable(pluginManager.capabilities, {
       role: 'integration--auth',
       data: authSurfaceData,

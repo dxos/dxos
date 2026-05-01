@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Obj, Ref } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Button, Dialog, Input, useTranslation } from '@dxos/react-ui';
 
@@ -24,10 +24,14 @@ export type SyncTargetsChecklistProps = {
 /**
  * Dialog body for picking which remote targets are synced into an Integration.
  *
- * Pre-checks the targets currently in `integration.targets`. On submit invokes
- * the generic `SetIntegrationTargets` operation, which mechanically reconciles
- * the targets array. Rendered as a `Dialog.Content` inside the layout system's
- * surrounding `Dialog.Root` + `Dialog.Overlay` — opened via
+ * Pre-checks any rows whose `id` (foreign id) is already recorded on the
+ * Integration as a target's `remoteId`. On submit invokes the generic
+ * `SetIntegrationTargets` op with `{ remoteId, name }` entries — no local
+ * objects are created here. The provider's `sync` op materializes local
+ * placeholders on first run for each newly-selected target.
+ *
+ * Rendered as `Dialog.Content` inside the layout system's surrounding
+ * `Dialog.Root` + `Dialog.Overlay` — opened via
  * `LayoutOperation.UpdateDialog({ subject: SYNC_TARGETS_DIALOG, ... })`.
  */
 export const SyncTargetsChecklist = ({ integration, availableTargets }: SyncTargetsChecklistProps) => {
@@ -35,29 +39,28 @@ export const SyncTargetsChecklist = ({ integration, availableTargets }: SyncTarg
   const { invokePromise } = useOperationInvoker();
 
   const initiallySelected = useMemo(() => {
-    const selected = new Set<string>();
+    const ids = new Set<string>();
     for (const target of integration.targets ?? []) {
-      const obj = target.object.target;
-      if (obj) selected.add(Obj.getDXN(obj).toString());
+      if (target.remoteId) ids.add(target.remoteId);
     }
-    return selected;
+    return ids;
   }, [integration.targets]);
 
   const [selected, setSelected] = useState<Set<string>>(() => new Set(initiallySelected));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string>();
 
-  const toggle = useCallback((dxn: string) => {
+  const toggle = useCallback((id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(dxn)) next.delete(dxn);
-      else next.add(dxn);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }, []);
 
   const selectAll = useCallback(() => {
-    setSelected(new Set(availableTargets.map((target) => target.object.dxn.toString())));
+    setSelected(new Set(availableTargets.map((target) => target.id)));
   }, [availableTargets]);
 
   const selectNone = useCallback(() => {
@@ -68,12 +71,12 @@ export const SyncTargetsChecklist = ({ integration, availableTargets }: SyncTarg
     setSubmitting(true);
     setError(undefined);
     try {
-      const selectedRefs = availableTargets
-        .filter((target) => selected.has(target.object.dxn.toString()))
-        .map((target) => target.object);
+      const chosen = availableTargets
+        .filter((target) => selected.has(target.id))
+        .map((target) => ({ remoteId: target.id, name: target.name }));
       const result = await invokePromise(SetIntegrationTargets, {
         integration: Ref.make(integration),
-        selectedRefs,
+        selected: chosen,
       });
       if (result.error) {
         throw result.error;
@@ -119,24 +122,21 @@ export const SyncTargetsChecklist = ({ integration, availableTargets }: SyncTarg
           </p>
         ) : (
           <div role='none' className='flex flex-col gap-1 mt-form-gap'>
-            {availableTargets.map((target) => {
-              const dxn = target.object.dxn.toString();
-              return (
-                <Input.Root key={dxn}>
-                  <div role='none' className='flex items-start gap-2'>
-                    <Input.Checkbox
-                      checked={selected.has(dxn)}
-                      onCheckedChange={() => toggle(dxn)}
-                      disabled={submitting}
-                    />
-                    <div role='none' className='flex flex-col'>
-                      <Input.Label>{target.name}</Input.Label>
-                      {target.description && <p className='text-description'>{target.description}</p>}
-                    </div>
+            {availableTargets.map((target) => (
+              <Input.Root key={target.id}>
+                <div role='none' className='flex items-start gap-2'>
+                  <Input.Checkbox
+                    checked={selected.has(target.id)}
+                    onCheckedChange={() => toggle(target.id)}
+                    disabled={submitting}
+                  />
+                  <div role='none' className='flex flex-col'>
+                    <Input.Label>{target.name}</Input.Label>
+                    {target.description && <p className='text-description'>{target.description}</p>}
                   </div>
-                </Input.Root>
-              );
-            })}
+                </div>
+              </Input.Root>
+            ))}
           </div>
         )}
 

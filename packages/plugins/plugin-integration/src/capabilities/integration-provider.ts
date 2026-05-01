@@ -4,19 +4,22 @@
 
 import type * as HttpClient from '@effect/platform/HttpClient';
 import type * as Effect from 'effect/Effect';
+import type * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { type Obj, type Ref } from '@dxos/echo';
 import { type Operation } from '@dxos/operation';
+import { type OAuthProvider } from '@dxos/protocols';
 import { type AccessToken } from '@dxos/types';
+
+import { type Integration } from '../types';
 
 /**
  * Descriptor for one remote target available from a service.
  *
- * Returned by an `IntegrationProvider`'s `getSyncTargets` operation. The
- * `object` ref points to a local find-or-created placeholder that this
- * provider has materialized (idempotently keyed by foreign id) — picking
- * which targets to keep is a separate, generic step in plugin-integration.
+ * Returned by an `IntegrationProvider`'s `getSyncTargets` operation —
+ * read-only metadata about a remote item (board, calendar, …). Local objects
+ * are NOT created during discovery; the provider's `sync` op materializes
+ * them on first run for whichever targets the user selected in the checklist.
  */
 export type RemoteTarget = {
   /** Remote identifier (e.g. Trello board id). */
@@ -25,28 +28,29 @@ export type RemoteTarget = {
   name: string;
   /** Optional secondary line. */
   description?: string;
-  /** Ref to the find-or-created local placeholder object. */
-  object: Ref.Ref<Obj.Unknown>;
   /** Service-specific extras for display. */
   metadata?: Record<string, unknown>;
 };
 
 /**
  * Hook fired by plugin-integration after a matching AccessToken is created
- * (manual entry or OAuth callback). Implementations typically populate
- * service-specific fields on the token (e.g. `account` from `/members/me`).
+ * (OAuth callback). Implementations typically populate service-specific
+ * fields on the token (e.g. `account` from `/members/me`) and — for
+ * single-target integrations like Gmail where there's no `getSyncTargets`
+ * UI — create the default target object and attach it to the integration's
+ * `targets` array.
  *
- * The hook receives the *persisted* token and can mutate it via `Obj.change`.
- * Errors are caught and logged by plugin-integration so a hook failure can't
- * strand the token in the Custom tokens section — the wrapping Integration
- * is auto-created BEFORE this hook runs.
+ * Both `accessToken` and `integration` are *persisted* objects; mutate via
+ * `Obj.change`. Errors are caught and logged by plugin-integration so a
+ * hook failure can't strand the integration that's already in the database.
  *
  * The hook may use `HttpClient` (provided by plugin-integration via
  * `FetchHttpClient.layer`); other Effect requirements aren't supported.
  */
-export type OnTokenCreated = (
-  accessToken: AccessToken.AccessToken,
-) => Effect.Effect<void, Error, HttpClient.HttpClient>;
+export type OnTokenCreated = (input: {
+  accessToken: AccessToken.AccessToken;
+  integration: Integration.Integration;
+}) => Effect.Effect<void, Error, HttpClient.HttpClient>;
 
 /**
  * One entry per supported service. Service plugins contribute via
@@ -60,16 +64,48 @@ export type OnTokenCreated = (
  * preset shows in the menu, the token wraps in an Integration, but
  * "Change sync targets" is unavailable.
  */
+/**
+ * OAuth flow specification for a provider. The coordinator reads this to
+ * open the OAuth popup; the AccessToken's `scopes` field is set from
+ * `scopes` so we can later disambiguate which provider a token belongs to
+ * even when multiple providers share the same `source` (e.g. Gmail and
+ * Google Calendar both `source: 'google.com'` with different scopes).
+ */
+export type IntegrationOAuthSpec = {
+  provider: OAuthProvider;
+  scopes: readonly string[];
+  /** Default `note` written onto the AccessToken when first created. */
+  note?: string;
+};
+
 export type IntegrationProvider = {
-  /** Matches `AccessToken.source` (e.g. `'trello.com'`). */
+  /**
+   * Stable plugin-defined identifier for this provider entry. Unique across
+   * all providers — the create-Integration form picks providers by this id,
+   * and `Integration.providerId` records which provider an Integration
+   * belongs to. Distinct from `source` so multiple providers can share the
+   * same OAuth domain (Gmail/Calendar both use `source: 'google.com'`).
+   */
+  id: string;
+  /** Matches `AccessToken.source` (e.g. `'trello.com'`, `'google.com'`). */
   source: string;
   /**
    * User-facing label shown in the integration source selector
-   * (e.g. `'Trello'`, `'Linear'`). Defaults to `source` when omitted.
+   * (e.g. `'Trello'`, `'Linear'`). Defaults to `id` when omitted.
    */
   label?: string;
   /**
-   * Operation definition for discovery + idempotent materialization.
+   * OAuth flow spec. When omitted, the provider has no OAuth flow — used
+   * for non-OAuth integrations (e.g. manual API key entry, future).
+   */
+  oauth?: IntegrationOAuthSpec;
+  /**
+   * Operation definition for discovery — return descriptors for every remote
+   * target reachable from the integration's access token. Implementations
+   * MUST be read-only — no local objects are created here. Materialization
+   * happens lazily in the provider's `sync` op on first run for any target
+   * that hasn't been seen yet.
+   *
    * Signature: `(input: { integration: Ref<Integration> }) => { targets: RemoteTarget[] }`.
    * When omitted, "Change sync targets" is unavailable.
    *
@@ -83,6 +119,14 @@ export type IntegrationProvider = {
    * When omitted, "Sync now" is unavailable.
    */
   sync?: Operation.Definition.Any;
+  /**
+   * Optional schema describing the per-target `options` shape this provider
+   * understands (e.g. `SyncOptions` for Gmail, `CalendarSyncOptions` for
+   * Calendar). When set, the IntegrationArticle renders an inline form on
+   * each target row that edits `target.options`. When unset, `options` are
+   * simply unused for this provider.
+   */
+  optionsSchema?: Schema.Schema<any, any>;
   /**
    * Optional service-specific token-created hook. See {@link OnTokenCreated}.
    */
@@ -99,8 +143,20 @@ export const IntegrationProvider = Capability.make<IntegrationProvider[]>(
 import { useCapabilities } from '@dxos/app-framework/ui';
 
 /**
- * Resolve the contributed `IntegrationProvider` whose `source` matches.
- * Returns `undefined` if no service plugin handles this source.
+ * Resolve the contributed `IntegrationProvider` by stable `id`. Prefer this
+ * over source-based lookup — multiple providers can share the same source
+ * (Gmail and Google Calendar both `source: 'google.com'`).
+ */
+export const useIntegrationProviderById = (providerId: string | undefined): IntegrationProvider | undefined => {
+  const providers = useCapabilities(IntegrationProvider).flat();
+  return providerId ? providers.find((p) => p.id === providerId) : undefined;
+};
+
+/**
+ * Legacy lookup by `source` — kept for callers that only have the access
+ * token's `source` and no providerId context. Returns the *first* matching
+ * provider, which is ambiguous when multiple providers share a source. New
+ * call sites should use {@link useIntegrationProviderById} instead.
  */
 export const useIntegrationProvider = (source: string | undefined): IntegrationProvider | undefined => {
   const providers = useCapabilities(IntegrationProvider).flat();

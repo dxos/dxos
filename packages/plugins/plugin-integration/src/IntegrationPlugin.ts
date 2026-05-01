@@ -18,18 +18,18 @@ import { meta } from '#meta';
 
 import { IntegrationCoordinator } from './capabilities';
 import { translations } from './translations';
-import { Integration, IntegrationSourceAnnotationId } from './types';
+import { Integration, IntegrationProviderAnnotationId } from './types';
 
 /**
- * Form schema for the create-Integration dialog. The `source` field is
- * tagged with {@link IntegrationSourceAnnotationId}; a `role: 'form-input'`
+ * Form schema for the create-Integration dialog. The `providerId` field is
+ * tagged with {@link IntegrationProviderAnnotationId}; a `role: 'form-input'`
  * Surface contributed by this plugin reads currently-registered
  * `IntegrationProvider` capabilities and renders a dropdown.
  */
 const CreateIntegrationForm = Schema.Struct({
-  source: Schema.String.annotations({
+  providerId: Schema.String.annotations({
     title: 'Service',
-    [IntegrationSourceAnnotationId]: true,
+    [IntegrationProviderAnnotationId]: true,
   }),
 });
 
@@ -45,7 +45,7 @@ const CreateIntegrationForm = Schema.Struct({
  * that hasn't been persisted yet — `CreateObjectDialog` skips navigation
  * when subject is empty.
  */
-const createIntegration: CreateObject = (props: { source: string }, options) =>
+const createIntegration: CreateObject = (props: { providerId: string }, options) =>
   Effect.gen(function* () {
     const db = Database.isDatabase(options.target) ? options.target : Obj.getDatabase(options.target);
     if (!db) {
@@ -56,7 +56,7 @@ const createIntegration: CreateObject = (props: { source: string }, options) =>
     const { integrationId } = yield* coordinator.createIntegration({
       db,
       spaceId: db.spaceId,
-      source: props.source,
+      providerId: props.providerId,
     });
 
     // The integration object isn't in the database yet (the coordinator

@@ -13,7 +13,7 @@ import { GoogleCredentials } from '../../../services/google-credentials';
 import { GmailSend } from '../../definitions';
 
 export default GmailSend.pipe(
-  Operation.withHandler(({ userId = 'me', message, mailbox: mailboxRef }) =>
+  Operation.withHandler(({ userId = 'me', message, mailbox: mailboxRef, integration: integrationRef }) =>
     Effect.gen(function* () {
       log('sending email', { userId, mailbox: mailboxRef?.dxn.toString() });
 
@@ -53,7 +53,7 @@ export default GmailSend.pipe(
       };
     }).pipe(
       Effect.provide(FetchHttpClient.layer),
-      Effect.provide(mailboxRef ? GoogleCredentials.fromMailbox(mailboxRef) : GoogleCredentials.default),
+      Effect.provide(integrationRef ? GoogleCredentials.fromIntegration(integrationRef) : GoogleCredentials.default),
     ),
   ),
 );

@@ -19,9 +19,13 @@ export const translations = [
         'add-token.menu': 'Add Integration',
         'add-custom-token.menu': 'Custom Token',
         'delete-token.menu': 'Delete Token',
+        'delete-integration.label': 'Delete integration',
         'new-integration.label': 'New Integration',
         'new-integration.description': 'Create a new custom access token.',
         'connect-integration.label': 'Connect {{provider}}',
+        'get-sync-targets-error.title': 'Failed to load sync targets',
+        'close.label': 'Close',
+        'sync-integration.label': 'Sync now',
       },
       [Integration.Integration.typename]: {
         'typename.label': 'Integration',
