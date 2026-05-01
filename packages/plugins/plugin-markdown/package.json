@@ -26,6 +26,7 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#testing": "./src/testing.ts",
+    "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
   },
   "exports": {
@@ -59,6 +60,12 @@
       "browser": "./dist/lib/browser/testing.mjs",
       "node": "./dist/lib/node-esm/testing.mjs"
     },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "browser": "./dist/lib/browser/translations.mjs",
+      "node": "./dist/lib/node-esm/translations.mjs"
+    },
     "./types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
@@ -81,18 +88,15 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/blueprints": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/functions": "workspace:*",
-    "@dxos/functions-runtime": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",

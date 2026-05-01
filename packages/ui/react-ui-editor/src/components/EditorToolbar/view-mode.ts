@@ -3,9 +3,10 @@
 //
 
 import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
-import { type EditorViewMode } from '@dxos/ui-editor';
+import { type EditorViewMode } from '@dxos/ui-editor/types';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { type EditorToolbarState } from './types';
 
 const viewModes = {

@@ -25,9 +25,9 @@ import { Organization, Person } from '@dxos/types';
 
 import { DeckState, OperationHandler } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
+import { translations } from '#translations';
 
 import { Plank } from '../../containers/Plank';
-import { translations } from '../../translations';
 import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix';
 
 random.seed(123);

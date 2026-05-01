@@ -3,12 +3,12 @@
 //
 
 import { Chat, Agent, McpServer } from '@dxos/assistant-toolkit';
-import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Blueprint, Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
-import { translations as componentsTranslations } from '@dxos/react-ui-components';
-import { translations as formTranslations } from '@dxos/react-ui-form';
+import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 
 import { meta } from '#meta';
 
@@ -18,7 +18,6 @@ export const translations: Resource[] = [
   ...formTranslations,
   {
     'en-US': {
-      // TODO(burdon): From assistant.
       [Blueprint.Blueprint.typename]: {
         'typename.label': 'Blueprint',
         'typename.label_zero': 'Blueprints',
@@ -30,18 +29,17 @@ export const translations: Resource[] = [
         'delete-object.label': 'Delete blueprint',
         'object-deleted.label': 'Blueprint deleted',
       },
-      [Type.getTypename(Prompt.Prompt)]: {
-        'typename.label': 'Prompt',
-        'typename.label_zero': 'Prompts',
-        'typename.label_one': 'Prompt',
-        'typename.label_other': 'Prompts',
-        'object-name.placeholder': 'New prompt',
-        'add-object.label': 'Add prompt',
-        'rename-object.label': 'Rename prompt',
-        'delete-object.label': 'Delete prompt',
-        'object-deleted.label': 'Prompt deleted',
+      [Type.getTypename(Routine.Routine)]: {
+        'typename.label': 'Routine',
+        'typename.label_zero': 'Routines',
+        'typename.label_one': 'Routine',
+        'typename.label_other': 'Routines',
+        'object-name.placeholder': 'New routine',
+        'add-object.label': 'Add routine',
+        'rename-object.label': 'Rename routine',
+        'delete-object.label': 'Delete routine',
+        'object-deleted.label': 'Routine deleted',
       },
-      // TODO(burdon): From conductor.
       [Sequence.typename]: {
         'typename.label': 'Sequence',
         'typename.label_zero': 'Sequences',
@@ -167,6 +165,7 @@ export const translations: Resource[] = [
         // Trigger status
         'trigger-status-disabled.label': 'Triggers disabled',
         'trigger-status-idle.label': 'Triggers idle',
+        'trigger-status-edge.label': 'Triggers will run on EDGE',
         'trigger-status-running.label': 'Trigger running',
         'trigger-status-error.label': 'Trigger error',
         'trigger-runtime.label': 'Auto trigger execution',

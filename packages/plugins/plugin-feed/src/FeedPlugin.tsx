@@ -7,8 +7,8 @@ import * as Option from 'effect/Option';
 
 import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Annotation } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { AttentionEvents } from '@dxos/plugin-attention/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
@@ -17,9 +17,8 @@ import { MagazineBlueprint } from '#blueprints';
 import { AppGraphBuilder, BlueprintDefinition, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { FeedOperation } from '#operations';
+import { translations } from '#translations';
 import { Magazine, Subscription } from '#types';
-
-import { translations } from './translations';
 
 export const FeedPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({

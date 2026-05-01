@@ -8,10 +8,10 @@ import * as Predicate from 'effect/Predicate';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiRequest, ToolExecutionServices } from '@dxos/assistant';
+import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 import { type Actor, LegacyOrganization, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 

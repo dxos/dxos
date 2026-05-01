@@ -6,7 +6,7 @@ import { type Space, SpaceState } from '@dxos/client/echo';
 import { type Database, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Expando } from '@dxos/schema';
-import { type Label } from '@dxos/ui-types';
+import { type Label } from '@dxos/ui-types/translations';
 
 import { meta } from '#meta';
 

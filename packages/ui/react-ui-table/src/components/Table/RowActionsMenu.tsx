@@ -7,8 +7,9 @@ import React from 'react';
 
 import { DropdownMenu, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
+import { translationKey } from '#translations';
+
 import { type ModalController, type TableModel } from '../../model';
-import { translationKey } from '../../translations';
 
 type RowActionsMenuProps = { model: TableModel; modals: ModalController };
 

@@ -7,7 +7,7 @@ import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 're
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName, setRef } from '@dxos/react-ui';
-import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-components';
+import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-markdown';
 import { type Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
@@ -18,8 +18,8 @@ import { MessageSyncer } from './sync';
 
 const defaultOptions: MarkdownStreamProps['options'] = {
   autoScroll: true,
-  // wire: true,
-  cursor: true,
+  typewriter: true,
+  cursor: false,
 };
 
 export type ChatThreadProps = ThemedClassName<
@@ -28,12 +28,24 @@ export type ChatThreadProps = ThemedClassName<
     messages?: Message.Message[];
     error?: Error;
     onEvent?: (event: ChatEvent) => void;
-  } & Pick<MarkdownStreamProps, 'options' | 'debug'>
+  } & Pick<MarkdownStreamProps, 'options' | 'debug' | 'extensions' | 'footer'>
 >;
 
-// TODO(burdon): Memo thread position.
 export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThreadProps>(
-  ({ classNames, identity, messages = [], error, options = defaultOptions, debug = false, onEvent }, forwardedRef) => {
+  (
+    {
+      classNames,
+      identity,
+      messages = [],
+      error,
+      options = defaultOptions,
+      footer,
+      debug = false,
+      extensions,
+      onEvent,
+    },
+    forwardedRef,
+  ) => {
     const [controller, setController] = useState<MarkdownStreamController | null>(null);
     const handleMarkdownStreamRef = useCallback(
       (instance: MarkdownStreamController | null) => {
@@ -56,8 +68,11 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
     // Update document.
     const syncer = useMemo(() => controller && new MessageSyncer(controller, blockToMarkdown), [controller]);
     useEffect(() => {
-      const reset = syncer?.append(messages, true);
-      if (reset) {
+      if (!syncer) {
+        return;
+      }
+
+      if (syncer.update(messages)) {
         controller?.scrollToBottom('instant');
       }
     }, [controller, syncer, messages]);
@@ -85,6 +100,8 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
           registry={componentRegistry}
           options={options}
           debug={debug}
+          extensions={extensions}
+          footer={footer}
           onEvent={handleEvent}
           ref={handleMarkdownStreamRef}
         />

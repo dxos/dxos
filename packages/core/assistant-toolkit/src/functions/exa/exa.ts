@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import Exa from 'exa-js';
 
-import { CredentialsService } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { CredentialsService } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 
 import { ExaSearch } from './definitions';
 

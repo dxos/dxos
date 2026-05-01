@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Operation } from '@dxos/operation';
+import { type Operation } from '@dxos/compute';
 
 /**
  * Pluggable contract for augmenting the CRM blueprint with additional

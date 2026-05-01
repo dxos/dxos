@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { AiContextService } from '@dxos/assistant';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { ContextAdd } from './definitions';
 

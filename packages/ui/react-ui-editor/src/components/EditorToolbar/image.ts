@@ -4,7 +4,7 @@
 
 import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
 
 /** Add image upload action to the builder. */
 export const addImageUpload =

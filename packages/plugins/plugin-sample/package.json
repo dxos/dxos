@@ -24,6 +24,7 @@
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
   },
   "exports": {
@@ -45,6 +46,12 @@
       "browser": "./dist/lib/browser/operations/index.mjs",
       "node": "./dist/lib/node-esm/operations/index.mjs"
     },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "browser": "./dist/lib/browser/translations.mjs",
+      "node": "./dist/lib/node-esm/translations.mjs"
+    },
     "./types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
@@ -61,11 +68,11 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-atom": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",

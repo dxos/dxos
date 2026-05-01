@@ -11,10 +11,12 @@ import { DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { HuePicker } from '@dxos/react-ui-pickers';
+import { FactoryAnnotation } from '@dxos/schema';
 import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { Form, type FormFieldMap, omitId } from '../Form';
 
 export type ObjectPropertiesProps = PropsWithChildren<{ object: Obj.Unknown }>;
@@ -36,16 +38,26 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
       );
     }, [object]);
 
-    const handleCreate = useCallback((schema: Type.AnyEntity, values: any) => {
-      invariant(db);
-      invariant(Type.isObjectSchema(schema));
-      const newObject = db.add(Obj.make(schema, values));
-      if (Obj.instanceOf(Tag.Tag, newObject)) {
-        Obj.change(object, (object) => {
-          Obj.getMeta(object).tags = [...(Obj.getMeta(object).tags ?? []), Obj.getDXN(newObject).toString()];
-        });
-      }
-    }, []);
+    // Persist a newly-created object referenced by one of the form's ref
+    // fields and return it. The calling RefField wires the new Ref into its
+    // own slot's form value; for the BaseSchema `tags` array, the resulting
+    // form change is then synced back to `Obj.getMeta(object).tags` by
+    // `handleChange` below — so Tag.Tag follows the same generic path as any
+    // other ref-array field, no type-specific branching required here.
+    //
+    // Schemas whose required structure can't be produced by `Obj.make(schema,
+    // values)` alone (e.g. types with a required ref to a backing object) can
+    // declare a `FactoryAnnotation` to take over construction.
+    const handleCreate = useCallback(
+      (schema: Type.AnyEntity, values: any): Obj.Unknown => {
+        invariant(db);
+        invariant(Type.isObjectSchema(schema));
+        const factory = Option.getOrUndefined(FactoryAnnotation.get(schema));
+        const newObject = factory ? (factory(values) as Obj.Unknown) : Obj.make(schema, values);
+        return db.add(newObject) as Obj.Unknown;
+      },
+      [db],
+    );
 
     // TODO(wittjosiah): Use FormRootProps type.
     const handleChange = useCallback(

@@ -19,9 +19,9 @@ import { Thread as ThreadComponent } from '@dxos/react-ui-thread';
 import { withLayout, Loading } from '@dxos/react-ui/testing';
 import { Message, Thread } from '@dxos/types';
 
+import { translations } from '#translations';
 import { Channel } from '#types';
 
-import { translations } from '../../translations';
 import { ChatContainer } from './ChatContainer';
 
 random.seed(1);

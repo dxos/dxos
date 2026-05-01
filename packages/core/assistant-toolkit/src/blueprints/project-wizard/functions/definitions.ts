@@ -4,10 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/compute';
+import { QueueService } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 
 import { Agent } from '../../../types';
 
@@ -52,7 +52,7 @@ export const SyncTriggers = Operation.make({
     key: 'org.dxos.function.agent.sync-triggers',
     name: 'Sync triggers',
     description:
-      'Synchronizes triggers in the database with the agent subscriptions. Call this after editing the subscriptions array.',
+      'Synchronizes triggers with the agent: subscriptions, cron, filter-events, and enabled (copied to every trigger). Call after editing those fields.',
   },
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotations({

@@ -19,6 +19,7 @@
     "#hooks": "./src/hooks/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
   },
   "exports": {
@@ -40,6 +41,12 @@
       "node": "./dist/lib/node-esm/operations/index.mjs",
       "types": "./dist/types/src/operations/index.d.ts"
     },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "browser": "./dist/lib/browser/translations.mjs",
+      "node": "./dist/lib/node-esm/translations.mjs"
+    },
     "./types": {
       "source": "./src/types/index.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
@@ -57,15 +64,14 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/cli-util": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/functions": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-native": "workspace:*",

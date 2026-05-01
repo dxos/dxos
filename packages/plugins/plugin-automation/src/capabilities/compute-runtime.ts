@@ -7,6 +7,7 @@ import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueS
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
@@ -17,8 +18,10 @@ import { AgentService, AiContextBinder, AiContextService, AiSession, AiSessionSe
 import { McpServer } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
+import { SpaceProperties } from '@dxos/client-protocol';
 import { Resource } from '@dxos/context';
 import { Database, DXN, Feed, Filter, Obj } from '@dxos/echo';
+import { AtomObj } from '@dxos/echo-atom';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { acquireReleaseResource, asyncTaskTaggingLayer } from '@dxos/effect';
 import {
@@ -102,7 +105,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
       return this.#runtimes.get(spaceId)!;
     }
 
-    const layer = Layer.unwrapEffect(
+    const layer = Layer.unwrapScoped(
       Effect.gen(this, function* () {
         const client = this.#capabilities.get(ClientCapabilities.Client);
         const aiServiceLayer =
@@ -133,11 +136,43 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         const mcpQuery = space.db.query(Filter.type(McpServer.McpServer));
         this.#subscriptions.set(spaceId, mcpQuery.subscribe());
 
-        return Layer.mergeAll(
-          TriggerDispatcher.layer({ timeControl: 'natural' }),
-          Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints)),
+        return Layer.scopedDiscard(
+          Effect.gen(function* () {
+            const registry = yield* Registry.AtomRegistry;
+            const triggerDispatcher = yield* TriggerDispatcher;
+            // Track the in-flight start/stop so a new transition cancels the previous one
+            // (preserving ordering on rapid toggles) and surfaces failures via the Effect logger.
+            let inFlight: Fiber.RuntimeFiber<unknown, unknown> | undefined;
+            const transition = (effect: Effect.Effect<unknown, unknown>) => {
+              if (inFlight) {
+                Effect.runFork(Fiber.interrupt(inFlight));
+              }
+              inFlight = Effect.runFork(
+                effect.pipe(
+                  Effect.tapErrorCause((cause) => Effect.logError('trigger dispatcher transition failed', cause)),
+                ),
+              );
+            };
+            const unsubscribe = registry.subscribe(
+              AtomObj.make(space.properties),
+              (properties: Obj.Snapshot<SpaceProperties>) => {
+                const computeEnvironment = properties.computeEnvironment ?? 'local';
+                transition(computeEnvironment === 'local' ? triggerDispatcher.start() : triggerDispatcher.stop());
+              },
+              { immediate: true },
+            );
+            yield* Effect.addFinalizer(() =>
+              Effect.sync(() => {
+                unsubscribe();
+                if (inFlight) {
+                  Effect.runFork(Fiber.interrupt(inFlight));
+                }
+              }),
+            );
+          }),
         )
           .pipe(
+            Layer.provideMerge(TriggerDispatcher.layer({ timeControl: 'natural' })),
             Layer.provideMerge(
               AgentService.layer({
                 getMcpServers: () =>
@@ -255,10 +290,12 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             Layer.provideMerge(CredentialsService.layerFromDatabase()),
             Layer.provideMerge(ClientService.fromClient(client)),
             Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
+          )
+          .pipe(
             Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
             Layer.provideMerge(space ? createFeedServiceLayer(space.queues) : Feed.notAvailable),
-          )
-          .pipe(Layer.provideMerge(isDev ? asyncTaskTaggingLayer() : Layer.empty));
+            Layer.provideMerge(isDev ? asyncTaskTaggingLayer() : Layer.empty),
+          );
       }),
     );
 

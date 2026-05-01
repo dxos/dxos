@@ -30,6 +30,14 @@ tasks:
   serve:
     deps:
       - prebuild
+  # Dev-server startup harness — measures `vite serve` against the shared
+  # `dev-startup.spec.ts`. Distinct from `e2e` (which inherits from `ts-test`'s
+  # default playwright config and runs the production preview harness).
+  e2e-dev:
+    command: pnpm exec playwright test --config=src/playwright/playwright-dev.config.ts
+    deps:
+      - prebuild
+      - ^:build
   test:
     inputs:
       - .storybook/*

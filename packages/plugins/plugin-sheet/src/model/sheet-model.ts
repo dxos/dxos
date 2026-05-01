@@ -20,7 +20,7 @@ import {
   addressToA1Notation,
   createSheetName,
   isFormula,
-} from '@dxos/compute';
+} from '@dxos/compute-hyperformula';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/internal';

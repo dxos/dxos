@@ -5,9 +5,9 @@
 import * as Predicate from 'effect/Predicate';
 
 import { AGENT_PROCESS_KEY, AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
-import { Trace } from '@dxos/functions';
+import { Trace } from '@dxos/compute';
 import { Process } from '@dxos/functions-runtime';
-import { LogLevel } from '@dxos/log';
+import { LogLevel, log } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
 
 /**
@@ -332,7 +332,15 @@ export const buildExecutionGraph = ({
     }
   }
 
-  return builder.build();
+  const built = builder.build();
+  log('trace execution graph', {
+    traceMessages: traceMessages.length,
+    flatEvents: events.length,
+    commits: built.commits.length,
+    branches: built.branches.length,
+    activeProcesses: activeProcesses.length,
+  });
+  return built;
 };
 
 type Falsy = false | null | undefined;

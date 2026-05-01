@@ -6,7 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { FeedbackForm } from './FeedbackForm';
 
 const meta = {
@@ -27,6 +28,17 @@ export const Default: Story = {
   args: {
     onSave: (values) => {
       console.log(values);
+    },
+  },
+};
+
+export const WithDownloadLogs: Story = {
+  args: {
+    onSave: (values) => {
+      console.log(values);
+    },
+    onDownloadLogs: () => {
+      console.log('download logs clicked');
     },
   },
 };

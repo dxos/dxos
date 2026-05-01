@@ -3,8 +3,7 @@
 //
 
 import { type DXN } from '@dxos/echo';
-import { log } from '@dxos/log';
-import { type MarkdownStreamController } from '@dxos/react-ui-components';
+import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { type ContentBlock, type Message } from '@dxos/types';
 import { type StateDispatch, type XmlWidgetStateManager } from '@dxos/ui-editor';
 
@@ -16,6 +15,21 @@ import { rehydrateToolWidgetsFromMessages } from './tool-widget-state';
 export type TextModel = Pick<MarkdownStreamController, 'length' | 'setContent' | 'append' | 'updateWidget'>;
 
 /**
+ * Renders a block to markdown.
+ *
+ * Contract: for any block whose lifetime spans multiple invocations (i.e. a streaming block
+ * with `pending: true` whose content grows over time, transitioning to `pending: false`), the
+ * sequence of returned strings must be monotonically extending — each subsequent value must be
+ * a string-extension of the previous. The {@link MessageSyncer} relies on this invariant to
+ * compute appendable deltas without diffing.
+ */
+export type BlockRenderer = (
+  context: MessageThreadContext,
+  message: Message.Message,
+  block: ContentBlock.Any,
+) => string | undefined;
+
+/**
  * Thread context passed to renderer.
  */
 export class MessageThreadContext implements Pick<MarkdownStreamController, 'updateWidget'> {
@@ -25,37 +39,30 @@ export class MessageThreadContext implements Pick<MarkdownStreamController, 'upd
     this._widgetState?.updateWidget(id, value);
   }
 
-  // TODO(burdon): Resolve from hypergraph.
+  // TODO(burdon): Resolve name from hypergraph.
   getObjectLabel(_id: DXN) {
     return 'Object';
   }
 }
 
 /**
- * Renders a block to markdown.
- */
-export type BlockRenderer = (
-  context: MessageThreadContext,
-  message: Message.Message,
-  block: ContentBlock.Any,
-) => string | undefined;
-
-/**
  * Syncs messages with the editor.
+ *
+ * Reflects the AI streaming contract:
+ * - Messages and their blocks are appended in order.
+ * - Only the last block in `messages` may be `pending`; all earlier blocks are finalized.
+ * - The renderer's output for a streaming block grows monotonically (see {@link BlockRenderer}).
+ * - The document is read-only outside this syncer.
+ *
+ * Under those rules the syncer needs only:
+ * - `_completed`: the flat-block index past which everything has been fully appended.
+ * - `_trailing`: chars of the in-flight block (at index `_completed`) already appended.
+ * - `_threadId`: identity sentinel; if `messages[0]?.id` changes, the document is replaced.
  */
 export class MessageSyncer {
-  #syncEpoch = 0;
-  private _initialMessageId?: string;
-  private _currentMessageIndex = 0;
-  private _currentBlockIndex = 0;
-  private _currentBlockContent?: string;
-  /**
-   * Set by `processBlocks` when a streaming block's renderer output stops being a
-   * prefix-extension of the previously-emitted content (e.g. an upstream normalisation collapses
-   * a line). The incremental append path can no longer produce a correct delta, so the caller
-   * resets the syncer and rebuilds the whole document via the buffer/`setContent` path.
-   */
-  private _needsRebuild = false;
+  private _threadId?: string;
+  private _completed = 0;
+  private _trailing = 0;
 
   private readonly _context: MessageThreadContext;
 
@@ -70,131 +77,74 @@ export class MessageSyncer {
     return this._context;
   }
 
-  reset() {
-    log('reset');
-    this.#resetState();
-    void this._document.setContent('');
-  }
-
   /**
-   * Clears in-memory sync cursors without touching the document. Used by the internal rebuild
-   * path (which immediately re-dispatches content via `#fullRebuild`) and by `reset()` (which
-   * also clears the document). Kept private so callers cannot forget to match a state reset
-   * with a document update.
+   * Replace the document with the rendering of `messages`. Use on mount, on thread switch,
+   * and from {@link update} when it detects an identity change in `messages[0]`.
    */
-  #resetState() {
-    this.#syncEpoch++;
-    this._initialMessageId = undefined;
-    this._currentMessageIndex = 0;
-    this._currentBlockIndex = 0;
-    this._currentBlockContent = undefined;
-    this._needsRebuild = false;
-  }
-
-  /**
-   * Syncs messages with the editor.
-   */
-  append(messages: Message.Message[], flush = false): boolean {
-    // Check if new set of messages.
-    if (this._initialMessageId !== messages[0]?.id) {
-      this.reset();
-      this._initialMessageId = messages[0]?.id;
-    }
-
-    if (this._document.length === 0 && flush) {
-      return this.#fullRebuild(messages);
-    }
-
-    this._needsRebuild = false;
-    this.processBlocks(messages, (content) => {
-      void this._document.append(content);
+  reset(messages: Message.Message[] = []): void {
+    this._threadId = messages[0]?.id;
+    this._completed = 0;
+    this._trailing = 0;
+    const buffer = this._walk(messages);
+    // Match the pre-rewrite behaviour: rendering from a steady state (initial mount with
+    // non-empty messages, or thread switch) lands the entire content via `setContent` — which
+    // uses `wireBypass`, so the editor jumps straight to the final text and `update()` returns
+    // `true` so the caller can scroll to the bottom. Live streaming partials that arrive
+    // *after* this initial render flow through `update()`'s incremental path → `_document.append`
+    // → wire's drip filter, preserving the char-by-char typewriter for incoming text.
+    void this._document.setContent(buffer).then(() => {
+      rehydrateToolWidgetsFromMessages(this._context, messages);
     });
+  }
 
-    if (this._needsRebuild) {
-      // A streaming block's render diverged from the previously-emitted content; the incremental
-      // append path cannot recover (it would duplicate the opening of the block in the document).
-      // Reset and rebuild from scratch via the `setContent` path so the document matches `messages`.
-      // Use `#resetState` (not `reset()`) to avoid dispatching an extra `setContent('')` that
-      // `#fullRebuild` would immediately overwrite.
-      log.warn('non-monotonic streaming render detected; rebuilding chat thread document');
-      this.#resetState();
-      this._initialMessageId = messages[0]?.id;
-      return this.#fullRebuild(messages);
+  /**
+   * Stream the suffix of the rendered messages into the document.
+   * Returns `true` if the document was replaced (initial mount or thread switch), `false`
+   * if the call was a streaming append (or a no-op).
+   */
+  update(messages: Message.Message[]): boolean {
+    if (messages[0]?.id !== this._threadId) {
+      this.reset(messages);
+      return true;
     }
-
+    const buffer = this._walk(messages);
+    if (buffer.length > 0) {
+      void this._document.append(buffer);
+    }
     return false;
   }
 
   /**
-   * Render every block into a fresh buffer and hand the result to `setContent`, then rehydrate
-   * tool widget state once the dispatch settles.
+   * Walk flat blocks starting at `_completed`, advancing the cursors and returning the chars
+   * to append. Blocks before `_completed` are skipped — their renderer is never re-invoked,
+   * which preserves single-shot side effects (e.g. tool widget state mutation).
    */
-  #fullRebuild(messages: Message.Message[]): boolean {
-    const buffer: string[] = [];
-    this.processBlocks(messages, (content) => buffer.push(content));
-    const content = buffer.join('');
-    // `setContent` dispatches `xmlTagResetEffect`, which clears widget props accumulated during
-    // `processBlocks`; re-apply tool state after the document is replaced.
-    const epoch = this.#syncEpoch;
-    void this._document
-      .setContent(content)
-      .then(() => {
-        if (epoch !== this.#syncEpoch) {
-          return;
+  _walk(messages: Message.Message[]): string {
+    let buffer = '';
+    let index = 0;
+    outer: for (const message of messages) {
+      for (const block of message.blocks) {
+        if (index < this._completed) {
+          index++;
+          continue;
         }
-        rehydrateToolWidgetsFromMessages(this._context, messages);
-      })
-      .catch((error) => {
-        // `processBlocks` advanced the sync cursors for `messages`; if the document dispatch
-        // rejected, those cursors no longer match the document state, so any subsequent
-        // incremental append would emit incorrect deltas. Clear cursor state (while leaving the
-        // document as-is for the controller to recover) and force the next `append` to start
-        // from scratch.
-        log.warn('failed to replace thread content; resetting syncer state for next append', { error });
-        this.#resetState();
-      });
-
-    return true;
-  }
-
-  private processBlocks(messages: Message.Message[], append: (content: string) => void) {
-    let i = this._currentMessageIndex;
-    for (const message of messages.slice(this._currentMessageIndex)) {
-      if (i > this._currentMessageIndex) {
-        this._currentBlockIndex = 0;
-      }
-
-      this._currentMessageIndex = i;
-      let j = this._currentBlockIndex;
-      for (const block of message.blocks.slice(this._currentBlockIndex)) {
-        this._currentBlockIndex = j;
-        const currentBlockContent = this._renderer(this._context, message, block);
-        if (currentBlockContent) {
-          if (this._currentBlockContent !== undefined && !currentBlockContent.startsWith(this._currentBlockContent)) {
-            // The renderer's output for a streaming block must be a prefix-extension of the
-            // previously-emitted content; otherwise the incremental append path cannot recover.
-            // Signal the caller to fall back to a full rebuild and bail out.
-            this._needsRebuild = true;
-            return;
-          }
-
-          const delta =
-            this._currentBlockContent !== undefined
-              ? currentBlockContent.slice(this._currentBlockContent.length)
-              : currentBlockContent;
-          this._currentBlockContent = currentBlockContent;
-          append(delta);
+        const rendered = this._renderer(this._context, message, block) ?? '';
+        if (rendered.length > this._trailing) {
+          buffer += rendered.slice(this._trailing);
         }
-
         if (block.pending) {
-          return;
-        } else {
-          this._currentBlockContent = undefined;
-          this._currentBlockIndex++;
+          // Stay on this block; record how far we've appended so the next call can resume.
+          // `Math.max`-style guard against a non-monotonic renderer output without shrinking the doc.
+          if (rendered.length > this._trailing) {
+            this._trailing = rendered.length;
+          }
+          break outer;
         }
-        j++;
+        this._completed = index + 1;
+        this._trailing = 0;
+        index++;
       }
-      i++;
     }
+    return buffer;
   }
 }

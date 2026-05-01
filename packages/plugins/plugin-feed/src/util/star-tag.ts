@@ -9,6 +9,8 @@ import { useQuery } from '@dxos/react-client/echo';
 
 import { Subscription } from '../types';
 
+// TODO(burdon): Factor out.
+
 /**
  * Returns the canonical "starred" {@link Tag.Tag} object for the given database, if one exists.
  * Reactively updates when a matching tag is added or removed from the space.
@@ -18,10 +20,15 @@ export const useStarTag = (db?: Database.Database): Tag.Tag | undefined => {
   return useMemo(() => tags.find((tag) => tag.label === Subscription.STAR_TAG), [tags]);
 };
 
+/** Finds an existing starred tag in the database, returning undefined if none exists. */
+export const findStarTag = (db: Database.Database): Tag.Tag | undefined => {
+  const existing = db.query(Filter.type(Tag.Tag)).runSync();
+  return existing.find((tag) => tag.label === Subscription.STAR_TAG);
+};
+
 /** Finds an existing starred tag in the database, creating one if necessary. */
 export const ensureStarTag = (db: Database.Database): Tag.Tag => {
-  const existing = db.query(Filter.type(Tag.Tag)).runSync();
-  const found = existing.find((tag) => tag.label === Subscription.STAR_TAG);
+  const found = findStarTag(db);
   if (found) {
     return found;
   }

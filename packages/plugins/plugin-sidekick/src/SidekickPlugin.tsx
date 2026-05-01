@@ -10,9 +10,8 @@ import { Annotation } from '@dxos/echo';
 
 import { BlueprintDefinition, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { Profile, Sidekick } from '#types';
-
-import { translations } from './translations';
 
 export const SidekickPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),

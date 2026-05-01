@@ -7,9 +7,9 @@ import React, { useMemo } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { translations } from '#translations';
 import { type TicTacToe, TicTacToe as TicTacToeTypes } from '#types';
 
-import { translations } from '../../translations';
 import { TicTacToeArticle } from './TicTacToeArticle';
 
 type DefaultStoryProps = { size?: number; winCondition?: number; level?: TicTacToe.Level };

@@ -26,17 +26,18 @@ import {
   PlanningBlueprint,
   PlanningHandlers,
 } from '@dxos/assistant-toolkit';
-import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
+import { Blueprint, Routine } from '@dxos/compute';
+import { ExampleHandlers, Trigger } from '@dxos/compute';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
-import { ExampleHandlers, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
-import { Assistant, AssistantPlugin } from '@dxos/plugin-assistant';
+import { AssistantPlugin } from '@dxos/plugin-assistant';
 import { AssistantOperation } from '@dxos/plugin-assistant/operations';
+import { Assistant } from '@dxos/plugin-assistant/types';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client/types';
@@ -103,7 +104,7 @@ const buildPluginManagerOptions = ({
         Blueprint.Blueprint,
         Operation.PersistentOperation,
         Markdown.Document,
-        Prompt.Prompt,
+        Routine.Routine,
         Trigger.Trigger,
         ...types,
       ],

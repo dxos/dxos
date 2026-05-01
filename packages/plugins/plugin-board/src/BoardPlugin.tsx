@@ -7,17 +7,16 @@ import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Annotation } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
-import { translations as boardTranslations } from '@dxos/react-ui-board';
+import { translations as boardTranslations } from '@dxos/react-ui-board/translations';
 
 import { ReactSurface } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { Board } from '#types';
-
-import { translations } from './translations';
 
 export const BoardPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({

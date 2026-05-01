@@ -9,7 +9,8 @@ import React, { useCallback } from 'react';
 import { findNode, getArrayElementType, getDiscriminatedType, isDiscriminatedUnion, isNestedType } from '@dxos/effect';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 
-import { translationKey } from '../../../translations';
+import { translationKey } from '#translations';
+
 import { getFormProperties } from '../../../util';
 import { useFormValues } from '../Form';
 import { FormField, type FormFieldProps } from '../FormField';

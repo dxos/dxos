@@ -6,11 +6,11 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/assistant/testing';
+import { Operation } from '@dxos/compute';
+import { OperationHandlerSet } from '@dxos/compute';
 import { Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { Operation } from '@dxos/operation';
-import { OperationHandlerSet } from '@dxos/operation';
 import { Person, Pipeline, Task } from '@dxos/types';
 
 import { LINEAR_ID_KEY, default as fetchLinearIssues } from './sync-issues';

@@ -12,7 +12,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 
 import { PluginDetail } from '#components';
 
-import { useCommunityPlugins } from '../../hooks';
+import { useCommunityPlugins, useRemotePluginIds } from '../../hooks';
 
 // TODO(burdon): Convert to ECHO type.
 export type PluginArticleProps = { subject: Plugin.Plugin };
@@ -21,6 +21,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   const manager = usePluginManager();
   const plugins = useAtomValue(manager.plugins);
   const { entries } = useCommunityPlugins();
+  const remotePluginIds = useRemotePluginIds();
   const [installing, setInstalling] = useState(false);
 
   const enabled = manager.getEnabled().includes(plugin.meta.id);
@@ -29,7 +30,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
     [plugins, plugin.meta.id],
   );
   const isCore = manager.getCore().includes(plugin.meta.id);
-  const canUninstall = isInstalled && !isCore;
+  const canUninstall = isInstalled && !isCore && remotePluginIds.has(plugin.meta.id);
 
   const moduleUrl = useMemo(
     () => entries.find((entry) => entry.meta.id === plugin.meta.id)?.moduleUrl,

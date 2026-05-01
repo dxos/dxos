@@ -52,9 +52,9 @@ export const Spinner = forwardRef<HTMLDivElement, SpinnerProps>(
               borderRadius: ['10%', '20%', '10%'],
             },
             flash: {
-              scale: [0.9, 0.2, 0.2, 0.2, 0.9, 0.2, 0.2, 0.2, 0.9],
+              scale: [0.9, 0.6, 0.2, 0.6, 0.2, 0.6, 0.2, 0.6, 0.2, 0.6, 0.9],
               rotate: [0],
-              borderRadius: ['10%', '50%', '10%'],
+              borderRadius: ['100%'],
             },
             error: {
               scale: [0.9, 0.7, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9],

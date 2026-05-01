@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { type Database, Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
@@ -14,9 +14,10 @@ import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { ParentLabelAnnotationId } from '@dxos/schema';
 
-import { translationKey } from '../../../translations';
+import { translationKey } from '#translations';
+
 import { ObjectPicker, type ObjectPickerContentProps, type RefOption } from '../../ObjectPicker';
-import { omitId } from '../Form';
+import { omitHiddenFormFields, omitId } from '../Form';
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 // TODO(burdon): Factor out.
@@ -53,7 +54,13 @@ export type RefFieldProps = FormFieldComponentProps &
     useSchema?: (db?: Database.Database, typename?: string) => Type.AnyEntity;
     useResults?: (db?: Database.Database, typename?: string) => Entity.Any[];
     getOptions?: (objects: Entity.Any[], options?: { parentLabel?: boolean }) => RefOption[];
-    onCreate?: (schema: Type.AnyEntity, values: any) => void;
+    /**
+     * Persist a newly-created object. Called after the user fills out the
+     * inline create form and clicks Save. Should add the object to the
+     * database and return it (sync or async). The returned object is then
+     * wired into this slot's form value as a Ref.
+     */
+    onCreate?: (schema: Type.AnyEntity, values: any) => Obj.Unknown | Promise<Obj.Unknown> | undefined | void;
   };
 
 export const RefField = (props: RefFieldProps) => {
@@ -92,11 +99,21 @@ export const RefField = (props: RefFieldProps) => {
 
   const handleGetValue = useCallback(() => {
     const formValue = getValue();
+    // Match form-value Refs against options by the bare object id (last DXN
+    // segment), not by full DXN string. Ref.make uses
+    // `DXN.fromLocalObjectId(id)` (`dxn:echo:@:<id>`), but
+    // `Entity.getDXN(obj)` on a registered object produces the space-scoped
+    // form (`dxn:echo:<spaceId>:<id>`). String-comparing the two never
+    // matches, so the just-created Ref's option lookup fails and the slot
+    // displays as empty even though the underlying form value IS set.
+    const dxnToObjectId = (dxn: string): string => dxn.split(':').pop() ?? dxn;
+
     const unknownToRefOption = (value: unknown) => {
       const isRef = Ref.isRef(value);
       if (isRef || isRefSnapshot(value)) {
         const dxnString = isRef ? value.dxn.toString() : value['/'];
-        const matchingOption = options.find((option) => option.id === dxnString);
+        const objectId = dxnToObjectId(dxnString);
+        const matchingOption = options.find((option) => dxnToObjectId(option.id) === objectId);
         if (matchingOption) {
           return matchingOption;
         }
@@ -112,13 +129,24 @@ export const RefField = (props: RefFieldProps) => {
   const selectedIds = useMemo(() => (item ? [item.id] : []), [item]);
   const createSchema = useSchema(db, typename);
 
+  // Lift the popover open state so we can dismiss it after a successful create.
+  const [open, setOpen] = useState(false);
+
   const handleCreate = useCallback(
-    (values: any) => {
-      if (createSchema && onCreate) {
-        onCreate(createSchema, values);
+    async (values: any) => {
+      if (!createSchema || !onCreate) {
+        return;
       }
+      const newObject = await onCreate(createSchema, values);
+      if (newObject) {
+        // Wire the newly-created object into this slot's form value. ArrayField
+        // owns the array; this RefField represents a single slot, so writing a
+        // Ref via `onValueChange` populates that slot.
+        onValueChange(type, Ref.make(newObject));
+      }
+      setOpen(false);
     },
-    [createSchema, onCreate],
+    [createSchema, onCreate, type, onValueChange],
   );
 
   const handleUpdate = useCallback(
@@ -158,7 +186,7 @@ export const RefField = (props: RefFieldProps) => {
             </DxAnchor>
           )
         ) : (
-          <ObjectPicker.Root>
+          <ObjectPicker.Root open={open} onOpenChange={setOpen}>
             <ObjectPicker.Trigger asChild classNames='p-0'>
               {item ? (
                 <div role='none' className='flex gap-form-gap w-full'>
@@ -180,7 +208,10 @@ export const RefField = (props: RefFieldProps) => {
                 classNames='dx-card-popover-width'
                 options={options}
                 selectedIds={selectedIds}
-                createSchema={createSchema && omitId(createSchema)}
+                // Strip hidden (`FormInputAnnotation.set(false)`) fields so the
+                // form's validator doesn't reject required-but-hidden fields
+                // such as backing-object refs supplied by a `FactoryAnnotation`.
+                createSchema={createSchema && omitHiddenFormFields(omitId(createSchema))}
                 createOptionLabel={createOptionLabel}
                 createOptionIcon={createOptionIcon}
                 createInitialValuePath={createInitialValuePath}

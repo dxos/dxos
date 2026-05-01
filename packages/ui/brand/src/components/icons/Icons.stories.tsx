@@ -51,6 +51,17 @@ export const Default: Story = {
           <DXOS className={mx(size, 'fill-neutral-700')} />
           <KUBE className={mx(size, 'fill-neutral-700')} />
         </>
+        <>
+          <div className='flex justify-center'>
+            <DXOS className={mx('w-[40px] h-[40px] fill-sky-700')} />
+          </div>
+          <div className='flex justify-center'>
+            <DXOS className={mx('w-[24px] h-[24px] fill-sky-700')} />
+          </div>
+          <div className='flex justify-center'>
+            <DXOS className={mx('w-[16px] h-[16px] fill-sky-700')} />
+          </div>
+        </>
       </div>
     );
   },

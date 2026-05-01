@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Script } from '@dxos/functions';
+import { Script } from '@dxos/compute';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';

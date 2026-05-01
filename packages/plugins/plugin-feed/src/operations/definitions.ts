@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { Operation } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 
 import { meta } from '#meta';
 
@@ -82,6 +82,27 @@ export const FetchArticleContent = Operation.make({
 });
 
 /**
+ * Fetches a Post's article page over HTTP and writes the extracted plain text
+ * to `post.content` and the first image URL to `post.imageUrl`. Idempotent —
+ * skips if `post.content` is already set or the Post has no link. Used by the
+ * reader view to populate the full article on first open.
+ */
+export const LoadPostContent = Operation.make({
+  meta: {
+    key: `${FEED_OPERATION}.load-post-content`,
+    name: 'Load Post Content',
+    description: 'Fetches and stores the full article content on a Post.',
+  },
+  input: Schema.Struct({
+    post: Ref.Ref(Subscription.Post).annotations({
+      description: 'The Post to load content for.',
+    }),
+  }),
+  output: Schema.Void,
+  services: [Database.Service],
+});
+
+/**
  * Writes snippet and imageUrl onto the Post and appends the Post ref to the
  * Magazine's posts list. Idempotent. Agent-facing tool.
  */
@@ -109,6 +130,30 @@ export const AddPostToMagazine = Operation.make({
   }),
   output: Subscription.Post,
   services: [Database.Service],
+});
+
+/**
+ * End-to-end magazine refresh: loads each referenced feed, syncs new posts from
+ * the source RSS/Atom URL, runs deterministic curation, then enforces each
+ * feed's `keep` bound on the magazine's curated post list. Drives the
+ * MagazineArticle Curate button.
+ */
+export const RefreshMagazine = Operation.make({
+  meta: {
+    key: `${FEED_OPERATION}.refresh-magazine`,
+    name: 'Refresh Magazine',
+    description: 'Syncs feeds, curates new posts, and applies per-feed keep limits.',
+  },
+  input: Schema.Struct({
+    magazine: Ref.Ref(Magazine.Magazine).annotations({
+      description: 'The Magazine to refresh.',
+    }),
+  }),
+  output: Schema.Struct({
+    synced: Schema.Number.annotations({ description: 'Number of feeds successfully synced.' }),
+    added: Schema.Number.annotations({ description: 'Number of Posts added to the Magazine.' }),
+  }),
+  services: [Capability.Service],
 });
 
 /**

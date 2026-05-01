@@ -15,13 +15,13 @@ import { VitePWA } from 'vite-plugin-pwa';
 import solid from 'vite-plugin-solid';
 import wasm from 'vite-plugin-wasm';
 
-import { importMapPlugin } from '@dxos/app-framework/vite-plugin';
+import { bootLoaderPlugin, importMapPlugin } from '@dxos/app-framework/vite-plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
-import { vitePluginLog } from '@dxos/vite-plugin-log';
+import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
@@ -54,7 +54,8 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
         '@dxos/lit-*',
       ],
     }),
-  env.command === 'serve' && vitePluginLog(),
+  // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
+  DxosLogPlugin(),
   wasm(),
   // sourcemaps(),
 ];
@@ -82,6 +83,18 @@ export default defineConfig((env) => ({
         rootDir,
       ],
     },
+    // Pre-transform the critical-path source files when `vite serve` starts,
+    // before any browser request. The first navigation finds them already
+    // in the transform cache.
+    warmup: {
+      clientFiles: [
+        './src/main.tsx',
+        './src/dedicated-worker.ts',
+        './src/shared-worker.ts',
+        './src/coordinator-worker.ts',
+        './src/plugin-defs.tsx',
+      ],
+    },
   },
   esbuild: {
     keepNames: true,
@@ -104,84 +117,97 @@ export default defineConfig((env) => ({
       },
       output: {
         chunkFileNames,
-        manualChunks: {
-          react: ['react', 'react-dom'],
+        // Rolldown (used by Vite 8) requires `manualChunks` to be a function — the
+        // record form that worked in Rollup is rejected at runtime.
+        manualChunks: (id: string) => {
+          if (id.includes('/node_modules/react/') || id.includes('/node_modules/react-dom/')) {
+            return 'react';
+          }
         },
       },
     },
   },
   optimizeDeps: {
     exclude: ['@dxos/wa-sqlite'],
-    ...(isFastBundle && {
-      include: [
-        // React.
-        'react',
-        'react-dom',
-        'react/jsx-runtime',
-        // Effect (with subpath imports).
-        'effect',
-        'effect/Effect',
-        'effect/Array',
-        'effect/Ref',
-        'effect/Option',
-        'effect/Cause',
-        'effect/Exit',
-        'effect/Layer',
-        'effect/Runtime',
-        'effect/Fiber',
-        'effect/Deferred',
-        'effect/Function',
-        'effect/HashSet',
-        'effect/PubSub',
-        'effect/Schema',
-        'effect/Context',
-        'effect/Stream',
-        'effect/Console',
-        '@effect/platform',
-        '@effect/platform-browser',
-        // Effect AI (with submodule exports).
-        '@effect/ai',
-        '@effect/ai/AiError',
-        '@effect/ai/Chat',
-        '@effect/ai/LanguageModel',
-        '@effect/ai/Prompt',
-        '@effect/ai/Response',
-        '@effect/ai/Tool',
-        '@effect/ai/Toolkit',
-        '@effect/ai-anthropic',
-        '@effect/ai-anthropic/AnthropicClient',
-        '@effect/ai-anthropic/AnthropicLanguageModel',
-        '@effect/ai-anthropic/AnthropicTool',
-        '@effect/ai-openai',
-        '@effect/ai-openai/OpenAiClient',
-        '@effect/ai-openai/OpenAiLanguageModel',
-        // Automerge.
-        '@automerge/automerge',
-        '@automerge/automerge-repo',
-        // CodeMirror (many files in HAR).
-        'codemirror',
-        '@codemirror/state',
-        '@codemirror/view',
-        '@codemirror/language',
-        '@codemirror/commands',
-        '@codemirror/autocomplete',
-        '@codemirror/lang-javascript',
-        '@codemirror/lang-json',
-        '@codemirror/lang-markdown',
-        '@codemirror/theme-one-dark',
-        // Radix (many requests in HAR).
-        '@radix-ui/react-dialog',
-        '@radix-ui/react-dropdown-menu',
-        '@radix-ui/react-tooltip',
-        '@radix-ui/react-scroll-area',
-        '@radix-ui/react-popover',
-        '@radix-ui/react-slot',
-        '@radix-ui/react-context-menu',
-        // Atlaskit drag-and-drop.
-        '@atlaskit/pragmatic-drag-and-drop',
-        '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator',
-      ],
-    }),
+    // List deeply-imported dep entrypoints so vite's optimize-deps phase
+    // pre-bundles them up front. Without this, vite discovers them mid-load
+    // (when a dynamic import unwraps a new subpath), which forces a full
+    // page reload with the "Discovered new dependencies" banner — ~10 s of
+    // wasted dev time per discovery cycle. The pre-bundle cost is amortized
+    // after the first `vite serve`.
+    include: [
+      // React.
+      'react',
+      'react-dom',
+      'react/jsx-runtime',
+      // Effect (with subpath imports).
+      'effect',
+      'effect/Effect',
+      'effect/Array',
+      'effect/Ref',
+      'effect/Option',
+      'effect/Cause',
+      'effect/Exit',
+      'effect/Layer',
+      'effect/Runtime',
+      'effect/Fiber',
+      'effect/Deferred',
+      'effect/Function',
+      'effect/HashSet',
+      'effect/PubSub',
+      'effect/Schema',
+      'effect/Context',
+      'effect/Stream',
+      'effect/Console',
+      '@effect/platform',
+      '@effect/platform-browser',
+      // Effect AI (with submodule exports).
+      '@effect/ai',
+      '@effect/ai/AiError',
+      '@effect/ai/Chat',
+      '@effect/ai/LanguageModel',
+      '@effect/ai/Prompt',
+      '@effect/ai/Response',
+      '@effect/ai/Tool',
+      '@effect/ai/Toolkit',
+      '@effect/ai-anthropic',
+      '@effect/ai-anthropic/AnthropicClient',
+      '@effect/ai-anthropic/AnthropicLanguageModel',
+      '@effect/ai-anthropic/AnthropicTool',
+      '@effect/ai-openai',
+      '@effect/ai-openai/OpenAiClient',
+      '@effect/ai-openai/OpenAiLanguageModel',
+      // Automerge.
+      '@automerge/automerge',
+      '@automerge/automerge-repo',
+      // CodeMirror (many files in HAR).
+      'codemirror',
+      '@codemirror/state',
+      '@codemirror/view',
+      '@codemirror/language',
+      '@codemirror/commands',
+      '@codemirror/autocomplete',
+      '@codemirror/lang-javascript',
+      '@codemirror/lang-json',
+      '@codemirror/lang-markdown',
+      '@codemirror/theme-one-dark',
+      // Radix (many requests in HAR).
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-tooltip',
+      '@radix-ui/react-scroll-area',
+      '@radix-ui/react-popover',
+      '@radix-ui/react-slot',
+      '@radix-ui/react-context-menu',
+      // Atlaskit drag-and-drop.
+      '@atlaskit/pragmatic-drag-and-drop',
+      '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator',
+    ],
+    // Scan the auxiliary HTML entrypoints during pre-bundle so navigations
+    // to `internal.html` / `devtools.html` / `reset.html` /
+    // `script-frame/index.html` don't trip a "discovered new dependencies"
+    // reload mid-session.
+    entries: ['./index.html', './internal.html', './devtools.html', './reset.html', './script-frame/index.html'],
   },
   resolve: {
     alias: {
@@ -284,50 +310,31 @@ export default defineConfig((env) => ({
         options.jsc ??= {};
         options.jsc.target = 'esnext';
       },
-      plugins: [
-        [
-          '@dxos/swc-log-plugin',
-          {
-            to_transform: [
-              {
-                name: 'log',
-                package: '@dxos/log',
-                param_index: 2,
-                include_args: false,
-                include_call_site: true,
-                include_scope: true,
-              },
-              {
-                name: 'dbg',
-                package: '@dxos/log',
-                param_index: 1,
-                include_args: true,
-                include_call_site: false,
-                include_scope: false,
-              },
-              {
-                name: 'invariant',
-                package: '@dxos/invariant',
-                param_index: 2,
-                include_args: true,
-                include_call_site: false,
-                include_scope: true,
-              },
-              {
-                name: 'Context',
-                package: '@dxos/context',
-                param_index: 1,
-                include_args: false,
-                include_call_site: false,
-                include_scope: false,
-              },
-            ],
-          },
-        ],
-      ],
+      // Log-meta injection is handled by `DxosLogPlugin` (Rolldown transform hook) above —
+      // it runs on all js/ts/jsx/tsx modules pre-pass, so the SWC log plugin is no longer needed here.
     }),
 
+    // ???
     importMapPlugin(),
+
+    // Hand the boot loader the Composer brand mark so the visual identity
+    // is established before any JS bundle parses. The SVG carries its own
+    // brand-palette fills (no `currentColor` reliance) and ships as ~2 KB of
+    // inline markup. Wrapped in try/catch so an asset rename or move only
+    // loses the brand mark — the loader still renders the bar + status
+    // without it.
+    bootLoaderPlugin({
+      markSvg: (() => {
+        const markPath = path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon.svg');
+        try {
+          return readFileSync(markPath, 'utf8');
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.warn(`bootLoaderPlugin: composer brand mark not found at ${markPath}; running without mark.`, error);
+          return undefined;
+        }
+      })(),
+    }),
 
     VitePWA({
       // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).

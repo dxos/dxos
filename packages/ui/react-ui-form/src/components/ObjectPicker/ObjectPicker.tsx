@@ -8,7 +8,8 @@ import React, { type KeyboardEvent, forwardRef, useCallback, useState } from 're
 import { type Palette, Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Combobox, useSearchListInput, useSearchListResults } from '@dxos/react-ui-search';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { Form } from '../Form';
 import { type FormFieldMap } from '../Form/FormFieldComponent';
 
@@ -26,7 +27,14 @@ export type ObjectPickerContentProps = ThemedClassName<{
   createSchema?: Schema.Schema.AnyNoContext;
   createInitialValuePath?: string;
   createFieldMap?: FormFieldMap;
-  onCreate?: (values: any) => void;
+  /**
+   * Persist a newly-created object given the form values. May be async (e.g.
+   * to write to a database). The Promise is awaited before the inline create
+   * form is collapsed back to the picker list, so consumers can complete
+   * follow-up work (assign the new ref to a parent slot, close the popover)
+   * before the picker UI re-renders.
+   */
+  onCreate?: (values: any) => unknown | Promise<unknown>;
   onSelect: (id: string) => void;
 }>;
 
@@ -55,8 +63,8 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
     });
 
     const handleFormSave = useCallback(
-      (values: any) => {
-        onCreate?.(values);
+      async (values: any) => {
+        await onCreate?.(values);
         setShowForm(false);
         setFormInitialValue('');
       },
