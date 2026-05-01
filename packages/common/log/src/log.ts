@@ -29,15 +29,57 @@ export interface LogMethods {
   config: (options?: LogOptions) => Log;
   addProcessor: (processor: LogProcessor, addDefault?: boolean) => () => void;
 
+  /**
+   * Log at `trace` level.
+   *
+   * Generally not surfaced to the developer and not captured in a log file.
+   */
   trace: LogFunction;
+
+  /**
+   * Log at `debug` level.
+   * Generally not surfaced to the developer and captured in a log file.
+   */
   debug: LogFunction;
+
+  /**
+   * Log at `verbose` level.
+   * Generally not surfaced to the developer and not captured in a log file.
+   */
   verbose: LogFunction;
+
+  /**
+   * Log at `info` level.
+   * Generally surfaced to the developer and captured in a log file.
+   */
   info: LogFunction;
+
+  /**
+   * Log at `warn` level.
+   * Generally surfaced to the developer and captured in a log file.
+   */
   warn: LogFunction;
+
+  /**
+   * Log at `error` level.
+   * Generally surfaced to the developer and captured in a log file.
+   */
   error: LogFunction;
+
+  /**
+   * Log an error and its stack trace at an `error` level.
+   * Generally surfaced to the developer and captured in a log file.
+   */
   catch: (error: Error | any, context?: LogContext, meta?: CallMetadata) => void;
 
+  /**
+   * Decorator to log method parameters and return value at the `info` level.
+   */
   method: (arg0?: never, arg1?: never, meta?: CallMetadata) => MethodDecorator;
+
+  /**
+   * Wrapper to log function parameters and return value at the `info` level.
+   */
   function: <F extends (...args: any[]) => any>(
     name: string,
     fn: F,
@@ -46,7 +88,14 @@ export interface LogMethods {
     },
   ) => F;
 
+  /**
+   * Log a horizontal rule at the `info` level.
+   */
   break: () => void;
+
+  /**
+   * Log a stack trace at the `info` level.
+   */
   stack: (message?: string, context?: never, meta?: CallMetadata) => void;
 }
 

@@ -425,6 +425,11 @@ export const QueryOptions = Schema.Struct({
    * Nested select statements will use this option to filter deleted objects.
    */
   deleted: Schema.optional(Schema.Literal('include', 'exclude', 'only')),
+
+  /**
+   * Diagnostics-only label for logs / tooling (not used by execution semantics).
+   */
+  debugLabel: Schema.optional(Schema.String),
 });
 
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
