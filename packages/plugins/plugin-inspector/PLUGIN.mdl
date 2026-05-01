@@ -1,0 +1,119 @@
+---
+id: org.dxos.plugin.inspector
+name: InspectorPlugin
+version: 0.1.0
+---
+
+Real-time AI agent execution inspector. Renders a side panel that shows every
+step an agent takes — user/assistant messages, tool calls and results,
+reasoning, and per-turn statistics — with the ability to stop the running
+process.
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+
+## Types
+
+```mdl
+type InspectorStepType
+  literals: user-message | assistant-message | tool-call | tool-result | reasoning | stats | running | turn-start | turn-completed | input-received
+```
+
+```mdl
+type InspectorStep
+  fields:
+    id: string                # unique identifier for the step
+    timestamp: number         # epoch ms of the event
+    type: InspectorStepType
+    label: string             # short timeline label
+    pending: boolean          # true while the step is in flight
+    toolName?: string
+    toolCallId?: string
+    toolInput?: string        # JSON-encoded tool args (for tool-call)
+    toolResult?: string       # tool output (for tool-result)
+    error?: string
+    content?: string          # full text body (for messages/reasoning)
+    tokens?:
+      input?: number
+      output?: number
+    duration?: number         # step duration in ms
+```
+
+## Components
+
+```mdl
+component InspectorPanel
+  desc: Top-level surface rendered as deck-companion--inspector. Reads trace messages from the active space's feed and renders the toolbar + timeline.
+```
+
+```mdl
+component InspectorToolbar
+  desc: Header showing live/idle status, aggregated metrics (tool calls, tokens, total duration), and stop/clear controls.
+  props:
+    processes: Process.Info[]
+    steps: InspectorStep[]
+    onStop?: () => void
+    onClear?: () => void
+```
+
+```mdl
+component ExecutionTimeline
+  desc: Vertical timeline rendering one entry per InspectorStep with role-specific icons and expandable details.
+  props:
+    steps: InspectorStep[]
+```
+
+## Features
+
+```mdl
+feat F-1: Live trace
+  req F-1.1: Subscribe to Trace.Message rows on the active space's feed.
+  req F-1.2: Convert raw trace messages into ordered InspectorStep entries via useEphemeralSteps.
+  req F-1.3: Reflect agent process state (RUNNING / HYBERNATING / IDLE) in the toolbar.
+```
+
+```mdl
+feat F-2: Aggregated metrics
+  req F-2.1: Sum input + output tokens across the current step list.
+  req F-2.2: Sum step durations for "wall time" rendering.
+  req F-2.3: Count tool-call steps for the lightning indicator.
+```
+
+```mdl
+feat F-3: Stop running agent
+  req F-3.1: When at least one process is RUNNING/HYBERNATING, surface a stop button.
+  req F-3.2: Clicking stop calls ProcessManager.attach(processId).terminate(). [planned]
+```
+
+```mdl
+feat F-4: Clear timeline
+  req F-4.1: Allow the user to clear the local step list without affecting the underlying trace feed.
+```
+
+## Acceptance
+
+```mdl
+test T-1: empty state
+  given: no agent processes and no trace messages on the active space
+  then: InspectorPanel renders with the toolbar in "Inspector" idle state and an empty timeline
+```
+
+```mdl
+test T-2: live agent
+  given: an agent process in state RUNNING and at least one tool-call step
+  then: toolbar shows the green Live indicator, the metrics row, and a stop button
+```
+
+```mdl
+test T-3: post-run idle
+  given: no running process but at least one historical tool-result step
+  then: toolbar shows the neutral Idle indicator plus a clear button
+```
