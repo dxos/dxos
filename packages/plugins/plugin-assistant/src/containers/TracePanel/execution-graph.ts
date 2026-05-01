@@ -22,7 +22,7 @@ const ICONS = {
     level: LogLevel.VERBOSE,
   },
   agentRequestEnd: {
-    icon: 'ph--check-circle--regular',
+    icon: 'ph--atom--regular',
     level: LogLevel.INFO,
   },
   userMessage: {
@@ -34,7 +34,7 @@ const ICONS = {
     level: LogLevel.VERBOSE,
   },
   statusMessage: {
-    icon: 'ph--dot-outline--regular',
+    icon: 'ph--info--regular',
     level: LogLevel.VERBOSE,
   },
   toolCall: {
@@ -50,7 +50,7 @@ const ICONS = {
     level: LogLevel.ERROR,
   },
   toolResultSuccess: {
-    icon: 'ph--check-circle--regular',
+    icon: 'ph--wrench--regular',
     level: LogLevel.INFO,
   },
   runningAgent: {
@@ -58,19 +58,19 @@ const ICONS = {
     level: LogLevel.INFO,
   },
   operationStart: {
-    icon: 'ph--play--regular',
+    icon: 'ph--function--regular',
     level: LogLevel.VERBOSE,
   },
   operationEnd: {
-    icon: 'ph--check-circle--regular',
+    icon: 'ph--function--regular',
     level: LogLevel.INFO,
   },
   operationEndError: {
-    icon: 'ph--x-circle--regular',
+    icon: 'ph--function--regular',
     level: LogLevel.ERROR,
   },
   operationEndSuccess: {
-    icon: 'ph--check-circle--regular',
+    icon: 'ph--function--regular',
     level: LogLevel.INFO,
   },
   agentRequestRunning: {
@@ -318,7 +318,9 @@ export const buildExecutionGraph = ({
                 CommitSelector.compose(CommitSelector.last()),
                 CommitSelector.andAlso(
                   CommitSelector.tag(event.meta.pid && tagPid(event.meta.pid)).pipe(
-                    CommitSelector.compose(CommitSelector.not(CommitSelector.tag(tagOperationBegin(event.meta.pid ?? 'unknown')))),
+                    CommitSelector.compose(
+                      CommitSelector.not(CommitSelector.tag(tagOperationBegin(event.meta.pid ?? 'unknown'))),
+                    ),
                     CommitSelector.compose(CommitSelector.last()),
                   ),
                 ),
@@ -328,7 +330,7 @@ export const buildExecutionGraph = ({
             timestamp: new Date(event.timestamp),
             icon: event.data.outcome === 'success' ? ICONS.operationEndSuccess.icon : ICONS.operationEndError.icon,
             level: event.data.outcome === 'success' ? ICONS.operationEndSuccess.level : ICONS.operationEndError.level,
-            message: event.data.name ?? event.data.key,
+            message: `${event.data.name ?? event.data.key} - ${event.data.outcome === 'success' ? 'Success' : 'Error'}`,
           },
           {
             replace:
