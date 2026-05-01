@@ -278,6 +278,9 @@
       "path": "../../plugins/plugin-inbox"
     },
     {
+      "path": "../../plugins/plugin-inspector"
+    },
+    {
       "path": "../../plugins/plugin-iroh-beacon"
     },
     {

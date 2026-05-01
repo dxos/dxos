@@ -615,6 +615,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-inspector/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-iroh-beacon/package.json",
           "jsonpath": "$.version"
         },

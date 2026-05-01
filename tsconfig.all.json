@@ -355,6 +355,9 @@
       "path": "packages/plugins/plugin-inbox/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-inspector/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-iroh-beacon/tsconfig.json"
     },
     {
