@@ -26,6 +26,9 @@ import { Integration } from '../types';
 const whenSpace = (node: Node.Node): Option.Option<Space> =>
   node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none();
 
+/** Type for the per-space "Integrations" container node. */
+const INTEGRATIONS_SECTION_TYPE = `${meta.id}.space-settings`;
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
@@ -91,12 +94,14 @@ export default Capability.makeModule(
       // entry. Sits in the unpositioned middle band — General Settings
       // hoists above, Database falls back below.
       //
-      // Integration objects are listed as direct children. Their `targets`
-      // (e.g. Trello kanbans) are NOT surfaced under the Integration node —
-      // those live in the database subgraph as regular objects of their
-      // own type, accessed via the standard Type/All path.
+      // Split into two extensions so children stay reactive: the framework's
+      // connector diff only tracks the top-level node ids returned, so
+      // inlining `nodes:` here would leak old child edges/nodes when an
+      // integration is deleted. Listing the children from a *separate*
+      // connector keyed off this section's type lets the framework
+      // properly remove edges for objects that disappear from the query.
       GraphBuilder.createExtension({
-        id: 'integrations',
+        id: 'integrations-section',
         match: whenSpace,
         connector: (space, get) => {
           const integrations = get(AtomQuery.make(space.db, Filter.type(Integration.Integration)));
@@ -106,7 +111,7 @@ export default Capability.makeModule(
           return Effect.succeed([
             Node.make({
               id: 'integrations',
-              type: `${meta.id}.space-settings`,
+              type: INTEGRATIONS_SECTION_TYPE,
               // Pure container node — clicking just expands the children
               // (each Integration object). The legacy "Manage integrations"
               // article was removed; per-Integration management lives on
@@ -123,17 +128,36 @@ export default Capability.makeModule(
                 droppable: false,
                 space,
               },
-              nodes: integrations
-                .map((integration) =>
-                  createObjectNode({
-                    db: space.db,
-                    object: integration,
-                    resolve,
-                  }),
-                )
-                .filter((node): node is NonNullable<typeof node> => node !== null),
             }),
           ]);
+        },
+      }),
+
+      // Lists the individual Integration objects under the section node.
+      // Matches by section type and re-derives the space from the section
+      // node's `properties.space`. Their `targets` (e.g. Trello kanbans)
+      // are NOT surfaced as children — those live in the database subgraph
+      // as regular objects of their own type, accessed via the standard
+      // Type/All path.
+      GraphBuilder.createExtension({
+        id: 'integration-listing',
+        match: (node) => {
+          const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+          return node.type === INTEGRATIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
+        },
+        connector: (space, get) => {
+          const integrations = get(AtomQuery.make(space.db, Filter.type(Integration.Integration)));
+          return Effect.succeed(
+            integrations
+              .map((integration) =>
+                createObjectNode({
+                  db: space.db,
+                  object: integration,
+                  resolve,
+                }),
+              )
+              .filter((node): node is NonNullable<typeof node> => node !== null),
+          );
         },
       }),
     ]);
