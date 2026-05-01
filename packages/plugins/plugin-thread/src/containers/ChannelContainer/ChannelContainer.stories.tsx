@@ -18,11 +18,10 @@ import { Query, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { Message, Thread } from '@dxos/types';
 
+import { translations } from '#translations';
 import { Channel } from '#types';
 
 import { ThreadPlugin } from '../../ThreadPlugin';
-
-import { translations } from '#translations';
 import { ChannelContainer, type ChannelContainerProps } from './ChannelContainer';
 
 // TODO(wittjosiah): Channel doesn't render full height.
