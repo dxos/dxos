@@ -24,7 +24,7 @@ export const ROLLDOWN_LOG_META_PLUGIN_NAME = 'dxos:rolldown-log-meta';
 
 const PLUGIN_NAME = 'dxos:vite-plugin-log';
 
-const LOG_META_EXCLUDE_ID_DEFAULT = /node_modules|\\0/;
+const LOG_META_EXCLUDE_ID_DEFAULT = /node_modules|\0/;
 
 /** Inputs matching Rolldown's `transform` hook `meta` plus `code` / `id`. */
 export type RolldownLogMetaHookContext = {
@@ -165,7 +165,7 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
       order: 'pre' as const,
       filter: {
         id: {
-          exclude: tr.excludeId ?? /node_modules|\\0/,
+          exclude: tr.excludeId ?? LOG_META_EXCLUDE_ID_DEFAULT,
         },
         moduleType: {
           include: ['js', 'jsx', 'ts', 'tsx'],
