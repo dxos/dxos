@@ -5,7 +5,7 @@
 import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
 
-import { TEST_TAGS } from '../../../vitest.base.config';
+import { TEST_TAGS } from '../../../vitest.tags';
 
 // TODO(wittjosiah): Get working with vitest.base.config.ts.
 export default defineConfig({

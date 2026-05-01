@@ -21,6 +21,9 @@ import PluginImportSource from '@dxos/vite-plugin-import-source';
 // build the plugin first, which introduces a moon dep cycle through @dxos/log
 // (vite-plugin-log -> log -> ... -> log:test -> vite-plugin-log).
 import { DxosLogPlugin } from './tools/vite-plugin-log/src/plugin.ts';
+import { TEST_TAGS } from './vitest.tags';
+
+export { TEST_TAGS };
 
 const isDebug = !!process.env.VITEST_DEBUG;
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
@@ -51,19 +54,6 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
     },
   };
 };
-
-/**
- * Native Vitest tags used across the repo. Filter at the CLI with
- * `--tagsFilter "<expr>"` (boolean expressions over these names).
- */
-export const TEST_TAGS = [
-  { name: 'flaky', description: 'Tests that may be flaky (Trunk pass-on-rerun integration).' },
-  { name: 'llm', description: 'Tests that hit external LLM APIs (Anthropic, OpenAI, Ollama).' },
-  { name: 'sync', description: 'Tests that hit external sync APIs (Discord, Linear, browser-based).' },
-  { name: 'sync-e2e', description: 'End-to-end tests against the real EDGE worker.' },
-  { name: 'functions-e2e', description: 'End-to-end tests that deploy and invoke real Cloudflare functions.' },
-  { name: 'tracing-e2e', description: 'End-to-end tracing/observability tests against SigNoz.' },
-];
 
 const createStorybookProject = (dirname: string) =>
   defineProject({

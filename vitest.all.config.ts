@@ -7,7 +7,7 @@ import { defineConfig } from 'vitest/config';
 
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 
-import { TEST_TAGS } from './vitest.base.config';
+import { TEST_TAGS } from './vitest.tags';
 
 /**
  * Config for the vitest vscode extension.
