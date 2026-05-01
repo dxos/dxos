@@ -208,7 +208,7 @@ export const Streaming: Story = {
     content: THREAD_1,
     options: {
       autoScroll: true,
-      wire: true,
+      typewriter: true,
       cursor: true,
     },
   },
@@ -274,7 +274,7 @@ export const Reasoning: Story = {
     content: REASONING_PARTS.body,
     options: {
       autoScroll: true,
-      wire: true,
+      typewriter: true,
       cursor: true,
     },
   },
