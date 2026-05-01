@@ -13,7 +13,7 @@ import { Card } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
-import { FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
+import { ExpandoCard, FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -69,6 +69,17 @@ export default Capability.makeModule(() =>
       //
       // Fallback for any object.
       //
+
+      Surface.create({
+        id: 'fallback-expando',
+        role: 'card--content',
+        position: 'fallback',
+        filter: (data): data is { subject: Obj.Unknown } =>
+          Obj.isObject(data.subject) && !Obj.getSchema(data.subject),
+        component: ({ data, role }) => {
+          return <ExpandoCard role={role} subject={data.subject} />;
+        },
+      }),
 
       Surface.create({
         id: 'fallback-popover',

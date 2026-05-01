@@ -6,6 +6,7 @@ import React, { type FC, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
 import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/testing';
@@ -87,5 +88,14 @@ export const createTask = (): Task.Task => {
   return Obj.make(Task.Task, {
     title: random.lorem.sentence(),
     status: random.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
+  });
+};
+
+export const createExpando = (): TestSchema.Expando => {
+  return Obj.make(TestSchema.Expando, {
+    name: random.person.fullName(),
+    email: random.internet.email(),
+    age: random.number.int({ min: 18, max: 80 }),
+    active: random.datatype.boolean(),
   });
 };
