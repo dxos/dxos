@@ -8,13 +8,13 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { createEdgeIdentity } from '@dxos/client/edge';
+import type { OperationInvoker as OperationInvokerExports } from '@dxos/compute';
 import { Context as DxContext } from '@dxos/context';
 import { type Database, type Key, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import type { OperationInvoker as OperationInvokerExports } from '@dxos/compute';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { AccessToken } from '@dxos/types';
 

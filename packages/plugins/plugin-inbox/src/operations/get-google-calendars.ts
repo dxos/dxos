@@ -9,9 +9,9 @@ import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Obj } from '@dxos/echo';
 import { withAuthorization } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
+import { Database, Obj } from '@dxos/echo';
 
 import { AccessTokenNotPopulatedError, IntegrationDatabaseMissingError } from '../errors';
 import { GetGoogleCalendars } from './definitions';

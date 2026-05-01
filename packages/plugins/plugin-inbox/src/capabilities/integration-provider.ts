@@ -9,8 +9,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Obj, Ref } from '@dxos/echo';
 import { withAuthorization } from '@dxos/compute';
+import { Obj, Ref } from '@dxos/echo';
 import {
   IntegrationProvider as IntegrationProviderCapability,
   type OnTokenCreated,

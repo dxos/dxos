@@ -5,8 +5,8 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { Database, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Database, Obj } from '@dxos/echo';
 
 import { IntegrationDatabaseMissingError } from '../errors';
 import { TrelloApi } from '../services';

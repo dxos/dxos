@@ -7,8 +7,8 @@ import type * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import type { Obj, Ref } from '@dxos/echo';
 import type { Operation } from '@dxos/compute';
+import type { Obj, Ref } from '@dxos/echo';
 import type { OAuthProvider } from '@dxos/protocols';
 import type { AccessToken } from '@dxos/types';
 

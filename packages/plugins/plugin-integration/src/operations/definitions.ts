@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/types';
 
 import { meta } from '#meta';
