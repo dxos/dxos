@@ -2,6 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './ChatDialog';
-export * from './ChatEditor';
 export * from './ChatStatus';
+export * from './format';

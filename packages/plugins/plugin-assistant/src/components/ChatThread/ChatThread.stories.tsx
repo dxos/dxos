@@ -136,7 +136,7 @@ export const Delayed: Story = {
     delay: 500,
     options: {
       autoScroll: true,
-      wire: true,
+      typewriter: true,
       cursor: true,
     },
   },

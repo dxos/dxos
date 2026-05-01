@@ -31,6 +31,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     classNames,
+    placeholder: 'Ask a question...',
   },
 };
 
@@ -41,12 +42,12 @@ export const WithSuggestions: Story = {
     onSubmit: (text) => {
       log('onSubmit', { text });
     },
+
     // onSuggest: (text) => {
     //   const trimmed = text.trim().toLowerCase();
     //   if (trimmed.length < 2) {
     //     return [];
     //   }
-
     //   const suggestions = [
     //     'Create a kanban board',
     //     'Create a new project',
@@ -54,7 +55,6 @@ export const WithSuggestions: Story = {
     //     "Let's play chess",
     //     'Show me Paris on a map',
     //   ];
-
     //   return suggestions.filter((s) => s.toLowerCase().startsWith(text));
     // },
   },

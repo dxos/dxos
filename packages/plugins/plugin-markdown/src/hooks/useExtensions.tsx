@@ -33,7 +33,7 @@ import {
   preview,
   replacer,
   selectionState,
-  typewriter,
+  snippets,
 } from '@dxos/ui-editor';
 import { type EditorViewMode, type RenderCallback } from '@dxos/ui-editor/types';
 import { isTruthy, safeUrl } from '@dxos/util';
@@ -112,7 +112,6 @@ export const useExtensions = ({
       settings?.editorInputMode,
       settings?.folding,
       settings?.numberedHeadings,
-      settings?.typewriter,
       platform,
       onSelectObject,
     ],
@@ -187,9 +186,9 @@ const createBaseExtensions = ({
   }
 
   if (settings?.debug) {
-    const items = settings.typewriter?.split(/[,\n]/) ?? '';
+    const items = settings.snippets?.split(/[,\n]/) ?? '';
     if (items) {
-      extensions.push(typewriter({ items }));
+      extensions.push(snippets({ items }));
     }
   }
 

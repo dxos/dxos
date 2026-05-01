@@ -112,6 +112,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               );
 
               log('begin request', { prompt });
+              log('trace agent request begin');
               yield* Trace.write(AgentRequestBegin, {});
               yield* session
                 .createRequest({
