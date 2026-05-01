@@ -57,6 +57,11 @@ export type TimelineProps = ThemedClassName<{
   /** Optional whitelist. */
   branches?: string[];
   commits?: Commit[];
+  /**
+   * Controlled value for the highlighted branch.
+   * When provided, takes precedence over the branch derived from the currently selected commit.
+   */
+  currentBranch?: string | null;
   showTimestamp?: boolean;
   showIcon?: boolean;
   compact?: boolean;
@@ -80,6 +85,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
       classNames,
       branches: branchesProp,
       commits = empty,
+      currentBranch,
       showTimestamp = false,
       showIcon = true,
       compact = false,
@@ -209,11 +215,25 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
     const currentRef = useDynamicRef(current);
     const currentCommit = useMemo(() => (current !== undefined ? commits[current] : undefined), [current, commits]);
 
+    // Controlled `currentBranch` takes precedence over the branch derived from the selected commit.
+    const highlightedBranch = currentBranch ?? currentCommit?.branch;
+
     useEffect(() => {
       onCurrentChange?.({ current, commit: current === undefined ? undefined : commits[current] });
       const el = containerRef.current?.querySelector(`[data-index="${current}"]`);
       el?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
     }, [current]);
+
+    // When the controlled `currentBranch` changes, jump to the first commit on that branch.
+    useEffect(() => {
+      if (!currentBranch) {
+        return;
+      }
+      const index = commits.findIndex((commit) => commit.branch === currentBranch);
+      if (index >= 0) {
+        setCurrent(index);
+      }
+    }, [currentBranch]);
 
     useEffect(() => {
       if (!containerRef.current) {
@@ -311,8 +331,8 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                       data-index={index}
                       aria-current={current === index}
                       className={mx(
-                        'group col-span-full grid grid-cols-subgrid gap-1 overflow-hidden items-center',
-                        'aria-[current=true]:bg-active-surface __hover:bg-hover-surface',
+                        'group col-span-full grid grid-cols-subgrid gap-1 overflow-hidden items-center px-[2px]',
+                        'dx-current dx-hover',
                         hasLink && 'cursor-pointer',
                       )}
                       style={{ height: `${options.lineHeight}px` }}
@@ -325,7 +345,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                           spans={spans}
                           index={index}
                           commit={commit}
-                          currentCommit={currentCommit}
+                          highlightedBranch={highlightedBranch}
                           options={options}
                         />
                       </div>
@@ -398,14 +418,14 @@ type LineVectorProps = {
   spans: Map<string, Span>;
   index: number;
   commit: Commit;
-  currentCommit: Commit | undefined;
+  highlightedBranch: string | undefined;
   options: TimelineOptions;
 };
 
 /**
  * SVG for node and connector paths.
  */
-const LineVector = ({ branchLane, laneCount, spans, index, commit, currentCommit, options }: LineVectorProps) => {
+const LineVector = ({ branchLane, laneCount, spans, index, commit, highlightedBranch, options }: LineVectorProps) => {
   const halfHeight = options.lineHeight / 2;
   const cx = (c: number) => c * options.columnWidth + options.columnWidth / 2;
   const getBranchIndex = (branch: string): number => branchLane.get(branch) ?? -1;
@@ -449,7 +469,7 @@ const LineVector = ({ branchLane, laneCount, spans, index, commit, currentCommit
   const color = colors[col % colors.length];
   const opacity = (branch: string | undefined) => [
     'duration-500 transition-opacity',
-    branch === currentCommit?.branch ? 'opacity-100' : 'opacity-50',
+    branch === highlightedBranch ? 'opacity-100' : 'opacity-50',
   ];
 
   return (
