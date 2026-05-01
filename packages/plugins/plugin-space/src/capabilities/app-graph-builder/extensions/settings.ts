@@ -4,12 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { isPersonalSpace } from '@dxos/app-toolkit';
+import { AppNodeMatcher, isPersonalSpace } from '@dxos/app-toolkit';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-
-import { whenSpace } from './shared';
 
 //
 // Extension Factory
@@ -32,7 +30,7 @@ import { whenSpace } from './shared';
 export const createSettingsExtensions = Effect.fnUntraced(function* () {
   const extension = yield* GraphBuilder.createExtension({
     id: 'settings-sections',
-    match: whenSpace,
+    match: AppNodeMatcher.whenSpace,
     connector: (space) => {
       const personal = isPersonalSpace(space);
       return Effect.succeed([

@@ -17,7 +17,6 @@ import { ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
 import { type Label } from '@dxos/ui-types';
 
 import { meta } from '#meta';
-import { SPACE_TYPE } from '#types';
 
 export {
   type MetadataResolver,
@@ -57,14 +56,6 @@ export const META_NS: { ns: string } = { ns: meta.id };
 
 export const BLOCK_REORDER_ABOVE = (_source: TreeData, instruction: any) => instruction.type === 'reorder-above';
 export const CAN_DROP_SPACE = (source: TreeData) => Obj.isObject(source.item.data) || isSpace(source.item.data);
-
-//
-// Matchers
-//
-
-/** Match space nodes and return the Space object. */
-export const whenSpace = (node: Node.Node): Option.Option<Space> =>
-  node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none();
 
 //
 // Caches (space-specific, not moved to app-toolkit)

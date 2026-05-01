@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, getActiveSpace, getPersonalSpace, isPersonalSpace } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNodeMatcher, getActiveSpace, getPersonalSpace, isPersonalSpace } from '@dxos/app-toolkit';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Filter, Obj } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
@@ -29,7 +29,6 @@ import {
   checkPendingMigration,
   spaceActionsCache,
   spaceRearrangeCache,
-  whenSpace,
 } from './shared';
 
 //
@@ -174,7 +173,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 
     GraphBuilder.createExtension({
       id: 'actions',
-      match: whenSpace,
+      match: AppNodeMatcher.whenSpace,
       actions: (space, get) => {
         const [client] = get(capabilities.atom(ClientCapabilities.Client));
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);

@@ -6,22 +6,18 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, createObjectNode } from '@dxos/app-toolkit';
-import { type Space, isSpace } from '@dxos/client/echo';
+import { AppCapabilities, AppNodeMatcher, createObjectNode } from '@dxos/app-toolkit';
+import { isSpace } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SPACE_TYPE } from '@dxos/plugin-space/types';
 
 import { meta } from '#meta';
 import { IntegrationProvider, type IntegrationProviderEntry } from '#types';
 
 import { Integration } from '../types';
-
-const whenSpace = (node: Node.Node): Option.Option<Space> =>
-  node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none();
 
 /** Type for the per-space "Integrations" container node. */
 const INTEGRATIONS_SECTION_TYPE = `${meta.id}.space-settings`;
@@ -84,7 +80,7 @@ export default Capability.makeModule(
       // Separate listing extension so graph reacts when targets are deleted.
       GraphBuilder.createExtension({
         id: 'integrations-section',
-        match: whenSpace,
+        match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           const integrations = get(AtomQuery.make(space.db, Filter.type(Integration.Integration)));
           if (integrations.length === 0) {

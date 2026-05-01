@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, LayoutOperation, Segments } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Segments } from '@dxos/app-toolkit';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Collection, Filter, Obj, Query, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
@@ -35,7 +35,6 @@ import {
   createObjectNode,
   downloadBlob,
   getDynamicLabel,
-  whenSpace,
 } from './shared';
 
 //
@@ -53,7 +52,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
     // Types section virtual node under each space.
     GraphBuilder.createExtension({
       id: 'types-section',
-      match: whenSpace,
+      match: AppNodeMatcher.whenSpace,
       connector: (space, get) => {
         const spaceState = get(CreateAtom.fromObservable(space.state));
         if (spaceState !== SpaceState.SPACE_READY) {

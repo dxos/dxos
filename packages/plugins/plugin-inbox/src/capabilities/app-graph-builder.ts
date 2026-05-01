@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, getSpaceIdFromPath } from '@dxos/app-toolkit';
-import { type Space, isSpace } from '@dxos/client/echo';
+import { AppCapabilities, AppNode, AppNodeMatcher, getSpaceIdFromPath } from '@dxos/app-toolkit';
+import { isSpace } from '@dxos/client/echo';
 import { type Feed, Filter, Key, Obj, Query, Ref } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
@@ -16,7 +16,6 @@ import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Integration } from '@dxos/plugin-integration/types';
-import { SPACE_TYPE } from '@dxos/plugin-space/types';
 import { getLinkedVariant, isLinkedSegment, linkedSegment } from '@dxos/react-ui-attention';
 import { type Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
@@ -35,9 +34,6 @@ import { getAllMailId, getDraftsId, getMailboxesSectionId } from '../paths';
 
 const FILTER_TYPE = `${Mailbox.Mailbox.typename}-filter`;
 
-const whenSpace = (node: Node.Node): Option.Option<Space> =>
-  node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none();
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const selectionManager = yield* Capability.get(AttentionCapabilities.Selection);
@@ -52,7 +48,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'mailboxes-section',
-        match: whenSpace,
+        match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           const mailboxes = get(AtomQuery.make(space.db, Filter.type(Mailbox.Mailbox)));
           if (mailboxes.length === 0) {
@@ -332,69 +328,69 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: 'sync-mailbox',
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
-        actions: (mailbox) =>
-          Effect.gen(function* () {
-            const db = Obj.getDatabase(mailbox);
-            if (!db) {
-              return [];
-            }
-            const integrations = yield* Effect.promise(() => db.query(Filter.type(Integration.Integration)).run());
-            const mailboxParent = integrations.find((integration) =>
-              integration.targets.some((target) => target.object?.dxn.asEchoDXN()?.echoId === mailbox.id),
-            );
-            if (!mailboxParent) {
-              return [];
-            }
-            return [
-              {
-                id: 'sync',
-                data: () =>
-                  Operation.invoke(InboxOperation.SyncMailbox, {
-                    integration: Ref.make(mailboxParent),
-                    mailbox: Ref.make(mailbox),
-                  }),
-                properties: {
-                  label: ['sync-mailbox.label', { ns: meta.id }],
-                  icon: 'ph--arrows-clockwise--regular',
-                  disposition: 'list-item',
-                },
+        // Reactive: AtomQuery + the integration's `targets` field. Rebuilds
+        // when an integration referencing this mailbox is added or removed.
+        actions: (mailbox, get) => {
+          const db = Obj.getDatabase(mailbox);
+          if (!db) {
+            return Effect.succeed([]);
+          }
+          const integrations = get(AtomQuery.make(db, Filter.type(Integration.Integration)));
+          const integration = integrations.find((integration) =>
+            integration.targets.some((target) => target.object?.dxn.asEchoDXN()?.echoId === mailbox.id),
+          );
+          if (!integration) {
+            return Effect.succeed([]);
+          }
+          return Effect.succeed([
+            {
+              id: 'sync',
+              data: () =>
+                Operation.invoke(InboxOperation.SyncMailbox, {
+                  integration: Ref.make(integration),
+                  mailbox: Ref.make(mailbox),
+                }),
+              properties: {
+                label: ['sync-mailbox.label', { ns: meta.id }],
+                icon: 'ph--arrows-clockwise--regular',
+                disposition: 'list-item',
               },
-            ];
-          }),
+            },
+          ]);
+        },
       }),
 
       GraphBuilder.createExtension({
         id: 'sync-calendar',
         match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
-        actions: (calendar) =>
-          Effect.gen(function* () {
-            const db = Obj.getDatabase(calendar);
-            if (!db) {
-              return [];
-            }
-            const integrations = yield* Effect.promise(() => db.query(Filter.type(Integration.Integration)).run());
-            const calendarParent = integrations.find((integration) =>
-              integration.targets.some((target) => target.object?.dxn.asEchoDXN()?.echoId === calendar.id),
-            );
-            if (!calendarParent) {
-              return [];
-            }
-            return [
-              {
-                id: 'sync',
-                data: () =>
-                  Operation.invoke(InboxOperation.SyncCalendar, {
-                    integration: Ref.make(calendarParent),
-                    calendar: Ref.make(calendar),
-                  }),
-                properties: {
-                  label: ['sync-calendar.label', { ns: meta.id }],
-                  icon: 'ph--arrows-clockwise--regular',
-                  disposition: 'list-item',
-                },
+        actions: (calendar, get) => {
+          const db = Obj.getDatabase(calendar);
+          if (!db) {
+            return Effect.succeed([]);
+          }
+          const integrations = get(AtomQuery.make(db, Filter.type(Integration.Integration)));
+          const integration = integrations.find((integration) =>
+            integration.targets.some((target) => target.object?.dxn.asEchoDXN()?.echoId === calendar.id),
+          );
+          if (!integration) {
+            return Effect.succeed([]);
+          }
+          return Effect.succeed([
+            {
+              id: 'sync',
+              data: () =>
+                Operation.invoke(InboxOperation.SyncCalendar, {
+                  integration: Ref.make(integration),
+                  calendar: Ref.make(calendar),
+                }),
+              properties: {
+                label: ['sync-calendar.label', { ns: meta.id }],
+                icon: 'ph--arrows-clockwise--regular',
+                disposition: 'list-item',
               },
-            ];
-          }),
+            },
+          ]);
+        },
       }),
     ]);
 

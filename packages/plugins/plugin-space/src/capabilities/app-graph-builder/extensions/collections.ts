@@ -6,7 +6,14 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, Segments, getObjectPathFromObject, toUrlPath } from '@dxos/app-toolkit';
+import {
+  AppCapabilities,
+  AppNodeMatcher,
+  LayoutOperation,
+  Segments,
+  getObjectPathFromObject,
+  toUrlPath,
+} from '@dxos/app-toolkit';
 import { SpaceState, getSpace, isSpace } from '@dxos/client/echo';
 import { Collection, Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
@@ -29,7 +36,6 @@ import {
   createObjectNode,
   getCollectionGraphNodePartials,
   getDynamicLabel,
-  whenSpace,
 } from './shared';
 
 //
@@ -51,7 +57,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     // Collections section virtual node under each space.
     GraphBuilder.createExtension({
       id: 'collections-section',
-      match: whenSpace,
+      match: AppNodeMatcher.whenSpace,
       connector: (space, get) => {
         const spaceState = get(CreateAtom.fromObservable(space.state));
         if (spaceState !== SpaceState.SPACE_READY) {
