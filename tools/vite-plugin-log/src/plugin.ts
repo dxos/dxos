@@ -118,8 +118,14 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
       configureServer(server: ViteDevServer) {
         const logPath = path.isAbsolute(logFilename) ? logFilename : path.join(process.cwd(), logFilename);
 
-        fs.mkdirSync(path.dirname(logPath), { recursive: true });
-        fs.writeFileSync(logPath, '', 'utf8');
+        // Best-effort init: bad permissions / read-only volume should warn, not abort the dev server.
+        try {
+          fs.mkdirSync(path.dirname(logPath), { recursive: true });
+          fs.writeFileSync(logPath, '', 'utf8');
+        } catch (err) {
+          server.config.logger.error(`[${PLUGIN_NAME}] log sink init failed: ${String(err)}`, { timestamp: true });
+          return;
+        }
 
         server.ws.on('dxos-plugin:log', (data: unknown) => {
           if (data == null || typeof data !== 'object') {
@@ -129,11 +135,12 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
           if (typeof chunk !== 'string' || chunk.length === 0) {
             return;
           }
-          try {
-            fs.appendFileSync(logPath, chunk, 'utf8');
-          } catch (err) {
-            server.config.logger.error(`[${PLUGIN_NAME}] append failed: ${String(err)}`, { timestamp: true });
-          }
+          // Async append so a high-volume HMR doesn't block the websocket event loop.
+          fs.appendFile(logPath, chunk, 'utf8', (err) => {
+            if (err) {
+              server.config.logger.error(`[${PLUGIN_NAME}] append failed: ${String(err)}`, { timestamp: true });
+            }
+          });
         });
       },
 
