@@ -2,8 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Array, Order, pipe, Pipeable, Struct } from 'effect';
+import * as Array from 'effect/Array';
+import { pipe } from 'effect/Function';
+import * as Order from 'effect/Order';
+import * as Pipeable from 'effect/Pipeable';
 import * as Predicate from 'effect/Predicate';
+import * as Struct from 'effect/Struct';
 
 import { AGENT_PROCESS_KEY, AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { Trace } from '@dxos/compute';
