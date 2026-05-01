@@ -207,6 +207,64 @@ describe('parser', () => {
       }),
     );
 
+    // Regression: an unrecognized XML-style tag in the model's text response (e.g. the user
+    // asks "respond with your name inside an xml tag" and the model emits `<name>Claude</name>`)
+    // used to be silently dropped because `makeContentBlock` returned `undefined` for any tag
+    // not in `ModelTags`. The parser must instead preserve the original text.
+    it.effect(
+      'unknown xml-style tag is preserved as literal text',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([...text(['<name>Claude</name>'])])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect)
+          .pipe(Effect.map(Chunk.toArray));
+
+        expect(result).toEqual([
+          {
+            _tag: 'text',
+            text: '<name>Claude</name>',
+          },
+        ] satisfies ContentBlock.Any[]);
+      }),
+    );
+
+    // Regression: an *unclosed* unrecognized tag must NOT have a synthetic `</tag>`
+    // appended. Reconstructing one corrupts the response text — the chat doc would render
+    // a phantom close tag mid-message and confuse downstream parsers.
+    it.effect(
+      'unclosed unknown xml-style tag is preserved without a synthetic close',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([...text(['You sent `<foo>`, which looks like a tag'])])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect)
+          .pipe(Effect.map(Chunk.toArray));
+
+        expect(result).toEqual([
+          { _tag: 'text', text: 'You sent `' },
+          { _tag: 'text', text: '<foo>`, which looks like a tag' },
+        ] satisfies ContentBlock.Any[]);
+      }),
+    );
+
+    // Regression: the model writes a sentence that contains an unrecognized tag — the
+    // surrounding text plus the tag must all be preserved (the tag splits the stream into
+    // separate text blocks at the state-machine boundaries, but no content is dropped).
+    it.effect(
+      'unknown xml-style tag mixed with surrounding text is preserved',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([...text(['My name is <name>Claude</name>.'])])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect)
+          .pipe(Effect.map(Chunk.toArray));
+
+        expect(result).toEqual([
+          { _tag: 'text', text: 'My name is ' },
+          { _tag: 'text', text: '<name>Claude</name>' },
+          { _tag: 'text', text: '.' },
+        ] satisfies ContentBlock.Any[]);
+      }),
+    );
+
     it.effect(
       'works when every character is streamed individually',
       Effect.fn(function* ({ expect }) {

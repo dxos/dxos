@@ -8,7 +8,8 @@ import { GeoLocation, type GeoPoint } from '@dxos/echo/internal';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
 
-import { translationKey } from '../../../translations';
+import { translationKey } from '#translations';
+
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 export const GeoPointField = ({

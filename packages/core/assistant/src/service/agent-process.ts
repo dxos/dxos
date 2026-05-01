@@ -14,12 +14,12 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AiService, OpaqueToolkit, type ModelName } from '@dxos/ai';
+import { Trace } from '@dxos/compute';
+import { Operation, OperationRegistry } from '@dxos/compute';
 import { Database, DXN, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { Trace } from '@dxos/functions';
 import { Process, ProcessManager, StorageService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { Operation, OperationRegistry } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
 import { type McpServerConfig, AiSession } from '../conversation';
@@ -111,6 +111,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               );
 
               log('begin request', { prompt });
+              log('trace agent request begin');
               yield* Trace.write(AgentRequestBegin, {});
               yield* session
                 .createRequest({

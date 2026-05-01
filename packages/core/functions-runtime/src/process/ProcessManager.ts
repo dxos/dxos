@@ -835,6 +835,14 @@ export class ProcessManagerImpl implements Manager {
                 },
               ],
             });
+            log('process trace emit', {
+              pid: id,
+              parentPid: options?.parentProcessId,
+              processName: params.name,
+              eventKey: event.key,
+              isEphemeral: message.isEphemeral,
+              route: message.isEphemeral ? 'ephemeral-push' : 'trace-sink',
+            });
             if (message.isEphemeral) {
               handleRef?.pushEphemeral(message);
             } else {

@@ -30,10 +30,10 @@ import { ViewModel, getTypenameFromQuery } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
 import { useProjectionModel } from '#hooks';
+import { translations } from '#translations';
 import { Kanban } from '#types';
 
 import { KanbanPlugin } from '../../KanbanPlugin';
-import { translations } from '../../translations';
 
 random.seed(0);
 

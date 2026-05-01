@@ -9,7 +9,7 @@ import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 import { InternalError } from '@dxos/errors';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { Integration } from '@dxos/plugin-integration/types';
 import { Kanban } from '@dxos/plugin-kanban/types';
 import { Expando } from '@dxos/schema';

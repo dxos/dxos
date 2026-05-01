@@ -5,8 +5,8 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 
 import { GoogleMail } from '../../../apis';
 import { GmailSendMessageInvalidError } from '../../../errors';

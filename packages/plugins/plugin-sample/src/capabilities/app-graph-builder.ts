@@ -13,9 +13,9 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, createObjectNode } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
+import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
-import { Operation } from '@dxos/operation';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';

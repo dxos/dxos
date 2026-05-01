@@ -13,10 +13,9 @@ import * as Predicate from 'effect/Predicate';
 import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
 
-import { Database, Filter, Obj, Query, Ref as EchoRef } from '@dxos/echo';
-import { Feed } from '@dxos/echo';
+import { Operation } from '@dxos/compute';
+import { Database, Feed, Filter, Obj, Query, Ref as EchoRef } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 import { Integration } from '@dxos/plugin-integration/types';
 import { type Event } from '@dxos/types';
 

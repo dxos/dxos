@@ -10,7 +10,8 @@ import { Obj } from '@dxos/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { EditMessage, type EditMessageProps } from './EditMessage';
 
 const createDraft = () =>

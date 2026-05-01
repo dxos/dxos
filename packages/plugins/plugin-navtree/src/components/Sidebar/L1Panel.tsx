@@ -158,44 +158,75 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
             caller={NAV_TREE_ITEM}
           />
         )}
-        {menuActions.length === 1 && (
-          <IconButton
-            density='coarse'
-            classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
-            variant='ghost'
-            icon={menuActions[0].properties?.icon ?? 'ph--placeholder--regular'}
-            iconOnly
-            label={toLocalizedString(menuActions[0].properties?.label, t)}
-            data-testid={menuActions[0].properties?.testId}
-            onClick={() => onAction(menuActions[0] as Node.Action)}
-          />
-        )}
-        {menuActions.length > 1 && (
-          <Menu.Root caller={NAV_TREE_ITEM} onAction={onAction}>
-            <Menu.Trigger asChild>
-              <IconButton
-                density='coarse'
-                classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
-                variant='ghost'
-                icon='ph--dots-three-vertical--regular'
-                iconOnly
-                label={t('tree-item-actions.label')}
-                data-testid='navtree.treeItem.actionsLevel0'
-              />
-            </Menu.Trigger>
-            <Menu.Content group={item} items={menuActions as MenuItem[]} />
-          </Menu.Root>
-        )}
+        <MenuActions item={item} menuActions={menuActions} onAction={onAction} />
         {ItemEnd && <ItemEnd node={item} open />}
       </div>
     </div>
   );
 };
 
+type L1MenuActions = {
+  primaryAction: Node.ActionLike;
+  groupedActions: Record<string, Node.Action[]>;
+  menuActions: Node.Action[];
+  onAction: (action: Node.Action, params?: Node.InvokeProps) => void;
+};
+
+/**
+ * Header menu actions for an L1 workspace tab. Renders nothing for an empty
+ * `menuActions`, a single inline icon button for one action, and a
+ * `…`-menu trigger for multiple.
+ */
+const MenuActions = ({
+  item,
+  menuActions,
+  onAction,
+}: {
+  item: Node.Node;
+} & Pick<L1MenuActions, 'menuActions' | 'onAction'>) => {
+  const { t } = useTranslation(meta.id);
+
+  if (menuActions.length === 0) {
+    return null;
+  }
+
+  if (menuActions.length === 1) {
+    return (
+      <IconButton
+        density='coarse'
+        classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
+        variant='ghost'
+        icon={menuActions[0].properties?.icon ?? 'ph--placeholder--regular'}
+        iconOnly
+        label={toLocalizedString(menuActions[0].properties?.label, t)}
+        data-testid={menuActions[0].properties?.testId}
+        onClick={() => onAction(menuActions[0] as Node.Action)}
+      />
+    );
+  }
+
+  return (
+    <Menu.Root caller={NAV_TREE_ITEM} onAction={onAction}>
+      <Menu.Trigger asChild>
+        <IconButton
+          density='coarse'
+          classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
+          variant='ghost'
+          icon='ph--dots-three-vertical--regular'
+          iconOnly
+          label={t('tree-item-actions.label')}
+          data-testid='navtree.treeItem.actionsLevel0'
+        />
+      </Menu.Trigger>
+      <Menu.Content group={item} items={menuActions as MenuItem[]} />
+    </Menu.Root>
+  );
+};
+
 /**
  * Builds the menu actions for the L1 panel header.
  */
-const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) => {
+const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>): L1MenuActions => {
   const runAction = useActionRunner();
 
   const { actions: actionsProp, groupedActions } = useActions(item);

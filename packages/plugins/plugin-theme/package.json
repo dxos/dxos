@@ -13,7 +13,8 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#meta": "./src/meta.ts"
+    "#meta": "./src/meta.ts",
+    "#translations": "./src/translations.ts"
   },
   "exports": {
     ".": {
@@ -25,6 +26,12 @@
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
       "browser": "./dist/lib/browser/meta.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "browser": "./dist/lib/browser/translations.mjs",
+      "node": "./dist/lib/node-esm/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -3,7 +3,7 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { type ComputeGraphRegistry } from '@dxos/compute';
+import { type ComputeGraphRegistry } from '@dxos/compute-hyperformula';
 import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid';
 
 import { meta } from '#meta';

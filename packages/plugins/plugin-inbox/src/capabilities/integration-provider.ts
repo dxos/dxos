@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
-import { withAuthorization } from '@dxos/functions';
+import { withAuthorization } from '@dxos/compute';
 import {
   IntegrationProvider as IntegrationProviderCapability,
   type OnTokenCreated,

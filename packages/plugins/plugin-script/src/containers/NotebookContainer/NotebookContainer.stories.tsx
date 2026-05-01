@@ -9,14 +9,15 @@ import React from 'react';
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
+import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { AssistantPlugin } from '@dxos/plugin-assistant';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
-import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
+import { MarkdownPlugin } from '@dxos/plugin-markdown';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Config, useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
@@ -24,9 +25,9 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { DataTypes } from '@dxos/schema';
 
 import { createNotebook } from '#testing';
+import { translations } from '#translations';
 import { Notebook } from '#types';
 
-import { translations } from '../../translations';
 import { NotebookContainer } from './NotebookContainer';
 
 const meta: Meta<typeof NotebookContainer> = {

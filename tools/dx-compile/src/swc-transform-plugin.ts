@@ -6,6 +6,41 @@ import * as Swc from '@swc/core';
 import { type Plugin } from 'esbuild';
 import { readFile } from 'fs/promises';
 
+// Resolved lazily so dx-compile doesn't take a build-time package dep on
+// @dxos/vite-plugin-log (which would create a moon cycle:
+//   dx-compile:compile -> ^:build -> vite-plugin-log:build -> ts-build's
+//   compile -> dx-compile:compile).
+type LogMetaTransformFn = (code: string, filename: string) => string | null;
+let _logMetaTransform: LogMetaTransformFn | null | undefined;
+let _didWarnLogMetaLoadFailure = false;
+
+const loadLogMetaTransform = async (): Promise<LogMetaTransformFn | null> => {
+  if (_logMetaTransform !== undefined) {
+    return _logMetaTransform;
+  }
+  try {
+    // Specifier built dynamically so TypeScript's bundler resolution doesn't try
+    // to type-check the package at dx-compile build time. dx-compile must build
+    // standalone (no vite-plugin-log dep on its compile graph) — but at run time
+    // the package is always available because every consumer that runs dx-compile
+    // already has @dxos/vite-plugin-log resolved (root devDependency).
+    const specifier = ['@dxos', 'vite-plugin-log'].join('/');
+    const mod = (await import(specifier)) as { transformLogMeta?: LogMetaTransformFn };
+    _logMetaTransform = mod.transformLogMeta ?? null;
+  } catch (err) {
+    // ERR_MODULE_NOT_FOUND is the expected case when vite-plugin-log itself is
+    // self-bootstrapping. Anything else is a real regression — warn once so we
+    // don't silently drop log-meta injection across the rest of the build.
+    const code = (err as NodeJS.ErrnoException | undefined)?.code;
+    if (code !== 'ERR_MODULE_NOT_FOUND' && !_didWarnLogMetaLoadFailure) {
+      _didWarnLogMetaLoadFailure = true;
+      console.warn('dx-compile: failed to load `@dxos/vite-plugin-log`; continuing without log-meta injection.', err);
+    }
+    _logMetaTransform = null;
+  }
+  return _logMetaTransform;
+};
+
 /**
  * Factory so that plugins can share the transform cache.
  *
@@ -26,6 +61,20 @@ export class SwcTransformPlugin {
 
     const begin = performance.now();
     const output = await Swc.transform(source, this._options.getTranspilerOptions({ filePath: filename }));
+    let code = output.code;
+
+    // Apply @dxos/log call-site meta injection so consumers' dist/ has the
+    // same `__dxlog_file` / `{F,L,S,...}` data that the Rolldown plugin emits
+    // at app build time. Resolving lazily means dx-compile remains usable
+    // before vite-plugin-log itself has been built.
+    const transformLogMeta = await loadLogMetaTransform();
+    if (transformLogMeta) {
+      const next = transformLogMeta(code, filename);
+      if (next != null) {
+        code = next;
+      }
+    }
+
     const end = performance.now();
 
     if (this._options.isVerbose) {
@@ -36,7 +85,7 @@ export class SwcTransformPlugin {
       );
     }
 
-    return output.code;
+    return code;
   }
 
   private async _transformCached(filename: string): Promise<string> {

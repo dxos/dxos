@@ -21,8 +21,9 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Organization } from '@dxos/types';
 
+import { translations } from '#translations';
+
 import { AssistantPlugin } from '../../AssistantPlugin';
-import { translations } from '../../translations';
 import { AgentProperties } from './AgentProperties';
 
 type DefaultStoryProps = {};

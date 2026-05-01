@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 
 import { UpdateTasks } from './definitions';
 import { MarkdownTasks, type TaskOperation } from './task-list';

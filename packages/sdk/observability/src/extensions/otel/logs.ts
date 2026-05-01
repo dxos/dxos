@@ -81,8 +81,11 @@ export class OtelLogs {
   }
 }
 
+/** Maps {@link LogLevel} to OpenTelemetry {@link SeverityNumber}. */
 const convertLevel = (level: LogLevel): SeverityNumber => {
   switch (level) {
+    case LogLevel.TRACE:
+      return SeverityNumber.TRACE;
     case LogLevel.DEBUG:
       return SeverityNumber.DEBUG;
     case LogLevel.VERBOSE:
@@ -94,7 +97,7 @@ const convertLevel = (level: LogLevel): SeverityNumber => {
     case LogLevel.ERROR:
       return SeverityNumber.ERROR;
     default:
-      return SeverityNumber.ERROR;
+      return SeverityNumber.UNSPECIFIED;
   }
 };
 

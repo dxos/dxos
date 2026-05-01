@@ -14,7 +14,7 @@ import { EdgeHttpClient } from '@dxos/edge-client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import type { OperationInvoker as OperationInvokerExports } from '@dxos/operation';
+import type { OperationInvoker as OperationInvokerExports } from '@dxos/compute';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { AccessToken } from '@dxos/types';
 

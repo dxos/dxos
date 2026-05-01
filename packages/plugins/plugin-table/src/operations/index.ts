@@ -1,6 +1,6 @@
 // Copyright 2025 DXOS.org
 
-import { OperationHandlerSet } from '@dxos/operation';
+import { OperationHandlerSet } from '@dxos/compute';
 
 export * as TableOperation from './definitions';
 export { CreateTableSchema, type CreateTableType, Table } from './definitions';

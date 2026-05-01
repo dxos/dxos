@@ -16,7 +16,8 @@ import {
   getFormatSchema,
 } from '@dxos/schema';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { getFormProperties } from '../../util';
 import { Form, type FormFieldMap, type FormRootProps, SelectField, SelectOptionField } from '../Form';
 

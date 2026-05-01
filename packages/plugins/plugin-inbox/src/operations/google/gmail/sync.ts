@@ -12,10 +12,9 @@ import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 
+import { Operation, Trace } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 import { Integration } from '@dxos/plugin-integration/types';
 import { Message } from '@dxos/types';
 

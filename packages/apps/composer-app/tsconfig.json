@@ -89,6 +89,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/log-store-idb"
+    },
+    {
       "path": "../../common/merkle-search-tree"
     },
     {
@@ -131,9 +134,6 @@
       "path": "../../core/assistant-toolkit"
     },
     {
-      "path": "../../core/blueprints"
-    },
-    {
       "path": "../../core/compute"
     },
     {
@@ -168,12 +168,6 @@
     },
     {
       "path": "../../core/echo/index-core"
-    },
-    {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/functions-runtime"
     },
     {
       "path": "../../core/halo/credentials"
@@ -216,9 +210,6 @@
     },
     {
       "path": "../../core/mesh/websocket-rpc"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"
@@ -264,6 +255,9 @@
     },
     {
       "path": "../../plugins/plugin-discord"
+    },
+    {
+      "path": "../../plugins/plugin-doctor"
     },
     {
       "path": "../../plugins/plugin-explorer"

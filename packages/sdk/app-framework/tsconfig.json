@@ -45,13 +45,16 @@
       "path": "../../common/web-context-react"
     },
     {
+      "path": "../../core/compute"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/operation"
+      "path": "../../ui/brand"
     },
     {
       "path": "../../ui/react-primitives/react-error-boundary"

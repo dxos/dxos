@@ -9,7 +9,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Integration } from '@dxos/plugin-integration/types';
 import { Kanban } from '@dxos/plugin-kanban/types';

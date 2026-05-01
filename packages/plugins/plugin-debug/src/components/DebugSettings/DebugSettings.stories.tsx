@@ -7,7 +7,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { DebugSettings } from './DebugSettings';
 
 const meta = {
@@ -30,6 +31,6 @@ export const Default: Story = {
     settings: {
       wireframe: false,
     },
-    logBuffer: { serialize: () => '' } as any,
+    logStore: { export: async () => '' } as any,
   },
 };

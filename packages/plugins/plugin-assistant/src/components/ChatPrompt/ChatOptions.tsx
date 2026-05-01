@@ -7,7 +7,7 @@ import React, { type JSX, useCallback, useMemo, useState } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
 import { McpServer } from '@dxos/assistant-toolkit';
-import { type Blueprint } from '@dxos/blueprints';
+import { type Blueprint } from '@dxos/compute';
 import { Annotation, type Database, Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Popover, Select, useTranslation } from '@dxos/react-ui';
@@ -39,7 +39,7 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
   const { t } = useTranslation(meta.id);
 
   return (
-    <div role='none' className='flex p-2'>
+    <div role='none' className='flex'>
       <Popover.Root>
         <Popover.Trigger asChild>
           <IconButton variant='ghost' icon='ph--plus--regular' iconOnly label={t('context-objects.button')} />
@@ -66,26 +66,24 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
         <Popover.Portal>
           <Popover.Content side='top' classNames={styles.panel}>
             <Popover.Viewport>
-              <Tabs.Root orientation='horizontal' defaultValue='model' defaultActivePart='list' tabIndex={-1}>
-                <Tabs.Viewport
-                  // TODO(burdon): Simplify styles.
-                  classNames={mx(
-                    'max-h-(--radix-popover-content-available-height) grid grid-rows-[1fr_min-content]',
-                    '[&_[cmdk-root]]:contents [&_[role="tabpanel"]]:grid [&_[role="tabpanel"]]:grid-rows-[1fr_min-content]',
-                    '[&_[role="listbox"]]:min-h-0 [&_[role="listbox"]]:overflow-y-auto',
-                    '[&_[role="tabpanel"]]:min-h-0 [&_[role="tabpanel"]]:px-form-chrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:hidden',
-                  )}
-                >
-                  <Tabs.Panel value='model' tabIndex={-1} classNames='dx-focus-ring-inset'>
+              <Tabs.Root
+                classNames='flex'
+                orientation='horizontal'
+                defaultValue='model'
+                defaultActivePart='list'
+                tabIndex={-1}
+              >
+                <Tabs.Viewport classNames={mx('grid grid-rows-[1fr_40px] w-full')}>
+                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='model'>
                     <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
                   </Tabs.Panel>
-                  <Tabs.Panel value='mcp-servers' tabIndex={-1} classNames='dx-focus-ring-inset'>
-                    <McpServersPanel db={db} />
-                  </Tabs.Panel>
-                  <Tabs.Panel value='blueprints' tabIndex={-1} classNames='dx-focus-ring-inset'>
+                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='blueprints'>
                     <BlueprintsPanel blueprintRegistry={blueprintRegistry} db={db} context={context} />
                   </Tabs.Panel>
-                  <Tabs.Tablist classNames={styles.toolbar}>
+                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
+                    <McpServersPanel db={db} />
+                  </Tabs.Panel>
+                  <Tabs.Tablist classNames={[styles.toolbar]}>
                     <Tabs.IconTab value='model' icon='ph--cpu--regular' label={t('chat-model.title')} />
                     <Tabs.IconTab
                       value='blueprints'
@@ -126,7 +124,7 @@ const BlueprintsPanel = ({
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <SearchList.Content classNames='py-form-chrome'>
+      <SearchList.Content classNames='flex flex-col'>
         <SearchList.Viewport>
           {results.map((blueprint) => {
             const isActive = activeBlueprints.has(blueprint.key);
@@ -142,8 +140,8 @@ const BlueprintsPanel = ({
             );
           })}
         </SearchList.Viewport>
+        <SearchList.Input placeholder={t('search.placeholder')} classNames='border-t border-separator' autoFocus />
       </SearchList.Content>
-      <SearchList.Input placeholder={t('search.placeholder')} classNames='mb-form-chrome' autoFocus />
     </SearchList.Root>
   );
 };
@@ -198,7 +196,7 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
   );
 
   return (
-    <div className='py-form-chrome space-y-2'>
+    <div className='p-form-chrome'>
       {servers.map((server) => (
         <div key={server.id} className='flex items-center gap-2 px-form-chrome'>
           <Input.Root>
@@ -222,7 +220,7 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
       {adding ? (
         <McpServerForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
       ) : (
-        <div role='none' className='px-form-chrome'>
+        <div role='none'>
           <IconButton
             variant='ghost'
             icon='ph--plus--regular'

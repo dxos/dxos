@@ -16,7 +16,8 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { Person } from '@dxos/types';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { ObjectPicker } from './ObjectPicker';
 
 random.seed(1);

@@ -23,7 +23,8 @@ import {
 import { useTranslation } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { getRefProps } from '../../util';
 import {
   ArrayField,

@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { Integration } from '@dxos/plugin-integration/types';
 import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban/types';
 import { Expando } from '@dxos/schema';

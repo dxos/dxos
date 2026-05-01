@@ -46,8 +46,8 @@ export const translations = [
 
         'trigger-payload-prop-name.placeholder': 'New payload property name',
         'import-function-button.label': 'Loading...',
-        'loading-functions.message': 'Loading functions...',
         'update-function-button.label': 'Update',
+        'loading-functions.message': 'Loading functions...',
       },
     },
   },

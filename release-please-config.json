@@ -150,6 +150,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/log-store-idb/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/merkle-search-tree/package.json",
           "jsonpath": "$.version"
         },
@@ -266,6 +271,11 @@
         {
           "type": "json",
           "path": "packages/core/compute/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute-hyperformula/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -566,6 +576,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-discord/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-doctor/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1180,11 +1195,6 @@
         },
         {
           "type": "json",
-          "path": "tools/swc-log-plugin/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "tools/toolbox/package.json",
           "jsonpath": "$.version"
         },
@@ -1201,6 +1211,11 @@
         {
           "type": "json",
           "path": "tools/vite-plugin-log/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/vite-plugin-log/example/package.json",
           "jsonpath": "$.version"
         },
         {

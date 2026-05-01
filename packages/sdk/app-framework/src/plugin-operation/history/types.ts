@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Operation } from '@dxos/operation';
+import type { Operation } from '@dxos/compute';
 
 /**
  * History entry stored by HistoryTracker.

@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 import { isNonNullable } from '@dxos/util';
 
 import { DeckCapabilities, type DeckState, type LayoutMode, getMode, isLayoutMode } from '../types';
