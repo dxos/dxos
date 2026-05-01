@@ -5,12 +5,11 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { Operation } from '@dxos/compute';
 import { Format } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 
 import { meta } from '#meta';
-
-import { translations } from '../translations';
+import { translations } from '#translations';
 
 const t = translations[0]['en-US'][meta.id];
 

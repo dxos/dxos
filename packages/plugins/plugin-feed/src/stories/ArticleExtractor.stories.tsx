@@ -10,8 +10,9 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { composable } from '@dxos/ui-theme';
 
+import { translations } from '#translations';
+
 import { PostContent } from '../components';
-import { translations } from '../translations';
 import { Subscription } from '../types';
 import { type ExtractedArticle, extractArticle } from '../util';
 
@@ -195,6 +196,6 @@ type Story = StoryObj<typeof meta>;
  *
  * Paste a URL → the storybook-react vite middleware proxies the fetch via
  * `/api/rss?url=` to bypass browser CORS → the HTML is run through
- * `extractArticle` → the result is rendered with `MarkdownViewer`.
+ * `extractArticle` → the result is rendered with `MarkdownBlock`.
  */
 export const Default: Story = {};

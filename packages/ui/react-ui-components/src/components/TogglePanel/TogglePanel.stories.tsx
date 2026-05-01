@@ -8,7 +8,7 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
 import { Icon, Input, Panel, Toolbar } from '@dxos/react-ui';
-import { MarkdownViewer } from '@dxos/react-ui-markdown';
+import { MarkdownBlock } from '@dxos/react-ui-markdown';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
@@ -93,7 +93,7 @@ const DefaultStory = (props: TogglePanelRootProps) => {
           </TogglePanel.Header>
           <TogglePanel.Content>
             <TogglePanel.Viewport>
-              <MarkdownViewer classNames='p-2 text-sm' content={text.join('\n\n')} />
+              <MarkdownBlock classNames='p-2 text-sm' content={text.join('\n\n')} />
             </TogglePanel.Viewport>
           </TogglePanel.Content>
         </TogglePanel.Root>

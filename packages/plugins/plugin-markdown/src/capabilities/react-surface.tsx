@@ -17,7 +17,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { Text } from '@dxos/schema';
-import { type EditorViewMode } from '@dxos/ui-editor';
+import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { MarkdownSettings } from '#components';
 import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps } from '#containers';

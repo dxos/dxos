@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { LogBuffer } from '@dxos/log';
+import { IdbLogStore } from '@dxos/log-store-idb';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
@@ -24,10 +24,12 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const createLogStore = () => new IdbLogStore({ dbName: 'composer-logs-storybook' });
+
 export const Default: Story = {
   args: {
     defaultOpen: true,
-    logBuffer: new LogBuffer(),
+    logStore: createLogStore(),
     onRefresh: () => console.log('refresh'),
   },
 };
@@ -37,7 +39,7 @@ export const WithError: Story = {
     defaultOpen: true,
     onReset: async () => console.log('reset'),
     error: Object.assign(new Error('Failed to load storage'), { name: 'StorageError' }),
-    logBuffer: new LogBuffer(),
+    logStore: createLogStore(),
     onRefresh: () => console.log('refresh'),
   },
 };

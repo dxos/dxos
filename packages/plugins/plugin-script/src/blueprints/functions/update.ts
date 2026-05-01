@@ -5,10 +5,10 @@
 import { next as A, type Doc } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 
+import { type Script } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
-import { type Script } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 
 import { Update } from './definitions';
 

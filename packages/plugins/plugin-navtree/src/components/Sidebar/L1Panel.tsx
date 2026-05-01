@@ -22,7 +22,7 @@ import { meta } from '#meta';
 
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
-import { NavTreeItemAction, NavTreeItemColumns } from '../NavTreeItem';
+import { NavTreeItemColumns } from '../NavTreeItem';
 
 export type L1PanelProps = {
   open?: boolean;
@@ -141,9 +141,9 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
   const { renderItemEnd: ItemEnd } = useNavTreeContext();
   const title = toLocalizedString(item.properties.label, t);
   const backCapableWorkspace = isPinnedWorkspace(item.id);
+  useLoadDescendents(item);
 
   const { primaryAction, groupedActions, menuActions, onAction } = useL1MenuActions({ item, path });
-  useLoadDescendents(item);
 
   // TODO(wittjosiah): Hack to only show containsAttended when attended item is within alternate tree (e.g. settings).
   //  Since every object in the space is a descendant of the space node, we'd otherwise always show containsAttended.
@@ -184,56 +184,81 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
       {/* TODO(wittjosiah): Reconcile with NavTreeItemColumns. */}
       <div role='none' className='contents dx-app-no-drag'>
         {primaryAction?.properties?.disposition === 'list-item-primary' && !primaryAction?.properties?.disabled && (
-          <NavTreeItemAction
-            testId={primaryAction.properties?.testId}
-            label={toLocalizedString(primaryAction.properties?.label, t)}
-            icon={primaryAction.properties?.icon ?? 'ph--placeholder--regular'}
-            parent={item}
-            path={path}
-            monolithic={Node.isAction(primaryAction)}
-            menuActions={Node.isAction(primaryAction) ? [primaryAction] : groupedActions[primaryAction?.id ?? '']}
-            menuType={primaryAction.properties?.menuType}
-            caller={NAV_TREE_ITEM}
-          />
-        )}
-        {menuActions.length === 1 && (
           <IconButton
             density='coarse'
             classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
             variant='ghost'
-            icon={menuActions[0].properties?.icon ?? 'ph--placeholder--regular'}
+            icon={primaryAction.properties?.icon ?? 'ph--placeholder--regular'}
             iconOnly
-            label={toLocalizedString(menuActions[0].properties?.label, t)}
-            data-testid={menuActions[0].properties?.testId}
-            onClick={() => onAction(menuActions[0] as Node.Action)}
+            label={toLocalizedString(primaryAction.properties?.label, t)}
+            data-testid={primaryAction.properties?.testId}
+            onClick={() => onAction(primaryAction as Node.Action)}
           />
         )}
-        {menuActions.length > 1 && (
-          <Menu.Root caller={NAV_TREE_ITEM} onAction={onAction}>
-            <Menu.Trigger asChild>
-              <IconButton
-                density='coarse'
-                classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
-                variant='ghost'
-                icon='ph--dots-three-vertical--regular'
-                iconOnly
-                label={t('tree-item-actions.label')}
-                data-testid='navtree.treeItem.actionsLevel0'
-              />
-            </Menu.Trigger>
-            <Menu.Content group={item} items={menuActions as MenuItem[]} />
-          </Menu.Root>
-        )}
+        <MenuActions item={item} menuActions={menuActions} onAction={onAction} />
         {ItemEnd && <ItemEnd node={item} open={alternateTreeOpen} />}
       </div>
     </div>
   );
 };
 
+const MenuActions = ({
+  item,
+  menuActions,
+  onAction,
+}: {
+  item: Node.Node;
+} & Pick<L1MenuActions, 'menuActions' | 'onAction'>) => {
+  const { t } = useTranslation(meta.id);
+
+  if (menuActions.length === 0) {
+    return null;
+  }
+
+  if (menuActions.length === 1) {
+    return (
+      <IconButton
+        density='coarse'
+        classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
+        variant='ghost'
+        icon={menuActions[0].properties?.icon ?? 'ph--placeholder--regular'}
+        iconOnly
+        label={toLocalizedString(menuActions[0].properties?.label, t)}
+        data-testid={menuActions[0].properties?.testId}
+        onClick={() => onAction(menuActions[0] as Node.Action)}
+      />
+    );
+  }
+
+  return (
+    <Menu.Root caller={NAV_TREE_ITEM} onAction={onAction}>
+      <Menu.Trigger asChild>
+        <IconButton
+          density='coarse'
+          classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
+          variant='ghost'
+          icon='ph--dots-three-vertical--regular'
+          iconOnly
+          label={t('tree-item-actions.label')}
+          data-testid='navtree.treeItem.actionsLevel0'
+        />
+      </Menu.Trigger>
+      <Menu.Content group={item} items={menuActions as MenuItem[]} />
+    </Menu.Root>
+  );
+};
+
+type L1MenuActions = {
+  primaryAction: Node.ActionLike;
+  groupedActions: Record<string, Node.Action[]>;
+  menuActions: Node.Action[];
+  onAction: (action: Node.Action, params?: Node.InvokeProps) => void;
+};
+
 /**
  * Builds the menu actions for the L1 panel header, combining graph actions with a synthetic settings/back action.
  */
-const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) => {
+const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>): L1MenuActions => {
   const { t } = useTranslation(meta.id);
   const { setAlternateTree } = useNavTreeContext();
   const { graph } = useAppGraph();
@@ -261,6 +286,7 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) =
     if (!alternateTree) {
       return undefined;
     }
+
     return {
       id: settingsActionId,
       type: Node.ActionType,
@@ -272,7 +298,7 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) =
         icon: isAlternate
           ? 'ph--arrow-u-down-left--regular'
           : (alternateTree.properties.icon ?? 'ph--placeholder--regular'),
-        disposition: 'list-item',
+        disposition: 'list-item-primary',
         testId: isAlternate ? 'navtree.backToSpace' : 'navtree.spaceSettings',
       },
     } as Node.Action;
@@ -294,7 +320,7 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) =
         void runAction(action, { ...params, path });
       }
     },
-    [settingsActionId, setAlternateTree, alternatePath, isAlternate, runAction, graph, alternateTree, path],
+    [graph, path, settingsActionId, alternateTree, setAlternateTree, alternatePath, isAlternate, runAction],
   );
 
   return { primaryAction, groupedActions, menuActions, onAction };

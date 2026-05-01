@@ -20,7 +20,7 @@ import { type Magazine, Subscription } from '#types';
 
 import { findStarTag, hasMetaTag, useStarTag } from '../../util';
 import { MagazineTile, formatPublished } from './MagazineTile';
-import { type CurateState } from './MagazineToolbar';
+import { MagazineSort, type CurateState } from './MagazineToolbar';
 import { MagazineToolbar, type MagazineView } from './MagazineToolbar';
 
 export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
@@ -33,7 +33,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const showItem = useShowItem();
   const id = attendableId ?? Obj.getDXN(subject).toString();
   const currentId = useSelected(id, 'single');
-  const [sort, setSort] = useState<'date' | 'rank'>('date');
+  const [sort, setSort] = useState<MagazineSort>('date');
   const [view, setView] = useState<MagazineView>('default');
   const db = Obj.getDatabase(subject);
   const starTag = useStarTag(db);
@@ -81,6 +81,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     return map;
   }, [allFeeds]);
 
+  // Compute posts.
+  const posts = useMagazinePosts(subject, sort, view, starTag);
+
   // Kick off load for any Post refs that aren't yet resolved so `ref.target`
   // becomes populated reactively on the next render cycle. Also pre-load each
   // resolved Post's `feed` ref so `MagazineTile` can show the feed name.
@@ -121,85 +124,6 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       subject.posts = subject.posts.filter((ref) => !orphanIds.has(ref.dxn.toString()));
     });
   }, [subject, subject.feeds, subject.posts]);
-
-  const posts = useMemo<Subscription.Post[]>(() => {
-    const resolved: Subscription.Post[] = [];
-    const seenDxn = new Set<string>();
-    const seenLink = new Set<string>();
-    const seenGuid = new Set<string>();
-    for (const ref of subject.posts) {
-      const target = ref.target;
-      if (!target) {
-        continue;
-      }
-
-      // Dedup by DXN, then by link, then by guid. Two different feeds can publish the
-      // same article (distinct Post objects, same `link` / `guid`); without secondary
-      // dedup the masonry shows them as duplicate tiles.
-      const dxn = Obj.getDXN(target).toString();
-      if (seenDxn.has(dxn)) {
-        continue;
-      }
-      if (target.link && seenLink.has(target.link)) {
-        continue;
-      }
-      if (target.guid && seenGuid.has(target.guid)) {
-        continue;
-      }
-
-      seenDxn.add(dxn);
-      if (target.link) {
-        seenLink.add(target.link);
-      }
-      if (target.guid) {
-        seenGuid.add(target.guid);
-      }
-      resolved.push(target);
-    }
-
-    // View mode determines which posts the tile grid shows.
-    // - 'archived'  → only archived posts.
-    // - 'starred'   → only starred (non-archived) posts.
-    // - 'default'   → everything except archived.
-    let visible: Subscription.Post[];
-    switch (view) {
-      case 'archived':
-        visible = resolved.filter((post) => post.archived);
-        break;
-      case 'starred':
-        visible = resolved.filter((post) => !post.archived && hasMetaTag(post, starTag));
-        break;
-      default:
-        visible = resolved.filter((post) => !post.archived);
-        break;
-    }
-
-    if (sort === 'rank') {
-      // Lower rank = more relevant; posts without rank fall to the bottom.
-      return [...visible].sort((postA, postB) => {
-        const rankA = postA.rank ?? Number.POSITIVE_INFINITY;
-        const rankB = postB.rank ?? Number.POSITIVE_INFINITY;
-        return rankA - rankB;
-      });
-    }
-
-    // Default: most recent first. Parse `published` to a timestamp because RSS feeds
-    // commonly emit RFC 822 strings (e.g. "Mon, 25 Apr 2026 ...") which don't sort
-    // correctly lexicographically. Posts without a parseable date fall to the bottom.
-    const timestamp = (post: Subscription.Post): number => {
-      if (!post.published) {
-        return Number.NEGATIVE_INFINITY;
-      }
-      const ms = Date.parse(post.published);
-      return Number.isNaN(ms) ? Number.NEGATIVE_INFINITY : ms;
-    };
-
-    return [...visible].sort((postA, postB) => timestamp(postB) - timestamp(postA));
-    // `subject.posts` may return the same array proxy reference even when its
-    // contents change (ECHO's reactive proxy is stable per-object).
-    // Including `.length` and a content fingerprint as deps forces re-computation on
-    // any add/remove, so the masonry tiles re-render after Curate / Clear.
-  }, [subject.posts, subject.posts.length, subject.posts.map((ref) => ref.dxn.toString()).join(), sort, view, starTag]);
 
   // Reset the magazine's curated post list. Starred posts are preserved so
   // the user doesn't lose manually-saved items; a follow-up Curate will
@@ -268,6 +192,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         .join(),
     [subject.feeds],
   );
+
   // Key on both magazine identity and feed fingerprint so switching to a different
   // magazine with the same feeds still triggers curation for the new magazine.
   const previousCurateKey = useRef({ subject, feedFingerprint });
@@ -327,7 +252,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       </Panel.Toolbar>
       <Panel.Content>
         {posts.length === 0 ? (
-          <div className='flex items-center justify-center h-full text-subdued text-sm'>
+          <div role='none' className='flex items-center justify-center h-full text-subdued text-sm'>
             {t('empty-magazine.message')}
           </div>
         ) : (
@@ -375,4 +300,98 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
       onOpen={data.onOpen}
     />
   );
+};
+
+const useMagazinePosts = (
+  subject: Magazine.Magazine,
+  sort: MagazineSort,
+  view: MagazineView,
+  starTag: Tag.Tag | undefined,
+) => {
+  const postFingerprint = subject.posts.map((ref) => ref.dxn.toString()).join();
+
+  return useMemo<Subscription.Post[]>(() => {
+    const seenDxn = new Set<string>();
+    const seenLink = new Set<string>();
+    const seenGuid = new Set<string>();
+
+    const resolved: Subscription.Post[] = [];
+    for (const ref of subject.posts) {
+      const target = ref.target;
+      if (!target) {
+        continue;
+      }
+
+      // Dedup by DXN, then by link, then by guid. Two different feeds can publish the
+      // same article (distinct Post objects, same `link` / `guid`); without secondary
+      // dedup the masonry shows them as duplicate tiles.
+      const dxn = Obj.getDXN(target).toString();
+      if (
+        seenDxn.has(dxn) ||
+        (target.link && seenLink.has(target.link)) ||
+        (target.guid && seenGuid.has(target.guid))
+      ) {
+        continue;
+      }
+
+      seenDxn.add(dxn);
+      if (target.link) {
+        seenLink.add(target.link);
+      }
+      if (target.guid) {
+        seenGuid.add(target.guid);
+      }
+
+      resolved.push(target);
+    }
+
+    // View mode determines which posts the tile grid shows.
+    // - 'archived'  → only archived posts.
+    // - 'starred'   → only starred (non-archived) posts.
+    // - 'default'   → everything except archived.
+    let visible: Subscription.Post[];
+    switch (view) {
+      case 'archived':
+        visible = resolved.filter((post) => post.archived);
+        break;
+      case 'starred':
+        visible = resolved.filter((post) => !post.archived && hasMetaTag(post, starTag));
+        break;
+      default:
+        visible = resolved.filter((post) => !post.archived);
+        break;
+    }
+
+    if (sort === 'rank') {
+      // Lower rank = more relevant; posts without rank fall to the bottom.
+      return [...visible].sort(
+        ({ rank: rankA = Number.POSITIVE_INFINITY }, { rank: rankB = Number.POSITIVE_INFINITY }) => rankA - rankB,
+      );
+    }
+
+    // Default: most recent first. Parse `published` to a timestamp because RSS feeds
+    // commonly emit RFC 822 strings (e.g. "Mon, 25 Apr 2026 ...") which don't sort
+    // correctly lexicographically. Posts without a parseable date fall to the bottom.
+    const timestamp = (post: Subscription.Post): number => {
+      if (!post.published) {
+        return Number.NEGATIVE_INFINITY;
+      }
+
+      const ms = Date.parse(post.published);
+      return Number.isNaN(ms) ? Number.NEGATIVE_INFINITY : ms;
+    };
+
+    return [...visible].sort((postA, postB) => timestamp(postB) - timestamp(postA));
+  }, [
+    // `subject.posts` may return the same array proxy reference even when its
+    // contents change (ECHO's reactive proxy is stable per-object).
+    // Including `.length` and a content fingerprint as deps forces re-computation on
+    // any add/remove, so the masonry tiles re-render after Curate / Clear.
+    subject.posts,
+    subject.posts.length,
+    postFingerprint,
+    sort,
+    view,
+    starTag,
+  ]);
 };

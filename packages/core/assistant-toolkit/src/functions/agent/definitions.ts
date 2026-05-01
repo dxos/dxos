@@ -5,10 +5,10 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService, OpaqueToolkit, ModelName } from '@dxos/ai';
-import { Prompt } from '@dxos/blueprints';
+import { Routine } from '@dxos/compute';
+import { Trace } from '@dxos/compute';
+import { Operation, OperationRegistry } from '@dxos/compute';
 import { Database, Feed, Ref } from '@dxos/echo';
-import { Trace } from '@dxos/functions';
-import { Operation, OperationRegistry } from '@dxos/operation';
 
 import * as Chat from '../../types/Chat';
 
@@ -19,10 +19,10 @@ export const AgentPrompt = Operation.make({
     description: 'Agentic worker that executes a provided prompt using blueprints and tools.',
   },
   input: Schema.Struct({
-    prompt: Ref.Ref(Prompt.Prompt),
+    prompt: Ref.Ref(Routine.Routine),
 
     /**
-     * When set, runs in this chat (history, queue, and bound context). Prompt blueprints and context objects are merged into the conversation for this request.
+     * When set, runs in this chat (history, queue, and bound context). Routine blueprints and context objects are merged into the conversation for this request.
      */
     chat: Schema.optional(Ref.Ref(Chat.Chat)),
 

@@ -79,6 +79,9 @@
       "path": "packages/common/log/tsconfig.json"
     },
     {
+      "path": "packages/common/log-store-idb/tsconfig.json"
+    },
+    {
       "path": "packages/common/merkle-search-tree/tsconfig.json"
     },
     {
@@ -149,6 +152,9 @@
     },
     {
       "path": "packages/core/compute/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute-hyperformula/tsconfig.json"
     },
     {
       "path": "packages/core/conductor/tsconfig.json"
