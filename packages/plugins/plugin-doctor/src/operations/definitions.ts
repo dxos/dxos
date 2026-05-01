@@ -67,8 +67,7 @@ const QueryComposerLogsInput = Schema.Struct({
   ),
   tabId: Schema.optional(
     Schema.String.annotations({
-      description:
-        'Filter by `i` (environment / tab id; output of inferEnvironmentName).',
+      description: 'Filter by `i` (environment / tab id; output of inferEnvironmentName).',
     }),
   ),
   select: Schema.optional(

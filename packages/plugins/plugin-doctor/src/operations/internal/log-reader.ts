@@ -29,11 +29,7 @@ const getFactory = (options: ReadOptions): IDBFactory | undefined => {
   return (globalThis as { indexedDB?: IDBFactory }).indexedDB;
 };
 
-const openReadOnly = (
-  factory: IDBFactory,
-  dbName: string,
-  storeName: string,
-): Promise<IDBDatabase> =>
+const openReadOnly = (factory: IDBFactory, dbName: string, storeName: string): Promise<IDBDatabase> =>
   new Promise((resolve, reject) => {
     const request = factory.open(dbName, 1);
     request.onupgradeneeded = () => {
@@ -57,9 +53,7 @@ const openReadOnly = (
  * The function never throws — read failures resolve with the rows collected so far. The
  * @dxos/log integration is best-effort; we never want introspection to crash the app.
  */
-export const readLogRows = async (
-  options: ReadOptions,
-): Promise<{ total: number; opened: boolean }> => {
+export const readLogRows = async (options: ReadOptions): Promise<{ total: number; opened: boolean }> => {
   const factory = getFactory(options);
   if (!factory) {
     log.warn('plugin-doctor: indexedDB is not available in this environment');

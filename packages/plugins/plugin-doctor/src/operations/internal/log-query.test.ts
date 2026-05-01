@@ -122,9 +122,7 @@ describe('runQuery', () => {
   });
 
   test('topK caps groups and sets truncated', ({ expect }) => {
-    const rows: LogRecord[] = ['a', 'b', 'c', 'd'].map((file) =>
-      makeRecord({ f: `packages/${file}/x.ts` }),
-    );
+    const rows: LogRecord[] = ['a', 'b', 'c', 'd'].map((file) => makeRecord({ f: `packages/${file}/x.ts` }));
     const result = runQuery(rows, { groupBy: 'file', topK: 2 });
     expect(result.groups).toHaveLength(2);
     expect(result.truncated).toBe(true);
@@ -146,11 +144,7 @@ describe('runQuery', () => {
   });
 
   test('tabId filter restricts to matching environment id', ({ expect }) => {
-    const rows: LogRecord[] = [
-      makeRecord({ i: 'tab-a' }),
-      makeRecord({ i: 'tab-b' }),
-      makeRecord({ i: 'tab-a' }),
-    ];
+    const rows: LogRecord[] = [makeRecord({ i: 'tab-a' }), makeRecord({ i: 'tab-b' }), makeRecord({ i: 'tab-a' })];
     const result = runQuery(rows, { tabId: 'tab-a' });
     expect(result.matched).toBe(2);
   });

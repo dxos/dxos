@@ -8,12 +8,7 @@ import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
 
 import { QueryComposerLogs } from './definitions';
-import {
-  HARD_LIMIT_ENTRIES,
-  type LogRecord,
-  type QueryInput,
-  runQuery,
-} from './internal/log-query';
+import { HARD_LIMIT_ENTRIES, type LogRecord, type QueryInput, runQuery } from './internal/log-query';
 import { readLogRows } from './internal/log-reader';
 
 // TODO(plugin-doctor): add an AssistantTestLayer end-to-end test that exercises
@@ -25,8 +20,7 @@ export default QueryComposerLogs.pipe(
       const start = Date.now();
       const records: LogRecord[] = [];
       const queryInput = input as QueryInput;
-      const direction: 'next' | 'prev' =
-        !queryInput.groupBy && queryInput.order === 'desc' ? 'prev' : 'next';
+      const direction: 'next' | 'prev' = !queryInput.groupBy && queryInput.order === 'desc' ? 'prev' : 'next';
       const limit = Math.min(queryInput.limit ?? 100, HARD_LIMIT_ENTRIES);
 
       const opened = yield* Effect.tryPromise({

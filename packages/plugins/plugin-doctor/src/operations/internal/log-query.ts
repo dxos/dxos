@@ -30,12 +30,7 @@ export type LogRecord = {
   e?: string;
 };
 
-export type GroupByKey =
-  | 'level'
-  | 'message'
-  | 'file'
-  | 'tabId'
-  | `context.${string}`;
+export type GroupByKey = 'level' | 'message' | 'file' | 'tabId' | `context.${string}`;
 
 export type AggregateMode = 'count' | 'sample' | 'firstLast';
 
@@ -132,8 +127,7 @@ const formatField = (value: unknown): string => {
  * Re-implementation of formatLine in scripts/query-logs.mjs — keep stable for downstream tooling.
  */
 export const formatPrettyLine = (record: LogRecord): string => {
-  const fileLine =
-    record.f !== undefined || record.n !== undefined ? `${record.f ?? ''}:${record.n ?? ''}` : '';
+  const fileLine = record.f !== undefined || record.n !== undefined ? `${record.f ?? ''}:${record.n ?? ''}` : '';
   return [
     formatField(record.t),
     formatField(record.l),
@@ -145,10 +139,7 @@ export const formatPrettyLine = (record: LogRecord): string => {
   ].join(' ');
 };
 
-const projectRecord = (
-  record: LogRecord,
-  select: readonly (keyof LogRecord)[] | undefined,
-): LogRecord => {
+const projectRecord = (record: LogRecord, select: readonly (keyof LogRecord)[] | undefined): LogRecord => {
   if (!select || select.length === 0) {
     return record;
   }
@@ -243,8 +234,7 @@ export const runQuery = (rows: Iterable<LogRecord>, input: QueryInput): QueryRes
   const messageRegex = input.messageRegex !== undefined ? new RegExp(input.messageRegex) : undefined;
   const sinceMs = parseTime(input.since);
   const untilMs = parseTime(input.until);
-  const allowedLetters =
-    input.levels && input.levels.length > 0 ? new Set<string>(input.levels) : undefined;
+  const allowedLetters = input.levels && input.levels.length > 0 ? new Set<string>(input.levels) : undefined;
 
   const limit = clampLimit(input);
   const topK = clampTopK(input);
