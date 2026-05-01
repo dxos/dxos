@@ -55,9 +55,7 @@ export const useCpuLoad = (): CpuInfo => {
       const now = performance.now();
 
       const fps =
-        frameTimes.length > 1
-          ? Math.round(1000 / (frameTimes.reduce((acc, t) => acc + t, 0) / frameTimes.length))
-          : 0;
+        frameTimes.length > 1 ? Math.round(1000 / (frameTimes.reduce((acc, t) => acc + t, 0) / frameTimes.length)) : 0;
 
       const cutoff = now - LOAD_WINDOW_MS;
       while (longTaskEntries.length > 0 && longTaskEntries[0].start < cutoff) {
