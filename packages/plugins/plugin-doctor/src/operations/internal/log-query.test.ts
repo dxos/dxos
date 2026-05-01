@@ -118,6 +118,7 @@ describe('runQuery', () => {
     const rows = Array.from({ length: 10 }, (_, idx) => makeRecord({ l: 'I', m: `m${idx}` }));
     const result = runQuery(rows, { groupBy: 'level', aggregate: 'sample', sampleSize: 2 });
     expect(result.groups?.[0].samples).toHaveLength(2);
+    expect(result.truncated).toBe(true);
   });
 
   test('aggregate=firstLast emits ISO timestamps', ({ expect }) => {

@@ -336,6 +336,8 @@ export const runQuery = (rows: Iterable<LogRecord>, input: QueryInput): QueryRes
         }
         if (bucket.samples.length < sampleSize) {
           bucket.samples.push(record);
+        } else {
+          truncated = true;
         }
       } else if (aggregate === 'firstLast') {
         const ts = parseRecordTime(record);
