@@ -244,43 +244,6 @@ describe('Agent', () => {
   );
 
   it.scoped(
-    'sync-triggers sets trigger enabled from agent.enabled',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        const agent = yield* Agent.makeInitialized(
-          {
-            name: 'Toggle agent',
-            instructions: 'Test enabled propagation.',
-            blueprints: [Ref.make(MarkdownBlueprint.make())],
-            enabled: false,
-            cron: '0 9 * * *',
-          },
-          blueprint,
-        );
-        yield* Database.flush();
-
-        yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
-
-        const triggers = yield* Database.runQuery(Filter.type(Trigger.Trigger));
-        expect(triggers.length).toBeGreaterThan(0);
-        expect(triggers.every((trigger) => trigger.enabled === false)).toBe(true);
-
-        Obj.change(agent, (agent) => {
-          agent.enabled = true;
-        });
-        yield* Database.flush();
-        yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
-
-        const triggersAfter = yield* Database.runQuery(Filter.type(Trigger.Trigger));
-        expect(triggersAfter).toHaveLength(triggers.length);
-        expect(triggersAfter.every((trigger) => trigger.enabled === true)).toBe(true);
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-  );
-
-  it.scoped(
     'planning',
     Effect.fnUntraced(
       function* (_) {
@@ -336,6 +299,43 @@ describe('Agent', () => {
       TestHelpers.provideTestContext,
     ),
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
+  );
+
+  it.scoped(
+    'sync-triggers sets trigger enabled from agent.enabled',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const agent = yield* Agent.makeInitialized(
+          {
+            name: 'Toggle agent',
+            instructions: 'Test enabled propagation.',
+            blueprints: [Ref.make(MarkdownBlueprint.make())],
+            enabled: false,
+            cron: '0 9 * * *',
+          },
+          blueprint,
+        );
+        yield* Database.flush();
+
+        yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
+
+        const triggers = yield* Database.runQuery(Filter.type(Trigger.Trigger));
+        expect(triggers.length).toBeGreaterThan(0);
+        expect(triggers.every((trigger) => trigger.enabled === false)).toBe(true);
+
+        Obj.change(agent, (agent) => {
+          agent.enabled = true;
+        });
+        yield* Database.flush();
+        yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
+
+        const triggersAfter = yield* Database.runQuery(Filter.type(Trigger.Trigger));
+        expect(triggersAfter).toHaveLength(triggers.length);
+        expect(triggersAfter.every((trigger) => trigger.enabled === true)).toBe(true);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
   );
 });
 
