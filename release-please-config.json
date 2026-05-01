@@ -620,6 +620,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-integration/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-iroh-beacon/package.json",
           "jsonpath": "$.version"
         },
@@ -810,17 +815,17 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-token-manager/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-transcription/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/plugins/plugin-transformer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-trello/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -5,14 +5,14 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { ActivationEvent, Capability, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Annotation } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SpaceCapabilities, SpaceEvents, type CreateObject } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
 import { CalendarBlueprint, InboxBlueprint } from '#blueprints';
@@ -20,6 +20,7 @@ import {
   AppGraphBuilder,
   BlueprintDefinition,
   InboxSettings,
+  IntegrationProvider,
   NavigationResolver,
   OperationHandler,
   ReactSurface,
@@ -125,14 +126,8 @@ export const InboxPlugin = Plugin.define(meta).pipe(
     activate: InboxSettings,
   }),
   Plugin.addModule({
-    id: 'on-space-created',
-    activatesOn: SpaceEvents.SpaceCreated,
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
-          Operation.invoke(InboxOperation.OnCreateSpace, params),
-        ),
-      ),
+    activatesOn: AppActivationEvents.SetupIntegrationProviders,
+    activate: IntegrationProvider,
   }),
   Plugin.make,
 );

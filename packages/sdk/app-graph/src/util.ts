@@ -37,8 +37,12 @@ export const normalizeRelation = (relation?: Node.RelationInput): Node.Relation 
  * Shallow-compare two values: same reference, or same own-keys with === values.
  */
 export const shallowEqual = (a: unknown, b: unknown): boolean => {
-  if (a === b) return true;
-  if (a == null || b == null || typeof a !== 'object' || typeof b !== 'object') return false;
+  if (a === b) {
+    return true;
+  }
+  if (a == null || b == null || typeof a !== 'object' || typeof b !== 'object') {
+    return false;
+  }
   const keysA = Object.keys(a as Record<string, unknown>);
   const keysB = Object.keys(b as Record<string, unknown>);
   if (keysA.length !== keysB.length) {

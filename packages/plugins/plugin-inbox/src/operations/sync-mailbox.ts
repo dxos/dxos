@@ -4,41 +4,80 @@
 
 import * as Effect from 'effect/Effect';
 
-import { runInSpace } from '@dxos/app-framework/plugin-runtime';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Obj, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { Integration } from '@dxos/plugin-integration/types';
 
 import { meta } from '#meta';
 
+import { Mailbox } from '../types';
 import { SyncMailbox } from './definitions';
+
+const syncOne = (integration: Integration.Integration, mailbox: Mailbox.Mailbox) =>
+  Effect.gen(function* () {
+    const db = Obj.getDatabase(mailbox);
+    invariant(db);
+    const { GmailFunctions } = yield* Effect.promise(() => import('./google/gmail'));
+    yield* Operation.invoke(
+      GmailFunctions.Sync,
+      {
+        integration: Ref.make(integration),
+        mailbox: Ref.make(mailbox),
+      },
+      { spaceId: db.spaceId },
+    ).pipe(
+      Effect.catchAll((error) => {
+        log.catch(error);
+        return Operation.invoke(LayoutOperation.AddToast, {
+          id: `${meta.id}/sync-mailbox-error`,
+          icon: 'ph--warning--regular',
+          duration: 5_000,
+          title: ['sync-mailbox-error.title', { ns: meta.id }],
+          closeLabel: ['close.label', { ns: meta.id }],
+        });
+      }),
+    );
+  });
 
 const handler: Operation.WithHandler<typeof SyncMailbox> = SyncMailbox.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ mailbox }) {
-      const db = Obj.getDatabase(mailbox);
-      invariant(db);
-      const { GmailFunctions } = yield* Effect.promise(() => import('./google/gmail'));
-      yield* runInSpace(
-        db.spaceId,
-        [] as const,
-        Operation.invoke(GmailFunctions.Sync, {
-          mailbox: Ref.make(mailbox),
-        }),
-      ).pipe(
-        Effect.catchAll((error) => {
-          log.catch(error);
-          return Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.id}/sync-mailbox-error`,
-            icon: 'ph--warning--regular',
-            duration: 5_000,
-            title: ['sync-mailbox-error.title', { ns: meta.id }],
-            closeLabel: ['close.label', { ns: meta.id }],
-          });
-        }),
+    Effect.fnUntraced(function* (input) {
+      const integrationObj = yield* Database.load(input.integration).pipe(
+        Effect.provide(Database.layer(Obj.getDatabase(input.integration.target!)!)),
       );
+
+      const pairs: Array<{ integration: Integration.Integration; mailbox: Mailbox.Mailbox }> = [];
+      const mailboxRef = input.mailbox;
+      if (mailboxRef) {
+        const mailbox = yield* Database.load(mailboxRef);
+        pairs.push({ integration: integrationObj, mailbox });
+      } else {
+        for (const target of integrationObj.targets ?? []) {
+          if (!target.object) {
+            continue;
+          }
+          const targetObj = yield* Database.load(target.object);
+          if (!Mailbox.instanceOf(targetObj)) {
+            continue;
+          }
+          pairs.push({ integration: integrationObj, mailbox: targetObj });
+        }
+      }
+
+      for (const { integration, mailbox } of pairs) {
+        yield* syncOne(integration, mailbox);
+      }
+
+      yield* Operation.invoke(LayoutOperation.AddToast, {
+        id: `${meta.id}/sync-mailbox-success`,
+        icon: 'ph--check--regular',
+        duration: 3_000,
+        title: ['sync-mailbox-success.title', { ns: meta.id }],
+        closeLabel: ['close.label', { ns: meta.id }],
+      });
     }),
   ),
 );

@@ -25,7 +25,7 @@ export const Collection = Schema.Struct({
   }),
   Annotation.IconAnnotation.set({
     icon: 'ph--folder--regular',
-    hue: 'neutral',
+    hue: 'amber',
   }),
 );
 
