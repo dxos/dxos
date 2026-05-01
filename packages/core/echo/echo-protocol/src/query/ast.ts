@@ -425,6 +425,13 @@ export const QueryOptions = Schema.Struct({
    * Nested select statements will use this option to filter deleted objects.
    */
   deleted: Schema.optional(Schema.Literal('include', 'exclude', 'only')),
+
+  /**
+   * If true, the query will not validate that the typenames in the filter are resolvable,
+   * and will not filter out result objects whose schema cannot be resolved.
+   * @default false
+   */
+  skipSchemaValidation: Schema.optional(Schema.Boolean),
 });
 
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
@@ -541,4 +548,54 @@ export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
     Match.when({ type: 'select' }, () => []),
     Match.exhaustive,
   );
+};
+
+/**
+ * Collect all typename DXN strings referenced by filters in a query AST.
+ * Skips null typenames (which match any type).
+ */
+export const collectTypenames = (query: Query): string[] => {
+  const typenames: string[] = [];
+  visit(query, (node) => {
+    Match.value(node).pipe(
+      Match.when({ type: 'select' }, ({ filter }) => collectFilterTypenames(filter, typenames)),
+      Match.when({ type: 'filter' }, ({ filter }) => collectFilterTypenames(filter, typenames)),
+      Match.when({ type: 'relation' }, ({ filter }) => {
+        if (filter) collectFilterTypenames(filter, typenames);
+      }),
+      Match.when({ type: 'incoming-references' }, ({ typename }) => {
+        if (typename != null) typenames.push(typename);
+      }),
+      Match.orElse(() => {}),
+    );
+  });
+  return typenames;
+};
+
+const collectFilterTypenames = (filter: Filter, out: string[]): void => {
+  if (filter.type === 'object' && filter.typename != null) {
+    out.push(filter.typename);
+  }
+  if (filter.type === 'and' || filter.type === 'or') {
+    for (const f of filter.filters) {
+      collectFilterTypenames(f, out);
+    }
+  }
+  if (filter.type === 'not') {
+    collectFilterTypenames(filter.filter, out);
+  }
+};
+
+/**
+ * Resolve the effective query options by taking the outer-most (first-visited) option
+ * clause in the AST. Returns undefined if no options clauses are present.
+ */
+export const getEffectiveOptions = (query: Query): QueryOptions | undefined => {
+  let options: QueryOptions | undefined;
+  visit(query, (node) => {
+    if (node.type === 'options' && options == null) {
+      options = node.options;
+    }
+  });
+  return options;
 };

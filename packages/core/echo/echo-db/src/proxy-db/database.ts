@@ -29,6 +29,7 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type HypergraphImpl } from '../hypergraph';
+import { QueryResultImpl } from '../query';
 import { DatabaseSchemaRegistry } from './database-schema-registry';
 import { type ObjectMigration } from './object-migration';
 
@@ -233,7 +234,10 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       query = query.from({ spaceIds: [this.spaceId] });
     }
 
-    return this._coreDatabase.graph.query(query);
+    const context = this._coreDatabase.graph._createQueryContext({
+      schemaResolver: this.graph.createRefResolver({ context: { space: this.spaceId } }),
+    });
+    return new QueryResultImpl(context, query);
   }
 
   /**
@@ -256,13 +260,14 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     if (!isEchoObject(obj)) {
+      // Validate at the user-facing entry point only. Cascade adds via createRef call back into
+      // db.add but with already-EchoObject inputs, so this branch is skipped on cascades.
       const schema = Obj.getSchema(obj as unknown as Obj.Unknown);
       if (schema != null) {
         if (!this.schemaRegistry.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
           throw createSchemaNotRegisteredError(schema);
         }
       }
-
       obj = createObject(obj);
     }
     assertObjectModel(obj);
@@ -376,7 +381,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 const createSchemaNotRegisteredError = (schema?: any) => {
   const message = 'Schema not registered';
   if (schema?.typename) {
-    return new Error(`${message} Schema: ${schema.typename}`);
+    return new Error(`${message}: ${schema.typename}`);
   }
 
   return new Error(message);

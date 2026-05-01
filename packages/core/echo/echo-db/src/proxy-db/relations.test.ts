@@ -17,8 +17,10 @@ describe('Relations', () => {
 
   beforeEach(async () => {
     testBuilder = await new EchoTestBuilder().open();
-    ({ db, graph } = await testBuilder.createDatabase());
-    await graph.schemaRegistry.register([TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy]);
+    // Types are registered at peer-level so they survive reload.
+    ({ db, graph } = await testBuilder.createDatabase({
+      types: [TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy],
+    }));
   });
 
   afterEach(async () => {

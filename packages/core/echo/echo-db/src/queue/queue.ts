@@ -7,7 +7,7 @@ import * as Predicate from 'effect/Predicate';
 import { DeferredTask } from '@dxos/async';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Database, Entity, Obj, type Ref } from '@dxos/echo';
+import { type Database, Entity, type Hypergraph, Obj, type Ref } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import { type ObjectJSON, ParentId, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
@@ -131,6 +131,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     private readonly _refResolver: Ref.Resolver,
     private readonly _dxn: DXN,
     private readonly _database?: Database.Database,
+    private readonly _graph?: Hypergraph.Hypergraph,
   ) {
     const { subspaceTag, spaceId, queueId } = this._dxn.asQueueDXN() ?? {};
     this._subspaceTag = subspaceTag ?? failedInvariant();
@@ -260,6 +261,9 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   private _query(queryOrFilter: Query.Any | Filter.Any) {
     const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
     const queryWithScope = query.from({ spaceIds: [this._spaceId], queues: [this._dxn.toString()] });
+    // Queue queries don't enforce schema validation: queues are a raw append-anything protocol and
+    // upstream callers (e.g. Feed/AiContextBinder) often query for types not registered in the
+    // runtime schema registry of the consumer.
     return new QueryResultImpl(new QueueQueryContext(this, this._ctx), queryWithScope);
   }
 

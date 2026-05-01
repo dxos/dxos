@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import type * as Schema from 'effect/Schema';
+
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
@@ -113,6 +115,14 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   /**
+   * Create a query context with an optional schema resolver for validation.
+   * @internal
+   */
+  _createQueryContext(options: { schemaResolver?: Ref.Resolver } = {}): QueryContext {
+    return this._createLiveObjectQueryContext(options);
+  }
+
+  /**
    * Creates a reference to an existing object in the database.
    *
    * NOTE: The reference may be dangling if the object is not present in the database.
@@ -185,25 +195,17 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         }
       },
 
+      resolveSchemaSync: (dxn) => {
+        return this._resolveSchemaSync(dxn, context);
+      },
+
       resolveSchema: async (dxn) => {
         const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
         let status: string = '';
         try {
-          switch (dxn.kind) {
-            case DXN.kind.TYPE: {
-              const schema = this.schemaRegistry.getSchemaByDXN(dxn);
-              status = schema != null ? 'resolved' : 'missing';
-              return schema;
-            }
-            case DXN.kind.ECHO: {
-              status = 'error';
-              throw new Error('Not implemented: Resolving schema stored in the database');
-            }
-            default: {
-              status = 'unknown dxn';
-              return undefined;
-            }
-          }
+          const schema = this._resolveSchemaSync(dxn, context);
+          status = schema != null ? 'resolved' : 'missing';
+          return schema;
         } finally {
           if (TRACE_REF_RESOLUTION) {
             log.info('resolveSchema', {
@@ -336,13 +338,48 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     }
   }
 
+  /**
+   * Sync schema lookup across runtime registry and the persistent registry of the relevant
+   * database (determined by DXN spaceId or the resolver context).
+   */
+  private _resolveSchemaSync(
+    dxn: DXN,
+    context: Hypergraph.RefResolutionContext,
+  ): Schema.Schema.AnyNoContext | undefined {
+    switch (dxn.kind) {
+      case DXN.kind.TYPE: {
+        const runtimeMatch = this.schemaRegistry.getSchemaByDXN(dxn);
+        if (runtimeMatch != null) {
+          return runtimeMatch;
+        }
+        const spaceId = context.space;
+        if (spaceId == null) {
+          return undefined;
+        }
+        return this._databases.get(spaceId)?.schemaRegistry.getSchemaByDXN(dxn);
+      }
+      case DXN.kind.ECHO: {
+        const echo = dxn.asEchoDXN();
+        const spaceId = echo?.spaceId ?? context.space;
+        if (spaceId == null || echo == null) {
+          return undefined;
+        }
+        return this._databases.get(spaceId)?.schemaRegistry.getSchemaByDXN(dxn);
+      }
+      default: {
+        return undefined;
+      }
+    }
+  }
+
   private async _resolveDatabaseObjectAsync(spaceId: SpaceId, objectId: ObjectId): Promise<Entity.Unknown | undefined> {
     const db = this._databases.get(spaceId);
     if (!db) {
       return undefined;
     }
-    const [obj] = await db.query(Filter.id(objectId)).run();
-    return obj;
+    // Bypass `db.query` so ref resolution does not get filtered by the query-level schema check
+    // (Refs may legitimately point at objects whose schema is not registered with this client).
+    return await db._loadObjectById(objectId);
   }
 
   private _resolveQueueSync(spaceId: SpaceId, subspaceTag: QueueSubspaceTag, queueId: ObjectId): Queue | undefined {
@@ -416,7 +453,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     this._updateEvent.emit(updateEvent);
   }
 
-  private _createLiveObjectQueryContext(): QueryContext {
+  private _createLiveObjectQueryContext({ schemaResolver }: { schemaResolver?: Ref.Resolver } = {}): QueryContext {
     const context = new GraphQueryContext({
       onStart: () => {
         this._queryContexts.add(context);
@@ -424,6 +461,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       onStop: () => {
         this._queryContexts.delete(context);
       },
+      schemaResolver,
     });
 
     for (const database of this._databases.values()) {

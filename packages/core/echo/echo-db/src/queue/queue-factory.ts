@@ -52,6 +52,7 @@ export class QueueFactory extends Resource implements QueueAPI {
       this._graph.createRefResolver({ context: { space: this._spaceId, queue: dxn } }),
       dxn,
       database,
+      this._graph,
     );
     this._queues.set(stringDxn, newQueue);
     return newQueue as any as Queue<T>;

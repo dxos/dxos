@@ -102,6 +102,29 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
 
+  /**
+   * Resolves a schema by its type or echo DXN.
+   * Checks for a matching PersistentSchema in the space.
+   */
+  public getSchemaByDXN(dxn: DXN): Type.RuntimeType | undefined {
+    switch (dxn.kind) {
+      case DXN.kind.ECHO: {
+        // NOTE: Can't delegate to `query({ backingObjectId })` here because the runtime branch of
+        // `filterOrderResults` doesn't honor `backingObjectId`, so it'd fall back to unrelated
+        // runtime entries. `getSchemaById` already resolves cached + persistent ids correctly.
+        const id = dxn.asEchoDXN()?.echoId;
+        return id ? this.getSchemaById(id) : undefined;
+      }
+      case DXN.kind.TYPE: {
+        const components = dxn.asTypeDXN();
+        if (!components) return undefined;
+        return this.query({ typename: components.type, version: components.version }).runSync()[0];
+      }
+      default:
+        return undefined;
+    }
+  }
+
   // TODO(burdon): Refactor: this is too complex and untestable.
   query<Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
     _query?: Q & SchemaRegistry.Query,
