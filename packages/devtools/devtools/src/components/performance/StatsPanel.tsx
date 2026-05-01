@@ -7,9 +7,10 @@ import React, { type PropsWithChildren, useCallback, useEffect, useState } from 
 import { getSyncSummary, useSyncState } from '@dxos/react-client/echo';
 import { Icon, ScrollArea, Toggle } from '@dxos/react-ui';
 
-import { type Stats, removeEmpty } from '../../hooks';
+import { type Stats, removeEmpty, useCpuLoad } from '../../hooks';
 import { Panel } from './Panel';
 import {
+  CpuPanel,
   DatabasePanel,
   EdgePanel,
   LoggingPanel,
@@ -30,6 +31,7 @@ const LOCAL_STORAGE_KEY = 'org.dxos.plugin.debug.panels';
 
 const PANEL_KEYS = [
   'ts',
+  'cpu',
   'performance',
   'surfaceProfiler',
   'edge',
@@ -84,6 +86,7 @@ export const StatsPanel = ({
   const queries = [...(stats?.queries ?? [])];
   queries.reverse();
 
+  const cpu = useCpuLoad();
   const syncState = useSyncState();
   const syncSummary = getSyncSummary(syncState);
 
@@ -124,6 +127,7 @@ export const StatsPanel = ({
         />
         <LoggingPanel {...props('logging')} />
         <MemoryPanel id='memory' memory={stats?.memory} />
+        <CpuPanel id='cpu' cpu={cpu} />
         <NetworkPanel id='network' network={stats?.network} />
         <EdgePanel id='edge' open={panelState.edge} edge={stats?.edge} onToggle={handleToggle} />
         <PerformancePanel

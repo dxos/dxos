@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+export * from './useCpuLoad';
 export * from './useCredentials';
 export * from './useDevtoolsContext';
 export * from './useFeedMessages';

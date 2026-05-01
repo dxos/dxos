@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+export * from './CpuPanel';
 export * from './Database';
 export * from './EdgePanel';
 export * from './LoggingPanel';
