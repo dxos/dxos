@@ -30,7 +30,12 @@ import * as ProcessHandle from './ProcessHandle';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker';
 import { layer as storageServiceLayer } from './storage-service-layer';
 
-export { type ProcessIdGenerator, UUIDProcessIdGenerator, SequentialProcessIdGenerator } from './process-id';
+export {
+  type ProcessIdGenerator,
+  UUIDProcessIdGenerator,
+  SequentialProcessIdGenerator,
+  SequentialProcessIdGenerator as SequentialIdGenerator,
+} from './process-id';
 
 export { ProcessOperationInvoker };
 
@@ -188,6 +193,7 @@ export interface Manager {
 }
 
 export { ProcessManagerService };
+export { ProcessManagerService as Service };
 
 export interface ProcessManagerImplOpts {
   registry: Registry.Registry;

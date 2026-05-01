@@ -115,11 +115,11 @@ export const layer = (opts?: {
    * Provider for space-level MCP server configs.
    */
   getMcpServers?: () => McpServerConfig[];
-}): Layer.Layer<AgentService, never, ProcessManager.ProcessManagerService> =>
+}): Layer.Layer<AgentService, never, ProcessManager.Service> =>
   Layer.effect(
     AgentService,
     Effect.gen(function* () {
-      const processManager = yield* ProcessManager.ProcessManagerService;
+      const processManager = yield* ProcessManager.Service;
       const sessionCache = new Map<string, Session>();
 
       return {

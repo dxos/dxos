@@ -3,13 +3,16 @@
 //
 
 import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
 import React from 'react';
 
 import { Process } from '@dxos/functions';
-import { Icon, IconButton, ScrollArea, Treegrid } from '@dxos/react-ui';
+import { Icon, IconButton, ScrollArea, Tooltip, Treegrid } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { Unit } from '@dxos/util';
 
 export type ProcessTreeProps = {
+  // TODO(burdon): Atom.
   processes: readonly Process.Info[];
   onProcessSelect?: (process: Process.Info) => void;
   onProcessTerminate?: (process: Process.Info) => void;
@@ -17,28 +20,30 @@ export type ProcessTreeProps = {
 
 export const ProcessTree = composable<HTMLDivElement, ProcessTreeProps>(
   ({ processes, onProcessSelect, onProcessTerminate, ...props }, forwardedRef) => {
-    const filteredProcesses: Process.Info[] = [
+    const sortedProcesses = [
       ...processes.filter((process) => [Process.State.RUNNING, Process.State.HYBERNATING].includes(process.state)),
       ...processes.filter((process) => [Process.State.IDLE].includes(process.state)).slice(0, 3),
-      ...processes
-        .filter((process) =>
-          [Process.State.SUCCEEDED, Process.State.FAILED, Process.State.TERMINATED].includes(process.state),
-        )
-        .slice(0, 3),
-    ];
+      ...processes.filter((process) =>
+        [Process.State.SUCCEEDED, Process.State.FAILED, Process.State.TERMINATED].includes(process.state),
+      ),
+    ].sort((a, b) => {
+      const aCompletedAt = Option.getOrElse(a.completedAt, () => Infinity);
+      const bCompletedAt = Option.getOrElse(b.completedAt, () => Infinity);
+      return bCompletedAt - aCompletedAt;
+    });
 
     return (
       <ScrollArea.Root {...composableProps(props, { classNames: 'dx-expander' })} thin ref={forwardedRef}>
         <ScrollArea.Viewport>
           <Treegrid.Root gridTemplateColumns='1fr'>
-            {filteredProcesses
+            {sortedProcesses
               .filter((process) => process.parentPid === null)
               .map((process) => {
-                const activeChildren = filteredProcesses.filter(
-                  (candidate) =>
-                    candidate.parentPid?.toString() === process.pid.toString() &&
-                    candidate.state === Process.State.RUNNING,
-                );
+                // const activeChildren = filteredProcesses.filter(
+                //   (candidate) =>
+                //     candidate.parentPid?.toString() === process.pid.toString() &&
+                //     candidate.state === Process.State.RUNNING,
+                // );
                 return (
                   <Treegrid.Row
                     key={process.pid.toString()}
@@ -48,12 +53,12 @@ export const ProcessTree = composable<HTMLDivElement, ProcessTreeProps>(
                     <Treegrid.Cell
                       indent
                       classNames={mx(
-                        'grid grid-cols-[min-content_1fr_min-content] items-center gap-1 min-w-0',
+                        'grid grid-cols-[min-content_1fr_min-content_min-content] items-center gap-1 min-w-0',
                         onProcessSelect && 'dx-hover',
                       )}
                       onClick={() => onProcessSelect?.(process)}
                     >
-                      <div role='none' className='p-1'>
+                      <Tooltip.Trigger className='p-1' content={process.state.toString()}>
                         <Icon
                           size={4}
                           classNames={mx(
@@ -72,14 +77,21 @@ export const ProcessTree = composable<HTMLDivElement, ProcessTreeProps>(
                             Match.orElse(() => 'ph--spinner-gap--regular'),
                           )}
                         />
-                      </div>
+                      </Tooltip.Trigger>
                       <div role='none' className='flex items-center gap-2 text-xs overflow-hidden'>
                         {/* TODO(burdon): Name is too long (and not informative). */}
-                        <span className='truncate text-description'>{process.params.name}</span>
+                        <span className='truncate text-description select-none'>
+                          {process.params.name ?? process.pid.toString()}
+                        </span>
                         {/* {activeChildren.length > 0 && (
                           <span className='text-xs text-description ml-1'>{activeChildren[0].params.name}</span>
                         )} */}
                       </div>
+                      {([Process.State.FAILED, Process.State.SUCCEEDED].includes(process.state) && (
+                        <div className='text-xs text-description tabular-nums'>
+                          {Unit.Millisecond(process.metrics.wallTime).toString()}
+                        </div>
+                      )) || <div />}
                       {onProcessTerminate && (
                         <IconButton
                           classNames='min-h-0 p-1'
@@ -88,7 +100,10 @@ export const ProcessTree = composable<HTMLDivElement, ProcessTreeProps>(
                           variant='ghost'
                           size={4}
                           label='Actions'
-                          onClick={() => onProcessTerminate?.(process)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onProcessTerminate?.(process);
+                          }}
                         />
                       )}
                     </Treegrid.Cell>

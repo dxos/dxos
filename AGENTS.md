@@ -50,6 +50,10 @@
 - **IMPORTANT**: When moving code (between files, packages, or namespaces), do NOT leave compatibility re-exports or shims behind. Proactively update every call site to import from the new location in the same change. Backwards-compatibility aliases rot and hide the refactor; fix all usages up front.
 - Use barrel imports whenever possible.
 - Prefer ES `#private` fields/methods over TypeScript `private` keyword in new code. Existing `_private` convention is fine to keep.
+- For files imported as a namespace (i.e., marked with `// @import-as-namespace`), avoid prefixing top-level types with the namespace name. Inside `Foo.ts` prefer `Manager`, `Service`, `Options` over `FooManager`, `FooService`, `FooOptions` — callers see `Foo.Manager` either way.
+- Common suffix for constructor option-bag types is `Options` (e.g., `SpawnOptions`, `ManagerImplOptions`) — pick this over `Opts`/`Props`/`Config` for consistency.
+- Consider taking an options object when a constructor or function has more than a few readonly props, especially when several are optional or share a logical grouping.
+- Class member ordering (consider): static fields → public readonly → public mutable → private readonly (incl. constructor-injected) → private mutable → constructor → public methods → private methods. Within each group, rank properties roughly from most-important to least — importance signals include "further up the stack" (closer to public API), required over optional, readonly over mutable.
 
 ### React
 
