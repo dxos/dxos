@@ -12,7 +12,7 @@ export const translations = [
   {
     'en-US': {
       [meta.id]: {
-        'plugin.name': 'Tokens',
+        'plugin.name': 'Integration',
         'space-panel.name': 'Integrations',
         'integrations-verbose.label': 'Manage integrations',
         'integrations.description': 'You can manage all the integrations for your space with external services here.',

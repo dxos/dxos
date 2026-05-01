@@ -16,11 +16,6 @@ import { meta } from '#meta';
 /**
  * Settings-style children attached directly under each Space node.
  *
- * Previously these lived under a `${meta.id}.settings` "alternate-tree"
- * sub-panel. With every Space child now being a virtual node, the sub-panel
- * adds no value and has been removed; the same children attach directly to
- * the Space.
- *
  * Both `general` and `members` are pinned to the top via `position: 'hoist'`
  * so they sit above the un-positioned middle band (collections, mailboxes,
  * automations, integrations, etc.). Database and Devtools occupy the

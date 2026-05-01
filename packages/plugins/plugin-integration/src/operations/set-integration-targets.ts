@@ -44,9 +44,7 @@ const handler: Operation.WithHandler<typeof SetIntegrationTargets> = SetIntegrat
         // Compute it up front so we can also backfill the local object's
         // `name` from the picker entry — same name a freshly-materialized
         // local object would have inherited.
-        const firstNewSel = existingTarget
-          ? selected.find((s) => !currentRemoteIds.has(s.remoteId))
-          : undefined;
+        const firstNewSel = existingTarget ? selected.find((s) => !currentRemoteIds.has(s.remoteId)) : undefined;
         if (existingTarget && firstNewSel?.name) {
           const existing = (yield* Database.load(existingTarget)) as Obj.Unknown & { name?: string };
           if (!existing.name) {

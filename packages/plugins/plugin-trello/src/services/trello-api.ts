@@ -5,16 +5,19 @@
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientError from '@effect/platform/HttpClientError';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
-import type * as Cause from 'effect/Cause';
+import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as ParseResult from 'effect/ParseResult';
+import * as Schema from 'effect/Schema';
 import * as Schedule from 'effect/Schedule';
 
 import { Database, type Ref } from '@dxos/echo';
 import { Integration } from '@dxos/plugin-integration/types';
 
 import { TRELLO_API_BASE } from '../constants';
+import { InvalidTrelloAccessTokenError } from '../errors';
 
 /**
  * Trello API credentials. The `key` is the user's API key; `token` is the
@@ -26,44 +29,52 @@ type TrelloCredentialsValue = {
   token: string;
 };
 
+const TrelloMemberSchema = Schema.Struct({
+  id: Schema.String,
+  username: Schema.String,
+  fullName: Schema.String,
+  email: Schema.String.pipe(Schema.optional),
+});
+
 /** Subset of the authenticated member returned by `GET /members/me`. */
-export type TrelloMember = {
-  id: string;
-  username: string;
-  fullName: string;
-  email?: string;
-};
+export type TrelloMember = Schema.Schema.Type<typeof TrelloMemberSchema>;
+
+const TrelloBoardSchema = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  closed: Schema.Boolean,
+  url: Schema.String,
+  shortUrl: Schema.String,
+  dateLastActivity: Schema.String,
+});
 
 /** Subset of a Trello board returned by `GET /members/me/boards`. */
-export type TrelloBoard = {
-  id: string;
-  name: string;
-  closed: boolean;
-  url: string;
-  shortUrl: string;
-  dateLastActivity: string;
-};
+export type TrelloBoard = Schema.Schema.Type<typeof TrelloBoardSchema>;
+
+const TrelloListSchema = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  closed: Schema.Boolean,
+  pos: Schema.Number,
+});
 
 /** Subset of a Trello list returned by `GET /boards/{id}/lists`. */
-export type TrelloList = {
-  id: string;
-  name: string;
-  closed: boolean;
-  pos: number;
-};
+export type TrelloList = Schema.Schema.Type<typeof TrelloListSchema>;
 
-/** Subset of a Trello card returned by `GET /boards/{id}/cards`. */
-export type TrelloCard = {
-  id: string;
-  name: string;
-  desc: string;
-  closed: boolean;
-  idList: string;
-  pos: number;
-  url: string;
-  shortUrl: string;
-  dateLastActivity: string;
-};
+const TrelloCardSchema = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  desc: Schema.String,
+  closed: Schema.Boolean,
+  idList: Schema.String,
+  pos: Schema.Number,
+  url: Schema.String,
+  shortUrl: Schema.String,
+  dateLastActivity: Schema.String,
+});
+
+/** Subset of a Trello card returned by `GET /boards/{id}/cards/all`. */
+export type TrelloCard = Schema.Schema.Type<typeof TrelloCardSchema>;
 
 /** Fields accepted by `POST /cards`. */
 export type CreateCardInput = {
@@ -90,22 +101,28 @@ export type UpdateCardInput = {
  *
  * - apiKey: 32-char hex Trello Power-Up key (identifies the DXOS app to Trello).
  * - userToken: 64-char hex per-user authorization token.
+ *
+ * Fails with {@link InvalidTrelloAccessTokenError} when the stored token is not
+ * exactly two non-empty segments.
  */
-export const credentialsFromAccessToken = (record: { token: string }): TrelloCredentialsValue => {
+export const credentialsFromAccessToken = (record: {
+  token: string;
+}): Effect.Effect<TrelloCredentialsValue, InvalidTrelloAccessTokenError> => {
   const parts = record.token.split(':');
   if (parts.length !== 2 || !parts[0] || !parts[1]) {
-    throw new Error('Trello access token must be a "<apiKey>:<userToken>" colon-separated string.');
+    return Effect.fail(new InvalidTrelloAccessTokenError());
   }
   const [key, token] = parts;
-  return { key, token };
+  return Effect.succeed({ key, token });
 };
 
 /**
  * Layer-based credentials service. Mirrors the `GoogleCredentials` pattern in
  * plugin-inbox: every API call pulls creds from this service rather than
  * threading them through as an explicit parameter, so callers compose a
- * single `Effect.provide(TrelloCredentials.fromIntegration(ref))` at the
- * operation boundary instead of plumbing creds through every call site.
+ * single `Effect.provide(TrelloApi.TrelloCredentials.fromIntegration(ref))`
+ * (with `{ TrelloApi }` from `../services`) at the operation boundary instead
+ * of plumbing creds through every call site.
  */
 export class TrelloCredentials extends Context.Tag('@dxos/plugin-trello/TrelloCredentials')<
   TrelloCredentials,
@@ -118,7 +135,7 @@ export class TrelloCredentials extends Context.Tag('@dxos/plugin-trello/TrelloCr
       Effect.gen(function* () {
         const integration = yield* Database.load(integrationRef);
         const accessToken = yield* Database.load(integration.accessToken);
-        return credentialsFromAccessToken(accessToken);
+        return yield* credentialsFromAccessToken(accessToken);
       }),
     );
 }
@@ -133,12 +150,18 @@ const authParams = (
 ) => {
   const out: Record<string, string> = { key: creds.key, token: creds.token };
   for (const [k, v] of Object.entries(extra)) {
-    if (v !== undefined) {out[k] = String(v);}
+    if (v !== undefined) {
+      out[k] = String(v);
+    }
   }
   return out;
 };
 
-type TrelloEffect<T> = Effect.Effect<T, HttpClientError.HttpClientError, HttpClient.HttpClient | TrelloCredentials>;
+type TrelloEffect<T> = Effect.Effect<
+  T,
+  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException,
+  HttpClient.HttpClient | TrelloCredentials
+>;
 
 /**
  * Decide whether a Trello request failure is worth retrying.
@@ -147,12 +170,24 @@ type TrelloEffect<T> = Effect.Effect<T, HttpClientError.HttpClientError, HttpCli
  *  - 4xx other than 429 (auth, validation, not-found): no — retry just wastes time
  *    and, for 401/403, may exacerbate rate limiting on the same token.
  *  - TimeoutException (the request didn't complete in the allotted window): yes.
+ *  - Schema decode failures (`ParseError`): no — payload won't become valid on retry.
  */
-const shouldRetry = (error: HttpClientError.HttpClientError | Cause.TimeoutException): boolean => {
-  if (error._tag === 'TimeoutException') {return true;}
-  if (error._tag === 'RequestError') {return true;}
+const shouldRetry = (
+  error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException,
+): boolean => {
+  if (error instanceof ParseResult.ParseError) {
+    return false;
+  }
+  if (Cause.isTimeoutException(error)) {
+    return true;
+  }
+  if (error._tag === 'RequestError') {
+    return true;
+  }
   // ResponseError: only retry transient response failures.
-  if (error.reason !== 'StatusCode') {return true;}
+  if (error.reason !== 'StatusCode') {
+    return true;
+  }
   const status = error.response.status;
   return status === 429 || (status >= 500 && status <= 599);
 };
@@ -164,18 +199,18 @@ const shouldRetry = (error: HttpClientError.HttpClientError | Cause.TimeoutExcep
  *    api.trello.com — Trello answers the GET fine but doesn't handle the
  *    preflight OPTIONS, so the browser blocks the response. Same workaround
  *    we use for Google's userinfo endpoint).
- *  - parse JSON body
+ *  - parse JSON body with Effect Schema (invalid shapes fail as {@link ParseResult.ParseError})
  *  - 15s timeout
  *  - exponential retry with jitter, up to 3 attempts, only on transient failures
  *    (transport errors, 429, 5xx) — never on 4xx auth/validation errors.
  *  - scope the response so its body stream is released even on failure
  */
-const runRequest = <T>(request: HttpClientRequest.HttpClientRequest): TrelloEffect<T> =>
+const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema.Schema<T>): TrelloEffect<T> =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
     const clientNoTracer = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
     return yield* clientNoTracer.execute(request).pipe(
-      Effect.flatMap((res) => res.json as Effect.Effect<T, HttpClientError.HttpClientError>),
+      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(schema))),
       Effect.timeout('15 seconds'),
       Effect.retry({
         schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
@@ -183,7 +218,7 @@ const runRequest = <T>(request: HttpClientRequest.HttpClientRequest): TrelloEffe
       }),
       Effect.scoped,
     );
-  }) as TrelloEffect<T>;
+  });
 
 /**
  * Build a Trello request that pulls credentials from the `TrelloCredentials`
@@ -193,28 +228,35 @@ const runRequest = <T>(request: HttpClientRequest.HttpClientRequest): TrelloEffe
  */
 const trelloRequest = <T>(
   build: (creds: TrelloCredentialsValue) => HttpClientRequest.HttpClientRequest,
+  schema: Schema.Schema<T>,
 ): TrelloEffect<T> =>
   Effect.gen(function* () {
     const creds = yield* TrelloCredentials;
-    return yield* runRequest<T>(build(creds));
+    return yield* runRequest(build(creds), schema);
   });
 
 /** Returns the authenticated member's identity. */
 export const fetchMember = (): TrelloEffect<TrelloMember> =>
-  trelloRequest((creds) =>
-    HttpClientRequest.get(`${TRELLO_API_BASE}/members/me`).pipe(
-      HttpClientRequest.setUrlParams(authParams(creds, { fields: 'id,username,fullName,email' })),
-    ),
+  trelloRequest(
+    (creds) =>
+      HttpClientRequest.get(`${TRELLO_API_BASE}/members/me`).pipe(
+        HttpClientRequest.setUrlParams(authParams(creds, { fields: 'id,username,fullName,email' })),
+      ),
+    TrelloMemberSchema,
   );
 
+const TrelloBoardListSchema = Schema.Array(TrelloBoardSchema);
+
 /** Lists all boards the authenticated user can access. */
-export const fetchBoards = (): TrelloEffect<TrelloBoard[]> =>
-  trelloRequest((creds) =>
-    HttpClientRequest.get(`${TRELLO_API_BASE}/members/me/boards`).pipe(
-      HttpClientRequest.setUrlParams(
-        authParams(creds, { fields: 'id,name,closed,url,shortUrl,dateLastActivity', filter: 'open' }),
+export const fetchBoards = (): TrelloEffect<ReadonlyArray<TrelloBoard>> =>
+  trelloRequest(
+    (creds) =>
+      HttpClientRequest.get(`${TRELLO_API_BASE}/members/me/boards`).pipe(
+        HttpClientRequest.setUrlParams(
+          authParams(creds, { fields: 'id,name,closed,url,shortUrl,dateLastActivity', filter: 'open' }),
+        ),
       ),
-    ),
+    TrelloBoardListSchema,
   );
 
 /**
@@ -225,11 +267,15 @@ export const fetchBoards = (): TrelloEffect<TrelloBoard[]> =>
  * locally — appearing in a "no column" bucket and unable to be pushed
  * (because the empty string doesn't resolve to any list id).
  */
-export const fetchLists = (boardId: string): TrelloEffect<TrelloList[]> =>
-  trelloRequest((creds) =>
-    HttpClientRequest.get(`${TRELLO_API_BASE}/boards/${boardId}/lists`).pipe(
-      HttpClientRequest.setUrlParams(authParams(creds, { fields: 'id,name,closed,pos', filter: 'all' })),
-    ),
+const TrelloListListSchema = Schema.Array(TrelloListSchema);
+
+export const fetchLists = (boardId: string): TrelloEffect<ReadonlyArray<TrelloList>> =>
+  trelloRequest(
+    (creds) =>
+      HttpClientRequest.get(`${TRELLO_API_BASE}/boards/${boardId}/lists`).pipe(
+        HttpClientRequest.setUrlParams(authParams(creds, { fields: 'id,name,closed,pos', filter: 'all' })),
+      ),
+    TrelloListListSchema,
   );
 
 /**
@@ -241,27 +287,35 @@ export const fetchLists = (boardId: string): TrelloEffect<TrelloList[]> =>
  * `IntegrationTarget` is reserved for service-defined sync state and is left
  * unset for Trello.
  */
-export const fetchCards = (boardId: string): TrelloEffect<TrelloCard[]> =>
-  trelloRequest((creds) =>
-    HttpClientRequest.get(`${TRELLO_API_BASE}/boards/${boardId}/cards/all`).pipe(
-      HttpClientRequest.setUrlParams(
-        authParams(creds, { fields: 'id,name,desc,closed,idList,pos,url,shortUrl,dateLastActivity' }),
+const TrelloCardListSchema = Schema.Array(TrelloCardSchema);
+
+export const fetchCards = (boardId: string): TrelloEffect<ReadonlyArray<TrelloCard>> =>
+  trelloRequest(
+    (creds) =>
+      HttpClientRequest.get(`${TRELLO_API_BASE}/boards/${boardId}/cards/all`).pipe(
+        HttpClientRequest.setUrlParams(
+          authParams(creds, { fields: 'id,name,desc,closed,idList,pos,url,shortUrl,dateLastActivity' }),
+        ),
       ),
-    ),
+    TrelloCardListSchema,
   );
 
 /** Creates a card. */
 export const createCard = (input: CreateCardInput): TrelloEffect<TrelloCard> =>
-  trelloRequest((creds) =>
-    HttpClientRequest.post(`${TRELLO_API_BASE}/cards`).pipe(
-      HttpClientRequest.setUrlParams(authParams(creds, input as Record<string, string | number | boolean | undefined>)),
-    ),
+  trelloRequest(
+    (creds) =>
+      HttpClientRequest.post(`${TRELLO_API_BASE}/cards`).pipe(
+        HttpClientRequest.setUrlParams(authParams(creds, input as Record<string, string | number | boolean | undefined>)),
+      ),
+    TrelloCardSchema,
   );
 
 /** Updates a card by id. */
 export const updateCard = (cardId: string, input: UpdateCardInput): TrelloEffect<TrelloCard> =>
-  trelloRequest((creds) =>
-    HttpClientRequest.put(`${TRELLO_API_BASE}/cards/${cardId}`).pipe(
-      HttpClientRequest.setUrlParams(authParams(creds, input as Record<string, string | number | boolean | undefined>)),
-    ),
+  trelloRequest(
+    (creds) =>
+      HttpClientRequest.put(`${TRELLO_API_BASE}/cards/${cardId}`).pipe(
+        HttpClientRequest.setUrlParams(authParams(creds, input as Record<string, string | number | boolean | undefined>)),
+      ),
+    TrelloCardSchema,
   );

@@ -26,6 +26,26 @@ export type RemoteTarget = {
   metadata?: Record<string, unknown>;
 };
 
+/** Input accepted by every {@link IntegrationProviderEntry.getSyncTargets} operation. */
+export type GetSyncTargetsInput = {
+  integration: Ref.Ref<Integration.Integration>;
+};
+
+/** Output returned by {@link IntegrationProviderEntry.getSyncTargets} discovery operations. */
+export type GetSyncTargetsOutput = {
+  targets: readonly RemoteTarget[];
+};
+
+/** Minimum input for provider {@link IntegrationProviderEntry.sync} operations. */
+export type IntegrationSyncInput = {
+  integration: Ref.Ref<Integration.Integration>;
+};
+
+/**
+ * Result shape for provider sync operations (not consumed by integration UI yet).
+ */
+export type IntegrationSyncOutput = any;
+
 /** Hook fired after OAuth creates an AccessToken for this integration. */
 export type OnTokenCreated = (input: {
   accessToken: AccessToken.AccessToken;
@@ -38,7 +58,7 @@ export type OnTokenCreated = (input: {
    * single-target providers (Gmail) create a fresh target object.
    */
   existingTarget?: Ref.Ref<Obj.Unknown>;
-}) => Effect.Effect<void, Error, HttpClient.HttpClient>;
+}) => Effect.Effect<void, never, HttpClient.HttpClient>;
 
 /** OAuth spec for IntegrationProvider.oauth. */
 export type IntegrationOAuthSpec = {
@@ -57,8 +77,8 @@ export type IntegrationProviderEntry = {
   /** User-facing label; defaults to `id` when omitted. */
   label?: string;
   oauth?: IntegrationOAuthSpec;
-  getSyncTargets?: Operation.Definition.Any;
-  sync?: Operation.Definition.Any;
+  getSyncTargets?: Operation.Definition<GetSyncTargetsInput, GetSyncTargetsOutput>;
+  sync?: Operation.Definition<IntegrationSyncInput, IntegrationSyncOutput>;
   /** Schema describing per-target rows in `Integration.targets` `.options`. */
   optionsSchema?: Schema.Schema<any, any>;
   onTokenCreated?: OnTokenCreated;

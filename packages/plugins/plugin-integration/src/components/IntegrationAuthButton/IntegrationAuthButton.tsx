@@ -10,9 +10,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { Button, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { IntegrationProvider } from '#types';
-
-import { IntegrationCoordinator } from '../../capabilities';
+import { IntegrationCoordinator, IntegrationProvider } from '#types';
 
 export type IntegrationAuthButtonProps = {
   /** Stable id of the `IntegrationProvider` capability entry to authenticate against. */

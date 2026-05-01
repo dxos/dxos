@@ -6,10 +6,10 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.token-manager',
-  name: 'Tokens',
+  id: 'org.dxos.plugin.integration',
+  name: 'Integrations',
   description: trim`
-    Secure credential management for API keys and authentication tokens.
-    Store and manage access tokens for external integrations with encrypted storage.
+    Manage integrations with external services.
+    Connect your space to external services and manage your integrations here.
   `,
 };

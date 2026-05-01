@@ -64,7 +64,9 @@ const DefaultStory = () => {
   const handleCreateCallback = useCallback(
     (values: any) => {
       console.log('[on create]', values);
-      if (!space) {return;}
+      if (!space) {
+        return;
+      }
       const newPerson = space.db.add(Obj.make(Person.Person, values));
       mockHandleCreate(values);
       return newPerson;

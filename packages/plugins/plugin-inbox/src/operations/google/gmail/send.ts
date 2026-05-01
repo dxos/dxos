@@ -9,6 +9,7 @@ import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 
 import { GoogleMail } from '../../../apis';
+import { GmailSendMessageInvalidError } from '../../../errors';
 import { GoogleCredentials } from '../../../services/google-credentials';
 import { GmailSend } from '../../definitions';
 
@@ -27,7 +28,7 @@ export default GmailSend.pipe(
       const text = message.blocks.find((b) => b._tag === 'text')?.text;
 
       if (!to || !text) {
-        return yield* Effect.fail(new Error('Missing "to" or content in message.'));
+        return yield* Effect.fail(new GmailSendMessageInvalidError());
       }
 
       const headers = [

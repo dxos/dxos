@@ -15,12 +15,7 @@ import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 
 import { IntegrationAuthButton } from '#components';
 import { CustomTokenDialog, IntegrationArticle, SyncTargetsChecklist } from '#containers';
-import {
-  Integration,
-  IntegrationProvider,
-  IntegrationProviderAnnotationId,
-  type IntegrationProviderEntry,
-} from '#types';
+import { Integration, IntegrationProvider, IntegrationProviderAnnotationId } from '#types';
 
 import { CUSTOM_TOKEN_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
 
@@ -37,8 +32,12 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'integration-auth',
         role: 'integration--auth',
-        filter: (data): data is { providerId: string; existingTarget?: ComponentProps<typeof IntegrationAuthButton>['existingTarget'] } =>
-          typeof (data as any).providerId === 'string',
+        filter: (
+          data,
+        ): data is {
+          providerId: string;
+          existingTarget?: ComponentProps<typeof IntegrationAuthButton>['existingTarget'];
+        } => typeof (data as any).providerId === 'string',
         component: ({ data }) => {
           const space = useActiveSpace();
           if (!space) {
@@ -50,7 +49,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: SYNC_TARGETS_DIALOG,
+        id: 'sync-targets-dialog',
         filter: AppSurface.component<ComponentProps<typeof SyncTargetsChecklist>>(
           AppSurface.Dialog,
           SYNC_TARGETS_DIALOG,
@@ -58,7 +57,7 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <SyncTargetsChecklist {...data.props} />,
       }),
       Surface.create({
-        id: CUSTOM_TOKEN_DIALOG,
+        id: 'custom-token-dialog',
         filter: AppSurface.component<ComponentProps<typeof CustomTokenDialog>>(AppSurface.Dialog, CUSTOM_TOKEN_DIALOG),
         component: ({ data }) => <CustomTokenDialog {...data.props} />,
       }),
@@ -67,12 +66,14 @@ export default Capability.makeModule(() =>
         role: 'form-input',
         filter: (data): data is { schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
           const fieldAst = (data as any)?.fieldPropertyAst as SchemaAST.AST | undefined;
-          if (!fieldAst) {return false;}
+          if (!fieldAst) {
+            return false;
+          }
           const annotation = findAnnotation<boolean>(fieldAst, IntegrationProviderAnnotationId);
           return !!annotation;
         },
         component: ({ data: { fieldPropertyAst }, ...inputProps }) => {
-          const providers = useCapabilities(IntegrationProvider).flat() as IntegrationProviderEntry[];
+          const providers = useCapabilities(IntegrationProvider).flat();
           const options = useMemo(
             () => providers.map((provider) => ({ value: provider.id, label: provider.label ?? provider.id })),
             [providers],

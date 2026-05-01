@@ -11,8 +11,7 @@ import { useObject } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { Form, Settings } from '@dxos/react-ui-form';
 
-import { useSyncIntegration, useSyncTargetsChecklist } from '#hooks';
-import { useIntegrationProviderById } from '#hooks';
+import { useIntegrationProvider, useSyncIntegration, useSyncTargetsChecklist } from '#hooks';
 import { meta } from '#meta';
 
 import { type Integration } from '../../types';
@@ -23,7 +22,7 @@ export const IntegrationArticle = ({ subject }: IntegrationArticleProps) => {
   const { t } = useTranslation(meta.id);
   useObject(subject);
   const accessToken = subject.accessToken.target;
-  const provider = useIntegrationProviderById(subject.providerId);
+  const provider = useIntegrationProvider(subject.providerId);
   const { available: syncTargetsAvailable, loading, openChecklist } = useSyncTargetsChecklist(subject);
   const { available: syncAvailable, syncing, sync } = useSyncIntegration(subject);
 
@@ -144,7 +143,9 @@ const TargetRow = ({
       Obj.change(integration, (integration) => {
         const m = integration as Obj.Mutable<typeof integration>;
         const next = [...m.targets];
-        if (!next[targetIndex]) {return;}
+        if (!next[targetIndex]) {
+          return;
+        }
         next[targetIndex] = { ...next[targetIndex], options: { ...values } };
         m.targets = next;
       });
@@ -152,7 +153,9 @@ const TargetRow = ({
     [integration, targetIndex],
   );
 
-  if (!target) {return null;}
+  if (!target) {
+    return null;
+  }
 
   return (
     <Settings.Panel>

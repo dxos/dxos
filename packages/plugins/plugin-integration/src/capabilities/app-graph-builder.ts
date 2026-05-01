@@ -42,11 +42,12 @@ export default Capability.makeModule(
             const provider = providers.find((p) => p.id === integration.providerId);
             const actions = [];
             if (provider?.sync) {
+              const sync = provider.sync;
               actions.push(
                 Node.makeAction({
                   id: `${meta.id}.sync-integration.${integration.id}`,
                   data: () =>
-                    Operation.invoke(provider.sync as any, {
+                    Operation.invoke(sync, {
                       integration: Ref.make(integration),
                     }),
                   properties: {

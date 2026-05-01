@@ -17,7 +17,7 @@ import {
 } from '@dxos/plugin-integration/types';
 import { OAuthProvider } from '@dxos/protocols';
 
-import { GOOGLE_INTEGRATION_SOURCE } from '../constants';
+import { GMAIL_PROVIDER_ID, GOOGLE_CALENDAR_PROVIDER_ID, GOOGLE_INTEGRATION_SOURCE } from '../constants';
 import { GetGoogleCalendars, SyncCalendar, SyncMailbox } from '../operations/definitions';
 import { CalendarSyncOptions, Mailbox, SyncOptions } from '../types';
 
@@ -26,13 +26,17 @@ const GoogleUserInfo = Schema.Struct({
 });
 
 /**
- * Fills the access token's `account` from Google's `/oauth2/v3/userinfo`.
- * Tracer disabled around the request to work around a CORS issue with
- * traced requests (see https://github.com/Effect-TS/effect/issues/4568).
+ * Fetches the user's email from Google's `/oauth2/v3/userinfo` and returns it,
+ * or `undefined` when there is no token, `account` is already set, or email is absent.
+ * Callers persist it on the access token (e.g. via `Obj.change`). Tracer is disabled
+ * around the request to work around a CORS issue with traced requests
+ * (see https://github.com/Effect-TS/effect/issues/4568).
  */
 const fillAccountEmail = (accessToken: { token: string; account?: string }) =>
   Effect.gen(function* () {
-    if (!accessToken.token || accessToken.account) {return undefined;}
+    if (!accessToken.token || accessToken.account) {
+      return undefined;
+    }
 
     const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(accessToken.token, 'Bearer')));
     const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
@@ -66,7 +70,9 @@ const gmailOnTokenCreated: OnTokenCreated = ({ accessToken, integration, existin
     }
 
     const db = Obj.getDatabase(integration);
-    if (!db) {return;}
+    if (!db) {
+      return;
+    }
     const defaultName = email ?? 'Inbox';
     let targetRef: Ref.Ref<Obj.Unknown>;
     if (existingTarget) {
@@ -93,7 +99,7 @@ const gmailOnTokenCreated: OnTokenCreated = ({ accessToken, integration, existin
         },
       ];
     });
-  }).pipe(Effect.mapError((error) => (error instanceof Error ? error : new Error(String(error)))));
+  }).pipe(Effect.orDie);
 
 const calendarOnTokenCreated: OnTokenCreated = ({ accessToken }) =>
   Effect.gen(function* () {
@@ -103,14 +109,7 @@ const calendarOnTokenCreated: OnTokenCreated = ({ accessToken }) =>
         accessToken.account = email;
       });
     }
-  }).pipe(Effect.mapError((error) => (error instanceof Error ? error : new Error(String(error)))));
-
-/**
- * Stable provider ids for auth surfaces (`role: 'integration--auth'`).
- */
-export const GMAIL_PROVIDER_ID = 'gmail';
-
-export const GOOGLE_CALENDAR_PROVIDER_ID = 'google-calendar';
+  }).pipe(Effect.orDie);
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

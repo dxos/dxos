@@ -2,12 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ComponentType, lazy } from 'react';
+import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
 
-export const IntegrationArticle: ComponentType<any> = lazy(() => import('./IntegrationArticle'));
-export const SyncTargetsChecklist: ComponentType<any> = lazy(() =>
-  import('./SyncTargetsChecklist').then((m) => ({ default: m.SyncTargetsChecklist })),
+import type { CustomTokenDialogProps } from './CustomTokenDialog';
+import type { IntegrationArticleProps } from './IntegrationArticle';
+import type { SyncTargetsChecklistProps } from './SyncTargetsChecklist';
+
+export const IntegrationArticle: LazyExoticComponent<ComponentType<IntegrationArticleProps>> = lazy(
+  () => import('./IntegrationArticle'),
 );
-export const CustomTokenDialog: ComponentType<any> = lazy(() =>
-  import('./CustomTokenDialog').then((m) => ({ default: m.CustomTokenDialog })),
+export const SyncTargetsChecklist: LazyExoticComponent<ComponentType<SyncTargetsChecklistProps>> = lazy(
+  () => import('./SyncTargetsChecklist'),
+);
+export const CustomTokenDialog: LazyExoticComponent<ComponentType<CustomTokenDialogProps>> = lazy(
+  () => import('./CustomTokenDialog'),
 );

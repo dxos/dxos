@@ -99,6 +99,16 @@ describe('arrangement utils', () => {
       expect(byColumn.b.hidden).toBeUndefined();
     });
 
+    test('treats non-array ids as empty (Automerge / corrupt layout)', ({ expect }) => {
+      const arrangement = {
+        order: [],
+        columns: { a: { ids: {} as unknown as string[] }, b: { ids: ['ok'] } },
+      };
+      const byColumn = getOrderByColumnFromArrangement(arrangement);
+      expect(byColumn.a.ids).toEqual([]);
+      expect(byColumn.b.ids).toEqual(['ok']);
+    });
+
     test('returns mutable copies', ({ expect }) => {
       const idX = ObjectId.random();
       const kanban = Kanban.make({

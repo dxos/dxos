@@ -34,12 +34,6 @@
       "node": "./dist/lib/node-esm/cli/index.mjs",
       "types": "./dist/types/src/cli/index.d.ts"
     },
-    "./hooks": {
-      "source": "./src/hooks/index.ts",
-      "browser": "./dist/lib/browser/hooks/index.mjs",
-      "node": "./dist/lib/node-esm/hooks/index.mjs",
-      "types": "./dist/types/src/hooks/index.d.ts"
-    },
     "./operations": {
       "source": "./src/operations/index.ts",
       "browser": "./dist/lib/browser/operations/index.mjs",
@@ -69,6 +63,7 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
     "@dxos/invariant": "workspace:*",

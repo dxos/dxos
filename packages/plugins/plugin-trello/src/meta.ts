@@ -9,9 +9,7 @@ export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.trello',
   name: 'Trello',
   description: trim`
-    Sync Trello boards into the integration mechanism. Each Trello board becomes a Kanban,
-    each card becomes an Expando. Selection happens through the generic Integration UI;
-    this plugin contributes the service-specific operations.
+    Connect Trello to your workspace so boards and cards stay available alongside everything else you're doing.
   `,
   icon: 'ph--kanban--regular',
   iconHue: 'blue',

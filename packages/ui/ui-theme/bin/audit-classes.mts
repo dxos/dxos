@@ -58,7 +58,9 @@ const TWIGNORE_PATH = path.join(ROOT, '.twignore');
 //   packages/**/testing/**
 //   **/*.test.tsx
 function loadIgnorePatterns(): string[] {
-  if (!fs.existsSync(TWIGNORE_PATH)) {return [];}
+  if (!fs.existsSync(TWIGNORE_PATH)) {
+    return [];
+  }
   return fs
     .readFileSync(TWIGNORE_PATH, 'utf-8')
     .split('\n')
@@ -127,7 +129,9 @@ function readCssDir(dir: string, classes: Set<string>): void {
   for (const entry of entries) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      if (entry.name === 'node_modules' || entry.name === 'dist') {continue;}
+      if (entry.name === 'node_modules' || entry.name === 'dist') {
+        continue;
+      }
       readCssDir(full, classes);
     } else if (entry.name.endsWith('.css')) {
       try {
@@ -186,14 +190,20 @@ function isMalformed(candidate: string): boolean {
   // Unclosed arbitrary-value bracket
   const opens = (candidate.match(/\[/g) ?? []).length;
   const closes = (candidate.match(/\]/g) ?? []).length;
-  if (opens !== closes) {return true;}
+  if (opens !== closes) {
+    return true;
+  }
 
   // Trailing dash or colon — e.g. "text-" or "hover:"
-  if (/[-:]$/.test(candidate)) {return true;}
+  if (/[-:]$/.test(candidate)) {
+    return true;
+  }
 
   // Double dash not inside brackets and not a CSS custom property ref
   // (e.g. "bg--neutral" is broken, but "bg-[--color-foo]" is fine)
-  if (/(?<!\[)--(?!\w)/.test(candidate)) {return true;}
+  if (/(?<!\[)--(?!\w)/.test(candidate)) {
+    return true;
+  }
 
   return false;
 }
@@ -364,14 +374,20 @@ const JS_KEYWORDS = new Set([
 // (b) passes candidatesToCss (handled later), OR (c) is in the custom set.
 // This pre-filter removes JS keywords and common words without dashes.
 function isLikelyClassCandidate(candidate: string): boolean {
-  if (candidate.length > MAX_CANDIDATE_LENGTH) {return false;}
+  if (candidate.length > MAX_CANDIDATE_LENGTH) {
+    return false;
+  }
   // Must not be a known JS keyword / common word (when no dash/colon present)
   if (!candidate.includes('-') && !candidate.includes(':')) {
-    if (JS_KEYWORDS.has(candidate)) {return false;}
+    if (JS_KEYWORDS.has(candidate)) {
+      return false;
+    }
     // Single words with no dash: only keep if very short (likely Tailwind
     // one-word utilities like 'flex', 'hidden') — longer ones are probably prose.
     // candidatesToCss will filter them further; we just skip obvious noise.
-    if (candidate.length > 8) {return false;}
+    if (candidate.length > 8) {
+      return false;
+    }
   }
   return true;
 }
@@ -388,9 +404,13 @@ function isLikelyClassCandidate(candidate: string): boolean {
  */
 function isKnownIdentifierClass(candidate: string): boolean {
   // Named group/peer syntax: group/{name} or peer/{name}
-  if (/^(?:group|peer)\/[\w-]+$/.test(candidate)) {return true;}
+  if (/^(?:group|peer)\/[\w-]+$/.test(candidate)) {
+    return true;
+  }
   // Standalone context modifiers
-  if (/^(?:dark|light|ltr|rtl)$/.test(candidate)) {return true;}
+  if (/^(?:dark|light|ltr|rtl)$/.test(candidate)) {
+    return true;
+  }
   return false;
 }
 
@@ -416,7 +436,9 @@ function hasCamelCase(candidate: string): boolean {
       depth--;
       continue;
     }
-    if (depth === 0 && ch >= 'A' && ch <= 'Z') {return true;}
+    if (depth === 0 && ch >= 'A' && ch <= 'Z') {
+      return true;
+    }
   }
   return false;
 }
@@ -463,7 +485,9 @@ function extractApplyCandidates(content: string): Array<{ candidate: string; pos
         continue;
       }
       const cls = token.replace(/;$/, '').trim();
-      if (cls) {results.push({ candidate: cls, position: offset });}
+      if (cls) {
+        results.push({ candidate: cls, position: offset });
+      }
       offset += token.length;
     }
   }
@@ -537,7 +561,9 @@ async function main(): Promise<void> {
     const [css] = ds.candidatesToCss([singleClass]);
     if (css !== null) {
       console.log(`\n✓  "${singleClass}" is a valid Tailwind class.`);
-      if (showCss) {console.log('\nGenerated CSS:\n' + css);}
+      if (showCss) {
+        console.log('\nGenerated CSS:\n' + css);
+      }
     } else {
       const customClasses = extractCustomClassNames(STYLES_DIR);
       if (customClasses.has(singleClass)) {
@@ -582,7 +608,9 @@ async function main(): Promise<void> {
   let scanned = 0;
   let ignoredCount = 0;
   for (const filePath of files) {
-    if (SKIP_FILE_PATTERNS.some((re) => re.test(filePath))) {continue;}
+    if (SKIP_FILE_PATTERNS.some((re) => re.test(filePath))) {
+      continue;
+    }
     const relPath = path.relative(ROOT, filePath);
     if (ignorePatterns.length > 0 && isIgnored(relPath, ignorePatterns)) {
       ignoredCount++;
@@ -601,13 +629,23 @@ async function main(): Promise<void> {
       ext === 'css' ? extractApplyCandidates(content) : scanner.getCandidatesWithPositions({ content, extension: ext });
 
     for (const { candidate, position } of withPos) {
-      if (NOISE_PATTERN.test(candidate)) {continue;}
-      if (hasCamelCase(candidate)) {continue;}
-      if (!isLikelyClassCandidate(candidate)) {continue;}
-      if (EXTRA_NOISE_PATTERNS.some((re) => re.test(candidate))) {continue;}
+      if (NOISE_PATTERN.test(candidate)) {
+        continue;
+      }
+      if (hasCamelCase(candidate)) {
+        continue;
+      }
+      if (!isLikelyClassCandidate(candidate)) {
+        continue;
+      }
+      if (EXTRA_NOISE_PATTERNS.some((re) => re.test(candidate))) {
+        continue;
+      }
       // Filter import-path segments: `word/word` that aren't Tailwind `/` syntax.
       // Tailwind uses `/` only for opacity (bg-red-500/50) or named groups (group/name).
-      if (candidate.includes('/') && !isKnownIdentifierClass(candidate) && !/\/\d+$/.test(candidate)) {continue;}
+      if (candidate.includes('/') && !isKnownIdentifierClass(candidate) && !/\/\d+$/.test(candidate)) {
+        continue;
+      }
       const loc = byteOffsetToLineCol(content, position);
       const relFile = path.relative(ROOT, filePath);
       const list = candidateOccurrences.get(candidate) ?? [];
@@ -615,7 +653,9 @@ async function main(): Promise<void> {
       candidateOccurrences.set(candidate, list);
     }
     scanned++;
-    if (scanned % 500 === 0) {process.stdout.write(`  …${scanned}/${files.length}\r`);}
+    if (scanned % 500 === 0) {
+      process.stdout.write(`  …${scanned}/${files.length}\r`);
+    }
   }
   process.stdout.write('\n');
 
@@ -626,16 +666,24 @@ async function main(): Promise<void> {
 
   const validTailwind = new Set<string>();
   for (let i = 0; i < candidateList.length; i++) {
-    if (cssResults[i] !== null) {validTailwind.add(candidateList[i]);}
+    if (cssResults[i] !== null) {
+      validTailwind.add(candidateList[i]);
+    }
   }
 
   // Classify
   const findings: Finding[] = [];
 
   for (const [candidate, occurrences] of candidateOccurrences) {
-    if (validTailwind.has(candidate)) {continue;}
-    if (customClasses.has(candidate)) {continue;}
-    if (isKnownIdentifierClass(candidate)) {continue;}
+    if (validTailwind.has(candidate)) {
+      continue;
+    }
+    if (customClasses.has(candidate)) {
+      continue;
+    }
+    if (isKnownIdentifierClass(candidate)) {
+      continue;
+    }
 
     const kind = isMalformed(candidate) ? 'malformed' : 'unknown';
 
@@ -704,7 +752,9 @@ async function main(): Promise<void> {
         for (const { file, line, col } of shownLocs) {
           console.log(`    ${file}:${line}:${col}`);
         }
-        if (locs.length > 3) {console.log(`    … and ${locs.length - 3} more`);}
+        if (locs.length > 3) {
+          console.log(`    … and ${locs.length - 3} more`);
+        }
       }
     } else {
       for (const [cls, locs] of shown) {
@@ -730,7 +780,9 @@ async function main(): Promise<void> {
       `  |  scanned ${scanned} files${ignoredMsg}, ${candidateOccurrences.size} unique candidates\n`,
   );
 
-  if (has('--exit-code')) {process.exit(1);}
+  if (has('--exit-code')) {
+    process.exit(1);
+  }
 }
 
 main().catch((err) => {

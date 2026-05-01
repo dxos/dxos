@@ -188,7 +188,9 @@ const refWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T
   const effect = (get: Atom.Context) =>
     Effect.gen(function* () {
       const snapshot = get(make(ref));
-      if (snapshot == null) {return undefined;}
+      if (snapshot == null) {
+        return undefined;
+      }
       const option = yield* Obj.getReactiveOption(snapshot);
       return Option.getOrElse(option, () => undefined);
     });

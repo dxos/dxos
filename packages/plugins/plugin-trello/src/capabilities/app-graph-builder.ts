@@ -17,19 +17,11 @@ import { Kanban } from '@dxos/plugin-kanban/types';
 import { meta } from '#meta';
 
 import { TRELLO_SOURCE } from '../constants';
-import { SyncTrelloBoard } from '../operations';
+import { TrelloOperation } from '../operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      // Per-Integration "Sync now" lives in plugin-integration's generic
-      // graph builder — it dispatches to the provider's `sync` op so every
-      // service plugin gets the action for free. Trello only contributes
-      // the per-board action below.
-
-      // "Sync this board" action on each Trello-keyed items-Kanban. Reactive
-      // to the parent Integration's `targets` — the action only appears when
-      // an Integration references this kanban.
       GraphBuilder.createExtension({
         id: 'trello-sync-board',
         match: (node) => {
@@ -51,10 +43,6 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          // Find the parent Integration whose targets include this kanban.
-          // Compare by echo id, not full DXN string — stored refs use the
-          // space-relative form (`dxn:echo:@:...`) while `Obj.getDXN(kanban)`
-          // returns the absolute form, so a string compare always misses.
           const integrations = get(AtomQuery.make(db, Filter.type(Integration.Integration)));
           const integration = integrations.find((integration) =>
             integration.targets.some((target) => target.object?.dxn.asEchoDXN()?.echoId === kanban.id),
@@ -66,7 +54,7 @@ export default Capability.makeModule(
             {
               id: 'trello-sync-this-board',
               data: () =>
-                Operation.invoke(SyncTrelloBoard, {
+                Operation.invoke(TrelloOperation.SyncTrelloBoard, {
                   integration: Ref.make(integration),
                   kanban: Ref.make(kanban),
                 }),

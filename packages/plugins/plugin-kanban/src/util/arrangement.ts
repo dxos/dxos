@@ -20,7 +20,7 @@ import {
  */
 export const getOrderFromArrangement = (arrangement?: Kanban.Arrangement): string[] => {
   const order = arrangement?.order;
-  if (order != null && order.length > 0) {
+  if (order != null && Array.isArray(order) && order.length > 0) {
     return [...order];
   }
 
@@ -41,10 +41,14 @@ export const getOrderByColumnFromArrangement = (
   const columns = arrangement?.columns;
   if (columns != null && Object.keys(columns).length > 0) {
     return Object.fromEntries(
-      Object.entries(columns).map(([key, entry]) => [
-        key,
-        { ids: [...(entry.ids ?? [])], ...(entry.hidden !== undefined && { hidden: entry.hidden }) },
-      ]),
+      Object.entries(columns).map(([key, entry]) => {
+        const rawIds = entry.ids;
+        const ids = Array.isArray(rawIds) ? [...rawIds] : [];
+        return [
+          key,
+          { ids, ...(entry.hidden !== undefined && { hidden: entry.hidden }) },
+        ];
+      }),
     );
   }
 

@@ -28,7 +28,9 @@ export default Capability.makeModule(
         return threads({ registry, stateAtom }, doc, invokePromise);
       },
       ({ document: doc }) => {
-        if (!doc) {return [];}
+        if (!doc) {
+          return [];
+        }
         const registry = capabilities.get(Capabilities.AtomRegistry);
         const stateAtom = capabilities.get(ThreadCapabilities.State);
 
@@ -45,7 +47,9 @@ export default Capability.makeModule(
         });
       },
       ({ document: doc }) => {
-        if (!doc) {return [];}
+        if (!doc) {
+          return [];
+        }
         const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
 
         return EditorView.updateListener.of((update) => {

@@ -14,13 +14,16 @@ import { AccessToken } from '@dxos/types';
 
 import { AppGraphBuilder, BuiltinProviders, Coordinator, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
+import { CreateIntegrationForm, Integration, IntegrationCoordinator } from '#types';
 
-import { IntegrationCoordinator } from './capabilities';
 import { translations } from './translations';
-import { CreateIntegrationForm, Integration } from './types';
 
 export const IntegrationPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addAppGraphModule({
+    // TODO(wittjosiah): Find a better place to fire this event.
+    firesBeforeActivation: [AppActivationEvents.SetupIntegrationProviders],
+    activate: AppGraphBuilder,
+  }),
   AppPlugin.addMetadataModule({
     metadata: [
       {
@@ -58,7 +61,7 @@ export const IntegrationPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupAppGraph,
+    activatesOn: AppActivationEvents.SetupIntegrationProviders,
     activate: BuiltinProviders,
   }),
   Plugin.addModule({

@@ -108,7 +108,9 @@ const minimax = (
       const score = minimax(next, size, winCondition, depth + 1, false, aiMarker, alpha, beta);
       best = Math.max(best, score);
       alpha = Math.max(alpha, best);
-      if (beta <= alpha) {break;}
+      if (beta <= alpha) {
+        break;
+      }
     }
     return best;
   } else {
@@ -118,7 +120,9 @@ const minimax = (
       const score = minimax(next, size, winCondition, depth + 1, true, aiMarker, alpha, beta);
       best = Math.min(best, score);
       beta = Math.min(beta, best);
-      if (beta <= alpha) {break;}
+      if (beta <= alpha) {
+        break;
+      }
     }
     return best;
   }

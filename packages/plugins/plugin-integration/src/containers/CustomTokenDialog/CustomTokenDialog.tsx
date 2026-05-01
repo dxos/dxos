@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
@@ -9,13 +10,13 @@ import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type Database } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
+import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-
-import { IntegrationCoordinator } from '../../capabilities/integration-coordinator';
+import { IntegrationCoordinator } from '#types';
 
 /**
  * Form schema for the custom-token entry dialog. Annotations drive the
@@ -51,18 +52,16 @@ export type CustomTokenDialogProps = {
  */
 export const CustomTokenDialog = ({ db, providerId, providerLabel }: CustomTokenDialogProps) => {
   const { t } = useTranslation(meta.id);
-  const { invokePromise } = useOperationInvoker();
+  const { invoke } = useOperationInvoker();
   const coordinator = useCapability(IntegrationCoordinator);
   const [error, setError] = useState<string>();
 
   const handleSave = useCallback(
     (values: CustomTokenValues) => {
-      void (async () => {
-        setError(undefined);
-        try {
-          // Coordinator persists, fires AccessTokenCreated, and navigates to
-          // the new Integration's article. Dialog only closes on success.
-          await coordinator.createCustomIntegration({
+      setError(undefined);
+      void runAndForwardErrors(
+        Effect.gen(function* () {
+          yield* coordinator.createCustomIntegration({
             db,
             providerId,
             source: values.source,
@@ -70,14 +69,18 @@ export const CustomTokenDialog = ({ db, providerId, providerLabel }: CustomToken
             token: values.token,
             name: providerLabel,
           });
-          await invokePromise(LayoutOperation.UpdateDialog, { state: false });
-        } catch (err) {
-          log.catch(err);
-          setError(String((err as Error).message ?? err));
-        }
-      })();
+          yield* invoke(LayoutOperation.UpdateDialog, { state: false });
+        }).pipe(
+          Effect.catchAll((failure) =>
+            Effect.sync(() => {
+              log.catch(failure);
+              setError(String(failure instanceof Error ? failure.message : failure));
+            }),
+          ),
+        ),
+      );
     },
-    [coordinator, db, providerId, providerLabel, invokePromise],
+    [coordinator, db, providerId, providerLabel, invoke],
   );
 
   return (

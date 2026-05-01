@@ -85,12 +85,18 @@ describe('computeAiMove', () => {
       let status = 'playing';
 
       for (let turn = 0; turn < 9; turn++) {
-        if (status !== 'playing') {break;}
+        if (status !== 'playing') {
+          break;
+        }
         const validMoves = board.split('').filter((c) => c === '-').length;
-        if (validMoves === 0) {break;}
+        if (validMoves === 0) {
+          break;
+        }
 
         const move = computeAiMove(board, size, winCondition, currentMarker, 'hard');
-        if (move === -1) {break;}
+        if (move === -1) {
+          break;
+        }
 
         const boardArr = board.split('');
         boardArr[move] = currentMarker;

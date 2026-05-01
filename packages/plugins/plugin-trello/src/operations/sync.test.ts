@@ -9,28 +9,18 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 import { Integration } from '@dxos/plugin-integration/types';
-import { Kanban } from '@dxos/plugin-kanban/types';
+import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban/types';
 import { Expando } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
 import { TRELLO_SOURCE } from '../constants';
-import { type TrelloBoard, type TrelloCard, type TrelloList } from '../services/trello-api';
-import { pushBoardCards, reconcileBoardCards } from './sync-board';
+import { TrelloApi } from '../services';
+import { findOrCreateKanbanForBoard, pushBoardCards, reconcileBoardCards } from './sync';
 
-/**
- * Tests the snapshot-driven three-way merge in pull and push reconcilers
- * against a real ECHO database.
- *
- * Coverage:
- *  - Pull: first run seeds snapshots; second run is a no-op.
- *  - Pull: remote-only change → take remote.
- *  - Pull: local-only change → keep local (don't clobber).
- *  - Pull: both changed → remote wins (conflict policy).
- *  - Pull: soft-close cards absent remotely.
- *  - Push: locally-created card → POST + writeback + seed snapshot.
- *  - Push: locally-edited card → PUT only diverged fields.
- *  - Push: snapshot-equal items don't push (no bouncing).
- */
+type TrelloBoard = TrelloApi.TrelloBoard;
+type TrelloCard = TrelloApi.TrelloCard;
+type TrelloList = TrelloApi.TrelloList;
+
 describe('reconcileBoardCards (pull)', () => {
   let builder: EchoTestBuilder;
 
@@ -124,6 +114,33 @@ describe('reconcileBoardCards (pull)', () => {
     expect(snapshots.board1?.name).toBe('Test Board');
     expect(snapshots.board1?.columns?.['To Do']?.ids).toHaveLength(1);
     expect(snapshots.board1?.columns?.['Done']?.ids).toHaveLength(1);
+    expect(kanban.arrangement.columns[UNCATEGORIZED_VALUE]?.hidden).toBe(true);
+  });
+
+  test('remote columns merge keeps uncategorized hidden by default', async ({ expect }) => {
+    const { db, integration } = await setup();
+    const layer = Database.layer(db);
+    const kanban = db.add(
+      Obj.make(Kanban.Kanban, {
+        [Obj.Meta]: { keys: [{ source: TRELLO_SOURCE, id: 'board1' }] },
+        name: 'Test Board',
+        arrangement: {
+          order: [],
+          columns: { [UNCATEGORIZED_VALUE]: { ids: [], hidden: false } },
+        },
+        spec: { kind: 'items' as const, pivotField: 'listName', items: [] },
+      }),
+    );
+
+    const board = makeRemoteBoard();
+    const lists = [makeRemoteList('list1', 'To Do')];
+    const cards = [makeRemoteCard('card1', 'list1', 'Task A')];
+
+    await Effect.gen(function* () {
+      return yield* reconcileBoardCards(integration, kanban, board, cards, lists);
+    }).pipe(Effect.provide(layer), runAndForwardErrors);
+
+    expect(kanban.arrangement.columns[UNCATEGORIZED_VALUE]?.hidden).toBe(false);
   });
 
   test('second run is idempotent (snapshot equals remote → no writes)', async ({ expect }) => {
@@ -457,5 +474,81 @@ describe('pushBoardCards (push)', () => {
 
     expect(result.created + result.updated).toBe(0);
     expect(updateCalled).toBe(0);
+  });
+});
+
+describe('findOrCreateKanbanForBoard', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const setup = async () => {
+    const { db, graph } = await builder.createDatabase();
+    await graph.schemaRegistry.register([Kanban.Kanban, Expando.Expando]);
+    return { db };
+  };
+
+  const board = (id: string, name = 'My Board'): TrelloBoard => ({
+    id,
+    name,
+    closed: false,
+    url: `https://trello.com/b/${id}`,
+    shortUrl: `https://trello.com/b/${id}`,
+    dateLastActivity: '2026-04-29T00:00:00Z',
+  });
+
+  test('creates a new kind:items Kanban with the foreign key on first call', async ({ expect }) => {
+    const { db } = await setup();
+    const testLayer = Database.layer(db);
+
+    const kanban = await Effect.gen(function* () {
+      return yield* findOrCreateKanbanForBoard(board('board1', 'Board One'));
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+
+    expect(kanban.spec.kind).toBe('items');
+    expect(kanban.name).toBe('Board One');
+    if (kanban.spec.kind === 'items') {
+      expect(kanban.spec.pivotField).toBe('listName');
+      expect(kanban.spec.items).toEqual([]);
+    }
+    expect(Obj.getMeta(kanban).keys.find((k) => k.source === TRELLO_SOURCE)?.id).toBe('board1');
+  });
+
+  test('returns the existing Kanban on subsequent calls (idempotent)', async ({ expect }) => {
+    const { db } = await setup();
+    const testLayer = Database.layer(db);
+
+    const first = await Effect.gen(function* () {
+      return yield* findOrCreateKanbanForBoard(board('board1'));
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+
+    const second = await Effect.gen(function* () {
+      return yield* findOrCreateKanbanForBoard(board('board1'));
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+
+    expect(Obj.getDXN(first).toString()).toBe(Obj.getDXN(second).toString());
+  });
+
+  test('creates distinct Kanbans for distinct boards', async ({ expect }) => {
+    const { db } = await setup();
+    const testLayer = Database.layer(db);
+
+    const a = await Effect.gen(function* () {
+      return yield* findOrCreateKanbanForBoard(board('boardA', 'A'));
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+
+    const b = await Effect.gen(function* () {
+      return yield* findOrCreateKanbanForBoard(board('boardB', 'B'));
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+
+    expect(Obj.getDXN(a).toString()).not.toBe(Obj.getDXN(b).toString());
+    expect(a.name).toBe('A');
+    expect(b.name).toBe('B');
   });
 });

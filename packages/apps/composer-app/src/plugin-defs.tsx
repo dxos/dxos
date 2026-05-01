@@ -67,6 +67,7 @@ const ID = {
   GRAPH: 'org.dxos.plugin.graph',
   HELP: 'org.dxos.plugin.help',
   INBOX: 'org.dxos.plugin.inbox',
+  INTEGRATION: 'org.dxos.plugin.integration',
   IROH_BEACON: 'org.dxos.plugin.iroh-beacon',
   KANBAN: 'org.dxos.plugin.kanban',
   MAP: 'org.dxos.plugin.map',
@@ -103,7 +104,6 @@ const ID = {
   THEME: 'org.dxos.plugin.theme',
   THREAD: 'org.dxos.plugin.thread',
   TICTACTOE: 'org.dxos.plugin.tictactoe',
-  TOKEN_MANAGER: 'org.dxos.plugin.token-manager',
   TRANSCRIPTION: 'org.dxos.plugin.transcription',
   TRELLO: 'org.dxos.plugin.trello',
   VOXEL: 'org.dxos.plugin.voxel',
@@ -121,6 +121,7 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     ID.CRX_BRIDGE,
     ID.GRAPH,
     ID.HELP,
+    ID.INTEGRATION,
     layoutPluginId,
     isTauri && !isMobile && !isPopover && ID.NATIVE,
     OperationPlugin.meta.id,
@@ -135,7 +136,6 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     ID.SPACE,
     ID.STATUS_BAR,
     ID.THEME,
-    ID.TOKEN_MANAGER,
     WelcomePlugin.meta.id,
   ]
     .filter(isTruthy)

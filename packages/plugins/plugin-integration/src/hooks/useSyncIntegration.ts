@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { useIntegrationProviderById } from '#hooks';
+import { useIntegrationProvider } from '#hooks';
 
 import { type Integration } from '../types';
 
@@ -35,14 +35,16 @@ export type UseSyncIntegrationResult = {
  */
 export const useSyncIntegration = (integration: Integration.Integration | undefined): UseSyncIntegrationResult => {
   const { invokePromise } = useOperationInvoker();
-  const provider = useIntegrationProviderById(integration?.providerId);
+  const provider = useIntegrationProvider(integration?.providerId);
   const [syncing, setSyncing] = useState(false);
 
   const sync = useCallback(async () => {
-    if (!integration || !provider?.sync) {return;}
+    if (!integration || !provider?.sync) {
+      return;
+    }
     setSyncing(true);
     try {
-      const result = await invokePromise(provider.sync as any, {
+      const result = await invokePromise(provider.sync, {
         integration: Ref.make(integration),
       });
       if (result.error) {

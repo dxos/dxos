@@ -9,93 +9,55 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context as DxContext } from '@dxos/context';
-import { type Database, type Key, Obj, Ref } from '@dxos/echo';
+import { type Database, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import type { OperationInvoker as OperationInvokerExports } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { type OAuthFlowResult } from '@dxos/protocols';
 import { AccessToken } from '@dxos/types';
 
-import { meta } from '#meta';
-import { IntegrationProvider, type IntegrationProviderEntry, type RemoteTarget } from '#types';
+import {
+  IntegrationCoordinator,
+  IntegrationProvider,
+  type IntegrationProviderEntry,
+} from '#types';
 
 import { CUSTOM_TOKEN_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
+import { IntegrationProviderNotFoundError } from '../errors';
 import { IntegrationOperation } from '../operations';
 import { Integration } from '../types';
 
-/**
- * Long-lived coordinator for integration creation + OAuth flows.
- *
- * Owns the `window.message` listener that catches OAuth callbacks (because
- * `useOAuth` was tied to a React component lifetime, the listener died as
- * soon as the user navigated away — including immediately after closing the
- * "create integration" dialog). This capability is mounted at plugin
- * activation and torn down at deactivation, so OAuth callbacks always have
- * somewhere to land regardless of which UI is currently visible.
- *
- * `createIntegration` is the full lifecycle:
- *  1. Build `AccessToken` + `Integration` stubs in memory (NOT yet in the db).
- *  2. Open the OAuth popup; return.
- *  3. When the OAuth callback fires, persist both objects to the db, reparent
- *     the token under the Integration, run the provider's `onTokenCreated`,
- *     and navigate the user to the new Integration's article.
- *
- * Nothing lands in the database until OAuth succeeds — closing the popup or
- * a network failure leaves no stranded objects.
- */
-export type IntegrationCoordinator = {
-  /**
-   * Entry point for the create-Integration flow. Branches on whether the
-   * provider has an OAuth spec:
-   *
-   *  - **OAuth providers**: builds in-memory `AccessToken` + `Integration`
-   *    stubs, stashes them, and opens the OAuth popup. The stubs are
-   *    persisted only after the OAuth callback fires successfully.
-   *  - **Non-OAuth providers** (e.g. the built-in `custom` token): opens
-   *    the `CUSTOM_TOKEN_DIALOG` and returns immediately. The dialog
-   *    collects `{ source, account?, token }` from the user and finishes
-   *    the flow via {@link createCustomIntegration}.
-   *
-   * `providerId` selects an entry from the `IntegrationProvider` capability
-   * registry. The resulting Integration records `providerId` so subsequent
-   * operations (sync, onTokenCreated, etc.) route back to the same provider.
-   */
-  createIntegration: (input: {
-    db: Database.Database;
-    spaceId: Key.SpaceId;
-    providerId: string;
-    /**
-     * Existing local object to wire up as the Integration's first target.
-     * Set when the auth flow is initiated from a surface that already has
-     * the target in scope (e.g. an `InitializeMailbox` button on an existing
-     * Mailbox, or a `NewCalendar` button on an existing Calendar). Threaded
-     * through to the provider's `onTokenCreated` and to the sync-targets
-     * dialog so providers can attach the existing object instead of
-     * materializing a fresh one.
-     */
-    existingTarget?: Ref.Ref<Obj.Unknown>;
-  }) => Effect.Effect<{ integrationId: string }, Error>;
-  /**
-   * Persist a manually-entered access token + Integration. Used by the
-   * `CUSTOM_TOKEN_DIALOG` after the user submits — there's no OAuth callback
-   * to wait on, so values are written directly. Runs the same finalization
-   * path as the OAuth flow (`AccessTokenCreated` dispatch, navigation).
-   */
-  createCustomIntegration: (input: {
-    db: Database.Database;
-    providerId: string;
-    source: string;
-    account?: string;
-    token: string;
-    name?: string;
-  }) => Promise<{ integrationId: string }>;
-};
-
-export const IntegrationCoordinator = Capability.make<IntegrationCoordinator>(
-  `${meta.id}.capability.integration-coordinator`,
-);
+/** Opens the sync-targets checklist dialog after an Integration was created. */
+async function openSyncTargetsDialogAfterIntegrationCreated(
+  invoker: OperationInvokerExports.OperationInvoker,
+  getSyncTargets: NonNullable<IntegrationProviderEntry['getSyncTargets']>,
+  persistedIntegration: Integration.Integration,
+  existingTarget: Ref.Ref<Obj.Any> | undefined,
+): Promise<void> {
+  try {
+    const result = await invoker.invokePromise(getSyncTargets, {
+      integration: Ref.make(persistedIntegration),
+    });
+    if (result.error) {
+      throw result.error;
+    }
+    const targets = result.data?.targets ?? [];
+    await invoker.invokePromise(LayoutOperation.UpdateDialog, {
+      subject: SYNC_TARGETS_DIALOG,
+      state: true,
+      props: {
+        integration: persistedIntegration,
+        availableTargets: targets,
+        existingTarget,
+      },
+    });
+  } catch (error: unknown) {
+    log.warn('open sync-targets dialog after create failed', { error });
+  }
+}
 
 /** Pending integration awaiting an OAuth callback. */
 type Pending = {
@@ -164,23 +126,22 @@ export default Capability.makeModule(
       // from the service's `/me` endpoint). Routes by `providerId` because
       // multiple providers may share the same `source` (e.g. Gmail and
       // Google Calendar both `'google.com'` with different scopes).
-      const providers = pluginContext.getAll(IntegrationProvider).flat() as IntegrationProviderEntry[];
+      const providers = pluginContext.getAll(IntegrationProvider).flat();
       const provider = providers.find((p) => p.id === providerId);
       if (provider?.onTokenCreated) {
-        try {
-          await runAndForwardErrors(
-            provider
-              .onTokenCreated({ accessToken: persistedToken, integration: persistedIntegration, existingTarget })
-              .pipe(
-                Effect.provide(FetchHttpClient.layer),
-                Effect.catchAll((error) =>
-                  Effect.sync(() => log.warn('onTokenCreated failed', { source: persistedToken.source, error })),
-                ),
+        await runAndForwardErrors(
+          provider
+            .onTokenCreated({ accessToken: persistedToken, integration: persistedIntegration, existingTarget })
+            .pipe(
+              Effect.provide(FetchHttpClient.layer),
+              Effect.catchAll((error) =>
+                Effect.sync(() => log.warn('onTokenCreated failed', { source: persistedToken.source, error })),
               ),
-          );
-        } catch (error) {
-          log.warn('onTokenCreated runner failed', { error });
-        }
+              Effect.catchAllDefect((defect) =>
+                Effect.sync(() => log.warn('onTokenCreated defect', { source: persistedToken.source, defect })),
+              ),
+            ),
+        );
       }
 
       // Navigate to the new Integration under its space's `integrations`
@@ -196,28 +157,12 @@ export default Capability.makeModule(
         .catch((error: unknown) => log.warn('navigate to new integration failed', { error }));
 
       const dialogPromise = provider?.getSyncTargets
-        ? (async () => {
-            try {
-              const result = await invoker.invokePromise(provider.getSyncTargets as any, {
-                integration: Ref.make(persistedIntegration),
-              });
-              if (result.error) {
-                throw result.error;
-              }
-              const targets = (result.data as { targets: readonly RemoteTarget[] } | undefined)?.targets ?? [];
-              await invoker.invokePromise(LayoutOperation.UpdateDialog, {
-                subject: SYNC_TARGETS_DIALOG,
-                state: true,
-                props: {
-                  integration: persistedIntegration,
-                  availableTargets: targets,
-                  existingTarget,
-                },
-              });
-            } catch (error) {
-              log.warn('open sync-targets dialog after create failed', { error });
-            }
-          })()
+        ? openSyncTargetsDialogAfterIntegrationCreated(
+            invoker,
+            provider.getSyncTargets,
+            persistedIntegration,
+            existingTarget,
+          )
         : Promise.resolve();
 
       await Promise.all([navigatePromise, dialogPromise]);
@@ -225,8 +170,12 @@ export default Capability.makeModule(
 
     const handleMessage = (event: MessageEvent): void => {
       // No OAuth flow has been started yet — nothing in `pending` could match.
-      if (!edgeOrigin) {return;}
-      if (event.origin !== edgeOrigin) {return;}
+      if (!edgeOrigin) {
+        return;
+      }
+      if (event.origin !== edgeOrigin) {
+        return;
+      }
 
       const data = event.data as OAuthFlowResult;
       if (!data || !data.success) {
@@ -267,10 +216,10 @@ export default Capability.makeModule(
     }) =>
       Effect.tryPromise({
         try: async () => {
-          const providers = pluginContext.getAll(IntegrationProvider).flat() as IntegrationProviderEntry[];
+          const providers = pluginContext.getAll(IntegrationProvider).flat();
           const provider = providers.find((p) => p.id === providerId);
           if (!provider) {
-            throw new Error(`No IntegrationProvider registered with id: ${providerId}`);
+            throw new IntegrationProviderNotFoundError(providerId);
           }
 
           // Non-OAuth provider — open the custom-token dialog and return.
@@ -332,38 +281,42 @@ export default Capability.makeModule(
         catch: (error) => (error instanceof Error ? error : new Error(String(error))),
       });
 
-    const createCustomIntegration: IntegrationCoordinator['createCustomIntegration'] = async ({
+    const createCustomIntegration: IntegrationCoordinator['createCustomIntegration'] = ({
       db,
       providerId,
       source,
       account,
       token: tokenValue,
       name,
-    }) => {
-      const providers = pluginContext.getAll(IntegrationProvider).flat() as IntegrationProviderEntry[];
-      const provider = providers.find((p) => p.id === providerId);
-      if (!provider) {
-        throw new Error(`No IntegrationProvider registered with id: ${providerId}`);
-      }
+    }) =>
+      Effect.tryPromise({
+        try: async () => {
+          const providers = pluginContext.getAll(IntegrationProvider).flat();
+          const provider = providers.find((p) => p.id === providerId);
+          if (!provider) {
+            throw new IntegrationProviderNotFoundError(providerId);
+          }
 
-      // Build stubs with the user-supplied values, then run the same
-      // finalize path as the OAuth flow. No `pending` map entry needed —
-      // there's no callback to round-trip through.
-      const accessToken = Obj.make(AccessToken.AccessToken, {
-        source,
-        account,
-        token: tokenValue,
-      });
-      const integration = Obj.make(Integration.Integration, {
-        name: name ?? account ?? source,
-        providerId: provider.id,
-        accessToken: Ref.make(accessToken),
-        targets: [],
-      });
+          // Build stubs with the user-supplied values, then run the same
+          // finalize path as the OAuth flow. No `pending` map entry needed —
+          // there's no callback to round-trip through.
+          const accessToken = Obj.make(AccessToken.AccessToken, {
+            source,
+            account,
+            token: tokenValue,
+          });
+          const integration = Obj.make(Integration.Integration, {
+            name: name ?? account ?? source,
+            providerId: provider.id,
+            accessToken: Ref.make(accessToken),
+            targets: [],
+          });
 
-      await finalizePending({ token: accessToken, integration, db, providerId: provider.id });
-      return { integrationId: integration.id };
-    };
+          await finalizePending({ token: accessToken, integration, db, providerId: provider.id });
+          return { integrationId: integration.id };
+        },
+        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+      });
 
     return Capability.contributes(IntegrationCoordinator, { createIntegration, createCustomIntegration }, () =>
       Effect.sync(() => {

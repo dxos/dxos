@@ -187,7 +187,9 @@ const infinityTrajectory = (rx = 0.35, ry = 0.25): Trajectory => {
   let totalLen = 0;
 
   const rebuild = (width: number, height: number) => {
-    if (width === cacheW && height === cacheH) {return;}
+    if (width === cacheW && height === cacheH) {
+      return;
+    }
     cacheW = width;
     cacheH = height;
     cumLens = [0];
@@ -214,8 +216,11 @@ const infinityTrajectory = (rx = 0.35, ry = 0.25): Trajectory => {
       let hi = N;
       while (hi - lo > 1) {
         const mid = (lo + hi) >> 1;
-        if (cumLens[mid] <= s) {lo = mid;}
-        else {hi = mid;}
+        if (cumLens[mid] <= s) {
+          lo = mid;
+        } else {
+          hi = mid;
+        }
       }
       const segLen = cumLens[lo + 1] - cumLens[lo];
       const alpha = segLen > 0 ? (s - cumLens[lo]) / segLen : 0;
@@ -264,7 +269,9 @@ const dxosTrajectory = (scale = 1): Trajectory => {
   let totalLen = 0;
 
   const rebuild = (width: number, height: number) => {
-    if (width === cacheW && height === cacheH) {return;}
+    if (width === cacheW && height === cacheH) {
+      return;
+    }
     cacheW = width;
     cacheH = height;
     // Use the square side so arc-lengths are isotropic regardless of canvas aspect ratio.
@@ -292,7 +299,9 @@ const dxosTrajectory = (scale = 1): Trajectory => {
       const oy = (height - sq) / 2;
       const s = ((dist % totalLen) + totalLen) % totalLen;
       let seg = 0;
-      while (seg < n - 1 && cumLens[seg + 1] <= s) {seg++;}
+      while (seg < n - 1 && cumLens[seg + 1] <= s) {
+        seg++;
+      }
       const segLen = cumLens[seg + 1] - cumLens[seg];
       const alpha = segLen > 0 ? (s - cumLens[seg]) / segLen : 0;
       const [x0, y0] = vertices[seg];

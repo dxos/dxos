@@ -9,9 +9,8 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { useIntegrationProviderById } from '#hooks';
+import { useIntegrationProvider } from '#hooks';
 import { meta } from '#meta';
-import type { RemoteTarget } from '#types';
 
 import { SYNC_TARGETS_DIALOG } from '../constants';
 import { type Integration } from '../types';
@@ -41,20 +40,22 @@ export const useSyncTargetsChecklist = (
   integration: Integration.Integration | undefined,
 ): UseSyncTargetsChecklistResult => {
   const { invokePromise } = useOperationInvoker();
-  const provider = useIntegrationProviderById(integration?.providerId);
+  const provider = useIntegrationProvider(integration?.providerId);
   const [loading, setLoading] = useState(false);
 
   const openChecklist = useCallback(async () => {
-    if (!integration || !provider?.getSyncTargets) {return;}
+    if (!integration || !provider?.getSyncTargets) {
+      return;
+    }
     setLoading(true);
     try {
-      const result = await invokePromise(provider.getSyncTargets as any, {
+      const result = await invokePromise(provider.getSyncTargets, {
         integration: Ref.make(integration),
       });
       if (result.error) {
         throw result.error;
       }
-      const targets = (result.data as { targets: readonly RemoteTarget[] } | undefined)?.targets ?? [];
+      const targets = result.data?.targets ?? [];
       void invokePromise(LayoutOperation.UpdateDialog, {
         subject: SYNC_TARGETS_DIALOG,
         state: true,

@@ -113,11 +113,6 @@ const ItemsKanbanContainer = ({ role, subject: object }: ItemsKanbanContainerPro
   const projection = useItemsProjection(object);
   const change = useEchoChangeCallback(object);
 
-  // Items atom: dereference each ref via `AtomObj.make(ref)` so the atom
-  // re-runs reactively when refs hydrate (e.g. on initial open of a synced
-  // kanban — items load async). Filters out closed/tombstoned cards (pull
-  // marks `closed=true` for cards deleted upstream).
-  //
   // TODO(wittjosiah): pass refs (not loaded objects) through to the kanban
   //   board and let `KanbanCard` subscribe to its own ref via `useObject`.
   //   Today this atom subscribes to *every* item — any one changing causes the
@@ -137,8 +132,12 @@ const ItemsKanbanContainer = ({ role, subject: object }: ItemsKanbanContainerPro
         const out: Obj.Unknown[] = [];
         for (const ref of object.spec.items as ReadonlyArray<Ref.Ref<Obj.Unknown>>) {
           const target = get(AtomObj.make(ref));
-          if (target == null) {continue;}
-          if ((target as unknown as { closed?: unknown }).closed === true) {continue;}
+          if (target == null) {
+            continue;
+          }
+          if ((target as unknown as { closed?: unknown }).closed === true) {
+            continue;
+          }
           out.push(target as unknown as Obj.Unknown);
         }
         return out;
@@ -146,17 +145,15 @@ const ItemsKanbanContainer = ({ role, subject: object }: ItemsKanbanContainerPro
     [object.spec.items],
   );
 
-  // Items variant doesn't support card-create through the Kanban UI yet — items
-  // are owned by the integration. Card removal still goes through the standard op.
-  // TODO(integration-create): wire `onCardAdd` to the create-object flow so
-  //   users can add items directly from the kanban (currently the column's
-  //   "+" button is hidden because `onCardAdd` is undefined).
   const handleCardRemove = useCallback(() => undefined, []);
 
   if (!object || !db || !change) {
     return null;
   }
 
+  // TODO(wittjosiah): wire `onCardAdd` to the create-object flow so
+  //   users can add items directly from the kanban (currently the column's
+  //   "+" button is hidden because `onCardAdd` is undefined).
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>

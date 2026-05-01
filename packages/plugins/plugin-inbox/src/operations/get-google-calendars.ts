@@ -13,6 +13,7 @@ import { Database, Obj } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 
+import { AccessTokenNotPopulatedError, IntegrationDatabaseMissingError } from '../errors';
 import { GetGoogleCalendars } from './definitions';
 
 const CALENDAR_LIST_URL =
@@ -51,14 +52,14 @@ const handler: Operation.WithHandler<typeof GetGoogleCalendars> = GetGoogleCalen
       const target = integration.target;
       const db = target ? Obj.getDatabase(target) : undefined;
       if (!db) {
-        return yield* Effect.fail(new Error('No database for integration ref'));
+        return yield* Effect.fail(new IntegrationDatabaseMissingError());
       }
 
       return yield* Effect.gen(function* () {
         const integrationObj = yield* Database.load(integration);
         const accessToken = yield* Database.load(integrationObj.accessToken);
         if (!accessToken.token) {
-          return yield* Effect.fail(new Error('Access token not yet populated.'));
+          return yield* Effect.fail(new AccessTokenNotPopulatedError());
         }
 
         const remoteCalendars = yield* listGoogleCalendars(accessToken.token).pipe(

@@ -47,7 +47,9 @@ export default {
     const exportsCache = new Map(); // packageName -> Set<segment>
 
     const loadExportsForPackage = (pkgName) => {
-      if (exportsCache.has(pkgName)) {return exportsCache.get(pkgName);}
+      if (exportsCache.has(pkgName)) {
+        return exportsCache.get(pkgName);
+      }
       try {
         const pkgJson = requireForFile(`${pkgName}/package.json`);
         const ex = pkgJson && pkgJson.exports;
@@ -55,8 +57,12 @@ export default {
         if (ex && typeof ex === 'object') {
           for (const key of Object.keys(ex)) {
             // Keys like './Schema', './SchemaAST', './Function' (skip '.' and './package.json').
-            if (key === '.' || key === './package.json') {continue;}
-            if (key.startsWith('./')) {segments.add(key.slice(2));}
+            if (key === '.' || key === './package.json') {
+              continue;
+            }
+            if (key.startsWith('./')) {
+              segments.add(key.slice(2));
+            }
           }
         }
         exportsCache.set(pkgName, segments);
@@ -74,7 +80,9 @@ export default {
     };
 
     const resolveExportToSegment = (pkgName, exportName) => {
-      if (isValidSubpath(pkgName, exportName)) {return exportName;}
+      if (isValidSubpath(pkgName, exportName)) {
+        return exportName;
+      }
       if (pkgName === 'effect' && EFFECT_EXPORT_TO_SUBPATH[exportName]) {
         const segment = EFFECT_EXPORT_TO_SUBPATH[exportName];
         return isValidSubpath(pkgName, segment) ? segment : null;
@@ -110,9 +118,13 @@ export default {
     return {
       ImportDeclaration: (node) => {
         const source = String(node.source.value);
-        if (!isEffectPackage(source)) {return;}
+        if (!isEffectPackage(source)) {
+          return;
+        }
         const basePackage = getBasePackage(source);
-        if (shouldSkipEffectPackage(basePackage)) {return;}
+        if (shouldSkipEffectPackage(basePackage)) {
+          return;
+        }
 
         // If it's a subpath import (e.g., 'effect/Schema'), enforce namespace import except for allowed subpaths.
         if (source.startsWith(basePackage + '/')) {
@@ -148,10 +160,15 @@ export default {
         const typeImports = [];
         const regularImports = [];
         for (const specifier of node.specifiers) {
-          if (specifier.type !== 'ImportSpecifier') {continue;}
+          if (specifier.type !== 'ImportSpecifier') {
+            continue;
+          }
           const entry = { imported: specifier.imported.name, local: specifier.local.name };
-          if (specifier.importKind === 'type') {typeImports.push(entry);}
-          else {regularImports.push(entry);}
+          if (specifier.importKind === 'type') {
+            typeImports.push(entry);
+          } else {
+            regularImports.push(entry);
+          }
         }
 
         // Partition into resolvable vs unresolved specifiers (resolved entries include segment for fix).
@@ -162,13 +179,19 @@ export default {
 
         typeImports.forEach((spec) => {
           const segment = resolveExportToSegment(packageName, spec.imported);
-          if (segment) {resolvedType.push({ ...spec, segment });}
-          else {unresolvedType.push(spec);}
+          if (segment) {
+            resolvedType.push({ ...spec, segment });
+          } else {
+            unresolvedType.push(spec);
+          }
         });
         regularImports.forEach((spec) => {
           const segment = resolveExportToSegment(packageName, spec.imported);
-          if (segment) {resolvedRegular.push({ ...spec, segment });}
-          else {unresolvedRegular.push(spec);}
+          if (segment) {
+            resolvedRegular.push({ ...spec, segment });
+          } else {
+            unresolvedRegular.push(spec);
+          }
         });
 
         const unresolved = [...unresolvedType, ...unresolvedRegular].map(({ imported }) => imported);
@@ -214,7 +237,9 @@ export default {
               const useNamed = NAMED_IMPORT_ALLOWED_SUBPATHS.has(segment);
               const merged = [...group.regular];
               for (const t of group.type) {
-                if (!group.regular.some((r) => r.local === t.local)) {merged.push(t);}
+                if (!group.regular.some((r) => r.local === t.local)) {
+                  merged.push(t);
+                }
               }
               if (useNamed && merged.length > 0) {
                 const specParts = merged.map(({ imported, local }) =>
@@ -225,7 +250,9 @@ export default {
                 const seen = new Set();
                 for (const { imported, local } of merged) {
                   const alias = imported !== local ? local : imported;
-                  if (seen.has(alias)) {continue;}
+                  if (seen.has(alias)) {
+                    continue;
+                  }
                   seen.add(alias);
                   const isTypeOnly =
                     group.type.some((t) => t.imported === imported) &&
@@ -249,7 +276,9 @@ export default {
               });
               unresolvedType.forEach((s) => {
                 const entry = byLocal.get(s.local) ?? {};
-                if (!entry.value) {entry.type = s;} // only keep type if no value for same local
+                if (!entry.value) {
+                  entry.type = s;
+                } // only keep type if no value for same local
                 byLocal.set(s.local, entry);
               });
 
@@ -265,14 +294,18 @@ export default {
                   specParts.push(part);
                 }
               }
-              if (specParts.length) {imports.push(`import { ${specParts.join(', ')} } from '${packageName}';`);}
+              if (specParts.length) {
+                imports.push(`import { ${specParts.join(', ')} } from '${packageName}';`);
+              }
             }
 
             // Get the original import's indentation.
             const importIndent = sourceCode.text.slice(node.range[0] - node.loc.start.column, node.range[0]);
 
             // Join imports with newline and proper indentation.
-            if (imports.length === 0) {return null;} // nothing to change
+            if (imports.length === 0) {
+              return null;
+            } // nothing to change
             const newImports = imports.join('\n' + importIndent);
 
             return fixer.replaceText(node, newImports);

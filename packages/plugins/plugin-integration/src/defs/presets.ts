@@ -12,6 +12,8 @@ import { type OAuthProvider } from '@dxos/protocols';
  * Provider lookup at runtime goes through the contributed
  * `IntegrationProvider` capabilities; this type is kept only so the
  * non-React OAuth helpers (Tauri/mobile/CLI flows) can stay generic.
+ *
+ * @deprecated Use the `IntegrationProvider` capabilities instead.
  */
 export type OAuthPreset = {
   label: string;

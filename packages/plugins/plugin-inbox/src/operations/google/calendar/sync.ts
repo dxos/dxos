@@ -22,6 +22,7 @@ import { type Event } from '@dxos/types';
 
 import { GoogleCalendar } from '../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
+import { CalendarForeignKeyWrongTypeError } from '../../../errors';
 import { InboxResolver, GoogleCredentials } from '../../../services';
 import { Calendar } from '../../../types';
 import { GoogleCalendarSync } from '../../definitions';
@@ -90,7 +91,7 @@ const findOrCreateCalendar = (remoteId: string, name: string) =>
       const candidate = existing[0];
       // TODO(wittjosiah): Filter.foreignKeys typing may not narrow to Calendar; drop guard if it does.
       if (!Calendar.instanceOf(candidate)) {
-        return yield* Effect.fail(new Error('Foreign key query returned a non-calendar object.'));
+        return yield* Effect.fail(new CalendarForeignKeyWrongTypeError());
       }
       return candidate;
     }

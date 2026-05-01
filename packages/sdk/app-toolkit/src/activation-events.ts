@@ -18,6 +18,15 @@ export namespace AppActivationEvents {
   export const SetupMetadata = ActivationEvent$.make('org.dxos.app-framework.event.setup-metadata');
 
   /**
+   * Fired before {@link SetupAppGraph}. Activates modules that contribute the
+   * integration-provider capability so service plugins register OAuth/sync
+   * handlers before the app graph queries them.
+   */
+  export const SetupIntegrationProviders = ActivationEvent$.make(
+    'org.dxos.app-framework.event.setup-integration-providers',
+  );
+
+  /**
    * Fired before the graph is created.
    */
   export const SetupAppGraph = ActivationEvent$.make('org.dxos.app-framework.event.setup-graph');

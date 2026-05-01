@@ -207,9 +207,6 @@ export default Capability.makeModule(
         },
       }),
 
-      // Settings entries attach directly under each filesystem workspace
-      // (formerly nested under an alternate-tree "Settings" sub-panel).
-      // `general` hoists above the workspace's directory entries.
       GraphBuilder.createExtension({
         id: 'workspace-settings',
         match: NodeMatcher.whenNodeType(FILESYSTEM_TYPE),

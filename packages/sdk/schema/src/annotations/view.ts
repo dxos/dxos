@@ -9,16 +9,16 @@ import { type Obj, type Type, View } from '@dxos/echo';
 import { createAnnotationHelper, type AnnotationHelper } from '@dxos/echo/internal';
 
 // TODO(wittjosiah): This won't serialize into echo. Migrate to `Annotation.make` to store in `PropertyMeta`.
+export const ViewAnnotationId = Symbol.for('@dxos/schema/annotation/View');
+
+/** Ref-like Echo field to a persisted View document. */
+type EchoViewRefLike = { load?: () => Promise<View.View>; target?: View.View };
+
 /**
  * Property path segments from the Echo object root to a Ref<View> field (e.g. `['view']` or `['spec', 'view']`).
  * A schema may annotate this path while individual instances omit or unset that ref — those objects are treated as non-view holders at runtime until a ref appears.
  */
 export type EchoViewRefPath = readonly string[];
-
-export const ViewAnnotationId = Symbol.for('@dxos/schema/annotation/View');
-
-/** Ref-like Echo field to a persisted View document. */
-type EchoViewRefLike = { load?: () => Promise<View.View>; target?: View.View };
 
 export type ViewAnnotationModule = AnnotationHelper<EchoViewRefPath> & {
   /**
@@ -35,7 +35,7 @@ export type ViewAnnotationModule = AnnotationHelper<EchoViewRefPath> & {
   tryLoadAtPath: (object: Obj.Unknown, path: EchoViewRefPath) => Effect.Effect<View.View | undefined, never, never>;
 };
 
-const viewAnnotationSchema = createAnnotationHelper<EchoViewRefPath>(ViewAnnotationId);
+const viewAnnotation = createAnnotationHelper<EchoViewRefPath>(ViewAnnotationId);
 
 const getHolderAtPath = (object: unknown, path: EchoViewRefPath): unknown => {
   let current: unknown = object;
@@ -50,7 +50,7 @@ const getHolderAtPath = (object: unknown, path: EchoViewRefPath): unknown => {
 
 const viewMethods: Omit<ViewAnnotationModule, keyof AnnotationHelper<EchoViewRefPath>> = {
   has(schema: Type.AnyEntity): boolean {
-    return viewAnnotationSchema.get(schema).pipe(
+    return viewAnnotation.get(schema).pipe(
       Option.map((path) => path.length > 0),
       Option.getOrElse(() => false),
     );
@@ -79,4 +79,4 @@ const viewMethods: Omit<ViewAnnotationModule, keyof AnnotationHelper<EchoViewRef
 };
 
 /** View schema annotation (`get`/`set`/`getFromAst`) plus path traversal helpers. */
-export const ViewAnnotation = Object.assign(viewAnnotationSchema, viewMethods) as ViewAnnotationModule;
+export const ViewAnnotation = Object.assign(viewAnnotation, viewMethods) as ViewAnnotationModule;

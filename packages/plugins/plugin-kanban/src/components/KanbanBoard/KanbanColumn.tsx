@@ -56,10 +56,6 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
           eventHandler={eventHandler}
           Tile={itemTile as FC<MosaicTileProps<Obj.Unknown>>}
         />
-        {/* Always render the footer to preserve column layout/spacing.
-            `Board.Column.Footer` shows its add button only when `onAdd` is
-            defined, so passing it conditionally hides just the "+" while the
-            footer rail stays. */}
         <Board.Column.Footer
           onAdd={
             onCardAdd

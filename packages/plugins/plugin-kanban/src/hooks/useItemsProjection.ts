@@ -10,33 +10,15 @@ import type { ProjectionModel } from '@dxos/schema';
 import { type Kanban } from '#types';
 
 /**
- * Stub `ProjectionModel`-shaped object for items-variant kanbans.
- *
- * Items-variant kanbans don't have a backing `View`, so the real `ProjectionModel`
- * (which depends on a View) doesn't apply. We synthesize a minimal one exposing
- * `pivotField` so `useKanbanBoardModel` can pivot, and stubbed accessors so
- * downstream consumers (the card-rendering `FormFieldSet`) don't crash on
- * methods like `getFieldProjections()` / `getHiddenProperties()`.
- *
- * Column options are derived from `kanban.arrangement.columns` keys, NOT from
- * loaded items. The integration sync writes `arrangement.columns` from the
- * service's own ordering primitive (e.g. Trello's `pos`), so the full column
- * list is available before any item ref has hydrated. This avoids subscribing
- * to every item just to know which columns exist — items remain on lazy load.
- *
- * Card body rendering: we hide `pivotField` (it's already shown as the column
- * the card lives in) and report no other field projections, which makes the
- * `FormFieldSet` fall through to schema-only ordering — Expando schemas have
- * no fixed properties, so the body renders empty and the card shows just the
- * title (`Obj.getLabel(data)`).
+ * Minimal `ProjectionModel` for `spec.kind === 'items'` (no View). Supplies `pivotField`
+ * and column options from `arrangement.columns` keys—written by sync so columns exist
+ * before refs hydrate. Stubs `getFieldProjections` / `getHiddenProperties` for shared
+ * board/card UI; hides the pivot on the card body (column shows it); Expando cards render title only.
  */
 export const useItemsProjection = (kanban: Kanban.KanbanItems): ProjectionModel => {
   return useMemo(() => {
     const pivotField = kanban.spec.pivotField;
 
-    // Column list comes from the kanban's arrangement, written by sync. Reading
-    // `kanban.arrangement.columns` is reactive through ECHO — when sync rewrites
-    // it, this hook re-renders and the column structure updates.
     const optionIds = Object.keys(kanban.arrangement?.columns ?? {});
     const options = optionIds.map((id) => ({ id, title: id, color: 'neutral' as const }));
 
@@ -52,14 +34,11 @@ export const useItemsProjection = (kanban: Kanban.KanbanItems): ProjectionModel 
     } = {
       fields,
       tryGetFieldProjection: (id: string) => (id === pivotField ? fieldProjection : undefined),
-      // Card-body renderer asks for the projection's field list. We don't surface
-      // the pivot here (the column already conveys it) and Expandos have no other
-      // fixed fields to project, so report none.
       getFieldProjections: () => [],
-      // Hide the pivot from the card body to avoid rendering it twice.
       getHiddenProperties: () => [pivotField],
     };
 
+    // TODO(wittjosiah): Refactor ProjectionModel to be an interface that we can fulfill.
     return stub as unknown as ProjectionModel;
   }, [kanban.arrangement?.columns, kanban.spec.pivotField]);
 };

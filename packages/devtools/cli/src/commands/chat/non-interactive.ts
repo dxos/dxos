@@ -128,7 +128,9 @@ export const runNonInteractive = async (options: RunNonInteractiveOptions): Prom
       changed
         .filter(({ id }) => {
           const obj = after.get(id);
-          if (!obj) {return false;}
+          if (!obj) {
+            return false;
+          }
           return TRACKED_TYPENAME_SET.has(typename); // typename re-check via lookup below
         })
         .map(({ id, created }) => ({ id, created, kind, typename })),
@@ -140,7 +142,9 @@ export const runNonInteractive = async (options: RunNonInteractiveOptions): Prom
         const live = (space.db as any).getObjectById?.(id);
         const typename = live ? Obj.getTypename(live) : undefined;
         const kind = kindForTypename(typename);
-        if (!kind) {return undefined;}
+        if (!kind) {
+          return undefined;
+        }
         const dxn = live ? Obj.getDXN(live).toString() : `dxn:echo:@:${id}`;
         return { kind, dxn, created };
       })

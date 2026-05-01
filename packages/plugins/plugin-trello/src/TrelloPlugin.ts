@@ -15,7 +15,7 @@ export const TrelloPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupAppGraph,
+    activatesOn: AppActivationEvents.SetupIntegrationProviders,
     activate: IntegrationProvider,
   }),
   Plugin.make,

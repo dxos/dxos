@@ -10,44 +10,21 @@ import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { Format, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { AccessToken } from '@dxos/types';
 
-/**
- * One target of an Integration: a remote item the user has chosen to sync.
- *
- * The selection-time identifier is `remoteId` (the foreign id from the remote
- * service — Trello board id, Google calendar id, …). The local placeholder
- * object (`object`) is populated lazily by the provider's `sync` op on first
- * run — discovery (`getSyncTargets`) is read-only and doesn't write any
- * objects to the space. Providers that auto-create their target at OAuth
- * time (e.g. Gmail's single Mailbox) set `object` directly and may omit
- * `remoteId`.
- */
+/** One sync target: chosen remote item (`remoteId`) plus optional local root (`object`). */
 const IntegrationTarget = Schema.Struct({
-  /**
-   * Local placeholder object. Set either at OAuth time (single-target
-   * providers) or lazily on first sync. Undefined while a target is selected
-   * but not yet materialized.
-   */
+  /** Local root; set at OAuth for single-target flows or on first sync otherwise. */
   object: Ref.Ref(Obj.Unknown).pipe(Schema.optional),
-  /**
-   * Foreign id from the remote service (e.g. Trello board id). Identifies
-   * the target before any local object exists; sync uses it to materialize
-   * the placeholder.
-   */
+  /** Remote foreign id before materialization (board id, calendar id, …). */
   remoteId: Schema.String.pipe(Schema.optional),
-  /** Cached display name for the target — used by the article UI before first sync. */
+  /** Display label for UI before sync. */
   name: Schema.String.pipe(Schema.optional),
-  /** Opaque, service-defined cursor for this target (e.g. a last-modified timestamp). */
+  /** Provider-defined sync cursor (opaque). */
   cursor: Schema.String.pipe(Schema.optional),
-  /** Observed status: ISO timestamp of the most recent successful sync. */
+  /** Last successful sync (ISO). */
   lastSyncAt: Format.DateTime.pipe(Schema.optional),
-  /** Observed status: error message from the most recent failed sync, if any. */
+  /** Last sync failure message. */
   lastError: Schema.String.pipe(Schema.optional),
-  /**
-   * Per-target options interpreted by the contributing `IntegrationProvider`
-   * (e.g. Gmail uses `{ syncBackDays?, filter? }`, Calendar adds
-   * `syncForwardDays`). Plugin-integration treats this as opaque; each
-   * provider documents and validates its own shape.
-   */
+  /** Provider-specific options; opaque here—providers validate their shape. */
   options: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(
     FormInputAnnotation.set(false),
     Schema.optional,
@@ -57,45 +34,22 @@ const IntegrationTarget = Schema.Struct({
 export type IntegrationTarget = Schema.Schema.Type<typeof IntegrationTarget>;
 
 /**
- * Generic representation of an external-service integration.
- *
- * Pairs an {@link AccessToken} with a list of root local objects that are populated
- * (and bidirectionally synced) from the external service.
- *
- * The schema is service-agnostic. Routing to the right `IntegrationProvider`
- * goes via `providerId` (set at create time) — `accessToken.source` alone
- * isn't sufficient because multiple providers can share the same OAuth
- * source (e.g. Gmail and Google Calendar both `'google.com'`).
- *
- * Scheduling/recurrence is deliberately not modeled here — DXOS Triggers own
- * recurring execution and can reference the service-specific sync operation
- * directly.
+ * External-service integration: {@link AccessToken} plus synced local roots (`targets`).
+ * Routed by `providerId` (not `accessToken.source` alone—multiple providers may share a source).
+ * Recurrence lives in Triggers, not on this type.
  */
 export const Integration = Schema.Struct({
-  /** User-friendly label distinct from account/source — e.g. "Work Trello". */
+  /** Display name (e.g. "Work Trello"). */
   name: Schema.String.pipe(Schema.optional),
-  /**
-   * Stable id of the `IntegrationProvider` capability entry that created
-   * this Integration. Used to look up the provider's sync ops, OAuth spec,
-   * and `onTokenCreated` hook on subsequent operations. Optional only for
-   * forward compatibility with pre-providerId Integrations.
-   */
+  /** Capability id for sync/OAuth/`onTokenCreated`; optional for legacy rows. */
   providerId: Schema.String.pipe(Schema.optional),
+  /** Stored OAuth/API credential. */
   accessToken: Ref.Ref(AccessToken.AccessToken),
-  /** Root local objects this Integration populates. */
+  /** Targets to sync (remote id ↔ local root per row). */
   targets: Schema.Array(IntegrationTarget),
   /**
-   * Per-item snapshots of last-pulled remote state, keyed by `foreignId`
-   * (the remote identifier, also stored in each item's `Obj.Meta.keys`).
-   * The inner record is a service-defined map of fields — for Trello a card
-   * snapshot stores `{ name, description, listName, url, closed }`; a board
-   * snapshot stores `{ name, columns: { [listName]: { ids } } }`. Trello's
-   * id namespace is unified, so a single flat map covers both granularities.
-   *
-   * Used to drive a three-way merge on pull: comparing `(local, remote, snapshot)`
-   * per field lets us distinguish "user changed this locally" from "remote
-   * changed this since the last sync" without writing the snapshot to the
-   * SDK layer. On both-changed conflicts the policy is remote-wins.
+   * Last-seen remote fields keyed by foreign id (matches `Obj.Meta.keys`).
+   * Shape is provider-defined; drives pull merge `(local, remote, snapshot)` — remote wins on conflict.
    */
   snapshots: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(
     FormInputAnnotation.set(false),

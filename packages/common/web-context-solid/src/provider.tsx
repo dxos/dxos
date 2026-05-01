@@ -183,7 +183,9 @@ export function ContextProtocolProvider<T extends UnknownContext>(props: Context
       }
 
       const info = subscriptions.get(callback);
-      if (!info) {continue;}
+      if (!info) {
+        continue;
+      }
 
       const { consumerHost } = info;
 

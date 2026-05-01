@@ -43,9 +43,6 @@ export const KanbanSettings = ({ subject: object }: KanbanSettingsProps) => {
     [fieldProjections],
   );
 
-  // Read the primitive directly so the memoized `initialValues` recomputes
-  // when the underlying value changes — depending on `object.arrangement.columns`
-  // wouldn't, since it's the same proxy reference across mutations.
   const hideUncategorized = object.arrangement.columns[UNCATEGORIZED_VALUE]?.hidden ?? false;
 
   const handleValuesChanged = useCallback(
@@ -56,14 +53,6 @@ export const KanbanSettings = ({ subject: object }: KanbanSettingsProps) => {
         });
       }
       if (values.hideUncategorized !== undefined) {
-        // The hide flag lives on the per-column arrangement entry — the
-        // settings UI only exposes it for UNCATEGORIZED, but the data
-        // structure supports per-column hiding generally.
-        //
-        // Mutate `hidden` on the existing entry rather than replacing the
-        // entry wholesale: reading `existing.ids` returns ECHO's array
-        // proxy, and re-assigning it inside a fresh literal trips the
-        // encoder, which writes `{}` and fails schema validation.
         updateKanban((kanban) => {
           const existing = kanban.arrangement.columns[UNCATEGORIZED_VALUE];
           if (existing) {

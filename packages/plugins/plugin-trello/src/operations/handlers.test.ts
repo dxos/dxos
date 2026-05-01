@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
+import { InternalError } from '@dxos/errors';
 import { Operation } from '@dxos/operation';
 import { Integration } from '@dxos/plugin-integration/types';
 import { Kanban } from '@dxos/plugin-kanban/types';
@@ -15,9 +16,13 @@ import { Expando } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
 import { TRELLO_SOURCE } from '../constants';
-import { type TrelloBoard, type TrelloCard, type TrelloList } from '../services/trello-api';
+import { TrelloApi } from '../services';
 import getTrelloBoardsHandler from './get-trello-boards';
-import syncTrelloBoardHandler from './sync-trello-board';
+import syncTrelloBoardHandler from './sync';
+
+type TrelloBoard = TrelloApi.TrelloBoard;
+type TrelloCard = TrelloApi.TrelloCard;
+type TrelloList = TrelloApi.TrelloList;
 
 // Stub the network layer so handlers run against fixtures, not real Trello.
 vi.mock('../services/trello-api', async () => {
@@ -74,7 +79,7 @@ vi.mock('../services/trello-api', async () => {
   };
   return {
     ...actual,
-    // Real `trello-api` functions return `Effect<T, HttpClientError, HttpClient>`.
+    // Real `trello-api` functions return `Effect<T, HttpClientError | ParseError, HttpClient>`.
     // The stubs return `Effect.succeed(...)` so handlers can `yield*` them
     // without needing a real HttpClient layer.
     fetchMember: vi.fn(() =>
@@ -218,7 +223,9 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     // Make fetchLists fail for board-b only.
     const fetchLists = trelloApi.fetchLists as unknown as ReturnType<typeof vi.fn>;
     fetchLists.mockImplementation((boardId: string) => {
-      if (boardId === 'board-b') {return Effect.fail(new Error('boom'));}
+      if (boardId === 'board-b') {
+        return Effect.fail(new InternalError({ context: { reason: 'boom' } }));
+      }
       return Effect.succeed([{ id: 'list-a1', name: 'To Do', closed: false, pos: 0 }]);
     });
 

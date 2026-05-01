@@ -81,7 +81,9 @@ test.skip(
       const importRe =
         /\bimport\s*(?:[^'"()]*?from\s*)?['"]([^'"\n]+)['"];?|\bimport\s*\(\s*['"]([^'"\n]+)['"]\s*\)|\bexport\s*[^'"()]*?from\s*['"]([^'"\n]+)['"]/g;
       const fetchAndRecurse = async (url: string) => {
-        if (visited.has(url)) {return;}
+        if (visited.has(url)) {
+          return;
+        }
         visited.add(url);
         console.log(url);
 
@@ -109,9 +111,13 @@ test.skip(
           let m: RegExpExecArray | null;
           while ((m = importRe.exec(code))) {
             const spec = m[1] || m[2] || m[3];
-            if (!spec) {continue;}
+            if (!spec) {
+              continue;
+            }
             // Ignore data: and http(s) external URLs.
-            if (/^(data:|https?:)/i.test(spec)) {continue;}
+            if (/^(data:|https?:)/i.test(spec)) {
+              continue;
+            }
             // Resolve relative and absolute paths against the current module URL.
             const resolved = new URL(spec, url).toString();
             await fetchAndRecurse(resolved);
@@ -122,7 +128,9 @@ test.skip(
           const pageDom = new JSDOM(page);
           for (const s of Array.from(pageDom.window.document.querySelectorAll<HTMLScriptElement>('script[src]'))) {
             const src = s.getAttribute('src');
-            if (src) {await fetchAndRecurse(new URL(src, url).toString());}
+            if (src) {
+              await fetchAndRecurse(new URL(src, url).toString());
+            }
           }
         } else {
           // For other assets (css, wasm, etc.), just ensure fetch succeeds.

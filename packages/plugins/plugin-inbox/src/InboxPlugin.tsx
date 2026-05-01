@@ -126,7 +126,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
     activate: InboxSettings,
   }),
   Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupAppGraph,
+    activatesOn: AppActivationEvents.SetupIntegrationProviders,
     activate: IntegrationProvider,
   }),
   Plugin.make,
