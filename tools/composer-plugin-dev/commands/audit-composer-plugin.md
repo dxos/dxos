@@ -9,6 +9,13 @@ You are auditing a Composer plugin. The path is `$ARGUMENTS` (default: current d
 
 Walk the plugin tree and report **every deviation** from the rules in `skills/composer-plugin-dev/references/`. Use the topic index in `SKILL.md` to navigate. Be specific — cite file paths and line numbers.
 
+### Architecture (`before-you-build.md`)
+
+- Does this plugin duplicate domain types that already exist in another plugin or `@dxos/types` (e.g. service-prefixed copies of `Kanban.Card`)? **Critical.**
+- Does it ship a bespoke UI for entities an existing plugin already renders? Should it be a headless sync layer over the existing UI instead?
+- For sync/integration plugins: is sync state modeled as a dedicated ECHO object (cursor, external-id mapping, last-sync timestamp)?
+- Any cross-object atomicity assumptions that conflict with non-atomic writes in the store? Flag for human review.
+
 ### Layout
 
 - `src/` matches `directory-structure.md`?

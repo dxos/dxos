@@ -5,7 +5,7 @@ description: Author DXOS Composer plugins — primarily community plugins built 
 
 # Composer Plugin Authoring
 
-**Audience.** This skill is for authors building a Composer plugin **outside the dxos monorepo** — in your own GitHub repository, packaged as a community plugin. Inside the monorepo (`packages/plugins/plugin-*`), most patterns are identical, but a handful of things change (build system, dep specifiers, package layout, registration, spec language). Each section below has an **"Inside the dxos monorepo"** callout where it differs.
+**Audience.** This skill is for authors building a Composer plugin **outside the dxos monorepo**. For v1, the recommended layout is an **external monorepo** containing many community plugins (so refactoring/abstractions can move across them); standalone per-plugin repos like `dxos/plugin-excalidraw` are also supported and may become the preferred shape in v2. Inside the dxos monorepo (`packages/plugins/plugin-*`), most patterns are identical, but a handful of things change (build system, dep specifiers, package layout, registration, spec language). Each section below has an **"Inside the dxos monorepo"** callout where it differs.
 
 **Reference plugins.**
 
@@ -21,7 +21,13 @@ When in doubt, copy a working plugin and modify.
 
 Each topic below links to a focused reference file under `references/`. Read the index first, then jump to the file you need. Files are short and self-contained; don't try to read them all at once.
 
+> **Read [before-you-build.md](references/before-you-build.md) first.** It covers the architectural decisions that should precede any scaffolding: surveying existing plugins, reusing internal types, preferring headless sync layers over bespoke UI, sync-state design, the open question around non-atomic writes, and when to stop and ask a human.
+
 ## Topics
+
+### Before you build
+
+0. **[Before you build](references/before-you-build.md)** — survey existing plugins, reuse internal types, prefer headless sync over bespoke UI, build reusable sync infrastructure, watch out for non-atomic writes, and know when to flag architectural decisions to a human.
 
 ### Getting started
 
