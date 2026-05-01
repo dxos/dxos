@@ -94,15 +94,20 @@ export const KanbanBoardRoot = ({
   const { t } = useTranslation(meta.id);
   const model = useKanbanBoardModel(kanban, projection, items, registry);
   const columns = model?.getColumns?.() ?? [];
-  const view = kanban?.view?.target;
+  const view = kanban?.spec.kind === 'view' ? kanban.spec.view.target : undefined;
   const pivotFieldId = view?.projection?.pivotFieldId;
   const columnFieldPath = useMemo(() => {
+    // Items-variant kanbans use the property name itself as the pivot field
+    // (no view/projection translation layer).
+    if (kanban?.spec.kind === 'items') {
+      return kanban.spec.pivotField;
+    }
     if (pivotFieldId === undefined || !projection) {
       return undefined;
     }
 
     return projection.tryGetFieldProjection(pivotFieldId)?.props.property;
-  }, [projection, pivotFieldId]);
+  }, [kanban?.spec, projection, pivotFieldId]);
 
   const getPivotAttributes = useCallback<KanbanBoardContextValue['getPivotAttributes']>(
     (columnValue) => {

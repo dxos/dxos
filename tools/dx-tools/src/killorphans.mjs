@@ -42,7 +42,9 @@ const pgid = -child.pid;
 // ─────────────────────────────────────────────────────────────────────────────
 ['SIGINT', 'SIGTERM'].forEach((sig) => {
   // Windows can’t send SIGTERM; ignore or emulate if needed
-  if (sig === 'SIGTERM' && os.platform() === 'win32') return;
+  if (sig === 'SIGTERM' && os.platform() === 'win32') {
+    return;
+  }
   process.on(sig, () => {
     try {
       os.platform() === 'win32'

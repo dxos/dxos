@@ -133,18 +133,24 @@ export class OnboardingManager {
       // Automatically start join space flow if already authed.
       if (this._spaceInvitationCode) {
         await this._openJoinSpace();
-        if (aborted()) return;
+        if (aborted()) {
+          return;
+        }
       }
       // Ensure that recovery credential is present.
       await this._setupRecovery();
-      if (aborted()) return;
+      if (aborted()) {
+        return;
+      }
       // Ensure that agent is present.
       await this._createAgent();
       return;
     } else if (!this._skipAuth) {
       // No identity yet: show welcome screen.
       await this._showWelcome();
-      if (aborted()) return;
+      if (aborted()) {
+        return;
+      }
     }
 
     if (this._deviceInvitationCode !== undefined) {
@@ -164,11 +170,17 @@ export class OnboardingManager {
     } else if (!this._identity && this._skipAuth) {
       // Auth disabled (e.g. integration tests): just bring up a fresh identity.
       await this._createIdentity();
-      if (aborted()) return;
+      if (aborted()) {
+        return;
+      }
       await this._setupRecovery();
-      if (aborted()) return;
+      if (aborted()) {
+        return;
+      }
       await this._startHelp();
-      if (aborted()) return;
+      if (aborted()) {
+        return;
+      }
       await this._createAgent();
     } else if (!this._identity && this._token && this._tokenType === 'login') {
       // Login flow: redeem the recovery token from `/account/login` to restore
@@ -178,7 +190,9 @@ export class OnboardingManager {
       await this._login();
       await this._setupRecovery();
     }
-    if (aborted()) return;
+    if (aborted()) {
+      return;
+    }
 
     if (this._skipAuth && this._spaceInvitationCode) {
       // If skipping auth and a space invitation code is present, open join space flow.

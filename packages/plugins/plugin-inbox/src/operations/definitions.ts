@@ -6,10 +6,9 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
-import { SpaceSchema } from '@dxos/client/echo';
-import { CredentialsService, QueueService, Trace } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { CredentialsService, Operation, QueueService, Trace } from '@dxos/compute';
 import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Integration } from '@dxos/plugin-integration/types';
 import { Actor, Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -18,15 +17,29 @@ import { Calendar, Mailbox } from '../types';
 
 const INBOX_OPERATION = `${meta.id}.operation`;
 
-export const OnCreateSpace = Operation.make({
-  meta: { key: `${INBOX_OPERATION}.on-create-space`, name: 'On Create Space' },
-  services: [Capability.Service],
+/** Wire-shape of a `RemoteTarget` for getSyncTargets-style operations. */
+const RemoteTarget = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  description: Schema.String.pipe(Schema.optional),
+});
+
+export const GetGoogleCalendars = Operation.make({
+  // TODO(wittjosiah): Declaring services here forces DynamicRuntime validation to fail before the handler
+  //   runs because composer's invoker doesn't carry per-space Database. The handler provides
+  //   `Database.layer(db)` itself (same pattern as plugin-trello GetTrelloBoards).
+  meta: {
+    key: `${INBOX_OPERATION}.get-google-calendars`,
+    name: 'Get Google Calendars',
+    description:
+      'Discover Google Calendars reachable from an integration and materialize a Calendar object per remote calendar.',
+  },
   input: Schema.Struct({
-    space: SpaceSchema,
-    rootCollection: Collection.Collection,
-    isDefault: Schema.optional(Schema.Boolean),
+    integration: Ref.Ref(Integration.Integration),
   }),
-  output: Schema.Void,
+  output: Schema.Struct({
+    targets: Schema.Array(RemoteTarget),
+  }),
 });
 
 export const AddMailbox = Operation.make({
@@ -100,10 +113,9 @@ export const GmailSend = Operation.make({
   input: Schema.Struct({
     userId: Schema.String.pipe(Schema.optional),
     message: Message.Message,
-    mailbox: Ref.Ref(Mailbox.Mailbox).pipe(
-      Schema.annotations({ description: 'Optional mailbox to send from. Uses mailbox credentials if provided.' }),
-      Schema.optional,
-    ),
+    integration: Ref.Ref(Integration.Integration).annotations({
+      description: 'Integration to source Gmail credentials from.',
+    }),
   }),
   output: Schema.Struct({
     id: Schema.String,
@@ -119,7 +131,12 @@ export const GoogleMailSync = Operation.make({
     description: 'Sync emails from Gmail to the mailbox feed.',
   },
   input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({ description: 'Reference to the mailbox object.' }),
+    integration: Ref.Ref(Integration.Integration).annotations({
+      description: 'Integration that owns credentials and per-target sync metadata.',
+    }),
+    mailbox: Ref.Ref(Mailbox.Mailbox)
+      .annotations({ description: 'When omitted, syncs every mailbox listed on the Integration.' })
+      .pipe(Schema.optional),
     userId: Schema.String.pipe(Schema.optional),
     label: Schema.String.pipe(
       Schema.annotations({
@@ -151,11 +168,12 @@ export const SyncMailbox = Operation.make({
   meta: {
     key: `${INBOX_OPERATION}.sync-mailbox`,
     name: 'Sync Mailbox',
-    description: 'Runs Google Mail sync and notifies of failures.',
+    description: 'Runs Google Mail sync and notifies of progress.',
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    mailbox: Mailbox.Mailbox,
+    integration: Ref.Ref(Integration.Integration),
+    mailbox: Ref.Ref(Mailbox.Mailbox).pipe(Schema.optional),
   }),
   output: Schema.Void,
 });
@@ -168,9 +186,15 @@ export const GoogleCalendarSync = Operation.make({
       'Sync events from Google Calendar. The initial sync uses startTime ordering for specified number of days. Subsequent syncs use updatedMin to catch all changes.',
   },
   input: Schema.Struct({
-    calendar: Ref.Ref(Calendar.Calendar).annotations({
-      description: 'Reference to the calendar object.',
+    integration: Ref.Ref(Integration.Integration).annotations({
+      description: 'Integration that owns credentials and per-target sync metadata.',
     }),
+    calendar: Ref.Ref(Calendar.Calendar)
+      .annotations({
+        description:
+          'When omitted, syncs every calendar target on the Integration (materializing on first run as needed).',
+      })
+      .pipe(Schema.optional),
     googleCalendarId: Schema.optional(Schema.String),
     syncBackDays: Schema.optional(Schema.Number),
     syncForwardDays: Schema.optional(Schema.Number),
@@ -187,11 +211,12 @@ export const SyncCalendar = Operation.make({
   meta: {
     key: `${INBOX_OPERATION}.sync-calendar`,
     name: 'Sync Calendar',
-    description: 'Runs Google Calendar sync and notifies of failures.',
+    description: 'Runs Google Calendar sync and notifies of progress.',
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    calendar: Calendar.Calendar,
+    integration: Ref.Ref(Integration.Integration),
+    calendar: Ref.Ref(Calendar.Calendar).pipe(Schema.optional),
   }),
   output: Schema.Void,
 });

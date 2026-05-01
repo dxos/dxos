@@ -9,12 +9,12 @@ import { Capability } from '@dxos/app-framework';
 import { meta } from '#meta';
 
 export namespace NavTreeCapabilities {
-  export type NavTreeItemState = { open: boolean; current: boolean; alternateTree?: boolean };
+  export type NavTreeItemState = { open: boolean; current: boolean };
 
   export type NavTreeStateStore = {
     getItem: (path: string[]) => NavTreeItemState;
     getItemAtom: (path: string[]) => Atom.Atom<NavTreeItemState>;
-    setItem: (path: string[], key: 'open' | 'current' | 'alternateTree', next: boolean) => void;
+    setItem: (path: string[], key: 'open' | 'current', next: boolean) => void;
   };
 
   export const State = Capability.make<NavTreeStateStore>(`${meta.id}.capability.state`);

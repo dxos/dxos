@@ -18,10 +18,28 @@ import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
 // TODO(wittjosiah): Factor out?
 export const PivotColumnAnnotationId = Symbol.for('@dxos/plugin-kanban/annotation/PivotColumn');
 
-export const SettingsSchema = Schema.Struct({
+/**
+ * Settings common to every Kanban (view or items). Rendered as form fields
+ * by `KanbanSettings`.
+ */
+export const KanbanSettingsSchema = Schema.Struct({
+  hideUncategorized: Schema.Boolean.annotations({
+    title: 'Hide uncategorized column',
+    description: 'When enabled, items without a pivot value won’t be shown as a column.',
+  }).pipe(Schema.optional),
+});
+
+/**
+ * Settings for view-variant Kanbans only. Spreads {@link KanbanSettingsSchema}'s
+ * fields and adds a column-field picker that binds the View’s pivot field.
+ * Items-variant kanbans use a hardcoded `spec.pivotField` and don’t expose
+ * this control.
+ */
+export const KanbanViewSettingsSchema = Schema.Struct({
   columnFieldId: Schema.String.annotations({
     title: 'Column field',
   }),
+  ...KanbanSettingsSchema.fields,
 });
 
 export const CreateKanbanSchema = Schema.Struct({
