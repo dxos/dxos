@@ -118,9 +118,7 @@
     "scripts/**",
     "docs/legacy/**",
     "docs/public/webflow/**",
-    "docs/scripts/**",
-    "tools/swc-log-plugin/tests/__swc_snapshots__/**",
-    "tools/swc-log-plugin/test-rig/**"
+    "docs/scripts/**"
   ],
   "jsPlugins": [
     "@dxos/eslint-plugin-rules",
