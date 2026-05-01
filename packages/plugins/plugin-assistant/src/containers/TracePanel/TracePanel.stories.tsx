@@ -14,7 +14,6 @@ import { Feed } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import { FeedTraceSink, ProcessManager } from '@dxos/functions-runtime';
 import { ObjectId } from '@dxos/keys';
-import { dbg } from '@dxos/log';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { useComputeRuntime } from '@dxos/plugin-automation/hooks';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -214,7 +213,7 @@ const useLocalStorageNumber = (key: string, initial: number): [number, Dispatch<
     if (typeof window !== 'undefined') {
       const stored = window.localStorage.getItem(key);
       const parsed = stored === null ? Number.NaN : Number(stored);
-      if (Number.isFinite(parsed)) {
+      if (Number.isInteger(parsed) && parsed >= 0) {
         value = parsed;
         hydrated = true;
       }
@@ -248,6 +247,10 @@ const SnapshotStory = () => {
   const [step, setStep, stepHydrated] = useLocalStorageNumber(STEP_STORAGE_KEY, 0);
   const [playing, setPlaying] = useState(false);
 
+  useEffect(() => {
+    setStep((current) => Math.min(Math.max(current, 0), total));
+  }, [total, setStep]);
+
   // Start with all messages loaded once the snapshot first arrives; afterwards the user controls `step`.
   // Skip the auto-init if we restored a value from localStorage so we don't clobber the user's last position.
   const hasInitializedRef = useRef(false);
@@ -265,7 +268,6 @@ const SnapshotStory = () => {
     () => buildExecutionGraph({ traceMessages: visibleMessages }),
     [visibleMessages],
   );
-  dbg(commits);
 
   const stepNext = useCallback(() => setStep((current) => Math.min(current + 1, total)), [total]);
   const stepPrev = useCallback(() => setStep((current) => Math.max(current - 1, 0)), []);

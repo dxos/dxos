@@ -8,7 +8,7 @@ import * as Predicate from 'effect/Predicate';
 import { AGENT_PROCESS_KEY, AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { Trace } from '@dxos/compute';
 import { Process } from '@dxos/functions-runtime';
-import { LogLevel, dbg, log } from '@dxos/log';
+import { LogLevel, log } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
 
 /**
@@ -129,8 +129,6 @@ export const buildExecutionGraph = ({
   );
 
   builder.addBranch(MAIN_BRANCH);
-
-  dbg(JSON.stringify(events, null, 2));
 
   for (const event of events) {
     if (Trace.isOfType(AgentRequestBegin, event)) {
@@ -279,17 +277,14 @@ export const buildExecutionGraph = ({
       builder.addCommit({
         id: `${event.id}:${event.data.key}:start`,
         branch: event.meta.parentPid ?? MAIN_BRANCH,
-        parents: dbg(
-          builder.computeParents(
-            CommitSelector.branch(event.meta.parentPid ?? MAIN_BRANCH).pipe(
-              CommitSelector.andAlso(CommitSelector.tag(event.meta.parentPid && tagStartMarker(event.meta.parentPid))),
-              CommitSelector.compose(CommitSelector.orderByTimestamp()),
-              CommitSelector.compose(CommitSelector.last()),
-              CommitSelector.orElse(CommitSelector.branch(event.meta.parentPid)),
-              CommitSelector.compose(CommitSelector.last()),
-            ),
+        parents: builder.computeParents(
+          CommitSelector.branch(event.meta.parentPid ?? MAIN_BRANCH).pipe(
+            CommitSelector.andAlso(CommitSelector.tag(event.meta.parentPid && tagStartMarker(event.meta.parentPid))),
+            CommitSelector.compose(CommitSelector.orderByTimestamp()),
+            CommitSelector.compose(CommitSelector.last()),
+            CommitSelector.orElse(CommitSelector.branch(event.meta.parentPid)),
+            CommitSelector.compose(CommitSelector.last()),
           ),
-          { '~LogMeta': '~LogMeta', A: ['OperationStart parents'] } as any,
         ),
         tags: [
           ...getTags(event.meta),
@@ -358,7 +353,9 @@ export const buildExecutionGraph = ({
       builder.addCommit({
         id: `running:${process.pid}`,
         branch: process.pid,
-        parents: builder.computeParents(CommitSelector.branch(process.pid)),
+        parents: builder.computeParents(
+          CommitSelector.branch(process.pid).pipe(CommitSelector.compose(CommitSelector.last())),
+        ),
         icon: ICONS.agentRequestRunning.icon,
         level: ICONS.agentRequestRunning.level,
         message: 'Generating...',
@@ -368,7 +365,9 @@ export const buildExecutionGraph = ({
       builder.addCommit({
         id: `running:${process.pid}`,
         branch: process.pid,
-        parents: builder.computeParents(CommitSelector.branch(process.pid)),
+        parents: builder.computeParents(
+          CommitSelector.branch(process.pid).pipe(CommitSelector.compose(CommitSelector.last())),
+        ),
         icon: ICONS.processRunning.icon,
         level: ICONS.processRunning.level,
         message: 'Running...',
@@ -378,7 +377,6 @@ export const buildExecutionGraph = ({
   }
 
   const built = builder.build();
-  dbg(JSON.stringify(built, null, 2));
   log('trace execution graph', {
     traceMessages: traceMessages.length,
     flatEvents: events.length,

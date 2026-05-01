@@ -172,25 +172,19 @@ describe('CommitSelector', () => {
     test('returns prev result when prev is non-empty', ({ expect }) => {
       const a = makeCommit('a', { branch: 'main' });
       const b = makeCommit('b', { branch: 'feature' });
-      const selector = CommitSelector.branch('main').pipe(
-        CommitSelector.orElse(CommitSelector.branch('feature')),
-      );
+      const selector = CommitSelector.branch('main').pipe(CommitSelector.orElse(CommitSelector.branch('feature')));
       expect(selector.select([a, b])).toEqual([a]);
     });
 
     test('returns next result when prev is empty', ({ expect }) => {
       const b = makeCommit('b', { branch: 'feature' });
-      const selector = CommitSelector.branch('main').pipe(
-        CommitSelector.orElse(CommitSelector.branch('feature')),
-      );
+      const selector = CommitSelector.branch('main').pipe(CommitSelector.orElse(CommitSelector.branch('feature')));
       expect(selector.select([b])).toEqual([b]);
     });
 
     test('returns empty when both prev and next are empty', ({ expect }) => {
       const z = makeCommit('z', { branch: 'other' });
-      const selector = CommitSelector.branch('main').pipe(
-        CommitSelector.orElse(CommitSelector.branch('feature')),
-      );
+      const selector = CommitSelector.branch('main').pipe(CommitSelector.orElse(CommitSelector.branch('feature')));
       expect(selector.select([z])).toEqual([]);
     });
   });
@@ -199,9 +193,7 @@ describe('CommitSelector', () => {
     test('returns the union of prev and next', ({ expect }) => {
       const a = makeCommit('a', { branch: 'main' });
       const b = makeCommit('b', { branch: 'feature' });
-      const selector = CommitSelector.branch('main').pipe(
-        CommitSelector.andAlso(CommitSelector.branch('feature')),
-      );
+      const selector = CommitSelector.branch('main').pipe(CommitSelector.andAlso(CommitSelector.branch('feature')));
       expect(ids(selector.select([a, b])).toSorted()).toEqual(['a', 'b']);
     });
 
@@ -299,10 +291,7 @@ describe('CommitSelector', () => {
     test('combines results from multiple selectors', ({ expect }) => {
       const a = makeCommit('a', { branch: 'main' });
       const b = makeCommit('b', { branch: 'feature' });
-      const selector = CommitSelector.unionAll(
-        CommitSelector.branch('main'),
-        CommitSelector.branch('feature'),
-      );
+      const selector = CommitSelector.unionAll(CommitSelector.branch('main'), CommitSelector.branch('feature'));
       expect(ids(selector.select([a, b])).toSorted()).toEqual(['a', 'b']);
     });
 

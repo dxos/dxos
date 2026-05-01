@@ -10,12 +10,9 @@ import { useEffect, useState } from 'react';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { AutomationCapabilities } from '../types';
 import { useComputeRuntime } from './useComputeRuntime';
 
-type ResolvedService<T extends Context.Tag<any, any>> =
-  | (Context.Tag.Service<T> & AutomationCapabilities.ComputeRuntime)
-  | undefined;
+type ResolvedService<T extends Context.Tag<any, any>> = Context.Tag.Service<T> | undefined;
 
 /**
  * Resolves a service from the compute runtime for a given space.
@@ -48,7 +45,7 @@ export const useComputeRuntimeService = <T extends Context.Tag<any, any>>(
           return;
         }
         if (Exit.isSuccess(exit)) {
-          setService(exit.value as ResolvedService<T>);
+          setService(exit.value);
         } else {
           log.warn('useComputeRuntimeService: failed to acquire service', { cause: exit.cause });
         }
