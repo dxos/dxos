@@ -279,7 +279,7 @@ const useMarkdownStreamTextEditor = (
             xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
             // TODO(burdon): Temporarily disable footer to avoid layout shift while scrolling.
             false ? streamFooter(setFooterRoot) : [],
-            scroller({ overScroll: 120 }),
+            scroller({ overScroll: 160 }),
             ...(options?.autoScroll ? [autoScroll()] : []),
             ...(options?.wire
               ? [

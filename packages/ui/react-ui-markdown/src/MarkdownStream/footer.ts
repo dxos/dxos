@@ -13,6 +13,52 @@ import { Domino } from '@dxos/ui';
 export const setFooterVisibleEffect = StateEffect.define<boolean>();
 
 /**
+ * Block widget rendered at the end of the document. The DOM element is reported via
+ * `setRoot` so the host React component can `createPortal` arbitrary content into it.
+ */
+class FooterWidget extends WidgetType {
+  private _inner: HTMLDivElement | null = null;
+
+  constructor(private readonly _setRoot: (el: HTMLElement | null) => void) {
+    super();
+  }
+
+  // Singleton equality so CM keeps the same DOM element across decoration rebuilds —
+  // the React subtree portaled into it is not unmounted on every doc change.
+  override eq(_other: this): boolean {
+    return true;
+  }
+
+  override ignoreEvent(): boolean {
+    return true;
+  }
+
+  override toDOM(): HTMLElement {
+    // The outer block-widget element is `position: relative` with zero flow height so it
+    // does not push the document layout (autoScroll, line measurement, etc. ignore it).
+    // The inner element is `position: absolute`, taking the React subtree out of flow — it
+    // renders as a floating layer anchored to the doc tail without consuming space.
+    const inner = Domino.of('div')
+      .classNames('cm-stream-footer-content')
+      .style({ position: 'absolute', left: '0', top: '0' });
+
+    const el = Domino.of('div')
+      .classNames('cm-stream-footer')
+      .style({ position: 'relative', height: '0' })
+      .append(inner);
+
+    this._inner = inner.root;
+    this._setRoot(inner.root);
+    return el.root;
+  }
+
+  override destroy(): void {
+    this._inner = null;
+    this._setRoot(null);
+  }
+}
+
+/**
  * Renders a host-supplied React subtree as a CodeMirror block widget anchored at
  * `doc.length`. The widget lives inside the document, so it scrolls with content. Toggle
  * visibility via {@link setFooterVisibleEffect}; the decoration's position is mapped
@@ -50,41 +96,3 @@ export const streamFooter = (setRoot: (el: HTMLElement | null) => void): Extensi
 
   return [field];
 };
-
-/**
- * Block widget rendered at the end of the document. The DOM element is reported via
- * `setRoot` so the host React component can `createPortal` arbitrary content into it.
- */
-class FooterWidget extends WidgetType {
-  constructor(private readonly _setRoot: (el: HTMLElement | null) => void) {
-    super();
-  }
-
-  // Singleton equality so CM keeps the same DOM element across decoration rebuilds —
-  // the React subtree portaled into it is not unmounted on every doc change.
-  override eq(_other: this): boolean {
-    return true;
-  }
-
-  override ignoreEvent(): boolean {
-    return true;
-  }
-
-  override toDOM(): HTMLElement {
-    // The outer block-widget element is `position: relative` with zero flow height so it
-    // does not push the document layout (autoScroll, line measurement, etc. ignore it).
-    // The inner element is `position: absolute`, taking the React subtree out of flow — it
-    // renders as a floating layer anchored to the doc tail without consuming space.
-    const inner = Domino.of('div')
-      .classNames('cm-stream-footer-content')
-      .style({ position: 'absolute', left: '0', top: '0' });
-
-    this._setRoot(inner.root);
-    return Domino.of('div').classNames('cm-stream-footer').style({ position: 'relative', height: '0' }).append(inner)
-      .root;
-  }
-
-  override destroy(): void {
-    this._setRoot(null);
-  }
-}
