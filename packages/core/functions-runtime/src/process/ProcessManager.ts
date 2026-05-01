@@ -22,8 +22,7 @@ import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
 import { DXN, Obj } from '@dxos/echo';
-import { Performance } from '@dxos/effect';
-import { runAndForwardErrors } from '@dxos/effect';
+import { Performance, runAndForwardErrors } from '@dxos/effect';
 import { Process, ServiceResolver, Trace } from '@dxos/functions';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -205,80 +204,94 @@ export interface Manager {
 /**
  * Tag for the ProcessManager service.
  */
-export class ProcessManagerService extends Context.Tag('@dxos/functions-runtime/ProcessManagerService')<
-  ProcessManagerService,
-  Manager
->() {}
+export class Service extends Context.Tag('@dxos/functions-runtime/ProcessManagerService')<Service, Manager>() {}
+
+export type IdGenerator = () => Process.ID;
+
+/**
+ * Generates a random process id (UUID string).
+ */
+export const UUIDIdGenerator: IdGenerator = () => Process.ID.make(crypto.randomUUID());
+
+/**
+ * Generates sequential string process ids (`0`, `1`, …); useful in tests.
+ */
+export const SequentialIdGenerator: IdGenerator = (() => {
+  let nextId = 0;
+  return () => Process.ID.make(String(nextId++));
+})();
 
 /**
  * Output queue uses Option to signal completion: Some(value) for data, None for end-of-stream.
  */
 type OutputItem<O> = Option.Option<O>;
 
-class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
-  readonly statusAtom: Atom.Writable<Status>;
+interface HandleImplOptions<I, O, R> {
+  readonly pid: Process.ID;
   readonly parentId: Process.ID | null;
+  readonly key: string;
+  readonly params: Process.Params;
   readonly environment: Environment;
+  readonly callbacks: Process.Callbacks<I, O, R>;
+  readonly scope: Scope.CloseableScope;
+  readonly services: Context.Context<R | Process.BaseServices>;
+  readonly registry: Registry.Registry;
+  readonly outputQueue: Queue.Queue<OutputItem<O>>;
+  readonly storage: Context.Tag.Service<typeof StorageService.StorageService>;
+  readonly traceSink: Trace.Sink;
+  readonly onFinished?: (state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>;
+  readonly onStatusChanged?: () => void;
+  readonly hasRunningChildren?: () => boolean;
+}
+
+class HandleImpl<I, O, R> implements Handle<I, O> {
+  readonly pid: Process.ID;
+  readonly parentId: Process.ID | null;
+  readonly key: string;
+  readonly params: Process.Params;
+  readonly environment: Environment;
+  readonly statusAtom: Atom.Writable<Status>;
+
+  readonly #callbacks: Process.Callbacks<I, O, R>;
+  readonly #scope: Scope.CloseableScope;
+  readonly #services: Context.Context<R | Process.BaseServices>;
+  readonly #registry: Registry.Registry;
+  readonly #outputQueue: Queue.Queue<OutputItem<O>>;
+  readonly #storage: Context.Tag.Service<typeof StorageService.StorageService>;
+  readonly #traceSink: Trace.Sink;
+  readonly #onFinished: ((state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>) | undefined;
+  readonly #onStatusChanged: (() => void) | undefined;
+  readonly #hasRunningChildren: () => boolean;
+  readonly #ephemeralBuffer = new EphemeralTraceBuffer();
+  readonly #ephemeralSubscribers: Queue.Queue<Option.Option<Trace.Message>>[] = [];
+  readonly #alarmSemaphore = Effect.runSync(Effect.makeSemaphore(1));
 
   #currentStatus: Status;
   #activeHandlers = 0;
   #finished = false;
   #succeedRequested = false;
   #failError: Error | null = null;
-  readonly key: string;
-  readonly params: Process.Params;
   #wallTimeMs = 0;
   #inputCount = 0;
   #outputCount = 0;
   #alarmTimer: ReturnType<typeof setTimeout> | null = null;
-  #services: Context.Context<R | Process.BaseServices>;
-  #alarmSemaphore = Effect.runSync(Effect.makeSemaphore(1));
 
-  readonly #callbacks: Process.Callbacks<I, O, R>;
-  readonly #scope: Scope.CloseableScope;
-  readonly #registry: Registry.Registry;
-  readonly #outputQueue: Queue.Queue<OutputItem<O>>;
-  readonly #storage: Context.Tag.Service<typeof StorageService.StorageService>;
-  readonly #traceSink: Trace.Sink;
-
-  readonly #ephemeralBuffer = new EphemralTraceBuffer();
-  readonly #ephemeralSubscribers: Queue.Queue<Option.Option<Trace.Message>>[] = [];
-
-  readonly #onFinished: ((state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>) | undefined;
-  readonly #onStatusChanged: (() => void) | undefined;
-  readonly #hasRunningChildren: () => boolean;
-
-  constructor(
-    readonly pid: Process.ID,
-    parentId: Process.ID | null,
-    callbacks: Process.Callbacks<I, O, R>,
-    scope: Scope.CloseableScope,
-    services: Context.Context<R | Process.BaseServices>,
-    registry: Registry.Registry,
-    outputQueue: Queue.Queue<OutputItem<O>>,
-    storage: Context.Tag.Service<typeof StorageService.StorageService>,
-    key: string,
-    params: Process.Params,
-    environment: Environment,
-    traceSink: Trace.Sink,
-    onFinished?: (state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>,
-    onStatusChanged?: () => void,
-    hasRunningChildren?: () => boolean,
-  ) {
-    this.parentId = parentId;
-    this.key = key;
-    this.params = params;
-    this.environment = environment;
-    this.#callbacks = callbacks;
-    this.#scope = scope;
-    this.#services = services;
-    this.#registry = registry;
-    this.#outputQueue = outputQueue;
-    this.#traceSink = traceSink;
-    this.#storage = storage;
-    this.#onFinished = onFinished;
-    this.#onStatusChanged = onStatusChanged;
-    this.#hasRunningChildren = hasRunningChildren ?? (() => false);
+  constructor(options: HandleImplOptions<I, O, R>) {
+    this.pid = options.pid;
+    this.parentId = options.parentId;
+    this.key = options.key;
+    this.params = options.params;
+    this.environment = options.environment;
+    this.#callbacks = options.callbacks;
+    this.#scope = options.scope;
+    this.#services = options.services;
+    this.#registry = options.registry;
+    this.#outputQueue = options.outputQueue;
+    this.#storage = options.storage;
+    this.#traceSink = options.traceSink;
+    this.#onFinished = options.onFinished;
+    this.#onStatusChanged = options.onStatusChanged;
+    this.#hasRunningChildren = options.hasRunningChildren ?? (() => false);
 
     this.#currentStatus = {
       state: Process.State.RUNNING,
@@ -288,7 +301,11 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     };
     this.statusAtom = Atom.make<Status>(this.#currentStatus);
     this.#registry.mount(this.statusAtom);
-    log('lifecycle: created', { parentId, key, params });
+    log('lifecycle: created', { parentId: this.parentId, key: this.key, params: this.params });
+  }
+
+  get status(): Status {
+    return this.#currentStatus;
   }
 
   snapshotStatus(): Status {
@@ -322,7 +339,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     };
   }
 
-  /** Run process onSpawn. Called by ProcessManagerImpl after spawn. */
+  /** Run process onSpawn. Called by ManagerImpl after spawn. */
   runOnSpawn(): Effect.Effect<void> {
     log('lifecycle: onspawn');
     return this.#runHandler('spawn', () => this.#callbacks.onSpawn()).pipe(Effect.flatMap(Fiber.join));
@@ -416,6 +433,51 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     );
   }
 
+  requestSucceed(): void {
+    this.#succeedRequested = true;
+  }
+
+  requestFail(error: Error): void {
+    this.#failError = error;
+  }
+
+  // TODO(dmaretskyi): Update to make it prefer the earliest alarm.
+  requestAlarm(timeout?: number): void {
+    if (this.#finished) {
+      return;
+    }
+    this.#clearAlarm();
+    const delay = timeout ?? 0;
+    log('lifecycle: alarm scheduled', { delayMs: delay });
+    this.#alarmTimer = setTimeout(() => {
+      this.#alarmTimer = null;
+      if (!this.#finished) {
+        Effect.runFork(
+          this.#runHandler('alarm', () => this.#callbacks.onAlarm()).pipe(
+            Effect.flatMap(Fiber.join),
+            this.#alarmSemaphore.withPermits(1),
+          ),
+        );
+      }
+    }, delay);
+  }
+
+  requestSubmitOutput(output: O): void {
+    log('lifecycle: submit output', { pid: this.pid });
+    this.#outputCount++;
+    this.#onStatusChanged?.();
+    Queue.unsafeOffer(this.#outputQueue, Option.some(output));
+  }
+
+  requestChildEvent(event: Process.ChildEvent<unknown>): void {
+    if (this.#finished) {
+      log('lifecycle: child event ignored (already finished)', { tag: event._tag, childPid: event.pid });
+      return;
+    }
+    log('lifecycle: child event', { tag: event._tag, childPid: event.pid });
+    Effect.runFork(this.#runHandler('childEvent', () => this.#callbacks.onChildEvent(event)));
+  }
+
   #assertRunAndExitProcessActive(): Effect.Effect<void> {
     const { state, exit } = this.#currentStatus;
     if (state === Process.State.TERMINATED) {
@@ -464,51 +526,6 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
       yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
       yield* Deferred.await(deferred);
     }).pipe(Effect.scoped);
-  }
-
-  get status(): Status {
-    return this.#currentStatus;
-  }
-
-  requestSucceed(): void {
-    this.#succeedRequested = true;
-  }
-
-  requestFail(error: Error): void {
-    this.#failError = error;
-  }
-
-  // TODO(dmaretskyi): Update to make it prefer the earliest alarm.
-  requestAlarm(timeout?: number): void {
-    if (this.#finished) {
-      return;
-    }
-    this.#clearAlarm();
-    const delay = timeout ?? 0;
-    log('lifecycle: alarm scheduled', { delayMs: delay });
-    this.#alarmTimer = setTimeout(() => {
-      this.#alarmTimer = null;
-      if (!this.#finished) {
-        Effect.runFork(
-          this.#runHandler('alarm', () => this.#callbacks.onAlarm()).pipe(
-            Effect.flatMap(Fiber.join),
-            this.#alarmSemaphore.withPermits(1),
-          ),
-        );
-      }
-    }, delay);
-  }
-
-  requestSubmitOutput(output: O): void {
-    log('lifecycle: submit output', { pid: this.pid });
-    this.#outputCount++;
-    this.#onStatusChanged?.();
-    Queue.unsafeOffer(this.#outputQueue, Option.some(output));
-  }
-
-  requestChildEvent(event: Process.ChildEvent<unknown>): void {
-    log('lifecycle: child event', { tag: event._tag, childPid: event.pid });
-    Effect.runFork(this.#runHandler('childEvent', () => this.#callbacks.onChildEvent(event)));
   }
 
   #runHandler(
@@ -637,34 +654,33 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   }
 }
 
-export interface ProcessManagerImplOpts {
-  registry: Registry.Registry;
-  kvStore: KeyValueStore.KeyValueStore;
-  traceSink: Trace.Sink;
-  serviceResolver?: ServiceResolver.ServiceResolver;
-  handlerSet?: OperationHandlerSet.OperationHandlerSet;
-  idGenerator?: ProcessIdGenerator;
+export interface ManagerImplOptions {
+  readonly registry: Registry.Registry;
+  readonly kvStore: KeyValueStore.KeyValueStore;
+  readonly traceSink: Trace.Sink;
+  readonly serviceResolver?: ServiceResolver.ServiceResolver;
+  readonly handlerSet?: OperationHandlerSet.OperationHandlerSet;
+  readonly idGenerator?: IdGenerator;
 }
 
-export class ProcessManagerImpl implements Manager {
-  readonly #idGenerator: ProcessIdGenerator;
-  readonly #handles = new Map<Process.ID, ProcessHandleImpl<any, any, any>>();
+export class ManagerImpl implements Manager {
+  readonly #idGenerator: IdGenerator;
   readonly #registry: Registry.Registry;
   readonly #kvStore: KeyValueStore.KeyValueStore;
   readonly #serviceResolver: ServiceResolver.ServiceResolver;
   readonly #handlerSet: OperationHandlerSet.OperationHandlerSet | undefined;
   readonly #traceSink: Trace.Sink;
-
+  readonly #handles = new Map<Process.ID, HandleImpl<any, any, any>>();
   readonly #processTreeAtom: Atom.Writable<readonly Process.Info[]>;
   readonly #monitor: Process.Monitor;
 
-  constructor(opts: ProcessManagerImplOpts) {
-    this.#idGenerator = opts.idGenerator ?? UUIDProcessIdGenerator;
-    this.#registry = opts.registry;
-    this.#kvStore = opts.kvStore;
-    this.#serviceResolver = opts.serviceResolver ?? ServiceResolver.empty;
-    this.#handlerSet = opts.handlerSet;
-    this.#traceSink = opts.traceSink;
+  constructor(options: ManagerImplOptions) {
+    this.#idGenerator = options.idGenerator ?? UUIDIdGenerator;
+    this.#registry = options.registry;
+    this.#kvStore = options.kvStore;
+    this.#serviceResolver = options.serviceResolver ?? ServiceResolver.empty;
+    this.#handlerSet = options.handlerSet;
+    this.#traceSink = options.traceSink;
     this.#processTreeAtom = Atom.make<readonly Process.Info[]>([]);
     this.#registry.mount(this.#processTreeAtom);
     this.#monitor = {
@@ -679,26 +695,6 @@ export class ProcessManagerImpl implements Manager {
 
   get operationHandlerSet(): OperationHandlerSet.OperationHandlerSet {
     return this.#handlerSet ?? OperationHandlerSet.empty;
-  }
-
-  #hasNonTerminalChildren(parentPid: Process.ID): boolean {
-    for (const handle of this.#handles.values()) {
-      if (handle.parentId === parentPid) {
-        const { state } = handle.snapshotStatus();
-        if (state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  #buildProcessTreeSnapshot(): readonly Process.Info[] {
-    return [...this.#handles.values()].map((handle) => handle.snapshotProcessInfo());
-  }
-
-  #refreshProcessTree(): void {
-    this.#registry.set(this.#processTreeAtom, this.#buildProcessTreeSnapshot());
   }
 
   /**
@@ -722,42 +718,6 @@ export class ProcessManagerImpl implements Manager {
       this.#refreshProcessTree();
       log('lifecycle: manager shutdown complete', { terminated: order.length });
     });
-  }
-
-  /**
-   * Pids with no pending children in the handle map first, so child processes shut down before parents.
-   */
-  #shutdownTerminationOrder(): ProcessHandleImpl<any, any, any>[] {
-    const byPid = new Map(this.#handles);
-    const pending = new Set<Process.ID>(byPid.keys());
-    const result: ProcessHandleImpl<any, any, any>[] = [];
-
-    const pendingChildCount = (pid: Process.ID): number => {
-      let count = 0;
-      for (const childPid of pending) {
-        const child = byPid.get(childPid)!;
-        if (child.parentId === pid) {
-          count++;
-        }
-      }
-      return count;
-    };
-
-    while (pending.size > 0) {
-      let leaves = [...pending].filter((pid) => pendingChildCount(pid) === 0);
-      if (leaves.length === 0) {
-        leaves = [[...pending][0]!];
-      }
-      for (const pid of leaves) {
-        pending.delete(pid);
-        const handle = byPid.get(pid);
-        if (handle) {
-          result.push(handle);
-        }
-      }
-    }
-
-    return result;
   }
 
   spawn<I, O>(definition: Process.Process<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>> {
@@ -789,7 +749,7 @@ export class ProcessManagerImpl implements Manager {
         process: id,
       };
 
-      let handleRef: ProcessHandleImpl<I, O, any> | null = null;
+      let handleRef: HandleImpl<I, O, any> | null = null;
 
       const params: Process.Params = {
         name: options?.name ?? null,
@@ -914,23 +874,23 @@ export class ProcessManagerImpl implements Manager {
           }
         });
 
-      const handle = new ProcessHandleImpl<I, O, any>(
-        id,
-        Option.getOrNull(parentOption),
-        callbacks,
-        scope,
-        fullCtx,
-        this.#registry,
-        outputQueue,
-        storage,
-        definition.key,
+      const handle = new HandleImpl<I, O, any>({
+        pid: id,
+        parentId: Option.getOrNull(parentOption),
+        key: definition.key,
         params,
         environment,
-        this.#traceSink,
+        callbacks,
+        scope,
+        services: fullCtx,
+        registry: this.#registry,
+        outputQueue,
+        storage,
+        traceSink: this.#traceSink,
         onFinished,
-        () => this.#refreshProcessTree(),
-        () => this.#hasNonTerminalChildren(id),
-      );
+        onStatusChanged: () => this.#refreshProcessTree(),
+        hasRunningChildren: () => this.#hasNonTerminalChildren(id),
+      });
       handleRef = handle;
       this.#handles.set(id, handle);
       this.#refreshProcessTree();
@@ -957,7 +917,7 @@ export class ProcessManagerImpl implements Manager {
 
   list(options?: ListOptions): Effect.Effect<readonly Handle.Any[]> {
     return Effect.sync(() => {
-      let impls: ProcessHandleImpl<any, any, any>[] = [...this.#handles.values()];
+      let impls: HandleImpl<any, any, any>[] = [...this.#handles.values()];
       if (options?.key !== undefined) {
         impls = impls.filter((handle) => handle.key === options.key);
       }
@@ -984,22 +944,63 @@ export class ProcessManagerImpl implements Manager {
       });
     });
   }
+
+  #hasNonTerminalChildren(parentPid: Process.ID): boolean {
+    for (const handle of this.#handles.values()) {
+      if (handle.parentId === parentPid) {
+        const { state } = handle.snapshotStatus();
+        if (state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  #buildProcessTreeSnapshot(): readonly Process.Info[] {
+    return [...this.#handles.values()].map((handle) => handle.snapshotProcessInfo());
+  }
+
+  #refreshProcessTree(): void {
+    this.#registry.set(this.#processTreeAtom, this.#buildProcessTreeSnapshot());
+  }
+
+  /**
+   * Pids with no pending children in the handle map first, so child processes shut down before parents.
+   */
+  #shutdownTerminationOrder(): HandleImpl<any, any, any>[] {
+    const byPid = new Map(this.#handles);
+    const pending = new Set<Process.ID>(byPid.keys());
+    const result: HandleImpl<any, any, any>[] = [];
+
+    const pendingChildCount = (pid: Process.ID): number => {
+      let count = 0;
+      for (const childPid of pending) {
+        const child = byPid.get(childPid)!;
+        if (child.parentId === pid) {
+          count++;
+        }
+      }
+      return count;
+    };
+
+    while (pending.size > 0) {
+      let leaves = [...pending].filter((pid) => pendingChildCount(pid) === 0);
+      if (leaves.length === 0) {
+        leaves = [[...pending][0]!];
+      }
+      for (const pid of leaves) {
+        pending.delete(pid);
+        const handle = byPid.get(pid);
+        if (handle) {
+          result.push(handle);
+        }
+      }
+    }
+
+    return result;
+  }
 }
-
-export type ProcessIdGenerator = () => Process.ID;
-
-/**
- * Generates a random process id (UUID string).
- */
-export const UUIDProcessIdGenerator: ProcessIdGenerator = () => Process.ID.make(crypto.randomUUID());
-
-/**
- * Generates sequential string process ids (`0`, `1`, …); useful in tests.
- */
-export const SequentialProcessIdGenerator: ProcessIdGenerator = (() => {
-  let nextId = 0;
-  return () => Process.ID.make(String(nextId++));
-})();
 
 /**
  * Scoped layer that provides ProcessManager and ProcessMonitorService.
@@ -1010,9 +1011,9 @@ export const SequentialProcessIdGenerator: ProcessIdGenerator = (() => {
  * and Registry.AtomRegistry from the environment.
  */
 export const layer = (opts?: {
-  idGenerator?: ProcessIdGenerator;
+  idGenerator?: IdGenerator;
 }): Layer.Layer<
-  ProcessManagerService | Process.ProcessMonitorService,
+  Service | Process.ProcessMonitorService,
   never,
   | KeyValueStore.KeyValueStore
   | ServiceResolver.ServiceResolver
@@ -1029,7 +1030,7 @@ export const layer = (opts?: {
       const registry = yield* Registry.AtomRegistry;
       const traceSink = yield* Trace.TraceSink;
 
-      const manager = new ProcessManagerImpl({
+      const manager = new ManagerImpl({
         registry,
         kvStore,
         traceSink,
@@ -1041,7 +1042,7 @@ export const layer = (opts?: {
       yield* Effect.addFinalizer(() => manager.shutdown());
 
       return Context.mergeAll(
-        Context.make(ProcessManagerService, manager),
+        Context.make(Service, manager),
         Context.make(Process.ProcessMonitorService, manager.monitor),
       );
     }),
@@ -1050,9 +1051,9 @@ export const layer = (opts?: {
 /**
  * Compacting circular buffer of ephemeral trace events.
  */
-class EphemralTraceBuffer {
-  #maxLength: number;
-  #buffer: Trace.Message[] = [];
+class EphemeralTraceBuffer {
+  readonly #maxLength: number;
+  readonly #buffer: Trace.Message[] = [];
 
   constructor(maxLength: number = 25) {
     this.#maxLength = maxLength;
@@ -1105,6 +1106,11 @@ class EphemralTraceBuffer {
 // =============================================================================
 // ProcessOperationInvoker (merged to avoid circular dependency)
 // =============================================================================
+
+// Aliased before the namespace so the outer `Service` tag remains reachable
+// from inside the namespace (where `Service` resolves to the nested tag).
+const ManagerServiceTag = Service;
+type ManagerServiceTag = Service;
 
 export namespace ProcessOperationInvoker {
   export interface OperationFiber<T> {
@@ -1312,10 +1318,10 @@ export namespace ProcessOperationInvoker {
   export const layer: Layer.Layer<
     Operation.Service | Service,
     never,
-    ProcessManagerService | OperationHandlerSet.OperationHandlerProvider
+    ManagerServiceTag | OperationHandlerSet.OperationHandlerProvider
   > = Layer.unwrapEffect(
     Effect.gen(function* () {
-      const manager = yield* ProcessManagerService;
+      const manager = yield* ManagerServiceTag;
       const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
       const service = make({ manager, handlerSet });
       return Layer.mergeAll(Layer.succeed(Operation.Service, service), Layer.succeed(Service, service));

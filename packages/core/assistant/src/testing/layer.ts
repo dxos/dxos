@@ -78,7 +78,7 @@ export type AssistantTestServices =
   | OpaqueToolkit.OpaqueToolkitProvider
   | Operation.Service
   // Core
-  | ProcessManager.ProcessManagerService
+  | ProcessManager.Service
   | Process.ProcessMonitorService
   | Registry.AtomRegistry
   // Should those be here?
@@ -114,7 +114,7 @@ export const AssistantTestLayer = ({
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
     Layer.provideMerge(AgentService.layer({ systemPrompt, model: resolvedModel })),
-    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
+    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
     Layer.provideMerge(
       // TODO(dmaretskyi): Refactor to be able to merge resovler layers, also consider service mesh achitecture.
       Layer.effect(

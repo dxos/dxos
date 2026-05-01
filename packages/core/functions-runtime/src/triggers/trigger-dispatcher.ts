@@ -92,7 +92,7 @@ interface ScheduledTrigger {
 
 type TriggerDispatcherServices =
   | Registry.AtomRegistry
-  | ProcessManager.ProcessManagerService
+  | ProcessManager.Service
   | TriggerStateStore
   | QueueService
   | Database.Service;
@@ -331,7 +331,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         // Prepare input data
         const inputData = this._prepareInputData(trigger, event);
 
-        const manager = yield* ProcessManager.ProcessManagerService;
+        const manager = yield* ProcessManager.Service;
         const executable = Process.fromOperation(functionDef, manager.operationHandlerSet);
         const handle = yield* manager.spawn(executable, {
           name: functionDef.meta.name ? `${functionDef.meta.name} (${functionDef.meta.key})` : functionDef.meta.key,
