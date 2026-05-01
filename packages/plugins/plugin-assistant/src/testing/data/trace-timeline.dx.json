@@ -237,7 +237,7 @@
             "$ref": "/schemas/echo/ref",
             "reference": {
               "schema": {
-                "$ref": "dxn:type:org.dxos.type.prompt"
+                "$ref": "dxn:type:org.dxos.type.routine"
               },
               "schemaVersion": "0.1.0"
             }

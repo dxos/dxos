@@ -8,11 +8,11 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
+import { CredentialsService, withAuthorization } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Filter, Obj, Query, Ref, type Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
-import { CredentialsService, withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 import { Person, Pipeline, Task } from '@dxos/types';
 
 import { syncObjects } from '../../../sync';

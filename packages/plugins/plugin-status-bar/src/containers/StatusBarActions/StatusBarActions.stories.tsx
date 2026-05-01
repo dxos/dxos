@@ -8,7 +8,8 @@ import { Config } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { StatusBarActions } from './StatusBarActions';
 
 const meta: Meta<typeof StatusBarActions> = {

@@ -64,8 +64,8 @@ export const Matrix = ({
   );
 
   return (
-    <div className={mx('flex shrink-0 items-center', getSize(size), classNames)}>
-      <div className='dx-expander relative flex'>
+    <div role='none' className={mx('flex shrink-0 items-center', getSize(size), classNames)}>
+      <div role='none' className='dx-expander relative flex'>
         <AnimatePresence>
           {positions.map((variant, i) => (
             <Dot

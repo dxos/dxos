@@ -21,6 +21,8 @@ import {
 } from '@dxos/react-ui';
 import { composable, composableProps, mx, withColumn } from '@dxos/ui-theme';
 
+import { translationKey } from '#translations';
+
 import {
   type FormHandler,
   type FormHandlerProps,
@@ -28,7 +30,6 @@ import {
   useFormHandler,
   useKeyHandler,
 } from '../../hooks';
-import { translationKey } from '../../translations';
 import { FormFieldLabel, type FormFieldLabelProps, type FormFieldStateProps } from './FormFieldComponent';
 import {
   FormFieldSet as NaturalFormFieldSet,

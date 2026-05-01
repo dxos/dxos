@@ -5,20 +5,18 @@
 import { type Extension, Prec } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { useAtomValue } from '@effect-atom/atom-react';
-import { createContext } from '@radix-ui/react-context';
 import * as Array from 'effect/Array';
 import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type Chat as ChatModule } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
-import { type Database, Filter, Obj } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
 import { type Queue, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
-import { type MarkdownStreamController } from '@dxos/react-ui-components';
+import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
@@ -27,7 +25,6 @@ import { isTruthy, trim } from '@dxos/util';
 import { useChatToolbarActions } from '#hooks';
 import { meta } from '#meta';
 
-import { type AiChatProcessor } from '../../processor';
 import {
   ChatActions,
   type ChatActionsProps,
@@ -37,24 +34,11 @@ import {
   ChatStatusIndicator,
 } from '../ChatPrompt';
 import { ChatThread as NaturalChatThread, type ChatThreadProps as NaturalChatThreadProps } from '../ChatThread';
+import { ChatStreamStatus } from './ChatStreamStatus';
+import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
 import { type ChatEvent } from './events';
 
-//
-// Context
-// NOTE: The context should not be exported. It is only used internally.
-// Components outside of this Radix-style group shuld define their own APIs.
-//
-
-type ChatContextValue = {
-  debug?: boolean;
-  event: Event<ChatEvent>;
-  db?: Database.Database;
-  chat?: ChatModule.Chat;
-  messages: Message.Message[];
-  processor: AiChatProcessor;
-};
-
-export const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('Chat');
+export { useChatContext };
 
 //
 // Root
@@ -71,7 +55,20 @@ const ChatRoot = ({ children, chat, queue, processor, onEvent, ...props }: ChatR
   const [debug, setDebug] = useState(false);
   const pending = useAtomValue(processor.messages);
   const streaming = useAtomValue(processor.streaming);
+  const active = useAtomValue(processor.active);
   const lastPrompt = useRef<string | undefined>(undefined);
+
+  // Track request start/end timestamps so the visible elapsed value in `ChatStreamStatus`
+  // can be derived from wall-clock time and survive the re-mounts that happen each time
+  // wire's drip queue toggles `wireDrainingEffect`.
+  const [requestTiming, setRequestTiming] = useState<ChatRequestTiming | null>(null);
+  useEffect(() => {
+    if (active) {
+      setRequestTiming({ startedAt: Date.now(), endedAt: null });
+    } else {
+      setRequestTiming((prev) => (prev && prev.endedAt == null ? { ...prev, endedAt: Date.now() } : prev));
+    }
+  }, [active]);
 
   // Messages.
   const storedMessages = useQuery(queue, Filter.type(Message.Message));
@@ -162,6 +159,7 @@ const ChatRoot = ({ children, chat, queue, processor, onEvent, ...props }: ChatR
       chat={chat}
       messages={messages}
       processor={processor}
+      requestTiming={requestTiming}
       {...props}
     >
       {children}
@@ -226,8 +224,27 @@ const ChatThread = (props: ChatThreadProps) => {
   const { debug, event, messages, processor } = useChatContext(CHAT_THREAD_NAME);
   const identity = useIdentity();
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
+  const active = useAtomValue(processor.active);
+
+  // When `Mod-d` fires from the document editor we are about to be re-instantiated
+  // (debug toggles the editor's extension stack). Mark this editor as the focus source so
+  // the post-rerender effect below restores focus to the new view.
+  const refocusAfterDebug = useRef(false);
+  // Stable callback — `useChatKeymapExtensions` memoises on its identity, and an unstable
+  // arrow here would cascade into a new `extensions` array on every parent render, which
+  // re-instantiates the underlying CodeMirror view (breaking smooth autoScroll).
+  const onToggleDebug = useCallback(() => {
+    refocusAfterDebug.current = true;
+  }, []);
+  const extensions = useChatKeymapExtensions({ event, onToggleDebug });
 
   const controllerRef = useRef<MarkdownStreamController | null>(null);
+  useEffect(() => {
+    if (refocusAfterDebug.current) {
+      refocusAfterDebug.current = false;
+      controllerRef.current?.focus();
+    }
+  }, [debug]);
   useEffect(() => {
     return event.on((event) => {
       switch (event.type) {
@@ -263,6 +280,8 @@ const ChatThread = (props: ChatThreadProps) => {
       messages={messages}
       error={error}
       debug={debug}
+      footer={<ChatStreamStatus />}
+      extensions={extensions}
       onEvent={handleEvent}
       ref={controllerRef}
     />
@@ -303,7 +322,7 @@ const ChatPrompt = ({
   onOnlineChange,
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.id);
-  const { db, processor, event } = useChatContext(CHAT_PROMPT_NAME);
+  const { db, debug, processor, event } = useChatContext(CHAT_PROMPT_NAME);
 
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(processor.streaming);
@@ -340,46 +359,20 @@ const ChatPrompt = ({
     },
   });
 
-  const extensions = useMemo<Extension[]>(() => {
-    return [
-      Prec.highest(
-        keymap.of([
-          {
-            key: 'Mod-d',
-            preventDefault: true,
-            run: () => {
-              event.emit({ type: 'toggle-debug' });
-              return true;
-            },
-          },
-          {
-            key: 'Mod-ArrowUp',
-            preventDefault: true,
-            run: () => {
-              event.emit({ type: 'nav-previous' });
-              return true;
-            },
-            shift: () => {
-              event.emit({ type: 'thread-open' });
-              return true;
-            },
-          },
-          {
-            key: 'Mod-ArrowDown',
-            preventDefault: true,
-            run: () => {
-              event.emit({ type: 'nav-next' });
-              return true;
-            },
-            shift: () => {
-              event.emit({ type: 'thread-close' });
-              return true;
-            },
-          },
-        ]),
-      ),
-    ].filter(isTruthy);
-  }, [event, expandable]);
+  // Mirror the document editor's pattern so focus is restored after a debug-mode toggle
+  // (idempotent if the prompt editor wasn't reinstantiated).
+  const refocusAfterDebug = useRef(false);
+  // Stable callback (see ChatThread above for rationale).
+  const onToggleDebug = useCallback(() => {
+    refocusAfterDebug.current = true;
+  }, []);
+  const extensions = useChatKeymapExtensions({ event, onToggleDebug });
+  useEffect(() => {
+    if (refocusAfterDebug.current) {
+      refocusAfterDebug.current = false;
+      editorRef.current?.focus();
+    }
+  }, [debug]);
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
@@ -422,7 +415,7 @@ const ChatPrompt = ({
       </div>
 
       {db && settings && (
-        <div role='none' className='flex items-center overflow-hidden'>
+        <div role='none' className='flex items-center overflow-hidden p-1.5'>
           <ChatOptions
             db={db}
             blueprintRegistry={processor.blueprintRegistry}
@@ -458,6 +451,66 @@ const ChatPrompt = ({
 };
 
 ChatPrompt.displayName = CHAT_PROMPT_NAME;
+
+/**
+ * CodeMirror keymap shared by the chat document (Thread) and the prompt editor — pressing
+ * Mod-d, Mod-Arrow keys, etc. when either editor is focused emits the corresponding
+ * `ChatEvent` on the shared event bus.
+ *
+ * `onToggleDebug` runs synchronously in the keymap callback (before the event emits and
+ * any state updates), so the caller can mark its editor as the source and re-focus it
+ * after the rerender — debug mode toggling re-instantiates the document editor and would
+ * otherwise lose focus.
+ */
+const useChatKeymapExtensions = ({
+  event,
+  onToggleDebug,
+}: {
+  event: Event<ChatEvent>;
+  onToggleDebug?: () => void;
+}): Extension[] => {
+  return useMemo<Extension[]>(() => {
+    return [
+      Prec.highest(
+        keymap.of([
+          {
+            key: 'Mod-d',
+            preventDefault: true,
+            run: () => {
+              onToggleDebug?.();
+              event.emit({ type: 'toggle-debug' });
+              return true;
+            },
+          },
+          {
+            key: 'Mod-ArrowUp',
+            preventDefault: true,
+            run: () => {
+              event.emit({ type: 'nav-previous' });
+              return true;
+            },
+            shift: () => {
+              event.emit({ type: 'thread-open' });
+              return true;
+            },
+          },
+          {
+            key: 'Mod-ArrowDown',
+            preventDefault: true,
+            run: () => {
+              event.emit({ type: 'nav-next' });
+              return true;
+            },
+            shift: () => {
+              event.emit({ type: 'thread-close' });
+              return true;
+            },
+          },
+        ]),
+      ),
+    ].filter(isTruthy);
+  }, [event, onToggleDebug]);
+};
 
 //
 // Chat

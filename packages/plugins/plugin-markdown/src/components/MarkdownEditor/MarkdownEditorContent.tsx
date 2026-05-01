@@ -17,7 +17,6 @@ import {
 import {
   type EditorSelectionState,
   type EditorStateStore,
-  type EditorViewMode,
   type ThemeExtensionsOptions,
   mobileSlots,
   createBasicExtensions,
@@ -29,6 +28,7 @@ import {
   processEditorPayload,
   editorClassNames,
 } from '@dxos/ui-editor';
+import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 

@@ -117,6 +117,34 @@ describe('nodeToJson', () => {
     expect(elements[0].complete).toBe(true);
   });
 
+  // Regression: when reasoning text contains escaped XML (e.g. `&lt;foo&gt;`), Lezer XML
+  // splits the inline content into Text + EntityReference + Text + EntityReference + Text
+  // siblings. The walker used to skip entity references and push each text segment as a
+  // separate child, so `getXmlTextChild(children)` only saw the prefix before the first
+  // `&lt;` (e.g. ``"The user sent `"``).
+  test('should preserve text containing entity references as a single child', ({ expect }) => {
+    const xml = trim`
+      <reasoning>The user sent \`&lt;foo&gt;\`, which appears to be an XML-like tag.</reasoning>
+    `;
+
+    const registry = { reasoning: { block: true } };
+    const elements = parseElements(xml, registry);
+    expect(elements).toHaveLength(1);
+    expect(elements[0]._tag).toBe('reasoning');
+    expect(elements[0].children).toEqual(['The user sent `<foo>`, which appears to be an XML-like tag.']);
+  });
+
+  test('should decode numeric character references', ({ expect }) => {
+    const xml = trim`
+      <reasoning>arrow &#8594; and hex &#x2192;</reasoning>
+    `;
+
+    const registry = { reasoning: { block: true } };
+    const elements = parseElements(xml, registry);
+    expect(elements).toHaveLength(1);
+    expect(elements[0].children).toEqual(['arrow → and hex →']);
+  });
+
   test('should parse tag with multiple blank lines in content', ({ expect }) => {
     const xml = trim`
       <reasoning>

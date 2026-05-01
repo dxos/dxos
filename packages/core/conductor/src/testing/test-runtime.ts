@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { raise } from '@dxos/debug';
-import { ComputeEventLogger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import { GraphExecutor } from '../compiler';
 import {
+  ComputeNodeContext,
   type ComputeGraphModel,
   type ComputeNode,
   type ComputeRequirements,
@@ -60,11 +60,11 @@ export class TestRuntime {
   runGraph<T extends ValueRecord = any>(
     graphDxn: string,
     input: ValueBag<any>,
-  ): Effect.Effect<ValueBag<T>, ConductorError, Exclude<ComputeRequirements, ComputeEventLogger>> {
+  ): Effect.Effect<ValueBag<T>, ConductorError, Exclude<ComputeRequirements, ComputeNodeContext>> {
     return Effect.gen(this, function* () {
       const program = yield* Effect.promise(() => this._workflowLoader.load(DXN.parse(graphDxn)));
       return yield* program.run(input);
-    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeEventLogger.layerNoop));
+    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeNodeContext.layerNoop));
   }
 
   // TODO(dmaretskyi): Support cases where the are no or multiple "input" nodes.
@@ -73,7 +73,7 @@ export class TestRuntime {
     graphDxn: string,
     inputNodeId: string,
     input: ValueBag<any>,
-  ): Effect.Effect<Record<string, ValueBag<any>>, ConductorError, Exclude<ComputeRequirements, ComputeEventLogger>> {
+  ): Effect.Effect<Record<string, ValueBag<any>>, ConductorError, Exclude<ComputeRequirements, ComputeNodeContext>> {
     return Effect.gen(this, function* () {
       const workflow = yield* Effect.promise(() => this._workflowLoader.load(DXN.parse(graphDxn)));
       const executor = new GraphExecutor({
@@ -91,6 +91,6 @@ export class TestRuntime {
       }
 
       return result;
-    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeEventLogger.layerNoop));
+    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeNodeContext.layerNoop));
   }
 }

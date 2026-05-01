@@ -5,9 +5,9 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Ref } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { Trigger } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
+import { Filter, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
@@ -18,7 +18,10 @@ import { meta } from '#meta';
 export const DailySummarySettings = ({ space }: AppSurface.SpaceArticleProps) => {
   const { t } = useTranslation(meta.id);
 
-  const triggers = useQuery(space.db, Filter.type(Trigger.Trigger));
+  const triggers = useQuery(
+    space.db,
+    Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-daily-summary.DailySummarySettings'),
+  );
   const existingTrigger = useMemo(
     () =>
       triggers.find((trigger) => {

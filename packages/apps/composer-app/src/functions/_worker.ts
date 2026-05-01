@@ -10,7 +10,8 @@ type Env = {
   SIGNOZ_INGESTION_KEY?: string;
 };
 
-const MAX_BODY_SIZE = 8 * 1024 * 1024; // 8MB.
+const OTEL_MAX_BODY_SIZE = 800 * 1024 * 1024; // 800MB.
+const FEEDBACK_LOGS_MAX_BODY_SIZE = 8 * 1024 * 1024; // 8MB.
 
 const ALLOWED_ORIGINS = new Set([
   'https://composer.space',
@@ -42,16 +43,16 @@ const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response>
   }
 
   const contentLength = Number(request.headers.get('content-length') ?? 0);
-  if (contentLength > MAX_BODY_SIZE) {
+  if (contentLength > FEEDBACK_LOGS_MAX_BODY_SIZE) {
     return new Response('Payload too large', { status: 413 });
   }
 
-  const body = await request.text();
-  if (body.length === 0) {
+  const bodyBuffer = await request.arrayBuffer();
+  if (bodyBuffer.byteLength === 0) {
     return new Response('Empty body', { status: 400 });
   }
 
-  if (body.length > MAX_BODY_SIZE) {
+  if (bodyBuffer.byteLength > FEEDBACK_LOGS_MAX_BODY_SIZE) {
     return new Response('Payload too large', { status: 413 });
   }
 
@@ -59,7 +60,7 @@ const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response>
   const id = crypto.randomUUID();
   const key = `logs/${date}/${id}.ndjson`;
 
-  await env.FEEDBACK_LOGS.put(key, body, {
+  await env.FEEDBACK_LOGS.put(key, bodyBuffer, {
     httpMetadata: { contentType: 'application/x-ndjson' },
   });
 
@@ -207,14 +208,14 @@ const handleOtelProxy = async (request: Request, env: Env, signal: string): Prom
     upstreamHeaders['Content-Length'] = contentLengthHeader;
   }
 
-  // Count bytes as they stream; abort and return 413 if MAX_BODY_SIZE is exceeded.
+  // Count bytes as they stream; abort and return 413 if OTEL_MAX_BODY_SIZE is exceeded.
   // This guards against missing or falsified Content-Length headers.
   let byteCount = 0;
   let sizeExceeded = false;
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>({
     transform(chunk, controller) {
       byteCount += chunk.byteLength;
-      if (byteCount > MAX_BODY_SIZE) {
+      if (byteCount > OTEL_MAX_BODY_SIZE) {
         sizeExceeded = true;
         controller.error(new Error('Payload too large'));
       } else {

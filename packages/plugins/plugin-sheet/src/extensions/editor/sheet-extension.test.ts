@@ -8,7 +8,7 @@ import { testTree } from '@lezer/generator/test';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
 import { describe, expect, test } from 'vitest';
 
-import { defaultFunctions } from '@dxos/compute';
+import { defaultFunctions } from '@dxos/compute-hyperformula';
 
 import { sheetExtension } from './sheet-extension';
 

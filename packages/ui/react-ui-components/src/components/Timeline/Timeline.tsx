@@ -12,7 +12,7 @@ import { ScrollContainer, type ScrollController } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
 
 export type TimelineOptions = {
   lineHeight: number;
