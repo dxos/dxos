@@ -24,6 +24,10 @@ export const ROLLDOWN_LOG_META_PLUGIN_NAME = 'dxos:rolldown-log-meta';
 
 const PLUGIN_NAME = 'dxos:vite-plugin-log';
 
+// The literal `\0` matches the null-byte prefix Rollup/Vite use for virtual module IDs
+// (e.g. `\0commonjsHelpers.js`). The lint rule rejects control chars in regexes by default,
+// but the null byte is exactly what we want to match here.
+// eslint-disable-next-line no-control-regex
 const LOG_META_EXCLUDE_ID_DEFAULT = /node_modules|\0/;
 
 /** Inputs matching Rolldown's `transform` hook `meta` plus `code` / `id`. */
