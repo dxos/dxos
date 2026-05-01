@@ -5,7 +5,7 @@
 import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
 import { pipe } from 'effect/Function';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -22,66 +22,71 @@ import { Panel } from '@dxos/react-ui';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
 import { composable, mx } from '@dxos/ui-theme';
 
-import { ProcessTree } from '#components';
+import { ProcessTree, ProcessTreeProps } from '#components';
 
 import { buildExecutionGraph } from './execution-graph';
 
+export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
+
+export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
+  ({ space, onProcessTerminate, ...props }, forwardedRef) => {
+    const { invokePromise } = useOperationInvoker();
+    const { branches, commits } = useExecutionGraph(space);
+    const runtime = useComputeRuntimeService(Process.ProcessMonitorService, space.id);
+    const processes = useAtomValue(runtime?.processTreeAtom ?? atomEmpty);
+
+    const handleCommitClick = useCallback(
+      (commit: Commit) => {
+        if (commit.link) {
+          const dxn = DXN.tryParse(commit.link)?.asEchoDXN();
+          if (dxn?.spaceId && dxn.echoId) {
+            // TODO(dmaretskyi): Navigates, but fails to open.
+            void invokePromise(LayoutOperation.Open, {
+              subject: [`${dxn.spaceId}:${dxn.echoId}`],
+            });
+          }
+        }
+      },
+      [invokePromise],
+    );
+
+    // Select current branch.
+    const [currentBranch, setCurrentBranch] = useState<string | null>(null);
+    const handleProcessSelect = useCallback(
+      (process: Process.Info) => {
+        const branch = branches.find((branch) => branch === process.pid.toString());
+        if (branch) {
+          log.info('select', { process, branch });
+          setCurrentBranch(branch);
+        }
+      },
+      [branches],
+    );
+
+    return (
+      <Panel.Root {...props} ref={forwardedRef}>
+        <Panel.Content className='grid grid-rows-[min-content_1fr] divide-y divide-separator'>
+          <ProcessTree
+            classNames={mx('max-h-[8lh] border-b border-separator')}
+            processes={processes}
+            onProcessSelect={handleProcessSelect}
+            onProcessTerminate={onProcessTerminate}
+          />
+          <Timeline
+            currentBranch={currentBranch}
+            branches={branches}
+            commits={commits}
+            compact
+            onCommitClick={handleCommitClick}
+          />
+        </Panel.Content>
+      </Panel.Root>
+    );
+  },
+);
+
 // Stable ref.
 const atomEmpty = Atom.make(() => [] as const);
-
-export type TracePanelProps = AppSurface.SpaceArticleProps;
-
-export const TracePanel = composable<HTMLDivElement, TracePanelProps>(({ space, ...props }, forwardedRef) => {
-  const { invokePromise } = useOperationInvoker();
-  const { branches, commits } = useExecutionGraph(space);
-
-  useEffect(() => {
-    log('trace panel render graph', { spaceId: space.id, branchCount: branches.length, commitCount: commits.length });
-  }, [space.id, branches.length, commits.length]);
-
-  const handleCommitClick = useCallback(
-    (commit: Commit) => {
-      if (commit.link) {
-        const dxn = DXN.tryParse(commit.link)?.asEchoDXN();
-        if (dxn?.spaceId && dxn.echoId) {
-          // TODO(dmaretskyi): Navigates, but fails to open.
-          void invokePromise(LayoutOperation.Open, {
-            subject: [`${dxn.spaceId}:${dxn.echoId}`],
-          });
-        }
-      }
-    },
-    [invokePromise],
-  );
-
-  return (
-    <Panel.Root {...props} ref={forwardedRef}>
-      <Panel.Content className='grid grid-rows-[min-content_1fr]'>
-        <ActiveProcessList spaceId={space.id} />
-
-        <Timeline branches={branches} commits={commits} compact onCommitClick={handleCommitClick} />
-      </Panel.Content>
-    </Panel.Root>
-  );
-});
-
-/**
- * Separated into its own component because useComputeRuntimeService uses React's use() which requires a Suspense boundary.
- */
-const ActiveProcessList = ({ spaceId }: { spaceId: Space['id'] }) => {
-  const runtime = useComputeRuntimeService(Process.ProcessMonitorService, spaceId);
-  const activeProcesses = useAtomValue(runtime?.processTreeAtom ?? atomEmpty);
-
-  useEffect(() => {
-    log('trace panel process tree', { spaceId, processCount: activeProcesses.length });
-  }, [spaceId, activeProcesses.length]);
-
-  if (activeProcesses.length === 0) {
-    return <div />;
-  }
-
-  return <ProcessTree classNames={mx('max-h-[8lh] px-2 border-b border-separator')} processes={activeProcesses} />;
-};
 
 type ExecutionGraph = {
   branches: string[];
@@ -95,11 +100,11 @@ type UseExecutionGraphOptions = {
 const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOptions = {}): ExecutionGraph => {
   const runtime = useComputeRuntimeService(Process.ProcessMonitorService, space.id);
   const activeProcesses = useAtomValue(runtime?.processTreeAtom ?? atomEmpty);
-
   const atom = useMemo(
     () => getExecutionGraph(space, activeProcesses, { eventLimit }),
     [space, activeProcesses, eventLimit],
   );
+
   return useAtomValue(atom);
 };
 
