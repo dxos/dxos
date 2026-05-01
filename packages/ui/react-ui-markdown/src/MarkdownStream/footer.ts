@@ -34,16 +34,13 @@ class FooterWidget extends WidgetType {
   }
 
   override toDOM(): HTMLElement {
-    return document.createElement('div');
-
     // The outer block-widget element is `position: relative` with zero flow height so it
     // does not push the document layout (autoScroll, line measurement, etc. ignore it).
     // The inner element is `position: absolute`, taking the React subtree out of flow — it
     // renders as a floating layer anchored to the doc tail without consuming space.
     const inner = Domino.of('div')
       .classNames('cm-stream-footer-content')
-      .style({ position: 'absolute', left: '0', top: '80px' })
-      .text('###');
+      .style({ position: 'absolute', left: '0', top: '0' });
 
     const el = Domino.of('div')
       .classNames('cm-stream-footer')
@@ -51,7 +48,7 @@ class FooterWidget extends WidgetType {
       .append(inner);
 
     this._inner = inner.root;
-    // this._setRoot(inner.root);
+    this._setRoot(inner.root);
     return el.root;
   }
 

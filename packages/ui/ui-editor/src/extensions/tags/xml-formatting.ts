@@ -111,7 +111,7 @@ export const xmlFormatting = ({ skip }: XmlFormattingOptions = {}): Extension =>
 
     EditorView.baseTheme({
       '.cm-xml-element': {
-        backgroundColor: 'var(--color-group-surface)',
+        backgroundColor: 'var(--color-active-surface)',
         borderRadius: '0.25rem',
         padding: '0.25rem',
       },
