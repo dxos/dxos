@@ -257,6 +257,9 @@
       "path": "../../plugins/plugin-discord"
     },
     {
+      "path": "../../plugins/plugin-doctor"
+    },
+    {
       "path": "../../plugins/plugin-explorer"
     },
     {
