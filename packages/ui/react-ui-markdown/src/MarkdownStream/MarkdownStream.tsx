@@ -112,8 +112,10 @@ export type MarkdownStreamProps = ThemedClassName<
  */
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
   ({ classNames, debug, content, options, registry, extensions, footer, onEvent }, forwardedRef) => {
-    // Store current content so that we can toggle debug mode.
-    const contentRef = useRef(content);
+    // Store current content so that we can toggle debug mode. Default to '' so the
+    // `append()` path (which does `contentRef.current += text`) doesn't concatenate
+    // against `undefined` and stamp `"undefined"` into the transcript snapshot.
+    const contentRef = useRef(content ?? '');
 
     // DOM node for the footer block widget — populated when its decoration mounts.
     const [footerRoot, setFooterRoot] = useState<HTMLElement | null>(null);

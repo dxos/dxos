@@ -94,10 +94,20 @@ export const nodeToJson = (state: EditorState, node: SyntaxNode): Tag | undefine
         child = child.nextSibling;
       }
 
-      // Trim leading/trailing whitespace on string children but preserve structure.
-      const trimmed = children
-        .map((value) => (typeof value === 'string' ? value.trim() : value))
-        .filter((value) => typeof value !== 'string' || value.length > 0);
+      // Trim only leading/trailing whitespace on the outer-boundary string segments —
+      // interior strings are preserved verbatim so meaningful whitespace around inline
+      // child elements (e.g. `<reasoning>foo <ref/> bar</reasoning>`) is not collapsed.
+      if (children.length > 0 && typeof children[0] === 'string') {
+        children[0] = children[0].trimStart();
+      }
+      if (children.length > 0) {
+        const lastIndex = children.length - 1;
+        const last = children[lastIndex];
+        if (typeof last === 'string') {
+          children[lastIndex] = last.trimEnd();
+        }
+      }
+      const trimmed = children.filter((value) => typeof value !== 'string' || value.length > 0);
 
       if (trimmed.length > 0) {
         tag.children = trimmed;

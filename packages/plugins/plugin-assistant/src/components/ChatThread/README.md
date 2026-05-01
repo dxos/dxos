@@ -28,7 +28,7 @@ ChatThread.tsx (packages/plugins/plugin-assistant/src/components/ChatThread/Chat
   ▼
 MarkdownStreamController.append / setContent
   ▼
-MarkdownStream (packages/ui/react-ui-components/src/components/MarkdownStream)
+MarkdownStream (packages/ui/react-ui-markdown/src/MarkdownStream/MarkdownStream.tsx)
   │
   │  CodeMirror editor with:
   │    - extendedMarkdown (parseMixed → xmlLanguage on HTMLBlock/Paragraph)
