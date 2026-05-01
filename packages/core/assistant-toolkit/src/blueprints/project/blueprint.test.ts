@@ -272,6 +272,7 @@ describe('Agent', () => {
         yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
 
         const triggersAfter = yield* Database.runQuery(Filter.type(Trigger.Trigger));
+        expect(triggersAfter).toHaveLength(triggers.length);
         expect(triggersAfter.every((trigger) => trigger.enabled === true)).toBe(true);
       },
       Effect.provide(TestLayer),

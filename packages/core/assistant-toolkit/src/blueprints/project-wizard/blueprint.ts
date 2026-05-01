@@ -37,7 +37,7 @@ const make = () =>
 
         The agent itself is an ECHO object and can be edited like any other object using the database blueprint.
         You can edit the agent's instructions, name, and other properties directly.
-        If you edit the agent's \`enabled\` field, subscriptions array, or \`cron\` field, you MUST call the sync-triggers function afterward to synchronize the triggers (\`enabled\` is applied to all triggers).
+        If you edit the agent's \`enabled\` field, \`filterEvents\` field, subscriptions array, or \`cron\` field, you MUST call the sync-triggers function afterward to synchronize the triggers (\`enabled\` is applied to all triggers).
 
         IMPORTANT: Before attempting to create an agent call the [agent-rules] tool to get the rules for creating an agent.
       `,

@@ -252,7 +252,7 @@ export class IndexQuerySource implements QuerySource {
           database,
         });
       } catch (err) {
-        const typeDxn = json[ATTR_TYPE] as string;
+        const typeDxn = typeof json[ATTR_TYPE] === 'string' ? json[ATTR_TYPE] : '<unknown>';
         if (!emittedSchemaValidationWarnings.has(typeDxn)) {
           emittedSchemaValidationWarnings.add(typeDxn);
           log.warn('object failed schema validation', { type: typeDxn, error: err });
