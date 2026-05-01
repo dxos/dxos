@@ -6,6 +6,8 @@ import { WidgetType } from '@codemirror/view';
 
 import { Domino } from '@dxos/ui';
 
+import { styles } from './defaults';
+
 /**
  * Simple stats widget.
  */
@@ -19,7 +21,7 @@ export class StatsWidget extends WidgetType {
   }
 
   override toDOM() {
-    return Domino.of('div').classNames('pt-2 pb-4 text-sm text-placeholder').text(this.text).root;
+    return Domino.of('div').classNames(styles.padding, 'text-sm text-placeholder').text(this.text).root;
   }
 
   override updateDOM(dom: HTMLElement) {

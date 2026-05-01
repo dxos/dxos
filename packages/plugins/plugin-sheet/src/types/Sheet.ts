@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { addressFromA1Notation, isFormula } from '@dxos/compute';
+import { addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 

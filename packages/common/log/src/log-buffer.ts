@@ -6,31 +6,10 @@ import { CircularBuffer } from '@dxos/util';
 
 import { type LogConfig, LogLevel, shortLevelName } from './config';
 import { type LogEntry, type LogProcessor } from './context';
+import { type LogRecord } from './jsonl';
 
 const DEFAULT_BUFFER_SIZE = 2_000;
 const MAX_CONTEXT_LENGTH = 500;
-
-/**
- * Compact log record with short property names for small serialized size.
- */
-export type LogRecord = {
-  /** ISO timestamp. */
-  t: string;
-  /** Level letter (D, V, I, W, E). */
-  l: string;
-  /** Message. */
-  m: string;
-  /** File path. */
-  f?: string;
-  /** Line number. */
-  n?: number;
-  /* Object from which the log was emitted. */
-  o?: string;
-  /** Error stack. */
-  e?: string;
-  /** Context JSON. */
-  c?: string;
-};
 
 /**
  * Captures recent log entries in a circular buffer for debug log dump.

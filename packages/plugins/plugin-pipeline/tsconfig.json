@@ -36,6 +36,9 @@
       "path": "../../core/assistant-toolkit"
     },
     {
+      "path": "../../core/compute"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -46,12 +49,6 @@
     },
     {
       "path": "../../core/echo/echo-query"
-    },
-    {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../devtools/devtools"

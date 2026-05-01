@@ -8,7 +8,8 @@ import React, { useState } from 'react';
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { Listbox } from './Listbox';
 
 random.seed(1234);

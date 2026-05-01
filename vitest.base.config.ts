@@ -16,6 +16,12 @@ import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import { MODULES } from '@dxos/node-std/_/config';
 import PluginImportSource from '@dxos/vite-plugin-import-source';
 
+// NOTE: Imported by relative path on purpose. Going through `@dxos/vite-plugin-log`
+// would force every package's `:test`/`:test-browser`/`:test-storybook` task to
+// build the plugin first, which introduces a moon dep cycle through @dxos/log
+// (vite-plugin-log -> log -> ... -> log:test -> vite-plugin-log).
+import { DxosLogPlugin } from './tools/vite-plugin-log/src/plugin.ts';
+
 const isDebug = !!process.env.VITEST_DEBUG;
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
 
@@ -103,7 +109,10 @@ const createBrowserProject = ({
           ...(nodeExternal ? [NodeExternalPlugin({ injectGlobals, nodeStd: true })] : []),
         ],
       },
-      exclude: ['@dxos/wa-sqlite'],
+      // `@anthropic-ai/tokenizer` re-exports `tiktoken/lite` via `require`, but
+      // tiktoken's wasm has top-level await which esbuild can't put behind a
+      // require(). Skip prebundling for the wasm dep so vite serves it as ESM.
+      exclude: ['@dxos/wa-sqlite', 'tiktoken', 'tiktoken/lite'],
     },
     esbuild: {
       target: 'esnext',
@@ -176,7 +185,9 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       ...plugins,
       PluginImportSource({ include: ['@dxos/**', '#*'] }),
       process.env.VITE_INSPECT ? Inspect() : undefined,
-      // Add react plugin to enable SWC transfors.
+      // Log-meta injection only — no dev file sink (vitest is a test runner, not a dev server).
+      DxosLogPlugin({ logToFile: false }),
+      // Add react plugin to enable SWC transforms.
       react({
         tsDecorators: true,
         useAtYourOwnRisk_mutateSwcOptions: (options) => {
@@ -184,47 +195,6 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
           options.jsc ??= {};
           options.jsc.target = 'esnext';
         },
-        plugins: [
-          [
-            '@dxos/swc-log-plugin',
-            {
-              to_transform: [
-                {
-                  name: 'log',
-                  package: '@dxos/log',
-                  param_index: 2,
-                  include_args: false,
-                  include_call_site: true,
-                  include_scope: true,
-                },
-                {
-                  name: 'dbg',
-                  package: '@dxos/log',
-                  param_index: 1,
-                  include_args: true,
-                  include_call_site: false,
-                  include_scope: false,
-                },
-                {
-                  name: 'invariant',
-                  package: '@dxos/invariant',
-                  param_index: 2,
-                  include_args: true,
-                  include_call_site: false,
-                  include_scope: true,
-                },
-                {
-                  name: 'Context',
-                  package: '@dxos/context',
-                  param_index: 1,
-                  include_args: false,
-                  include_call_site: false,
-                  include_scope: false,
-                },
-              ],
-            },
-          ],
-        ],
       }),
     ],
   });

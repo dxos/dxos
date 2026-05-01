@@ -23,11 +23,11 @@ import {
   type ToolResolverService,
   withoutToolCallParising,
 } from '@dxos/ai';
-import { type Blueprint } from '@dxos/blueprints';
+import { type Blueprint } from '@dxos/compute';
+import { Trace } from '@dxos/compute';
+import { Operation, OperationRegistry } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
-import { Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Operation, OperationRegistry } from '@dxos/operation';
 import { ContentBlock, Message } from '@dxos/types';
 
 import { type AiAssistantError } from '../errors';

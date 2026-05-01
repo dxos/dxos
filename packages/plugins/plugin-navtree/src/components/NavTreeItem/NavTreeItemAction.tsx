@@ -113,7 +113,7 @@ export const NavTreeItemAction = ({
   monolithic,
   menuActions,
   menuType,
-  parent: node,
+  parent,
   path,
   ...props
 }: NavTreeItemActionMenuProps) => {
@@ -121,10 +121,9 @@ export const NavTreeItemAction = ({
 
   const monolithicAction = menuActions?.length === 1 && menuActions[0];
   const baseLabel = toLocalizedString(monolithicAction ? monolithicAction.properties!.label : props.label, t);
-
   return monolithic && menuActions?.length === 1 ? (
-    <NavTreeItemMonolithicAction baseLabel={baseLabel} parent={node} path={path} {...menuActions[0]} />
+    <NavTreeItemMonolithicAction baseLabel={baseLabel} parent={parent} path={path} {...menuActions[0]} />
   ) : (
-    <NavTreeItemActionDropdownMenu {...props} label={baseLabel} parent={node} path={path} menuActions={menuActions} />
+    <NavTreeItemActionDropdownMenu {...props} label={baseLabel} parent={parent} path={path} menuActions={menuActions} />
   );
 };

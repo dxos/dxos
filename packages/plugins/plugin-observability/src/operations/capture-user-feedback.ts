@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { ObservabilityCapabilities } from '../types';
 import { CaptureUserFeedback } from './definitions';

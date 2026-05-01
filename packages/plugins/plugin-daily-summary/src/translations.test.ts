@@ -5,8 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { meta } from '#meta';
-
-import { translations } from './translations';
+import { translations } from '#translations';
 
 describe('translations', () => {
   const enUS = translations[0]['en-US'];

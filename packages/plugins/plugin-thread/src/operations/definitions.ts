@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { Operation } from '@dxos/compute';
 import { Database, Key, Obj, Ref } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { SpaceSchema } from '@dxos/react-client/echo';
 import { Actor, AnchoredTo, Message, Thread } from '@dxos/types';

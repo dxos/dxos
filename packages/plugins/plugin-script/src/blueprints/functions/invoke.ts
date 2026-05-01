@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { ClientService } from '@dxos/client';
+import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Database } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
-import { Operation } from '@dxos/operation';
 import { getSpace } from '@dxos/react-client/echo';
 
 import { Invoke } from './definitions';

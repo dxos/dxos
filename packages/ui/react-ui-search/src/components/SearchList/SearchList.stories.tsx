@@ -9,7 +9,8 @@ import { random } from '@dxos/random';
 import { Input, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { useSearchListInput, useSearchListItem, useSearchListResults } from './hooks';
 import { SearchList } from './SearchList';
 

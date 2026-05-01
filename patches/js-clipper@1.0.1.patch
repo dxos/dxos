@@ -1,5 +1,5 @@
 diff --git a/clipper.js b/clipper.js
-index cd42dec27993ce61d8efa6baa903ea1407ca33cc..d514c0a58bf922b7643620721a4e8c39dd515a2c 100755
+index cd42dec27993ce61d8efa6baa903ea1407ca33cc..e9de681c1ae76d1205df146ee1ee846cb0e827c8 100755
 --- a/clipper.js
 +++ b/clipper.js
 @@ -5952,10 +5952,10 @@ ClipperLib.Clipper.DistanceSqrd = function (pt1, pt2)
@@ -10,17 +10,10 @@ index cd42dec27993ce61d8efa6baa903ea1407ca33cc..d514c0a58bf922b7643620721a4e8c39
 -  //(y� - y�)x + (x� - x�)y + (y� - y�)x� - (x� - x�)y� = 0
 -  //A = (y� - y�); B = (x� - x�); C = (y� - y�)x� - (x� - x�)y�
 -  //perpendicular distance of point (x�,y�) = (Ax� + By� + C)/Sqrt(A� + B�)
-+  //given 2 points (x1,y1) & (x2,y2) is ...
-+  //(y1 - y2)x + (x2 - x1)y + (y2 - y1)x1 - (x2 - x1)y1 = 0
-+  //A = (y1 - y2); B = (x2 - x1); C = (y2 - y1)x1 - (x2 - x1)y1
-+  //perpendicular distance of point (x3,y3) = (Ax3 + By3 + C)/Sqrt(A2 + B2)
++  //given 2 points (x¹,y¹) & (x²,y²) is ...
++  //(y¹ - y²)x + (x² - x¹)y + (y² - y¹)x¹ - (x² - x¹)y¹ = 0
++  //A = (y¹ - y²); B = (x² - x¹); C = (y² - y¹)x¹ - (x² - x¹)y¹
++  //perpendicular distance of point (x³,y³) = (Ax³ + By³ + C)/Sqrt(A² + B²)
    //see http://en.wikipedia.org/wiki/Perpendicular_distance
    var A = ln1.Y - ln2.Y;
    var B = ln2.X - ln1.X;
-@@ -6983,4 +6983,4 @@ ClipperLib.JS.PolyTreeToExPolygons = function (polytree)
- };
- 
- 
--module.exports = ClipperLib;
-\ No newline at end of file
-+export default ClipperLib;

@@ -14,14 +14,31 @@
  * to React's `<Placeholder>`.
  */
 #boot-loader {
+  /*
+   * Tunable sizes — change these in one place and every derived calc()
+   * (mark size, dot orbit radius, status offset, …) follows.
+   */
+  /*
+   * Caps the disc / mark at the design pixel sizes on roomy viewports while
+   * shrinking proportionally on narrow ones (`vmin` follows the smaller of
+   * width / height) so neither the ring nor the mark crops on phones.
+   */
+  --boot-loader-disc-size: min(384px, 80vmin);
+  /*
+   * Match the React `Placeholder`'s logo box (`h-[300px] w-[300px]` at the
+   * `stage >= 1` keyframe) so the brand mark doesn't visibly jump size when
+   * the loader hands off — the responsive cap keeps the same 300/384 ratio
+   * (≈78%) at any viewport width.
+   */
+  --boot-loader-mark-size: min(300px, 62.5vmin);
+  --boot-loader-dot-size: 6px;
+  --boot-loader-line-thickness: 1px;
+  --boot-loader-line-feather: 2px;
+  --boot-loader-status-gap: 24px;
+
   position: fixed;
   inset: 0;
-  z-index: 2147483647;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
+  z-index: 10;
   background: var(--boot-loader-bg-light, #fafafa);
   color: var(--boot-loader-fg-light, #0a0a0a);
   font-family:
@@ -41,66 +58,181 @@
   }
 }
 
+/*
+ * Register the progress var as a typed custom property so the browser can
+ * interpolate it. Both the conic-gradient arc and the orbiting dot derive
+ * their angle from `--boot-loader-bar-progress`, so animating the var (rather
+ * than the resulting `background` / `transform`) keeps them in lockstep —
+ * `transition: background` on a conic-gradient doesn't interpolate smoothly
+ * in all engines, which previously caused the head of the arc to flicker
+ * against the dot during each progress step.
+ */
+@property --boot-loader-bar-progress {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+/*
+ * Stack the ring and the brand mark in the same square so the mark sits
+ * centered inside the circle. Grid stacking keeps the mark outside the ring's
+ * mask (the mask would otherwise clip the SVG to the 1px-thick arc shape).
+ */
+#boot-loader-disc {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: var(--boot-loader-disc-size);
+  height: var(--boot-loader-disc-size);
+  transform: translate(-50%, -50%);
+  transition: --boot-loader-bar-progress 240ms ease-out;
+}
+
+#boot-loader-disc > * {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/*
+ * Default to grayscale so the mark reads as a quiet monochrome silhouette
+ * before any host-driven progress lands; the brand palette swaps in once
+ * the driver flips `data-host-driven` on the disc (state-2 entry — the
+ * first `__bootLoader.progress()` call). Hover keeps a parallel reveal
+ * affordance for inspection in the storybook. The 600ms ease lets the
+ * grayscale → color transition play through the activation phase rather
+ * than snapping.
+ */
 #boot-loader-mark {
-  width: 56px;
-  height: 56px;
+  width: var(--boot-loader-mark-size);
+  height: var(--boot-loader-mark-size);
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.1;
+  filter: grayscale(100%);
+  transition: filter 1000ms ease-out;
+}
+
+/*
+ * `grayscale(0%)` (identity) rather than `none` — `filter: none` changes
+ * the filter function list and most engines treat that as a discrete
+ * transition (snap, not ease). Keeping `grayscale(...)` on both sides of
+ * the rule lets the browser interpolate the percentage smoothly.
+ */
+#boot-loader-disc[data-host-driven] #boot-loader-mark,
+#boot-loader-mark:hover {
+  filter: grayscale(0%);
 }
 
 #boot-loader-mark svg {
   width: 100%;
   height: 100%;
-  /* `fill="currentColor"` on the host SVG inherits the loader's text colour. */
+  /*
+   * The host SVG carries its own brand-palette fills, so we don't apply a
+   * `color` cascade here. SVGs that intentionally use `fill="currentColor"`
+   * still pick up the loader's text colour via `#boot-loader`'s `color`.
+   */
 }
 
+/*
+ * Circular determinate progress — a 1px-thick ring carved out of a filled
+ * disc by a radial-gradient mask. The mask applies to the element and its
+ * descendants so the `::before` progress arc is clipped to the ring shape
+ * too. There is no indeterminate state: the ring sits empty (0%) until the
+ * host calls `__bootLoader.progress(fraction)`, then the arc grows in place.
+ * The fill repaints on the compositor thread so progress remains visually
+ * smooth even while the JS main thread is busy parsing modules.
+ */
 #boot-loader-bar {
   position: relative;
-  width: min(240px, 50vw);
-  height: 2px;
-  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
   background: rgba(127, 127, 127, 0.18);
-  border-radius: 1px;
+  opacity: 0.2;
+  /*
+   * Feather the inner edge so the thin line gets soft anti-aliased edges
+   * instead of a hard pixel cutoff (which can look stair-stepped on
+   * non-retina screens). The outer edge is clipped by `border-radius: 50%`,
+   * so only the inner side of the ring needs the gradient feather. The
+   * solid line lives in the outermost `--boot-loader-line-thickness` of the
+   * disc; the feather extends `--boot-loader-line-feather` further inward.
+   */
+  mask: radial-gradient(
+    circle closest-side,
+    transparent calc(100% - var(--boot-loader-line-thickness) - var(--boot-loader-line-feather)),
+    #000 calc(100% - var(--boot-loader-line-thickness))
+  );
+  -webkit-mask: radial-gradient(
+    circle closest-side,
+    transparent calc(100% - var(--boot-loader-line-thickness) - var(--boot-loader-line-feather)),
+    #000 calc(100% - var(--boot-loader-line-thickness))
+  );
 }
 
+/*
+ * The host writes 0–100 into `--boot-loader-bar-progress` via
+ * `__bootLoader.progress(fraction)`. The `transition: background` smooths
+ * the transitions between counter ticks so the arc grows continuously
+ * rather than snapping. `conic-gradient` is clockwise-only, so the arc is
+ * mirrored horizontally with `scaleX(-1)` to grow anticlockwise from
+ * 12 o'clock.
+ */
 #boot-loader-bar::before {
   content: '';
   position: absolute;
   inset: 0;
-  width: 40%;
-  background: currentcolor;
-  opacity: 0.7;
-  border-radius: 1px;
-  animation: boot-loader-bar 1.4s ease-in-out infinite;
-}
-
-@keyframes boot-loader-bar {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(250%);
-  }
+  border-radius: 50%;
+  background: conic-gradient(currentcolor calc(var(--boot-loader-bar-progress, 0) * 1%), transparent 0);
+  transform: scaleX(-1);
+  opacity: 0.9;
 }
 
 /*
- * Determinate state — host called `window.__bootLoader.progress(fraction)`.
- * Cancel the slide animation and pin the fill to whatever percentage the
- * driver wrote into `--boot-loader-bar-progress` (0–100). The transition on
- * `width` smooths the transitions between counter ticks so the fill grows
- * continuously rather than snapping.
+ * A small dot at the leading edge of the arc. Lives as a sibling of the
+ * masked ring (inside `#boot-loader-disc`) so the radial-gradient mask
+ * doesn't clip it. The `rotate(...) translateY(-50%)` recipe orbits the
+ * dot around the disc centre: at progress 0 it sits at 12 o'clock; the
+ * negative rotation grows it anticlockwise to match the arc.
  */
-#boot-loader-bar[data-determinate]::before {
-  width: calc(var(--boot-loader-bar-progress, 0) * 1%);
-  animation: none;
-  transform: none;
-  transition: width 240ms ease-out;
+#boot-loader-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--boot-loader-dot-size);
+  height: var(--boot-loader-dot-size);
+  margin: calc(var(--boot-loader-dot-size) / -2) 0 0 calc(var(--boot-loader-dot-size) / -2);
+  border-radius: 50%;
+  background: currentcolor;
+  opacity: 0;
+  /*
+   * Orbit radius = `disc/2 - line/2` so the dot's centre lands on the solid
+   * line's centre rather than on the disc's outer edge (the line lives in
+   * the outermost `--boot-loader-line-thickness` of the disc).
+   */
+  transform: rotate(calc(var(--boot-loader-bar-progress, 0) * -3.6deg))
+    translateY(calc(var(--boot-loader-disc-size) / -2 + var(--boot-loader-line-thickness) / 2));
+  transition: opacity 200ms ease-out;
+}
+
+/*
+ * The driver sets `data-progress-active` on `#boot-loader-disc` while
+ * progress is strictly between 0 and 1, hiding the dot at the empty (0%)
+ * and full (100%) ring states where it would either sit on a bare ring or
+ * coincide with the start of the arc.
+ */
+#boot-loader-disc[data-progress-active] #boot-loader-dot {
+  opacity: 0.9;
 }
 
 #boot-loader-status {
-  opacity: 0.7;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* Sit just below the centered disc — half the disc plus the configured gap. */
+  transform: translate(-50%, calc(var(--boot-loader-disc-size) / 2 + var(--boot-loader-status-gap)));
+  opacity: 0.5;
   /*
    * Pin both `line-height` and `height` so the status box stays exactly the
    * same size regardless of which phase string is currently displayed. With

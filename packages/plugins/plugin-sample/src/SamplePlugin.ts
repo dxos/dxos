@@ -13,16 +13,15 @@ import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Annotation, Type } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { AppGraphBuilder, SampleSettings, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { SampleItem } from '#types';
-
-import { translations } from './translations';
 
 export const SamplePlugin = Plugin.define(meta).pipe(
   // Registers graph builder extensions (actions, connectors, companions).
