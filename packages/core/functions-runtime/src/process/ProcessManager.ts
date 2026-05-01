@@ -470,6 +470,10 @@ class HandleImpl<I, O, R> implements Handle<I, O> {
   }
 
   requestChildEvent(event: Process.ChildEvent<unknown>): void {
+    if (this.#finished) {
+      log('lifecycle: child event ignored (already finished)', { tag: event._tag, childPid: event.pid });
+      return;
+    }
     log('lifecycle: child event', { tag: event._tag, childPid: event.pid });
     Effect.runFork(this.#runHandler('childEvent', () => this.#callbacks.onChildEvent(event)));
   }

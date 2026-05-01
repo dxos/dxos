@@ -100,7 +100,10 @@ export const ProcessTree = composable<HTMLDivElement, ProcessTreeProps>(
                           variant='ghost'
                           size={4}
                           label='Actions'
-                          onClick={() => onProcessTerminate?.(process)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onProcessTerminate?.(process);
+                          }}
                         />
                       )}
                     </Treegrid.Cell>

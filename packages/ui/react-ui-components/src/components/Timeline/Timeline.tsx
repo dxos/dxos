@@ -469,7 +469,7 @@ const LineVector = ({ branchLane, laneCount, spans, index, commit, highlightedBr
   const color = colors[col % colors.length];
   const opacity = (branch: string | undefined) => [
     'duration-500 transition-opacity',
-    branch === highlightedBranch ? 'opacity-100' : 'opacity-50',
+    highlightedBranch === undefined || branch === highlightedBranch ? 'opacity-100' : 'opacity-50',
   ];
 
   return (
