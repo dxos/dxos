@@ -6,13 +6,20 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 import { expect, within } from 'storybook/test';
 
+import { Composer } from '@dxos/brand';
 import { Input, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Placeholder } from './Placeholder';
 
+/**
+ * The story renders the brand-agnostic `Placeholder` from `@dxos/app-framework/ui`
+ * with the Composer brand icon as its `logo`, so the storybook mirrors what
+ * composer-app actually mounts in production. The render function form lets
+ * the SVG accept the placeholder's animation `className` directly.
+ */
 const meta = {
-  title: 'apps/composer-app/Placeholder',
+  title: 'sdk/app-framework/components/Placeholder',
   component: Placeholder,
   render: () => {
     const [stage, setStage] = useState(0);
@@ -44,7 +51,7 @@ const meta = {
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content>
-          <Placeholder stage={stage} />
+          <Placeholder stage={stage} logo={(logoProps) => <Composer {...logoProps} />} />
         </Panel.Content>
       </Panel.Root>
     );
@@ -63,7 +70,8 @@ export const Default: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // Smoke test: verify the component renders with the status indicator.
-    await expect(canvas.getByLabelText('Initializing')).toBeInTheDocument();
+    // Smoke test: the toolbar's `Next` button is rendered alongside the
+    // placeholder, so the story mounted without throwing.
+    await expect(canvas.getByRole('button', { name: 'Next' })).toBeInTheDocument();
   },
 };

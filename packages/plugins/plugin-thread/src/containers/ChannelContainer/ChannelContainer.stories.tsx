@@ -21,7 +21,8 @@ import { Message, Thread } from '@dxos/types';
 import { Channel } from '#types';
 
 import { ThreadPlugin } from '../../ThreadPlugin';
-import { translations } from '../../translations';
+
+import { translations } from '#translations';
 import { ChannelContainer, type ChannelContainerProps } from './ChannelContainer';
 
 // TODO(wittjosiah): Channel doesn't render full height.

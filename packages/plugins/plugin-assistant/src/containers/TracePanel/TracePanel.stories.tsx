@@ -13,14 +13,14 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
+import { Process, ServiceResolver, Trace } from '@dxos/compute';
+import { OperationHandlerSet } from '@dxos/compute';
 import { Database, Feed } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
-import { Process, ServiceResolver, Trace } from '@dxos/functions';
 import { FeedTraceSink, ProcessManager } from '@dxos/functions-runtime';
 import { ObjectId } from '@dxos/keys';
 import { dbg } from '@dxos/log';
-import { OperationHandlerSet } from '@dxos/operation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -30,7 +30,8 @@ import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { Timeline } from '@dxos/react-ui-components';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { buildExecutionGraph } from './execution-graph';
 import { TracePanel } from './TracePanel';
 

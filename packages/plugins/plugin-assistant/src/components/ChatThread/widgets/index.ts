@@ -3,7 +3,7 @@
 //
 
 export * from './FallbackWidget';
-export * from './PromptWidget';
+export * from './RoutineWidget';
 export * from './ReasoningWidget';
 export * from './ReferenceWidget';
 export * from './SelectWidget';

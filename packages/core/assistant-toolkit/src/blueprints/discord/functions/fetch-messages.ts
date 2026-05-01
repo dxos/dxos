@@ -17,10 +17,10 @@ import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
+import { CredentialsService, Trace } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { CredentialsService, Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 import { Message } from '@dxos/types';
 
 import { FetchMessages, TimeRange } from './definitions';

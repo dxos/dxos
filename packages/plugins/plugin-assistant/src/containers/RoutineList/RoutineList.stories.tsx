@@ -8,7 +8,7 @@ import React from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Prompt } from '@dxos/blueprints';
+import { Routine } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -20,10 +20,11 @@ import { Panel } from '@dxos/react-ui';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Organization } from '@dxos/types';
 
+import { translations } from '#translations';
+
 import { AssistantPlugin } from '../../AssistantPlugin';
-import { translations } from '../../translations';
 import { TracePanel } from '../TracePanel';
-import { PromptList } from './PromptList';
+import { RoutineList } from './RoutineList';
 
 // TODO(burdon): Factor out (see assistant-stories)
 export const config = {
@@ -60,7 +61,7 @@ const DefaultStory = () => {
   return (
     <Panel.Root>
       <Panel.Toolbar className='flex p-1 items-center'>
-        <PromptList subject={subject} role='toolbar-input' attendableId='story' />
+        <RoutineList subject={subject} role='toolbar-input' attendableId='story' />
       </Panel.Toolbar>
       <Panel.Content>
         <TracePanel role='article' space={space} attendableId={space.id} />
@@ -70,7 +71,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/containers/PromptList',
+  title: 'plugins/plugin-assistant/containers/RoutineList',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
@@ -78,7 +79,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Prompt.Prompt, Organization.Organization, Markdown.Document],
+          types: [Routine.Routine, Organization.Organization, Markdown.Document],
           config: config.remote,
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -91,19 +92,19 @@ const meta = {
                 }),
               );
               space.db.add(
-                Prompt.make({
+                Routine.make({
                   name: 'Summarize',
                   instructions: 'Create a new markdown document that is a summary of the selected object.',
                 }),
               );
               space.db.add(
-                Prompt.make({
+                Routine.make({
                   name: 'Analyze',
                   instructions: 'Analyze the selected content.',
                 }),
               );
               space.db.add(
-                Prompt.make({
+                Routine.make({
                   name: 'Translate',
                   instructions: 'Translate the selected content to Spanish.',
                 }),

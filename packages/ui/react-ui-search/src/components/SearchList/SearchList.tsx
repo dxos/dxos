@@ -29,7 +29,8 @@ import {
 } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import {
   SearchListInputContextProvider,
   SearchListItemContextProvider,

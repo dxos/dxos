@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
+import { type OperationInvoker } from '@dxos/compute';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { type OperationInvoker } from '@dxos/operation';
 
 import { UndoOperation } from '../../common';
 import { EmptyHistoryError } from './errors';

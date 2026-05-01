@@ -7,7 +7,7 @@ import React, { type JSX, useCallback, useMemo, useState } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
 import { McpServer } from '@dxos/assistant-toolkit';
-import { type Blueprint } from '@dxos/blueprints';
+import { type Blueprint } from '@dxos/compute';
 import { Annotation, type Database, Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Popover, Select, useTranslation } from '@dxos/react-ui';

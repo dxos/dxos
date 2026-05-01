@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Predicate from 'effect/Predicate';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { TokenManagerOperation } from '@dxos/plugin-token-manager/operations';
 
 import { defaultScriptsForIntegration } from '#meta';

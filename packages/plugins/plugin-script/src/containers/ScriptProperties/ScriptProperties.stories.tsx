@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Blueprint } from '@dxos/blueprints';
-import { Script } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { Blueprint } from '@dxos/compute';
+import { Script } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -19,8 +19,8 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { createScript } from '#testing';
+import { translations } from '#translations';
 
-import { translations } from '../../translations';
 import { ScriptProperties } from './ScriptProperties';
 
 type DefaultStoryProps = {};

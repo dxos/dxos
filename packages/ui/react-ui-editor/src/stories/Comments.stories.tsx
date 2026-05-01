@@ -11,7 +11,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
-import { type Comment, annotations, comments, createExternalCommentSync } from '@dxos/ui-editor';
+import { annotations, comments, createExternalCommentSync } from '@dxos/ui-editor';
+import { type Comment } from '@dxos/ui-editor/types';
 
 import { createRenderer, str } from '../util';
 import { EditorStory, content, longText } from './components';

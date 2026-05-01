@@ -7,7 +7,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppCapabilities, getPersonalSpace } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
-import { type LogBuffer, log } from '@dxos/log';
+import { log } from '@dxos/log';
+import { type IdbLogStore } from '@dxos/log-store-idb';
 import { useClient } from '@dxos/react-client';
 import { Icon, IconButton, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
@@ -30,12 +31,12 @@ const StorageAdapters = {
 export type DebugSettingsProps = AppSurface.SettingsArticleProps<
   Settings.Settings,
   {
-    logBuffer: LogBuffer;
+    logStore: IdbLogStore;
     onUpload?: AppCapabilities.FileUploader;
   }
 >;
 
-export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload }: DebugSettingsProps) => {
+export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }: DebugSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const [toast, setToast] = useState<Toast>();
   const download = useFileDownload();
@@ -90,12 +91,12 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload 
     }
   }, [client, download, handleToast, onUpload, t]);
 
-  const handleDownloadLogs = useCallback(() => {
-    const ndjson = logBuffer.serialize();
+  const handleDownloadLogs = useCallback(async () => {
+    const ndjson = await logStore.export();
     const file = new Blob([ndjson], { type: 'application/x-ndjson' });
     const fileName = `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson`;
     download(file, fileName);
-  }, [download, logBuffer]);
+  }, [download, logStore]);
 
   const handleRepair = useCallback(async () => {
     try {

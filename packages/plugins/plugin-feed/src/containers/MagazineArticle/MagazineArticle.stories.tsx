@@ -19,10 +19,10 @@ import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { generateCuratedPost, generateFeed, generateMagazine } from '#testing';
+import { translations } from '#translations';
 import { Magazine, Subscription } from '#types';
 
 import { FeedPlugin } from '../../FeedPlugin';
-import { translations } from '../../translations';
 import { MagazineArticle } from './MagazineArticle';
 
 const DefaultStory = () => {

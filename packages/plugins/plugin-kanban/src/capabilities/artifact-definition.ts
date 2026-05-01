@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import { ToolResult, createTool } from '@dxos/ai';
 import { Capabilities, Capability, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';
-import { defineArtifact } from '@dxos/blueprints';
+import { defineArtifact } from '@dxos/compute';
 import { Obj, Query } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

@@ -150,6 +150,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/log-store-idb/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/merkle-search-tree/package.json",
           "jsonpath": "$.version"
         },
@@ -266,6 +271,11 @@
         {
           "type": "json",
           "path": "packages/core/compute/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute-hyperformula/package.json",
           "jsonpath": "$.version"
         },
         {

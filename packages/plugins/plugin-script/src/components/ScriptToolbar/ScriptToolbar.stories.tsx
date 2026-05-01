@@ -8,13 +8,13 @@ import React, { useMemo } from 'react';
 
 import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Script } from '@dxos/functions';
+import { Script } from '@dxos/compute';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type ScriptToolbarState, type ScriptToolbarStateStore } from '#hooks';
+import { translations } from '#translations';
 
-import { translations } from '../../translations';
 import { ScriptToolbar } from './ScriptToolbar';
 
 // Create a mock store for stories.

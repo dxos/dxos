@@ -20,11 +20,9 @@ import {
   Cursor,
   type EditorStateStore,
   EditorView,
-  type EditorViewMode,
   type Extension,
   InputModeExtensions,
   type PreviewOptions,
-  type RenderCallback,
   createDataExtensions,
   decorateMarkdown,
   documentId,
@@ -37,6 +35,7 @@ import {
   selectionState,
   typewriter,
 } from '@dxos/ui-editor';
+import { type EditorViewMode, type RenderCallback } from '@dxos/ui-editor/types';
 import { isTruthy, safeUrl } from '@dxos/util';
 
 import { Markdown } from '#types';

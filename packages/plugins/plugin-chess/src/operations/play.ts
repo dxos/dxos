@@ -5,8 +5,8 @@
 import { Chess as ChessJS } from 'chess.js';
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 
 import { type Chess } from '../types';
 import { Play } from './definitions';

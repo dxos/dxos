@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import { Trigger } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { FeedAnnotation } from '@dxos/schema';
 
 import { Agent } from '../../../types';
@@ -123,6 +123,28 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
           function: Ref.make(Operation.serialize(AgentWorker)),
           enabled: true,
           spec: Trigger.specQueue(agent.queue.dxn.toString()),
+          input: {
+            agent: Ref.make(agent),
+            event: '{{event}}',
+          },
+        }),
+      );
+    }
+
+    // Timer trigger bypasses the qualifier and invokes the agent worker directly on a schedule.
+    if (agent.cron) {
+      yield* Database.add(
+        Trigger.make({
+          [Obj.Parent]: agent,
+          [Obj.Meta]: {
+            keys: [
+              { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
+              { source: AGENT_TRIGGER_TARGET_EXTENSION_KEY, id: `timer:${agent.cron}` },
+            ],
+          },
+          enabled: true,
+          spec: Trigger.specTimer(agent.cron),
+          function: Ref.make(Operation.serialize(AgentWorker)),
           input: {
             agent: Ref.make(agent),
             event: '{{event}}',

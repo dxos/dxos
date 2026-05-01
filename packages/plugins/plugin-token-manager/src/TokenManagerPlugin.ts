@@ -8,8 +8,7 @@ import { AccessToken } from '@dxos/types';
 
 import { AppGraphBuilder, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
-
-import { translations } from './translations';
+import { translations } from '#translations';
 
 export const TokenManagerPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
