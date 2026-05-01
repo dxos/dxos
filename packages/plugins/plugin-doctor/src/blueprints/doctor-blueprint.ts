@@ -16,6 +16,13 @@ const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'Doctor',
+    description: trim`
+      Self-introspection: read this Composer browser tab's own runtime logs from
+      the local IndexedDB log store. Enable to triage bugs, explain unexpected
+      behavior, find noisy code paths, or verify that an action took effect.
+      Read-only and bounded — never modifies the log store.
+    `,
+    agentCanEnable: true,
     tools: Blueprint.toolDefinitions({ operations }),
     instructions: Template.make({
       source: trim`

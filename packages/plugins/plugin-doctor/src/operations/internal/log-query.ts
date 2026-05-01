@@ -17,6 +17,21 @@ export const HARD_LIMIT_SAMPLE = 25;
 const DEFAULT_LIMIT = 100;
 const DEFAULT_TOPK = 50;
 const DEFAULT_SAMPLE = 3;
+// Cap user regex source length as a coarse defense against ReDoS — pathological patterns
+// can stall the main thread when matched against thousands of records.
+const MAX_REGEX_SOURCE_LENGTH = 256;
+
+const compileUserRegex = (source: string, label: string): RegExp => {
+  if (source.length > MAX_REGEX_SOURCE_LENGTH) {
+    throw new Error(`${label} exceeds max length ${MAX_REGEX_SOURCE_LENGTH}`);
+  }
+  try {
+    return new RegExp(source);
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    throw new Error(`Invalid regex in ${label}: ${reason}`);
+  }
+};
 
 export type LogRecord = {
   t?: string;
@@ -238,22 +253,10 @@ export const runQuery = (rows: Iterable<LogRecord>, input: QueryInput): QueryRes
   const start = Date.now();
 
   const filterGroups = (input.filters ?? []).map(parseFilterGroup);
-  const greps = (input.grep ?? []).map((source, idx) => {
-    try {
-      return new RegExp(source);
-    } catch (err) {
-      const reason = err instanceof Error ? err.message : String(err);
-      throw new Error(`Invalid regex in grep[${idx}]: ${reason}`);
-    }
-  });
+  const greps = (input.grep ?? []).map((source, idx) => compileUserRegex(source, `grep[${idx}]`));
   let messageRegex: RegExp | undefined;
   if (input.messageRegex !== undefined) {
-    try {
-      messageRegex = new RegExp(input.messageRegex);
-    } catch (err) {
-      const reason = err instanceof Error ? err.message : String(err);
-      throw new Error(`Invalid regex in messageRegex: ${reason}`);
-    }
+    messageRegex = compileUserRegex(input.messageRegex, 'messageRegex');
   }
   const sinceMs = parseTime(input.since);
   const untilMs = parseTime(input.until);
