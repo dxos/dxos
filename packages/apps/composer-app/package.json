@@ -98,6 +98,7 @@
     "@dxos/plugin-tictactoe": "workspace:*",
     "@dxos/plugin-token-manager": "workspace:*",
     "@dxos/plugin-transcription": "workspace:*",
+    "@dxos/plugin-trello": "workspace:*",
     "@dxos/plugin-voxel": "workspace:*",
     "@dxos/plugin-wnfs": "workspace:*",
     "@dxos/plugin-zen": "workspace:*",

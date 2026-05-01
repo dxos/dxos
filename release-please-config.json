@@ -820,6 +820,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-trello/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-voxel/package.json",
           "jsonpath": "$.version"
         },

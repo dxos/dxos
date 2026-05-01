@@ -395,6 +395,9 @@
       "path": "../../plugins/plugin-transcription"
     },
     {
+      "path": "../../plugins/plugin-trello"
+    },
+    {
       "path": "../../plugins/plugin-voxel"
     },
     {
