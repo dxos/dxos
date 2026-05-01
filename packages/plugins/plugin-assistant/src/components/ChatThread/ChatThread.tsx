@@ -28,12 +28,22 @@ export type ChatThreadProps = ThemedClassName<
     messages?: Message.Message[];
     error?: Error;
     onEvent?: (event: ChatEvent) => void;
-  } & Pick<MarkdownStreamProps, 'options' | 'debug' | 'extensions'>
+  } & Pick<MarkdownStreamProps, 'options' | 'debug' | 'extensions' | 'footer'>
 >;
 
 export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThreadProps>(
   (
-    { classNames, identity, messages = [], error, options = defaultOptions, debug = false, extensions, onEvent },
+    {
+      classNames,
+      identity,
+      messages = [],
+      error,
+      options = defaultOptions,
+      debug = false,
+      extensions,
+      footer,
+      onEvent,
+    },
     forwardedRef,
   ) => {
     const [controller, setController] = useState<MarkdownStreamController | null>(null);
@@ -61,6 +71,7 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
       if (!syncer) {
         return;
       }
+
       if (syncer.update(messages)) {
         controller?.scrollToBottom('instant');
       }
@@ -90,6 +101,7 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
           options={options}
           debug={debug}
           extensions={extensions}
+          footer={footer}
           onEvent={handleEvent}
           ref={handleMarkdownStreamRef}
         />

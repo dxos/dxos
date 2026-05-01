@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, type Ref, forwardRef, useEffect, useImpe
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { formatElapsed } from './formatElapsed';
+import { formatElapsed } from './format';
 
 const TICK_MS = 1_000;
 
@@ -16,22 +16,22 @@ const TICK_MS = 1_000;
 // Context
 //
 
-type StatusContextValue = {
-  /** Whole seconds elapsed since Status.Root mounted. Only advances while `running` is true. */
+type ChatStatusContextValue = {
+  /** Whole seconds elapsed since ChatStatus.Root mounted. Only advances while `running` is true. */
   elapsed: number;
-  /** Whether the Status.Root tick is currently active. Toggled via the StatusController. */
+  /** Whether the ChatStatus.Root tick is currently active. Toggled via the ChatStatusController. */
   running: boolean;
 };
 
-const [StatusProvider, useStatusContext] = createContext<StatusContextValue>('Status');
+const [ChatStatusProvider, useChatStatusContext] = createContext<ChatStatusContextValue>('ChatStatus');
 
-export { useStatusContext };
+export { useChatStatusContext };
 
 //
 // Controller
 //
 
-export type StatusController = {
+export type ChatStatusController = {
   /** Resume the tick. No-op if already running. */
   start: () => void;
   /** Pause the tick. The reported `elapsed` freezes at its last value. */
@@ -49,8 +49,8 @@ export type RootProps = ThemedClassName<
   }>
 >;
 
-const Root = forwardRef<StatusController, RootProps>(
-  ({ classNames, children, defaultRunning = true }: RootProps, forwardedRef: Ref<StatusController>) => {
+const Root = forwardRef<ChatStatusController, RootProps>(
+  ({ classNames, children, defaultRunning = true }: RootProps, forwardedRef: Ref<ChatStatusController>) => {
     const [elapsed, setElapsed] = useState(0);
     const [running, setRunning] = useState(defaultRunning);
 
@@ -89,16 +89,16 @@ const Root = forwardRef<StatusController, RootProps>(
     );
 
     return (
-      <StatusProvider elapsed={elapsed} running={running}>
+      <ChatStatusProvider elapsed={elapsed} running={running}>
         <span className={mx('inline-flex items-center gap-2 text-description font-mono tabular-nums', classNames)}>
           {children}
         </span>
-      </StatusProvider>
+      </ChatStatusProvider>
     );
   },
 );
 
-Root.displayName = 'Status.Root';
+Root.displayName = 'ChatChatStatus.Root';
 
 //
 // Icon
@@ -131,12 +131,12 @@ export type StopwatchProps = ThemedClassName<{
 }>;
 
 /**
- * Elapsed-time display, driven by the Status.Root context tick.
- * Use `offset` to shift the displayed value; remount `Status.Root` to reset the underlying counter.
+ * Elapsed-time display, driven by the ChatStatus.Root context tick.
+ * Use `offset` to shift the displayed value; remount `ChatStatus.Root` to reset the underlying counter.
  * Marked `aria-live='off'` so screen readers don't announce every tick.
  */
 const Stopwatch = ({ classNames, offset = 0 }: StopwatchProps) => {
-  const { elapsed } = useStatusContext('Status.Stopwatch');
+  const { elapsed } = useChatStatusContext('ChatChatStatus.Stopwatch');
   return (
     <span aria-live='off' className={mx(classNames)}>
       {formatElapsed((elapsed + offset) * 1_000)}
@@ -171,10 +171,10 @@ export type TextProps = ThemedClassName<PropsWithChildren>;
 const Text = ({ classNames, children }: TextProps) => <span className={mx(classNames)}>{children}</span>;
 
 //
-// Status
+// ChatStatus
 //
 
-export const Status = {
+export const ChatStatus = {
   Root,
   Icon,
   Stopwatch,
