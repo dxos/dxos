@@ -75,7 +75,11 @@ const ICONS = {
   },
   agentRequestRunning: {
     icon: 'ph--spinner-gap--regular',
-    level: LogLevel.INFO,
+    level: LogLevel.VERBOSE,
+  },
+  processRunning: {
+    icon: 'ph--spinner-gap--regular',
+    level: LogLevel.VERBOSE,
   },
 } as const;
 
@@ -360,6 +364,16 @@ export const buildExecutionGraph = ({
         message: 'Generating...',
         timestamp: new Date(),
       });
+    } else if (process.state === Process.State.RUNNING && builder.hasBranch(process.pid)) {
+      builder.addCommit({
+        id: `running:${process.pid}`,
+        branch: process.pid,
+        parents: builder.computeParents(CommitSelector.branch(process.pid)),
+        icon: ICONS.processRunning.icon,
+        level: ICONS.processRunning.level,
+        message: 'Running...',
+        timestamp: new Date(),
+      });
     }
   }
 
@@ -523,6 +537,10 @@ class GraphBuilder {
 
   findCommits(selector: CommitSelector): Commit[] {
     return selector.select(this.#commits);
+  }
+
+  hasBranch(branch: string): boolean {
+    return this.#branches.has(branch);
   }
 
   addCommit(
