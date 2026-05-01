@@ -10,7 +10,6 @@ import { Obj, Ref } from '@dxos/echo';
 import { Integration } from '@dxos/plugin-integration/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, IconButton, Message, useTranslation } from '@dxos/react-ui';
-import { AccessToken } from '@dxos/types';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -32,7 +31,6 @@ export const InitializeMailbox = composable<HTMLDivElement, InitializeMailboxPro
     const { invokePromise } = useOperationInvoker();
     const pluginManager = usePluginManager();
     const db = Obj.getDatabase(mailbox);
-    const tokens = useQuery(db, Filter.type(AccessToken.AccessToken));
     const [syncing, setSyncing] = useState(false);
 
     const handleOpenSettings = useCallback(() => {
@@ -45,30 +43,33 @@ export const InitializeMailbox = composable<HTMLDivElement, InitializeMailboxPro
     }, [db, invokePromise]);
 
     const integrations = useQuery(db, Filter.type(Integration.Integration));
-    const mailboxParent = integrations.find((integration) =>
+    const mailboxIntegration = integrations.find((integration) =>
       integration.targets.some((target) => target.object?.dxn.asEchoDXN()?.echoId === mailbox.id),
     );
 
     const handleSync = useCallback(async () => {
-      if (!mailboxParent) return;
+      if (!mailboxIntegration) return;
       setSyncing(true);
       try {
         await invokePromise(InboxOperation.SyncMailbox, {
-          integration: Ref.make(mailboxParent),
+          integration: Ref.make(mailboxIntegration),
           mailbox: Ref.make(mailbox),
         });
       } finally {
         setSyncing(false);
       }
-    }, [invokePromise, mailbox, mailboxParent]);
+    }, [invokePromise, mailbox, mailboxIntegration]);
 
     let message: string | undefined;
     let action: ReactNode;
-    const token = tokens.find((token) => token.source.includes('google'));
-    if (token) {
+    // Gate sync on an Integration that directly references *this* mailbox,
+    // not on the mere presence of a Google token in the space — a token from
+    // an unrelated integration may have the wrong scopes (e.g. calendar-only)
+    // and isn't a green light to sync mail.
+    if (mailboxIntegration) {
       action = (
         <IconButton
-          disabled={syncing || !mailboxParent}
+          disabled={syncing}
           variant='primary'
           iconClassNames={syncing ? 'animate-spin' : undefined}
           icon={syncing ? 'ph--spinner-gap--regular' : 'ph--arrow-clockwise--regular'}
@@ -78,7 +79,9 @@ export const InitializeMailbox = composable<HTMLDivElement, InitializeMailboxPro
       );
     } else {
       message = t('no-integrations.label');
-      const data = { providerId: GMAIL_PROVIDER_ID };
+      // Pass the current Mailbox through as `existingTarget` so the OAuth
+      // flow wires Gmail up to *this* mailbox instead of creating a new one.
+      const data = { providerId: GMAIL_PROVIDER_ID, existingTarget: Ref.make(mailbox) };
       action = Surface.isAvailable(pluginManager.capabilities, { role: 'integration--auth', data }) ? (
         <Surface.Surface role='integration--auth' data={data} limit={1} />
       ) : (

@@ -7,6 +7,7 @@ import type * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import type { Obj, Ref } from '@dxos/echo';
 import type { Operation } from '@dxos/operation';
 import type { OAuthProvider } from '@dxos/protocols';
 import type { AccessToken } from '@dxos/types';
@@ -29,6 +30,14 @@ export type RemoteTarget = {
 export type OnTokenCreated = (input: {
   accessToken: AccessToken.AccessToken;
   integration: Integration.Integration;
+  /**
+   * Pre-existing local object the caller wants to wire up as the
+   * Integration's first target — set when the auth flow was initiated from
+   * a surface that already has the target object in scope (e.g. an
+   * `InitializeMailbox` button on an existing Mailbox). When omitted,
+   * single-target providers (Gmail) create a fresh target object.
+   */
+  existingTarget?: Ref.Ref<Obj.Unknown>;
 }) => Effect.Effect<void, Error, HttpClient.HttpClient>;
 
 /** OAuth spec for IntegrationProvider.oauth. */

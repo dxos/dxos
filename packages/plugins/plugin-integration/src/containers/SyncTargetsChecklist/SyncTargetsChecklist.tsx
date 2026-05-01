@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Ref } from '@dxos/echo';
+import { type Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Button, Dialog, Input, useTranslation } from '@dxos/react-ui';
 
@@ -19,6 +19,13 @@ import { type Integration } from '../../types';
 export type SyncTargetsChecklistProps = {
   integration: Integration.Integration;
   availableTargets: ReadonlyArray<RemoteTarget>;
+  /**
+   * Existing local object to attach to the first newly-selected target —
+   * threaded through from the auth surface (e.g. a Calendar object the user
+   * was viewing when they kicked off OAuth). Forwarded to
+   * `SetIntegrationTargets`.
+   */
+  existingTarget?: Ref.Ref<Obj.Unknown>;
 };
 
 /**
@@ -34,7 +41,7 @@ export type SyncTargetsChecklistProps = {
  * `Dialog.Root` + `Dialog.Overlay` — opened via
  * `LayoutOperation.UpdateDialog({ subject: SYNC_TARGETS_DIALOG, ... })`.
  */
-export const SyncTargetsChecklist = ({ integration, availableTargets }: SyncTargetsChecklistProps) => {
+export const SyncTargetsChecklist = ({ integration, availableTargets, existingTarget }: SyncTargetsChecklistProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
 
@@ -77,6 +84,7 @@ export const SyncTargetsChecklist = ({ integration, availableTargets }: SyncTarg
       const result = await invokePromise(SetIntegrationTargets, {
         integration: Ref.make(integration),
         selected: chosen,
+        existingTarget,
       });
       if (result.error) {
         throw result.error;
@@ -88,7 +96,7 @@ export const SyncTargetsChecklist = ({ integration, availableTargets }: SyncTarg
     } finally {
       setSubmitting(false);
     }
-  }, [availableTargets, selected, integration, invokePromise]);
+  }, [availableTargets, selected, integration, invokePromise, existingTarget]);
 
   return (
     <Dialog.Content>

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AccessToken } from '@dxos/types';
 
@@ -72,6 +72,13 @@ export const SetIntegrationTargets = Operation.make({
         name: Schema.String.pipe(Schema.optional),
       }),
     ),
+    /**
+     * Pre-existing local object to attach to the first newly-added target.
+     * Used when the auth flow was initiated from a surface that already had
+     * the target in scope (e.g. clicking Connect from an empty Calendar
+     * article). Skipped when no new targets are added.
+     */
+    existingTarget: Ref.Ref(Obj.Unknown).pipe(Schema.optional),
   }),
   output: Schema.Struct({
     added: Schema.Number,

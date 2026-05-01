@@ -37,13 +37,16 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'integration-auth',
         role: 'integration--auth',
-        filter: (data): data is { providerId: string } => typeof (data as any).providerId === 'string',
+        filter: (data): data is { providerId: string; existingTarget?: ComponentProps<typeof IntegrationAuthButton>['existingTarget'] } =>
+          typeof (data as any).providerId === 'string',
         component: ({ data }) => {
           const space = useActiveSpace();
           if (!space) {
             return null;
           }
-          return <IntegrationAuthButton providerId={data.providerId} db={space.db} />;
+          return (
+            <IntegrationAuthButton providerId={data.providerId} db={space.db} existingTarget={data.existingTarget} />
+          );
         },
       }),
       Surface.create({

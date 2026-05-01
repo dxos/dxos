@@ -66,6 +66,16 @@ export type IntegrationCoordinator = {
     db: Database.Database;
     spaceId: Key.SpaceId;
     providerId: string;
+    /**
+     * Existing local object to wire up as the Integration's first target.
+     * Set when the auth flow is initiated from a surface that already has
+     * the target in scope (e.g. an `InitializeMailbox` button on an existing
+     * Mailbox, or a `NewCalendar` button on an existing Calendar). Threaded
+     * through to the provider's `onTokenCreated` and to the sync-targets
+     * dialog so providers can attach the existing object instead of
+     * materializing a fresh one.
+     */
+    existingTarget?: Ref.Ref<Obj.Unknown>;
   }) => Effect.Effect<{ integrationId: string }, Error>;
   /**
    * Persist a manually-entered access token + Integration. Used by the
@@ -96,6 +106,8 @@ type Pending = {
    *  dispatch to the correct `onTokenCreated`. Source alone isn't enough
    *  when multiple providers share an OAuth domain (Gmail/Calendar). */
   providerId: string;
+  /** Existing local target object passed through from the auth surface. */
+  existingTarget?: Ref.Ref<Obj.Any>;
 };
 
 export default Capability.makeModule(
@@ -129,7 +141,7 @@ export default Capability.makeModule(
     let edgeOrigin: string | undefined;
 
     const finalizePending = async (entry: Pending): Promise<void> => {
-      const { token, integration, db, providerId } = entry;
+      const { token, integration, db, providerId, existingTarget } = entry;
       // Persist both via direct `db.add`. Direct add doesn't drop them into
       // the root collection (which is what `SpaceOperation.AddObject` with
       // `hidden: false` would do); the `Integrations` graph branch finds
@@ -157,12 +169,14 @@ export default Capability.makeModule(
       if (provider?.onTokenCreated) {
         try {
           await runAndForwardErrors(
-            provider.onTokenCreated({ accessToken: persistedToken, integration: persistedIntegration }).pipe(
-              Effect.provide(FetchHttpClient.layer),
-              Effect.catchAll((error) =>
-                Effect.sync(() => log.warn('onTokenCreated failed', { source: persistedToken.source, error })),
+            provider
+              .onTokenCreated({ accessToken: persistedToken, integration: persistedIntegration, existingTarget })
+              .pipe(
+                Effect.provide(FetchHttpClient.layer),
+                Effect.catchAll((error) =>
+                  Effect.sync(() => log.warn('onTokenCreated failed', { source: persistedToken.source, error })),
+                ),
               ),
-            ),
           );
         } catch (error) {
           log.warn('onTokenCreated runner failed', { error });
@@ -197,6 +211,7 @@ export default Capability.makeModule(
                 props: {
                   integration: persistedIntegration,
                   availableTargets: targets,
+                  existingTarget,
                 },
               });
             } catch (error) {
@@ -244,7 +259,12 @@ export default Capability.makeModule(
 
     window.addEventListener('message', handleMessage);
 
-    const createIntegration: IntegrationCoordinator['createIntegration'] = ({ db, spaceId, providerId }) =>
+    const createIntegration: IntegrationCoordinator['createIntegration'] = ({
+      db,
+      spaceId,
+      providerId,
+      existingTarget,
+    }) =>
       Effect.tryPromise({
         try: async () => {
           const providers = pluginContext.getAll(IntegrationProvider).flat() as IntegrationProviderEntry[];
@@ -295,7 +315,7 @@ export default Capability.makeModule(
             targets: [],
           });
 
-          pending.set(token.id, { token, integration, db, providerId: provider.id });
+          pending.set(token.id, { token, integration, db, providerId: provider.id, existingTarget });
 
           const edge = getEdgeClient();
           edgeOrigin = new URL(edge.baseUrl).origin;

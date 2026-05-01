@@ -10,7 +10,6 @@ import { Obj, Ref } from '@dxos/echo';
 import { Integration } from '@dxos/plugin-integration/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
-import { AccessToken } from '@dxos/types';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -28,7 +27,6 @@ export type NewCalendarProps = {
  */
 export const NewCalendar = composable<HTMLDivElement, NewCalendarProps>(({ calendar, ...props }, forwardedRef) => {
   const db = Obj.getDatabase(calendar);
-  const tokens = useQuery(db, Filter.type(AccessToken.AccessToken));
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const pluginManager = usePluginManager();
@@ -44,26 +42,32 @@ export const NewCalendar = composable<HTMLDivElement, NewCalendarProps>(({ calen
   }, [db, invokePromise]);
 
   const integrations = useQuery(db, Filter.type(Integration.Integration));
-  const calendarParent = integrations.find((integration) =>
+  const calendarIntegration = integrations.find((integration) =>
     integration.targets.some((target) => target.object?.dxn.asEchoDXN()?.echoId === calendar.id),
   );
 
   const handleSync = useCallback(async () => {
-    if (!calendarParent) return;
+    if (!calendarIntegration) return;
     setSyncing(true);
     try {
       await invokePromise(InboxOperation.SyncCalendar, {
-        integration: Ref.make(calendarParent),
+        integration: Ref.make(calendarIntegration),
         calendar: Ref.make(calendar),
       });
     } finally {
       setSyncing(false);
     }
-  }, [invokePromise, calendar, calendarParent]);
+  }, [invokePromise, calendar, calendarIntegration]);
 
-  const googleToken = tokens.find((token) => token.source.includes('google'));
-  if (!googleToken) {
-    const authSurfaceData = { providerId: GOOGLE_CALENDAR_PROVIDER_ID };
+  // Gate sync on an Integration that directly references *this* calendar,
+  // not on the mere presence of a Google token in the space — a token from
+  // an unrelated integration may have the wrong scopes (e.g. mail-only) and
+  // isn't a green light to sync calendar.
+  if (!calendarIntegration) {
+    // Pass the current Calendar through as `existingTarget` so the OAuth
+    // flow attaches *this* calendar to the first sync target the user picks
+    // from the post-OAuth checklist, instead of materializing a fresh one.
+    const authSurfaceData = { providerId: GOOGLE_CALENDAR_PROVIDER_ID, existingTarget: Ref.make(calendar) };
     const hasAuthSurface = Surface.isAvailable(pluginManager.capabilities, {
       role: 'integration--auth',
       data: authSurfaceData,
@@ -101,7 +105,7 @@ export const NewCalendar = composable<HTMLDivElement, NewCalendarProps>(({ calen
       {...composableProps(props, { classNames: 'flex flex-col items-center gap-4 p-8' })}
     >
       <p className='text-description'>{t('empty-calendar.message')}</p>
-      <Button onClick={handleSync} disabled={syncing || !calendarParent}>
+      <Button onClick={handleSync} disabled={syncing}>
         {t('sync-calendar.label')}
       </Button>
     </div>

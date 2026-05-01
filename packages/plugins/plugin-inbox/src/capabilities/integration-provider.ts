@@ -47,11 +47,16 @@ const fillAccountEmail = (accessToken: { token: string; account?: string }) =>
   });
 
 /**
- * onTokenCreated for Gmail: fills the account email AND auto-creates the
- * single Mailbox target. Mail integrations have no `getSyncTargets` UI
- * (there's only one inbox per account), so the target is hardcoded here.
+ * onTokenCreated for Gmail: fills the account email AND attaches the single
+ * Mailbox target. Mail integrations have no `getSyncTargets` UI (there's
+ * only one inbox per account), so the target is wired up here. When
+ * `existingTarget` is provided (e.g. the auth flow was initiated from
+ * `InitializeMailbox` on an existing Mailbox), the existing object is
+ * reused — and given the same default name a freshly-created Mailbox would
+ * have (`email ?? 'Inbox'`) when its `name` is unset. Otherwise a fresh
+ * Mailbox is created.
  */
-const gmailOnTokenCreated: OnTokenCreated = ({ accessToken, integration }) =>
+const gmailOnTokenCreated: OnTokenCreated = ({ accessToken, integration, existingTarget }) =>
   Effect.gen(function* () {
     const email = yield* fillAccountEmail(accessToken);
     if (email) {
@@ -62,16 +67,28 @@ const gmailOnTokenCreated: OnTokenCreated = ({ accessToken, integration }) =>
 
     const db = Obj.getDatabase(integration);
     if (!db) return;
-    const mailbox = Mailbox.make({
-      name: email ?? 'Inbox',
-    });
-    db.add(mailbox);
+    const defaultName = email ?? 'Inbox';
+    let targetRef: Ref.Ref<Obj.Unknown>;
+    if (existingTarget) {
+      // Backfill name on the user's existing Mailbox if they hadn't named it.
+      const existing = (yield* Effect.promise(() => existingTarget.load())) as Mailbox.Mailbox;
+      if (!existing.name) {
+        Obj.change(existing, (obj) => {
+          obj.name = defaultName;
+        });
+      }
+      targetRef = existingTarget;
+    } else {
+      const mailbox = Mailbox.make({ name: defaultName });
+      db.add(mailbox);
+      targetRef = Ref.make(mailbox);
+    }
     Obj.change(integration, (integration) => {
       const mutable = integration as Obj.Mutable<typeof integration>;
       mutable.targets = [
         ...mutable.targets,
         {
-          object: Ref.make(mailbox),
+          object: targetRef,
           options: {} as Record<string, unknown>,
         },
       ];

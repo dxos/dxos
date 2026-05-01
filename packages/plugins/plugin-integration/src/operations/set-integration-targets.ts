@@ -21,7 +21,7 @@ import { SetIntegrationTargets } from './definitions';
  */
 const handler: Operation.WithHandler<typeof SetIntegrationTargets> = SetIntegrationTargets.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ integration, selected }) {
+    Effect.fn(function* ({ integration, selected, existingTarget }) {
       // TODO(wittjosiah): the operation should just depend on `Database.Service`
       //   and have it provided by the OperationInvoker — composer's invoker is
       //   wired without a `databaseResolver`, so we derive the db from the input
@@ -39,6 +39,22 @@ const handler: Operation.WithHandler<typeof SetIntegrationTargets> = SetIntegrat
         const currentRemoteIds = new Set(
           obj.targets.map((t) => t.remoteId).filter((id): id is string => id !== undefined),
         );
+
+        // First newly-added target receives the `existingTarget` attachment.
+        // Compute it up front so we can also backfill the local object's
+        // `name` from the picker entry — same name a freshly-materialized
+        // local object would have inherited.
+        const firstNewSel = existingTarget
+          ? selected.find((s) => !currentRemoteIds.has(s.remoteId))
+          : undefined;
+        if (existingTarget && firstNewSel?.name) {
+          const existing = (yield* Database.load(existingTarget)) as Obj.Unknown & { name?: string };
+          if (!existing.name) {
+            Obj.change(existing, (mutable) => {
+              (mutable as { name?: string }).name = firstNewSel.name;
+            });
+          }
+        }
 
         let added = 0;
         let removed = 0;
@@ -60,9 +76,16 @@ const handler: Operation.WithHandler<typeof SetIntegrationTargets> = SetIntegrat
               removed++;
             }
           }
+          // Subsequent picks materialize fresh placeholders lazily on first
+          // sync, as usual.
           for (const sel of selected) {
             if (!currentRemoteIds.has(sel.remoteId)) {
-              next.push({ remoteId: sel.remoteId, name: sel.name });
+              const attach = sel === firstNewSel && existingTarget !== undefined;
+              next.push({
+                remoteId: sel.remoteId,
+                name: sel.name,
+                ...(attach && { object: existingTarget }),
+              });
               added++;
             }
           }
