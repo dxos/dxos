@@ -261,7 +261,7 @@ export class RpcPeer {
    */
   private async _receive(msg: Uint8Array): Promise<void> {
     const decoded = getRpcMessageCodec().decode(msg, { preserveAny: true });
-    DEBUG_CALLS && log('received message', { type: Object.keys(decoded)[0] });
+    DEBUG_CALLS && log.trace('received message', { type: Object.keys(decoded)[0] });
 
     if (decoded.request) {
       if (this._state !== RpcState.OPENED && this._state !== RpcState.OPENING) {
@@ -291,10 +291,10 @@ export class RpcPeer {
           });
         });
       } else {
-        DEBUG_CALLS && log('requesting...', { method: req.method });
+        DEBUG_CALLS && log.trace('requesting...', { method: req.method });
         const response = await this._callHandler(req);
         DEBUG_CALLS &&
-          log('sending response', {
+          log.trace('sending response', {
             method: req.method,
             response: response.payload?.type_url,
             error: response.error,
@@ -310,7 +310,7 @@ export class RpcPeer {
       const responseId = decoded.response.id;
       invariant(typeof responseId === 'number');
       if (!this._outgoingRequests.has(responseId)) {
-        log('received response with invalid id', { responseId });
+        log.trace('received response with invalid id', { responseId });
         return; // Ignore requests with incorrect id.
       }
 
@@ -320,7 +320,7 @@ export class RpcPeer {
         this._outgoingRequests.delete(responseId);
       }
 
-      DEBUG_CALLS && log('response', { type_url: decoded.response.payload?.type_url });
+      DEBUG_CALLS && log.trace('response', { type_url: decoded.response.payload?.type_url });
       item.resolve(decoded.response);
     } else if (decoded.open) {
       log('received open message', { state: this._state });
@@ -375,7 +375,7 @@ export class RpcPeer {
    * Peer should be open before making this call.
    */
   async call(method: string, request: Any, options?: RequestOptions): Promise<Any> {
-    DEBUG_CALLS && log('calling...', { method });
+    DEBUG_CALLS && log.trace('calling...', { method });
     throwIfNotOpen(this._state);
 
     let response: Response;
@@ -506,7 +506,7 @@ export class RpcPeer {
   }
 
   private async _sendMessage(message: RpcMessage, timeout?: number): Promise<void> {
-    DEBUG_CALLS && log('sending message', { type: Object.keys(message)[0] });
+    DEBUG_CALLS && log.trace('sending message', { type: Object.keys(message)[0] });
     await this._params.port.send(getRpcMessageCodec().encode(message, { preserveAny: true }), timeout);
   }
 
