@@ -24,11 +24,20 @@ const schemaForValue = (value: unknown): Schema.Schema.AnyNoContext | undefined 
   }
 };
 
-export const ExpandoCard = ({ subject }: AppSurface.ObjectCardProps) => {
+/**
+ * Reserved keys: `id`, plus any `~`-prefixed key (ECHO uses `~`-prefixed
+ * string keys to brand entity instances and schemas — KindId,
+ * SchemaKindId, SnapshotKindId, etc. — and the `~` namespace is reserved
+ * for that purpose). They show up in `Object.keys` but aren't user data.
+ */
+const isInternalKey = (key: string) => key === 'id' || key.startsWith('~');
+
+export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps) => {
   const schema = useMemo(() => {
+    const ignored = new Set(ignorePaths ?? []);
     const fields: Record<string, Schema.Schema.AnyNoContext> = {};
     for (const key of Object.keys(subject)) {
-      if (key === 'id') {
+      if (isInternalKey(key) || ignored.has(key)) {
         continue;
       }
       const fieldSchema = schemaForValue((subject as any)[key]);
@@ -37,7 +46,7 @@ export const ExpandoCard = ({ subject }: AppSurface.ObjectCardProps) => {
       }
     }
     return Schema.Struct(fields);
-  }, [subject]);
+  }, [subject, ignorePaths]);
 
   const handleSave = useCallback(
     (values: any, { changed }: { changed: Record<string, boolean> }) => {

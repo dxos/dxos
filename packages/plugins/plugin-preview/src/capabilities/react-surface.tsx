@@ -65,11 +65,11 @@ export default Capability.makeModule(() =>
           return <TaskCard role={role} subject={data.subject} />;
         },
       }),
-      Surface.create<{ subject: Expando.Expando }>({
+      Surface.create<AppSurface.ObjectCardData<Expando.Expando>>({
         id: 'schema-popover--expando',
         filter: AppSurface.object(AppSurface.Card, Expando.Expando),
         component: ({ data, role }) => {
-          return <ExpandoCard role={role} subject={data.subject} />;
+          return <ExpandoCard role={role} subject={data.subject} ignorePaths={data.ignorePaths} />;
         },
       }),
 

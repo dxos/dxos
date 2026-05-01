@@ -34,9 +34,12 @@ export type ReconcileResult = {
 /**
  * Mapped fields written to each Expando from its remote Trello card. Anything outside
  * this list (user-added properties like `priority`, `tags`, etc.) is preserved across
- * syncs — we only ever read/write these five.
+ * syncs — we only ever read/write these. `url` and `closed` are intentionally
+ * omitted: `url` is a server-side artifact reconstructible from the card's foreign
+ * id, and `closed` maps to ECHO object deletion (closed-on-Trello = removed-locally)
+ * rather than a tracked field.
  */
-const MAPPED_FIELDS = ['name', 'description', 'listName', 'url', 'closed'] as const;
+const MAPPED_FIELDS = ['name', 'description', 'listName'] as const;
 type MappedField = (typeof MAPPED_FIELDS)[number];
 type CardSnapshot = Partial<Record<MappedField, unknown>>;
 
@@ -179,16 +182,30 @@ export const reconcileBoardCards: (
     let added = 0;
     let updated = 0;
 
+    let removed = 0;
+
     for (const card of remoteCards) {
       const remoteFields: Record<MappedField, unknown> = {
         name: card.name,
         description: card.desc,
         listName: listName(card.idList),
-        url: card.url,
-        closed: card.closed,
       };
 
       const existing = localByForeignId.get(card.id);
+
+      // `closed` on Trello → soft-deleted in ECHO. We never store a `closed`
+      // field locally; the card disappears from the database (the ref stays
+      // in `kanban.spec.items` to preserve arrangement on undelete or
+      // re-sync).
+      if (card.closed) {
+        if (existing && !Obj.isDeleted(existing)) {
+          yield* Database.remove(existing);
+          removed++;
+        }
+        // Skip first-sight create when remote already says closed.
+        continue;
+      }
+
       if (existing) {
         const snapshot = readSnapshot<CardSnapshot>(integration, card.id) ?? {};
         const fields = existing as unknown as Record<string, unknown>;
@@ -231,26 +248,18 @@ export const reconcileBoardCards: (
       }
     }
 
-    // Soft-close: cards present locally with a Trello foreign id that aren't in the
-    // remote response. Tombstones stay in `kanban.spec.items` to preserve arrangement;
-    // they're filtered out at render time by `useItemsProjection` / `ItemsKanbanContainer`.
+    // Cards present locally that aren't in the remote response — treat the
+    // same as a closed remote: soft-delete the local object. The ref in
+    // `kanban.spec.items` is preserved.
     const remoteIds = new Set(remoteCards.map((c) => c.id));
-    let removed = 0;
     for (const [fid, target] of localByForeignId) {
       if (remoteIds.has(fid)) {
         continue;
       }
-      const wasClosed = (target as unknown as Record<string, unknown>).closed === true;
-      if (!wasClosed) {
-        Obj.change(target, (target) => {
-          (target as unknown as Record<string, unknown>).closed = true;
-        });
+      if (!Obj.isDeleted(target)) {
+        yield* Database.remove(target);
         removed++;
       }
-      // Refresh the snapshot's `closed` flag so push doesn't try to bounce the
-      // tombstone back to Trello next pass.
-      const prev = (readSnapshot<CardSnapshot>(integration, fid) ?? {}) as CardSnapshot;
-      writeSnapshot(integration, fid, { ...prev, closed: true });
     }
 
     if (newRefs.length > 0) {
@@ -367,10 +376,10 @@ export type PushResult = {
  *    `integration.snapshots[foreignId]` — i.e. the user edited a field that wasn't
  *    written by the most recent pull. PUT only the diverged fields.
  *
- * Tombstones (`closed === true`) are NEVER pushed: pull marks `closed` when the
- * remote card is gone, and pushing that state hits a 404. After a successful PUT,
- * the snapshot is refreshed with the pushed values so subsequent passes see no
- * divergence.
+ * Tombstones (`Obj.isDeleted(target)`) are NEVER pushed: pull soft-deletes the
+ * local copy when the remote card is closed or gone, and pushing that state
+ * hits a 404. After a successful PUT, the snapshot is refreshed with the
+ * pushed values so subsequent passes see no divergence.
  */
 export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
   integration: Integration.Integration,
@@ -402,10 +411,14 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
       continue;
     }
 
-    const fields = target as unknown as Record<string, unknown>;
-    if (fields.closed === true) {
+    // Soft-deleted locally → skip push. Pull tombstones the local copy when
+    // the remote is closed/missing; pushing a tombstone hits a 404. Once the
+    // local object is `Obj.isDeleted`, we have nothing meaningful to send.
+    if (Obj.isDeleted(target)) {
       continue;
-    } // tombstones never push
+    }
+
+    const fields = target as unknown as Record<string, unknown>;
 
     const foreignId = Obj.getMeta(target).keys.find((k) => k.source === TRELLO_SOURCE)?.id;
     const name = typeof fields.name === 'string' ? fields.name : '';
@@ -440,8 +453,6 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
           name,
           description: desc,
           listName: localListName ?? '',
-          url: '',
-          closed: false,
         });
         created++;
       }

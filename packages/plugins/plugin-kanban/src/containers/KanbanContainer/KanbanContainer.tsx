@@ -135,7 +135,10 @@ const ItemsKanbanContainer = ({ role, subject: object }: ItemsKanbanContainerPro
           if (target == null) {
             continue;
           }
-          if ((target as unknown as { closed?: unknown }).closed === true) {
+          // Drop soft-deleted cards (e.g. Trello-closed cards). The ref
+          // stays in `spec.items` so arrangement is preserved, but the card
+          // shouldn't render.
+          if (Obj.isDeleted(target)) {
             continue;
           }
           out.push(target as unknown as Obj.Unknown);

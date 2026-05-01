@@ -305,16 +305,13 @@ describe('reconcileBoardCards (pull)', () => {
     }).pipe(Effect.provide(layer), runAndForwardErrors);
 
     expect(result.removed).toBe(1);
-    const items = (kanban.spec.kind === 'items' ? kanban.spec.items : [])
-      .map((ref: Ref.Ref<Obj.Unknown>) => ref.target)
-      .filter((o: Obj.Unknown | undefined): o is Obj.Unknown => o != null);
-    const card2 = items.find(
-      (item: Obj.Unknown) => Obj.getMeta(item).keys.find((k) => k.source === TRELLO_SOURCE)?.id === 'card2',
-    );
-    expect((card2 as unknown as Record<string, unknown>)?.closed).toBe(true);
-    // Snapshot's `closed` flag is updated so push won't bounce it back.
-    const snapshots = (integration.snapshots ?? {}) as Record<string, any>;
-    expect(snapshots.card2?.closed).toBe(true);
+    // Closed-on-Trello (or missing) → soft-deleted in ECHO. The ref stays
+    // in `kanban.spec.items` so the arrangement is preserved, but its
+    // target is no longer queryable / is flagged deleted.
+    const refs = kanban.spec.kind === 'items' ? (kanban.spec.items as ReadonlyArray<Ref.Ref<Obj.Unknown>>) : [];
+    expect(refs).toHaveLength(2);
+    const liveCount = refs.filter((ref) => ref.target != null && !Obj.isDeleted(ref.target)).length;
+    expect(liveCount).toBe(1);
   });
 });
 
@@ -393,7 +390,7 @@ describe('pushBoardCards (push)', () => {
     Obj.change(integration, (integration) => {
       const mut = integration as Obj.Mutable<typeof integration>;
       mut.snapshots = {
-        card1: { name: 'Task A', description: 'orig', listName: 'To Do', url: '', closed: false },
+        card1: { name: 'Task A', description: 'orig', listName: 'To Do' },
       };
     });
 
@@ -439,7 +436,7 @@ describe('pushBoardCards (push)', () => {
     Obj.change(integration, (integration) => {
       const mut = integration as Obj.Mutable<typeof integration>;
       mut.snapshots = {
-        card1: { name: 'Pulled', description: '', listName: 'To Do', url: '', closed: false },
+        card1: { name: 'Pulled', description: '', listName: 'To Do' },
       };
     });
 
