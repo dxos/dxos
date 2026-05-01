@@ -9,7 +9,12 @@ import { View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
 
-/** Per-column entry (ids order, optional hidden). */
+/**
+ * Per-column entry: ordered card ids plus an optional `hidden` flag that
+ * removes the column from the rendered board (and from the model's column
+ * list). Today only the uncategorized column is exposed in settings, but
+ * the data structure supports per-column hiding generally.
+ */
 const ArrangementColumnEntry = Schema.Struct({
   ids: Schema.Array(Obj.ID),
   hidden: Schema.Boolean.pipe(Schema.optional),

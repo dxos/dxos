@@ -148,7 +148,9 @@ const ItemsKanbanContainer = ({ role, subject: object }: ItemsKanbanContainerPro
 
   // Items variant doesn't support card-create through the Kanban UI yet — items
   // are owned by the integration. Card removal still goes through the standard op.
-  const handleCardAdd = useCallback(() => undefined, []);
+  // TODO(integration-create): wire `onCardAdd` to the create-object flow so
+  //   users can add items directly from the kanban (currently the column's
+  //   "+" button is hidden because `onCardAdd` is undefined).
   const handleCardRemove = useCallback(() => undefined, []);
 
   if (!object || !db || !change) {
@@ -165,7 +167,6 @@ const ItemsKanbanContainer = ({ role, subject: object }: ItemsKanbanContainerPro
         projection={projection}
         items={itemsAtom}
         change={change}
-        onCardAdd={handleCardAdd}
         onCardRemove={handleCardRemove}
       >
         <Panel.Content asChild>

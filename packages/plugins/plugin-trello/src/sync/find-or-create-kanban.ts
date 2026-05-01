@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Database, Filter, Obj, Query } from '@dxos/echo';
-import { Kanban } from '@dxos/plugin-kanban/types';
+import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban/types';
 
 import { TRELLO_PIVOT_FIELD, TRELLO_SOURCE } from '../constants';
 import { type TrelloBoard } from '../services/trello-api';
@@ -40,10 +40,16 @@ export const findOrCreateKanbanForBoard: (
     return existing;
   }
 
+  // Hide the uncategorized column by default for Trello-synced boards: every
+  // card already carries a Trello list (the `pivotField`), so the
+  // uncategorized column would only show transient pre-sync state.
   const kanban = Obj.make(Kanban.Kanban, {
     [Obj.Meta]: { keys: [{ source: TRELLO_SOURCE, id: board.id }] },
     name: board.name,
-    arrangement: { order: [], columns: {} },
+    arrangement: {
+      order: [],
+      columns: { [UNCATEGORIZED_VALUE]: { ids: [], hidden: true } },
+    },
     spec: { kind: 'items' as const, pivotField: TRELLO_PIVOT_FIELD, items: [] },
   });
   return yield* Database.add(kanban);

@@ -56,11 +56,17 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
           eventHandler={eventHandler}
           Tile={itemTile as FC<MosaicTileProps<Obj.Unknown>>}
         />
-        {onCardAdd && (
-          <Board.Column.Footer
-            onAdd={() => onCardAdd(column.columnValue === UNCATEGORIZED_VALUE ? undefined : column.columnValue)}
-          />
-        )}
+        {/* Always render the footer to preserve column layout/spacing.
+            `Board.Column.Footer` shows its add button only when `onAdd` is
+            defined, so passing it conditionally hides just the "+" while the
+            footer rail stays. */}
+        <Board.Column.Footer
+          onAdd={
+            onCardAdd
+              ? () => onCardAdd(column.columnValue === UNCATEGORIZED_VALUE ? undefined : column.columnValue)
+              : undefined
+          }
+        />
       </Board.Column.Root>
     );
   },

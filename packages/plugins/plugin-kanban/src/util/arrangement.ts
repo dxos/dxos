@@ -54,11 +54,15 @@ export const getOrderByColumnFromArrangement = (
 /**
  * Builds the ordered list of columns (value + ids) for the board model.
  *
- * Column order: uncategorized first, then effectiveOrder, then any selectOption ids not yet in order.
- * Each entry gets the ids from effectiveByColumn for that column (or empty).
+ * Column order: uncategorized first, then effectiveOrder, then any
+ * selectOption ids not yet in order. Each entry gets the ids from
+ * effectiveByColumn for that column (or empty). Columns whose entry has
+ * `hidden: true` are dropped from the result — currently only the
+ * "Uncategorized" column is toggleable from settings, but the filter is
+ * generic so any column can be hidden via the same flag.
  *
  * @param effectiveOrder - Column order from arrangement (or previous merge).
- * @param effectiveByColumn - Per-column card id order from arrangement.
+ * @param effectiveByColumn - Per-column card id order + hidden flag from arrangement.
  * @param selectOptions - Defines valid column ids; any missing from order are appended.
  * @returns ColumnStructure array in display order.
  */
@@ -78,10 +82,12 @@ export const computeColumnStructure = (
     }
   }
 
-  return order.map((columnValue) => ({
-    columnValue,
-    ids: effectiveByColumn[columnValue]?.ids ?? [],
-  }));
+  return order
+    .filter((columnValue) => effectiveByColumn[columnValue]?.hidden !== true)
+    .map((columnValue) => ({
+      columnValue,
+      ids: effectiveByColumn[columnValue]?.ids ?? [],
+    }));
 };
 
 /**
@@ -152,13 +158,16 @@ export const computeItemArrangement = <T extends BaseKanbanItem = BaseKanbanItem
   const validColumnValues = new Set(selectOptions.map((opt) => opt.id));
   const byColumn = getOrderByColumnFromArrangement(object?.arrangement);
 
-  // Column order: uncategorized first, then each select option (skip uncategorized if duplicated).
+  // Column order: uncategorized first, then each select option (skip
+  // uncategorized if duplicated). Columns whose arrangement entry has
+  // `hidden: true` are dropped — same generic hide-by-column flag used
+  // by `computeColumnStructure`.
   const columnEntries = [
     { columnValue: UNCATEGORIZED_VALUE, ids: byColumn[UNCATEGORIZED_VALUE]?.ids ?? [] },
     ...selectOptions
       .filter((opt) => opt.id !== UNCATEGORIZED_VALUE)
       .map((opt) => ({ columnValue: opt.id, ids: byColumn[opt.id]?.ids ?? [] })),
-  ];
+  ].filter((entry) => byColumn[entry.columnValue]?.hidden !== true);
 
   return columnEntries.map(({ columnValue, ids }) => ({
     columnValue,

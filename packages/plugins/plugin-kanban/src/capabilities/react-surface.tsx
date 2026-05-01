@@ -15,7 +15,7 @@ import { type Collection } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 
-import { KanbanContainer, KanbanViewEditor } from '#containers';
+import { KanbanContainer, KanbanSettings } from '#containers';
 import { Kanban, PivotColumnAnnotationId } from '#types';
 
 export default Capability.makeModule(() =>
@@ -34,7 +34,7 @@ export default Capability.makeModule(() =>
         id: 'object-properties',
         position: 'hoist',
         filter: AppSurface.object(AppSurface.ObjectProperties, Kanban.Kanban),
-        component: ({ data }) => <KanbanViewEditor subject={data.subject} />,
+        component: ({ data }) => <KanbanSettings subject={data.subject} />,
       }),
       Surface.create({
         id: 'create-initial-schema-form-[pivot-column]',
