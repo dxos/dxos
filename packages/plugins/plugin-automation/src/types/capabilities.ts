@@ -31,7 +31,7 @@ export namespace AutomationCapabilities {
     | Blueprint.RegistryService
     | AgentService.AgentService
     | Process.ProcessMonitorService
-    | ProcessManager.ProcessManagerService
+    | ProcessManager.Service
     | Operation.Service
     | OperationRegistry.Service
     | OpaqueToolkit.OpaqueToolkitProvider;
