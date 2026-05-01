@@ -73,12 +73,10 @@ describe('Trace timeline', () => {
             ├──●  [user] Create an organization called "Cyberdyne Systems".
             │  ●  [check-circle] list-schemas - Success
             │  ●  [check-circle] create-object - Success
-            │  ●  [check-circle] add-to-context - Success
             ◆──╯  [check-circle] Agent completed request
             ●  │  [atom] Agent processing request...
             │  ●  [user] Create a person named "John Connor".
             │  ●  [check-circle] create-object - Success
-            │  ●  [check-circle] add-to-context - Success
             ◆──╯  [check-circle] Agent completed request
             "
           `);
