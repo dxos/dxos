@@ -142,22 +142,19 @@ describe('LanguageModel', () => {
 
   it.effect(
     'should process an agentic loop using Claude',
-    Effect.fn(
-      function* ({ expect }) {
-        // @effect-diagnostics-next-line multipleEffectProvide:off
-        const createProgram = (prompt: string) =>
-          createChat(prompt).pipe(
-            Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
-            Effect.provide(AnthropicLayer),
-            Effect.provide(CalculatorLayer),
-          );
+    Effect.fn(function* ({ expect }) {
+      // @effect-diagnostics-next-line multipleEffectProvide:off
+      const createProgram = (prompt: string) =>
+        createChat(prompt).pipe(
+          Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+          Effect.provide(AnthropicLayer),
+          Effect.provide(CalculatorLayer),
+        );
 
-        const result = yield* createProgram('What is six times seven?');
-        log.info('result', { result });
-        expect(result).toContain('42');
-      },
-      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
-    ),
+      const result = yield* createProgram('What is six times seven?');
+      log.info('result', { result });
+      expect(result).toContain('42');
+    }, TestHelpers.runIf(process.env.ANTHROPIC_API_KEY)),
     { tags: ['llm'] },
   );
 

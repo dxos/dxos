@@ -30,33 +30,27 @@ describe('OllamaResolver', () => {
   describe(MODEL, () => {
     it.effect(
       'generateText',
-      Effect.fn(
-        function* (_) {
-          const response = yield* LanguageModel.generateText({
-            prompt: 'What is 2 + 2? Reply with just the number.',
-          });
+      Effect.fn(function* (_) {
+        const response = yield* LanguageModel.generateText({
+          prompt: 'What is 2 + 2? Reply with just the number.',
+        });
 
-          log.info('response', { text: response.text, usage: response.usage });
-        },
-        Effect.provide(ModelLayer),
-      ),
+        log.info('response', { text: response.text, usage: response.usage });
+      }, Effect.provide(ModelLayer)),
       { timeout: 120_000, tags: ['llm'] },
     );
 
     it.effect(
       'streamText',
-      Effect.fn(
-        function* (_) {
-          const parts = yield* LanguageModel.streamText({
-            prompt: 'Count from 1 to 5, one number per line.',
-          }).pipe(Stream.runCollect, Effect.map(Chunk.toArray));
+      Effect.fn(function* (_) {
+        const parts = yield* LanguageModel.streamText({
+          prompt: 'Count from 1 to 5, one number per line.',
+        }).pipe(Stream.runCollect, Effect.map(Chunk.toArray));
 
-          const textDeltas = parts.filter((p) => p.type === 'text-delta');
-          const fullText = textDeltas.map((p) => (p as { delta: string }).delta).join('');
-          log.info('streamText', { partCount: parts.length, deltaCount: textDeltas.length, fullText });
-        },
-        Effect.provide(ModelLayer),
-      ),
+        const textDeltas = parts.filter((p) => p.type === 'text-delta');
+        const fullText = textDeltas.map((p) => (p as { delta: string }).delta).join('');
+        log.info('streamText', { partCount: parts.length, deltaCount: textDeltas.length, fullText });
+      }, Effect.provide(ModelLayer)),
       { timeout: 120_000, tags: ['llm'] },
     );
 

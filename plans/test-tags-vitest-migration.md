@@ -23,39 +23,39 @@ of `&&`, `||`, `!`, `*`, parentheses).
   `ctx.skip()` when the tag isn't set.
 
 `TestHelpers.runIf` / `skipIf` / `provideTestContext` and `TestContextService`
-are *not* tag-related and stay.
+are _not_ tag-related and stay.
 
 ### Test files using `TestHelpers.taggedTest(...)`
 
-| File | Tag |
-| :-- | :-- |
-| `packages/core/ai/src/effect-ai-tools.test.ts` (×2) | `llm` |
-| `packages/core/ai/src/effect-ai.test.ts` (×9) | `llm` |
-| `packages/core/ai/src/resolvers/ChatCompletionsAdapter.test.ts` (×2) | `llm` |
-| `packages/core/ai/src/resolvers/ollama/OllamaResolver.test.ts` (×4) | `llm` |
-| `packages/core/mcp-client/src/McpToolkit.test.ts` (×2) | `llm` |
-| `packages/core/assistant/src/session/session-ollama.test.ts` | `llm` |
-| `packages/core/assistant-toolkit/src/blueprints/design/blueprint.test.ts` | `llm` |
-| `packages/core/assistant-toolkit/src/blueprints/planning-old/blueprint.test.ts` | `llm` |
-| `packages/core/assistant-toolkit/src/blueprints/research/functions/research.test.ts` | `flaky` |
-| `packages/core/assistant-toolkit/src/blueprints/discord/functions/fetch-messages.test.ts` | `sync` |
-| `packages/core/assistant-toolkit/src/blueprints/linear/functions/linear.test.ts` | `sync` |
-| `packages/core/assistant-toolkit/src/blueprints/browser/blueprint.test.ts` | `sync` |
+| File                                                                                      | Tag     |
+| :---------------------------------------------------------------------------------------- | :------ |
+| `packages/core/ai/src/effect-ai-tools.test.ts` (×2)                                       | `llm`   |
+| `packages/core/ai/src/effect-ai.test.ts` (×9)                                             | `llm`   |
+| `packages/core/ai/src/resolvers/ChatCompletionsAdapter.test.ts` (×2)                      | `llm`   |
+| `packages/core/ai/src/resolvers/ollama/OllamaResolver.test.ts` (×4)                       | `llm`   |
+| `packages/core/mcp-client/src/McpToolkit.test.ts` (×2)                                    | `llm`   |
+| `packages/core/assistant/src/session/session-ollama.test.ts`                              | `llm`   |
+| `packages/core/assistant-toolkit/src/blueprints/design/blueprint.test.ts`                 | `llm`   |
+| `packages/core/assistant-toolkit/src/blueprints/planning-old/blueprint.test.ts`           | `llm`   |
+| `packages/core/assistant-toolkit/src/blueprints/research/functions/research.test.ts`      | `flaky` |
+| `packages/core/assistant-toolkit/src/blueprints/discord/functions/fetch-messages.test.ts` | `sync`  |
+| `packages/core/assistant-toolkit/src/blueprints/linear/functions/linear.test.ts`          | `sync`  |
+| `packages/core/assistant-toolkit/src/blueprints/browser/blueprint.test.ts`                | `sync`  |
 
 `packages/plugins/plugin-assistant/src/operations/prompt.test.ts` uses
 `test.runIf(TestHelpers.tagEnabled('llm'))(...)` — same tag, different shape.
 
 ### Test files using `describe.runIf(process.env.DX_TEST_TAGS?.includes(...))`
 
-| File | Tag |
-| :-- | :-- |
-| `packages/core/functions-testing/src/cpu-limit.test.ts` | `functions-e2e` |
-| `packages/plugins/plugin-script/src/testing/simulator.test.ts` | `functions-e2e` |
-| `packages/plugins/plugin-script/src/e2e/ai.test.ts` (`.skip` chained) | `functions-e2e` |
-| `packages/plugins/plugin-script/src/e2e/deploy.test.ts` | `functions-e2e` |
+| File                                                                         | Tag             |
+| :--------------------------------------------------------------------------- | :-------------- |
+| `packages/core/functions-testing/src/cpu-limit.test.ts`                      | `functions-e2e` |
+| `packages/plugins/plugin-script/src/testing/simulator.test.ts`               | `functions-e2e` |
+| `packages/plugins/plugin-script/src/e2e/ai.test.ts` (`.skip` chained)        | `functions-e2e` |
+| `packages/plugins/plugin-script/src/e2e/deploy.test.ts`                      | `functions-e2e` |
 | `packages/plugins/plugin-inbox/src/operations/google/gmail/sync-e2e.test.ts` | `functions-e2e` |
-| `packages/sdk/client/test/e2e/sync.test.ts` | `sync-e2e` |
-| `packages/sdk/client/test/e2e/edge-recovery.test.ts` | `sync-e2e` |
+| `packages/sdk/client/test/e2e/sync.test.ts`                                  | `sync-e2e`      |
+| `packages/sdk/client/test/e2e/edge-recovery.test.ts`                         | `sync-e2e`      |
 
 ### Comments / docs referencing `DX_TEST_TAGS`
 
@@ -82,14 +82,14 @@ returned `Effect.fnUntraced` pipeline. Its sole call-site is
 Six tags are in use across the repo and will be declared in the shared Vitest
 config:
 
-| Tag | Description |
-| :-- | :-- |
-| `flaky` | Tests that may be flaky (Trunk pass-on-rerun integration). |
-| `llm` | Tests that hit external LLM APIs (`@anthropic`, `@openai`, Ollama). |
-| `sync` | Tests that hit external sync APIs (Discord, Linear, browser-based). |
-| `sync-e2e` | End-to-end tests against the real EDGE worker. |
-| `functions-e2e` | End-to-end tests that deploy and invoke real Cloudflare functions. |
-| `tracing-e2e` | End-to-end tracing/observability tests against SigNoz. |
+| Tag             | Description                                                         |
+| :-------------- | :------------------------------------------------------------------ |
+| `flaky`         | Tests that may be flaky (Trunk pass-on-rerun integration).          |
+| `llm`           | Tests that hit external LLM APIs (`@anthropic`, `@openai`, Ollama). |
+| `sync`          | Tests that hit external sync APIs (Discord, Linear, browser-based). |
+| `sync-e2e`      | End-to-end tests against the real EDGE worker.                      |
+| `functions-e2e` | End-to-end tests that deploy and invoke real Cloudflare functions.  |
+| `tracing-e2e`   | End-to-end tracing/observability tests against SigNoz.              |
 
 ## Migration plan
 
@@ -217,7 +217,7 @@ caller passes `tags` directly to `it.effect(...)`'s options object instead.
   `moon run plugin-inbox:test`, `moon run client:test`,
   `moon run functions-testing:test`, `moon run plugin-assistant:test` —
   expecting all suites to either pass or skip as before. Tagged tests should
-  *not* execute without the appropriate `--tagsFilter`.
+  _not_ execute without the appropriate `--tagsFilter`.
 
 ## Out of scope
 
