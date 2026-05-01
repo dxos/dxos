@@ -11,6 +11,9 @@
   "license": "MIT",
   "author": "DXOS.org",
   "type": "module",
+  "imports": {
+    "#translations": "./src/translations.ts"
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -75,8 +78,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "imports": {
-    "#translations": "./src/translations.ts"
   }
 }

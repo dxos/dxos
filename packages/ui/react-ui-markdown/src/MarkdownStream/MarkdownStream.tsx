@@ -269,7 +269,7 @@ const useMarkdownStreamTextEditor = (
             // up these utility classes from this source file.
             xmlBlockDecoration({
               tag: 'prompt',
-              lineClass: 'cm-prompt-line flex justify-end my-4',
+              lineClass: 'cm-prompt-line __flex my-8',
               contentClass: 'cm-prompt-bubble dx-panel px-2 py-1.5 rounded-sm [&_*]:text-inherit!',
               hideTags: true,
             }),
