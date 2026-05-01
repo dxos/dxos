@@ -124,13 +124,15 @@ export const buildExecutionGraph = ({
 }: BuildExecutionGraphParams): { branches: string[]; commits: Commit[] } => {
   const builder = new GraphBuilder();
 
-  const events = traceMessages.slice(-eventLimit).flatMap((message) =>
-    message.events.map((event: Trace.Event) => ({
-      id: message.id,
-      meta: message.meta,
-      ...event,
-    })),
-  );
+  const events = traceMessages
+    .flatMap((message) =>
+      message.events.map((event: Trace.Event) => ({
+        id: message.id,
+        meta: message.meta,
+        ...event,
+      })),
+    )
+    .slice(-eventLimit);
 
   builder.addBranch(MAIN_BRANCH);
 
@@ -564,17 +566,19 @@ class GraphBuilder {
     if (opts?.replace) {
       const matches = this.findCommits(opts.replace);
       if (matches.length > 0) {
-        this.#commits[this.#commits.indexOf(matches.at(-1)!)] = commit;
+        const replaced = matches.at(-1)!;
+        this.#commits.splice(this.#commits.indexOf(replaced), 1);
         // Update parents to point to the new commit.
-        for (const commit of this.#commits) {
-          if (commit.parents) {
-            for (let i = 0; i < commit.parents.length; i++) {
-              if (commit.parents[i] === matches.at(-1)!.id) {
-                commit.parents[i] = commit.id;
+        for (const existingCommit of this.#commits) {
+          if (existingCommit.parents) {
+            for (let i = 0; i < existingCommit.parents.length; i++) {
+              if (existingCommit.parents[i] === replaced.id) {
+                existingCommit.parents[i] = commit.id;
               }
             }
           }
         }
+        this.#commits.push(commit);
         return;
       }
     }
