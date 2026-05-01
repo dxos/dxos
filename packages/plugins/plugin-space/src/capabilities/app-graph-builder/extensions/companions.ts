@@ -12,6 +12,7 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Node } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
+import type { EchoViewRefPath } from '@dxos/schema';
 import { ViewAnnotation } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -64,11 +65,10 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
         }
 
         const schema = Obj.getSchema(node.data);
-        const isView = Option.fromNullable(schema).pipe(
-          Option.flatMap((candidate) => ViewAnnotation.get(candidate)),
-          Option.getOrElse(() => false),
-        );
-        if (!isView) {
+        const path = schema ? ViewAnnotation.get(schema).pipe(Option.getOrElse(() => [] as EchoViewRefPath)) : [];
+        const isEchoViewBacked = schema && path.length > 0 ? ViewAnnotation.hasRefAlongPath(node.data, path) : false;
+
+        if (!isEchoViewBacked) {
           return Option.none();
         }
 

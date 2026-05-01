@@ -58,10 +58,18 @@ export const transformLogMeta = (
 };
 
 const langFromFilename = (filename: string): 'ts' | 'tsx' | 'js' | 'jsx' | undefined => {
-  if (filename.endsWith('.tsx')) return 'tsx';
-  if (filename.endsWith('.ts')) return 'ts';
-  if (filename.endsWith('.jsx')) return 'jsx';
-  if (filename.endsWith('.mjs') || filename.endsWith('.cjs') || filename.endsWith('.js')) return 'js';
+  if (filename.endsWith('.tsx')) {
+    return 'tsx';
+  }
+  if (filename.endsWith('.ts')) {
+    return 'ts';
+  }
+  if (filename.endsWith('.jsx')) {
+    return 'jsx';
+  }
+  if (filename.endsWith('.mjs') || filename.endsWith('.cjs') || filename.endsWith('.js')) {
+    return 'js';
+  }
   return undefined;
 };
 

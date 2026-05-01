@@ -74,9 +74,13 @@ export class SyncClient {
    */
   handleMessage(message: ProtocolMessage): Effect.Effect<void, never, never> {
     const requestId = 'requestId' in message && message.requestId != null ? String(message.requestId) : undefined;
-    if (requestId == null) return Effect.void;
+    if (requestId == null) {
+      return Effect.void;
+    }
     const deferred = this.#handlers.get(requestId);
-    if (deferred == null) return Effect.void;
+    if (deferred == null) {
+      return Effect.void;
+    }
     this.#handlers.delete(requestId);
     if (message._tag === 'Error') {
       return Effect.andThen(Deferred.fail(deferred, new Error(message.message)), () => Effect.void);
