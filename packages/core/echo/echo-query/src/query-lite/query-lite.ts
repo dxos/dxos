@@ -701,6 +701,9 @@ const prettyQuery = (query: QueryAST.Query): string => {
       if (query.options.deleted !== undefined) {
         parts.push(`deleted: ${JSON.stringify(query.options.deleted)}`);
       }
+      if (query.options.debugLabel !== undefined) {
+        parts.push(`debugLabel: ${JSON.stringify(query.options.debugLabel)}`);
+      }
       return `${prettyQuery(query.query)}.options({ ${parts.join(', ')} })`;
     }
     case 'from': {

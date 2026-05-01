@@ -13,7 +13,7 @@ import { SpaceProperties } from '@dxos/client-protocol';
 import { Blueprint } from '@dxos/compute';
 import { QueueService, Trigger } from '@dxos/compute';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -223,8 +223,9 @@ describe('Agent', () => {
 
         yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
 
-        const triggers = yield* Database.runQuery(Filter.type(Trigger.Trigger));
-        const timerTriggers = triggers.filter((trigger) => trigger.spec?.kind === 'timer');
+        const triggers = yield* Database.runQuery(
+          Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.blueprint.test.timer'),
+        );
         expect(timerTriggers).toHaveLength(1);
 
         const timerTrigger = timerTriggers[0];
@@ -319,8 +320,9 @@ describe('Agent', () => {
 
         yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
 
-        const triggers = yield* Database.runQuery(Filter.type(Trigger.Trigger));
-        expect(triggers.length).toBeGreaterThan(0);
+        const triggers = yield* Database.runQuery(
+          Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.blueprint.test.toggle-enabled'),
+        );
         expect(triggers.every((trigger) => trigger.enabled === false)).toBe(true);
 
         Obj.change(agent, (agent) => {
@@ -329,7 +331,9 @@ describe('Agent', () => {
         yield* Database.flush();
         yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
 
-        const triggersAfter = yield* Database.runQuery(Filter.type(Trigger.Trigger));
+        const triggersAfter = yield* Database.runQuery(
+          Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.blueprint.test.after'),
+        );
         expect(triggersAfter).toHaveLength(triggers.length);
         expect(triggersAfter.every((trigger) => trigger.enabled === true)).toBe(true);
       },

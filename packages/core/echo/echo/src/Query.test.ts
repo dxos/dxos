@@ -617,6 +617,20 @@ describe('query api', () => {
       );
     });
 
+    test('Query.pretty surfaces debugLabel from options', () => {
+      const query = Query.select(Filter.type(TestSchema.Person)).debugLabel('my-label');
+      expect(Query.pretty(query)).toContain('debugLabel');
+      expect(Query.pretty(query)).toContain('"my-label"');
+    });
+
+    test('Query.debugLabel merges onto existing options clause', () => {
+      const query = Query.select(Filter.type(TestSchema.Person)).options({ deleted: 'exclude' }).debugLabel('timer-probe');
+      const pretty = Query.pretty(query);
+      expect(pretty).toContain('deleted');
+      expect(pretty).toContain('debugLabel');
+      expect(pretty).toContain('"timer-probe"');
+    });
+
     test('Query.pretty returns human-readable query string', () => {
       const query = Query.select(Filter.type(TestSchema.Person, { name: 'Fred' }));
       const pretty = Query.pretty(query);

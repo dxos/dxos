@@ -58,7 +58,10 @@ export const useSyncTrigger = ({
 }) => {
   const client = useClient();
   const [pending, setPending] = useState(false);
-  const triggers = useQuery(db, Filter.type(Trigger.Trigger));
+  const triggers = useQuery(
+    db,
+    Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-inbox.useSyncTrigger'),
+  );
 
   const subjectDxn = Obj.getDXN(subject);
   const syncTrigger = useMemo(
