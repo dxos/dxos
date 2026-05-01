@@ -337,6 +337,9 @@
       "path": "packages/plugins/plugin-discord/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-doctor/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-explorer/tsconfig.json"
     },
     {
