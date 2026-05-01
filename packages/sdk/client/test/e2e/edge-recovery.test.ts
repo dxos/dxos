@@ -53,10 +53,10 @@ const createClient = (signalContext: MemorySignalManagerContext): Client => {
   return new Client({ config, services });
 };
 
-// DX_TEST_TAGS=sync-e2e moon run client:test -- --run test/e2e/edge-invitation-replication.test.ts
-describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))(
+// moon run client:test -- --run --tagsFilter=sync-e2e test/e2e/edge-invitation-replication.test.ts
+describe(
   'edge replication after identity recovery',
-  { timeout: 300_000, retry: 0 },
+  { timeout: 300_000, retry: 0, tags: ['sync-e2e'] },
   () => {
     test('data replicates to recovered identity via edge after original peer is destroyed', async () => {
       const signalContext = new MemorySignalManagerContext();

@@ -101,7 +101,7 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
       },
       Effect.provide(AiSessionService.layerNewFeed().pipe(Layer.provideMerge(TestLayer))),
       TestHelpers.provideTestContext,
-      TestHelpers.taggedTest('llm'),
     ),
+    { tags: ['llm'] },
   );
 });

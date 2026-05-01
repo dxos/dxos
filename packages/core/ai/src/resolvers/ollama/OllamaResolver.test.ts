@@ -10,7 +10,6 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
-import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 
 import * as AiModelResolver from '../../AiModelResolver';
@@ -40,9 +39,8 @@ describe('OllamaResolver', () => {
           log.info('response', { text: response.text, usage: response.usage });
         },
         Effect.provide(ModelLayer),
-        TestHelpers.taggedTest('llm'),
       ),
-      { timeout: 120_000 },
+      { timeout: 120_000, tags: ['llm'] },
     );
 
     it.effect(
@@ -58,9 +56,8 @@ describe('OllamaResolver', () => {
           log.info('streamText', { partCount: parts.length, deltaCount: textDeltas.length, fullText });
         },
         Effect.provide(ModelLayer),
-        TestHelpers.taggedTest('llm'),
       ),
-      { timeout: 120_000 },
+      { timeout: 120_000, tags: ['llm'] },
     );
 
     it.effect(
@@ -82,9 +79,8 @@ describe('OllamaResolver', () => {
         },
         Effect.provide(CalculatorLayer),
         Effect.provide(ModelLayer),
-        TestHelpers.taggedTest('llm'),
       ),
-      { timeout: 120_000 },
+      { timeout: 120_000, tags: ['llm'] },
     );
 
     it.effect(
@@ -106,9 +102,8 @@ describe('OllamaResolver', () => {
         },
         Effect.provide(CalculatorLayer),
         Effect.provide(ModelLayer),
-        TestHelpers.taggedTest('llm'),
       ),
-      { timeout: 120_000 },
+      { timeout: 120_000, tags: ['llm'] },
     );
   });
 });

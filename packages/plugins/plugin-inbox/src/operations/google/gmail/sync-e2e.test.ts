@@ -27,7 +27,7 @@ import { Mailbox } from '../../../types';
 
 const config = configPreset({ edge: 'local' });
 
-describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
+describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
   test('bundle function', async () => {
     const artifact = await bundleFunction({
       entryPoint: new URL('./sync.ts', import.meta.url).pathname,

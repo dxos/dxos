@@ -71,7 +71,7 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
-      TestHelpers.taggedTest('llm'),
     ),
+    { tags: ['llm'] },
   );
 });

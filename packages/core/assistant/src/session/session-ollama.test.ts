@@ -24,7 +24,7 @@ import { AiRequest } from './request';
  *
  * Run with:
  * ```bash
- * DX_TEST_TAGS=llm pnpm --filter @dxos/assistant exec vitest run session.ollama
+ * pnpm --filter @dxos/assistant exec vitest run --tagsFilter=llm session.ollama
  * ```
  */
 
@@ -74,8 +74,7 @@ describe('AiRequest (ollama gpt-oss:20b)', () => {
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
-      TestHelpers.taggedTest('llm'),
     ),
-    { timeout: 120_000 },
+    { timeout: 120_000, tags: ['llm'] },
   );
 });

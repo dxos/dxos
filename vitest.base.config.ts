@@ -42,6 +42,7 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
   return {
     test: {
       ...resolveReporterConfig(dirname),
+      tags: TEST_TAGS,
       // Suppress flaky WebSocket birpc teardown unhandled rejections from storybook test runner.
       ...(storybook ? { dangerouslyIgnoreUnhandledErrors: true } : {}),
       projects: [nodeProject, storybookProject, ...browserProjects].filter(
@@ -50,6 +51,19 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
     },
   };
 };
+
+/**
+ * Native Vitest tags used across the repo. Filter at the CLI with
+ * `--tagsFilter "<expr>"` (boolean expressions over these names).
+ */
+export const TEST_TAGS = [
+  { name: 'flaky', description: 'Tests that may be flaky (Trunk pass-on-rerun integration).' },
+  { name: 'llm', description: 'Tests that hit external LLM APIs (Anthropic, OpenAI, Ollama).' },
+  { name: 'sync', description: 'Tests that hit external sync APIs (Discord, Linear, browser-based).' },
+  { name: 'sync-e2e', description: 'End-to-end tests against the real EDGE worker.' },
+  { name: 'functions-e2e', description: 'End-to-end tests that deploy and invoke real Cloudflare functions.' },
+  { name: 'tracing-e2e', description: 'End-to-end tracing/observability tests against SigNoz.' },
+];
 
 const createStorybookProject = (dirname: string) =>
   defineProject({

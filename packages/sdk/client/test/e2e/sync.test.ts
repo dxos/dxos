@@ -15,8 +15,8 @@ import { log } from '@dxos/log';
 import { EdgeService } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
-// DX_TEST_TAGS=sync-e2e pnpm vitest run sync.test.ts
-describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout: 120_000, retry: 0 }, async () => {
+// pnpm vitest run --tagsFilter=sync-e2e sync.test.ts
+describe('sync', { timeout: 120_000, retry: 0, tags: ['sync-e2e'] }, async () => {
   test('sync stuck', async () => {
     const ITERATIONS = 10,
       BURST_SIZE = 30,
