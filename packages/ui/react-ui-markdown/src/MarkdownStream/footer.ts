@@ -6,12 +6,12 @@ import { type Extension, StateEffect, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 
 import { Domino } from '@dxos/ui';
-import { wireDrainingEffect } from '@dxos/ui-editor';
+import { typewriterDrainingEffect } from '@dxos/ui-editor';
 
 /**
  * Host-controlled visibility intent. The footer block widget is rendered only when this is
- * `true` AND wire is not actively draining its typewriter buffer — the latter is observed
- * through {@link wireDrainingEffect}. Removing the decoration during a drip avoids the
+ * `true` AND typewriter is not actively draining its typewriter buffer — the latter is observed
+ * through {@link typewriterDrainingEffect}. Removing the decoration during a drip avoids the
  * scroll-measure conflict between CM's view-line model and the floating absolute child.
  */
 export const setFooterVisibleEffect = StateEffect.define<boolean>();
@@ -19,7 +19,7 @@ export const setFooterVisibleEffect = StateEffect.define<boolean>();
 type FooterState = {
   /** Host wants the footer rendered. */
   wanted: boolean;
-  /** Wire is actively dripping into the document. */
+  /** Typewriter is actively dripping into the document. */
   draining: boolean;
   decorations: DecorationSet;
 };
@@ -29,15 +29,15 @@ type FooterState = {
  * `doc.length`. The widget lives inside the document, so it scrolls with content.
  *
  * Toggle the host-intent visibility via {@link setFooterVisibleEffect}. The widget is also
- * automatically removed while {@link wireDrainingEffect} reports `true` and re-mounted
- * once wire's buffer drains — this prevents the block widget from interfering with CM's
+ * automatically removed while {@link typewriterDrainingEffect} reports `true` and re-mounted
+ * once the typewriter's buffer drains — this prevents the block widget from interfering with CM's
  * view-line measurement during the typewriter drip.
  *
  * For pure doc edits (no visibility transition), the decoration's position is mapped
  * through the change set so insertions at the end translate the anchor without destroying
  * the widget's DOM.
  */
-export const streamFooter = (setRoot: (el: HTMLElement | null) => void): Extension => {
+export const footer = (setRoot: (el: HTMLElement | null) => void): Extension => {
   const widget = new FooterWidget(setRoot);
   const buildSet = (length: number): DecorationSet =>
     Decoration.set([Decoration.widget({ widget, block: true, side: 1 }).range(length)]);
@@ -50,15 +50,18 @@ export const streamFooter = (setRoot: (el: HTMLElement | null) => void): Extensi
         if (effect.is(setFooterVisibleEffect)) {
           wanted = effect.value;
         }
-        if (effect.is(wireDrainingEffect)) {
+        if (effect.is(typewriterDrainingEffect)) {
           draining = effect.value;
         }
       }
 
-      const visible = wanted && !draining;
+      // Also gate on the document being non-empty: there's nothing for the footer to anchor
+      // below, and rendering it on a blank doc looks like detached chrome.
+      const docLength = tr.state.doc.length;
+      const visible = wanted && !draining && docLength > 0;
       const wasVisible = decorations.size > 0;
       if (visible !== wasVisible) {
-        decorations = visible ? buildSet(tr.state.doc.length) : Decoration.none;
+        decorations = visible ? buildSet(docLength) : Decoration.none;
       } else if (tr.docChanged && decorations.size > 0) {
         // Position-map the existing decoration so insertions at the end translate the
         // widget anchor without destroying the DOM (`widget.eq` is identity-true).

@@ -280,8 +280,8 @@ const ChatThread = (props: ChatThreadProps) => {
       messages={messages}
       error={error}
       debug={debug}
-      extensions={extensions}
       footer={<ChatStreamStatus />}
+      extensions={extensions}
       onEvent={handleEvent}
       ref={controllerRef}
     />
