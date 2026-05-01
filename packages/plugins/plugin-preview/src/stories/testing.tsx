@@ -6,10 +6,10 @@ import React, { type FC, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
 import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
 import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/testing';
+import { Expando } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
 export type DefaultStoryProps<T extends Obj.Any> = {
@@ -91,8 +91,8 @@ export const createTask = (): Task.Task => {
   });
 };
 
-export const createExpando = (): TestSchema.Expando => {
-  return Obj.make(TestSchema.Expando, {
+export const createExpando = (): Expando.Expando => {
+  return Expando.make({
     name: random.person.fullName(),
     email: random.internet.email(),
     age: random.number.int({ min: 18, max: 80 }),

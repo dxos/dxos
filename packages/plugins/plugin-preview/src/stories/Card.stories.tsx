@@ -6,11 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { type TestSchema } from '@dxos/echo/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
 import { withLayout } from '@dxos/react-ui/testing';
+import { type Expando } from '@dxos/schema';
 import { type Organization, type Person, type Pipeline, type Task } from '@dxos/types';
 
 import { ExpandoCard, FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
@@ -76,7 +76,7 @@ export const _Task: StoryObj<typeof DefaultStory<Task.Task>> = {
   },
 };
 
-export const _Expando: StoryObj<typeof DefaultStory<TestSchema.Expando>> = {
+export const _Expando: StoryObj<typeof DefaultStory<Expando.Expando>> = {
   args: {
     Component: ExpandoCard,
     createObject: createExpando,
