@@ -67,7 +67,6 @@ export default Capability.makeModule(() =>
       }),
       Surface.create<{ subject: Expando.Expando }>({
         id: 'schema-popover--expando',
-        position: 'hoist',
         filter: AppSurface.object(AppSurface.Card, Expando.Expando),
         component: ({ data, role }) => {
           return <ExpandoCard role={role} subject={data.subject} />;
