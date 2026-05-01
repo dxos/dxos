@@ -10,10 +10,10 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
-import { type ProjectionModel } from '@dxos/schema';
+import { Expando, type ProjectionModel } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
-import { FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
+import { ExpandoCard, FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -63,6 +63,13 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.Card, Task.Task),
         component: ({ data, role }) => {
           return <TaskCard role={role} subject={data.subject} />;
+        },
+      }),
+      Surface.create<{ subject: Expando.Expando }>({
+        id: 'schema-popover--expando',
+        filter: AppSurface.object(AppSurface.Card, Expando.Expando),
+        component: ({ data, role }) => {
+          return <ExpandoCard role={role} subject={data.subject} />;
         },
       }),
 
