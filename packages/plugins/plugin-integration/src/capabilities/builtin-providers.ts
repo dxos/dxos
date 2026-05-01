@@ -40,7 +40,7 @@ export default Capability.makeModule<IntegrationProviderEntry[]>(
         label: 'Linear',
         oauth: {
           provider: OAuthProvider.LINEAR,
-          scopes: ['write'],
+          scopes: ['read', 'write'],
         },
       },
       {
