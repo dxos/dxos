@@ -225,13 +225,31 @@ type Bucket = {
  *
  * Rows must be passed in `asc` order (oldest first); callers control ordering by reading
  * the underlying store in the desired direction.
+ *
+ * Throws on invalid regex sources passed via `grep` / `messageRegex` so the operation
+ * surfaces it as a structured failure rather than silently returning fewer results.
  */
 export const runQuery = (rows: Iterable<LogRecord>, input: QueryInput): QueryResult => {
   const start = Date.now();
 
   const filterGroups = (input.filters ?? []).map(parseFilterGroup);
-  const greps = (input.grep ?? []).map((source) => new RegExp(source));
-  const messageRegex = input.messageRegex !== undefined ? new RegExp(input.messageRegex) : undefined;
+  const greps = (input.grep ?? []).map((source, idx) => {
+    try {
+      return new RegExp(source);
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err);
+      throw new Error(`Invalid regex in grep[${idx}]: ${reason}`);
+    }
+  });
+  let messageRegex: RegExp | undefined;
+  if (input.messageRegex !== undefined) {
+    try {
+      messageRegex = new RegExp(input.messageRegex);
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err);
+      throw new Error(`Invalid regex in messageRegex: ${reason}`);
+    }
+  }
   const sinceMs = parseTime(input.since);
   const untilMs = parseTime(input.until);
   const allowedLetters = input.levels && input.levels.length > 0 ? new Set<string>(input.levels) : undefined;
@@ -253,7 +271,7 @@ export const runQuery = (rows: Iterable<LogRecord>, input: QueryInput): QueryRes
     total += 1;
 
     // Cheap filters first.
-    if (allowedLetters && record.l !== undefined && !allowedLetters.has(record.l)) {
+    if (allowedLetters && !allowedLetters.has(record.l ?? '')) {
       continue;
     }
     if (sinceMs !== undefined || untilMs !== undefined) {

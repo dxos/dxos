@@ -19,6 +19,7 @@ export default QueryComposerLogs.pipe(
     Effect.fn(function* (input) {
       const start = Date.now();
       const records: LogRecord[] = [];
+      let malformed = 0;
       const queryInput = input as QueryInput;
       const direction: 'next' | 'prev' = !queryInput.groupBy && queryInput.order === 'desc' ? 'prev' : 'next';
       const limit = Math.min(queryInput.limit ?? 100, HARD_LIMIT_ENTRIES);
@@ -49,9 +50,8 @@ export default QueryComposerLogs.pipe(
                   return false;
                 }
               } catch {
-                // Malformed rows are accounted for via runQuery's `total` skip path
-                // — we still push so that the count reflects what the store held.
-                records.push({});
+                // Skip malformed rows but count them so `total` reflects the underlying store.
+                malformed += 1;
               }
               return undefined;
             },
@@ -75,7 +75,11 @@ export default QueryComposerLogs.pipe(
         };
       }
 
-      return runQuery(records, queryInput);
+      const result = yield* Effect.try({
+        try: () => runQuery(records, queryInput),
+        catch: (err) => new Error(`Query failed: ${err instanceof Error ? err.message : String(err)}`),
+      });
+      return { ...result, total: result.total + malformed };
     }),
   ),
   Operation.opaqueHandler,
