@@ -5,6 +5,18 @@
       "source": "oxc-project/oxc",
       "sourceType": "github",
       "computedHash": "b313a891bc4173aac0bd948d5e8c40f5dd921fe67eb5f51184c364e2b869f0e7"
+    },
+    "moon": {
+      "source": "hyperb1iss/moonrepo-skill",
+      "sourceType": "github",
+      "skillPath": "skills/moon/SKILL.md",
+      "computedHash": "b09592c8023529035c8c116d0af3dae32af87e818f69879ee916b8bdabc28f36"
+    },
+    "proto": {
+      "source": "hyperb1iss/moonrepo-skill",
+      "sourceType": "github",
+      "skillPath": "skills/proto/SKILL.md",
+      "computedHash": "71ac82a46f0fee0ede59310c37ea4cb5c00bdee0ac8cef56361c9fcc5e898d50"
     }
   }
 }

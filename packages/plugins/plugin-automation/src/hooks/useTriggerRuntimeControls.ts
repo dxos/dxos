@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { useEffect, useState } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';
-import { type Database, Filter } from '@dxos/echo';
+import { type Database, Filter, Query } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 import { TriggerDispatcher, type TriggerDispatcherState } from '@dxos/functions-runtime';
 import { useQuery } from '@dxos/react-client/echo';
@@ -23,7 +23,10 @@ interface TriggerRuntimeControls {
 }
 
 export const useTriggerRuntimeControls = (db: Database.Database | undefined): TriggerRuntimeControls => {
-  const triggers = useQuery(db, Filter.type(Trigger.Trigger));
+  const triggers = useQuery(
+    db,
+    Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-automation.useTriggerRuntimeControls'),
+  );
 
   const [dispatcher, setDispatcher] = useState<Context.Tag.Service<TriggerDispatcher> | undefined>(undefined);
 

@@ -1,0 +1,8 @@
+{
+  "name": "composer-plugin-dev",
+  "version": "0.1.0",
+  "description": "Authoring guide for DXOS Composer plugins: scaffolding, capabilities, surfaces, operations, blueprints, testing, and community-plugin packaging.",
+  "author": "DXOS.org",
+  "homepage": "https://github.com/dxos/dxos",
+  "keywords": ["dxos", "composer", "plugin"]
+}
