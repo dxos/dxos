@@ -33,7 +33,7 @@ export const ChatActions = ({
   const { t } = useTranslation(meta.id);
 
   return (
-    <div className={mx('flex items-center me-1', classNames)}>
+    <div className={mx('flex items-center', classNames)}>
       {children}
 
       {microphone && (

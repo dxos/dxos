@@ -401,7 +401,7 @@ const ChatPrompt = ({
       </div>
 
       {db && settings && (
-        <div role='none' className='flex items-center overflow-hidden'>
+        <div role='none' className='flex items-center overflow-hidden p-1.5'>
           <ChatOptions
             db={db}
             blueprintRegistry={processor.blueprintRegistry}
