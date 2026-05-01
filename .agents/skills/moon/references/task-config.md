@@ -16,57 +16,57 @@ Complete reference for task configuration in moon.yml and .moon/tasks.yml.
 
 ```yaml
 # .moon/tasks/node.yml
-$schema: "https://moonrepo.dev/schemas/tasks.json"
+$schema: 'https://moonrepo.dev/schemas/tasks.json'
 
 # External configuration to extend
-extends: "https://raw.githubusercontent.com/org/repo/main/.moon/tasks/base.yml"
+extends: 'https://raw.githubusercontent.com/org/repo/main/.moon/tasks/base.yml'
 
 # Conditions for which projects inherit these tasks
 inheritedBy:
   toolchains:
-    or: ["javascript", "typescript"]
-  stacks: ["frontend", "backend"]
-  layers: ["application", "library"]
+    or: ['javascript', 'typescript']
+  stacks: ['frontend', 'backend']
+  layers: ['application', 'library']
 
 # File groups inherited by matching projects
 fileGroups:
   configs:
-    - "*.config.{js,cjs,mjs,ts}"
-    - "tsconfig*.json"
+    - '*.config.{js,cjs,mjs,ts}'
+    - 'tsconfig*.json'
   sources:
-    - "src/**/*"
-    - "types/**/*"
+    - 'src/**/*'
+    - 'types/**/*'
   tests:
-    - "tests/**/*"
-    - "**/__tests__/**/*"
-    - "**/*.test.{ts,tsx}"
+    - 'tests/**/*'
+    - '**/__tests__/**/*'
+    - '**/*.test.{ts,tsx}'
 
 # Default options for all tasks in this file
 taskOptions:
   cache: true
-  runInCI: "affected"
+  runInCI: 'affected'
 
 # Implicit dependencies added to ALL tasks
 implicitDeps:
-  - "^:build" # Run upstream builds first
+  - '^:build' # Run upstream builds first
 
 # Implicit inputs added to ALL tasks
 implicitInputs:
-  - "package.json"
-  - "/tsconfig.base.json"
+  - 'package.json'
+  - '/tsconfig.base.json'
 
 # Tasks inherited by matching projects
 tasks:
   lint:
-    command: "eslint ."
+    command: 'eslint .'
     inputs:
-      - "@group(sources)"
+      - '@group(sources)'
 
   test:
-    command: "vitest run"
+    command: 'vitest run'
     inputs:
-      - "@group(sources)"
-      - "@group(tests)"
+      - '@group(sources)'
+      - '@group(tests)'
 ```
 
 ### Inheritance Conditions
@@ -87,17 +87,17 @@ Projects inherit tasks when ALL specified conditions match (AND logic between co
 ```yaml
 inheritedBy:
   # Simple array (OR within condition)
-  stacks: ["frontend", "backend"]
+  stacks: ['frontend', 'backend']
 
   # With operators (tags and toolchains support this)
   toolchains:
-    or: ["javascript", "typescript"] # Match any
-    not: ["ruby"] # Exclude
+    or: ['javascript', 'typescript'] # Match any
+    not: ['ruby'] # Exclude
 
   tags:
-    and: ["react", "typescript"] # Match all
-    or: ["web", "mobile"] # Match any
-    not: ["deprecated"] # Exclude
+    and: ['react', 'typescript'] # Match all
+    or: ['web', 'mobile'] # Match any
+    not: ['deprecated'] # Exclude
 ```
 
 #### Scoped Task Files
@@ -270,17 +270,17 @@ The `extends` field allows tasks to inherit from sibling tasks or globally inher
 tasks:
   # Base task
   lint:
-    command: "eslint ."
+    command: 'eslint .'
     inputs:
-      - "@group(sources)"
+      - '@group(sources)'
     options:
       cache: true
 
   # Extended task - inherits all settings from lint
   lint-fix:
-    extends: "lint"
-    args: "--fix"
-    preset: "utility" # Disable cache, enable interactive
+    extends: 'lint'
+    args: '--fix'
+    preset: 'utility' # Disable cache, enable interactive
 ```
 
 ### Extension with Overrides
@@ -288,26 +288,26 @@ tasks:
 ```yaml
 tasks:
   build:
-    command: "vite build"
+    command: 'vite build'
     inputs:
-      - "@group(sources)"
-      - "@group(configs)"
+      - '@group(sources)'
+      - '@group(configs)'
     outputs:
-      - "dist"
+      - 'dist'
     env:
-      NODE_ENV: "production"
+      NODE_ENV: 'production'
     options:
       cache: true
 
   # Development build - overrides specific settings
   build-dev:
-    extends: "build"
-    args: "--mode development"
+    extends: 'build'
+    args: '--mode development'
     env:
-      NODE_ENV: "development"
+      NODE_ENV: 'development'
     options:
       cache: false
-      mergeArgs: "replace" # Don't append, replace args
+      mergeArgs: 'replace' # Don't append, replace args
 ```
 
 ### Extending Inherited Tasks
@@ -351,20 +351,20 @@ Tasks named `dev`, `start`, or `serve` automatically get the `server` preset.
 tasks:
   # Long-running development server
   dev:
-    command: "vite dev"
-    preset: "server" # No cache, streams output, persistent
+    command: 'vite dev'
+    preset: 'server' # No cache, streams output, persistent
 
   # Interactive utility command
   migrate:
-    command: "prisma migrate dev"
-    preset: "utility" # No cache, streams output, interactive
+    command: 'prisma migrate dev'
+    preset: 'utility' # No cache, streams output, interactive
 
   # Override preset defaults
   watch:
-    command: "tsc --watch"
-    preset: "server"
+    command: 'tsc --watch'
+    preset: 'server'
     options:
-      runInCI: "skip" # Override the preset's runInCI: false
+      runInCI: 'skip' # Override the preset's runInCI: false
 ```
 
 ## Controlling Inherited Tasks
@@ -378,8 +378,8 @@ Projects can filter, exclude, or rename inherited tasks.
 workspace:
   inheritedTasks:
     include:
-      - "lint"
-      - "test"
+      - 'lint'
+      - 'test'
     # Only these tasks are inherited; all others excluded
 ```
 
@@ -389,8 +389,8 @@ workspace:
 workspace:
   inheritedTasks:
     exclude:
-      - "deploy"
-      - "publish"
+      - 'deploy'
+      - 'publish'
     # All tasks inherited except these
 ```
 
@@ -400,8 +400,8 @@ workspace:
 workspace:
   inheritedTasks:
     rename:
-      buildApplication: "build" # Use shorter name locally
-      testUnit: "test"
+      buildApplication: 'build' # Use shorter name locally
+      testUnit: 'test'
 ```
 
 ### Combined Example
@@ -410,10 +410,10 @@ workspace:
 # moon.yml
 workspace:
   inheritedTasks:
-    include: ["lint", "test", "build", "buildApplication"]
-    exclude: ["test"] # Applied after include
+    include: ['lint', 'test', 'build', 'buildApplication']
+    exclude: ['test'] # Applied after include
     rename:
-      buildApplication: "build" # Applied last
+      buildApplication: 'build' # Applied last
 # Result: only 'lint' and 'build' tasks inherited
 ```
 
@@ -433,38 +433,38 @@ File groups organize related files for reuse across tasks.
 fileGroups:
   # Source files
   sources:
-    - "src/**/*"
-    - "lib/**/*"
+    - 'src/**/*'
+    - 'lib/**/*'
 
   # Test files
   tests:
-    - "tests/**/*"
-    - "**/__tests__/**/*"
-    - "**/*.test.{ts,tsx,js,jsx}"
-    - "**/*.spec.{ts,tsx,js,jsx}"
+    - 'tests/**/*'
+    - '**/__tests__/**/*'
+    - '**/*.test.{ts,tsx,js,jsx}'
+    - '**/*.spec.{ts,tsx,js,jsx}'
 
   # Configuration files
   configs:
-    - "*.config.{js,cjs,mjs,ts}"
-    - "tsconfig*.json"
-    - "package.json"
+    - '*.config.{js,cjs,mjs,ts}'
+    - 'tsconfig*.json'
+    - 'package.json'
 
   # Static assets
   assets:
-    - "public/**/*"
-    - "static/**/*"
+    - 'public/**/*'
+    - 'static/**/*'
 
   # Everything lintable
   lintable:
-    - "@group(sources)"
-    - "@group(tests)"
-    - "@group(configs)"
+    - '@group(sources)'
+    - '@group(tests)'
+    - '@group(configs)'
 
   # Negation patterns
   production:
-    - "src/**/*"
-    - "!src/**/*.test.*"
-    - "!src/**/__mocks__/**"
+    - 'src/**/*'
+    - '!src/**/*.test.*'
+    - '!src/**/__mocks__/**'
 ```
 
 ### Using File Groups
@@ -472,25 +472,25 @@ fileGroups:
 ```yaml
 tasks:
   lint:
-    command: "eslint"
+    command: 'eslint'
     args:
-      - "@globs(lintable)" # Glob patterns as arguments
+      - '@globs(lintable)' # Glob patterns as arguments
     inputs:
-      - "@group(lintable)" # For cache hashing
+      - '@group(lintable)' # For cache hashing
 
   typecheck:
-    command: "tsc --noEmit"
+    command: 'tsc --noEmit'
     inputs:
-      - "@group(sources)"
-      - "@group(configs)"
+      - '@group(sources)'
+      - '@group(configs)'
 
   test:
-    command: "vitest run"
+    command: 'vitest run'
     args:
-      - "@files(tests)" # Expanded file paths
+      - '@files(tests)' # Expanded file paths
     inputs:
-      - "@group(sources)"
-      - "@group(tests)"
+      - '@group(sources)'
+      - '@group(tests)'
 ```
 
 ### Token Functions for File Groups
@@ -536,16 +536,16 @@ Control how inherited and extended task values combine.
 ```yaml
 tasks:
   build:
-    command: "webpack"
-    args: ["--mode", "production"]
-    deps: ["codegen"]
-    inputs: ["src/**/*"]
+    command: 'webpack'
+    args: ['--mode', 'production']
+    deps: ['codegen']
+    inputs: ['src/**/*']
     options:
-      mergeArgs: "replace" # Completely replace inherited args
-      mergeDeps: "prepend" # Run local deps before inherited
-      mergeEnv: "append" # Add to inherited env vars
-      mergeInputs: "append" # Combine with inherited inputs
-      mergeOutputs: "replace" # Override inherited outputs
+      mergeArgs: 'replace' # Completely replace inherited args
+      mergeDeps: 'prepend' # Run local deps before inherited
+      mergeEnv: 'append' # Add to inherited env vars
+      mergeInputs: 'append' # Combine with inherited inputs
+      mergeOutputs: 'replace' # Override inherited outputs
 ```
 
 ### Merge Fields
@@ -604,8 +604,8 @@ Dependencies added to ALL inherited tasks:
 ```yaml
 # .moon/tasks/node.yml
 implicitDeps:
-  - "^:build" # Always build dependencies first
-  - "~:codegen" # Always run codegen in same project
+  - '^:build' # Always build dependencies first
+  - '~:codegen' # Always run codegen in same project
 ```
 
 ### implicitInputs
@@ -615,9 +615,9 @@ Input files added to ALL inherited tasks:
 ```yaml
 # .moon/tasks/node.yml
 implicitInputs:
-  - "package.json"
-  - "/tsconfig.base.json" # Workspace root
-  - "/.moon/toolchains.yml" # Workspace config (v2: plural)
+  - 'package.json'
+  - '/tsconfig.base.json' # Workspace root
+  - '/.moon/toolchains.yml' # Workspace config (v2: plural)
 ```
 
 ## External Configuration (extends)
@@ -626,18 +626,18 @@ implicitInputs:
 
 ```yaml
 # .moon/tasks/node.yml
-extends: "https://raw.githubusercontent.com/company/configs/main/.moon/tasks/base.yml"
+extends: 'https://raw.githubusercontent.com/company/configs/main/.moon/tasks/base.yml'
 
 # Local overrides and additions
 tasks:
   custom:
-    command: "custom-tool"
+    command: 'custom-tool'
 ```
 
 ### Extending Local Configuration
 
 ```yaml
-extends: "../shared/base-tasks.yml"
+extends: '../shared/base-tasks.yml'
 ```
 
 ### Versioning Remote Configs
@@ -693,13 +693,13 @@ tasks:
 ```yaml
 tasks:
   build:
-    command: "tsc"
+    command: 'tsc'
     deps:
-      - "^:build" # Build all dependencies first
+      - '^:build' # Build all dependencies first
     inputs:
-      - "@group(sources)"
+      - '@group(sources)'
     outputs:
-      - "dist"
+      - 'dist'
 ```
 
 ### Development Server
@@ -707,8 +707,8 @@ tasks:
 ```yaml
 tasks:
   dev:
-    command: "vite dev"
-    preset: "server" # Sets persistent, no cache, no CI
+    command: 'vite dev'
+    preset: 'server' # Sets persistent, no cache, no CI
 ```
 
 ### Serial Dependencies
@@ -716,11 +716,11 @@ tasks:
 ```yaml
 tasks:
   deploy:
-    command: "./deploy.sh"
+    command: './deploy.sh'
     deps:
-      - "clean"
-      - "build"
-      - "test"
+      - 'clean'
+      - 'build'
+      - 'test'
     options:
       runDepsInParallel: false # Run in order
 ```
@@ -730,14 +730,14 @@ tasks:
 ```yaml
 tasks:
   build-linux:
-    command: "./build-linux.sh"
+    command: './build-linux.sh'
     options:
-      os: "linux"
+      os: 'linux'
 
   e2e:
-    command: "playwright test"
+    command: 'playwright test'
     options:
-      runInCI: "always"
+      runInCI: 'always'
       timeout: 600
       retryCount: 2
 ```

@@ -26,7 +26,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Required for affected detection
+          fetch-depth: 0 # Required for affected detection
 
       - name: Setup Toolchain
         uses: moonrepo/setup-toolchain@v0
@@ -44,7 +44,6 @@ jobs:
           matrix: ${{ toJSON(matrix) }}
 
 ---
-
 # Alternative: Split by task type
 # .github/workflows/ci-split.yml
 
@@ -94,7 +93,6 @@ jobs:
       - run: moon ci :test
 
 ---
-
 # Open source multi-platform testing
 # .github/workflows/ci-matrix.yml
 
@@ -140,7 +138,6 @@ jobs:
           matrix: ${{ toJSON(matrix) }}
 
 ---
-
 # CircleCI configuration
 # .circleci/config.yml
 
@@ -172,7 +169,6 @@ workflows:
       - ci
 
 ---
-
 # Buildkite configuration
 # .buildkite/pipeline.yml
 

@@ -313,10 +313,10 @@ proto is the toolchain backend for moon. Configure in `.moon/toolchains.yml` (v2
 ```yaml
 # .moon/toolchains.yml
 javascript:
-  packageManager: "pnpm"
+  packageManager: 'pnpm'
 
 node:
-  version: "20.10.0"
+  version: '20.10.0'
 ```
 
 Or pin moon itself via proto:

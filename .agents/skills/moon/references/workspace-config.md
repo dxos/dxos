@@ -5,7 +5,7 @@ Complete reference for `.moon/workspace.yml` configuration.
 ## Schema
 
 ```yaml
-$schema: "https://moonrepo.dev/schemas/workspace.json"
+$schema: 'https://moonrepo.dev/schemas/workspace.json'
 ```
 
 ## Projects
@@ -14,10 +14,10 @@ $schema: "https://moonrepo.dev/schemas/workspace.json"
 
 ```yaml
 projects:
-  - "apps/*"
-  - "packages/*"
-  - "tools/*"
-  - "!packages/deprecated-*" # Exclusion
+  - 'apps/*'
+  - 'packages/*'
+  - 'tools/*'
+  - '!packages/deprecated-*' # Exclusion
 ```
 
 ### Explicit Mapping
@@ -25,27 +25,27 @@ projects:
 ```yaml
 projects:
   sources:
-    app: "apps/web"
-    api: "apps/api"
+    app: 'apps/web'
+    api: 'apps/api'
   globs:
-    - "packages/*"
+    - 'packages/*'
 ```
 
 ## VCS Configuration
 
 ```yaml
 vcs:
-  client: "git" # v2: 'manager' renamed to 'client'
-  provider: "github" # github, gitlab, bitbucket, other
-  defaultBranch: "main"
+  client: 'git' # v2: 'manager' renamed to 'client'
+  provider: 'github' # github, gitlab, bitbucket, other
+  defaultBranch: 'main'
   remoteCandidates:
-    - "origin"
-    - "upstream"
+    - 'origin'
+    - 'upstream'
   hooks:
     pre-commit:
-      - "moon run :lint --affected --status staged"
+      - 'moon run :lint --affected --status staged'
     pre-push:
-      - "moon run :test --affected"
+      - 'moon run :test --affected'
 ```
 
 > Note: In v2, VCS hooks write to `.moon/hooks` instead of `.git/hooks`.
@@ -58,11 +58,11 @@ vcs:
 pipeline:
   # Targets to archive for caching
   archivableTargets:
-    - ":build"
-    - ":test"
+    - ':build'
+    - ':test'
 
   # Cache settings
-  cacheLifetime: "7 days"
+  cacheLifetime: '7 days'
   autoCleanCache: true
 
   # Output settings
@@ -85,7 +85,7 @@ pipeline:
 
 ```yaml
 # When running :task without project scope, use this project
-defaultProject: "website"
+defaultProject: 'website'
 ```
 
 ## Hasher Configuration
@@ -93,15 +93,15 @@ defaultProject: "website"
 ```yaml
 hasher:
   # Optimization mode
-  optimization: "performance" # accuracy, performance
+  optimization: 'performance' # accuracy, performance
 
   # Walk strategy
-  walkStrategy: "vcs" # glob, vcs
+  walkStrategy: 'vcs' # glob, vcs
 
   # Ignore patterns
   ignoredPatterns:
-    - "**/.git/**"
-    - "**/node_modules/**"
+    - '**/.git/**'
+    - '**/node_modules/**'
 
   # Batch size for hashing
   batchSize: 2500
@@ -112,10 +112,10 @@ hasher:
 ```yaml
 codeowners:
   globalPaths:
-    "/*": ["@platform-team"]
-    "/apps/*": ["@product-team"]
-    "/packages/*": ["@library-team"]
-  orderBy: "project-source"
+    '/*': ['@platform-team']
+    '/apps/*': ['@product-team']
+    '/packages/*': ['@library-team']
+  orderBy: 'project-source'
   sync: true # v2: 'syncOnRun' renamed to 'sync'
 ```
 
@@ -129,10 +129,10 @@ constraints:
   # Tag-based dependency rules
   tagRelationships:
     frontend:
-      requires: ["shared"]
-      conflicts: ["backend-only"]
+      requires: ['shared']
+      conflicts: ['backend-only']
     backend:
-      requires: ["shared"]
+      requires: ['shared']
 ```
 
 ## Generator
@@ -140,8 +140,8 @@ constraints:
 ```yaml
 generator:
   templates:
-    - "./templates"
-    - "npm:@company/templates"
+    - './templates'
+    - 'npm:@company/templates'
 ```
 
 ## Extensions
@@ -149,9 +149,9 @@ generator:
 ```yaml
 extensions:
   migrate-nx:
-    plugin: "https://example.com/migrate-nx.wasm"
+    plugin: 'https://example.com/migrate-nx.wasm'
   custom:
-    plugin: "file://./extensions/custom.wasm"
+    plugin: 'file://./extensions/custom.wasm'
 ```
 
 ## Remote Caching
@@ -160,13 +160,13 @@ extensions:
 
 ```yaml
 remote:
-  host: "grpcs://cache.example.com"
+  host: 'grpcs://cache.example.com'
   auth:
-    token: "CACHE_TOKEN"
+    token: 'CACHE_TOKEN'
     headers:
-      "X-Custom-Header": "value"
+      'X-Custom-Header': 'value'
   cache:
-    compression: "zstd"
+    compression: 'zstd'
     verifyIntegrity: true
     localReadOnly: false # Download only, no uploads (for dev)
 ```
@@ -175,7 +175,7 @@ remote:
 
 ```yaml
 remote:
-  host: "grpc://your-server:9092"
+  host: 'grpc://your-server:9092'
 ```
 
 Run bazel-remote:
@@ -209,19 +209,19 @@ remote:
 ```yaml
 # Depot
 remote:
-  host: "grpcs://cache.depot.dev"
+  host: 'grpcs://cache.depot.dev'
   auth:
-    token: "DEPOT_TOKEN"
+    token: 'DEPOT_TOKEN'
     headers:
-      "X-Depot-Org": "<org-id>"
-      "X-Depot-Project": "<project-id>"
+      'X-Depot-Org': '<org-id>'
+      'X-Depot-Project': '<project-id>'
 ```
 
 ## Notifier
 
 ```yaml
 notifier:
-  webhookUrl: "https://hooks.slack.com/..."
+  webhookUrl: 'https://hooks.slack.com/...'
 ```
 
 ## Telemetry
@@ -233,49 +233,49 @@ telemetry: true # Enable usage telemetry
 ## Complete Example
 
 ```yaml
-$schema: "https://moonrepo.dev/schemas/workspace.json"
+$schema: 'https://moonrepo.dev/schemas/workspace.json'
 
 projects:
-  - "apps/*"
-  - "packages/*"
-  - "tools/*"
+  - 'apps/*'
+  - 'packages/*'
+  - 'tools/*'
 
 vcs:
-  client: "git" # v2: 'manager' renamed to 'client'
-  provider: "github"
-  defaultBranch: "main"
+  client: 'git' # v2: 'manager' renamed to 'client'
+  provider: 'github'
+  defaultBranch: 'main'
   hooks:
     pre-commit:
-      - "moon run :lint --affected --status staged"
+      - 'moon run :lint --affected --status staged'
 
 pipeline: # v2: 'runner' renamed to 'pipeline'
   archivableTargets:
-    - ":build"
-  cacheLifetime: "7 days"
+    - ':build'
+  cacheLifetime: '7 days'
   inheritColorsForPipedTasks: true
   logRunningCommand: true
   autoCleanCache: true
 
 hasher:
-  optimization: "performance"
-  walkStrategy: "vcs"
+  optimization: 'performance'
+  walkStrategy: 'vcs'
 
 codeowners:
   globalPaths:
-    "/*": ["@platform-team"]
+    '/*': ['@platform-team']
   sync: true # v2: 'syncOnRun' renamed to 'sync'
 
 constraints:
   enforceProjectTypeRelationships: true
   tagRelationships:
     frontend:
-      requires: ["shared"]
+      requires: ['shared']
     backend:
-      requires: ["shared"]
+      requires: ['shared']
 
 generator:
   templates:
-    - "./templates"
+    - './templates'
 
 telemetry: true
 ```

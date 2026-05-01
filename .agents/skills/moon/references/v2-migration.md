@@ -93,7 +93,7 @@ Tasks now run in shells (Bash on Unix, pwsh on Windows). To disable:
 ```yaml
 tasks:
   example:
-    command: "tool"
+    command: 'tool'
     options:
       shell: false
 ```
@@ -118,7 +118,7 @@ Configure fallback project when running tasks without scope:
 
 ```yaml
 # .moon/workspace.yml
-defaultProject: "core-app"
+defaultProject: 'core-app'
 ```
 
 Usage:
@@ -133,10 +133,10 @@ Usage:
 ```yaml
 # .moon/toolchain.yml (v1)
 node:
-  version: "20.10.0"
-  packageManager: "pnpm"
+  version: '20.10.0'
+  packageManager: 'pnpm'
   pnpm:
-    version: "8.0.0"
+    version: '8.0.0'
 ```
 
 ### v2 Structure (Flat)
@@ -144,14 +144,14 @@ node:
 ```yaml
 # .moon/toolchains.yml (v2)
 javascript:
-  packageManager: "pnpm"
+  packageManager: 'pnpm'
   inferTasksFromScripts: true
 
 node:
-  version: "20.10.0"
+  version: '20.10.0'
 
 pnpm:
-  version: "8.0.0"
+  version: '8.0.0'
 ```
 
 **Critical**: `bun`, `deno`, and `node` toolchains require `javascript` to be enabled:
@@ -160,7 +160,7 @@ pnpm:
 javascript: {} # Required!
 
 bun:
-  version: "1.0.0"
+  version: '1.0.0'
 ```
 
 ## WASM Extensions
@@ -186,11 +186,11 @@ Hooks now write to `.moon/hooks` instead of `.git/hooks`.
 ```yaml
 # v1
 unstable_remote:
-  host: "grpcs://cache.example.com"
+  host: 'grpcs://cache.example.com'
 
 # v2
 remote:
-  host: "grpcs://cache.example.com"
+  host: 'grpcs://cache.example.com'
 ```
 
 ## CLI Changes

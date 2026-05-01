@@ -56,67 +56,67 @@ moon project-graph         # Visualize dependencies
 
 ```yaml
 # .moon/workspace.yml
-$schema: "https://moonrepo.dev/schemas/workspace.json"
+$schema: 'https://moonrepo.dev/schemas/workspace.json'
 
 projects:
-  - "apps/*"
-  - "packages/*"
+  - 'apps/*'
+  - 'packages/*'
 
 vcs:
-  client: "git"
-  defaultBranch: "main"
+  client: 'git'
+  defaultBranch: 'main'
 
 pipeline:
   archivableTargets:
-    - ":build"
-  cacheLifetime: "7 days"
+    - ':build'
+  cacheLifetime: '7 days'
 ```
 
 ## Project Configuration
 
 ```yaml
 # moon.yml
-$schema: "https://moonrepo.dev/schemas/project.json"
+$schema: 'https://moonrepo.dev/schemas/project.json'
 
-language: "typescript"
-layer: "application" # v2: 'type' renamed to 'layer'
-stack: "frontend"
-tags: ["react", "graphql"]
+language: 'typescript'
+layer: 'application' # v2: 'type' renamed to 'layer'
+stack: 'frontend'
+tags: ['react', 'graphql']
 
 dependsOn:
-  - "shared-utils"
-  - id: "api-client"
-    scope: "production"
+  - 'shared-utils'
+  - id: 'api-client'
+    scope: 'production'
 
 fileGroups:
   sources:
-    - "src/**/*"
+    - 'src/**/*'
   tests:
-    - "tests/**/*"
+    - 'tests/**/*'
 
 tasks:
   build:
-    command: "vite build"
+    command: 'vite build'
     inputs:
-      - "@group(sources)"
+      - '@group(sources)'
     outputs:
-      - "dist"
+      - 'dist'
     deps:
-      - "^:build"
+      - '^:build'
 
   dev:
-    command: "vite dev"
-    preset: "server"
+    command: 'vite dev'
+    preset: 'server'
 
   # v2: Use 'script' for shell features (pipes, redirects)
   lint:
-    script: "eslint . && prettier --check ."
+    script: 'eslint . && prettier --check .'
 
   test:
-    command: "vitest run"
+    command: 'vitest run'
     inputs:
-      - "@group(sources)"
-      - "@group(tests)"
+      - '@group(sources)'
+      - '@group(tests)'
 ```
 
 ### Layer Types (v2)
@@ -152,15 +152,15 @@ Tasks can be inherited globally via `.moon/tasks/*.yml`:
 ```yaml
 # .moon/tasks/node.yml
 inheritedBy:
-  toolchains: ["javascript", "typescript"]
+  toolchains: ['javascript', 'typescript']
 
 fileGroups:
-  sources: ["src/**/*"]
+  sources: ['src/**/*']
 
 tasks:
   lint:
-    command: "eslint ."
-    inputs: ["@group(sources)"]
+    command: 'eslint .'
+    inputs: ['@group(sources)']
 ```
 
 Projects control inheritance:
@@ -169,10 +169,10 @@ Projects control inheritance:
 # moon.yml
 workspace:
   inheritedTasks:
-    include: ["lint", "test"]
-    exclude: ["deploy"]
+    include: ['lint', 'test']
+    exclude: ['deploy']
     rename:
-      buildApp: "build"
+      buildApp: 'build'
 ```
 
 ### Task Options
@@ -180,64 +180,64 @@ workspace:
 ```yaml
 tasks:
   example:
-    command: "cmd"
+    command: 'cmd'
     options:
       cache: true # Enable caching
-      runInCI: "affected" # affected, always, only, false
+      runInCI: 'affected' # affected, always, only, false
       persistent: true # Long-running process
       retryCount: 2 # Retry on failure
       timeout: 300 # Seconds
-      mutex: "resource" # Exclusive lock
-      priority: "high" # critical, high, normal, low
+      mutex: 'resource' # Exclusive lock
+      priority: 'high' # critical, high, normal, low
 ```
 
 ### Input Tokens
 
 ```yaml
 inputs:
-  - "@group(sources)" # File group
-  - "@globs(tests)" # Glob patterns
-  - "/tsconfig.base.json" # Workspace root file
-  - "$NODE_ENV" # Environment variable
+  - '@group(sources)' # File group
+  - '@globs(tests)' # Glob patterns
+  - '/tsconfig.base.json' # Workspace root file
+  - '$NODE_ENV' # Environment variable
 ```
 
 ## Toolchain Configuration
 
 ```yaml
 # .moon/toolchains.yml (v2: plural)
-$schema: "https://moonrepo.dev/schemas/toolchains.json"
+$schema: 'https://moonrepo.dev/schemas/toolchains.json'
 
 # JavaScript ecosystem (v2: required for node/bun/deno)
 javascript:
-  packageManager: "pnpm"
+  packageManager: 'pnpm'
   inferTasksFromScripts: false
 
 node:
-  version: "20.10.0"
+  version: '20.10.0'
 
 pnpm:
-  version: "8.12.0"
+  version: '8.12.0'
 
 # Alternative runtimes
 bun:
-  version: "1.0.0"
+  version: '1.0.0'
 
 deno:
-  version: "1.40.0"
+  version: '1.40.0'
 
 typescript:
   syncProjectReferences: true
   routeOutDirToCache: true
 
 rust:
-  version: "1.75.0"
-  bins: ["cargo-nextest", "cargo-llvm-cov"]
+  version: '1.75.0'
+  bins: ['cargo-nextest', 'cargo-llvm-cov']
 
 go:
-  version: "1.21.0"
+  version: '1.21.0'
 
 python:
-  version: "3.12.0"
+  version: '3.12.0'
 ```
 
 ### Toolchain Tiers
