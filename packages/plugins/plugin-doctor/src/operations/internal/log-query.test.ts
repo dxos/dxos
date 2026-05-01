@@ -43,6 +43,15 @@ describe('runQuery', () => {
     expect(result.entries?.map((entry) => (entry as LogRecord).m)).toEqual(['two', 'three']);
   });
 
+  test('invalid messageRegex throws a descriptive error', ({ expect }) => {
+    expect(() => runQuery(baseRows, { messageRegex: '(' })).toThrow(/Invalid regex in messageRegex/);
+  });
+
+  test('oversized grep regex is rejected', ({ expect }) => {
+    const tooLong = 'a'.repeat(257);
+    expect(() => runQuery(baseRows, { grep: [tooLong] })).toThrow(/exceeds max length/);
+  });
+
   test('grep tests against raw JSON line and ANDs', ({ expect }) => {
     const result = runQuery(baseRows, { grep: ['rpc', 'src/z.ts'] });
     expect(result.matched).toBe(1);
