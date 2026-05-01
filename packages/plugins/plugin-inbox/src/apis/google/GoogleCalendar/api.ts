@@ -26,12 +26,14 @@ export const listEventsByStartTime = Effect.fn(function* (
   timeMax: string,
   pageSize: number,
   pageToken?: string | undefined,
+  q?: string | undefined,
 ) {
   const url = createUrl([API_URL, 'calendars', encodeURIComponent(calendarId), 'events'], {
     timeMin,
     timeMax,
     maxResults: pageSize,
     pageToken,
+    q,
     // NOTE: `singleEvents=false` is not compatible with `orderBy=startTime`.
     //   Expanded instances can be deduplicated downstream by recurringEventId.
     singleEvents: true,
@@ -51,11 +53,13 @@ export const listEventsByUpdated = Effect.fn(function* (
   updatedMin: string,
   pageSize: number,
   pageToken?: string | undefined,
+  q?: string | undefined,
 ) {
   const url = createUrl([API_URL, 'calendars', encodeURIComponent(calendarId), 'events'], {
     updatedMin,
     maxResults: pageSize,
     pageToken,
+    q,
     // Don't create individual instances of recurring events.
     singleEvents: false,
     orderBy: 'updated',

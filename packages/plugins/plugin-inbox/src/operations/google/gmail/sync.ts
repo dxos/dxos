@@ -51,10 +51,11 @@ export default GoogleMailSync.pipe(
       userId = 'me',
       label = 'inbox',
       after = format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+      filter,
       restrictedMode = false,
     }) =>
       Effect.gen(function* () {
-        log('syncing gmail', { mailbox: mailboxRef.dxn.toString(), userId, after, restrictedMode });
+        log('syncing gmail', { mailbox: mailboxRef.dxn.toString(), userId, after, filter, restrictedMode });
         const mailbox = yield* Database.load(mailboxRef);
         const feed = yield* Database.load(mailbox.feed);
 
@@ -88,6 +89,7 @@ export default GoogleMailSync.pipe(
           feed,
           userId,
           label,
+          filter,
           existingGmailIds,
           restrictedMode,
         );
@@ -139,14 +141,22 @@ const generateDateRanges = (config: DateRangeConfig): Stream.Stream<DateChunk> =
   );
 };
 
-const fetchMessagesForDateRange = (userId: string, label: string, dateChunk: DateChunk) => {
+const fetchMessagesForDateRange = (userId: string, label: string, filter: string | undefined, dateChunk: DateChunk) => {
   return Stream.unfoldChunkEffect({ pageToken: Option.none<string>(), done: false }, (state) =>
     Effect.gen(function* () {
       if (state.done) {
         return Option.none();
       }
 
-      const query = `in:anywhere label:${label} after:${format(dateChunk.start, 'yyyy/MM/dd')} before:${format(dateChunk.end, 'yyyy/MM/dd')}`;
+      const query = [
+        `in:anywhere`,
+        `label:${label}`,
+        `after:${format(dateChunk.start, 'yyyy/MM/dd')}`,
+        `before:${format(dateChunk.end, 'yyyy/MM/dd')}`,
+        filter ? `(${filter})` : undefined,
+      ]
+        .filter(Boolean)
+        .join(' ');
       log('fetching message IDs', {
         query,
         pageToken: Option.getOrUndefined(state.pageToken),
@@ -180,6 +190,7 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
   feed: Feed.Feed,
   userId: string,
   label: string,
+  filter: string | undefined,
   existingGmailIds: Set<string>,
   restricted: boolean,
 ) {
@@ -191,7 +202,7 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
 
   const count = yield* Function.pipe(
     generateDateRanges(config),
-    Stream.flatMap((dateChunk) => fetchMessagesForDateRange(userId, label, dateChunk), { concurrency: 1 }),
+    Stream.flatMap((dateChunk) => fetchMessagesForDateRange(userId, label, filter, dateChunk), { concurrency: 1 }),
     Stream.filter((messageId) => {
       const isDuplicate = existingGmailIds.has(messageId);
       if (isDuplicate) {

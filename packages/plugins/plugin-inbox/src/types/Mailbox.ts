@@ -9,6 +9,8 @@ import { FormInputAnnotation } from '@dxos/echo/internal';
 import { FeedAnnotation } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
+import { SyncOptions } from './SyncOptions';
+
 // TODO(burdon): Implement as labels?
 export enum MessageState {
   NONE = 0,
@@ -40,6 +42,12 @@ export const Mailbox = Schema.Struct({
     Ref.Ref(AccessToken.AccessToken).annotations({
       title: 'Account',
       description: 'Google account credentials for syncing this mailbox.',
+    }),
+  ),
+  sync: Schema.optional(
+    SyncOptions.annotations({
+      title: 'Sync',
+      description: 'Configures how messages are synced from the upstream provider.',
     }),
   ),
 }).pipe(

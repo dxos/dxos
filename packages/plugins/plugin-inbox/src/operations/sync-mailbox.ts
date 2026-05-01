@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { format, subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
@@ -24,10 +25,14 @@ const handler: Operation.WithHandler<typeof SyncMailbox> = SyncMailbox.pipe(
       invariant(db);
       const runtime = computeRuntime.getRuntime(db.spaceId);
       const { GmailFunctions } = yield* Effect.promise(() => import('./google/gmail'));
+      const { syncBackDays, filter } = mailbox.sync ?? {};
+      const after = syncBackDays != null ? format(subDays(new Date(), syncBackDays), 'yyyy-MM-dd') : undefined;
       yield* Effect.tryPromise(() =>
         runtime.runPromise(
           Operation.invoke(GmailFunctions.Sync, {
             mailbox: Ref.make(mailbox),
+            after,
+            filter,
           }),
         ),
       ).pipe(

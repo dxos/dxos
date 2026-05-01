@@ -24,10 +24,14 @@ const handler: Operation.WithHandler<typeof SyncCalendar> = SyncCalendar.pipe(
       invariant(db);
       const runtime = computeRuntime.getRuntime(db.spaceId);
       const { CalendarFunctions } = yield* Effect.promise(() => import('./google/calendar'));
+      const { syncBackDays, syncForwardDays, filter } = calendar.sync ?? {};
       yield* Effect.tryPromise(() =>
         runtime.runPromise(
           Operation.invoke(CalendarFunctions.Sync, {
             calendar: Ref.make(calendar),
+            syncBackDays,
+            syncForwardDays,
+            filter,
           }),
         ),
       ).pipe(
