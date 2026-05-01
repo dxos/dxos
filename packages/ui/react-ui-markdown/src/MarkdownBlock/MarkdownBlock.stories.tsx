@@ -8,24 +8,24 @@ import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
-import { MarkdownViewer } from './MarkdownViewer';
+import { MarkdownBlock } from './MarkdownBlock';
 
 random.seed(0);
 
 const meta = {
-  title: 'ui/react-ui-markdown/MarkdownViewer',
-  component: MarkdownViewer,
+  title: 'ui/react-ui-markdown/MarkdownBlock',
+  component: MarkdownBlock,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
-} satisfies Meta<typeof MarkdownViewer>;
+} satisfies Meta<typeof MarkdownBlock>;
 
 export default meta;
 
-type Story = StoryObj<typeof MarkdownViewer>;
+type Story = StoryObj<typeof MarkdownBlock>;
 
 const content = trim`
   # Hello World!
 
-  > An example of the MarkdownViewer component.
+  > An example of the MarkdownBlock component.
 
   ${random.lorem.paragraphs(1)}
 

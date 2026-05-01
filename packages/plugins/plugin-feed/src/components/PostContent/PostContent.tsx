@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { ScrollArea } from '@dxos/react-ui';
-import { MarkdownViewer } from '@dxos/react-ui-markdown';
+import { MarkdownBlock } from '@dxos/react-ui-markdown';
 import { composable } from '@dxos/ui-theme';
 
 import { Subscription } from '#types';
@@ -97,7 +97,7 @@ export const PostContent = composable<HTMLDivElement, PostContentProps>(
           {showHero && (
             <img src={post.imageUrl} alt='' className='rounded w-full object-cover max-h-72' loading='lazy' />
           )}
-          {content && <MarkdownViewer content={content} />}
+          {content && <MarkdownBlock content={content} />}
           {meta && <div className='text-xs text-subdued'>{meta}</div>}
         </ScrollArea.Viewport>
       </ScrollArea.Root>

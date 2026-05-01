@@ -26,6 +26,8 @@ JSON fenced code:
 }
 ```
 
+We can also have <xml>content</xml>.
+
 ## Structured data
 
 Table:

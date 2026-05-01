@@ -3,7 +3,7 @@
 //
 
 import { type DXN } from '@dxos/echo';
-import { type MarkdownStreamController } from '@dxos/react-ui-components';
+import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { type ContentBlock, type Message } from '@dxos/types';
 import { type StateDispatch, type XmlWidgetStateManager } from '@dxos/ui-editor';
 
