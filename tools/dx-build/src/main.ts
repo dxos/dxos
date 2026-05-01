@@ -10,7 +10,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import ts from 'typescript';
 
 const VERBOSE = false,
-  USE_TSGO = false;
+  USE_TSGO = process.env.DX_USE_TSC !== '1';
 
 const main = async () => {
   // Find and parse tsconfig.json.
