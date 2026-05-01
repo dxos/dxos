@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Effect } from 'effect';
 import * as Context from 'effect/Context';
 import { use, useMemo } from 'react';
 
@@ -21,5 +22,5 @@ export const useComputeRuntimeService = <T extends Context.Tag<any, any>>(
   }
 
   // TODO(burdon): This introduces a suspension point which may not terminate.
-  return unwrapExit(use(useMemo(() => runtime.runPromiseExit(tag), [runtime, tag])));
+  return unwrapExit(use(useMemo(() => runtime.runPromiseExit(tag.pipe(Effect.timeout('30 seconds'))), [runtime, tag])));
 };

@@ -5,7 +5,7 @@
 import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
 import { pipe } from 'effect/Function';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -57,7 +57,9 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(({ space, 
   return (
     <Panel.Root {...props} ref={forwardedRef}>
       <Panel.Content className='grid grid-rows-[min-content_1fr]'>
-        <ActiveProcessList spaceId={space.id} />
+        <Suspense fallback={null}>
+          <ActiveProcessList spaceId={space.id} />
+        </Suspense>
         <Timeline branches={branches} commits={commits} compact onCommitClick={handleCommitClick} />
       </Panel.Content>
     </Panel.Root>
