@@ -81,14 +81,13 @@ describe('schema registration semantics', () => {
       expect(queue.objects).toHaveLength(1);
     });
 
-    test('fails when schema is not in runtime registry and not persisted in db', async () => {
+    test('succeeds even when schema is not registered (queues are raw append-anything)', async () => {
       await using peer = await builder.createPeer();
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
       const queue = queues.create();
-      await expect(queue.append([Obj.make(TestSchema.Person, { name: 'Alice' })])).rejects.toThrow(
-        /Schema not registered/,
-      );
+      await queue.append([Obj.make(TestSchema.Person, { name: 'Alice' })]);
+      expect(queue.objects).toHaveLength(1);
     });
   });
 
@@ -103,12 +102,13 @@ describe('schema registration semantics', () => {
       await expect(db.query(Filter.type(TestSchema.Person)).run()).rejects.toThrow(/unknown typename/);
     });
 
-    test('queue query', async () => {
+    test('queue query succeeds even with unresolvable typename (queues are raw protocol)', async () => {
       await using peer = await builder.createPeer();
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
       const queue = queues.create();
-      await expect(queue.query(Filter.type(TestSchema.Person)).run()).rejects.toThrow(/unknown typename/);
+      const results = await queue.query(Filter.type(TestSchema.Person)).run();
+      expect(results).toHaveLength(0);
     });
 
     test('db query succeeds when typename is registered in runtime registry', async () => {
@@ -168,7 +168,7 @@ describe('schema registration semantics', () => {
       );
     });
 
-    test('queue objects whose schema cannot be resolved are filtered out', async () => {
+    test('queue objects are returned regardless of schema resolution (queues are raw protocol)', async () => {
       const EphemeralSchema = Schema.Struct({
         name: Schema.optional(Schema.String),
       }).pipe(Type.object({ typename: 'com.example.test.ephemeral-queue', version: '0.1.0' }));
@@ -180,21 +180,15 @@ describe('schema registration semantics', () => {
       await queue.append([Obj.make(EphemeralSchema, { name: 'Alice' })]);
 
       // With the schema registered, the query returns the object.
-      const withSchema = await queue
-        .query(Query.select(Filter.everything()).options({ skipSchemaValidation: true }))
-        .run();
+      const withSchema = await queue.query(Query.select(Filter.everything())).run();
       expect(withSchema).toHaveLength(1);
 
       // Simulate a peer without the schema in its runtime registry.
       (peer.client.graph.schemaRegistry as any)._registry.delete(EphemeralSchema.typename);
 
-      // With skipSchemaValidation the object is still returned.
-      const bypass = await queue.query(Query.select(Filter.everything()).options({ skipSchemaValidation: true })).run();
-      expect(bypass).toHaveLength(1);
-
-      // Without skipSchemaValidation the object is filtered out.
-      const filtered = await queue.query(Query.select(Filter.everything())).run();
-      expect(filtered).toHaveLength(0);
+      // Queue queries don't enforce schema validation, so the object is still returned.
+      const afterUnregister = await queue.query(Query.select(Filter.everything())).run();
+      expect(afterUnregister).toHaveLength(1);
     });
   });
 

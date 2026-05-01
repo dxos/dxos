@@ -35,10 +35,8 @@ import {
 } from '@dxos/functions-runtime';
 import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
-import { Text } from '@dxos/schema';
-import { Message } from '@dxos/types';
 
-import { AiContextBinder, AiContextService, AiSession, AiSessionService, ContextBinding } from '../conversation';
+import { AiContextBinder, AiContextService, AiSession, AiSessionService } from '../conversation';
 import { AgentService } from '../service';
 import { CompleteBlock } from '../tracing';
 
@@ -109,18 +107,7 @@ export const AssistantTestLayer = ({
   const operationHandlersSet = Array.isArray(operationHandlers)
     ? OperationHandlerSet.merge(...operationHandlers)
     : operationHandlers;
-  types.push(
-    Blueprint.Blueprint,
-    Prompt.Prompt,
-    Operation.PersistentOperation,
-    Feed.Feed,
-    Trigger.Trigger,
-    Tag.Tag,
-    Trace.Message,
-    ContextBinding,
-    Message.Message,
-    Text.Text,
-  );
+  types.push(Blueprint.Blueprint, Prompt.Prompt, Operation.PersistentOperation, Feed.Feed, Trigger.Trigger, Tag.Tag);
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
   return Layer.empty.pipe(

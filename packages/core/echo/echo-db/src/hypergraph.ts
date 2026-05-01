@@ -377,8 +377,9 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     if (!db) {
       return undefined;
     }
-    const [obj] = await db.query(Filter.id(objectId)).run();
-    return obj;
+    // Bypass `db.query` so ref resolution does not get filtered by the query-level schema check
+    // (Refs may legitimately point at objects whose schema is not registered with this client).
+    return await db._loadObjectById(objectId);
   }
 
   private _resolveQueueSync(spaceId: SpaceId, subspaceTag: QueueSubspaceTag, queueId: ObjectId): Queue | undefined {

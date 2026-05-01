@@ -260,13 +260,14 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     if (!isEchoObject(obj)) {
+      // Validate at the user-facing entry point only. Cascade adds via createRef call back into
+      // db.add but with already-EchoObject inputs, so this branch is skipped on cascades.
       const schema = Obj.getSchema(obj as unknown as Obj.Unknown);
       if (schema != null) {
         if (!this.schemaRegistry.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
           throw createSchemaNotRegisteredError(schema);
         }
       }
-
       obj = createObject(obj);
     }
     assertObjectModel(obj);

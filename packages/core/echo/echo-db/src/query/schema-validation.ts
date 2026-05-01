@@ -7,11 +7,26 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { DXN } from '@dxos/keys';
 
 /**
+ * Returns true if the query has a queue scope (`.from({ queues: [...] })`).
+ * Queues are a raw append-anything protocol, so schema validation is skipped for queue-scoped queries.
+ */
+const queryTargetsQueue = (query: QueryAST.Query): boolean => {
+  let hasQueues = false;
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'from' && node.from._tag === 'scope' && node.from.scope.queues !== undefined) {
+      hasQueues = true;
+    }
+  });
+  return hasQueues;
+};
+
+/**
  * Returns true if the query opts out of schema validation.
  */
 export const isSchemaValidationSkipped = (query: QueryAST.Query): boolean => {
   const options = QueryAST.getEffectiveOptions(query);
-  return options?.skipSchemaValidation === true;
+  if (options?.skipSchemaValidation === true) return true;
+  return queryTargetsQueue(query);
 };
 
 /**

@@ -189,9 +189,6 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
    */
   async append(items: T[]): Promise<void> {
     items.forEach((item) => assertObjectModel(item));
-    for (const item of items) {
-      assertSchemaRegistered(item, this._database, this._graph);
-    }
 
     for (const item of items) {
       setRefResolverOnData(item, this._refResolver);
@@ -257,7 +254,10 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   private _query(queryOrFilter: Query.Any | Filter.Any) {
     const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
     const queryWithScope = query.from({ spaceIds: [this._spaceId], queues: [this._dxn.toString()] });
-    return new QueryResultImpl(new QueueQueryContext(this, this._ctx, this._refResolver), queryWithScope);
+    // Queue queries don't enforce schema validation: queues are a raw append-anything protocol and
+    // upstream callers (e.g. Feed/AiContextBinder) often query for types not registered in the
+    // runtime schema registry of the consumer.
+    return new QueryResultImpl(new QueueQueryContext(this, this._ctx), queryWithScope);
   }
 
   async sync({
@@ -396,18 +396,3 @@ const objectSetChanged = (before: Entity.Unknown[], after: Entity.Unknown[]) => 
 };
 
 const isSqliteNotOpenError = (err: any) => err.cause?.message?.includes('The database connection is not open');
-
-const assertSchemaRegistered = (obj: Entity.Unknown, database?: Database.Database, graph?: Hypergraph.Hypergraph) => {
-  const schema = Entity.getSchema(obj);
-  if (schema == null) {
-    return;
-  }
-  const runtimeRegistry = database?.graph.schemaRegistry ?? graph?.schemaRegistry;
-  const persistentRegistry = database?.schemaRegistry;
-  const runtimeHas = runtimeRegistry?.hasSchema(schema as any) ?? false;
-  const persistentHas = persistentRegistry?.hasSchema(schema as any) ?? false;
-  if (!runtimeHas && !persistentHas) {
-    const typename = (schema as any).typename;
-    throw new Error(typename ? `Schema not registered: ${typename}` : 'Schema not registered');
-  }
-};
