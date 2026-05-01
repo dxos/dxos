@@ -8,12 +8,12 @@ import { AutomationPlugin } from '@dxos/plugin-automation/cli';
 import { ChessPlugin } from '@dxos/plugin-chess/cli';
 import { ClientPlugin } from '@dxos/plugin-client/cli';
 import { InboxPlugin } from '@dxos/plugin-inbox/cli';
+import { IntegrationPlugin } from '@dxos/plugin-integration/cli';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/cli';
 import { ObservabilityPlugin } from '@dxos/plugin-observability/cli';
 import { RegistryPlugin } from '@dxos/plugin-registry/cli';
 import { SamplePlugin } from '@dxos/plugin-sample/cli';
 import { SpacePlugin } from '@dxos/plugin-space/cli';
-import { IntegrationPlugin } from '@dxos/plugin-integration/cli';
 
 export type PluginConfig = {
   config?: Config;

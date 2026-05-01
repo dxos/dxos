@@ -9,8 +9,8 @@ import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 import { Operation } from '@dxos/operation';
-import { Kanban } from '@dxos/plugin-kanban/types';
 import { Integration } from '@dxos/plugin-integration/types';
+import { Kanban } from '@dxos/plugin-kanban/types';
 import { Expando } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
@@ -165,9 +165,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
         account: 'me@example.com',
       }),
     );
-    const integration = db.add(
-      Obj.make(Integration.Integration, { accessToken: Ref.make(token), targets: [] }),
-    );
+    const integration = db.add(Obj.make(Integration.Integration, { accessToken: Ref.make(token), targets: [] }));
     return { db, integration };
   };
 
@@ -178,10 +176,9 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     const layer = Database.layer(db);
 
     // 1. Discovery: descriptors only — NO local Kanbans created yet.
-    const discovered = await getTrelloBoardsHandler.handler({ integration: Ref.make(integration) }).pipe(
-      Effect.provide(layer),
-      runAndForwardErrors,
-    );
+    const discovered = await getTrelloBoardsHandler
+      .handler({ integration: Ref.make(integration) })
+      .pipe(Effect.provide(layer), runAndForwardErrors);
     expect(discovered.targets).toHaveLength(2);
     const boardA = discovered.targets.find((t) => t.id === 'board-a')!;
     expect(boardA.name).toBe('Board A');
@@ -192,19 +189,17 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     // 2. Selection: record `{ remoteId, name }` for board A. The generic
     // `SetIntegrationTargets` op is covered by its own test; here we just
     // simulate the dialog's effect on `integration.targets`.
-    Obj.change(integration, (mutable) => {
-      const m = mutable as Obj.Mutable<typeof mutable>;
+    Obj.change(integration, (integration) => {
+      const m = integration as Obj.Mutable<typeof integration>;
       m.targets = [{ remoteId: boardA.id, name: boardA.name }];
     });
     expect(integration.targets).toHaveLength(1);
     expect(integration.targets[0].object).toBeUndefined();
 
     // 3. Sync: lazily materializes board A's Kanban + reconciles its cards.
-    const result = await syncTrelloBoardHandler.handler({ integration: Ref.make(integration) }).pipe(
-      stubOperationService,
-      Effect.provide(layer),
-      runAndForwardErrors,
-    );
+    const result = await syncTrelloBoardHandler
+      .handler({ integration: Ref.make(integration) })
+      .pipe(stubOperationService, Effect.provide(layer), runAndForwardErrors);
     expect(result.pulled.added).toBe(1);
 
     // Only board A's Kanban exists — board B was never selected.
@@ -230,22 +225,19 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     const { db, integration } = await setup();
     const layer = Database.layer(db);
 
-    const discovered = await getTrelloBoardsHandler.handler({ integration: Ref.make(integration) }).pipe(
-      Effect.provide(layer),
-      runAndForwardErrors,
-    );
+    const discovered = await getTrelloBoardsHandler
+      .handler({ integration: Ref.make(integration) })
+      .pipe(Effect.provide(layer), runAndForwardErrors);
 
     // Select both boards by recording `{ remoteId, name }` entries.
-    Obj.change(integration, (mutable) => {
-      const m = mutable as Obj.Mutable<typeof mutable>;
+    Obj.change(integration, (integration) => {
+      const m = integration as Obj.Mutable<typeof integration>;
       m.targets = discovered.targets.map((t) => ({ remoteId: t.id, name: t.name }));
     });
 
-    await syncTrelloBoardHandler.handler({ integration: Ref.make(integration) }).pipe(
-      stubOperationService,
-      Effect.provide(layer),
-      runAndForwardErrors,
-    );
+    await syncTrelloBoardHandler
+      .handler({ integration: Ref.make(integration) })
+      .pipe(stubOperationService, Effect.provide(layer), runAndForwardErrors);
 
     const targetA = integration.targets.find((t) => t.remoteId === 'board-a');
     const targetB = integration.targets.find((t) => t.remoteId === 'board-b');

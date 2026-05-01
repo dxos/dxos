@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
@@ -16,19 +16,9 @@ import { Integration } from '@dxos/plugin-integration/types';
 import { meta } from '#meta';
 
 import { type Calendar } from '../types';
-
 import { SyncCalendar } from './definitions';
 
-/**
- * Outer wrapper that hands off to the compute-runtime-resident
- * `GoogleCalendarSync` op. The inner op now handles target iteration and
- * lazy materialization itself, so this op is mostly a dispatch +
- * success/error toast layer.
- */
-const dispatch = (
-  integration: Integration.Integration,
-  calendar: Calendar.Calendar | undefined,
-) =>
+const dispatch = (integration: Integration.Integration, calendar: Calendar.Calendar | undefined) =>
   Effect.gen(function* () {
     const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
     const db = Obj.getDatabase(integration);
@@ -59,34 +49,15 @@ const dispatch = (
 const handler: Operation.WithHandler<typeof SyncCalendar> = SyncCalendar.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      // Per-calendar entry: query for the parent Integration so the inner
-      // sync can always source credentials and target state the same way.
-      // Integration entry: pass through with no `calendar` arg — the inner
-      // op iterates `integration.targets` itself.
-      if ('calendar' in input) {
-        const db = Obj.getDatabase(input.calendar);
-        if (!db) {
-          log.warn('calendar has no database; skipping sync', { calendar: input.calendar.id });
-        } else {
-          const integrations = yield* Effect.promise(() =>
-            db.query(Filter.type(Integration.Integration)).run(),
-          );
-          const parent = integrations.find((integration) =>
-            integration.targets.some(
-              (target) => target.object?.dxn.asEchoDXN()?.echoId === input.calendar.id,
-            ),
-          );
-          if (!parent) {
-            log.warn('no parent Integration found for calendar; skipping sync', { calendar: input.calendar.id });
-          } else {
-            yield* dispatch(parent, input.calendar);
-          }
-        }
+      const integrationObj = yield* Database.load(input.integration).pipe(
+        Effect.provide(Database.layer(Obj.getDatabase(input.integration.target!)!)),
+      );
+
+      if (input.calendar) {
+        const calendar = yield* Database.load(input.calendar);
+        yield* dispatch(integrationObj, calendar);
       } else {
-        const integration = input.integration.target;
-        if (integration) {
-          yield* dispatch(integration, undefined);
-        }
+        yield* dispatch(integrationObj, undefined);
       }
 
       yield* Operation.invoke(LayoutOperation.AddToast, {

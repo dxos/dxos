@@ -45,7 +45,6 @@ export const GetTrelloBoards = Operation.make({
   //   provides `Database.layer(db)` itself.
 });
 
-
 /**
  * Bidirectional reconcile of currently-selected Trello targets in an Integration.
  *

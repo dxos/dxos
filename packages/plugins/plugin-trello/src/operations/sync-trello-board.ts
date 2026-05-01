@@ -13,14 +13,7 @@ import { Kanban } from '@dxos/plugin-kanban/types';
 import { meta } from '#meta';
 
 import { TRELLO_SOURCE } from '../constants';
-import {
-  TrelloCredentials,
-  createCard,
-  fetchBoards,
-  fetchCards,
-  fetchLists,
-  updateCard,
-} from '../services/trello-api';
+import { TrelloCredentials, createCard, fetchBoards, fetchCards, fetchLists, updateCard } from '../services/trello-api';
 import { findOrCreateKanbanForBoard } from '../sync/find-or-create-kanban';
 import { pushBoardCards, reconcileBoardCards } from '../sync/sync-board';
 import { SyncTrelloBoard } from './definitions';
@@ -71,159 +64,158 @@ const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.p
       // boards, no db).
       const outcome = yield* Effect.either(
         Effect.gen(function* () {
-        const integrationObj = yield* Database.load(integration);
+          const integrationObj = yield* Database.load(integration);
 
-      // Fetch the user's boards once so each target can look up its remote
-      // `TrelloBoard` (for board-level fields like `name`). One round-trip
-      // regardless of target count, and we already know `fetchBoards` is part
-      // of the surface area used by `GetTrelloBoards`.
-      const allBoards = yield* fetchBoards();
-      const boardsById = new Map(allBoards.map((b) => [b.id, b]));
+          // Fetch the user's boards once so each target can look up its remote
+          // `TrelloBoard` (for board-level fields like `name`). One round-trip
+          // regardless of target count, and we already know `fetchBoards` is part
+          // of the surface area used by `GetTrelloBoards`.
+          const allBoards = yield* fetchBoards();
+          const boardsById = new Map(allBoards.map((b) => [b.id, b]));
 
-      // Determine which target entries to process and materialize their local
-      // Kanbans on demand. Targets stored without a local object (the dialog
-      // recorded `{ remoteId, name }` only) get a Kanban find-or-created here
-      // and the ref written back; subsequent syncs see `target.object` and
-      // skip materialization. This is where `getSyncTargets`'s read-only
-      // discovery hands off to actual local writes.
-      // Stored target refs use the space-relative form (`dxn:echo:@:...`); the
-      // input `kanbanRef` may be absolute. Compare by echo id to be tolerant.
-      const kanbanFilterId = kanbanRef?.dxn.asEchoDXN()?.echoId;
-      const targetEntries: Array<{
-        entry: typeof integrationObj.targets[number];
-        kanban: Kanban.Kanban;
-        boardId: string;
-        remoteBoard: typeof allBoards[number];
-      }> = [];
-      for (const target of integrationObj.targets) {
-        // Resolve the foreign id: prefer `target.remoteId` (set by the dialog
-        // for selected-but-not-yet-synced targets), fall back to the existing
-        // local object's foreign-key meta (set by older targets that have
-        // already been materialized).
-        let foreignId = target.remoteId;
-        let localObj = target.object?.target;
-        if (foreignId === undefined && localObj) {
-          foreignId = Obj.getMeta(localObj).keys.find((k) => k.source === TRELLO_SOURCE)?.id;
-        }
-        if (foreignId === undefined) continue;
-        const remoteBoard = boardsById.get(foreignId);
-        if (!remoteBoard) continue;
-
-        // Materialize the local Kanban if we don't have one yet, and write
-        // the ref back into the target so subsequent syncs skip this branch.
-        if (!localObj) {
-          localObj = yield* findOrCreateKanbanForBoard(remoteBoard);
-          const materializedRef = Ref.make(localObj);
-          Obj.change(integrationObj, (mutableObj) => {
-            const mutable = mutableObj as Obj.Mutable<typeof mutableObj>;
-            const idx = mutable.targets.findIndex((t) => t.remoteId === foreignId);
-            if (idx >= 0) {
-              mutable.targets[idx] = { ...mutable.targets[idx], object: materializedRef };
+          // Determine which target entries to process and materialize their local
+          // Kanbans on demand. Targets stored without a local object (the dialog
+          // recorded `{ remoteId, name }` only) get a Kanban find-or-created here
+          // and the ref written back; subsequent syncs see `target.object` and
+          // skip materialization. This is where `getSyncTargets`'s read-only
+          // discovery hands off to actual local writes.
+          // Stored target refs use the space-relative form (`dxn:echo:@:...`); the
+          // input `kanbanRef` may be absolute. Compare by echo id to be tolerant.
+          const kanbanFilterId = kanbanRef?.dxn.asEchoDXN()?.echoId;
+          const targetEntries: Array<{
+            entry: (typeof integrationObj.targets)[number];
+            kanban: Kanban.Kanban;
+            boardId: string;
+            remoteBoard: (typeof allBoards)[number];
+          }> = [];
+          for (const target of integrationObj.targets) {
+            // Resolve the foreign id: prefer `target.remoteId` (set by the dialog
+            // for selected-but-not-yet-synced targets), fall back to the existing
+            // local object's foreign-key meta (set by older targets that have
+            // already been materialized).
+            let foreignId = target.remoteId;
+            let localObj = target.object?.target;
+            if (foreignId === undefined && localObj) {
+              foreignId = Obj.getMeta(localObj).keys.find((k) => k.source === TRELLO_SOURCE)?.id;
             }
-          });
-        }
+            if (foreignId === undefined) continue;
+            const remoteBoard = boardsById.get(foreignId);
+            if (!remoteBoard) continue;
 
-        const targetEchoId = Ref.make(localObj).dxn.asEchoDXN()?.echoId;
-        if (kanbanFilterId && targetEchoId !== kanbanFilterId) continue;
-        if (!Obj.instanceOf(Kanban.Kanban, localObj)) continue;
-        if (!Kanban.isKanbanItems(localObj)) continue;
+            // Materialize the local Kanban if we don't have one yet, and write
+            // the ref back into the target so subsequent syncs skip this branch.
+            if (!localObj) {
+              localObj = yield* findOrCreateKanbanForBoard(remoteBoard);
+              const materializedRef = Ref.make(localObj);
+              Obj.change(integrationObj, (integrationObj) => {
+                const mutable = integrationObj as Obj.Mutable<typeof integrationObj>;
+                const idx = mutable.targets.findIndex((t) => t.remoteId === foreignId);
+                if (idx >= 0) {
+                  mutable.targets[idx] = { ...mutable.targets[idx], object: materializedRef };
+                }
+              });
+            }
 
-        targetEntries.push({ entry: target, kanban: localObj, boardId: foreignId, remoteBoard });
-      }
+            const targetEchoId = Ref.make(localObj).dxn.asEchoDXN()?.echoId;
+            if (kanbanFilterId && targetEchoId !== kanbanFilterId) continue;
+            if (!Obj.instanceOf(Kanban.Kanban, localObj)) continue;
+            if (!Kanban.isKanbanItems(localObj)) continue;
 
-      const perTarget = yield* Effect.forEach(
-        targetEntries,
-        ({ kanban: targetKanban, boardId, remoteBoard }) =>
-          Effect.gen(function* () {
-            const result = yield* Effect.either(
+            targetEntries.push({ entry: target, kanban: localObj, boardId: foreignId, remoteBoard });
+          }
+
+          const perTarget = yield* Effect.forEach(
+            targetEntries,
+            ({ kanban: targetKanban, boardId, remoteBoard }) =>
               Effect.gen(function* () {
-                // The trello-api functions return `Effect<T, HttpClientError, HttpClient>`
-                // with retry+timeout baked in. The HttpClient layer is provided at the
-                // operation boundary below. Trello's cards endpoint doesn't support a
-                // delta cursor, so we full-fetch every sync and don't read/write
-                // `target.cursor` here.
-                const lists = yield* fetchLists(boardId);
-                const cards = yield* fetchCards(boardId);
-                const reconcileResult = yield* reconcileBoardCards(
-                  integrationObj,
-                  targetKanban,
-                  remoteBoard,
-                  cards,
-                  lists,
+                const result = yield* Effect.either(
+                  Effect.gen(function* () {
+                    // The trello-api functions return `Effect<T, HttpClientError, HttpClient>`
+                    // with retry+timeout baked in. The HttpClient layer is provided at the
+                    // operation boundary below. Trello's cards endpoint doesn't support a
+                    // delta cursor, so we full-fetch every sync and don't read/write
+                    // `target.cursor` here.
+                    const lists = yield* fetchLists(boardId);
+                    const cards = yield* fetchCards(boardId);
+                    const reconcileResult = yield* reconcileBoardCards(
+                      integrationObj,
+                      targetKanban,
+                      remoteBoard,
+                      cards,
+                      lists,
+                    );
+
+                    const pushResult = yield* pushBoardCards(integrationObj, targetKanban, lists, {
+                      create: ({ listId, name, desc }) =>
+                        createCard({ idList: listId, name, desc }).pipe(
+                          Effect.map((card) => ({ id: card.id })),
+                          Effect.mapError((error) => (error instanceof Error ? error : new Error(String(error)))),
+                        ),
+                      update: (foreignId, payload) =>
+                        updateCard(foreignId, {
+                          name: payload.name,
+                          desc: payload.desc,
+                          idList: payload.listId,
+                        }).pipe(
+                          Effect.map(() => undefined),
+                          Effect.mapError((error) => (error instanceof Error ? error : new Error(String(error)))),
+                        ),
+                    });
+
+                    return { reconcileResult, pushResult };
+                  }),
                 );
 
-                const pushResult = yield* pushBoardCards(integrationObj, targetKanban, lists, {
-                  create: ({ listId, name, desc }) =>
-                    createCard({ idList: listId, name, desc }).pipe(
-                      Effect.map((card) => ({ id: card.id })),
-                      Effect.mapError((error) => (error instanceof Error ? error : new Error(String(error)))),
-                    ),
-                  update: (foreignId, payload) =>
-                    updateCard(foreignId, {
-                      name: payload.name,
-                      desc: payload.desc,
-                      idList: payload.listId,
-                    }).pipe(
-                      Effect.map(() => undefined),
-                      Effect.mapError((error) => (error instanceof Error ? error : new Error(String(error)))),
-                    ),
+                // Update the target entry in place with success/failure status.
+                // Match by `remoteId` (stable across runs) with a fallback to
+                // local-object echo id for legacy entries that lack `remoteId`.
+                Obj.change(integrationObj, (integrationObj) => {
+                  const m = integrationObj as Obj.Mutable<typeof integrationObj>;
+                  const idx = m.targets.findIndex((t) => {
+                    if (t.remoteId !== undefined) return t.remoteId === boardId;
+                    const localId = t.object?.target
+                      ? Obj.getMeta(t.object.target).keys.find((k) => k.source === TRELLO_SOURCE)?.id
+                      : undefined;
+                    return localId === boardId;
+                  });
+                  if (idx < 0) return;
+                  if (result._tag === 'Right') {
+                    m.targets[idx] = {
+                      ...m.targets[idx],
+                      lastSyncAt: new Date().toISOString(),
+                      lastError: undefined,
+                    };
+                  } else {
+                    m.targets[idx] = {
+                      ...m.targets[idx],
+                      lastError: String((result.left as Error).message ?? result.left),
+                    };
+                  }
                 });
 
-                return { reconcileResult, pushResult };
+                return result._tag === 'Right' ? result.right : undefined;
               }),
-            );
+            { concurrency: TARGET_CONCURRENCY },
+          );
 
-            // Update the target entry in place with success/failure status.
-            // Match by `remoteId` (stable across runs) with a fallback to
-            // local-object echo id for legacy entries that lack `remoteId`.
-            Obj.change(integrationObj, (integrationObj) => {
-              const m = integrationObj as Obj.Mutable<typeof integrationObj>;
-              const idx = m.targets.findIndex((t) => {
-                if (t.remoteId !== undefined) return t.remoteId === boardId;
-                const localId = t.object?.target ? Obj.getMeta(t.object.target).keys.find((k) => k.source === TRELLO_SOURCE)?.id : undefined;
-                return localId === boardId;
-              });
-              if (idx < 0) return;
-              if (result._tag === 'Right') {
-                m.targets[idx] = {
-                  ...m.targets[idx],
-                  lastSyncAt: new Date().toISOString(),
-                  lastError: undefined,
-                };
-              } else {
-                m.targets[idx] = {
-                  ...m.targets[idx],
-                  lastError: String((result.left as Error).message ?? result.left),
-                };
-              }
-            });
+          // Aggregate counts across successful targets.
+          let pulled = { added: 0, updated: 0, removed: 0 };
+          let pushed = { created: 0, updated: 0 };
+          for (const r of perTarget) {
+            if (!r) continue;
+            pulled = {
+              added: pulled.added + r.reconcileResult.added,
+              updated: pulled.updated + r.reconcileResult.updated,
+              removed: pulled.removed + r.reconcileResult.removed,
+            };
+            pushed = {
+              created: pushed.created + r.pushResult.created,
+              updated: pushed.updated + r.pushResult.updated,
+            };
+          }
 
-            return result._tag === 'Right' ? result.right : undefined;
-          }),
-        { concurrency: TARGET_CONCURRENCY },
-      );
-
-      // Aggregate counts across successful targets.
-      let pulled = { added: 0, updated: 0, removed: 0 };
-      let pushed = { created: 0, updated: 0 };
-      for (const r of perTarget) {
-        if (!r) continue;
-        pulled = {
-          added: pulled.added + r.reconcileResult.added,
-          updated: pulled.updated + r.reconcileResult.updated,
-          removed: pulled.removed + r.reconcileResult.removed,
-        };
-        pushed = {
-          created: pushed.created + r.pushResult.created,
-          updated: pushed.updated + r.pushResult.updated,
-        };
-      }
-
-        return { pulled, pushed };
-        }).pipe(
-          Effect.provide(Database.layer(db)),
-          Effect.provide(TrelloCredentials.fromIntegration(integration)),
-        ),
+          return { pulled, pushed };
+        }).pipe(Effect.provide(Database.layer(db)), Effect.provide(TrelloCredentials.fromIntegration(integration))),
       );
 
       // Toasting is UX-only and the layout/capability service isn't always

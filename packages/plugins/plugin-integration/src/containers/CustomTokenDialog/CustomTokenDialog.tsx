@@ -47,18 +47,7 @@ export type CustomTokenDialogProps = {
 };
 
 /**
- * Dialog for creating an Integration backed by a manually-entered access
- * token. Used by the "Custom Token" provider — no OAuth flow runs; the user
- * supplies `{ source, account?, token }` directly. On submit the dialog
- * delegates to `IntegrationCoordinator.createCustomIntegration`, which
- * persists the AccessToken + Integration, fires `AccessTokenCreated`, and
- * navigates to the new article — same finalization path as the OAuth flow.
- *
- * Layout mirrors `CreateObjectDialog`: a `Dialog.Content` with a header and
- * body whose body hosts a `Form.Root` → `Form.Viewport` → `Form.Content`
- * with `Form.FieldSet` + `Form.Submit`. The dialog is opened by the
- * coordinator with `blockAlign: 'start'` so it sits at the top of the
- * viewport like the create-object flow.
+ * Dialog for integrations created with a manually entered access token (no OAuth flow).
  */
 export const CustomTokenDialog = ({ db, providerId, providerLabel }: CustomTokenDialogProps) => {
   const { t } = useTranslation(meta.id);

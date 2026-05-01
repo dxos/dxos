@@ -19,10 +19,6 @@ const DEVTOOLS_TYPE = `${meta.id}.devtools`;
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      // Devtools node — attaches at root and under each Space (the latter
-      // gains an extra "Generate objects" sub-action keyed off the active
-      // space). `position: 'fallback'` pins it to the bottom of its parent's
-      // children list.
       GraphBuilder.createExtension({
         id: 'devtools',
         match: NodeMatcher.whenAny(NodeMatcher.whenRoot, NodeMatcher.whenNodeType(SPACE_TYPE)),

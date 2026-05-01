@@ -12,5 +12,6 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/capabilities/index.ts'
       - '--entryPoint=src/cli/index.ts'
+      - '--entryPoint=src/hooks/index.ts'
       - '--entryPoint=src/operations/index.ts'
       - '--entryPoint=src/types/index.ts'

@@ -9,10 +9,11 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
+import { useIntegrationProviderById } from '#hooks';
 import { meta } from '#meta';
+import type { RemoteTarget } from '#types';
 
 import { SYNC_TARGETS_DIALOG } from '../constants';
-import { type RemoteTarget, useIntegrationProviderById } from '../capabilities/integration-provider';
 import { type Integration } from '../types';
 
 export type UseSyncTargetsChecklistResult = {

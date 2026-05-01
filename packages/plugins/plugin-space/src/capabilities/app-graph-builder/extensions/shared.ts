@@ -178,9 +178,7 @@ export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.An
       let holder: unknown = viewSnapshot;
       for (const segment of path) {
         holder =
-          holder == null || typeof holder !== 'object'
-            ? undefined
-            : (holder as Record<string, unknown>)[segment];
+          holder == null || typeof holder !== 'object' ? undefined : (holder as Record<string, unknown>)[segment];
       }
       // Path resolved to a non-null value → this instance is a "view". Path
       // resolved to null/undefined → it's a regular object that happens to

@@ -15,11 +15,14 @@ import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 
 import { IntegrationAuthButton } from '#components';
 import { CustomTokenDialog, IntegrationArticle, SyncTargetsChecklist } from '#containers';
+import {
+  Integration,
+  IntegrationProvider,
+  IntegrationProviderAnnotationId,
+  type IntegrationProviderEntry,
+} from '#types';
 
 import { CUSTOM_TOKEN_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
-import { Integration, IntegrationProviderAnnotationId } from '../types';
-
-import { IntegrationProvider, type IntegrationProvider as IntegrationProviderType } from './integration-provider';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -31,11 +34,6 @@ export default Capability.makeModule(() =>
           <IntegrationArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
-      // Inline OAuth connect button used by inbox/calendar/etc. when they
-      // detect a missing integration mid-flow. Independent of the
-      // create-Integration dialog path. Caller passes `providerId` to
-      // select a specific provider entry — needed because multiple
-      // providers can share the same OAuth domain (Gmail / Calendar).
       Surface.create({
         id: 'integration-auth',
         role: 'integration--auth',
@@ -50,7 +48,10 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: SYNC_TARGETS_DIALOG,
-        filter: AppSurface.component<ComponentProps<typeof SyncTargetsChecklist>>(AppSurface.Dialog, SYNC_TARGETS_DIALOG),
+        filter: AppSurface.component<ComponentProps<typeof SyncTargetsChecklist>>(
+          AppSurface.Dialog,
+          SYNC_TARGETS_DIALOG,
+        ),
         component: ({ data }) => <SyncTargetsChecklist {...data.props} />,
       }),
       Surface.create({
@@ -58,12 +59,6 @@ export default Capability.makeModule(() =>
         filter: AppSurface.component<ComponentProps<typeof CustomTokenDialog>>(AppSurface.Dialog, CUSTOM_TOKEN_DIALOG),
         component: ({ data }) => <CustomTokenDialog {...data.props} />,
       }),
-      // Form-input renderer for the Integration provider selector. The
-      // create-Integration form's `providerId` field carries
-      // `IntegrationProviderAnnotationId`; this surface filters by that and
-      // renders a dropdown populated from currently-registered
-      // `IntegrationProvider` capabilities — so adding/removing a service
-      // plugin updates the form without rebuilding the schema.
       Surface.create({
         id: 'integration-provider-selector',
         role: 'form-input',
@@ -74,7 +69,7 @@ export default Capability.makeModule(() =>
           return !!annotation;
         },
         component: ({ data: { fieldPropertyAst }, ...inputProps }) => {
-          const providers = useCapabilities(IntegrationProvider).flat() as IntegrationProviderType[];
+          const providers = useCapabilities(IntegrationProvider).flat() as IntegrationProviderEntry[];
           const options = useMemo(
             () => providers.map((provider) => ({ value: provider.id, label: provider.label ?? provider.id })),
             [providers],

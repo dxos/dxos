@@ -15,15 +15,13 @@ import { Integration } from '../types';
 const INTEGRATION_OPERATION = `${meta.id}.operation`;
 
 export const AccessTokenCreated = Operation.make({
+  // TODO(wittjosiah): declare `services: [Database.Service]` once composer's OperationInvoker is wired
+  //   with a `databaseResolver`. Today, declaring it forces DynamicRuntime validation to fail before any
+  //   handler runs because the managed runtime doesn't carry per-space Database. Handlers that need
+  //   Database derive it from input objects via `Obj.getDatabase` and provide `Database.layer(db)` themselves.
   meta: { key: `${INTEGRATION_OPERATION}.access-token-created`, name: 'Access Token Created' },
   input: Schema.Struct({ accessToken: AccessToken.AccessToken }),
   output: Schema.Void,
-  // TODO(wittjosiah): declare `services: [Database.Service]` once composer's
-  //   OperationInvoker is wired with a `databaseResolver`. Today, declaring it
-  //   forces DynamicRuntime validation to fail before any handler runs because
-  //   the managed runtime doesn't carry per-space Database. Handlers that need
-  //   Database derive it from input objects via `Obj.getDatabase` and provide
-  //   `Database.layer(db)` themselves.
 });
 
 /**
@@ -33,6 +31,7 @@ export const AccessTokenCreated = Operation.make({
  * generic create exists for "set up the integration first, attach targets later".
  */
 export const CreateIntegration = Operation.make({
+  // TODO(wittjosiah): Handler should provide `Database.layer(db)` itself for now (same as AccessTokenCreated).
   meta: {
     key: `${INTEGRATION_OPERATION}.create-integration`,
     name: 'Create Integration',
@@ -47,8 +46,6 @@ export const CreateIntegration = Operation.make({
     }).pipe(Schema.optional),
   }),
   output: Integration.Integration,
-  // TODO(wittjosiah): see AccessTokenCreated above. Handler should provide
-  //   `Database.layer(db)` itself for now.
 });
 
 /**

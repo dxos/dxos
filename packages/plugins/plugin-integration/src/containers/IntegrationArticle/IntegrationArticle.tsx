@@ -12,9 +12,9 @@ import { Button, useTranslation } from '@dxos/react-ui';
 import { Form, Settings } from '@dxos/react-ui-form';
 
 import { useSyncIntegration, useSyncTargetsChecklist } from '#hooks';
+import { useIntegrationProviderById } from '#hooks';
 import { meta } from '#meta';
 
-import { useIntegrationProviderById } from '../../capabilities/integration-provider';
 import { type Integration } from '../../types';
 
 export type IntegrationArticleProps = AppSurface.ObjectArticleProps<Integration.Integration>;
@@ -82,7 +82,6 @@ export const IntegrationArticle = ({ subject }: IntegrationArticleProps) => {
             </Button>
           </Settings.Item>
         )}
-
       </Settings.Section>
 
       {/* Hide the entire Sync targets section for providers that don't sync
@@ -105,12 +104,7 @@ export const IntegrationArticle = ({ subject }: IntegrationArticleProps) => {
             </Settings.Panel>
           ) : (
             subject.targets.map((_target, idx) => (
-              <TargetRow
-                key={idx}
-                integration={subject}
-                targetIndex={idx}
-                optionsSchema={provider?.optionsSchema}
-              />
+              <TargetRow key={idx} integration={subject} targetIndex={idx} optionsSchema={provider?.optionsSchema} />
             ))
           )}
         </Settings.Section>
@@ -147,8 +141,8 @@ const TargetRow = ({
 
   const handleValuesChanged = useCallback(
     (values: Record<string, unknown>) => {
-      Obj.change(integration, (mutable) => {
-        const m = mutable as Obj.Mutable<typeof mutable>;
+      Obj.change(integration, (integration) => {
+        const m = integration as Obj.Mutable<typeof integration>;
         const next = [...m.targets];
         if (!next[targetIndex]) return;
         next[targetIndex] = { ...next[targetIndex], options: { ...values } };

@@ -34,11 +34,11 @@
       "node": "./dist/lib/node-esm/cli/index.mjs",
       "types": "./dist/types/src/cli/index.d.ts"
     },
-    "./capabilities": {
-      "source": "./src/capabilities/index.ts",
-      "browser": "./dist/lib/browser/capabilities/index.mjs",
-      "node": "./dist/lib/node-esm/capabilities/index.mjs",
-      "types": "./dist/types/src/capabilities/index.d.ts"
+    "./hooks": {
+      "source": "./src/hooks/index.ts",
+      "browser": "./dist/lib/browser/hooks/index.mjs",
+      "node": "./dist/lib/node-esm/hooks/index.mjs",
+      "types": "./dist/types/src/hooks/index.d.ts"
     },
     "./operations": {
       "source": "./src/operations/index.ts",

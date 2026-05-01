@@ -67,10 +67,7 @@ const viewMethods: Omit<ViewAnnotationModule, keyof AnnotationHelper<EchoViewRef
     const holder = getHolderAtPath(object, path) as EchoViewRefLike | undefined;
     return holder?.target;
   },
-  tryLoadAtPath(
-    object: Obj.Unknown,
-    path: EchoViewRefPath,
-  ): Effect.Effect<View.View | undefined, never, never> {
+  tryLoadAtPath(object: Obj.Unknown, path: EchoViewRefPath): Effect.Effect<View.View | undefined, never, never> {
     return Effect.gen(function* () {
       const holder = getHolderAtPath(object, path) as EchoViewRefLike | undefined;
       if (typeof holder?.load !== 'function') {

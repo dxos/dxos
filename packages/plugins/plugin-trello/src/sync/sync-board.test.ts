@@ -56,9 +56,7 @@ describe('reconcileBoardCards (pull)', () => {
         token: 'apikey:usertoken',
       }),
     );
-    const integration = db.add(
-      Obj.make(Integration.Integration, { accessToken: Ref.make(token), targets: [] }),
-    );
+    const integration = db.add(Obj.make(Integration.Integration, { accessToken: Ref.make(token), targets: [] }));
     return { db, integration };
   };
 
@@ -107,10 +105,7 @@ describe('reconcileBoardCards (pull)', () => {
 
     const board = makeRemoteBoard();
     const lists = [makeRemoteList('list1', 'To Do'), makeRemoteList('list2', 'Done')];
-    const cards = [
-      makeRemoteCard('card1', 'list1', 'Task A'),
-      makeRemoteCard('card2', 'list2', 'Task B'),
-    ];
+    const cards = [makeRemoteCard('card1', 'list1', 'Task A'), makeRemoteCard('card2', 'list2', 'Task B')];
 
     const result = await Effect.gen(function* () {
       return yield* reconcileBoardCards(integration, kanban, board, cards, lists);
@@ -212,8 +207,8 @@ describe('reconcileBoardCards (pull)', () => {
 
     // User edits the description locally.
     const localItem = (kanban.spec.kind === 'items' ? kanban.spec.items[0]?.target : undefined) as Obj.Unknown;
-    Obj.change(localItem, (m) => {
-      (m as unknown as Record<string, unknown>).description = 'local edit';
+    Obj.change(localItem, (localItem) => {
+      (localItem as unknown as Record<string, unknown>).description = 'local edit';
     });
 
     // Pull again with unchanged remote — local edit must survive.
@@ -251,8 +246,8 @@ describe('reconcileBoardCards (pull)', () => {
     }).pipe(Effect.provide(layer), runAndForwardErrors);
 
     const localItem = (kanban.spec.kind === 'items' ? kanban.spec.items[0]?.target : undefined) as Obj.Unknown;
-    Obj.change(localItem, (m) => {
-      (m as unknown as Record<string, unknown>).description = 'local edit';
+    Obj.change(localItem, (localItem) => {
+      (localItem as unknown as Record<string, unknown>).description = 'local edit';
     });
 
     // Remote also changed. Remote wins.
@@ -289,13 +284,7 @@ describe('reconcileBoardCards (pull)', () => {
     }).pipe(Effect.provide(layer), runAndForwardErrors);
 
     const result = await Effect.gen(function* () {
-      return yield* reconcileBoardCards(
-        integration,
-        kanban,
-        board,
-        [makeRemoteCard('card1', 'list1', 'A')],
-        lists,
-      );
+      return yield* reconcileBoardCards(integration, kanban, board, [makeRemoteCard('card1', 'list1', 'A')], lists);
     }).pipe(Effect.provide(layer), runAndForwardErrors);
 
     expect(result.removed).toBe(1);
@@ -337,9 +326,7 @@ describe('pushBoardCards (push)', () => {
         token: 'apikey:usertoken',
       }),
     );
-    const integration = db.add(
-      Obj.make(Integration.Integration, { accessToken: Ref.make(token), targets: [] }),
-    );
+    const integration = db.add(Obj.make(Integration.Integration, { accessToken: Ref.make(token), targets: [] }));
     return { db, integration };
   };
 
@@ -386,8 +373,8 @@ describe('pushBoardCards (push)', () => {
     const { db, integration } = await setup();
 
     // Seed a snapshot so we can detect a local divergence on `description` only.
-    Obj.change(integration, (m) => {
-      const mut = m as Obj.Mutable<typeof m>;
+    Obj.change(integration, (integration) => {
+      const mut = integration as Obj.Mutable<typeof integration>;
       mut.snapshots = {
         card1: { name: 'Task A', description: 'orig', listName: 'To Do', url: '', closed: false },
       };
@@ -432,8 +419,8 @@ describe('pushBoardCards (push)', () => {
   test('snapshot-equal item is not pushed (no bouncing)', async ({ expect }) => {
     const { db, integration } = await setup();
 
-    Obj.change(integration, (m) => {
-      const mut = m as Obj.Mutable<typeof m>;
+    Obj.change(integration, (integration) => {
+      const mut = integration as Obj.Mutable<typeof integration>;
       mut.snapshots = {
         card1: { name: 'Pulled', description: '', listName: 'To Do', url: '', closed: false },
       };

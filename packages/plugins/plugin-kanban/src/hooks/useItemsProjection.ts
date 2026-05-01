@@ -47,10 +47,9 @@ export const useItemsProjection = (kanban: Kanban.KanbanItems): ProjectionModel 
 
     const fields = Atom.make(() => [fieldProjection.field]);
 
-    const stub: Pick<
-      ProjectionModel,
-      'tryGetFieldProjection' | 'getFieldProjections' | 'getHiddenProperties'
-    > & { fields: typeof fields } = {
+    const stub: Pick<ProjectionModel, 'tryGetFieldProjection' | 'getFieldProjections' | 'getHiddenProperties'> & {
+      fields: typeof fields;
+    } = {
       fields,
       tryGetFieldProjection: (id: string) => (id === pivotField ? fieldProjection : undefined),
       // Card-body renderer asks for the projection's field list. We don't surface

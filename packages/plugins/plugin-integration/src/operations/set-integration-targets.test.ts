@@ -27,14 +27,8 @@ describe('SetIntegrationTargets', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([
-      Integration.Integration,
-      AccessToken.AccessToken,
-      Expando.Expando,
-    ]);
-    const token = db.add(
-      Obj.make(AccessToken.AccessToken, { source: 'example.com', token: 'tok', account: 'me' }),
-    );
+    await graph.schemaRegistry.register([Integration.Integration, AccessToken.AccessToken, Expando.Expando]);
+    const token = db.add(Obj.make(AccessToken.AccessToken, { source: 'example.com', token: 'tok', account: 'me' }));
     return { db, token };
   };
 
@@ -52,9 +46,7 @@ describe('SetIntegrationTargets', () => {
 
   test('appends remote-id selections not previously in targets', async ({ expect }) => {
     const { db, token } = await setup();
-    const integration = db.add(
-      Integration.make({ accessToken: Ref.make(token), targets: [] }),
-    );
+    const integration = db.add(Integration.make({ accessToken: Ref.make(token), targets: [] }));
 
     const result = await invokeSet(db, integration, [{ remoteId: 'foo', name: 'Foo' }]);
     expect(result.added).toBe(1);
@@ -109,9 +101,7 @@ describe('SetIntegrationTargets', () => {
     expect(integration.targets.length).toBe(1);
     expect(integration.targets[0].cursor).toBe('sentinel');
     expect(integration.targets[0].lastSyncAt).toBe(lastSyncAt);
-    expect(integration.targets[0].object?.dxn.asEchoDXN()?.echoId).toBe(
-      Ref.make(obj).dxn.asEchoDXN()?.echoId,
-    );
+    expect(integration.targets[0].object?.dxn.asEchoDXN()?.echoId).toBe(Ref.make(obj).dxn.asEchoDXN()?.echoId);
   });
 
   test('leaves auto-created targets (no remoteId) untouched on submit', async ({ expect }) => {

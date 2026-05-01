@@ -15,9 +15,3 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 
 export { IntegrationCoordinator } from './integration-coordinator';
-export {
-  IntegrationProvider,
-  type OnTokenCreated,
-  type RemoteTarget,
-  useIntegrationProvider,
-} from './integration-provider';

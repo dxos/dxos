@@ -19,8 +19,6 @@ const whenSpace = (node: Node.Node): Option.Option<Space> =>
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      // Daily-summary entry attaches directly under each Space (formerly under
-      // the alternate-tree settings panel).
       GraphBuilder.createExtension({
         id: 'space-settings-daily-summary',
         match: whenSpace,

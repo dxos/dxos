@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import {
   IntegrationProvider as IntegrationProviderCapability,
   type OnTokenCreated,
-} from '@dxos/plugin-integration/capabilities';
+} from '@dxos/plugin-integration/types';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { TRELLO_SOURCE } from '../constants';

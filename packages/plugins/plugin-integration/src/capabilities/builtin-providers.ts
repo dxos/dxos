@@ -5,29 +5,16 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { OAuthProvider } from '@dxos/protocols';
 
-import { IntegrationProvider } from './integration-provider';
+import { IntegrationProvider, type IntegrationProviderEntry } from '#types';
+
+import { CUSTOM_PROVIDER_ID } from '../constants';
 
 /**
- * Built-in `IntegrationProvider` entries:
- *
- *  - **OAuth presets** (GitHub, Linear, Slack) that don't yet have a dedicated
- *    service plugin. They register `id`, `source`, `label`, and `oauth` so the
- *    provider shows up in the "Add Object → Integration" picker; sync ops and
- *    `onTokenCreated` are absent. As real service plugins land
- *    (plugin-github, plugin-linear, plugin-slack), each contributes its own
- *    `IntegrationProvider` and the matching entry here should be removed.
- *
- *  - **Custom** — manual access-token entry. No OAuth flow; the user types
- *    `source`, `account`, `token` into a dedicated dialog. The integration
- *    coordinator routes provider entries with no `oauth` through the custom
- *    dialog instead of the OAuth popup. No sync support — purely a credential
- *    holder for ad-hoc services.
+ * Built-in `IntegrationProvider` entries: custom token + stub OAuth presets
+ * awaiting dedicated service plugins.
  */
-export const CUSTOM_PROVIDER_ID = 'custom';
-
-export default Capability.makeModule<IntegrationProvider[]>(
+export default Capability.makeModule<IntegrationProviderEntry[]>(
   Effect.fnUntraced(function* () {
     return Capability.contributes(IntegrationProvider, [
       {
@@ -36,6 +23,8 @@ export default Capability.makeModule<IntegrationProvider[]>(
         source: '',
         label: 'Custom Token',
       },
+      // TODO(wittjosiah): Implement github, linear, slack as dedicated plugins instead of presets.
+      /*
       {
         id: 'github',
         source: 'github.com',
@@ -63,6 +52,7 @@ export default Capability.makeModule<IntegrationProvider[]>(
           scopes: ['channels:read', 'chat:write', 'users:read'],
         },
       },
+      */
     ]);
   }),
 );

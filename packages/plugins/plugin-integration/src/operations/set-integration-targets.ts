@@ -43,10 +43,10 @@ const handler: Operation.WithHandler<typeof SetIntegrationTargets> = SetIntegrat
         let added = 0;
         let removed = 0;
 
-        Obj.change(obj, (mutableObj) => {
-          const mutable = mutableObj as Obj.Mutable<typeof mutableObj>;
+        Obj.change(obj, (obj) => {
+          const mutable = obj as Obj.Mutable<typeof obj>;
 
-          const next: typeof obj.targets[number][] = [];
+          const next: (typeof obj.targets)[number][] = [];
           for (const target of obj.targets) {
             // Auto-created targets with no remoteId aren't touched by the
             // dialog (the user has no way to deselect them) — keep as-is.

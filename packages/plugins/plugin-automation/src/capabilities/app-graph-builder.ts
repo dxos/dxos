@@ -21,10 +21,6 @@ const whenSpace = (node: Node.Node): Option.Option<Space> =>
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      // Automations + Functions entries attach directly under each Space
-      // (formerly under the alternate-tree settings panel). `fallback`
-      // sinks them to the bottom of the Space's children alongside Database
-      // and Devtools, away from the user's day-to-day content.
       GraphBuilder.createExtension({
         id: 'space-settings-automation',
         match: whenSpace,

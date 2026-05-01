@@ -14,13 +14,12 @@ import { withAuthorization } from '@dxos/functions';
 import {
   IntegrationProvider as IntegrationProviderCapability,
   type OnTokenCreated,
-} from '@dxos/plugin-integration/capabilities';
+} from '@dxos/plugin-integration/types';
 import { OAuthProvider } from '@dxos/protocols';
 
+import { GOOGLE_INTEGRATION_SOURCE } from '../constants';
 import { GetGoogleCalendars, SyncCalendar, SyncMailbox } from '../operations/definitions';
 import { CalendarSyncOptions, Mailbox, SyncOptions } from '../types';
-
-const GOOGLE_SOURCE = 'google.com';
 
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),
@@ -35,9 +34,7 @@ const fillAccountEmail = (accessToken: { token: string; account?: string }) =>
   Effect.gen(function* () {
     if (!accessToken.token || accessToken.account) return undefined;
 
-    const httpClient = yield* HttpClient.HttpClient.pipe(
-      Effect.map(withAuthorization(accessToken.token, 'Bearer')),
-    );
+    const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(accessToken.token, 'Bearer')));
     const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
 
     const userInfo = yield* HttpClientRequest.get('https://www.googleapis.com/oauth2/v3/userinfo').pipe(
@@ -63,10 +60,6 @@ const gmailOnTokenCreated: OnTokenCreated = ({ accessToken, integration }) =>
       });
     }
 
-    // Hardcode the single Mailbox target. The user can't change which
-    // mailbox is synced — there's only one. The actual filter/date-range
-    // configuration goes on the target's `options` and is editable via the
-    // integration article.
     const db = Obj.getDatabase(integration);
     if (!db) return;
     const mailbox = Mailbox.make({
@@ -74,9 +67,9 @@ const gmailOnTokenCreated: OnTokenCreated = ({ accessToken, integration }) =>
     });
     db.add(mailbox);
     Obj.change(integration, (integration) => {
-      const m = integration as Obj.Mutable<typeof integration>;
-      m.targets = [
-        ...m.targets,
+      const mutable = integration as Obj.Mutable<typeof integration>;
+      mutable.targets = [
+        ...mutable.targets,
         {
           object: Ref.make(mailbox),
           options: {} as Record<string, unknown>,
@@ -85,12 +78,7 @@ const gmailOnTokenCreated: OnTokenCreated = ({ accessToken, integration }) =>
     });
   }).pipe(Effect.mapError((error) => (error instanceof Error ? error : new Error(String(error)))));
 
-/**
- * onTokenCreated for Calendar / YouTube: just fills the account email.
- * Targets for Calendar are picked via `getSyncTargets` (one per
- * subscribed Google calendar). YouTube has no targets yet (TODO).
- */
-const sharedOnTokenCreated: OnTokenCreated = ({ accessToken }) =>
+const calendarOnTokenCreated: OnTokenCreated = ({ accessToken }) =>
   Effect.gen(function* () {
     const email = yield* fillAccountEmail(accessToken);
     if (email) {
@@ -101,31 +89,18 @@ const sharedOnTokenCreated: OnTokenCreated = ({ accessToken }) =>
   }).pipe(Effect.mapError((error) => (error instanceof Error ? error : new Error(String(error)))));
 
 /**
- * Stable provider ids. Exported so callers (e.g. inbox / calendar
- * `Surface.Surface role='integration--auth'`) can reference them by name.
+ * Stable provider ids for auth surfaces (`role: 'integration--auth'`).
  */
 export const GMAIL_PROVIDER_ID = 'gmail';
-export const GOOGLE_CALENDAR_PROVIDER_ID = 'google-calendar';
-export const YOUTUBE_PROVIDER_ID = 'youtube';
 
-/**
- * Contributes three `IntegrationProvider` entries for Google services
- * (Gmail, Google Calendar, YouTube). All three share `source: 'google.com'`
- * — they go through the same Google OAuth flow — but request distinct
- * scopes so the resulting AccessToken has only the minimum permissions
- * needed for that service. `IntegrationProvider.id` disambiguates them.
- *
- * Sync ops aren't wired here yet; the existing inbox/calendar handlers
- * remain the source of sync logic until they migrate onto the integration
- * pipeline. YouTube is OAuth-only for now (no sync ops, no targets) — left
- * as a TODO follow-up.
- */
+export const GOOGLE_CALENDAR_PROVIDER_ID = 'google-calendar';
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(IntegrationProviderCapability, [
       {
         id: GMAIL_PROVIDER_ID,
-        source: GOOGLE_SOURCE,
+        source: GOOGLE_INTEGRATION_SOURCE,
         label: 'Gmail',
         oauth: {
           provider: OAuthProvider.GOOGLE,
@@ -141,7 +116,7 @@ export default Capability.makeModule(
       },
       {
         id: GOOGLE_CALENDAR_PROVIDER_ID,
-        source: GOOGLE_SOURCE,
+        source: GOOGLE_INTEGRATION_SOURCE,
         label: 'Google Calendar',
         oauth: {
           provider: OAuthProvider.GOOGLE,
@@ -153,24 +128,8 @@ export default Capability.makeModule(
         optionsSchema: CalendarSyncOptions,
         getSyncTargets: GetGoogleCalendars,
         sync: SyncCalendar,
-        onTokenCreated: sharedOnTokenCreated,
-      },
-      {
-        id: YOUTUBE_PROVIDER_ID,
-        source: GOOGLE_SOURCE,
-        label: 'YouTube',
-        oauth: {
-          provider: OAuthProvider.GOOGLE,
-          scopes: [
-            'https://www.googleapis.com/auth/youtube.readonly',
-            'https://www.googleapis.com/auth/youtube.force-ssl',
-            'https://www.googleapis.com/auth/userinfo.email',
-          ],
-        },
-        onTokenCreated: sharedOnTokenCreated,
-        // TODO(integration-sync): wire `getSyncTargets` + `sync` for YouTube.
+        onTokenCreated: calendarOnTokenCreated,
       },
     ]);
   }),
 );
-

@@ -154,9 +154,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'selected-objects',
         role: 'article',
-        filter: (
-          data,
-        ): data is { companionTo: Obj.Unknown; subject: 'selected-objects' } => {
+        filter: (data): data is { companionTo: Obj.Unknown; subject: 'selected-objects' } => {
           if (data.subject !== 'selected-objects' || !Obj.isObject(data.companionTo)) {
             return false;
           }
@@ -206,9 +204,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'create-initial-space-form-[hue]',
         role: 'form-input',
-        filter: (
-          data,
-        ): data is { prop: string; schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
+        filter: (data): data is { prop: string; schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
           const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, HueAnnotationId);
           return !!annotation;
         },
@@ -232,9 +228,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'create-initial-space-form-[icon]',
         role: 'form-input',
-        filter: (
-          data,
-        ): data is { prop: string; schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
+        filter: (data): data is { prop: string; schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
           const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, IconAnnotationId);
           return !!annotation;
         },
@@ -309,8 +303,7 @@ export default Capability.makeModule(
         component: ({ data }) => {
           const schema = Obj.getSchema(data.subject);
           const path = schema ? Option.getOrElse(ViewAnnotation.get(schema), () => [] as readonly string[]) : [];
-          const view =
-            path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.subject, path) : undefined;
+          const view = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.subject, path) : undefined;
 
           if (!view) {
             return null;

@@ -203,9 +203,7 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) =
     a.properties?.disposition === 'list-item-primary' ? -1 : 1,
   );
 
-  const menuActions = (
-    primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : actionsProp
-  )
+  const menuActions = (primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : actionsProp)
     .flatMap((action) => (Node.isAction(action) ? [action] : []))
     .filter((a) => ['list-item', 'list-item-primary'].includes(a.properties?.disposition));
 

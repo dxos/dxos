@@ -4,6 +4,9 @@
 
 import { meta } from '#meta';
 
+/** Google Calendar / Gmail foreign-key `Meta.keys[].source` used by inbox sync. */
+export const GOOGLE_INTEGRATION_SOURCE = 'google.com';
+
 export const POPOVER_SAVE_FILTER = `${meta.id}.SaveFilterPopover`;
 
 export const MAILBOXES_SECTION_TYPE = `${meta.id}.mailboxes-section`;

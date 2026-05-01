@@ -94,9 +94,7 @@ export type UpdateCardInput = {
 export const credentialsFromAccessToken = (record: { token: string }): TrelloCredentialsValue => {
   const parts = record.token.split(':');
   if (parts.length !== 2 || !parts[0] || !parts[1]) {
-    throw new Error(
-      'Trello access token must be a "<apiKey>:<userToken>" colon-separated string.',
-    );
+    throw new Error('Trello access token must be a "<apiKey>:<userToken>" colon-separated string.');
   }
   const [key, token] = parts;
   return { key, token };
@@ -129,7 +127,10 @@ export class TrelloCredentials extends Context.Tag('@dxos/plugin-trello/TrelloCr
  * Build a Trello request URL params record that includes the auth pair plus
  * any additional query params the caller wants to set.
  */
-const authParams = (creds: TrelloCredentialsValue, extra: Record<string, string | number | boolean | undefined> = {}) => {
+const authParams = (
+  creds: TrelloCredentialsValue,
+  extra: Record<string, string | number | boolean | undefined> = {},
+) => {
   const out: Record<string, string> = { key: creds.key, token: creds.token };
   for (const [k, v] of Object.entries(extra)) {
     if (v !== undefined) out[k] = String(v);

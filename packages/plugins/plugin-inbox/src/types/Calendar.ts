@@ -12,8 +12,6 @@ import { FeedAnnotation } from '@dxos/schema';
 export const Calendar = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
-  // Track the last synced update timestamp to handle out-of-order event updates.
-  lastSyncedUpdate: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.calendar',
@@ -35,7 +33,7 @@ export const CreateCalendarSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
 });
 
-type CalendarProps = Omit<Obj.MakeProps<typeof Calendar>, 'feed' | 'lastSyncedUpdate'>;
+type CalendarProps = Omit<Obj.MakeProps<typeof Calendar>, 'feed'>;
 
 /** Creates a calendar object with a backing feed. */
 export const make = (props: CalendarProps = {}) => {

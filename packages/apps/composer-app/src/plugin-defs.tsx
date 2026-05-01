@@ -174,7 +174,6 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       ID.PIPELINE,
       ID.SIDEKICK,
       ID.TRANSCRIPTION,
-      ID.TRELLO,
       ID.ZEN,
     ],
   ]

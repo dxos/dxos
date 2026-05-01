@@ -10,8 +10,9 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { Button, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
+import { IntegrationProvider } from '#types';
 
-import { IntegrationCoordinator, IntegrationProvider } from '../../capabilities';
+import { IntegrationCoordinator } from '../../capabilities';
 
 export type IntegrationAuthButtonProps = {
   /** Stable id of the `IntegrationProvider` capability entry to authenticate against. */
@@ -36,9 +37,7 @@ export const IntegrationAuthButton = ({ providerId, db }: IntegrationAuthButtonP
 
   const handleClick = useCallback(async () => {
     const coordinator = manager.capabilities.get(IntegrationCoordinator);
-    await runAndForwardErrors(coordinator.createIntegration({ db, spaceId: db.spaceId, providerId })).catch(
-      () => {},
-    );
+    await runAndForwardErrors(coordinator.createIntegration({ db, spaceId: db.spaceId, providerId })).catch(() => {});
   }, [manager, db, providerId]);
 
   if (!provider?.oauth) {

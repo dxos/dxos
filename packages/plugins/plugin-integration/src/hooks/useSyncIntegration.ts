@@ -8,7 +8,8 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { useIntegrationProviderById } from '../capabilities/integration-provider';
+import { useIntegrationProviderById } from '#hooks';
+
 import { type Integration } from '../types';
 
 export type UseSyncIntegrationResult = {
@@ -32,9 +33,7 @@ export type UseSyncIntegrationResult = {
  * are written by the operation handler and show up reactively in the
  * `IntegrationArticle` surface.
  */
-export const useSyncIntegration = (
-  integration: Integration.Integration | undefined,
-): UseSyncIntegrationResult => {
+export const useSyncIntegration = (integration: Integration.Integration | undefined): UseSyncIntegrationResult => {
   const { invokePromise } = useOperationInvoker();
   const provider = useIntegrationProviderById(integration?.providerId);
   const [syncing, setSyncing] = useState(false);

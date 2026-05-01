@@ -7,28 +7,23 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
+import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context as DxContext } from '@dxos/context';
 import { type Database, type Key, Obj, Ref } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
 import { EdgeHttpClient } from '@dxos/edge-client';
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
-import { createEdgeIdentity } from '@dxos/client/edge';
 import { type OAuthFlowResult } from '@dxos/protocols';
 import { AccessToken } from '@dxos/types';
 
 import { meta } from '#meta';
+import { IntegrationProvider, type IntegrationProviderEntry, type RemoteTarget } from '#types';
 
 import { CUSTOM_TOKEN_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
 import { IntegrationOperation } from '../operations';
 import { Integration } from '../types';
-
-import {
-  IntegrationProvider,
-  type IntegrationProvider as IntegrationProviderType,
-  type RemoteTarget,
-} from './integration-provider';
 
 /**
  * Long-lived coordinator for integration creation + OAuth flows.
@@ -157,19 +152,17 @@ export default Capability.makeModule(
       // from the service's `/me` endpoint). Routes by `providerId` because
       // multiple providers may share the same `source` (e.g. Gmail and
       // Google Calendar both `'google.com'` with different scopes).
-      const providers = pluginContext.getAll(IntegrationProvider).flat() as IntegrationProviderType[];
+      const providers = pluginContext.getAll(IntegrationProvider).flat() as IntegrationProviderEntry[];
       const provider = providers.find((p) => p.id === providerId);
       if (provider?.onTokenCreated) {
         try {
           await runAndForwardErrors(
-            provider
-              .onTokenCreated({ accessToken: persistedToken, integration: persistedIntegration })
-              .pipe(
-                Effect.provide(FetchHttpClient.layer),
-                Effect.catchAll((error) =>
-                  Effect.sync(() => log.warn('onTokenCreated failed', { source: persistedToken.source, error })),
-                ),
+            provider.onTokenCreated({ accessToken: persistedToken, integration: persistedIntegration }).pipe(
+              Effect.provide(FetchHttpClient.layer),
+              Effect.catchAll((error) =>
+                Effect.sync(() => log.warn('onTokenCreated failed', { source: persistedToken.source, error })),
               ),
+            ),
           );
         } catch (error) {
           log.warn('onTokenCreated runner failed', { error });
@@ -246,9 +239,7 @@ export default Capability.makeModule(
         token.token = data.accessToken;
       });
 
-      void finalizePending(entry).catch((error: unknown) =>
-        log.warn('finalize pending integration failed', { error }),
-      );
+      void finalizePending(entry).catch((error: unknown) => log.warn('finalize pending integration failed', { error }));
     };
 
     window.addEventListener('message', handleMessage);
@@ -256,7 +247,7 @@ export default Capability.makeModule(
     const createIntegration: IntegrationCoordinator['createIntegration'] = ({ db, spaceId, providerId }) =>
       Effect.tryPromise({
         try: async () => {
-          const providers = pluginContext.getAll(IntegrationProvider).flat() as IntegrationProviderType[];
+          const providers = pluginContext.getAll(IntegrationProvider).flat() as IntegrationProviderEntry[];
           const provider = providers.find((p) => p.id === providerId);
           if (!provider) {
             throw new Error(`No IntegrationProvider registered with id: ${providerId}`);
@@ -329,7 +320,7 @@ export default Capability.makeModule(
       token: tokenValue,
       name,
     }) => {
-      const providers = pluginContext.getAll(IntegrationProvider).flat() as IntegrationProviderType[];
+      const providers = pluginContext.getAll(IntegrationProvider).flat() as IntegrationProviderEntry[];
       const provider = providers.find((p) => p.id === providerId);
       if (!provider) {
         throw new Error(`No IntegrationProvider registered with id: ${providerId}`);
@@ -354,14 +345,11 @@ export default Capability.makeModule(
       return { integrationId: integration.id };
     };
 
-    return Capability.contributes(
-      IntegrationCoordinator,
-      { createIntegration, createCustomIntegration },
-      () =>
-        Effect.sync(() => {
-          window.removeEventListener('message', handleMessage);
-          pending.clear();
-        }),
+    return Capability.contributes(IntegrationCoordinator, { createIntegration, createCustomIntegration }, () =>
+      Effect.sync(() => {
+        window.removeEventListener('message', handleMessage);
+        pending.clear();
+      }),
     );
   }),
 );

@@ -7,8 +7,8 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Filter, Obj, Ref } from '@dxos/echo';
 import { getSpace } from '@dxos/client/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Integration } from '@dxos/plugin-integration/types';
@@ -54,9 +54,7 @@ export default Capability.makeModule(
                     space.db.query(Filter.type(Integration.Integration)).run(),
                   );
                   const parent = integrations.find((integration) =>
-                    integration.targets.some(
-                      (target) => target.object?.dxn.asEchoDXN()?.echoId === kanban.id,
-                    ),
+                    integration.targets.some((target) => target.object?.dxn.asEchoDXN()?.echoId === kanban.id),
                   );
                   if (!parent) return;
                   yield* Operation.invoke(SyncTrelloBoard, {
@@ -65,7 +63,7 @@ export default Capability.makeModule(
                   });
                 }),
               properties: {
-                label: ['sync this board.label', { ns: meta.id }],
+                label: ['sync-this-board.label', { ns: meta.id }],
                 icon: 'ph--arrows-clockwise--regular',
                 disposition: 'list-item',
               },

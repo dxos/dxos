@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 import { Button, Dialog, Input, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
+import type { RemoteTarget } from '#types';
 
-import { type RemoteTarget } from '../../capabilities/integration-provider';
 import { SetIntegrationTargets } from '../../operations/definitions';
 import { type Integration } from '../../types';
 
@@ -147,9 +147,7 @@ export const SyncTargetsChecklist = ({ integration, availableTargets }: SyncTarg
           <Button disabled={submitting}>{t('cancel.label', { defaultValue: 'Cancel' })}</Button>
         </Dialog.Close>
         <Button variant='primary' onClick={handleSubmit} disabled={submitting}>
-          {submitting
-            ? t('submitting.label', { defaultValue: 'Saving…' })
-            : t('save.label', { defaultValue: 'Save' })}
+          {submitting ? t('submitting.label', { defaultValue: 'Saving…' }) : t('save.label', { defaultValue: 'Save' })}
         </Button>
       </Dialog.ActionBar>
     </Dialog.Content>

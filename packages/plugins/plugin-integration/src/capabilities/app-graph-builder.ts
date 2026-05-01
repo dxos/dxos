@@ -16,11 +16,8 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { SPACE_TYPE } from '@dxos/plugin-space/types';
 
 import { meta } from '#meta';
+import { IntegrationProvider, type IntegrationProviderEntry } from '#types';
 
-import {
-  IntegrationProvider,
-  type IntegrationProvider as IntegrationProviderType,
-} from './integration-provider';
 import { Integration } from '../types';
 
 const whenSpace = (node: Node.Node): Option.Option<Space> =>
@@ -37,20 +34,15 @@ export default Capability.makeModule(
       capabilities.getAll(AppCapabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
     const extensions = yield* Effect.all([
-      // Generic per-Integration actions:
-      //  - "Sync now" — dispatched to the provider's `sync` op, runs across
-      //    every target on the integration. Mirrors Trello's
-      //    `trello-sync-integration` extension but works for any provider
-      //    that contributes a `sync`.
-      //  - "Delete integration" — the article doesn't host a Delete row,
-      //    so this graph action is the only deletion affordance.
       GraphBuilder.createExtension({
         id: 'integration-actions',
         match: (node) =>
           Integration.instanceOf(node.data) ? Option.some(node.data as Integration.Integration) : Option.none(),
         actions: (integration) =>
           Effect.gen(function* () {
-            const providers = (yield* Capability.Service).getAll(IntegrationProvider).flat() as IntegrationProviderType[];
+            const providers = (yield* Capability.Service)
+              .getAll(IntegrationProvider)
+              .flat() as IntegrationProviderEntry[];
             const provider = providers.find((p) => p.id === integration.providerId);
             const actions = [];
             if (provider?.sync) {
@@ -88,18 +80,8 @@ export default Capability.makeModule(
           }),
       }),
 
-      // Single "Integrations" branch directly under each Space. Hidden when
-      // no Integration objects exist (mirrors the inbox plugin's
-      // mailboxes-section pattern) so empty spaces don't carry a phantom
-      // entry. Sits in the unpositioned middle band — General Settings
-      // hoists above, Database falls back below.
-      //
-      // Split into two extensions so children stay reactive: the framework's
-      // connector diff only tracks the top-level node ids returned, so
-      // inlining `nodes:` here would leak old child edges/nodes when an
-      // integration is deleted. Listing the children from a *separate*
-      // connector keyed off this section's type lets the framework
-      // properly remove edges for objects that disappear from the query.
+      // Per-space integrations folder; kept empty until an Integration exists.
+      // Separate listing extension so graph reacts when targets are deleted.
       GraphBuilder.createExtension({
         id: 'integrations-section',
         match: whenSpace,
@@ -112,16 +94,10 @@ export default Capability.makeModule(
             Node.make({
               id: 'integrations',
               type: INTEGRATIONS_SECTION_TYPE,
-              // Pure container node — clicking just expands the children
-              // (each Integration object). The legacy "Manage integrations"
-              // article was removed; per-Integration management lives on
-              // each Integration's own article surface.
               data: null,
               properties: {
                 label: ['space-panel.name', { ns: meta.id }],
                 icon: 'ph--plugs--regular',
-                // Match the Integration type's hue so the section reads as
-                // part of the same "integrations" colorway.
                 iconHue: 'cyan',
                 role: 'branch',
                 draggable: false,
@@ -133,12 +109,7 @@ export default Capability.makeModule(
         },
       }),
 
-      // Lists the individual Integration objects under the section node.
-      // Matches by section type and re-derives the space from the section
-      // node's `properties.space`. Their `targets` (e.g. Trello kanbans)
-      // are NOT surfaced as children — those live in the database subgraph
-      // as regular objects of their own type, accessed via the standard
-      // Type/All path.
+      // Integration objects listed under `integrations-section` (targets stay in the DB subgraph only).
       GraphBuilder.createExtension({
         id: 'integration-listing',
         match: (node) => {

@@ -37,10 +37,12 @@ export const AccessToken = Schema.Struct({
     title: 'Token',
     description: 'The token provided by the service.',
   }),
-  scopes: Schema.Array(Schema.String).annotations({
-    title: 'Scopes',
-    description: 'The scopes granted to this token by the service.',
-  }).pipe(Schema.optional),
+  scopes: Schema.Array(Schema.String)
+    .annotations({
+      title: 'Scopes',
+      description: 'The scopes granted to this token by the service.',
+    })
+    .pipe(Schema.optional),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.accessToken',
