@@ -275,6 +275,7 @@ const useMarkdownStreamTextEditor = (
             }),
             xmlFormatting({ skip: ['prompt'] }),
             xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
+            // TODO(burdon): Temporarily disable footer to avoid layout shift while scrolling.
             false ? streamFooter(setFooterRoot) : [],
             scroller({ overScroll: 160 }),
             ...(options?.autoScroll ? [autoScroll()] : []),
