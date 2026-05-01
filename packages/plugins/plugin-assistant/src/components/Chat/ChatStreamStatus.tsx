@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { ChatStatus, formatElapsed } from '@dxos/react-ui-chat';
 import { Matrix } from '@dxos/react-ui-sfx';
 import { type ContentBlock } from '@dxos/types';
+import { Unit } from '@dxos/util';
 
 import { type ChatRequestTiming, useChatContext } from './context';
 
@@ -19,7 +19,7 @@ const TICK_MS = 1_000;
  *
  * The block-widget host re-mounts this component each time wire's drip queue toggles
  * (`wireDrainingEffect`) — so all visible state is derived from chat-context values that
- * survive the unmount: the latest `stats` block on `processor.messages` for token counts,
+ * survive the unmount: the latest `stats` block on the chat context's `messages` for token counts,
  * and `requestTiming` (start/end wall-clock timestamps) for the elapsed value.
  *
  * Shows:
@@ -28,8 +28,12 @@ const TICK_MS = 1_000;
  * - cumulative session total tokens across all `stats` content blocks
  */
 export const ChatStreamStatus = () => {
-  const { processor, requestTiming } = useChatContext(CHAT_STREAM_STATUS_NAME);
-  const messages = useAtomValue(processor.messages);
+  // Read `messages` from the chat context (combines `useQuery(queue)` + the processor's
+  // pending atom) rather than `processor.messages` directly — the latter only contains
+  // blocks streamed via the ephemeral `PartialBlock` channel, while finalized blocks
+  // (including the per-turn `stats` block we read for token counts) are submitted to the
+  // feed via `_submitMessage` and only show up through `useQuery`.
+  const { messages, requestTiming } = useChatContext(CHAT_STREAM_STATUS_NAME);
 
   const { lastOutputTokens, sessionTotalTokens } = useMemo(() => {
     let last: number | undefined;
@@ -48,7 +52,7 @@ export const ChatStreamStatus = () => {
   const isRunning = requestTiming != null && requestTiming.endedAt == null;
 
   return (
-    <ChatStatus.Root defaultRunning={false} classNames='py-2'>
+    <ChatStatus.Root defaultRunning={false} classNames='py-2 text-sm'>
       <ChatStatus.Icon>
         <Matrix classNames='mr-2' dim={4} size={3} dotSize={3} count={10} interval={500} active={isRunning} />
       </ChatStatus.Icon>
@@ -60,13 +64,13 @@ export const ChatStreamStatus = () => {
       {lastOutputTokens != null && (
         <>
           <ChatStatus.Separator />
-          <ChatStatus.Text>{lastOutputTokens} tok</ChatStatus.Text>
+          <ChatStatus.Text>↓ {Unit.Thousand(lastOutputTokens).toString()}</ChatStatus.Text>
         </>
       )}
       {sessionTotalTokens > 0 && (
         <>
           <ChatStatus.Separator />
-          <ChatStatus.Text>{sessionTotalTokens} session</ChatStatus.Text>
+          <ChatStatus.Text>Σ {Unit.Thousand(sessionTotalTokens).toString()}</ChatStatus.Text>
         </>
       )}
     </ChatStatus.Root>
