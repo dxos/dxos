@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Array, pipe, Pipeable, Struct } from 'effect';
+import { Array, Order, pipe, Pipeable, Struct } from 'effect';
 import * as Predicate from 'effect/Predicate';
 
 import { AGENT_PROCESS_KEY, AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
@@ -205,11 +205,6 @@ export const buildExecutionGraph = ({
                     CommitSelector.compose(CommitSelector.last()),
                   ),
                 ),
-                CommitSelector.andAlso(
-                  CommitSelector.tag(event.meta.pid && tagStartMarker(event.meta.pid)).pipe(
-                    CommitSelector.compose(CommitSelector.last()),
-                  ),
-                ),
               ),
             ),
             tags: getTags(event.meta),
@@ -220,127 +215,133 @@ export const buildExecutionGraph = ({
           });
           break;
         }
-        case 'toolCall': {
-          builder.addCommit({
-            id: `${event.data.block.toolCallId}:call`,
-            branch: event.meta.pid ?? MAIN_BRANCH,
-            parents: builder.computeParents(
-              CommitSelector.branch(event.meta.pid ?? MAIN_BRANCH).pipe(
-                CommitSelector.compose(CommitSelector.last()),
-                CommitSelector.orElse(
-                  CommitSelector.tag(event.meta.pid && tagStartMarker(event.meta.pid)).pipe(
-                    CommitSelector.compose(CommitSelector.last()),
-                  ),
-                ),
-              ),
-            ),
-            tags: getTags(event.meta),
-            timestamp: new Date(event.timestamp),
-            icon: ICONS.toolCall.icon,
-            level: ICONS.toolCall.level,
-            message: event.data.block.name,
-          });
-          break;
-        }
-        case 'toolResult': {
-          builder.addCommit(
-            {
-              id: `${event.data.block.toolCallId}:result`,
-              branch: event.meta.pid ?? MAIN_BRANCH,
-              parents: builder.computeParents(
-                CommitSelector.firstOf(
-                  CommitSelector.branch(event.meta.pid ?? MAIN_BRANCH).pipe(
-                    CommitSelector.compose(CommitSelector.last()),
-                  ),
-                  CommitSelector.tag(event.meta.pid && tagPid(event.meta.pid)).pipe(
-                    CommitSelector.compose(CommitSelector.last()),
-                  ),
-                  CommitSelector.tag(event.meta.pid && tagStartMarker(event.meta.pid)).pipe(
-                    CommitSelector.compose(CommitSelector.last()),
-                  ),
-                ),
-              ),
-              tags: getTags(event.meta),
-              timestamp: new Date(event.timestamp),
-              icon: event.data.block.error ? ICONS.toolResultError.icon : ICONS.toolResultSuccess.icon,
-              level: event.data.block.error ? ICONS.toolResultError.level : ICONS.toolResultSuccess.level,
-              message: event.data.block.error
-                ? `${event.data.block.name} - Error: ${trimText(event.data.block.error)}`
-                : `${event.data.block.name} - Success`,
-            },
-            {
-              replace: CommitSelector.id(`${event.data.block.toolCallId}:call`),
-            },
-          );
-          break;
-        }
+        // Handled by OperationStart and OperationEnd.
+        // case 'toolCall': {
+        //   builder.addCommit({
+        //     id: `${event.data.block.toolCallId}:call`,
+        //     branch: event.meta.pid ?? MAIN_BRANCH,
+        //     parents: builder.computeParents(
+        //       CommitSelector.branch(event.meta.pid ?? MAIN_BRANCH).pipe(
+        //         CommitSelector.compose(CommitSelector.last()),
+        //         CommitSelector.orElse(
+        //           CommitSelector.tag(event.meta.pid && tagStartMarker(event.meta.pid)).pipe(
+        //             CommitSelector.compose(CommitSelector.last()),
+        //           ),
+        //         ),
+        //       ),
+        //     ),
+        //     tags: getTags(event.meta),
+        //     timestamp: new Date(event.timestamp),
+        //     icon: ICONS.toolCall.icon,
+        //     level: ICONS.toolCall.level,
+        //     message: event.data.block.name,
+        //   });
+        //   break;
+        // }
+        // case 'toolResult': {
+        //   builder.addCommit(
+        //     {
+        //       id: `${event.data.block.toolCallId}:result`,
+        //       branch: event.meta.pid ?? MAIN_BRANCH,
+        //       parents: builder.computeParents(
+        //         CommitSelector.firstOf(
+        //           CommitSelector.branch(event.meta.pid ?? MAIN_BRANCH).pipe(
+        //             CommitSelector.compose(CommitSelector.last()),
+        //           ),
+        //           CommitSelector.tag(event.meta.pid && tagPid(event.meta.pid)).pipe(
+        //             CommitSelector.compose(CommitSelector.last()),
+        //           ),
+        //           CommitSelector.tag(event.meta.pid && tagStartMarker(event.meta.pid)).pipe(
+        //             CommitSelector.compose(CommitSelector.last()),
+        //           ),
+        //         ),
+        //       ),
+        //       tags: getTags(event.meta),
+        //       timestamp: new Date(event.timestamp),
+        //       icon: event.data.block.error ? ICONS.toolResultError.icon : ICONS.toolResultSuccess.icon,
+        //       level: event.data.block.error ? ICONS.toolResultError.level : ICONS.toolResultSuccess.level,
+        //       message: event.data.block.error
+        //         ? `${event.data.block.name} - Error: ${trimText(event.data.block.error)}`
+        //         : `${event.data.block.name} - Success`,
+        //     },
+        //     {
+        //       replace: CommitSelector.id(`${event.data.block.toolCallId}:call`),
+        //     },
+        //   );
+        //   break;
+        // }
       }
     } else if (Trace.isOfType(Trace.OperationStart, event)) {
-      if (!event.meta.conversationId) {
-        // Ignoring tool calls.
-        builder.addCommit({
-          id: `${event.id}:${event.data.key}:start`,
-          branch: event.meta.parentPid ?? MAIN_BRANCH,
-          parents: dbg(
-            builder.computeParents(
-              CommitSelector.branch(event.meta.parentPid ?? MAIN_BRANCH).pipe(
-                CommitSelector.orElse(CommitSelector.tag(event.meta.parentPid && tagStartMarker(event.meta.parentPid))),
-                CommitSelector.compose(CommitSelector.last()),
-              ),
+      builder.addCommit({
+        id: `${event.id}:${event.data.key}:start`,
+        branch: event.meta.parentPid ?? MAIN_BRANCH,
+        parents: dbg(
+          builder.computeParents(
+            CommitSelector.branch(event.meta.parentPid ?? MAIN_BRANCH).pipe(
+              CommitSelector.andAlso(CommitSelector.tag(event.meta.parentPid && tagStartMarker(event.meta.parentPid))),
+              CommitSelector.compose(CommitSelector.orderByTimestamp()),
+              CommitSelector.compose(CommitSelector.last()),
+              CommitSelector.orElse(CommitSelector.branch(event.meta.parentPid)),
+              CommitSelector.compose(CommitSelector.last()),
             ),
-            { '~LogMeta': '~LogMeta', A: ['OperationStart parents'] } as any,
           ),
-          tags: [
-            ...getTags(event.meta),
-            tagOperationBegin(event.meta.pid ?? 'unknown'),
-            event.meta.pid && tagStartMarker(event.meta.pid),
-          ].filter(Predicate.isNotNullable),
-          timestamp: new Date(event.timestamp),
-          icon: ICONS.operationStart.icon,
-          level: ICONS.operationStart.level,
-          message: event.data.name ?? event.data.key,
-        });
-      }
+          { '~LogMeta': '~LogMeta', A: ['OperationStart parents'] } as any,
+        ),
+        tags: [
+          ...getTags(event.meta),
+          tagOperationBegin(event.meta.pid ?? 'unknown'),
+          event.meta.pid && tagStartMarker(event.meta.pid),
+        ].filter(Predicate.isNotNullable),
+        timestamp: new Date(event.timestamp),
+        icon: ICONS.operationStart.icon,
+        level: ICONS.operationStart.level,
+        message: event.data.name ?? event.data.key,
+      });
     } else if (Trace.isOfType(Trace.OperationEnd, event)) {
-      if (!event.meta.conversationId) {
-        // Ignoring tool calls.
-        const children = builder.findCommits(CommitSelector.tag(event.meta.pid && tagPid(event.meta.pid)));
-        builder.addCommit(
-          {
-            id: `${event.id}:${event.data.key}:end`,
-            branch: event.meta.parentPid ?? MAIN_BRANCH,
-            parents: builder.computeParents(
-              CommitSelector.branch(event.meta.parentPid ?? MAIN_BRANCH).pipe(
-                CommitSelector.compose(
-                  CommitSelector.not(CommitSelector.tag(tagOperationBegin(event.meta.pid ?? 'unknown'))),
-                ),
-                CommitSelector.orElse(CommitSelector.tag(event.meta.parentPid && tagStartMarker(event.meta.parentPid))),
-                CommitSelector.compose(CommitSelector.last()),
-                CommitSelector.andAlso(
-                  CommitSelector.tag(event.meta.pid && tagPid(event.meta.pid)).pipe(
-                    CommitSelector.compose(
-                      CommitSelector.not(CommitSelector.tag(tagOperationBegin(event.meta.pid ?? 'unknown'))),
-                    ),
-                    CommitSelector.compose(CommitSelector.last()),
+      const children = builder.findCommits(
+        CommitSelector.anyTags([
+          event.meta.pid && tagPid(event.meta.pid),
+          event.meta.pid && tagParentPid(event.meta.pid),
+        ]),
+      );
+      builder.addCommit(
+        {
+          id: `${event.id}:${event.data.key}:end`,
+          branch: event.meta.parentPid ?? MAIN_BRANCH,
+          parents: builder.computeParents(
+            CommitSelector.branch(event.meta.parentPid ?? MAIN_BRANCH).pipe(
+              CommitSelector.compose(
+                CommitSelector.not(CommitSelector.tag(tagOperationBegin(event.meta.pid ?? 'unknown'))),
+              ),
+              CommitSelector.orElse(CommitSelector.tag(event.meta.parentPid && tagStartMarker(event.meta.parentPid))),
+              CommitSelector.compose(CommitSelector.last()),
+              CommitSelector.andAlso(
+                CommitSelector.anyTags([
+                  event.meta.pid && tagPid(event.meta.pid),
+                  event.meta.pid && tagParentPid(event.meta.pid),
+                ]).pipe(
+                  CommitSelector.compose(
+                    CommitSelector.not(CommitSelector.tag(tagOperationBegin(event.meta.pid ?? 'unknown'))),
                   ),
+                  CommitSelector.compose(CommitSelector.last()),
                 ),
               ),
             ),
-            tags: getTags(event.meta),
-            timestamp: new Date(event.timestamp),
-            icon: event.data.outcome === 'success' ? ICONS.operationEndSuccess.icon : ICONS.operationEndError.icon,
-            level: event.data.outcome === 'success' ? ICONS.operationEndSuccess.level : ICONS.operationEndError.level,
-            message: `${event.data.name ?? event.data.key} - ${event.data.outcome === 'success' ? 'Success' : 'Error'}`,
-          },
-          {
-            replace:
-              // TODO(dmaretskyi): Deduping events in subbranches brekas graph.
-              !event.meta.parentPid && children.length > 1 // 1 is the operation begin commit.
-                ? undefined
-                : CommitSelector.tag(tagOperationBegin(event.meta.pid ?? 'unknown')),
-          },
-        );
-      }
+          ),
+          tags: getTags(event.meta),
+          timestamp: new Date(event.timestamp),
+          icon: event.data.outcome === 'success' ? ICONS.operationEndSuccess.icon : ICONS.operationEndError.icon,
+          level: event.data.outcome === 'success' ? ICONS.operationEndSuccess.level : ICONS.operationEndError.level,
+          message: `${event.data.name ?? event.data.key} - ${event.data.outcome === 'success' ? 'Success' : 'Error'}`,
+        },
+        {
+          replace:
+            // TODO(dmaretskyi): Deduping events in subbranches brekas graph.
+            !event.meta.parentPid || children.length > 1 // 1 is the operation begin commit.
+              ? undefined
+              : CommitSelector.tag(tagOperationBegin(event.meta.pid ?? 'unknown')),
+        },
+      );
     }
   }
 
@@ -412,7 +413,8 @@ export const CommitSelector = {
   /**
    * Selects commits by branch.
    */
-  branch: (branch: string): CommitSelector => CommitSelector.filter((commit) => commit.branch === branch),
+  branch: (branch: string | Falsy): CommitSelector =>
+    CommitSelector.filter((commit) => branch && commit.branch === branch),
 
   /**
    * Chains two selectors together, applying the second selector to the result of the first.
@@ -450,7 +452,7 @@ export const CommitSelector = {
       }),
 
   /**
-   * Selects commits that match ither of the given selectors.
+   * Selects commits that match either of the given selectors.
    */
   andAlso:
     (next: CommitSelector) =>
@@ -510,6 +512,9 @@ export const CommitSelector = {
       }
       return [];
     }),
+
+  orderByTimestamp: (): CommitSelector =>
+    CommitSelector.make(Array.sortWith((a) => a.timestamp?.getTime() ?? 0, Order.number)),
 };
 
 class GraphBuilder {
