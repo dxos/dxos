@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type Dispatch, type SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
@@ -200,6 +200,36 @@ export const Default: Story = {};
  */
 const PLAYBACK_INTERVAL_MS = 250;
 
+const STEP_STORAGE_KEY = 'plugin-assistant.trace-panel.snapshot.step';
+
+/**
+ * `useState<number>` that hydrates from and persists to `localStorage`.
+ * The third tuple member is `true` iff a valid value was loaded on first render.
+ */
+const useLocalStorageNumber = (key: string, initial: number): [number, Dispatch<SetStateAction<number>>, boolean] => {
+  const initRef = useRef<{ value: number; hydrated: boolean } | null>(null);
+  if (initRef.current === null) {
+    let value = initial;
+    let hydrated = false;
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem(key);
+      const parsed = stored === null ? Number.NaN : Number(stored);
+      if (Number.isFinite(parsed)) {
+        value = parsed;
+        hydrated = true;
+      }
+    }
+    initRef.current = { value, hydrated };
+  }
+  const [value, setValue] = useState(initRef.current.value);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(key, String(value));
+    }
+  }, [key, value]);
+  return [value, setValue, initRef.current.hydrated];
+};
+
 const SnapshotStory = () => {
   const [space] = useSpaces();
   const [feed] = useQuery(space?.db, FeedTraceSink.query);
@@ -210,25 +240,25 @@ const SnapshotStory = () => {
 
   // Sort by first event timestamp so playback order is chronological regardless of query ordering.
   const sortedMessages = useMemo(
-    () =>
-      [...allMessages].sort(
-        (left, right) => (left.events[0]?.timestamp ?? 0) - (right.events[0]?.timestamp ?? 0),
-      ),
+    () => [...allMessages].sort((left, right) => (left.events[0]?.timestamp ?? 0) - (right.events[0]?.timestamp ?? 0)),
     [allMessages],
   );
 
   const total = sortedMessages.length;
-  const [step, setStep] = useState(0);
+  const [step, setStep, stepHydrated] = useLocalStorageNumber(STEP_STORAGE_KEY, 0);
   const [playing, setPlaying] = useState(false);
 
   // Start with all messages loaded once the snapshot first arrives; afterwards the user controls `step`.
+  // Skip the auto-init if we restored a value from localStorage so we don't clobber the user's last position.
   const hasInitializedRef = useRef(false);
   useEffect(() => {
     if (!hasInitializedRef.current && total > 0) {
       hasInitializedRef.current = true;
-      setStep(total);
+      if (!stepHydrated) {
+        setStep(total);
+      }
     }
-  }, [total]);
+  }, [total, stepHydrated, setStep]);
 
   const visibleMessages = useMemo(() => sortedMessages.slice(0, step), [sortedMessages, step]);
   const { commits, branches } = useMemo(
@@ -323,7 +353,7 @@ const SnapshotStory = () => {
           </span>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content asChild>
+      <Panel.Content>
         <Timeline branches={branches} commits={commits} showTimestamp />
       </Panel.Content>
     </Panel.Root>

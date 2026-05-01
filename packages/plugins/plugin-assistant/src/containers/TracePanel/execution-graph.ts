@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Array, pipe, Pipeable, Struct } from 'effect';
 import * as Predicate from 'effect/Predicate';
 
 import { AGENT_PROCESS_KEY, AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { Trace } from '@dxos/compute';
 import { Process } from '@dxos/functions-runtime';
-import { LogLevel, log } from '@dxos/log';
+import { LogLevel, dbg, log } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
 
 /**
@@ -125,12 +126,18 @@ export const buildExecutionGraph = ({
 
   builder.addBranch(MAIN_BRANCH);
 
+  dbg(JSON.stringify(events, null, 2));
+
   for (const event of events) {
     if (Trace.isOfType(AgentRequestBegin, event)) {
       builder.addCommit({
         id: event.id,
         branch: event.meta.parentPid ?? MAIN_BRANCH,
-        parents: builder.computeParents([{ branch: event.meta.parentPid ?? MAIN_BRANCH }]),
+        parents: builder.computeParents(
+          CommitSelector.branch(event.meta.parentPid ?? MAIN_BRANCH).pipe(
+            CommitSelector.compose(CommitSelector.last()),
+          ),
+        ),
         tags: [...getTags(event.meta), event.meta.pid && tagStartMarker(event.meta.pid)].filter(
           Predicate.isNotNullable,
         ),
@@ -143,10 +150,17 @@ export const buildExecutionGraph = ({
       builder.addCommit({
         id: event.id,
         branch: event.meta.parentPid ?? MAIN_BRANCH,
-        parents: builder.computeParents([
-          { branch: event.meta.parentPid ?? MAIN_BRANCH },
-          { commit: { tags: [event.meta.pid && tagPid(event.meta.pid)] } },
-        ]),
+        parents: builder.computeParents(
+          CommitSelector.unionAll(
+            CommitSelector.branch(event.meta.parentPid ?? MAIN_BRANCH).pipe(
+              CommitSelector.orElse(CommitSelector.tag(event.meta.pid && tagPid(event.meta.pid))),
+              CommitSelector.compose(CommitSelector.last()),
+            ),
+            CommitSelector.tag(event.meta.pid && tagPid(event.meta.pid)).pipe(
+              CommitSelector.compose(CommitSelector.last()),
+            ),
+          ),
+        ),
         tags: getTags(event.meta),
         timestamp: new Date(event.timestamp),
         icon: ICONS.agentRequestEnd.icon,
@@ -160,19 +174,16 @@ export const buildExecutionGraph = ({
             builder.addCommit({
               id: event.id,
               branch: event.meta.pid ?? MAIN_BRANCH,
-              parents: builder.computeParents([
-                {
-                  branch: event.meta.pid ?? MAIN_BRANCH,
-                  fallback: { tags: [event.meta.pid && tagPid(event.meta.pid)] },
-                },
-                {
-                  commit: {
-                    tags: [event.meta.parentPid && tagStartMarker(event.meta.parentPid)].filter(
-                      Predicate.isNotNullable,
+              parents: builder.computeParents(
+                CommitSelector.branch(event.meta.pid ?? MAIN_BRANCH).pipe(
+                  CommitSelector.compose(CommitSelector.last()),
+                  CommitSelector.orElse(
+                    CommitSelector.tag(event.meta.pid && tagStartMarker(event.meta.pid)).pipe(
+                      CommitSelector.compose(CommitSelector.last()),
                     ),
-                  },
-                },
-              ]),
+                  ),
+                ),
+              ),
               tags: getTags(event.meta),
               timestamp: new Date(event.timestamp),
               icon: ICONS.userMessage.icon,
@@ -186,12 +197,21 @@ export const buildExecutionGraph = ({
           builder.addCommit({
             id: event.id,
             branch: event.meta.pid ?? MAIN_BRANCH,
-            parents: builder.computeParents([
-              {
-                branch: event.meta.pid ?? MAIN_BRANCH,
-                fallback: { tags: [event.meta.pid && tagPid(event.meta.pid)] },
-              },
-            ]),
+            parents: builder.computeParents(
+              CommitSelector.branch(event.meta.pid ?? MAIN_BRANCH).pipe(
+                CommitSelector.compose(CommitSelector.last()),
+                CommitSelector.orElse(
+                  CommitSelector.tag(event.meta.pid && tagPid(event.meta.pid)).pipe(
+                    CommitSelector.compose(CommitSelector.last()),
+                  ),
+                ),
+                CommitSelector.andAlso(
+                  CommitSelector.tag(event.meta.pid && tagStartMarker(event.meta.pid)).pipe(
+                    CommitSelector.compose(CommitSelector.last()),
+                  ),
+                ),
+              ),
+            ),
             tags: getTags(event.meta),
             timestamp: new Date(event.timestamp),
             icon: ICONS.statusMessage.icon,
@@ -204,12 +224,16 @@ export const buildExecutionGraph = ({
           builder.addCommit({
             id: `${event.data.block.toolCallId}:call`,
             branch: event.meta.pid ?? MAIN_BRANCH,
-            parents: builder.computeParents([
-              {
-                branch: event.meta.pid ?? MAIN_BRANCH,
-                fallback: { tags: [event.meta.pid && tagPid(event.meta.pid)] },
-              },
-            ]),
+            parents: builder.computeParents(
+              CommitSelector.branch(event.meta.pid ?? MAIN_BRANCH).pipe(
+                CommitSelector.compose(CommitSelector.last()),
+                CommitSelector.orElse(
+                  CommitSelector.tag(event.meta.pid && tagStartMarker(event.meta.pid)).pipe(
+                    CommitSelector.compose(CommitSelector.last()),
+                  ),
+                ),
+              ),
+            ),
             tags: getTags(event.meta),
             timestamp: new Date(event.timestamp),
             icon: ICONS.toolCall.icon,
@@ -223,12 +247,19 @@ export const buildExecutionGraph = ({
             {
               id: `${event.data.block.toolCallId}:result`,
               branch: event.meta.pid ?? MAIN_BRANCH,
-              parents: builder.computeParents([
-                {
-                  branch: event.meta.pid ?? MAIN_BRANCH,
-                  fallback: { tags: [event.meta.pid && tagPid(event.meta.pid)] },
-                },
-              ]),
+              parents: builder.computeParents(
+                CommitSelector.firstOf(
+                  CommitSelector.branch(event.meta.pid ?? MAIN_BRANCH).pipe(
+                    CommitSelector.compose(CommitSelector.last()),
+                  ),
+                  CommitSelector.tag(event.meta.pid && tagPid(event.meta.pid)).pipe(
+                    CommitSelector.compose(CommitSelector.last()),
+                  ),
+                  CommitSelector.tag(event.meta.pid && tagStartMarker(event.meta.pid)).pipe(
+                    CommitSelector.compose(CommitSelector.last()),
+                  ),
+                ),
+              ),
               tags: getTags(event.meta),
               timestamp: new Date(event.timestamp),
               icon: event.data.block.error ? ICONS.toolResultError.icon : ICONS.toolResultSuccess.icon,
@@ -238,9 +269,7 @@ export const buildExecutionGraph = ({
                 : `${event.data.block.name} - Success`,
             },
             {
-              replace: {
-                id: [`${event.data.block.toolCallId}:call`],
-              },
+              replace: CommitSelector.id(`${event.data.block.toolCallId}:call`),
             },
           );
           break;
@@ -252,17 +281,15 @@ export const buildExecutionGraph = ({
         builder.addCommit({
           id: `${event.id}:${event.data.key}:start`,
           branch: event.meta.parentPid ?? MAIN_BRANCH,
-          parents: builder.computeParents([
-            {
-              branch: event.meta.parentPid ?? MAIN_BRANCH,
-              fallback: { tags: [event.meta.parentPid && tagPid(event.meta.parentPid)] },
-            },
-            {
-              commit: {
-                tags: [event.meta.parentPid && tagStartMarker(event.meta.parentPid)].filter(Predicate.isNotNullable),
-              },
-            },
-          ]),
+          parents: dbg(
+            builder.computeParents(
+              CommitSelector.branch(event.meta.parentPid ?? MAIN_BRANCH).pipe(
+                CommitSelector.orElse(CommitSelector.tag(event.meta.parentPid && tagStartMarker(event.meta.parentPid))),
+                CommitSelector.compose(CommitSelector.last()),
+              ),
+            ),
+            { '~LogMeta': '~LogMeta', A: ['OperationStart parents'] } as any,
+          ),
           tags: [
             ...getTags(event.meta),
             tagOperationBegin(event.meta.pid ?? 'unknown'),
@@ -277,23 +304,26 @@ export const buildExecutionGraph = ({
     } else if (Trace.isOfType(Trace.OperationEnd, event)) {
       if (!event.meta.conversationId) {
         // Ignoring tool calls.
-        const children = builder.findCommits({ tags: [event.meta.pid && tagPid(event.meta.pid)] });
+        const children = builder.findCommits(CommitSelector.tag(event.meta.pid && tagPid(event.meta.pid)));
         builder.addCommit(
           {
             id: `${event.id}:${event.data.key}:end`,
             branch: event.meta.parentPid ?? MAIN_BRANCH,
-            parents: builder.computeParents([
-              {
-                branch: event.meta.parentPid ?? MAIN_BRANCH,
-                fallback: { tags: [event.meta.parentPid && tagPid(event.meta.parentPid)] },
-              },
-              { commit: { tags: [event.meta.pid && tagPid(event.meta.pid)] } },
-              {
-                commit: {
-                  tags: [event.meta.parentPid && tagStartMarker(event.meta.parentPid)].filter(Predicate.isNotNullable),
-                },
-              },
-            ]),
+            parents: builder.computeParents(
+              CommitSelector.branch(event.meta.parentPid ?? MAIN_BRANCH).pipe(
+                CommitSelector.compose(
+                  CommitSelector.not(CommitSelector.tag(tagOperationBegin(event.meta.pid ?? 'unknown'))),
+                ),
+                CommitSelector.orElse(CommitSelector.tag(event.meta.parentPid && tagStartMarker(event.meta.parentPid))),
+                CommitSelector.compose(CommitSelector.last()),
+                CommitSelector.andAlso(
+                  CommitSelector.tag(event.meta.pid && tagPid(event.meta.pid)).pipe(
+                    CommitSelector.compose(CommitSelector.not(CommitSelector.tag(tagOperationBegin(event.meta.pid ?? 'unknown')))),
+                    CommitSelector.compose(CommitSelector.last()),
+                  ),
+                ),
+              ),
+            ),
             tags: getTags(event.meta),
             timestamp: new Date(event.timestamp),
             icon: event.data.outcome === 'success' ? ICONS.operationEndSuccess.icon : ICONS.operationEndError.icon,
@@ -305,9 +335,7 @@ export const buildExecutionGraph = ({
               // TODO(dmaretskyi): Deduping events in subbranches brekas graph.
               !event.meta.parentPid && children.length > 1 // 1 is the operation begin commit.
                 ? undefined
-                : {
-                    tags: [tagOperationBegin(event.meta.pid ?? 'unknown')],
-                  },
+                : CommitSelector.tag(tagOperationBegin(event.meta.pid ?? 'unknown')),
           },
         );
       }
@@ -323,7 +351,7 @@ export const buildExecutionGraph = ({
       builder.addCommit({
         id: `running:${process.pid}`,
         branch: process.pid,
-        parents: builder.computeParents([{ branch: process.pid }]),
+        parents: builder.computeParents(CommitSelector.branch(process.pid)),
         icon: ICONS.agentRequestRunning.icon,
         level: ICONS.agentRequestRunning.level,
         message: 'Generating...',
@@ -333,6 +361,7 @@ export const buildExecutionGraph = ({
   }
 
   const built = builder.build();
+  dbg(JSON.stringify(built, null, 2));
   log('trace execution graph', {
     traceMessages: traceMessages.length,
     flatEvents: events.length,
@@ -344,25 +373,149 @@ export const buildExecutionGraph = ({
 };
 
 type Falsy = false | null | undefined;
-type MaybeFalsy<T> = T | Falsy;
 
-// TODO(dmaretskyi): Replace this with simple composition of predicates.
-type CommitSelector = { id?: MaybeFalsy<string>[]; tags?: MaybeFalsy<string>[] };
+export interface CommitSelector extends Pipeable.Pipeable {
+  select: (commits: Commit[]) => Commit[];
+}
+
+export const CommitSelector = {
+  make: (select: CommitSelector['select']): CommitSelector => ({
+    select,
+    pipe(...args: any) {
+      return Pipeable.pipeArguments(this, args);
+    },
+  }),
+
+  identity: (): CommitSelector => CommitSelector.make((commits) => commits),
+
+  /**
+   * Selects commits that match the given predicate.
+   */
+  filter: (predicate: (commit: Commit) => unknown): CommitSelector =>
+    CommitSelector.make((commits) => commits.filter(predicate)),
+
+  /**
+   * Selects commits by id.
+   */
+  id: (id: string): CommitSelector => CommitSelector.filter((commit) => commit.id === id),
+  /**
+   * Selects commits by tag.
+   */
+  tag: (tag: string | Falsy): CommitSelector => CommitSelector.filter((commit) => tag && commit.tags?.includes(tag)),
+  /**
+   * Selects commits by if any of the given tags are present.
+   */
+  anyTags: (tags: (string | Falsy)[]): CommitSelector =>
+    CommitSelector.filter((commit) => tags.some((tag) => tag && commit.tags?.includes(tag))),
+  /**
+   * Selects commits by branch.
+   */
+  branch: (branch: string): CommitSelector => CommitSelector.filter((commit) => commit.branch === branch),
+
+  /**
+   * Chains two selectors together, applying the second selector to the result of the first.
+   *
+   * Example:
+   *
+   * ```
+   * CommitSelector.tag('tag').pipe(CommitSelector.compose(CommitSelector.branch('main')));
+   * ```
+   */
+  compose:
+    (next: CommitSelector) =>
+    (prev: CommitSelector): CommitSelector =>
+      CommitSelector.make((commits) => next.select(prev.select(commits))),
+
+  /**
+   * If `prev` selector matches no commits, return `next` selector, otherwise return `prev` selector.
+   * Same as `CommitSelector.firstOf(prev, next)`.
+   *
+   * Example:
+   *
+   * ```
+   * CommitSelector.tag('tag').pipe(CommitSelector.orElse(CommitSelector.branch('main')));
+   * ```
+   */
+  orElse:
+    (next: CommitSelector) =>
+    (prev: CommitSelector): CommitSelector =>
+      CommitSelector.make((commits) => {
+        const selected = prev.select(commits);
+        if (selected.length > 0) {
+          return selected;
+        }
+        return next.select(commits);
+      }),
+
+  /**
+   * Selects commits that match ither of the given selectors.
+   */
+  andAlso:
+    (next: CommitSelector) =>
+    (prev: CommitSelector): CommitSelector =>
+      CommitSelector.unionAll(prev, next),
+
+  /**
+   * Selects the first n commits.
+   */
+  first: (n: number = 1): CommitSelector => CommitSelector.make((commits) => commits.slice(0, n)),
+  /**
+   * Selects the last n commits (reverses the order of the commits).
+   */
+  last: (n: number = 1): CommitSelector => CommitSelector.make((commits) => commits.toReversed().slice(0, n)),
+  /**
+   * Selects commits that do not match the given selector.
+   */
+  not: (selector: CommitSelector): CommitSelector =>
+    CommitSelector.make((commits) => {
+      const selected = selector.select(commits);
+      return commits.filter((commit) => !selected.includes(commit));
+    }),
+
+  /**
+   * Selects commits that match any of the given selectors.
+   */
+  unionAll: (...selectors: CommitSelector[]): CommitSelector =>
+    CommitSelector.make((commits) => {
+      return Array.dedupeWith(
+        selectors.flatMap((selector) => selector.select(commits)),
+        (a, b) => a.id === b.id,
+      );
+    }),
+
+  /**
+   * Selects commits that match all of the given selectors.
+   */
+  intersectAll: (...selectors: CommitSelector[]): CommitSelector =>
+    CommitSelector.make((commits) => {
+      const selected = selectors.map((selector) => selector.select(commits));
+      if (selected.length === 0) {
+        return [];
+      }
+      return selected[0].filter((commit) => selected.every((selected) => selected.some((c) => c.id === commit.id)));
+    }),
+
+  /**
+   * Returns the result of the first selector that matches any commits.
+   */
+  firstOf: (...selectors: CommitSelector[]): CommitSelector =>
+    CommitSelector.make((commits) => {
+      for (const selector of selectors) {
+        const selected = selector.select(commits);
+        if (selected.length > 0) {
+          return selected;
+        }
+      }
+      return [];
+    }),
+};
 
 class GraphBuilder {
   #commits: Commit[] = [];
   #branches = new Set<string>();
 
-  findCommits(selector: CommitSelector) {
-    return this.#commits.filter((commit) => {
-      if (selector.id && selector.id.includes(commit.id)) {
-        return true;
-      }
-      if (selector.tags && selector.tags.some((tag) => tag && commit.tags?.includes(tag))) {
-        return true;
-      }
-      return false;
-    });
+  findCommits(selector: CommitSelector): Commit[] {
+    return selector.select(this.#commits);
   }
 
   addCommit(
@@ -376,16 +529,25 @@ class GraphBuilder {
     },
   ) {
     if (opts?.ifMissing) {
-      const commits = this.findCommits(opts.ifMissing);
-      if (commits.length > 0) {
+      if (this.findCommits(opts.ifMissing).length > 0) {
         return;
       }
     }
     this.addBranch(commit.branch);
     if (opts?.replace) {
-      const commits = this.findCommits(opts.replace);
-      if (commits.length > 0) {
-        this.#commits[this.#commits.indexOf(commits.at(-1)!)] = commit;
+      const matches = this.findCommits(opts.replace);
+      if (matches.length > 0) {
+        this.#commits[this.#commits.indexOf(matches.at(-1)!)] = commit;
+        // Update parents to point to the new commit.
+        for (const commit of this.#commits) {
+          if (commit.parents) {
+            for (let i = 0; i < commit.parents.length; i++) {
+              if (commit.parents[i] === matches.at(-1)!.id) {
+                commit.parents[i] = commit.id;
+              }
+            }
+          }
+        }
         return;
       }
     }
@@ -393,63 +555,40 @@ class GraphBuilder {
   }
 
   removeCommit(selector: CommitSelector) {
-    const commits = this.findCommits(selector);
-    for (const commit of commits) {
+    for (const commit of this.findCommits(selector)) {
       this.#commits.splice(this.#commits.indexOf(commit), 1);
     }
   }
 
   /**
-   * Computes parents based on a list of specs.
+   * Computes parents — picks first matching commit's id.
    */
-  computeParents(
-    specs: (
-      | {
-          /**
-           * Parent commits selector.
-           */
-          commit?: CommitSelector;
-        }
-      | {
-          /**
-           * Last commit on this branch as parent.
-           */
-          branch?: string;
-
-          /**
-           * Fallback if branch has no commits.
-           */
-          fallback?: CommitSelector;
-        }
-    )[],
-  ): string[] {
-    return specs.flatMap((spec) => {
-      if ('commit' in spec && spec.commit) {
-        return this.findCommits(spec.commit)
-          .slice(-1)
-          .map((commit) => commit.id);
-      }
-      if ('branch' in spec && spec.branch) {
-        const lastCommit = this.#commits.findLast((commit) => commit.branch === spec.branch);
-        if (lastCommit) {
-          return [lastCommit.id];
-        } else if (spec.fallback) {
-          return this.findCommits(spec.fallback)
-            .slice(-1)
-            .map((commit) => commit.id);
-        } else {
-          return [];
-        }
-      }
-      return [];
-    });
+  computeParents(selector: CommitSelector): string[] {
+    return Array.dedupe(selector.select(this.#commits).map((commit) => commit.id));
   }
 
   addBranch(branch: string) {
     this.#branches.add(branch);
   }
 
+  /**
+   * Removes duplicate commits and dangling parents.
+   */
+  doctor() {
+    this.#commits = pipe(
+      this.#commits,
+      Array.dedupeWith((a, b) => a.id === b.id),
+      Array.map(
+        Struct.evolve({
+          parents: (parents) =>
+            parents ? Array.filter(parents, (id) => this.#commits.some((commit) => commit.id === id)) : undefined,
+        }),
+      ),
+    );
+  }
+
   build() {
+    this.doctor();
     return {
       commits: this.#commits,
       branches: [...this.#branches],
