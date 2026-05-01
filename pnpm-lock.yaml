@@ -2442,6 +2442,9 @@ importers:
       '@dxos/plugin-discord':
         specifier: workspace:*
         version: link:../../plugins/plugin-discord
+      '@dxos/plugin-doctor':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-doctor
       '@dxos/plugin-explorer':
         specifier: workspace:*
         version: link:../../plugins/plugin-explorer
@@ -9138,6 +9141,31 @@ importers:
       react-dom:
         specifier: ~19.2.3
         version: 19.2.3(react@19.2.3)
+      vite:
+        specifier: '>=8.0.0'
+        version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/plugins/plugin-doctor:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+    devDependencies:
       vite:
         specifier: '>=8.0.0'
         version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
@@ -42924,8 +42952,8 @@ snapshots:
 
   '@napi-rs/wasm-runtime@0.2.12':
     dependencies:
-      '@emnapi/core': 1.7.1
-      '@emnapi/runtime': 1.7.1
+      '@emnapi/core': 1.10.0
+      '@emnapi/runtime': 1.10.0
       '@tybys/wasm-util': 0.10.1
     optional: true
 

@@ -52,6 +52,7 @@
     "@dxos/plugin-debug": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-discord": "workspace:*",
+    "@dxos/plugin-doctor": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-feed": "workspace:*",
     "@dxos/plugin-files": "workspace:*",
