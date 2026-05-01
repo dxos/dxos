@@ -29,6 +29,14 @@ export const Agent = Schema.Struct({
   name: Schema.optional(Schema.String),
 
   /**
+   * When false, agent triggers are disabled after sync-triggers runs.
+   */
+  enabled: Schema.optional(Schema.Boolean).annotations({
+    title: 'Enabled',
+    description: 'Master switch for agent automation; propagated to all triggers on sync.',
+  }),
+
+  /**
    * Instructions for the agent.
    */
   instructions: Ref.Ref(Text.Text).pipe(
@@ -127,6 +135,7 @@ export const makeInitialized = (
       artifacts: props.artifacts ?? [],
       subscriptions: props.subscriptions ?? [],
       filterEvents: props.filterEvents ?? true,
+      enabled: props.enabled ?? true,
     });
     yield* Database.add(agent);
     const feed = yield* Database.add(Feed.make());
