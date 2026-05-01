@@ -63,6 +63,12 @@ describe('runQuery', () => {
     expect(result.matched).toBe(2);
   });
 
+  test('time bounds accept digit-only strings as epoch milliseconds', ({ expect }) => {
+    const since = String(Date.parse('2026-01-01T00:00:03.000Z'));
+    const result = runQuery(baseRows, { since });
+    expect(result.matched).toBe(2);
+  });
+
   test('filter exclude (!rpc) drops matching entries at trace+', ({ expect }) => {
     const result = runQuery(baseRows, { filters: ['debug,!rpc'] });
     // info, warn, error pass; the rpc debug entry is excluded.

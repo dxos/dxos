@@ -104,6 +104,11 @@ const parseTime = (value: string | number | undefined): number | undefined => {
   if (typeof value === 'number') {
     return Number.isFinite(value) ? value : undefined;
   }
+  // Accept digit-only strings as epoch ms — assistants often serialize numbers as strings.
+  if (/^-?\d+$/.test(value)) {
+    const asNumber = Number(value);
+    return Number.isFinite(asNumber) ? asNumber : undefined;
+  }
   const parsed = Date.parse(value);
   return Number.isFinite(parsed) ? parsed : undefined;
 };
