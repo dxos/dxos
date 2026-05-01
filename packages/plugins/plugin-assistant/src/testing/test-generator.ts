@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
 import { random } from '@dxos/random';
-import { renderObjectLink, textStream } from '@dxos/react-ui-components';
+import { renderObjectLink, textStream } from '@dxos/react-ui-markdown';
 import { type Actor, type ContentBlock, Message, Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 

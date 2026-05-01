@@ -54,7 +54,9 @@ export const filterStderrBuffer = (buffer: string): string => {
   for (let i = 0; i < lines.length; i += 2) {
     const line = lines[i] ?? '';
     const newline = lines[i + 1] ?? '';
-    if (line === '' && newline === '') continue;
+    if (line === '' && newline === '') {
+      continue;
+    }
     const decision = decideStderrChunk(line + newline, suppressing);
     suppressing = decision.suppressing;
     if (!decision.drop) {

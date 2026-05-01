@@ -2,11 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type LogConfig, type LogEntry, type LogProcessor, inferEnvironmentName, serializeToJsonl } from '@dxos/log';
+import {
+  type LogConfig,
+  type LogEntry,
+  type LogFilter,
+  type LogProcessor,
+  inferEnvironmentName,
+  parseFilter,
+  serializeToJsonl,
+  shouldLog,
+} from '@dxos/log';
 
 import { trimJsonlToSize } from './trim';
 
 const DEFAULT_STORE_NAME = 'logs';
+const DEFAULT_LOG_FILTER = 'debug';
 const DEFAULT_FLUSH_INTERVAL = 250;
 const DEFAULT_FLUSH_BATCH_SIZE = 500;
 // Sized for ~50 MB on disk at the observed Composer average of ~350 bytes per JSONL line.
@@ -47,6 +57,11 @@ export type IdbLogStoreOptions = {
    * Defaults to a scope-aware id of the form `<scope>:<name>:<suffix>` — see {@link inferEnvironmentName}.
    */
   tabId?: string;
+  /**
+   * Same syntax as `DX_LOG` / {@link parseFilter} (e.g. `debug`, `info`, `pattern:warn`).
+   * Entries below the minimum level are not stored. Default `debug` (TRACE is excluded).
+   */
+  logFilter?: string;
 };
 
 /**
@@ -70,6 +85,7 @@ export class IdbLogStore {
   readonly #maxRecords: number;
   readonly #evictionInterval: number;
   readonly #tabId: string;
+  readonly #filters: LogFilter[];
 
   #queue: string[] = [];
   #flushTimer: ReturnType<typeof setTimeout> | undefined;
@@ -89,6 +105,7 @@ export class IdbLogStore {
     this.#maxRecords = options.maxRecords ?? DEFAULT_MAX_RECORDS;
     this.#evictionInterval = options.evictionInterval ?? DEFAULT_EVICTION_INTERVAL;
     this.#tabId = options.tabId ?? inferEnvironmentName();
+    this.#filters = parseFilter(options.logFilter ?? DEFAULT_LOG_FILTER);
 
     this.#installLifecycleHandlers();
     this.#scheduleEviction();
@@ -99,6 +116,9 @@ export class IdbLogStore {
    */
   readonly processor: LogProcessor = (_config: LogConfig, entry: LogEntry) => {
     if (this.#closed) {
+      return;
+    }
+    if (!shouldLog(entry, this.#filters)) {
       return;
     }
     const line = serializeToJsonl(entry, { env: this.#tabId });

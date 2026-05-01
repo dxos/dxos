@@ -2,29 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
-import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { type Dispatch, type SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
-import { Process, ServiceResolver, Trace } from '@dxos/compute';
-import { OperationHandlerSet } from '@dxos/compute';
-import { Database, Feed } from '@dxos/echo';
+import { Process, Trace } from '@dxos/compute';
+import { Feed } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
 import { FeedTraceSink, ProcessManager } from '@dxos/functions-runtime';
 import { ObjectId } from '@dxos/keys';
-import { dbg } from '@dxos/log';
+import { AutomationPlugin } from '@dxos/plugin-automation';
+import { useComputeRuntime } from '@dxos/plugin-automation/hooks';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { type Space, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { Timeline } from '@dxos/react-ui-components';
@@ -125,55 +120,18 @@ const SimulatedAgent = Process.make(
 );
 
 //
-// Story runtime — lightweight ProcessManager + FeedTraceSink.
-//
-
-type StoryRuntime = ManagedRuntime.ManagedRuntime<ProcessManager.ProcessManagerService, never>;
-
-const createStoryRuntime = (space: Space): StoryRuntime => {
-  const dbLayer = Database.layer(space.db);
-  const feedServiceLayer = createFeedServiceLayer(space.queues);
-  const traceSinkLayer = FeedTraceSink.layerLive.pipe(Layer.provide(dbLayer), Layer.provide(feedServiceLayer));
-
-  const layer = ProcessManager.layer().pipe(
-    Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, ServiceResolver.empty)),
-    Layer.provide(KeyValueStore.layerMemory),
-    Layer.provide(OperationHandlerSet.provide(OperationHandlerSet.empty)),
-    Layer.provideMerge(Registry.layer),
-    Layer.provide(traceSinkLayer),
-  );
-
-  return ManagedRuntime.make(layer);
-};
-
-//
 // Story component.
 //
 
 const DefaultStory = () => {
   const [space] = useSpaces();
-  const runtimeRef = useRef<StoryRuntime | null>(null);
+  const runtime = useComputeRuntime(space?.id);
   const invokeCounterRef = useRef(0);
 
-  useEffect(() => {
-    if (!space) {
-      return;
-    }
-
-    const runtime = createStoryRuntime(space);
-    runtimeRef.current = runtime;
-    return () => {
-      runtimeRef.current = null;
-      void runtime.dispose();
-    };
-  }, [space]);
-
   const handleRunAgent = useCallback(() => {
-    const runtime = runtimeRef.current;
     if (!runtime) {
       return;
     }
-
     const scenarioIndex = invokeCounterRef.current++;
     void runtime.runPromise(
       Effect.gen(function* () {
@@ -182,9 +140,9 @@ const DefaultStory = () => {
         yield* handle.submitInput(scenarioIndex);
       }),
     );
-  }, []);
+  }, [runtime]);
 
-  if (!space) {
+  if (!space || !runtime) {
     return <Loading />;
   }
 
@@ -202,19 +160,210 @@ const DefaultStory = () => {
   );
 };
 
-export const WithSnapshot: Story = {
-  render: () => {
-    const [space] = useSpaces();
-    const [feed] = useQuery(space?.db, FeedTraceSink.query);
-    const traceMessages = useQuery(
-      space?.db,
-      feed ? Query.select(Filter.everything()).from(feed) : Query.select(Filter.nothing()),
-    );
-    dbg(traceMessages);
-    const { commits, branches } = useMemo(() => buildExecutionGraph({ traceMessages }), [traceMessages]);
-    dbg(commits);
-    return <Timeline branches={branches} commits={commits} showTimestamp />;
+const meta = {
+  title: 'plugins/plugin-assistant/containers/TracePanel',
+  render: DefaultStory,
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'column' }),
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [Feed.Feed, Trace.Message],
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* initializeIdentity(client);
+              const [space] = client.spaces.get();
+              yield* Effect.promise(() => space.waitUntilReady());
+            }),
+        }),
+        AutomationPlugin(),
+      ],
+    }),
+  ],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
   },
+} satisfies Meta;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+
+/**
+ * Interval (ms) between auto-played trace messages.
+ */
+const PLAYBACK_INTERVAL_MS = 250;
+
+const STEP_STORAGE_KEY = 'plugin-assistant.trace-panel.snapshot.step';
+
+/**
+ * `useState<number>` that hydrates from and persists to `localStorage`.
+ * The third tuple member is `true` iff a valid value was loaded on first render.
+ */
+const useLocalStorageNumber = (key: string, initial: number): [number, Dispatch<SetStateAction<number>>, boolean] => {
+  const initRef = useRef<{ value: number; hydrated: boolean } | null>(null);
+  if (initRef.current === null) {
+    let value = initial;
+    let hydrated = false;
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem(key);
+      const parsed = stored === null ? Number.NaN : Number(stored);
+      if (Number.isInteger(parsed) && parsed >= 0) {
+        value = parsed;
+        hydrated = true;
+      }
+    }
+    initRef.current = { value, hydrated };
+  }
+  const [value, setValue] = useState(initRef.current.value);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(key, String(value));
+    }
+  }, [key, value]);
+  return [value, setValue, initRef.current.hydrated];
+};
+
+const SnapshotStory = () => {
+  const [space] = useSpaces();
+  const [feed] = useQuery(space?.db, FeedTraceSink.query);
+  const allMessages = useQuery(
+    space?.db,
+    feed ? Query.select(Filter.everything()).from(feed) : Query.select(Filter.nothing()),
+  );
+
+  // Sort by first event timestamp so playback order is chronological regardless of query ordering.
+  const sortedMessages = useMemo(
+    () => [...allMessages].sort((left, right) => (left.events[0]?.timestamp ?? 0) - (right.events[0]?.timestamp ?? 0)),
+    [allMessages],
+  );
+
+  const total = sortedMessages.length;
+  const [step, setStep, stepHydrated] = useLocalStorageNumber(STEP_STORAGE_KEY, 0);
+  const [playing, setPlaying] = useState(false);
+
+  useEffect(() => {
+    setStep((current) => Math.min(Math.max(current, 0), total));
+  }, [total, setStep]);
+
+  // Start with all messages loaded once the snapshot first arrives; afterwards the user controls `step`.
+  // Skip the auto-init if we restored a value from localStorage so we don't clobber the user's last position.
+  const hasInitializedRef = useRef(false);
+  useEffect(() => {
+    if (!hasInitializedRef.current && total > 0) {
+      hasInitializedRef.current = true;
+      if (!stepHydrated) {
+        setStep(total);
+      }
+    }
+  }, [total, stepHydrated, setStep]);
+
+  const visibleMessages = useMemo(() => sortedMessages.slice(0, step), [sortedMessages, step]);
+  const { commits, branches } = useMemo(
+    () => buildExecutionGraph({ traceMessages: visibleMessages }),
+    [visibleMessages],
+  );
+
+  const stepNext = useCallback(() => setStep((current) => Math.min(current + 1, total)), [total]);
+  const stepPrev = useCallback(() => setStep((current) => Math.max(current - 1, 0)), []);
+  const reset = useCallback(() => {
+    setStep(0);
+    setPlaying(false);
+  }, []);
+  const showAll = useCallback(() => {
+    setStep(total);
+    setPlaying(false);
+  }, [total]);
+  const togglePlay = useCallback(() => setPlaying((previous) => !previous), []);
+
+  // Auto-play steps forward until we reach the end.
+  useEffect(() => {
+    if (!playing) {
+      return;
+    }
+    const id = window.setInterval(() => {
+      setStep((current) => {
+        if (current >= total) {
+          setPlaying(false);
+          return current;
+        }
+        return current + 1;
+      });
+    }, PLAYBACK_INTERVAL_MS);
+    return () => window.clearInterval(id);
+  }, [playing, total]);
+
+  // Keyboard shortcuts: ←/h step back, →/l step forward, space play/pause, r reset, e/End show all.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable) {
+        return;
+      }
+      switch (event.key) {
+        case 'ArrowRight':
+        case 'l':
+          event.preventDefault();
+          stepNext();
+          break;
+        case 'ArrowLeft':
+        case 'h':
+          event.preventDefault();
+          stepPrev();
+          break;
+        case ' ':
+          event.preventDefault();
+          togglePlay();
+          break;
+        case 'r':
+          event.preventDefault();
+          reset();
+          break;
+        case 'e':
+        case 'End':
+          event.preventDefault();
+          showAll();
+          break;
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [stepNext, stepPrev, togglePlay, reset, showAll]);
+
+  return (
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <IconButton iconOnly icon='ph--skip-back--regular' label='Reset (R)' onClick={reset} />
+          <IconButton iconOnly icon='ph--caret-left--regular' label='Step back (← / H)' onClick={stepPrev} />
+          <IconButton
+            iconOnly
+            icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
+            label={playing ? 'Pause (Space)' : 'Play (Space)'}
+            onClick={togglePlay}
+          />
+          <IconButton iconOnly icon='ph--caret-right--regular' label='Step forward (→ / L)' onClick={stepNext} />
+          <IconButton iconOnly icon='ph--skip-forward--regular' label='Show all (E / End)' onClick={showAll} />
+          <Toolbar.Separator />
+          <span className='pli-2 text-sm tabular-nums opacity-70'>
+            {step} / {total}
+          </span>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content>
+        <Timeline branches={branches} commits={commits} showTimestamp />
+      </Panel.Content>
+    </Panel.Root>
+  );
+};
+
+export const WithSnapshot: Story = {
+  render: () => <SnapshotStory />,
   decorators: [
     withTheme(),
     withLayout({ layout: 'column' }),
@@ -238,36 +387,3 @@ export const WithSnapshot: Story = {
     }),
   ],
 };
-
-const meta = {
-  title: 'plugins/plugin-assistant/containers/TracePanel',
-  render: DefaultStory,
-  decorators: [
-    withTheme(),
-    withLayout({ layout: 'column' }),
-    withPluginManager({
-      plugins: [
-        ...corePlugins(),
-        ClientPlugin({
-          types: [Feed.Feed, Trace.Message],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              yield* initializeIdentity(client);
-              const [space] = client.spaces.get();
-              yield* Effect.promise(() => space.waitUntilReady());
-            }),
-        }),
-      ],
-    }),
-  ],
-  parameters: {
-    layout: 'fullscreen',
-    translations,
-  },
-} satisfies Meta;
-
-export default meta;
-
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {};

@@ -14,7 +14,8 @@ export * from './log';
 export { parseFilter } from './options';
 export * from './processors';
 export * from './scope';
-export type * from './meta';
+export type { CallMetadata } from './meta';
+export { LOG_META_MARKER, isLogMeta } from './meta';
 export { dbg } from './dbg';
 export * from './log-buffer';
 

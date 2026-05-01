@@ -580,6 +580,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-doctor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-explorer/package.json",
           "jsonpath": "$.version"
         },
@@ -606,6 +611,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-inbox/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-integration/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -800,17 +810,17 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-token-manager/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-transcription/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/plugins/plugin-transformer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-trello/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1185,11 +1195,6 @@
         },
         {
           "type": "json",
-          "path": "tools/swc-log-plugin/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "tools/toolbox/package.json",
           "jsonpath": "$.version"
         },
@@ -1206,6 +1211,11 @@
         {
           "type": "json",
           "path": "tools/vite-plugin-log/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/vite-plugin-log/example/package.json",
           "jsonpath": "$.version"
         },
         {
