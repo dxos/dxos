@@ -74,8 +74,9 @@ const BOOT_ID = Math.random().toString(36).slice(2, 10);
 const MODULE_EVAL_TIME = Date.now();
 log('composer main: module evaluated', { bootId: BOOT_ID, t: MODULE_EVAL_TIME });
 
-if (import.meta.hot) {
-  import.meta.hot.dispose(() => {
+const importMeta = import.meta as any;
+if (importMeta.hot) {
+  importMeta.hot.dispose(() => {
     log('composer main: hmr dispose', { bootId: BOOT_ID, ageMs: Date.now() - MODULE_EVAL_TIME });
   });
 }
