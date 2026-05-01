@@ -73,7 +73,10 @@ describe('IdbLogStore', () => {
     await store.flush();
 
     const jsonl = await store.export();
-    const messages = jsonl.split('\n').filter(Boolean).map((line) => JSON.parse(line).m);
+    const messages = jsonl
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => JSON.parse(line).m);
     expect(messages).toHaveLength(2);
     expect(messages).toContain('debug-line');
     expect(messages).toContain('kept');
@@ -86,7 +89,10 @@ describe('IdbLogStore', () => {
     store.processor(fakeConfig, makeEntry(LogLevel.INFO, 'kept'));
     await store.flush();
     const jsonl = await store.export();
-    const messages = jsonl.split('\n').filter(Boolean).map((line) => JSON.parse(line).m);
+    const messages = jsonl
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => JSON.parse(line).m);
     expect(messages).toEqual(['kept']);
   });
 

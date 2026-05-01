@@ -624,7 +624,9 @@ describe('query api', () => {
     });
 
     test('Query.debugLabel merges onto existing options clause', () => {
-      const query = Query.select(Filter.type(TestSchema.Person)).options({ deleted: 'exclude' }).debugLabel('timer-probe');
+      const query = Query.select(Filter.type(TestSchema.Person))
+        .options({ deleted: 'exclude' })
+        .debugLabel('timer-probe');
       const pretty = Query.pretty(query);
       expect(pretty).toContain('deleted');
       expect(pretty).toContain('debugLabel');
