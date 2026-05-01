@@ -573,6 +573,21 @@ class QueryClass implements Query$.Any {
       options,
     });
   }
+
+  debugLabel(label: string): Query$.Any {
+    if (this.ast.type === 'options') {
+      return new QueryClass({
+        type: 'options',
+        query: this.ast.query,
+        options: { ...this.ast.options, debugLabel: label },
+      });
+    }
+    return new QueryClass({
+      type: 'options',
+      query: this.ast,
+      options: { debugLabel: label },
+    });
+  }
 }
 
 export const Query1: typeof Query$ = QueryClass;
