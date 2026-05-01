@@ -6,6 +6,8 @@ import { WidgetType } from '@codemirror/view';
 
 import { Domino } from '@dxos/ui';
 
+import { styles } from './defaults';
+
 /**
  * Props used to derive a stable key for a reasoning block across CodeMirror widget rebuilds.
  * CodeMirror does not assign persistent IDs to widgets; streaming re-runs the factory each tick.
@@ -37,14 +39,14 @@ export class ReasoningWidget extends WidgetType {
 
   override toDOM() {
     const root = Domino.of('div')
-      .classNames('pt-2 pb-2')
+      .classNames(styles.padding)
       .append(
         Domino.of('div')
-          .classNames('relative overflow-hidden p-px rounded-sm border border-subdued-separator')
+          .classNames('relative overflow-hidden p-px', styles.border)
           .attributes({ 'data-trail-container': '' })
           .append(
             Domino.of('div')
-              .classNames('relative z-10 bg-base-surface rounded-sm text-sm text-description px-2 py-1')
+              .classNames('relative z-10 bg-base-surface rounded-sm text-sm text-subdued px-2 py-1')
               .append(
                 Domino.of('div')
                   .classNames('max-h-[5lh] overflow-y-auto')

@@ -11,7 +11,7 @@ import { Operation } from '@dxos/compute';
 import { Annotation } from '@dxos/echo';
 import { AutomationEvents } from '@dxos/plugin-automation/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
-import { MarkdownEvents } from '@dxos/plugin-markdown';
+import { MarkdownEvents } from '@dxos/plugin-markdown/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
@@ -26,10 +26,10 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { SheetOperation } from '#operations';
+import { translations } from '#translations';
 import { Sheet } from '#types';
 
 import { serializer } from './serializer';
-import { translations } from './translations';
 
 export const SheetPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({

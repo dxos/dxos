@@ -10,10 +10,10 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Annotation, Ref, Type } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client/types';
-import { MarkdownEvents } from '@dxos/plugin-markdown';
+import { MarkdownEvents } from '@dxos/plugin-markdown/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { SpaceCapabilities, SpaceEvents, type CreateObject } from '@dxos/plugin-space/types';
-import { translations as threadTranslations } from '@dxos/react-ui-thread';
+import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import {
@@ -29,9 +29,8 @@ import {
 } from '#capabilities';
 import { THREAD_ITEM, meta } from '#meta';
 import { ThreadOperation } from '#operations';
+import { translations } from '#translations';
 import { Channel } from '#types';
-
-import { translations } from './translations';
 
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 //  NOTE(burdon): Review/discuss CursorConverter semantics.

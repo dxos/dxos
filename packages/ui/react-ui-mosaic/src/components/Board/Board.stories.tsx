@@ -16,9 +16,10 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { mx } from '@dxos/ui-theme';
 
+import { translations } from '#translations';
+
 import { useEventHandlerAdapter } from '../../hooks';
 import { TestColumn, TestItem } from '../../testing';
-import { translations } from '../../translations';
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicEventHandler } from '../Mosaic';
 import { Board, type BoardModel } from './Board';

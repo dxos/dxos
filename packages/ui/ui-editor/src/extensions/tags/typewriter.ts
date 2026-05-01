@@ -13,17 +13,28 @@ import {
 } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
-/** Annotate a transaction to bypass the wire buffer (content appears immediately). */
-export const wireBypass = Annotation.define<boolean>();
-
 import { Domino } from '@dxos/ui';
+
+/** Annotate a transaction to bypass the typewriter buffer (content appears immediately). */
+export const typewriterBypass = Annotation.define<boolean>();
+
+/**
+ * Public state effect signalling whether typewriter's drip queue is currently draining.
+ * Other extensions can subscribe to coordinate behaviour with the typewriter (e.g. hide
+ * a block-widget footer while text is being dripped to avoid scroll-measure conflicts).
+ *
+ * Dispatched at queue transitions:
+ * - `true` — empty → non-empty (drain rAF/interval is starting).
+ * - `false` — non-empty → empty (last char written, drain stopped).
+ */
+export const typewriterDrainingEffect = StateEffect.define<boolean>();
 
 type BufferState = { text: string; insertAt: number };
 
 const DEFAULT_RATE = 200;
 const CURSOR_LINGER = 3_000;
 
-export type WireOptions = {
+export type TypewriterOptions = {
   /** Characters per second. */
   rate?: number;
   /** Show a blinking cursor at the insertion point while streaming. */
@@ -33,10 +44,10 @@ export type WireOptions = {
 };
 
 /**
- * Extension that intercepts appended text and inserts it one character at a time,
- * except for XML tags, links, and images which are flushed atomically.
+ * Intercepts appended text and inserts it one character at a time, while flushing XML tags,
+ * markdown links, and images atomically for smooth typewriter-style streaming.
  */
-export const wire = (options: WireOptions = {}): Extension => {
+export const typewriter = (options: TypewriterOptions = {}): Extension => {
   const rate = options.rate ?? DEFAULT_RATE;
   const interval = 1_000 / rate;
   const streamingTags = options.streamingTags ?? new Set<string>();
@@ -51,7 +62,6 @@ export const wire = (options: WireOptions = {}): Extension => {
     create: () => ({ text: '', insertAt: 0 }),
     update: (value, tr) => {
       let { text, insertAt } = value;
-
       for (const effect of tr.effects) {
         if (effect.is(suppressAppend)) {
           text += effect.value.text;
@@ -96,7 +106,7 @@ export const wire = (options: WireOptions = {}): Extension => {
     }
 
     // Allow bypassed and drip insertions through.
-    if (tr.annotation(wireBypass) || tr.effects.some((effect) => effect.is(insertChunk))) {
+    if (tr.annotation(typewriterBypass) || tr.effects.some((effect) => effect.is(insertChunk))) {
       return tr;
     }
 
@@ -130,44 +140,62 @@ export const wire = (options: WireOptions = {}): Extension => {
   // View plugin that drains the buffer, emitting one character or one atomic chunk per tick.
   const drainPlugin = ViewPlugin.fromClass(
     class {
-      #timer: ReturnType<typeof setInterval> | undefined;
-      #activeStreamTag: string | null = null;
+      _timer: ReturnType<typeof setInterval> | undefined;
+      _activeStreamTag: string | null = null;
 
       constructor(private view: EditorView) {
-        this.#start();
+        // Note: do NOT eagerly call `_start()` here. The buffer is empty at construction,
+        // and any synchronous `view.dispatch` inside the constructor is rejected by
+        // CodeMirror because we're inside the initial update flow. `update()` calls
+        // `_start()` once the buffer first becomes non-empty.
       }
 
       update(update: ViewUpdate) {
         const buffer = update.state.field(bufferField);
         // Reset streaming state when buffer is cleared (e.g., document reset).
         if (buffer.text.length === 0) {
-          this.#activeStreamTag = null;
+          this._activeStreamTag = null;
         }
-        if (buffer.text.length > 0 && this.#timer === undefined) {
-          this.#start();
+        if (buffer.text.length > 0 && this._timer === undefined) {
+          this._start();
         }
       }
 
-      #start() {
-        this.#timer = setInterval(() => {
+      _start() {
+        // Announce the drain has started so coordinated extensions (e.g. footer block
+        // widgets) can step out of the way before any drip transactions land. Deferred
+        // via `queueMicrotask` because `_start` is invoked from inside `update()` (and
+        // therefore inside CM's update flow), where synchronous `view.dispatch` is
+        // disallowed.
+        queueMicrotask(() => {
+          this.view.dispatch({
+            effects: typewriterDrainingEffect.of(true),
+            annotations: typewriterBypass.of(true),
+          });
+        });
+        this._timer = setInterval(() => {
           const { text, insertAt } = this.view.state.field(bufferField);
           if (text.length === 0) {
-            clearInterval(this.#timer);
-            this.#timer = undefined;
+            clearInterval(this._timer);
+            this._timer = undefined;
+            this.view.dispatch({
+              effects: typewriterDrainingEffect.of(false),
+              annotations: typewriterBypass.of(true),
+            });
             return;
           }
 
-          const result = flushable(text, streamingTags, this.#activeStreamTag);
+          const result = flushable(text, streamingTags, this._activeStreamTag);
           if (result.count === 0) {
             // Structure incomplete — wait for more data.
             return;
           }
 
           if (result.enterTag) {
-            this.#activeStreamTag = result.enterTag;
+            this._activeStreamTag = result.enterTag;
           }
           if (result.exitTag) {
-            this.#activeStreamTag = null;
+            this._activeStreamTag = null;
           }
 
           const chunk = text.slice(0, result.count);
@@ -179,12 +207,14 @@ export const wire = (options: WireOptions = {}): Extension => {
       }
 
       destroy() {
-        clearInterval(this.#timer);
+        clearInterval(this._timer);
       }
     },
   );
 
-  return [bufferField, filter, drainPlugin, options.cursor && wireCursor(bufferField)].filter(Boolean) as Extension[];
+  return [bufferField, filter, drainPlugin, options.cursor && typewriterCursor(bufferField)].filter(
+    Boolean,
+  ) as Extension[];
 };
 
 //
@@ -195,7 +225,7 @@ export const wire = (options: WireOptions = {}): Extension => {
  * Blinking cursor widget at the insertion point while the buffer is draining.
  * Lingers for 2s after the buffer empties before being removed.
  */
-const wireCursor = (bufferField: StateField<BufferState>): Extension => {
+const typewriterCursor = (bufferField: StateField<BufferState>): Extension => {
   const hideCursor = StateEffect.define();
 
   const visibilityField = StateField.define<{
@@ -254,7 +284,7 @@ const wireCursor = (bufferField: StateField<BufferState>): Extension => {
 
   const timerPlugin = ViewPlugin.fromClass(
     class {
-      #timer: ReturnType<typeof setTimeout> | undefined;
+      _timer: ReturnType<typeof setTimeout> | undefined;
 
       constructor(private view: EditorView) {}
 
@@ -263,18 +293,18 @@ const wireCursor = (bufferField: StateField<BufferState>): Extension => {
         const { visible } = update.state.field(visibilityField);
 
         if (text.length > 0) {
-          clearTimeout(this.#timer);
-          this.#timer = undefined;
-        } else if (visible && this.#timer === undefined) {
-          this.#timer = setTimeout(() => {
+          clearTimeout(this._timer);
+          this._timer = undefined;
+        } else if (visible && this._timer === undefined) {
+          this._timer = setTimeout(() => {
             this.view.dispatch({ effects: hideCursor.of(null) });
-            this.#timer = undefined;
+            this._timer = undefined;
           }, CURSOR_LINGER);
         }
       }
 
       destroy() {
-        clearTimeout(this.#timer);
+        clearTimeout(this._timer);
       }
     },
   );

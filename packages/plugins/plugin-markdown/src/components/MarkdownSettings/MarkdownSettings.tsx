@@ -13,7 +13,7 @@ import { Markdown } from '#types';
 
 export type MarkdownSettingsProps = AppSurface.SettingsArticleProps<Markdown.Settings>;
 
-const TypewriterField = ({ value, onChange, readonly }: SettingsFieldProps<string>) => (
+const SnippetsField = ({ value, onChange, readonly }: SettingsFieldProps<string>) => (
   <Input.TextArea disabled={readonly} rows={5} value={value ?? ''} onChange={(event) => onChange(event.target.value)} />
 );
 
@@ -24,8 +24,8 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
         <SettingsForm.FieldSet
           readonly={!onSettingsChange}
           schema={Markdown.Settings}
-          visible={(path, values) => path !== 'typewriter' || !!values.debug}
-          fieldMap={{ typewriter: TypewriterField }}
+          visible={(path, values) => path !== 'snippets' || !!values.debug}
+          fieldMap={{ snippets: SnippetsField }}
           values={settings}
           onValuesChanged={(values) => onSettingsChange?.(() => values)}
         />

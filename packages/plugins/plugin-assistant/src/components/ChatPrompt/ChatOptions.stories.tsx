@@ -20,8 +20,8 @@ import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 
 import { useBlueprintRegistry, useContextBinder } from '#hooks';
+import { translations } from '#translations';
 
-import { translations } from '../../translations';
 import { ChatOptions, ObjectsPanel, type ChatOptionsProps } from './ChatOptions';
 
 const presets = [

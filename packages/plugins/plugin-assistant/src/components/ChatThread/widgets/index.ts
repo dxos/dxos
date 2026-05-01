@@ -3,12 +3,11 @@
 //
 
 export * from './FallbackWidget';
-export * from './RoutineWidget';
 export * from './ReasoningWidget';
 export * from './ReferenceWidget';
 export * from './SelectWidget';
 export * from './StatsWidget';
+export * from './StatusWidget';
 export * from './SummaryWidget';
 export * from './SuggestionWidget';
 export * from './ToolWidget';
-export * from './StatusWidget';

@@ -20,9 +20,8 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { AppGraphBuilder, SampleSettings, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { SampleItem } from '#types';
-
-import { translations } from './translations';
 
 export const SamplePlugin = Plugin.define(meta).pipe(
   // Registers graph builder extensions (actions, connectors, companions).

@@ -23,9 +23,9 @@ import { mx } from '@dxos/ui-theme';
 
 import { NavTreeContainer } from '#containers';
 import { storybookGraphBuilders } from '#testing';
+import { translations } from '#translations';
 
 import { NavTreePlugin } from '../../NavTreePlugin';
-import { translations } from '../../translations';
 
 random.seed(1234);
 

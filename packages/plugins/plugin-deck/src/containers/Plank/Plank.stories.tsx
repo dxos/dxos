@@ -20,8 +20,8 @@ import { Organization } from '@dxos/types';
 
 import { DeckSettings, DeckState } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
+import { translations } from '#translations';
 
-import { translations } from '../../translations';
 import { Plank } from './Plank';
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(

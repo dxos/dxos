@@ -11,7 +11,8 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { SpaceSettingsContainer } from './SpaceSettingsContainer';
 
 const Story = (props: Partial<AppSurface.SpaceArticleProps>) => {

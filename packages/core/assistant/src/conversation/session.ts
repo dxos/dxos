@@ -70,7 +70,7 @@ const SUMMARY_THRESHOLD = 80_000;
  */
 export class AiSession extends Resource {
   /**
-   * Blueprints and objects bound to the conversation.
+   * Blueprints and objects bound to the session.
    */
   private readonly _binder: AiContextBinder;
   private readonly _feed: Feed.Feed;

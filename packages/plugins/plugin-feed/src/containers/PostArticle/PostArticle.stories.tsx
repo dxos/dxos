@@ -11,9 +11,9 @@ import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
+import { translations } from '#translations';
 import { Subscription } from '#types';
 
-import { translations } from '../../translations';
 import { PostArticle } from './PostArticle';
 
 const SAMPLE_MARKDOWN = `# Local-first software
