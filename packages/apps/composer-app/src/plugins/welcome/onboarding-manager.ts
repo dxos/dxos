@@ -128,7 +128,9 @@ export class OnboardingManager {
       // failures since the resulting state is what we wanted).
       if (this._email && this._hubUrl) {
         await this._bindExistingIdentityIfPossible();
-        if (aborted()) return;
+        if (aborted()) {
+          return;
+        }
       }
       // Automatically start join space flow if already authed.
       if (this._spaceInvitationCode) {
