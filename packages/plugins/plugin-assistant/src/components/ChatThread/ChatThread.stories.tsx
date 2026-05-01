@@ -9,9 +9,9 @@ import * as Layer from 'effect/Layer';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { ContextQueueService } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { ContextQueueService } from '@dxos/functions';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -23,8 +23,8 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { createMessageGenerator } from '#testing';
+import { translations } from '#translations';
 
-import { translations } from '../../translations';
 import { ChatThread, type ChatThreadProps } from './ChatThread';
 
 random.seed(1);
@@ -136,7 +136,7 @@ export const Delayed: Story = {
     delay: 500,
     options: {
       autoScroll: true,
-      wire: true,
+      typewriter: true,
       cursor: true,
     },
   },

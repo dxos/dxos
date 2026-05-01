@@ -129,7 +129,7 @@ const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntry
         showSelected={false}
         {...props}
       >
-        <Outline.Content classNames='pt-2 pb-2' />
+        <Outline.Content classNames='py-2' />
       </Outline.Root>
     </div>
   );

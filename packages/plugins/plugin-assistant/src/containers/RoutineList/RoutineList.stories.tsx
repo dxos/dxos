@@ -8,7 +8,7 @@ import React from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Routine } from '@dxos/blueprints';
+import { Routine } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -20,8 +20,9 @@ import { Panel } from '@dxos/react-ui';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Organization } from '@dxos/types';
 
+import { translations } from '#translations';
+
 import { AssistantPlugin } from '../../AssistantPlugin';
-import { translations } from '../../translations';
 import { TracePanel } from '../TracePanel';
 import { RoutineList } from './RoutineList';
 

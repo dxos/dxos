@@ -8,13 +8,13 @@ import * as Schema from 'effect/Schema';
 
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Annotation, Ref, Tag, Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { AttentionEvents } from '@dxos/plugin-attention/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
-import { translations as componentsTranslations } from '@dxos/react-ui-components';
-import { translations as formTranslations } from '@dxos/react-ui-form';
+import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { DataTypes, createDefaultSchema } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 import {
@@ -48,10 +48,9 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
+import { translations } from '#translations';
 import { SpaceEvents } from '#types';
 import { type CreateObject, type SpacePluginOptions } from '#types';
-
-import { translations } from './translations';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addMetadataModule({

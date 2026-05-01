@@ -6,9 +6,9 @@ import { describe, test } from 'vitest';
 
 import { trim } from '@dxos/util';
 
-import { xmlElementLength } from './wire';
+import { xmlElementLength } from './typewriter';
 
-describe('wire', () => {
+describe('typewriter', () => {
   test('xmlElementLength handles hyphenated custom element names', ({ expect }) => {
     const inner = 'Hello';
     const el = `<dom-widget>${inner}</dom-widget>`;

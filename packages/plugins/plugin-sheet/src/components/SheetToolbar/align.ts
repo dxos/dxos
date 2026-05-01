@@ -5,7 +5,7 @@
 import { type Registry, RegistryContext } from '@effect-atom/atom-react';
 import { useContext, useEffect } from 'react';
 
-import { type CompleteCellRange, inRange } from '@dxos/compute';
+import { type CompleteCellRange, inRange } from '@dxos/compute-hyperformula';
 import { Obj } from '@dxos/echo';
 import {
   type ActionGraphProps,

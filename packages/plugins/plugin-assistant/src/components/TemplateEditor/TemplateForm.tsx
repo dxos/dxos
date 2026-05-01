@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import React, { Fragment, useCallback, useEffect } from 'react';
 
-import { type Template } from '@dxos/blueprints';
+import { type Template } from '@dxos/compute';
 import { type Obj } from '@dxos/echo';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { isNonNullable } from '@dxos/util';

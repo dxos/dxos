@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Database, Entity, Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 
 import { Memory } from '../../../types/Memory';
 import { SaveMemory } from './definitions';

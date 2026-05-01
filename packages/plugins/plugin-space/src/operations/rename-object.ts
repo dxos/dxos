@@ -3,8 +3,8 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 
 import { OBJECT_RENAME_POPOVER } from '../constants';
 import { SpaceOperation } from './definitions';

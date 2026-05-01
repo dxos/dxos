@@ -3,7 +3,7 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/operation';
+import { OperationHandlerSet } from '@dxos/compute';
 
 import type { ClientReadyOptions } from './client-ready';
 

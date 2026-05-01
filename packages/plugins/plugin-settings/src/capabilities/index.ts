@@ -3,7 +3,7 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/operation';
+import { OperationHandlerSet } from '@dxos/compute';
 
 export const SettingsAppGraphBuilder = Capability.lazy('SettingsAppGraphBuilder', () => import('./app-graph-builder'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(

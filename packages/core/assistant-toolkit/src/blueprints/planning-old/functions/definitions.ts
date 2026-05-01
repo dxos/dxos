@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Operation } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
 export const ReadTasks = Operation.make({

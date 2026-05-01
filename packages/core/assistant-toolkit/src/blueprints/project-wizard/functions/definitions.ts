@@ -4,10 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/compute';
+import { QueueService } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 
 import { Agent } from '../../../types';
 

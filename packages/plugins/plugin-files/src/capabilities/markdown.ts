@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown';
+import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { listener } from '@dxos/ui-editor';
 
 import { FileCapabilities, type LocalFile } from '#types';

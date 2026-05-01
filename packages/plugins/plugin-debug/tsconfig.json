@@ -54,10 +54,10 @@
       "path": "../../core/assistant-toolkit"
     },
     {
-      "path": "../../core/blueprints"
+      "path": "../../core/compute"
     },
     {
-      "path": "../../core/compute"
+      "path": "../../core/compute-hyperformula"
     },
     {
       "path": "../../core/conductor"
@@ -70,12 +70,6 @@
     },
     {
       "path": "../../core/echo/echo-pipeline"
-    },
-    {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"

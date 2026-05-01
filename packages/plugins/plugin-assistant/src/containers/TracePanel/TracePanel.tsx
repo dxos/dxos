@@ -10,9 +10,9 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Trace } from '@dxos/compute';
 import { Filter, Query } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
-import { Trace } from '@dxos/functions';
 import { FeedTraceSink, Process } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -22,8 +22,12 @@ import { Panel } from '@dxos/react-ui';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
 import { composable, mx } from '@dxos/ui-theme';
 
-import { ProcessTree } from '../../components';
+import { ProcessTree } from '#components';
+
 import { buildExecutionGraph } from './execution-graph';
+
+// Stable ref.
+const atomEmpty = Atom.make(() => [] as const);
 
 export type TracePanelProps = AppSurface.SpaceArticleProps;
 
@@ -77,9 +81,6 @@ const ActiveProcessList = ({ spaceId }: { spaceId: Space['id'] }) => {
 
   return <ProcessTree classNames={mx('max-h-[8lh] px-2 border-b border-separator')} processes={activeProcesses} />;
 };
-
-// Stable ref.
-const atomEmpty = Atom.make(() => [] as const);
 
 type ExecutionGraph = {
   branches: string[];

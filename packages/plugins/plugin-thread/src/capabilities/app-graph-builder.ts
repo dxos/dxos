@@ -8,8 +8,8 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';

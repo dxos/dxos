@@ -14,7 +14,8 @@ import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { ParentLabelAnnotationId } from '@dxos/schema';
 
-import { translationKey } from '../../../translations';
+import { translationKey } from '#translations';
+
 import { ObjectPicker, type ObjectPickerContentProps, type RefOption } from '../../ObjectPicker';
 import { omitHiddenFormFields, omitId } from '../Form';
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';

@@ -6,10 +6,10 @@ import React, { useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { type Routine } from '@dxos/blueprints';
+import { type Routine } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation/hooks';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';

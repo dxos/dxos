@@ -15,7 +15,8 @@ import { Card } from '@dxos/react-ui';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { MarkdownCard, type MarkdownCardProps } from './MarkdownCard';
 
 random.seed(1234);

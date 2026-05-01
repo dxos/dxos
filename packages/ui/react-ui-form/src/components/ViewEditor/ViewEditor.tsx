@@ -26,7 +26,8 @@ import {
 } from '@dxos/schema';
 import { mx, osTranslations, subtleHover } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { FieldEditor } from '../FieldEditor';
 import {
   Form,

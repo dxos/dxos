@@ -17,6 +17,7 @@
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#meta": "./src/meta.ts",
+    "#translations": "./src/translations.ts",
     "#transport": "./src/transport/index.ts",
     "#types": "./src/types.ts"
   },
@@ -26,6 +27,12 @@
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "browser": "./dist/lib/browser/translations.mjs",
+      "node": "./dist/lib/node-esm/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -16,7 +16,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ProjectionModel, ViewModel, getTypenameFromQuery } from '@dxos/schema';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { TestLayout, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 
