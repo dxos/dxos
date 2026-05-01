@@ -26,7 +26,7 @@ export const snippet = ({ height, scale = 1 }: SnippetOptions) => {
     EditorState.readOnly.of(true),
     EditorView.editable.of(false),
     EditorState.transactionFilter.of((tr) => {
-      if (tr.selection) return []; // Drop any selection changes.
+      if (tr.selection) {return [];} // Drop any selection changes.
       return tr;
     }),
     EditorView.theme({

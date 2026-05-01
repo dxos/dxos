@@ -47,7 +47,7 @@ export const NewCalendar = composable<HTMLDivElement, NewCalendarProps>(({ calen
   );
 
   const handleSync = useCallback(async () => {
-    if (!calendarIntegration) return;
+    if (!calendarIntegration) {return;}
     setSyncing(true);
     try {
       await invokePromise(InboxOperation.SyncCalendar, {

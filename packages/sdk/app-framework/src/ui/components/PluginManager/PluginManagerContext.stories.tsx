@@ -38,7 +38,7 @@ const CountStatus = () => {
     }
   }, [counter]);
 
-  if (!manager) return null;
+  if (!manager) {return null;}
 
   const isEven = count % 2 === 0;
 

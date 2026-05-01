@@ -45,7 +45,7 @@ export const useSyncTargetsChecklist = (
   const [loading, setLoading] = useState(false);
 
   const openChecklist = useCallback(async () => {
-    if (!integration || !provider?.getSyncTargets) return;
+    if (!integration || !provider?.getSyncTargets) {return;}
     setLoading(true);
     try {
       const result = await invokePromise(provider.getSyncTargets as any, {

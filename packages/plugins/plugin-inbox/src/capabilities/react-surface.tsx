@@ -133,7 +133,7 @@ export default Capability.makeModule(() =>
           ),
         ),
         component: ({ data, role }) => {
-          if (!data?.subject || !data?.companionTo) return null;
+          if (!data?.subject || !data?.companionTo) {return null;}
           return <EventArticle role={role} subject={data.subject} companionTo={data.companionTo} />;
         },
       }),

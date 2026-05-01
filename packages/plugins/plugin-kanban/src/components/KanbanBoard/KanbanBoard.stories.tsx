@@ -79,7 +79,7 @@ const DefaultStory = () => {
 
   const handleCardAdd = useCallback(
     (columnValue: string | undefined) => {
-      if (!state || !columnFieldPath || !registry) return undefined;
+      if (!state || !columnFieldPath || !registry) {return undefined;}
       const card = Obj.make(Organization.Organization, {
         ...createOrg(),
         ...(columnFieldPath ? { [columnFieldPath]: columnValue } : {}),
@@ -93,7 +93,7 @@ const DefaultStory = () => {
 
   const handleCardRemove = useCallback(
     (card: Obj.Unknown) => {
-      if (!registry) return;
+      if (!registry) {return;}
       const current = registry.get(items) ?? [];
       registry.set(
         items,

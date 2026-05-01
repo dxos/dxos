@@ -137,8 +137,8 @@ const ItemsKanbanContainer = ({ role, subject: object }: ItemsKanbanContainerPro
         const out: Obj.Unknown[] = [];
         for (const ref of object.spec.items as ReadonlyArray<Ref.Ref<Obj.Unknown>>) {
           const target = get(AtomObj.make(ref));
-          if (target == null) continue;
-          if ((target as unknown as { closed?: unknown }).closed === true) continue;
+          if (target == null) {continue;}
+          if ((target as unknown as { closed?: unknown }).closed === true) {continue;}
           out.push(target as unknown as Obj.Unknown);
         }
         return out;

@@ -48,7 +48,7 @@ export const InitializeMailbox = composable<HTMLDivElement, InitializeMailboxPro
     );
 
     const handleSync = useCallback(async () => {
-      if (!mailboxIntegration) return;
+      if (!mailboxIntegration) {return;}
       setSyncing(true);
       try {
         await invokePromise(InboxOperation.SyncMailbox, {

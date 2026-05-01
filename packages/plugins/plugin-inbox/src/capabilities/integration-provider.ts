@@ -32,7 +32,7 @@ const GoogleUserInfo = Schema.Struct({
  */
 const fillAccountEmail = (accessToken: { token: string; account?: string }) =>
   Effect.gen(function* () {
-    if (!accessToken.token || accessToken.account) return undefined;
+    if (!accessToken.token || accessToken.account) {return undefined;}
 
     const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(accessToken.token, 'Bearer')));
     const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
@@ -66,15 +66,15 @@ const gmailOnTokenCreated: OnTokenCreated = ({ accessToken, integration, existin
     }
 
     const db = Obj.getDatabase(integration);
-    if (!db) return;
+    if (!db) {return;}
     const defaultName = email ?? 'Inbox';
     let targetRef: Ref.Ref<Obj.Unknown>;
     if (existingTarget) {
       // Backfill name on the user's existing Mailbox if they hadn't named it.
       const existing = (yield* Effect.promise(() => existingTarget.load())) as Mailbox.Mailbox;
       if (!existing.name) {
-        Obj.change(existing, (obj) => {
-          obj.name = defaultName;
+        Obj.change(existing, (existing) => {
+          existing.name = defaultName;
         });
       }
       targetRef = existingTarget;

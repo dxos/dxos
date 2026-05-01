@@ -63,9 +63,9 @@ const mergeField = <T>(
   }
   const localChanged = local !== snapshot;
   const remoteChanged = remote !== snapshot;
-  if (!localChanged && !remoteChanged) return { value: local, source: 'unchanged' };
-  if (!localChanged && remoteChanged) return { value: remote, source: 'remote' };
-  if (localChanged && !remoteChanged) return { value: local, source: 'local' };
+  if (!localChanged && !remoteChanged) {return { value: local, source: 'unchanged' };}
+  if (!localChanged && remoteChanged) {return { value: remote, source: 'remote' };}
+  if (localChanged && !remoteChanged) {return { value: local, source: 'local' };}
   return { value: remote, source: 'remote' };
 };
 
@@ -81,9 +81,9 @@ const mergeDeep = <T>(
   }
   const localChanged = !eq(local, snapshot);
   const remoteChanged = !eq(remote, snapshot);
-  if (!localChanged && !remoteChanged) return { value: local, source: 'unchanged' };
-  if (!localChanged && remoteChanged) return { value: remote, source: 'remote' };
-  if (localChanged && !remoteChanged) return { value: local, source: 'local' };
+  if (!localChanged && !remoteChanged) {return { value: local, source: 'unchanged' };}
+  if (!localChanged && remoteChanged) {return { value: remote, source: 'remote' };}
+  if (localChanged && !remoteChanged) {return { value: local, source: 'local' };}
   return { value: remote, source: 'remote' };
 };
 
@@ -143,9 +143,9 @@ export const reconcileBoardCards: (
     const localByForeignId = new Map<string, Obj.Unknown>();
     for (const ref of itemsSpec.items) {
       const target = ref.target;
-      if (!target) continue;
+      if (!target) {continue;}
       const fid = Obj.getMeta(target).keys.find((k) => k.source === TRELLO_SOURCE)?.id;
-      if (fid) localByForeignId.set(fid, target);
+      if (fid) {localByForeignId.set(fid, target);}
     }
 
     const newRefs: Array<Ref.Ref<Obj.Unknown>> = [];
@@ -210,7 +210,7 @@ export const reconcileBoardCards: (
     const remoteIds = new Set(remoteCards.map((c) => c.id));
     let removed = 0;
     for (const [fid, target] of localByForeignId) {
-      if (remoteIds.has(fid)) continue;
+      if (remoteIds.has(fid)) {continue;}
       const wasClosed = (target as unknown as Record<string, unknown>).closed === true;
       if (!wasClosed) {
         Obj.change(target, (target) => {
@@ -244,7 +244,7 @@ export const reconcileBoardCards: (
     const cardsByList = new Map<string, TrelloCard[]>();
     for (const card of remoteCards) {
       const ln = listName(card.idList);
-      if (!cardsByList.has(ln)) cardsByList.set(ln, []);
+      if (!cardsByList.has(ln)) {cardsByList.set(ln, []);}
       cardsByList.get(ln)!.push(card);
     }
     const sortedLists = [...lists].sort((a, b) => a.pos - b.pos);
@@ -357,10 +357,10 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
 
   for (const ref of itemsSpec.items) {
     const target = ref.target;
-    if (!target) continue;
+    if (!target) {continue;}
 
     const fields = target as unknown as Record<string, unknown>;
-    if (fields.closed === true) continue; // tombstones never push
+    if (fields.closed === true) {continue;} // tombstones never push
 
     const foreignId = Obj.getMeta(target).keys.find((k) => k.source === TRELLO_SOURCE)?.id;
     const name = typeof fields.name === 'string' ? fields.name : '';
@@ -377,7 +377,7 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
 
     if (!foreignId) {
       // Locally-created card: POST + writeback. Need a list to put it in.
-      if (!listId) continue;
+      if (!listId) {continue;}
       const result = yield* push.create({ listId, name, desc });
       // Re-read foreign keys before writing — if a concurrent run wrote one already,
       // skip the local FK write so we don't end up with two FK entries on this object.
@@ -425,7 +425,7 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
       diverged = true;
     }
 
-    if (!diverged) continue;
+    if (!diverged) {continue;}
 
     yield* push.update(foreignId, updatePayload);
     // Refresh the snapshot with the values just pushed.

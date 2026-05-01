@@ -30,7 +30,7 @@ import { TrelloCredentials, credentialsFromAccessToken, fetchMember } from '../s
  */
 const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
   Effect.gen(function* () {
-    if (accessToken.account) return;
+    if (accessToken.account) {return;}
     const creds = yield* Effect.try({
       try: () => credentialsFromAccessToken(accessToken),
       catch: (error) => (error instanceof Error ? error : new Error(String(error))),

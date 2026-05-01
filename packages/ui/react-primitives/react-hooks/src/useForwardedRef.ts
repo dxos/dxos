@@ -47,7 +47,7 @@ export const mergeRefs = <T>(refs: (Ref<T> | undefined)[]): Ref<T> => {
     }
 
     return () => {
-      for (const cleanup of cleanups) cleanup();
+      for (const cleanup of cleanups) {cleanup();}
     };
   };
 };

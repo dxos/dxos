@@ -29,10 +29,10 @@ export const syncObjects: (
     Effect.fnUntraced(function* (obj) {
       // Sync referenced objects.
       for (const key of Object.keys(obj)) {
-        if (typeof key !== 'string' || key === 'id') continue;
-        if (!Ref.isRef((obj as any)[key])) continue;
+        if (typeof key !== 'string' || key === 'id') {continue;}
+        if (!Ref.isRef((obj as any)[key])) {continue;}
         const ref: Ref.Unknown = (obj as any)[key];
-        if (!ref.target) continue;
+        if (!ref.target) {continue;}
         if (Obj.getDXN(ref.target).isLocalObjectId()) {
           // obj not persisted to db.
           const [target] = yield* syncObjects([ref.target], { foreignKeyId });
@@ -66,20 +66,20 @@ const copyObjectData = (existing: Obj.Unknown, newObj: Obj.Unknown) => {
   Obj.change(existing, (existing) => {
     // Copy properties from newObj to existing.
     for (const key of Object.keys(newObj)) {
-      if (typeof key !== 'string' || key === 'id') continue;
+      if (typeof key !== 'string' || key === 'id') {continue;}
       if (
         typeof (newObj as any)[key] !== 'string' &&
         typeof (newObj as any)[key] !== 'number' &&
         typeof (newObj as any)[key] !== 'boolean' &&
         !Ref.isRef((newObj as any)[key])
       )
-        continue;
+        {continue;}
       (existing as any)[key] = (newObj as any)[key];
     }
 
     // Delete properties that don't exist in newObj.
     for (const key of Object.keys(existing)) {
-      if (typeof key !== 'string' || key === 'id') continue;
+      if (typeof key !== 'string' || key === 'id') {continue;}
       if (!(key in newObj)) {
         delete (existing as any)[key];
       }

@@ -13,7 +13,7 @@ import { onCleanup } from 'solid-js';
 import { useRegistry } from '../registry';
 
 const flattenExit = <A, E>(exit: Exit.Exit<A, E>): A => {
-  if (Exit.isSuccess(exit)) return exit.value;
+  if (Exit.isSuccess(exit)) {return exit.value;}
   throw Cause.squash(exit.cause);
 };
 

@@ -48,7 +48,7 @@ export const SyncTargetsChecklist = ({ integration, availableTargets, existingTa
   const initiallySelected = useMemo(() => {
     const ids = new Set<string>();
     for (const target of integration.targets ?? []) {
-      if (target.remoteId) ids.add(target.remoteId);
+      if (target.remoteId) {ids.add(target.remoteId);}
     }
     return ids;
   }, [integration.targets]);
@@ -60,8 +60,8 @@ export const SyncTargetsChecklist = ({ integration, availableTargets, existingTa
   const toggle = useCallback((id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) {next.delete(id);}
+      else {next.add(id);}
       return next;
     });
   }, []);

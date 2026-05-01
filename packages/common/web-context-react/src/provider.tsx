@@ -149,8 +149,8 @@ export const ContextProtocolProvider = <T extends UnknownContext>({
   const handleContextProviderEvent = useCallback(
     (e: Event) => {
       const event = e as ContextProviderEvent<UnknownContext>;
-      if (event.context !== context) return;
-      if (containerRef.current && event.contextTarget === containerRef.current) return;
+      if (event.context !== context) {return;}
+      if (containerRef.current && event.contextTarget === containerRef.current) {return;}
 
       const seen = new Set<ContextCallback<ContextType<T>>>();
       for (const ref of subscriptionRefs) {
@@ -161,9 +161,9 @@ export const ContextProtocolProvider = <T extends UnknownContext>({
         }
 
         const info = subscriptions.get(callback);
-        if (!info) continue;
+        if (!info) {continue;}
 
-        if (seen.has(callback)) continue;
+        if (seen.has(callback)) {continue;}
         seen.add(callback);
 
         info.consumerHost.dispatchEvent(
@@ -198,7 +198,7 @@ export const ContextProtocolProvider = <T extends UnknownContext>({
 
   useEffect(() => {
     const el = containerRef.current;
-    if (!el) return;
+    if (!el) {return;}
 
     el.addEventListener(CONTEXT_REQUEST_EVENT, handleContextRequestEvent);
     el.addEventListener(CONTEXT_PROVIDER_EVENT, handleContextProviderEvent);

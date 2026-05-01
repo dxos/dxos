@@ -85,7 +85,7 @@ const MapRoot = (props: MapRootProps) => {
   const [attention, setAttention] = createSignal(false);
 
   onMount(() => {
-    if (!mapContainer) return;
+    if (!mapContainer) {return;}
 
     const leafletMap = L.map(mapContainer, {
       center: props.center ?? defaults.center,
@@ -119,7 +119,7 @@ const MapRoot = (props: MapRootProps) => {
   // Enable/disable scroll wheel zoom based on attention
   createEffect(() => {
     const leafletMap = map();
-    if (!leafletMap) return;
+    if (!leafletMap) {return;}
 
     if (attention()) {
       leafletMap.scrollWheelZoom.enable();
@@ -150,7 +150,7 @@ const MapTiles = () => {
 
   createEffect(() => {
     const leafletMap = map();
-    if (!leafletMap) return;
+    if (!leafletMap) {return;}
 
     const att = attention();
     tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -212,7 +212,7 @@ const MapMarkers = (props: MapMarkersProps) => {
 
   createEffect(() => {
     const leafletMap = map();
-    if (!leafletMap) return;
+    if (!leafletMap) {return;}
 
     const markerList = props.markers?.() ?? [];
     const currentIds = new Set(markerList.map((m) => m.id));
@@ -274,7 +274,7 @@ const CustomControl = (props: { children: JSX.Element; position: ControlPosition
 
   createEffect(() => {
     const map = mapAccessor();
-    if (!map || !controlContainer) return;
+    if (!map || !controlContainer) {return;}
 
     const Control = L.Control.extend({
       onAdd: () => {

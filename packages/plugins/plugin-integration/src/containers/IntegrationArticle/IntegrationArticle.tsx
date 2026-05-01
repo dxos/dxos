@@ -144,7 +144,7 @@ const TargetRow = ({
       Obj.change(integration, (integration) => {
         const m = integration as Obj.Mutable<typeof integration>;
         const next = [...m.targets];
-        if (!next[targetIndex]) return;
+        if (!next[targetIndex]) {return;}
         next[targetIndex] = { ...next[targetIndex], options: { ...values } };
         m.targets = next;
       });
@@ -152,7 +152,7 @@ const TargetRow = ({
     [integration, targetIndex],
   );
 
-  if (!target) return null;
+  if (!target) {return null;}
 
   return (
     <Settings.Panel>

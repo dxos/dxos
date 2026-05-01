@@ -225,8 +225,8 @@ export default Capability.makeModule(
 
     const handleMessage = (event: MessageEvent): void => {
       // No OAuth flow has been started yet — nothing in `pending` could match.
-      if (!edgeOrigin) return;
-      if (event.origin !== edgeOrigin) return;
+      if (!edgeOrigin) {return;}
+      if (event.origin !== edgeOrigin) {return;}
 
       const data = event.data as OAuthFlowResult;
       if (!data || !data.success) {

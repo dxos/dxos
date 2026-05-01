@@ -31,11 +31,11 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: 'trello-sync-board',
         match: (node) => {
-          if (!Obj.instanceOf(Kanban.Kanban, node.data)) return Option.none();
+          if (!Obj.instanceOf(Kanban.Kanban, node.data)) {return Option.none();}
           const kanban = node.data as Kanban.Kanban;
-          if (kanban.spec.kind !== 'items') return Option.none();
+          if (kanban.spec.kind !== 'items') {return Option.none();}
           const foreignId = Obj.getMeta(kanban).keys.find((k) => k.source === TRELLO_SOURCE)?.id;
-          if (!foreignId) return Option.none();
+          if (!foreignId) {return Option.none();}
           return Option.some(kanban);
         },
         actions: (kanban) =>
@@ -45,7 +45,7 @@ export default Capability.makeModule(
               data: () =>
                 Effect.gen(function* () {
                   const space = getSpace(kanban);
-                  if (!space) return;
+                  if (!space) {return;}
                   // Find the parent Integration whose targets include this kanban.
                   // Compare by echo id, not full DXN string — stored refs use the
                   // space-relative form (`dxn:echo:@:...`) while `Obj.getDXN(kanban)`
@@ -56,7 +56,7 @@ export default Capability.makeModule(
                   const parent = integrations.find((integration) =>
                     integration.targets.some((target) => target.object?.dxn.asEchoDXN()?.echoId === kanban.id),
                   );
-                  if (!parent) return;
+                  if (!parent) {return;}
                   yield* Operation.invoke(SyncTrelloBoard, {
                     integration: Ref.make(parent),
                     kanban: Ref.make(kanban),

@@ -175,7 +175,7 @@ const extractDominantColor = (
       const alpha = pixels[i + 3];
 
       // Skip transparent pixels.
-      if (alpha === 0) continue;
+      if (alpha === 0) {continue;}
 
       // Calculate saturation to weight vibrant colors more.
       const max = Math.max(red, green, blue);
@@ -215,21 +215,21 @@ const isTransparent = (pixels: Uint8ClampedArray, sampleSize: number, threshold:
   for (let x = 0; x < sampleSize; x++) {
     // Top edge.
     const topIndex = x * 4;
-    if (pixels[topIndex + 3] === 0) edgeTransparentPixels++;
+    if (pixels[topIndex + 3] === 0) {edgeTransparentPixels++;}
 
     // Bottom edge.
     const bottomIndex = ((sampleSize - 1) * sampleSize + x) * 4;
-    if (pixels[bottomIndex + 3] === 0) edgeTransparentPixels++;
+    if (pixels[bottomIndex + 3] === 0) {edgeTransparentPixels++;}
   }
 
   for (let y = 1; y < sampleSize - 1; y++) {
     // Left edge.
     const leftIndex = y * sampleSize * 4;
-    if (pixels[leftIndex + 3] === 0) edgeTransparentPixels++;
+    if (pixels[leftIndex + 3] === 0) {edgeTransparentPixels++;}
 
     // Right edge.
     const rightIndex = (y * sampleSize + sampleSize - 1) * 4;
-    if (pixels[rightIndex + 3] === 0) edgeTransparentPixels++;
+    if (pixels[rightIndex + 3] === 0) {edgeTransparentPixels++;}
   }
 
   return edgeTransparentPixels / edgePixels > threshold;

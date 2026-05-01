@@ -90,7 +90,7 @@ export const makeIdb = (
 
       if (options.installReactivityHooks) {
         sqlite3.update_hook(db, (_op: any, _db: any, table: any, rowid: any) => {
-          if (!table) return;
+          if (!table) {return;}
           const id = String(Number(rowid));
           reactivity.unsafeInvalidate({ [table]: [id] });
         });

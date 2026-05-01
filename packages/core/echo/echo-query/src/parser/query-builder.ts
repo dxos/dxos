@@ -246,7 +246,7 @@ export class QueryBuilder {
             let exprEnd = cursor.to;
 
             while (cursor.nextSibling() && depth > 0) {
-              if (cursor.node.name === '(') depth++;
+              if (cursor.node.name === '(') {depth++;}
               else if (cursor.node.name === ')') {
                 depth--;
                 if (depth === 0) {
@@ -681,12 +681,12 @@ export const normalizeInput = (input: string): string => {
     let scanIndex = pos;
     while (scanIndex < input.length) {
       const innerChar = input[scanIndex];
-      if (innerChar === '"') break;
-      if (innerChar === "'" && scanIndex > pos && !/[a-zA-Z0-9_]/.test(input[scanIndex - 1])) break;
-      if (innerChar === "'" && scanIndex === pos) break;
-      if (innerChar !== "'" && SPECIAL_CHARS.test(innerChar)) break;
-      if (innerChar === '-' && input[scanIndex + 1] === '>') break;
-      if (innerChar === '<' && input[scanIndex + 1] === '-') break;
+      if (innerChar === '"') {break;}
+      if (innerChar === "'" && scanIndex > pos && !/[a-zA-Z0-9_]/.test(input[scanIndex - 1])) {break;}
+      if (innerChar === "'" && scanIndex === pos) {break;}
+      if (innerChar !== "'" && SPECIAL_CHARS.test(innerChar)) {break;}
+      if (innerChar === '-' && input[scanIndex + 1] === '>') {break;}
+      if (innerChar === '<' && input[scanIndex + 1] === '-') {break;}
       scanIndex++;
     }
     // Defensive: if no characters were consumed, advance one to avoid infinite loops.

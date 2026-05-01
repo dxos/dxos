@@ -218,7 +218,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     // Make fetchLists fail for board-b only.
     const fetchLists = trelloApi.fetchLists as unknown as ReturnType<typeof vi.fn>;
     fetchLists.mockImplementation((boardId: string) => {
-      if (boardId === 'board-b') return Effect.fail(new Error('boom'));
+      if (boardId === 'board-b') {return Effect.fail(new Error('boom'));}
       return Effect.succeed([{ id: 'list-a1', name: 'To Do', closed: false, pos: 0 }]);
     });
 

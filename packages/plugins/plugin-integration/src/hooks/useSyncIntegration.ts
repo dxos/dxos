@@ -39,7 +39,7 @@ export const useSyncIntegration = (integration: Integration.Integration | undefi
   const [syncing, setSyncing] = useState(false);
 
   const sync = useCallback(async () => {
-    if (!integration || !provider?.sync) return;
+    if (!integration || !provider?.sync) {return;}
     setSyncing(true);
     try {
       const result = await invokePromise(provider.sync as any, {

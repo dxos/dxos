@@ -98,9 +98,9 @@ const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.p
             if (foreignId === undefined && localObj) {
               foreignId = Obj.getMeta(localObj).keys.find((k) => k.source === TRELLO_SOURCE)?.id;
             }
-            if (foreignId === undefined) continue;
+            if (foreignId === undefined) {continue;}
             const remoteBoard = boardsById.get(foreignId);
-            if (!remoteBoard) continue;
+            if (!remoteBoard) {continue;}
 
             // Materialize the local Kanban if we don't have one yet, and write
             // the ref back into the target so subsequent syncs skip this branch.
@@ -117,9 +117,9 @@ const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.p
             }
 
             const targetEchoId = Ref.make(localObj).dxn.asEchoDXN()?.echoId;
-            if (kanbanFilterId && targetEchoId !== kanbanFilterId) continue;
-            if (!Obj.instanceOf(Kanban.Kanban, localObj)) continue;
-            if (!Kanban.isKanbanItems(localObj)) continue;
+            if (kanbanFilterId && targetEchoId !== kanbanFilterId) {continue;}
+            if (!Obj.instanceOf(Kanban.Kanban, localObj)) {continue;}
+            if (!Kanban.isKanbanItems(localObj)) {continue;}
 
             targetEntries.push({ entry: target, kanban: localObj, boardId: foreignId, remoteBoard });
           }
@@ -172,13 +172,13 @@ const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.p
                 Obj.change(integrationObj, (integrationObj) => {
                   const m = integrationObj as Obj.Mutable<typeof integrationObj>;
                   const idx = m.targets.findIndex((t) => {
-                    if (t.remoteId !== undefined) return t.remoteId === boardId;
+                    if (t.remoteId !== undefined) {return t.remoteId === boardId;}
                     const localId = t.object?.target
                       ? Obj.getMeta(t.object.target).keys.find((k) => k.source === TRELLO_SOURCE)?.id
                       : undefined;
                     return localId === boardId;
                   });
-                  if (idx < 0) return;
+                  if (idx < 0) {return;}
                   if (result._tag === 'Right') {
                     m.targets[idx] = {
                       ...m.targets[idx],
@@ -202,7 +202,7 @@ const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.p
           let pulled = { added: 0, updated: 0, removed: 0 };
           let pushed = { created: 0, updated: 0 };
           for (const r of perTarget) {
-            if (!r) continue;
+            if (!r) {continue;}
             pulled = {
               added: pulled.added + r.reconcileResult.added,
               updated: pulled.updated + r.reconcileResult.updated,

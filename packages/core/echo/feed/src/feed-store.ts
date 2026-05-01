@@ -124,7 +124,7 @@ export class FeedStore {
         const rows = yield* sql<{ feedPrivateId: number }>`
               SELECT feedPrivateId FROM feeds WHERE spaceId = ${spaceId} AND feedId = ${feedId}
           `;
-        if (rows.length > 0) return rows[0].feedPrivateId;
+        if (rows.length > 0) {return rows[0].feedPrivateId;}
 
         const newRows = yield* sql<{ feedPrivateId: number }>`
               INSERT INTO feeds (spaceId, feedId, feedNamespace) VALUES (${spaceId}, ${feedId}, ${namespace}) RETURNING feedPrivateId
@@ -141,7 +141,7 @@ export class FeedStore {
       Effect.gen(this, function* () {
         const sql = yield* SqlClient.SqlClient;
         const rows = yield* sql<{ token: string }>`SELECT token FROM cursor_tokens WHERE spaceId = ${spaceId}`;
-        if (rows.length > 0) return rows[0].token;
+        if (rows.length > 0) {return rows[0].token;}
 
         const token = crypto.randomUUID().replace(/-/g, '').slice(0, 6);
         yield* sql`INSERT INTO cursor_tokens (spaceId, token) VALUES (${spaceId}, ${token})`;

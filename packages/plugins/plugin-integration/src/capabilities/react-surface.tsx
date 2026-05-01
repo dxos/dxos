@@ -67,7 +67,7 @@ export default Capability.makeModule(() =>
         role: 'form-input',
         filter: (data): data is { schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
           const fieldAst = (data as any)?.fieldPropertyAst as SchemaAST.AST | undefined;
-          if (!fieldAst) return false;
+          if (!fieldAst) {return false;}
           const annotation = findAnnotation<boolean>(fieldAst, IntegrationProviderAnnotationId);
           return !!annotation;
         },

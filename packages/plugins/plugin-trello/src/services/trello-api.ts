@@ -133,7 +133,7 @@ const authParams = (
 ) => {
   const out: Record<string, string> = { key: creds.key, token: creds.token };
   for (const [k, v] of Object.entries(extra)) {
-    if (v !== undefined) out[k] = String(v);
+    if (v !== undefined) {out[k] = String(v);}
   }
   return out;
 };
@@ -149,10 +149,10 @@ type TrelloEffect<T> = Effect.Effect<T, HttpClientError.HttpClientError, HttpCli
  *  - TimeoutException (the request didn't complete in the allotted window): yes.
  */
 const shouldRetry = (error: HttpClientError.HttpClientError | Cause.TimeoutException): boolean => {
-  if (error._tag === 'TimeoutException') return true;
-  if (error._tag === 'RequestError') return true;
+  if (error._tag === 'TimeoutException') {return true;}
+  if (error._tag === 'RequestError') {return true;}
   // ResponseError: only retry transient response failures.
-  if (error.reason !== 'StatusCode') return true;
+  if (error.reason !== 'StatusCode') {return true;}
   const status = error.response.status;
   return status === 429 || (status >= 500 && status <= 599);
 };

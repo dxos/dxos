@@ -32,8 +32,8 @@ export function trim(strings: TemplateStringsArray, ...values: any[]) {
   // Split into lines and trim leading/trailing blank lines.
   const lines = raw.split('\n');
 
-  while (lines.length && !lines[0].trim()) lines.shift();
-  while (lines.length && !lines[lines.length - 1].trim()) lines.pop();
+  while (lines.length && !lines[0].trim()) {lines.shift();}
+  while (lines.length && !lines[lines.length - 1].trim()) {lines.pop();}
 
   // Find smallest indent across all non-blank lines.
   const minIndent = Math.min(...lines.filter((l) => l.trim()).map((l) => l.match(/^[ \t]*/)?.[0].length ?? 0));

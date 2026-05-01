@@ -74,7 +74,7 @@ export const createInaudibleAudioStreamTrack = async ({ ctx }: { ctx: Context })
 
   let oscillatorStarted = false;
   const ensureOscillatorStarted = () => {
-    if (oscillatorStarted) return;
+    if (oscillatorStarted) {return;}
     oscillator.start();
     oscillatorStarted = true;
   };

@@ -106,7 +106,7 @@ const createEventCollector = (invoker: OperationInvoker.OperationInvoker): Effec
       events,
       waitForEvents: (count: number) =>
         Effect.gen(function* () {
-          if (events.length >= count) return;
+          if (events.length >= count) {return;}
           const deferred = yield* Deferred.make<void>();
           yield* Ref.set(waiterRef, { count, deferred });
           // Check again in case events arrived between check and setting ref

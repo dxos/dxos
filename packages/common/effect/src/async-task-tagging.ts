@@ -31,9 +31,9 @@ export const asyncTaskTaggingLayer = () => {
       context: (f, fiber) => {
         const maybeParentSpan = Context.getOption(Tracer.ParentSpan)(fiber.currentContext);
 
-        if (maybeParentSpan._tag === 'None') return oldTracer.context(f, fiber);
+        if (maybeParentSpan._tag === 'None') {return oldTracer.context(f, fiber);}
         const parentSpan = maybeParentSpan.value;
-        if (parentSpan._tag === 'ExternalSpan') return oldTracer.context(f, fiber);
+        if (parentSpan._tag === 'ExternalSpan') {return oldTracer.context(f, fiber);}
         const span = parentSpan;
         if (runInTask in span && typeof span[runInTask] === 'function') {
           return span[runInTask](() => oldTracer.context(f, fiber));

@@ -547,7 +547,7 @@ const waitForTransceiverToSendData = async (ctx: Context, transceiver: RTCRtpTra
   ctx.onDispose(() => waitForData.throw(new Error('Transceiver was closed')));
 
   const checkStats = async () => {
-    if (ctx.disposed) return;
+    if (ctx.disposed) {return;}
 
     try {
       const stats = await transceiver.sender.getStats();

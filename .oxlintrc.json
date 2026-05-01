@@ -15,6 +15,7 @@
     "@dxos/eslint-plugin-rules/translation-key-format": "warn",
     "@dxos/eslint-plugin-rules/no-effect-run-promise": "error",
     "@dxos/eslint-plugin-rules/no-empty-promise-catch": "error",
+    "eslint/curly": ["error", "all"],
     "eslint/no-async-promise-executor": "off",
     "eslint/no-constant-binary-expression": "off",
     "eslint/no-constant-condition": "off",
