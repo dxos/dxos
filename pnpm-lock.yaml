@@ -18702,6 +18702,9 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
+      '@dxos/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../ui-editor
@@ -18763,9 +18766,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
-      '@dxos/ui':
-        specifier: workspace:*
-        version: link:../ui
       '@effect/vitest':
         specifier: 'catalog:'
         version: 0.27.0(effect@3.20.0)(vitest@3.2.4)
