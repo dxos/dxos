@@ -9,7 +9,6 @@ import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName, setRef } from '@dxos/react-ui';
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-markdown';
 import { type Message } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
 
 import { type ChatEvent } from '../Chat';
@@ -18,8 +17,9 @@ import { MessageSyncer } from './sync';
 
 const defaultOptions: MarkdownStreamProps['options'] = {
   autoScroll: true,
-  typewriter: true,
   cursor: false,
+  fader: false,
+  typewriter: true,
 };
 
 export type ChatThreadProps = ThemedClassName<
@@ -91,12 +91,9 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
     );
 
     return (
-      <div
-        role='none'
-        data-hue={userHue}
-        className={mx('flex h-full w-full justify-center overflow-hidden', classNames)}
-      >
+      <div role='none' data-hue={userHue} className='contents'>
         <MarkdownStream
+          classNames={classNames}
           registry={componentRegistry}
           options={options}
           debug={debug}

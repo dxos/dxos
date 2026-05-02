@@ -19,7 +19,7 @@ export class SuggestionWidget extends WidgetType {
   }
 
   override toDOM() {
-    // NOTE: Container must have `dx-size-container` to support cqi.
+    // NOTE: Container must have `dx-inline-size-container` (or `dx-size-container`) to support cqi.
     return Domino.of('span')
       .classNames(mx('inline-flex max-w-[calc(100cqi-8px)] my-1 pe-2 overflow-hidden'))
       .append(

@@ -4,6 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { type ThemedClassName } from '@dxos/react-ui';
 import { ChatStatus, formatElapsed } from '@dxos/react-ui-chat';
 import { Matrix } from '@dxos/react-ui-sfx';
 import { type ContentBlock } from '@dxos/types';
@@ -13,6 +14,8 @@ import { type ChatRequestTiming, useChatContext } from './context';
 
 const CHAT_STREAM_STATUS_NAME = 'Chat.StreamStatus';
 const TICK_MS = 1_000;
+
+export type ChatStreamStatusProps = ThemedClassName<{ icon?: boolean }>;
 
 /**
  * Live status pill rendered at the bottom of the chat thread.
@@ -27,7 +30,7 @@ const TICK_MS = 1_000;
  * - last completed turn's output token count (from the most recent `stats` content block)
  * - cumulative session total tokens across all `stats` content blocks
  */
-export const ChatStreamStatus = () => {
+export const ChatStreamStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
   // Read `messages` from the chat context (combines `useQuery(queue)` + the processor's
   // pending atom) rather than `processor.messages` directly — the latter only contains
   // blocks streamed via the ephemeral `PartialBlock` channel, while finalized blocks
@@ -50,28 +53,46 @@ export const ChatStreamStatus = () => {
   }, [messages]);
 
   const isRunning = requestTiming != null && requestTiming.endedAt == null;
+  const show = requestTiming || lastOutputTokens || sessionTotalTokens > 0;
+  if (!show) {
+    return null;
+  }
 
   return (
-    <ChatStatus.Root defaultRunning={false} classNames='py-2 text-sm'>
-      <ChatStatus.Icon>
-        <Matrix classNames='mr-2' dim={4} size={3} dotSize={3} count={10} interval={500} active={isRunning} />
-      </ChatStatus.Icon>
-      {requestTiming && (
-        <ChatStatus.Text>
-          <Elapsed timing={requestTiming} />
-        </ChatStatus.Text>
+    <ChatStatus.Root defaultRunning={false} classNames={['py-2 gap-2 text-sm', classNames]}>
+      {icon && (
+        <ChatStatus.Icon>
+          <Matrix
+            classNames='w-5 h-5'
+            dotClassNames='bg-primary-500'
+            dim={4}
+            dotSize={3}
+            count={10}
+            interval={500}
+            active={isRunning}
+          />
+        </ChatStatus.Icon>
       )}
-      {lastOutputTokens != null && (
-        <>
-          <ChatStatus.Separator />
-          <ChatStatus.Text>↓ {Unit.Thousand(lastOutputTokens).toString()}</ChatStatus.Text>
-        </>
-      )}
-      {sessionTotalTokens > 0 && (
-        <>
-          <ChatStatus.Separator />
-          <ChatStatus.Text>Σ {Unit.Thousand(sessionTotalTokens).toString()}</ChatStatus.Text>
-        </>
+      {show && (
+        <div role='none' className='flex items-center'>
+          {requestTiming && (
+            <ChatStatus.Text>
+              <Elapsed timing={requestTiming} />
+            </ChatStatus.Text>
+          )}
+          {lastOutputTokens != null && (
+            <>
+              {requestTiming && <ChatStatus.Separator />}
+              <ChatStatus.Text>↓ {Unit.Thousand(lastOutputTokens).toString()}</ChatStatus.Text>
+            </>
+          )}
+          {sessionTotalTokens > 0 && (
+            <>
+              {(requestTiming || lastOutputTokens != null) && <ChatStatus.Separator />}
+              <ChatStatus.Text>Σ {Unit.Thousand(sessionTotalTokens).toString()}</ChatStatus.Text>
+            </>
+          )}
+        </div>
       )}
     </ChatStatus.Root>
   );
@@ -89,11 +110,12 @@ const Elapsed = ({ timing }: { timing: ChatRequestTiming }) => {
     if (!isRunning) {
       return;
     }
+
     const id = setInterval(() => setNow(Date.now()), TICK_MS);
     return () => clearInterval(id);
   }, [isRunning]);
-  const elapsedMs = (timing.endedAt ?? now) - timing.startedAt;
-  return <>{formatElapsed(elapsedMs)}</>;
+
+  return <>{formatElapsed((timing.endedAt ?? now) - timing.startedAt)}</>;
 };
 
 const isStats = (block: ContentBlock.Any): block is ContentBlock.Stats => block._tag === 'stats';

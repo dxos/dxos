@@ -265,6 +265,35 @@ describe('parser', () => {
       }),
     );
 
+    // Repro: third <reasoning> block in a chat doc — multi-line content with newlines,
+    // list items, single + double quotes, mixed with `<status>` and `<toolCall/>` tags
+    // around it. Verify all three reasoning blocks are preserved verbatim.
+    it.effect(
+      'multi-line reasoning content with quotes and list items is preserved',
+      Effect.fn(function* ({ expect }) {
+        const r1 = '<reasoning>The user wants me to summarize.</reasoning>';
+        const r2 = '<reasoning>The magazine has 10 posts already curated.</reasoning>';
+        const r3 = [
+          '<reasoning>The magazine has 10 posts, but several are duplicates. Unique articles:',
+          '1. "FBI affidavit quotes White House press dinner shooting suspect expressing rage at \'a pedophile, rapist and traitor\' – US politics live" - About Cole Allen.',
+          '2. "Australia news live: UK inquiry says \'cracks already beginning to show\' on Aukus" - Live blog.',
+          '5. "\'Shortcomings and failures\' could sink Aukus nuclear submarines plan" - UK inquiry warns.</reasoning>',
+        ].join('\n');
+        const input = [r1, '<status>Loading…</status>', r2, '<status>OK</status>', r3, 'Done.'].join('\n');
+
+        const result = yield* makeInputStream([...text(splitByCharacter(input))])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect)
+          .pipe(Effect.map(Chunk.toArray));
+
+        const reasonings = result.filter((b) => b._tag === 'text' && b.text.startsWith('<reasoning>'));
+        expect(reasonings).toHaveLength(3);
+        expect(reasonings[0]).toEqual({ _tag: 'text', text: r1 });
+        expect(reasonings[1]).toEqual({ _tag: 'text', text: r2 });
+        expect(reasonings[2]).toEqual({ _tag: 'text', text: r3 });
+      }),
+    );
+
     it.effect(
       'works when every character is streamed individually',
       Effect.fn(function* ({ expect }) {

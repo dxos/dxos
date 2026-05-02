@@ -38,14 +38,27 @@ export function useKanbanBoardModel<T extends BaseKanbanItem = BaseKanbanItem>(
   // Source atoms: reactive reads from the kanban object; items come from the passed-in atom (e.g. AtomQuery or in-memory).
   const arrangementAtom = useMemo(() => AtomObj.makeProperty(kanban, 'arrangement'), [kanban]);
   const viewSnapshotAtom = useMemo(
-    () => (kanban?.view ? AtomObj.make(kanban.view) : Atom.make<undefined>(() => undefined)),
-    [kanban?.view],
+    () =>
+      kanban?.spec?.kind === 'view' && kanban.spec.view
+        ? AtomObj.make(kanban.spec.view)
+        : Atom.make<undefined>(() => undefined),
+    [kanban?.spec],
   );
 
-  /** Only changes when view.projection.pivotFieldId changes; keeps columns from firing on other view updates. */
+  /**
+   * Only changes when the discriminator-relevant pivot input changes.
+   * View-variant: derived from `view.projection.pivotFieldId`.
+   * Items-variant: the kanban's `spec.pivotField` (the property name itself acts as the field id).
+   */
   const pivotFieldIdAtom = useMemo(
-    () => Atom.make((get) => get(viewSnapshotAtom)?.projection?.pivotFieldId as string | undefined),
-    [viewSnapshotAtom],
+    () =>
+      Atom.make((get) => {
+        if (kanban?.spec.kind === 'items') {
+          return kanban.spec.pivotField;
+        }
+        return get(viewSnapshotAtom)?.projection?.pivotFieldId as string | undefined;
+      }),
+    [kanban?.spec, viewSnapshotAtom],
   );
 
   // Effective per-column ids: from kanban.arrangement.columns; empty when arrangement has no columns.

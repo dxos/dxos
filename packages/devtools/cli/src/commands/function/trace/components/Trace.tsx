@@ -157,8 +157,12 @@ const formatTime = (timestamp: number): string => {
 
 // Helper: Format invocation outcome as status string.
 const formatStatus = (outcome?: InvocationOutcome): string => {
-  if (outcome === InvocationOutcome.SUCCESS) return 'OK';
-  if (outcome === InvocationOutcome.FAILURE) return 'ERR';
+  if (outcome === InvocationOutcome.SUCCESS) {
+    return 'OK';
+  }
+  if (outcome === InvocationOutcome.FAILURE) {
+    return 'ERR';
+  }
   return outcome ?? 'UNKNOWN';
 };
 
