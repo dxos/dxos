@@ -11,8 +11,9 @@ import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps
 import { type Message } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
+import { type Assistant } from '../../types';
 import { type ChatEvent } from '../Chat';
-import { blockToMarkdown, componentRegistry } from './registry';
+import { componentRegistry, createBlockRenderer } from './registry';
 import { MessageSyncer } from './sync';
 
 const defaultOptions: MarkdownStreamProps['options'] = {
@@ -27,6 +28,7 @@ export type ChatThreadProps = ThemedClassName<
     identity?: Identity;
     messages?: Message.Message[];
     error?: Error;
+    viewType?: Assistant.ChatView;
     onEvent?: (event: ChatEvent) => void;
   } & Pick<MarkdownStreamProps, 'options' | 'debug' | 'extensions' | 'footer'>
 >;
@@ -42,6 +44,7 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
       footer,
       debug = false,
       extensions,
+      viewType,
       onEvent,
     },
     forwardedRef,
@@ -66,7 +69,8 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
     }, [controller, error]);
 
     // Update document.
-    const syncer = useMemo(() => controller && new MessageSyncer(controller, blockToMarkdown), [controller]);
+    const renderer = useMemo(() => createBlockRenderer(viewType), [viewType]);
+    const syncer = useMemo(() => controller && new MessageSyncer(controller, renderer), [controller, renderer]);
     useEffect(() => {
       if (!syncer) {
         return;
@@ -93,6 +97,7 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
     return (
       <div role='none' data-hue={userHue} className='contents'>
         <MarkdownStream
+          key={viewType}
           classNames={classNames}
           registry={componentRegistry}
           options={options}

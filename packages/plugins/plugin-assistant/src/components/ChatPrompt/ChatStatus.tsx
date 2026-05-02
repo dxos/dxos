@@ -5,17 +5,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { ChatStatus, formatElapsed } from '@dxos/react-ui-chat';
+import { ChatStatus as NaturalChatStatus, formatElapsed } from '@dxos/react-ui-chat';
 import { Matrix } from '@dxos/react-ui-sfx';
 import { type ContentBlock } from '@dxos/types';
 import { Unit } from '@dxos/util';
 
-import { type ChatRequestTiming, useChatContext } from './context';
+import { type ChatRequestTiming, useChatContext } from '../Chat/context';
 
 const CHAT_STREAM_STATUS_NAME = 'Chat.StreamStatus';
 const TICK_MS = 1_000;
 
-export type ChatStreamStatusProps = ThemedClassName<{ icon?: boolean }>;
+export type ChatStreamStatusProps = ThemedClassName<{
+  icon?: boolean;
+}>;
 
 /**
  * Live status pill rendered at the bottom of the chat thread.
@@ -30,7 +32,7 @@ export type ChatStreamStatusProps = ThemedClassName<{ icon?: boolean }>;
  * - last completed turn's output token count (from the most recent `stats` content block)
  * - cumulative session total tokens across all `stats` content blocks
  */
-export const ChatStreamStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
+export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
   // Read `messages` from the chat context (combines `useQuery(queue)` + the processor's
   // pending atom) rather than `processor.messages` directly — the latter only contains
   // blocks streamed via the ephemeral `PartialBlock` channel, while finalized blocks
@@ -59,9 +61,9 @@ export const ChatStreamStatus = ({ classNames, icon }: ChatStreamStatusProps) =>
   }
 
   return (
-    <ChatStatus.Root defaultRunning={false} classNames={['py-2 gap-2 text-sm', classNames]}>
+    <NaturalChatStatus.Root defaultRunning={false} classNames={['py-2 gap-2 text-sm', classNames]}>
       {icon && (
-        <ChatStatus.Icon>
+        <NaturalChatStatus.Icon>
           <Matrix
             classNames='w-5 h-5'
             dotClassNames='bg-primary-500'
@@ -71,30 +73,30 @@ export const ChatStreamStatus = ({ classNames, icon }: ChatStreamStatusProps) =>
             interval={500}
             active={isRunning}
           />
-        </ChatStatus.Icon>
+        </NaturalChatStatus.Icon>
       )}
       {show && (
         <div role='none' className='flex items-center'>
           {requestTiming && (
-            <ChatStatus.Text>
+            <NaturalChatStatus.Text>
               <Elapsed timing={requestTiming} />
-            </ChatStatus.Text>
+            </NaturalChatStatus.Text>
           )}
           {lastOutputTokens != null && (
             <>
-              {requestTiming && <ChatStatus.Separator />}
-              <ChatStatus.Text>↓ {Unit.Thousand(lastOutputTokens).toString()}</ChatStatus.Text>
+              {requestTiming && <NaturalChatStatus.Separator />}
+              <NaturalChatStatus.Text>↓ {Unit.Thousand(lastOutputTokens).toString()}</NaturalChatStatus.Text>
             </>
           )}
           {sessionTotalTokens > 0 && (
             <>
-              {(requestTiming || lastOutputTokens != null) && <ChatStatus.Separator />}
-              <ChatStatus.Text>Σ {Unit.Thousand(sessionTotalTokens).toString()}</ChatStatus.Text>
+              {(requestTiming || lastOutputTokens != null) && <NaturalChatStatus.Separator />}
+              <NaturalChatStatus.Text>Σ {Unit.Thousand(sessionTotalTokens).toString()}</NaturalChatStatus.Text>
             </>
           )}
         </div>
       )}
-    </ChatStatus.Root>
+    </NaturalChatStatus.Root>
   );
 };
 
