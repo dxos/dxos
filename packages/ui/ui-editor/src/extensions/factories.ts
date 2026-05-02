@@ -143,6 +143,10 @@ export const createBasicExtensions = (propsProp?: BasicExtensionsOptions): Exten
     props.lineWrapping && EditorView.lineWrapping,
     props.placeholder && placeholder(props.placeholder),
     props.readOnly !== undefined && EditorState.readOnly.of(props.readOnly),
+    // `EditorState.readOnly` is advisory — CodeMirror doesn't auto-reject doc-changing
+    // transactions. Some extensions (e.g. `@codemirror/lang-markdown`'s Enter handler that
+    // continues a list) dispatch programmatic edits regardless. Drop them here.
+    props.readOnly && EditorState.transactionFilter.of((tr) => (tr.docChanged ? [] : tr)),
     props.scrollPastEnd && scrollPastEnd(),
     props.tabbable && tabbable,
     props.tabSize && EditorState.tabSize.of(props.tabSize),
