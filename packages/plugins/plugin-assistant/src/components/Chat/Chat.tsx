@@ -274,17 +274,19 @@ const ChatThread = (props: ChatThreadProps) => {
   }
 
   return (
-    <NaturalChatThread
-      {...props}
-      identity={identity}
-      messages={messages}
-      error={error}
-      debug={debug}
-      footer={<ChatStreamStatus />}
-      extensions={extensions}
-      onEvent={handleEvent}
-      ref={controllerRef}
-    />
+    <div role='none' className='dx-container relative'>
+      <NaturalChatThread
+        {...props}
+        identity={identity}
+        messages={messages}
+        error={error}
+        debug={debug}
+        extensions={extensions}
+        onEvent={handleEvent}
+        ref={controllerRef}
+      />
+      <ChatStreamStatus classNames='absolute left-0 bottom-2 px-3 rounded-sm bg-group-surface' />
+    </div>
   );
 };
 
@@ -397,7 +399,7 @@ const ChatPrompt = ({
       className={mx(
         'flex flex-col w-full dx-density-fine',
         outline &&
-          'bg-group-surface border border-subdued-separator transition transition-border [&:has(.cm-content:focus)]:border-separator rounded-sm',
+          'bg-group-surface rounded-sm! border border-subdued-separator transition transition-border [&:has(.cm-content:focus)]:border-separator',
         classNames,
       )}
     >
