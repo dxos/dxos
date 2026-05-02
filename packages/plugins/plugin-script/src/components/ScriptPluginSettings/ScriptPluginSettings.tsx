@@ -5,12 +5,11 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Button, Select, useTranslation } from '@dxos/react-ui';
+import { Button, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
-import { type EditorInputMode, EditorInputModes } from '@dxos/ui-editor/types';
 
 import { meta } from '#meta';
-import { type Settings } from '#types';
+import { Settings } from '#types';
 
 export type ScriptPluginSettingsProps = AppSurface.SettingsArticleProps<
   Settings.Settings,
@@ -31,33 +30,12 @@ export const ScriptPluginSettings = ({ settings, onSettingsChange, onAuthenticat
             {t('authenticate-button.label')}
           </Button>
         </SettingsForm.Item>
-
-        <SettingsForm.Item title={t('editor-input-mode.label')} description={t('editor-input-mode.description')}>
-          <Select.Root
-            disabled={!onSettingsChange}
-            value={settings.editorInputMode ?? 'default'}
-            onValueChange={(value) => {
-              onSettingsChange?.((s) => ({ ...s, editorInputMode: value as EditorInputMode }));
-            }}
-          >
-            <Select.TriggerButton
-              disabled={!onSettingsChange}
-              placeholder={t('select-editor-input-mode.placeholder')}
-            />
-            <Select.Portal>
-              <Select.Content>
-                <Select.Viewport>
-                  {EditorInputModes.map((mode) => (
-                    <Select.Option key={mode} value={mode}>
-                      {t(`settings.editor-input-mode.${mode}.label`)}
-                    </Select.Option>
-                  ))}
-                </Select.Viewport>
-                <Select.Arrow />
-              </Select.Content>
-            </Select.Portal>
-          </Select.Root>
-        </SettingsForm.Item>
+        <SettingsForm.FieldSet
+          readonly={!onSettingsChange}
+          schema={Settings.Settings}
+          values={settings}
+          onValuesChanged={(values) => onSettingsChange?.(() => values)}
+        />
       </SettingsForm.Section>
     </SettingsForm.Viewport>
   );
