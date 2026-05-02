@@ -76,9 +76,16 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
           <ChatComponent.Toolbar classNames='dx-document' attendableId={attendableId} companionTo={companionTo} />
         </Panel.Toolbar>
         <Panel.Content>
-          <ChatComponent.Viewport>
-            <ChatComponent.Thread />
-            <div role='none' className='dx-document p-4'>
+          <ChatComponent.Content>
+            <div role='none' className='dx-container relative'>
+              <ChatComponent.Thread />
+              <div role='none' className='absolute bottom-2 left-0 right-0'>
+                <div role='none' className='dx-document px-4'>
+                  <ChatComponent.Status classNames='px-3 rounded-sm bg-group-surface' />
+                </div>
+              </div>
+            </div>
+            <div role='none' className='dx-document px-4 pb-4'>
               <ChatComponent.Prompt
                 {...chatProps}
                 outline
@@ -87,7 +94,7 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
                 onOnlineChange={setOnline}
               />
             </div>
-          </ChatComponent.Viewport>
+          </ChatComponent.Content>
         </Panel.Content>
       </Panel.Root>
     </ChatComponent.Root>

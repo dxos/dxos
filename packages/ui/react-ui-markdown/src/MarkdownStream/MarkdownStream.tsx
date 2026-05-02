@@ -264,6 +264,7 @@ const useMarkdownStreamTextEditor = (
         }),
         createThemeExtensions({
           slots: documentSlots,
+          scrollbarThin: true,
           syntaxHighlighting: true,
           themeMode,
         }),

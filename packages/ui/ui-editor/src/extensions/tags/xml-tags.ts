@@ -13,7 +13,6 @@ import {
   WidgetType,
   keymap,
 } from '@codemirror/view';
-// TODO(burdon): Factor out agnostic types (React/solid).
 import { type FunctionComponent } from 'react';
 
 import { invariant } from '@dxos/invariant';

@@ -38,7 +38,7 @@ export class ReasoningWidget extends WidgetType {
   }
 
   override toDOM() {
-    const root = Domino.of('div')
+    return Domino.of('div')
       .classNames(styles.padding)
       .append(
         Domino.of('div')
@@ -56,8 +56,6 @@ export class ReasoningWidget extends WidgetType {
             Domino.of('div').attributes({ 'data-id': this.#pos }),
           ),
       ).root;
-
-    return root;
   }
 
   override updateDOM(dom: HTMLElement) {
