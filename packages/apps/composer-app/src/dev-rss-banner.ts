@@ -26,6 +26,7 @@ import { log } from '@dxos/log';
 const DEFAULT_FEEDS = [
   'https://www.theregister.com/software/ai_ml/headlines.atom',
   'https://news.ycombinator.com/rss',
+  'https://www.latent.space/feed',
   'https://importai.substack.com/feed',
 ];
 const DEFAULT_FEED = DEFAULT_FEEDS[Math.floor(Math.random() * DEFAULT_FEEDS.length)];
