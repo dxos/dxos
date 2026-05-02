@@ -195,10 +195,10 @@ const ChatToolbar = composable<HTMLDivElement, ChatToolbarProps>(
 ChatToolbar.displayName = CHAT_TOOLBAR_NAME;
 
 //
-// Viewport
+// Content
 //
 
-const CHAT_VIEWPORT_NAME = 'Chat.Viewport';
+const CHAT_CONTENT_NAME = 'Chat.Content';
 
 type ChatContentProps = {};
 
@@ -210,7 +210,7 @@ const ChatContent = composable<HTMLDivElement, ChatContentProps>(({ children, ..
   );
 });
 
-ChatContent.displayName = CHAT_VIEWPORT_NAME;
+ChatContent.displayName = CHAT_CONTENT_NAME;
 
 //
 // Thread
