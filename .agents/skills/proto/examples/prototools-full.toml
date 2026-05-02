@@ -1,0 +1,84 @@
+# .prototools - Complete configuration example
+
+# Core language versions
+node = "20.10.0"
+npm = "10.2.0"
+pnpm = "8.12.0"
+yarn = "4.0.0"
+bun = "1.0.18"
+deno = "1.40.0"
+rust = "1.75.0"
+go = "1.21.5"
+python = "3.12.0"
+
+# Pin proto itself
+proto = "0.51.0"
+
+# Pin moon (if using)
+moon = "1.31.0"
+
+# Third-party plugins
+[plugins]
+# Database tools
+atlas = "https://raw.githubusercontent.com/crashdump/proto-tools/main/toml-plugins/atlas/plugin.toml"
+
+# Configuration language
+pkl = "https://raw.githubusercontent.com/milesj/proto-plugins/master/pkl.toml"
+
+# CLI tools
+jira = "https://raw.githubusercontent.com/Phault/proto-toml-plugins/main/jira/plugin.toml"
+
+# Global settings
+[settings]
+# Automatically install missing tools when running
+auto-install = true
+
+# Automatically clean unused tools in background
+auto-clean = true
+
+# Disable telemetry collection
+telemetry = false
+
+# How to detect versions
+# first-available: Use first version found (default)
+# prefer-prototools: Prefer .prototools over ecosystem files
+# only-prototools: Only use .prototools
+detect-strategy = "prefer-prototools"
+
+# HTTP/Network settings
+[settings.http]
+# Corporate proxy
+proxies = ["https://corporate.proxy:8080"]
+
+# Proxies to treat as secure even if HTTP
+secure-proxies = ["http://internal.proxy"]
+
+# Custom root certificate for SSL
+# root-cert = "/path/to/corporate-ca.pem"
+
+# Offline mode settings
+[settings.offline]
+# Timeout for connectivity check (ms)
+timeout = 750
+
+# Global environment variables
+[env]
+# Development defaults
+NODE_ENV = "development"
+RUST_BACKTRACE = "1"
+
+# Variable substitution
+# API_BASE = "${COMPANY_API_HOST}/v1"
+
+# Per-tool configuration
+[tools.node]
+# Custom aliases
+aliases = { work = "18.19.0", personal = "21.0.0" }
+
+[tools.node.env]
+# Node-specific environment
+NODE_OPTIONS = "--max-old-space-size=4096"
+
+[tools.python.env]
+# Python-specific environment
+PYTHONDONTWRITEBYTECODE = "1"

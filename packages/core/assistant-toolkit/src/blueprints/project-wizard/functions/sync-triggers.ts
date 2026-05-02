@@ -52,10 +52,12 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
     );
 
     // Remove all existing triggers — they will be recreated with the current config.
-    // This ensures operation and concurrency stay in sync when filterEvents is toggled.
+    // This ensures operation, concurrency, and enabled stay in sync when agent fields change.
     for (const trigger of triggers) {
       yield* Database.remove(trigger);
     }
+
+    const triggersEnabled = agent.enabled ?? true;
 
     // Lazy import to avoid circular dependency issues.
     const { Qualifier, AgentWorker } = yield* Effect.promise(() => import('../../project'));
@@ -95,7 +97,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
               { source: AGENT_TRIGGER_TARGET_EXTENSION_KEY, id: subscription.dxn.toString() },
             ],
           },
-          enabled: true,
+          enabled: triggersEnabled,
           spec: Trigger.specQueue(queueDxn.toString()),
           function: Ref.make(Operation.serialize(filterEvents ? Qualifier : AgentWorker)),
           input: {
@@ -121,7 +123,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
             ],
           },
           function: Ref.make(Operation.serialize(AgentWorker)),
-          enabled: true,
+          enabled: triggersEnabled,
           spec: Trigger.specQueue(agent.queue.dxn.toString()),
           input: {
             agent: Ref.make(agent),
@@ -142,7 +144,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
               { source: AGENT_TRIGGER_TARGET_EXTENSION_KEY, id: `timer:${agent.cron}` },
             ],
           },
-          enabled: true,
+          enabled: triggersEnabled,
           spec: Trigger.specTimer(agent.cron),
           function: Ref.make(Operation.serialize(AgentWorker)),
           input: {

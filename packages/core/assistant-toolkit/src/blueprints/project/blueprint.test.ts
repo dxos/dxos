@@ -13,7 +13,7 @@ import { SpaceProperties } from '@dxos/client-protocol';
 import { Blueprint } from '@dxos/compute';
 import { QueueService, Trigger } from '@dxos/compute';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -223,8 +223,12 @@ describe('Agent', () => {
 
         yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
 
-        const triggers = yield* Database.runQuery(Filter.type(Trigger.Trigger));
-        const timerTriggers = triggers.filter((trigger) => trigger.spec?.kind === 'timer');
+        const triggers = yield* Database.runQuery(
+          Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.blueprint.test.timer'),
+        );
+        const timerTriggers = triggers.filter(
+          (trigger) => trigger.spec?.kind === 'timer' && trigger.spec.cron === cron,
+        );
         expect(timerTriggers).toHaveLength(1);
 
         const timerTrigger = timerTriggers[0];
@@ -299,6 +303,46 @@ describe('Agent', () => {
       TestHelpers.provideTestContext,
     ),
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
+  );
+
+  it.scoped(
+    'sync-triggers sets trigger enabled from agent.enabled',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const agent = yield* Agent.makeInitialized(
+          {
+            name: 'Toggle agent',
+            instructions: 'Test enabled propagation.',
+            blueprints: [Ref.make(MarkdownBlueprint.make())],
+            enabled: false,
+            cron: '0 9 * * *',
+          },
+          blueprint,
+        );
+        yield* Database.flush();
+
+        yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
+
+        const triggers = yield* Database.runQuery(
+          Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.blueprint.test.toggle-enabled'),
+        );
+        expect(triggers.every((trigger) => trigger.enabled === false)).toBe(true);
+
+        Obj.change(agent, (agent) => {
+          agent.enabled = true;
+        });
+        yield* Database.flush();
+        yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
+
+        const triggersAfter = yield* Database.runQuery(
+          Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.blueprint.test.after'),
+        );
+        expect(triggersAfter).toHaveLength(triggers.length);
+        expect(triggersAfter.every((trigger) => trigger.enabled === true)).toBe(true);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
   );
 });
 

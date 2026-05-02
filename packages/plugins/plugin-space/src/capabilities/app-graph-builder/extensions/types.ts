@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, LayoutOperation, Segments } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Segments } from '@dxos/app-toolkit';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Collection, Filter, Obj, Query, Type } from '@dxos/echo';
@@ -35,7 +35,6 @@ import {
   createObjectNode,
   downloadBlob,
   getDynamicLabel,
-  whenSpace,
 } from './shared';
 
 //
@@ -53,7 +52,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
     // Types section virtual node under each space.
     GraphBuilder.createExtension({
       id: 'types-section',
-      match: whenSpace,
+      match: AppNodeMatcher.whenSpace,
       connector: (space, get) => {
         const spaceState = get(CreateAtom.fromObservable(space.state));
         if (spaceState !== SpaceState.SPACE_READY) {
@@ -67,6 +66,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
             label: ['types-section.label', { ns: meta.id }],
             icon: 'ph--shapes--regular',
             space,
+            position: 'fallback',
             testId: 'spacePlugin.typesSection',
           }),
         ]);
@@ -92,9 +92,6 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           if (SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
             return false;
           }
-          if (ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
-            return false;
-          }
           if (Type.getTypename(schema) === Collection.Collection.typename) {
             return false;
           }
@@ -109,6 +106,9 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           }
           const typename = Type.getTypename(schema);
           const objects = get(AtomQuery.make(space.db, Filter.typename(typename)));
+          if (ViewAnnotation.has(schema)) {
+            return objects.some((obj) => !viewIndex.isView(obj));
+          }
           return objects.length > 0 || viewIndex.typenamesWithViews.has(typename);
         });
 
@@ -182,7 +182,14 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         return Option.some({ space: node.data.space as Space, typename: node.data.typename as string });
       },
       connector: ({ space, typename }, get) => {
-        const objects = get(AtomQuery.make(space.db, Filter.typename(typename)));
+        const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
+        const schemas = client
+          ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
+          : [];
+        const viewIndex = buildViewIndex(get, space, schemas);
+        const objects = get(AtomQuery.make(space.db, Filter.typename(typename))).filter(
+          (object: Obj.Unknown) => !viewIndex.isView(object),
+        );
 
         return Effect.succeed(
           objects
@@ -274,7 +281,7 @@ const createSchemaNode = ({
       };
     }),
     Match.orElse(() => ({
-      label: getDynamicLabel('typename.label', typename, { count: 2, default: typename }),
+      label: getDynamicLabel('typename.label', typename, { count: 2, defaultValue: typename }),
       nodeId: typename,
     })),
   );

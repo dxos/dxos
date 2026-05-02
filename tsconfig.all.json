@@ -334,6 +334,9 @@
       "path": "packages/plugins/plugin-discord/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-doctor/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-explorer/tsconfig.json"
     },
     {
@@ -350,6 +353,9 @@
     },
     {
       "path": "packages/plugins/plugin-inbox/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-integration/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-iroh-beacon/tsconfig.json"
@@ -466,13 +472,13 @@
       "path": "packages/plugins/plugin-tictactoe/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-token-manager/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-transcription/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-transformer/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-trello/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-voxel/tsconfig.json"

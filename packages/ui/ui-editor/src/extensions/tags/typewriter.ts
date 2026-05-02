@@ -29,49 +29,92 @@ export const typewriterBypass = Annotation.define<boolean>();
  */
 export const typewriterDrainingEffect = StateEffect.define<boolean>();
 
-type BufferState = { text: string; insertAt: number };
+/**
+ * Buffer state. The pending text is `text.slice(head)` — but `head` is advanced
+ * without slicing on every drip to avoid O(n²) string copying. The prefix is
+ * compacted lazily once it exceeds half the string or `COMPACT_HEAD_THRESHOLD`.
+ */
+type BufferState = { text: string; head: number; insertAt: number };
 
-const DEFAULT_RATE = 200;
+/** How long to show the cursor after motion has stopped. */
 const CURSOR_LINGER = 3_000;
 
+/** Per-frame time budget for draining the buffer. Stays well under a 16 ms frame. */
+const FRAME_BUDGET_MS = 4;
+
+/**
+ * Visible characters of plain text emitted per animation frame. At 60 fps a value of 1
+ * gives ~60 char/s — fast enough to keep up with most streams while still reading as a
+ * smooth character-by-character drip. Atomic structures (XML elements, markdown links)
+ * always flush whole regardless of this cap.
+ */
+const CHARS_PER_FRAME = 5;
+
+/**
+ * When the pending buffer exceeds this many characters, abandon typewriter pacing
+ * and flush the entire buffer in one transaction. The visual benefit of typewriter
+ * has negative value past human-reading rates.
+ */
+const FLUSH_THRESHOLD = 2_000;
+
+/** Compaction trigger for the head-offset rope. */
+const COMPACT_HEAD_THRESHOLD = 4_096;
+
 export type TypewriterOptions = {
-  /** Characters per second. */
-  rate?: number;
   /** Show a blinking cursor at the insertion point while streaming. */
   cursor?: boolean;
   /** Tag names whose inner content should be streamed (not buffered until close). */
   streamingTags?: Set<string>;
+  /** Hard cap before falling back to single-flush mode. Defaults to 2 000 chars. */
+  flushThreshold?: number;
+  /** Per-frame time budget for draining (ms). Defaults to 20 ms. */
+  frameBudgetMs?: number;
+  /**
+   * Maximum visible characters of plain text emitted per animation frame. Atomic
+   * structures (XML elements, markdown links) always flush whole and are not subject
+   * to this cap. Default 1 — ~60 char/s at 60 fps. Raise for faster typewriter speed.
+   */
+  charsPerFrame?: number;
 };
 
 /**
- * Intercepts appended text and inserts it one character at a time, while flushing XML tags,
- * markdown links, and images atomically for smooth typewriter-style streaming.
+ * Intercepts appended text and inserts it as time-budgeted batches per animation frame,
+ * while flushing XML tags, markdown links, and images atomically for smooth typewriter-style
+ * streaming. Falls back to bulk-flush when the buffer grows past `flushThreshold` to keep
+ * the editor responsive on long runs.
  */
 export const typewriter = (options: TypewriterOptions = {}): Extension => {
-  const rate = options.rate ?? DEFAULT_RATE;
-  const interval = 1_000 / rate;
   const streamingTags = options.streamingTags ?? new Set<string>();
+  const flushThreshold = options.flushThreshold ?? FLUSH_THRESHOLD;
+  const frameBudgetMs = options.frameBudgetMs ?? FRAME_BUDGET_MS;
+  const charsPerFrame = options.charsPerFrame ?? CHARS_PER_FRAME;
 
   // Effect to suppress a transaction from being applied (replaced by buffered insert).
   const suppressAppend = StateEffect.define<{ from: number; text: string }>();
-  // Effect to insert text from the buffer (single char or atomic chunk).
+  // Effect to insert text from the buffer (single batch per frame).
   const insertChunk = StateEffect.define<{ from: number; text: string }>();
 
   // State field that holds the pending buffer of text to drip into the document.
   const bufferField = StateField.define<BufferState>({
-    create: () => ({ text: '', insertAt: 0 }),
+    create: () => ({ text: '', head: 0, insertAt: 0 }),
     update: (value, tr) => {
-      let { text, insertAt } = value;
+      let { text, head, insertAt } = value;
       for (const effect of tr.effects) {
         if (effect.is(suppressAppend)) {
-          text += effect.value.text;
-          if (text.length === effect.value.text.length) {
+          // If pending was empty, anchor insertAt at the new append point.
+          if (text.length === head) {
             insertAt = effect.value.from;
           }
+          text += effect.value.text;
         }
         if (effect.is(insertChunk)) {
-          text = text.slice(effect.value.text.length);
+          head += effect.value.text.length;
           insertAt = effect.value.from + effect.value.text.length;
+          // Compact lazily so the prefix doesn't grow without bound.
+          if (head >= COMPACT_HEAD_THRESHOLD || (head > 0 && head * 2 >= text.length)) {
+            text = text.slice(head);
+            head = 0;
+          }
         }
       }
 
@@ -86,7 +129,7 @@ export const typewriter = (options: TypewriterOptions = {}): Extension => {
           });
         }
         if (isReset) {
-          return { text: '', insertAt: 0 };
+          return { text: '', head: 0, insertAt: 0 };
         }
 
         // Map insertion position through document changes not caused by us.
@@ -95,7 +138,7 @@ export const typewriter = (options: TypewriterOptions = {}): Extension => {
         }
       }
 
-      return { text, insertAt };
+      return { text, head, insertAt };
     },
   });
 
@@ -137,77 +180,120 @@ export const typewriter = (options: TypewriterOptions = {}): Extension => {
     };
   });
 
-  // View plugin that drains the buffer, emitting one character or one atomic chunk per tick.
+  // View plugin that drains the buffer once per animation frame, emitting as many atomic
+  // chunks as fit within `frameBudgetMs`. Falls back to a single dispatch when the buffer
+  // grows past `flushThreshold`.
   const drainPlugin = ViewPlugin.fromClass(
     class {
-      _timer: ReturnType<typeof setInterval> | undefined;
+      _raf: number | undefined;
       _activeStreamTag: string | null = null;
 
       constructor(private view: EditorView) {
-        // Note: do NOT eagerly call `_start()` here. The buffer is empty at construction,
+        // Note: do NOT eagerly start the drain here. The buffer is empty at construction,
         // and any synchronous `view.dispatch` inside the constructor is rejected by
-        // CodeMirror because we're inside the initial update flow. `update()` calls
-        // `_start()` once the buffer first becomes non-empty.
+        // CodeMirror because we're inside the initial update flow.
       }
 
       update(update: ViewUpdate) {
-        const buffer = update.state.field(bufferField);
-        // Reset streaming state when buffer is cleared (e.g., document reset).
-        if (buffer.text.length === 0) {
+        const { text, head } = update.state.field(bufferField);
+        const pending = text.length - head;
+        if (pending === 0) {
           this._activeStreamTag = null;
         }
-        if (buffer.text.length > 0 && this._timer === undefined) {
+        if (pending > 0 && this._raf === undefined) {
           this._start();
         }
       }
 
       _start() {
-        // Announce the drain has started so coordinated extensions (e.g. footer block
-        // widgets) can step out of the way before any drip transactions land. Deferred
-        // via `queueMicrotask` because `_start` is invoked from inside `update()` (and
-        // therefore inside CM's update flow), where synchronous `view.dispatch` is
-        // disallowed.
+        // Announce drain start. Deferred via microtask because `_start` runs from inside
+        // `update()`, where synchronous `view.dispatch` is disallowed.
         queueMicrotask(() => {
           this.view.dispatch({
             effects: typewriterDrainingEffect.of(true),
             annotations: typewriterBypass.of(true),
           });
         });
-        this._timer = setInterval(() => {
-          const { text, insertAt } = this.view.state.field(bufferField);
-          if (text.length === 0) {
-            clearInterval(this._timer);
-            this._timer = undefined;
-            this.view.dispatch({
-              effects: typewriterDrainingEffect.of(false),
-              annotations: typewriterBypass.of(true),
-            });
-            return;
-          }
+        this._raf = requestAnimationFrame(this._tick);
+      }
 
-          const result = flushable(text, streamingTags, this._activeStreamTag);
-          if (result.count === 0) {
-            // Structure incomplete — wait for more data.
-            return;
-          }
+      _tick = () => {
+        const { text, head, insertAt } = this.view.state.field(bufferField);
+        const pending = text.length - head;
 
-          if (result.enterTag) {
-            this._activeStreamTag = result.enterTag;
-          }
-          if (result.exitTag) {
-            this._activeStreamTag = null;
-          }
+        if (pending === 0) {
+          this.view.dispatch({
+            effects: typewriterDrainingEffect.of(false),
+            annotations: typewriterBypass.of(true),
+          });
+          this._raf = undefined;
+          return;
+        }
 
-          const chunk = text.slice(0, result.count);
+        // Backpressure: flush everything in one shot when the buffer is too large to
+        // pace at typewriter rates. Streaming-tag context is dropped — anything still
+        // buffered (including a closing tag, if present) lands as one chunk.
+        if (pending > flushThreshold) {
+          const chunk = text.slice(head);
+          this._activeStreamTag = null;
           this.view.dispatch({
             changes: { from: insertAt, insert: chunk },
             effects: insertChunk.of({ from: insertAt, text: chunk }),
           });
-        }, interval);
-      }
+          this._raf = requestAnimationFrame(this._tick);
+          return;
+        }
+
+        // Time-budgeted batch: accumulate atomic chunks until we run out of budget,
+        // hit an incomplete structure, exhaust the buffer, or hit the per-frame
+        // visible-character cap. Atomic chunks (count > 1) are always emitted whole;
+        // the cap only throttles plain-text drips so the typewriter cadence stays
+        // visible at the per-frame level.
+        const startTime = performance.now();
+        let pos = head;
+        let activeTag = this._activeStreamTag;
+        let charsEmitted = 0;
+        while (pos < text.length && performance.now() - startTime < frameBudgetMs) {
+          const result = flushable(text, pos, streamingTags, activeTag);
+          if (result.count === 0) {
+            // Head is inside an incomplete structure — wait for more data.
+            break;
+          }
+          // Stop after the per-frame cap, but only once we've already emitted at
+          // least one chunk this frame — otherwise a multi-char atomic structure
+          // (e.g. a markdown link) could starve forever on a small cap.
+          if (charsEmitted > 0 && charsEmitted + result.count > charsPerFrame) {
+            break;
+          }
+          if (result.enterTag) {
+            activeTag = result.enterTag;
+          }
+          if (result.exitTag) {
+            activeTag = null;
+          }
+          pos += result.count;
+          charsEmitted += result.count;
+        }
+
+        const totalCount = pos - head;
+        if (totalCount > 0) {
+          const chunk = text.slice(head, head + totalCount);
+          this._activeStreamTag = activeTag;
+          this.view.dispatch({
+            changes: { from: insertAt, insert: chunk },
+            effects: insertChunk.of({ from: insertAt, text: chunk }),
+          });
+        }
+
+        // Continue draining next frame; if pending is 0 after the dispatch, the next
+        // tick will land on the early-out above and stop the loop.
+        this._raf = requestAnimationFrame(this._tick);
+      };
 
       destroy() {
-        clearInterval(this._timer);
+        if (this._raf !== undefined) {
+          cancelAnimationFrame(this._raf);
+        }
       }
     },
   );
@@ -236,8 +322,9 @@ const typewriterCursor = (bufferField: StateField<BufferState>): Extension => {
   }>({
     create: () => ({ visible: false, insertAt: 0, lastNonWsAt: 0 }),
     update: (value, tr) => {
-      const { text, insertAt } = tr.state.field(bufferField);
-      if (text.length > 0) {
+      const { text, head, insertAt } = tr.state.field(bufferField);
+      const pending = text.length - head;
+      if (pending > 0) {
         // Track the last position where a non-whitespace character was inserted.
         let lastNonWsAt = tr.changes.mapPos(Math.min(value.lastNonWsAt, tr.startState.doc.length));
         if (tr.docChanged) {
@@ -267,10 +354,10 @@ const typewriterCursor = (bufferField: StateField<BufferState>): Extension => {
         return Decoration.none;
       }
 
-      const { text } = tr.state.field(bufferField);
+      const { text, head } = tr.state.field(bufferField);
       // While draining, show cursor at the insertion point.
       // When lingering (buffer empty), show at last non-whitespace position.
-      const cursorAt = text.length > 0 ? insertAt : lastNonWsAt;
+      const cursorAt = text.length > head ? insertAt : lastNonWsAt;
       const pos = Math.min(cursorAt, tr.state.doc.length);
       return Decoration.set([
         Decoration.widget({
@@ -289,10 +376,11 @@ const typewriterCursor = (bufferField: StateField<BufferState>): Extension => {
       constructor(private view: EditorView) {}
 
       update(update: ViewUpdate) {
-        const { text } = update.state.field(bufferField);
+        const { text, head } = update.state.field(bufferField);
         const { visible } = update.state.field(visibilityField);
+        const pending = text.length - head;
 
-        if (text.length > 0) {
+        if (pending > 0) {
           clearTimeout(this._timer);
           this._timer = undefined;
         } else if (visible && this._timer === undefined) {
@@ -317,8 +405,14 @@ const typewriterCursor = (bufferField: StateField<BufferState>): Extension => {
  * U+25CF Ballot Box
  */
 class CursorWidget extends WidgetType {
+  // All instances are interchangeable — let CM reuse the existing DOM across drips so
+  // the blink animation isn't restarted on every transaction.
+  override eq(other: WidgetType): boolean {
+    return other instanceof CursorWidget;
+  }
+
   toDOM() {
-    const inner = Domino.of('span').text('\u2217').style({ animation: 'blink 1s infinite', animationDelay: '250ms' });
+    const inner = Domino.of('span').text('∗').style({ animation: 'blink 1s infinite', animationDelay: '250ms' });
     return Domino.of('span').style({ opacity: '0.8' }).append(inner).root;
   }
 }
@@ -328,6 +422,9 @@ class CursorWidget extends WidgetType {
  * Custom elements use hyphens; `\w+` alone incorrectly stops at `-` (e.g. `dom` from `dom-widget`).
  */
 const OPENING_TAG_NAME = /^<([a-zA-Z][\w-]*)/;
+
+/** Tag names are short — bound the slice we hand to the regex matcher. */
+const TAG_NAME_PROBE = 64;
 
 /** Escapes a string for safe embedding in RegExp source (tag names from the document). */
 const escapeRegExpSource = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -341,91 +438,98 @@ type FlushResult = {
 };
 
 /**
- * Scans the buffer and returns the number of characters that can be flushed.
- * Returns 0 if the head of the buffer is inside an incomplete structure
- * (XML element, markdown link, or image) that should be flushed atomically.
- * Returns > 1 when a complete structure is at the head and should be emitted in one batch.
+ * Scans the buffer starting at `start` and returns the number of characters that can be
+ * flushed. Returns 0 if the head of the buffer is inside an incomplete structure (XML
+ * element, markdown link, or image) that should be flushed atomically. Returns > 1 when
+ * a complete structure is at the head and should be emitted in one batch.
  *
- * When `activeStreamTag` is set, we're inside a streaming tag: inner content drips
- * one character at a time, and the closing tag is flushed atomically.
+ * When `activeStreamTag` is set, we're inside a streaming tag: inner content drips one
+ * character at a time, and the closing tag is flushed atomically.
  */
-const flushable = (buffer: string, streamingTags: Set<string>, activeStreamTag: string | null): FlushResult => {
-  if (buffer.length === 0) {
+const flushable = (
+  buffer: string,
+  start: number,
+  streamingTags: Set<string>,
+  activeStreamTag: string | null,
+): FlushResult => {
+  if (start >= buffer.length) {
     return { count: 0 };
   }
 
   // Inside a streaming tag: drip content, flush closing tag atomically.
   if (activeStreamTag) {
     const closeTag = `</${activeStreamTag}>`;
-    if (buffer.startsWith(closeTag)) {
+    if (buffer.startsWith(closeTag, start)) {
       return { count: closeTag.length, exitTag: true };
     }
     // Nested XML element — buffer atomically.
-    if (buffer[0] === '<') {
-      return { count: xmlElementLength(buffer) };
+    if (buffer[start] === '<') {
+      return { count: xmlElementLength(buffer, start) };
     }
     // Drip inner content one character at a time.
     return { count: 1 };
   }
 
-  const ch = buffer[0];
+  const ch = buffer[start];
 
   // XML element.
   if (ch === '<') {
-    // Check if this is a streaming tag's opening tag.
-    const nameMatch = buffer.match(OPENING_TAG_NAME);
+    // Tag-name match against a bounded slice (tag names are short).
+    const probe = buffer.slice(start, start + TAG_NAME_PROBE);
+    const nameMatch = probe.match(OPENING_TAG_NAME);
     if (nameMatch && streamingTags.has(nameMatch[1])) {
-      const close = buffer.indexOf('>');
+      const close = buffer.indexOf('>', start);
       if (close === -1) {
         return { count: 0 }; // Opening tag incomplete.
       }
       // Self-closing streaming tag — flush atomically, no streaming mode.
       if (buffer[close - 1] === '/') {
-        return { count: close + 1 };
+        return { count: close + 1 - start };
       }
       // Flush opening tag and enter streaming mode.
-      return { count: close + 1, enterTag: nameMatch[1] };
+      return { count: close + 1 - start, enterTag: nameMatch[1] };
     }
     // Non-streaming XML: buffer the entire element.
-    return { count: xmlElementLength(buffer) };
+    return { count: xmlElementLength(buffer, start) };
   }
 
   // Image: ![alt](url) — starts with '!'.
-  if (ch === '!' && buffer.length > 1 && buffer[1] === '[') {
-    return { count: linkLength(buffer, 1) };
+  if (ch === '!' && buffer.length > start + 1 && buffer[start + 1] === '[') {
+    return { count: linkLength(buffer, start, start + 1) };
   }
 
   // Link: [text](url).
   if (ch === '[') {
-    return { count: linkLength(buffer, 0) };
+    return { count: linkLength(buffer, start, start) };
   }
 
   return { count: 1 };
 };
 
 /**
- * Returns the length of a complete XML element at the start of the buffer, or 0 if the element is incomplete.
- * Handles self-closing tags, closing tags, and opening tags with nested content.
- * E.g., `<foo>content<bar />more</foo>` returns the full length.
+ * Returns the length of a complete XML element starting at `start`, or 0 if the element
+ * is incomplete. Handles self-closing tags, closing tags, and opening tags with nested
+ * content. E.g., `<foo>content<bar />more</foo>` returns the full length.
  */
-export const xmlElementLength = (buffer: string): number => {
-  const close = buffer.indexOf('>');
+export const xmlElementLength = (buffer: string, start = 0): number => {
+  const close = buffer.indexOf('>', start);
   if (close === -1) {
     return 0; // Tag not closed yet.
   }
 
   // Self-closing tag: <foo />.
   if (buffer[close - 1] === '/') {
-    return close + 1;
+    return close + 1 - start;
   }
 
   // Closing tag: </foo>.
-  if (buffer[1] === '/') {
-    return close + 1;
+  if (buffer[start + 1] === '/') {
+    return close + 1 - start;
   }
 
   // Opening tag: extract the tag name and find its matching closing tag.
-  const nameMatch = buffer.match(OPENING_TAG_NAME);
+  const probe = buffer.slice(start, start + TAG_NAME_PROBE);
+  const nameMatch = probe.match(OPENING_TAG_NAME);
   if (!nameMatch) {
     // Not a valid tag (e.g., `< ` or `<123`); emit one character.
     return 1;
@@ -434,8 +538,9 @@ export const xmlElementLength = (buffer: string): number => {
   const tagName = nameMatch[1];
   let depth = 0;
 
-  // Walk through all tags in the buffer tracking nesting depth.
+  // Walk through all tags in the buffer tracking nesting depth, starting at `start`.
   const tagPattern = new RegExp(`<(/?)${escapeRegExpSource(tagName)}(\\s[^>]*)?>`, 'g');
+  tagPattern.lastIndex = start;
   let match: RegExpExecArray | null;
   while ((match = tagPattern.exec(buffer)) !== null) {
     const isSelfClosing = match[0].endsWith('/>');
@@ -444,12 +549,12 @@ export const xmlElementLength = (buffer: string): number => {
     if (isSelfClosing) {
       // Self-closing doesn't change depth, but if depth is 0 this is the root.
       if (depth === 0) {
-        return match.index + match[0].length;
+        return match.index + match[0].length - start;
       }
     } else if (isClosing) {
       depth--;
       if (depth === 0) {
-        return match.index + match[0].length;
+        return match.index + match[0].length - start;
       }
     } else {
       depth++;
@@ -461,12 +566,12 @@ export const xmlElementLength = (buffer: string): number => {
 };
 
 /**
- * Returns the length of a complete markdown link/image starting at `offset`,
- * or 0 if the structure is incomplete.
- * Expects buffer[offset] === '['.
+ * Returns the length (from `start`) of a complete markdown link/image whose `[` is at
+ * `bracketAt`, or 0 if the structure is incomplete. Returns 1 if the bracket is not part
+ * of a link (no following `(`).
  */
-const linkLength = (buffer: string, offset: number): number => {
-  const bracketClose = buffer.indexOf(']', offset + 1);
+const linkLength = (buffer: string, start: number, bracketAt: number): number => {
+  const bracketClose = buffer.indexOf(']', bracketAt + 1);
   if (bracketClose === -1) {
     return 0;
   }
@@ -485,5 +590,5 @@ const linkLength = (buffer: string, offset: number): number => {
     return 0;
   }
 
-  return parenClose + 1;
+  return parenClose + 1 - start;
 };

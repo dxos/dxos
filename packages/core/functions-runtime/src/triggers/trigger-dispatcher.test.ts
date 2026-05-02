@@ -40,7 +40,7 @@ const TestLayer = Layer.mergeAll(
   TriggerStateStore.layerMemory,
   Layer.mergeAll(AiService.notAvailable, CredentialsService.layerConfig([]), FetchHttpClient.layer),
 ).pipe(
-  Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
+  Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
   Layer.provideMerge(ServiceResolver.layerRequirements(Database.Service)),
   Layer.provideMerge(
     TestDatabaseLayer({

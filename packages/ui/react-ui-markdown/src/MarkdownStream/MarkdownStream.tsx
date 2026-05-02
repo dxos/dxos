@@ -138,7 +138,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
       registry,
       options,
       extensions,
-      setFooterRoot,
+      setFooterRoot: footer ? setFooterRoot : undefined,
     });
 
     // Show the status footer.
@@ -289,7 +289,7 @@ const useMarkdownStreamTextEditor = (
             }),
             xmlFormatting({ skip: ['prompt'] }),
             xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
-            scroller({ overScroll: 160 }),
+            scroller({ overScroll: 80 }),
             options?.autoScroll && autoScroll(),
             options?.typewriter &&
               typewriter({
