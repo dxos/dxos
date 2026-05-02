@@ -25,11 +25,23 @@ import {
 /**
  * Custom XML tags registry.
  *
- * NOTE: `<prompt>` is intentionally NOT registered here. It is rendered via mark + line
- * decorations (`xmlBlockDecoration`) in MarkdownStream so the prompt text remains part of
- * the document and can be highlighted by `xmlFormatting`.
+ * NOTE: `<prompt>` has no widget — it is rendered via mark + line decorations
+ * (`xmlBlockDecoration`) in MarkdownStream so the prompt text remains part of the document
+ * and can be highlighted by `xmlFormatting`. It is still listed here so the markdown block
+ * parser (`xmlBlockParsers`) knows to keep `<prompt>...</prompt>` as a single HTMLBlock
+ * — otherwise an unregistered prompt opens a Paragraph that lazy-continues into the
+ * following lines and breaks parsing of subsequent multi-line tags (e.g. a `<reasoning>`
+ * block whose content contains an ordered list).
  */
 export const componentRegistry: XmlWidgetRegistry = {
+  //
+  // Block-only (no widget — see note above).
+  //
+
+  prompt: {
+    block: true,
+  },
+
   //
   // DOM Widgets
   //

@@ -195,14 +195,14 @@ const ChatToolbar = composable<HTMLDivElement, ChatToolbarProps>(
 ChatToolbar.displayName = CHAT_TOOLBAR_NAME;
 
 //
-// Viewport
+// Content
 //
 
-const CHAT_VIEWPORT_NAME = 'Chat.Viewport';
+const CHAT_CONTENT_NAME = 'Chat.Content';
 
-type ChatViewportProps = {};
+type ChatContentProps = {};
 
-const ChatViewport = composable<HTMLDivElement, ChatViewportProps>(({ children, ...props }, forwardedRef) => {
+const ChatContent = composable<HTMLDivElement, ChatContentProps>(({ children, ...props }, forwardedRef) => {
   return (
     <div {...composableProps(props, { classNames: 'dx-expander flex flex-col' })} ref={forwardedRef}>
       {children}
@@ -210,7 +210,7 @@ const ChatViewport = composable<HTMLDivElement, ChatViewportProps>(({ children, 
   );
 });
 
-ChatViewport.displayName = CHAT_VIEWPORT_NAME;
+ChatContent.displayName = CHAT_CONTENT_NAME;
 
 //
 // Thread
@@ -274,19 +274,16 @@ const ChatThread = (props: ChatThreadProps) => {
   }
 
   return (
-    <div role='none' className='dx-container relative'>
-      <NaturalChatThread
-        {...props}
-        identity={identity}
-        messages={messages}
-        error={error}
-        debug={debug}
-        extensions={extensions}
-        onEvent={handleEvent}
-        ref={controllerRef}
-      />
-      <ChatStreamStatus classNames='absolute left-0 bottom-2 px-3 rounded-sm bg-group-surface' />
-    </div>
+    <NaturalChatThread
+      {...props}
+      identity={identity}
+      messages={messages}
+      error={error}
+      debug={debug}
+      extensions={extensions}
+      onEvent={handleEvent}
+      ref={controllerRef}
+    />
   );
 };
 
@@ -521,9 +518,10 @@ const useChatKeymapExtensions = ({
 export const Chat = {
   Root: ChatRoot,
   Toolbar: ChatToolbar,
-  Viewport: ChatViewport,
+  Content: ChatContent,
   Thread: ChatThread,
+  Status: ChatStreamStatus,
   Prompt: ChatPrompt,
 };
 
-export type { ChatRootProps, ChatToolbarProps, ChatViewportProps, ChatThreadProps, ChatPromptProps, ChatEvent };
+export type { ChatRootProps, ChatToolbarProps, ChatContentProps, ChatThreadProps, ChatPromptProps, ChatEvent };
