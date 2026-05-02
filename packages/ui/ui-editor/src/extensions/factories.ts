@@ -145,8 +145,14 @@ export const createBasicExtensions = (propsProp?: BasicExtensionsOptions): Exten
     props.readOnly !== undefined && EditorState.readOnly.of(props.readOnly),
     // `EditorState.readOnly` is advisory — CodeMirror doesn't auto-reject doc-changing
     // transactions. Some extensions (e.g. `@codemirror/lang-markdown`'s Enter handler that
-    // continues a list) dispatch programmatic edits regardless. Drop them here.
-    props.readOnly && EditorState.transactionFilter.of((tr) => (tr.docChanged ? [] : tr)),
+    // continues a list) dispatch programmatic edits regardless. Drop user-initiated edits
+    // (anything carrying a `userEvent` annotation) but pass programmatic dispatches —
+    // streaming `MarkdownStream` and similar consumers depend on being able to populate the
+    // doc themselves.
+    props.readOnly &&
+      EditorState.transactionFilter.of((tr) =>
+        tr.docChanged && (tr.isUserEvent('input') || tr.isUserEvent('delete')) ? [] : tr,
+      ),
     props.scrollPastEnd && scrollPastEnd(),
     props.tabbable && tabbable,
     props.tabSize && EditorState.tabSize.of(props.tabSize),

@@ -260,7 +260,6 @@ const useMarkdownStreamTextEditor = (
         createBasicExtensions({
           lineWrapping: true,
           readOnly: true,
-          scrollPastEnd: true,
         }),
         createThemeExtensions({
           slots: documentSlots,

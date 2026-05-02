@@ -9,13 +9,27 @@ import { describe, test } from 'vitest';
 import { createBasicExtensions } from './factories';
 
 describe('createBasicExtensions readOnly', () => {
-  test('drops doc-changing transactions when readOnly is true', ({ expect }) => {
+  test('drops user-initiated edits when readOnly is true', ({ expect }) => {
+    const state = EditorState.create({
+      doc: 'hello',
+      extensions: [createBasicExtensions({ readOnly: true })],
+    });
+    const tr = state.update({
+      changes: { from: state.doc.length, insert: ' world' },
+      userEvent: 'input.type',
+    });
+    expect(tr.state.doc.toString()).toBe('hello');
+  });
+
+  test('allows programmatic dispatches (no userEvent) when readOnly is true', ({ expect }) => {
+    // Streaming consumers (e.g. MarkdownStream) populate the doc programmatically — those
+    // transactions must pass even though the editor is read-only to the user.
     const state = EditorState.create({
       doc: 'hello',
       extensions: [createBasicExtensions({ readOnly: true })],
     });
     const tr = state.update({ changes: { from: state.doc.length, insert: ' world' } });
-    expect(tr.state.doc.toString()).toBe('hello');
+    expect(tr.state.doc.toString()).toBe('hello world');
   });
 
   test('selection-only transactions still apply when readOnly', ({ expect }) => {
