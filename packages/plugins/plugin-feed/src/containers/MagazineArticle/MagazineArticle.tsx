@@ -199,9 +199,15 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   );
 
   // Key on both magazine identity and feed fingerprint so switching to a different
-  // magazine with the same feeds still triggers curation for the new magazine.
-  const previousCurateKey = useRef({ subject, feedFingerprint });
+  // magazine with the same feeds still triggers curation for the new magazine. The
+  // ref starts with sentinel undefineds so the initial mount also triggers curation
+  // — that covers first render of a magazine that already has feeds (e.g. just
+  // created with a seeded default feed, or restored from a deep link).
+  const previousCurateKey = useRef<{ subject?: Magazine.Magazine; feedFingerprint?: string }>({});
   useEffect(() => {
+    if (subject.feeds.length === 0) {
+      return;
+    }
     if (
       previousCurateKey.current.subject !== subject ||
       previousCurateKey.current.feedFingerprint !== feedFingerprint
