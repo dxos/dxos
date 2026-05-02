@@ -1,6 +1,6 @@
 # Plugin Settings Audit
 
-Tracks which plugin settings panels use schema-driven `Settings.FieldSet` and which still hand-roll their controls.
+Tracks which plugin settings panels use schema-driven `SettingsForm.FieldSet` and which still hand-roll their controls.
 
 The target shape for a plugin settings panel is:
 
