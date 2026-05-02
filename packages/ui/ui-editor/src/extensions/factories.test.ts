@@ -21,6 +21,20 @@ describe('createBasicExtensions readOnly', () => {
     expect(tr.state.doc.toString()).toBe('hello');
   });
 
+  for (const userEvent of ['delete.forward', 'undo', 'redo']) {
+    test(`drops '${userEvent}' user events when readOnly is true`, ({ expect }) => {
+      const state = EditorState.create({
+        doc: 'hello',
+        extensions: [createBasicExtensions({ readOnly: true })],
+      });
+      const tr = state.update({
+        changes: { from: state.doc.length, insert: ' world' },
+        userEvent,
+      });
+      expect(tr.state.doc.toString()).toBe('hello');
+    });
+  }
+
   test('allows programmatic dispatches (no userEvent) when readOnly is true', ({ expect }) => {
     // Streaming consumers (e.g. MarkdownStream) populate the doc programmatically — those
     // transactions must pass even though the editor is read-only to the user.
