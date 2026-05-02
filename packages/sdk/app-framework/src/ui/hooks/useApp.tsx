@@ -195,7 +195,17 @@ export const useApp = ({
         Queue.take(queue).pipe(
           Effect.tap(({ event, state, module, error: error$ }) =>
             Effect.sync(() => {
-              if (event === ActivationEvents.Startup.id && state === 'activated') {
+              // Event-level Startup activated (no `module` field) fires once,
+              // after every module triggered by Startup has finished. Module
+              // activations now also carry their parent event id (so the trace
+              // can attribute a module to its triggering event), which means
+              // each module activated under Startup publishes
+              // `{ event: 'startup', state: 'activated', module: <id> }`. Without
+              // the `!module` guard the listener would mark the app ready on
+              // the *first* such module rather than waiting for the event-level
+              // completion — leaving downstream capabilities (operation-invoker,
+              // app-graph, …) un-registered when the placeholder dismisses.
+              if (event === ActivationEvents.Startup.id && state === 'activated' && !module) {
                 clearTimeout(timeoutId);
                 setReady(true);
                 readyRef.current = true;
