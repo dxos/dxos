@@ -2,22 +2,42 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type DocHandle, Repo } from '@automerge/automerge-repo';
+import { type ChangeFn, type ChangeOptions, type Doc, type Heads } from '@automerge/automerge';
+import { type DocHandle, Repo, decodeHeads, encodeHeads } from '@automerge/automerge-repo';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { render, screen } from '@testing-library/react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { describe, test } from 'vitest';
 
+import { type IDocHandle } from '@dxos/echo-db';
 import { getDeep } from '@dxos/util';
 
 import { automerge } from './automerge';
 
+// Adapter: `IDocHandle` (used by `DocHandleProxy` in production) takes raw `Heads` (hex)
+// at `changeAt`, but automerge-repo's `DocHandle.changeAt` expects bs58check-encoded
+// `UrlHeads`. Encode on the way in, decode on the way out so the test's repo-backed
+// handle satisfies the extension's `IDocHandle` contract.
+const adaptRepoHandle = <T,>(handle: DocHandle<T>): IDocHandle<T> => ({
+  doc: () => handle.doc() as Doc<T> | undefined,
+  change: (callback: ChangeFn<T>, options?: ChangeOptions<T>) =>
+    options ? handle.change(callback, options) : handle.change(callback),
+  changeAt: (heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): Heads | undefined => {
+    const encoded = options
+      ? handle.changeAt(encodeHeads(heads), callback, options)
+      : handle.changeAt(encodeHeads(heads), callback);
+    return encoded ? decodeHeads(encoded) : undefined;
+  },
+  addListener: (event, listener) => handle.on(event, listener),
+  removeListener: (event, listener) => handle.off(event, listener),
+});
+
+const path = ['text'];
+
 type TestObject = {
   text: string;
 };
-
-const path = ['text'];
 
 class Generator {
   constructor(private readonly _handle: DocHandle<TestObject>) {}
@@ -33,8 +53,7 @@ const Test: FC<{ handle: DocHandle<TestObject>; generator: Generator }> = ({ han
   const [view, setView] = useState<EditorView>();
   useEffect(() => {
     const extensions = [
-      // TODO(mykola): Fix types.
-      automerge({ handle: handle as any, path }),
+      automerge({ handle: adaptRepoHandle(handle), path }),
       EditorView.updateListener.of((update) => {
         if (view.state.doc.toString() === 'hello!') {
           // Update editor.
