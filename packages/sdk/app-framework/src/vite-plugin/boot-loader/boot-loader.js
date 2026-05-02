@@ -96,8 +96,10 @@
     /**
      * Update the visible status line. The caller owns formatting — the
      * loader just renders `humanized` and records the structured fields
-     * for the trace. Idempotent on `humanized`: equal back-to-back values
-     * are a no-op for timings and the DOM update.
+     * for the trace. Idempotent on the full structured payload: equal
+     * back-to-back updates are a no-op, but two updates with the same
+     * visible text and different `event` / `module` ids still produce a
+     * fresh trace entry so the timeline can distinguish those transitions.
      *
      * Payload: `{ event?, module?, humanized }`.
      *   - `humanized`: the exact string to display (e.g. "Loading framework…",
@@ -110,22 +112,35 @@
         return;
       }
       var humanized = payload.humanized || '';
-      var element = document.getElementById('boot-loader-status');
-      if (element && element.textContent === humanized) {
+      var event = payload.event || null;
+      var moduleId = payload.module || null;
+      // Compare against the previous entry's structured fields, not the
+      // DOM text alone — two different transitions can humanize to the same
+      // visible string (e.g. an event-level "Activating Foo" followed by a
+      // module-level "Activating Foo: react-surface" reduced to "Activating
+      // Foo" by a custom formatter), and the trace should still carry both.
+      var previous = timings.length > 0 ? timings[timings.length - 1] : null;
+      if (
+        previous &&
+        previous.text === humanized &&
+        (previous.event || null) === event &&
+        (previous.module || null) === moduleId
+      ) {
         return;
       }
-      if (timings.length > 0) {
-        timings[timings.length - 1].duration = Date.now() - last;
+      if (previous) {
+        previous.duration = Date.now() - last;
       }
       var entry = { text: humanized };
-      if (payload.event) {
-        entry.event = payload.event;
+      if (event) {
+        entry.event = event;
       }
-      if (payload.module) {
-        entry.module = payload.module;
+      if (moduleId) {
+        entry.module = moduleId;
       }
       timings.push(entry);
       last = Date.now();
+      var element = document.getElementById('boot-loader-status');
       if (element) {
         element.textContent = humanized;
       }

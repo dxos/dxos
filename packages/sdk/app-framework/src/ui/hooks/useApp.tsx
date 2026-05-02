@@ -31,24 +31,30 @@ export type StartupProgress = {
   /** Fractional progress (0-1). */
   progress: number;
   /**
-   * Raw activation event key (e.g. `org.dxos.app-framework.event.startup`)
-   * when the in-flight activation is event-level. Mutually exclusive with
+   * Raw activation event key (e.g. `org.dxos.app-framework.event.startup`).
+   * Set on event-level transitions, *and* on module-level transitions where
+   * it carries the parent activation event that first triggered the
+   * module's load (plumbed through `_loadCapabilitiesForModules` →
+   * `_loadModule`). Consumers can use this either as the primary id (when
+   * {@link module} is absent) or as an extra "context" field alongside
    * {@link module}.
    */
   event?: string;
   /**
    * Raw module id (e.g. `org.dxos.plugin.observability.module.ReactSurface`)
-   * when the in-flight activation is module-level. Mutually exclusive with
-   * {@link event}.
+   * when the in-flight activation is module-level. When present,
+   * {@link event} may also be set, identifying the parent activation that
+   * triggered this module's load.
    */
   module?: string;
   /**
-   * Pre-humanized label for either {@link event} or {@link module}, supplied
-   * for consumers that want a sensible default. Hosts that prefer to render
-   * their own label can read the raw {@link event}/{@link module} fields and
-   * ignore this — the framework leaves the policy choice (which transitions
-   * to surface, how to format them, whether to drop sub-modules entirely)
-   * to the host's `Placeholder`.
+   * Pre-humanized label for the currently surfaced transition (module
+   * label if {@link module} is set, otherwise the event label), supplied
+   * for consumers that want a sensible default. Hosts that prefer to
+   * render their own label can read the raw {@link event}/{@link module}
+   * fields and ignore this — the framework leaves the policy choice
+   * (which transitions to surface, how to format them, whether to drop
+   * sub-modules entirely) to the host's `Placeholder`.
    */
   humanizedName?: string;
 };
