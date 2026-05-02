@@ -154,6 +154,9 @@ export const translations: Resource[] = [
         'settings.default.label': 'Default',
         'settings.custom-prompts.label': 'Use custom prompts',
         'settings.custom-prompts.description': 'Allow the assistant to use custom prompts defined in your spaces.',
+        'settings.chat-view-type.label': 'Chat view',
+        'settings.chat-view-type.description':
+          'Controls which message blocks are shown in the chat: normal hides reasoning, thinking shows reasoning, verbose shows debug data, summary shows only your prompts.',
         'settings.llm-provider.label': 'LLM provider',
         'settings.llm-provider.description': 'Select which language model service to use for AI responses.',
         'settings.edge-llm-model.label': 'Remote language model',

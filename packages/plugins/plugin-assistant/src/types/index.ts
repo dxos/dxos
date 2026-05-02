@@ -9,5 +9,6 @@ export * as Assistant from './Assistant';
 
 export * from './capabilities';
 export * from './defs';
+export { CHAT_VIEW_TYPES, type ChatViewType } from './Settings';
 export * from './events';
 export * from './service';

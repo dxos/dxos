@@ -77,7 +77,7 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
         </Panel.Toolbar>
         <Panel.Content>
           <ChatComponent.Viewport>
-            <ChatComponent.Thread />
+            <ChatComponent.Thread viewType={settings.chatViewType} />
             <div role='none' className='dx-document p-4'>
               <ChatComponent.Prompt
                 {...chatProps}
