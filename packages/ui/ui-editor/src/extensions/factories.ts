@@ -152,10 +152,7 @@ export const createBasicExtensions = (propsProp?: BasicExtensionsOptions): Exten
     props.readOnly &&
       EditorState.transactionFilter.of((tr) =>
         tr.docChanged &&
-        (tr.isUserEvent('input') ||
-          tr.isUserEvent('delete') ||
-          tr.isUserEvent('undo') ||
-          tr.isUserEvent('redo'))
+        (tr.isUserEvent('input') || tr.isUserEvent('delete') || tr.isUserEvent('undo') || tr.isUserEvent('redo'))
           ? []
           : tr,
       ),
