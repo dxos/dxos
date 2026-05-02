@@ -140,7 +140,7 @@ export const PluginItem = ({
             aria-describedby={descriptionId}
             classNames='cursor-pointer'
             icon='ph--gear--regular'
-            label={t('settings.label')}
+            label={t('plugin-settings.label')}
             iconOnly
             size={4}
             onClick={handleSettings}
