@@ -18,7 +18,7 @@ declare global {
      * re-declare the type.
      */
     __bootLoader?: {
-      status: (text: string) => void;
+      status: (payload: { event?: string; module?: string; humanized: string }) => void;
       progress: (fraction?: number) => void;
       dismiss: () => void;
     };
@@ -62,23 +62,28 @@ export const Placeholder = ({ stage = 1, progress, logo }: PlaceholderComponentP
   }
 
   // Phase B: feed activation progress + status to the still-visible boot
-  // loader. Maps `[0, 1]` activation → `[0.5, 1]` of the ring; surfaces
-  // `progress.status` (humanised module id from `useApp`) so the loader's
-  // status line tracks each module being activated rather than holding the
-  // pre-activation "Starting Composer…" text. No-op once the loader has
-  // been dismissed (its `progress()` / `status()` early-return when the
-  // boot DOM is gone). Skipping `stage >= 2` lets the dismissal run
-  // uncontended.
+  // loader. Maps `[0, 1]` activation → `[0.5, 1]` of the ring; forwards
+  // the raw activation source (`event` / `module`) plus the pre-humanised
+  // label to `__bootLoader.status` so the loader gets to decide how to
+  // render and trace each transition (current default policy: "Activating
+  // <humanizedName>"; trace mode and timings track the structured fields).
+  // No-op once the loader has been dismissed (its `status()` early-returns
+  // when the boot DOM is gone). Skipping `stage >= 2` lets the dismissal
+  // run uncontended.
   useEffect(() => {
     if (stage >= 2) {
       return;
     }
     const fraction = progress?.progress ?? 0;
     window.__bootLoader?.progress(0.5 + fraction * 0.5);
-    if (progress?.status) {
-      window.__bootLoader?.status(`Activating ${progress.status}…`);
+    if (progress?.humanizedName) {
+      window.__bootLoader?.status({
+        event: progress.event,
+        module: progress.module,
+        humanized: `Activating ${progress.humanizedName}`,
+      });
     }
-  }, [stage, progress?.progress, progress?.status]);
+  }, [stage, progress?.progress, progress?.event, progress?.module, progress?.humanizedName]);
 
   // Hand off from the native-DOM boot loader once the placeholder starts
   // fading out — keeping the loader visible through `stage 0` and `stage 1`

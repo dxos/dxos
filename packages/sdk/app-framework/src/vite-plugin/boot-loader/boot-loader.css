@@ -232,6 +232,11 @@
   left: 50%;
   /* Sit just below the centered disc — half the disc plus the configured gap. */
   transform: translate(-50%, calc(var(--boot-loader-disc-size) / 2 + var(--boot-loader-status-gap)));
+  /*
+   * Slightly de-emphasised vs body text so the brand mark + ring stay the
+   * dominant focus, but high enough to remain legible on both light and dark
+   * backgrounds without a custom palette.
+   */
   opacity: 0.5;
   /*
    * Pin both `line-height` and `height` so the status box stays exactly the

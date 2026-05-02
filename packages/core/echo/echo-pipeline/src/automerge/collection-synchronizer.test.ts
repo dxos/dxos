@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Heads } from '@automerge/automerge';
-import * as Automerge from '@automerge/automerge';
+import * as A from '@automerge/automerge';
 import type { DocumentId, PeerId } from '@automerge/automerge-repo';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
@@ -84,14 +83,14 @@ describe('CollectionSynchronizer', () => {
   });
 });
 
-const TEST_HEADS = range(4).map((i) => Automerge.getHeads(Automerge.from({ i: i.toString() })));
+const TEST_HEADS = range(4).map((i) => A.getHeads(A.from({ i: i.toString() })));
 
 const STATE_1: CollectionState = {
   documents: {
     a: TEST_HEADS[0],
     b: TEST_HEADS[1],
     c: TEST_HEADS[2],
-  } as Record<DocumentId, Heads>,
+  } as Record<DocumentId, A.Heads>,
 };
 
 const STATE_2: CollectionState = {
@@ -99,5 +98,5 @@ const STATE_2: CollectionState = {
     a: TEST_HEADS[0],
     b: TEST_HEADS[3],
     d: TEST_HEADS[2],
-  } as Record<DocumentId, Heads>,
+  } as Record<DocumentId, A.Heads>,
 };
