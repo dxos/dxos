@@ -20,8 +20,6 @@ export type CreateSelectFieldOptions = {
   defaultLabel?: string | null;
 };
 
-const DEFAULT_VALUE = '__default';
-
 /**
  * Factory for a `SettingsFieldSet` `fieldMap` entry that renders a Select control
  * over a fixed list of options, with an optional sentinel for `undefined`.
@@ -31,18 +29,22 @@ export const createSelectField = ({
   defaultLabel = 'Default',
 }: CreateSelectFieldOptions): React.FC<SettingsFieldProps<string | undefined>> => {
   const normalized = options.map((option) => (typeof option === 'string' ? { value: option, label: option } : option));
+  const hasDefault = defaultLabel !== null;
+  // Per-instance sentinel avoids collisions with real option values; empty string when the
+  // sentinel is omitted so `undefined` maps to a value Select.Root treats as "no selection".
+  const sentinel = hasDefault ? `__default__${Math.random().toString(36).slice(2)}` : '';
 
   return ({ value, onChange, readonly }) => (
     <Select.Root
       disabled={readonly}
-      value={value ?? DEFAULT_VALUE}
-      onValueChange={(next) => onChange(next === DEFAULT_VALUE ? undefined : next)}
+      value={value ?? sentinel}
+      onValueChange={(next) => onChange(hasDefault && next === sentinel ? undefined : next)}
     >
       <Select.TriggerButton disabled={readonly} />
       <Select.Portal>
         <Select.Content>
           <Select.Viewport>
-            {defaultLabel !== null && <Select.Option value={DEFAULT_VALUE}>{defaultLabel}</Select.Option>}
+            {hasDefault && <Select.Option value={sentinel}>{defaultLabel}</Select.Option>}
             {normalized.map((option) => (
               <Select.Option key={option.value} value={option.value}>
                 {option.label ?? option.value}

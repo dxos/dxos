@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 import { ContentBlock, type Message } from '@dxos/types';
 import { type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 
-import { type ChatView } from '../../types';
+import { type Assistant } from '../../types';
 import { type BlockRenderer, type MessageThreadContext } from './sync';
 import { applyToolBlockToWidgetState } from './tool-widget-state';
 import {
@@ -150,9 +150,9 @@ export const blockToMarkdown: BlockRenderer = createBlockRenderer('normal');
  * - `summary`: only user prompts.
  * - `normal`: user prompts + assistant text + tool calls + summary/select/suggestion/reference + status. Hides reasoning.
  * - `thinking`: same as normal plus reasoning.
- * - `verbose`: renders every block (debug fallbacks visible).
+ * - `debug`: renders every block (raw fallbacks visible).
  */
-export function createBlockRenderer(viewType: ChatView): BlockRenderer {
+export function createBlockRenderer(viewType: Assistant.ChatView | undefined): BlockRenderer {
   return (context, message, block) => {
     if (!isBlockVisible(viewType, message, block)) {
       return;
@@ -165,22 +165,24 @@ export function createBlockRenderer(viewType: ChatView): BlockRenderer {
   };
 }
 
-const isBlockVisible = (viewType: ChatView, message: Message.Message, block: ContentBlock.Any): boolean => {
-  if (viewType === 'verbose') {
-    return true;
+const isBlockVisible = (
+  viewType: Assistant.ChatView | undefined,
+  message: Message.Message,
+  block: ContentBlock.Any,
+): boolean => {
+  switch (viewType) {
+    case 'debug':
+      return true;
+    case 'normal':
+      return block._tag !== 'reasoning';
+    case 'summary':
+      // Show only conversational text (user prompts + assistant replies); hide reasoning,
+      // tool calls, status, stats, and synthetic system messages.
+      return block._tag === 'text' && (block as ContentBlock.Text).disposition !== 'synthetic';
+    case 'thinking':
+    default:
+      return true;
   }
-  if (viewType === 'summary') {
-    return (
-      message.sender.role === 'user' &&
-      block._tag === 'text' &&
-      (block as ContentBlock.Text).disposition !== 'synthetic'
-    );
-  }
-  // normal & thinking: hide reasoning unless thinking.
-  if (block._tag === 'reasoning') {
-    return viewType === 'thinking';
-  }
-  return true;
 };
 
 const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Message, block: ContentBlock.Any) => {

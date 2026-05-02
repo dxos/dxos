@@ -9,6 +9,7 @@ export * as DynamicRuntime from './dynamic-runtime';
 export * from './errors';
 export * from './json-path';
 export * from './resource';
+export * from './types';
 export * from './url';
 export * as RuntimeProvider from './RuntimeProvider';
 export * as Performance from './Performance';

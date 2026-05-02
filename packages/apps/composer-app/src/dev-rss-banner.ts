@@ -68,6 +68,7 @@ export const showDevRssBanner = async ({ feedUrl = DEFAULT_FEED }: DevRssBannerO
     }
 
     const entry = entries[Math.floor(Math.random() * entries.length)];
+    console.log(JSON.stringify(entry));
     const title = entry.querySelector('title')?.textContent?.trim();
     if (!title) {
       return;
@@ -91,7 +92,7 @@ export const showDevRssBanner = async ({ feedUrl = DEFAULT_FEED }: DevRssBannerO
 
     renderBanner({ title, link, summary, source });
   } catch (error) {
-    log.info('dev-rss-banner: fetch/parse error', { error: String(error) });
+    log.catch(error);
   }
 };
 

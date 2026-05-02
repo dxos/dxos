@@ -11,7 +11,7 @@ import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps
 import { type Message } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
-import { type ChatView } from '../../types';
+import { type Assistant } from '../../types';
 import { type ChatEvent } from '../Chat';
 import { componentRegistry, createBlockRenderer } from './registry';
 import { MessageSyncer } from './sync';
@@ -28,7 +28,7 @@ export type ChatThreadProps = ThemedClassName<
     identity?: Identity;
     messages?: Message.Message[];
     error?: Error;
-    viewType?: ChatView;
+    viewType?: Assistant.ChatView;
     onEvent?: (event: ChatEvent) => void;
   } & Pick<MarkdownStreamProps, 'options' | 'debug' | 'extensions' | 'footer'>
 >;
@@ -44,7 +44,7 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
       footer,
       debug = false,
       extensions,
-      viewType = 'normal',
+      viewType,
       onEvent,
     },
     forwardedRef,
@@ -97,6 +97,7 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
     return (
       <div role='none' data-hue={userHue} className='contents'>
         <MarkdownStream
+          key={viewType}
           classNames={classNames}
           registry={componentRegistry}
           options={options}

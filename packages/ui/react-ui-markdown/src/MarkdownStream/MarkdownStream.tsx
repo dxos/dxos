@@ -267,42 +267,47 @@ const useMarkdownStreamTextEditor = (
           syntaxHighlighting: true,
           themeMode,
         }),
-        !debug &&
-          [
-            extendedMarkdown({ registry }),
-            decorateMarkdown({
-              // `dxn:` links/images are reference widgets owned by `preview()` (PreviewInlineWidget /
-              // PreviewBlockWidget). Skipping them here avoids `decorateMarkdown` adding a
-              // non-functional `LinkButton` anchor on top of the same node — e.g. for
-              // `[DXOS](dxn:echo:BNPMIBEDJLRIILYUYZVM6GT64VWI6WPPZ:01KQ889PZBRNHAEECV0ANFAYX7)`.
-              skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
-            }),
-            preview(),
-            // NOTE: An ancestor element must set `data-hue` so `.dx-panel` resolves to the user's
-            // hue tokens (see `packages/ui/ui-theme/src/css/components/panel.css`). Tailwind picks
-            // up these utility classes from this source file.
-            xmlBlockDecoration({
-              tag: 'prompt',
-              lineClass: 'cm-prompt-line my-8',
-              contentClass: 'cm-prompt-bubble dx-panel px-2 py-1.5 rounded-sm [&_*]:text-inherit!',
-              hideTags: true,
-            }),
-            xmlFormatting({ skip: ['prompt'] }),
-            xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
-            scroller({ overScroll: 80 }),
-            options?.autoScroll && autoScroll(),
-            options?.typewriter &&
-              typewriter({
-                cursor: options?.cursor,
-                streamingTags: new Set(
-                  Object.entries(registry ?? {})
-                    .filter(([, def]) => def.streaming)
-                    .map(([tag]) => tag),
-                ),
+        xmlFormatting({ skip: debug ? [] : ['prompt'] }),
+        debug
+          ? [
+              //
+              xmlFormatting({}),
+            ]
+          : [
+              extendedMarkdown({ registry }),
+              decorateMarkdown({
+                // `dxn:` links/images are reference widgets owned by `preview()` (PreviewInlineWidget /
+                // PreviewBlockWidget). Skipping them here avoids `decorateMarkdown` adding a
+                // non-functional `LinkButton` anchor on top of the same node — e.g. for
+                // `[DXOS](dxn:echo:BNPMIBEDJLRIILYUYZVM6GT64VWI6WPPZ:01KQ889PZBRNHAEECV0ANFAYX7)`.
+                skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
               }),
-            options?.fader && fader(),
-            setFooterRoot && footer(setFooterRoot),
-          ].filter(isTruthy),
+              preview(),
+              // NOTE: An ancestor element must set `data-hue` so `.dx-panel` resolves to the user's
+              // hue tokens (see `packages/ui/ui-theme/src/css/components/panel.css`). Tailwind picks
+              // up these utility classes from this source file.
+              xmlBlockDecoration({
+                tag: 'prompt',
+                lineClass: 'cm-prompt-line my-8',
+                contentClass: 'cm-prompt-bubble dx-panel px-2 py-1.5 rounded-sm [&_*]:text-inherit!',
+                hideTags: true,
+              }),
+              xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
+              xmlFormatting({ skip: ['prompt'] }),
+              scroller({ overScroll: 80 }),
+              options?.autoScroll && autoScroll(),
+              options?.typewriter &&
+                typewriter({
+                  cursor: options?.cursor,
+                  streamingTags: new Set(
+                    Object.entries(registry ?? {})
+                      .filter(([, def]) => def.streaming)
+                      .map(([tag]) => tag),
+                  ),
+                }),
+              options?.fader && fader(),
+              setFooterRoot && footer(setFooterRoot),
+            ].filter(isTruthy),
         extraExtensions,
       ].filter(isTruthy),
     };

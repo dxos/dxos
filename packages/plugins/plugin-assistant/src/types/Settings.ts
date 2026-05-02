@@ -18,9 +18,9 @@ export const ModelProviders = getLiteralValues(ModelProvider);
 
 export const ChatView = Schema.Union(
   Schema.Literal('normal').annotations({ title: 'Normal' }),
-  Schema.Literal('thinking').annotations({ title: 'Thinking' }),
-  Schema.Literal('verbose').annotations({ title: 'Verbose' }),
   Schema.Literal('summary').annotations({ title: 'Summary' }),
+  Schema.Literal('thinking').annotations({ title: 'Thinking' }),
+  Schema.Literal('debug').annotations({ title: 'Debug' }),
 );
 export type ChatView = Schema.Schema.Type<typeof ChatView>;
 export const ChatViews = getLiteralValues(ChatView);
@@ -61,7 +61,7 @@ export const Settings = Schema.mutable(
       ChatView.annotations({
         title: 'Chat view',
         description:
-          'Controls which message blocks are shown in the chat: normal hides reasoning, thinking shows reasoning, verbose shows debug data, summary shows only your prompts.',
+          'Controls which message blocks are shown in the chat: normal hides reasoning, thinking shows reasoning, debug shows raw blocks, summary shows only conversational text.',
       }),
     ),
     modelProvider: Schema.optional(

@@ -8,6 +8,5 @@ export type { Chat as ChatType } from '@dxos/assistant-toolkit';
 export * as Assistant from './Assistant';
 
 export * from './capabilities';
-export { ChatViews, ChatView, ModelProviders, ModelProvider, ModelDefaults } from './Settings';
 export * from './events';
 export * from './service';

@@ -5,11 +5,11 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Input, Message, useTranslation } from '@dxos/react-ui';
+import { Message, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { type Settings } from '#types';
+import { Settings } from '#types';
 
 export type ObservabilitySettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
 
@@ -22,16 +22,12 @@ export const ObservabilitySettings = ({ settings, onSettingsChange }: Observabil
         <Message.Root valence='info'>
           <Message.Content>{t('observability.description')}</Message.Content>
         </Message.Root>
-        <SettingsForm.Item
-          title={t('observability-enabled.label')}
-          description={t('observability-enabled.description')}
-        >
-          <Input.Switch
-            disabled={!onSettingsChange}
-            checked={settings.enabled}
-            onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, enabled: !!checked }))}
-          />
-        </SettingsForm.Item>
+        <SettingsForm.FieldSet
+          readonly={!onSettingsChange}
+          schema={Settings.Settings}
+          values={settings}
+          onValuesChanged={(values) => onSettingsChange?.(() => values)}
+        />
       </SettingsForm.Section>
     </SettingsForm.Viewport>
   );
