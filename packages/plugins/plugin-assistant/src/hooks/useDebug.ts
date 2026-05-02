@@ -8,6 +8,11 @@ import { trim } from '@dxos/util';
 
 import { type AiChatProcessor } from '../processor';
 
+/**
+ * Returns an async callback that logs the chat's current context, system prompt,
+ * and resolved tools to the browser console under a collapsible group.
+ * Used by the chat's debug-toggle event handler.
+ */
 export const useDebug = ({ processor }: { processor: AiChatProcessor }) => {
   return useCallback(async () => {
     const objects = processor.context.getObjects();
