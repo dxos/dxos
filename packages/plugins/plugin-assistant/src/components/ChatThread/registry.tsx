@@ -8,6 +8,7 @@ import { log } from '@dxos/log';
 import { ContentBlock, type Message } from '@dxos/types';
 import { type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 
+import { type ChatViewType } from '../../types';
 import { type BlockRenderer, type MessageThreadContext } from './sync';
 import { applyToolBlockToWidgetState } from './tool-widget-state';
 import {
@@ -141,17 +142,45 @@ export const componentRegistry: XmlWidgetRegistry = {
 /**
  * Convert block to markdown.
  */
-export const blockToMarkdown: BlockRenderer = (
-  context: MessageThreadContext,
-  message: Message.Message,
-  block: ContentBlock.Any,
-) => {
-  let str = blockToMarkdownImpl(context, message, block);
-  if (str && !block.pending) {
-    return (str += '\n');
-  }
+export const blockToMarkdown: BlockRenderer = createBlockRenderer('normal');
 
-  return str;
+/**
+ * Create a {@link BlockRenderer} that filters blocks based on the chat view type.
+ *
+ * - `summary`: only user prompts.
+ * - `normal`: user prompts + assistant text + tool calls + summary/select/suggestion/reference + status. Hides reasoning.
+ * - `thinking`: same as normal plus reasoning.
+ * - `verbose`: renders every block (debug fallbacks visible).
+ */
+export function createBlockRenderer(viewType: ChatViewType): BlockRenderer {
+  return (context, message, block) => {
+    if (!isBlockVisible(viewType, message, block)) {
+      return;
+    }
+    let str = blockToMarkdownImpl(context, message, block);
+    if (str && !block.pending) {
+      return (str += '\n');
+    }
+    return str;
+  };
+}
+
+const isBlockVisible = (viewType: ChatViewType, message: Message.Message, block: ContentBlock.Any): boolean => {
+  if (viewType === 'verbose') {
+    return true;
+  }
+  if (viewType === 'summary') {
+    return (
+      message.sender.role === 'user' &&
+      block._tag === 'text' &&
+      (block as ContentBlock.Text).disposition !== 'synthetic'
+    );
+  }
+  // normal & thinking: hide reasoning unless thinking.
+  if (block._tag === 'reasoning') {
+    return viewType === 'thinking';
+  }
+  return true;
 };
 
 const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Message, block: ContentBlock.Any) => {

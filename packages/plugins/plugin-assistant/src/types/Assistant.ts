@@ -12,3 +12,5 @@ export type Chat = ChatModule.Chat;
 import * as SettingsModule from './Settings';
 export const Settings = SettingsModule.Settings;
 export type Settings = SettingsModule.Settings;
+export const CHAT_VIEW_TYPES = SettingsModule.CHAT_VIEW_TYPES;
+export type ChatViewType = SettingsModule.ChatViewType;

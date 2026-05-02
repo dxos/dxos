@@ -10,7 +10,7 @@ import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { type Assistant, LLM_PROVIDERS } from '#types';
+import { type Assistant, CHAT_VIEW_TYPES, LLM_PROVIDERS } from '#types';
 
 // TODO(burdon): Factor out default Selector.
 const DEFAULT_VALUE = '__default';
@@ -19,6 +19,13 @@ const LLM_PROVIDER_LABELS = {
   edge: 'DXOS',
   ollama: 'Ollama',
   lmstudio: 'LM Studio',
+} as const;
+
+const CHAT_VIEW_TYPE_LABELS = {
+  normal: 'Normal',
+  thinking: 'Thinking',
+  verbose: 'Verbose',
+  summary: 'Summary',
 } as const;
 
 export type AssistantSettingsProps = AppSurface.SettingsArticleProps<Assistant.Settings>;
@@ -38,6 +45,36 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
             checked={!!settings.customPrompts}
             onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, customPrompts: checked }))}
           />
+        </SettingsForm.Item>
+
+        <SettingsForm.Item
+          title={t('settings.chat-view-type.label')}
+          description={t('settings.chat-view-type.description')}
+        >
+          <Select.Root
+            disabled={!onSettingsChange}
+            value={settings.chatViewType ?? 'normal'}
+            onValueChange={(value) => {
+              onSettingsChange?.((s) => ({
+                ...s,
+                chatViewType: value === DEFAULT_VALUE ? undefined : (value as any),
+              }));
+            }}
+          >
+            <Select.TriggerButton disabled={!onSettingsChange} placeholder={t('settings.chat-view-type.label')} />
+            <Select.Portal>
+              <Select.Content>
+                <Select.Viewport>
+                  {CHAT_VIEW_TYPES.map((type) => (
+                    <Select.Option key={type} value={type}>
+                      {CHAT_VIEW_TYPE_LABELS[type]}
+                    </Select.Option>
+                  ))}
+                </Select.Viewport>
+                <Select.Arrow />
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
         </SettingsForm.Item>
 
         <SettingsForm.Item

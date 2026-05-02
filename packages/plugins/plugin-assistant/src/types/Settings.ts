@@ -8,6 +8,9 @@ import * as Schema from 'effect/Schema';
 
 import { LLM_PROVIDERS } from './defs';
 
+export const CHAT_VIEW_TYPES = ['normal', 'thinking', 'verbose', 'summary'] as const;
+export type ChatViewType = (typeof CHAT_VIEW_TYPES)[number];
+
 export const Settings = Schema.mutable(
   Schema.Struct({
     llmProvider: Schema.optional(Schema.Literal(...LLM_PROVIDERS)),
@@ -15,6 +18,7 @@ export const Settings = Schema.mutable(
     ollamaModel: Schema.optional(Schema.String),
     lmstudioModel: Schema.optional(Schema.String),
     customPrompts: Schema.optional(Schema.Boolean),
+    chatViewType: Schema.optional(Schema.Literal(...CHAT_VIEW_TYPES)),
   }),
 );
 

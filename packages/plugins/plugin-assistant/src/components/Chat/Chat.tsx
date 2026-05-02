@@ -220,8 +220,9 @@ const CHAT_THREAD_NAME = 'Chat.Thread';
 
 type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'>;
 
-const ChatThread = (props: ChatThreadProps) => {
+const ChatThread = ({ viewType, debug: debugProp, ...props }: ChatThreadProps) => {
   const { debug, event, messages, processor } = useChatContext(CHAT_THREAD_NAME);
+  const verbose = viewType === 'verbose';
   const identity = useIdentity();
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const active = useAtomValue(processor.active);
@@ -279,7 +280,8 @@ const ChatThread = (props: ChatThreadProps) => {
       identity={identity}
       messages={messages}
       error={error}
-      debug={debug}
+      debug={debugProp ?? (debug || verbose)}
+      viewType={viewType}
       extensions={extensions}
       onEvent={handleEvent}
       ref={controllerRef}
