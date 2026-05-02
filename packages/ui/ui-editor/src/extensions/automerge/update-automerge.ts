@@ -5,6 +5,7 @@
 //
 
 import { next as A, type Heads } from '@automerge/automerge';
+import { decodeHeads, encodeHeads } from '@automerge/automerge-repo';
 import { type EditorState, type StateField, type Text, type Transaction } from '@codemirror/state';
 
 import { type IDocHandle } from '@dxos/echo-db';
@@ -32,7 +33,9 @@ export const updateAutomerge = (
     return undefined;
   }
 
-  const newHeads = handle.changeAt(lastHeads, (doc: A.Doc<unknown>) => {
+  // `DocHandle.changeAt` expects bs58check-encoded `UrlHeads`, but our state stores raw
+  // `Heads` (hex) from `A.getHeads()`. Encode on the way in, decode on the way out.
+  const encodedNewHeads = handle.changeAt(encodeHeads(lastHeads), (doc: A.Doc<unknown>) => {
     const invertedTransactions: { from: number; del: number; insert: Text }[] = [];
     for (const tr of transactions) {
       tr.changes.iterChanges((fromA, toA, _fromB, _toB, insert) => {
@@ -46,5 +49,5 @@ export const updateAutomerge = (
     });
   });
 
-  return newHeads ?? undefined;
+  return encodedNewHeads ? decodeHeads(encodedNewHeads) : undefined;
 };

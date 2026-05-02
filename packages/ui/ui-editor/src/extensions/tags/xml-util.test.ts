@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { syntaxTree } from '@codemirror/language';
+import { ensureSyntaxTree, syntaxTree } from '@codemirror/language';
 import { EditorState } from '@codemirror/state';
 import { describe, test } from 'vitest';
 
 import { trim } from '@dxos/util';
 
 import { extendedMarkdown } from './extended-markdown';
+import TEXT from './testing/text.md?raw';
 import { xmlTags } from './xml-tags';
 import { nodeToJson, type Tag } from './xml-util';
 
@@ -27,8 +28,9 @@ const parseElements = (doc: string, registry: Record<string, any> = {}): ParsedE
     extensions: [extendedMarkdown({ registry }), xmlTags({ registry })],
   });
 
+  const tree = ensureSyntaxTree(state, doc.length, 5000) ?? syntaxTree(state);
   const elements: ParsedElement[] = [];
-  syntaxTree(state).iterate({
+  tree.iterate({
     enter: (node) => {
       if (node.type.name === 'Element') {
         const tag = nodeToJson(state, node.node);
@@ -160,5 +162,25 @@ describe('nodeToJson', () => {
     expect(elements).toHaveLength(1);
     expect(elements[0]._tag).toBe('reasoning');
     expect(elements[0].complete).toBe(true);
+  });
+
+  test('should parse text.md', ({ expect }) => {
+    const elements = parseElements(TEXT);
+    const tags = elements.map((element) => element._tag);
+    expect(tags).toEqual([
+      'prompt',
+      'reasoning',
+      'status',
+      'toolCall',
+      'toolCall',
+      'reasoning',
+      'status',
+      'toolCall',
+      'reasoning',
+      'prompt',
+      'reasoning',
+      'prompt',
+      'name',
+    ]);
   });
 });

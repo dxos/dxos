@@ -58,19 +58,20 @@ const Test: FC<{ handle: DocHandle<TestObject>; generator: Generator }> = ({ han
   return <div ref={ref} data-testid='editor' />;
 };
 
+// TODO(burdon): Test history/undo.
+// TODO(burdon): https://testing-library.com/docs/react-testing-library/example-intro/
+
 describe('Automerge', () => {
   test('basic sync', ({ expect }) => {
     const repo = new Repo({ network: [] });
     const handle = repo.create<TestObject>();
     const generator = new Generator(handle);
     render(<Test handle={handle} generator={generator} />);
+
     const editor = screen.getByTestId('editor');
     expect(editor.textContent).toBe('');
 
     generator.update('hello!');
     expect(editor.textContent).toBe('hello world!');
   });
-
-  // TODO(burdon): Test history/undo.
-  // TODO(burdon): https://testing-library.com/docs/react-testing-library/example-intro/
 });

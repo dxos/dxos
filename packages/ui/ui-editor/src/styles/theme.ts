@@ -114,7 +114,7 @@ export const baseTheme = EditorView.baseTheme({
     overflowAnchor: 'auto',
   },
   '.cm-scroller::-webkit-scrollbar': {
-    width: '8px',
+    width: 'var(--scrollbar-width,18px)',
   },
   '.cm-scroller::-webkit-scrollbar-track': {},
   '.cm-scroller::-webkit-scrollbar-thumb': {

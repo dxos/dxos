@@ -179,6 +179,7 @@ export const createBasicExtensions = (propsProp?: BasicExtensionsOptions): Exten
 export type ThemeExtensionsOptions = {
   monospace?: boolean;
   themeMode?: ThemeMode;
+  scrollbarThin?: boolean;
   slots?: {
     editor?: {
       className?: string;
@@ -217,9 +218,10 @@ export const defaultStyles = {
  */
 export const createThemeExtensions = ({
   monospace,
-  themeMode,
+  scrollbarThin,
   slots: slotsProp,
   syntaxHighlighting: syntaxHighlightingProp,
+  themeMode,
 }: ThemeExtensionsOptions = {}): Extension => {
   const slots: NonNullable<ThemeExtensionsOptions['slots']> = defaultsDeep({}, slotsProp, defaultThemeSlots);
   return [
@@ -230,12 +232,15 @@ export const createThemeExtensions = ({
       syntaxHighlighting(HighlightStyle.define(themeMode === 'dark' ? defaultStyles.dark : defaultStyles.light)),
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
-    slots.scroller?.className &&
+    (slots.scroller?.className || scrollbarThin) &&
       ViewPlugin.fromClass(
         class {
           constructor(view: EditorView) {
             if (slots.scroller?.className) {
               view.scrollDOM.classList.add(...slots.scroller.className.split(/\s+/));
+            }
+            if (scrollbarThin) {
+              view.scrollDOM.style.setProperty('--scrollbar-width', '4px');
             }
           }
         },

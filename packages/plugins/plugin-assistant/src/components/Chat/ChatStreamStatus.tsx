@@ -15,7 +15,7 @@ import { type ChatRequestTiming, useChatContext } from './context';
 const CHAT_STREAM_STATUS_NAME = 'Chat.StreamStatus';
 const TICK_MS = 1_000;
 
-export type ChatStreamStatusProps = ThemedClassName;
+export type ChatStreamStatusProps = ThemedClassName<{ icon?: boolean }>;
 
 /**
  * Live status pill rendered at the bottom of the chat thread.
@@ -30,7 +30,7 @@ export type ChatStreamStatusProps = ThemedClassName;
  * - last completed turn's output token count (from the most recent `stats` content block)
  * - cumulative session total tokens across all `stats` content blocks
  */
-export const ChatStreamStatus = ({ classNames }: ChatStreamStatusProps) => {
+export const ChatStreamStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
   // Read `messages` from the chat context (combines `useQuery(queue)` + the processor's
   // pending atom) rather than `processor.messages` directly — the latter only contains
   // blocks streamed via the ephemeral `PartialBlock` channel, while finalized blocks
@@ -60,7 +60,7 @@ export const ChatStreamStatus = ({ classNames }: ChatStreamStatusProps) => {
 
   return (
     <ChatStatus.Root defaultRunning={false} classNames={['py-2 gap-2 text-sm', classNames]}>
-      {false && (
+      {icon && (
         <ChatStatus.Icon>
           <Matrix
             classNames='w-5 h-5'
@@ -82,13 +82,13 @@ export const ChatStreamStatus = ({ classNames }: ChatStreamStatusProps) => {
           )}
           {lastOutputTokens != null && (
             <>
-              <ChatStatus.Separator />
+              {requestTiming && <ChatStatus.Separator />}
               <ChatStatus.Text>↓ {Unit.Thousand(lastOutputTokens).toString()}</ChatStatus.Text>
             </>
           )}
           {sessionTotalTokens > 0 && (
             <>
-              <ChatStatus.Separator />
+              {(requestTiming || lastOutputTokens != null) && <ChatStatus.Separator />}
               <ChatStatus.Text>Σ {Unit.Thousand(sessionTotalTokens).toString()}</ChatStatus.Text>
             </>
           )}
@@ -110,11 +110,12 @@ const Elapsed = ({ timing }: { timing: ChatRequestTiming }) => {
     if (!isRunning) {
       return;
     }
+
     const id = setInterval(() => setNow(Date.now()), TICK_MS);
     return () => clearInterval(id);
   }, [isRunning]);
-  const elapsedMs = (timing.endedAt ?? now) - timing.startedAt;
-  return <>{formatElapsed(elapsedMs)}</>;
+
+  return <>{formatElapsed((timing.endedAt ?? now) - timing.startedAt)}</>;
 };
 
 const isStats = (block: ContentBlock.Any): block is ContentBlock.Stats => block._tag === 'stats';
