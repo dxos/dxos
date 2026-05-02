@@ -11,7 +11,7 @@ import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps
 import { type Message } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
-import { type ChatViewType } from '../../types';
+import { type ChatView } from '../../types';
 import { type ChatEvent } from '../Chat';
 import { componentRegistry, createBlockRenderer } from './registry';
 import { MessageSyncer } from './sync';
@@ -28,7 +28,7 @@ export type ChatThreadProps = ThemedClassName<
     identity?: Identity;
     messages?: Message.Message[];
     error?: Error;
-    viewType?: ChatViewType;
+    viewType?: ChatView;
     onEvent?: (event: ChatEvent) => void;
   } & Pick<MarkdownStreamProps, 'options' | 'debug' | 'extensions' | 'footer'>
 >;

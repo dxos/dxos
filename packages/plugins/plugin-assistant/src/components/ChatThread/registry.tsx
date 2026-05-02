@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 import { ContentBlock, type Message } from '@dxos/types';
 import { type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 
-import { type ChatViewType } from '../../types';
+import { type ChatView } from '../../types';
 import { type BlockRenderer, type MessageThreadContext } from './sync';
 import { applyToolBlockToWidgetState } from './tool-widget-state';
 import {
@@ -152,7 +152,7 @@ export const blockToMarkdown: BlockRenderer = createBlockRenderer('normal');
  * - `thinking`: same as normal plus reasoning.
  * - `verbose`: renders every block (debug fallbacks visible).
  */
-export function createBlockRenderer(viewType: ChatViewType): BlockRenderer {
+export function createBlockRenderer(viewType: ChatView): BlockRenderer {
   return (context, message, block) => {
     if (!isBlockVisible(viewType, message, block)) {
       return;
@@ -165,7 +165,7 @@ export function createBlockRenderer(viewType: ChatViewType): BlockRenderer {
   };
 }
 
-const isBlockVisible = (viewType: ChatViewType, message: Message.Message, block: ContentBlock.Any): boolean => {
+const isBlockVisible = (viewType: ChatView, message: Message.Message, block: ContentBlock.Any): boolean => {
   if (viewType === 'verbose') {
     return true;
   }

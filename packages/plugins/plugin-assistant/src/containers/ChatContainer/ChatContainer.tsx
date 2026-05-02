@@ -78,7 +78,7 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
         <Panel.Content>
           <ChatComponent.Content>
             <div role='none' className='dx-container relative'>
-              <ChatComponent.Thread viewType={settings.chatViewType} />
+              <ChatComponent.Thread viewType={settings.chatView} />
               <div role='none' className='absolute bottom-2 left-0 right-0'>
                 <div role='none' className='dx-document px-4'>
                   <ChatComponent.Status classNames='px-3 rounded-sm bg-group-surface' />

@@ -61,7 +61,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
       <NaturalChatDialog.Root open={open} expanded={expanded} onOpenChange={setOpen}>
         <NaturalChatDialog.Header title={t('assistant-dialog.title')} />
         <NaturalChatDialog.Content>
-          <Chat.Thread viewType={settings.chatViewType} />
+          <Chat.Thread viewType={settings.chatView} />
         </NaturalChatDialog.Content>
         <NaturalChatDialog.Footer classNames='p-1.5'>
           <Chat.Prompt {...chatProps} preset={preset?.id} online={online} onOnlineChange={setOnline} expandable />
