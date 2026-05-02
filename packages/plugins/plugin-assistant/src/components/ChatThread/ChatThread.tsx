@@ -18,7 +18,7 @@ import { MessageSyncer } from './sync';
 const defaultOptions: MarkdownStreamProps['options'] = {
   autoScroll: true,
   cursor: false,
-  fader: true,
+  fader: false,
   typewriter: true,
 };
 
