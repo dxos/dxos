@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Annotation } from '@dxos/echo';
+import { Annotation, Ref } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
@@ -19,6 +19,13 @@ import { meta } from '#meta';
 import { FeedOperation } from '#operations';
 import { translations } from '#translations';
 import { Magazine, Subscription } from '#types';
+
+/** Starter feed seeded into every newly created Magazine. */
+const DEFAULT_MAGAZINE_FEED = {
+  name: 'EFF Updates',
+  url: 'https://www.eff.org/rss/updates.xml',
+  type: 'rss',
+} as Subscription.Feed;
 
 export const FeedPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({
@@ -67,7 +74,18 @@ export const FeedPlugin = Plugin.define(meta).pipe(
           blueprints: [MagazineBlueprint.key],
           createObject: ((props, options) =>
             Effect.gen(function* () {
-              const object = Magazine.make(props);
+              // Seed every new Magazine with one starter Feed so the article view has
+              // something to curate immediately rather than booting into an empty state.
+              const defaultFeed = Subscription.makeFeed({ ...DEFAULT_MAGAZINE_FEED });
+              yield* Operation.invoke(SpaceOperation.AddObject, {
+                object: defaultFeed,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+              yield* Operation.schedule(FeedOperation.SyncFeed, { feed: defaultFeed });
+
+              const object = Magazine.make({ ...props, feeds: [Ref.make(defaultFeed)] });
               return yield* Operation.invoke(SpaceOperation.AddObject, {
                 object,
                 target: options.target,

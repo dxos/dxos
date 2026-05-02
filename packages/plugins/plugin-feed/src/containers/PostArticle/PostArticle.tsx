@@ -2,16 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { PostContent } from '#components';
 import { meta } from '#meta';
+import { FeedOperation } from '#operations';
 import { Subscription } from '#types';
 
 import { ensureStarTag, fetchArticle, hasMetaTag, toggleMetaTag, useStarTag } from '../../util';
@@ -20,11 +22,32 @@ export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
 
 export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
   const { t } = useTranslation(meta.id);
+  const { invokePromise } = useOperationInvoker();
   // Subscribe to the post so the toolbar icons (star, archive, mark-unread) re-render
   // when their underlying state changes via Obj.change.
   useObject(post);
   const db = Obj.getDatabase(post);
   const starTag = useStarTag(db);
+
+  // Lazily fetch full article content the first time this Post is shown — covers
+  // entry points that bypass MagazineArticle's `handleOpen` (deep-link, agent surface,
+  // restored attention). LoadPostContent is idempotent (no-op if `content` already
+  // populated or `link` missing), so a unique guard per Post id is enough to keep us
+  // from re-firing on every render.
+  const requestedContentFor = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    const postId = (post as { id: string }).id;
+    if (requestedContentFor.current === postId) {
+      return;
+    }
+    if (!post.link || post.content) {
+      return;
+    }
+    requestedContentFor.current = postId;
+    void invokePromise(FeedOperation.LoadPostContent, { post: Ref.make(post) }).catch((err) =>
+      log.catch(err, { postLink: post.link }),
+    );
+  }, [post, post.link, post.content, invokePromise]);
 
   // Reactive lookup of the source feed name. `post.feed?.target?.name` only renders
   // synchronously when the ref is already resolved; querying feeds via useQuery means
