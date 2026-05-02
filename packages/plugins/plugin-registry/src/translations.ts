@@ -14,7 +14,7 @@ export const translations = [
         'details.label': 'Details',
         'home-page.label': 'Website',
         'source.label': 'Source',
-        'plugin-registry.label': 'Plugin Registry',
+        'plugin-registry.label': 'Plugin Settings',
         'official-plugins.label': 'Official',
         'installed-plugins.label': 'Enabled',
         'recommended-plugins.label': 'Recommended',
