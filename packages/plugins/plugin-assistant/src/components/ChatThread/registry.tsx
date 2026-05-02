@@ -8,6 +8,7 @@ import { log } from '@dxos/log';
 import { ContentBlock, type Message } from '@dxos/types';
 import { type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 
+import { type Assistant } from '../../types';
 import { type BlockRenderer, type MessageThreadContext } from './sync';
 import { applyToolBlockToWidgetState } from './tool-widget-state';
 import {
@@ -141,17 +142,47 @@ export const componentRegistry: XmlWidgetRegistry = {
 /**
  * Convert block to markdown.
  */
-export const blockToMarkdown: BlockRenderer = (
-  context: MessageThreadContext,
+export const blockToMarkdown: BlockRenderer = createBlockRenderer('normal');
+
+/**
+ * Create a {@link BlockRenderer} that filters blocks based on the chat view type.
+ *
+ * - `summary`: only user prompts.
+ * - `normal`: user prompts + assistant text + tool calls + summary/select/suggestion/reference + status. Hides reasoning.
+ * - `thinking`: same as normal plus reasoning.
+ * - `debug`: renders every block (raw fallbacks visible).
+ */
+export function createBlockRenderer(viewType: Assistant.ChatView | undefined): BlockRenderer {
+  return (context, message, block) => {
+    if (!isBlockVisible(viewType, message, block)) {
+      return;
+    }
+    let str = blockToMarkdownImpl(context, message, block);
+    if (str && !block.pending) {
+      return (str += '\n');
+    }
+    return str;
+  };
+}
+
+const isBlockVisible = (
+  viewType: Assistant.ChatView | undefined,
   message: Message.Message,
   block: ContentBlock.Any,
-) => {
-  let str = blockToMarkdownImpl(context, message, block);
-  if (str && !block.pending) {
-    return (str += '\n');
+): boolean => {
+  switch (viewType) {
+    case 'debug':
+      return true;
+    case 'normal':
+      return block._tag !== 'reasoning';
+    case 'summary':
+      // Show only conversational text (user prompts + assistant replies); hide reasoning,
+      // tool calls, status, stats, and synthetic system messages.
+      return block._tag === 'text' && (block as ContentBlock.Text).disposition !== 'synthetic';
+    case 'thinking':
+    default:
+      return true;
   }
-
-  return str;
 };
 
 const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Message, block: ContentBlock.Any) => {

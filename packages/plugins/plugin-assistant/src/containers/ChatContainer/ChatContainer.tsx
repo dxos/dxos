@@ -14,7 +14,7 @@ import { getParentId } from '@dxos/react-ui-attention';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
 import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
-import { AssistantCapabilities, type ChatType } from '#types';
+import { type Assistant, AssistantCapabilities, type ChatType } from '#types';
 
 export type ChatContainerProps = (
   | AppSurface.ObjectArticleProps<ChatType.Chat | undefined>
@@ -64,13 +64,14 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
 
   const feedTarget = chat?.feed.target;
   const queue = space && feedTarget ? space.queues.get(Feed.getQueueDxn(feedTarget)!) : undefined;
+  const view = (chat?.view as Assistant.ChatView | undefined) ?? settings.chatView;
 
   if (!processor) {
     return null;
   }
 
   return (
-    <ChatComponent.Root db={space?.db} chat={chat} queue={queue} processor={processor} onEvent={onEvent}>
+    <ChatComponent.Root db={space?.db} chat={chat} feed={queue} processor={processor} onEvent={onEvent}>
       <Panel.Root role={role} ref={forwardedRef}>
         <Panel.Toolbar className='bg-toolbar-surface'>
           <ChatComponent.Toolbar classNames='dx-document' attendableId={attendableId} companionTo={companionTo} />
@@ -78,12 +79,14 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
         <Panel.Content>
           <ChatComponent.Content>
             <div role='none' className='dx-container relative'>
-              <ChatComponent.Thread />
-              <div role='none' className='absolute bottom-2 left-0 right-0'>
-                <div role='none' className='dx-document px-4'>
-                  <ChatComponent.Status classNames='px-3 rounded-sm bg-group-surface' />
+              <ChatComponent.Thread viewType={view} />
+              {view !== 'summary' && (
+                <div role='none' className='absolute bottom-2 left-0 right-0'>
+                  <div role='none' className='dx-document px-4'>
+                    <ChatComponent.Status classNames='px-3 rounded-sm bg-group-surface' />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
             <div role='none' className='dx-document px-4 pb-4'>
               <ChatComponent.Prompt

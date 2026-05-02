@@ -91,7 +91,7 @@ export const showDevRssBanner = async ({ feedUrl = DEFAULT_FEED }: DevRssBannerO
 
     renderBanner({ title, link, summary, source });
   } catch (error) {
-    log.info('dev-rss-banner: fetch/parse error', { error: String(error) });
+    log.catch(error);
   }
 };
 
