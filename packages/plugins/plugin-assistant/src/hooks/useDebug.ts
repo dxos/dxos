@@ -13,18 +13,21 @@ export const useDebug = ({ processor }: { processor: AiChatProcessor }) => {
     const objects = processor.context.getObjects();
     const blueprints = processor.context.getBlueprints();
     const system = await processor.getSystemPrompt();
-    const tools = await processor.getTools();
+    const tools = (await processor.getTools()) ?? {};
     console.group('Chat', { objects, blueprints });
-    console.log(trim`
-      System Prompt:
-      ${system}
-    `);
-    console.log(trim`
-      Tools:
-      ${Object.values(tools)
-        .map((tool) => JSON.stringify(tool, null, 2))
-        .join('\n')}
-    `);
-    console.groupEnd();
+    try {
+      console.log(trim`
+        System Prompt:
+        ${system}
+      `);
+      console.log(trim`
+        Tools:
+        ${Object.values(tools)
+          .map((tool) => JSON.stringify(tool, null, 2))
+          .join('\n')}
+      `);
+    } finally {
+      console.groupEnd();
+    }
   }, [processor]);
 };
