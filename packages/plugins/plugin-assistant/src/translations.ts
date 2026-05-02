@@ -151,7 +151,6 @@ export const translations: Resource[] = [
         'branch-thread.menu': 'Branch chat',
         'chat-toolbar.title': 'Chat toolbar',
 
-
         // Trigger status
         'trigger-status-disabled.label': 'Triggers disabled',
         'trigger-status-idle.label': 'Triggers idle',

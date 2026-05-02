@@ -30,9 +30,7 @@ export const createSelectField = ({
   options,
   defaultLabel = 'Default',
 }: CreateSelectFieldOptions): React.FC<SettingsFieldProps<string | undefined>> => {
-  const normalized = options.map((option) =>
-    typeof option === 'string' ? { value: option, label: option } : option,
-  );
+  const normalized = options.map((option) => (typeof option === 'string' ? { value: option, label: option } : option));
 
   return ({ value, onChange, readonly }) => (
     <Select.Root
