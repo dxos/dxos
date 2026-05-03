@@ -101,6 +101,12 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps>(
 
 MasonryContentInner.displayName = 'Masonry.Content';
 
+const MasonryContent = MasonryContentInner as (
+  props: MasonryContentProps & {
+    ref?: Ref<HTMLDivElement | null>;
+  },
+) => JSX.Element;
+
 //
 // Viewport
 //
@@ -180,12 +186,6 @@ const ComposableVirtuosoMasonry = composable<HTMLDivElement, VirtuosoMasonryProp
 );
 
 MasonryViewportInner.displayName = 'Masonry.Viewport';
-
-const MasonryContent = MasonryContentInner as (
-  props: MasonryContentProps & {
-    ref?: Ref<HTMLDivElement | null>;
-  },
-) => JSX.Element;
 
 const MasonryViewport = MasonryViewportInner as <Item>(
   props: MasonryViewportProps<Item> & {
