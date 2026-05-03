@@ -293,7 +293,7 @@ export const translations = [
 
         'presence.label': 'Online activity',
         'qr.label': 'QR Code',
-        'typename.label': 'Typename',
+        'typename.label': 'Object',
         'unnamed-collection.label': 'Unnamed',
       },
     },
