@@ -16,7 +16,7 @@ import { Panel } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 
-import { GalleryImage, Lightbox, type LightboxTile } from '#components';
+import { GalleryImage, Lightbox, type LightboxTileProps } from '#components';
 import { meta } from '#meta';
 import { Gallery } from '#types';
 
@@ -26,7 +26,7 @@ import { GALLERY_SHOW_SEGMENT } from '../../paths';
 export type GalleryArticleProps = AppSurface.ObjectArticleProps<Gallery.Gallery>;
 
 /** Lightbox tile that resolves `wnfs://` URLs to blob URLs. */
-const ResolvingTile: LightboxTile = ({ image, onDelete }) => {
+const ResolvingTile = ({ image, onDelete }: LightboxTileProps) => {
   const url = useImageUrl(image.url, image.type);
   return <GalleryImage image={image} url={url} onDelete={onDelete} />;
 };

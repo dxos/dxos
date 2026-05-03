@@ -13,7 +13,7 @@ import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 
-import { GalleryImage, Lightbox, type LightboxTile } from '#components';
+import { GalleryImage, Lightbox, type LightboxTileProps } from '#components';
 import { meta } from '#meta';
 import { type Gallery } from '#types';
 
@@ -23,7 +23,7 @@ export type GalleryShowProps = {
   gallery: Gallery.Gallery;
 };
 
-const ResolvingTile: LightboxTile = ({ image }) => {
+const ResolvingTile = ({ image }: LightboxTileProps) => {
   const url = useImageUrl(image.url, image.type);
   return <GalleryImage image={image} url={url} />;
 };

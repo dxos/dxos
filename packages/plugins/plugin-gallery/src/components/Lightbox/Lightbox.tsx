@@ -16,36 +16,41 @@ import { GalleryImage } from '../GalleryImage';
 
 const LIGHTBOX_NAME = 'Lightbox';
 
-export type LightboxTileProps = {
-  image: Gallery.Image;
-  index: number;
-  onDelete?: () => void;
-};
-
-export type LightboxTile = ComponentType<LightboxTileProps>;
-
 type ContextValue = {
   gallery: Gallery.Gallery;
   onDelete?: (index: number) => void;
-  Tile: LightboxTile;
+  Tile: ComponentType<LightboxTileProps>;
   emptyMessage?: ReactNode;
 };
 
 const [Provider, useLightboxContext] = createContext<ContextValue>(LIGHTBOX_NAME);
 
-const DefaultTile: LightboxTile = ({ image, onDelete }) => (
+//
+// Tile
+//
+
+type LightboxTileProps = {
+  image: Gallery.Image;
+  index: number;
+  onDelete?: () => void;
+};
+
+/** Default Lightbox tile: renders a `GalleryImage` using `image.url` directly. */
+const LightboxTile = ({ image, onDelete }: LightboxTileProps) => (
   <GalleryImage image={image} url={image.url} onDelete={onDelete} />
 );
+
+LightboxTile.displayName = `${LIGHTBOX_NAME}.Tile`;
 
 //
 // Root
 //
 
-export type LightboxRootProps = PropsWithChildren<{
+type LightboxRootProps = PropsWithChildren<{
   gallery: Gallery.Gallery;
   onDelete?: (index: number) => void;
-  /** Render a single tile. Defaults to `GalleryImage` with `image.url` as src. */
-  Tile?: LightboxTile;
+  /** Render a single tile. Defaults to `Lightbox.Tile` (`GalleryImage` with `image.url` as src). */
+  Tile?: ComponentType<LightboxTileProps>;
   /** Custom empty-state node. Defaults to a translated message. */
   emptyMessage?: ReactNode;
 }>;
@@ -54,7 +59,7 @@ export type LightboxRootProps = PropsWithChildren<{
  * Headless context provider for a Lightbox masonry. Containers compose
  * `Panel.Root` / `Panel.Toolbar` / `Panel.Content` around `Lightbox.Viewport`.
  */
-const LightboxRoot = ({ gallery, onDelete, Tile = DefaultTile, emptyMessage, children }: LightboxRootProps) => (
+const LightboxRoot = ({ gallery, onDelete, Tile = LightboxTile, emptyMessage, children }: LightboxRootProps) => (
   <Provider gallery={gallery} onDelete={onDelete} Tile={Tile} emptyMessage={emptyMessage}>
     {children}
   </Provider>
@@ -66,7 +71,7 @@ LightboxRoot.displayName = `${LIGHTBOX_NAME}.Root`;
 // Viewport
 //
 
-export type LightboxViewportProps = ThemedClassName<{}>;
+type LightboxViewportProps = ThemedClassName<{}>;
 
 /**
  * Renders the masonry grid (or the empty state) for the gallery in context.
@@ -120,5 +125,8 @@ LightboxViewport.displayName = `${LIGHTBOX_NAME}.Viewport`;
 
 export const Lightbox = {
   Root: LightboxRoot,
+  Tile: LightboxTile,
   Viewport: LightboxViewport,
 };
+
+export type { LightboxRootProps, LightboxTileProps, LightboxViewportProps };
