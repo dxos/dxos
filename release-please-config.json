@@ -605,6 +605,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-gallery/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-graph/package.json",
           "jsonpath": "$.version"
         },

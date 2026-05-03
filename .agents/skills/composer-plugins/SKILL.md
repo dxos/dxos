@@ -98,7 +98,28 @@ Low-level UI. Must NOT depend on `@dxos/app-framework` or `@dxos/app-toolkit`.
 Each component lives in its own subdirectory with an `index.ts` barrel.
 Use named exports; no default exports. Create a basic storybook for each.
 
-See: `plugin-chess/src/components/Chessboard/`
+**Prefer composable Radix-style namespaces for non-trivial components.** Mirror the `Foo.Root / Foo.Toolbar / Foo.Content / Foo.Viewport` pattern used by `Panel.*`, `Card.*`, `Masonry.*`, and `ScrollArea.*` in `@dxos/react-ui` and `@dxos/react-ui-masonry`. The Root provides shared context (data, callbacks, Tile component); subcomponents read it and slot into the outer Panel/ScrollArea structure. This lets containers plug in their own toolbar contents (e.g. MenuBuilder buttons) without forking the component, and keeps the component fully presentation-only.
+
+```tsx
+// Pure component namespace — no app-framework deps.
+export const FooMasonry = { Root: Root, Toolbar: Toolbar, Content: Content, Viewport: Viewport };
+
+// Container composes:
+<FooMasonry.Root items={items} onDelete={handleDelete}>
+  <FooMasonry.Toolbar>
+    <Menu.Root {...menuActions} attendableId={attendableId}>
+      <Menu.Toolbar />
+    </Menu.Root>
+  </FooMasonry.Toolbar>
+  <FooMasonry.Content>
+    <FooMasonry.Viewport />
+  </FooMasonry.Content>
+</FooMasonry.Root>;
+```
+
+Sketch the namespace export first when designing a new component; only collapse to a single component if the surface really has no slots.
+
+See: `plugin-chess/src/components/Chessboard/`, `packages/ui/react-ui-masonry/src/Masonry.tsx`
 
 ### Container (`src/containers/`)
 
@@ -107,6 +128,56 @@ Each container lives in its own subdirectory. The subdirectory `index.ts` bridge
 The top-level `containers/index.ts` uses `lazy(() => import('./X'))` with `: ComponentType<any>` annotation.
 Surface components use suffixes matching their role: `Article`, `Card`, `Dialog`, `Popover`, `Settings`.
 Create a basic storybook for each.
+
+**If a "component" needs `useCapability`/`useCapabilities`/`useAppGraph`/`useOperationInvoker`, it belongs in `containers/`.** Storybooks won't have a PluginManager — calling capability hooks under `components/` throws. Refactor: take the resolved value (URL, callback, Tile component) as a prop and move the hook one level up.
+
+### Reactivity: wrap subjects with `useObject`
+
+A surface receiving an ECHO subject via `AppSurface.ObjectArticleProps<T>` MUST call `useObject(subject)` and read from the returned snapshot. Without it, mutations to nested arrays/structs (e.g. `Obj.change(obj, m => m.images = [...])`) do not trigger re-render until you navigate away and back — the prop reference stays stable; the subscription lives in `useObject`.
+
+```tsx
+const [gallery] = useObject(subject);
+// reads (gallery.images) re-render reactively
+// writes still go through the original subject:
+const handleDelete = (i: number) =>
+  Obj.change(subject, (obj) => {
+    const m = obj as Obj.Mutable<Gallery.Gallery>;
+    m.images = (m.images ?? []).filter((_, idx) => idx !== i);
+  });
+```
+
+The snapshot type is narrow — cast as needed (`obj as Obj.Mutable<T>` inside `Obj.change`, or `as T` for read access of fields not surfaced on `Snapshot<T>`).
+
+### Toolbar wiring: `MenuBuilder` + `useMenuActions` + `attendableId`
+
+Always thread `attendableId` from `AppSurface.ObjectArticleProps` into `<Menu.Root>`. Don't underscore it as unused — without it, attention-driven contributions don't target the right surface.
+
+```tsx
+const actionsAtom = useMemo(
+  () =>
+    Atom.make(
+      (): ActionGraphProps =>
+        MenuBuilder.make()
+          .action(
+            'add',
+            { label: ['add.label', { ns: meta.id }], icon: 'ph--plus--regular', disposition: 'toolbar' },
+            handleAdd,
+          )
+          .build(),
+    ),
+  [handleAdd],
+);
+const menuActions = useMenuActions(actionsAtom);
+return (
+  <Panel.Toolbar>
+    <Menu.Root {...menuActions} attendableId={attendableId}>
+      <Menu.Toolbar />
+    </Menu.Root>
+  </Panel.Toolbar>
+);
+```
+
+See: `plugin-sample/src/containers/SampleArticle.tsx`.
 
 **Containers must use standard UI primitives — never custom classNames for layout or styling.** Use:
 

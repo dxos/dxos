@@ -349,6 +349,9 @@
       "path": "packages/plugins/plugin-files/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-gallery/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-graph/tsconfig.json"
     },
     {
