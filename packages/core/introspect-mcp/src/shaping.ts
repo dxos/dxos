@@ -3,7 +3,7 @@
 //
 
 // Response shaping for token budgets.
-//
+
 // Default tool responses target ~500 tokens. Lists get truncated with a note
 // telling the caller how to refine. Single-record fetches don't get truncated;
 // callers opt into heavier fields via `include`.

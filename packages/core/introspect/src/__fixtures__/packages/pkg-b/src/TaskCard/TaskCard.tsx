@@ -2,32 +2,31 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type FC } from 'react';
+import { Task } from '@fixture/pkg-a';
 
 import { useObject } from '@dxos/echo-react';
 
-import { type Task } from '@fixture/pkg-a';
-
 export interface TaskCardProps {
-  task: Task;
+  task: Task.Task;
 }
 
 /**
  * Renders a Task — fixture React component exercising the useObject pattern.
  */
-export const TaskCard: FC<TaskCardProps> = ({ task }) => {
-  const [snapshot, update] = useObject(task);
-  if (!snapshot) {
+export const TaskCard = ({ task: taskProp }: TaskCardProps) => {
+  const [task, update] = useObject(taskProp);
+  if (!task) {
     return null;
   }
+
   return (
     <article>
-      <h3>{snapshot.title}</h3>
-      {snapshot.description ? <p>{snapshot.description}</p> : null}
+      <h3>{task.title}</h3>
+      {task.description ? <p>{task.description}</p> : null}
       <label>
         <input
           type='checkbox'
-          checked={snapshot.done}
+          checked={task.done}
           onChange={(event) =>
             update((draft) => {
               draft.done = event.target.checked;

@@ -29,7 +29,12 @@
     "ts-morph": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
     "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

@@ -1,6 +1,7 @@
 # @dxos/introspect — Design Notes
 
-Phase 1 covers steps 1–3 of the build spec: scaffold + package/symbol indexing + a thin MCP server with four tools. Plugin/surface/capability/intent/schema/idiom layers are deferred.
+Phase 1 covers steps 1–3 of the build spec: scaffold + package/symbol indexing + a thin MCP server with four tools.
+Plugin/surface/capability/intent/schema/idiom layers are deferred.
 
 ## Things confirmed by reading the real codebase
 
@@ -22,4 +23,5 @@ First call to `findSymbol` against the real monorepo (~250 packages) takes ~80s 
 
 ## Why query methods take a deps object instead of using a class
 
-The query layer (`src/query/`) is pure functions over plain data. The introspector wires them to a cached extractor closure and a package list. This keeps the query layer trivially testable (pass in fake data, no setup) and makes the eventual file-watcher step a matter of swapping the extractor.
+The query layer (`src/query/`) is pure functions over plain data.
+The introspector wires them to a cached extractor closure and a package list. This keeps the query layer trivially testable (pass in fake data, no setup) and makes the eventual file-watcher step a matter of swapping the extractor.

@@ -6,12 +6,12 @@
   "type": "module",
   "exports": {
     ".": {
-      "source": "./src/index.tsx"
+      "source": "./src/index.ts"
     }
   },
   "dependencies": {
     "@dxos/echo-react": "workspace:*",
     "@fixture/pkg-a": "workspace:*",
-    "react": "^18.0.0"
+    "react": "^19.0.0"
   }
 }

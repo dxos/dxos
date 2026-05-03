@@ -29,7 +29,9 @@ export const createServer = (options: ServerOptions): McpServer => {
     version: options.version ?? '0.0.0',
   });
 
-  // ---- list_packages ----
+  /**
+   * list_packages
+   */
   server.registerTool(
     'list_packages',
     {
@@ -59,7 +61,9 @@ export const createServer = (options: ServerOptions): McpServer => {
     },
   );
 
-  // ---- get_package ----
+  /**
+   * get_package
+   */
   server.registerTool(
     'get_package',
     {
@@ -82,7 +86,9 @@ export const createServer = (options: ServerOptions): McpServer => {
     },
   );
 
-  // ---- find_symbol ----
+  /**
+   * find_symbol
+   */
   server.registerTool(
     'find_symbol',
     {
@@ -107,7 +113,9 @@ export const createServer = (options: ServerOptions): McpServer => {
     },
   );
 
-  // ---- get_symbol ----
+  /**
+   * get_symbol
+   */
   server.registerTool(
     'get_symbol',
     {

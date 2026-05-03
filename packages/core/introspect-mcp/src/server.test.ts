@@ -13,7 +13,9 @@ import { createIntrospector, type Introspector } from '@dxos/introspect';
 import { createServer } from './server';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const FIXTURE_ROOT = join(__dirname, '__fixtures__');
+
+// Reuse the @dxos/introspect package's fixtures so the two test suites stay in sync.
+const FIXTURE_ROOT = join(__dirname, '..', '..', 'introspect', 'src', '__fixtures__');
 
 type Connected = {
   client: Client;
@@ -138,7 +140,7 @@ describe('introspect-mcp server', () => {
     };
     expect(payload.data.ref).toBe('@fixture/pkg-a#make');
     expect(payload.data.signature).toContain('make');
-    expect(payload.data.summary).toBe('Task factory.');
+    expect(payload.data.summary).toContain('Task factory');
     expect(payload.data.source).toBeUndefined();
   });
 

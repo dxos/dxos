@@ -57,7 +57,7 @@ describe('introspector against fixture monorepo', () => {
     expect(detail).not.toBeNull();
     expect(detail!.workspaceDependencies).toEqual(['@dxos/echo-react', '@fixture/pkg-a']);
     expect(detail!.externalDependencies).toEqual(['react']);
-    expect(detail!.entryPoints).toEqual(['src/index.tsx']);
+    expect(detail!.entryPoints).toEqual(['src/index.ts']);
   });
 
   test('getPackage returns null for unknown', ({ expect }) => {
@@ -98,27 +98,44 @@ describe('introspector against fixture monorepo', () => {
     expect(interfaces.some((m) => m.name === 'TaskCardProps')).toBe(true);
   });
 
-  test('getSymbol returns signature, JSDoc summary, and source location for the ECHO type', ({ expect }) => {
+  test('getSymbol resolves through barrels to the original file', ({ expect }) => {
+    // pkg-a's entry is src/index.ts which barrels src/Task.ts.
+    // ts-morph's getExportedDeclarations follows the re-export back to the original.
     const detail = intro.getSymbol('@fixture/pkg-a#Task');
     expect(detail).not.toBeNull();
     expect(detail!.signature).toContain('Task');
-    expect(detail!.location.file).toContain('pkg-a/src/index.ts');
+    expect(detail!.location.file).toContain('pkg-a/src/Task.ts');
     expect(detail!.location.line).toBeGreaterThan(0);
     expect(detail!.summary).toContain('Task item');
     expect(detail!.source).toBeUndefined();
   });
 
-  test('getSymbol with include=source returns the full Schema.Struct body', ({ expect }) => {
+  test('getSymbol with include=source returns Schema.Struct + annotations', ({ expect }) => {
     const detail = intro.getSymbol('@fixture/pkg-a#Task', ['source']);
     expect(detail!.source).toContain('Schema.Struct');
     expect(detail!.source).toContain('Type.object');
     expect(detail!.source).toContain('com.example.type.Task');
+    // Property-level description annotation.
+    expect(detail!.source).toContain("description: 'Short summary of the task.'");
+    // Type-level Label annotation.
+    expect(detail!.source).toContain("LabelAnnotation.set(['title'])");
+  });
+
+  test('getSymbol surfaces both merged declarations of Task in source', ({ expect }) => {
+    // ECHO idiom: `export const Task = Schema.Struct(...)` AND
+    // `export interface Task extends Schema.Schema.Type<typeof Task> {}` — both
+    // declarations share a name, and the indexer concatenates their source so
+    // consumers see the full pattern rather than only the value form.
+    const detail = intro.getSymbol('@fixture/pkg-a#Task', ['source']);
+    expect(detail!.source).toContain('export const Task');
+    expect(detail!.source).toContain('export interface Task extends Schema.Schema.Type<typeof Task>');
   });
 
   test('getSymbol on the React component captures its useObject body', ({ expect }) => {
     const detail = intro.getSymbol('@fixture/pkg-b#TaskCard', ['source']);
     expect(detail).not.toBeNull();
     expect(detail!.source).toContain('useObject');
+    expect(detail!.location.file).toContain('pkg-b/src/TaskCard/TaskCard.tsx');
   });
 
   test('getSymbol returns null for unknown ref', ({ expect }) => {

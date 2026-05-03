@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
+import { glob } from 'glob';
 import {
   type ExportedDeclarations,
   type JSDoc,
@@ -53,6 +53,9 @@ export const extractSymbols = (monorepoRoot: string, pkg: PackageLike): PackageS
   const project = new Project({
     useInMemoryFileSystem: false,
     skipAddingFilesFromTsConfig: true,
+    // We walk all source files explicitly (see below), so we don't need ts-morph
+    // to follow imports. Skipping resolution keeps each package's parse cost
+    // bounded and avoids spurious failures when a workspace dep isn't built.
     skipFileDependencyResolution: true,
     compilerOptions: {
       allowJs: false,
@@ -63,14 +66,22 @@ export const extractSymbols = (monorepoRoot: string, pkg: PackageLike): PackageS
     },
   });
 
+  // Walk every TypeScript source file in the package's `src/` directory rather
+  // than relying on ts-morph to follow re-export chains from the entry point.
+  // This makes the indexer robust to namespace re-exports (`export * as X`) and
+  // multi-hop barrels, and keeps each file's symbols visible at their original
+  // declaration site — which is what callers actually want from getSymbol.
+  const files = glob.sync('src/**/*.{ts,tsx}', {
+    cwd: join(monorepoRoot, pkg.path),
+    ignore: ['**/*.test.{ts,tsx}', '**/*.stories.{ts,tsx}', '**/__fixtures__/**', '**/__tests__/**'],
+    absolute: true,
+    nodir: true,
+  });
+
   const symbols: ExtractedSymbol[] = [];
-  for (const entry of pkg.entryPoints) {
-    const entryPath = join(monorepoRoot, pkg.path, entry);
-    if (!existsSync(entryPath)) {
-      continue;
-    }
+  for (const filePath of files) {
     try {
-      const source = project.addSourceFileAtPathIfExists(entryPath);
+      const source = project.addSourceFileAtPathIfExists(filePath);
       if (!source) {
         continue;
       }
@@ -79,48 +90,76 @@ export const extractSymbols = (monorepoRoot: string, pkg: PackageLike): PackageS
         if (declarations.length === 0) {
           continue;
         }
-        const decl = declarations[0];
-        const extracted = describeSymbol(name, decl, monorepoRoot, pkg.name);
+        const extracted = describeSymbol(name, declarations, monorepoRoot, pkg.name);
         if (extracted) {
           symbols.push(extracted);
         }
       }
     } catch (err) {
-      log.warn('symbol extraction failed', { package: pkg.name, entry, err: String(err) });
+      log.warn('symbol extraction failed', { package: pkg.name, file: filePath, err: String(err) });
     }
   }
 
-  // De-duplicate by name (a symbol re-exported from multiple entry points).
-  const seen = new Set<string>();
-  const unique = symbols.filter((s) => {
-    if (seen.has(s.name)) {
-      return false;
+  // Dedup by name. When the same name appears in multiple files (e.g. a
+  // barrel's namespace re-export plus the original declaration), prefer the
+  // entry whose primary declaration carries the most information — value/type
+  // declarations beat namespace re-exports.
+  const byName = new Map<string, ExtractedSymbol>();
+  for (const sym of symbols) {
+    const existing = byName.get(sym.name);
+    if (!existing || preferenceScore(sym) > preferenceScore(existing)) {
+      byName.set(sym.name, sym);
     }
-    seen.add(s.name);
-    return true;
-  });
-  unique.sort((a, b) => a.name.localeCompare(b.name));
-
+  }
+  const unique = [...byName.values()].sort((a, b) => a.name.localeCompare(b.name));
   return { packageName: pkg.name, symbols: unique };
+};
+
+const preferenceScore = (sym: ExtractedSymbol): number => {
+  // Higher = preferred. Concrete declarations beat re-exports; runtime entities
+  // beat type-only ones since callers can do more with them.
+  switch (sym.kind) {
+    case 'class':
+    case 'function':
+      return 5;
+    case 'variable':
+    case 'enum':
+      return 4;
+    case 'interface':
+    case 'type':
+      return 3;
+    case 'namespace':
+      return 1;
+    default:
+      return 0;
+  }
 };
 
 const describeSymbol = (
   name: string,
-  decl: ExportedDeclarations,
+  declarations: readonly ExportedDeclarations[],
   monorepoRoot: string,
   packageName: string,
 ): ExtractedSymbol | null => {
-  const kind = classifyDeclaration(decl);
-  const sourceFile = decl.getSourceFile();
-  const start = decl.getStart();
+  // ECHO idiom emits a value AND a same-named interface companion:
+  //   export const Task = Schema.Struct({...}).pipe(Type.object({...}));
+  //   export interface Task extends Schema.Schema.Type<typeof Task> {}
+  // We surface them as a single symbol so callers see both forms in `source`.
+  // The "primary" declaration drives signature/location/kind; the rest contribute
+  // their text so the full pattern is visible.
+  const primary = pickPrimary(declarations);
+  const kind = classifyDeclaration(primary);
+  const sourceFile = primary.getSourceFile();
+  const start = primary.getStart();
   const lineCol = sourceFile.getLineAndColumnAtPos(start);
   const location: SourceLocation = {
     file: relative(monorepoRoot, sourceFile.getFilePath()),
     line: lineCol.line,
     column: lineCol.column,
   };
-  const signature = readSignature(decl);
-  const jsdoc = readJSDoc(decl);
+  const signature = readSignature(primary);
+  const jsdoc = readJSDoc(primary) ?? declarations.map(readJSDoc).find((d) => d !== undefined);
+  const source = declarations.map(declarationText).join('\n\n');
   return {
     name,
     ref: formatSymbolRef(packageName, name),
@@ -129,8 +168,35 @@ const describeSymbol = (
     jsdoc,
     summary: summarize(jsdoc),
     location,
-    source: decl.getText(),
+    source,
   };
+};
+
+// Return the declaration text including any leading `export` modifier.
+// `VariableDeclaration.getText()` returns just the declarator (`x = 1`), missing
+// the `export const` from the parent VariableStatement — climb when needed.
+const declarationText = (decl: ExportedDeclarations): string => {
+  if (decl.getKind() === SyntaxKind.VariableDeclaration) {
+    const stmt = decl.getFirstAncestorByKind(SyntaxKind.VariableStatement);
+    if (stmt) {
+      return stmt.getText();
+    }
+  }
+  return decl.getText();
+};
+
+// Pick the "most informative" declaration for a merged export. The value
+// declaration (variable/function/class) is what callers can actually use at
+// runtime, so we prefer it; type-only companions (interface/type alias) are
+// supplementary. Falls back to the first declaration if none qualify.
+const pickPrimary = (declarations: readonly ExportedDeclarations[]): ExportedDeclarations => {
+  const valueKinds = new Set<SyntaxKind>([
+    SyntaxKind.VariableDeclaration,
+    SyntaxKind.FunctionDeclaration,
+    SyntaxKind.ClassDeclaration,
+    SyntaxKind.EnumDeclaration,
+  ]);
+  return declarations.find((d) => valueKinds.has(d.getKind())) ?? declarations[0];
 };
 
 const classifyDeclaration = (decl: ExportedDeclarations): SymbolKind => {
@@ -165,10 +231,10 @@ const classifyDeclaration = (decl: ExportedDeclarations): SymbolKind => {
 };
 
 const readSignature = (decl: ExportedDeclarations): string => {
-  // Prefer ts-morph's own signature text where available; fall back to the first
-  // line of the declaration. This is intentionally lightweight — we're optimizing
-  // for indexing speed across thousands of files, not type-perfect rendering.
-  const text = decl.getText();
+  // Lightweight: take the declaration's first line (or up to the first opening
+  // brace, whichever comes first). Optimized for indexing speed across
+  // thousands of files, not type-perfect rendering.
+  const text = declarationText(decl);
   const firstBrace = text.indexOf('{');
   const firstNewline = text.indexOf('\n');
   const cut = [firstBrace, firstNewline].filter((n) => n > 0);
