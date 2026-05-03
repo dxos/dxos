@@ -5,9 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
+import { type MarkdownExtensionProvider, MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { getSpace } from '@dxos/react-client/echo';
-import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { WnfsCapabilities } from '#types';
 
@@ -18,22 +17,22 @@ export default Capability.makeModule(
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    return Capability.contributes(MarkdownCapabilities.Extensions, [
-      ({ document, viewMode }: { document?: any; viewMode?: EditorViewMode }) => {
-        if (viewMode === 'source') {
-          return undefined;
-        }
+    const provider: MarkdownExtensionProvider = ({ document, viewMode }) => {
+      if (viewMode === 'source') {
+        return undefined;
+      }
 
-        const blockstore = capabilities.get(WnfsCapabilities.Blockstore);
-        const instances = capabilities.get(WnfsCapabilities.Instances);
+      const blockstore = capabilities.get(WnfsCapabilities.Blockstore);
+      const instances = capabilities.get(WnfsCapabilities.Instances);
 
-        if (document) {
-          const space = getSpace(document);
-          return space ? [image({ blockstore, instances, space })] : [];
-        }
+      if (document) {
+        const space = getSpace(document);
+        return space ? [image({ blockstore, instances, space })] : undefined;
+      }
 
-        return [];
-      },
-    ]);
+      return undefined;
+    };
+
+    return Capability.contributes(MarkdownCapabilities.Extensions, [provider]);
   }),
 );
