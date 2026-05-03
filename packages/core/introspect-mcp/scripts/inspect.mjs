@@ -56,14 +56,27 @@ if (!existsSync(tsx)) {
   process.exit(1);
 }
 
-console.error(`[inspect] CLI:  ${cli}`);
-console.error(`[inspect] Root: ${root}`);
-console.error(`[inspect] tsx:  ${tsx}`);
+// First `find_symbol` against the real monorepo can take ~80s on cold start
+// because ts-morph parses every package. Bump the Inspector's per-request
+// timeout (default 10s) so the call doesn't hit MCP error -32001. Subsequent
+// calls are cached and fast.
+const REQUEST_TIMEOUT_MS = 180_000;
+
+console.error(`[inspect] CLI:           ${cli}`);
+console.error(`[inspect] Root:          ${root}`);
+console.error(`[inspect] tsx:           ${tsx}`);
+console.error(`[inspect] Req timeout:   ${REQUEST_TIMEOUT_MS}ms`);
 console.error('[inspect] Launching MCP Inspector — open the URL it prints (with ?MCP_PROXY_AUTH_TOKEN=...).');
 console.error('');
 
 const child = spawn('npx', ['@modelcontextprotocol/inspector', tsx, '--conditions=source', cli, '--root', root], {
   stdio: 'inherit',
+  env: {
+    ...process.env,
+    MCP_SERVER_REQUEST_TIMEOUT: String(REQUEST_TIMEOUT_MS),
+    MCP_REQUEST_MAX_TOTAL_TIMEOUT: String(REQUEST_TIMEOUT_MS),
+    MCP_REQUEST_TIMEOUT_RESET_ON_PROGRESS: 'true',
+  },
 });
 
 child.on('error', (err) => {
