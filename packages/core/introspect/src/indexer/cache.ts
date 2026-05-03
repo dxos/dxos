@@ -16,8 +16,9 @@
 
 import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, statSync } from 'node:fs';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import { pid } from 'node:process';
 
 import type { PackageSymbols } from './symbols';
 
@@ -46,7 +47,11 @@ export type CacheFile = {
 };
 
 const CACHE_VERSION = 1;
-const DEFAULT_CACHE_PATH = '.dxos-introspect/cache.json';
+// node_modules/.cache/<tool> is the standard convention for build-tool caches
+// (babel, swc, eslint, vite all live here). Pros: auto-gitignored, easy to
+// nuke via `pnpm clean`/`rm -rf node_modules`, lives next to the deps the
+// cache indexes. Cons: a fresh `pnpm install` wipes it (rebuild ~80s once).
+const DEFAULT_CACHE_PATH = 'node_modules/.cache/dxos-introspect/cache.json';
 
 export type CacheKey = {
   hash: string;
@@ -129,14 +134,20 @@ export const loadCache = async (cachePath: string, expectedKey: CacheKey): Promi
 };
 
 /**
- * Persist the cache. Errors are logged and swallowed — caching is a
- * performance optimization, never a correctness requirement.
+ * Persist the cache. Writes to a per-process temp file then atomically
+ * renames into place — readers never see a half-written file even if
+ * multiple introspector processes (Inspector, Claude Code, Claude Desktop)
+ * race to rebuild the cache.
+ *
+ * Errors are logged and swallowed — caching is a performance optimization,
+ * never a correctness requirement.
  */
 export const saveCache = async (
   cachePath: string,
   key: CacheKey,
   symbols: Record<string, PackageSymbols>,
 ): Promise<void> => {
+  const tmpPath = `${cachePath}.${pid}.tmp`;
   try {
     await mkdir(dirname(cachePath), { recursive: true });
     const file: CacheFile = {
@@ -145,8 +156,12 @@ export const saveCache = async (
       packages: key.packages,
       symbols,
     };
-    await writeFile(cachePath, JSON.stringify(file), 'utf8');
+    await writeFile(tmpPath, JSON.stringify(file), 'utf8');
+    // Atomic on POSIX — readers see either the old file or the new one,
+    // never a partially-written stream.
+    await rename(tmpPath, cachePath);
   } catch (err) {
     warn('save failed', err);
+    await unlink(tmpPath).catch(() => undefined);
   }
 };

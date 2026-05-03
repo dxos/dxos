@@ -177,26 +177,29 @@ Each tool maps to one or two query layer methods. Keep parameter names matching 
 ```ts
 list_packages(filter?)
 get_package(name)
+
+list_symbols(package?)
 find_symbol(query, kind?)
 get_symbol(ref, include?)
 
 list_plugins(filter?)
 get_plugin(id)
-list_surfaces()
-list_capabilities()
-list_intents()
+list_capabilities(plugin?)
+list_operations(plugin?)
+list_types(plugin?)
+list_surfaces(plugin?)
 
 list_schemas(package?)
 get_schema(typename)
 find_schema_usage(typename)
 
+list_ui_components(package?)
+get_ui_component(ref, include?)
+find_styling_tokens(query)
+
 what_works_with(ref)
 trace_intent(id)
 find_examples(pattern)
-
-list_ui_components(package?)
-get_component(ref, include?)
-find_styling_tokens(query)
 
 list_idioms()
 get_idiom(name)

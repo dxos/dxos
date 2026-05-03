@@ -98,7 +98,7 @@ export const createServer = (options: ServerOptions): McpServer => {
         'Use this when the user wants to know what a specific package offers, or to browse a package after get_package. ' +
         'Returns lightweight rows with refs you can pass to get_symbol; capped at 30 — refine with `kind` or call get_symbol directly.',
       inputSchema: {
-        package: z.string().describe('Exact package name, e.g. "@dxos/echo-react".'),
+        package: z.string().describe('Exact package name, e.g. "@dxos/ai".'),
         kind: z
           .enum(['function', 'class', 'interface', 'type', 'enum', 'variable', 'namespace'])
           .optional()

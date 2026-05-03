@@ -2,10 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { cacheFilePath, computeCacheKey, loadCache, saveCache } from './indexer/cache';
-import { discoverPackages } from './indexer/packages';
-import { extractSymbols, type PackageSymbols } from './indexer/symbols';
-import { findSymbol as queryFindSymbol, getSymbol as queryGetSymbol } from './query/symbols';
+import {
+  cacheFilePath,
+  computeCacheKey,
+  discoverPackages,
+  extractSymbols,
+  loadCache,
+  type PackageSymbols,
+  saveCache,
+} from './indexer';
+import { findSymbol as queryFindSymbol, getSymbol as queryGetSymbol } from './query';
 import {
   type Package,
   type PackageDetail,
@@ -36,10 +42,12 @@ export type IntrospectorOptions = {
   cache?: boolean;
 };
 
+/**
+ * Introspector API.
+ */
 export type Introspector = {
   ready: Promise<void>;
   dispose: () => void;
-
   listPackages: (filter?: PackageFilter) => Package[];
   getPackage: (name: string) => PackageDetail | null;
   /** Enumerate every exported symbol declared by a package. Returns [] if the package is unknown. */
