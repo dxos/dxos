@@ -18,7 +18,7 @@ import { meta } from '#meta';
 import { FeedOperation } from '#operations';
 import { type Magazine, Subscription } from '#types';
 
-import { findStarTag, hasMetaTag, useStarTag } from '../../util';
+import { dxnToObjectId, findStarTag, hasMetaTag, useStarTag } from '../../util';
 import { MagazineTile, formatPublished } from './MagazineTile';
 import { MagazineSort, type CurateState } from './MagazineToolbar';
 import { MagazineToolbar, type MagazineView } from './MagazineToolbar';
@@ -103,8 +103,13 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
 
   // When the user removes a feed from the magazine via ObjectProperties, prune any
   // curated posts whose source feed is no longer present.
+  // Compare by bare object id rather than full DXN — `subject.feeds[i].dxn` and
+  // `post.feed.dxn` may carry different prefixes (`dxn:echo:@:<id>` vs
+  // `dxn:echo:<spaceId>:<id>`) depending on how each ref was constructed, so
+  // string-comparing the full DXN flags every post as an orphan and wipes the
+  // magazine on mount.
   useEffect(() => {
-    const feedDxns = new Set(subject.feeds.map((ref) => ref.dxn.toString()));
+    const feedIds = new Set(subject.feeds.map((ref) => dxnToObjectId(ref.dxn)));
     const orphanIds = new Set<string>();
     for (const postRef of subject.posts) {
       const post = postRef.target;
@@ -112,8 +117,8 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       if (!feedRef) {
         continue;
       }
-      if (!feedDxns.has(feedRef.dxn.toString())) {
-        orphanIds.add(postRef.dxn.toString());
+      if (!feedIds.has(dxnToObjectId(feedRef.dxn))) {
+        orphanIds.add(dxnToObjectId(postRef.dxn));
       }
     }
     if (orphanIds.size === 0) {
@@ -121,7 +126,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     }
 
     Obj.change(subject, (subject) => {
-      subject.posts = subject.posts.filter((ref) => !orphanIds.has(ref.dxn.toString()));
+      subject.posts = subject.posts.filter((ref) => !orphanIds.has(dxnToObjectId(ref.dxn)));
     });
   }, [subject, subject.feeds, subject.posts]);
 
@@ -194,9 +199,20 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   );
 
   // Key on both magazine identity and feed fingerprint so switching to a different
-  // magazine with the same feeds still triggers curation for the new magazine.
-  const previousCurateKey = useRef({ subject, feedFingerprint });
+  // magazine with the same feeds still triggers curation for the new magazine. The
+  // ref starts with sentinel undefineds so the initial mount also triggers curation
+  // — that covers first render of a magazine that already has feeds (e.g. just
+  // created with a seeded default feed, or restored from a deep link).
+  const previousCurateKey = useRef<{ subject?: Magazine.Magazine; feedFingerprint?: string }>({});
   useEffect(() => {
+    if (subject.feeds.length === 0) {
+      // Track the empty state so a later restore (re-adding the same feed set
+      // that was previously cleared) still registers as a fingerprint change and
+      // re-fires curation. Without this the cached key would stay pinned to the
+      // pre-clear feed list and the comparison below would erroneously skip.
+      previousCurateKey.current = { subject, feedFingerprint };
+      return;
+    }
     if (
       previousCurateKey.current.subject !== subject ||
       previousCurateKey.current.feedFingerprint !== feedFingerprint
