@@ -16,9 +16,9 @@
 // errors caught at the call site of the actual `@dxos/introspect` package
 // remain caught by the package's own build.
 
+import { glob } from 'glob';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { glob } from 'glob';
 import { Project, ScriptTarget } from 'ts-morph';
 import { describe, test } from 'vitest';
 
@@ -61,9 +61,7 @@ describe('fixture monorepo wellformedness', () => {
         const lineCol = start !== undefined ? source.getLineAndColumnAtPos(start) : undefined;
         const message = diag.getMessageText();
         const text = typeof message === 'string' ? message : message.getMessageText();
-        errors.push(
-          `${filePath}${lineCol ? `:${lineCol.line}:${lineCol.column}` : ''} TS${diag.getCode()}: ${text}`,
-        );
+        errors.push(`${filePath}${lineCol ? `:${lineCol.line}:${lineCol.column}` : ''} TS${diag.getCode()}: ${text}`);
       }
       // Sanity: the file must contain at least one top-level `export`. Catches
       // accidental empty files. We textually search rather than relying on

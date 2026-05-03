@@ -5,10 +5,9 @@
 // Entry point for the dx-introspect-mcp CLI. Boots an introspector against the
 // monorepo root inferred from cwd (or --root) and exposes it over stdio.
 
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { existsSync } from 'node:fs';
 import { dirname, isAbsolute, resolve } from 'node:path';
-
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
 import { createIntrospector } from '@dxos/introspect';
 

@@ -2,13 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import { glob } from 'glob';
 import { exec } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 import { promisify } from 'node:util';
-
-import { glob } from 'glob';
 
 import { log } from '@dxos/log';
 

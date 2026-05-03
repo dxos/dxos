@@ -4,15 +4,7 @@
 
 // All result types are plain serializable data — no classes, no functions, no Promises.
 
-export type SymbolKind =
-  | 'function'
-  | 'class'
-  | 'interface'
-  | 'type'
-  | 'enum'
-  | 'variable'
-  | 'namespace'
-  | 'unknown';
+export type SymbolKind = 'function' | 'class' | 'interface' | 'type' | 'enum' | 'variable' | 'namespace' | 'unknown';
 
 export type SourceLocation = {
   file: string;

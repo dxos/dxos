@@ -3,7 +3,7 @@
 //
 
 export { createIntrospector, type Introspector, type IntrospectorOptions } from './introspector';
-export { formatSymbolRef, parseRef, isSymbolRef, type RefParts, type SymbolRefParts } from './refs';
+export { formatSymbolRef, isSymbolRef, parseRef, type RefParts, type SymbolRefParts } from './refs';
 export type {
   Package,
   PackageDetail,

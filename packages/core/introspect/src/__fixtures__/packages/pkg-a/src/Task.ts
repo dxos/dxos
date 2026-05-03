@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
@@ -12,11 +14,17 @@ import { LabelAnnotation } from '@dxos/echo/internal';
  * realistic DXOS shapes (Schema.Struct + Type.object + annotations).
  */
 export const Task = Schema.Struct({
-  title: Schema.String.annotations({ description: 'Short summary of the task.' }),
+  title: Schema.String.annotations({
+    description: 'Short summary of the task.',
+  }),
   description: Schema.optional(
-    Schema.String.annotations({ description: 'Longer free-form notes about the task.' }),
+    Schema.String.annotations({
+      description: 'Longer free-form notes about the task.',
+    }),
   ),
-  done: Schema.Boolean.annotations({ description: 'Whether the task has been completed.' }),
+  done: Schema.Boolean.annotations({
+    description: 'Whether the task has been completed.',
+  }),
 }).pipe(
   Type.object({
     typename: 'com.example.type.Task',

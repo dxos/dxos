@@ -2,17 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { join, relative } from 'node:path';
-
 import { glob } from 'glob';
-import {
-  type ExportedDeclarations,
-  type JSDoc,
-  type Node,
-  Project,
-  ScriptTarget,
-  SyntaxKind,
-} from 'ts-morph';
+import { join, relative } from 'node:path';
+import { type ExportedDeclarations, type JSDoc, type Node, Project, ScriptTarget, SyntaxKind } from 'ts-morph';
 
 import { log } from '@dxos/log';
 
@@ -272,7 +264,10 @@ const summarize = (jsdoc: string | undefined): string | undefined => {
   if (!jsdoc) {
     return undefined;
   }
-  const firstLine = jsdoc.split('\n').map((s) => s.trim()).find((s) => s.length > 0);
+  const firstLine = jsdoc
+    .split('\n')
+    .map((s) => s.trim())
+    .find((s) => s.length > 0);
   if (!firstLine) {
     return undefined;
   }
