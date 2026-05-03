@@ -4,7 +4,7 @@
 
 import {
   cacheFilePath,
-  computeCacheKey,
+  computePackageMtimes,
   discoverPackages,
   extractSymbols,
   loadCache,
@@ -114,43 +114,44 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
   const ready = (async () => {
     packages = await discoverPackages(monorepoRoot);
 
+    let liveMtimes: Record<string, ReturnType<typeof computePackageMtimes>[string]> = {};
+    let packageNamesByPath: Record<string, string> = {};
     if (cache) {
-      // Try the on-disk cache first. If the cache key (per-package src/ mtime
-      // hash) matches the current state, we skip the entire extraction.
-      const key = computeCacheKey(
+      packageNamesByPath = Object.fromEntries(packages.map((p) => [p.path, p.name]));
+      liveMtimes = computePackageMtimes(
         monorepoRoot,
         packages.map((p) => p.path),
       );
-      const loaded = await loadCache(cachePath, key);
+      const loaded = await loadCache(cachePath, liveMtimes, packageNamesByPath);
       if (loaded) {
         for (const [name, syms] of Object.entries(loaded.symbols)) {
           symbolsByPackage.set(name, syms);
         }
+        const total = packages.length;
+        const reused = loaded.validCount;
+        const stale = loaded.staleCount;
+        const fresh = total - reused;
         // stderr only — MCP servers must keep stdout reserved for JSON-RPC.
         console.error(
-          `[introspect] loaded symbol cache: ${Object.keys(loaded.symbols).length} packages from ${cachePath}`,
+          `[introspect] loaded symbol cache: ${reused}/${total} packages reused` +
+            (stale > 0 ? ` (${stale} stale)` : '') +
+            (fresh > 0 ? ` — ${fresh} packages need extraction` : ''),
         );
-        initialized = true;
-        return;
       }
     }
 
     if (prewarm) {
-      // Block `ready` on the pre-warm so callers can rely on every method
-      // being fast once `ready` resolves — no cold-start timeouts from MCP
-      // clients. For 250 packages this takes ~80s of CPU on first run; the
-      // disk cache makes subsequent runs nearly instant.
+      // Pre-warm only the packages NOT already loaded from cache. Block
+      // `ready` on this so callers can rely on every method being fast once
+      // `ready` resolves. For 250 packages cold this takes ~80s of CPU; with
+      // a warm cache and one edited package, this takes <1s.
       await preWarmSymbols();
       if (cache) {
-        const key = computeCacheKey(
-          monorepoRoot,
-          packages.map((p) => p.path),
-        );
         const snapshot: Record<string, PackageSymbols> = {};
         for (const [name, syms] of symbolsByPackage) {
           snapshot[name] = syms;
         }
-        await saveCache(cachePath, key, snapshot);
+        await saveCache(cachePath, liveMtimes, packageNamesByPath, snapshot);
         console.error(`[introspect] saved symbol cache: ${Object.keys(snapshot).length} packages to ${cachePath}`);
       }
     }

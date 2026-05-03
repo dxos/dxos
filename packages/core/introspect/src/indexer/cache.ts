@@ -4,17 +4,17 @@
 
 // On-disk symbol cache.
 //
-// Cache key: a content hash over the list of (package path, src/ tree mtime).
-// On load: if the recomputed key matches the saved key, the cache is reusable.
-// On any mismatch (file added/removed/edited), the cache is invalidated and
-// the indexer falls back to a fresh ts-morph extraction.
+// Per-package keying: the cache stores a (path, srcMtime) tuple alongside the
+// extracted symbols for every package. On load, we keep entries whose
+// (path, srcMtime) pair still matches the live filesystem and discard the
+// rest. Editing one package only invalidates that package's entry; everything
+// else is reused.
 //
 // We deliberately don't track every individual file — just per-package src/
 // directory mtimes — because that's what changes when a developer edits code,
 // and walking deep mtimes for every symbol would be more expensive than the
 // extraction we're trying to cache.
 
-import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
@@ -35,39 +35,41 @@ export type CachePackageEntry = {
   srcMtime: number;
 };
 
+export type CacheEntry = {
+  /** Most-recent mtime (ms) under the package's src/. */
+  srcMtime: number;
+  /** Package path relative to monorepo root, kept for debug visibility. */
+  path: string;
+  /** Extracted symbols. */
+  symbols: PackageSymbols;
+};
+
 export type CacheFile = {
   /** Schema version — bump when CacheFile / extracted symbol shape changes. */
   version: number;
-  /** Hash of the package list — recomputed on load to detect changes. */
-  hash: string;
-  /** Per-package entries used to compute the hash; kept for debug visibility. */
-  packages: CachePackageEntry[];
-  /** Extracted symbols per package, keyed by package name. */
-  symbols: Record<string, PackageSymbols>;
+  /** Per-package entries keyed by package name. */
+  entries: Record<string, CacheEntry>;
 };
 
-const CACHE_VERSION = 1;
+const CACHE_VERSION = 2;
 // node_modules/.cache/<tool> is the standard convention for build-tool caches
 // (babel, swc, eslint, vite all live here). Pros: auto-gitignored, easy to
 // nuke via `pnpm clean`/`rm -rf node_modules`, lives next to the deps the
 // cache indexes. Cons: a fresh `pnpm install` wipes it (rebuild ~80s once).
 const DEFAULT_CACHE_PATH = 'node_modules/.cache/dxos-introspect/cache.json';
 
-export type CacheKey = {
-  hash: string;
-  packages: CachePackageEntry[];
-};
-
 export const cacheFilePath = (monorepoRoot: string): string => join(monorepoRoot, DEFAULT_CACHE_PATH);
 
 /**
- * Build a cache key from the current state of the package list. Walks each
- * package's `src/` directory once to find the most-recent mtime; combines
- * them into a stable hash.
+ * Compute the current src/ mtime for every package. Used both to build the
+ * cache and to decide which cached entries are still valid.
  */
-export const computeCacheKey = (monorepoRoot: string, packagePaths: string[]): CacheKey => {
-  const entries: CachePackageEntry[] = [];
-  for (const path of [...packagePaths].sort()) {
+export const computePackageMtimes = (
+  monorepoRoot: string,
+  packagePaths: string[],
+): Record<string, CachePackageEntry> => {
+  const entries: Record<string, CachePackageEntry> = {};
+  for (const path of packagePaths) {
     const srcDir = join(monorepoRoot, path, 'src');
     let srcMtime = 0;
     if (existsSync(srcDir)) {
@@ -77,13 +79,9 @@ export const computeCacheKey = (monorepoRoot: string, packagePaths: string[]): C
         warn(`mtime walk failed for ${path}`, err);
       }
     }
-    entries.push({ path, srcMtime });
+    entries[path] = { path, srcMtime };
   }
-  const hash = createHash('sha256');
-  for (const entry of entries) {
-    hash.update(`${entry.path}\0${entry.srcMtime}\n`);
-  }
-  return { hash: hash.digest('hex'), packages: entries };
+  return entries;
 };
 
 const walkMaxMtime = (dir: string): number => {
@@ -107,30 +105,58 @@ const walkMaxMtime = (dir: string): number => {
   return max;
 };
 
+export type LoadedCache = {
+  /** Symbols by package name, populated only for entries whose mtime still matches. */
+  symbols: Record<string, PackageSymbols>;
+  /** Number of entries that were valid (subset of file's total). */
+  validCount: number;
+  /** Number of entries that were stale (mtime mismatch) and discarded. */
+  staleCount: number;
+};
+
 /**
- * Load the cache if it exists and the key matches. Returns null on miss
- * (no file, parse error, key mismatch, or version mismatch).
+ * Load the cache file and return only those entries whose (path, srcMtime)
+ * still matches the live filesystem. Stale entries are silently dropped — the
+ * caller will re-extract them. Returns null if the file doesn't exist or is
+ * unparseable.
  */
-export const loadCache = async (cachePath: string, expectedKey: CacheKey): Promise<CacheFile | null> => {
+export const loadCache = async (
+  cachePath: string,
+  liveMtimes: Record<string, CachePackageEntry>,
+  packageNamesByPath: Record<string, string>,
+): Promise<LoadedCache | null> => {
   if (!existsSync(cachePath)) {
     return null;
   }
+  let parsed: CacheFile;
   try {
     const content = await readFile(cachePath, 'utf8');
-    const parsed = JSON.parse(content) as CacheFile;
-    if (parsed.version !== CACHE_VERSION) {
-      warn(`version mismatch (saved=${parsed.version} expected=${CACHE_VERSION}) — re-indexing`);
-      return null;
-    }
-    if (parsed.hash !== expectedKey.hash) {
-      warn('hash mismatch — re-indexing');
-      return null;
-    }
-    return parsed;
+    parsed = JSON.parse(content) as CacheFile;
   } catch (err) {
     warn('load failed — re-indexing', err);
     return null;
   }
+  if (parsed.version !== CACHE_VERSION) {
+    warn(`version mismatch (saved=${parsed.version} expected=${CACHE_VERSION}) — re-indexing`);
+    return null;
+  }
+  const symbols: Record<string, PackageSymbols> = {};
+  let valid = 0;
+  let stale = 0;
+  for (const [path, live] of Object.entries(liveMtimes)) {
+    const name = packageNamesByPath[path];
+    if (!name) {
+      continue;
+    }
+    const cached = parsed.entries?.[name];
+    if (cached && cached.srcMtime === live.srcMtime && cached.path === path) {
+      symbols[name] = cached.symbols;
+      valid++;
+    } else if (cached) {
+      stale++;
+    }
+  }
+  return { symbols, validCount: valid, staleCount: stale };
 };
 
 /**
@@ -144,18 +170,28 @@ export const loadCache = async (cachePath: string, expectedKey: CacheKey): Promi
  */
 export const saveCache = async (
   cachePath: string,
-  key: CacheKey,
-  symbols: Record<string, PackageSymbols>,
+  liveMtimes: Record<string, CachePackageEntry>,
+  packageNamesByPath: Record<string, string>,
+  symbolsByName: Record<string, PackageSymbols>,
 ): Promise<void> => {
   const tmpPath = `${cachePath}.${pid}.tmp`;
   try {
+    const entries: Record<string, CacheEntry> = {};
+    for (const [name, syms] of Object.entries(symbolsByName)) {
+      // Reverse-look up the path for this package so the entry can be
+      // independently validated on next load.
+      const path = Object.keys(packageNamesByPath).find((p) => packageNamesByPath[p] === name);
+      if (!path) {
+        continue;
+      }
+      const live = liveMtimes[path];
+      if (!live) {
+        continue;
+      }
+      entries[name] = { path, srcMtime: live.srcMtime, symbols: syms };
+    }
     await mkdir(dirname(cachePath), { recursive: true });
-    const file: CacheFile = {
-      version: CACHE_VERSION,
-      hash: key.hash,
-      packages: key.packages,
-      symbols,
-    };
+    const file: CacheFile = { version: CACHE_VERSION, entries };
     await writeFile(tmpPath, JSON.stringify(file), 'utf8');
     // Atomic on POSIX — readers see either the old file or the new one,
     // never a partially-written stream.
