@@ -80,19 +80,36 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     const startedAt = Date.now();
     let lastReported = startedAt;
     let i = 0;
+    // Update in place when stderr is a TTY (interactive terminal); print
+    // discrete lines otherwise (log files, CI). Both write to stderr so
+    // stdout stays clean for the MCP JSON-RPC stream.
+    const tty = Boolean(process.stderr.isTTY);
+    const writeProgress = (msg: string, final = false): void => {
+      if (tty) {
+        // \r returns to column 0, \x1b[K clears to end of line.
+        process.stderr.write(`\r\x1b[K${msg}${final ? '\n' : ''}`);
+      } else {
+        process.stderr.write(`${msg}\n`);
+      }
+    };
+
     for (const pkg of packages) {
       if (disposed) {
         return;
       }
       ensureSymbols(pkg);
       i++;
-      // Progress to stderr roughly every 5 seconds so users running
-      // `moon run introspect:index` can tell it's making progress.
       const now = Date.now();
-      if (now - lastReported > 5_000 || i === total) {
+      // Throttle to roughly every 250ms in TTY mode (smooth progress) and
+      // every 5s in non-TTY mode (log lines stay readable).
+      const throttleMs = tty ? 250 : 5_000;
+      if (now - lastReported > throttleMs || i === total) {
         const elapsed = ((now - startedAt) / 1000).toFixed(0);
         const eta = i > 0 ? Math.round((((now - startedAt) / i) * (total - i)) / 1000) : 0;
-        console.error(`[introspect] indexing ${i}/${total} packages (${elapsed}s elapsed, ~${eta}s remaining)`);
+        writeProgress(
+          `[introspect] indexing ${i}/${total} packages (${elapsed}s elapsed, ~${eta}s remaining)`,
+          i === total,
+        );
         lastReported = now;
       }
       // Yield each iteration so we don't block the event loop for the full
