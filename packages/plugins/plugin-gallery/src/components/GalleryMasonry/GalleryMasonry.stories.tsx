@@ -58,9 +58,7 @@ const DefaultStory = ({ initialImages, enableDelete }: DefaultStoryProps) => {
           <Toolbar.Button>Show</Toolbar.Button>
         </Toolbar.Root>
       </GalleryMasonry.Toolbar>
-      <GalleryMasonry.Content>
-        <GalleryMasonry.Viewport />
-      </GalleryMasonry.Content>
+      <GalleryMasonry.Viewport />
     </GalleryMasonry.Root>
   );
 };

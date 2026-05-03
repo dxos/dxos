@@ -118,9 +118,7 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
           <Menu.Toolbar />
         </Menu.Root>
       </GalleryMasonry.Toolbar>
-      <GalleryMasonry.Content>
-        <GalleryMasonry.Viewport />
-      </GalleryMasonry.Content>
+      <GalleryMasonry.Viewport />
       {fileInput}
     </GalleryMasonry.Root>
   );

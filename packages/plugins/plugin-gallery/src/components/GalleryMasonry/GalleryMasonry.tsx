@@ -64,46 +64,43 @@ Root.displayName = `${GALLERY_MASONRY_NAME}.Root`;
 //
 
 const Toolbar = ({ children }: PropsWithChildren) => <Panel.Toolbar>{children}</Panel.Toolbar>;
+
 Toolbar.displayName = `${GALLERY_MASONRY_NAME}.Toolbar`;
 
 //
-// Content
-//
-
-const Content = ({ children }: PropsWithChildren) => <Panel.Content>{children}</Panel.Content>;
-Content.displayName = `${GALLERY_MASONRY_NAME}.Content`;
-
-//
 // Viewport
+//
+// Wraps Panel.Content + the Masonry's own ScrollArea (Masonry.Content)
+// + masonry grid (Masonry.Viewport). Renders the empty-state in place
+// when there are no images.
 //
 
 const Viewport = () => {
   const { t } = useTranslation(meta.id);
   const { images, onDelete, Tile, emptyMessage } = useGalleryMasonryContext(`${GALLERY_MASONRY_NAME}.Viewport`);
-
   const items = useMemo(() => images.map((image, index) => ({ image, index })), [images]);
 
-  if (items.length === 0) {
-    return (
-      <div role='status' className='flex items-center justify-center h-full text-subdued'>
-        {emptyMessage ?? t('empty.message')}
-      </div>
-    );
-  }
-
   return (
-    <Masonry.Root
-      Tile={({ data }: { data: { image: Image; index: number } }) => (
-        <Tile image={data.image} index={data.index} onDelete={onDelete && (() => onDelete(data.index))} />
+    <Panel.Content>
+      {items.length === 0 ? (
+        <div role='status' className='flex items-center justify-center h-full text-subdued'>
+          {emptyMessage ?? t('empty.message')}
+        </div>
+      ) : (
+        <Masonry.Root
+          Tile={({ data }: { data: { image: Image; index: number } }) => (
+            <Tile image={data.image} index={data.index} onDelete={onDelete && (() => onDelete(data.index))} />
+          )}
+        >
+          <Masonry.Content padding centered>
+            <Masonry.Viewport
+              items={items}
+              getId={(data: { image: Image; index: number }) => `${data.index}:${data.image.url}`}
+            />
+          </Masonry.Content>
+        </Masonry.Root>
       )}
-    >
-      <Masonry.Content>
-        <Masonry.Viewport
-          items={items}
-          getId={(data: { image: Image; index: number }) => `${data.index}:${data.image.url}`}
-        />
-      </Masonry.Content>
-    </Masonry.Root>
+    </Panel.Content>
   );
 };
 
@@ -116,6 +113,5 @@ Viewport.displayName = `${GALLERY_MASONRY_NAME}.Viewport`;
 export const GalleryMasonry = {
   Root,
   Toolbar,
-  Content,
   Viewport,
 };
