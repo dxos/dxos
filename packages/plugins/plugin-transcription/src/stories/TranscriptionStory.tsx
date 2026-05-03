@@ -58,11 +58,13 @@ export const TranscriptionStory: FC<{
               ref={fileInputRef}
               type='file'
               accept={uploadAccept}
+              disabled={disabled}
               className='hidden'
               onChange={handleFileChange}
             />
             <IconButton
               iconOnly
+              disabled={disabled}
               icon='ph--upload--regular'
               label='Upload audio'
               onClick={() => fileInputRef.current?.click()}

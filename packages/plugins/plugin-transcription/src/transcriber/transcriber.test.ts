@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { type AudioChunk } from './audio-recorder';
 import { alignWhisperSegments, type WhisperSegment } from './transcriber';
@@ -24,7 +24,7 @@ const segment = (overrides: Partial<WhisperSegment>): WhisperSegment => ({
 });
 
 describe('alignWhisperSegments', () => {
-  test('returns empty when no chunks were transcribed', () => {
+  test('returns empty when no chunks were transcribed', ({ expect }) => {
     const result = alignWhisperSegments(
       [segment({ text: 'x', end: 1, words: [{ word: 'x', start: 0, end: 1 }] })],
       [],
@@ -34,7 +34,7 @@ describe('alignWhisperSegments', () => {
     expect(result.lastUsedTimestamp).toBeUndefined();
   });
 
-  test('absolute-timestamps and deduplicates segments against lastUsedTimestamp', () => {
+  test('absolute-timestamps and deduplicates segments against lastUsedTimestamp', ({ expect }) => {
     const segments: WhisperSegment[] = [
       segment({
         text: 'hello world',
@@ -60,7 +60,7 @@ describe('alignWhisperSegments', () => {
     expect(second.lastUsedTimestamp).toBeUndefined();
   });
 
-  test('keeps later words when earlier words fall before lastUsedTimestamp', () => {
+  test('keeps later words when earlier words fall before lastUsedTimestamp', ({ expect }) => {
     const segments: WhisperSegment[] = [
       segment({
         text: 'old new',
@@ -81,7 +81,7 @@ describe('alignWhisperSegments', () => {
     expect(result.lastUsedTimestamp).toBe(T0 + 2_000);
   });
 
-  test('drops segments that end before lastUsedTimestamp', () => {
+  test('drops segments that end before lastUsedTimestamp', ({ expect }) => {
     const segments: WhisperSegment[] = [
       segment({
         text: 'stale',

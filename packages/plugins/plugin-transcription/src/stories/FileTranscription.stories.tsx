@@ -53,6 +53,7 @@ const AudioFile = ({
   const actor: Actor.Actor = useMemo(() => ({ name: 'You' }), []);
 
   // Optional uploaded file overrides the default URL.
+  // The useEffect below revokes the previous URL whenever it changes (and on unmount).
   const [uploadedUrl, setUploadedUrl] = useState<string>();
   useEffect(() => {
     return () => {
@@ -64,12 +65,7 @@ const AudioFile = ({
 
   const handleUpload = useCallback((file: File) => {
     setRunning(false);
-    setUploadedUrl((prev) => {
-      if (prev) {
-        URL.revokeObjectURL(prev);
-      }
-      return URL.createObjectURL(file);
-    });
+    setUploadedUrl(URL.createObjectURL(file));
   }, []);
 
   const sourceUrl = uploadedUrl ?? audioUrl;

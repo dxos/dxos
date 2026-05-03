@@ -210,39 +210,30 @@ export class Transcriber extends Resource {
   @trace.span({ showInBrowserTimeline: true })
   private async _fetchTranscription(audio: string): Promise<WhisperSegment[]> {
     if (audio.length === 0) {
-      this._audioChunks = [];
       throw new Error('No audio to send for transcribing');
     }
 
     let segments: WhisperSegment[];
-    try {
-      if (this._transcribeFn) {
-        segments = await this._transcribeFn(audio);
-      } else {
-        const endpoint = this._config.endpoint ?? TRANSCRIPTION_URL;
-        const response = await fetch(`${endpoint}/transcribe`, {
-          method: 'POST',
-          body: JSON.stringify({ audio }),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+    if (this._transcribeFn) {
+      segments = await this._transcribeFn(audio);
+    } else {
+      const endpoint = this._config.endpoint ?? TRANSCRIPTION_URL;
+      const response = await fetch(`${endpoint}/transcribe`, {
+        method: 'POST',
+        body: JSON.stringify({ audio }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-        if (!response.ok) {
-          throw new Error(`Transcription failed: ${response.statusText}`);
-        }
-
-        ({ segments } = (await response.json()) as { segments: WhisperSegment[] });
+      if (!response.ok) {
+        throw new Error(`Transcription failed: ${response.statusText}`);
       }
-    } catch (err) {
-      this._audioChunks = [];
-      throw err;
+
+      ({ segments } = (await response.json()) as { segments: WhisperSegment[] });
     }
 
-    log.info('transcription response', {
-      segments: segments.length,
-      string: segments.map((segment) => segment.text).join(' '),
-    });
+    log.info('transcription response', { segments: segments.length });
 
     return segments;
   }
