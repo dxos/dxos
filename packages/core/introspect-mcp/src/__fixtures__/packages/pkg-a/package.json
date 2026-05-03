@@ -2,11 +2,15 @@
   "name": "@fixture/pkg-a",
   "version": "1.0.0",
   "private": true,
-  "description": "Fixture package A",
+  "description": "Fixture ECHO type package (Task)",
   "type": "module",
   "exports": {
     ".": {
       "source": "./src/index.ts"
     }
+  },
+  "dependencies": {
+    "@dxos/echo": "workspace:*",
+    "effect": "^3.0.0"
   }
 }

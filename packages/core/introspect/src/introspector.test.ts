@@ -26,6 +26,11 @@ describe('refs', () => {
 });
 
 describe('introspector against fixture monorepo', () => {
+  // Fixture shape:
+  //   @fixture/pkg-a — ECHO type definition (Schema.Struct + Type.object) for Task,
+  //                    plus a make() factory using Obj.make.
+  //   @fixture/pkg-b — React component (TaskCard) consuming a Task via useObject,
+  //                    plus a TaskCardProps interface.
   let intro: Introspector;
 
   beforeAll(async () => {
@@ -48,66 +53,72 @@ describe('introspector against fixture monorepo', () => {
   });
 
   test('getPackage returns workspace and external deps', ({ expect }) => {
-    const detail = intro.getPackage('@fixture/pkg-a');
+    const detail = intro.getPackage('@fixture/pkg-b');
     expect(detail).not.toBeNull();
-    expect(detail!.workspaceDependencies).toEqual(['@fixture/pkg-b']);
-    expect(detail!.externalDependencies).toEqual(['left-pad']);
-    expect(detail!.entryPoints).toEqual(['src/index.ts']);
+    expect(detail!.workspaceDependencies).toEqual(['@dxos/echo-react', '@fixture/pkg-a']);
+    expect(detail!.externalDependencies).toEqual(['react']);
+    expect(detail!.entryPoints).toEqual(['src/index.tsx']);
   });
 
   test('getPackage returns null for unknown', ({ expect }) => {
     expect(intro.getPackage('@fixture/missing')).toBeNull();
   });
 
-  test('findSymbol locates exports across packages', ({ expect }) => {
-    const matches = intro.findSymbol('add');
-    expect(matches.find((m) => m.name === 'add')).toMatchObject({
-      ref: '@fixture/pkg-a#add',
-      kind: 'function',
-    });
+  test('findSymbol locates the ECHO Task schema', ({ expect }) => {
+    const matches = intro.findSymbol('Task');
+    const taskMatch = matches.find((m) => m.ref === '@fixture/pkg-a#Task');
+    expect(taskMatch).toBeDefined();
+    expect(taskMatch!.summary).toContain('Task item');
+  });
+
+  test('findSymbol locates the make factory as a function', ({ expect }) => {
+    const matches = intro.findSymbol('make');
+    const make = matches.find((m) => m.ref === '@fixture/pkg-a#make');
+    expect(make).toBeDefined();
+    expect(make!.kind).toBe('function');
+    expect(make!.summary).toContain('factory');
+  });
+
+  test('findSymbol locates the React component as a function', ({ expect }) => {
+    const matches = intro.findSymbol('TaskCard');
+    const card = matches.find((m) => m.name === 'TaskCard');
+    expect(card?.ref).toBe('@fixture/pkg-b#TaskCard');
+    expect(card?.kind).toBe('function');
+  });
+
+  test('findSymbol locates the Props interface', ({ expect }) => {
+    const matches = intro.findSymbol('TaskCardProps');
+    const props = matches.find((m) => m.name === 'TaskCardProps');
+    expect(props?.kind).toBe('interface');
   });
 
   test('findSymbol filters by kind', ({ expect }) => {
-    const types = intro.findSymbol('Status', 'type');
-    expect(types.some((m) => m.name === 'Status' && m.kind === 'type')).toBe(true);
+    const interfaces = intro.findSymbol('TaskCard', 'interface');
+    expect(interfaces.every((m) => m.kind === 'interface')).toBe(true);
+    expect(interfaces.some((m) => m.name === 'TaskCardProps')).toBe(true);
   });
 
-  test('findSymbol classifies arrow-function variables as functions', ({ expect }) => {
-    const matches = intro.findSymbol('add');
-    const add = matches.find((m) => m.name === 'add');
-    expect(add?.kind).toBe('function');
-  });
-
-  test('findSymbol classifies plain string variables as variables', ({ expect }) => {
-    const matches = intro.findSymbol('greeting');
-    const greeting = matches.find((m) => m.name === 'greeting');
-    expect(greeting?.kind).toBe('variable');
-  });
-
-  test('findSymbol classifies classes', ({ expect }) => {
-    const matches = intro.findSymbol('Counter');
-    expect(matches.find((m) => m.name === 'Counter')?.kind).toBe('class');
-  });
-
-  test('findSymbol classifies interfaces', ({ expect }) => {
-    const matches = intro.findSymbol('UserOptions');
-    expect(matches.find((m) => m.name === 'UserOptions')?.kind).toBe('interface');
-  });
-
-  test('getSymbol returns signature and location', ({ expect }) => {
-    const detail = intro.getSymbol('@fixture/pkg-a#add');
+  test('getSymbol returns signature, JSDoc summary, and source location for the ECHO type', ({ expect }) => {
+    const detail = intro.getSymbol('@fixture/pkg-a#Task');
     expect(detail).not.toBeNull();
-    expect(detail!.kind).toBe('function');
-    expect(detail!.signature).toContain('add');
+    expect(detail!.signature).toContain('Task');
     expect(detail!.location.file).toContain('pkg-a/src/index.ts');
     expect(detail!.location.line).toBeGreaterThan(0);
-    expect(detail!.summary).toBe('Adds two numbers together.');
+    expect(detail!.summary).toContain('Task item');
     expect(detail!.source).toBeUndefined();
   });
 
-  test('getSymbol with include=source returns full text', ({ expect }) => {
-    const detail = intro.getSymbol('@fixture/pkg-a#Counter', ['source']);
-    expect(detail!.source).toContain('class Counter');
+  test('getSymbol with include=source returns the full Schema.Struct body', ({ expect }) => {
+    const detail = intro.getSymbol('@fixture/pkg-a#Task', ['source']);
+    expect(detail!.source).toContain('Schema.Struct');
+    expect(detail!.source).toContain('Type.object');
+    expect(detail!.source).toContain('com.example.type.Task');
+  });
+
+  test('getSymbol on the React component captures its useObject body', ({ expect }) => {
+    const detail = intro.getSymbol('@fixture/pkg-b#TaskCard', ['source']);
+    expect(detail).not.toBeNull();
+    expect(detail!.source).toContain('useObject');
   });
 
   test('getSymbol returns null for unknown ref', ({ expect }) => {

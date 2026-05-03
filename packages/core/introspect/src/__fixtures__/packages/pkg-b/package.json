@@ -2,7 +2,16 @@
   "name": "@fixture/pkg-b",
   "version": "0.1.0",
   "private": false,
-  "description": "Fixture package B",
+  "description": "Fixture React component package consuming @fixture/pkg-a",
   "type": "module",
-  "main": "src/index.ts"
+  "exports": {
+    ".": {
+      "source": "./src/index.tsx"
+    }
+  },
+  "dependencies": {
+    "@dxos/echo-react": "workspace:*",
+    "@fixture/pkg-a": "workspace:*",
+    "react": "^18.0.0"
+  }
 }

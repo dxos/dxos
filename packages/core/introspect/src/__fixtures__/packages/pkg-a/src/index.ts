@@ -2,24 +2,29 @@
 // Copyright 2026 DXOS.org
 //
 
-/**
- * Adds two numbers together.
- */
-export const add = (a: number, b: number): number => a + b;
+import * as Schema from 'effect/Schema';
+
+import { Obj, Type } from '@dxos/echo';
 
 /**
- * A simple counter class.
+ * Task item — fixture ECHO type used to verify symbol extraction against
+ * realistic DXOS shapes (Schema.Struct + Type.object).
  */
-export class Counter {
-  #value = 0;
-  increment(): number {
-    return ++this.#value;
-  }
-}
+export const Task = Schema.Struct({
+  title: Schema.String,
+  description: Schema.optional(Schema.String),
+  done: Schema.Boolean,
+}).pipe(
+  Type.object({
+    typename: 'com.example.type.Task',
+    version: '0.1.0',
+  }),
+);
 
-export interface UserOptions {
-  name: string;
-  age?: number;
-}
+export type Task = Schema.Schema.Type<typeof Task>;
 
-export type Status = 'idle' | 'loading' | 'ready';
+/**
+ * Task factory — mirrors the make/Obj.make pattern used by real plugins.
+ */
+export const make = (props: { title: string; description?: string; done?: boolean }) =>
+  Obj.make(Task, { done: false, ...props });

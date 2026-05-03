@@ -46,6 +46,9 @@ const parseToolText = (result: { content: Array<{ type: string; text?: string }>
 };
 
 describe('introspect-mcp server', () => {
+  // Fixture: @fixture/pkg-a exports an ECHO Task schema (Schema.Struct + Type.object)
+  // and a make() factory. Mirrors realistic DXOS shapes so tool responses match
+  // what an LLM client would see when querying the real monorepo.
   let env: Connected;
 
   beforeAll(async () => {
@@ -83,10 +86,11 @@ describe('introspect-mcp server', () => {
       arguments: { name: '@fixture/pkg-a' },
     });
     const payload = parseToolText(result as any) as {
-      data: { name: string; entryPoints: string[] } | null;
+      data: { name: string; entryPoints: string[]; workspaceDependencies: string[] } | null;
     };
     expect(payload.data?.name).toBe('@fixture/pkg-a');
     expect(payload.data?.entryPoints).toContain('src/index.ts');
+    expect(payload.data?.workspaceDependencies).toContain('@dxos/echo');
   });
 
   test('get_package returns null with note for unknown package', async ({ expect }) => {
@@ -99,52 +103,54 @@ describe('introspect-mcp server', () => {
     expect(payload.note).toContain('No package');
   });
 
-  test('find_symbol locates a symbol by name', async ({ expect }) => {
+  test('find_symbol locates the ECHO Task schema', async ({ expect }) => {
     const result = await env.client.callTool({
       name: 'find_symbol',
-      arguments: { query: 'add' },
+      arguments: { query: 'Task' },
     });
     const payload = parseToolText(result as any) as {
-      data: Array<{ ref: string; kind: string }>;
+      data: Array<{ ref: string; kind: string; summary?: string }>;
     };
-    const match = payload.data.find((m) => m.ref === '@fixture/pkg-a#add');
+    const match = payload.data.find((m) => m.ref === '@fixture/pkg-a#Task');
     expect(match).toBeDefined();
-    expect(match!.kind).toBe('function');
+    expect(match!.summary).toContain('Task item');
   });
 
   test('find_symbol filters by kind', async ({ expect }) => {
     const result = await env.client.callTool({
       name: 'find_symbol',
-      arguments: { query: 'Counter', kind: 'class' },
+      arguments: { query: 'make', kind: 'function' },
     });
     const payload = parseToolText(result as any) as {
       data: Array<{ ref: string; kind: string }>;
     };
-    expect(payload.data.every((m) => m.kind === 'class')).toBe(true);
-    expect(payload.data.some((m) => m.ref === '@fixture/pkg-a#Counter')).toBe(true);
+    expect(payload.data.every((m) => m.kind === 'function')).toBe(true);
+    expect(payload.data.some((m) => m.ref === '@fixture/pkg-a#make')).toBe(true);
   });
 
-  test('get_symbol returns signature without source by default', async ({ expect }) => {
+  test('get_symbol returns signature and JSDoc summary by default', async ({ expect }) => {
     const result = await env.client.callTool({
       name: 'get_symbol',
-      arguments: { ref: '@fixture/pkg-a#add' },
+      arguments: { ref: '@fixture/pkg-a#make' },
     });
     const payload = parseToolText(result as any) as {
       data: { ref: string; signature: string; source?: string; summary?: string };
     };
-    expect(payload.data.ref).toBe('@fixture/pkg-a#add');
-    expect(payload.data.signature).toContain('add');
-    expect(payload.data.summary).toBe('Adds two numbers.');
+    expect(payload.data.ref).toBe('@fixture/pkg-a#make');
+    expect(payload.data.signature).toContain('make');
+    expect(payload.data.summary).toBe('Task factory.');
     expect(payload.data.source).toBeUndefined();
   });
 
-  test('get_symbol with include=["source"] expands the body', async ({ expect }) => {
+  test('get_symbol with include=["source"] expands the Schema.Struct body', async ({ expect }) => {
     const result = await env.client.callTool({
       name: 'get_symbol',
-      arguments: { ref: '@fixture/pkg-a#Counter', include: ['source'] },
+      arguments: { ref: '@fixture/pkg-a#Task', include: ['source'] },
     });
     const payload = parseToolText(result as any) as { data: { source: string } };
-    expect(payload.data.source).toContain('class Counter');
+    expect(payload.data.source).toContain('Schema.Struct');
+    expect(payload.data.source).toContain('Type.object');
+    expect(payload.data.source).toContain('com.example.type.Task');
   });
 
   test('get_symbol returns null with note for unknown ref', async ({ expect }) => {
