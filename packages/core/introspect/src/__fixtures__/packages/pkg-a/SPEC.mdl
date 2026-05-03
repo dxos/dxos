@@ -1,0 +1,70 @@
+---
+id: com.example.fixture.pkg-a
+name: PkgA
+version: 1.0.0
+---
+
+Fixture package: declares the `Task` ECHO type and a factory.
+Used by `@dxos/introspect`'s test suite to verify symbol extraction
+against realistic DXOS shapes (Schema.Struct + Type.object + annotations).
+
+## Extensions
+
+| Term       | URI                              |
+| ---------- | -------------------------------- |
+| `echo-type`| `org.dxos.mdl.echo-type@1.0`     |
+| `op`       | `org.dxos.mdl.op@1.0`            |
+
+## Types
+
+```mdl
+echo-type Task
+  desc: A simple task item with title, optional description, and a done flag.
+  echo-schema:
+    typename: com.example.type.Task
+    version:  0.1.0
+  fields:
+    title:        string             # description: Short summary of the task.
+    description?: string             # description: Longer free-form notes about the task.
+    done:         boolean             # description: Whether the task has been completed.
+  label: title                        # LabelAnnotation — display label field
+```
+
+## Operations
+
+```mdl
+op make
+  desc: Construct a new Task with `done` defaulted to false.
+  input:
+    title:        string
+    description?: string
+    done?:        boolean
+  output: Task
+  note: wraps Obj.make(Task, ...)
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext echo-type
+  uri: org.dxos.mdl.echo-type@1.0
+  extends: type
+  desc: An ECHO object type — a Schema.Struct with Type.object metadata and annotations.
+  adds-fields:
+    echo-schema: { typename: URI, version: SemVer }
+    label?:      Identifier            # field used for display label
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: A named operation with typed inputs, outputs, and declared errors.
+  fields:
+    desc?:   Prose
+    input?:  FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    note?:   Prose
+```

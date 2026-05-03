@@ -1,8 +1,10 @@
 # @dxos/introspect-mcp
 
-MCP server that exposes [@dxos/introspect](../introspect) over stdio. Lets LLM tools (Claude Code, etc.) query the DXOS monorepo's package and symbol graph.
+MCP server that exposes [@dxos/introspect](../introspect) over stdio. 
+Lets LLM tools (Claude Code, etc.) query the DXOS monorepo's package and symbol graph.
 
-This package is **phase 1**: four tools wired to package and symbol queries. More tools will land as the core indexer grows (plugins, capabilities, schemas, idioms).
+This package is **phase 1**: four tools wired to package and symbol queries. 
+More tools will land as the core indexer grows (plugins, capabilities, schemas, idioms).
 
 ## Tools
 
@@ -23,9 +25,11 @@ pnpm -F @dxos/introspect-mcp start
 dx-introspect-mcp [--root <path>] [--log-path <path>]
 ```
 
-The server speaks JSON-RPC over stdio (default MCP transport). Configure your Claude Code (or other MCP client) to launch this command.
+The server speaks JSON-RPC over stdio (default MCP transport). 
+Configure your Claude Code (or other MCP client) to launch this command.
 
-`--root` defaults to the nearest ancestor of `cwd` that contains `pnpm-workspace.yaml`. `--log-path` enables JSONL logging of every tool call to drive future tool design.
+`--root` defaults to the nearest ancestor of `cwd` that contains `pnpm-workspace.yaml`. 
+`--log-path` enables JSONL logging of every tool call to drive future tool design.
 
 ## Response shaping
 
@@ -43,7 +47,8 @@ Three ways, in order of how close they are to "real":
 moon run introspect-mcp:test
 ```
 
-Boots the server with an in-memory transport, connects an MCP client, and round-trips every tool. See [`src/server.test.ts`](src/server.test.ts) — 10 tests, ~1s.
+Boots the server with an in-memory transport, connects an MCP client, and round-trips every tool. 
+See [`src/server.test.ts`](src/server.test.ts) — 10 tests, ~1s.
 
 ### 2. Interactive probe with MCP Inspector
 
@@ -51,10 +56,16 @@ The MCP SDK ships an interactive UI for talking to a stdio server. From the mono
 
 ```bash
 npx @modelcontextprotocol/inspector \
-  pnpm -F @dxos/introspect-mcp start -- --root "$PWD"
+  npx tsx packages/core/introspect-mcp/src/cli.ts --root "$PWD"
 ```
 
-Open the URL it prints, click into **Tools**, and you can call `list_packages` / `get_package` / `find_symbol` / `get_symbol` against the live monorepo with form inputs and see raw responses.
+> ⚠️ **Don't launch via `pnpm start`.** pnpm's script-runner writes a header line (`> @dxos/introspect-mcp@x.y.z start`) to stdout, which corrupts the JSON-RPC stream and produces "Connection Error – Check if your MCP server is running and proxy token is correct." in the Inspector. 
+  Invoke `tsx` (or the built binary) directly so the server owns stdout.
+
+> 🔑 **Open the URL the Inspector prints**, not `http://localhost:6274` directly. 
+  The printed URL contains a `?MCP_PROXY_AUTH_TOKEN=...` query string — without it the proxy rejects the WebSocket connection with the same "proxy token" error.
+
+Once the URL is open, click **Tools**, and you can call `list_packages` / `get_package` / `find_symbol` / `get_symbol` against the live monorepo with form inputs and see raw responses.
 
 ### 3. Wire it into Claude Code
 
@@ -64,27 +75,34 @@ Add to `.mcp.json` (project-scoped) or `~/.claude.json` (user-scoped):
 {
   "mcpServers": {
     "dxos-introspect": {
-      "command": "pnpm",
+      "command": "npx",
       "args": [
-        "-F", "@dxos/introspect-mcp", "start",
-        "--", "--root", "/absolute/path/to/dxos"
+        "tsx",
+        "/absolute/path/to/dxos/packages/core/introspect-mcp/src/cli.ts",
+        "--root", "/absolute/path/to/dxos"
       ]
     }
   }
 }
 ```
 
-In a fresh Claude Code session, `/mcp` shows the server connected with four tools (`mcp__dxos-introspect__list_packages` etc.). Ask something like *"which plugin owns the Markdown editor?"* and watch it call `find_symbol` followed by `get_symbol`.
+(Don't use `pnpm start` here either — same stdout-pollution issue as the Inspector.)
+
+In a fresh Claude Code session, `/mcp` shows the server connected with four tools (`mcp__dxos-introspect__list_packages` etc.). 
+Ask something like *"which plugin owns the Markdown editor?"* and watch it call `find_symbol` followed by `get_symbol`.
 
 ### Quick sanity check
 
 Verify the binary speaks JSON-RPC at all:
 
 ```bash
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
-  | pnpm -F @dxos/introspect-mcp start --root "$PWD"
+printf '%s\n' \
+  '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"probe","version":"0"}}}' \
+  '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+  | npx tsx packages/core/introspect-mcp/src/cli.ts --root "$PWD"
 ```
 
-Should print a response listing the four tools.
+Should print two JSON-RPC responses — the second listing the four tools.
 
-For development, option 2 is fastest — the Inspector gives you a clickable UI without restarting Claude Code. Once it works there it works everywhere.
+For development, option 2 is fastest — the Inspector gives you a clickable UI without restarting Claude Code. 
+Once it works there it works everywhere.
