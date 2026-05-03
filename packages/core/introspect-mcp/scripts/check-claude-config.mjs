@@ -3,9 +3,9 @@
 // Copyright 2026 DXOS.org
 //
 
-// Verify the dxos-introspect entry in the user's Claude settings.json works
-// end-to-end. Spawns the server using the exact command and args Claude Code
-// would use, completes the JSON-RPC initialize handshake, and calls one tool.
+// Verify the dxos-introspect entry in this repo's .mcp.json works end-to-end.
+// Spawns the server using the exact command and args Claude Code would use,
+// completes the JSON-RPC initialize handshake, and calls one tool.
 //
 // Run:
 //   node packages/core/introspect-mcp/scripts/check-claude-config.mjs
@@ -15,13 +15,33 @@
 
 import { spawn } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
-import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-// Claude Code reads MCP servers from ~/.claude.json (project-scoped under
-// `.projects[<path>].mcpServers`), NOT from ~/.claude/settings.json. Look up
-// the entry in the closest ancestor project key — same way Claude Code does.
-const SETTINGS = join(homedir(), '.claude.json');
+// Walk up from this script to find the project root (where .mcp.json lives,
+// next to pnpm-workspace.yaml). Claude Code reads project-scoped MCP servers
+// from a `.mcp.json` file at the workspace root.
+const findRepoRoot = (start) => {
+  let cursor = start;
+  while (true) {
+    if (existsSync(join(cursor, 'pnpm-workspace.yaml'))) {
+      return cursor;
+    }
+    const parent = dirname(cursor);
+    if (parent === cursor) {
+      return null;
+    }
+    cursor = parent;
+  }
+};
+
+const here = dirname(fileURLToPath(import.meta.url));
+const repoRoot = findRepoRoot(here);
+if (!repoRoot) {
+  console.error('✗ could not find repo root (no pnpm-workspace.yaml)');
+  process.exit(1);
+}
+const SETTINGS = join(repoRoot, '.mcp.json');
 // Cold-start the server may need ~80s to build the symbol cache the first
 // time. Subsequent runs reuse the disk cache and complete in seconds.
 const TIMEOUT_MS = 180_000;
@@ -35,9 +55,9 @@ const fail = (msg, detail) => {
   process.exit(1);
 };
 
-// --- Step 1: read the user's Claude settings.json ----------------------
+// --- Step 1: read .mcp.json from repo root -----------------------------
 if (!existsSync(SETTINGS)) {
-  fail(`${SETTINGS} not found`, 'Claude Code has never been run, or the file moved.');
+  fail(`${SETTINGS} not found`, 'Create a .mcp.json at the repo root with an mcpServers entry.');
 }
 let settings;
 try {
@@ -48,30 +68,16 @@ try {
 ok(`read ${SETTINGS}`);
 
 // --- Step 2: confirm the dxos-introspect entry exists -------------------
-// Walk up from cwd to find the closest project key with mcpServers, mirroring
-// Claude Code's resolution order.
-const projects = settings.projects ?? {};
-let entry;
-let projectKey;
-let cursor = process.cwd();
-while (cursor !== '/' && !entry) {
-  const proj = projects[cursor];
-  if (proj?.mcpServers?.['dxos-introspect']) {
-    entry = proj.mcpServers['dxos-introspect'];
-    projectKey = cursor;
-    break;
-  }
-  cursor = cursor.replace(/\/[^/]*$/, '') || '/';
-}
+const entry = settings.mcpServers?.['dxos-introspect'];
 if (!entry) {
-  fail(
-    'No dxos-introspect entry found in .projects[*].mcpServers under cwd',
-    `Searched ancestors of ${process.cwd()}. Add the entry under .projects["<repo-root>"].mcpServers in ${SETTINGS}.`,
-  );
+  fail('mcpServers["dxos-introspect"] missing from .mcp.json', `Add the entry to ${SETTINGS}.`);
 }
-ok(`found entry under .projects["${projectKey}"].mcpServers["dxos-introspect"]`);
+ok('found mcpServers["dxos-introspect"] in .mcp.json');
 const command = entry.command;
-const args = entry.args ?? [];
+const rawArgs = entry.args ?? [];
+// Resolve relative paths against the repo root — Claude Code spawns with cwd
+// set to the workspace root, so the same resolution applies.
+const args = rawArgs.map((a) => (typeof a === 'string' && a.endsWith('.ts') ? resolve(repoRoot, a) : a));
 if (typeof command !== 'string' || !Array.isArray(args)) {
   fail('entry has wrong shape', JSON.stringify(entry));
 }
@@ -101,8 +107,10 @@ if (!usingConditionsSource) {
 ok('--conditions=source present');
 
 // --- Step 4: spawn the exact same way Claude Code would ----------------
-console.log(`  (spawning server — cold cache may take ~80s, warm <2s)`);
-const child = spawn(command, args, { stdio: ['pipe', 'pipe', 'pipe'] });
+// Claude Code uses the project root as cwd when spawning project-scoped MCP
+// servers, so we do the same — relative paths in args resolve correctly.
+console.log(`  (spawning server with cwd=${repoRoot} — cold cache ~80s, warm <2s)`);
+const child = spawn(command, args, { stdio: ['pipe', 'pipe', 'pipe'], cwd: repoRoot });
 let stdoutBuf = '';
 let stderrBuf = '';
 child.stdout.on('data', (chunk) => {
@@ -187,6 +195,6 @@ if (packageCount === 0) {
 }
 ok(`tools/call list_packages: ${packageCount} packages`);
 
-console.log('\n✅ Claude Code MCP entry is valid and the server round-trips real tool calls.');
+console.log('\n✅ .mcp.json entry is valid and the server round-trips real tool calls.');
 console.log('   Restart Claude Code (Cmd+Q + relaunch) to pick up the entry.');
 process.exit(0);

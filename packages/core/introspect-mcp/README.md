@@ -39,32 +39,17 @@ Configure your Claude Code (or other MCP client) to launch this command.
 
 ## Use it from Claude Code
 
-1. Add this entry to `~/.claude/settings.json` under `mcpServers`:
+The repo ships a project-scoped [`.mcp.json`](../../../.mcp.json) at the repo root that registers `dxos-introspect`. Claude Code picks it up automatically when launched anywhere under the repo.
 
-   ```json
-   "dxos-introspect": {
-     "command": "npx",
-     "args": [
-       "tsx",
-       "--conditions=source",
-       "<ABSOLUTE_PATH>/packages/core/introspect-mcp/src/cli.ts",
-       "--root",
-       "<ABSOLUTE_PATH>"
-     ]
-   }
-   ```
-
-   Replace `<ABSOLUTE_PATH>` with the absolute path to your monorepo (or worktree) root.
-
-2. **Verify before restarting** — runs the same spawn Claude Code will use, completes a real JSON-RPC `initialize` + `tools/list` + `tools/call list_packages`, and exits 0 on success:
+1. **Verify the config works** — runs the same spawn Claude Code will use, completes a real JSON-RPC `initialize` + `tools/list` + `tools/call list_packages`, and exits 0 on success:
 
    ```bash
    moon run introspect-mcp:check
    ```
 
-3. **Restart Claude Code** (Cmd+Q + relaunch). Type `/mcp` to confirm `dxos-introspect` is connected.
+2. **Restart Claude Code** (Cmd+Q + relaunch). Type `/mcp` to confirm `dxos-introspect ✓ connected`.
 
-4. Try it: ask Claude *"list every symbol in @dxos/echo-react"*.
+3. Try it: ask Claude *"list every symbol in @dxos/echo-react"*.
 
 ## Other testing entry points
 
