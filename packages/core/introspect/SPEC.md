@@ -11,7 +11,7 @@ Both are thin adapters over a shared core. Build the core and the MCP server fir
 
 ## Architecture
 
-```
+```text
 packages/devtools/
   plugin-introspect-core/   ← index + query + curation (no transport, no UI)
   plugin-introspect-mcp/    ← MCP adapter (Node, stdio + HTTP)
@@ -130,7 +130,7 @@ Provide `parseRef(s)` and `formatRef(parts)` helpers; don't let adapters string-
 
 A `.dxos-introspect/` directory in the repo root with:
 
-```
+```text
 .dxos-introspect/
   idioms/
     plugin-scaffold.md
