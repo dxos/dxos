@@ -20,6 +20,9 @@ const FIXTURE_ROOT = join(__dirname, '..', '..', 'introspect', 'src', '__fixture
 
 // Pick a high port that's unlikely to collide with a running dev tool.
 const PORT = 39476;
+// Force IPv4 — `localhost` resolves to ::1 first on Linux containers, which
+// breaks fetch() if the server bound to 127.0.0.1 (or vice versa).
+const HOST = '127.0.0.1';
 
 describe('http integration', () => {
   let serverProcess: ReturnType<typeof spawn>;
@@ -27,9 +30,11 @@ describe('http integration', () => {
 
   beforeAll(async () => {
     const tsx = join(FIXTURE_ROOT, '..', '..', '..', '..', '..', 'node_modules', '.bin', 'tsx');
-    serverProcess = spawn(tsx, ['--conditions=source', CLI_PATH, '--root', FIXTURE_ROOT, '--http', String(PORT)], {
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
+    serverProcess = spawn(
+      tsx,
+      ['--conditions=source', CLI_PATH, '--root', FIXTURE_ROOT, '--http', String(PORT), '--host', HOST],
+      { stdio: ['ignore', 'pipe', 'pipe'] },
+    );
 
     // Wait for the "HTTP server listening" line on stderr.
     await new Promise<void>((resolveListen, rejectListen) => {
@@ -44,7 +49,7 @@ describe('http integration', () => {
       setTimeout(() => rejectListen(new Error('server did not start within 30s')), 30_000);
     });
 
-    const transport = new StreamableHTTPClientTransport(new URL(`http://localhost:${PORT}/mcp`));
+    const transport = new StreamableHTTPClientTransport(new URL(`http://${HOST}:${PORT}/mcp`));
     client = new Client({ name: 'http-probe', version: 'test' }, { capabilities: {} });
     await client.connect(transport);
   }, 60_000);
