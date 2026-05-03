@@ -1,7 +1,8 @@
 {
-  "name": "@dxos/plugin-wnfs",
+  "name": "@dxos/plugin-gallery",
   "version": "0.8.3",
-  "description": "WNFS file management plugin",
+  "private": true,
+  "description": "Image gallery plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -10,6 +11,7 @@
   },
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": true,
   "type": "module",
   "imports": {
     "#capabilities": "./src/capabilities/index.ts",
@@ -23,18 +25,15 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "types": "./dist/types/src/index.d.ts"
-    },
-    "./helpers": {
-      "source": "./src/helpers/index.ts",
-      "browser": "./dist/lib/browser/helpers/index.mjs",
-      "types": "./dist/types/src/helpers/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./operations": {
       "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
       "browser": "./dist/lib/browser/operations/index.mjs",
-      "types": "./dist/types/src/operations/index.d.ts"
+      "node": "./dist/lib/node-esm/operations/index.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
@@ -44,8 +43,9 @@
     },
     "./types": {
       "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
-      "types": "./dist/types/src/types/index.d.ts"
+      "node": "./dist/lib/node-esm/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -54,46 +54,34 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/language": "catalog:",
-    "@codemirror/state": "catalog:",
-    "@codemirror/view": "catalog:",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/crypto": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
-    "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-deck": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-wnfs": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-editor": "workspace:*",
-    "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-masonry": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@ipld/car": "catalog:",
-    "blockstore-core": "catalog:",
-    "blockstore-idb": "catalog:",
-    "debounce": "catalog:",
-    "effect": "catalog:",
-    "idb-keyval": "catalog:",
-    "interface-blockstore": "catalog:",
-    "it-all": "catalog:",
-    "multiformats": "catalog:",
-    "react-dropzone": "catalog:",
-    "uint8arrays": "catalog:",
-    "wnfs": "catalog:"
+    "@effect-atom/atom-react": "catalog:",
+    "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/random": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
+    "@dxos/plugin-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",
@@ -103,7 +91,6 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
