@@ -145,6 +145,26 @@ const runHttp = async (server: Awaited<ReturnType<typeof createServer>>, args: A
   const transports = new Map<string, StreamableHTTPServerTransport>();
 
   const httpServer = createHttpServer((req: IncomingMessage, res: ServerResponse) => {
+    // CORS — Composer (and any other browser-based MCP client) sends a
+    // cross-origin preflight before the POST. Without these headers, the
+    // browser blocks the request and the underlying client surfaces a generic
+    // "UnknownException" from Effect.tryPromise. We allow any origin because
+    // this server is for local dev only; it should bind to localhost.
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin ?? '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+    res.setHeader(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Authorization, Mcp-Session-Id, Last-Event-ID, MCP-Protocol-Version',
+    );
+    res.setHeader('Access-Control-Expose-Headers', 'Mcp-Session-Id');
+    res.setHeader('Access-Control-Max-Age', '86400');
+    res.setHeader('Vary', 'Origin');
+    if (req.method === 'OPTIONS') {
+      res.statusCode = 204;
+      res.end();
+      return;
+    }
+
     // Apply optional bearer-token auth before delegating to the transport.
     if (args.apiKey) {
       const header = req.headers.authorization ?? '';
