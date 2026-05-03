@@ -148,7 +148,9 @@ export const loadCache = async (
     warn('load failed — re-indexing', err);
     return null;
   }
-  if (parsed.version === CACHE_VERSION) {
+  // Version-discriminated union narrowing — compare against literals so TS
+  // narrows the union, instead of `=== CACHE_VERSION` (which is just `number`).
+  if (parsed.version === 2) {
     return matchV2(parsed, liveMtimes, packageNamesByPath);
   }
   if (parsed.version === 1) {
