@@ -129,7 +129,19 @@ export const main = async (argv: string[] = process.argv.slice(2)): Promise<void
   });
 
   if (args.httpPort !== undefined) {
-    await runHttp(server, args);
+    // HTTP mode needs a fresh McpServer per session (the SDK rejects multiple
+    // transports on the same Server). Pass a factory so runHttp can build one
+    // per connection while sharing the introspector.
+    await runHttp(
+      () =>
+        createServer({
+          introspector,
+          name: '@dxos/introspect-mcp',
+          version: '0.0.1',
+          logger: args.logPath ? fileLogger(args.logPath) : undefined,
+        }),
+      args,
+    );
   } else {
     const transport = new StdioServerTransport();
     await server.connect(transport);
@@ -137,7 +149,7 @@ export const main = async (argv: string[] = process.argv.slice(2)): Promise<void
   }
 };
 
-const runHttp = async (server: Awaited<ReturnType<typeof createServer>>, args: Args): Promise<void> => {
+const runHttp = async (serverFactory: () => Awaited<ReturnType<typeof createServer>>, args: Args): Promise<void> => {
   // Stateful mode — we keep one transport per client session. The session ID
   // is returned in the initialize response and the client echoes it on every
   // subsequent request. Required because the MCP client expects to send
@@ -195,7 +207,9 @@ const runHttp = async (server: Awaited<ReturnType<typeof createServer>>, args: A
         transport = transports.get(sessionId)!;
       } else {
         // No session yet — must be an `initialize` request. Spin up a new
-        // transport, connect it to the shared MCP server, and remember the id.
+        // McpServer + transport pair (the SDK requires a 1:1 binding) and
+        // remember it under the session id Composer/Inspector echoes back.
+        const sessionServer = serverFactory();
         transport = new StreamableHTTPServerTransport({
           sessionIdGenerator: () => randomUUID(),
           onsessioninitialized: (id) => {
@@ -206,8 +220,10 @@ const runHttp = async (server: Awaited<ReturnType<typeof createServer>>, args: A
           if (transport!.sessionId) {
             transports.delete(transport!.sessionId);
           }
+          // Best-effort cleanup of the per-session server.
+          sessionServer.close().catch(() => undefined);
         };
-        await server.connect(transport);
+        await sessionServer.connect(transport);
       }
       try {
         await transport.handleRequest(req, res);
