@@ -48,13 +48,16 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
 
   const ready = (async () => {
     packages = await discoverPackages(monorepoRoot);
-    initialized = true;
     if (prewarm) {
       // Yield-style pre-warm: extract one package's symbols per setImmediate
-      // tick so we don't block the event loop. By the time the first
-      // findSymbol call lands, most packages are already cached.
-      void preWarmSymbols();
+      // tick so we don't block the event loop while still bounding total
+      // wall-clock to roughly the sum of per-package extraction cost.
+      // We BLOCK `ready` on this so callers can rely on every method being
+      // fast once `ready` resolves — no cold-start timeouts from MCP clients.
+      // For 250 packages this takes ~80s of CPU; tradeoff is intentional.
+      await preWarmSymbols();
     }
+    initialized = true;
   })();
 
   const preWarmSymbols = async (): Promise<void> => {
