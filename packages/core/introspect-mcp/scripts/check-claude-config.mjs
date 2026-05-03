@@ -88,14 +88,18 @@ const cliPath = args.find((a) => typeof a === 'string' && a.endsWith('cli.ts'));
 if (cliPath && !existsSync(cliPath)) {
   fail(`cli.ts referenced by entry does not exist`, cliPath);
 }
-if (cliPath) ok(`cli.ts exists: ${cliPath}`);
+if (cliPath) {
+  ok(`cli.ts exists: ${cliPath}`);
+}
 
 const rootIdx = args.indexOf('--root');
 const rootPath = rootIdx >= 0 ? args[rootIdx + 1] : undefined;
 if (rootPath && !existsSync(join(rootPath, 'pnpm-workspace.yaml'))) {
   fail(`--root does not point at a monorepo (no pnpm-workspace.yaml)`, rootPath);
 }
-if (rootPath) ok(`--root is a monorepo: ${rootPath}`);
+if (rootPath) {
+  ok(`--root is a monorepo: ${rootPath}`);
+}
 
 const usingConditionsSource = args.includes('--conditions=source');
 if (!usingConditionsSource) {
