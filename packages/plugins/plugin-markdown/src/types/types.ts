@@ -12,7 +12,10 @@ import { type Document } from './Markdown';
 // TODO(wittjosiah): MarkdownExtensionProvider is a part of the MarkdownCapabilities api which should be in ./types.
 
 // TODO(burdon): Async?
-export type MarkdownExtensionProvider = (props: { document?: Document }) => Extension | undefined;
+export type MarkdownExtensionProvider = (props: {
+  document?: Document;
+  viewMode?: EditorViewMode;
+}) => Extension | undefined;
 
 export type MarkdownPluginState = {
   // Codemirror extensions provided by other plugins.

@@ -28,13 +28,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
   const blueprintRegistry = useBlueprintRegistry();
-  const processor = useChatProcessor({
-    chat,
-    preset,
-    runtime,
-    blueprintRegistry,
-    settings,
-  });
+  const processor = useChatProcessor({ chat, preset, runtime, blueprintRegistry, settings });
 
   // TODO(burdon): Refocus when open.
   const [open, setOpen] = useState(true);

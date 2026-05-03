@@ -26,14 +26,15 @@ export const ChatModule = ({ space }: ComponentProps) => {
   const processor = useChatProcessor({ runtime, space, chat, preset, blueprintRegistry });
 
   const feedTarget = chat?.feed?.target;
-  const queue = feedTarget ? space.queues.get(Feed.getQueueDxn(feedTarget)!) : undefined;
+  const feedDxn = feedTarget ? Feed.getQueueDxn(feedTarget) : undefined;
+  const feed = feedDxn ? space.queues.get(feedDxn) : undefined;
 
   if (!chat || !processor) {
     return null;
   }
 
   return (
-    <Chat.Root chat={chat} queue={queue} processor={processor}>
+    <Chat.Root chat={chat} feed={feed} processor={processor}>
       <Panel.Root className='dx-document'>
         {/* TODO(burdon): Chat.Toolbar => Menu.Root which doesn't handle slot. Need to audit Root components. */}
         <Panel.Toolbar>

@@ -56,6 +56,7 @@
     "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-feed": "workspace:*",
     "@dxos/plugin-files": "workspace:*",
+    "@dxos/plugin-gallery": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-help": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",

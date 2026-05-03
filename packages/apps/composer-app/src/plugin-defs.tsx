@@ -66,6 +66,7 @@ const ID = {
   DOCTOR: 'org.dxos.plugin.doctor',
   EXPLORER: 'org.dxos.plugin.explorer',
   FEED: 'org.dxos.plugin.feed',
+  GALLERY: 'org.dxos.plugin.gallery',
   GRAPH: 'org.dxos.plugin.graph',
   HELP: 'org.dxos.plugin.help',
   INBOX: 'org.dxos.plugin.inbox',
@@ -147,6 +148,7 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
 export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] =>
   [
     // Default
+    ID.GALLERY,
     ID.INBOX,
     ID.KANBAN,
     ID.MARKDOWN,
@@ -258,6 +260,7 @@ export const getPlugins = async (
     { DoctorPlugin },
     { ExplorerPlugin },
     { FeedPlugin },
+    { GalleryPlugin },
     { GraphPlugin },
     { HelpPlugin },
     { InboxPlugin },
@@ -320,6 +323,7 @@ export const getPlugins = async (
     track(import('@dxos/plugin-doctor')),
     track(import('@dxos/plugin-explorer')),
     track(import('@dxos/plugin-feed')),
+    track(import('@dxos/plugin-gallery')),
     track(import('@dxos/plugin-graph')),
     track(import('@dxos/plugin-help')),
     track(import('@dxos/plugin-inbox')),
@@ -403,6 +407,7 @@ export const getPlugins = async (
     DoctorPlugin(),
     ExplorerPlugin(),
     FeedPlugin(),
+    GalleryPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),

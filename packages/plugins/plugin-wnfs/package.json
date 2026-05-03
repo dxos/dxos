@@ -26,6 +26,11 @@
       "browser": "./dist/lib/browser/index.mjs",
       "types": "./dist/types/src/index.d.ts"
     },
+    "./helpers": {
+      "source": "./src/helpers/index.ts",
+      "browser": "./dist/lib/browser/helpers/index.mjs",
+      "types": "./dist/types/src/helpers/index.d.ts"
+    },
     "./operations": {
       "source": "./src/operations/index.ts",
       "browser": "./dist/lib/browser/operations/index.mjs",
