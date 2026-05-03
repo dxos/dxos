@@ -19,6 +19,20 @@ tasks:
       - '--conditions=source'
       - src/cli.ts
     preset: server
+  # Run the MCP server over HTTP (Streamable HTTP transport on /mcp). Lets
+  # plugin-assistant (and other HTTP/SSE-only MCP clients) connect by URL.
+  # Add the resulting URL (`http://localhost:39476/mcp`) as an MCP server
+  # in plugin-assistant's settings with protocol = http.
+  serve-http:
+    command: pnpm
+    args:
+      - exec
+      - tsx
+      - '--conditions=source'
+      - src/cli.ts
+      - '--http'
+      - '39476'
+    preset: server
   # Launch the MCP Inspector against this server with all paths absolutized.
   # Useful for interactive testing.
   inspect:

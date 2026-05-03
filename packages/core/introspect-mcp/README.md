@@ -52,6 +52,33 @@ moon run introspect-mcp:check
 
 3. Try it: ask Claude *"list every symbol in @dxos/echo-react"*.
 
+## Use it from Composer (plugin-assistant)
+
+Composer's `plugin-assistant` accepts MCP servers by URL (HTTP / SSE only — not stdio). To bridge, run the server in HTTP mode:
+
+```bash
+moon run introspect-mcp:serve-http
+```
+
+This binds to `http://localhost:39476/mcp` (Streamable HTTP transport, stateful sessions).
+
+Then in Composer:
+
+1. Open a chat → click the **chat options** icon → **MCP servers** tab → **Add MCP server**.
+2. Fill in:
+   - **Name**: `dxos-introspect`
+   - **Server URL**: `http://localhost:39476/mcp`
+   - **Protocol**: `http`
+   - **API key**: leave empty (no auth — see below)
+3. Save and toggle **enabled**. The five tools (`list_packages`, `get_package`, `list_symbols`, `find_symbol`, `get_symbol`) become available to the assistant.
+
+**Auth:** by default the HTTP server accepts unauthenticated requests on localhost only. To require a bearer token (e.g. when running from a remote machine), pass `--api-key <token>` to `cli.ts` and put the same token in Composer's MCP server **API key** field.
+
+```bash
+pnpm exec tsx --conditions=source packages/core/introspect-mcp/src/cli.ts \
+  --http 39476 --api-key sekret
+```
+
 ## Test it from a browser (MCP Inspector)
 
 Launches the official MCP Inspector UI against this server, with all paths pre-baked:
@@ -106,6 +133,7 @@ Runs the server attached to your terminal stdio, blocking for input. Send JSON-R
 | `moon run introspect-mcp:inspect` | Launch the MCP Inspector (browser UI) against this server, with all paths absolutized. Cold cache may take ~80s; subsequent runs <1s. |
 | `moon run introspect-mcp:sanity` | Inspector + proxy auth check — confirms the launcher succeeds and the proxy responds with a valid auth token. |
 | `moon run introspect-mcp:serve` | Raw stdio server, for piping requests in by hand. |
+| `moon run introspect-mcp:serve-http` | HTTP server on `localhost:39476/mcp`. Use this to wire the server into Composer's plugin-assistant or any other HTTP/SSE-only MCP client. |
 | `moon run introspect:index` | Pre-build the on-disk symbol cache (`<root>/node_modules/.cache/dxos-introspect/`). The cache makes server startup near-instant. |
 
 ## Why `--conditions=source`?

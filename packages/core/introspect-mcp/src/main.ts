@@ -3,10 +3,14 @@
 //
 
 // Entry point for the dx-introspect-mcp CLI. Boots an introspector against the
-// monorepo root inferred from cwd (or --root) and exposes it over stdio.
+// monorepo root inferred from cwd (or --root) and exposes it over either
+// stdio (default) or HTTP (when --http <port> is passed).
 
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import { randomUUID } from 'node:crypto';
 import { existsSync } from 'node:fs';
+import { createServer as createHttpServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { dirname, isAbsolute, resolve } from 'node:path';
 
 import { createIntrospector } from '@dxos/introspect';
@@ -17,14 +21,24 @@ import { createServer } from './server';
 type Args = {
   root: string;
   logPath?: string;
+  /** If set, run as an HTTP server on this port instead of stdio. */
+  httpPort?: number;
+  /** Bind address for HTTP mode. Defaults to localhost. */
+  host: string;
+  /** Optional bearer token; when set, requests must send `Authorization: Bearer <token>`. */
+  apiKey?: string;
 };
 
 const parseArgs = (argv: string[]): Args => {
   let root: string | undefined;
   let logPath: string | undefined;
+  let httpPort: number | undefined;
+  let host = 'localhost';
+  let apiKey: string | undefined;
+  const valueArgs = new Set(['--root', '--log-path', '--http', '--host', '--api-key']);
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
-    if (arg === '--root' || arg === '--log-path') {
+    if (valueArgs.has(arg)) {
       const value = argv[i + 1];
       if (value === undefined || value.startsWith('-')) {
         console.error(`Error: ${arg} requires a value.`);
@@ -32,10 +46,26 @@ const parseArgs = (argv: string[]): Args => {
         process.exit(1);
       }
       i++;
-      if (arg === '--root') {
-        root = value;
-      } else {
-        logPath = value;
+      switch (arg) {
+        case '--root':
+          root = value;
+          break;
+        case '--log-path':
+          logPath = value;
+          break;
+        case '--http':
+          httpPort = Number.parseInt(value, 10);
+          if (!Number.isFinite(httpPort) || httpPort <= 0) {
+            console.error(`Error: --http expects a port number, got "${value}".`);
+            process.exit(1);
+          }
+          break;
+        case '--host':
+          host = value;
+          break;
+        case '--api-key':
+          apiKey = value;
+          break;
       }
     } else if (arg === '--help' || arg === '-h') {
       printUsage();
@@ -51,7 +81,7 @@ const parseArgs = (argv: string[]): Args => {
     console.error('Could not find monorepo root (looking for pnpm-workspace.yaml). Pass --root explicitly.');
     process.exit(1);
   }
-  return { root: resolvedRoot, logPath };
+  return { root: resolvedRoot, logPath, httpPort, host, apiKey };
 };
 
 const resolveRoot = (root: string): string => (isAbsolute(root) ? root : resolve(process.cwd(), root));
@@ -78,6 +108,9 @@ const printUsage = (): void => {
       'Options:',
       '  --root <path>       Monorepo root (default: discovered from cwd via pnpm-workspace.yaml)',
       '  --log-path <path>   Append-only JSONL log of tool calls (default: stderr-silent)',
+      '  --http <port>       Run as HTTP server on the given port (default: stdio)',
+      '  --host <addr>       HTTP bind address (default: localhost)',
+      '  --api-key <token>   Require `Authorization: Bearer <token>` on HTTP requests',
       '  -h, --help          Show this help',
     ].join('\n'),
   );
@@ -95,8 +128,92 @@ export const main = async (argv: string[] = process.argv.slice(2)): Promise<void
     logger: args.logPath ? fileLogger(args.logPath) : undefined,
   });
 
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
+  if (args.httpPort !== undefined) {
+    await runHttp(server, args);
+  } else {
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
+    // Stay alive until stdin closes — the SDK handles that signal internally.
+  }
+};
 
-  // Stay alive until stdin closes — the SDK handles that signal internally.
+const runHttp = async (server: Awaited<ReturnType<typeof createServer>>, args: Args): Promise<void> => {
+  // Stateful mode — we keep one transport per client session. The session ID
+  // is returned in the initialize response and the client echoes it on every
+  // subsequent request. Required because the MCP client expects to send
+  // `notifications/initialized` (and later requests) under the same session.
+  const transports = new Map<string, StreamableHTTPServerTransport>();
+
+  const httpServer = createHttpServer((req: IncomingMessage, res: ServerResponse) => {
+    // Apply optional bearer-token auth before delegating to the transport.
+    if (args.apiKey) {
+      const header = req.headers.authorization ?? '';
+      const expected = `Bearer ${args.apiKey}`;
+      if (header !== expected) {
+        res.statusCode = 401;
+        res.setHeader('WWW-Authenticate', 'Bearer');
+        res.end('Unauthorized');
+        return;
+      }
+    }
+    if (req.url === '/health') {
+      res.statusCode = 200;
+      res.setHeader('content-type', 'text/plain');
+      res.end('ok\n');
+      return;
+    }
+    if (req.url !== '/mcp' && req.url !== '/mcp/') {
+      res.statusCode = 404;
+      res.end('Not found');
+      return;
+    }
+
+    void (async () => {
+      const sessionId = req.headers['mcp-session-id'];
+      let transport: StreamableHTTPServerTransport | undefined;
+      if (typeof sessionId === 'string' && transports.has(sessionId)) {
+        transport = transports.get(sessionId)!;
+      } else {
+        // No session yet — must be an `initialize` request. Spin up a new
+        // transport, connect it to the shared MCP server, and remember the id.
+        transport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: () => randomUUID(),
+          onsessioninitialized: (id) => {
+            transports.set(id, transport!);
+          },
+        });
+        transport.onclose = () => {
+          if (transport!.sessionId) {
+            transports.delete(transport!.sessionId);
+          }
+        };
+        await server.connect(transport);
+      }
+      try {
+        await transport.handleRequest(req, res);
+      } catch (err) {
+        console.error('[introspect-mcp] HTTP transport error:', err);
+        if (!res.writableEnded) {
+          res.statusCode = 500;
+          res.end('Internal Server Error');
+        }
+      }
+    })();
+  });
+
+  await new Promise<void>((resolveListen, rejectListen) => {
+    httpServer.once('error', rejectListen);
+    httpServer.listen(args.httpPort, args.host, () => {
+      console.error(`[introspect-mcp] HTTP server listening on http://${args.host}:${args.httpPort}/mcp`);
+      if (args.apiKey) {
+        console.error('[introspect-mcp] auth: Authorization: Bearer <token> required');
+      } else {
+        console.error('[introspect-mcp] auth: none — bind to localhost only');
+      }
+      resolveListen();
+    });
+  });
+
+  // Stay alive until SIGINT/SIGTERM.
+  await new Promise<void>(() => {});
 };
