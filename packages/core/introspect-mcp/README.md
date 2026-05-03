@@ -32,3 +32,59 @@ The server speaks JSON-RPC over stdio (default MCP transport). Configure your Cl
 - List responses cap at 30 items and include a `truncated` note when more exist.
 - `get_symbol` returns signature + summary + location by default; full source/JSDoc require explicit `include`.
 - Long source/JSDoc bodies are truncated with a marker — call again with a narrower question if needed.
+
+## Testing
+
+Three ways, in order of how close they are to "real":
+
+### 1. Automated tests
+
+```bash
+moon run introspect-mcp:test
+```
+
+Boots the server with an in-memory transport, connects an MCP client, and round-trips every tool. See [`src/server.test.ts`](src/server.test.ts) — 10 tests, ~1s.
+
+### 2. Interactive probe with MCP Inspector
+
+The MCP SDK ships an interactive UI for talking to a stdio server. From the monorepo root:
+
+```bash
+npx @modelcontextprotocol/inspector \
+  pnpm -F @dxos/introspect-mcp start -- --root "$PWD"
+```
+
+Open the URL it prints, click into **Tools**, and you can call `list_packages` / `get_package` / `find_symbol` / `get_symbol` against the live monorepo with form inputs and see raw responses.
+
+### 3. Wire it into Claude Code
+
+Add to `.mcp.json` (project-scoped) or `~/.claude.json` (user-scoped):
+
+```jsonc
+{
+  "mcpServers": {
+    "dxos-introspect": {
+      "command": "pnpm",
+      "args": [
+        "-F", "@dxos/introspect-mcp", "start",
+        "--", "--root", "/absolute/path/to/dxos"
+      ]
+    }
+  }
+}
+```
+
+In a fresh Claude Code session, `/mcp` shows the server connected with four tools (`mcp__dxos-introspect__list_packages` etc.). Ask something like *"which plugin owns the Markdown editor?"* and watch it call `find_symbol` followed by `get_symbol`.
+
+### Quick sanity check
+
+Verify the binary speaks JSON-RPC at all:
+
+```bash
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
+  | pnpm -F @dxos/introspect-mcp start --root "$PWD"
+```
+
+Should print a response listing the four tools.
+
+For development, option 2 is fastest — the Inspector gives you a clickable UI without restarting Claude Code. Once it works there it works everywhere.
