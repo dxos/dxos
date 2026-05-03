@@ -140,23 +140,14 @@ describe('Trace timeline', () => {
           const { commits, branches } = buildExecutionGraph({ traceMessages: messages });
           const graph = renderTimelineAscii(commits, branches);
           expect(`\n${graph}\n`).toMatchInlineSnapshot(`
-                "
-                ●     [atom] Agent processing request...
-                ├──●  [user] List all available schemas. Tell me what typenames are available.
-                │  ●  [function] List schemas - Success
-                ◆──╯  [atom] Agent completed request
-                ●  │  [atom] Agent processing request...
-                │  ●  [user] Create an organization called "DXOS" and a person named "Alice".
-                │  ●  [function] Create object - Success
-                │  ●  [function] Create object - Success
-                ◆──╯  [atom] Agent completed request
-                ●  │  [atom] Agent processing request...
-                │  ●  [user] Search for all organizations and persons.
-                │  ●  [function] Query - Success
-                │  ●  [function] Query - Success
-                ◆──╯  [atom] Agent completed request
-                "
-              `);
+              "
+              ●     [atom] Agent processing request...
+              ├──●  [user] Search for all organizations. How many are there?
+              │  ●  [function] List schemas - Success
+              │  ●  [function] Query - Success
+              ◆──╯  [atom] Agent completed request
+              "
+            `);
         },
         Effect.provide(TestLayer),
         TestHelpers.provideTestContext,
