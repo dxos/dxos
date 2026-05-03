@@ -87,6 +87,33 @@ export const createServer = (options: ServerOptions): McpServer => {
   );
 
   /**
+   * list_symbols
+   */
+  server.registerTool(
+    'list_symbols',
+    {
+      title: 'List all exported symbols of a package',
+      description:
+        'Enumerate every exported symbol declared by a single package (e.g. all exports of "@dxos/echo-react"). ' +
+        'Use this when the user wants to know what a specific package offers, or to browse a package after get_package. ' +
+        'Returns lightweight rows with refs you can pass to get_symbol; capped at 30 — refine with `kind` or call get_symbol directly.',
+      inputSchema: {
+        package: z.string().describe('Exact package name, e.g. "@dxos/echo-react".'),
+        kind: z
+          .enum(['function', 'class', 'interface', 'type', 'enum', 'variable', 'namespace'])
+          .optional()
+          .describe('Optional filter on declaration kind.'),
+      },
+    },
+    async (args) => {
+      const matches = introspector.listSymbols(args.package, args.kind);
+      const shaped = shapeFindSymbol(matches);
+      log({ tool: 'list_symbols', args, count: matches.length, truncated: shaped.truncated });
+      return toToolResult(shaped);
+    },
+  );
+
+  /**
    * find_symbol
    */
   server.registerTool(

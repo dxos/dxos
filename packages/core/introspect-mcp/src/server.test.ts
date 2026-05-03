@@ -61,10 +61,40 @@ describe('introspect-mcp server', () => {
     await env.close();
   });
 
-  test('lists all four tools', async ({ expect }) => {
+  test('lists all five tools', async ({ expect }) => {
     const { tools } = await env.client.listTools();
     const names = tools.map((t) => t.name).sort();
-    expect(names).toEqual(['find_symbol', 'get_package', 'get_symbol', 'list_packages']);
+    expect(names).toEqual(['find_symbol', 'get_package', 'get_symbol', 'list_packages', 'list_symbols']);
+  });
+
+  test('list_symbols returns every symbol in a package', async ({ expect }) => {
+    const result = await env.client.callTool({
+      name: 'list_symbols',
+      arguments: { package: '@fixture/pkg-a' },
+    });
+    const payload = parseToolText(result as any) as { data: Array<{ name: string; kind: string }> };
+    const names = payload.data.map((s) => s.name).sort();
+    expect(names).toContain('Task');
+    expect(names).toContain('make');
+  });
+
+  test('list_symbols filters by kind', async ({ expect }) => {
+    const result = await env.client.callTool({
+      name: 'list_symbols',
+      arguments: { package: '@fixture/pkg-b', kind: 'interface' },
+    });
+    const payload = parseToolText(result as any) as { data: Array<{ name: string; kind: string }> };
+    expect(payload.data.every((s) => s.kind === 'interface')).toBe(true);
+    expect(payload.data.some((s) => s.name === 'TaskCardProps')).toBe(true);
+  });
+
+  test('list_symbols returns empty data for unknown package', async ({ expect }) => {
+    const result = await env.client.callTool({
+      name: 'list_symbols',
+      arguments: { package: '@fixture/missing' },
+    });
+    const payload = parseToolText(result as any) as { data: unknown[] };
+    expect(payload.data).toEqual([]);
   });
 
   test('list_packages returns the fixture package', async ({ expect }) => {

@@ -42,6 +42,8 @@ export type Introspector = {
 
   listPackages: (filter?: PackageFilter) => Package[];
   getPackage: (name: string) => PackageDetail | null;
+  /** Enumerate every exported symbol declared by a package. Returns [] if the package is unknown. */
+  listSymbols: (packageName: string, kind?: SymbolKind) => SymbolMatch[];
   findSymbol: (query: string, kind?: SymbolKind) => SymbolMatch[];
   getSymbol: (ref: string, include?: SymbolInclude[]) => SymbolDetail | null;
 };
@@ -151,6 +153,23 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     return packages.find((p) => p.name === name) ?? null;
   };
 
+  const listSymbols = (packageName: string, kind?: SymbolKind): SymbolMatch[] => {
+    assertReady();
+    const pkg = packages.find((p) => p.name === packageName);
+    if (!pkg) {
+      return [];
+    }
+    const { symbols } = ensureSymbols(pkg);
+    const filtered = kind ? symbols.filter((s) => s.kind === kind) : symbols;
+    return filtered.map((s) => ({
+      ref: s.ref,
+      package: pkg.name,
+      name: s.name,
+      kind: s.kind,
+      summary: s.summary,
+    }));
+  };
+
   const findSymbol = (query: string, kind?: SymbolKind): SymbolMatch[] => {
     assertReady();
     const all: PackageSymbols[] = [];
@@ -178,6 +197,7 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     dispose,
     listPackages,
     getPackage,
+    listSymbols,
     findSymbol,
     getSymbol,
   };

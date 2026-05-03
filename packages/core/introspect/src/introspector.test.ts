@@ -98,6 +98,24 @@ describe('introspector against fixture monorepo', () => {
     expect(interfaces.some((m) => m.name === 'TaskCardProps')).toBe(true);
   });
 
+  test('listSymbols returns every export of a package', ({ expect }) => {
+    const symbols = intro.listSymbols('@fixture/pkg-a');
+    const names = symbols.map((s) => s.name).sort();
+    expect(names).toContain('Task');
+    expect(names).toContain('make');
+    expect(symbols.every((s) => s.package === '@fixture/pkg-a')).toBe(true);
+  });
+
+  test('listSymbols filters by kind', ({ expect }) => {
+    const props = intro.listSymbols('@fixture/pkg-b', 'interface');
+    expect(props.every((s) => s.kind === 'interface')).toBe(true);
+    expect(props.some((s) => s.name === 'TaskCardProps')).toBe(true);
+  });
+
+  test('listSymbols returns [] for unknown package', ({ expect }) => {
+    expect(intro.listSymbols('@fixture/missing')).toEqual([]);
+  });
+
   test('getSymbol resolves through barrels to the original file', ({ expect }) => {
     // pkg-a's entry is src/index.ts which barrels src/Task.ts.
     // ts-morph's getExportedDeclarations follows the re-export back to the original.

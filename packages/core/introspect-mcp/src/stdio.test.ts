@@ -36,10 +36,10 @@ describe('stdio integration', () => {
     await client?.close();
   });
 
-  test('subprocess starts and lists the four tools', async ({ expect }) => {
+  test('subprocess starts and lists the five tools', async ({ expect }) => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name).sort();
-    expect(names).toEqual(['find_symbol', 'get_package', 'get_symbol', 'list_packages']);
+    expect(names).toEqual(['find_symbol', 'get_package', 'get_symbol', 'list_packages', 'list_symbols']);
   });
 
   test('list_packages round-trips real JSON-RPC over stdio', async ({ expect }) => {
