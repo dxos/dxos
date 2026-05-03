@@ -13,9 +13,9 @@ Both are thin adapters over a shared core. Build the core and the MCP server fir
 
 ```
 packages/devtools/
-  plugin-introspect-core/      ← index + query + curation (no transport, no UI)
-  plugin-introspect-mcp/       ← MCP adapter (Node, stdio + HTTP)
-  plugin-composer/         ← Composer plugin (later — out of scope for v1)
+  plugin-introspect-core/   ← index + query + curation (no transport, no UI)
+  plugin-introspect-mcp/    ← MCP adapter (Node, stdio + HTTP)
+  plugin-composer/          ← Composer plugin (later — out of scope for v1)
 ```
 
 Three layers inside `core`, separated cleanly:
@@ -52,12 +52,12 @@ Export a single `createIntrospector(options)` factory:
 ```ts
 type IntrospectorOptions = {
   monorepoRoot: string;
-  watch?: boolean;          // default true
-  curationPath?: string;    // default <root>/.dxos-introspect/
+  watch?: boolean; // default true
+  curationPath?: string; // default <root>/.dxos-introspect/
 };
 
 type Introspector = {
-  ready: Promise<void>;     // resolves when initial index is built
+  ready: Promise<void>; // resolves when initial index is built
   dispose: () => void;
 
   // Package & symbol
@@ -174,7 +174,7 @@ Body is the explanation + template code. The query layer parses these on startup
 
 Each tool maps to one or two query layer methods. Keep parameter names matching the query API. Tools to implement:
 
-```
+```ts
 list_packages(filter?)
 get_package(name)
 find_symbol(query, kind?)
@@ -216,7 +216,7 @@ This is the MCP adapter's main responsibility beyond plumbing.
 
 ### Tool descriptions
 
-Tool descriptions are read by LLMs to decide when to call. Write them to be specific about *when* not just *what*:
+Tool descriptions are read by LLMs to decide when to call. Write them to be specific about _when_ not just _what_:
 
 > `find_symbol`: Find an exported symbol (function, class, type, hook, schema, capability) by name or partial name across all DXOS packages. Use this when the user references something by name and you need to locate which package owns it before reading more. Returns refs you can pass to `get_symbol`.
 
