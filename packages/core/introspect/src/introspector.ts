@@ -76,11 +76,25 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
   };
 
   const preWarmSymbols = async (): Promise<void> => {
+    const total = packages.length;
+    const startedAt = Date.now();
+    let lastReported = startedAt;
+    let i = 0;
     for (const pkg of packages) {
       if (disposed) {
         return;
       }
       ensureSymbols(pkg);
+      i++;
+      // Progress to stderr roughly every 5 seconds so users running
+      // `moon run introspect:index` can tell it's making progress.
+      const now = Date.now();
+      if (now - lastReported > 5_000 || i === total) {
+        const elapsed = ((now - startedAt) / 1000).toFixed(0);
+        const eta = i > 0 ? Math.round((((now - startedAt) / i) * (total - i)) / 1000) : 0;
+        console.error(`[introspect] indexing ${i}/${total} packages (${elapsed}s elapsed, ~${eta}s remaining)`);
+        lastReported = now;
+      }
       // Yield each iteration so we don't block the event loop for the full
       // ~80s of ts-morph parsing on a real-monorepo cold start.
       await new Promise<void>((resolve) => setImmediate(resolve));
