@@ -1,9 +1,9 @@
 # @dxos/introspect-mcp
 
-MCP server that exposes [@dxos/introspect](../introspect) over stdio. 
+MCP server that exposes [@dxos/introspect](../introspect) over stdio.
 Lets LLM tools (Claude Code, etc.) query the DXOS monorepo's package and symbol graph.
 
-This package is **phase 1**: four tools wired to package and symbol queries. 
+This package is **phase 1**: five tools wired to package and symbol queries.
 More tools will land as the core indexer grows (plugins, capabilities, schemas, idioms).
 
 ## Tools
@@ -12,6 +12,7 @@ More tools will land as the core indexer grows (plugins, capabilities, schemas, 
 | --- | --- |
 | `list_packages` | List packages, with optional `name` / `pathPrefix` / `privateOnly` filters. |
 | `get_package` | Full record for one package: workspace + external deps, entry points. |
+| `list_symbols` | Enumerate every exported symbol of a single package, optionally filtered by kind. |
 | `find_symbol` | Locate an exported symbol by name (case-insensitive); ranks exact > prefix > substring. |
 | `get_symbol` | Detail for one symbol by ref. Pass `include=["source"]` to expand the body. |
 
@@ -63,7 +64,28 @@ The terminal prints a URL containing `?MCP_PROXY_AUTH_TOKEN=...`. **Open that ex
 
 In the UI: Transport must be `STDIO` (the form is pre-filled). Click **Connect** → **Tools** → **List Tools** → pick a tool → **Run Tool**.
 
-If you see "Connection Error" in the browser, run `moon run introspect-mcp:sanity` from your terminal — it'll diagnose stale-process port collisions and proxy-auth issues with named checkpoints.
+### If "Connect" doesn't work
+
+Most often a stale Inspector process is holding ports `6274` / `6277`, or your browser tab is pointed at an Inspector instance that's been killed (so the auth token is invalid).
+
+Reset cleanly:
+
+```bash
+lsof -ti:6274,6277 | xargs kill -9
+```
+```bash
+pkill -f "tsx.*introspect-mcp"
+```
+```bash
+moon run introspect-mcp:check
+```
+```bash
+moon run introspect-mcp:inspect
+```
+
+Open *only* the URL the new Inspector prints (with the auth token). Click Connect.
+
+If `moon run introspect-mcp:check` fails, run `moon run introspect-mcp:sanity` for additional named-checkpoint diagnostics.
 
 ## Run the server standalone
 
@@ -80,12 +102,25 @@ Runs the server attached to your terminal stdio, blocking for input. Send JSON-R
 | Command | What it does |
 | --- | --- |
 | `moon run introspect-mcp:test` | Unit + integration tests (in-memory and real-stdio subprocess), ~3s |
-| `moon run introspect-mcp:check` | End-to-end: spawns the server with the exact command from your `~/.claude/settings.json` and round-trips a tool call. **Run before restarting Claude Code.** |
+| `moon run introspect-mcp:check` | End-to-end: spawns the server with the exact command from `.mcp.json` and round-trips a tool call. **Run before restarting Claude Code.** |
 | `moon run introspect-mcp:inspect` | Launch the MCP Inspector (browser UI) against this server, with all paths absolutized. Cold cache may take ~80s; subsequent runs <1s. |
 | `moon run introspect-mcp:sanity` | Inspector + proxy auth check — confirms the launcher succeeds and the proxy responds with a valid auth token. |
 | `moon run introspect-mcp:serve` | Raw stdio server, for piping requests in by hand. |
-| `moon run introspect:index` | Pre-build the on-disk symbol cache. The cache makes server startup near-instant. |
+| `moon run introspect:index` | Pre-build the on-disk symbol cache (`<root>/node_modules/.cache/dxos-introspect/`). The cache makes server startup near-instant. |
 
 ## Why `--conditions=source`?
 
 The package.json `exports` field has a `source` condition pointing at `src/index.ts`. Without `--conditions=source`, `tsx` falls through to the `default` condition (`dist/lib/node/index.mjs`) which doesn't exist unless you've run a build. The flag lets the server boot from source with no build step — same behavior the rest of the DXOS toolchain relies on.
+
+## Cache
+
+The indexer stores extracted symbols at `<repo-root>/node_modules/.cache/dxos-introspect/cache.json` (~13 MB for 250 packages). Following the babel/swc/eslint convention so it's auto-gitignored and gets nuked by `pnpm clean`. Saves are atomic (write-temp-then-rename), so concurrent introspector processes can't corrupt each other.
+
+To force a fresh re-index:
+
+```bash
+rm -rf node_modules/.cache/dxos-introspect
+moon run introspect:index
+```
+
+The cache also auto-invalidates on any source-file mtime change, so manual deletion is rarely needed.
