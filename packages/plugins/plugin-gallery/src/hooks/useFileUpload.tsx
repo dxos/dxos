@@ -7,6 +7,7 @@ import React, { type ReactElement, useCallback, useRef } from 'react';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities, type FileInfo } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
 
 export type UseFileUploadOptions = {
   /** ECHO subject whose containing database receives the upload. */
@@ -76,9 +77,14 @@ export const useFileUpload = ({ subject, accept, multiple, onUpload }: UseFileUp
         return;
       }
       for (const file of files) {
-        const info = await uploader(db, file);
-        if (info?.url) {
-          await onUpload({ ...info, url: info.url } as FileInfo & { url: string }, file);
+        try {
+          const info = await uploader(db, file);
+          if (info?.url) {
+            await onUpload({ ...info, url: info.url } as FileInfo & { url: string }, file);
+          }
+        } catch (err) {
+          // TODO(burdon): Surface to caller via an `onError` option once a UX for upload errors is decided.
+          log.warn('file upload failed', { file: file.name, err });
         }
       }
     },

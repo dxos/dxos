@@ -9,8 +9,6 @@ import type { OperationHandlerSet } from '@dxos/compute';
 
 import { GalleryHandlers } from '#operations';
 
-export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(
-  Effect.fnUntraced(function* () {
-    return Capability.contributes(Capabilities.OperationHandler, GalleryHandlers);
-  }),
+export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(() =>
+  Effect.succeed(Capability.contributes(Capabilities.OperationHandler, GalleryHandlers)),
 );

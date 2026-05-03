@@ -16,8 +16,16 @@ import { GalleryImage } from '../GalleryImage';
 
 const LIGHTBOX_NAME = 'Lightbox';
 
+/**
+ * Structural subset of `Gallery.Gallery` that `Lightbox` actually reads.
+ * Accepting this (rather than the schema type) lets containers pass either
+ * a plain object (storybook) or a `Snapshot<Gallery>` from `useObject`
+ * without an unsafe cast.
+ */
+type GalleryLike = { images?: ReadonlyArray<Gallery.Image> };
+
 type ContextValue = {
-  gallery: Gallery.Gallery;
+  gallery: GalleryLike | undefined;
   onDelete?: (index: number) => void;
   Tile: ComponentType<LightboxTileProps>;
   emptyMessage?: ReactNode;
@@ -47,7 +55,7 @@ LightboxTile.displayName = `${LIGHTBOX_NAME}.Tile`;
 //
 
 type LightboxRootProps = PropsWithChildren<{
-  gallery: Gallery.Gallery;
+  gallery: GalleryLike | undefined;
   onDelete?: (index: number) => void;
   /** Render a single tile. Defaults to `Lightbox.Tile` (`GalleryImage` with `image.url` as src). */
   Tile?: ComponentType<LightboxTileProps>;
@@ -81,12 +89,22 @@ type LightboxViewportProps = ThemedClassName<{}>;
 const LightboxViewport = composable<HTMLDivElement, LightboxViewportProps>((props, forwardedRef) => {
   const { t } = useTranslation(meta.id);
   const { gallery, onDelete, Tile, emptyMessage } = useLightboxContext(`${LIGHTBOX_NAME}.Viewport`);
-  const images = gallery.images ?? [];
+  const images = gallery?.images ?? [];
   const items = useMemo(
     () => images.map((image, index) => ({ image, index })),
     // Length tracks ECHO-array mutations even when the underlying reference is stable.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [images, images.length],
+  );
+
+  // Memoised so the masonry's internal `TileAdapter` (memoised on `[Tile, gutter]`)
+  // doesn't recreate on every render and remount every visible tile.
+  const MasonryTile = useMemo(
+    () =>
+      ({ data }: { data: { image: Gallery.Image; index: number } }) => (
+        <Tile image={data.image} index={data.index} onDelete={onDelete && (() => onDelete(data.index))} />
+      ),
+    [Tile, onDelete],
   );
 
   if (items.length === 0) {
@@ -102,15 +120,13 @@ const LightboxViewport = composable<HTMLDivElement, LightboxViewportProps>((prop
   }
 
   return (
-    <Masonry.Root
-      Tile={({ data }: { data: { image: Gallery.Image; index: number } }) => (
-        <Tile image={data.image} index={data.index} onDelete={onDelete && (() => onDelete(data.index))} />
-      )}
-    >
+    <Masonry.Root Tile={MasonryTile}>
       <Masonry.Content {...composableProps(props)} ref={forwardedRef} centered>
         <Masonry.Viewport
           items={items}
-          getId={(data: { image: Gallery.Image; index: number }) => `${data.index}:${data.image.url}`}
+          // Use the URL as the stable per-tile key — index-based keys would
+          // shift after a deletion and force unrelated tiles to remount.
+          getId={(data: { image: Gallery.Image; index: number }) => data.image.url ?? String(data.index)}
         />
       </Masonry.Content>
     </Masonry.Root>

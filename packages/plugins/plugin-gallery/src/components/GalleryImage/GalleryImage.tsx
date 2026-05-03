@@ -8,11 +8,10 @@ import { Card, Icon, Toolbar, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-
-import { type Image } from '../../types/Gallery';
+import { Gallery } from '#types';
 
 export type GalleryImageProps = {
-  image: Image;
+  image: Gallery.Image;
   /**
    * Pre-resolved URL for `<img src>`.
    * For `http(s)://` URLs this is just `image.url`.
@@ -47,12 +46,7 @@ export const GalleryImage = ({ image, url, classNames, onDelete }: GalleryImageP
             style={aspectRatio ? { aspectRatio } : undefined}
           />
         ) : (
-          <div
-            role='image'
-            aria-label={alt}
-            className='w-full bg-input'
-            style={{ aspectRatio: aspectRatio ?? 16 / 9 }}
-          />
+          <div role='img' aria-label={alt} className='w-full bg-input' style={{ aspectRatio: aspectRatio ?? 16 / 9 }} />
         )}
       </div>
       <Card.Toolbar>
@@ -64,7 +58,7 @@ export const GalleryImage = ({ image, url, classNames, onDelete }: GalleryImageP
             iconOnly
             variant='ghost'
             label={t('delete-image.label')}
-            classNames='opacity-0 group-hover:opacity-100 transition-opacity'
+            classNames='opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity'
             onClick={onDelete}
           />
         )}

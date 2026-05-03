@@ -26,7 +26,8 @@ export const ChatModule = ({ space }: ComponentProps) => {
   const processor = useChatProcessor({ runtime, space, chat, preset, blueprintRegistry });
 
   const feedTarget = chat?.feed?.target;
-  const feed = feedTarget ? space.queues.get(Feed.getQueueDxn(feedTarget)!) : undefined;
+  const feedDxn = feedTarget ? Feed.getQueueDxn(feedTarget) : undefined;
+  const feed = feedDxn ? space.queues.get(feedDxn) : undefined;
 
   if (!chat || !processor) {
     return null;

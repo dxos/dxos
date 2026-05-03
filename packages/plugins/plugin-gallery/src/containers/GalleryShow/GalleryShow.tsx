@@ -12,12 +12,14 @@ import { DeckCapabilities } from '@dxos/plugin-deck';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
+import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { GalleryImage, Lightbox, type LightboxTileProps } from '#components';
 import { meta } from '#meta';
 import { type Gallery } from '#types';
 
 import { useImageUrl } from '../../hooks';
+import { GALLERY_SHOW_SEGMENT } from '../../paths';
 
 export type GalleryShowProps = {
   gallery: Gallery.Gallery;
@@ -41,9 +43,11 @@ export const GalleryShow = ({ gallery: subject }: GalleryShowProps) => {
       return;
     }
     const objectPath = getObjectPathFromObject(subject);
+    const showId = `${objectPath}/${linkedSegment(GALLERY_SHOW_SEGMENT)}`;
     const db = Obj.getDatabase(subject);
     if (deck?.fullscreen) {
-      await invokePromise(DeckOperation.Adjust, { type: 'solo--fullscreen' as const, id: objectPath });
+      // Match the ID used to enter fullscreen (see GalleryArticle.handleShow / app-graph-builder).
+      await invokePromise(DeckOperation.Adjust, { type: 'solo--fullscreen' as const, id: showId });
     }
     await invokePromise(LayoutOperation.Open, {
       subject: [objectPath],
@@ -53,7 +57,7 @@ export const GalleryShow = ({ gallery: subject }: GalleryShowProps) => {
 
   return (
     <div className='relative w-full h-full bg-attention-surface'>
-      <Lightbox.Root gallery={gallery as unknown as Gallery.Gallery} Tile={ResolvingTile}>
+      <Lightbox.Root gallery={gallery} Tile={ResolvingTile}>
         <Lightbox.Viewport />
       </Lightbox.Root>
       <div className='absolute top-4 right-4 z-[200]'>

@@ -34,6 +34,9 @@ export const useImageUrl = (url: string | undefined, type?: string): string | un
       setResolved(url);
       return;
     }
+    // Clear any prior URL (e.g. an http URL from a previous render) while wnfs
+    // resolution is pending so we don't render a stale, unrelated image.
+    setResolved(undefined);
     if (!blockstore) {
       return;
     }

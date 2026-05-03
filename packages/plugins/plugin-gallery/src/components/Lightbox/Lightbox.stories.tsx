@@ -45,7 +45,7 @@ type DefaultStoryProps = {
 
 const DefaultStory = ({ initialImages, enableDelete }: DefaultStoryProps) => {
   const [images, setImages] = useState<Gallery.Image[]>(initialImages);
-  const gallery = { name: 'Sample Gallery', images } as unknown as Gallery.Gallery;
+  const gallery = { name: 'Sample Gallery', images };
 
   return (
     <Lightbox.Root

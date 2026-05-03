@@ -49,5 +49,6 @@ export const Gallery = Schema.Struct({
 
 export interface Gallery extends Schema.Schema.Type<typeof Gallery> {}
 
+/** Construct a new `Gallery` ECHO object. Defaults `images` to an empty array. */
 export const make = ({ name, images = [] }: { name?: string; images?: Image[] } = {}) =>
   Obj.make(Gallery, { name, images });

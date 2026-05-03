@@ -112,7 +112,7 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
   const menuActions = useMenuActions(actionsAtom);
 
   return (
-    <Lightbox.Root gallery={gallery as unknown as Gallery.Gallery} onDelete={handleDelete} Tile={ResolvingTile}>
+    <Lightbox.Root gallery={gallery} onDelete={handleDelete} Tile={ResolvingTile}>
       <Menu.Root {...menuActions} attendableId={attendableId}>
         <Panel.Root role={role}>
           <Panel.Toolbar asChild>
