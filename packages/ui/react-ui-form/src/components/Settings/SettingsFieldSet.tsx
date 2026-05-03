@@ -27,9 +27,14 @@ export type SettingsFieldProps<T = any> = {
 };
 
 /**
- * Map of property names to custom field renderers.
+ * Map of property names to either a custom field renderer or a nested field map for struct fields.
+ * When a value type `T` is provided, the map shape is checked against the schema's value type.
  */
-export type SettingsFieldMap = Record<string, React.FC<SettingsFieldProps>>;
+export type SettingsFieldMap<T extends Record<string, any> = Record<string, any>> = {
+  [K in keyof T]?: NonNullable<T[K]> extends Record<string, any>
+    ? SettingsFieldMap<NonNullable<T[K]>>
+    : React.FC<SettingsFieldProps<T[K]>>;
+};
 
 export type SettingsFieldSetProps<T extends Record<string, any> = Record<string, any>> = {
   /** Effect Schema for the settings object. */
@@ -44,14 +49,17 @@ export type SettingsFieldSetProps<T extends Record<string, any> = Record<string,
   /** When true, all controls are disabled. */
   readonly?: boolean;
 
-  /** Map of property names to custom field renderers. */
-  fieldMap?: SettingsFieldMap;
+  /** Map of property names to custom field renderers. Nested objects map to struct sub-fields. */
+  fieldMap?: SettingsFieldMap<T>;
 
-  /** Control field visibility. Return false to hide a field. */
+  /** Control field visibility. Receives the dotted path (e.g. `'modelDefaults.edge'`) at every level. */
   visible?: (path: string, values: T) => boolean;
 
-  /** Override the order of fields. Fields not listed are appended in schema order. */
+  /** Override the order of fields. Fields not listed are appended in schema order. Applied per scope. */
   sort?: string[];
+
+  /** Internal: dot-path prefix used by recursive struct rendering. */
+  pathPrefix?: string;
 };
 
 //
@@ -66,6 +74,7 @@ export const SettingsFieldSet = <T extends Record<string, any>>({
   fieldMap,
   visible,
   sort,
+  pathPrefix = '',
 }: SettingsFieldSetProps<T>) => {
   const properties = useMemo(() => {
     const props = getFormProperties(schema.ast);
@@ -90,18 +99,27 @@ export const SettingsFieldSet = <T extends Record<string, any>>({
     <>
       {properties.map((property) => {
         const name = property.name.toString();
-        if (visible && !visible(name, values)) {
+        const path = pathPrefix ? `${pathPrefix}.${name}` : name;
+        if (visible && !visible(path, values)) {
           return null;
         }
 
+        const entry = fieldMap?.[name as keyof typeof fieldMap] as
+          | React.FC<SettingsFieldProps>
+          | SettingsFieldMap
+          | undefined;
         return (
           <SettingsFieldItem
             key={name}
+            path={path}
             property={property}
             value={values[name]}
             onChange={(value) => handleChange(name, value)}
             readonly={readonly}
-            customField={fieldMap?.[name]}
+            customField={typeof entry === 'function' ? entry : undefined}
+            nestedFieldMap={typeof entry === 'object' ? entry : undefined}
+            visible={visible as (path: string, values: any) => boolean}
+            sort={sort}
           />
         );
       })}
@@ -117,13 +135,27 @@ SettingsFieldSet.displayName = 'Settings.FieldSet';
 
 type SettingsFieldItemProps = {
   property: SchemaProperty;
+  path: string;
   value: any;
   onChange: (value: any) => void;
   readonly?: boolean;
   customField?: React.FC<SettingsFieldProps>;
+  nestedFieldMap?: SettingsFieldMap;
+  visible?: (path: string, values: any) => boolean;
+  sort?: string[];
 };
 
-const SettingsFieldItem = ({ property, value, onChange, readonly, customField }: SettingsFieldItemProps) => {
+const SettingsFieldItem = ({
+  property,
+  path,
+  value,
+  onChange,
+  readonly,
+  customField,
+  nestedFieldMap,
+  visible,
+  sort,
+}: SettingsFieldItemProps) => {
   const { type } = property;
   const name = property.name.toString();
   const title = getAnnotation<string>(SchemaAST.TitleAnnotationId)(type) ?? String.capitalize(name);
@@ -142,6 +174,20 @@ const SettingsFieldItem = ({ property, value, onChange, readonly, customField }:
   const fieldType = detectFieldType(type);
 
   switch (fieldType) {
+    case 'struct':
+      return (
+        <SettingsFieldSet
+          schema={{ ast: type }}
+          values={value ?? {}}
+          onValuesChanged={onChange}
+          readonly={readonly}
+          fieldMap={nestedFieldMap}
+          visible={visible}
+          sort={sort}
+          pathPrefix={path}
+        />
+      );
+
     case 'boolean':
       return (
         <SettingsItem title={title} description={description}>

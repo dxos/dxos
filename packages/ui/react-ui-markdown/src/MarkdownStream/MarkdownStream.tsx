@@ -267,6 +267,7 @@ const useMarkdownStreamTextEditor = (
           syntaxHighlighting: true,
           themeMode,
         }),
+        xmlFormatting({ skip: debug ? [] : ['prompt'] }),
         !debug &&
           [
             extendedMarkdown({ registry }),
@@ -287,7 +288,6 @@ const useMarkdownStreamTextEditor = (
               contentClass: 'cm-prompt-bubble dx-panel px-2 py-1.5 rounded-sm [&_*]:text-inherit!',
               hideTags: true,
             }),
-            xmlFormatting({ skip: ['prompt'] }),
             xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
             scroller({ overScroll: 80 }),
             options?.autoScroll && autoScroll(),

@@ -91,7 +91,7 @@ export const showDevRssBanner = async ({ feedUrl = DEFAULT_FEED }: DevRssBannerO
 
     renderBanner({ title, link, summary, source });
   } catch (error) {
-    log.info('dev-rss-banner: fetch/parse error', { error: String(error) });
+    log.catch(error);
   }
 };
 
@@ -122,7 +122,7 @@ const renderBanner = ({
     transform: 'translateX(-50%)',
     maxWidth: 'min(640px, calc(100vw - 32px))',
     padding: '12px 16px',
-    border: '1px solid currentcolor',
+    border: '1px solid #888888',
     borderRadius: '8px',
     opacity: '0.7',
     textAlign: 'center',
