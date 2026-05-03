@@ -34,19 +34,27 @@ export const GalleryImage = ({ image, url, classNames, onDelete }: GalleryImageP
 
   return (
     <Card.Root classNames={mx('group relative', classNames)}>
-      {url ? (
-        <img
-          src={url}
-          alt={alt}
-          loading='lazy'
-          width={image.width}
-          height={image.height}
-          className='block w-full h-auto'
-          style={aspectRatio ? { aspectRatio } : undefined}
-        />
-      ) : (
-        <div role='image' aria-label={alt} className='w-full bg-input' style={{ aspectRatio: aspectRatio ?? 16 / 9 }} />
-      )}
+      {/* col-span-full so the image spans Card.Root's grid (icon|title|menu). */}
+      <div role='none' className='col-span-full'>
+        {url ? (
+          <img
+            src={url}
+            alt={alt}
+            loading='lazy'
+            width={image.width}
+            height={image.height}
+            className='block w-full h-auto'
+            style={aspectRatio ? { aspectRatio } : undefined}
+          />
+        ) : (
+          <div
+            role='image'
+            aria-label={alt}
+            className='w-full bg-input'
+            style={{ aspectRatio: aspectRatio ?? 16 / 9 }}
+          />
+        )}
+      </div>
       <Card.Toolbar>
         <Icon icon={image.description ? 'ph--text-aa--regular' : 'ph--image--regular'} size={5} />
         <Card.Title>{image.description ?? image.name ?? ''}</Card.Title>
