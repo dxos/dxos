@@ -70,6 +70,10 @@ child.on('error', (err) => {
   console.error(`[inspect] Failed to spawn Inspector: ${err.message}`);
   process.exit(1);
 });
-child.on('exit', (code) => process.exit(code ?? 0));
+// Preserve a non-zero exit when the Inspector terminates via signal — a
+// Ctrl-C/SIGTERM should not look like a successful run.
+child.on('exit', (code, signal) => process.exit(signal ? 1 : (code ?? 0)));
+// Forward signals to the child but let its own `exit` handler decide the
+// final exit code, so signal-terminated runs propagate correctly.
 process.on('SIGINT', () => child.kill('SIGINT'));
 process.on('SIGTERM', () => child.kill('SIGTERM'));
