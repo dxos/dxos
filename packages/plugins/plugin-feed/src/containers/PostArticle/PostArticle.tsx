@@ -36,7 +36,7 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
   // from re-firing on every render.
   const requestedContentFor = useRef<string | undefined>(undefined);
   useEffect(() => {
-    const postId = (post as { id: string }).id;
+    const postId = Obj.getDXN(post).toString();
     if (requestedContentFor.current === postId) {
       return;
     }

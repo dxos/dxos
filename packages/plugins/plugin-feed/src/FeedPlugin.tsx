@@ -76,16 +76,25 @@ export const FeedPlugin = Plugin.define(meta).pipe(
             Effect.gen(function* () {
               // Seed every new Magazine with one starter Feed so the article view has
               // something to curate immediately rather than booting into an empty state.
-              const defaultFeed = Subscription.makeFeed({ ...DEFAULT_MAGAZINE_FEED });
-              yield* Operation.invoke(SpaceOperation.AddObject, {
-                object: defaultFeed,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-              yield* Operation.schedule(FeedOperation.SyncFeed, { feed: defaultFeed });
+              // Best-effort: a seeding failure (AddObject reject, SyncFeed schedule
+              // error) must not abort Magazine creation, and partial success (feed
+              // added but schedule failed) would otherwise leave an orphaned hidden
+              // feed referenced by no magazine. Wrapping the whole block in
+              // `Effect.option` collapses both into a clean None on failure.
+              const seededFeed = yield* Effect.gen(function* () {
+                const defaultFeed = Subscription.makeFeed({ ...DEFAULT_MAGAZINE_FEED });
+                yield* Operation.invoke(SpaceOperation.AddObject, {
+                  object: defaultFeed,
+                  target: options.target,
+                  hidden: true,
+                  targetNodeId: options.targetNodeId,
+                });
+                yield* Operation.schedule(FeedOperation.SyncFeed, { feed: defaultFeed });
+                return defaultFeed;
+              }).pipe(Effect.option);
 
-              const object = Magazine.make({ ...props, feeds: [Ref.make(defaultFeed)] });
+              const initialFeeds = Option.isSome(seededFeed) ? [Ref.make(seededFeed.value)] : [];
+              const object = Magazine.make({ ...props, feeds: initialFeeds });
               return yield* Operation.invoke(SpaceOperation.AddObject, {
                 object,
                 target: options.target,
