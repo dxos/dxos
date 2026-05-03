@@ -239,16 +239,50 @@
    */
   opacity: 0.5;
   /*
-   * Pin both `line-height` and `height` so the status box stays exactly the
-   * same size regardless of which phase string is currently displayed. With
-   * only `min-height: 1em`, the browser's `line-height: normal` resolved to
-   * slightly different rendered heights as the text changed, which reflowed
-   * the flex column and bumped the progress bar a few pixels each time.
-   * `white-space: nowrap` makes sure long phase strings ("Loading
-   * framework…") never wrap to a second line.
+   * Single-line viewport over a vertically-stacked track of every status
+   * the driver has emitted. The track translates upward by one line-height
+   * per `status()` call (see `--boot-loader-line` below), animated via
+   * CSS `transition` on `transform` so the new line slides in from below
+   * while the previous line slides out — independent of any
+   * `scroll-behavior` smooth-scroll support, which Playwright/headless
+   * Chrome strips even from spec-compliant `scrollTo({ behavior: 'smooth' })`
+   * calls.
    */
   height: 1.5em;
   line-height: 1.5;
   letter-spacing: 0.01em;
+  text-align: center;
+  overflow: hidden;
+}
+
+/*
+ * Track of every appended `.boot-loader-status-line`. The driver writes
+ * `--boot-loader-line` (0 = first line visible, 1 = second, …) on this
+ * element and the `transform` interpolates because `--boot-loader-line` is
+ * registered as a typed `<number>` custom property below.
+ */
+#boot-loader-status-track {
+  display: flex;
+  flex-direction: column;
+  /*
+   * The driver writes `transform: translateY(<index>em)` directly per
+   * `status()` call (see `boot-loader.js`). The transition animates the
+   * change so the new line slides in from below while the previous one
+   * slides out at the top.
+   */
+  transform: translateY(0);
+  transition: transform 500ms ease-out;
+}
+
+/* Honour reduced-motion preferences explicitly — `transition` doesn't auto-respect it. */
+@media (prefers-reduced-motion: reduce) {
+  #boot-loader-status-track {
+    transition: none;
+  }
+}
+
+.boot-loader-status-line {
+  flex: 0 0 auto;
+  height: 1.5em;
   white-space: nowrap;
 }
