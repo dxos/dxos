@@ -36,3 +36,14 @@ tasks:
       - scripts/sanity.mjs
     options:
       cache: false
+  # Verify the Claude Code MCP entry in ~/.claude/settings.json works
+  # end-to-end: spawns the server with the exact command + args Claude Code
+  # would use, completes the JSON-RPC handshake, lists tools, and invokes
+  # list_packages. Run this BEFORE restarting Claude Code to confirm the
+  # entry is valid; if it passes, restart and the server will connect.
+  check:
+    command: node
+    args:
+      - scripts/check-claude-config.mjs
+    options:
+      cache: false

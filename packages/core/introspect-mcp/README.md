@@ -37,78 +37,46 @@ Configure your Claude Code (or other MCP client) to launch this command.
 - `get_symbol` returns signature + summary + location by default; full source/JSDoc require explicit `include`.
 - Long source/JSDoc bodies are truncated with a marker — call again with a narrower question if needed.
 
-## Testing
+## Use it from Claude Code
 
-Three ways, in order of how close they are to "real":
+1. Add this entry to `~/.claude/settings.json` under `mcpServers`:
 
-### 1. Automated tests
+   ```json
+   "dxos-introspect": {
+     "command": "npx",
+     "args": [
+       "tsx",
+       "--conditions=source",
+       "<ABSOLUTE_PATH>/packages/core/introspect-mcp/src/cli.ts",
+       "--root",
+       "<ABSOLUTE_PATH>"
+     ]
+   }
+   ```
 
-```bash
-moon run introspect-mcp:test
-```
+   Replace `<ABSOLUTE_PATH>` with the absolute path to your monorepo (or worktree) root.
 
-Boots the server with an in-memory transport, connects an MCP client, and round-trips every tool. 
-See [`src/server.test.ts`](src/server.test.ts) — 10 tests, ~1s.
+2. **Verify before restarting** — runs the same spawn Claude Code will use, completes a real JSON-RPC `initialize` + `tools/list` + `tools/call list_packages`, and exits 0 on success:
 
-### 2. Interactive probe with MCP Inspector
+   ```bash
+   moon run introspect-mcp:check
+   ```
 
-The MCP SDK ships an interactive UI for talking to a stdio server. From the monorepo root:
+3. **Restart Claude Code** (Cmd+Q + relaunch). Type `/mcp` to confirm `dxos-introspect` is connected.
 
-```bash
-npx @modelcontextprotocol/inspector \
-  npx tsx --conditions=source packages/core/introspect-mcp/src/cli.ts --root "$PWD"
-```
+4. Try it: ask Claude *"list every symbol in @dxos/echo-react"*.
 
-The Inspector pre-fills the form from those argv tokens and inherits your shell's cwd as the spawn directory.
+## Other testing entry points
 
-**Once the page opens:**
+| Command | What it does |
+| --- | --- |
+| `moon run introspect-mcp:test` | Unit + integration tests (in-memory and real-stdio subprocess), ~3s |
+| `moon run introspect-mcp:check` | End-to-end: spawns the server with the exact command from your `~/.claude/settings.json` and round-trips a tool call. **Run before restarting Claude Code.** |
+| `moon run introspect-mcp:inspect` | Launch the MCP Inspector (browser UI) against this server, with all paths absolutized. Cold cache may take ~80s; subsequent runs <1s. |
+| `moon run introspect-mcp:sanity` | Inspector + proxy auth check — confirms the launcher succeeds and the proxy responds with a valid auth token. |
+| `moon run introspect-mcp:serve` | Raw stdio server, for piping requests in by hand. |
+| `moon run introspect:index` | Pre-build the on-disk symbol cache. The cache makes server startup near-instant. |
 
-1. **Open the URL the Inspector printed**, not `http://localhost:6274` directly. The printed URL carries a `?MCP_PROXY_AUTH_TOKEN=…` query string — without it the proxy rejects the WebSocket and you'll see "Connection Error – Check if your MCP server is running and proxy token is correct."
-2. In the left sidebar, **Transport Type** must be `STDIO` (not SSE / Streamable HTTP). The Inspector persists the last-used transport across sessions, so check this every time.
-3. Click **Connect**. Tools should populate within ~1s.
+## Why `--conditions=source`?
 
-**Common pitfalls:**
-
-- ⚠️ **Don't launch via `pnpm -F @dxos/introspect-mcp start` directly into the Inspector.** pnpm's script-runner writes a header line (`> @dxos/introspect-mcp@x.y.z start`) to stdout, which corrupts the JSON-RPC stream and produces the same "proxy token" error. Use `tsx` (with `--conditions=source`) or the built binary so the server owns stdout.
-- ⚠️ **Use absolute paths if you fill the form by hand.** Inspector spawns the command from its own cwd, not your terminal's — relative paths like `packages/core/introspect-mcp/src/cli.ts` won't resolve. Pass the command on the launch CLI (as above) so cwd is inherited.
-- ⚠️ **The `--conditions=source` flag is what lets tsx skip the `dist/` build.** Without it, tsx resolves `@dxos/introspect` through the package's `default` export and fails with `ERR_MODULE_NOT_FOUND` until you `moon run introspect:build`.
-
-### 3. Wire it into Claude Code
-
-Add to `.mcp.json` (project-scoped) or `~/.claude.json` (user-scoped):
-
-```jsonc
-{
-  "mcpServers": {
-    "dxos-introspect": {
-      "command": "npx",
-      "args": [
-        "tsx",
-        "/absolute/path/to/dxos/packages/core/introspect-mcp/src/cli.ts",
-        "--root", "/absolute/path/to/dxos"
-      ]
-    }
-  }
-}
-```
-
-(Don't use `pnpm start` here either — same stdout-pollution issue as the Inspector.)
-
-In a fresh Claude Code session, `/mcp` shows the server connected with four tools (`mcp__dxos-introspect__list_packages` etc.). 
-Ask something like *"which plugin owns the Markdown editor?"* and watch it call `find_symbol` followed by `get_symbol`.
-
-### Quick sanity check
-
-Verify the binary speaks JSON-RPC at all:
-
-```bash
-printf '%s\n' \
-  '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"probe","version":"0"}}}' \
-  '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
-  | npx tsx packages/core/introspect-mcp/src/cli.ts --root "$PWD"
-```
-
-Should print two JSON-RPC responses — the second listing the four tools.
-
-For development, option 2 is fastest — the Inspector gives you a clickable UI without restarting Claude Code. 
-Once it works there it works everywhere.
+The package.json `exports` field has a `source` condition pointing at `src/index.ts`. Without `--conditions=source`, `tsx` falls through to the `default` condition (`dist/lib/node/index.mjs`) which doesn't exist unless you've run a build. The flag lets the server boot from source with no build step — same behavior the rest of the DXOS toolchain relies on.
