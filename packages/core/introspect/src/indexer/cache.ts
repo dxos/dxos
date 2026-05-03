@@ -114,11 +114,23 @@ export type LoadedCache = {
   staleCount: number;
 };
 
+// Legacy v1 schema — kept here so we can migrate the on-disk file forward
+// without forcing a full re-extraction on every schema bump.
+type CacheFileV1 = {
+  version: 1;
+  hash: string;
+  packages: CachePackageEntry[];
+  symbols: Record<string, PackageSymbols>;
+};
+
 /**
  * Load the cache file and return only those entries whose (path, srcMtime)
  * still matches the live filesystem. Stale entries are silently dropped — the
  * caller will re-extract them. Returns null if the file doesn't exist or is
  * unparseable.
+ *
+ * Forward-compatible: reads v1 files (single-hash format) and migrates the
+ * symbol map without re-extracting anything that's still valid.
  */
 export const loadCache = async (
   cachePath: string,
@@ -128,18 +140,29 @@ export const loadCache = async (
   if (!existsSync(cachePath)) {
     return null;
   }
-  let parsed: CacheFile;
+  let parsed: CacheFile | CacheFileV1;
   try {
     const content = await readFile(cachePath, 'utf8');
-    parsed = JSON.parse(content) as CacheFile;
+    parsed = JSON.parse(content) as CacheFile | CacheFileV1;
   } catch (err) {
     warn('load failed — re-indexing', err);
     return null;
   }
-  if (parsed.version !== CACHE_VERSION) {
-    warn(`version mismatch (saved=${parsed.version} expected=${CACHE_VERSION}) — re-indexing`);
-    return null;
+  if (parsed.version === CACHE_VERSION) {
+    return matchV2(parsed, liveMtimes, packageNamesByPath);
   }
+  if (parsed.version === 1) {
+    return matchV1(parsed, liveMtimes, packageNamesByPath);
+  }
+  warn(`unknown cache version (saved=${(parsed as { version: number }).version}) — re-indexing`);
+  return null;
+};
+
+const matchV2 = (
+  parsed: CacheFile,
+  liveMtimes: Record<string, CachePackageEntry>,
+  packageNamesByPath: Record<string, string>,
+): LoadedCache => {
   const symbols: Record<string, PackageSymbols> = {};
   let valid = 0;
   let stale = 0;
@@ -153,6 +176,38 @@ export const loadCache = async (
       symbols[name] = cached.symbols;
       valid++;
     } else if (cached) {
+      stale++;
+    }
+  }
+  return { symbols, validCount: valid, staleCount: stale };
+};
+
+const matchV1 = (
+  parsed: CacheFileV1,
+  liveMtimes: Record<string, CachePackageEntry>,
+  packageNamesByPath: Record<string, string>,
+): LoadedCache => {
+  // v1 stored mtimes in `packages[]` and symbols by name in `symbols{}`.
+  // For each package whose v1 mtime matches the live mtime, reuse the
+  // symbols. Mismatched ones get re-extracted by the caller.
+  const v1Mtimes = new Map<string, number>();
+  for (const entry of parsed.packages ?? []) {
+    v1Mtimes.set(entry.path, entry.srcMtime);
+  }
+  const symbols: Record<string, PackageSymbols> = {};
+  let valid = 0;
+  let stale = 0;
+  for (const [path, live] of Object.entries(liveMtimes)) {
+    const name = packageNamesByPath[path];
+    if (!name) {
+      continue;
+    }
+    const cachedMtime = v1Mtimes.get(path);
+    const syms = parsed.symbols?.[name];
+    if (syms && cachedMtime === live.srcMtime) {
+      symbols[name] = syms;
+      valid++;
+    } else if (syms) {
       stale++;
     }
   }
