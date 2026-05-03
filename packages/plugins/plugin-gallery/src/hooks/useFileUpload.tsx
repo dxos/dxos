@@ -62,13 +62,20 @@ export const useFileUpload = ({ subject, accept, multiple, onUpload }: UseFileUp
 
   const handleChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const files = event.target.files;
-      const db = Obj.getDatabase(subject);
-      event.target.value = '';
-      if (!files || !uploader || !db) {
+      const fileList = event.target.files;
+      if (!fileList || fileList.length === 0) {
         return;
       }
-      for (const file of Array.from(files)) {
+      // Snapshot the FileList into a real array BEFORE resetting `value` —
+      // clearing `value` empties the live FileList reference.
+      const files = Array.from(fileList);
+      event.target.value = '';
+
+      const db = Obj.getDatabase(subject);
+      if (!uploader || !db) {
+        return;
+      }
+      for (const file of files) {
         const info = await uploader(db, file);
         if (info?.url) {
           await onUpload({ ...info, url: info.url } as FileInfo & { url: string }, file);
