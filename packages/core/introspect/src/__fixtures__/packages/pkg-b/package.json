@@ -1,0 +1,8 @@
+{
+  "name": "@fixture/pkg-b",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Fixture package B",
+  "type": "module",
+  "main": "src/index.ts"
+}

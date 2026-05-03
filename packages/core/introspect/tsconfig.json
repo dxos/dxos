@@ -1,0 +1,16 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {},
+  "exclude": [
+    "src/__fixtures__"
+  ],
+  "include": [
+    "src",
+    "src/**/*.json"
+  ],
+  "references": [
+    {
+      "path": "../../common/log"
+    }
+  ]
+}

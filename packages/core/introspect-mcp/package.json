@@ -1,0 +1,45 @@
+{
+  "name": "@dxos/introspect-mcp",
+  "version": "0.8.3",
+  "private": true,
+  "description": "MCP server exposing DXOS monorepo introspection.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/node/index.mjs"
+    }
+  },
+  "bin": {
+    "dx-introspect-mcp": "./bin/dx-introspect-mcp.mjs"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "start": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@dxos/introspect": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@modelcontextprotocol/sdk": "catalog:",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

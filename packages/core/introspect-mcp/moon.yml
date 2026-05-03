@@ -1,0 +1,10 @@
+layer: application
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--platform=node'

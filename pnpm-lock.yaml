@@ -5841,6 +5841,56 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
 
+  packages/core/introspect:
+    dependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      glob:
+        specifier: '>=10.5.0'
+        version: 13.0.3
+      ts-morph:
+        specifier: 'catalog:'
+        version: 16.0.0
+    devDependencies:
+      '@types/node':
+        specifier: 22.10.2
+        version: 22.10.2
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.5(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(esbuild@0.28.0)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.12))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/core/introspect-mcp:
+    dependencies:
+      '@dxos/introspect':
+        specifier: workspace:*
+        version: link:../introspect
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@modelcontextprotocol/sdk':
+        specifier: '>=1.26.0'
+        version: 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
+      zod:
+        specifier: ^4.0.0
+        version: 4.3.6
+    devDependencies:
+      '@types/node':
+        specifier: 22.10.2
+        version: 22.10.2
+      tsx:
+        specifier: 'catalog:'
+        version: 4.21.0
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.5(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(esbuild@0.28.0)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.12))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
   packages/core/mcp-client:
     dependencies:
       '@dxos/ai':
@@ -5860,7 +5910,7 @@ importers:
         version: 0.33.2(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
       '@modelcontextprotocol/sdk':
         specifier: '>=1.26.0'
-        version: 1.27.1(@cfworker/json-schema@4.1.1)
+        version: 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
       effect:
         specifier: 3.20.0
         version: 3.20.0
@@ -23638,6 +23688,7 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       '@cfworker/json-schema': ^4.1.1
+      zod: ^3.25 || ^4.0
     peerDependenciesMeta:
       '@cfworker/json-schema':
         optional: true
@@ -39297,9 +39348,6 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.1.12:
-    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
-
   zod@4.3.6:
     resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
@@ -43053,7 +43101,7 @@ snapshots:
 
   '@mixmark-io/domino@2.2.0': {}
 
-  '@modelcontextprotocol/sdk@1.27.1(@cfworker/json-schema@4.1.1)':
+  '@modelcontextprotocol/sdk@1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)':
     dependencies:
       '@hono/node-server': 1.19.9(hono@4.12.2)
       ajv: 8.18.0
@@ -43070,8 +43118,8 @@ snapshots:
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.0
       raw-body: 3.0.1
-      zod: 4.1.12
-      zod-to-json-schema: 3.25.1(zod@4.1.12)
+      zod: 4.3.6
+      zod-to-json-schema: 3.25.1(zod@4.3.6)
     optionalDependencies:
       '@cfworker/json-schema': 4.1.1
     transitivePeerDependencies:
@@ -49315,7 +49363,7 @@ snapshots:
     dependencies:
       '@cfworker/json-schema': 4.1.1
       '@cloudflare/ai-chat': 0.0.6(agents@0.3.10)(ai@6.0.97(zod@4.3.6))(react@19.2.3)(zod@4.3.6)
-      '@modelcontextprotocol/sdk': 1.27.1(@cfworker/json-schema@4.1.1)
+      '@modelcontextprotocol/sdk': 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
       ai: 6.0.97(zod@4.3.6)
       cron-schedule: 6.0.0
       escape-html: 1.0.3
@@ -54624,7 +54672,7 @@ snapshots:
       smol-toml: 1.4.2
       strip-json-comments: 5.0.2
       typescript: 6.0.3
-      zod: 4.1.12
+      zod: 4.3.6
 
   koffi@2.14.1: {}
 
@@ -60855,7 +60903,7 @@ snapshots:
       std-env: 4.1.0
       tinybench: 2.9.0
       tinyexec: 1.1.1
-      tinyglobby: 0.2.15
+      tinyglobby: 0.2.16
       tinyrainbow: 3.1.0
       vite: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       why-is-node-running: 2.3.0
@@ -61579,15 +61627,13 @@ snapshots:
       compress-commons: 6.0.2
       readable-stream: 4.7.0
 
-  zod-to-json-schema@3.25.1(zod@4.1.12):
+  zod-to-json-schema@3.25.1(zod@4.3.6):
     dependencies:
-      zod: 4.1.12
+      zod: 4.3.6
 
   zod@3.22.3: {}
 
   zod@3.25.76: {}
-
-  zod@4.1.12: {}
 
   zod@4.3.6: {}
 

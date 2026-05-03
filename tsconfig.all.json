@@ -214,6 +214,12 @@
       "path": "packages/core/halo/keyring/tsconfig.json"
     },
     {
+      "path": "packages/core/introspect/tsconfig.json"
+    },
+    {
+      "path": "packages/core/introspect-mcp/tsconfig.json"
+    },
+    {
       "path": "packages/core/mcp-client/tsconfig.json"
     },
     {

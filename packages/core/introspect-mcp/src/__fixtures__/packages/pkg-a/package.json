@@ -1,0 +1,12 @@
+{
+  "name": "@fixture/pkg-a",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Fixture package A",
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts"
+    }
+  }
+}
