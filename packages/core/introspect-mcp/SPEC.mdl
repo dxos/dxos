@@ -1,0 +1,258 @@
+---
+id: org.dxos.introspect-mcp
+name: IntrospectMcp
+version: 0.1.0
+extends: [org.dxos.introspect@0.1.0]
+---
+
+MCP server that exposes `@dxos/introspect` over stdio. A thin adapter: tool
+schema definitions, parameter validation, response shaping for token budgets,
+and stable ref formatting. All real logic lives in the core package.
+
+## Extensions
+
+| Term      | URI                          |
+| --------- | ---------------------------- |
+| `type`    | `org.dxos.mdl.type@1.0`      |
+| `op`      | `org.dxos.mdl.op@1.0`        |
+| `service` | `org.dxos.mdl.service@1.0`   |
+| `feat`    | `org.dxos.mdl.feat@1.0`      |
+| `test`    | `org.dxos.mdl.test@1.0`      |
+
+## Types
+
+```mdl
+type ToolResult
+  desc: Shape returned by every tool — a JSON envelope with optional truncation note.
+  fields:
+    data:       any
+    note?:      string                  # explanation when data is null
+    truncated?: string                  # summary of dropped results when capped
+```
+
+```mdl
+type ServerOptions
+  fields:
+    introspector: Introspector          # see org.dxos.introspect
+    name?:        string                # MCP server name advertised to clients
+    version?:     string
+    logger?:      ToolLogger
+```
+
+## Services
+
+```mdl
+service McpServer
+  desc: |
+    Wraps `@modelcontextprotocol/sdk` McpServer. Boots over stdio (default)
+    or HTTP (later). Connects an Introspector to four tools mapped to its
+    query methods.
+  loading: eager
+  ops:
+    create(options: ServerOptions) → McpServer
+    connect(transport: Transport) → Promise<void>
+    close() → Promise<void>
+  requires: [Introspector]
+```
+
+## Operations (MCP Tools)
+
+```mdl
+op list_packages
+  desc: |
+    List packages in the DXOS monorepo. Use this to discover what packages
+    exist before drilling into one.
+  input:
+    name?:        string                # substring of the package name
+    pathPrefix?:  string                # e.g. "packages/plugins"
+    privateOnly?: boolean
+  output: ToolResult                    # data: Package[]
+  note: response capped at 30 entries; surplus reported via `truncated`
+```
+
+```mdl
+op get_package
+  desc: Fetch the full record for a single package by exact name.
+  input:
+    name: string                        # e.g. "@dxos/echo"
+  output: ToolResult                    # data: PackageDetail | null
+```
+
+```mdl
+op find_symbol
+  desc: |
+    Find an exported symbol by name or partial name across all DXOS
+    packages. Returns refs that can be passed to `get_symbol`.
+  input:
+    query: string
+    kind?: SymbolKind
+  output: ToolResult                    # data: SymbolMatch[]
+  note: ranking — exact > prefix > substring; capped at 30
+```
+
+```mdl
+op get_symbol
+  desc: |
+    Fetch detail for a single symbol by ref (e.g. "@dxos/echo#Expando").
+    Default: signature + JSDoc summary + source location.
+    Pass `include=['source']` for the full declaration text.
+  input:
+    ref:      string                    # <package>#<name>
+    include?: ('source' | 'jsdoc' | 'signature')[]
+  output: ToolResult                    # data: SymbolDetail | null
+```
+
+## Features
+
+```mdl
+feat F-1: Tool surface
+
+  req F-1.1:
+    when: an MCP client lists tools
+    then: exactly four tools are advertised — list_packages, get_package, find_symbol, get_symbol
+
+  req F-1.2:
+    when: a tool description is read by an LLM
+    then: it specifies *when* to use the tool, not just what it does
+    note: drives trigger accuracy; generic descriptions are an anti-pattern
+```
+
+```mdl
+feat F-2: Response shaping
+
+  req F-2.1:
+    when: a list response would exceed 30 entries
+    then: response is capped and `truncated` carries a refinement hint
+
+  req F-2.2:
+    when: get_symbol is called without `include`
+    then: response omits `source` and full `jsdoc`; only signature + summary returned
+
+  req F-2.3:
+    when: source or JSDoc preview exceeds the budget (1.2kB / 600B)
+    then: text is truncated with a marker indicating remaining length
+
+  req F-2.4:
+    when: a record-fetch tool (get_package / get_symbol) finds nothing
+    then: data is null and `note` explains which key was missing
+```
+
+```mdl
+feat F-3: Tool-call observability
+
+  req F-3.1:
+    when: a logger is configured via ServerOptions
+    then: every tool call is recorded with tool name, args, and response shape
+
+  req F-3.2:
+    when: future search_code tool is added (later phase)
+    then: its calls are logged separately so unmatched queries can drive new structured tools
+```
+
+## Acceptance
+
+```mdl
+test T-1: Tool surface contract
+  given: server connected to a fixture introspector
+  when: client calls listTools
+  then: returned tool names sorted equal ['find_symbol', 'get_package', 'get_symbol', 'list_packages']
+```
+
+```mdl
+test T-2: list_packages name filter
+  given: server connected to fixture monorepo with pkg-a and pkg-b
+  when: client calls list_packages with arguments { name: 'pkg-a' }
+  then: data.map(p => p.name) === ['@fixture/pkg-a']
+```
+
+```mdl
+test T-3: find_symbol surfaces ECHO Task
+  given: server connected
+  when: client calls find_symbol with query 'Task'
+  then:
+    - some result has ref '@fixture/pkg-a#Task'
+    - that result's summary contains 'Task item'
+```
+
+```mdl
+test T-4: get_symbol expands source on demand
+  given: server connected
+  when: client calls get_symbol with { ref: '@fixture/pkg-a#Task', include: ['source'] }
+  then:
+    - data.source contains 'Schema.Struct'
+    - data.source contains 'Type.object'
+    - data.source contains 'com.example.type.Task'
+```
+
+```mdl
+test T-5: Unknown ref returns null with note
+  given: server connected
+  when: client calls get_symbol with { ref: '@fixture/pkg-a#nonexistent' }
+  then:
+    - data is null
+    - note contains 'No symbol'
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields, variants, and invariants.
+  fields:
+    desc?:     Prose
+    fields?:   FieldMap
+    literals?: UnionList
+    extends?:  TypeRef[]
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    In this document, ops correspond one-to-one with MCP tools.
+  fields:
+    desc?:     Prose
+    input?:    FieldMap
+    output?:   TypeExpr
+    errors?:   ErrorMap
+    effects?:  EffectList
+    requires?: ServiceList
+    note?:     Prose
+```
+
+```mdl
+ext service
+  uri: org.dxos.mdl.service@1.0
+  desc: An external or system-level dependency providing named operations.
+  fields:
+    desc?:    Prose
+    loading?: eager | lazy
+    ops?:     OpMap
+    errors?:  ErrorMap
+    requires?: ServiceList
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req:   RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?:  Step | Step[]
+    then:   Step | Step[]
+    tags?:  TagList
+```

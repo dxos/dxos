@@ -1,0 +1,278 @@
+---
+id: org.dxos.introspect
+name: Introspect
+version: 0.1.0
+---
+
+Indexes the DXOS monorepo and exposes packages and exported symbols as plain
+serializable data. Phase 1: package walking + symbol extraction. Plugins,
+surfaces, capabilities, schemas, idioms, composition queries, and file
+watching are deferred to later phases.
+
+## Extensions
+
+| Term      | URI                          |
+| --------- | ---------------------------- |
+| `type`    | `org.dxos.mdl.type@1.0`      |
+| `op`      | `org.dxos.mdl.op@1.0`        |
+| `service` | `org.dxos.mdl.service@1.0`   |
+| `feat`    | `org.dxos.mdl.feat@1.0`      |
+| `test`    | `org.dxos.mdl.test@1.0`      |
+
+## Types
+
+```mdl
+type SymbolKind
+  literals: function | class | interface | type | enum | variable | namespace | unknown
+```
+
+```mdl
+type Package
+  fields:
+    name:        string
+    version:     string
+    private:     boolean
+    path:        string                    # relative to the monorepo root
+    description?: string
+```
+
+```mdl
+type PackageDetail
+  extends: [Package]
+  fields:
+    workspaceDependencies: string[]        # `workspace:*` deps
+    externalDependencies:  string[]        # catalog or pinned deps
+    entryPoints:           string[]        # resolved from exports['.'].source / main
+    exportCount:           number
+```
+
+```mdl
+type SymbolMatch
+  fields:
+    ref:      string                       # @pkg#name
+    package:  string
+    name:     string
+    kind:     SymbolKind
+    summary?: string                       # first line of JSDoc
+```
+
+```mdl
+type SymbolDetail
+  extends: [SymbolMatch]
+  fields:
+    signature: string
+    jsdoc?:    string
+    location:  { file: string, line: number, column: number }
+    source?:   string                       # only when include=['source']
+```
+
+## Services
+
+```mdl
+service Introspector
+  desc: |
+    In-process index of the monorepo. Built lazily — `ready` resolves once
+    the package list is loaded; symbols extract on first access per package
+    and cache.
+  loading: eager
+  ops:
+    listPackages(filter?: PackageFilter) → Package[]
+    getPackage(name: string) → PackageDetail | null
+    findSymbol(query: string, kind?: SymbolKind) → SymbolMatch[]
+    getSymbol(ref: string, include?: SymbolInclude[]) → SymbolDetail | null
+    dispose() → void
+```
+
+## Operations
+
+```mdl
+op discoverPackages
+  desc: |
+    Walk the monorepo and return its packages. Tries `moon query projects`
+    first; falls back to globbing `packages/**/package.json`. The Moon path
+    is gated on `<root>/.moon/` existing so callers running against fixture
+    trees don't accidentally pick up a parent monorepo's project graph.
+  input:
+    monorepoRoot: string
+  output: PackageDetail[]
+  effects: [fs:read, exec]
+```
+
+```mdl
+op extractSymbols
+  desc: |
+    Walk every `.ts/.tsx` file in a package's `src/` and collect exported
+    declarations. Merged declarations under one name (e.g. ECHO's
+    `export const X` + `export interface X` companion) are surfaced as a
+    single symbol whose `source` concatenates both forms.
+  input:
+    monorepoRoot: string
+    pkg: PackageDetail
+  output: SymbolMatch[]
+  effects: [fs:read]
+```
+
+```mdl
+op findSymbol
+  desc: Locate exported symbols by name or partial name across all packages.
+  input:
+    query: string
+    kind?: SymbolKind
+  output: SymbolMatch[]
+  note: |
+    Ranking: exact match → prefix match → substring. Stable sort by name
+    then package within each tier. Capped at 50 results.
+```
+
+## Features
+
+```mdl
+feat F-1: Package indexing
+
+  req F-1.1:
+    when: introspector is created against a monorepo with a `.moon/` directory
+    then: package list is sourced from `moon query projects`
+
+  req F-1.2:
+    when: the monorepo has no Moon workspace
+    then: package list is sourced from globbing `packages/**/package.json`
+
+  req F-1.3:
+    when: a package has a workspace dependency (`"workspace:*"`)
+    then: it appears in `PackageDetail.workspaceDependencies`, not `externalDependencies`
+```
+
+```mdl
+feat F-2: Symbol extraction
+
+  req F-2.1:
+    when: a package's source contains both `export const X` and `export interface X`
+    then: a single symbol named `X` is returned whose `source` includes both declarations
+
+  req F-2.2:
+    when: a barrel re-exports symbols via `export * as Ns from './Ns'`
+    then: the original declarations remain queryable at their source locations
+    note: dedup by name prefers concrete declarations over namespace re-exports
+
+  req F-2.3:
+    when: `findSymbol(query)` returns no exact match
+    then: prefix matches and substring matches follow, in that order
+
+  req F-2.4:
+    when: `getSymbol(ref)` is called with `include=['source']`
+    then: response carries the full declaration text, otherwise only the signature
+```
+
+```mdl
+feat F-3: Stable refs
+
+  req F-3.1:
+    when: any symbol is returned
+    then: it carries a string `ref` of the form `<package>#<name>`
+
+  req F-3.2:
+    when: a ref is round-tripped through `parseRef` and `formatSymbolRef`
+    then: the original string is recovered exactly
+```
+
+## Acceptance
+
+```mdl
+test T-1: Discover fixture packages
+  given: introspector created against the fixture monorepo
+  when: caller invokes listPackages()
+  then:
+    - returned names include `@fixture/pkg-a` and `@fixture/pkg-b`
+    - `@fixture/pkg-a` is private; `@fixture/pkg-b` is not
+```
+
+```mdl
+test T-2: Find an ECHO Task by name
+  given: introspector ready
+  when: caller invokes findSymbol('Task')
+  then:
+    - a match exists with ref `@fixture/pkg-a#Task`
+    - its summary contains `Task item`
+```
+
+```mdl
+test T-3: Get full source of a merged Schema declaration
+  given: introspector ready
+  when: caller invokes getSymbol('@fixture/pkg-a#Task', ['source'])
+  then:
+    - source contains `Schema.Struct`
+    - source contains `Type.object`
+    - source contains `LabelAnnotation.set(['title'])`
+    - source contains both `export const Task` and `export interface Task extends Schema.Schema.Type<typeof Task>`
+```
+
+```mdl
+test T-4: Resolve symbol location through barrels
+  given: pkg-a barrels via `export * as Task from './Task'`
+  when: caller invokes getSymbol('@fixture/pkg-a#Task')
+  then: location.file ends with `pkg-a/src/Task.ts`
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields, variants, and invariants.
+  fields:
+    desc?:    Prose
+    fields?:  FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?:     Prose
+    input?:    FieldMap
+    output?:   TypeExpr
+    errors?:   ErrorMap
+    effects?:  EffectList
+    requires?: ServiceList
+    note?:     Prose
+```
+
+```mdl
+ext service
+  uri: org.dxos.mdl.service@1.0
+  desc: An external or system-level dependency providing named operations.
+  fields:
+    desc?:    Prose
+    loading?: eager | lazy
+    ops?:     OpMap
+    errors?:  ErrorMap
+    note?:    Prose
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req:   RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?:  Step | Step[]
+    then:   Step | Step[]
+    tags?:  TagList
+```
