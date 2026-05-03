@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { cacheFilePath, computeCacheKey, loadCache, saveCache } from './indexer/cache';
 import { discoverPackages } from './indexer/packages';
 import { extractSymbols, type PackageSymbols } from './indexer/symbols';
 import { findSymbol as queryFindSymbol, getSymbol as queryGetSymbol } from './query/symbols';
@@ -20,12 +21,19 @@ export type IntrospectorOptions = {
   /** Reserved for step 10 (file watching). Currently a no-op. */
   watch?: boolean;
   /**
-   * If true (default), spawn a background pre-warm of the symbol cache once
-   * `ready` resolves so the first `findSymbol` call doesn't pay the full
-   * extraction cost synchronously. Disable for short-lived scripts that only
-   * touch a few symbols.
+   * If true (default), populate the symbol cache for every package before
+   * `ready` resolves. Pre-warm makes startup take longer (~80s on the real
+   * monorepo) but every subsequent tool call is instant. Pass `false` to
+   * defer extraction to the first call that needs it (lazy mode).
    */
   prewarm?: boolean;
+  /**
+   * If true (default), persist the symbol cache to disk and reuse it across
+   * runs when no source files have changed. The cache lives at
+   * `<monorepoRoot>/.dxos-introspect/cache.json`. Pass `false` to disable
+   * (e.g. for tests).
+   */
+  cache?: boolean;
 };
 
 export type Introspector = {
@@ -39,42 +47,13 @@ export type Introspector = {
 };
 
 export const createIntrospector = (options: IntrospectorOptions): Introspector => {
-  const { monorepoRoot, prewarm = true } = options;
+  const { monorepoRoot, prewarm = true, cache = true } = options;
+  const cachePath = cacheFilePath(monorepoRoot);
 
   let packages: PackageDetail[] = [];
   let initialized = false;
   const symbolsByPackage = new Map<string, PackageSymbols>();
   let disposed = false;
-
-  const ready = (async () => {
-    packages = await discoverPackages(monorepoRoot);
-    if (prewarm) {
-      // Yield-style pre-warm: extract one package's symbols per setImmediate
-      // tick so we don't block the event loop while still bounding total
-      // wall-clock to roughly the sum of per-package extraction cost.
-      // We BLOCK `ready` on this so callers can rely on every method being
-      // fast once `ready` resolves — no cold-start timeouts from MCP clients.
-      // For 250 packages this takes ~80s of CPU; tradeoff is intentional.
-      await preWarmSymbols();
-    }
-    initialized = true;
-  })();
-
-  const preWarmSymbols = async (): Promise<void> => {
-    for (const pkg of packages) {
-      if (disposed) {
-        return;
-      }
-      ensureSymbols(pkg);
-      await new Promise<void>((resolve) => setImmediate(resolve));
-    }
-  };
-
-  const assertReady = (): void => {
-    if (!initialized) {
-      throw new Error('Introspector not ready — await introspector.ready before calling API methods.');
-    }
-  };
 
   const ensureSymbols = (pkg: PackageDetail): PackageSymbols => {
     const cached = symbolsByPackage.get(pkg.name);
@@ -84,6 +63,70 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     const extracted = extractSymbols(monorepoRoot, pkg);
     symbolsByPackage.set(pkg.name, extracted);
     return extracted;
+  };
+
+  const preWarmSymbols = async (): Promise<void> => {
+    for (const pkg of packages) {
+      if (disposed) {
+        return;
+      }
+      ensureSymbols(pkg);
+      // Yield each iteration so we don't block the event loop for the full
+      // ~80s of ts-morph parsing on a real-monorepo cold start.
+      await new Promise<void>((resolve) => setImmediate(resolve));
+    }
+  };
+
+  const ready = (async () => {
+    packages = await discoverPackages(monorepoRoot);
+
+    if (cache) {
+      // Try the on-disk cache first. If the cache key (per-package src/ mtime
+      // hash) matches the current state, we skip the entire extraction.
+      const key = computeCacheKey(
+        monorepoRoot,
+        packages.map((p) => p.path),
+      );
+      const loaded = await loadCache(cachePath, key);
+      if (loaded) {
+        for (const [name, syms] of Object.entries(loaded.symbols)) {
+          symbolsByPackage.set(name, syms);
+        }
+        // stderr only — MCP servers must keep stdout reserved for JSON-RPC.
+        console.error(
+          `[introspect] loaded symbol cache: ${Object.keys(loaded.symbols).length} packages from ${cachePath}`,
+        );
+        initialized = true;
+        return;
+      }
+    }
+
+    if (prewarm) {
+      // Block `ready` on the pre-warm so callers can rely on every method
+      // being fast once `ready` resolves — no cold-start timeouts from MCP
+      // clients. For 250 packages this takes ~80s of CPU on first run; the
+      // disk cache makes subsequent runs nearly instant.
+      await preWarmSymbols();
+      if (cache) {
+        const key = computeCacheKey(
+          monorepoRoot,
+          packages.map((p) => p.path),
+        );
+        const snapshot: Record<string, PackageSymbols> = {};
+        for (const [name, syms] of symbolsByPackage) {
+          snapshot[name] = syms;
+        }
+        await saveCache(cachePath, key, snapshot);
+        console.error(`[introspect] saved symbol cache: ${Object.keys(snapshot).length} packages to ${cachePath}`);
+      }
+    }
+    initialized = true;
+  })();
+
+  const assertReady = (): void => {
+    if (!initialized) {
+      throw new Error('Introspector not ready — await introspector.ready before calling API methods.');
+    }
   };
 
   const listPackages = (filter?: PackageFilter): Package[] => {

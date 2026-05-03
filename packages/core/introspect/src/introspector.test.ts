@@ -34,7 +34,7 @@ describe('introspector against fixture monorepo', () => {
   let intro: Introspector;
 
   beforeAll(async () => {
-    intro = createIntrospector({ monorepoRoot: FIXTURE_ROOT });
+    intro = createIntrospector({ monorepoRoot: FIXTURE_ROOT, cache: false });
     await intro.ready;
   });
 

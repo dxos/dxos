@@ -127,7 +127,7 @@ export const createServer = (options: ServerOptions): McpServer => {
       inputSchema: {
         ref: z.string().describe('Symbol ref in the form "<package>#<name>", e.g. "@dxos/echo#Expando".'),
         include: z
-          .array(z.enum(['source', 'jsdoc', 'signature']))
+          .array(z.enum(['source', 'jsdoc']))
           .optional()
           .describe('Optional fields to expand; default returns signature + summary only.'),
       },

@@ -6,10 +6,13 @@ import { globSync } from 'glob';
 import { join, relative } from 'node:path';
 import { type ExportedDeclarations, type JSDoc, type Node, Project, ScriptTarget, SyntaxKind } from 'ts-morph';
 
-import { log } from '@dxos/log';
-
 import { formatSymbolRef } from '../refs';
 import type { SourceLocation, SymbolKind } from '../types';
+
+// stderr-only — stdout is reserved for the MCP JSON-RPC stream.
+const warn = (msg: string, err?: unknown): void => {
+  console.error(err ? `[introspect symbols] ${msg}: ${String(err)}` : `[introspect symbols] ${msg}`);
+};
 
 export type ExtractedSymbol = {
   name: string;
@@ -88,7 +91,7 @@ export const extractSymbols = (monorepoRoot: string, pkg: PackageLike): PackageS
         }
       }
     } catch (err) {
-      log.warn('symbol extraction failed', { package: pkg.name, file: filePath, err: String(err) });
+      warn(`symbol extraction failed for ${pkg.name} (${filePath})`, err);
     }
   }
 

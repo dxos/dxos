@@ -24,7 +24,7 @@ type Connected = {
 };
 
 const connect = async (): Promise<Connected> => {
-  const introspector = createIntrospector({ monorepoRoot: FIXTURE_ROOT });
+  const introspector = createIntrospector({ monorepoRoot: FIXTURE_ROOT, cache: false });
   await introspector.ready;
   const server = createServer({ introspector, version: 'test' });
 

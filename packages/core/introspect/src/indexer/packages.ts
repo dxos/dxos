@@ -9,9 +9,12 @@ import { readFile } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 import { promisify } from 'node:util';
 
-import { log } from '@dxos/log';
-
 import type { PackageDetail } from '../types';
+
+// stderr-only — stdout is reserved for the MCP JSON-RPC stream.
+const warn = (msg: string, err?: unknown): void => {
+  console.error(err ? `[introspect packages] ${msg}: ${String(err)}` : `[introspect packages] ${msg}`);
+};
 
 const execAsync = promisify(exec);
 
@@ -69,7 +72,7 @@ const tryMoon = async (monorepoRoot: string): Promise<PackageDetail[] | null> =>
     }
     return await loadPackages(monorepoRoot, sources);
   } catch (err) {
-    log.info('moon query failed, falling back to glob', { err: String(err) });
+    warn('moon query failed, falling back to glob', err);
     return null;
   }
 };
@@ -128,7 +131,7 @@ const readPackageJson = async (monorepoRoot: string, source: string): Promise<Pa
       exportCount: 0, // Filled in lazily by the symbol indexer.
     };
   } catch (err) {
-    log.warn('failed to read package.json', { path: pkgPath, err: String(err) });
+    warn(`failed to read package.json at ${pkgPath}`, err);
     return null;
   }
 };
