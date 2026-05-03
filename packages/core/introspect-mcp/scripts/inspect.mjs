@@ -17,8 +17,27 @@
 
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
+import net from 'node:net';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+// Returns true if the port appears free, false if something is listening.
+// We attempt a TCP connect — if anything accepts (or even refuses with
+// EADDRINUSE-class errors via the bind side, which we don't use here), the
+// port is in use. ECONNREFUSED means free.
+const probePort = (port) =>
+  new Promise((resolveProbe) => {
+    const sock = new net.Socket();
+    const settle = (free) => {
+      sock.destroy();
+      resolveProbe(free);
+    };
+    sock.setTimeout(500);
+    sock.once('connect', () => settle(false)); // someone is listening
+    sock.once('timeout', () => settle(false)); // suspicious — assume held
+    sock.once('error', (err) => settle(err.code === 'ECONNREFUSED'));
+    sock.connect(port, '127.0.0.1');
+  });
 
 const here = dirname(fileURLToPath(import.meta.url));
 const cli = resolve(here, '..', 'src', 'cli.ts');
@@ -61,6 +80,20 @@ if (!existsSync(tsx)) {
 // timeout (default 10s) so the call doesn't hit MCP error -32001. Subsequent
 // calls are cached and fast.
 const REQUEST_TIMEOUT_MS = 180_000;
+
+// Inspector binds 6274 (UI) and 6277 (proxy). If either is held by a stale
+// process, Inspector dies with "Proxy Server PORT IS IN USE" and the user
+// gets a confusing "Connection Error – proxy token" later. Detect up front.
+const UI_PORT = 6274;
+const PROXY_PORT = 6277;
+for (const port of [UI_PORT, PROXY_PORT]) {
+  if (!(await probePort(port))) {
+    console.error(`[inspect] Port ${port} is in use — likely a previous Inspector left running.`);
+    console.error(`[inspect] Free it with:  lsof -ti:${UI_PORT},${PROXY_PORT} | xargs -r kill -9`);
+    console.error(`[inspect] Or:            pkill -f modelcontextprotocol/inspector`);
+    process.exit(1);
+  }
+}
 
 console.error(`[inspect] CLI:           ${cli}`);
 console.error(`[inspect] Root:          ${root}`);

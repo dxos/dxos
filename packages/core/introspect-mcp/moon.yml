@@ -26,3 +26,13 @@ tasks:
     args:
       - scripts/inspect.mjs
     preset: server
+  # End-to-end sanity check: spawns the Inspector, authenticates against the
+  # proxy with the printed token, and confirms /config returns 200. Catches
+  # stale-process port collisions, broken auth, and spawn failures before
+  # they manifest as a vague browser-side "Connection Error".
+  sanity:
+    command: node
+    args:
+      - scripts/sanity.mjs
+    options:
+      cache: false
