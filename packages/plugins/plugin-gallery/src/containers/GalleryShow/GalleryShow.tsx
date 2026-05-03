@@ -10,19 +10,27 @@ import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/ap
 import { Obj } from '@dxos/echo';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
-import { Button, Panel, useTranslation } from '@dxos/react-ui';
-import { Masonry } from '@dxos/react-ui-masonry';
+import { useObject } from '@dxos/react-client/echo';
+import { Button, useTranslation } from '@dxos/react-ui';
 
-import { GalleryImage } from '#components';
+import { GalleryImage, GalleryMasonry, type GalleryMasonryTile } from '#components';
 import { meta } from '#meta';
 import { type Gallery } from '#types';
+
+import { useImageUrl } from '../../hooks';
 
 export type GalleryShowProps = {
   gallery: Gallery.Gallery;
 };
 
-export const GalleryShow = ({ gallery }: GalleryShowProps) => {
+const ResolvingTile: GalleryMasonryTile = ({ image }) => {
+  const url = useImageUrl(image.url, image.type);
+  return <GalleryImage image={image} url={url} />;
+};
+
+export const GalleryShow = ({ gallery: subject }: GalleryShowProps) => {
   const { t } = useTranslation(meta.id);
+  const [gallery] = useObject(subject);
   const stateAtom = useCapability(DeckCapabilities.State);
   const state = useAtomValue(stateAtom);
   const deck = useMemo(() => state.decks[state.activeDeck], [state.decks, state.activeDeck]);
@@ -32,41 +40,29 @@ export const GalleryShow = ({ gallery }: GalleryShowProps) => {
     if (!invokePromise) {
       return;
     }
-    const objectPath = getObjectPathFromObject(gallery);
-    const db = Obj.getDatabase(gallery);
+    const objectPath = getObjectPathFromObject(subject);
+    const db = Obj.getDatabase(subject);
     if (deck?.fullscreen) {
-      await invokePromise(DeckOperation.Adjust, {
-        type: 'solo--fullscreen' as const,
-        id: objectPath,
-      });
+      await invokePromise(DeckOperation.Adjust, { type: 'solo--fullscreen' as const, id: objectPath });
     }
     await invokePromise(LayoutOperation.Open, {
       subject: [objectPath],
       workspace: db ? getSpacePath(db.spaceId) : undefined,
     });
-  }, [gallery, deck, invokePromise]);
+  }, [subject, deck, invokePromise]);
 
-  const items = useMemo(() => (gallery.images ?? []).map((image, index) => ({ image, index })), [gallery.images]);
+  const images = (gallery as unknown as Gallery.Gallery).images ?? [];
 
   return (
-    <Panel.Root role='article' classNames='relative bg-attention-surface'>
-      <Panel.Content asChild>
-        <div className='relative w-full h-full'>
-          <Masonry.Root
-            Tile={({ data }: { data: { image: Gallery.Image; index: number } }) => <GalleryImage image={data.image} />}
-          >
-            <Masonry.Content padding>
-              <Masonry.Viewport
-                items={items}
-                getId={(data: { image: Gallery.Image; index: number }) => `${data.index}:${data.image.url}`}
-              />
-            </Masonry.Content>
-          </Masonry.Root>
-          <div className='absolute top-4 right-4 z-[200]'>
-            <Button onClick={() => void handleExit()}>{t('exit-show.label')}</Button>
-          </div>
-        </div>
-      </Panel.Content>
-    </Panel.Root>
+    <div className='relative w-full h-full bg-attention-surface'>
+      <GalleryMasonry.Root role='article' images={images} Tile={ResolvingTile}>
+        <GalleryMasonry.Content>
+          <GalleryMasonry.Viewport />
+        </GalleryMasonry.Content>
+      </GalleryMasonry.Root>
+      <div className='absolute top-4 right-4 z-[200]'>
+        <Button onClick={() => void handleExit()}>{t('exit-show.label')}</Button>
+      </div>
+    </div>
   );
 };

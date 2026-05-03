@@ -4,30 +4,39 @@
 
 import React from 'react';
 
-import { Card, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, Toolbar, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
 import { type Image } from '../../types/Gallery';
-import { useImageUrl } from '../useImageUrl';
 
 export type GalleryImageProps = {
   image: Image;
+  /**
+   * Pre-resolved URL for `<img src>`.
+   * For `http(s)://` URLs this is just `image.url`.
+   * For `wnfs://` URLs the caller resolves to a blob URL via `useImageUrl`.
+   */
+  url?: string;
   classNames?: string;
   onDelete?: () => void;
 };
 
-export const GalleryImage = ({ image, classNames, onDelete }: GalleryImageProps) => {
+export const GalleryImage = ({ image, url, classNames, onDelete }: GalleryImageProps) => {
   const { t } = useTranslation(meta.id);
-  const url = useImageUrl(image.url, image.type);
   const alt = image.description ?? image.name ?? '';
 
   return (
     <Card.Root classNames={mx('group relative', classNames)}>
-      {url && <Card.Poster image={url} alt={alt} aspect='auto' fit='cover' />}
+      {url ? (
+        <Card.Poster image={url} alt={alt} aspect='auto' fit='cover' />
+      ) : (
+        <div role='image' aria-label={alt} className='aspect-video w-full bg-input' />
+      )}
       <Card.Toolbar>
-        <Card.Title>{image.name ?? image.description ?? ''}</Card.Title>
+        <Icon icon={image.description ? 'ph--text-aa--regular' : 'ph--image--regular'} size={5} />
+        <Card.Title>{image.description ?? image.name ?? ''}</Card.Title>
         {onDelete && (
           <Toolbar.IconButton
             icon='ph--trash--regular'
