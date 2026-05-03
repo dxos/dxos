@@ -94,31 +94,32 @@ export const GalleryArticle = ({ role, attendableId: _attendableId, subject: gal
   // Build toolbar actions via MenuBuilder.
   const actionsAtom = useMemo(
     () =>
-      Atom.make((): ActionGraphProps =>
-        MenuBuilder.make()
-          .action(
-            'add',
-            {
-              label: ['add-image.label', { ns: meta.id }],
-              icon: 'ph--plus--regular',
-              disabled: !uploader,
-              disposition: 'toolbar',
-              testId: 'gallery.toolbar.add',
-            },
-            () => handleAdd(),
-          )
-          .action(
-            'show',
-            {
-              label: ['show.label', { ns: meta.id }],
-              icon: 'ph--play--regular',
-              disabled: !deckState,
-              disposition: 'toolbar',
-              testId: 'gallery.toolbar.show',
-            },
-            () => void handleShow(),
-          )
-          .build(),
+      Atom.make(
+        (): ActionGraphProps =>
+          MenuBuilder.make()
+            .action(
+              'add',
+              {
+                label: ['add-image.label', { ns: meta.id }],
+                icon: 'ph--plus--regular',
+                disabled: !uploader,
+                disposition: 'toolbar',
+                testId: 'gallery.toolbar.add',
+              },
+              () => handleAdd(),
+            )
+            .action(
+              'show',
+              {
+                label: ['show.label', { ns: meta.id }],
+                icon: 'ph--play--regular',
+                disabled: !deckState,
+                disposition: 'toolbar',
+                testId: 'gallery.toolbar.show',
+              },
+              () => void handleShow(),
+            )
+            .build(),
       ),
     [uploader, deckState, handleAdd, handleShow],
   );
@@ -126,10 +127,7 @@ export const GalleryArticle = ({ role, attendableId: _attendableId, subject: gal
   const menuActions = useMenuActions(actionsAtom);
 
   const galleryImages = (gallery as Gallery.Gallery).images ?? [];
-  const items = useMemo(
-    () => galleryImages.map((image, index) => ({ image, index })),
-    [galleryImages],
-  );
+  const items = useMemo(() => galleryImages.map((image, index) => ({ image, index })), [galleryImages]);
 
   return (
     <Panel.Root role={role}>

@@ -46,19 +46,14 @@ export const GalleryShow = ({ gallery }: GalleryShowProps) => {
     });
   }, [gallery, deck, invokePromise]);
 
-  const items = useMemo(
-    () => (gallery.images ?? []).map((image, index) => ({ image, index })),
-    [gallery.images],
-  );
+  const items = useMemo(() => (gallery.images ?? []).map((image, index) => ({ image, index })), [gallery.images]);
 
   return (
     <Panel.Root role='article' classNames='relative bg-attention-surface'>
       <Panel.Content asChild>
         <div className='relative w-full h-full'>
           <Masonry.Root
-            Tile={({ data }: { data: { image: Gallery.Image; index: number } }) => (
-              <GalleryImage image={data.image} />
-            )}
+            Tile={({ data }: { data: { image: Gallery.Image; index: number } }) => <GalleryImage image={data.image} />}
           >
             <Masonry.Content padding>
               <Masonry.Viewport
