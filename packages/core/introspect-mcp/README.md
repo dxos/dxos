@@ -19,17 +19,17 @@ Tool descriptions are written for LLM trigger accuracy — they describe *when* 
 
 ## Running it
 
+You normally don't run this server directly — let Claude Code or the MCP Inspector spawn it for you (see sections below). For the rare case of a custom client or manual probing:
+
 ```bash
-pnpm -F @dxos/introspect-mcp start
-# or, if installed globally
-dx-introspect-mcp [--root <path>] [--log-path <path>]
+moon run introspect-mcp:serve
 ```
 
-The server speaks JSON-RPC over stdio (default MCP transport). 
-Configure your Claude Code (or other MCP client) to launch this command.
+The server speaks JSON-RPC over stdio: it reads requests from stdin and writes responses to stdout, blocking until stdin closes. Configure your MCP client to spawn `npx tsx --conditions=source packages/core/introspect-mcp/src/cli.ts` from the repo root — this is exactly what `.mcp.json` does.
 
-`--root` defaults to the nearest ancestor of `cwd` that contains `pnpm-workspace.yaml`. 
-`--log-path` enables JSONL logging of every tool call to drive future tool design.
+CLI flags:
+- `--root <path>` — monorepo root (defaults to the nearest ancestor of cwd containing `pnpm-workspace.yaml`).
+- `--log-path <path>` — append-only JSONL log of every tool call.
 
 ## Response shaping
 
@@ -39,17 +39,41 @@ Configure your Claude Code (or other MCP client) to launch this command.
 
 ## Use it from Claude Code
 
-The repo ships a project-scoped [`.mcp.json`](../../../.mcp.json) at the repo root that registers `dxos-introspect`. Claude Code picks it up automatically when launched anywhere under the repo.
+The repo ships a project-scoped [`.mcp.json`](../../../.mcp.json) at the repo root that registers `dxos-introspect`. **Claude Code spawns the server automatically** as a stdio subprocess on launch — you don't start it manually.
 
 1. **Verify the config works** — runs the same spawn Claude Code will use, completes a real JSON-RPC `initialize` + `tools/list` + `tools/call list_packages`, and exits 0 on success:
 
-   ```bash
-   moon run introspect-mcp:check
-   ```
+```bash
+moon run introspect-mcp:check
+```
 
 2. **Restart Claude Code** (Cmd+Q + relaunch). Type `/mcp` to confirm `dxos-introspect ✓ connected`.
 
 3. Try it: ask Claude *"list every symbol in @dxos/echo-react"*.
+
+## Test it from a browser (MCP Inspector)
+
+Launches the official MCP Inspector UI against this server, with all paths pre-baked:
+
+```bash
+moon run introspect-mcp:inspect
+```
+
+The terminal prints a URL containing `?MCP_PROXY_AUTH_TOKEN=...`. **Open that exact URL** in your browser (the token is required; clicking through to plain `http://localhost:6274` will fail). The Inspector spawns the same `cli.ts` that Claude Code does.
+
+In the UI: Transport must be `STDIO` (the form is pre-filled). Click **Connect** → **Tools** → **List Tools** → pick a tool → **Run Tool**.
+
+If you see "Connection Error" in the browser, run `moon run introspect-mcp:sanity` from your terminal — it'll diagnose stale-process port collisions and proxy-auth issues with named checkpoints.
+
+## Run the server standalone
+
+For piping JSON-RPC by hand or wiring into a different MCP client:
+
+```bash
+moon run introspect-mcp:serve
+```
+
+Runs the server attached to your terminal stdio, blocking for input. Send JSON-RPC requests to its stdin; responses come on stdout. Useful only if you're testing with a custom client; for the normal case, let Claude Code or the Inspector spawn it.
 
 ## Other testing entry points
 
