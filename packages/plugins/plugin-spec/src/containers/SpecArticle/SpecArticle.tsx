@@ -27,14 +27,16 @@ import { mdl, mdlBlockDescription } from '../../extension';
 
 export type SpecArticleProps = AppSurface.ObjectArticleProps<Spec.Spec>;
 
-export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(({ role, subject: spec }, forwardedRef) => {
+export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(({ role, subject }, forwardedRef) => {
   const { themeMode } = useThemeContext();
   const identity = useIdentity();
+  const [spec] = useObject(subject);
   const space = getSpace(spec);
 
   // Trigger re-render when the content ref resolves.
-  useObject(spec.content);
-  const target = spec.content.target;
+  // Snapshot is unused — `createDocAccessor` requires the live ref target proxy.
+  useObject(subject.content);
+  const target = subject.content.target;
 
   const extensions = useMemo(
     () =>

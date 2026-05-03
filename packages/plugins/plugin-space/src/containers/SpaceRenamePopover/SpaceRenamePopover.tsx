@@ -22,7 +22,7 @@ export const SpaceRenamePopover = ({ space }: { space: Space }) => {
   const { invokePromise } = useOperationInvoker();
 
   const handleDone = useCallback(() => {
-    Obj.change(space.properties, (obj) => {
+    Obj.update(space.properties, (obj) => {
       obj.name = name;
     });
     void invokePromise(LayoutOperation.UpdatePopover, { anchorId: '', state: false });

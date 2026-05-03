@@ -160,7 +160,7 @@ export function useObject<T extends Obj.Unknown, K extends keyof T>(
       return;
     }
 
-    Obj.change(obj, (obj: any) => {
+    Obj.update(obj, (obj: any) => {
       if (typeof updateOrValue === 'function') {
         const returnValue = (updateOrValue as (obj: unknown) => unknown)(property !== undefined ? obj[property] : obj);
         if (returnValue !== undefined) {

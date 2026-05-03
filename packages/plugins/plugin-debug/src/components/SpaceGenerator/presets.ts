@@ -74,7 +74,7 @@ export const generator = () => ({
 
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
           const tagDxn = Obj.getDXN(tag).toString();
-          Obj.change(doc, (doc) => {
+          Obj.update(doc, (doc) => {
             Obj.getMeta(doc).tags = [tagDxn];
           });
 
@@ -752,7 +752,7 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
     functionTrigger = triggerShape.functionTrigger!.target!;
     const triggerSpec = functionTrigger.spec;
     invariant(triggerSpec && triggerSpec.kind === triggerKind, 'No trigger spec.');
-    Obj.change(functionTrigger, (functionTrigger) => {
+    Obj.update(functionTrigger, (functionTrigger) => {
       initSpec(functionTrigger.spec as any);
     });
   });
@@ -804,7 +804,7 @@ const setupQueue = (
 const attachTrigger = (functionTrigger: Trigger.Trigger | undefined, computeModel: ComputeGraphModel) => {
   invariant(functionTrigger);
   const inputNode = computeModel.nodes.find((node) => node.type === NODE_INPUT)!;
-  Obj.change(functionTrigger, (functionTrigger) => {
+  Obj.update(functionTrigger, (functionTrigger) => {
     functionTrigger.function = Ref.make(computeModel.root);
     functionTrigger.inputNodeId = inputNode.id;
   });

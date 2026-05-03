@@ -34,7 +34,7 @@ const checkArrayMutationAllowed = (arr: any, method: string): void => {
 
 /**
  * Extends the native array to make sure that arrays methods are correctly reactive.
- * Enforces that mutations only happen within Obj.change() context.
+ * Enforces that mutations only happen within Obj.update() context.
  */
 export class ReactiveArray<T> extends Array<T> {
   static override get [Symbol.species]() {

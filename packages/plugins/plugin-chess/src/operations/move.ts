@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof Move> = Move.pipe(
 
       chess.move(move, { strict: false });
       const pgn = chess.pgn();
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         const mutableGame = obj as Obj.Mutable<typeof obj>;
         mutableGame.pgn = pgn;
       });

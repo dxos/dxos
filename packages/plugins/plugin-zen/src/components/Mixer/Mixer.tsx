@@ -90,7 +90,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
 
   const handleAdd = useCallback(() => {
     const sequence = Sequence.makeSequence();
-    Obj.change(dream, (dream) => {
+    Obj.update(dream, (dream) => {
       dream.sequences = [...(dream.sequences ?? []), sequence];
     });
     setSelected(sequence.id);
@@ -102,7 +102,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
 
   const handleDelete = useCallback(
     (id: string) => {
-      Obj.change(dream, (dream) => {
+      Obj.update(dream, (dream) => {
         dream.sequences = (dream.sequences ?? []).filter((layer) => layer.id !== id);
       });
       if (selected === id) {
@@ -117,7 +117,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
 
   const handleUpdate = useCallback(
     (updated: Sequence.Sequence) => {
-      Obj.change(dream, (dream) => {
+      Obj.update(dream, (dream) => {
         dream.sequences = (dream.sequences ?? []).map((layer) => (layer.id === updated.id ? updated : layer));
       });
       if (playing) {
@@ -129,7 +129,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
 
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
-      Obj.change(dream, (dream) => {
+      Obj.update(dream, (dream) => {
         const next = [...(dream.sequences ?? [])];
         const [moved] = next.splice(fromIndex, 1);
         next.splice(toIndex, 0, moved);

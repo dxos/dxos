@@ -88,7 +88,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
     }
 
     {
-      Obj.change(trigger, (trigger) => {
+      Obj.update(trigger, (trigger) => {
         trigger.input!.iterations = 100;
       });
       await sync(space);
@@ -136,13 +136,13 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
     await sync(space);
     await observeInvocations(space, 5);
 
-    Obj.change(trigger, (trigger) => {
+    Obj.update(trigger, (trigger) => {
       trigger.input!.iterations = 1_000_000_000;
     });
     await sync(space);
     await observeInvocations(space, 10);
 
-    Obj.change(trigger, (trigger) => {
+    Obj.update(trigger, (trigger) => {
       trigger.input!.iterations = 100;
     });
     await sync(space);

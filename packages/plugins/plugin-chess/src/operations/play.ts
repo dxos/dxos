@@ -33,7 +33,7 @@ const handler: Operation.WithHandler<typeof Play> = Play.pipe(
 
       chess.move(move, { strict: false });
       const pgn = chess.pgn();
-      Obj.change(object, (object) => {
+      Obj.update(object, (object) => {
         const mutableGame = object as Obj.Mutable<typeof object>;
         mutableGame.pgn = pgn;
       });

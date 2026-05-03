@@ -123,7 +123,7 @@ export const useObject: {
       if (obj === undefined) {
         return;
       }
-      Obj.change(obj, (obj: any) => {
+      Obj.update(obj, (obj: any) => {
         if (typeof updateOrValue === 'function') {
           const returnValue = updateOrValue(property !== undefined ? obj[property] : obj);
           if (returnValue !== undefined) {

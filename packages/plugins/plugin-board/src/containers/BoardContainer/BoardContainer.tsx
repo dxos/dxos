@@ -73,7 +73,7 @@ export const BoardContainer = ({ role, subject: board, attendableId }: BoardCont
     (id) => {
       // TODO(burdon): Impl. DXN.equals and pass in DXN from `id`.
       const idx = board.items.findIndex((ref) => ref.dxn.asEchoDXN()?.echoId === id);
-      Obj.change(board, (board) => {
+      Obj.update(board, (board) => {
         if (idx !== -1) {
           board.items.splice(idx, 1);
         }
@@ -86,7 +86,7 @@ export const BoardContainer = ({ role, subject: board, attendableId }: BoardCont
   const handleMove = useCallback<NonNullable<BoardRootProps['onMove']>>(
     (id, position) => {
       const layout = board.layout.cells[id];
-      Obj.change(board, (board) => {
+      Obj.update(board, (board) => {
         board.layout.cells[id] = { ...layout, ...position };
       });
     },
@@ -106,7 +106,7 @@ export const BoardContainer = ({ role, subject: board, attendableId }: BoardCont
       }
 
       // Create a reference to the selected object and add it to the board.
-      Obj.change(board, (board) => {
+      Obj.update(board, (board) => {
         board.items.push(Ref.make(selectedObject));
 
         // Set the layout position for the new item.

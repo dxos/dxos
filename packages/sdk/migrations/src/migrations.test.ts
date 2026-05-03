@@ -76,7 +76,7 @@ describe.skip('Migrations', () => {
   });
 
   test('if some migrations have been run before, runs only the remaining migrations', async () => {
-    Obj.change(space.properties, (obj) => {
+    Obj.update(space.properties, (obj) => {
       obj['test.version'] = '1970-01-02';
     });
     await space.db.graph.schemaRegistry.register([TestSchema.Expando]);
@@ -90,7 +90,7 @@ describe.skip('Migrations', () => {
   });
 
   test('if all migrations have been run before, does nothing', async () => {
-    Obj.change(space.properties, (obj) => {
+    Obj.update(space.properties, (obj) => {
       obj['test.version'] = '1970-01-03';
     });
     await Migrations.migrate(space);
