@@ -4,7 +4,15 @@
 
 import '@dxos-theme';
 
-import React, { type Dispatch, type FC, type RefObject, type SetStateAction } from 'react';
+import React, {
+  type ChangeEvent,
+  type Dispatch,
+  type FC,
+  type ReactNode,
+  type RefObject,
+  type SetStateAction,
+  useRef,
+} from 'react';
 
 import { IconButton, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
@@ -18,7 +26,21 @@ export const TranscriptionStory: FC<{
   running: boolean;
   onRunningChange: Dispatch<SetStateAction<boolean>>;
   audioRef?: RefObject<HTMLAudioElement | null>;
-}> = ({ model, running, onRunningChange, audioRef, disabled }) => {
+  onUpload?: (file: File) => void;
+  uploadAccept?: string;
+  toolbarSlot?: ReactNode;
+}> = ({ model, running, onRunningChange, audioRef, disabled, onUpload, uploadAccept = 'audio/*', toolbarSlot }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && onUpload) {
+      onUpload(file);
+    }
+    // Reset so the same file can be re-selected.
+    event.target.value = '';
+  };
+
   return (
     <div className='flex flex-col w-[30rem]'>
       {audioRef && <audio ref={audioRef} autoPlay />}
@@ -30,6 +52,24 @@ export const TranscriptionStory: FC<{
           label={running ? 'Pause' : 'Play'}
           onClick={() => onRunningChange((running) => !running)}
         />
+        {onUpload && (
+          <>
+            <input
+              ref={fileInputRef}
+              type='file'
+              accept={uploadAccept}
+              className='hidden'
+              onChange={handleFileChange}
+            />
+            <IconButton
+              iconOnly
+              icon='ph--upload--regular'
+              label='Upload audio'
+              onClick={() => fileInputRef.current?.click()}
+            />
+          </>
+        )}
+        {toolbarSlot}
       </Toolbar.Root>
       <ScrollContainer.Root pin>
         <ScrollContainer.Content>
