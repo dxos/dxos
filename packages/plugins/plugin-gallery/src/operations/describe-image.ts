@@ -32,10 +32,10 @@ const handler: Operation.WithHandler<typeof DescribeImage> = DescribeImage.pipe(
 
       const description = PLACEHOLDER_DESCRIPTIONS[index % PLACEHOLDER_DESCRIPTIONS.length];
 
-      Obj.change(obj, (draft) => {
-        const next = [...(draft.images ?? [])];
+      Obj.change(obj, (obj) => {
+        const next = [...(obj.images ?? [])];
         next[index] = { ...next[index], description };
-        draft.images = next;
+        obj.images = next;
       });
 
       return { description };
