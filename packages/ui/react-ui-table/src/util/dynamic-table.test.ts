@@ -9,7 +9,11 @@ import { Format } from '@dxos/echo';
 
 import { type TablePropertyDefinition, getBaseSchema, makeDynamicTable } from './dynamic-table';
 
-describe('makeDynamicTable', () => {
+// Quarantined — flaky in CI under hoisted node_modules layout.
+// Trunk.io tracking:
+//   https://app.trunk.io/dxos/flaky-tests/test/fe424f97-f8a1-5f2f-a191-5b3ec4e8f6b7
+//   https://app.trunk.io/dxos/flaky-tests/test/ee00f293-9b9b-55ed-b4cd-48a07edea96c
+describe.skip('makeDynamicTable', () => {
   /**
    * Base case: plain jsonSchema (not from Echo / JsonSchema.toJsonSchema). Does not exercise the path
    * where projection or schema are reactive, so this does not reproduce the Obj.change regression.

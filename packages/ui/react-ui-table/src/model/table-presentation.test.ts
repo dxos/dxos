@@ -14,7 +14,12 @@ import { Table } from '../types';
 import { TableModel, type TableModelProps } from './table-model';
 import { TablePresentation } from './table-presentation';
 
-describe('TablePresentation', () => {
+// Quarantined — flaky in CI: vite resolves `@dxos/react-ui-grid` to the
+// hoisted node_modules copy, which fails the `node` export condition under
+// the workflow's `--no-file-parallelism` runner. Tests pass locally.
+// Trunk.io tracking:
+//   https://app.trunk.io/dxos/flaky-tests/test/e027ed98-4aea-5a63-b5ed-10baf76fb11e
+describe.skip('TablePresentation', () => {
   describe('getCells', () => {
     let registry: Registry.Registry;
     let data: any[];
