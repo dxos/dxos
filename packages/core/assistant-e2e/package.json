@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/assistant-e-2-e",
+  "name": "@dxos/assistant-e2e",
   "version": "0.8.3",
   "description": "Assistant e2e tests.",
   "homepage": "https://dxos.org",

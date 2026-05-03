@@ -192,7 +192,6 @@ export const createBasicExtensions = (propsProp?: BasicExtensionsOptions): Exten
 export type ThemeExtensionsOptions = {
   monospace?: boolean;
   themeMode?: ThemeMode;
-  /** When true, sets `--scrollbar-width: 4px` on the scroll container for a thinner scrollbar. */
   scrollbarThin?: boolean;
   slots?: {
     editor?: {
@@ -254,7 +253,7 @@ export const createThemeExtensions = ({
               view.scrollDOM.classList.add(...slots.scroller.className.split(/\s+/));
             }
             if (scrollbarThin) {
-              view.scrollDOM.style.setProperty('--scrollbar-width', '4px');
+              view.scrollDOM.style.setProperty('--scrollbar-size', '4px');
             }
           }
         },
