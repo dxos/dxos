@@ -58,9 +58,7 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
         .flat()
         .reduce((acc: Extension[], provider) => {
           const extension =
-            typeof provider === 'function'
-              ? provider({ document: object as Markdown.Document, viewMode })
-              : provider;
+            typeof provider === 'function' ? provider({ document: object as Markdown.Document, viewMode }) : provider;
           if (extension) {
             acc.push(extension);
           }
