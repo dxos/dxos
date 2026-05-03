@@ -128,21 +128,20 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
   );
 };
 
-const readImageDimensions = (file: File): Promise<{ width?: number; height?: number }> =>
-  new Promise((resolve) => {
-    if (!file.type.startsWith('image/')) {
-      resolve({});
-      return;
-    }
-    const url = URL.createObjectURL(file);
+const readImageDimensions = async (file: File): Promise<{ width?: number; height?: number }> => {
+  if (!file.type.startsWith('image/')) {
+    return {};
+  }
+  const url = URL.createObjectURL(file);
+  try {
     const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve({ width: img.naturalWidth, height: img.naturalHeight });
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      resolve({});
-    };
-    img.src = url;
-  });
+    const dimensions = await new Promise<{ width?: number; height?: number }>((resolve) => {
+      img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      img.onerror = () => resolve({});
+      img.src = url;
+    });
+    return dimensions;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+};

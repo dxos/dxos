@@ -99,11 +99,17 @@ const LightboxViewport = composable<HTMLDivElement, LightboxViewportProps>((prop
 
   // Memoised so the masonry's internal `TileAdapter` (memoised on `[Tile, gutter]`)
   // doesn't recreate on every render and remount every visible tile.
+  // `data` may be undefined for an instant during a delete transition (the
+  // masonry can call `ItemContent` with a stale index before the items array
+  // change has propagated) — guard rather than throw.
   const MasonryTile = useMemo(
     () =>
-      ({ data }: { data: { image: Gallery.Image; index: number } }) => (
-        <Tile image={data.image} index={data.index} onDelete={onDelete && (() => onDelete(data.index))} />
-      ),
+      ({ data }: { data?: { image: Gallery.Image; index: number } }) => {
+        if (!data) {
+          return null;
+        }
+        return <Tile image={data.image} index={data.index} onDelete={onDelete && (() => onDelete(data.index))} />;
+      },
     [Tile, onDelete],
   );
 
@@ -126,7 +132,7 @@ const LightboxViewport = composable<HTMLDivElement, LightboxViewportProps>((prop
           items={items}
           // Use the URL as the stable per-tile key — index-based keys would
           // shift after a deletion and force unrelated tiles to remount.
-          getId={(data: { image: Gallery.Image; index: number }) => data.image.url ?? String(data.index)}
+          getId={(data?: { image: Gallery.Image; index: number }) => data?.image?.url ?? String(data?.index ?? '')}
         />
       </Masonry.Content>
     </Masonry.Root>
