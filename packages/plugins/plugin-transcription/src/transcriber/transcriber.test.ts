@@ -25,7 +25,11 @@ const segment = (overrides: Partial<WhisperSegment>): WhisperSegment => ({
 
 describe('alignWhisperSegments', () => {
   test('returns empty when no chunks were transcribed', () => {
-    const result = alignWhisperSegments([segment({ text: 'x', end: 1, words: [{ word: 'x', start: 0, end: 1 }] })], [], 0);
+    const result = alignWhisperSegments(
+      [segment({ text: 'x', end: 1, words: [{ word: 'x', start: 0, end: 1 }] })],
+      [],
+      0,
+    );
     expect(result.transcripts).toEqual([]);
     expect(result.lastUsedTimestamp).toBeUndefined();
   });
