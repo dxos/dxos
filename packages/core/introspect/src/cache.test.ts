@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { cacheFilePath } from './indexer/cache';
-import { createIntrospector, type Introspector } from './introspector';
+import { createIntrospector } from './introspector';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURE_SRC = join(__dirname, '__fixtures__');
