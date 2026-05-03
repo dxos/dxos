@@ -5,12 +5,12 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type ComponentType, type PropsWithChildren, type ReactNode, useMemo } from 'react';
 
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 
 import { meta } from '#meta';
 
-import { type Image } from '../../types/Gallery';
+import { type Gallery, type Image } from '../../types/Gallery';
 import { GalleryImage } from '../GalleryImage';
 
 const GALLERY_MASONRY_NAME = 'GalleryMasonry';
@@ -24,7 +24,7 @@ export type GalleryMasonryTileProps = {
 export type GalleryMasonryTile = ComponentType<GalleryMasonryTileProps>;
 
 type ContextValue = {
-  images: ReadonlyArray<Image>;
+  gallery: Gallery;
   onDelete?: (index: number) => void;
   Tile: GalleryMasonryTile;
   emptyMessage?: ReactNode;
@@ -39,11 +39,12 @@ const DefaultTile: GalleryMasonryTile = ({ image, onDelete }) => (
 //
 // Root
 //
+// Headless: provides context only — no DOM. Containers compose Panel.Root /
+// Panel.Toolbar / Panel.Content around `GalleryMasonry.Viewport` themselves.
+//
 
 export type GalleryMasonryRootProps = PropsWithChildren<{
-  /** Article surface role forwarded to `Panel.Root`. */
-  role?: string;
-  images: ReadonlyArray<Image>;
+  gallery: Gallery;
   onDelete?: (index: number) => void;
   /** Render a single tile. Defaults to `GalleryImage` with `image.url` as src. */
   Tile?: GalleryMasonryTile;
@@ -51,56 +52,48 @@ export type GalleryMasonryRootProps = PropsWithChildren<{
   emptyMessage?: ReactNode;
 }>;
 
-const Root = ({ role, images, onDelete, Tile = DefaultTile, emptyMessage, children }: GalleryMasonryRootProps) => (
-  <Provider images={images} onDelete={onDelete} Tile={Tile} emptyMessage={emptyMessage}>
-    <Panel.Root role={role}>{children}</Panel.Root>
+const Root = ({ gallery, onDelete, Tile = DefaultTile, emptyMessage, children }: GalleryMasonryRootProps) => (
+  <Provider gallery={gallery} onDelete={onDelete} Tile={Tile} emptyMessage={emptyMessage}>
+    {children}
   </Provider>
 );
 
 Root.displayName = `${GALLERY_MASONRY_NAME}.Root`;
 
 //
-// Toolbar
-//
-
-const Toolbar = ({ children }: PropsWithChildren) => <Panel.Toolbar>{children}</Panel.Toolbar>;
-
-Toolbar.displayName = `${GALLERY_MASONRY_NAME}.Toolbar`;
-
-//
 // Viewport
 //
-// Wraps Panel.Content + the Masonry's own ScrollArea (Masonry.Content)
-// + masonry grid (Masonry.Viewport). Renders the empty-state in place
-// when there are no images.
+// Renders the masonry grid (or the empty state). Owns the `ScrollArea.Root`
+// (via `Masonry.Content`). Containers wrap this in `Panel.Content` (or any
+// other layout) themselves.
 //
 
 const Viewport = () => {
   const { t } = useTranslation(meta.id);
-  const { images, onDelete, Tile, emptyMessage } = useGalleryMasonryContext(`${GALLERY_MASONRY_NAME}.Viewport`);
-  const items = useMemo(() => images.map((image, index) => ({ image, index })), [images]);
+  const { gallery, onDelete, Tile, emptyMessage } = useGalleryMasonryContext(`${GALLERY_MASONRY_NAME}.Viewport`);
+  const items = useMemo(() => (gallery.images ?? []).map((image, index) => ({ image, index })), [gallery.images]);
+
+  if (items.length === 0) {
+    return (
+      <div role='status' className='flex items-center justify-center h-full text-subdued'>
+        {emptyMessage ?? t('empty.message')}
+      </div>
+    );
+  }
 
   return (
-    <Panel.Content>
-      {items.length === 0 ? (
-        <div role='status' className='flex items-center justify-center h-full text-subdued'>
-          {emptyMessage ?? t('empty.message')}
-        </div>
-      ) : (
-        <Masonry.Root
-          Tile={({ data }: { data: { image: Image; index: number } }) => (
-            <Tile image={data.image} index={data.index} onDelete={onDelete && (() => onDelete(data.index))} />
-          )}
-        >
-          <Masonry.Content padding centered>
-            <Masonry.Viewport
-              items={items}
-              getId={(data: { image: Image; index: number }) => `${data.index}:${data.image.url}`}
-            />
-          </Masonry.Content>
-        </Masonry.Root>
+    <Masonry.Root
+      Tile={({ data }: { data: { image: Image; index: number } }) => (
+        <Tile image={data.image} index={data.index} onDelete={onDelete && (() => onDelete(data.index))} />
       )}
-    </Panel.Content>
+    >
+      <Masonry.Content padding centered>
+        <Masonry.Viewport
+          items={items}
+          getId={(data: { image: Image; index: number }) => `${data.index}:${data.image.url}`}
+        />
+      </Masonry.Content>
+    </Masonry.Root>
   );
 };
 
@@ -112,6 +105,5 @@ Viewport.displayName = `${GALLERY_MASONRY_NAME}.Viewport`;
 
 export const GalleryMasonry = {
   Root,
-  Toolbar,
   Viewport,
 };

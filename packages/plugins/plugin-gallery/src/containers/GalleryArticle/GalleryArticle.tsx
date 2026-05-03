@@ -12,6 +12,7 @@ import { Obj } from '@dxos/echo';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { useObject } from '@dxos/react-client/echo';
+import { Panel } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 
@@ -110,16 +111,19 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
   );
 
   const menuActions = useMenuActions(actionsAtom);
-  const images = (gallery as unknown as Gallery.Gallery).images ?? [];
 
   return (
-    <GalleryMasonry.Root role={role} images={images} onDelete={handleDelete} Tile={ResolvingTile}>
-      <GalleryMasonry.Toolbar>
-        <Menu.Root {...menuActions} attendableId={attendableId}>
-          <Menu.Toolbar />
-        </Menu.Root>
-      </GalleryMasonry.Toolbar>
-      <GalleryMasonry.Viewport />
+    <GalleryMasonry.Root gallery={gallery as unknown as Gallery.Gallery} onDelete={handleDelete} Tile={ResolvingTile}>
+      <Panel.Root role={role}>
+        <Panel.Toolbar>
+          <Menu.Root {...menuActions} attendableId={attendableId}>
+            <Menu.Toolbar />
+          </Menu.Root>
+        </Panel.Toolbar>
+        <Panel.Content>
+          <GalleryMasonry.Viewport />
+        </Panel.Content>
+      </Panel.Root>
       {fileInput}
     </GalleryMasonry.Root>
   );

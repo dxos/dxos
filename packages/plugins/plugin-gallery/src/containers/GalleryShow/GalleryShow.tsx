@@ -51,11 +51,9 @@ export const GalleryShow = ({ gallery: subject }: GalleryShowProps) => {
     });
   }, [subject, deck, invokePromise]);
 
-  const images = (gallery as unknown as Gallery.Gallery).images ?? [];
-
   return (
     <div className='relative w-full h-full bg-attention-surface'>
-      <GalleryMasonry.Root role='article' images={images} Tile={ResolvingTile}>
+      <GalleryMasonry.Root gallery={gallery as unknown as Gallery.Gallery} Tile={ResolvingTile}>
         <GalleryMasonry.Viewport />
       </GalleryMasonry.Root>
       <div className='absolute top-4 right-4 z-[200]'>

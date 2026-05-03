@@ -5,12 +5,12 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Toolbar } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { type Image } from '../../types/Gallery';
+import { type Gallery, type Image } from '../../types/Gallery';
 import { GalleryMasonry } from './GalleryMasonry';
 
 // Picsum returns a random image at the requested size for each unique seed.
@@ -45,20 +45,24 @@ type DefaultStoryProps = {
 
 const DefaultStory = ({ initialImages, enableDelete }: DefaultStoryProps) => {
   const [images, setImages] = useState<Image[]>(initialImages);
+  const gallery = { name: 'Sample Gallery', images } as unknown as Gallery;
 
   return (
     <GalleryMasonry.Root
-      role='article'
-      images={images}
+      gallery={gallery}
       onDelete={enableDelete ? (index) => setImages((prev) => prev.filter((_, i) => i !== index)) : undefined}
     >
-      <GalleryMasonry.Toolbar>
-        <Toolbar.Root>
-          <Toolbar.Button>Add image</Toolbar.Button>
-          <Toolbar.Button>Show</Toolbar.Button>
-        </Toolbar.Root>
-      </GalleryMasonry.Toolbar>
-      <GalleryMasonry.Viewport />
+      <Panel.Root role='article'>
+        <Panel.Toolbar>
+          <Toolbar.Root>
+            <Toolbar.Button>Add image</Toolbar.Button>
+            <Toolbar.Button>Show</Toolbar.Button>
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content>
+          <GalleryMasonry.Viewport />
+        </Panel.Content>
+      </Panel.Root>
     </GalleryMasonry.Root>
   );
 };
