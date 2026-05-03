@@ -39,7 +39,7 @@ export type MarkdownContainerProps = AppSurface.ObjectArticleProps<
 
 export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerProps>(
   (
-    { role, subject: object, id, attendableId, settings, extensionProviders, onSelectObject, ...props },
+    { role, subject: object, id, attendableId, settings, extensionProviders, onSelectObject, viewMode, ...props },
     forwardedRef,
   ) => {
     const db = Obj.isObject(object) ? Obj.getDatabase(object) : undefined;
@@ -58,14 +58,16 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
         .flat()
         .reduce((acc: Extension[], provider) => {
           const extension =
-            typeof provider === 'function' ? provider({ document: object as Markdown.Document }) : provider;
+            typeof provider === 'function'
+              ? provider({ document: object as Markdown.Document, viewMode })
+              : provider;
           if (extension) {
             acc.push(extension);
           }
 
           return acc;
         }, []);
-    }, [extensionProviders, otherExtensionProviders, object]);
+    }, [extensionProviders, otherExtensionProviders, object, viewMode]);
 
     // Toolbar actions from app graph.
     const { graph } = useAppGraph();
@@ -118,6 +120,7 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
         compact={role !== 'article'}
         extensions={extensions}
         settings={settings}
+        viewMode={viewMode}
         onAction={runAction}
         onFileUpload={handleFileUpload}
         onLinkQuery={handleLinkQuery}

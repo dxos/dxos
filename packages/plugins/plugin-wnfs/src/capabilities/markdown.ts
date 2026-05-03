@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { getSpace } from '@dxos/react-client/echo';
+import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { WnfsCapabilities } from '#types';
 
@@ -18,7 +19,11 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     return Capability.contributes(MarkdownCapabilities.Extensions, [
-      ({ document }: { document?: any }) => {
+      ({ document, viewMode }: { document?: any; viewMode?: EditorViewMode }) => {
+        if (viewMode === 'source') {
+          return undefined;
+        }
+
         const blockstore = capabilities.get(WnfsCapabilities.Blockstore);
         const instances = capabilities.get(WnfsCapabilities.Instances);
 
