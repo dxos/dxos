@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
 export const Image = Schema.Struct({
   url: Schema.String.annotations({
@@ -34,7 +34,7 @@ export interface Image extends Schema.Schema.Type<typeof Image> {}
 
 export const Gallery = Schema.Struct({
   name: Schema.optional(Schema.String),
-  images: Schema.optional(Schema.Array(Image)),
+  images: Schema.Array(Image).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.gallery',
