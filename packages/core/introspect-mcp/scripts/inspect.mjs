@@ -17,7 +17,7 @@
 
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -48,17 +48,28 @@ if (!existsSync(cli)) {
   process.exit(1);
 }
 
+// Prefer the workspace-local tsx binary so we don't depend on `npx tsx`
+// having to download or pick a different version in restricted environments.
+const tsx = join(root, 'node_modules', '.bin', 'tsx');
+if (!existsSync(tsx)) {
+  console.error(`[inspect] tsx not found at ${tsx} — run \`pnpm install\` from the repo root first.`);
+  process.exit(1);
+}
+
 console.error(`[inspect] CLI:  ${cli}`);
 console.error(`[inspect] Root: ${root}`);
+console.error(`[inspect] tsx:  ${tsx}`);
 console.error('[inspect] Launching MCP Inspector — open the URL it prints (with ?MCP_PROXY_AUTH_TOKEN=...).');
 console.error('');
 
-const child = spawn(
-  'npx',
-  ['@modelcontextprotocol/inspector', 'npx', 'tsx', '--conditions=source', cli, '--root', root],
-  { stdio: 'inherit' },
-);
+const child = spawn('npx', ['@modelcontextprotocol/inspector', tsx, '--conditions=source', cli, '--root', root], {
+  stdio: 'inherit',
+});
 
+child.on('error', (err) => {
+  console.error(`[inspect] Failed to spawn Inspector: ${err.message}`);
+  process.exit(1);
+});
 child.on('exit', (code) => process.exit(code ?? 0));
 process.on('SIGINT', () => child.kill('SIGINT'));
 process.on('SIGTERM', () => child.kill('SIGTERM'));

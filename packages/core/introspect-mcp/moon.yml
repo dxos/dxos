@@ -8,3 +8,21 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--platform=node'
+  # Run the MCP server from source (no build step required thanks to
+  # `tsx --conditions=source`). Long-running; designed to be piped to
+  # an MCP client via stdio.
+  serve:
+    command: pnpm
+    args:
+      - exec
+      - tsx
+      - '--conditions=source'
+      - src/cli.ts
+    preset: server
+  # Launch the MCP Inspector against this server with all paths absolutized.
+  # Useful for interactive testing.
+  inspect:
+    command: node
+    args:
+      - scripts/inspect.mjs
+    preset: server

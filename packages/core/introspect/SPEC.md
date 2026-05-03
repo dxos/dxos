@@ -13,9 +13,9 @@ Both are thin adapters over a shared core. Build the core and the MCP server fir
 
 ```text
 packages/devtools/
-  plugin-introspect-core/   ← index + query + curation (no transport, no UI)
-  plugin-introspect-mcp/    ← MCP adapter (Node, stdio + HTTP)
-  plugin-composer/          ← Composer plugin (later — out of scope for v1)
+  introspect/               ← index + query + curation (no transport, no UI)
+  introspect-mcp/           ← MCP adapter (Node, stdio + HTTP)
+  introspect-composer/      ← Composer plugin (later — out of scope for v1)
 ```
 
 Three layers inside `core`, separated cleanly:
@@ -34,7 +34,7 @@ The MCP adapter does only: tool schema definitions, parameter validation, respon
 - Indexing dependencies outside the monorepo
 - Fine-tuning, embeddings, or vector search — this is structured retrieval only
 
-## Core package: `plugin-introspect-core`
+## Core package: `@dxos/introspect`
 
 ### Tech choices
 
@@ -161,7 +161,7 @@ Body is the explanation + template code. The query layer parses these on startup
 - Integration test that runs against the actual DXOS monorepo and checks: at least N plugins detected, no parse errors logged, all known surfaces present
 - No tests for the index file watcher — it's hard to test reliably and mostly glue
 
-## MCP package: `plugin-introspect-mcp`
+## MCP package: `@dxos/introspect-mcp`
 
 ### Tech choices
 
@@ -283,7 +283,7 @@ If any of these are ambiguous after reading code, ask before deciding.
 
 ## Definition of done for v1
 
-- `pnpm -F @dxos/plugin-introspect-mcp start` boots an MCP server
+- `pnpm -F @dxos/introspect-mcp start` boots an MCP server
 - Claude Code configured with the server can: list packages, find any exported symbol, list all plugins with their surfaces and capabilities, get schema definitions, retrieve idioms
 - Running against the real monorepo produces no parse errors and detects every plugin currently in `packages/plugins/`
 - Adding a new plugin to the monorepo shows up in `list_plugins` within 1s (with watch mode) or after restart (without)
