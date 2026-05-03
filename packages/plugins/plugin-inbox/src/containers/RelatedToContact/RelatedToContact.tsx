@@ -24,11 +24,14 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
   const workspace = db ? getSpacePath(db.spaceId) : undefined;
   const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
   const calendars = useQuery(db, Filter.type(Calendar.Calendar));
+
+  // TODO(burdon): API REVIEW!!!
   const mailbox = mailboxes[0];
   const calendar = calendars[0];
   // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
   useObject(mailbox);
   useObject(calendar);
+
   const mailboxFeed = mailbox?.feed?.target as Feed.Feed | undefined;
   const calendarFeed = calendar?.feed?.target as Feed.Feed | undefined;
   // TODO(wittjosiah): Way to structure this query that does not require type assertions?
@@ -40,6 +43,7 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
     db,
     calendarFeed ? Query.select(Filter.type(Event.Event)).from(calendarFeed) : Query.select(Filter.nothing()),
   ) as Event.Event[];
+
   const relatedMessages = messages
     .filter(
       (message) =>
