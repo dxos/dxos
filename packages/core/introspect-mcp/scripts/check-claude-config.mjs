@@ -18,7 +18,10 @@ import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-const SETTINGS = join(homedir(), '.claude', 'settings.json');
+// Claude Code reads MCP servers from ~/.claude.json (project-scoped under
+// `.projects[<path>].mcpServers`), NOT from ~/.claude/settings.json. Look up
+// the entry in the closest ancestor project key — same way Claude Code does.
+const SETTINGS = join(homedir(), '.claude.json');
 // Cold-start the server may need ~80s to build the symbol cache the first
 // time. Subsequent runs reuse the disk cache and complete in seconds.
 const TIMEOUT_MS = 180_000;
@@ -45,16 +48,34 @@ try {
 ok(`read ${SETTINGS}`);
 
 // --- Step 2: confirm the dxos-introspect entry exists -------------------
-const entry = settings.mcpServers?.['dxos-introspect'];
-if (!entry) {
-  fail('settings.mcpServers["dxos-introspect"] is missing', 'Add the entry, then re-run this script.');
+// Walk up from cwd to find the closest project key with mcpServers, mirroring
+// Claude Code's resolution order.
+const projects = settings.projects ?? {};
+let entry;
+let projectKey;
+let cursor = process.cwd();
+while (cursor !== '/' && !entry) {
+  const proj = projects[cursor];
+  if (proj?.mcpServers?.['dxos-introspect']) {
+    entry = proj.mcpServers['dxos-introspect'];
+    projectKey = cursor;
+    break;
+  }
+  cursor = cursor.replace(/\/[^/]*$/, '') || '/';
 }
+if (!entry) {
+  fail(
+    'No dxos-introspect entry found in .projects[*].mcpServers under cwd',
+    `Searched ancestors of ${process.cwd()}. Add the entry under .projects["<repo-root>"].mcpServers in ${SETTINGS}.`,
+  );
+}
+ok(`found entry under .projects["${projectKey}"].mcpServers["dxos-introspect"]`);
 const command = entry.command;
 const args = entry.args ?? [];
 if (typeof command !== 'string' || !Array.isArray(args)) {
   fail('entry has wrong shape', JSON.stringify(entry));
 }
-ok(`found entry: ${command} ${args.join(' ')}`);
+ok(`spawn: ${command} ${args.join(' ')}`);
 
 // --- Step 3: confirm referenced files exist ----------------------------
 const cliPath = args.find((a) => typeof a === 'string' && a.endsWith('cli.ts'));
