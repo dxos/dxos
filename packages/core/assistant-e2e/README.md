@@ -1,4 +1,4 @@
-# @dxos/assistant-e-2-e
+# @dxos/assistant-e2e
 
 Agent end-to-end tests that verify assistant behavior by running prompts against the full agent stack.
 
@@ -69,13 +69,13 @@ agentTest(
 
 ```bash
 # Replay from memoized conversations (CI mode)
-moon run assistant-e-2-e:test
+moon run assistant-e2e:test
 
 # Generate new conversations (requires credentials)
-ALLOW_LLM_GENERATION=1 moon run assistant-e-2-e:test
+ALLOW_LLM_GENERATION=1 moon run assistant-e2e:test
 
 # Single test file
-ALLOW_LLM_GENERATION=1 moon run assistant-e-2-e:test -- src/testing/database.test.ts
+ALLOW_LLM_GENERATION=1 moon run assistant-e2e:test -- src/testing/database.test.ts
 ```
 
 Memoized conversations are stored in `*.conversations.json` next to each test file. Always commit these after regeneration.

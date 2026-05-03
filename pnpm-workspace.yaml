@@ -5,6 +5,7 @@ packages:
   - vendor/**/*
   - '!packages/deprecated/**'
   - '!packages/sdk/examples/src/template'
+  - '!**/__fixtures__/**'
   - '!**/build/**'
   - '!**/dist/**'
   - '!**/out/**'

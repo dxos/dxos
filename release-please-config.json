@@ -375,6 +375,16 @@
         },
         {
           "type": "json",
+          "path": "packages/core/introspect/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/introspect-mcp/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/mcp-client/package.json",
           "jsonpath": "$.version"
         },
