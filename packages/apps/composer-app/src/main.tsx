@@ -362,7 +362,11 @@ const main = async () => {
   const [builtinPlugins, remotePluginsResult] = await Promise.all([
     getPlugins(conf, {
       onPluginLoaded: (loaded, total) => {
-        bootStatus(`Loading plugins (${loaded}/${total})`);
+        // Pass `range` so the loader updates the existing line in place
+        // ("Loading plugins (12/80)") instead of appending a fresh entry per
+        // plugin tick — keeps the visible log compact and the boot trace
+        // collapses the (i/n) sequence into one transition.
+        window.__bootLoader?.status({ humanized: 'Loading plugins', range: { index: loaded, total } });
         // The ring spans two phases — plugin chunks (0 → 50%) and module
         // activation (50 → 100%, driven from `Placeholder` once React mounts).
         // Splitting the range keeps it monotonic across the boundary.

@@ -18,7 +18,18 @@ declare global {
      * re-declare the type.
      */
     __bootLoader?: {
-      status: (payload: { event?: string; module?: string; humanized: string }) => void;
+      status: (payload: {
+        event?: string;
+        module?: string;
+        humanized: string;
+        /**
+         * Optional `(index/total)` tick. When present, the loader replaces the
+         * current line in place ("Loading plugins (12/80)") instead of
+         * appending a new entry — keeps the visible log compact during long
+         * counted phases like plugin chunk-loading or module activation.
+         */
+        range?: { index: number; total: number };
+      }) => void;
       progress: (fraction?: number) => void;
       dismiss: () => void;
     };
