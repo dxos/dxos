@@ -44,7 +44,7 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
     subject,
     accept: 'image/*',
     onUpload: async (info, file) => {
-      const { width, height } = await readImageDimensions(file);
+      const { width, height } = await loadImageDimensions(file);
       Obj.change(subject, (subject) => {
         const mutable = subject as Obj.Mutable<Gallery.Gallery>;
         const next = [...(mutable.images ?? [])];
@@ -128,18 +128,25 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
   );
 };
 
-const readImageDimensions = async (file: File): Promise<{ width?: number; height?: number }> => {
+type ImageDimensions = {
+  width?: number;
+  height?: number;
+};
+
+const loadImageDimensions = async (file: File): Promise<ImageDimensions> => {
   if (!file.type.startsWith('image/')) {
     return {};
   }
+
   const url = URL.createObjectURL(file);
   try {
     const img = new Image();
-    const dimensions = await new Promise<{ width?: number; height?: number }>((resolve) => {
+    const dimensions = await new Promise<ImageDimensions>((resolve) => {
       img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
       img.onerror = () => resolve({});
       img.src = url;
     });
+
     return dimensions;
   } finally {
     URL.revokeObjectURL(url);
