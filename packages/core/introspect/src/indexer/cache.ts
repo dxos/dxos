@@ -46,7 +46,7 @@ export type CacheEntry = {
 
 export type CacheFile = {
   /** Schema version — bump when CacheFile / extracted symbol shape changes. */
-  version: number;
+  version: 2;
   /** Per-package entries keyed by package name. */
   entries: Record<string, CacheEntry>;
 };
