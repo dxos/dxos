@@ -20,6 +20,14 @@ import { type Message } from '@dxos/types';
 import { Transcription } from '../components';
 import { type SerializationModel } from '../model';
 
+/**
+ * Story wrapper that renders a transcript with playback controls, an optional audio file
+ * upload affordance, and a toolbar slot for additional controls.
+ *
+ * @param onUpload - Callback fired when the user picks a local audio file via the upload button.
+ * @param uploadAccept - HTML `accept` filter for the hidden file input. Defaults to `audio/*`.
+ * @param toolbarSlot - Extra content rendered after the upload button inside the toolbar.
+ */
 export const TranscriptionStory: FC<{
   model: SerializationModel<Message.Message>;
   disabled?: boolean;

@@ -213,7 +213,7 @@ export class Transcriber extends Resource {
       throw new Error('No audio to send for transcribing');
     }
 
-    let segments: WhisperSegment[];
+    let segments: unknown;
     if (this._transcribeFn) {
       segments = await this._transcribeFn(audio);
     } else {
@@ -230,12 +230,16 @@ export class Transcriber extends Resource {
         throw new Error(`Transcription failed: ${response.statusText}`);
       }
 
-      ({ segments } = (await response.json()) as { segments: WhisperSegment[] });
+      ({ segments } = (await response.json()) as { segments?: unknown });
+    }
+
+    if (!Array.isArray(segments)) {
+      throw new Error('Transcription response payload is invalid');
     }
 
     log.info('transcription response', { segments: segments.length });
 
-    return segments;
+    return segments as WhisperSegment[];
   }
 
   private _alignSegments(segments: WhisperSegment[], originalChunks: AudioChunk[]): ContentBlock.Transcript[] {
@@ -253,8 +257,8 @@ export class Transcriber extends Resource {
  *
  * @param segments - Raw segments returned by the Whisper service for `originalChunks`.
  * @param originalChunks - Chunks fed into the transcription request (used for the zero timestamp).
- * @param lastUsedTimestamp - Most recent absolute timestamp already emitted; segments at or before
- *   this point are deduped out.
+ * @param lastUsedTimestamp - Most recent absolute timestamp already emitted; segments whose end
+ *   falls strictly before this point are deduped out, as are individual words whose start does.
  */
 export const alignWhisperSegments = (
   segments: WhisperSegment[],
