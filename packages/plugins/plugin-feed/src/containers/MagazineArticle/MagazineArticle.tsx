@@ -206,6 +206,11 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const previousCurateKey = useRef<{ subject?: Magazine.Magazine; feedFingerprint?: string }>({});
   useEffect(() => {
     if (subject.feeds.length === 0) {
+      // Track the empty state so a later restore (re-adding the same feed set
+      // that was previously cleared) still registers as a fingerprint change and
+      // re-fires curation. Without this the cached key would stay pinned to the
+      // pre-clear feed list and the comparison below would erroneously skip.
+      previousCurateKey.current = { subject, feedFingerprint };
       return;
     }
     if (
