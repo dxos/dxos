@@ -8,14 +8,14 @@ import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
 export const Image = Schema.Struct({
-  url: Schema.String.annotations({
-    description: 'http(s):// or wnfs:// URL.',
-  }),
   type: Schema.optional(
     Schema.String.annotations({
       description: 'MIME type of the image, e.g. image/png.',
     }),
   ),
+  url: Schema.String.annotations({
+    description: 'http(s):// or wnfs:// URL.',
+  }),
   name: Schema.optional(
     Schema.String.annotations({
       description: 'Original file name.',
@@ -34,6 +34,7 @@ export interface Image extends Schema.Schema.Type<typeof Image> {}
 
 export const Gallery = Schema.Struct({
   name: Schema.optional(Schema.String),
+  // TODO(burdon): Refs vis inline?
   images: Schema.Array(Image).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
