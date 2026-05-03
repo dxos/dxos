@@ -25,8 +25,9 @@ export type ToolLogger = (entry: ToolLogEntry) => void;
 export const noopLogger: ToolLogger = () => {};
 
 /**
- * Wrap a logger so it always sees a timestamp and never throws into the caller.
- * Returns the wrapped logger; if `inner` is undefined, returns a no-op.
+ * Wrap a logger so failures inside it never throw into the caller. Returns the
+ * wrapped logger; if `inner` is undefined, returns a no-op. Timestamp injection
+ * is the responsibility of concrete sinks (see `fileLogger`).
  */
 export const registerLogger = (inner?: ToolLogger): ToolLogger => {
   if (!inner) {

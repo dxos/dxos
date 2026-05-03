@@ -28,7 +28,7 @@
     "src"
   ],
   "scripts": {
-    "start": "tsx src/cli.ts"
+    "start": "tsx --conditions=source src/cli.ts"
   },
   "dependencies": {
     "@dxos/introspect": "workspace:*",

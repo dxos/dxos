@@ -52,10 +52,13 @@ const tryMoon = async (monorepoRoot: string): Promise<PackageDetail[] | null> =>
     return null;
   }
   try {
-    // moon query projects returns JSON to stdout by default.
+    // moon query projects returns JSON to stdout by default. Bound the wait so
+    // a hung moon process can't block `introspector.ready` indefinitely — fall
+    // through to glob if it doesn't return promptly.
     const { stdout } = await execAsync('moon query projects', {
       cwd: monorepoRoot,
       maxBuffer: 32 * 1024 * 1024,
+      timeout: 30_000,
     });
     const parsed = JSON.parse(stdout) as { projects?: Array<{ source?: string }> };
     const sources = (parsed.projects ?? [])
@@ -82,19 +85,11 @@ const fromGlob = async (monorepoRoot: string): Promise<PackageDetail[]> => {
 };
 
 const loadPackages = async (monorepoRoot: string, sources: string[]): Promise<PackageDetail[]> => {
-  const seen = new Set<string>();
-  const results: PackageDetail[] = [];
-  for (const source of sources) {
-    const normalized = normalizePath(source);
-    if (seen.has(normalized)) {
-      continue;
-    }
-    seen.add(normalized);
-    const pkg = await readPackageJson(monorepoRoot, normalized);
-    if (pkg) {
-      results.push(pkg);
-    }
-  }
+  // Dedupe normalized sources, then read all package.json files concurrently.
+  // Sequential await burns wall-clock on large monorepos for no benefit.
+  const unique = [...new Set(sources.map(normalizePath))];
+  const settled = await Promise.all(unique.map((src) => readPackageJson(monorepoRoot, src)));
+  const results = settled.filter((pkg): pkg is PackageDetail => pkg !== null);
   results.sort((a, b) => a.name.localeCompare(b.name));
   return results;
 };

@@ -19,6 +19,13 @@ export type IntrospectorOptions = {
   monorepoRoot: string;
   /** Reserved for step 10 (file watching). Currently a no-op. */
   watch?: boolean;
+  /**
+   * If true (default), spawn a background pre-warm of the symbol cache once
+   * `ready` resolves so the first `findSymbol` call doesn't pay the full
+   * extraction cost synchronously. Disable for short-lived scripts that only
+   * touch a few symbols.
+   */
+  prewarm?: boolean;
 };
 
 export type Introspector = {
@@ -32,17 +39,39 @@ export type Introspector = {
 };
 
 export const createIntrospector = (options: IntrospectorOptions): Introspector => {
-  const { monorepoRoot } = options;
+  const { monorepoRoot, prewarm = true } = options;
 
   let packages: PackageDetail[] = [];
+  let initialized = false;
   const symbolsByPackage = new Map<string, PackageSymbols>();
   let disposed = false;
 
   const ready = (async () => {
     packages = await discoverPackages(monorepoRoot);
-    // Symbol extraction is lazy: we don't pay the ts-morph cost for packages
-    // that are never queried. The query layer fills this map on demand.
+    initialized = true;
+    if (prewarm) {
+      // Yield-style pre-warm: extract one package's symbols per setImmediate
+      // tick so we don't block the event loop. By the time the first
+      // findSymbol call lands, most packages are already cached.
+      void preWarmSymbols();
+    }
   })();
+
+  const preWarmSymbols = async (): Promise<void> => {
+    for (const pkg of packages) {
+      if (disposed) {
+        return;
+      }
+      ensureSymbols(pkg);
+      await new Promise<void>((resolve) => setImmediate(resolve));
+    }
+  };
+
+  const assertReady = (): void => {
+    if (!initialized) {
+      throw new Error('Introspector not ready — await introspector.ready before calling API methods.');
+    }
+  };
 
   const ensureSymbols = (pkg: PackageDetail): PackageSymbols => {
     const cached = symbolsByPackage.get(pkg.name);
@@ -55,6 +84,7 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
   };
 
   const listPackages = (filter?: PackageFilter): Package[] => {
+    assertReady();
     let result = packages.map(toPackage);
     if (filter?.name) {
       const needle = filter.name.toLowerCase();
@@ -71,10 +101,12 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
   };
 
   const getPackage = (name: string): PackageDetail | null => {
+    assertReady();
     return packages.find((p) => p.name === name) ?? null;
   };
 
   const findSymbol = (query: string, kind?: SymbolKind): SymbolMatch[] => {
+    assertReady();
     const all: PackageSymbols[] = [];
     for (const pkg of packages) {
       all.push(ensureSymbols(pkg));
@@ -83,6 +115,7 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
   };
 
   const getSymbol = (ref: string, include?: SymbolInclude[]): SymbolDetail | null => {
+    assertReady();
     return queryGetSymbol({ packages, loadSymbols: ensureSymbols }, ref, include);
   };
 

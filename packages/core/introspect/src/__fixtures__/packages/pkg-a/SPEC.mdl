@@ -24,10 +24,10 @@ echo-type Task
     typename: com.example.type.Task
     version:  0.1.0
   fields:
-    title:        string             # description: Short summary of the task.
-    description?: string             # description: Longer free-form notes about the task.
-    done:         boolean             # description: Whether the task has been completed.
-  label: title                        # LabelAnnotation — display label field
+    title:        string               # description: Short summary of the task.
+    description?: string               # description: Longer free-form notes about the task.
+    done:         boolean              # description: Whether the task has been completed.
+  label: title                         # LabelAnnotation — display label field
 ```
 
 ## Operations

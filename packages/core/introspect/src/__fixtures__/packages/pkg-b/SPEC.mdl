@@ -24,11 +24,11 @@ component TaskCard
     changes (title, description, done) re-render automatically. The `done`
     checkbox calls the update callback to toggle state in place.
   props:
-    task: Task                           # echo-type from pkg-a
+    task: Task                         # echo-type from pkg-a
   uses:
     useObject from @dxos/echo-react
   emits:
-    onToggleDone(value: boolean)         # via update callback
+    onToggleDone(value: boolean)       # via update callback
   layout: |
     <article>
       <h3>{title}</h3>
@@ -52,6 +52,6 @@ ext component
     slots?:   FieldMap
     actions?: ActionMap
     emits?:   EventMap
-    uses?:    ProseList                  # libraries / hooks the component depends on
+    uses?:    ProseList                # libraries / hooks the component depends on
     layout?:  CodeBlock
 ```

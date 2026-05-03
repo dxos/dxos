@@ -47,6 +47,8 @@ export const shapeGetPackage = (detail: PackageDetail): ToolResult => ({
     workspaceDependencies: detail.workspaceDependencies,
     externalDependencies: detail.externalDependencies,
     entryPoints: detail.entryPoints,
+    // Surfaced so callers can decide whether to call find_symbol against this package.
+    exportCount: detail.exportCount,
   },
 });
 

@@ -133,14 +133,14 @@ A `.dxos-introspect/` directory in the repo root with:
 ```
 .dxos-introspect/
   idioms/
-    [plugin-scaffold.md](http://plugin-scaffold.md)
-    [intent-handler.md](http://intent-handler.md)
-    [surface-contribution.md](http://surface-contribution.md)
-    [echo-query.md](http://echo-query.md)
-    [capability-provider.md](http://capability-provider.md)
+    plugin-scaffold.md
+    intent-handler.md
+    surface-contribution.md
+    echo-query.md
+    capability-provider.md
     ...
   canonical-examples.json   # maps idiom name → [SymbolRef | PluginRef]
-  [anti-patterns.md](http://anti-patterns.md)           # known bad patterns to flag/explain
+  anti-patterns.md           # known bad patterns to flag/explain
 ```
 
 Idiom markdown files have frontmatter:
@@ -271,7 +271,7 @@ The model writing this code should not assume — it should read actual DXOS sou
 - Whether `react-ui` or another package is the canonical UI primitives source
 - The styling token system — semantic tokens, OKLCH theme — and where it's defined
 
-Spend the first 30 minutes reading code, not writing it. Note anything surprising in a `[DESIGN-NOTES.md](http://DESIGN-NOTES.md)` at the package root.
+Spend the first 30 minutes reading code, not writing it. Note anything surprising in a `DESIGN-NOTES.md` at the package root.
 
 ## Open questions to surface, not guess
 

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { glob } from 'glob';
+import { globSync } from 'glob';
 import { join, relative } from 'node:path';
 import { type ExportedDeclarations, type JSDoc, type Node, Project, ScriptTarget, SyntaxKind } from 'ts-morph';
 
@@ -63,7 +63,7 @@ export const extractSymbols = (monorepoRoot: string, pkg: PackageLike): PackageS
   // This makes the indexer robust to namespace re-exports (`export * as X`) and
   // multi-hop barrels, and keeps each file's symbols visible at their original
   // declaration site — which is what callers actually want from getSymbol.
-  const files = glob.sync('src/**/*.{ts,tsx}', {
+  const files = globSync('src/**/*.{ts,tsx}', {
     cwd: join(monorepoRoot, pkg.path),
     ignore: ['**/*.test.{ts,tsx}', '**/*.stories.{ts,tsx}', '**/__fixtures__/**', '**/__tests__/**'],
     absolute: true,

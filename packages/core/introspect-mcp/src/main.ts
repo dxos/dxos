@@ -24,13 +24,26 @@ const parseArgs = (argv: string[]): Args => {
   let logPath: string | undefined;
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
-    if (arg === '--root' && i + 1 < argv.length) {
-      root = argv[++i];
-    } else if (arg === '--log-path' && i + 1 < argv.length) {
-      logPath = argv[++i];
+    if (arg === '--root' || arg === '--log-path') {
+      const value = argv[i + 1];
+      if (value === undefined || value.startsWith('-')) {
+        console.error(`Error: ${arg} requires a value.`);
+        printUsage();
+        process.exit(1);
+      }
+      i++;
+      if (arg === '--root') {
+        root = value;
+      } else {
+        logPath = value;
+      }
     } else if (arg === '--help' || arg === '-h') {
       printUsage();
       process.exit(0);
+    } else {
+      console.error(`Unknown argument: ${arg}`);
+      printUsage();
+      process.exit(1);
     }
   }
   const resolvedRoot = root ? resolveRoot(root) : findMonorepoRoot(process.cwd());

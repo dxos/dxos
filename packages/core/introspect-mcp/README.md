@@ -56,16 +56,22 @@ The MCP SDK ships an interactive UI for talking to a stdio server. From the mono
 
 ```bash
 npx @modelcontextprotocol/inspector \
-  npx tsx packages/core/introspect-mcp/src/cli.ts --root "$PWD"
+  npx tsx --conditions=source packages/core/introspect-mcp/src/cli.ts --root "$PWD"
 ```
 
-> ⚠️ **Don't launch via `pnpm start`.** pnpm's script-runner writes a header line (`> @dxos/introspect-mcp@x.y.z start`) to stdout, which corrupts the JSON-RPC stream and produces "Connection Error – Check if your MCP server is running and proxy token is correct." in the Inspector. 
-  Invoke `tsx` (or the built binary) directly so the server owns stdout.
+The Inspector pre-fills the form from those argv tokens and inherits your shell's cwd as the spawn directory.
 
-> 🔑 **Open the URL the Inspector prints**, not `http://localhost:6274` directly. 
-  The printed URL contains a `?MCP_PROXY_AUTH_TOKEN=...` query string — without it the proxy rejects the WebSocket connection with the same "proxy token" error.
+**Once the page opens:**
 
-Once the URL is open, click **Tools**, and you can call `list_packages` / `get_package` / `find_symbol` / `get_symbol` against the live monorepo with form inputs and see raw responses.
+1. **Open the URL the Inspector printed**, not `http://localhost:6274` directly. The printed URL carries a `?MCP_PROXY_AUTH_TOKEN=…` query string — without it the proxy rejects the WebSocket and you'll see "Connection Error – Check if your MCP server is running and proxy token is correct."
+2. In the left sidebar, **Transport Type** must be `STDIO` (not SSE / Streamable HTTP). The Inspector persists the last-used transport across sessions, so check this every time.
+3. Click **Connect**. Tools should populate within ~1s.
+
+**Common pitfalls:**
+
+- ⚠️ **Don't launch via `pnpm -F @dxos/introspect-mcp start` directly into the Inspector.** pnpm's script-runner writes a header line (`> @dxos/introspect-mcp@x.y.z start`) to stdout, which corrupts the JSON-RPC stream and produces the same "proxy token" error. Use `tsx` (with `--conditions=source`) or the built binary so the server owns stdout.
+- ⚠️ **Use absolute paths if you fill the form by hand.** Inspector spawns the command from its own cwd, not your terminal's — relative paths like `packages/core/introspect-mcp/src/cli.ts` won't resolve. Pass the command on the launch CLI (as above) so cwd is inherited.
+- ⚠️ **The `--conditions=source` flag is what lets tsx skip the `dist/` build.** Without it, tsx resolves `@dxos/introspect` through the package's `default` export and fails with `ERR_MODULE_NOT_FOUND` until you `moon run introspect:build`.
 
 ### 3. Wire it into Claude Code
 

@@ -50,7 +50,7 @@ export type SymbolMatch = {
   summary?: string;
 };
 
-export type SymbolInclude = 'source' | 'jsdoc' | 'signature';
+export type SymbolInclude = 'source' | 'jsdoc';
 
 export type SymbolDetail = {
   ref: string;
