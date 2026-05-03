@@ -42,11 +42,12 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
   } = useFileUpload({
     subject,
     accept: 'image/*',
-    onUpload: (info) => {
+    onUpload: async (info, file) => {
+      const { width, height } = await readImageDimensions(file);
       Obj.change(subject, (subject) => {
         const mutable = subject as Obj.Mutable<Gallery.Gallery>;
         const next = [...(mutable.images ?? [])];
-        next.push({ url: info.url, type: info.type, name: info.name });
+        next.push({ url: info.url, type: info.type, name: info.name, width, height });
         mutable.images = next;
       });
     },
@@ -123,3 +124,22 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
     </GalleryMasonry.Root>
   );
 };
+
+const readImageDimensions = (file: File): Promise<{ width?: number; height?: number }> =>
+  new Promise((resolve) => {
+    if (!file.type.startsWith('image/')) {
+      resolve({});
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve({});
+    };
+    img.src = url;
+  });
