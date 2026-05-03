@@ -42,7 +42,7 @@ export const TranscriptionStory: FC<{
   };
 
   return (
-    <div className='flex flex-col w-[30rem]'>
+    <>
       {audioRef && <audio ref={audioRef} autoPlay />}
       <Toolbar.Root>
         <IconButton
@@ -78,6 +78,6 @@ export const TranscriptionStory: FC<{
           </ScrollContainer.Viewport>
         </ScrollContainer.Content>
       </ScrollContainer.Root>
-    </div>
+    </>
   );
 };
