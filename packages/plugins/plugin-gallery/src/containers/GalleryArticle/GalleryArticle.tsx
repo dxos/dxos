@@ -26,7 +26,7 @@ export type GalleryArticleProps = AppSurface.ObjectArticleProps<Gallery.Gallery>
 
 const IMAGE_ACCEPT = 'image/*';
 
-export const GalleryArticle = ({ role, attendableId: _attendableId, subject: gallery }: GalleryArticleProps) => {
+export const GalleryArticle = ({ role, attendableId, subject: gallery }: GalleryArticleProps) => {
   const { t } = useTranslation(meta.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -132,7 +132,7 @@ export const GalleryArticle = ({ role, attendableId: _attendableId, subject: gal
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar>
-        <Menu.Root {...menuActions}>
+        <Menu.Root {...menuActions} attendableId={attendableId}>
           <Menu.Toolbar />
         </Menu.Root>
       </Panel.Toolbar>
