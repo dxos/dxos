@@ -9,8 +9,8 @@
     },
     {
       "name": "composer-app",
-      "runtimeExecutable": "moon",
-      "runtimeArgs": ["run", "composer-app:serve"],
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@dxos/composer-app", "exec", "vite", "dev"],
       "port": 5173
     },
     {

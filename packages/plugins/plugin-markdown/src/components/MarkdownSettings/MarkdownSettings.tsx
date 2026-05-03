@@ -13,7 +13,7 @@ import { Markdown } from '#types';
 
 export type MarkdownSettingsProps = AppSurface.SettingsArticleProps<Markdown.Settings>;
 
-const SnippetsField = ({ value, onChange, readonly }: SettingsFieldProps<string>) => (
+const SnippetsField = ({ value, onChange, readonly }: SettingsFieldProps<string | undefined>) => (
   <Input.TextArea disabled={readonly} rows={5} value={value ?? ''} onChange={(event) => onChange(event.target.value)} />
 );
 

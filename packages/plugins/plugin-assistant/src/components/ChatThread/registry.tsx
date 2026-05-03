@@ -8,6 +8,7 @@ import { log } from '@dxos/log';
 import { ContentBlock, type Message } from '@dxos/types';
 import { type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 
+import { type Assistant } from '../../types';
 import { type BlockRenderer, type MessageThreadContext } from './sync';
 import { applyToolBlockToWidgetState } from './tool-widget-state';
 import {
@@ -25,11 +26,23 @@ import {
 /**
  * Custom XML tags registry.
  *
- * NOTE: `<prompt>` is intentionally NOT registered here. It is rendered via mark + line
- * decorations (`xmlBlockDecoration`) in MarkdownStream so the prompt text remains part of
- * the document and can be highlighted by `xmlFormatting`.
+ * NOTE: `<prompt>` has no widget — it is rendered via mark + line decorations
+ * (`xmlBlockDecoration`) in MarkdownStream so the prompt text remains part of the document
+ * and can be highlighted by `xmlFormatting`. It is still listed here so the markdown block
+ * parser (`xmlBlockParsers`) knows to keep `<prompt>...</prompt>` as a single HTMLBlock
+ * — otherwise an unregistered prompt opens a Paragraph that lazy-continues into the
+ * following lines and breaks parsing of subsequent multi-line tags (e.g. a `<reasoning>`
+ * block whose content contains an ordered list).
  */
 export const componentRegistry: XmlWidgetRegistry = {
+  //
+  // Block-only (no widget — see note above).
+  //
+
+  prompt: {
+    block: true,
+  },
+
   //
   // DOM Widgets
   //
@@ -129,17 +142,47 @@ export const componentRegistry: XmlWidgetRegistry = {
 /**
  * Convert block to markdown.
  */
-export const blockToMarkdown: BlockRenderer = (
-  context: MessageThreadContext,
+export const blockToMarkdown: BlockRenderer = createBlockRenderer('normal');
+
+/**
+ * Create a {@link BlockRenderer} that filters blocks based on the chat view type.
+ *
+ * - `summary`: only user prompts.
+ * - `normal`: user prompts + assistant text + tool calls + summary/select/suggestion/reference + status. Hides reasoning.
+ * - `thinking`: same as normal plus reasoning.
+ * - `debug`: renders every block (raw fallbacks visible).
+ */
+export function createBlockRenderer(viewType: Assistant.ChatView | undefined): BlockRenderer {
+  return (context, message, block) => {
+    if (!isBlockVisible(viewType, message, block)) {
+      return;
+    }
+    let str = blockToMarkdownImpl(context, message, block);
+    if (str && !block.pending) {
+      return (str += '\n');
+    }
+    return str;
+  };
+}
+
+const isBlockVisible = (
+  viewType: Assistant.ChatView | undefined,
   message: Message.Message,
   block: ContentBlock.Any,
-) => {
-  let str = blockToMarkdownImpl(context, message, block);
-  if (str && !block.pending) {
-    return (str += '\n');
+): boolean => {
+  switch (viewType) {
+    case 'debug':
+      return true;
+    case 'normal':
+      return block._tag !== 'reasoning';
+    case 'summary':
+      // Show only conversational text (user prompts + assistant replies); hide reasoning,
+      // tool calls, status, stats, and synthetic system messages.
+      return block._tag === 'text' && (block as ContentBlock.Text).disposition !== 'synthetic';
+    case 'thinking':
+    default:
+      return true;
   }
-
-  return str;
 };
 
 const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Message, block: ContentBlock.Any) => {

@@ -41,7 +41,7 @@ export const ChatModule = ({ space }: ComponentProps) => {
         </Panel.Toolbar>
         <Panel.Content asChild>
           {/* TODO(burdon): Remove relative. */}
-          <Chat.Viewport classNames='relative'>
+          <Chat.Content classNames='relative'>
             <Toolbar.Root>
               <Toolbar.Text classNames='text-subdued'>{chat?.name}</Toolbar.Text>
               <Popover.Root>
@@ -65,7 +65,7 @@ export const ChatModule = ({ space }: ComponentProps) => {
               online={online}
               onOnlineChange={setOnline}
             />
-          </Chat.Viewport>
+          </Chat.Content>
         </Panel.Content>
       </Panel.Root>
     </Chat.Root>

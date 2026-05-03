@@ -143,6 +143,19 @@ export const createBasicExtensions = (propsProp?: BasicExtensionsOptions): Exten
     props.lineWrapping && EditorView.lineWrapping,
     props.placeholder && placeholder(props.placeholder),
     props.readOnly !== undefined && EditorState.readOnly.of(props.readOnly),
+    // `EditorState.readOnly` is advisory — CodeMirror doesn't auto-reject doc-changing
+    // transactions. Some extensions (e.g. `@codemirror/lang-markdown`'s Enter handler that
+    // continues a list) dispatch programmatic edits regardless. Drop user-initiated edits
+    // (`input` / `delete` keymap dispatches plus `undo` / `redo` from the history extension)
+    // but pass programmatic dispatches — streaming `MarkdownStream` and similar consumers
+    // depend on being able to populate the doc themselves.
+    props.readOnly &&
+      EditorState.transactionFilter.of((tr) =>
+        tr.docChanged &&
+        (tr.isUserEvent('input') || tr.isUserEvent('delete') || tr.isUserEvent('undo') || tr.isUserEvent('redo'))
+          ? []
+          : tr,
+      ),
     props.scrollPastEnd && scrollPastEnd(),
     props.tabbable && tabbable,
     props.tabSize && EditorState.tabSize.of(props.tabSize),
@@ -179,6 +192,8 @@ export const createBasicExtensions = (propsProp?: BasicExtensionsOptions): Exten
 export type ThemeExtensionsOptions = {
   monospace?: boolean;
   themeMode?: ThemeMode;
+  /** When true, sets `--scrollbar-width: 4px` on the scroll container for a thinner scrollbar. */
+  scrollbarThin?: boolean;
   slots?: {
     editor?: {
       className?: string;
@@ -217,9 +232,10 @@ export const defaultStyles = {
  */
 export const createThemeExtensions = ({
   monospace,
-  themeMode,
+  scrollbarThin,
   slots: slotsProp,
   syntaxHighlighting: syntaxHighlightingProp,
+  themeMode,
 }: ThemeExtensionsOptions = {}): Extension => {
   const slots: NonNullable<ThemeExtensionsOptions['slots']> = defaultsDeep({}, slotsProp, defaultThemeSlots);
   return [
@@ -230,12 +246,15 @@ export const createThemeExtensions = ({
       syntaxHighlighting(HighlightStyle.define(themeMode === 'dark' ? defaultStyles.dark : defaultStyles.light)),
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
-    slots.scroller?.className &&
+    (slots.scroller?.className || scrollbarThin) &&
       ViewPlugin.fromClass(
         class {
           constructor(view: EditorView) {
             if (slots.scroller?.className) {
               view.scrollDOM.classList.add(...slots.scroller.className.split(/\s+/));
+            }
+            if (scrollbarThin) {
+              view.scrollDOM.style.setProperty('--scrollbar-width', '4px');
             }
           }
         },

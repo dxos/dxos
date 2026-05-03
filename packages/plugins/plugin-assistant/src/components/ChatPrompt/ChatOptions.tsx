@@ -6,10 +6,10 @@ import * as Option from 'effect/Option';
 import React, { type JSX, useCallback, useMemo, useState } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
-import { McpServer } from '@dxos/assistant-toolkit';
+import { type Chat as ChatModule, McpServer } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/compute';
 import { Annotation, type Database, Filter, Obj, Type } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Popover, Select, useTranslation } from '@dxos/react-ui';
 import { Listbox, SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -17,13 +17,15 @@ import { getStyles, mx } from '@dxos/ui-theme';
 
 import { useActiveBlueprints, useBlueprintHandlers, useBlueprints, useContextObjects, useFilteredTypes } from '#hooks';
 import { meta } from '#meta';
+import { Assistant } from '#types';
 
 const styles = {
-  panel: 'w-[calc(100dvw-.5rem)] sm:w-max md:w-popover-default-width max-w-document-width',
-  toolbar: 'p-form-chrome border-t border-separator',
+  panel: 'w-[calc(100dvw-.5rem)] sm:w-max max-w-document-width',
+  toolbar: 'p-0! gap-0! border-t border-separator',
 };
 
 export type ChatOptionsProps = {
+  chat?: ChatModule.Chat;
   db: Database.Database;
   context: AiContextBinder;
   blueprintRegistry?: Blueprint.Registry;
@@ -35,7 +37,15 @@ export type ChatOptionsProps = {
 /**
  * Manages the runtime context for the chat.
  */
-export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, onPresetChange }: ChatOptionsProps) => {
+export const ChatOptions = ({
+  chat,
+  db,
+  context,
+  blueprintRegistry,
+  presets,
+  preset,
+  onPresetChange,
+}: ChatOptionsProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -69,11 +79,14 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
               <Tabs.Root
                 classNames='flex'
                 orientation='horizontal'
-                defaultValue='model'
+                defaultValue='view'
                 defaultActivePart='list'
                 tabIndex={-1}
               >
                 <Tabs.Viewport classNames={mx('grid grid-rows-[1fr_40px] w-full')}>
+                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
+                    <ViewPanel chat={chat} />
+                  </Tabs.Panel>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='model'>
                     <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
                   </Tabs.Panel>
@@ -84,6 +97,7 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
                     <McpServersPanel db={db} />
                   </Tabs.Panel>
                   <Tabs.Tablist classNames={[styles.toolbar]}>
+                    <Tabs.IconTab value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
                     <Tabs.IconTab value='model' icon='ph--cpu--regular' label={t('chat-model.title')} />
                     <Tabs.IconTab
                       value='blueprints'
@@ -143,6 +157,23 @@ const BlueprintsPanel = ({
         <SearchList.Input placeholder={t('search.placeholder')} classNames='border-t border-separator' autoFocus />
       </SearchList.Content>
     </SearchList.Root>
+  );
+};
+
+const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
+  const { t } = useTranslation(meta.id);
+  const [view, setView] = useObject(chat, 'view');
+  const value = (view as Assistant.ChatView | undefined) ?? 'normal';
+
+  return (
+    <Listbox.Root value={value} onValueChange={setView} autoFocus>
+      {Assistant.ChatViews.map((view) => (
+        <Listbox.Option key={view} value={view}>
+          <Listbox.OptionLabel>{t(`chat-view.${view}.label`, { defaultValue: view })}</Listbox.OptionLabel>
+          <Listbox.OptionIndicator />
+        </Listbox.Option>
+      ))}
+    </Listbox.Root>
   );
 };
 

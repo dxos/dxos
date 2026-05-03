@@ -71,13 +71,15 @@ describe('Trace timeline', () => {
             "
             ●     [atom] Agent processing request...
             ├──●  [user] Create an organization called "Cyberdyne Systems".
-            │  ●  [check-circle] list-schemas - Success
-            │  ●  [check-circle] create-object - Success
-            ◆──╯  [check-circle] Agent completed request
+            │  ●  [function] List schemas - Success
+            │  ●  [function] Create object - Success
+            │  ●  [function] Add to context - Success
+            ◆──╯  [atom] Agent completed request
             ●  │  [atom] Agent processing request...
             │  ●  [user] Create a person named "John Connor".
-            │  ●  [check-circle] create-object - Success
-            ◆──╯  [check-circle] Agent completed request
+            │  ●  [function] Create object - Success
+            │  ●  [function] Add to context - Success
+            ◆──╯  [atom] Agent completed request
             "
           `);
         },
@@ -138,23 +140,23 @@ describe('Trace timeline', () => {
           const { commits, branches } = buildExecutionGraph({ traceMessages: messages });
           const graph = renderTimelineAscii(commits, branches);
           expect(`\n${graph}\n`).toMatchInlineSnapshot(`
-            "
-            ●     [atom] Agent processing request...
-            ├──●  [user] List all available schemas. Tell me what typenames are available.
-            │  ●  [check-circle] list-schemas - Success
-            ◆──╯  [check-circle] Agent completed request
-            ●  │  [atom] Agent processing request...
-            │  ●  [user] Create an organization called "DXOS" and a person named "Alice".
-            │  ●  [check-circle] create-object - Success
-            │  ●  [check-circle] create-object - Success
-            ◆──╯  [check-circle] Agent completed request
-            ●  │  [atom] Agent processing request...
-            │  ●  [user] Search for all organizations and persons.
-            │  ●  [check-circle] query - Success
-            │  ●  [check-circle] query - Success
-            ◆──╯  [check-circle] Agent completed request
-            "
-          `);
+                "
+                ●     [atom] Agent processing request...
+                ├──●  [user] List all available schemas. Tell me what typenames are available.
+                │  ●  [function] List schemas - Success
+                ◆──╯  [atom] Agent completed request
+                ●  │  [atom] Agent processing request...
+                │  ●  [user] Create an organization called "DXOS" and a person named "Alice".
+                │  ●  [function] Create object - Success
+                │  ●  [function] Create object - Success
+                ◆──╯  [atom] Agent completed request
+                ●  │  [atom] Agent processing request...
+                │  ●  [user] Search for all organizations and persons.
+                │  ●  [function] Query - Success
+                │  ●  [function] Query - Success
+                ◆──╯  [atom] Agent completed request
+                "
+              `);
         },
         Effect.provide(TestLayer),
         TestHelpers.provideTestContext,
@@ -202,10 +204,11 @@ describe('Trace timeline', () => {
           const { commits, branches } = buildExecutionGraph({ traceMessages: messages });
           const graph = renderTimelineAscii(commits, branches);
           expect(`\n${graph}\n`).toMatchInlineSnapshot(`
-            "
-            ●  [check-circle] Agent
-            "
-          `);
+                  "
+                  ●  [function] Agent
+                  ●  [function] Agent - Success
+                  "
+                `);
         },
         Effect.provide(TestLayer),
         TestHelpers.provideTestContext,
@@ -227,12 +230,15 @@ describe('Trace timeline', () => {
           const { commits, branches } = buildExecutionGraph({ traceMessages: messages });
           const graph = renderTimelineAscii(commits, branches);
           expect(`\n${graph}\n`).toMatchInlineSnapshot(`
-            "
-            ●  [check-circle] Reply
-            ●  [check-circle] Reply
-            ●  [check-circle] Reply
-            "
-          `);
+                  "
+                  ●  [function] Reply
+                  ●  [function] Reply - Success
+                  ●  [function] Reply
+                  ●  [function] Reply - Success
+                  ●  [function] Reply
+                  ●  [function] Reply - Success
+                  "
+                `);
         },
         Effect.provide(TestLayer),
         TestHelpers.provideTestContext,
