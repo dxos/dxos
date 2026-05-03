@@ -13,7 +13,7 @@ import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 
-import { GalleryImage, GalleryMasonry, type GalleryMasonryTile } from '#components';
+import { GalleryImage, Lightbox, type LightboxTile } from '#components';
 import { meta } from '#meta';
 import { type Gallery } from '#types';
 
@@ -23,7 +23,7 @@ export type GalleryShowProps = {
   gallery: Gallery.Gallery;
 };
 
-const ResolvingTile: GalleryMasonryTile = ({ image }) => {
+const ResolvingTile: LightboxTile = ({ image }) => {
   const url = useImageUrl(image.url, image.type);
   return <GalleryImage image={image} url={url} />;
 };
@@ -53,9 +53,9 @@ export const GalleryShow = ({ gallery: subject }: GalleryShowProps) => {
 
   return (
     <div className='relative w-full h-full bg-attention-surface'>
-      <GalleryMasonry.Root gallery={gallery as unknown as Gallery.Gallery} Tile={ResolvingTile}>
-        <GalleryMasonry.Viewport />
-      </GalleryMasonry.Root>
+      <Lightbox.Root gallery={gallery as unknown as Gallery.Gallery} Tile={ResolvingTile}>
+        <Lightbox.Viewport />
+      </Lightbox.Root>
       <div className='absolute top-4 right-4 z-[200]'>
         <Button onClick={() => void handleExit()}>{t('exit-show.label')}</Button>
       </div>

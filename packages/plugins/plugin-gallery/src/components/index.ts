@@ -3,4 +3,4 @@
 //
 
 export * from './GalleryImage';
-export * from './GalleryMasonry';
+export * from './Lightbox';

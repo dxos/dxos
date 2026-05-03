@@ -16,17 +16,17 @@ import { Panel } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 
-import { GalleryImage, GalleryMasonry, type GalleryMasonryTile } from '#components';
+import { GalleryImage, Lightbox, type LightboxTile } from '#components';
 import { meta } from '#meta';
-import { type Gallery } from '#types';
+import { Gallery } from '#types';
 
 import { useFileUpload, useImageUrl } from '../../hooks';
 import { GALLERY_SHOW_SEGMENT } from '../../paths';
 
 export type GalleryArticleProps = AppSurface.ObjectArticleProps<Gallery.Gallery>;
 
-/** WNFS-aware tile that resolves `wnfs://` URLs to blob URLs. */
-const ResolvingTile: GalleryMasonryTile = ({ image, onDelete }) => {
+/** Lightbox tile that resolves `wnfs://` URLs to blob URLs. */
+const ResolvingTile: LightboxTile = ({ image, onDelete }) => {
   const url = useImageUrl(image.url, image.type);
   return <GalleryImage image={image} url={url} onDelete={onDelete} />;
 };
@@ -45,8 +45,8 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
     accept: 'image/*',
     onUpload: async (info, file) => {
       const { width, height } = await readImageDimensions(file);
-      Obj.change(subject, (subject) => {
-        const mutable = subject as Obj.Mutable<Gallery.Gallery>;
+      Obj.change(subject, (obj) => {
+        const mutable = obj as Obj.Mutable<Gallery.Gallery>;
         const next = [...(mutable.images ?? [])];
         next.push({ url: info.url, type: info.type, name: info.name, width, height });
         mutable.images = next;
@@ -56,8 +56,8 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
 
   const handleDelete = useCallback(
     (index: number) => {
-      Obj.change(subject, (subject) => {
-        const mutable = subject as Obj.Mutable<Gallery.Gallery>;
+      Obj.change(subject, (obj) => {
+        const mutable = obj as Obj.Mutable<Gallery.Gallery>;
         const next = [...(mutable.images ?? [])];
         next.splice(index, 1);
         mutable.images = next;
@@ -77,7 +77,6 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
     await invokePromise(LayoutOperation.Open, { subject: [showId], workspace: getSpacePath(db.spaceId) });
   }, [subject, invokePromise]);
 
-  // Build toolbar actions via MenuBuilder.
   const actionsAtom = useMemo(
     () =>
       Atom.make(
@@ -113,19 +112,19 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
   const menuActions = useMenuActions(actionsAtom);
 
   return (
-    <GalleryMasonry.Root gallery={gallery as unknown as Gallery.Gallery} onDelete={handleDelete} Tile={ResolvingTile}>
-      <Panel.Root role={role}>
-        <Panel.Toolbar>
-          <Menu.Root {...menuActions} attendableId={attendableId}>
+    <Lightbox.Root gallery={gallery as unknown as Gallery.Gallery} onDelete={handleDelete} Tile={ResolvingTile}>
+      <Menu.Root {...menuActions} attendableId={attendableId}>
+        <Panel.Root role={role}>
+          <Panel.Toolbar asChild>
             <Menu.Toolbar />
-          </Menu.Root>
-        </Panel.Toolbar>
-        <Panel.Content>
-          <GalleryMasonry.Viewport />
-        </Panel.Content>
-      </Panel.Root>
+          </Panel.Toolbar>
+          <Panel.Content asChild>
+            <Lightbox.Viewport />
+          </Panel.Content>
+        </Panel.Root>
+      </Menu.Root>
       {fileInput}
-    </GalleryMasonry.Root>
+    </Lightbox.Root>
   );
 };
 

@@ -14,26 +14,26 @@ import { Gallery } from '#types';
 
 import { GalleryImage } from '../GalleryImage';
 
-const GALLERY_MASONRY_NAME = 'GalleryMasonry';
+const LIGHTBOX_NAME = 'Lightbox';
 
-export type GalleryMasonryTileProps = {
+export type LightboxTileProps = {
   image: Gallery.Image;
   index: number;
   onDelete?: () => void;
 };
 
-export type GalleryMasonryTile = ComponentType<GalleryMasonryTileProps>;
+export type LightboxTile = ComponentType<LightboxTileProps>;
 
 type ContextValue = {
   gallery: Gallery.Gallery;
   onDelete?: (index: number) => void;
-  Tile: GalleryMasonryTile;
+  Tile: LightboxTile;
   emptyMessage?: ReactNode;
 };
 
-const [Provider, useGalleryMasonryContext] = createContext<ContextValue>(GALLERY_MASONRY_NAME);
+const [Provider, useLightboxContext] = createContext<ContextValue>(LIGHTBOX_NAME);
 
-const DefaultTile: GalleryMasonryTile = ({ image, onDelete }) => (
+const DefaultTile: LightboxTile = ({ image, onDelete }) => (
   <GalleryImage image={image} url={image.url} onDelete={onDelete} />
 );
 
@@ -41,42 +41,48 @@ const DefaultTile: GalleryMasonryTile = ({ image, onDelete }) => (
 // Root
 //
 
-export type GalleryMasonryRootProps = PropsWithChildren<{
+export type LightboxRootProps = PropsWithChildren<{
   gallery: Gallery.Gallery;
   onDelete?: (index: number) => void;
   /** Render a single tile. Defaults to `GalleryImage` with `image.url` as src. */
-  Tile?: GalleryMasonryTile;
+  Tile?: LightboxTile;
   /** Custom empty-state node. Defaults to a translated message. */
   emptyMessage?: ReactNode;
 }>;
 
-const GalleryMasonryRoot = ({
-  gallery,
-  onDelete,
-  Tile = DefaultTile,
-  emptyMessage,
-  children,
-}: GalleryMasonryRootProps) => (
+/**
+ * Headless context provider for a Lightbox masonry. Containers compose
+ * `Panel.Root` / `Panel.Toolbar` / `Panel.Content` around `Lightbox.Viewport`.
+ */
+const LightboxRoot = ({ gallery, onDelete, Tile = DefaultTile, emptyMessage, children }: LightboxRootProps) => (
   <Provider gallery={gallery} onDelete={onDelete} Tile={Tile} emptyMessage={emptyMessage}>
     {children}
   </Provider>
 );
 
-GalleryMasonryRoot.displayName = `${GALLERY_MASONRY_NAME}.Root`;
+LightboxRoot.displayName = `${LIGHTBOX_NAME}.Root`;
 
 //
 // Viewport
 //
-// Composable: forwards ref + classNames so callers can `<Panel.Content asChild>`
-// over it and tweak layout. Owns the `ScrollArea.Root` (via `Masonry.Content`).
-//
 
-export type GalleryMasonryViewportProps = ThemedClassName<{}>;
+export type LightboxViewportProps = ThemedClassName<{}>;
 
-const GalleryMasonryViewport = composable<HTMLDivElement, GalleryMasonryViewportProps>((props, forwardedRef) => {
+/**
+ * Renders the masonry grid (or the empty state) for the gallery in context.
+ * Composable: forwards ref + classNames so callers can `<Panel.Content asChild>`
+ * over it. Owns the `ScrollArea.Root` (via `Masonry.Content`).
+ */
+const LightboxViewport = composable<HTMLDivElement, LightboxViewportProps>((props, forwardedRef) => {
   const { t } = useTranslation(meta.id);
-  const { gallery, onDelete, Tile, emptyMessage } = useGalleryMasonryContext(`${GALLERY_MASONRY_NAME}.Viewport`);
-  const items = useMemo(() => (gallery.images ?? []).map((image, index) => ({ image, index })), [gallery.images]);
+  const { gallery, onDelete, Tile, emptyMessage } = useLightboxContext(`${LIGHTBOX_NAME}.Viewport`);
+  const images = gallery.images ?? [];
+  const items = useMemo(
+    () => images.map((image, index) => ({ image, index })),
+    // Length tracks ECHO-array mutations even when the underlying reference is stable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [images, images.length],
+  );
 
   if (items.length === 0) {
     return (
@@ -106,13 +112,13 @@ const GalleryMasonryViewport = composable<HTMLDivElement, GalleryMasonryViewport
   );
 });
 
-GalleryMasonryViewport.displayName = `${GALLERY_MASONRY_NAME}.Viewport`;
+LightboxViewport.displayName = `${LIGHTBOX_NAME}.Viewport`;
 
 //
-// Namespace
+// Lightbox
 //
 
-export const GalleryMasonry = {
-  Root: GalleryMasonryRoot,
-  Viewport: GalleryMasonryViewport,
+export const Lightbox = {
+  Root: LightboxRoot,
+  Viewport: LightboxViewport,
 };

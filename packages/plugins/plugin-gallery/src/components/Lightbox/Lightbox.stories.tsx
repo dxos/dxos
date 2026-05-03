@@ -9,12 +9,12 @@ import { Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { Gallery } from '#types';
 
-import { type Gallery, type Image } from '../../types/Gallery';
-import { GalleryMasonry } from './GalleryMasonry';
+import { Lightbox } from './Lightbox';
 
 // Picsum returns a random image at the requested size for each unique seed.
-const mockImage = (seed: string, w: number, h: number, description?: string): Image => ({
+const mockImage = (seed: string, w: number, h: number, description?: string): Gallery.Image => ({
   url: `https://picsum.photos/seed/${seed}/${w}/${h}`,
   type: 'image/jpeg',
   name: `${seed}.jpg`,
@@ -23,7 +23,7 @@ const mockImage = (seed: string, w: number, h: number, description?: string): Im
   height: h,
 });
 
-const SAMPLE_IMAGES: Image[] = [
+const SAMPLE_IMAGES: Gallery.Image[] = [
   mockImage('alpha', 600, 400, 'Mountain valley at dusk'),
   mockImage('bravo', 500, 700, 'Vertical forest path'),
   mockImage('charlie', 800, 500),
@@ -39,16 +39,16 @@ const SAMPLE_IMAGES: Image[] = [
 ];
 
 type DefaultStoryProps = {
-  initialImages: Image[];
+  initialImages: Gallery.Image[];
   enableDelete?: boolean;
 };
 
 const DefaultStory = ({ initialImages, enableDelete }: DefaultStoryProps) => {
-  const [images, setImages] = useState<Image[]>(initialImages);
-  const gallery = { name: 'Sample Gallery', images } as unknown as Gallery;
+  const [images, setImages] = useState<Gallery.Image[]>(initialImages);
+  const gallery = { name: 'Sample Gallery', images } as unknown as Gallery.Gallery;
 
   return (
-    <GalleryMasonry.Root
+    <Lightbox.Root
       gallery={gallery}
       onDelete={enableDelete ? (index) => setImages((prev) => prev.filter((_, i) => i !== index)) : undefined}
     >
@@ -59,16 +59,16 @@ const DefaultStory = ({ initialImages, enableDelete }: DefaultStoryProps) => {
             <Toolbar.Button>Show</Toolbar.Button>
           </Toolbar.Root>
         </Panel.Toolbar>
-        <Panel.Content>
-          <GalleryMasonry.Viewport />
+        <Panel.Content asChild>
+          <Lightbox.Viewport />
         </Panel.Content>
       </Panel.Root>
-    </GalleryMasonry.Root>
+    </Lightbox.Root>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-gallery/components/GalleryMasonry',
+  title: 'plugins/plugin-gallery/components/Lightbox',
   component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
