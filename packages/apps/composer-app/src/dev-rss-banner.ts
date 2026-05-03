@@ -122,7 +122,7 @@ const renderBanner = ({
     transform: 'translateX(-50%)',
     maxWidth: 'min(640px, calc(100vw - 32px))',
     padding: '12px 16px',
-    border: '1px solid currentcolor',
+    border: '1px solid #888888',
     borderRadius: '8px',
     opacity: '0.7',
     textAlign: 'center',

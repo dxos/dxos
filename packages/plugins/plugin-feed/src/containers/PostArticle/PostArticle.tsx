@@ -37,6 +37,7 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
   const requestedContentFor = useRef<string | undefined>(undefined);
   useEffect(() => {
     const postId = Obj.getDXN(post).toString();
+    console.log('requestedContentFor', requestedContentFor.current, postId);
     if (requestedContentFor.current === postId) {
       return;
     }
