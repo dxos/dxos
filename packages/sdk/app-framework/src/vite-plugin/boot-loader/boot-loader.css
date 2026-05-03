@@ -251,6 +251,12 @@
   height: 1.5em;
   line-height: 1.5;
   letter-spacing: 0.01em;
+  /* 
+   * Fixed-width digits so the `(i/n)` counter on range-bearing status
+   * updates ("Loading plugins (12/80)") doesn't jitter as the index
+   * ticks through different glyph widths. 
+   */
+  font-variant-numeric: tabular-nums;
   text-align: center;
   overflow: hidden;
 }
