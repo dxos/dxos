@@ -80,18 +80,10 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     const startedAt = Date.now();
     let lastReported = startedAt;
     let i = 0;
-    // Update in place when stderr is a TTY (interactive terminal); print
-    // discrete lines otherwise (log files, CI). Both write to stderr so
-    // stdout stays clean for the MCP JSON-RPC stream.
+    // TTY = direct interactive invocation: rewrite a single line every ~250ms.
+    // Non-TTY (moon, CI, log files): emit only a final summary; moon already
+    // shows its own task liveness, so periodic lines just compete with it.
     const tty = Boolean(process.stderr.isTTY);
-    const writeProgress = (msg: string, final = false): void => {
-      if (tty) {
-        // \r returns to column 0, \x1b[K clears to end of line.
-        process.stderr.write(`\r\x1b[K${msg}${final ? '\n' : ''}`);
-      } else {
-        process.stderr.write(`${msg}\n`);
-      }
-    };
 
     for (const pkg of packages) {
       if (disposed) {
@@ -100,17 +92,18 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
       ensureSymbols(pkg);
       i++;
       const now = Date.now();
-      // Throttle to roughly every 250ms in TTY mode (smooth progress) and
-      // every 5s in non-TTY mode (log lines stay readable).
-      const throttleMs = tty ? 250 : 5_000;
-      if (now - lastReported > throttleMs || i === total) {
+      const isFinal = i === total;
+      if (tty && (now - lastReported > 250 || isFinal)) {
         const elapsed = ((now - startedAt) / 1000).toFixed(0);
         const eta = i > 0 ? Math.round((((now - startedAt) / i) * (total - i)) / 1000) : 0;
-        writeProgress(
-          `[introspect] indexing ${i}/${total} packages (${elapsed}s elapsed, ~${eta}s remaining)`,
-          i === total,
+        // \r returns to column 0, \x1b[K clears to end of line.
+        process.stderr.write(
+          `\r\x1b[K[introspect] indexing ${i}/${total} packages (${elapsed}s elapsed, ~${eta}s remaining)${isFinal ? '\n' : ''}`,
         );
         lastReported = now;
+      } else if (!tty && isFinal) {
+        const elapsed = ((now - startedAt) / 1000).toFixed(0);
+        process.stderr.write(`[introspect] indexed ${total} packages in ${elapsed}s\n`);
       }
       // Yield each iteration so we don't block the event loop for the full
       // ~80s of ts-morph parsing on a real-monorepo cold start.
