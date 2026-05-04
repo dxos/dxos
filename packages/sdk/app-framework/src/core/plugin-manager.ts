@@ -288,7 +288,7 @@ class ManagerImpl implements PluginManager {
 
     this._removePlugin(id);
     if (this._onRemove) {
-      Effect.runFork(
+      this._runForkedFiber(
         this._onRemove(id).pipe(
           Effect.tapError((error) => Effect.sync(() => log.warn('plugin remove hook failed', { id, error }))),
           Effect.ignore,
@@ -532,6 +532,20 @@ class ManagerImpl implements PluginManager {
     fiber: Fiber.Fiber<unknown, unknown>,
   ): Effect.Effect<void> {
     return Ref.update(ref, (fibers) => fibers.filter((trackedFiber) => trackedFiber !== fiber));
+  }
+
+  /**
+   * Spawns an effect on the default runtime and registers the resulting fiber in
+   * `_inFlightFibers` so {@link shutdown} can interrupt it. Used from sync entry
+   * points like {@link remove} where there is no enclosing Effect to fork from;
+   * inside an Effect chain prefer the existing track/await/untrack pattern.
+   */
+  private _runForkedFiber<E>(effect: Effect.Effect<void, E>): void {
+    const fiber = Effect.runFork(effect);
+    Effect.runSync(this._trackFiber(this._inFlightFibers, fiber));
+    Effect.runFork(
+      Fiber.await(fiber).pipe(Effect.andThen(() => this._untrackFiber(this._inFlightFibers, fiber))),
+    );
   }
 
   //
