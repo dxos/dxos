@@ -392,6 +392,10 @@ const main = async () => {
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
+  // Hoist the uninstall hook out of the React component so its reference is stable —
+  // an inline arrow inside <Main> would be a new value on every render and would
+  // invalidate the `useApp` manager memo, looping the tree.
+  const onPluginRemove = (id: string) => UrlLoader.uninstall(id, { cache: assetCache });
   const core = getCore(conf);
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
@@ -434,7 +438,7 @@ const main = async () => {
       pluginLoader,
       // Drop the persisted entry and evict cached assets when the user uninstalls a plugin
       // so a re-install fetches fresh bytes and offline storage doesn't grow indefinitely.
-      onPluginRemove: (id) => UrlLoader.uninstall(id, { cache: assetCache }),
+      onPluginRemove,
       plugins,
       core,
       defaults,
