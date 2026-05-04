@@ -2,10 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React, { type ChangeEvent, useCallback, useState } from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
-import { useClient } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Button, Icon, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
@@ -22,7 +21,6 @@ export type CodeSettingsProps = {
 
 export const CodeSettings = ({ settings, onSettingsChange }: CodeSettingsProps) => {
   const { t } = useTranslation(meta.id);
-  const client = useClient();
   const spaces = useSpaces();
   const space = spaces[0];
   const tokens = useQuery(space?.db, Filter.type(AccessToken.AccessToken, { source: SERVICE }));
@@ -51,7 +49,7 @@ export const CodeSettings = ({ settings, onSettingsChange }: CodeSettingsProps) 
   }, [existing, space]);
 
   const handleEndpointChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    (event: ChangeEvent<HTMLInputElement>) => {
       onSettingsChange({ ...settings, endpoint: event.target.value || undefined });
     },
     [onSettingsChange, settings],

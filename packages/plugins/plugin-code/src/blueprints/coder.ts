@@ -26,10 +26,10 @@ const make = () =>
         Workflow:
         1. Iterate on the Spec content with the user. Propose features, types,
            operations, and acceptance tests.
-        2. Before dispatching a build, call verifySpec to lint the spec. If
-           verifySpec returns ok: false, surface the messages to the user and
+        2. Before dispatching a build, call verify-spec to lint the spec. If
+           verify-spec returns ok: false, surface the messages to the user and
            continue editing.
-        3. When the user is ready, call runBuildAgent with the CodeProject. The
+        3. When the user is ready, call run-build-agent with the CodeProject. The
            build is dispatched asynchronously. Report the returned status.
 
         Do not modify the user's repository directly. Operations are your only
