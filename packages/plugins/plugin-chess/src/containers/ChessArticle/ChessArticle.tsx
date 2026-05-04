@@ -34,7 +34,6 @@ export const ChessArticle = ({ role, attendableId: _attendableId, subject: game 
               icon='ph--info--regular'
               iconOnly
               label={t('toggle-info.button')}
-              disabled={showInfo}
               classNames={mx('invisible @3xl:visible')}
               onClick={() => setShowInfo((open) => !open)}
             />
