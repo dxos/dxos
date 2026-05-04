@@ -16,7 +16,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { ObjectId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-import { DatabaseBlueprint, DiscordBlueprint, MemoryBlueprint } from '..';
+import { DatabaseBlueprint, DiscordBlueprint, MemoryBlueprint } from '../index';
 import BlueprintManagerDefinition from './blueprint';
 import { BlueprintManagerHandlers, EnableBlueprints, QueryBlueprints } from './functions';
 
