@@ -14,7 +14,7 @@ const pluginTranslations = [
       [meta.id]: {
         'account.label': 'User profile',
         'profile.label': 'Profile',
-        'profile.description': 'You can adjust how your user settings here.',
+        'profile.description': 'User profile and account settings.',
         'devices.label': 'Devices',
         'add-device.label': 'Add device',
         'devices-verbose.label': 'Manage devices',
