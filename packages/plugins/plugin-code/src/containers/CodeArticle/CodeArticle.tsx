@@ -70,7 +70,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
             .action(
               'view-spec',
               {
-                label: t('view spec label'),
+                label: t('view.spec.label'),
                 icon: 'ph--file-text--regular',
                 disposition: 'toolbar',
                 checked: view === 'spec',
@@ -80,7 +80,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
             .action(
               'view-code',
               {
-                label: t('view code label'),
+                label: t('view.code.label'),
                 icon: 'ph--code--regular',
                 disposition: 'toolbar',
                 checked: view === 'code',
@@ -103,7 +103,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
               <Editor.View classNames={editorClassNames(role)} value={target?.content ?? ''} />
             ) : (
               <div role='none' className='flex items-center justify-center text-description p-4'>
-                {t('code view placeholder')}
+                {t('view.code.placeholder')}
               </div>
             )}
           </Panel.Content>
