@@ -170,7 +170,7 @@ export const AssistantTestLayer = ({
         Match.when('noop', () => Layer.mergeAll(Trace.layerNoop, FeedTraceSink.layerNoop)),
         Match.when('console', () => Layer.mergeAll(Trace.layerConsole, FeedTraceSink.layerNoop)),
         Match.when('pretty', () => Layer.mergeAll(TraceSinkPretty(), FeedTraceSink.layerNoop)),
-        Match.when('feed', () => FeedTraceSink.layerLive),
+        Match.when('feed', () => FeedTraceSink.layerLiveWithDirectSink),
         Match.exhaustive,
       ) as Layer.Layer<Trace.TraceSink | FeedTraceSink.FeedTraceSink>,
     ),
