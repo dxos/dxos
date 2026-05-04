@@ -18,42 +18,40 @@ export type AssetCacheMessage =
 
 const REQUEST_TIMEOUT_MS = 30_000;
 
-const sendMessage = async (message: AssetCacheMessage): Promise<unknown> => {
-  if (typeof navigator === 'undefined' || !navigator.serviceWorker) {
-    throw new Error('Service worker unavailable');
-  }
-  const registration = await navigator.serviceWorker.ready;
-  const target = navigator.serviceWorker.controller ?? registration.active;
-  if (!target) {
-    throw new Error('No active service worker');
-  }
-  return new Promise<unknown>((resolve, reject) => {
-    const channel = new MessageChannel();
-    const timeout = setTimeout(() => {
-      channel.port1.close();
-      reject(new Error(`Service worker did not respond to ${message.type} within ${REQUEST_TIMEOUT_MS}ms`));
-    }, REQUEST_TIMEOUT_MS);
-    channel.port1.onmessage = (event) => {
-      clearTimeout(timeout);
-      channel.port1.close();
-      const data = event.data as { ok: boolean; result?: unknown; error?: string };
-      if (data.ok) {
-        resolve(data.result);
-      } else {
-        reject(new Error(data.error ?? 'Service worker request failed'));
-      }
-    };
-    target.postMessage(message, [channel.port2]);
-  });
-};
-
-const sendMessageEffect = <T>(
+const sendMessage = <T>(
   operation: 'cache' | 'evict' | 'resolve' | 'list',
   message: AssetCacheMessage,
   pluginId?: string,
 ): Effect.Effect<T, PluginAssetCache.PluginAssetCacheError> =>
   Effect.tryPromise({
-    try: () => sendMessage(message) as Promise<T>,
+    try: async () => {
+      if (typeof navigator === 'undefined' || !navigator.serviceWorker) {
+        throw new Error('Service worker unavailable');
+      }
+      const registration = await navigator.serviceWorker.ready;
+      const target = navigator.serviceWorker.controller ?? registration.active;
+      if (!target) {
+        throw new Error('No active service worker');
+      }
+      return new Promise<T>((resolve, reject) => {
+        const channel = new MessageChannel();
+        const timeout = setTimeout(() => {
+          channel.port1.close();
+          reject(new Error(`Service worker did not respond to ${message.type} within ${REQUEST_TIMEOUT_MS}ms`));
+        }, REQUEST_TIMEOUT_MS);
+        channel.port1.onmessage = (event) => {
+          clearTimeout(timeout);
+          channel.port1.close();
+          const data = event.data as { ok: boolean; result?: T; error?: string };
+          if (data.ok) {
+            resolve(data.result as T);
+          } else {
+            reject(new Error(data.error ?? 'Service worker request failed'));
+          }
+        };
+        target.postMessage(message, [channel.port2]);
+      });
+    },
     catch: (cause) => new PluginAssetCache.PluginAssetCacheError({ context: { operation, pluginId }, cause }),
   });
 
@@ -65,10 +63,10 @@ const sendMessageEffect = <T>(
  */
 export const createServiceWorkerAssetCache = (): PluginAssetCache.Cache => ({
   cache: (pluginId, urls) =>
-    sendMessageEffect<void>('cache', { type: 'dxos:cache-plugin-assets', pluginId, urls }, pluginId).pipe(
+    sendMessage<void>('cache', { type: 'dxos:cache-plugin-assets', pluginId, urls }, pluginId).pipe(
       Effect.tapError((error) => Effect.sync(() => log.warn('failed to cache plugin assets', { pluginId, error }))),
     ),
-  evict: (pluginId) => sendMessageEffect<void>('evict', { type: 'dxos:evict-plugin', pluginId }, pluginId),
+  evict: (pluginId) => sendMessage<void>('evict', { type: 'dxos:evict-plugin', pluginId }, pluginId),
   resolve: (_pluginId, url) => Effect.succeed(url),
-  list: () => sendMessageEffect<readonly string[]>('list', { type: 'dxos:list-plugins' }),
+  list: () => sendMessage<readonly string[]>('list', { type: 'dxos:list-plugins' }),
 });

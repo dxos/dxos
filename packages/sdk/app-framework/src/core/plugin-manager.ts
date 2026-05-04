@@ -38,9 +38,9 @@ export type ManagerOptions = {
   /**
    * Hook called when a plugin is removed via {@link PluginManager.remove}. Used by the
    * host app to clean up persisted state (e.g. evict offline-cached plugin assets).
-   * Errors are logged and swallowed; removal still succeeds even if the hook throws.
+   * Failures are logged and swallowed; removal still succeeds even if the hook fails.
    */
-  onRemove?: (id: string) => Promise<void>;
+  onRemove?: (id: string) => Effect.Effect<void, unknown>;
 };
 
 export type ActivationMessage = {
@@ -288,9 +288,12 @@ class ManagerImpl implements PluginManager {
 
     this._removePlugin(id);
     if (this._onRemove) {
-      void this._onRemove(id).catch((error) => {
-        log.warn('plugin remove hook failed', { id, error });
-      });
+      Effect.runFork(
+        this._onRemove(id).pipe(
+          Effect.tapError((error) => Effect.sync(() => log.warn('plugin remove hook failed', { id, error }))),
+          Effect.ignore,
+        ),
+      );
     }
     return true;
   }

@@ -397,7 +397,7 @@ const main = async () => {
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
-  const onPluginRemove = (id: string) => runAndForwardErrors(UrlLoader.uninstall(id, { cache: assetCache }));
+  const onPluginRemove = (id: string) => UrlLoader.uninstall(id, { cache: assetCache });
   const core = getCore(conf);
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];

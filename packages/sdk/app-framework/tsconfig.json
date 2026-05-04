@@ -54,6 +54,9 @@
       "path": "../../core/operation"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../ui/react-primitives/react-error-boundary"
     },
     {
