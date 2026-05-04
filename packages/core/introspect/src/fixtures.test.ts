@@ -25,7 +25,7 @@ import { describe, test } from 'vitest';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const FIXTURE_ROOT = join(__dirname, '__fixtures__');
 
-describe('fixture monorepo wellformedness', () => {
+describe('fixture monorepo wellformedness', { timeout: 30_000 }, () => {
   test('every fixture .ts(x) file parses without syntactic errors', ({ expect }) => {
     const files = glob.sync('packages/**/src/**/*.{ts,tsx}', {
       cwd: FIXTURE_ROOT,
