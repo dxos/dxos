@@ -234,19 +234,29 @@ const runRoutineInput = (
       Effect.mapError((err) => new RoutineError('Failed to resolve routine.', { description: String(err) })),
     );
 
-    const blueprints = yield* Function.pipe(
-      routine.blueprints,
-      Effect.forEach(Database.loadOption),
-      Effect.map(Array.filter(Option.isSome)),
-      Effect.map(Array.map((opt) => opt.value)),
-    );
+    const blueprintResults = yield* Effect.forEach(routine.blueprints, Database.loadOption);
+    const blueprints = blueprintResults.flatMap((opt, i) => {
+      if (Option.isNone(opt)) {
+        log.warn('routine: blueprint not found, skipping', {
+          routineDxn: runInput.routineDxn,
+          ref: routine.blueprints[i],
+        });
+        return [];
+      }
+      return [opt.value];
+    });
 
-    const objects = yield* Function.pipe(
-      routine.context,
-      Effect.forEach(Database.loadOption),
-      Effect.map(Array.filter(Option.isSome)),
-      Effect.map(Array.map((opt) => opt.value)),
-    );
+    const objectResults = yield* Effect.forEach(routine.context, Database.loadOption);
+    const objects = objectResults.flatMap((opt, i) => {
+      if (Option.isNone(opt)) {
+        log.warn('routine: context object not found, skipping', {
+          routineDxn: runInput.routineDxn,
+          ref: routine.context[i],
+        });
+        return [];
+      }
+      return [opt.value];
+    });
 
     const promptInstructions = yield* Database.load(routine.instructions.source).pipe(
       Effect.mapError((err) => new RoutineError('Failed to load routine instructions.', { description: String(err) })),
