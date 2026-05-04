@@ -16,35 +16,32 @@ import { AgentPrompt } from './definitions';
 
 export default AgentPrompt.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(
-      function* (data) {
-        log.info('processing input', { input: data.input });
+    Effect.fnUntraced(function* (data) {
+      log.info('processing input', { input: data.input });
 
-        const input = yield* Ref.isRef(data.input)
-          ? Database.load(data.input).pipe(Effect.map(Obj.toJSON))
-          : Effect.succeed(data.input);
+      const input = yield* Ref.isRef(data.input)
+        ? Database.load(data.input).pipe(Effect.map(Obj.toJSON))
+        : Effect.succeed(data.input);
 
-        let feed = undefined;
-        if (data.chat) {
-          const chat = yield* Database.load(data.chat);
-          invariant(Obj.instanceOf(Chat.Chat, chat), 'Expected Chat object.');
-          feed = yield* Database.load(chat.feed);
-        }
+      let feed = undefined;
+      if (data.chat) {
+        const chat = yield* Database.load(data.chat);
+        invariant(Obj.instanceOf(Chat.Chat, chat), 'Expected Chat object.');
+        feed = yield* Database.load(chat.feed);
+      }
 
-        return yield* AgentService.runRoutine(data.prompt, {
-          input,
-          systemInstructions: data.systemInstructions,
-          model: data.model,
-          feed,
-        }).pipe(
-          // AgentService.layer() is provided inline because this handler may run
-          // inside a child process where AgentService is not injected via ServiceResolver.
-          Effect.provide(AgentService.layer()),
-          Effect.mapError((err) => new PromptError(err.message, { description: err.context?.description as string })),
-        );
-      },
-      Effect.scoped,
-    ),
+      return yield* AgentService.runRoutine(data.prompt, {
+        input,
+        systemInstructions: data.systemInstructions,
+        model: data.model,
+        feed,
+      }).pipe(
+        // AgentService.layer() is provided inline because this handler may run
+        // inside a child process where AgentService is not injected via ServiceResolver.
+        Effect.provide(AgentService.layer()),
+        Effect.mapError((err) => new PromptError(err.message, { description: err.context?.description as string })),
+      );
+    }, Effect.scoped),
   ),
   Operation.opaqueHandler,
 );

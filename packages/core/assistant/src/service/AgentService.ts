@@ -202,16 +202,13 @@ export const layer = (opts?: {
 
             const encodedInput = JSON.stringify(runInput);
 
-            const handle = yield* processManager.spawn(
-              RoutineProcess({ getMcpServers: opts?.getMcpServers }),
-              {
-                name: 'routine',
-                target: feedDxn,
-                traceMeta: {
-                  conversationId: feed.id,
-                },
+            const handle = yield* processManager.spawn(RoutineProcess({ getMcpServers: opts?.getMcpServers }), {
+              name: 'routine',
+              target: feedDxn,
+              traceMeta: {
+                conversationId: feed.id,
               },
-            );
+            });
 
             const output = yield* Stream.runHead(handle.runAndExit({ inputs: [encodedInput] }));
 
