@@ -51,6 +51,9 @@
       "path": "../../ui/react-ui-editor"
     },
     {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
       "path": "../../ui/ui-editor"
     },
     {

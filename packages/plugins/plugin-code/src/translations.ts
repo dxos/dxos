@@ -24,6 +24,9 @@ export const translations = [
       },
       [meta.id]: {
         'plugin.name': 'Code',
+        'view spec label': 'Spec',
+        'view code label': 'Code',
+        'code view placeholder': 'Build output will appear here.',
       },
     },
   },

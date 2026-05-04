@@ -13,7 +13,7 @@ import { translations } from '#translations';
 import { Spec } from '#types';
 
 import CHESS_1_MDL from '../../../docs/examples/chess-1.mdl?raw';
-import { SpecArticle } from './SpecArticle';
+import { CodeArticle } from './CodeArticle';
 
 const DefaultStory = ({ content }: { content?: string }) => {
   const spaces = useSpaces();
@@ -30,11 +30,11 @@ const DefaultStory = ({ content }: { content?: string }) => {
     return <Loading />;
   }
 
-  return <SpecArticle role='article' subject={spec} attendableId='story' />;
+  return <CodeArticle role='article' subject={spec} attendableId='story' />;
 };
 
 const meta = {
-  title: 'plugins/plugin-spec/containers/SpecArticle',
+  title: 'plugins/plugin-code/containers/CodeArticle',
   render: (args: { content?: string }) => <DefaultStory {...args} />,
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true, types: [Spec.Spec] }),
