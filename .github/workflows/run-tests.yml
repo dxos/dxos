@@ -32,7 +32,7 @@ jobs:
       image: ghcr.io/dxos/gh-actions:${{ inputs.node-version }}
       credentials:
         username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ github.token }}
     timeout-minutes: 30
     env:
       NODE_VERSION: ${{ inputs.node-version }}
