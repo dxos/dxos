@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AppCapabilities } from '@dxos/app-toolkit';
-import { Blueprint, Template } from '@dxos/blueprints';
+import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 import { InboxOperation } from '#operations';
@@ -20,7 +19,6 @@ const make = () =>
         InboxOperation.ClassifyEmail,
         InboxOperation.DraftEmail,
         InboxOperation.ReadEmail,
-        InboxOperation.SummarizeMailbox,
         InboxOperation.GoogleMailSync,
       ],
       tools: [],
@@ -57,7 +55,7 @@ const make = () =>
     }),
   });
 
-const blueprint: AppCapabilities.BlueprintDefinition = {
+const blueprint: Blueprint.Definition = {
   key: BLUEPRINT_KEY,
   make,
 };

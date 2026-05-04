@@ -16,7 +16,8 @@ import {
   getFormatSchema,
 } from '@dxos/schema';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { getFormProperties } from '../../util';
 import { Form, type FormFieldMap, type FormRootProps, SelectField, SelectOptionField } from '../Form';
 
@@ -151,7 +152,7 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
   const handleSave = useCallback<NonNullable<FormRootProps<PropertyType>['onSave']>>(
     (props) => {
       if (view) {
-        Obj.change(view, () => {
+        Obj.update(view, () => {
           projection.setFieldProjection({ field, props });
         });
       } else {

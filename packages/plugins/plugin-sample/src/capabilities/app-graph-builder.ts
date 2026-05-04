@@ -11,22 +11,16 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, createObjectNode } from '@dxos/app-toolkit';
-import { type Space, isSpace } from '@dxos/client/echo';
+import { AppCapabilities, AppNode, AppNodeMatcher, createObjectNode } from '@dxos/app-toolkit';
+import { isSpace } from '@dxos/client/echo';
+import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
-import { Operation } from '@dxos/operation';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SPACE_TYPE } from '@dxos/plugin-space/types';
 
 import { meta } from '#meta';
 import { SampleOperation } from '#operations';
 import { SampleItem } from '#types';
-
-// Custom matcher for Space nodes. Extracts the Space object from the node
-// so downstream connector/actions receive it as a typed value.
-const whenSpace = (node: Node.Node): Option.Option<Space> =>
-  node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none();
 
 // Section type constant used to identify the "Samples" section node.
 // A second extension matches this type to populate child nodes.
@@ -75,7 +69,7 @@ export default Capability.makeModule(
       // `AppNode.makeSection` builds a virtual branch node (non-navigable, non-draggable).
       GraphBuilder.createExtension({
         id: 'section',
-        match: whenSpace,
+        match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           const items = get(AtomQuery.make(space.db, Filter.type(SampleItem.SampleItem)));
           if (items.length === 0) {

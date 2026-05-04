@@ -739,7 +739,7 @@ class ManagerImpl implements PluginManager {
   ): Effect.Effect<Capability.Any[][], Error> {
     return Function.pipe(
       modules,
-      Array.map((mod) => this._loadModule(mod)),
+      Array.map((mod) => this._loadModule(mod, key)),
       Effect.allWith({ concurrency: 'unbounded' }),
       Effect.catchAll((error) => {
         return Effect.gen(this, function* () {
@@ -778,7 +778,14 @@ class ManagerImpl implements PluginManager {
     return semaphore;
   }
 
-  private _loadModule = (module: Plugin.PluginModule): Effect.Effect<Capability.Any[], Error> =>
+  // `parentEvent` is the activation event that first triggered this module
+  // load — included in `activating`/`activated` PubSub messages so subscribers
+  // (e.g. the boot loader's status listener) can associate a module with its
+  // triggering event in the trace. The same module may be referenced by
+  // multiple events, but module loads are memoized via `_moduleMemoMap`, so
+  // only the first event to need it will appear here; later events await the
+  // cached deferred without re-publishing.
+  private _loadModule = (module: Plugin.PluginModule, parentEvent: string): Effect.Effect<Capability.Any[], Error> =>
     Effect.gen(this, function* () {
       const semaphore = this._getModuleSemaphore(module.id);
 
@@ -794,9 +801,9 @@ class ManagerImpl implements PluginManager {
         this._moduleMemoMap.set(module.id, deferred);
 
         const loadEffect = Effect.gen(this, function* () {
-          log('loading module', { module: module.id });
+          log('loading module', { module: module.id, parentEvent });
           performance.mark(`module:${module.id}:start`);
-          yield* PubSub.publish(this.activation, { event: '', state: 'activating', module: module.id });
+          yield* PubSub.publish(this.activation, { event: parentEvent, state: 'activating', module: module.id });
           const [duration, capabilities] = yield* module
             .activate()
             .pipe(
@@ -808,9 +815,10 @@ class ManagerImpl implements PluginManager {
           const elapsed = Duration.toMillis(duration);
           performance.mark(`module:${module.id}:end`);
           performance.measure(`module:${module.id}`, `module:${module.id}:start`, `module:${module.id}:end`);
-          yield* PubSub.publish(this.activation, { event: '', state: 'activated', module: module.id });
+          yield* PubSub.publish(this.activation, { event: parentEvent, state: 'activated', module: module.id });
           log('loaded module', {
             module: module.id,
+            parentEvent,
             elapsed,
             failed: false,
           });

@@ -6,14 +6,14 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { ContextBinding } from '@dxos/assistant';
-import { AssistantTestLayer } from '@dxos/assistant/testing';
-import { Prompt } from '@dxos/blueprints';
+import { Routine } from '@dxos/compute';
+import { QueueService } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
+import { OperationHandlerSet } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { QueueService } from '@dxos/functions';
+import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
-import { OperationHandlerSet } from '@dxos/operation';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
@@ -54,7 +54,7 @@ describe('Agent prompt', () => {
         );
 
         const prompt = yield* Database.add(
-          Prompt.make({
+          Routine.make({
             name: 'chat-mode-test',
             instructions: 'Reply with a single word: ack.',
             blueprints: [],

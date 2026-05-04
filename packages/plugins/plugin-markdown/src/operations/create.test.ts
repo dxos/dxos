@@ -6,16 +6,16 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AgentService } from '@dxos/assistant';
-import { AssistantTestLayer } from '@dxos/assistant/testing';
-import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
+import { Blueprint } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { DXN, Database, Feed, Obj, Query } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { AgentService } from '@dxos/functions-runtime';
+import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { HasSubject } from '@dxos/types';
 

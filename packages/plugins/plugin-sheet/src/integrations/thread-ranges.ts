@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { debounce } from '@dxos/async';
-import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
+import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute-hyperformula';
 import { Obj, Relation } from '@dxos/echo';
 import { ThreadOperation } from '@dxos/plugin-thread/operations';
 import { Filter, Query, useQuery } from '@dxos/react-client/echo';

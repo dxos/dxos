@@ -6,7 +6,10 @@
 
 /**
  * Shows CI status and failures for the current branch.
- * Uses the `gh` CLI (must be authenticated via `gh auth login` or GITHUB_TOKEN).
+ * Uses the `gh` CLI; auth is taken from (in priority order):
+ *   1. `DX_GITHUB_CI_TOKEN` (preferred — pre-configured for CI/dev environments).
+ *   2. `GITHUB_TOKEN` / `GH_TOKEN` (whatever the gh CLI already honors).
+ *   3. `gh auth login` credentials on disk.
  *
  * Usage:
  *   pnpm -w gh-action            # Show current CI status and failures.
@@ -15,6 +18,15 @@
 
 import chalk from 'chalk';
 import { execSync } from 'child_process';
+
+// Surface DX_GITHUB_CI_TOKEN to the gh CLI so the script works in environments
+// (like sandboxed agents) that have the dxos token but no `gh auth login`.
+if (process.env.DX_GITHUB_CI_TOKEN && !process.env.GH_TOKEN && !process.env.GITHUB_TOKEN) {
+  process.env.GH_TOKEN = process.env.DX_GITHUB_CI_TOKEN;
+  // When the local git remote is a sandbox proxy (not github.com), gh can't infer the
+  // base repo from the remote. Pin it so commands resolve without `gh auth login`.
+  process.env.GH_REPO ??= 'dxos/dxos';
+}
 
 const REPO_ROOT = process.cwd();
 const WATCH = process.argv.includes('--watch');

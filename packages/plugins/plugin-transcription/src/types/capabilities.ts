@@ -20,14 +20,19 @@ export namespace TranscriptionCapabilities {
     recorderConfig?: Partial<MediaStreamRecorderProps['config']>;
     transcriberConfig?: Partial<TranscriberProps['config']>;
     onSegments: TranscriberProps['onSegments'];
+    transcribe?: TranscriberProps['transcribe'];
   };
+
   export type GetTranscriber = (props: GetTranscriberProps) => Transcriber;
-  export const Transcriber = Capability.make<GetTranscriber>(`${meta.id}.capability.transcriber`);
 
   export type GetTranscriptionManagerProps = {
     messageEnricher?: TranscriptMessageEnricher;
   };
+
   export type GetTranscriptionManager = (props: GetTranscriptionManagerProps) => TranscriptionManager;
+
+  export const Transcriber = Capability.make<GetTranscriber>(`${meta.id}.capability.transcriber`);
+
   export const TranscriptionManager = Capability.make<GetTranscriptionManager>(
     `${meta.id}.capability.transcription-manager`,
   );

@@ -37,7 +37,7 @@ import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/i
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
+import { AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -144,8 +144,6 @@ export class DataSpaceManager extends Resource {
 
   private readonly _spaces = new ComplexMap<PublicKey, DataSpace>(PublicKey.hash);
 
-  private readonly _instanceId = PublicKey.random().toHex();
-
   private readonly _spaceManager: SpaceManager;
   private readonly _metadataStore: MetadataStore;
   private readonly _keyring: Keyring;
@@ -221,7 +219,6 @@ export class DataSpaceManager extends Resource {
   @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
   protected override async _open(ctx: Context): Promise<void> {
     log('open');
-    log.trace('dxos.echo.data-space-manager.open', Trace.begin({ id: this._instanceId }));
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
     const spacesToActivate: DataSpace[] = [];
@@ -247,8 +244,6 @@ export class DataSpaceManager extends Resource {
     }
 
     this.updated.emit();
-
-    log.trace('dxos.echo.data-space-manager.open', Trace.end({ id: this._instanceId }));
   }
 
   @synchronized

@@ -7,7 +7,7 @@
     "denyWarnings": true
   },
   "rules": {
-    "@dxos/eslint-plugin-rules/consistent-change-param": "warn",
+    "@dxos/eslint-plugin-rules/consistent-update-param": "warn",
     "@dxos/eslint-plugin-rules/effect-subpath-imports": "warn",
     "@dxos/eslint-plugin-rules/header": "warn",
     "@dxos/eslint-plugin-rules/import-as-namespace": "warn",
@@ -15,6 +15,7 @@
     "@dxos/eslint-plugin-rules/translation-key-format": "warn",
     "@dxos/eslint-plugin-rules/no-effect-run-promise": "error",
     "@dxos/eslint-plugin-rules/no-empty-promise-catch": "error",
+    "eslint/curly": ["error", "all"],
     "eslint/no-async-promise-executor": "off",
     "eslint/no-constant-binary-expression": "off",
     "eslint/no-constant-condition": "off",
@@ -118,9 +119,7 @@
     "scripts/**",
     "docs/legacy/**",
     "docs/public/webflow/**",
-    "docs/scripts/**",
-    "tools/swc-log-plugin/tests/__swc_snapshots__/**",
-    "tools/swc-log-plugin/test-rig/**"
+    "docs/scripts/**"
   ],
   "jsPlugins": [
     "@dxos/eslint-plugin-rules",

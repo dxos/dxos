@@ -46,7 +46,6 @@ describe('useObject', () => {
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(obj, 'name'), { wrapper });
-
     const [value] = result.current;
     expect(value).toBe('Test');
   });
@@ -59,11 +58,10 @@ describe('useObject', () => {
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(obj, 'name'), { wrapper });
-
     expect(result.current[0]).toBe('Test');
 
-    // Update the property via Obj.change
-    Obj.change(obj, (obj) => {
+    // Update the property via Obj.update
+    Obj.update(obj, (obj) => {
       obj.name = 'Updated';
     });
 
@@ -81,11 +79,10 @@ describe('useObject', () => {
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(obj), { wrapper });
-
     expect(result.current[0].name).toBe('Test');
 
-    // Update a property via Obj.change
-    Obj.change(obj, (obj) => {
+    // Update a property via Obj.update
+    Obj.update(obj, (obj) => {
       obj.name = 'Updated';
     });
 
@@ -103,11 +100,10 @@ describe('useObject', () => {
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(obj, 'name'), { wrapper });
-
     expect(result.current[0]).toBe('Test');
 
-    // Update a different property via Obj.change
-    Obj.change(obj, (obj) => {
+    // Update a different property via Obj.update
+    Obj.update(obj, (obj) => {
       obj.email = 'newemail@example.com';
     });
 
@@ -142,7 +138,6 @@ describe('useObject', () => {
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(obj), { wrapper });
-
     const [value, updateCallback] = result.current;
     expect(value.name).toBe('Test');
 
@@ -165,7 +160,6 @@ describe('useObject', () => {
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(obj, 'name'), { wrapper });
-
     const [value, updateCallback] = result.current;
     expect(value).toBe('Test');
 
@@ -186,7 +180,6 @@ describe('useObject', () => {
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(obj, 'name'), { wrapper });
-
     const [value, updateCallback] = result.current;
     expect(value).toBe('Test');
 
@@ -207,7 +200,6 @@ describe('useObject', () => {
     const wrapper = createWrapper(registry);
 
     const { result, rerender } = renderHook(() => useObject(obj, 'name'), { wrapper });
-
     const [, firstUpdateCallback] = result.current;
 
     rerender();
@@ -233,7 +225,6 @@ describe('useObject', () => {
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(undefined as TestSchema.Person | undefined, 'name'), { wrapper });
-
     const [value] = result.current;
     expect(value).toBeUndefined();
   });
@@ -243,7 +234,6 @@ describe('useObject', () => {
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(undefined as TestSchema.Person | undefined), { wrapper });
-
     const [, updateCallback] = result.current;
 
     // Should not throw when calling update on undefined object.
@@ -262,7 +252,6 @@ describe('useObject', () => {
     const wrapper = createWrapper(registry);
 
     const { result, rerender } = renderHook(() => useObject(obj), { wrapper });
-
     const [firstSnapshot] = result.current;
     expect(firstSnapshot).toBeDefined();
 
@@ -286,7 +275,6 @@ describe('useObject', () => {
     const wrapper = createWrapper(registry);
 
     const { result, rerender } = renderHook(() => useObject(person.employer!), { wrapper });
-
     const [firstSnapshot] = result.current;
     expect(firstSnapshot).toBeDefined();
 

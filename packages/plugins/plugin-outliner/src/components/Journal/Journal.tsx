@@ -45,7 +45,7 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
     }
 
     const entry = JournalType.makeEntry();
-    Obj.change(journal, (journal) => {
+    Obj.update(journal, (journal) => {
       journal.entries[getDateString(date)] = Ref.make(entry);
     });
   }, [journal, date]);
@@ -129,7 +129,7 @@ const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntry
         showSelected={false}
         {...props}
       >
-        <Outline.Content classNames='pt-2 pb-2' />
+        <Outline.Content classNames='py-2' />
       </Outline.Root>
     </div>
   );

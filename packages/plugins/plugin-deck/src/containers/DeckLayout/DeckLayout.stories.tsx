@@ -24,6 +24,7 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { OperationHandler } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
+import { translations } from '#translations';
 import {
   DeckCapabilities,
   type EphemeralDeckState,
@@ -34,7 +35,6 @@ import {
   PLANK_COMPANION_TYPE,
 } from '#types';
 
-import { translations } from '../../translations';
 import { DeckLayout } from './DeckLayout';
 
 random.seed(1234);

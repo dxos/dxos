@@ -64,8 +64,12 @@ export default Capability.makeModule(() =>
           );
         },
         component: ({ data, role }) => {
-          const mailbox = (data.properties as { mailbox: Mailbox.Mailbox }).mailbox;
           const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          const mailbox = (data.properties as { mailbox: Mailbox.Mailbox }).mailbox;
           return <DraftsArticle role={role} space={space} attendableId={data.attendableId} mailbox={mailbox} />;
         },
       }),
@@ -129,7 +133,9 @@ export default Capability.makeModule(() =>
           ),
         ),
         component: ({ data, role }) => {
-          if (!data?.subject || !data?.companionTo) return null;
+          if (!data?.subject || !data?.companionTo) {
+            return null;
+          }
           return <EventArticle role={role} subject={data.subject} companionTo={data.companionTo} />;
         },
       }),
@@ -174,7 +180,6 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <CalendarProperties subject={data.subject} />,
       }),
 
-      // TODO(card-cleanup): Remove.
       // TODO(wittjosiah): Generalize the mess below.
       Surface.create({
         id: 'contact-related',

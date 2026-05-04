@@ -5,12 +5,12 @@
 import { ApiError } from '@dxos/protocols';
 
 /**
- * Error thrown when attempting to mutate an ECHO object outside of an Obj.change() context.
+ * Error thrown when attempting to mutate an ECHO object outside of an Obj.update() context.
  */
 export class MutationOutsideChangeContextError extends ApiError {
   constructor(operation: string, suggestion: string) {
     super({
-      message: `Cannot ${operation} outside of Obj.change(). Use Obj.change(obj, (mutableObj) => { ${suggestion} }) instead.`,
+      message: `Cannot ${operation} outside of Obj.update(). Use Obj.update(obj, (mutableObj) => { ${suggestion} }) instead.`,
     });
   }
 }

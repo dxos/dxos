@@ -7,12 +7,13 @@ import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { getPersonalSpace, getSpacePath, isPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
-import { type Space, SpaceState } from '@dxos/react-client/echo';
+import { SpaceState } from '@dxos/react-client/echo';
 import {
   Button,
   DropdownMenu,
@@ -38,12 +39,8 @@ const SpaceFormSchema = SpaceForm.pipe(
   ),
 );
 
-export type SpaceSettingsContainerProps = {
-  space: Space;
-};
-
 // TODO(wittjosiah): Handle space migrations here?
-export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) => {
+export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
@@ -72,7 +69,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
       }
 
       if (changed['name'] || changed['icon'] || changed['hue']) {
-        Obj.change(space.properties, (obj) => {
+        Obj.update(space.properties, (obj) => {
           if (changed['name'] && newValues.name !== undefined) {
             obj.name = newValues.name;
           }

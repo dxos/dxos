@@ -264,7 +264,7 @@ export const getTarget = <T extends Unknown | Snapshot>(relation: T): TargetOf<T
 
 /**
  * Makes all properties mutable recursively.
- * Used to provide a mutable view of a relation within `Relation.change`.
+ * Used to provide a mutable view of a relation within `Relation.update`.
  */
 export type Mutable<T> = internal.Mutable<T>;
 
@@ -272,10 +272,10 @@ export type Mutable<T> = internal.Mutable<T>;
  * Perform mutations on an echo relation within a controlled context.
  *
  * All mutations within the callback are batched and trigger a single notification
- * when the callback completes. Direct mutations outside of `Relation.change` will throw
+ * when the callback completes. Direct mutations outside of `Relation.update` will throw
  * an error for echo relations.
  *
- * @param relation - The echo relation to mutate. Use `Obj.change` for objects.
+ * @param relation - The echo relation to mutate. Use `Obj.update` for objects.
  * @param callback - The callback that performs mutations on the relation.
  *
  * @example
@@ -286,15 +286,15 @@ export type Mutable<T> = internal.Mutable<T>;
  *   role: 'Engineer',
  * });
  *
- * // Mutate within Relation.change
- * Relation.change(worksFor, (obj) => {
+ * // Mutate within Relation.update
+ * Relation.update(worksFor, (obj) => {
  *   obj.role = 'Senior Engineer';
  * });
  * ```
  *
- * Note: Only accepts relations. Use `Obj.change` for objects.
+ * Note: Only accepts relations. Use `Obj.update` for objects.
  */
-export const change = <T extends Unknown>(relation: T, callback: internal.ChangeCallback<T>): void => {
+export const update = <T extends Unknown>(relation: T, callback: internal.ChangeCallback<T>): void => {
   internal.change(relation, callback);
 };
 
@@ -337,7 +337,7 @@ export const getValue = (rel: Unknown | Snapshot, path: readonly (string | numbe
 
 /**
  * Set a deeply nested property on a relation.
- * Must be called within a `Relation.change` callback.
+ * Must be called within a `Relation.update` callback.
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
@@ -399,13 +399,13 @@ export const Meta = internal.MetaId;
 export type ReadonlyMeta = internal.ReadonlyMeta;
 
 /**
- * Mutable meta type returned by `Relation.getMeta` inside a `Relation.change` callback.
+ * Mutable meta type returned by `Relation.getMeta` inside a `Relation.update` callback.
  */
 export type Meta = internal.Meta;
 
 /**
  * Get the metadata for a relation.
- * Returns mutable meta when passed a mutable relation (inside `Relation.change` callback).
+ * Returns mutable meta when passed a mutable relation (inside `Relation.update` callback).
  * Returns read-only meta when passed a regular relation or snapshot.
  */
 // TODO(wittjosiah): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
@@ -423,7 +423,7 @@ export const getKeys = (entity: Unknown | Snapshot, source: string): ForeignKey[
 
 /**
  * Delete all keys from the relation for the specified source.
- * Must be called within a `Relation.change` callback.
+ * Must be called within a `Relation.update` callback.
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
@@ -432,7 +432,7 @@ export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => in
 
 /**
  * Add a tag to the relation.
- * Must be called within a `Relation.change` callback.
+ * Must be called within a `Relation.update` callback.
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
@@ -441,7 +441,7 @@ export const addTag = (entity: Mutable<Unknown>, tag: string): void => internal.
 
 /**
  * Remove a tag from the relation.
- * Must be called within a `Relation.change` callback.
+ * Must be called within a `Relation.update` callback.
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
@@ -466,7 +466,7 @@ export const getLabel = (entity: Unknown | Snapshot): string | undefined => inte
 
 /**
  * Set the label of the relation.
- * Must be called within a `Relation.change` callback.
+ * Must be called within a `Relation.update` callback.
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
@@ -481,7 +481,7 @@ export const getDescription = (entity: Unknown | Snapshot): string | undefined =
 
 /**
  * Set the description of the relation.
- * Must be called within a `Relation.change` callback.
+ * Must be called within a `Relation.update` callback.
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.

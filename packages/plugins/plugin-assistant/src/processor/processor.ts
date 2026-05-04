@@ -14,17 +14,17 @@ import {
   type AiSession,
   createSystemPrompt,
   formatSystemPrompt,
-  AgentService,
   PartialBlock,
   ToolExecutionServices,
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
-import { type Blueprint } from '@dxos/blueprints';
+import { type Blueprint } from '@dxos/compute';
+import { Trace, type CredentialsService, type QueueService } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { type Database, Feed, Obj, Ref } from '@dxos/echo';
 import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
-import { Trace, type CredentialsService, type QueueService } from '@dxos/functions';
+import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 import type { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Message } from '@dxos/types';
 

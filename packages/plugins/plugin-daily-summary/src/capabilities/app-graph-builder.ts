@@ -5,9 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { meta as spaceMeta } from '@dxos/plugin-space/meta';
+import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
+import { GraphBuilder } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
 
@@ -16,8 +15,8 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'space-settings-daily-summary',
-        match: NodeMatcher.whenNodeType(`${spaceMeta.id}.settings`),
-        connector: (node) =>
+        match: AppNodeMatcher.whenSpace,
+        connector: () =>
           Effect.succeed([
             AppNode.makeSettingsPanel({
               id: 'daily-summary',

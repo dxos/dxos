@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { getSpace } from '@dxos/client/echo';
+import { Operation } from '@dxos/compute';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 
 import { meta } from '#meta';
 
@@ -83,19 +83,19 @@ const handler: Operation.WithHandler<typeof SyncFeed> = SyncFeed.pipe(
         // Advance cursor to the newest post.
         const newestGuid = posts[0]?.guid;
         if (newestGuid) {
-          Obj.change(subscriptionFeed, (subscriptionFeed) => {
+          Obj.update(subscriptionFeed, (subscriptionFeed) => {
             subscriptionFeed.cursor = newestGuid;
           });
         }
 
         // Update feed metadata from channel if not already set.
         if (feedMeta.name && !subscriptionFeed.name) {
-          Obj.change(subscriptionFeed, (subscriptionFeed) => {
+          Obj.update(subscriptionFeed, (subscriptionFeed) => {
             subscriptionFeed.name = feedMeta.name;
           });
         }
         if (feedMeta.description && !subscriptionFeed.description) {
-          Obj.change(subscriptionFeed, (subscriptionFeed) => {
+          Obj.update(subscriptionFeed, (subscriptionFeed) => {
             subscriptionFeed.description = feedMeta.description;
           });
         }

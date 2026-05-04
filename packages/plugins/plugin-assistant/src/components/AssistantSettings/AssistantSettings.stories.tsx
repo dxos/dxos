@@ -6,7 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { AssistantSettings } from './AssistantSettings';
 
 const meta = {
@@ -28,7 +29,7 @@ export const Default: Story = {
   args: {
     settings: {
       customPrompts: false,
-      llmProvider: 'edge',
+      modelProvider: 'edge',
     },
   },
 };

@@ -26,7 +26,8 @@ import {
 } from '@dxos/schema';
 import { mx, osTranslations, subtleHover } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { FieldEditor } from '../FieldEditor';
 import {
   Form,
@@ -274,7 +275,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
       invariant(!readonly);
-      Obj.change(view, (view) => {
+      Obj.update(view, (view) => {
         // NOTE(ZaymonFC): Using arrayMove here causes a race condition with the kanban model.
         const fields = [...view.projection.fields];
         const [moved] = fields.splice(fromIndex, 1);

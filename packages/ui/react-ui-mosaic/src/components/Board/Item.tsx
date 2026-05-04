@@ -10,7 +10,8 @@ import { Card, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { getHashStyles } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicTileProps } from '../Mosaic';
 import { useBoard } from './Board';

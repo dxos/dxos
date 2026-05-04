@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { Client } from '@dxos/client';
-import { defaultFunctions } from '@dxos/compute';
-import { getRegisteredFunctionNames } from '@dxos/compute/testing';
+import { defaultFunctions } from '@dxos/compute-hyperformula';
+import { getRegisteredFunctionNames } from '@dxos/compute-hyperformula/testing';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { useAsyncEffect } from '@dxos/react-hooks';
@@ -39,7 +39,7 @@ const AutomergeStory = ({ value, ...props }: CellEditorProps) => {
     const space = await client.spaces.create();
 
     const sheet = Sheet.make();
-    Obj.change(sheet, (sheet) => {
+    Obj.update(sheet, (sheet) => {
       sheet.name = 'Test';
       sheet.cells[cell] = { value };
     });

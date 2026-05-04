@@ -9,16 +9,16 @@ import { describe, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
+import { Trigger } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Feed, Obj, Query, Ref } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 import { ErrorCodec, FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AccessToken, Message } from '@dxos/types';
@@ -27,7 +27,7 @@ import { Mailbox } from '../../../types';
 
 const config = configPreset({ edge: 'local' });
 
-describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
+describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
   test('bundle function', async () => {
     const artifact = await bundleFunction({
       entryPoint: new URL('./sync.ts', import.meta.url).pathname,
@@ -158,7 +158,6 @@ const setup = async () => {
     Obj.make(AccessToken.AccessToken, {
       source: 'google.com',
       token: process.env.GOOGLE_ACCESS_TOKEN ?? failedInvariant('GOOGLE_ACCESS_TOKEN is not set'),
-      note: 'Email read access.',
     }),
   );
 

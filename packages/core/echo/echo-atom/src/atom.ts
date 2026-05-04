@@ -188,7 +188,9 @@ const refWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T
   const effect = (get: Atom.Context) =>
     Effect.gen(function* () {
       const snapshot = get(make(ref));
-      if (snapshot == null) return undefined;
+      if (snapshot == null) {
+        return undefined;
+      }
       const option = yield* Obj.getReactiveOption(snapshot);
       return Option.getOrElse(option, () => undefined);
     });
@@ -202,7 +204,7 @@ const refWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T
 /**
  * Like {@link make} but returns the live reactive object instead of a snapshot.
  * Same input: Obj or Ref.Ref. Same output shape: Atom that updates when the object mutates.
- * Prefer {@link make} (snapshot) unless you need the live Obj.Obj for generic mutations (e.g. Obj.change).
+ * Prefer {@link make} (snapshot) unless you need the live Obj.Obj for generic mutations (e.g. Obj.update).
  *
  * @param objOrRef - The reactive object or ref.
  * @returns An atom that returns the live object. Returns undefined for refs (async loading) or undefined input.

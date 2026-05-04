@@ -5,69 +5,85 @@
 import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
 import { pipe } from 'effect/Function';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Trace } from '@dxos/compute';
 import { Filter, Query } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
-import { Trace } from '@dxos/functions';
 import { FeedTraceSink, Process } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { useComputeRuntimeService } from '@dxos/plugin-automation/hooks';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
 import { composable, mx } from '@dxos/ui-theme';
 
-import { ProcessTree } from '../../components';
+import { ProcessTree, ProcessTreeProps } from '#components';
+
 import { buildExecutionGraph } from './execution-graph';
 
-export type TracePanelProps = {
-  space: Space;
-};
+export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
 
-export const TracePanel = composable<HTMLDivElement, TracePanelProps>(({ space, ...props }, forwardedRef) => {
-  const { invokePromise } = useOperationInvoker();
-  const { branches, commits } = useExecutionGraph(space);
+export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
+  ({ space, onProcessTerminate, ...props }, forwardedRef) => {
+    const { invokePromise } = useOperationInvoker();
+    const { branches, commits } = useExecutionGraph(space);
+    const runtime = useComputeRuntimeService(Process.ProcessMonitorService, space.id);
+    const processes = useAtomValue(runtime?.processTreeAtom ?? atomEmpty);
 
-  const handleCommitClick = useCallback(
-    (commit: Commit) => {
-      if (commit.link) {
-        const dxn = DXN.tryParse(commit.link)?.asEchoDXN();
-        if (dxn?.spaceId && dxn.echoId) {
-          // TODO(dmaretskyi): Navigates, but fails to open.
-          void invokePromise(LayoutOperation.Open, {
-            subject: [`${dxn.spaceId}:${dxn.echoId}`],
-          });
+    const handleCommitClick = useCallback(
+      (commit: Commit) => {
+        if (commit.link) {
+          const dxn = DXN.tryParse(commit.link)?.asEchoDXN();
+          if (dxn?.spaceId && dxn.echoId) {
+            // TODO(dmaretskyi): Navigates, but fails to open.
+            void invokePromise(LayoutOperation.Open, {
+              subject: [`${dxn.spaceId}:${dxn.echoId}`],
+            });
+          }
         }
-      }
-    },
-    [invokePromise],
-  );
+      },
+      [invokePromise],
+    );
 
-  return (
-    <Panel.Root {...props} ref={forwardedRef}>
-      <Panel.Content className='grid grid-rows-[min-content_1fr]'>
-        <ActiveProcessList spaceId={space.id} />
-        <Timeline branches={branches} commits={commits} compact onCommitClick={handleCommitClick} />
-      </Panel.Content>
-    </Panel.Root>
-  );
-});
+    // Select current branch.
+    const [currentBranch, setCurrentBranch] = useState<string | null>(null);
+    const handleProcessSelect = useCallback(
+      (process: Process.Info) => {
+        const branch = branches.find((branch) => branch === process.pid.toString());
+        if (branch) {
+          log.info('select', { process, branch });
+          setCurrentBranch(branch);
+        }
+      },
+      [branches],
+    );
 
-/**
- * Separated into its own component because useComputeRuntimeService uses React's use() which requires a Suspense boundary.
- */
-const ActiveProcessList = ({ spaceId }: { spaceId: Space['id'] }) => {
-  const runtime = useComputeRuntimeService(Process.ProcessMonitorService, spaceId);
-  const activeProcesses = useAtomValue(runtime?.processTreeAtom ?? atomEmpty);
-  if (activeProcesses.length === 0) {
-    return <div />;
-  }
-
-  return <ProcessTree classNames={mx('max-h-[8lh] px-2 border-b border-separator')} processes={activeProcesses} />;
-};
+    return (
+      <Panel.Root {...props} ref={forwardedRef}>
+        <Panel.Content className='grid grid-rows-[min-content_1fr] divide-y divide-separator'>
+          <ProcessTree
+            classNames={mx('max-h-[8lh] border-b border-separator')}
+            processes={processes}
+            onProcessSelect={handleProcessSelect}
+            onProcessTerminate={onProcessTerminate}
+          />
+          <Timeline
+            currentBranch={currentBranch}
+            branches={branches}
+            commits={commits}
+            compact
+            onCommitClick={handleCommitClick}
+          />
+        </Panel.Content>
+      </Panel.Root>
+    );
+  },
+);
 
 // Stable ref.
 const atomEmpty = Atom.make(() => [] as const);
@@ -82,17 +98,25 @@ type UseExecutionGraphOptions = {
 };
 
 const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOptions = {}): ExecutionGraph => {
-  const atom = useMemo(() => getExecutionGraph(space, { eventLimit }), [space, eventLimit]);
+  const runtime = useComputeRuntimeService(Process.ProcessMonitorService, space.id);
+  const activeProcesses = useAtomValue(runtime?.processTreeAtom ?? atomEmpty);
+  const atom = useMemo(
+    () => getExecutionGraph(space, activeProcesses, { eventLimit }),
+    [space, activeProcesses, eventLimit],
+  );
+
   return useAtomValue(atom);
 };
 
 const getExecutionGraph = (
   space: Space,
-  { eventLimit = 100 }: UseExecutionGraphOptions = {},
+  activeProcesses: readonly Process.Info[] = [],
+  { eventLimit = 300 }: UseExecutionGraphOptions = {},
 ): Atom.Atom<ExecutionGraph> => {
   return pipe(
     AtomQuery.make(space.db, FeedTraceSink.query),
     Atom.map((feeds) => {
+      log('trace panel query trace feeds', { spaceId: space.id, feedCount: feeds.length });
       // TODO(dmaretskyi): This should be possible in a single query with properly working limit(1) and feed > feed contents traversal.
       return AtomQuery.make(
         space.db,
@@ -106,7 +130,7 @@ const getExecutionGraph = (
       Atom.make((get) =>
         buildExecutionGraph({
           traceMessages: [...get(_)],
-          activeProcesses: [],
+          activeProcesses,
           eventLimit,
         }),
       ),

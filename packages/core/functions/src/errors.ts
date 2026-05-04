@@ -18,4 +18,14 @@ export class FunctionNotFoundError extends BaseError.extend('FunctionNotFound', 
 
 export class FunctionError extends BaseError.extend('FunctionError', 'Function invocation error') {}
 
+export class InvalidOperationInputError extends BaseError.extend(
+  'InvalidOperationInput',
+  'Operation input did not match schema',
+) {}
+
+export class InvalidOperationOutputError extends BaseError.extend(
+  'InvalidOperationOutput',
+  'Operation output did not match schema',
+) {}
+
 export class TriggerStateNotFoundError extends BaseError.extend('TriggerStateNotFound', 'Trigger state not found') {}

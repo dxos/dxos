@@ -9,13 +9,13 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
 import { AiContextBinder, AiContextService } from '@dxos/assistant';
-import { type Blueprint } from '@dxos/blueprints';
+import { type Blueprint } from '@dxos/compute';
+import { QueueService } from '@dxos/compute';
 import { Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { acquireReleaseResource } from '@dxos/effect';
-import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { QueueAnnotation, Text } from '@dxos/schema';
 
@@ -27,6 +27,14 @@ import * as Plan from './Plan';
  */
 export const Agent = Schema.Struct({
   name: Schema.optional(Schema.String),
+
+  /**
+   * When false, agent triggers are disabled after sync-triggers runs.
+   */
+  enabled: Schema.optional(Schema.Boolean).annotations({
+    title: 'Enabled',
+    description: 'Master switch for agent automation; propagated to all triggers on sync.',
+  }),
 
   /**
    * Instructions for the agent.
@@ -79,6 +87,15 @@ export const Agent = Schema.Struct({
     title: 'Filter events',
     description: 'Allow the agent to filter events.',
   }),
+
+  /**
+   * Cron expression for a timer trigger that invokes the agent worker on a schedule.
+   * The timer trigger bypasses the qualifier and goes straight to the agent worker.
+   */
+  cron: Schema.optional(Schema.String).annotations({
+    title: 'Cron',
+    description: 'Cron expression for a timer trigger that invokes the agent on a schedule.',
+  }),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.agent',
@@ -118,6 +135,7 @@ export const makeInitialized = (
       artifacts: props.artifacts ?? [],
       subscriptions: props.subscriptions ?? [],
       filterEvents: props.filterEvents ?? true,
+      enabled: props.enabled ?? true,
     });
     yield* Database.add(agent);
     const feed = yield* Database.add(Feed.make());
@@ -147,7 +165,7 @@ export const makeInitialized = (
 
     const inputQueue = yield* QueueService.createQueue();
 
-    Obj.change(agent, (agent) => {
+    Obj.update(agent, (agent) => {
       agent.chat = Ref.make(chat);
       agent.queue = Ref.fromDXN(inputQueue.dxn);
     });
@@ -198,7 +216,7 @@ export const resetChatHistory = (
       }),
     );
     Obj.setParent(feed, chat);
-    Obj.change(agent, (agent) => {
+    Obj.update(agent, (agent) => {
       agent.chat = Ref.make(chat);
     });
 

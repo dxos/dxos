@@ -16,21 +16,25 @@ import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
-import { useApp } from '@dxos/app-framework/ui';
+import { Placeholder, type PlaceholderComponentProps, useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
+import { Composer } from '@dxos/brand';
 import { runAndForwardErrors } from '@dxos/effect';
-import { LogBuffer, LogLevel, log } from '@dxos/log';
+import { LogLevel, log } from '@dxos/log';
+import { IdbLogStore } from '@dxos/log-store-idb';
 import { Observability } from '@dxos/observability';
-import { observabilityTranslations } from '@dxos/plugin-observability';
+import { translations as observabilityTranslations } from '@dxos/plugin-observability/translations';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { defaultTx } from '@dxos/ui-theme';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
-import { Placeholder, ResetDialog } from './components';
+import { ResetDialog } from './components';
 import { initializeObservability, PARAM_PROFILER, setupConfig } from './config';
 import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
-import { APP_KEY } from './constants';
+import { APP_KEY, LOG_STORE_DB_NAME } from './constants';
+import { showDevRssBanner } from './dev-rss-banner';
+import { downloadLogs } from './log-download';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
 import { startupProfiler } from './profiler';
 import { translations } from './translations';
@@ -52,31 +56,34 @@ declare global {
   }
 
   // Debug hook: run `downloadLogs()` from devtools to save buffered logs (same as Reset dialog).
-  var downloadLogs: () => void;
-
-  interface Window {
-    /**
-     * Native-DOM boot loader driver injected by `bootLoaderPlugin`
-     * (`@dxos/app-framework/vite-plugin`). `status()` updates the visible
-     * status line; `progress(fraction)` switches the bar from the
-     * indeterminate slide to a determinate fill at `fraction` ∈ [0, 1] (or
-     * pass a negative value / omit to revert to indeterminate); `dismiss()`
-     * removes the loader after React mounts.
-     */
-    __bootLoader?: {
-      status: (text: string) => void;
-      progress: (fraction?: number) => void;
-      dismiss: () => void;
-    };
-  }
+  var downloadLogs: () => Promise<void>;
 }
+
+// `window.__bootLoader` is declared globally by `@dxos/app-framework/ui`
+// (alongside the React `Placeholder` that calls `dismiss()`).
 
 /**
  * Updates the native-DOM boot loader text. No-op once React has replaced #root.
  * The CSS animation in `index.html` keeps painting on the compositor thread
  * regardless of main-thread work, so this is purely textual feedback.
  */
-const bootStatus = (text: string) => window.__bootLoader?.status(text);
+const bootStatus = (text: string) => window.__bootLoader?.status({ humanized: text });
+
+// Stamp every (re-)evaluation of this module so we can tell Vite HMR reloads
+// from a true page boot. Dev-only — production has no HMR and the diagnostic
+// would just be noise. `import.meta.env.DEV` is statically replaced at build
+// time, so the whole block tree-shakes out of prod bundles.
+const BOOT_ID = import.meta.env?.DEV ? Math.random().toString(36).slice(2, 10) : '';
+const MODULE_EVAL_TIME = Date.now();
+if (import.meta.env?.DEV) {
+  log('composer main: module evaluated', { bootId: BOOT_ID, t: MODULE_EVAL_TIME });
+  const importMeta = import.meta as any;
+  if (importMeta.hot) {
+    importMeta.hot.dispose(() => {
+      log('composer main: hmr dispose', { bootId: BOOT_ID, ageMs: Date.now() - MODULE_EVAL_TIME });
+    });
+  }
+}
 
 /**
  * Picks the platform-appropriate offline asset cache for third-party plugins.
@@ -101,6 +108,16 @@ const createAssetCache = async (isTauri: boolean): Promise<PluginAssetCache.Cach
 };
 
 const main = async () => {
+  if (import.meta.env?.DEV) {
+    log('composer main: main() running', { bootId: BOOT_ID });
+    // Fire-and-forget: surfaces the latest entry from a dev RSS feed under
+    // the boot loader as a small distraction during cold boots. Routed
+    // through the Vite dev server's `/api/rss` proxy (see vite.config.ts)
+    // to dodge CORS. Tree-shakes out of prod via the `import.meta.env.DEV`
+    // gate above.
+    void showDevRssBanner();
+  }
+
   const url = new URL(window.location.href);
   const safeMode = isTrue(url.searchParams.get(PARAM_SAFE_MODE), false);
   if (safeMode) {
@@ -122,26 +139,11 @@ const main = async () => {
 
   TRACE_PROCESSOR.setInstanceTag('app');
 
-  const logBuffer = new LogBuffer();
-  log.addProcessor(logBuffer.logProcessor);
+  const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME });
+  log.addProcessor(logStore.processor);
 
-  // Mirrors `useFileDownload` from `@dxos/react-ui` (used by `ResetDialog`).
-  const downloadFile = (data: Blob | string, filename: string) => {
-    const url = typeof data === 'string' ? data : URL.createObjectURL(data);
-    const element = document.createElement('a');
-    element.setAttribute('href', url);
-    element.setAttribute('download', filename);
-    element.setAttribute('target', 'download');
-    element.click();
-  };
-
-  // TODO(dmaretskyi): Hookup to a button in the sidebar/devtools.
-  globalThis.downloadLogs = () => {
-    const ndjson = logBuffer.serialize();
-    const file = new Blob([ndjson], { type: 'application/x-ndjson' });
-    const fileName = `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson`;
-    downloadFile(file, fileName);
-  };
+  // Devtools convenience — also surfaced via the help panel and ResetDialog UI.
+  globalThis.downloadLogs = () => downloadLogs(logStore);
 
   profiler?.mark('dynamic-imports:start');
   bootStatus('Loading framework…');
@@ -201,7 +203,7 @@ const main = async () => {
 
   // Intentionally do not await; the buffering backend in TRACE_PROCESSOR captures
   // early spans and replays them once the real OTEL backend registers.
-  const observability = initializeObservability(config, isTauri, logBuffer);
+  const observability = initializeObservability(config, isTauri, logStore);
 
   // Capture a one-shot `composer.startup` event when the framework dispatches
   // `app-framework:startup-activated`. Includes total ms, per-phase ms, top-5
@@ -365,7 +367,7 @@ const main = async () => {
     config,
     services,
     observability,
-    logBuffer,
+    logStore,
 
     isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
     isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA),
@@ -383,17 +385,23 @@ const main = async () => {
   const [builtinPlugins, remotePluginsResult] = await Promise.all([
     getPlugins(conf, {
       onPluginLoaded: (loaded, total) => {
-        bootStatus(`Loading plugins (${loaded}/${total})`);
-        // Drive the determinate progress bar — flips the bar out of its
-        // indeterminate slide animation and grows it as chunks land.
-        window.__bootLoader?.progress(loaded / total);
+        // Pass `range` so the loader updates the existing line in place
+        // ("Loading plugins (12/80)") instead of appending a fresh entry per
+        // plugin tick — keeps the visible log compact and the boot trace
+        // collapses the (i/n) sequence into one transition.
+        window.__bootLoader?.status({ humanized: 'Loading plugins', range: { index: loaded, total } });
+        // The ring spans two phases — plugin chunks (0 → 50%) and module
+        // activation (50 → 100%, driven from `Placeholder` once React mounts).
+        // Splitting the range keeps it monotonic across the boundary.
+        window.__bootLoader?.progress((loaded / total) * 0.5);
       },
     }),
     runAndForwardErrors(UrlLoader.preload({ cache: assetCache })),
   ]);
 
   bootStatus('Starting Composer…');
-  window.__bootLoader?.progress(1);
+  // Park the ring at 50% — chunks done, activation about to take over.
+  window.__bootLoader?.progress(0.5);
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
@@ -422,7 +430,7 @@ const main = async () => {
         <Tooltip.Provider>
           <ResetDialog
             error={error}
-            logBuffer={logBuffer}
+            logStore={logStore}
             observability={observability}
             needRefresh={needRefresh}
             onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
@@ -433,10 +441,14 @@ const main = async () => {
     );
   };
 
+  const ComposerPlaceholder = (props: PlaceholderComponentProps) => (
+    <Placeholder {...props} logo={(logoProps) => <Composer {...logoProps} />} />
+  );
+
   const Main = () => {
     const App = useApp({
       fallback: Fallback,
-      placeholder: Placeholder,
+      placeholder: ComposerPlaceholder,
       pluginLoader,
       onPluginRemove,
       plugins,
@@ -455,6 +467,7 @@ const main = async () => {
   };
 
   const root = document.getElementById('root')!;
+  log('composer main: rendering App', { bootId: BOOT_ID, strict: conf.isStrict });
   if (conf.isStrict) {
     createRoot(root).render(
       <StrictMode>

@@ -13,7 +13,6 @@ import { Format, LabelAnnotation, SystemTypeAnnotation } from '@dxos/echo/intern
 export const LegacyAccessToken = Schema.Struct({
   source: Schema.String,
   token: Schema.String,
-  note: Schema.optional(Schema.String),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.access-token',
@@ -24,29 +23,26 @@ export const LegacyAccessToken = Schema.Struct({
 
 export interface LegacyAccessToken extends Schema.Schema.Type<typeof LegacyAccessToken> {}
 
-// TODO(burdon): Add scopes.
 export const AccessToken = Schema.Struct({
   source: Format.Hostname.annotations({
     title: 'Source',
     description: 'The domain name of the service that issued the token.',
     examples: ['github.com'],
   }),
-  account: Schema.optional(
-    Schema.String.annotations({
-      title: 'Account',
-      description: 'The account associated with the token.',
-    }),
-  ),
+  account: Schema.String.annotations({
+    title: 'Account',
+    description: 'The account associated with the token.',
+  }).pipe(Schema.optional),
   token: Schema.String.annotations({
     title: 'Token',
     description: 'The token provided by the service.',
   }),
-  note: Schema.optional(
-    Schema.String.annotations({
-      title: 'Note',
-      description: 'User-provided note about the token.',
-    }),
-  ),
+  scopes: Schema.Array(Schema.String)
+    .annotations({
+      title: 'Scopes',
+      description: 'The scopes granted to this token by the service.',
+    })
+    .pipe(Schema.optional),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.accessToken',
@@ -55,7 +51,7 @@ export const AccessToken = Schema.Struct({
   Schema.annotations({
     description: 'A credential or token for accessing a service.',
   }),
-  LabelAnnotation.set(['note', 'account', 'source']), // Note, then account as first precedence to differentiate multiple google tokens.
+  LabelAnnotation.set(['account', 'source']), // Account first (e.g. email from /members/me); source as fallback.
   Annotation.IconAnnotation.set({
     icon: 'ph--key--regular',
     hue: 'yellow',

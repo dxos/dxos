@@ -18,8 +18,8 @@ import { useGraphModel } from '#hooks';
 
 export type ExplorerContainerProps = AppSurface.ObjectArticleProps<View.View>;
 
-export const ExplorerContainer = ({ role, subject: view, attendableId: _attendableId }: ExplorerContainerProps) => {
-  useObject(view);
+export const ExplorerContainer = ({ role, subject, attendableId: _attendableId }: ExplorerContainerProps) => {
+  const [view] = useObject(subject);
   const space = view && getSpace(view);
   const [filter, setFilter] = useState<Filter.Any>();
   const model = useGraphModel(space, filter);

@@ -4,10 +4,10 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { getCollectionsPath, getObjectPath, getTypePath } from '@dxos/app-toolkit';
-import { Database, Obj, View } from '@dxos/echo';
+import { Operation } from '@dxos/compute';
+import { Database, Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 import { CollectionModel, ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
 
@@ -37,11 +37,10 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
         },
       });
 
-      const [schema] = db.schemaRegistry.query({ typename, location: ['runtime'] }).runSync();
-      const isViewSchema = schema !== undefined && ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false));
-      const view = isViewSchema
-        ? yield* Effect.promise(() => (object as Obj.Any).view.load() as Promise<View.View>)
-        : undefined;
+      const [runtimeSchema] = db.schemaRegistry.query({ typename, location: ['runtime'] }).runSync();
+      const echoViewPath =
+        runtimeSchema !== undefined ? ViewAnnotation.get(runtimeSchema).pipe(Option.getOrElse(() => [])) : [];
+      const view = echoViewPath.length > 0 ? yield* ViewAnnotation.tryLoadAtPath(object, echoViewPath) : undefined;
       const viewTargetTypename = view ? getTypenameFromQuery(view.query.ast) : undefined;
       const subject = getSubjectPathForNewObject({
         spaceId: db.spaceId,

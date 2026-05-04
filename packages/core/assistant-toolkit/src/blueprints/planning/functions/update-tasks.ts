@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
 import { Plan, Agent } from '../../../types';
@@ -17,7 +17,7 @@ export default UpdateTasks.pipe(
       const agent = yield* Agent.getFromChatContext;
       const plan = yield* Database.load(agent.plan);
 
-      Obj.change(plan, (plan) => {
+      Obj.update(plan, (plan) => {
         for (const task of newTasks) {
           const existingTask = plan.tasks.find((t) => t.id === task.id);
           if (existingTask) {

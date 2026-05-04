@@ -11,12 +11,13 @@ import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui'
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { AiContextBinder } from '@dxos/assistant';
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { translations, useContextBinder } from '@dxos/plugin-assistant';
+import { useContextBinder } from '@dxos/plugin-assistant';
+import { translations } from '@dxos/plugin-assistant/translations';
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';

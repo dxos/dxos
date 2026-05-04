@@ -7,7 +7,8 @@ import React, { ComponentPropsWithRef, forwardRef, PropsWithChildren } from 'rea
 import { Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { hoverableControlItem, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
-import { translationKey } from '../translations';
+import { translationKey } from '#translations';
+
 import type { ThreadEntity } from '../types';
 
 // TODO(burdon): Avoid exporting fragments.

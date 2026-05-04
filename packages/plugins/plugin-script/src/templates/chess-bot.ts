@@ -6,8 +6,8 @@ import { Chess as ChessJS } from 'chess.js';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { Chess } from '@dxos/plugin-chess/types';
 
 const ChessBot = Operation.make({
@@ -51,7 +51,7 @@ export default ChessBot.pipe(
 
       chess.move(move.san);
       const newPgn = chess.pgn();
-      Obj.change(loadedGame, (loadedGame) => {
+      Obj.update(loadedGame, (loadedGame) => {
         loadedGame.pgn = newPgn;
       });
       yield* Database.flush();

@@ -21,7 +21,7 @@ export const FormCard = ({ subject, projection }: AppSurface.ObjectCardProps & {
 
   const handleSave = useCallback((values: any, { changed }: { changed: Record<string, boolean> }) => {
     const paths = Object.keys(changed).filter((path) => changed[path]);
-    Obj.change(subject, () => {
+    Obj.update(subject, () => {
       for (const path of paths) {
         const value = values[path];
         const parts = splitJsonPath(path as JsonPath);

@@ -20,7 +20,7 @@ type AddProps = {
 export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
   const objectRef = Ref.make(object);
   if (Collection.isCollection(target)) {
-    Obj.change(target, (target) => {
+    Obj.update(target, (target) => {
       target.objects.push(objectRef);
     });
   } else if (hidden) {
@@ -33,13 +33,13 @@ export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
     const collectionRef: Ref.Ref<Collection.Collection> | undefined = properties[Collection.Collection.typename];
     if (collectionRef) {
       const collection = yield* Effect.promise(() => collectionRef.load());
-      Obj.change(collection, (collection) => {
+      Obj.update(collection, (collection) => {
         collection.objects.push(objectRef);
       });
     } else {
       const newCollection = Collection.make({ objects: [objectRef] });
       const collectionRef = Ref.make(newCollection);
-      Obj.change(properties, (properties) => {
+      Obj.update(properties, (properties) => {
         properties[Collection.Collection.typename] = collectionRef;
       });
     }

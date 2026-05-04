@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown';
+import { type MarkdownExtensionProvider, MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { getSpace } from '@dxos/react-client/echo';
 
 import { WnfsCapabilities } from '#types';
@@ -17,18 +17,22 @@ export default Capability.makeModule(
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    return Capability.contributes(MarkdownCapabilities.Extensions, [
-      ({ document }: { document?: any }) => {
-        const blockstore = capabilities.get(WnfsCapabilities.Blockstore);
-        const instances = capabilities.get(WnfsCapabilities.Instances);
+    const provider: MarkdownExtensionProvider = ({ document, viewMode }) => {
+      if (viewMode === 'source') {
+        return undefined;
+      }
 
-        if (document) {
-          const space = getSpace(document);
-          return space ? [image({ blockstore, instances, space })] : [];
-        }
+      const blockstore = capabilities.get(WnfsCapabilities.Blockstore);
+      const instances = capabilities.get(WnfsCapabilities.Instances);
 
-        return [];
-      },
-    ]);
+      if (document) {
+        const space = getSpace(document);
+        return space ? [image({ blockstore, instances, space })] : undefined;
+      }
+
+      return undefined;
+    };
+
+    return Capability.contributes(MarkdownCapabilities.Extensions, [provider]);
   }),
 );

@@ -11,12 +11,12 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Blueprint, Routine } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation/hooks';
 import { Graph } from '@dxos/plugin-explorer/types';
 import { DropdownMenu, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -69,7 +69,7 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
             if (!graph) {
               const { view } = await ViewModel.makeFromDatabase({ db });
               const newGraph = Graph.make({ query: { ast }, view });
-              Obj.change(notebook!, (obj) => {
+              Obj.update(notebook!, (obj) => {
                 const c = obj.cells.find((c) => c.id === cell.id);
                 if (c) {
                   c.graph = Ref.make(newGraph);
@@ -77,7 +77,7 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
                 }
               });
             } else {
-              Obj.change(graph, (graph) => {
+              Obj.update(graph, (graph) => {
                 graph.query.ast = ast as Obj.Mutable<typeof ast>;
               });
             }
@@ -136,7 +136,7 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
       const from = notebook.cells.findIndex((cell) => cell.id === source.id);
       const to = notebook.cells.findIndex((cell) => cell.id === target.id);
       if (from != null && to != null) {
-        Obj.change(notebook, (notebook) => {
+        Obj.update(notebook, (notebook) => {
           const cell = notebook.cells.splice(from, 1)[0];
           if (cell) {
             notebook.cells.splice(to, 0, cell);
@@ -165,14 +165,14 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
             const blueprints = objects
               .filter((blueprint) => INCLUDE_BLUEPRINTS.includes(blueprint.key))
               .map((blueprint) => Ref.make(blueprint));
-            cell.prompt = Ref.make(Prompt.make({ instructions: '', blueprints }));
+            cell.prompt = Ref.make(Routine.make({ instructions: '', blueprints }));
           }
           break;
         }
       }
 
       const idx = after ? notebook.cells.findIndex((cell) => cell.id === after) : notebook.cells.length;
-      Obj.change(notebook, (notebook) => {
+      Obj.update(notebook, (notebook) => {
         notebook.cells.splice(idx, 0, cell);
       });
     },
@@ -184,7 +184,7 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
       invariant(notebook);
       const idx = notebook.cells.findIndex((cell) => cell.id === id);
       if (idx !== -1) {
-        Obj.change(notebook, (notebook) => {
+        Obj.update(notebook, (notebook) => {
           notebook.cells.splice(idx, 1);
         });
       }
@@ -233,7 +233,7 @@ const runPrompt = Effect.fn(function* ({
   input,
   onResult,
 }: {
-  prompt: Ref.Ref<Prompt.Prompt>;
+  prompt: Ref.Ref<Routine.Routine>;
   input: Record<string, any>;
   onResult: (result: string) => void;
 }) {

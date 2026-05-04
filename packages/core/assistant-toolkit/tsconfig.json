@@ -12,9 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../common/context"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -51,9 +48,6 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-mosaic"
-    },
-    {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
@@ -66,10 +60,7 @@
       "path": "../assistant"
     },
     {
-      "path": "../blueprints"
-    },
-    {
-      "path": "../conductor"
+      "path": "../compute"
     },
     {
       "path": "../echo/echo"
@@ -81,16 +72,7 @@
       "path": "../echo/echo-protocol"
     },
     {
-      "path": "../functions"
-    },
-    {
       "path": "../functions-runtime"
-    },
-    {
-      "path": "../mesh/edge-client"
-    },
-    {
-      "path": "../operation"
     }
   ]
 }

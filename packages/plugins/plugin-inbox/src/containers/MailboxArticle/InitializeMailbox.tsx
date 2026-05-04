@@ -5,16 +5,17 @@
 import React, { type ReactNode, useCallback, useState } from 'react';
 
 import { Surface, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
-import { Obj } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
+import { Integration } from '@dxos/plugin-integration/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
-import { Button, IconButton, Message, useTranslation } from '@dxos/react-ui';
-import { AccessToken } from '@dxos/types';
+import { IconButton, Message, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { InboxOperation } from '#operations';
 import { type Mailbox } from '#types';
+
+import { GMAIL_PROVIDER_ID } from '../../constants';
 
 export type InitializeMailboxProps = {
   mailbox: Mailbox.Mailbox;
@@ -29,31 +30,31 @@ export const InitializeMailbox = composable<HTMLDivElement, InitializeMailboxPro
     const { invokePromise } = useOperationInvoker();
     const pluginManager = usePluginManager();
     const db = Obj.getDatabase(mailbox);
-    const tokens = useQuery(db, Filter.type(AccessToken.AccessToken));
     const [syncing, setSyncing] = useState(false);
 
-    const handleOpenSettings = useCallback(() => {
-      if (db) {
-        void invokePromise(LayoutOperation.Open, {
-          subject: [`${getSpacePath(db.spaceId)}/settings/org.dxos.plugin.token-manager.integrations`],
-          workspace: getSpacePath(db.spaceId),
-        });
-      }
-    }, [db, invokePromise]);
+    const integrations = useQuery(db, Filter.type(Integration.Integration));
+    const mailboxIntegration = integrations.find((integration) =>
+      integration.targets.some((target) => target.object?.dxn.asEchoDXN()?.echoId === mailbox.id),
+    );
 
     const handleSync = useCallback(async () => {
+      if (!mailboxIntegration) {
+        return;
+      }
       setSyncing(true);
       try {
-        await invokePromise(InboxOperation.SyncMailbox, { mailbox });
+        await invokePromise(InboxOperation.SyncMailbox, {
+          integration: Ref.make(mailboxIntegration),
+          mailbox: Ref.make(mailbox),
+        });
       } finally {
         setSyncing(false);
       }
-    }, [invokePromise, mailbox]);
+    }, [invokePromise, mailbox, mailboxIntegration]);
 
     let message: string | undefined;
     let action: ReactNode;
-    const token = tokens.find((token) => token.source.includes('google'));
-    if (token) {
+    if (mailboxIntegration) {
       action = (
         <IconButton
           disabled={syncing}
@@ -66,14 +67,10 @@ export const InitializeMailbox = composable<HTMLDivElement, InitializeMailboxPro
       );
     } else {
       message = t('no-integrations.label');
-      const data = { source: 'google.com' };
+      const data = { providerId: GMAIL_PROVIDER_ID, existingTarget: Ref.make(mailbox) };
       action = Surface.isAvailable(pluginManager.capabilities, { role: 'integration--auth', data }) ? (
         <Surface.Surface role='integration--auth' data={data} limit={1} />
-      ) : (
-        <Button variant='primary' onClick={handleOpenSettings}>
-          {t('manage-integrations-button.label')}
-        </Button>
-      );
+      ) : null;
     }
 
     return (

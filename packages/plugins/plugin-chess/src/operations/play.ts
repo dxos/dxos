@@ -5,8 +5,8 @@
 import { Chess as ChessJS } from 'chess.js';
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 
 import { type Chess } from '../types';
 import { Play } from './definitions';
@@ -33,7 +33,7 @@ const handler: Operation.WithHandler<typeof Play> = Play.pipe(
 
       chess.move(move, { strict: false });
       const pgn = chess.pgn();
-      Obj.change(object, (object) => {
+      Obj.update(object, (object) => {
         const mutableGame = object as Obj.Mutable<typeof object>;
         mutableGame.pgn = pgn;
       });

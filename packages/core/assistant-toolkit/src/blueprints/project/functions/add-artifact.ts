@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 
 import { Agent } from '../../../types';
 import { AddArtifact } from './definitions';
@@ -19,7 +19,7 @@ export default AddArtifact.pipe(
 
       const agent = yield* Agent.getFromChatContext;
 
-      Obj.change(agent, (agent) => {
+      Obj.update(agent, (agent) => {
         agent.artifacts.push({
           name,
           data: artifact,

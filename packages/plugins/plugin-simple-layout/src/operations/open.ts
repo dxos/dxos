@@ -9,8 +9,8 @@ import {
   createEdgeExistenceChecker,
   validateNavigationTarget,
 } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
-import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { layoutStateAccess } from './state-access';

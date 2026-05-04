@@ -60,7 +60,7 @@ export const Todos = () => {
       todoRefs.map(async (ref) => {
         const todo = await ref.load();
         if (todo.completed !== checked) {
-          Obj.change(todo, (todo) => {
+          Obj.update(todo, (todo) => {
             todo.completed = checked;
           });
         }
@@ -69,19 +69,25 @@ export const Todos = () => {
   };
 
   const handleClearCompleted = async () => {
-    if (!listSnapshot) return;
+    if (!listSnapshot) {
+      return;
+    }
     // Load all todos and find completed ones.
     const loadedTodos = await Promise.all(todoRefs.map((ref) => ref.load()));
     // Build set of ref DXNs to remove.
     const completedRefDxns = new Set<string>();
     for (let i = 0; i < todoRefs.length; i++) {
-      if (loadedTodos[i]?.completed) completedRefDxns.add(todoRefs[i].dxn.toString());
+      if (loadedTodos[i]?.completed) {
+        completedRefDxns.add(todoRefs[i].dxn.toString());
+      }
     }
 
     // Remove completed refs from the list (splice from end so indices stay valid).
     updateList((l) => {
       for (let i = l.todos.length - 1; i >= 0; i--) {
-        if (completedRefDxns.has(l.todos[i].dxn.toString())) l.todos.splice(i, 1);
+        if (completedRefDxns.has(l.todos[i].dxn.toString())) {
+          l.todos.splice(i, 1);
+        }
       }
     });
 
@@ -128,7 +134,9 @@ export const Todos = () => {
                   const dxn = ref.dxn.toString();
                   updateList((l) => {
                     const idx = l.todos.findIndex((r) => r.dxn.toString() === dxn);
-                    if (idx !== -1) l.todos.splice(idx, 1);
+                    if (idx !== -1) {
+                      l.todos.splice(idx, 1);
+                    }
                   });
                   space?.db.remove(todo);
                 }}

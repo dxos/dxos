@@ -7,11 +7,12 @@ import * as Effect from 'effect/Effect';
 import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework';
 import { APP_DOMAIN } from '@dxos/app-toolkit';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
-import { type LogBuffer } from '@dxos/log';
+import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
 import { isTruthy } from '@dxos/util';
 
 import { steps } from './help';
+import { downloadLogs } from './log-download';
 import { WelcomePlugin } from './plugins';
 
 const APP_LINK_ORIGIN = new URL('https://' + APP_DOMAIN).origin;
@@ -21,7 +22,7 @@ export type State = {
   config: Config;
   services: ClientServicesProvider;
   observability: Promise<Observability.Observability>;
-  logBuffer: LogBuffer;
+  logStore: IdbLogStore;
 };
 
 export type PluginConfig = State & {
@@ -62,11 +63,14 @@ const ID = {
   DEBUG: 'org.dxos.plugin.debug',
   DECK: 'org.dxos.plugin.deck',
   DISCORD: 'org.dxos.plugin.discord',
+  DOCTOR: 'org.dxos.plugin.doctor',
   EXPLORER: 'org.dxos.plugin.explorer',
   FEED: 'org.dxos.plugin.feed',
+  GALLERY: 'org.dxos.plugin.gallery',
   GRAPH: 'org.dxos.plugin.graph',
   HELP: 'org.dxos.plugin.help',
   INBOX: 'org.dxos.plugin.inbox',
+  INTEGRATION: 'org.dxos.plugin.integration',
   IROH_BEACON: 'org.dxos.plugin.iroh-beacon',
   KANBAN: 'org.dxos.plugin.kanban',
   MAP: 'org.dxos.plugin.map',
@@ -94,8 +98,8 @@ const ID = {
   SIMPLE_LAYOUT: 'org.dxos.plugin.simple-layout',
   SKETCH: 'org.dxos.plugin.sketch',
   SPACE: 'org.dxos.plugin.space',
+  CODE: 'org.dxos.plugin.code',
   SPACETIME: 'org.dxos.plugin.spacetime',
-  SPEC: 'org.dxos.plugin.spec',
   SPOTLIGHT: 'org.dxos.plugin.spotlight',
   STACK: 'org.dxos.plugin.stack',
   STATUS_BAR: 'org.dxos.plugin.status-bar',
@@ -103,8 +107,8 @@ const ID = {
   THEME: 'org.dxos.plugin.theme',
   THREAD: 'org.dxos.plugin.thread',
   TICTACTOE: 'org.dxos.plugin.tictactoe',
-  TOKEN_MANAGER: 'org.dxos.plugin.token-manager',
   TRANSCRIPTION: 'org.dxos.plugin.transcription',
+  TRELLO: 'org.dxos.plugin.trello',
   VOXEL: 'org.dxos.plugin.voxel',
   WNFS: 'org.dxos.plugin.wnfs',
   ZEN: 'org.dxos.plugin.zen',
@@ -120,6 +124,7 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     ID.CRX_BRIDGE,
     ID.GRAPH,
     ID.HELP,
+    ID.INTEGRATION,
     layoutPluginId,
     isTauri && !isMobile && !isPopover && ID.NATIVE,
     OperationPlugin.meta.id,
@@ -134,7 +139,6 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     ID.SPACE,
     ID.STATUS_BAR,
     ID.THEME,
-    ID.TOKEN_MANAGER,
     WelcomePlugin.meta.id,
   ]
     .filter(isTruthy)
@@ -144,6 +148,7 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
 export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] =>
   [
     // Default
+    ID.GALLERY,
     ID.INBOX,
     ID.KANBAN,
     ID.MARKDOWN,
@@ -154,7 +159,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     ID.THREAD,
     ID.WNFS,
 
-    ID.SPEC,
+    ID.CODE,
 
     // Dev
     isDev && ID.DEBUG,
@@ -165,7 +170,6 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     // Labs
     (isDev || isLabs) && [
       ID.ASSISTANT,
-      ID.DAILY_SUMMARY,
       ID.DISCORD,
       ID.FEED,
       ID.IROH_BEACON,
@@ -209,7 +213,7 @@ export const getPlugins = async (
     config,
     services,
     observability,
-    logBuffer,
+    logStore,
     isDev,
     isLocal,
     isLabs,
@@ -253,8 +257,10 @@ export const getPlugins = async (
     { DebugPlugin },
     { DeckPlugin },
     { DiscordPlugin },
+    { DoctorPlugin },
     { ExplorerPlugin },
     { FeedPlugin },
+    { GalleryPlugin },
     { GraphPlugin },
     { HelpPlugin },
     { InboxPlugin },
@@ -285,8 +291,8 @@ export const getPlugins = async (
     { SimpleLayoutPlugin },
     { SketchPlugin },
     { SpacePlugin },
+    { CodePlugin },
     { SpacetimePlugin },
-    { SpecPlugin },
     { SpotlightPlugin },
     { StackPlugin },
     { StatusBarPlugin },
@@ -294,8 +300,9 @@ export const getPlugins = async (
     { ThemePlugin },
     { ThreadPlugin },
     { TicTacToePlugin },
-    { TokenManagerPlugin },
+    { IntegrationPlugin },
     { TranscriptionPlugin },
+    { TrelloPlugin },
     { VoxelPlugin },
     { WnfsPlugin },
     { ZenPlugin },
@@ -313,8 +320,10 @@ export const getPlugins = async (
     track(import('@dxos/plugin-debug')),
     track(import('@dxos/plugin-deck')),
     track(import('@dxos/plugin-discord')),
+    track(import('@dxos/plugin-doctor')),
     track(import('@dxos/plugin-explorer')),
     track(import('@dxos/plugin-feed')),
+    track(import('@dxos/plugin-gallery')),
     track(import('@dxos/plugin-graph')),
     track(import('@dxos/plugin-help')),
     track(import('@dxos/plugin-inbox')),
@@ -345,8 +354,8 @@ export const getPlugins = async (
     track(import('@dxos/plugin-simple-layout')),
     track(import('@dxos/plugin-sketch')),
     track(import('@dxos/plugin-space')),
+    track(import('@dxos/plugin-code')),
     track(import('@dxos/plugin-spacetime')),
-    track(import('@dxos/plugin-spec')),
     track(import('@dxos/plugin-spotlight')),
     track(import('@dxos/plugin-stack')),
     track(import('@dxos/plugin-status-bar')),
@@ -354,8 +363,9 @@ export const getPlugins = async (
     track(import('@dxos/plugin-theme')),
     track(import('@dxos/plugin-thread')),
     track(import('@dxos/plugin-tictactoe')),
-    track(import('@dxos/plugin-token-manager')),
+    track(import('@dxos/plugin-integration')),
     track(import('@dxos/plugin-transcription')),
+    track(import('@dxos/plugin-trello')),
     track(import('@dxos/plugin-voxel')),
     track(import('@dxos/plugin-wnfs')),
     track(import('@dxos/plugin-zen')),
@@ -392,10 +402,12 @@ export const getPlugins = async (
     CrxPlugin(),
     CrxBridgePlugin(),
     DailySummaryPlugin(),
-    DebugPlugin({ logBuffer }),
+    DebugPlugin({ logStore }),
     DiscordPlugin(),
+    DoctorPlugin(),
     ExplorerPlugin(),
     FeedPlugin(),
+    GalleryPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),
@@ -410,11 +422,12 @@ export const getPlugins = async (
     MeetingPlugin(),
     MermaidPlugin(),
     isTauri && !isMobile && !isPopover && NativePlugin(),
-    NativeFilesystemPlugin(),
+    isTauri && !isMobile && !isPopover && NativeFilesystemPlugin(),
     NavTreePlugin(),
     ObservabilityPlugin({
       namespace: appKey,
       observability: () => observability,
+      downloadLogs: () => downloadLogs(logStore),
     }),
     OutlinerPlugin(),
     PipelinePlugin(),
@@ -435,7 +448,7 @@ export const getPlugins = async (
       observability: true,
       shareableLinkOrigin: origin,
     }),
-    SpecPlugin(),
+    CodePlugin(),
     StackPlugin(),
     StatusBarPlugin(),
     TablePlugin(),
@@ -446,8 +459,9 @@ export const getPlugins = async (
     }),
     TicTacToePlugin(),
     ThreadPlugin(),
-    TokenManagerPlugin(),
+    IntegrationPlugin(),
     TranscriptionPlugin(),
+    TrelloPlugin(),
     VoxelPlugin(),
     WelcomePlugin(),
     WnfsPlugin(),

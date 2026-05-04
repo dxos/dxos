@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 import { Thread } from '@dxos/types';
 
@@ -31,7 +31,7 @@ const handler: Operation.WithHandler<typeof DeleteMessage> = DeleteMessage.pipe(
         return { messageIndex: -1 };
       }
 
-      Obj.change(thread, (thread) => {
+      Obj.update(thread, (thread) => {
         thread.messages.splice(msgIndex, 1);
       });
 

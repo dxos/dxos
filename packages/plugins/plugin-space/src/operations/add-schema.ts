@@ -3,8 +3,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Plugin } from '@dxos/app-framework';
+import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 
 import { SpaceEvents, SpaceCapabilities } from '../types';
@@ -16,7 +16,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddSchema> = SpaceOpe
       const db = input.db;
       const schemas = yield* Effect.promise(() => db.schemaRegistry.register([input.schema]));
       const schema = schemas[0];
-      Obj.change(schema.persistentSchema, (obj) => {
+      Obj.update(schema.persistentSchema, (obj) => {
         if (input.name) {
           obj.name = input.name;
         }

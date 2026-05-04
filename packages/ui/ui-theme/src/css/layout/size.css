@@ -3,13 +3,26 @@
  */
 
 @layer dx-components {
-  /** 
-   * Registers the element as a size query container. 
+  /**
+   * Registers the element as a size query container.
    * Children can use @container queries to apply styles based on the container's dimensions (both width and height).
-   * Also enables children to use cqi units (e.g., max-w-[100cqi])
+   * Also enables children to use cqi/cqb units (e.g., max-w-[100cqi]).
+   * NOTE: `container-type: size` implies layout/size containment, which breaks CodeMirror's
+   * coordinate measurement (causes blank viewport sections during scroll until a click forces
+   * a re-measure). For editor content where only inline (width-based) queries are needed,
+   * use `.dx-inline-size-container` instead.
    */
   .dx-size-container {
     container-type: size;
+  }
+
+  /**
+   * Inline-only size query container. Provides cqi units for children without the layout
+   * containment side-effects of `container-type: size`. Use this in CodeMirror content
+   * wrappers where size containment would break viewport measurement.
+   */
+  .dx-inline-size-container {
+    container-type: inline-size;
   }
 
   /**

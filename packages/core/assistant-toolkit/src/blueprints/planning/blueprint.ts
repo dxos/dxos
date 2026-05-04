@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type AppCapabilities } from '@dxos/app-toolkit';
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/compute';
 
 import { UpdateTasks } from './functions';
 
@@ -17,7 +16,7 @@ const make = () =>
     tools: Blueprint.toolDefinitions({ operations: [UpdateTasks] }),
   });
 
-const blueprint: AppCapabilities.BlueprintDefinition = {
+const blueprint: Blueprint.Definition = {
   key: BLUEPRINT_KEY,
   make,
 };

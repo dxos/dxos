@@ -35,7 +35,7 @@ export type UseEventHandlerProps<TItem = any, TObject extends Obj.Unknown = Obj.
   make: (object: TObject) => TItem;
 
   /**
-   * Optional change callback for wrapping mutations in Obj.change style.
+   * Optional change callback for wrapping mutations in Obj.update style.
    * When provided, all array mutations will be wrapped in this callback.
    * When not provided, mutations happen directly on the items array.
    */

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 export const Fetch = Operation.make({

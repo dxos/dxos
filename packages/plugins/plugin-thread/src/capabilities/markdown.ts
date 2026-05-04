@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown';
+import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { type EditorState, commentClickedEffect, commentsState, documentId, overlap } from '@dxos/ui-editor';
 
@@ -28,7 +28,9 @@ export default Capability.makeModule(
         return threads({ registry, stateAtom }, doc, invokePromise);
       },
       ({ document: doc }) => {
-        if (!doc) return [];
+        if (!doc) {
+          return [];
+        }
         const registry = capabilities.get(Capabilities.AtomRegistry);
         const stateAtom = capabilities.get(ThreadCapabilities.State);
 
@@ -45,7 +47,9 @@ export default Capability.makeModule(
         });
       },
       ({ document: doc }) => {
-        if (!doc) return [];
+        if (!doc) {
+          return [];
+        }
         const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
 
         return EditorView.updateListener.of((update) => {

@@ -573,6 +573,21 @@ class QueryClass implements Query$.Any {
       options,
     });
   }
+
+  debugLabel(label: string): Query$.Any {
+    if (this.ast.type === 'options') {
+      return new QueryClass({
+        type: 'options',
+        query: this.ast.query,
+        options: { ...this.ast.options, debugLabel: label },
+      });
+    }
+    return new QueryClass({
+      type: 'options',
+      query: this.ast,
+      options: { debugLabel: label },
+    });
+  }
 }
 
 export const Query1: typeof Query$ = QueryClass;
@@ -700,6 +715,9 @@ const prettyQuery = (query: QueryAST.Query): string => {
       const parts: string[] = [];
       if (query.options.deleted !== undefined) {
         parts.push(`deleted: ${JSON.stringify(query.options.deleted)}`);
+      }
+      if (query.options.debugLabel !== undefined) {
+        parts.push(`debugLabel: ${JSON.stringify(query.options.debugLabel)}`);
       }
       return `${prettyQuery(query.query)}.options({ ${parts.join(', ')} })`;
     }

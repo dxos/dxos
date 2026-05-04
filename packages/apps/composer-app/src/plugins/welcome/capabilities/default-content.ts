@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, getCollectionsPath, getSpacePath } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { SpaceEvents } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space/types';
@@ -32,7 +32,7 @@ export default Capability.makeModule(
     if (!space) {
       return Capability.contributes(Capabilities.Null, null);
     }
-    Obj.change(space.properties, (obj) => {
+    Obj.update(space.properties, (obj) => {
       obj.icon = SPACE_ICON;
     });
     const defaultSpaceCollection = space.properties[Collection.Collection.typename].target;
@@ -54,10 +54,10 @@ export default Capability.makeModule(
     space.db.add(readme);
 
     const gettingStarted = space.db.add(Obj.make(Collection.Collection, { name: 'Getting Started', objects: [] }));
-    Obj.change(gettingStarted, (gettingStarted) => {
+    Obj.update(gettingStarted, (gettingStarted) => {
       gettingStarted.objects.push(Ref.make(readme));
     });
-    Obj.change(defaultSpaceCollection, (defaultSpaceCollection) => {
+    Obj.update(defaultSpaceCollection, (defaultSpaceCollection) => {
       defaultSpaceCollection.objects.push(Ref.make(gettingStarted));
     });
 

@@ -7,12 +7,11 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
-import { Prompt } from '@dxos/blueprints';
+import { Routine } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { TestHelpers } from '@dxos/effect/testing';
 import { ObjectId } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
 import { AutomationPlugin } from '@dxos/plugin-automation/cli';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { ClientPlugin } from '@dxos/plugin-client/cli';
@@ -28,8 +27,9 @@ ObjectId.dangerouslyDisableRandomness();
 describe('Agent prompt (composer plugin harness)', () => {
   // Hits AutomationPlugin compute runtime (plugin handlers, AiServiceLayer, blueprints).
   // Requires reachable edge AI (see repo DX_EDGE_AI_SERVICE_URL); not memoized like AssistantTestLayer tests.
-  test.runIf(TestHelpers.tagEnabled('llm'))(
+  test(
     'chat mode appends assistant messages to the chat queue',
+    { tags: ['llm'], timeout: 60_000 },
     async ({ expect }) => {
       await using harness = await createComposerTestApp({
         plugins: [ClientPlugin({}), AssistantPlugin(), AutomationPlugin()],
@@ -50,7 +50,7 @@ describe('Agent prompt (composer plugin harness)', () => {
 
           const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
           const prompt = yield* Database.add(
-            Prompt.make({
+            Routine.make({
               name: 'chat-mode-test',
               instructions: 'Reply with a single word: ack.',
               blueprints: [],
@@ -74,6 +74,5 @@ describe('Agent prompt (composer plugin harness)', () => {
         }),
       );
     },
-    60_000,
   );
 });

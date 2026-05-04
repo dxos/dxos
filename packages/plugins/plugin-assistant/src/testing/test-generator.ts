@@ -4,12 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
+import { ContextQueueService } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
-import { ContextQueueService } from '@dxos/functions';
 import { random } from '@dxos/random';
-import { renderObjectLink, textStream } from '@dxos/react-ui-components';
+import { renderObjectLink, textStream } from '@dxos/react-ui-markdown';
 import { type Actor, type ContentBlock, Message, Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -88,14 +88,14 @@ export const createMessageGenerator = (): MessageGenerator[] => [
 
     yield* Effect.promise(async () => {
       for await (const chunk of textStream(fullText, { wordsPerChunk: 2, chunkDelay: 60 })) {
-        Obj.change(message, (message) => {
+        Obj.update(message, (message) => {
           const block = message.blocks[0] as Mutable<ContentBlock.Text>;
           block.text += chunk;
         });
         // Queue queries only react to queue-level updates, not in-place object mutations.
         await queue.append([]);
       }
-      Obj.change(message, (message) => {
+      Obj.update(message, (message) => {
         const block = message.blocks[0] as Mutable<ContentBlock.Text>;
         block.pending = false;
       });

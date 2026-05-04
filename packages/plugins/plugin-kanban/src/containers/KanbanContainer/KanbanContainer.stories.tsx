@@ -30,10 +30,10 @@ import { ViewModel, getTypenameFromQuery } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
 import { useProjectionModel } from '#hooks';
+import { translations } from '#translations';
 import { Kanban } from '#types';
 
 import { KanbanPlugin } from '../../KanbanPlugin';
-import { translations } from '../../translations';
 
 random.seed(0);
 
@@ -88,7 +88,9 @@ const DefaultComponent = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const [kanban] = useQuery(space?.db, Filter.type(Kanban.Kanban));
-  const typename = kanban?.view.target?.query ? getTypenameFromQuery(kanban.view.target.query.ast) : undefined;
+  const viewRef = kanban && kanban.spec.kind === 'view' ? kanban.spec.view : undefined;
+  const view = viewRef?.target;
+  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(space?.db, typename);
   const projection = useProjectionModel(schema, kanban, registry);
 
@@ -97,15 +99,15 @@ const DefaultComponent = () => {
   const handleUpdateQuery = useCallback(
     (newQuery: QueryAST.Query) => {
       invariant(schema);
-      invariant(kanban?.view.target);
+      invariant(view);
       if (Type.isMutable(schema)) {
         schema.updateTypename(getTypenameFromQuery(newQuery));
       }
-      Obj.change(kanban.view.target, (view) => {
+      Obj.update(view, (view) => {
         view.query.ast = newQuery as Mutable<QueryAST.Query>;
       });
     },
-    [kanban, schema],
+    [view, schema],
   );
 
   const handleDeleteField = useCallback(
@@ -117,7 +119,7 @@ const DefaultComponent = () => {
     [schema, projection],
   );
 
-  if (!schema || !kanban?.view.target) {
+  if (!schema || !view) {
     return null;
   }
 
@@ -128,11 +130,11 @@ const DefaultComponent = () => {
         <ViewEditor
           registry={space?.db.schemaRegistry}
           schema={schema}
-          view={kanban.view.target}
+          view={view}
           onQueryChanged={handleUpdateQuery}
           onDelete={schema && Type.isMutable(schema) ? handleDeleteField : undefined}
         />
-        <Syntax.Root data={{ view: kanban.view.target, schema }}>
+        <Syntax.Root data={{ view, schema }}>
           <Syntax.Content>
             <Syntax.Filter />
             <Syntax.Viewport>

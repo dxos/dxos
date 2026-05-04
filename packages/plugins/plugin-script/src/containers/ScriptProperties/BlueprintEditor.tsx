@@ -5,10 +5,10 @@
 import React, { useCallback, useState } from 'react';
 
 import { ToolId } from '@dxos/ai';
-import { Blueprint, Template } from '@dxos/blueprints';
+import { Blueprint, Template } from '@dxos/compute';
+import { type Script } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { type Script } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, Input, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -48,14 +48,14 @@ export const BlueprintEditor = ({ object }: BlueprintEditorProps) => {
     try {
       if (existingBlueprint) {
         const text = await existingBlueprint.instructions.source.load();
-        Obj.change(text, (text) => {
+        Obj.update(text, (text) => {
           text.content = instructions;
         });
 
         if (fn?.key) {
           const toolId = ToolId.make(fn.key);
           if (!existingBlueprint.tools?.includes(toolId)) {
-            Obj.change(existingBlueprint, (existingBlueprint) => {
+            Obj.update(existingBlueprint, (existingBlueprint) => {
               existingBlueprint.tools = [...(existingBlueprint.tools ?? []), toolId];
             });
           }
