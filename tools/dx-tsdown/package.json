@@ -19,6 +19,7 @@
     "@oxc-project/types": "catalog:",
     "rolldown": "catalog:",
     "tsdown": "catalog:",
+    "typescript": "catalog:",
     "yargs": "catalog:"
   },
   "devDependencies": {
