@@ -12,6 +12,6 @@
   "dependencies": {
     "@dxos/echo-react": "workspace:*",
     "@fixture/pkg-a": "workspace:*",
-    "react": "^19.0.0"
+    "react": "^19.2.5"
   }
 }
