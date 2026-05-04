@@ -9,11 +9,11 @@ import * as Schema from 'effect/Schema';
 import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 
 import { meta } from '../meta';
-import { Spec } from './Spec';
+import * as Spec from './Spec';
 
 export const CodeProject = Schema.Struct({
   name: Schema.optional(Schema.String),
-  spec: Ref.Ref(Spec),
+  spec: Ref.Ref(Spec.Spec),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.codeProject',
@@ -29,5 +29,5 @@ export interface CodeProject extends Schema.Schema.Type<typeof CodeProject> {}
 
 export const isCodeProject = (object: unknown): object is CodeProject => Schema.is(CodeProject)(object);
 
-export const make = ({ name, spec }: { name?: string; spec: Spec }) =>
+export const make = ({ name, spec }: { name?: string; spec: Spec.Spec }) =>
   Obj.make(CodeProject, { name, spec: Ref.make(spec) });

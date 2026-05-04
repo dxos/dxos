@@ -35,8 +35,8 @@ export const CodeSettings = ({ settings, onSettingsChange }: CodeSettingsProps) 
       return;
     }
     if (existing) {
-      Obj.change(existing, (token) => {
-        (token as Obj.Mutable<typeof token>).token = value;
+      Obj.change(existing, (existing) => {
+        (existing as Obj.Mutable<typeof existing>).token = value;
       });
     } else {
       space.db.add(Obj.make(AccessToken.AccessToken, { source: SERVICE, token: value }));
@@ -66,7 +66,7 @@ export const CodeSettings = ({ settings, onSettingsChange }: CodeSettingsProps) 
               <Input.Label>{t('api-key.label')}</Input.Label>
               <Input.TextInput
                 type='password'
-                placeholder={existing ? t('api-key.placeholder.set') : t('api-key.placeholder.empty')}
+                placeholder={existing ? t('api-key.set.placeholder') : t('api-key.empty.placeholder')}
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
               />

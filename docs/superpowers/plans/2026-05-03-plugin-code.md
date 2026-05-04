@@ -70,6 +70,7 @@ Cross-repo touchpoints (Task 1):
 ## Task 1: Rename `plugin-spec` → `plugin-code`
 
 **Files:**
+
 - Move: `packages/plugins/plugin-spec/` → `packages/plugins/plugin-code/`
 - Modify: `packages/plugins/plugin-code/package.json` (name)
 - Modify: `packages/plugins/plugin-code/src/meta.ts`
@@ -96,11 +97,14 @@ git mv packages/plugins/plugin-code/src/SpecPlugin.tsx packages/plugins/plugin-c
 - [ ] **Step 3: Update `package.json`**
 
 Change:
+
 ```json
 "name": "@dxos/plugin-spec",
 "description": "Spec plugin",
 ```
+
 to:
+
 ```json
 "name": "@dxos/plugin-code",
 "description": "Code plugin — Composer plugin for AI-assisted plugin development.",
@@ -134,10 +138,13 @@ export const meta: Plugin.Meta = {
 - [ ] **Step 5: Update `src/CodePlugin.tsx`**
 
 Rename the exported symbol. In the file, replace:
+
 ```ts
 export const SpecPlugin = Plugin.define(meta).pipe(
 ```
+
 with:
+
 ```ts
 export const CodePlugin = Plugin.define(meta).pipe(
 ```
@@ -158,28 +165,37 @@ export * from './CodePlugin';
 - [ ] **Step 7: Update composer-app references**
 
 In `packages/apps/composer-app/package.json` change:
+
 ```json
 "@dxos/plugin-spec": "workspace:*",
 ```
+
 to:
+
 ```json
 "@dxos/plugin-code": "workspace:*",
 ```
 
 In `packages/apps/composer-app/src/plugin-defs.tsx` change:
+
 ```ts
 track(import('@dxos/plugin-spec')),
 ```
+
 to:
+
 ```ts
 track(import('@dxos/plugin-code')),
 ```
 
 In `packages/apps/composer-app/tsconfig.json` change:
+
 ```json
 "path": "../../plugins/plugin-spec"
 ```
+
 to:
+
 ```json
 "path": "../../plugins/plugin-code"
 ```
@@ -214,6 +230,7 @@ EOF
 ## Task 2: Refactor `CodeArticle` onto `Editor.*` primitives with Spec/Code tabs
 
 **Files:**
+
 - Move: `packages/plugins/plugin-code/src/containers/SpecArticle/` → `CodeArticle/`
 - Modify: `packages/plugins/plugin-code/src/containers/CodeArticle/CodeArticle.tsx`
 - Modify: `packages/plugins/plugin-code/src/containers/CodeArticle/CodeArticle.stories.tsx`
@@ -444,6 +461,7 @@ Append to `src/translations.ts` (in the existing `meta.id` namespace):
 - [ ] **Step 7: Update the storybook**
 
 Rename the export and the story title in `CodeArticle.stories.tsx`:
+
 - `SpecArticle` → `CodeArticle`
 - `'Plugins/Spec/SpecArticle'` → `'Plugins/Code/CodeArticle'` (or matching project convention)
 
@@ -479,6 +497,7 @@ EOF
 ## Task 3: Add `CodeProject` ECHO type
 
 **Files:**
+
 - Create: `packages/plugins/plugin-code/src/types/CodeProject.ts`
 - Modify: `packages/plugins/plugin-code/src/types/index.ts`
 - Modify: `packages/plugins/plugin-code/src/CodePlugin.tsx`
@@ -518,8 +537,7 @@ export interface CodeProject extends Schema.Schema.Type<typeof CodeProject> {}
 
 export const isCodeProject = (object: unknown): object is CodeProject => Schema.is(CodeProject)(object);
 
-export const make = ({ name, spec }: { name?: string; spec: Ref.Ref<Spec> }) =>
-  Obj.make(CodeProject, { name, spec });
+export const make = ({ name, spec }: { name?: string; spec: Ref.Ref<Spec> }) => Obj.make(CodeProject, { name, spec });
 ```
 
 - [ ] **Step 2: Update `types/index.ts`**
@@ -619,6 +637,7 @@ EOF
 ## Task 4: Add Settings type + settings capability
 
 **Files:**
+
 - Create: `packages/plugins/plugin-code/src/types/Settings.ts`
 - Create: `packages/plugins/plugin-code/src/capabilities/settings.ts`
 - Modify: `packages/plugins/plugin-code/src/capabilities/index.ts`
@@ -726,6 +745,7 @@ EOF
 ## Task 5: `CodeSettings` container with API-key UI
 
 **Files:**
+
 - Create: `packages/plugins/plugin-code/src/containers/CodeSettings/index.ts`
 - Create: `packages/plugins/plugin-code/src/containers/CodeSettings/CodeSettings.tsx`
 - Create: `packages/plugins/plugin-code/src/containers/CodeSettings/CodeSettings.stories.tsx`
@@ -958,6 +978,7 @@ EOF
 ## Task 6: Stub operations `verifySpec` + `runBuildAgent`
 
 **Files:**
+
 - Create: `packages/plugins/plugin-code/src/operations/index.ts`
 - Create: `packages/plugins/plugin-code/src/operations/definitions.ts`
 - Create: `packages/plugins/plugin-code/src/operations/handlers.ts`
@@ -1145,6 +1166,7 @@ EOF
 ## Task 7: Coder blueprint
 
 **Files:**
+
 - Create: `packages/plugins/plugin-code/src/blueprints/index.ts`
 - Create: `packages/plugins/plugin-code/src/blueprints/coder.ts`
 - Create: `packages/plugins/plugin-code/src/capabilities/blueprint-definition.ts`
@@ -1302,7 +1324,7 @@ Expected: working tree clean.
 - **Spec coverage:**
   - F-1 Rename → Task 1 ✓
   - F-2 CodeProject type → Task 3 ✓
-  - F-3 CodeArticle on Editor.* + tabs → Task 2 ✓
+  - F-3 CodeArticle on Editor.\* + tabs → Task 2 ✓
   - F-4 Settings + credentials → Tasks 4 + 5 ✓
   - F-5 Coder blueprint → Task 7 ✓
   - F-6 Stub operations → Task 6 ✓
