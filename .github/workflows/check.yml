@@ -1,6 +1,7 @@
 name: Check
 
 on:
+  pull_request:
   pull_request_target:
   merge_group:
 
@@ -47,6 +48,9 @@ concurrency:
 # https://moonrepo.dev/docs/guides/ci
 jobs:
   check:
+    # pull_request handles same-repo PRs; pull_request_target handles fork PRs.
+    # Skip pull_request_target for same-repo PRs to avoid double runs.
+    if: github.event_name != 'pull_request_target' || github.event.pull_request.head.repo.full_name != github.repository
     # Gate fork PRs on maintainer approval before running fork code with secrets in scope.
     environment: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository && 'external-pr' || '' }}
     runs-on: depot-ubuntu-24.04-8
@@ -102,6 +106,9 @@ jobs:
           access-token: ${{ secrets.GITHUB_TOKEN }}
 
   test:
+    # pull_request handles same-repo PRs; pull_request_target handles fork PRs.
+    # Skip pull_request_target for same-repo PRs to avoid double runs.
+    if: github.event_name != 'pull_request_target' || github.event.pull_request.head.repo.full_name != github.repository
     strategy:
       matrix:
         node-version: ['24.11.1']
