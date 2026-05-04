@@ -5,9 +5,7 @@
 import { Event, MulticastObservable, SubscriptionList } from '@dxos/async';
 import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace } from '@dxos/protocols';
 import { ConnectionState, type NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
 
 import { RPC_TIMEOUT } from '../common';
@@ -25,15 +23,7 @@ export class MeshProxy {
   /** Subscriptions for RPC streams that need to be re-established on reconnect. */
   private readonly _streamSubscriptions = new SubscriptionList();
 
-  private readonly _instanceId = PublicKey.random().toHex();
-
-  constructor(
-    private readonly _serviceProvider: ClientServicesProvider,
-    /**
-     * @internal
-     */
-    public _traceParent?: string,
-  ) {}
+  constructor(private readonly _serviceProvider: ClientServicesProvider) {}
 
   toJSON(): { networkStatus: NetworkStatus } {
     return {
@@ -54,7 +44,7 @@ export class MeshProxy {
    * @internal
    */
   async _open(): Promise<void> {
-    log.trace('dxos.sdk.mesh-proxy.open', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
+    log('opening mesh proxy');
 
     // Register reconnection callback to re-establish streams.
     this._serviceProvider.onReconnect?.(async () => {
@@ -63,7 +53,7 @@ export class MeshProxy {
     });
 
     this._setupStreams();
-    log.trace('dxos.sdk.mesh-proxy.open', trace.end({ id: this._instanceId }));
+    log('opened mesh proxy');
   }
 
   /**
