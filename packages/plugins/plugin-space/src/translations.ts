@@ -133,7 +133,7 @@ export const translations = [
         'spaces.label': 'Spaces',
         'space-settings.label': 'Spaces',
         'space-settings.description':
-          'Each space has its own settings you can configure, where you can adjust its properties, membership, integrations, and other objects specific to that space.',
+          'Per-space settings for properties, membership, integrations, and other space-specific objects.',
         'show-hidden-spaces.label': 'Show archived spaces',
         'show-hidden-spaces.description':
           'Display archived spaces in the sidebar so they can be accessed or unarchived.',
@@ -224,7 +224,7 @@ export const translations = [
 
         'members-panel.label': 'Members',
         'members-verbose.label': 'Manage space members',
-        'members.description': 'You can view the current status of space members here as well as invite new members.',
+        'members.description': 'Current space members and pending invitations.',
         'members.label': 'Members',
         'invitations.label': 'Invitations',
         'space-invitation.description': 'Manage invitations to the space.',
@@ -237,10 +237,10 @@ export const translations = [
         'open-current-space-settings.label': 'Open current space settings',
         'space-settings-properties.label': 'Settings',
         'space-properties-settings-verbose.label': 'Manage space properties',
-        'space-properties-settings.description': 'You can configure how this space is displayed in the app here.',
+        'space-properties-settings.description': 'Display settings for this space.',
         'space-settings-schema.label': 'Types',
         'schema-verbose.label': 'Manage types',
-        'schema.description': 'You can manage all of the types stored within this space here.',
+        'schema.description': 'Types defined within this space.',
         'no-schemas-found.message': 'No types found',
         'display-name-input.placeholder': 'Space name',
         'display-name.description': 'Name of the space as it appears in the app.',
@@ -249,7 +249,7 @@ export const translations = [
         'edge-replication.description':
           "Only change this if you know what you're doing. Disabling this will prevent the space from replicating through Composer's EDGE services, and relies solely on peer-to-peer sync.",
         'archive-space.description':
-          'Archiving a space will remove it from the sidebar and stop replicating updates, but will not delete the data. You can unarchive it by enabling archived spaces in the app settings.',
+          'Archiving a space will remove it from the sidebar and stop replicating updates, but will not delete the data. Unarchive by enabling archived spaces in the app settings.',
         'archive-space.label': 'Archive',
         'unarchive-space.label': 'Unarchive',
 

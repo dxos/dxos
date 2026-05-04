@@ -1,8 +1,8 @@
 {
-  "name": "@dxos/plugin-spec",
+  "name": "@dxos/plugin-code",
   "version": "0.1.0",
   "private": true,
-  "description": "Spec plugin",
+  "description": "Composer plugin for AI-assisted plugin development",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -14,9 +14,11 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#blueprints": "./src/blueprints/index.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
+    "#operations": "./src/operations/index.ts",
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
   },
@@ -25,6 +27,12 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
+    },
+    "./operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "browser": "./dist/lib/browser/operations/index.mjs",
+      "node": "./dist/lib/node-esm/operations/index.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
@@ -54,14 +62,20 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-atom": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "@lezer/common": "catalog:",
     "@lezer/highlight": "catalog:",
     "@lezer/lr": "catalog:",

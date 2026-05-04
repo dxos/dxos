@@ -10,34 +10,34 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Spec } from '#types';
+import { CodeProject, Spec } from '#types';
 
-import CHESS_1_MDL from '../../../docs/examples/chess-1.mdl?raw';
-import { SpecArticle } from './SpecArticle';
+import { CodeArticle } from './CodeArticle';
 
-const DefaultStory = ({ content }: { content?: string }) => {
+const DefaultStory = () => {
   const spaces = useSpaces();
   const space = spaces[0];
-  const [spec, setSpec] = useState<Spec.Spec | undefined>();
+  const [project, setProject] = useState<CodeProject.CodeProject | undefined>();
 
   useEffect(() => {
-    if (space && !spec) {
-      setSpec(space.db.add(Spec.make({ content })));
+    if (space && !project) {
+      const spec = space.db.add(Spec.make());
+      setProject(space.db.add(CodeProject.make({ name: 'Demo', spec })));
     }
-  }, [space, content, spec]);
+  }, [space, project]);
 
-  if (!spec) {
+  if (!project) {
     return <Loading />;
   }
 
-  return <SpecArticle role='article' subject={spec} attendableId='story' />;
+  return <CodeArticle role='article' subject={project} attendableId='story' />;
 };
 
 const meta = {
-  title: 'plugins/plugin-spec/containers/SpecArticle',
-  render: (args: { content?: string }) => <DefaultStory {...args} />,
+  title: 'plugins/plugin-code/containers/CodeArticle',
+  render: () => <DefaultStory />,
   decorators: [
-    withClientProvider({ createIdentity: true, createSpace: true, types: [Spec.Spec] }),
+    withClientProvider({ createIdentity: true, createSpace: true, types: [Spec.Spec, CodeProject.CodeProject] }),
     withTheme(),
     withLayout({ layout: 'column', classNames: 'w-[50rem]' }),
   ],
@@ -52,9 +52,3 @@ export default meta;
 type Story = StoryObj;
 
 export const Default: Story = {};
-
-export const Chess: Story = {
-  args: {
-    content: CHESS_1_MDL,
-  },
-};

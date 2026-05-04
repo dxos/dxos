@@ -11,7 +11,8 @@
       "name": "composer-app",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@dxos/composer-app", "exec", "vite", "dev"],
-      "port": 5173
+      "port": 5173,
+      "autoPort": true
     },
     {
       "name": "testbench-app",

@@ -18,6 +18,9 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
@@ -28,6 +31,9 @@
     },
     {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-atom"
     },
     {
       "path": "../../core/echo/echo-db"
@@ -45,16 +51,25 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
       "path": "../../ui/react-ui-editor"
     },
     {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
       "path": "../../ui/ui-editor"
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-space"

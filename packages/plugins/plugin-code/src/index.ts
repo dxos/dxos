@@ -3,4 +3,4 @@
 //
 
 export * from './meta';
-export * from './SpecPlugin';
+export * from './CodePlugin';
