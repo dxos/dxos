@@ -9,8 +9,9 @@ import { ObjectsTree } from '@dxos/devtools';
 import { Filter, Json, Obj, Query } from '@dxos/echo';
 import type { ObjectId } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
-import { Clipboard, Grid, Input, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Clipboard, Input, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { mx } from '@dxos/ui-theme';
 
 export type DebugObjectPanelProps = Pick<
   AppSurface.ObjectArticleProps<Obj.Unknown, {}, Obj.Unknown>,
@@ -34,7 +35,7 @@ export const DebugObjectPanel = ({ role, companionTo }: DebugObjectPanelProps) =
           <Toolbar.Root />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <Grid rows={db ? 2 : 1} classNames='divide-y divide-separator'>
+          <div role='none' className={mx('grid divide-y divide-separator', db && 'grid-rows-[1fr_2fr]')}>
             {db && (
               <ScrollArea.Root>
                 <ScrollArea.Viewport>
@@ -67,7 +68,7 @@ export const DebugObjectPanel = ({ role, companionTo }: DebugObjectPanelProps) =
                 </Panel.Content>
               </Panel.Root>
             </Syntax.Root>
-          </Grid>
+          </div>
         </Panel.Content>
       </Panel.Root>
     </Clipboard.Provider>
