@@ -5,7 +5,7 @@
 import * as Chat from '@effect/ai/Chat';
 import type * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Prompt from '@effect/ai/Prompt';
-import { describe, it } from '@effect/vitest';
+import { describe, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
@@ -145,4 +145,16 @@ describe('Browser Automation', () => {
       tags: ['llm'],
     },
   );
+});
+
+describe('McpToolkit.make', () => {
+  test('produces a failure (not a defect) when the server is unreachable', async ({ expect }) => {
+    const result = await runAndForwardErrors(
+      McpToolkit.make({
+        url: 'http://127.0.0.1:1/unreachable',
+        kind: 'http',
+      }).pipe(Effect.either),
+    );
+    expect(result._tag).toBe('Left');
+  });
 });

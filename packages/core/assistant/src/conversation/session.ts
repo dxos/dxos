@@ -291,7 +291,7 @@ const connectMcpServers = (
         Effect.tap((toolkit): void =>
           log.info('Connected to MCP server', { url: options.url, tools: Object.keys(toolkit.toolkit.tools).length }),
         ),
-        Effect.tapDefect((error) => Effect.sync(() => log.warn('Failed to connect to MCP server', { error }))),
+        Effect.tapError((error) => Effect.sync(() => log.warn('Failed to connect to MCP server', { error }))),
         Effect.either,
       ),
     ),

@@ -9,6 +9,7 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import type * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
@@ -29,7 +30,7 @@ export interface McpToolkitOptions {
  */
 const CLIENT_INFO = { name: '@dxos/mcp-client', version: '0.8.3' };
 
-export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.OpaqueToolkit> =>
+export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.OpaqueToolkit, Cause.UnknownException> =>
   Effect.gen(function* () {
     const client = yield* connectWithFallback(options);
 
@@ -83,7 +84,7 @@ export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.Op
 
 /**
  * Returns true when the error (or its wrapped cause) contains a 405 status code.
- * `Effect.tryPromise` wraps thrown errors in `UnknownException`, so we unwrap first.
+ * `Effect.tryPromise` wraps thrown errors in `Cause.UnknownException`, so we unwrap first.
  */
 export const is405 = (error: unknown): boolean => {
   const cause = error != null && typeof error === 'object' && 'error' in error ? (error as any).error : error;
@@ -95,7 +96,7 @@ export const is405 = (error: unknown): boolean => {
  * Per the MCP spec, a 405 indicates the server uses the other transport protocol.
  * Returns the connected Client (a fresh instance is created for the fallback attempt).
  */
-const connectWithFallback = (options: McpToolkitOptions): Effect.Effect<Client> =>
+const connectWithFallback = (options: McpToolkitOptions): Effect.Effect<Client, Cause.UnknownException> =>
   Effect.gen(function* () {
     const fallbackKind = options.kind === 'sse' ? 'http' : 'sse';
     const primary = yield* connectClient(options.url, options.kind, options.apiKey).pipe(Effect.either);
@@ -103,9 +104,9 @@ const connectWithFallback = (options: McpToolkitOptions): Effect.Effect<Client> 
       return primary.right;
     }
     if (is405(primary.left)) {
-      return yield* connectClient(options.url, fallbackKind, options.apiKey).pipe(Effect.orDie);
+      return yield* connectClient(options.url, fallbackKind, options.apiKey);
     }
-    return yield* Effect.die(primary.left);
+    return yield* Effect.fail(primary.left);
   });
 
 const connectClient = (url: string, kind: McpToolkitOptions['kind'], apiKey?: string) =>
