@@ -25,9 +25,9 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
   const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
   const calendars = useQuery(db, Filter.type(Calendar.Calendar));
 
-  // TODO(burdon): API REVIEW!!!
   const mailbox = mailboxes[0];
   const calendar = calendars[0];
+  // TODO(burdon): API REVIEW!!!
   // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
   useObject(mailbox);
   useObject(calendar);

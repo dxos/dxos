@@ -182,8 +182,9 @@ export function useObject<T extends Obj.Unknown, K extends keyof T>(
     // For property subscriptions on refs, we subscribe to trigger re-render on load.
     useObjectValue(registry, objOrRef);
     return [useObjectProperty(registry, liveObj, property), callback as ObjectPropUpdateCallback<T[K]>];
+  } else {
+    return [useObjectValue(registry, objOrRef), callback as ObjectUpdateCallback<T>];
   }
-  return [useObjectValue(registry, objOrRef), callback as ObjectUpdateCallback<T>];
 }
 
 /**

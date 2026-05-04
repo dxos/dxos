@@ -148,8 +148,9 @@ export const useObject: {
     // TODO(dxos): Property subscriptions on refs may not update correctly until the ref loads.
     useObjectValue(objOrRef);
     return [useObjectProperty(liveObj, property as any), callback];
+  } else {
+    return [useObjectValue(objOrRef), callback];
   }
-  return [useObjectValue(objOrRef), callback];
 }) as any;
 
 /**
