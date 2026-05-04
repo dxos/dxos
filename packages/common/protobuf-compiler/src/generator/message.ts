@@ -39,7 +39,7 @@ export const createMessageDeclaration = (type: protobufjs.Type, ctx: GeneratorCo
 
   const commentSections = type.comment ? [type.comment] : [];
   if (type.filename) {
-    commentSections.push(`Defined in:\n  {@link file://./${relative(dirname(ctx.outputFilename), type.filename)}}`);
+    commentSections.push(`Defined in: \`${relative(dirname(ctx.outputFilename), type.filename)}\``);
   }
 
   if (commentSections.length === 0) {
