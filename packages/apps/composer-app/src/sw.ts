@@ -4,13 +4,27 @@
 
 /// <reference lib="webworker" />
 
-import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
+import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching';
+import { NavigationRoute, registerRoute } from 'workbox-routing';
 
 declare const self: ServiceWorkerGlobalScope;
 
 // Precache all assets injected by VitePWA at build time (the app shell).
-precacheAndRoute(self.__WB_MANIFEST);
+//
+// `ignoreURLParametersMatching` lets the precache router serve `icons.svg?nocache=N`
+// (and any other cache-busting query the host adds at runtime) from the precached
+// `icons.svg` entry. Without this, query-bearing URLs miss the precache and fall
+// through to the network — a guaranteed offline failure for the icons sprite.
+precacheAndRoute(self.__WB_MANIFEST, {
+  ignoreURLParametersMatching: [/^nocache$/],
+});
 cleanupOutdatedCaches();
+
+// SPA navigation fallback. Composer's deep URLs (e.g. `/<spaceId>/types/...`) aren't direct
+// precache entries — without this, offline navigations 404. The handler routes all
+// `mode: 'navigate'` requests to the precached `/index.html`, which boots the SPA and
+// resolves the route client-side.
+registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html')));
 
 const PLUGIN_ASSET_CACHE = 'dxos-plugin-assets-v1';
 const INDEX_DB_NAME = 'dxos-plugin-asset-index';
@@ -69,12 +83,52 @@ const idbKeys = async (): Promise<string[]> => {
   });
 };
 
+/**
+ * In-memory mirror of the plugin-asset URL set so the fetch handler can decide
+ * synchronously whether to take ownership of an event. Without this we'd have to
+ * `event.respondWith` for every GET (since the IDB lookup is async), which preempts
+ * Workbox's precache routing — the original cause of "site can't be reached" when
+ * offline. Updated alongside IDB on every cache/evict message.
+ */
+const pluginAssetUrls = new Set<string>();
+
+const refreshPluginAssetUrls = async (): Promise<void> => {
+  const ids = await idbKeys();
+  pluginAssetUrls.clear();
+  for (const id of ids) {
+    const urls = await idbGet<string[]>(id);
+    urls?.forEach((url) => pluginAssetUrls.add(url));
+  }
+};
+
 const cachePluginAssets = async (pluginId: string, urls: readonly string[]): Promise<void> => {
   const cache = await caches.open(PLUGIN_ASSET_CACHE);
-  // `addAll` is atomic — if any fetch fails, nothing is committed. That's the
-  // right semantics for eager precache: a partial bundle is worse than no cache.
-  await cache.addAll(urls.map((url) => new Request(url, { credentials: 'omit' })));
+  // Always register the URLs so the fetch handler will intercept them, even if some
+  // can't be fetched right now (e.g. offline reload re-running cache.cache during
+  // preload). The host loader's `import(entryUrl)` only needs the entry to be in
+  // cache; the rest are nice-to-haves.
+  urls.forEach((url) => pluginAssetUrls.add(url));
   await idbPut(pluginId, urls);
+  // Per-URL fetching, tolerant: skip URLs already cached, and let individual failures
+  // (e.g. a single unreachable asset while offline) pass through without aborting the
+  // batch. Replaces `cache.addAll` which is atomic — one offline URL would otherwise
+  // wipe out an entire successful precache for an installed plugin.
+  await Promise.all(
+    urls.map(async (url) => {
+      const request = new Request(url, { credentials: 'omit' });
+      if (await cache.match(request)) {
+        return;
+      }
+      try {
+        const response = await fetch(request);
+        if (response.ok) {
+          await cache.put(request, response);
+        }
+      } catch {
+        // Best effort — surfaces as a stale cache miss later, not a fatal error.
+      }
+    }),
+  );
 };
 
 const evictPlugin = async (pluginId: string): Promise<void> => {
@@ -82,17 +136,9 @@ const evictPlugin = async (pluginId: string): Promise<void> => {
   const cache = await caches.open(PLUGIN_ASSET_CACHE);
   await Promise.all(urls.map((url) => cache.delete(url)));
   await idbDelete(pluginId);
-};
-
-const isPluginAsset = async (url: string): Promise<boolean> => {
-  const keys = await idbKeys();
-  for (const pluginId of keys) {
-    const urls = await idbGet<string[]>(pluginId);
-    if (urls?.includes(url)) {
-      return true;
-    }
-  }
-  return false;
+  // Rebuild the set from IDB so URLs shared between plugins (unlikely but possible)
+  // aren't dropped from memory while still claimed by another plugin.
+  await refreshPluginAssetUrls();
 };
 
 self.addEventListener('message', (event) => {
@@ -118,17 +164,20 @@ self.addEventListener('message', (event) => {
 });
 
 // Cache-first for any URL we've recorded as a plugin asset, with a stale-while-revalidate
-// background refresh so updated bundles propagate without forcing a full uninstall/reinstall.
+// background refresh so updated bundles propagate without forcing an uninstall/reinstall.
+//
+// Critical: only call `event.respondWith` when we know the URL is a plugin asset. Calling
+// it unconditionally claims the event for our handler, which (a) preempts Workbox's
+// precache router for app-shell URLs and (b) breaks offline because the inner `fetch`
+// rejects on no network. The synchronous `pluginAssetUrls.has(...)` check keeps us out of
+// Workbox's way for everything else.
 self.addEventListener('fetch', (event) => {
   const request = event.request;
-  if (request.method !== 'GET') {
+  if (request.method !== 'GET' || !pluginAssetUrls.has(request.url)) {
     return;
   }
   event.respondWith(
     (async () => {
-      if (!(await isPluginAsset(request.url))) {
-        return fetch(request);
-      }
       const cache = await caches.open(PLUGIN_ASSET_CACHE);
       const cached = await cache.match(request);
       const networkPromise = fetch(request)
@@ -145,4 +194,9 @@ self.addEventListener('fetch', (event) => {
 });
 
 self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+self.addEventListener('activate', (event) => {
+  // Hydrate the in-memory plugin-asset URL set from IDB before the SW starts handling
+  // fetches. Without this, the first reload after activation would miss every plugin
+  // asset until a cache-message replays them.
+  event.waitUntil(Promise.all([self.clients.claim(), refreshPluginAssetUrls()]));
+});

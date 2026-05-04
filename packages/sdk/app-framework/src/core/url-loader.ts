@@ -162,7 +162,12 @@ const loadFromManifest = async (
 ): Promise<{ plugin: Plugin.Plugin; manifest: PluginManifest.ResolvedManifest }> => {
   log.info('loading remote plugin', { manifestUrl });
   const manifest = await PluginManifest.fetchManifest(manifestUrl);
-  await cache.cache(manifest.id, manifest.assetUrls);
+  // Cache the manifest URL alongside its declared assets. Without it, `preload` on a
+  // subsequent reload would fetch the manifest from the network — and fail when the
+  // plugin's host is offline, dropping the plugin from the runtime.
+  const cachedUrls =
+    manifest.assetUrls.indexOf(manifestUrl) === -1 ? [manifestUrl, ...manifest.assetUrls] : manifest.assetUrls;
+  await cache.cache(manifest.id, cachedUrls);
   await loadStylesheets(manifest, cache);
   const entryUrl = await cache.resolve(manifest.id, manifest.entryUrl);
   const mod = await import(/* @vite-ignore */ entryUrl);

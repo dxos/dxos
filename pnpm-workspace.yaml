@@ -646,6 +646,7 @@ catalog:
   websocket-stream: ^5.5.2
   wnfs: 0.2.2
   workbox-precaching: ^7.3.0
+  workbox-routing: ^7.3.0
   workbox-window: ^7.3.0
   workerize-loader: ^2.0.2
   wrangler: ^4.59.1
@@ -707,10 +708,6 @@ overrides:
   esbuild: '>=0.25.0'
   fast-xml-parser: '>=5.3.6'
   glob: '>=10.5.0'
-  # workbox-build@7.3.0 still uses `glob.default.sync` (glob v7 API), which is
-  # absent in glob v10+. Pin its nested dep to v7 so injectManifest precaching
-  # works; the rest of the workspace keeps the modern glob from above.
-  workbox-build>glob: '^7.2.3'
   lodash: '>=4.17.23'
   lodash-es: '>=4.17.23'
   mdast-util-to-hast: '>=13.2.1'
@@ -731,6 +728,7 @@ overrides:
   typescript: 'catalog:'
   undici: '>=7.18.2'
   vite: '>=7.1.11'
+  workbox-build>glob: ^7.2.3
   wrangler: '>=4.59.1'
   ws: '>=8.17.1'
 
