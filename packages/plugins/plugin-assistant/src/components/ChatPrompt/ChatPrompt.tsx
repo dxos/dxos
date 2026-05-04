@@ -166,7 +166,7 @@ export const ChatPrompt = ({
             {online !== undefined && (
               <Input.Root>
                 <Input.Label srOnly>{t('online-switch.label')}</Input.Label>
-                <Input.Switch classNames='mx-2' checked={online} onCheckedChange={onOnlineChange} />
+                <Input.Switch classNames='mx-1' checked={online} onCheckedChange={onOnlineChange} />
               </Input.Root>
             )}
           </ChatActions>

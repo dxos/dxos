@@ -9,6 +9,7 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
@@ -20,6 +21,19 @@ export interface McpToolkitOptions {
   kind: 'sse' | 'http';
   apiKey?: string;
 }
+
+/**
+ * Typed failure raised when the MCP client cannot connect or list tools.
+ * Carries the underlying cause and the server URL for diagnostics.
+ */
+export class McpConnectionError extends Schema.TaggedError<McpConnectionError>('McpConnectionError')(
+  'McpConnectionError',
+  {
+    url: Schema.String,
+    kind: Schema.Literal('sse', 'http'),
+    message: Schema.String,
+  },
+) {}
 
 /**
  * Creates an OpaqueToolkit that connects to an MCP server and exposes its tools to the assistant.
