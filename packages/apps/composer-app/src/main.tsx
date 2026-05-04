@@ -80,18 +80,21 @@ const bootStatus = (text: string) => window.__bootLoader?.status(text);
 
 /**
  * Picks the platform-appropriate offline asset cache for third-party plugins.
- *  - Tauri (desktop + iOS): filesystem cache exposed by `@dxos/plugin-native`.
- *  - Web with a service worker: cache managed by `@dxos/plugin-pwa`'s SW.
+ *  - Tauri (desktop + iOS): Rust-backed filesystem cache, served via the `dxos-plugin://` URI scheme.
+ *  - Web with a service worker: cache managed by the SW in `./sw.ts`.
  *  - Otherwise (tests, unsupported environments): a no-op cache; plugins still
  *    load but lose their offline guarantee.
+ *
+ * Each branch dynamic-imports its impl so vite emits per-platform chunks instead
+ * of dragging both into the initial bundle.
  */
 const createAssetCache = async (isTauri: boolean): Promise<PluginAssetCache.Cache> => {
   if (isTauri) {
-    const { createTauriAssetCache } = await import('@dxos/plugin-native');
+    const { createTauriAssetCache } = await import('./asset-cache/tauri');
     return createTauriAssetCache();
   }
   if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-    const { createServiceWorkerAssetCache } = await import('@dxos/plugin-pwa');
+    const { createServiceWorkerAssetCache } = await import('./asset-cache/service-worker');
     return createServiceWorkerAssetCache();
   }
   return PluginAssetCache.noop();
@@ -438,8 +441,6 @@ const main = async () => {
       fallback: Fallback,
       placeholder: Placeholder,
       pluginLoader,
-      // Drop the persisted entry and evict cached assets when the user uninstalls a plugin
-      // so a re-install fetches fresh bytes and offline storage doesn't grow indefinitely.
       onPluginRemove,
       plugins,
       core,

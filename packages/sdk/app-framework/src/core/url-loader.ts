@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { log } from '@dxos/log';
 
+import * as Plugin from './plugin';
 import * as PluginAssetCache from './plugin-asset-cache';
 import * as PluginManifest from './plugin-manifest';
-import * as Plugin from './plugin';
 
 const DEFAULT_KEY = 'org.dxos.composer.remote-plugins';
 
@@ -129,11 +129,8 @@ const normalizePluginExport = (mod: Record<string, unknown>): Plugin.Plugin => {
 };
 
 /**
- * Loads stylesheet assets declared in the manifest by appending `<link rel="stylesheet">`
- * elements to the host document. The plugin bundle no longer self-injects CSS (vite-plugin-
- * css-injected-by-js was dropped when we moved to multi-asset distribution), so the host
- * is responsible for wiring up sibling CSS. Each link is tagged with `data-dxos-plugin-id`
- * so `uninstall` can clean them up.
+ * Loads stylesheets declared in the manifest by appending `<link rel="stylesheet">` elements to the host document.
+ * Each link is tagged with `data-dxos-plugin-id` so `uninstall` can clean them up.
  */
 const loadStylesheets = async (
   manifest: PluginManifest.ResolvedManifest,

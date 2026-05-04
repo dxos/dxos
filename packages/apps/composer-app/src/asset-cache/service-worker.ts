@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { PluginAssetCache } from '@dxos/app-framework';
+import { type PluginAssetCache } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
 /**
- * Message envelope shape recognised by the custom service worker (see composer-app/src/sw.ts).
+ * Message envelope shape recognised by the custom service worker (see ../sw.ts).
  * Kept here so the SW source and the host-side helper agree on the schema.
  */
 export type AssetCacheMessage =
@@ -46,12 +46,10 @@ const sendMessage = async (message: AssetCacheMessage): Promise<unknown> => {
 };
 
 /**
- * Service-worker-backed implementation of `PluginAssetCache.Cache`.
- *
- * The actual fetching and storage happens inside the service worker (see
- * composer-app/src/sw.ts). On the host side this just exchanges messages over
- * a `MessageChannel` and lets the SW's fetch handler serve cached responses
- * transparently — so `resolve()` returns the original URL unchanged.
+ * Service-worker-backed `PluginAssetCache.Cache`. The actual fetching and storage
+ * happens inside the SW (see ../sw.ts). On the host side this just exchanges
+ * messages over a `MessageChannel` and lets the SW's fetch handler serve cached
+ * responses transparently — so `resolve()` returns the original URL unchanged.
  */
 export const createServiceWorkerAssetCache = (): PluginAssetCache.Cache => ({
   cache: async (pluginId, urls) => {
