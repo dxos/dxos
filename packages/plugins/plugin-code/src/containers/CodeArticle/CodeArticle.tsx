@@ -24,25 +24,32 @@ import {
 import { isTruthy } from '@dxos/util';
 
 import { meta } from '#meta';
-import { Spec } from '#types';
+import { CodeProject } from '#types';
 
 import { mdl, mdlBlockDescription } from '../../extension';
 
 type View = 'spec' | 'code';
 
-export type CodeArticleProps = AppSurface.ObjectArticleProps<Spec.Spec>;
+export type CodeArticleProps = AppSurface.ObjectArticleProps<CodeProject.CodeProject>;
 
+/**
+ * Renders a CodeProject. Resolves the linked Spec and renders its mdl content
+ * in a tabbed editor — the Code tab is a placeholder for build output until
+ * the EDGE build service is wired up.
+ */
 export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
-  ({ role, subject: spec, attendableId }, forwardedRef) => {
+  ({ role, subject: project, attendableId }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const { themeMode } = useThemeContext();
     const identity = useIdentity();
-    const space = getSpace(spec);
+    const space = getSpace(project);
     const [view, setView] = useState<View>('spec');
 
-    // Trigger re-render when the content ref resolves.
-    useObject(spec.content);
-    const target = spec.content.target;
+    // Resolve the linked Spec.
+    useObject(project.spec);
+    const spec = project.spec.target;
+    useObject(spec?.content);
+    const target = spec?.content.target;
 
     const extensions = useMemo(
       () =>
@@ -53,6 +60,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
           decorateMarkdown(),
           mdl(),
           target &&
+            spec &&
             createDataExtensions({
               id: spec.id,
               text: createDocAccessor(target, ['content']),
@@ -60,7 +68,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
               identity,
             }),
         ].filter(isTruthy),
-      [identity, space, spec.id, target, themeMode],
+      [identity, space, spec, target, themeMode],
     );
 
     const customActions = useMemo<Atom.Atom<ActionGraphProps>>(
