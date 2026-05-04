@@ -193,6 +193,10 @@ export default async (options: TsdownExecutorOptions): Promise<{ success: boolea
       tsgo: true,
       emitDtsOnly: true,
       tsconfig: tsgoTsconfig,
+      // Use tsc resolver so TypeScript uses the `types` export condition (pre-built .d.ts)
+      // instead of OXC which picks up the `source` condition and resolves to .ts source files
+      // in sibling workspace packages — which tsgo cannot process.
+      resolver: 'tsc',
     } as any,
     skipNodeModulesBundle: true,
     report: false,
