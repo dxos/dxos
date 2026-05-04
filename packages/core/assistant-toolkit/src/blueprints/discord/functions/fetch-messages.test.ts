@@ -39,7 +39,7 @@ describe('Feed', { timeout: 600_000 }, () => {
       },
       Effect.provide(TestLayerWithCredentials),
       TestHelpers.provideTestContext,
-      TestHelpers.taggedTest('sync'),
     ),
+    { tags: ['sync'] },
   );
 });

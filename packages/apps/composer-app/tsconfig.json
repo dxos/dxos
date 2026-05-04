@@ -236,6 +236,9 @@
       "path": "../../plugins/plugin-client"
     },
     {
+      "path": "../../plugins/plugin-code"
+    },
+    {
       "path": "../../plugins/plugin-conductor"
     },
     {
@@ -267,6 +270,9 @@
     },
     {
       "path": "../../plugins/plugin-files"
+    },
+    {
+      "path": "../../plugins/plugin-gallery"
     },
     {
       "path": "../../plugins/plugin-graph"
@@ -363,9 +369,6 @@
     },
     {
       "path": "../../plugins/plugin-spacetime"
-    },
-    {
-      "path": "../../plugins/plugin-spec"
     },
     {
       "path": "../../plugins/plugin-spotlight"

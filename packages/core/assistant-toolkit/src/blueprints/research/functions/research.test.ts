@@ -142,8 +142,7 @@ describe('Research', () => {
       },
       Effect.provide(AgentTestLayer),
       TestHelpers.provideTestContext,
-      TestHelpers.taggedTest('flaky'),
     ),
-    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
+    { timeout: MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000, tags: ['flaky'] },
   );
 });

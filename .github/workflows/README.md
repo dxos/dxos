@@ -41,11 +41,11 @@ To run e2e job:
 | :-- | :-- | :-- | :-- |
 | **Flaky** in Trunk | Trunk UI, or **automatically** via Trunk’s **pass-on-rerun** detection | None—Trunk metadata only | Tests still run; failures still fail the job unless quarantined |
 | **Quarantine** in Trunk | Trunk UI | None | Test still **runs**; its failure does **not** fail the job |
-| **`TestHelpers.tagEnabled('flaky')` / `taggedTest('flaky')`** | Code ([`packages/common/effect/src/testing.ts`](../../packages/common/effect/src/testing.ts)) | Gated suites **skipped** unless `DX_TEST_TAGS` includes `flaky` | **`test`** job sets `DX_TEST_TAGS=flaky`, so gated tests **run** and Trunk keeps signal |
+| **Vitest `tags: ['flaky']`** | Code (per-suite/test option, declared in [`vitest.base.config.ts`](../../vitest.base.config.ts)) | Default `:test` task sets `VITEST_TAGS_FILTER='!flaky && …'` so gated suites **skip** locally | **`test`** job sets `VITEST_TAGS_FILTER='!llm && !sync && !sync-e2e && !functions-e2e && !tracing-e2e'`, so `flaky` tests **run** and Trunk keeps signal |
 
 **Pass-on-rerun:** Trunk marks a test as flaky when it observes a **fail then pass on retry** pattern (same CI job: a failing attempt followed by a passing retry). That is distinct from manually marking a test flaky in the Trunk UI.
 
-Other `DX_TEST_TAGS` values (`llm`, `sync`, package-specific suites, …) are separate opt-ins and are not tied to Trunk.
+Other tags (`llm`, `sync`, `sync-e2e`, `functions-e2e`, `tracing-e2e`) are declared in [`vitest.base.config.ts`](../../vitest.base.config.ts) and opted in by overriding `VITEST_TAGS_FILTER` (or passing `--tagsFilter=<expr>` directly). They are not tied to Trunk.
 
 ## Resources
 

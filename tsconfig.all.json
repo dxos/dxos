@@ -214,6 +214,12 @@
       "path": "packages/core/halo/keyring/tsconfig.json"
     },
     {
+      "path": "packages/core/introspect/tsconfig.json"
+    },
+    {
+      "path": "packages/core/introspect-mcp/tsconfig.json"
+    },
+    {
       "path": "packages/core/mcp-client/tsconfig.json"
     },
     {
@@ -310,6 +316,9 @@
       "path": "packages/plugins/plugin-client/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-code/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-conductor/tsconfig.json"
     },
     {
@@ -344,6 +353,9 @@
     },
     {
       "path": "packages/plugins/plugin-files/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-gallery/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-graph/tsconfig.json"
@@ -440,9 +452,6 @@
     },
     {
       "path": "packages/plugins/plugin-spacetime/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-spec/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-spotlight/tsconfig.json"

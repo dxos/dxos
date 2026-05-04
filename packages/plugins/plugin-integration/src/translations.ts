@@ -15,7 +15,7 @@ export const translations = [
         'plugin.name': 'Integration',
         'space-panel.name': 'Integrations',
         'integrations-verbose.label': 'Manage integrations',
-        'integrations.description': 'You can manage all the integrations for your space with external services here.',
+        'integrations.description': 'Integrations with external services for this space.',
         'add-token.menu': 'Add Integration',
         'add-custom-token.menu': 'Custom Token',
         'delete-token.menu': 'Delete Token',

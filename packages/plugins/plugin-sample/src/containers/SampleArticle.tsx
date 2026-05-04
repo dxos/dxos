@@ -16,7 +16,13 @@ import { Obj } from '@dxos/echo';
 import { type Node, useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { type ActionExecutor, type ActionGraphProps, Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
+import {
+  type ActionExecutor,
+  type ActionGraphProps,
+  Menu,
+  MenuBuilder,
+  useMenuActions as useMenuActionsFromAtom,
+} from '@dxos/react-ui-menu';
 
 import { SampleItemView } from '#components';
 import { meta } from '#meta';
@@ -31,7 +37,7 @@ export const SampleArticle = ({ role, subject, attendableId }: SampleArticleProp
   // `useObject` subscribes to the ECHO object and returns a new snapshot whenever it changes.
   // Reading from the snapshot ensures values do not change in the middle of a render cycle.
   const [snapshot] = useObject(subject);
-  const { actions, onAction } = useToolbarActions(attendableId);
+  const { actions, onAction } = useMenuActions(attendableId);
 
   // `onValuesChanged` receives partial updates from the form.
   // `Obj.update` provides a mutable draft for safe property assignment.
@@ -84,9 +90,9 @@ export default SampleArticle;
  * `useMenuActions` converts the atom into props for `Menu.Root`.
  * `useActionRunner` executes graph actions when triggered.
  */
-const useToolbarActions = (
+const useMenuActions = (
   attendableId: string,
-): { actions: ReturnType<typeof useMenuActions>; onAction: ActionExecutor } => {
+): { actions: ReturnType<typeof useMenuActionsFromAtom>; onAction: ActionExecutor } => {
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
 
@@ -105,7 +111,7 @@ const useToolbarActions = (
     [graph, attendableId],
   );
 
-  const menuActions = useMenuActions(actionsAtom);
+  const menuActions = useMenuActionsFromAtom(actionsAtom);
 
   const onAction: ActionExecutor = useCallback(
     (action) => {

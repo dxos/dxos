@@ -10,8 +10,8 @@ import { bundleFunction } from '@dxos/functions-runtime/bundler';
 import { FunctionWorker } from '@dxos/functions-simulator-cloudflare';
 import { ErrorCodec } from '@dxos/protocols';
 
-// Requires downloading assets from R2
-describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Run script in sumulator', () => {
+// Requires downloading assets from R2.
+describe('Run script in sumulator', { tags: ['functions-e2e'] }, () => {
   test('forex-effect', { timeout: 120_000 }, async () => {
     const source = await readFile(new URL('../templates/forex-effect.ts', import.meta.url), 'utf-8');
 

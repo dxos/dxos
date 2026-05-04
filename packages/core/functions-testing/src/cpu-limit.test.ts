@@ -14,8 +14,8 @@ import { deployFunction, observeInvocations, setup, sync } from './testing';
 
 const FIB_FUNCTION_PATH = new URL('./functions/fib.ts', import.meta.url).pathname;
 
-// Test suite to explore who CPU time limits influence function execution
-describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit', () => {
+// Test suite to explore who CPU time limits influence function execution.
+describe('CPU limit', { tags: ['functions-e2e'] }, () => {
   const config = configPreset({ edge: 'dev' });
 
   test('invoke directly', { timeout: 120_000 }, async ({ expect }) => {

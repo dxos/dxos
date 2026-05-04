@@ -2,13 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
+import * as Atom from '@effect-atom/atom/Atom';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { useObject, useObjects } from '@dxos/echo-react';
+import { AtomObj } from '@dxos/echo-atom';
+import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -27,14 +31,29 @@ type PickerState = {
 export type BoardContainerProps = AppSurface.ObjectArticleProps<BoardType.Board>;
 
 export const BoardContainer = ({ role, subject: board, attendableId }: BoardContainerProps) => {
-  const controller = useRef<BoardController>(null);
+  const { hasAttention } = useAttention(attendableId);
+  const db = Obj.getDatabase(board);
   const [boardItems] = useObject(board, 'items');
-  const items = useObjects(boardItems ?? []);
+  const itemsAtom = useMemo(
+    () =>
+      Atom.make((get) => {
+        const result: Obj.Unknown[] = [];
+        for (const ref of boardItems ?? []) {
+          const obj = get(AtomObj.makeWithReactive(ref));
+          if (obj) {
+            result.push(obj);
+          }
+        }
+        return result;
+      }),
+    [boardItems],
+  );
+  const items = useAtomValue(itemsAtom);
+
+  const controller = useRef<BoardController>(null);
   const addTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [pickerState, setPickerState] = useState<PickerState | null>(null);
-  const { hasAttention } = useAttention(attendableId);
 
-  const db = Obj.getDatabase(board);
   // TODO(burdon): Use search.
   const objects = useQuery(db, Filter.everything());
   const options = useMemo<ObjectPickerContentProps['options']>(
@@ -57,13 +76,22 @@ export const BoardContainer = ({ role, subject: board, attendableId }: BoardCont
   );
 
   const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
-    async (anchor, position = DEFAULT_POSITION) => {
+    async (anchor, position) => {
       const db = Obj.getDatabase(board);
       invariant(db);
+      // Grid backdrop "+" supplies a position → create a new Markdown document directly.
+      // Toolbar "+" omits position → fall back to the picker over existing objects.
+      if (position) {
+        const doc = db.add(Markdown.make());
+        Obj.update(board, (board) => {
+          board.items.push(Ref.make(doc));
+          board.layout.cells[doc.id.toString()] = position;
+        });
+        return;
+      }
+
       addTriggerRef.current = anchor;
-      setPickerState({
-        position,
-      });
+      setPickerState({ position: DEFAULT_POSITION });
     },
     [board],
   );
@@ -138,7 +166,8 @@ export const BoardContainer = ({ role, subject: board, attendableId }: BoardCont
                 <Board.Content>
                   {items?.map((item, index) => (
                     <Board.Cell item={item} key={index} layout={board.layout?.cells[item.id] ?? { x: 0, y: 0 }}>
-                      <Surface.Surface type={AppSurface.Card} data={{ subject: item }} limit={1} />
+                      {/* `editable` opts the cell into the in-place editor variant — surfaces that don't recognize the flag fall back to the read-only card. */}
+                      <Surface.Surface type={AppSurface.Card} data={{ subject: item, editable: true }} limit={1} />
                     </Board.Cell>
                   ))}
                 </Board.Content>
