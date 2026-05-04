@@ -11,11 +11,11 @@ import { expect } from 'vitest';
 
 import { PartialBlock } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { Blueprint } from '@dxos/compute';
+import { Blueprint } from '@dxos/blueprints';
 import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { Trace } from '@dxos/compute';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import { Trace } from '@dxos/functions';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Organization } from '@dxos/types';

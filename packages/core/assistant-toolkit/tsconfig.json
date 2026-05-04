@@ -60,6 +60,9 @@
       "path": "../assistant"
     },
     {
+      "path": "../compute"
+    },
+    {
       "path": "../echo/echo"
     },
     {

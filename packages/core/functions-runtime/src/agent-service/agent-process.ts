@@ -25,8 +25,8 @@ import {
 } from '@dxos/assistant';
 import { Database, DXN, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { Trace } from '@dxos/compute';
-import { Operation, OperationRegistry } from '@dxos/compute';
+import { Trace } from '@dxos/functions';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 

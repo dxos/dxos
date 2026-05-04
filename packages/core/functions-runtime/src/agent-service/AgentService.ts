@@ -11,10 +11,10 @@ import * as Stream from 'effect/Stream';
 
 import { ModelName } from '@dxos/ai';
 import { AiContextBinder, type McpServerConfig } from '@dxos/assistant';
-import { Blueprint } from '@dxos/compute';
+import { Blueprint } from '@dxos/blueprints';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { type Trace } from '@dxos/compute';
+import type { Trace } from '@dxos/functions';
 
 import * as ProcessManager from '../process/ProcessManager';
 import { AgentProcess } from './agent-process';

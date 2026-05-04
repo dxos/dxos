@@ -14,7 +14,7 @@ import * as Match from 'effect/Match';
 import { AiService, ConsolePrinter, OpaqueToolkit, type ModelName } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { AiContextBinder, AiContextService, AiSession, AiSessionService, CompleteBlock } from '@dxos/assistant';
-import { Blueprint, Routine } from '@dxos/compute';
+import { Blueprint, Routine } from '@dxos/blueprints';
 import { Database, DXN, Feed, Tag, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { acquireReleaseResource } from '@dxos/effect';
@@ -23,13 +23,13 @@ import {
   CredentialsService,
   Process,
   QueueService,
-  ServiceResolver,
-  type ServiceCredential,
   ServiceNotAvailableError,
+  ServiceResolver,
   Trace,
   Trigger,
-} from '@dxos/compute';
-import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
+  type ServiceCredential,
+} from '@dxos/functions';
+import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 
 import * as FeedTraceSink from '../FeedTraceSink';
 import { AgentService } from '../agent-service';

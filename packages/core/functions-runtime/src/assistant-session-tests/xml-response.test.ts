@@ -6,12 +6,11 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { AiRequest, ToolExecutionServices } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 
-import { ToolExecutionServices } from '../functions';
 import { AssistantTestLayer } from '../testing';
-import { AiRequest } from './request';
 
 const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(ToolExecutionServices),
@@ -27,7 +26,7 @@ describe('AiRequest xml response', () => {
   // regressions further down the parser/preprocessor path that might re-introduce the drop.
   it.effect(
     'response with xml tag emits a text block',
-    Effect.fnUntraced(
+    Effect.fn(
       function* ({ expect }) {
         const request = new AiRequest();
         const messages = yield* request.run({
@@ -44,8 +43,6 @@ describe('AiRequest xml response', () => {
         }));
         log.info('llm messages', { summary });
 
-        // The model must have emitted at least one assistant text block — without one,
-        // the chat UI would have nothing to render after the reasoning preamble.
         const assistantBlocks = messages
           .filter((message) => message.sender.role === 'assistant')
           .flatMap((message) => message.blocks);
@@ -56,8 +53,6 @@ describe('AiRequest xml response', () => {
 
         expect(textBlocks.length).toBeGreaterThan(0);
 
-        // Combined text from all assistant text blocks must contain at least one
-        // angle-bracket-delimited tag (the user asked for an XML wrapper).
         const combined = textBlocks.map((block) => (block as any).text ?? '').join('\n');
         log.info('combined text', { combined });
         expect(combined).toMatch(/<\w+[^>]*>/);
