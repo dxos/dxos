@@ -62,9 +62,6 @@
       "path": "../echo/echo-protocol"
     },
     {
-      "path": "../functions-runtime"
-    },
-    {
       "path": "../mcp-client"
     }
   ]

@@ -14,6 +14,7 @@ import * as Layer from 'effect/Layer';
 import { AiService } from '@dxos/ai';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { Database } from '@dxos/echo';
+import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import {
   CredentialsService,
   ExampleHandlers,
@@ -28,7 +29,6 @@ import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Person, Task } from '@dxos/types';
 
 import * as ProcessManager from '../process/ProcessManager';
-import { TestDatabaseLayer } from '../testing';
 import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
 

@@ -3,5 +3,3 @@
 //
 
 export * from './agent';
-export * from './entity-extraction';
-export * from './exa';
