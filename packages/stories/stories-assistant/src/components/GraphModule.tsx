@@ -5,7 +5,7 @@
 import * as Match from 'effect/Match';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Feed, Filter, Query } from '@dxos/echo';
+import { Feed, Filter } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useFlush } from '@dxos/plugin-assistant';
 import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
