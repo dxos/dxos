@@ -19,7 +19,7 @@ import { Spec } from '#types';
 
 const iconAnnotation = Annotation.IconAnnotation.get(Spec.Spec).pipe(Option.getOrThrow);
 
-export const SpecPlugin = Plugin.define(meta).pipe(
+export const CodePlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: {
       id: Spec.Spec.typename,

@@ -1,8 +1,8 @@
 {
-  "name": "@dxos/plugin-spec",
+  "name": "@dxos/plugin-code",
   "version": "0.1.0",
   "private": true,
-  "description": "Spec plugin",
+  "description": "Composer plugin for AI-assisted plugin development",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {

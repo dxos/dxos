@@ -2421,6 +2421,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client
+      '@dxos/plugin-code':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-code
       '@dxos/plugin-conductor':
         specifier: workspace:*
         version: link:../../plugins/plugin-conductor
@@ -2553,9 +2556,6 @@ importers:
       '@dxos/plugin-spacetime':
         specifier: workspace:*
         version: link:../../plugins/plugin-spacetime
-      '@dxos/plugin-spec':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-spec
       '@dxos/plugin-spotlight':
         specifier: workspace:*
         version: link:../../plugins/plugin-spotlight
@@ -8431,6 +8431,100 @@ importers:
         specifier: '>=8.0.0'
         version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
+  packages/plugins/plugin-code:
+    dependencies:
+      '@codemirror/autocomplete':
+        specifier: 'catalog:'
+        version: 6.19.0
+      '@codemirror/lang-markdown':
+        specifier: 'catalog:'
+        version: 6.3.4
+      '@codemirror/language':
+        specifier: 'catalog:'
+        version: 6.11.3
+      '@codemirror/lint':
+        specifier: 'catalog:'
+        version: 6.8.5
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.5.2
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.38.5
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-editor
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/ui-editor
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@lezer/common':
+        specifier: 'catalog:'
+        version: 1.2.2
+      '@lezer/highlight':
+        specifier: 'catalog:'
+        version: 1.2.1
+      '@lezer/lr':
+        specifier: ^1.4.2
+        version: 1.4.2
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+    devDependencies:
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
+      '@lezer/generator':
+        specifier: 'catalog:'
+        version: 1.7.1
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.7
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.7)
+      react:
+        specifier: ~19.2.3
+        version: 19.2.3
+      react-dom:
+        specifier: ~19.2.3
+        version: 19.2.3(react@19.2.3)
+      vite:
+        specifier: '>=8.0.0'
+        version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
   packages/plugins/plugin-conductor:
     dependencies:
       '@dxos/ai':
@@ -13614,100 +13708,6 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
-      '@types/react':
-        specifier: ~19.2.7
-        version: 19.2.7
-      '@types/react-dom':
-        specifier: ~19.2.3
-        version: 19.2.3(@types/react@19.2.7)
-      react:
-        specifier: ~19.2.3
-        version: 19.2.3
-      react-dom:
-        specifier: ~19.2.3
-        version: 19.2.3(react@19.2.3)
-      vite:
-        specifier: '>=8.0.0'
-        version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-
-  packages/plugins/plugin-spec:
-    dependencies:
-      '@codemirror/autocomplete':
-        specifier: 'catalog:'
-        version: 6.19.0
-      '@codemirror/lang-markdown':
-        specifier: 'catalog:'
-        version: 6.3.4
-      '@codemirror/language':
-        specifier: 'catalog:'
-        version: 6.11.3
-      '@codemirror/lint':
-        specifier: 'catalog:'
-        version: 6.8.5
-      '@codemirror/state':
-        specifier: 'catalog:'
-        version: 6.5.2
-      '@codemirror/view':
-        specifier: 'catalog:'
-        version: 6.38.5
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../sdk/app-framework
-      '@dxos/app-toolkit':
-        specifier: workspace:*
-        version: link:../../sdk/app-toolkit
-      '@dxos/compute':
-        specifier: workspace:*
-        version: link:../../core/compute
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
-      '@dxos/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-editor':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-editor
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
-      '@dxos/ui-editor':
-        specifier: workspace:*
-        version: link:../../ui/ui-editor
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@lezer/common':
-        specifier: 'catalog:'
-        version: 1.2.2
-      '@lezer/highlight':
-        specifier: 'catalog:'
-        version: 1.2.1
-      '@lezer/lr':
-        specifier: ^1.4.2
-        version: 1.4.2
-      effect:
-        specifier: 3.20.0
-        version: 3.20.0
-    devDependencies:
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
-      '@dxos/ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/ui-theme
-      '@lezer/generator':
-        specifier: 'catalog:'
-        version: 1.7.1
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.7

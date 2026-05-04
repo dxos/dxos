@@ -9,7 +9,7 @@ tags:
 tasks:
   compile:
     deps:
-      - plugin-spec:prebuild-lezer
+      - plugin-code:prebuild-lezer
     args:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/translations.ts'

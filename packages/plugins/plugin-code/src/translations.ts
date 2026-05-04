@@ -23,7 +23,7 @@ export const translations = [
         'object-deleted.label': 'Spec deleted',
       },
       [meta.id]: {
-        'plugin.name': 'Spec',
+        'plugin.name': 'Code',
       },
     },
   },
