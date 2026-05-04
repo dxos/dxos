@@ -9,7 +9,10 @@
       "DOM",
       "ES6"
     ],
-    "rootDir": "src"
+    "rootDir": "src",
+    "types": [
+      "chrome"
+    ]
   },
   "include": [
     "src"
@@ -47,6 +50,9 @@
     },
     {
       "path": "../../sdk/client-services"
+    },
+    {
+      "path": "../../sdk/composer-devtools-protocol"
     },
     {
       "path": "../../sdk/config"

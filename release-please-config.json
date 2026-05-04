@@ -890,6 +890,11 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/composer-devtools-protocol/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/config/package.json",
           "jsonpath": "$.version"
         },

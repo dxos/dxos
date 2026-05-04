@@ -10,6 +10,7 @@ import { log } from '@dxos/log';
 import { createThumbnail } from './actions';
 import { deliverClip, openComposerTab } from './bridge';
 import type { Clip } from './clip/types';
+import { installDevtoolsRouter } from './devtools/bridge';
 
 const NOTIFY_ICON = 'assets/img/icon-128.png';
 
@@ -63,6 +64,8 @@ const handleIncomingClip = async (clip: Clip) => {
  * Background worker.
  */
 const main = async () => {
+  installDevtoolsRouter();
+
   onMessage('config', ({ data }) => {
     return { debug: data.debug ?? false };
   });

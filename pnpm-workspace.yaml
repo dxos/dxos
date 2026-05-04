@@ -358,6 +358,7 @@ catalog:
   color-hash: ^1.0.3
   columnify: ^1.6.0
   command-score: 0.1.2
+  comlink: ^4.4.2
   comment-json: ^4.2.3
   compress-json: ^2.1.2
   concurrently: ^9.2.0

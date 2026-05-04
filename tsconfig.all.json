@@ -520,6 +520,9 @@
       "path": "packages/sdk/client-services/tsconfig.json"
     },
     {
+      "path": "packages/sdk/composer-devtools-protocol/tsconfig.json"
+    },
+    {
       "path": "packages/sdk/config/tsconfig.json"
     },
     {
