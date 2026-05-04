@@ -4,7 +4,7 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * as InboxOperation from './definitions';  
+export * as InboxOperation from './definitions';
 
 export const InboxOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./add-mailbox'),

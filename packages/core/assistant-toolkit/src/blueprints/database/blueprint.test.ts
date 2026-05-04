@@ -5,12 +5,12 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { AgentService } from '@dxos/functions-runtime';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { Blueprint } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Entity, Feed, Filter, Obj, Query, Ref, Relation, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { AgentService } from '@dxos/functions-runtime';
+import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';

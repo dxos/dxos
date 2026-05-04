@@ -126,7 +126,6 @@ export namespace AppCapabilities {
    */
   export const Toolkit = Capability$.make<Toolkit>('org.dxos.app-framework.capability.ai-toolkit');
 
-
   /**
    * @category Capability
    */

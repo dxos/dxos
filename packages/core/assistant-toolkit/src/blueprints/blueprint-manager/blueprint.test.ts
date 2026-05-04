@@ -8,11 +8,11 @@ import * as Layer from 'effect/Layer';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiContextService, AiSessionService } from '@dxos/assistant';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { Blueprint } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
@@ -115,11 +115,7 @@ describe('Blueprint Manager', () => {
         const { enabled, rejected } = yield* Operation.invoke(
           EnableBlueprints,
           {
-            keys: [
-              'org.dxos.blueprint.database',
-              'org.dxos.blueprint.memory',
-              'org.dxos.blueprint.discord',
-            ],
+            keys: ['org.dxos.blueprint.database', 'org.dxos.blueprint.memory', 'org.dxos.blueprint.discord'],
           },
           { conversation },
         );

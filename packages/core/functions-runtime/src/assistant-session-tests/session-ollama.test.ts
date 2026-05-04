@@ -6,8 +6,8 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { CalculatorLayer, CalculatorToolkit } from '@dxos/ai/testing';
 import { OpaqueToolkit } from '@dxos/ai';
+import { CalculatorLayer, CalculatorToolkit } from '@dxos/ai/testing';
 import { AiRequest, ToolExecutionServices } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect/testing';
 import { dbg, log } from '@dxos/log';

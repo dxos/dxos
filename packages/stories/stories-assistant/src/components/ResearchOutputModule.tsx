@@ -11,7 +11,6 @@ import { useQuery, useQueue } from '@dxos/react-client/echo';
 import { Card } from '@dxos/react-ui';
 
 import { ResearchInputQueue } from '../testing';
-
 import { type ComponentProps } from './types';
 
 export const ResearchOutputModule = ({ space }: ComponentProps) => {

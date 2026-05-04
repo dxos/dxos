@@ -17,7 +17,6 @@ import { log } from '@dxos/log';
 import { feedServiceFromQueueServiceLayer, QueueService } from '../effect-queue-service';
 import type { EchoDatabaseImpl } from '../proxy-db';
 import type { QueueFactory } from '../queue/queue-factory';
-
 import { EchoTestBuilder } from './echo-test-builder';
 
 const testBuilder = acquireReleaseResource(() => new EchoTestBuilder());

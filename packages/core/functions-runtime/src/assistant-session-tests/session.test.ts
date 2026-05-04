@@ -9,7 +9,6 @@ import { describe, expect } from 'vitest';
 import { AiSession, ContextBinding } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 
 describe('AiSession', () => {

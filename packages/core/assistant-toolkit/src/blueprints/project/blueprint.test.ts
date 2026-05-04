@@ -8,7 +8,6 @@ import * as Exit from 'effect/Exit';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiSession } from '@dxos/assistant';
-import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Blueprint } from '@dxos/compute';
 import { QueueService, Trigger } from '@dxos/compute';
@@ -18,6 +17,7 @@ import { Collection } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
+import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';

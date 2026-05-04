@@ -31,8 +31,8 @@ import {
 } from '@dxos/functions';
 import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 
-import * as FeedTraceSink from '../FeedTraceSink';
 import { AgentService } from '../agent-service';
+import * as FeedTraceSink from '../FeedTraceSink';
 import * as ProcessManager from '../process/ProcessManager';
 import { TriggerDispatcher, TriggerStateStore } from '../triggers';
 

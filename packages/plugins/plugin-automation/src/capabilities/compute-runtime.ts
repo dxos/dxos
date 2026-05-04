@@ -15,7 +15,6 @@ import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AiContextBinder, AiContextService, AiSession, AiSessionService } from '@dxos/assistant';
-import { AgentService } from '@dxos/functions-runtime';
 import { McpServer } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
@@ -32,6 +31,7 @@ import {
   QueueService,
   ServiceNotAvailableError,
 } from '@dxos/functions';
+import { AgentService } from '@dxos/functions-runtime';
 import {
   FeedTraceSink,
   FunctionImplementationResolver,

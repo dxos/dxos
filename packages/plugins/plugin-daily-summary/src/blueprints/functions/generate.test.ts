@@ -6,12 +6,12 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Blueprint } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Collection, DXN, Database, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';

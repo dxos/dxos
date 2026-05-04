@@ -5,12 +5,12 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { AgentService } from '@dxos/functions-runtime';
 import { DatabaseBlueprint, DatabaseHandlers, WebSearchBlueprint } from '@dxos/assistant-toolkit';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { Blueprint } from '@dxos/compute';
 import { Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { AgentService } from '@dxos/functions-runtime';
+import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Message, Organization, Person } from '@dxos/types';
@@ -53,11 +53,7 @@ describe('CRM Blueprint', () => {
       Effect.fnUntraced(
         function* (_) {
           const agent = yield* AgentService.createSession({
-            blueprints: [
-              CrmBlueprint.make(),
-              DatabaseBlueprint.make(),
-              WebSearchBlueprint.make(),
-            ],
+            blueprints: [CrmBlueprint.make(), DatabaseBlueprint.make(), WebSearchBlueprint.make()],
           });
           const msg = makeEmailMessage(fixture);
           yield* agent.submitPrompt(
@@ -83,11 +79,7 @@ describe('CRM Blueprint', () => {
     Effect.fnUntraced(
       function* (_) {
         const agent = yield* AgentService.createSession({
-          blueprints: [
-            CrmBlueprint.make(),
-            DatabaseBlueprint.make(),
-            WebSearchBlueprint.make(),
-          ],
+          blueprints: [CrmBlueprint.make(), DatabaseBlueprint.make(), WebSearchBlueprint.make()],
         });
         yield* agent.submitPrompt('research priya.adebayo@ventura-advisors.example');
         yield* agent.waitForCompletion();

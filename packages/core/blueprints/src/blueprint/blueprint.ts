@@ -129,4 +129,4 @@ export const toolDefinitions = ({
 export type Definition = {
   key: string;
   make: () => Blueprint;
-}
+};

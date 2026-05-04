@@ -18,7 +18,6 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { ResearchInputQueue } from '../testing';
-
 import { type ComponentProps } from './types';
 
 export const GraphModule = ({ space }: ComponentProps) => {

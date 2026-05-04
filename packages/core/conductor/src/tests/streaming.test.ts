@@ -11,9 +11,9 @@ import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
 import { Feed } from '@dxos/echo';
+import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, Trace } from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { Operation, OperationRegistry } from '@dxos/operation';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';

@@ -15,12 +15,12 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { Database } from '@dxos/echo';
+import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { Process, ServiceResolver, Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Organization } from '@dxos/types';
 
-import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import * as ProcessManager from './ProcessManager';
 import * as StorageService from './StorageService';
 

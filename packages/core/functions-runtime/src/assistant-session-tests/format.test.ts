@@ -8,9 +8,9 @@ import * as Schema from 'effect/Schema';
 
 import { createSystemPrompt, formatSystemPrompt } from '@dxos/assistant';
 import { Blueprint, Template } from '@dxos/blueprints';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Database, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Text } from '@dxos/schema';
 import { Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
