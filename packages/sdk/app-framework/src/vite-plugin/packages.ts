@@ -12,6 +12,13 @@
  * adding it here — in one place — so the externalization contract stays in sync
  * with what the host actually provides.
  *
+ * Every entry must also be a **direct** dependency of composer-app's `package.json`,
+ * including packages that are only re-exported by an umbrella (e.g. via subpath
+ * re-exports from another listed package). pnpm doesn't symlink transitive deps
+ * into a package's own `node_modules`, so the import-map plugin's `this.resolve`
+ * call fails for transitive-only entries and the importmap silently drops them —
+ * leaving plugins with bare specifiers the host can't satisfy at install time.
+ *
  * Plugin packages (`@dxos/plugin-*`) are intentionally NOT listed: community plugins
  * bundle their own copy of any plugin-subpath import, which is safe because those
  * exports are limited to lightweight types/operation defs.
@@ -91,13 +98,6 @@ export const DEFAULT_PACKAGES = [
   '@dxos/websocket-rpc',
 
   // packages/core
-  // `@dxos/blueprints`, `@dxos/functions`, `@dxos/functions-runtime`, and
-  // `@dxos/operation` must remain in this list AND in composer-app's direct deps
-  // (even though `@dxos/compute` umbrella-re-exports the first three) so that the
-  // import-map plugin can resolve them from the host module graph. Removing them
-  // here would force every plugin that still imports them by their original name
-  // to inline its own copy, breaking shared-package identity (e.g. `instanceof
-  // Operation` across host/plugin boundaries) and inflating plugin bundles.
   '@dxos/ai',
   '@dxos/assistant',
   '@dxos/assistant-toolkit',
