@@ -35,13 +35,34 @@ type AssetCacheMessage =
   | { type: 'dxos:evict-plugin'; pluginId: string }
   | { type: 'dxos:list-plugins' };
 
-const openIndex = (): Promise<IDBDatabase> =>
-  new Promise((resolve, reject) => {
-    const request = indexedDB.open(INDEX_DB_NAME, 1);
-    request.onupgradeneeded = () => request.result.createObjectStore(INDEX_STORE);
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
+// Lazy single-connection cache. The previous shape opened a fresh IDB connection
+// per call (one per `idbGet` / `idbPut` / `idbDelete` / `idbKeys`) and never
+// closed any of them — a real leak under heavy install/uninstall traffic since
+// each call ran without the SW ever explicitly closing the handle. Caching the
+// open promise lets the SW reuse a single connection for its lifetime; the
+// browser tears it down when the SW is unregistered or evicted.
+let dbPromise: Promise<IDBDatabase> | undefined;
+const openIndex = (): Promise<IDBDatabase> => {
+  if (!dbPromise) {
+    dbPromise = new Promise((resolve, reject) => {
+      const request = indexedDB.open(INDEX_DB_NAME, 1);
+      request.onupgradeneeded = () => request.result.createObjectStore(INDEX_STORE);
+      request.onsuccess = () => {
+        // If the connection is closed externally (e.g. another tab triggering a
+        // version change), drop the cached promise so the next caller reopens.
+        request.result.onclose = () => {
+          dbPromise = undefined;
+        };
+        resolve(request.result);
+      };
+      request.onerror = () => {
+        dbPromise = undefined;
+        reject(request.error);
+      };
+    });
+  }
+  return dbPromise;
+};
 
 const idbGet = async <T>(key: string): Promise<T | undefined> => {
   const db = await openIndex();

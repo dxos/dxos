@@ -83,7 +83,7 @@ export interface PluginManager {
    */
   add(id: string): Effect.Effect<Plugin.Plugin, Error>;
   enable(id: string): Effect.Effect<boolean, Error>;
-  remove(id: string): boolean;
+  remove(id: string): Effect.Effect<boolean, Error>;
   disable(id: string): Effect.Effect<boolean, Error>;
   // TODO(wittjosiah): Improve error typing.
   activate(
@@ -279,23 +279,25 @@ class ManagerImpl implements PluginManager {
    * Removes a plugin from the manager.
    * @param id The id of the plugin.
    */
-  remove(id: string): boolean {
-    log('remove plugin', { id });
-    const result = this.disable(id);
-    if (!result) {
-      return false;
-    }
+  remove(id: string): Effect.Effect<boolean, Error> {
+    return Effect.gen(this, function* () {
+      log('remove plugin', { id });
+      const disabled = yield* this.disable(id);
+      if (!disabled) {
+        return false;
+      }
 
-    this._removePlugin(id);
-    if (this._onRemove) {
-      this._runForkedFiber(
-        this._onRemove(id).pipe(
-          Effect.tapError((error) => Effect.sync(() => log.warn('plugin remove hook failed', { id, error }))),
-          Effect.ignore,
-        ),
-      );
-    }
-    return true;
+      this._removePlugin(id);
+      if (this._onRemove) {
+        this._runForkedFiber(
+          this._onRemove(id).pipe(
+            Effect.tapError((error) => Effect.sync(() => log.warn('plugin remove hook failed', { id, error }))),
+            Effect.ignore,
+          ),
+        );
+      }
+      return true;
+    });
   }
 
   /**

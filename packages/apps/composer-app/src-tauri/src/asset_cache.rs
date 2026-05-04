@@ -31,7 +31,9 @@ pub const URI_SCHEME: &str = "dxos-plugin";
 
 #[derive(Default)]
 pub struct AssetCacheState {
-    /// Per-plugin lock so concurrent cache operations on the same plugin serialize.
+    /// Global mutex serializing all cache writes (`cache_plugin_assets` /
+    /// `evict_plugin`). The inner `HashMap` is unused — kept to leave room for
+    /// per-plugin locks if the global serialization ever shows up as a hot spot.
     locks: Mutex<HashMap<String, ()>>,
 }
 
@@ -135,9 +137,13 @@ pub async fn cache_plugin_assets<R: Runtime>(
 
     for url in &urls {
         let bytes_path = asset_path(&dir, url)?;
-        if tokio::fs::metadata(&bytes_path).await.is_ok() {
-            // Already cached for this URL; skip. Hashed asset filenames in the manifest
-            // mean real plugin updates produce fresh entries naturally.
+        let meta_path = meta_path(&dir, url)?;
+        // Require BOTH the bytes and the meta sidecar before considering an entry cached.
+        // If a previous run died after writing bytes but before writing meta (network error
+        // or process crash), the lone bytes file alone shouldn't trick us into skipping —
+        // re-fetch the URL so the meta is always present alongside the body. Hashed asset
+        // filenames in the manifest mean real plugin updates produce fresh entries naturally.
+        if tokio::fs::metadata(&bytes_path).await.is_ok() && tokio::fs::metadata(&meta_path).await.is_ok() {
             continue;
         }
         if let Some(parent) = bytes_path.parent() {
@@ -147,7 +153,7 @@ pub async fn cache_plugin_assets<R: Runtime>(
         tokio::fs::write(&bytes_path, &bytes).await.map_err(|e| e.to_string())?;
         let meta = AssetMeta { url: url.clone(), mime, fetched_at: now_secs() };
         let meta_json = serde_json::to_vec(&meta).map_err(|e| e.to_string())?;
-        tokio::fs::write(meta_path(&dir, url)?, &meta_json).await.map_err(|e| e.to_string())?;
+        tokio::fs::write(&meta_path, &meta_json).await.map_err(|e| e.to_string())?;
     }
 
     let index = Index { plugin_id: plugin_id.clone(), urls };

@@ -185,7 +185,6 @@ const loadFromManifest = (
         new RemotePluginLoadError({ context: { locator: manifestUrl, reason: 'cache-error' }, cause }),
     );
     yield* cache.cache(manifest.id, cachedUrls).pipe(wrapCacheError);
-    yield* loadStylesheets(manifest, cache).pipe(wrapCacheError);
     const entryUrl = yield* cache.resolve(manifest.id, manifest.entryUrl).pipe(wrapCacheError);
     const mod = yield* Effect.tryPromise({
       try: () => import(/* @vite-ignore */ entryUrl),
@@ -210,6 +209,11 @@ const loadFromManifest = (
         }),
       );
     }
+    // Append stylesheets only after the entry imports cleanly and meta validation
+    // passes. If we did this earlier and the import or meta checks failed, the
+    // `<link>` tags would leak into the host DOM with no plugin to own their
+    // teardown — `uninstall` only runs for plugins the manager actually accepted.
+    yield* loadStylesheets(manifest, cache).pipe(wrapCacheError);
     return { plugin, manifest };
   });
 
