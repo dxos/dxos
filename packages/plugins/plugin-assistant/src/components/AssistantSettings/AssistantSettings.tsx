@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { DEFAULT_EDGE_MODELS, DEFAULT_LMSTUDIO_MODELS, DEFAULT_OLLAMA_MODELS } from '@dxos/ai';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -16,6 +16,16 @@ export type AssistantSettingsProps = AppSurface.SettingsArticleProps<Assistant.S
 
 export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSettingsProps) => {
   const { t } = useTranslation(meta.id);
+  const fieldMap = useMemo(
+    () => ({
+      modelDefaults: {
+        edge: createSelectField({ options: DEFAULT_EDGE_MODELS }),
+        ollama: createSelectField({ options: DEFAULT_OLLAMA_MODELS }),
+        lmstudio: createSelectField({ options: DEFAULT_LMSTUDIO_MODELS }),
+      },
+    }),
+    [],
+  );
 
   return (
     <SettingsForm.Viewport>
@@ -23,15 +33,9 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
         <SettingsForm.FieldSet
           readonly={!onSettingsChange}
           schema={Assistant.Settings}
-          fieldMap={{
-            modelDefaults: {
-              edge: createSelectField({ options: DEFAULT_EDGE_MODELS }),
-              ollama: createSelectField({ options: DEFAULT_OLLAMA_MODELS }),
-              lmstudio: createSelectField({ options: DEFAULT_LMSTUDIO_MODELS }),
-            },
-          }}
+          fieldMap={fieldMap}
           values={settings}
-          onValuesChanged={(values) => onSettingsChange?.(() => values)}
+          onValuesChanged={onSettingsChange}
         />
       </SettingsForm.Section>
     </SettingsForm.Viewport>

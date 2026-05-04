@@ -397,7 +397,7 @@ describe('Obj.update enforcement', () => {
       expect(() => {
         // @ts-expect-error Testing runtime error for readonly array mutation.
         obj.fields!.push({ label: 'tag2', value: 'val2' });
-      }).toThrow(/array\.push\(\).*outside of Obj\.change/);
+      }).toThrow(/array\.push\(\).*outside of Obj\.update/);
     });
 
     test('array pop outside Obj.update throws', ({ expect }) => {
@@ -409,7 +409,7 @@ describe('Obj.update enforcement', () => {
       expect(() => {
         // @ts-expect-error Testing runtime error for readonly array mutation.
         obj.fields!.pop();
-      }).toThrow(/array\.pop\(\).*outside of Obj\.change/);
+      }).toThrow(/array\.pop\(\).*outside of Obj\.update/);
     });
 
     test('array splice outside Obj.update throws', ({ expect }) => {
@@ -421,7 +421,7 @@ describe('Obj.update enforcement', () => {
       expect(() => {
         // @ts-expect-error Testing runtime error for readonly array mutation.
         obj.fields!.splice(0, 1);
-      }).toThrow(/array\.splice\(\).*outside of Obj\.change/);
+      }).toThrow(/array\.splice\(\).*outside of Obj\.update/);
     });
   });
 
@@ -442,7 +442,7 @@ describe('Obj.update enforcement', () => {
       expect(() => {
         // @ts-expect-error Testing runtime error for readonly property delete.
         delete obj.age;
-      }).toThrow(/delete object property.*outside of Obj\.change/);
+      }).toThrow(/delete object property.*outside of Obj\.update/);
     });
   });
 
