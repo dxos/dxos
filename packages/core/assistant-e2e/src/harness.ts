@@ -5,7 +5,6 @@
 import { TestContext } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Function from 'effect/Function';
 
 import { ModelName } from '@dxos/ai';
 import {
@@ -24,7 +23,7 @@ import {
 import { Blueprint, Routine } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
-import { TestHelpers, type TestTag } from '@dxos/effect/testing';
+import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
 import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/operations';
@@ -61,8 +60,6 @@ interface AgentTestOptions {
   inferenceProvider?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
 
   disableLlmMemoization?: boolean;
-
-  testTag?: TestTag;
 }
 
 export const agentTest: {
@@ -133,6 +130,5 @@ export const agentTest: {
     },
     Effect.provide(TestLayer),
     TestHelpers.provideTestContext,
-    options.testTag ? TestHelpers.taggedTest(options.testTag) : Function.identity,
   );
 };

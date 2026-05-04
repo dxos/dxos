@@ -52,8 +52,8 @@ describe.skip('Linear', { timeout: 600_000 }, () => {
         yield* Database.flush();
       },
       Effect.provide(TestLayer),
-      TestHelpers.taggedTest('sync'),
       TestHelpers.provideTestContext,
     ),
+    { tags: ['sync'] },
   );
 });

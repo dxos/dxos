@@ -93,8 +93,8 @@ describe('LanguageModel', () => {
       Effect.retry({ times: 1 }),
       Effect.provide(OpenAiLayer),
       TestHelpers.runIf(process.env.OPENAI_API_KEY),
-      TestHelpers.taggedTest('llm'),
     ),
+    { tags: ['llm'] },
   );
 
   it.effect(
@@ -119,8 +119,8 @@ describe('LanguageModel', () => {
       },
       Effect.provide([CalculatorLayer, OpenAiLayer]),
       TestHelpers.runIf(process.env.OPENAI_API_KEY),
-      TestHelpers.taggedTest('llm'),
     ),
+    { tags: ['llm'] },
   );
 
   it.effect(
@@ -142,23 +142,20 @@ describe('LanguageModel', () => {
 
   it.effect(
     'should process an agentic loop using Claude',
-    Effect.fn(
-      function* ({ expect }) {
-        // @effect-diagnostics-next-line multipleEffectProvide:off
-        const createProgram = (prompt: string) =>
-          createChat(prompt).pipe(
-            Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
-            Effect.provide(AnthropicLayer),
-            Effect.provide(CalculatorLayer),
-          );
+    Effect.fn(function* ({ expect }) {
+      // @effect-diagnostics-next-line multipleEffectProvide:off
+      const createProgram = (prompt: string) =>
+        createChat(prompt).pipe(
+          Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+          Effect.provide(AnthropicLayer),
+          Effect.provide(CalculatorLayer),
+        );
 
-        const result = yield* createProgram('What is six times seven?');
-        log.info('result', { result });
-        expect(result).toContain('42');
-      },
-      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
-      TestHelpers.taggedTest('llm'),
-    ),
+      const result = yield* createProgram('What is six times seven?');
+      log.info('result', { result });
+      expect(result).toContain('42');
+    }, TestHelpers.runIf(process.env.ANTHROPIC_API_KEY)),
+    { tags: ['llm'] },
   );
 
   it.effect(
@@ -176,9 +173,8 @@ describe('LanguageModel', () => {
       Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
-      TestHelpers.taggedTest('llm'),
     ),
-    { timeout: 120_000 },
+    { timeout: 120_000, tags: ['llm'] },
   );
 
   it.effect(
@@ -198,9 +194,8 @@ describe('LanguageModel', () => {
       Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' as any } })),
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
-      TestHelpers.taggedTest('llm'),
     ),
-    { timeout: 120_000 },
+    { timeout: 120_000, tags: ['llm'] },
   );
 
   it.effect(
@@ -231,9 +226,8 @@ describe('LanguageModel', () => {
       Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
-      TestHelpers.taggedTest('llm'),
     ),
-    { timeout: 120_000 },
+    { timeout: 120_000, tags: ['llm'] },
   ); //
 
   it.effect(
@@ -265,9 +259,8 @@ describe('LanguageModel', () => {
       Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' as any } })),
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
-      TestHelpers.taggedTest('llm'),
     ),
-    { timeout: 120_000 },
+    { timeout: 120_000, tags: ['llm'] },
   ); //
 
   it.effect(
@@ -302,9 +295,8 @@ describe('LanguageModel', () => {
       Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
-      TestHelpers.taggedTest('llm'),
     ),
-    { timeout: 120_000 },
+    { timeout: 120_000, tags: ['llm'] },
   );
 
   it.effect(
@@ -327,9 +319,8 @@ describe('LanguageModel', () => {
       Effect.provide(AnthropicLanguageModel.model('claude-opus-4-0')),
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
-      TestHelpers.taggedTest('llm'),
     ),
-    { timeout: 120_000 },
+    { timeout: 120_000, tags: ['llm'] },
   ); //
 });
 

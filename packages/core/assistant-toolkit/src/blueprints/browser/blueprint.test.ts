@@ -56,8 +56,7 @@ describe('Browser', () => {
       WithProperties,
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
-      TestHelpers.taggedTest('sync'),
     ),
-    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
+    { timeout: MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000, tags: ['sync'] },
   );
 });

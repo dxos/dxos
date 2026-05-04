@@ -25,7 +25,7 @@ describe('refs', () => {
   });
 });
 
-describe('introspector against fixture monorepo', () => {
+describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
   // Fixture shape:
   //   @fixture/pkg-a — ECHO type definition (Schema.Struct + Type.object) for Task,
   //                    plus a make() factory using Obj.make.

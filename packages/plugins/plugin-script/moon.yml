@@ -16,9 +16,7 @@ tasks:
       - '--entryPoint=src/types/index.ts'
       - '--entryPoint=src/templates/index.ts'
   e2e:
-    env:
-      DX_TEST_TAGS: functions-e2e
-    command: vitest run -c vitest.config.ts --reporter=verbose src/e2e/*.test.ts
+    command: vitest run -c vitest.config.ts --reporter=verbose --tagsFilter=functions-e2e src/e2e/*.test.ts
     deps:
       - ^:build
       - ^:compile
