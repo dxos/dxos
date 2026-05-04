@@ -15,8 +15,7 @@ const Segments = {
 export const getCodeProjectsSectionId = (): string => Segments.codeProjects;
 
 /** Canonical qualified path to the code-projects section of a space. */
-export const getCodeProjectsPath = (spaceId: string): string =>
-  `${Node.RootId}/${spaceId}/${Segments.codeProjects}`;
+export const getCodeProjectsPath = (spaceId: string): string => `${Node.RootId}/${spaceId}/${Segments.codeProjects}`;
 
 /** Canonical qualified path to a specific CodeProject within a space. */
 export const getCodeProjectPath = (spaceId: string, projectId: string): string =>
