@@ -42,6 +42,40 @@ export interface DxTsdownOptions {
 // Node globals shimmed for browser environments.
 const NODE_GLOBALS = ['global', 'Buffer', 'process'] as const;
 
+// Node built-in modules that @dxos/node-std provides browser shims for.
+// Keep in sync with packages/common/node-std/src/_/config.js.
+const NODE_STD_MODULES = ['fs/promises', 'assert', 'buffer', 'crypto', 'events', 'fs', 'path', 'process', 'stream', 'util'];
+
+/**
+ * Rewrites `node:xxx` and bare built-in imports (e.g. `util`, `events`) to
+ * `@dxos/node-std/xxx` in browser builds, matching the behaviour of esbuild's
+ * NodeExternalPlugin.  The remapped specifiers are marked external so rolldown
+ * does not attempt to bundle them — the downstream Vite/esbuild app provides
+ * the actual shim via its own aliases.
+ *
+ * Bare module names that appear in bundlePackages are skipped so packages like
+ * @dxos/node-std can still inline the npm polyfill rather than self-referencing.
+ */
+export const nodeStdPlugin = (bundlePackages: string[] = []) =>
+  ({
+    name: 'dx-node-std',
+    resolveId: {
+      order: 'pre' as const,
+      handler(id: string) {
+        if (id.startsWith('node:')) {
+          const mod = id.slice(5);
+          if (NODE_STD_MODULES.includes(mod)) {
+            return { id: `@dxos/node-std/${mod}`, external: true };
+          }
+        }
+        // Only remap bare names that are NOT explicitly being bundled by this package.
+        if (NODE_STD_MODULES.includes(id) && !bundlePackages.includes(id)) {
+          return { id: `@dxos/node-std/${id}`, external: true };
+        }
+      },
+    },
+  }) as any;
+
 /**
  * Marks all @dxos/* workspace packages as external before rolldown resolves them.
  *
@@ -311,7 +345,8 @@ export const defineConfig = (options: DxTsdownOptions = {}): UserConfig[] => {
   const configs: UserConfig[] = [];
 
   if (platform.includes('browser')) {
-    const browserPlugins: any[] = [rawPlugin, urlPlugin, wsExternalPlugin, logPlugin];
+    const nodeStd = nodeStdPlugin(bundlePackages);
+    const browserPlugins: any[] = [nodeStd, rawPlugin, urlPlugin, wsExternalPlugin, logPlugin];
     if (injectGlobals) {
       browserPlugins.push(injectGlobalsPlugin());
     }
@@ -349,13 +384,14 @@ export const defineConfig = (options: DxTsdownOptions = {}): UserConfig[] => {
   }
 
   if (platform.includes('neutral')) {
+    const nodeStdNeutral = nodeStdPlugin(bundlePackages);
     configs.push({
       ...base,
       entry,
       platform: 'neutral',
       format: 'esm',
       outDir: `${outputPath}/neutral`,
-      plugins: [rawPlugin, urlPlugin, wsExternalPlugin, logPlugin],
+      plugins: [nodeStdNeutral, rawPlugin, urlPlugin, wsExternalPlugin, logPlugin],
     });
   }
 
