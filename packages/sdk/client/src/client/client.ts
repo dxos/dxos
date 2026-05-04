@@ -357,7 +357,7 @@ export class Client {
       return this;
     }
 
-    log.trace('dxos.sdk.client.open', Trace.begin({ id: this._instanceId }));
+    log('client.initialize: initializing...', { id: this._instanceId });
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
     const { Runtime } = await import('@dxos/protocols/proto/dxos/config');
 
@@ -411,7 +411,7 @@ export class Client {
     }
 
     this._initialized = true;
-    log.trace('dxos.sdk.client.open', Trace.end({ id: this._instanceId }));
+    log('client.initialize: initialized', { id: this._instanceId });
     return this;
   }
 
