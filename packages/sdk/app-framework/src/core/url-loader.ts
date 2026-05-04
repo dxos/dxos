@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import * as Plugin from './plugin';
@@ -132,53 +133,61 @@ const normalizePluginExport = (mod: Record<string, unknown>): Plugin.Plugin => {
  * Loads stylesheets declared in the manifest by appending `<link rel="stylesheet">` elements to the host document.
  * Each link is tagged with `data-dxos-plugin-id` so `uninstall` can clean them up.
  */
-const loadStylesheets = async (
+const loadStylesheets = (
   manifest: PluginManifest.ResolvedManifest,
   cache: PluginAssetCache.Cache,
-): Promise<void> => {
-  if (typeof document === 'undefined') {
-    return;
-  }
-  const cssUrls = manifest.assetUrls.filter((url) => url.endsWith('.css'));
-  for (const url of cssUrls) {
-    const resolved = await cache.resolve(manifest.id, url);
-    if (document.querySelector(`link[data-dxos-plugin-id="${manifest.id}"][href="${resolved}"]`)) {
-      continue;
+): Effect.Effect<void, Error> =>
+  Effect.gen(function* () {
+    if (typeof document === 'undefined') {
+      return;
     }
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = resolved;
-    link.dataset.dxosPluginId = manifest.id;
-    document.head.appendChild(link);
-  }
-};
+    const cssUrls = manifest.assetUrls.filter((url) => url.endsWith('.css'));
+    for (const url of cssUrls) {
+      const resolved = yield* cache.resolve(manifest.id, url);
+      if (document.querySelector(`link[data-dxos-plugin-id="${manifest.id}"][href="${resolved}"]`)) {
+        continue;
+      }
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = resolved;
+      link.dataset.dxosPluginId = manifest.id;
+      document.head.appendChild(link);
+    }
+  });
 
-const loadFromManifest = async (
+const loadFromManifest = (
   manifestUrl: string,
   cache: PluginAssetCache.Cache,
-): Promise<{ plugin: Plugin.Plugin; manifest: PluginManifest.ResolvedManifest }> => {
-  log.info('loading remote plugin', { manifestUrl });
-  const manifest = await PluginManifest.fetchManifest(manifestUrl);
-  // Cache the manifest URL alongside its declared assets. Without it, `preload` on a
-  // subsequent reload would fetch the manifest from the network — and fail when the
-  // plugin's host is offline, dropping the plugin from the runtime.
-  const cachedUrls =
-    manifest.assetUrls.indexOf(manifestUrl) === -1 ? [manifestUrl, ...manifest.assetUrls] : manifest.assetUrls;
-  await cache.cache(manifest.id, cachedUrls);
-  await loadStylesheets(manifest, cache);
-  const entryUrl = await cache.resolve(manifest.id, manifest.entryUrl);
-  const mod = await import(/* @vite-ignore */ entryUrl);
-  const plugin = normalizePluginExport(mod);
-  if (!plugin.meta.id || !plugin.meta.name) {
-    throw new Error(`Remote plugin at ${manifestUrl} is missing required meta.id or meta.name.`);
-  }
-  if (plugin.meta.id !== manifest.id) {
-    throw new Error(
-      `Plugin meta.id (${plugin.meta.id}) does not match manifest id (${manifest.id}) at ${manifestUrl}.`,
-    );
-  }
-  return { plugin, manifest };
-};
+): Effect.Effect<{ plugin: Plugin.Plugin; manifest: PluginManifest.ResolvedManifest }, Error> =>
+  Effect.gen(function* () {
+    log.info('loading remote plugin', { manifestUrl });
+    const manifest = yield* Effect.tryPromise({
+      try: () => PluginManifest.fetchManifest(manifestUrl),
+      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+    });
+    // Cache the manifest URL alongside its declared assets. Without it, `preload` on a
+    // subsequent reload would fetch the manifest from the network — and fail when the
+    // plugin's host is offline, dropping the plugin from the runtime.
+    const cachedUrls =
+      manifest.assetUrls.indexOf(manifestUrl) === -1 ? [manifestUrl, ...manifest.assetUrls] : manifest.assetUrls;
+    yield* cache.cache(manifest.id, cachedUrls);
+    yield* loadStylesheets(manifest, cache);
+    const entryUrl = yield* cache.resolve(manifest.id, manifest.entryUrl);
+    const mod = yield* Effect.tryPromise({
+      try: () => import(/* @vite-ignore */ entryUrl),
+      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+    });
+    const plugin = normalizePluginExport(mod);
+    if (!plugin.meta.id || !plugin.meta.name) {
+      return yield* Effect.fail(new Error(`Remote plugin at ${manifestUrl} is missing required meta.id or meta.name.`));
+    }
+    if (plugin.meta.id !== manifest.id) {
+      return yield* Effect.fail(
+        new Error(`Plugin meta.id (${plugin.meta.id}) does not match manifest id (${manifest.id}) at ${manifestUrl}.`),
+      );
+    }
+    return { plugin, manifest };
+  });
 
 /**
  * Preloads previously persisted remote plugins from storage.
@@ -193,7 +202,9 @@ export const preload = async (options: Options = {}): Promise<Plugin.Plugin[]> =
     return [];
   }
   log.info('preloading remote plugins', { count: entries.length });
-  const results = await Promise.allSettled(entries.map((entry) => loadFromManifest(entry.url, cache)));
+  const results = await Promise.allSettled(
+    entries.map((entry) => runAndForwardErrors(loadFromManifest(entry.url, cache))),
+  );
   const plugins: Plugin.Plugin[] = [];
   for (let index = 0; index < results.length; index++) {
     const result = results[index];
@@ -227,10 +238,9 @@ export const make = (builtinPlugins: Plugin.Plugin[], options: Options = {}) => 
       if (!isUrl(locator)) {
         return yield* Effect.fail(new Error(`Plugin not found and locator is not a URL: ${locator}`));
       }
-      const result = yield* Effect.tryPromise({
-        try: () => loadFromManifest(locator, cache),
-        catch: (error) => new Error(`Failed to load remote plugin from ${locator}: ${error}`),
-      });
+      const result = yield* loadFromManifest(locator, cache).pipe(
+        Effect.mapError((error) => new Error(`Failed to load remote plugin from ${locator}: ${error}`)),
+      );
       const { plugin } = result;
       const duplicate = builtinPlugins.find((existing) => existing.meta.id === plugin.meta.id);
       if (duplicate) {
@@ -257,7 +267,7 @@ export const uninstall = async (pluginId: string, options: Options = {}): Promis
     document.querySelectorAll(`link[data-dxos-plugin-id="${pluginId}"]`).forEach((node) => node.remove());
   }
   try {
-    await cache.evict(pluginId);
+    await runAndForwardErrors(cache.evict(pluginId));
   } catch (error) {
     log.warn('failed to evict plugin assets', { pluginId, error });
   }

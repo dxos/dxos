@@ -28,17 +28,20 @@ const recordingCache = (): { cache: PluginAssetCache.Cache; calls: CacheCall[] }
   return {
     calls,
     cache: {
-      cache: async (pluginId, urls) => {
-        calls.push({ method: 'cache', pluginId, urls });
-      },
-      evict: async (pluginId) => {
-        calls.push({ method: 'evict', pluginId });
-      },
-      resolve: async (pluginId, url) => {
-        calls.push({ method: 'resolve', pluginId, url });
-        return url;
-      },
-      list: async () => [],
+      cache: (pluginId, urls) =>
+        Effect.sync(() => {
+          calls.push({ method: 'cache', pluginId, urls });
+        }),
+      evict: (pluginId) =>
+        Effect.sync(() => {
+          calls.push({ method: 'evict', pluginId });
+        }),
+      resolve: (pluginId, url) =>
+        Effect.sync(() => {
+          calls.push({ method: 'resolve', pluginId, url });
+          return url;
+        }),
+      list: () => Effect.succeed([] as readonly string[]),
     },
   };
 };
@@ -155,12 +158,10 @@ describe('UrlLoader', () => {
     it('still removes entry when cache eviction fails', async ({ expect }) => {
       const storage = memoryStorage('[{"id":"p1","url":"https://x/p1.json"}]');
       const cache: PluginAssetCache.Cache = {
-        cache: async () => {},
-        evict: async () => {
-          throw new Error('boom');
-        },
-        resolve: async (_id, url) => url,
-        list: async () => [],
+        cache: () => Effect.void,
+        evict: () => Effect.fail(new Error('boom')),
+        resolve: (_id, url) => Effect.succeed(url),
+        list: () => Effect.succeed([] as readonly string[]),
       };
       await UrlLoader.uninstall('p1', { storage, cache });
       expect(UrlLoader.getRemoteEntries({ storage })).toEqual([]);

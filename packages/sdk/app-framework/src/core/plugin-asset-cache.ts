@@ -2,37 +2,38 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 /**
  * Per-platform offline cache for third-party plugin assets.
  *
- * Implementations:
- *  - Web: backed by a service worker cache (see `@dxos/plugin-pwa`).
- *  - Tauri (desktop + iOS): backed by a filesystem cache served via a custom URI scheme (see `@dxos/plugin-native`).
- *  - Tests / unsupported environments: the no-op default returned by `noop()`.
+ * Implementations live alongside their platform glue (composer-app's
+ * `asset-cache/{tauri,service-worker}.ts`); the no-op default is for tests
+ * and unsupported environments.
  */
 export interface Cache {
   /**
    * Persist all listed URLs under the namespace of `pluginId`. Idempotent.
    * The order of `urls` is significant — the first entry is treated as the entry module.
    */
-  cache(pluginId: string, urls: readonly string[]): Promise<void>;
+  cache(pluginId: string, urls: readonly string[]): Effect.Effect<void, Error>;
 
   /**
    * Drop all assets for a plugin (uninstall).
    */
-  evict(pluginId: string): Promise<void>;
+  evict(pluginId: string): Effect.Effect<void, Error>;
 
   /**
    * Resolves a plugin asset URL to a platform-specific cached URL when one is available.
    * Returns the original URL when no cached copy exists or the platform serves cached
    * responses transparently (e.g. service worker fetch interception on web).
    */
-  resolve(pluginId: string, url: string): Promise<string>;
+  resolve(pluginId: string, url: string): Effect.Effect<string, Error>;
 
   /**
    * List currently cached plugin ids (diagnostic).
    */
-  list(): Promise<readonly string[]>;
+  list(): Effect.Effect<readonly string[], Error>;
 }
 
 /**
@@ -40,8 +41,8 @@ export interface Cache {
  * Plugins still load — they just have no offline guarantee.
  */
 export const noop = (): Cache => ({
-  cache: async () => {},
-  evict: async () => {},
-  resolve: async (_pluginId, url) => url,
-  list: async () => [],
+  cache: () => Effect.void,
+  evict: () => Effect.void,
+  resolve: (_pluginId, url) => Effect.succeed(url),
+  list: () => Effect.succeed([] as readonly string[]),
 });

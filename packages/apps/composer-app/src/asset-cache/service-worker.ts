@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { type PluginAssetCache } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
@@ -45,6 +47,12 @@ const sendMessage = async (message: AssetCacheMessage): Promise<unknown> => {
   });
 };
 
+const sendMessageEffect = <T>(message: AssetCacheMessage): Effect.Effect<T, Error> =>
+  Effect.tryPromise({
+    try: () => sendMessage(message) as Promise<T>,
+    catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+  });
+
 /**
  * Service-worker-backed `PluginAssetCache.Cache`. The actual fetching and storage
  * happens inside the SW (see ../sw.ts). On the host side this just exchanges
@@ -52,20 +60,11 @@ const sendMessage = async (message: AssetCacheMessage): Promise<unknown> => {
  * responses transparently — so `resolve()` returns the original URL unchanged.
  */
 export const createServiceWorkerAssetCache = (): PluginAssetCache.Cache => ({
-  cache: async (pluginId, urls) => {
-    try {
-      await sendMessage({ type: 'dxos:cache-plugin-assets', pluginId, urls });
-    } catch (error) {
-      log.warn('failed to cache plugin assets in service worker', { pluginId, error });
-      throw error;
-    }
-  },
-  evict: async (pluginId) => {
-    await sendMessage({ type: 'dxos:evict-plugin', pluginId });
-  },
-  resolve: async (_pluginId, url) => url,
-  list: async () => {
-    const result = (await sendMessage({ type: 'dxos:list-plugins' })) as readonly string[];
-    return result;
-  },
+  cache: (pluginId, urls) =>
+    sendMessageEffect<void>({ type: 'dxos:cache-plugin-assets', pluginId, urls }).pipe(
+      Effect.tapError((error) => Effect.sync(() => log.warn('failed to cache plugin assets', { pluginId, error }))),
+    ),
+  evict: (pluginId) => sendMessageEffect<void>({ type: 'dxos:evict-plugin', pluginId }),
+  resolve: (_pluginId, url) => Effect.succeed(url),
+  list: () => sendMessageEffect<readonly string[]>({ type: 'dxos:list-plugins' }),
 });
