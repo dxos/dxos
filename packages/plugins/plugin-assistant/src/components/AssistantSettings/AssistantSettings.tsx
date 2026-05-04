@@ -30,12 +30,12 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
   return (
     <SettingsForm.Viewport>
       <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
-        <SettingsForm.FieldSet
+        <SettingsForm.FieldSet<Assistant.Settings>
           readonly={!onSettingsChange}
           schema={Assistant.Settings}
           fieldMap={fieldMap}
           values={settings}
-          onValuesChanged={onSettingsChange}
+          onValuesChanged={(values) => onSettingsChange?.(() => values)}
         />
       </SettingsForm.Section>
     </SettingsForm.Viewport>
