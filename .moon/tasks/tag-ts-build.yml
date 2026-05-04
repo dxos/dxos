@@ -3,12 +3,12 @@ tasks:
   build:
     command: pnpm exec tsdown
     deps:
-      - dx-tsdown:compile
       - ^:build
       # Ensure ts-compile dependency packages are compiled first.
       - ^:compile
     inputs:
       - /tsconfig.base.json
+      - /tsdown.base.config.ts
       - tsconfig.json
       - tsdown.config.ts
       - '@group(sources)'

@@ -9,7 +9,7 @@
 
 import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -136,6 +136,11 @@ function writeConfig(configPath, opts) {
   const hasNonDefaultPlatform = platforms.length > 0 && !isDefaultPlatforms(platforms);
   const hasFlags = injectGlobals || importGlobals || bundlePackages.length > 0;
 
+  // Compute relative path from this config file to the root tsdown.base.config.ts.
+  const rootConfig = join(repoRoot, 'tsdown.base.config.ts');
+  const relPath = relative(dirname(configPath), rootConfig).replace(/\\/g, '/');
+  const importPath = relPath.startsWith('.') ? relPath : `./${relPath}`;
+
   if (!hasNonDefaultEntry && !hasNonDefaultPlatform && !hasFlags) {
     // Minimal config — all defaults.
     writeFileSync(
@@ -143,7 +148,7 @@ function writeConfig(configPath, opts) {
       [
         '// Copyright 2026 DXOS.org',
         '',
-        "import { defineConfig } from '@dxos/dx-tsdown/config';",
+        `import { defineConfig } from '${importPath}';`,
         '',
         'export default defineConfig();',
         '',
@@ -174,7 +179,7 @@ function writeConfig(configPath, opts) {
     [
       '// Copyright 2026 DXOS.org',
       '',
-      "import { defineConfig } from '@dxos/dx-tsdown/config';",
+      `import { defineConfig } from '${importPath}';`,
       '',
       'export default defineConfig({',
       ...parts,
