@@ -5,7 +5,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import * as Effect from 'effect/Effect';
 
-import { type PluginAssetCache } from '@dxos/app-framework';
+import { PluginAssetCache } from '@dxos/app-framework';
 
 /**
  * Tauri-backed `PluginAssetCache.Cache` for desktop + iOS. Drives the Rust
@@ -18,17 +18,28 @@ import { type PluginAssetCache } from '@dxos/app-framework';
  * loader imports that URL instead of the original.
  */
 export const createTauriAssetCache = (): PluginAssetCache.Cache => {
-  const tryInvoke = <T>(cmd: string, args?: Record<string, unknown>): Effect.Effect<T, Error> =>
+  const tryInvoke = <T>(
+    operation: 'cache' | 'evict' | 'resolve' | 'list',
+    cmd: string,
+    args?: { pluginId?: string; [key: string]: unknown },
+  ): Effect.Effect<T, PluginAssetCache.PluginAssetCacheError> =>
     Effect.tryPromise({
       try: () => invoke<T>(cmd, args),
-      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+      catch: (cause) =>
+        new PluginAssetCache.PluginAssetCacheError({
+          context: { operation, pluginId: args?.pluginId },
+          cause,
+        }),
     });
 
   return {
-    cache: (pluginId, urls) => tryInvoke<void>('cache_plugin_assets', { pluginId, urls }),
-    evict: (pluginId) => tryInvoke<void>('evict_plugin', { pluginId }),
+    cache: (pluginId, urls) => tryInvoke<void>('cache', 'cache_plugin_assets', { pluginId, urls }),
+    evict: (pluginId) => tryInvoke<void>('evict', 'evict_plugin', { pluginId }),
     resolve: (pluginId, url) =>
-      Effect.map(tryInvoke<string | null>('resolve_cached_url', { pluginId, url }), (cached) => cached ?? url),
-    list: () => tryInvoke<readonly string[]>('list_cached_plugins'),
+      Effect.map(
+        tryInvoke<string | null>('resolve', 'resolve_cached_url', { pluginId, url }),
+        (cached) => cached ?? url,
+      ),
+    list: () => tryInvoke<readonly string[]>('list', 'list_cached_plugins'),
   };
 };

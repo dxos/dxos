@@ -3,8 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
-import { runAndForwardErrors } from '@dxos/effect';
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
 import * as Plugin from './plugin';
@@ -12,6 +13,14 @@ import * as PluginAssetCache from './plugin-asset-cache';
 import * as PluginManifest from './plugin-manifest';
 
 const DEFAULT_KEY = 'org.dxos.composer.remote-plugins';
+
+/**
+ * Tagged error for any failure during remote plugin loading. Construction sites
+ * set `context.locator` and `context.reason` (one of `'invalid-locator' |
+ * 'manifest-error' | 'cache-error' | 'import-failed' | 'meta-missing' |
+ * 'meta-mismatch' | 'duplicate-id'`) so handlers can route on the failure mode.
+ */
+export class RemotePluginLoadError extends BaseError.extend('RemotePluginLoadError', 'Failed to load remote plugin') {}
 
 /**
  * Abstraction over key-value storage (defaults to localStorage).
@@ -136,7 +145,7 @@ const normalizePluginExport = (mod: Record<string, unknown>): Plugin.Plugin => {
 const loadStylesheets = (
   manifest: PluginManifest.ResolvedManifest,
   cache: PluginAssetCache.Cache,
-): Effect.Effect<void, Error> =>
+): Effect.Effect<void, PluginAssetCache.PluginAssetCacheError> =>
   Effect.gen(function* () {
     if (typeof document === 'undefined') {
       return;
@@ -158,61 +167,86 @@ const loadStylesheets = (
 const loadFromManifest = (
   manifestUrl: string,
   cache: PluginAssetCache.Cache,
-): Effect.Effect<{ plugin: Plugin.Plugin; manifest: PluginManifest.ResolvedManifest }, Error> =>
+): Effect.Effect<{ plugin: Plugin.Plugin; manifest: PluginManifest.ResolvedManifest }, RemotePluginLoadError> =>
   Effect.gen(function* () {
     log.info('loading remote plugin', { manifestUrl });
-    const manifest = yield* PluginManifest.fetchManifest(manifestUrl);
+    const manifest = yield* PluginManifest.fetchManifest(manifestUrl).pipe(
+      Effect.mapError(
+        (cause) => new RemotePluginLoadError({ context: { locator: manifestUrl, reason: 'manifest-error' }, cause }),
+      ),
+    );
     // Cache the manifest URL alongside its declared assets. Without it, `preload` on a
     // subsequent reload would fetch the manifest from the network — and fail when the
     // plugin's host is offline, dropping the plugin from the runtime.
     const cachedUrls =
       manifest.assetUrls.indexOf(manifestUrl) === -1 ? [manifestUrl, ...manifest.assetUrls] : manifest.assetUrls;
-    yield* cache.cache(manifest.id, cachedUrls);
-    yield* loadStylesheets(manifest, cache);
-    const entryUrl = yield* cache.resolve(manifest.id, manifest.entryUrl);
+    const wrapCacheError = Effect.mapError(
+      (cause: PluginAssetCache.PluginAssetCacheError) =>
+        new RemotePluginLoadError({ context: { locator: manifestUrl, reason: 'cache-error' }, cause }),
+    );
+    yield* cache.cache(manifest.id, cachedUrls).pipe(wrapCacheError);
+    yield* loadStylesheets(manifest, cache).pipe(wrapCacheError);
+    const entryUrl = yield* cache.resolve(manifest.id, manifest.entryUrl).pipe(wrapCacheError);
     const mod = yield* Effect.tryPromise({
       try: () => import(/* @vite-ignore */ entryUrl),
-      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+      catch: (cause) =>
+        new RemotePluginLoadError({ context: { locator: manifestUrl, reason: 'import-failed' }, cause }),
     });
     const plugin = normalizePluginExport(mod);
     if (!plugin.meta.id || !plugin.meta.name) {
-      return yield* Effect.fail(new Error(`Remote plugin at ${manifestUrl} is missing required meta.id or meta.name.`));
+      return yield* Effect.fail(
+        new RemotePluginLoadError({ context: { locator: manifestUrl, reason: 'meta-missing' } }),
+      );
     }
     if (plugin.meta.id !== manifest.id) {
       return yield* Effect.fail(
-        new Error(`Plugin meta.id (${plugin.meta.id}) does not match manifest id (${manifest.id}) at ${manifestUrl}.`),
+        new RemotePluginLoadError({
+          context: {
+            locator: manifestUrl,
+            reason: 'meta-mismatch',
+            metaId: plugin.meta.id,
+            manifestId: manifest.id,
+          },
+        }),
       );
     }
     return { plugin, manifest };
   });
 
 /**
- * Preloads previously persisted remote plugins from storage.
+ * Preloads previously persisted remote plugins from storage. Per-entry failures
+ * are logged and swallowed — the returned effect always succeeds with whichever
+ * plugins loaded cleanly, so a single bad entry can't block the host's startup.
  */
-export const preload = async (options: Options = {}): Promise<Plugin.Plugin[]> => {
-  const storage = options.storage ?? defaultStorage();
-  const key = options.key ?? DEFAULT_KEY;
-  const cache = options.cache ?? PluginAssetCache.noop();
+export const preload = (options: Options = {}): Effect.Effect<Plugin.Plugin[], never> =>
+  Effect.gen(function* () {
+    const storage = options.storage ?? defaultStorage();
+    const key = options.key ?? DEFAULT_KEY;
+    const cache = options.cache ?? PluginAssetCache.noop();
 
-  const entries = getPersistedRemotePlugins(storage, key);
-  if (entries.length === 0) {
-    return [];
-  }
-  log.info('preloading remote plugins', { count: entries.length });
-  const results = await Promise.allSettled(
-    entries.map((entry) => runAndForwardErrors(loadFromManifest(entry.url, cache))),
-  );
-  const plugins: Plugin.Plugin[] = [];
-  for (let index = 0; index < results.length; index++) {
-    const result = results[index];
-    if (result.status === 'fulfilled') {
-      plugins.push(result.value.plugin);
-    } else {
-      log.warn('failed to preload remote plugin', { entry: entries[index], error: result.reason });
+    const entries = getPersistedRemotePlugins(storage, key);
+    if (entries.length === 0) {
+      return [];
     }
-  }
-  return plugins;
-};
+    log.info('preloading remote plugins', { count: entries.length });
+    const results = yield* Effect.all(
+      entries.map((entry) =>
+        loadFromManifest(entry.url, cache).pipe(
+          Effect.tapError((error) =>
+            Effect.sync(() => log.warn('failed to preload remote plugin', { entry, error })),
+          ),
+          Effect.option,
+        ),
+      ),
+      { concurrency: 'unbounded' },
+    );
+    return results.flatMap((result) =>
+      Option.match(result, {
+        onNone: () => [],
+        onSome: ({ plugin }) => [plugin],
+      }),
+    );
+  });
 
 /**
  * Creates a plugin loader that resolves built-in plugins by ID or loads remote plugins from URLs.
@@ -226,23 +260,20 @@ export const make = (builtinPlugins: Plugin.Plugin[], options: Options = {}) => 
   const key = options.key ?? DEFAULT_KEY;
   const cache = options.cache ?? PluginAssetCache.noop();
 
-  return (locator: string): Effect.Effect<Plugin.Plugin, Error> =>
+  return (locator: string): Effect.Effect<Plugin.Plugin, RemotePluginLoadError> =>
     Effect.gen(function* () {
       const builtin = builtinPlugins.find((plugin) => plugin.meta.id === locator);
       if (builtin) {
         return builtin;
       }
       if (!isUrl(locator)) {
-        return yield* Effect.fail(new Error(`Plugin not found and locator is not a URL: ${locator}`));
+        return yield* Effect.fail(new RemotePluginLoadError({ context: { locator, reason: 'invalid-locator' } }));
       }
-      const result = yield* loadFromManifest(locator, cache).pipe(
-        Effect.mapError((error) => new Error(`Failed to load remote plugin from ${locator}: ${error}`)),
-      );
-      const { plugin } = result;
+      const { plugin } = yield* loadFromManifest(locator, cache);
       const duplicate = builtinPlugins.find((existing) => existing.meta.id === plugin.meta.id);
       if (duplicate) {
         return yield* Effect.fail(
-          new Error(`Remote plugin ${plugin.meta.id} conflicts with built-in plugin of the same id.`),
+          new RemotePluginLoadError({ context: { locator, reason: 'duplicate-id', id: plugin.meta.id } }),
         );
       }
       persistRemotePlugin(storage, key, { id: plugin.meta.id, url: locator });
@@ -253,19 +284,23 @@ export const make = (builtinPlugins: Plugin.Plugin[], options: Options = {}) => 
 /**
  * Removes a previously installed remote plugin: drops the persisted entry, evicts cached
  * assets, and removes any stylesheet `<link>` tags that {@link loadFromManifest} appended.
+ *
+ * Cache eviction failures are logged and swallowed — the persisted entry has already been
+ * dropped so the user-visible state is consistent regardless of whether the platform
+ * cache cooperated.
  */
-export const uninstall = async (pluginId: string, options: Options = {}): Promise<void> => {
-  const storage = options.storage ?? defaultStorage();
-  const key = options.key ?? DEFAULT_KEY;
-  const cache = options.cache ?? PluginAssetCache.noop();
+export const uninstall = (pluginId: string, options: Options = {}): Effect.Effect<void, never> =>
+  Effect.gen(function* () {
+    const storage = options.storage ?? defaultStorage();
+    const key = options.key ?? DEFAULT_KEY;
+    const cache = options.cache ?? PluginAssetCache.noop();
 
-  removePersistedRemotePlugin(storage, key, pluginId);
-  if (typeof document !== 'undefined') {
-    document.querySelectorAll(`link[data-dxos-plugin-id="${pluginId}"]`).forEach((node) => node.remove());
-  }
-  try {
-    await runAndForwardErrors(cache.evict(pluginId));
-  } catch (error) {
-    log.warn('failed to evict plugin assets', { pluginId, error });
-  }
-};
+    removePersistedRemotePlugin(storage, key, pluginId);
+    if (typeof document !== 'undefined') {
+      document.querySelectorAll(`link[data-dxos-plugin-id="${pluginId}"]`).forEach((node) => node.remove());
+    }
+    yield* cache.evict(pluginId).pipe(
+      Effect.tapError((error) => Effect.sync(() => log.warn('failed to evict plugin assets', { pluginId, error }))),
+      Effect.ignore,
+    );
+  });

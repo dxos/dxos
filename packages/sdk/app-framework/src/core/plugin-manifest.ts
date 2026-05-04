@@ -5,18 +5,22 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import { BaseError } from '@dxos/errors';
+import { PLUGIN_ENTRY_FILENAME } from '@dxos/protocols';
+
 /**
- * Filename of the entry module every plugin must publish at the root of its bundle.
- * Mirrors `PLUGIN_ENTRY_FILENAME` in `@dxos/protocols` — duplicated by value so this
- * module stays free of the protocols dependency.
+ * Tagged error for manifest fetch / parse failures. Construction sites set
+ * `context.manifestUrl` and `context.reason` (one of `'fetch-failed' |
+ * 'http-error' | 'parse-failed' | 'invalid'`) so handlers can route on the
+ * specific failure mode.
  */
-export const ENTRY_FILENAME = 'index.mjs';
+export class PluginManifestError extends BaseError.extend('PluginManifestError', 'Plugin manifest is invalid') {}
 
 /**
  * Schema for a third-party plugin manifest.
  *
  * The manifest is published as a sibling of the plugin's entry module
- * ({@link ENTRY_FILENAME}) and advertises every file the plugin needs at
+ * ({@link PLUGIN_ENTRY_FILENAME}) and advertises every file the plugin needs at
  * runtime so the host can eagerly cache them for offline use.
  */
 export const Manifest = Schema.Struct({
@@ -44,10 +48,10 @@ export type ResolvedManifest = {
  */
 export const parse = (manifestUrl: string, payload: unknown): ResolvedManifest => {
   const manifest = Schema.decodeUnknownSync(Manifest)(payload);
-  if (!manifest.assets.includes(ENTRY_FILENAME)) {
-    throw new Error(`Manifest at ${manifestUrl} does not list ${ENTRY_FILENAME} in assets.`);
+  if (!manifest.assets.includes(PLUGIN_ENTRY_FILENAME)) {
+    throw new Error(`Manifest at ${manifestUrl} does not list ${PLUGIN_ENTRY_FILENAME} in assets.`);
   }
-  const entryUrl = new URL(ENTRY_FILENAME, manifestUrl).toString();
+  const entryUrl = new URL(PLUGIN_ENTRY_FILENAME, manifestUrl).toString();
   const assetUrls = manifest.assets.map((asset) => new URL(asset, manifestUrl).toString());
   return {
     id: manifest.id,
@@ -58,28 +62,29 @@ export const parse = (manifestUrl: string, payload: unknown): ResolvedManifest =
   };
 };
 
-const wrapError = (error: unknown): Error => (error instanceof Error ? error : new Error(String(error)));
-
 /**
- * Fetches and parses a manifest from the given URL.
+ * Fetches and parses a manifest from the given URL. All failure modes surface as
+ * a single tagged {@link PluginManifestError}; callers route on `error.context.reason`.
  */
-export const fetchManifest = (manifestUrl: string): Effect.Effect<ResolvedManifest, Error> =>
+export const fetchManifest = (manifestUrl: string): Effect.Effect<ResolvedManifest, PluginManifestError> =>
   Effect.gen(function* () {
     const response = yield* Effect.tryPromise({
       try: () => fetch(manifestUrl),
-      catch: wrapError,
+      catch: (cause) =>
+        new PluginManifestError({ context: { manifestUrl, reason: 'fetch-failed' }, cause }),
     });
     if (!response.ok) {
       return yield* Effect.fail(
-        new Error(`Failed to fetch plugin manifest at ${manifestUrl}: ${response.status} ${response.statusText}`),
+        new PluginManifestError({ context: { manifestUrl, reason: 'http-error', status: response.status } }),
       );
     }
     const payload = yield* Effect.tryPromise({
       try: () => response.json() as Promise<unknown>,
-      catch: wrapError,
+      catch: (cause) =>
+        new PluginManifestError({ context: { manifestUrl, reason: 'parse-failed' }, cause }),
     });
     return yield* Effect.try({
       try: () => parse(manifestUrl, payload),
-      catch: wrapError,
+      catch: (cause) => new PluginManifestError({ context: { manifestUrl, reason: 'invalid' }, cause }),
     });
   });

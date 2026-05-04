@@ -389,10 +389,7 @@ const main = async () => {
         window.__bootLoader?.progress(loaded / total);
       },
     }),
-    UrlLoader.preload({ cache: assetCache }).catch((error) => {
-      log.warn('failed to preload remote plugins', { error });
-      return [] as Plugin.Plugin[];
-    }),
+    runAndForwardErrors(UrlLoader.preload({ cache: assetCache })),
   ]);
 
   bootStatus('Starting Composer…');
@@ -400,7 +397,7 @@ const main = async () => {
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
-  const onPluginRemove = (id: string) => UrlLoader.uninstall(id, { cache: assetCache });
+  const onPluginRemove = (id: string) => runAndForwardErrors(UrlLoader.uninstall(id, { cache: assetCache }));
   const core = getCore(conf);
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];

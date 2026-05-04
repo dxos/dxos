@@ -15048,6 +15048,9 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-error-boundary':
         specifier: workspace:*
         version: link:../../ui/react-primitives/react-error-boundary

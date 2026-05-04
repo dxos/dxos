@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type PluginAssetCache } from '@dxos/app-framework';
+import { PluginAssetCache } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
 /**
@@ -47,10 +47,14 @@ const sendMessage = async (message: AssetCacheMessage): Promise<unknown> => {
   });
 };
 
-const sendMessageEffect = <T>(message: AssetCacheMessage): Effect.Effect<T, Error> =>
+const sendMessageEffect = <T>(
+  operation: 'cache' | 'evict' | 'resolve' | 'list',
+  message: AssetCacheMessage,
+  pluginId?: string,
+): Effect.Effect<T, PluginAssetCache.PluginAssetCacheError> =>
   Effect.tryPromise({
     try: () => sendMessage(message) as Promise<T>,
-    catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+    catch: (cause) => new PluginAssetCache.PluginAssetCacheError({ context: { operation, pluginId }, cause }),
   });
 
 /**
@@ -61,10 +65,10 @@ const sendMessageEffect = <T>(message: AssetCacheMessage): Effect.Effect<T, Erro
  */
 export const createServiceWorkerAssetCache = (): PluginAssetCache.Cache => ({
   cache: (pluginId, urls) =>
-    sendMessageEffect<void>({ type: 'dxos:cache-plugin-assets', pluginId, urls }).pipe(
+    sendMessageEffect<void>('cache', { type: 'dxos:cache-plugin-assets', pluginId, urls }, pluginId).pipe(
       Effect.tapError((error) => Effect.sync(() => log.warn('failed to cache plugin assets', { pluginId, error }))),
     ),
-  evict: (pluginId) => sendMessageEffect<void>({ type: 'dxos:evict-plugin', pluginId }),
+  evict: (pluginId) => sendMessageEffect<void>('evict', { type: 'dxos:evict-plugin', pluginId }, pluginId),
   resolve: (_pluginId, url) => Effect.succeed(url),
-  list: () => sendMessageEffect<readonly string[]>({ type: 'dxos:list-plugins' }),
+  list: () => sendMessageEffect<readonly string[]>('list', { type: 'dxos:list-plugins' }),
 });

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { PLUGIN_ENTRY_FILENAME } from '@dxos/protocols';
+
 import { type Plugin } from '../core';
 
 /**
@@ -12,11 +14,10 @@ import { type Plugin } from '../core';
 export const MANIFEST_ASSET_NAME = 'manifest.json';
 
 /**
- * Filename of the entry module every plugin publishes at the root of its bundle.
- * Mirrors `PLUGIN_ENTRY_FILENAME` in `@dxos/protocols` — duplicated by value so
- * this module stays free of the protocols dependency.
+ * Canonical entry filename (re-exported from `@dxos/protocols`) so vite-plugin
+ * consumers don't have to reach into the protocols package directly.
  */
-export const ENTRY_FILENAME = 'index.mjs';
+export const ENTRY_FILENAME = PLUGIN_ENTRY_FILENAME;
 
 /**
  * Plugin metadata required to emit a manifest at build time.
