@@ -5,7 +5,7 @@ tags:
   - ts-test
   - pack
 tasks:
-  compile:
+  build:
     args:
       - '--platform=node'
       - '--entryPoint=src/index.ts'

@@ -18,7 +18,7 @@
         "browser": "./src/browser/index.ts",
         "default": "./src/node/index.ts"
       },
-      "types": "./dist/types/src/node/index.d.ts",
+      "types": "./dist/types/node/index.d.ts",
       "browser": "./dist/lib/browser/browser/index.mjs",
       "default": "./dist/lib/node-esm/node/index.mjs"
     }
@@ -26,12 +26,12 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "files": [
     "dist",
     "src"

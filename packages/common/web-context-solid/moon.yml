@@ -5,7 +5,7 @@ tags:
   - ts-test
   - pack
 tasks:
-  compile:
+  build:
     args:
       - '--entryPoint=src/index.ts'
   # TODO(wittjosiah): Get working with vitest.base.config.ts.

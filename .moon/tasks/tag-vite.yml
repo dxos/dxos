@@ -34,6 +34,7 @@ tasks:
   serve:
     command: pnpm exec vite dev
     deps:
+      - ^:build
       - ^:compile
     preset: server
   preview:

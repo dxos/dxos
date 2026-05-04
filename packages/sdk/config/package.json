@@ -18,7 +18,7 @@
         "browser": "./src/loaders/browser.ts",
         "default": "./src/loaders/index.ts"
       },
-      "types": "./dist/types/src/loaders/index.d.ts",
+      "types": "./dist/types/loaders/index.d.ts",
       "browser": "./dist/lib/browser/loaders/browser.mjs",
       "default": "./dist/lib/node-esm/loaders/index.mjs"
     },
@@ -27,7 +27,7 @@
         "browser": "./src/savers/browser.ts",
         "default": "./src/savers/index.ts"
       },
-      "types": "./dist/types/src/savers/index.d.ts",
+      "types": "./dist/types/savers/index.d.ts",
       "browser": "./dist/lib/browser/savers/browser.mjs",
       "default": "./dist/lib/node-esm/savers/index.mjs"
     },
@@ -36,7 +36,7 @@
         "browser": "./src/plugin/browser.ts",
         "default": "./src/plugin/index.ts"
       },
-      "types": "./dist/types/src/plugin/index.d.ts",
+      "types": "./dist/types/plugin/index.d.ts",
       "browser": "./dist/lib/browser/plugin/browser.mjs",
       "default": "./dist/lib/node-esm/plugin/index.mjs"
     }
@@ -44,7 +44,7 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
         "require": "./dist/lib/node/index.cjs",
@@ -53,25 +53,25 @@
     },
     "./esbuild-plugin": {
       "source": "./src/esbuild-plugin/index.ts",
-      "types": "./dist/types/src/esbuild-plugin/index.d.ts",
+      "types": "./dist/types/esbuild-plugin/index.d.ts",
       "import": "./dist/plugin/node-esm/esbuild-plugin.mjs",
       "require": "./dist/plugin/node/esbuild-plugin.cjs"
     },
     "./rollup-plugin": {
       "source": "./src/rollup-plugin/index.ts",
-      "types": "./dist/types/src/rollup-plugin/index.d.ts",
+      "types": "./dist/types/rollup-plugin/index.d.ts",
       "import": "./dist/plugin/node-esm/rollup-plugin.mjs",
       "require": "./dist/plugin/node/rollup-plugin.cjs"
     },
     "./vite-plugin": {
       "source": "./src/vite-plugin/index.ts",
-      "types": "./dist/types/src/vite-plugin/index.d.ts",
+      "types": "./dist/types/vite-plugin/index.d.ts",
       "import": "./dist/plugin/node-esm/vite-plugin.mjs",
       "require": "./dist/plugin/node/vite-plugin.cjs"
     }
   },
   "main": "dist/lib/node/index.cjs",
-  "types": "dist/types/src/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "files": [
     "dist",
     "src"

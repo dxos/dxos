@@ -8,7 +8,7 @@ tags:
   - pack
   - storybook
 tasks:
-  compile:
+  build:
     args:
       - '--entryPoint=src/devtools/index.ts'
       - '--entryPoint=src/echo/index.ts'

@@ -4,6 +4,6 @@ tags:
   - ts-build
   - pack
 tasks:
-  compile:
+  build:
     args:
       - '--entryPoint=src/index.ts'

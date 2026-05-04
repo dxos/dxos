@@ -5,7 +5,7 @@ tags:
   - ts-test
   - pack
 tasks:
-  compile:
+  build:
     args:
       - '--entryPoint=src/bundler/index.ts'
       - '--entryPoint=src/edge/index.ts'

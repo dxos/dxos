@@ -1,0 +1,27 @@
+{
+  "name": "@dxos/dx-tsdown",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "bin": {
+    "dx-tsdown": "cli.js"
+  },
+  "dependencies": {
+    "@oxc-project/types": "catalog:",
+    "rolldown": "catalog:",
+    "tsdown": "catalog:",
+    "yargs": "catalog:"
+  },
+  "devDependencies": {
+    "@types/yargs": "catalog:"
+  }
+}

@@ -15,31 +15,31 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
     "./native": {
       "source": "./src/native/index.ts",
-      "types": "./dist/types/src/native/index.d.ts",
+      "types": "./dist/types/native/index.d.ts",
       "default": "./dist/lib/neutral/native/index.mjs"
     },
     "./bundler": {
       "source": "./src/bundler/index.ts",
-      "types": "./dist/types/src/bundler/index.d.ts",
+      "types": "./dist/types/bundler/index.d.ts",
       "default": "./dist/lib/neutral/bundler/index.mjs"
     },
     "./edge": {
       "source": "./src/edge/index.ts",
-      "types": "./dist/types/src/edge/index.d.ts",
+      "types": "./dist/types/edge/index.d.ts",
       "default": "./dist/lib/neutral/edge/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
+      "types": "./dist/types/testing/index.d.ts",
       "default": "./dist/lib/neutral/testing/index.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "files": [
     "dist/lib",
     "dist/types",

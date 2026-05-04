@@ -6,7 +6,7 @@ tags:
   - ts-test-storybook
   - storybook
 tasks:
-  compile:
+  build:
     args:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/operations/index.ts'

@@ -7,7 +7,7 @@ tags:
   - pack
   - storybook
 tasks:
-  compile:
+  build:
     deps:
       - plugin-code:prebuild-lezer
     args:

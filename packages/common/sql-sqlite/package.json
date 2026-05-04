@@ -14,38 +14,38 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./SqliteClient": {
-      "types": "./dist/types/src/SqliteClient.d.ts",
+      "types": "./dist/types/SqliteClient.d.ts",
       "browser": "./dist/lib/browser/SqliteClient.mjs",
       "node": "./dist/lib/node-esm/SqliteClient.mjs"
     },
     "./OpfsWorker": {
-      "types": "./dist/types/src/OpfsWorker.d.ts",
+      "types": "./dist/types/OpfsWorker.d.ts",
       "browser": "./dist/lib/browser/OpfsWorker.mjs",
       "node": "./dist/lib/node-esm/OpfsWorker.mjs"
     },
     "./SqliteMigrator": {
-      "types": "./dist/types/src/SqliteMigrator.d.ts",
+      "types": "./dist/types/SqliteMigrator.d.ts",
       "browser": "./dist/lib/browser/SqliteMigrator.mjs",
       "node": "./dist/lib/node-esm/SqliteMigrator.mjs"
     },
     "./platform": {
-      "types": "./dist/types/src/platform/browser.d.ts",
+      "types": "./dist/types/platform/browser.d.ts",
       "browser": "./dist/lib/browser/platform/browser.mjs",
       "bun": "./dist/lib/node-esm/platform/bun.mjs",
       "node": "./dist/lib/node-esm/platform/node.mjs"
     },
     "./SqlExport": {
-      "types": "./dist/types/src/SqlExport.d.ts",
+      "types": "./dist/types/SqlExport.d.ts",
       "browser": "./dist/lib/browser/SqlExport.mjs",
       "node": "./dist/lib/node-esm/SqlExport.mjs"
     },
     "./SqlTransaction": {
-      "types": "./dist/types/src/SqlTransaction.d.ts",
+      "types": "./dist/types/SqlTransaction.d.ts",
       "browser": "./dist/lib/browser/SqlTransaction.mjs",
       "node": "./dist/lib/node-esm/SqlTransaction.mjs"
     }

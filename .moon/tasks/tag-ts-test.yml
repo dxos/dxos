@@ -4,7 +4,8 @@ tasks:
     command: pnpm exec dx-killorphans vitest run --passWithNoTests --project=node
     deps:
       - esbuild-plugins:compile
-      - node-std:compile
+      - node-std:build
+      - ^:build
       - ^:compile
     inputs:
       - '@group(sources)'
@@ -26,7 +27,8 @@ tasks:
     command: pnpm exec dx-killorphans vitest
     deps:
       - esbuild-plugins:compile
-      - node-std:compile
+      - node-std:build
+      - ^:build
       - ^:compile
     preset: server
 

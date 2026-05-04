@@ -5,10 +5,6 @@ tags:
   - ts-test
 tasks:
   build:
-    options:
-      mergeOutputs: replace
-    outputs: []
-  compile:
     command: bun
     args:
       - ./scripts/build.ts
@@ -38,7 +34,7 @@ tasks:
     args:
       - ./scripts/publish.ts
     deps:
-      - compile
+      - build
     inputs:
       - scripts/publish.ts
       - dist/**/*

@@ -18,7 +18,7 @@
         "browser": "./src/platform/browser/index.ts",
         "default": "./src/platform/node/index.ts"
       },
-      "types": "./dist/types/src/platform/node/index.d.ts",
+      "types": "./dist/types/platform/node/index.d.ts",
       "browser": "./dist/lib/browser/platform/browser/index.mjs",
       "default": "./dist/lib/node-esm/platform/node/index.mjs"
     },
@@ -27,14 +27,14 @@
         "browser": "./src/processors/console-stub.ts",
         "default": "./src/processors/console-processor.ts"
       },
-      "types": "./dist/types/src/processors/console-processor.d.ts",
+      "types": "./dist/types/processors/console-processor.d.ts",
       "browser": "./dist/lib/browser/processors/console-stub.mjs",
       "default": "./dist/lib/node-esm/processors/console-processor.mjs"
     }
   },
   "exports": {
     ".": {
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
         "require": "./dist/lib/node/index.cjs",
@@ -42,7 +42,7 @@
       }
     }
   },
-  "types": "dist/types/src/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "files": [
     "dist",
     "src"

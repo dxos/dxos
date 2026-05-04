@@ -6,6 +6,6 @@ tags:
   - ts-test-browser
   - pack
 tasks:
-  compile:
+  build:
     args:
       - '--entryPoint=src/index.ts'

@@ -18,36 +18,36 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./deprecated": {
       "source": "./src/deprecated/index.ts",
-      "types": "./dist/types/src/deprecated/index.d.ts",
+      "types": "./dist/types/deprecated/index.d.ts",
       "browser": "./dist/lib/browser/deprecated/index.mjs",
       "node": "./dist/lib/node-esm/deprecated/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
+      "types": "./dist/types/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
+      "types": "./dist/types/translations.d.ts",
       "browser": "./dist/lib/browser/translations.mjs",
       "node": "./dist/lib/node-esm/translations.mjs"
     },
     "./types": {
       "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
+      "types": "./dist/types/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
       "node": "./dist/lib/node-esm/types/index.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "files": [
     "dist",
     "src"
