@@ -165,7 +165,8 @@ export const BoardContainer = ({ role, subject: board, attendableId }: BoardCont
                 <Board.Content>
                   {items?.map((item, index) => (
                     <Board.Cell item={item} key={index} layout={board.layout?.cells[item.id] ?? { x: 0, y: 0 }}>
-                      <Surface.Surface type={AppSurface.Card} data={{ subject: item }} limit={1} />
+                      {/* `editable` opts the cell into the in-place editor variant — surfaces that don't recognize the flag fall back to the read-only card. */}
+                      <Surface.Surface type={AppSurface.Card} data={{ subject: item, editable: true }} limit={1} />
                     </Board.Cell>
                   ))}
                 </Board.Content>

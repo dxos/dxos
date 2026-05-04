@@ -66,9 +66,10 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
     <Card.Root
       ref={rootRef}
       classNames={mx(
-        // Card.Root is flex-col; stretching the inner Column.Root to fill the cell
-        // and giving the surface row 1fr keeps the card from leaving a blank row at the bottom.
-        'absolute p-0 [&>.dx-column-root]:grow [&>.dx-column-root]:[grid-auto-rows:min-content] [&>.dx-column-root]:[align-content:space-between]',
+        // Card.Root is flex-col; stretch Column.Root to fill the cell and give the first surface
+        // row 1fr so it absorbs free space (e.g. the snippet body). Toolbar stays on row 1 (auto);
+        // any additional rows after row 2 auto-flow at min content.
+        'absolute p-0 [&>.dx-column-root]:grow [&>.dx-column-root]:[grid-template-rows:auto_minmax(0,1fr)]',
         dragState === 'dragging' && 'opacity-50',
         classNames,
       )}
