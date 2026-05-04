@@ -12,6 +12,13 @@ import { type Plugin } from '../core';
 export const MANIFEST_ASSET_NAME = 'manifest.json';
 
 /**
+ * Filename of the entry module every plugin publishes at the root of its bundle.
+ * Mirrors `PLUGIN_ENTRY_FILENAME` in `@dxos/protocols` — duplicated by value so
+ * this module stays free of the protocols dependency.
+ */
+export const ENTRY_FILENAME = 'index.mjs';
+
+/**
  * Plugin metadata required to emit a manifest at build time.
  *
  * Extends `Plugin.Meta` with a build-time `version` field that is not
@@ -25,19 +32,16 @@ export type BuildMeta = Plugin.Meta & { version: string };
  *
  * The host fetches this manifest, resolves every entry in `assets` against the
  * manifest URL, and persists them via the platform `PluginAssetCache` so the
- * plugin works offline.
+ * plugin works offline. The entry module is always {@link ENTRY_FILENAME}; it
+ * must appear in `assets`.
  *
  * Exported from a vite-free module so tests and tooling can validate manifests
  * without paying the cost of loading vite + esbuild.
  */
-export const serializeManifest = (
-  meta: BuildMeta,
-  { entry, assets }: { entry: string; assets: readonly string[] },
-): string =>
+export const serializeManifest = (meta: BuildMeta, { assets }: { assets: readonly string[] }): string =>
   JSON.stringify(
     {
       ...meta,
-      entry,
       assets,
     },
     null,

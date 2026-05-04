@@ -5,17 +5,23 @@
 import * as Schema from 'effect/Schema';
 
 /**
+ * Filename of the entry module every plugin must publish at the root of its bundle.
+ * Mirrors `PLUGIN_ENTRY_FILENAME` in `@dxos/protocols` — duplicated by value so this
+ * module stays free of the protocols dependency.
+ */
+export const ENTRY_FILENAME = 'index.mjs';
+
+/**
  * Schema for a third-party plugin manifest.
  *
- * The manifest is published as a sibling of the plugin's entry module and
- * advertises every file the plugin needs at runtime so that the host can
- * eagerly cache them for offline use.
+ * The manifest is published as a sibling of the plugin's entry module
+ * ({@link ENTRY_FILENAME}) and advertises every file the plugin needs at
+ * runtime so the host can eagerly cache them for offline use.
  */
 export const Manifest = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
   version: Schema.String,
-  entry: Schema.String,
   assets: Schema.Array(Schema.String),
 });
 
@@ -37,11 +43,11 @@ export type ResolvedManifest = {
  */
 export const parse = (manifestUrl: string, payload: unknown): ResolvedManifest => {
   const manifest = Schema.decodeUnknownSync(Manifest)(payload);
-  const entryUrl = new URL(manifest.entry, manifestUrl).toString();
-  const assetUrls = manifest.assets.map((asset) => new URL(asset, manifestUrl).toString());
-  if (!assetUrls.includes(entryUrl)) {
-    throw new Error(`Manifest at ${manifestUrl} does not list the entry (${manifest.entry}) in assets.`);
+  if (!manifest.assets.includes(ENTRY_FILENAME)) {
+    throw new Error(`Manifest at ${manifestUrl} does not list ${ENTRY_FILENAME} in assets.`);
   }
+  const entryUrl = new URL(ENTRY_FILENAME, manifestUrl).toString();
+  const assetUrls = manifest.assets.map((asset) => new URL(asset, manifestUrl).toString());
   return {
     id: manifest.id,
     name: manifest.name,

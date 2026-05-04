@@ -4,15 +4,13 @@
 
 import { type Plugin as VitePlugin } from 'vite';
 
-import { type BuildMeta, MANIFEST_ASSET_NAME, serializeManifest } from '../manifest';
+import { type BuildMeta, ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest } from '../manifest';
 import { DEFAULT_PACKAGES, isSharedPackage } from '../packages';
 
-export { MANIFEST_ASSET_NAME, serializeManifest };
+export { ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest };
 export type { BuildMeta };
 
 const JSX_DEV_RUNTIME = 'react/jsx-dev-runtime';
-
-const DEFAULT_MODULE_FILE = 'plugin.mjs';
 
 /**
  * Whether an import should be externalized by the plugin bundle.
@@ -74,11 +72,10 @@ export type ComposerPluginOptions = {
   /**
    * Plugin metadata. When provided, a `manifest.json` asset is emitted alongside the bundle
    * listing every emitted file. The host fetches this manifest at install time and persists
-   * the declared assets in its offline cache so the plugin works without network.
+   * the declared assets in its offline cache so the plugin works without network. The bundle's
+   * entry module is always written as {@link ENTRY_FILENAME} (`index.mjs`).
    */
   meta?: BuildMeta;
-  /** Filename of the built module asset that the registry will load. Defaults to `plugin.mjs`. */
-  moduleFile?: string;
 };
 
 /**
@@ -99,7 +96,6 @@ export type ComposerPluginOptions = {
 export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] => {
   const entry = options?.entry ?? 'src/plugin.tsx';
   const port = options?.port ?? 3967;
-  const moduleFile = options?.moduleFile ?? DEFAULT_MODULE_FILE;
   const meta = options?.meta;
   const resolved = new Set<string>();
   let base = '/';
@@ -123,7 +119,7 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
           lib: {
             entry,
             formats: ['es'],
-            fileName: () => moduleFile,
+            fileName: () => ENTRY_FILENAME,
           },
           rolldownOptions: {
             external: (id: string) => isExternal(id),
@@ -271,7 +267,7 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
         this.emitFile({
           type: 'asset',
           fileName: MANIFEST_ASSET_NAME,
-          source: serializeManifest(meta, { entry: moduleFile, assets }),
+          source: serializeManifest(meta, { assets }),
         });
       },
     });

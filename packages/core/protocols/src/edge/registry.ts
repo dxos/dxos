@@ -33,21 +33,30 @@ export const PluginHealthSchema = Schema.Literal('ok', 'release-missing', 'manif
 export type PluginHealth = Schema.Schema.Type<typeof PluginHealthSchema>;
 
 /**
+ * Filename of the entry module every plugin must publish at the root of its bundle.
+ * The host dynamic-imports `<manifest URL base>/index.mjs` directly — no per-plugin
+ * configuration. `composerPlugin` outputs the bundle under this name so plugin authors
+ * never have to think about it.
+ */
+export const PLUGIN_ENTRY_FILENAME = 'index.mjs';
+
+/**
  * Shape of the manifest-asset JSON the registry service fetches from each plugin's latest release.
  *
  * Emitted by `@dxos/app-framework/vite-plugin`'s `composerPlugin` (see
  * `MANIFEST_ASSET_NAME`). Lists every file the plugin needs at runtime — the entry
- * module plus any sibling CSS, code-split chunks, fonts, etc. — so the host can
- * eagerly precache the whole bundle for offline use. Paths in `entry`/`assets` are
- * relative to the manifest's URL.
+ * module ({@link PLUGIN_ENTRY_FILENAME}) plus any sibling CSS, code-split chunks,
+ * fonts, etc. — so the host can eagerly precache the whole bundle for offline use.
+ * Paths in `assets` are relative to the manifest's URL.
  */
 export const PluginManifestSchema = Schema.Struct({
   ...PluginMetaSchema.fields,
   /** Plugin version (semver). Sourced from the publishing project's `package.json`. */
   version: Schema.String.pipe(Schema.nonEmptyString()),
-  /** Relative path to the entry module dynamic-imported by the host (e.g. `plugin.mjs`). */
-  entry: Schema.String.pipe(Schema.nonEmptyString()),
-  /** Relative paths of every file the plugin needs at runtime, including the entry. */
+  /**
+   * Relative paths of every file the plugin needs at runtime, including the entry.
+   * Must include {@link PLUGIN_ENTRY_FILENAME}; consumers verify on parse.
+   */
   assets: Schema.Array(Schema.String).pipe(Schema.minItems(1)),
 });
 export type PluginManifest = Schema.Schema.Type<typeof PluginManifestSchema>;
