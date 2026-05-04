@@ -9,9 +9,9 @@ import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
 import { Feed, Obj, Ref } from '@dxos/echo';
+import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, Trace } from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { DXN } from '@dxos/keys';

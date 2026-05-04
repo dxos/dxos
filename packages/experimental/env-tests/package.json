@@ -28,6 +28,7 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",
+    "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/blueprints": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/echo": "workspace:*",

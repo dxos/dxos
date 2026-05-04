@@ -10,5 +10,4 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/extraction/index.ts'
-      - '--entryPoint=src/testing/index.ts'
       - '--platform=neutral'

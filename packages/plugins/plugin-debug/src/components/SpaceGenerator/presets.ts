@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AgentPrompt, EntityExtraction, ResearchBlueprint } from '@dxos/assistant-toolkit';
+import { AgentPrompt, WebSearchBlueprint } from '@dxos/assistant-toolkit';
 import { Routine } from '@dxos/compute';
 import { Trigger } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
@@ -143,18 +143,6 @@ export const generator = () => ({
             }),
           );
 
-          space.db.add(
-            Trigger.make({
-              enabled: true,
-              // TODO(wittjosiah): Queue trigger doesn't support matching query of the column.
-              spec: Trigger.specQueue(queueDxn),
-              function: Ref.make(Operation.serialize(EntityExtraction)),
-              input: {
-                source: '{{event.item}}',
-              },
-            }),
-          );
-
           const researchPrompt = space.db.add(
             Routine.make({
               name: 'Research',
@@ -171,7 +159,7 @@ export const generator = () => ({
                 Create a research note for it at the end.
                 NOTE: Do mocked reseach (set mockSearch to true).
               `,
-              blueprints: [Ref.make(ResearchBlueprint.make())],
+              blueprints: [Ref.make(WebSearchBlueprint.make())],
             }),
           );
 

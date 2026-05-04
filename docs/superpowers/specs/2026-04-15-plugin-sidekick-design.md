@@ -87,7 +87,6 @@ All operations are pre-existing. The Sidekick Blueprint composes these blueprint
 
 - `ReadEmail` — read mailbox contents.
 - `ClassifyEmail` — tag/classify incoming email.
-- `SummarizeMailbox` — generate email summaries.
 - `DraftEmail` — create draft email responses.
 
 ### Inbox Send Blueprint (`org.dxos.blueprint.inbox-send`)
