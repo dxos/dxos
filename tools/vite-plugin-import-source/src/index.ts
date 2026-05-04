@@ -30,7 +30,9 @@ const PluginImportSource = ({
 }: PluginImportSourceOptions = {}): Plugin => {
   let resolver: ResolverFactory;
 
-  const globOptions = { dot: true };
+  // nocomment: minimatch treats patterns starting with '#' as comments by
+  // default, which breaks subpath-import patterns like '#*'.
+  const globOptions = { dot: true, nocomment: true };
   const isMatch = (filePath: string) =>
     include.some((pattern) => Minimatch(filePath, pattern, globOptions)) &&
     !exclude.some((pattern) => Minimatch(filePath, pattern, globOptions));
@@ -59,10 +61,12 @@ const PluginImportSource = ({
           return null; // Skip to next resolver.
         }
 
-        // Filter by package name pattern before resolving.
+        // Filter by package name pattern before resolving. nocomment: minimatch
+        // treats '#'-prefixed patterns as comments by default, which breaks
+        // subpath-import patterns like '#*'.
         const match =
-          include.some((pattern) => Minimatch(source, pattern, { dot: true })) &&
-          !exclude.some((pattern) => Minimatch(source, pattern, { dot: true }));
+          include.some((pattern) => Minimatch(source, pattern, { dot: true, nocomment: true })) &&
+          !exclude.some((pattern) => Minimatch(source, pattern, { dot: true, nocomment: true }));
 
         if (!match) {
           verbose && console.log(`[plugin-import-source] ${source} -> excluded`);

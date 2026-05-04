@@ -42,7 +42,7 @@ catalog:
   '@ch-ui/tailwind-tokens': 2.8.1
   '@ch-ui/tokens': 3.0.1
   '@cloudflare/ai-chat': ^0.0.6
-  '@cloudflare/vitest-pool-workers': ^0.14.1
+  '@cloudflare/vitest-pool-workers': ^0.14.9
   '@cloudflare/workers-types': ^4.20260302.0
   '@codemirror/autocomplete': ^6.19.0
   '@codemirror/commands': ^6.8.1
@@ -501,7 +501,7 @@ catalog:
   node-fetch: ^2.6.0
   node-notifier: ^10.0.1
   noise-protocol: 3.0.1
-  nyc: ^15.1.0
+  nyc: ^18.0.0
   ogl: ^1.0.11
   ollama: ^0.5.11
   once: ^1.4.0
