@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { dirname, relative } from 'path';
+import { dirname, relative, sep } from 'path';
 import type * as protobufjs from 'protobufjs';
 import * as ts from 'typescript';
 
@@ -39,7 +39,7 @@ export const createMessageDeclaration = (type: protobufjs.Type, ctx: GeneratorCo
 
   const commentSections = type.comment ? [type.comment] : [];
   if (type.filename) {
-    commentSections.push(`Defined in: \`${relative(dirname(ctx.outputFilename), type.filename)}\``);
+    commentSections.push(`Defined in: \`${relative(dirname(ctx.outputFilename), type.filename).split(sep).join('/')}\``);
   }
 
   if (commentSections.length === 0) {
