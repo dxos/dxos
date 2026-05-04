@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -11,7 +12,7 @@ import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 import { ModelName } from '@dxos/ai';
-import { Blueprint } from '@dxos/compute';
+import { Blueprint, Routine } from '@dxos/compute';
 import { type Trace } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
@@ -33,7 +34,7 @@ export interface Service {
    * Spawns a short-lived process that terminates after the routine completes.
    */
   runRoutine: (
-    routineRef: Ref.Ref<any>,
+    routineRef: Ref.Ref<Routine.Routine>,
     options?: RunRoutineOptions,
   ) => Effect.Effect<unknown, RoutineError, Database.Service | Feed.FeedService>;
 }
@@ -184,7 +185,7 @@ export const layer = (opts?: {
             return session;
           }),
 
-        runRoutine: (routineRef: Ref.Ref<any>, options?: RunRoutineOptions) =>
+        runRoutine: (routineRef: Ref.Ref<Routine.Routine>, options?: RunRoutineOptions) =>
           Effect.gen(function* () {
             const routine = yield* Database.load(routineRef).pipe(Effect.orDie);
             const routineDxn = Obj.getDXN(routine).toString();
@@ -210,7 +211,8 @@ export const layer = (opts?: {
               },
             });
 
-            const output = yield* Stream.runHead(handle.runAndExit({ inputs: [encodedInput] }));
+            const outputs = yield* handle.runAndExit({ inputs: [encodedInput] }).pipe(Stream.runCollect);
+            const output = Chunk.head(outputs);
 
             if (Option.isNone(output)) {
               return yield* Effect.fail(new RoutineError('Routine process produced no output.'));

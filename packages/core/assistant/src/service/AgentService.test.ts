@@ -192,7 +192,7 @@ describe('AgentService.runRoutine', () => {
 
         const result = yield* AgentService.runRoutine(Ref.make(routine));
 
-        expect(result).toBeDefined();
+        expect(result).toBe("Hello! 👋 Welcome! It's great to have you here. I hope you're having a wonderful day!");
         log.info('runRoutine result', { result });
       },
       Effect.provide(SimpleTestLayer),
@@ -219,7 +219,7 @@ describe('AgentService.runRoutine', () => {
           input: { text: 'The quick brown fox jumps over the lazy dog. It was a sunny day.' },
         });
 
-        expect(result).toBeDefined();
+        expect(result).toBe('A fox jumps over a lazy dog on a sunny day.');
         log.info('runRoutine result with input', { result });
       },
       Effect.provide(SimpleTestLayer),

@@ -189,7 +189,11 @@ const emitResultEffect = (
     Effect.matchEffect({
       onFailure: (err) =>
         Effect.sync(() => {
-          ctx.submitOutput({ _tag: 'failure', message: err.message, description: undefined });
+          ctx.submitOutput({
+            _tag: 'failure',
+            message: err.message,
+            description: err.context?.description as string | undefined,
+          });
           ctx.succeed();
         }),
       onSuccess: (value) =>
