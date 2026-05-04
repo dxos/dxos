@@ -1,9 +1,16 @@
 //! Offline cache for third-party plugin assets.
 //!
 //! Bundle layout under `app_data_dir/plugin-cache/<sha(plugin_id)>/`:
-//!   <sha(url)>          -- raw bytes
-//!   <sha(url)>.meta     -- JSON sidecar { url, mime, fetched_at }
+//!   <url-path>          -- raw bytes, mirroring the URL's path-within-origin
+//!                          (e.g. `chunks/foo.js`, `assets/style.css`, `manifest.json`)
+//!   <url-path>.meta     -- JSON sidecar { url, mime, fetched_at }
 //!   index.json          -- { plugin_id, urls: [...] } for diagnostics + listing
+//!
+//! Path-based filenames (rather than `sha(url)`) are load-bearing: the webview's
+//! relative-URL resolution treats `dxos-plugin://<plugin_hash>/<file>` like any
+//! other URL, so a sibling import like `import('./chunks/foo.js')` from the entry
+//! resolves to `dxos-plugin://<plugin_hash>/chunks/foo.js`. Hashed filenames
+//! would 404 every sibling import. Using URL paths makes resolution natural.
 //!
 //! Identical code path on desktop and mobile (iOS). Storage purge resilience:
 //! a missing file at lookup time triggers a re-fetch on the next online load,
@@ -16,6 +23,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tauri::{AppHandle, Manager, Runtime};
 use tokio::sync::Mutex;
+use url::Url;
 
 const CACHE_DIR: &str = "plugin-cache";
 const INDEX_FILE: &str = "index.json";
@@ -55,12 +63,23 @@ fn plugin_dir<R: Runtime>(app: &AppHandle<R>, plugin_id: &str) -> Result<PathBuf
     Ok(root_dir(app)?.join(hash(plugin_id)))
 }
 
-fn asset_path(plugin_dir: &Path, url: &str) -> PathBuf {
-    plugin_dir.join(hash(url))
+/// Returns the path-within-origin for a given URL, with the leading slash trimmed.
+/// Used as both the on-disk filename and the path component of the `dxos-plugin://` URI.
+/// Reserved file names like `index.json` are sidestepped — that key is only ever produced
+/// by us internally, so callers passing a URL whose path collides with it would be a bug.
+fn url_path(url: &str) -> Result<String, String> {
+    let parsed = Url::parse(url).map_err(|e| format!("invalid url {}: {}", url, e))?;
+    Ok(parsed.path().trim_start_matches('/').to_string())
 }
 
-fn meta_path(plugin_dir: &Path, url: &str) -> PathBuf {
-    plugin_dir.join(format!("{}.meta", hash(url)))
+fn asset_path(plugin_dir: &Path, url: &str) -> Result<PathBuf, String> {
+    Ok(plugin_dir.join(url_path(url)?))
+}
+
+fn meta_path(plugin_dir: &Path, url: &str) -> Result<PathBuf, String> {
+    let mut path = asset_path(plugin_dir, url)?;
+    path.as_mut_os_string().push(".meta");
+    Ok(path)
 }
 
 async fn fetch_one(url: &str) -> Result<(Vec<u8>, String), String> {
@@ -115,17 +134,20 @@ pub async fn cache_plugin_assets<R: Runtime>(
     tokio::fs::create_dir_all(&dir).await.map_err(|e| e.to_string())?;
 
     for url in &urls {
-        let bytes_path = asset_path(&dir, url);
+        let bytes_path = asset_path(&dir, url)?;
         if tokio::fs::metadata(&bytes_path).await.is_ok() {
-            // Already cached for this URL; skip. Manifest-version bumps yield new hashed
-            // filenames so a real plugin update produces fresh entries automatically.
+            // Already cached for this URL; skip. Hashed asset filenames in the manifest
+            // mean real plugin updates produce fresh entries naturally.
             continue;
+        }
+        if let Some(parent) = bytes_path.parent() {
+            tokio::fs::create_dir_all(parent).await.map_err(|e| e.to_string())?;
         }
         let (bytes, mime) = fetch_one(url).await?;
         tokio::fs::write(&bytes_path, &bytes).await.map_err(|e| e.to_string())?;
         let meta = AssetMeta { url: url.clone(), mime, fetched_at: now_secs() };
         let meta_json = serde_json::to_vec(&meta).map_err(|e| e.to_string())?;
-        tokio::fs::write(meta_path(&dir, url), &meta_json).await.map_err(|e| e.to_string())?;
+        tokio::fs::write(meta_path(&dir, url)?, &meta_json).await.map_err(|e| e.to_string())?;
     }
 
     let index = Index { plugin_id: plugin_id.clone(), urls };
@@ -152,9 +174,9 @@ pub async fn resolve_cached_url<R: Runtime>(
     url: String,
 ) -> Result<Option<String>, String> {
     let dir = plugin_dir(&app, &plugin_id)?;
-    let bytes_path = asset_path(&dir, &url);
+    let bytes_path = asset_path(&dir, &url)?;
     if tokio::fs::metadata(&bytes_path).await.is_ok() {
-        Ok(Some(format!("{}://{}/{}", URI_SCHEME, hash(&plugin_id), hash(&url))))
+        Ok(Some(format!("{}://{}/{}", URI_SCHEME, hash(&plugin_id), url_path(&url)?)))
     } else {
         Ok(None)
     }
@@ -179,20 +201,29 @@ pub async fn list_cached_plugins<R: Runtime>(app: AppHandle<R>) -> Result<Vec<St
     Ok(ids)
 }
 
-/// Builds a response for a `dxos-plugin://<plugin_hash>/<url_hash>` request.
+/// Builds a response for a `dxos-plugin://<plugin_hash>/<url-path>` request.
 pub fn handle_uri<R: Runtime>(
     app: &AppHandle<R>,
     request: &http::Request<Vec<u8>>,
 ) -> http::Response<Vec<u8>> {
     let uri = request.uri();
     let host = uri.host().unwrap_or("");
-    let url_hash = uri.path().trim_start_matches('/');
+    let path = uri.path().trim_start_matches('/');
 
     let bytes_path = match root_dir(app) {
-        Ok(root) => root.join(host).join(url_hash),
+        Ok(root) => root.join(host).join(path),
         Err(_) => return not_found(),
     };
-    let meta_path_buf = bytes_path.with_extension("meta");
+    // Reject path traversal: the resolved path must stay inside its plugin dir.
+    let plugin_root = match root_dir(app) {
+        Ok(root) => root.join(host),
+        Err(_) => return not_found(),
+    };
+    if !bytes_path.starts_with(&plugin_root) {
+        return not_found();
+    }
+    let mut meta_path_buf = bytes_path.clone();
+    meta_path_buf.as_mut_os_string().push(".meta");
 
     let bytes = match std::fs::read(&bytes_path) {
         Ok(bytes) => bytes,
@@ -212,9 +243,13 @@ pub fn handle_uri<R: Runtime>(
         .unwrap_or_else(|_| not_found())
 }
 
+/// 404 response. Sets `access-control-allow-origin: *` so the webview surfaces a clean
+/// 404 status to the caller instead of cascading into a "Cross-Origin Resource Sharing
+/// policy" error that obscures the real cause.
 fn not_found() -> http::Response<Vec<u8>> {
     http::Response::builder()
         .status(404)
+        .header("access-control-allow-origin", "*")
         .body(b"plugin asset not found".to_vec())
         .expect("404 response should always build")
 }

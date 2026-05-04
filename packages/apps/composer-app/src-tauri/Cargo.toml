@@ -37,6 +37,7 @@ sha2 = "0.10"
 http = "1"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
 tokio = { version = "1", features = ["rt", "fs", "net", "sync", "macros"] }
+url = "2"
 
 [target.'cfg(unix)'.dependencies]
 xattr = "1"
@@ -52,7 +53,6 @@ tauri-plugin-localhost = "2"
 hyper = { version = "1", features = ["http1", "server"] }
 hyper-util = { version = "0.1", features = ["tokio"] }
 http-body-util = "0.1"
-url = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-global-shortcut = "2"
 
