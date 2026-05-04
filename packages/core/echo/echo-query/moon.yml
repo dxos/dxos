@@ -21,13 +21,13 @@ tasks:
       - src/parser/gen/query.terms.ts
       - src/parser/gen/query.ts
   prebuild-query-lite:
-    command: pnpm exec tsdown --logLevel error
+    command: pnpm exec tsdown --config tsdown.query-lite.config.ts --logLevel error
     deps:
       - ^:build
       - ^:compile
     inputs:
       - src/query-lite/*
-      - tsdown.config.ts
+      - tsdown.query-lite.config.ts
     outputs:
       - dist/query-lite/*
   test:
