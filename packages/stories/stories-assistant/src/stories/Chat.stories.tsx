@@ -8,7 +8,6 @@ import * as Schema from 'effect/Schema';
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { AgentPrompt, LinearBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
-import {} from '@dxos/blueprints';
 import { Blueprint, Routine, Template } from '@dxos/compute';
 import { Reply, Script, Trigger } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
