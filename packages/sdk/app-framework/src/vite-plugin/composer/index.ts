@@ -257,6 +257,11 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
     plugins.push({
       name: 'composer-plugin:emit-manifest',
       apply: 'build',
+      // `enforce: 'post'` is load-bearing: vite's CSS extraction plugin emits sibling
+      // `.css` assets in its own `generateBundle` hook. Without `post`, ours runs first
+      // and sees only the JS chunks — the manifest then omits CSS, so the host can't
+      // inject `<link>` tags for the plugin's stylesheet at install time.
+      enforce: 'post',
       generateBundle(_options, bundle) {
         // Source maps are large and only fetched when devtools opens — exclude them
         // from the manifest so the host doesn't precache megabytes of debug data.

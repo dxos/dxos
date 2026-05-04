@@ -128,6 +128,34 @@ const normalizePluginExport = (mod: Record<string, unknown>): Plugin.Plugin => {
   throw new Error('Remote module default export is not a Plugin or a zero-arg plugin factory.');
 };
 
+/**
+ * Loads stylesheet assets declared in the manifest by appending `<link rel="stylesheet">`
+ * elements to the host document. The plugin bundle no longer self-injects CSS (vite-plugin-
+ * css-injected-by-js was dropped when we moved to multi-asset distribution), so the host
+ * is responsible for wiring up sibling CSS. Each link is tagged with `data-dxos-plugin-id`
+ * so `uninstall` can clean them up.
+ */
+const loadStylesheets = async (
+  manifest: PluginManifest.ResolvedManifest,
+  cache: PluginAssetCache.Cache,
+): Promise<void> => {
+  if (typeof document === 'undefined') {
+    return;
+  }
+  const cssUrls = manifest.assetUrls.filter((url) => url.endsWith('.css'));
+  for (const url of cssUrls) {
+    const resolved = await cache.resolve(manifest.id, url);
+    if (document.querySelector(`link[data-dxos-plugin-id="${manifest.id}"][href="${resolved}"]`)) {
+      continue;
+    }
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = resolved;
+    link.dataset.dxosPluginId = manifest.id;
+    document.head.appendChild(link);
+  }
+};
+
 const loadFromManifest = async (
   manifestUrl: string,
   cache: PluginAssetCache.Cache,
@@ -135,6 +163,7 @@ const loadFromManifest = async (
   log.info('loading remote plugin', { manifestUrl });
   const manifest = await PluginManifest.fetchManifest(manifestUrl);
   await cache.cache(manifest.id, manifest.assetUrls);
+  await loadStylesheets(manifest, cache);
   const entryUrl = await cache.resolve(manifest.id, manifest.entryUrl);
   const mod = await import(/* @vite-ignore */ entryUrl);
   const plugin = normalizePluginExport(mod);
@@ -213,7 +242,8 @@ export const make = (builtinPlugins: Plugin.Plugin[], options: Options = {}) => 
 };
 
 /**
- * Removes a previously installed remote plugin: drops the persisted entry and evicts cached assets.
+ * Removes a previously installed remote plugin: drops the persisted entry, evicts cached
+ * assets, and removes any stylesheet `<link>` tags that {@link loadFromManifest} appended.
  */
 export const uninstall = async (pluginId: string, options: Options = {}): Promise<void> => {
   const storage = options.storage ?? defaultStorage();
@@ -221,6 +251,9 @@ export const uninstall = async (pluginId: string, options: Options = {}): Promis
   const cache = options.cache ?? PluginAssetCache.noop();
 
   removePersistedRemotePlugin(storage, key, pluginId);
+  if (typeof document !== 'undefined') {
+    document.querySelectorAll(`link[data-dxos-plugin-id="${pluginId}"]`).forEach((node) => node.remove());
+  }
   try {
     await cache.evict(pluginId);
   } catch (error) {
