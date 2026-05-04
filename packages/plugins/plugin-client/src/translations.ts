@@ -20,8 +20,7 @@ const pluginTranslations = [
         'devices-verbose.label': 'Manage devices',
         'add-device.description':
           'Authenticating another device is a two-step process. To get started, create a code using the button below.',
-        'devices.description':
-          'You can add and remove devices, configure your agent in the cloud, reset this device, or log in as a different identity here.',
+        'devices.description': 'Devices, cloud agents, and account access for this identity.',
         'create-device-invitation.label': 'Create code',
         'qr-code.description':
           'Scan this QR code using the device you want to log in to, or copy the URL and share it with the new device.',
