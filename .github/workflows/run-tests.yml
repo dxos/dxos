@@ -1,0 +1,116 @@
+name: Run Tests
+
+on:
+  workflow_call:
+    inputs:
+      sha:
+        description: 'Commit SHA to check out'
+        required: true
+        type: string
+      node-version:
+        description: 'Node.js version'
+        required: false
+        type: string
+        default: '24.11.1'
+    secrets:
+      TRUNK_TOKEN:
+        required: true
+      CODECOV_TOKEN:
+        required: false
+
+permissions:
+  contents: read
+  pull-requests: write
+  packages: read
+
+jobs:
+  test:
+    # Gate fork PRs on maintainer approval. github context is inherited from the caller.
+    environment: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository && 'external-pr' || '' }}
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:${{ inputs.node-version }}
+      credentials:
+        username: dxos-bot
+        password: ${{ github.token }}
+    timeout-minutes: 30
+    env:
+      NODE_VERSION: ${{ inputs.node-version }}
+      # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
+      # while still excluding the heavier opt-in tag families.
+      VITEST_TAGS_FILTER: '!llm && !sync && !sync-e2e && !functions-e2e && !tracing-e2e'
+      VITEST_ENV: 'node'
+      VITEST_COVERAGE: 'true'
+      VITEST_XML_REPORT: 'true'
+      # NOTE: Browser tests also require a process for chromium. Limiting to 4 provides headroom for those processes.
+      MOON_CONCURRENCY: 4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.sha }}
+          fetch-depth: 0
+          lfs: true
+          persist-credentials: false
+
+      - name: Extract branch
+        id: extract_branch
+        uses: ./.github/actions/branch
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Install Playwright
+        run: pnpm run install-playwright
+
+      - name: Clean stale test results
+        run: rm -rf test-results
+
+      - name: Test Affected
+        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        uses: trunk-io/analytics-uploader@v1
+        with:
+          junit-paths: 'test-results/**/results.xml'
+          org-slug: dxos
+          token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
+          run: moon run :test :test-browser :test-storybook --affected remote -- --no-file-parallelism
+
+      - name: Test All
+        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        uses: trunk-io/analytics-uploader@v1
+        with:
+          junit-paths: 'test-results/**/results.xml'
+          org-slug: dxos
+          token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
+          run: moon exec --on-failure continue :test :test-browser :test-storybook -- --no-file-parallelism
+
+      - uses: 'moonrepo/run-report-action@v1'
+        if: (success() || failure()) && (github.event_name == 'pull_request' || github.event_name == 'pull_request_target')
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: vitest-report-${{ inputs.node-version }}
+          path: test-results
+          retention-days: 7
+
+      - uses: codecov/codecov-action@v5
+        if: ${{ inputs.node-version == '24.11.1' }}
+        with:
+          directory: ./coverage
+          fail_ci_if_error: false
+          handle_no_reports_found: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
+
+      - name: Send test report
+        if: ${{ always() && github.event_name == 'schedule' }}
+        uses: ./.github/actions/test-report
+        with:
+          name: 'test-${{ inputs.node-version }}'
+          result: ${{ job.status }}
