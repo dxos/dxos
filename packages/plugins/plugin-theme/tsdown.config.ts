@@ -3,6 +3,6 @@
 import { defineConfig } from '@dxos/dx-tsdown/config';
 
 export default defineConfig({
-  entry: ["src/index.ts","src/meta.ts","src/translations.ts"],
-  platform: ["browser"],
+  entry: ['src/index.ts', 'src/meta.ts', 'src/translations.ts'],
+  platform: ['browser'],
 });

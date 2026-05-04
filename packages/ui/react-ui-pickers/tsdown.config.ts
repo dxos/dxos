@@ -3,5 +3,5 @@
 import { defineConfig } from '@dxos/dx-tsdown/config';
 
 export default defineConfig({
-  entry: ["src/index.ts","src/components/IconPicker/icons.ts"],
+  entry: ['src/index.ts', 'src/components/IconPicker/icons.ts'],
 });

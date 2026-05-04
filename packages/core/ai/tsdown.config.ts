@@ -3,6 +3,6 @@
 import { defineConfig } from '@dxos/dx-tsdown/config';
 
 export default defineConfig({
-  entry: ["src/index.ts","src/resolvers/index.ts","src/testing/index.ts"],
-  platform: ["neutral"],
+  entry: ['src/index.ts', 'src/resolvers/index.ts', 'src/testing/index.ts'],
+  platform: ['neutral'],
 });

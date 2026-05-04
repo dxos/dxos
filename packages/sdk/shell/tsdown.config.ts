@@ -3,5 +3,5 @@
 import { defineConfig } from '@dxos/dx-tsdown/config';
 
 export default defineConfig({
-  entry: ["src/react.ts","src/testing/index.ts"],
+  entry: ['src/react.ts', 'src/testing/index.ts'],
 });

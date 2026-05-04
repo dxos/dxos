@@ -3,6 +3,6 @@
 import { defineConfig } from '@dxos/dx-tsdown/config';
 
 export default defineConfig({
-  entry: ["src/index.ts","src/stream.ts"],
+  entry: ['src/index.ts', 'src/stream.ts'],
   injectGlobals: true,
 });

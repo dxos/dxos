@@ -3,6 +3,6 @@
 import { defineConfig } from '@dxos/dx-tsdown/config';
 
 export default defineConfig({
-  platform: ["node"],
+  platform: ['node'],
   injectGlobals: true,
 });

@@ -3,5 +3,5 @@
 import { defineConfig } from '@dxos/dx-tsdown/config';
 
 export default defineConfig({
-  platform: ["browser"],
+  platform: ['browser'],
 });

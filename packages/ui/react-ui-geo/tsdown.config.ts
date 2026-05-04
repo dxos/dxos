@@ -3,5 +3,5 @@
 import { defineConfig } from '@dxos/dx-tsdown/config';
 
 export default defineConfig({
-  entry: ["src/data.ts","src/index.ts","src/translations.ts"],
+  entry: ['src/data.ts', 'src/index.ts', 'src/translations.ts'],
 });

@@ -7,11 +7,11 @@
 // Preserves other build task properties (deps, inputs, outputs).
 //
 
+import { parse, stringify, parseDocument } from '/home/user/dxos/node_modules/yaml/dist/index.js';
+import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { execSync } from 'node:child_process';
-import { parse, stringify, parseDocument } from '/home/user/dxos/node_modules/yaml/dist/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, '../../..');
