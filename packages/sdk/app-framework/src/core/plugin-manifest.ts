@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 /**
@@ -57,14 +58,28 @@ export const parse = (manifestUrl: string, payload: unknown): ResolvedManifest =
   };
 };
 
+const wrapError = (error: unknown): Error => (error instanceof Error ? error : new Error(String(error)));
+
 /**
  * Fetches and parses a manifest from the given URL.
  */
-export const fetchManifest = async (manifestUrl: string): Promise<ResolvedManifest> => {
-  const response = await fetch(manifestUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch plugin manifest at ${manifestUrl}: ${response.status} ${response.statusText}`);
-  }
-  const payload: unknown = await response.json();
-  return parse(manifestUrl, payload);
-};
+export const fetchManifest = (manifestUrl: string): Effect.Effect<ResolvedManifest, Error> =>
+  Effect.gen(function* () {
+    const response = yield* Effect.tryPromise({
+      try: () => fetch(manifestUrl),
+      catch: wrapError,
+    });
+    if (!response.ok) {
+      return yield* Effect.fail(
+        new Error(`Failed to fetch plugin manifest at ${manifestUrl}: ${response.status} ${response.statusText}`),
+      );
+    }
+    const payload = yield* Effect.tryPromise({
+      try: () => response.json() as Promise<unknown>,
+      catch: wrapError,
+    });
+    return yield* Effect.try({
+      try: () => parse(manifestUrl, payload),
+      catch: wrapError,
+    });
+  });

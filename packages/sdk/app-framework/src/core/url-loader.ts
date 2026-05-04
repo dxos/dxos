@@ -161,10 +161,7 @@ const loadFromManifest = (
 ): Effect.Effect<{ plugin: Plugin.Plugin; manifest: PluginManifest.ResolvedManifest }, Error> =>
   Effect.gen(function* () {
     log.info('loading remote plugin', { manifestUrl });
-    const manifest = yield* Effect.tryPromise({
-      try: () => PluginManifest.fetchManifest(manifestUrl),
-      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
-    });
+    const manifest = yield* PluginManifest.fetchManifest(manifestUrl);
     // Cache the manifest URL alongside its declared assets. Without it, `preload` on a
     // subsequent reload would fetch the manifest from the network — and fail when the
     // plugin's host is offline, dropping the plugin from the runtime.
