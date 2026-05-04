@@ -12,7 +12,7 @@ import { Annotation, Ref } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { OperationHandler, ReactSurface, Settings as SettingsCapability } from '#capabilities';
+import { BlueprintDefinition, OperationHandler, ReactSurface, Settings as SettingsCapability } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { CodeProject, Spec } from '#types';
@@ -67,6 +67,7 @@ export const CodePlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Spec.Spec, CodeProject.CodeProject] }),
   AppPlugin.addSettingsModule({ activate: SettingsCapability }),
