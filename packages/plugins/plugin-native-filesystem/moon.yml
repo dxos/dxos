@@ -4,9 +4,3 @@ tags:
   - ts-build
   - ts-test
   - pack
-tasks:
-  build:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/translations.ts'
-      - '--platform=browser'

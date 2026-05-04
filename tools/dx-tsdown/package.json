@@ -12,6 +12,9 @@
   "author": "info@dxos.org",
   "sideEffects": false,
   "type": "module",
+  "exports": {
+    "./config": "./dist/src/config.js"
+  },
   "bin": {
     "dx-tsdown": "cli.js"
   },

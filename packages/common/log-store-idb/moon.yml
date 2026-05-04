@@ -5,7 +5,3 @@ tags:
   - ts-test
   - ts-test-browser
   - pack
-tasks:
-  build:
-    args:
-      - '--entryPoint=src/index.ts'

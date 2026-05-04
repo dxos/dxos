@@ -6,10 +6,6 @@ tags:
   - pack
   - storybook
 tasks:
-  build:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--injectGlobals'
   test:
     inputs:
       - .storybook/*

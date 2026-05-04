@@ -33,8 +33,8 @@ void (async () => {
       .help().argv;
 
     const options: TsdownExecutorOptions = {
-      entryPoints: argv.entryPoint as string[],
-      platforms: argv.platform as Array<'browser' | 'node' | 'neutral'>,
+      entry: argv.entryPoint as string[],
+      platform: argv.platform as Array<'browser' | 'node' | 'neutral'>,
       injectGlobals: argv.injectGlobals as boolean,
       importGlobals: argv.importGlobals as boolean,
       bundlePackages: argv.bundlePackage as string[],

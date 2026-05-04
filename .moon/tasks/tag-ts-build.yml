@@ -1,9 +1,7 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   build:
-    command: pnpm exec dx-tsdown
-    args:
-      - --outputPath=dist/lib
+    command: pnpm exec tsdown
     deps:
       - dx-tsdown:compile
       - ^:build
@@ -12,6 +10,7 @@ tasks:
     inputs:
       - /tsconfig.base.json
       - tsconfig.json
+      - tsdown.config.ts
       - '@group(sources)'
     outputs:
       - dist/lib/

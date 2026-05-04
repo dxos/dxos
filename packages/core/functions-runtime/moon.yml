@@ -6,13 +6,6 @@ tags:
   - pack
 tasks:
   build:
-    args:
-      - '--entryPoint=src/bundler/index.ts'
-      - '--entryPoint=src/edge/index.ts'
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/native/index.ts'
-      - '--entryPoint=src/testing/index.ts'
-      - '--platform=neutral'
     deps:
       - prebuild
 

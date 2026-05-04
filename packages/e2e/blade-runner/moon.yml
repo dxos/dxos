@@ -3,8 +3,3 @@ language: typescript
 tags:
   - ts-build
   - ts-test
-tasks:
-  build:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/main.ts'

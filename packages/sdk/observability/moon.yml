@@ -6,8 +6,6 @@ tags:
   - pack
 tasks:
   build:
-    args:
-      - '--entryPoint=src/index.ts'
     deps:
       - prebuild
   prebuild:

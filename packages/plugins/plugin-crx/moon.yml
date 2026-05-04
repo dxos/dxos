@@ -2,9 +2,3 @@ layer: library
 language: typescript
 tags:
   - ts-build
-tasks:
-  build:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/translations.ts'
-      - '--entryPoint=src/types/index.ts'

@@ -3,13 +3,3 @@ language: typescript
 tags:
   - ts-build
   - ts-test
-tasks:
-  build:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/cli/index.ts'
-      - '--entryPoint=src/operations/index.ts'
-      - '--entryPoint=src/translations.ts'
-      - '--entryPoint=src/types/index.ts'
-      - '--platform=browser'
-      - '--platform=node'

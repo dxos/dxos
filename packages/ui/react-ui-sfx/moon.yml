@@ -8,8 +8,6 @@ tags:
   - storybook
 tasks:
   build:
-    args:
-      - '--entryPoint=src/index.ts'
     deps:
       - glsl
   glsl:

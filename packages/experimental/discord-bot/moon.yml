@@ -3,7 +3,3 @@ language: typescript
 tags:
   - ts-build
   - pack
-tasks:
-  build:
-    args:
-      - '--entryPoint=src/index.ts'

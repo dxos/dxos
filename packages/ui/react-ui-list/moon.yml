@@ -6,9 +6,3 @@ tags:
   - ts-test-storybook
   - pack
   - storybook
-tasks:
-  build:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--platform=browser'
-      - '--platform=node'
