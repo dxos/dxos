@@ -16,9 +16,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { ObjectId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-import DatabaseBlueprint from '../database/blueprint';
-import DiscordBlueprint from '../discord/blueprint';
-import MemoryBlueprint from '../memory/blueprint';
+import { DatabaseBlueprint, DiscordBlueprint, MemoryBlueprint } from '..';
 import BlueprintManagerDefinition from './blueprint';
 import { BlueprintManagerHandlers, EnableBlueprints, QueryBlueprints } from './functions';
 
@@ -52,7 +50,7 @@ describe('Blueprint Manager', () => {
         expect(result).toHaveLength(3);
         const keys = result.map((blueprint: Blueprint.Blueprint) => blueprint.key);
         expect(keys).toContain('org.dxos.blueprint.database');
-        expect(keys).toContain('dxos.org/blueprint/memory');
+        expect(keys).toContain('org.dxos.blueprint.memory');
         expect(keys).toContain('org.dxos.blueprint.discord');
       },
       provideTestLayers,
@@ -119,7 +117,7 @@ describe('Blueprint Manager', () => {
           {
             keys: [
               'org.dxos.blueprint.database',
-              'dxos.org/blueprint/memory',
+              'org.dxos.blueprint.memory',
               'org.dxos.blueprint.discord',
             ],
           },
@@ -128,7 +126,7 @@ describe('Blueprint Manager', () => {
         expect(enabled).toHaveLength(2);
         const enabledKeys = enabled.map((bp: Blueprint.Blueprint) => bp.key);
         expect(enabledKeys).toContain('org.dxos.blueprint.database');
-        expect(enabledKeys).toContain('dxos.org/blueprint/memory');
+        expect(enabledKeys).toContain('org.dxos.blueprint.memory');
         expect(rejected).toHaveLength(1);
         expect(rejected[0].key).toBe('org.dxos.blueprint.discord');
       },

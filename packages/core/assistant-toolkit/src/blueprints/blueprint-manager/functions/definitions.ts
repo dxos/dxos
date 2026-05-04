@@ -30,7 +30,7 @@ export const EnableBlueprints = Operation.make({
   input: Schema.Struct({
     keys: Schema.Array(Schema.String).annotations({
       description: 'The keys of the blueprints to enable.',
-      examples: [['dxos.org/blueprint/memory', 'org.dxos.blueprint.database']],
+      examples: [['org.dxos.blueprint.memory', 'org.dxos.blueprint.database']],
     }),
   }),
   output: Schema.Struct({
