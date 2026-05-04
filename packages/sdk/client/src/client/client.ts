@@ -31,7 +31,6 @@ import {
   InvalidConfigError,
   RemoteServiceConnectionError,
   RemoteServiceConnectionTimeout,
-  trace as Trace,
 } from '@dxos/protocols';
 import { type QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
@@ -357,9 +356,10 @@ export class Client {
       return this;
     }
 
-    log.trace('dxos.sdk.client.open', Trace.begin({ id: this._instanceId }));
+    log('initializing client');
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
     const { Runtime } = await import('@dxos/protocols/proto/dxos/config');
+    log('client.initialize: imports loaded');
 
     this._ctx = new Context();
     this._config = this._options.config ?? new Config();
@@ -391,27 +391,38 @@ export class Client {
     }
 
     // NOTE: Must currently match the host.
+    log('client.initialize: creating services provider', {
+      providedServices: !!this._options.services,
+      hasCreateWorker: !!this._options.createWorker,
+      hasCreateOpfsWorker: !!this._options.createOpfsWorker,
+      sqlitePath: this._options.sqlitePath,
+    });
     this._services = await (this._options.services ??
       createClientServices(this._config, {
         createWorker: this._options.createWorker,
         createOpfsWorker: this._options.createOpfsWorker,
         sqlitePath: this._options.sqlitePath, // TODO(dmaretskyi): Remove and derive from dataRoot in config.
       }));
+    log('client.initialize: services provider created');
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })
       : undefined;
     this._shellManager = this._iframeManager ? new ShellManager(this._iframeManager) : undefined;
+    log('client.initialize: opening client');
     await this._open(this._ctx);
+    log('client.initialize: client opened');
     invariant(this._runtime, 'Client runtime initialization failed.');
 
     // TODO(dmaretskyi): Refactor devtools init.
     if (typeof window !== 'undefined') {
+      log('client.initialize: mounting devtools hooks');
       const { mountDevtoolsHooks } = await import('../devtools');
       mountDevtoolsHooks({ client: this });
+      log('client.initialize: devtools hooks mounted');
     }
 
     this._initialized = true;
-    log.trace('dxos.sdk.client.open', Trace.end({ id: this._instanceId }));
+    log('initialized client');
     return this;
   }
 
@@ -419,10 +430,12 @@ export class Client {
   private async _open(ctx: Context): Promise<void> {
     log('opening...');
     invariant(this._services);
+    log('client._open: importing proxy modules');
     const { SpaceList } = await import('../echo/space-list');
     const { HaloProxy } = await import('../halo/halo-proxy');
     const { MeshProxy } = await import('../mesh/mesh-proxy');
     const { Shell } = await import('../services');
+    log('client._open: proxy modules loaded');
 
     const trigger = new Trigger<Error | undefined>();
     this._services.closed?.on(async (error) => {
@@ -465,9 +478,9 @@ export class Client {
     await this._echoClient.open(ctx);
     log('client._open: echo client opened');
 
-    const mesh = new MeshProxy(this._services, this._instanceId);
-    const halo = new HaloProxy(this._services, this._instanceId);
-    const spaces = new SpaceList(this._config, this._services, this._echoClient, this._instanceId);
+    const mesh = new MeshProxy(this._services);
+    const halo = new HaloProxy(this._services);
+    const spaces = new SpaceList(this._config, this._services, this._echoClient);
 
     const shell = this._shellManager
       ? new Shell({
@@ -514,8 +527,16 @@ export class Client {
     log('client._open: runtime opened');
 
     // TODO(wittjosiah): Factor out iframe manager and proxy into shell manager.
-    await this._iframeManager?.open();
-    await this._shellManager?.open();
+    if (this._iframeManager) {
+      log('client._open: opening iframe manager');
+      await this._iframeManager.open();
+      log('client._open: iframe manager opened');
+    }
+    if (this._shellManager) {
+      log('client._open: opening shell manager');
+      await this._shellManager.open();
+      log('client._open: shell manager opened');
+    }
     if (this._iframeManager?.iframe) {
       // TODO(wittjosiah): Remove. Workaround for socket runtime bug.
       //   https://github.com/socketsupply/socket/issues/893

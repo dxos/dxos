@@ -10,6 +10,7 @@ import {
   clientServiceBundle,
 } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { RemoteServiceConnectionTimeout } from '@dxos/protocols';
 import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
 import { trace } from '@dxos/tracing';
@@ -49,6 +50,7 @@ export class ClientServicesProxy implements ClientServicesProvider {
       return;
     }
 
+    log('client-services-proxy: opening', { timeout: this._timeout });
     this._proxy = createProtoRpcPeer({
       requested: clientServiceBundle,
       exposed: {},
@@ -66,6 +68,7 @@ export class ClientServicesProxy implements ClientServicesProvider {
         context: { timeout: this._timeout },
       }),
     );
+    log('client-services-proxy: opened');
   }
 
   async close(): Promise<void> {
@@ -73,7 +76,9 @@ export class ClientServicesProxy implements ClientServicesProvider {
       return;
     }
 
+    log('client-services-proxy: closing');
     await this._proxy.close();
     this._proxy = undefined;
+    log('client-services-proxy: closed');
   }
 }
