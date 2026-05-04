@@ -164,10 +164,7 @@ export const StringBackedKeepsFocus: Story = {
 
     // Focus editor and wait for focus to settle inside the editor root.
     editorContent.focus();
-    await waitFor(
-      () => (editorRoot.contains(document.activeElement) ? true : null),
-      'Editor did not receive focus',
-    );
+    await waitFor(() => (editorRoot.contains(document.activeElement) ? true : null), 'Editor did not receive focus');
 
     // Type several characters; focus must be preserved inside the editor root
     // after every keystroke. Regression: previously the EditorView was
