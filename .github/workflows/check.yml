@@ -106,7 +106,7 @@ jobs:
       matrix:
         node-version: ['24.11.1']
     # Fork PRs: gate on maintainer approval AND isolate secrets — only TRUNK_TOKEN
-    # reaches the test runner via the reusable workflow; DEPOT_TOKEN etc. are not passed.
+    # and CODECOV_TOKEN reach the test runner via the reusable workflow.
     environment: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository && 'external-pr' || '' }}
     uses: ./.github/workflows/run-tests.yml
     with:
@@ -118,7 +118,14 @@ jobs:
 
   e2e:
     # e2e only runs on direct pushes to release branches, never on PRs.
-    if: ${{ github.event_name != 'pull_request_target' && (startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e) }}
+    if: >-
+      github.event_name != 'pull_request_target' && (
+        startsWith(github.ref, 'refs/heads/main') ||
+        startsWith(github.ref, 'refs/heads/rc-') ||
+        startsWith(github.ref, 'refs/heads/hotfix-') ||
+        startsWith(github.ref, 'refs/heads/release-please-') ||
+        inputs.e2e
+      )
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
