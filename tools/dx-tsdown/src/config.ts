@@ -271,7 +271,9 @@ const generateDts = async (cwd: string): Promise<void> => {
 
 const sharedConfig = (bundlePackages: string[]): Partial<UserConfig> => ({
   skipNodeModulesBundle: true,
-  noExternal: bundlePackages.length > 0 ? bundlePackages : undefined,
+  // Include trailing-slash variants (e.g. 'util/') so rolldown bundles them alongside 'util'.
+  // Some packages use trailing-slash imports to bypass Vite aliases (e.g. node-std/src/util.js).
+  noExternal: bundlePackages.length > 0 ? [...bundlePackages, ...bundlePackages.map((p) => `${p}/`)] : undefined,
   dts: false,
   report: false,
   fixedExtension: true,
