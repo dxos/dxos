@@ -17,6 +17,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/vite-plugin-icons": "workspace:*",
+    "@dxos/vite-plugin-log": "workspace:*",
     "@storybook/addon-docs": "catalog:",
     "@storybook/addon-links": "catalog:",
     "@storybook/addon-themes": "catalog:",

@@ -20622,6 +20622,9 @@ importers:
       '@dxos/vite-plugin-icons':
         specifier: workspace:*
         version: link:../vite-plugin-icons
+      '@dxos/vite-plugin-log':
+        specifier: workspace:*
+        version: link:../vite-plugin-log
       '@storybook/addon-docs':
         specifier: 'catalog:'
         version: 10.3.6(@types/react@19.2.7)(esbuild@0.28.0)(rollup@3.30.0)(storybook@10.3.6(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(webpack@5.105.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.28.0))
@@ -20670,6 +20673,9 @@ importers:
       '@dxos/vite-plugin-import-source':
         specifier: workspace:*
         version: link:../vite-plugin-import-source
+      '@dxos/vite-plugin-log':
+        specifier: workspace:*
+        version: link:../vite-plugin-log
       '@storybook/addon-docs':
         specifier: 'catalog:'
         version: 10.3.6(@types/react@19.2.7)(esbuild@0.28.0)(rollup@3.30.0)(storybook@10.3.6(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(webpack@5.105.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.28.0))
@@ -20742,6 +20748,9 @@ importers:
       '@dxos/vite-plugin-icons':
         specifier: workspace:*
         version: link:../vite-plugin-icons
+      '@dxos/vite-plugin-log':
+        specifier: workspace:*
+        version: link:../vite-plugin-log
       '@storybook/addon-docs':
         specifier: 'catalog:'
         version: 10.3.6(@types/react@19.2.7)(esbuild@0.28.0)(rollup@3.30.0)(storybook@10.3.6(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(webpack@5.105.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.28.0))
