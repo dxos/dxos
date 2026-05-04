@@ -7,6 +7,7 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 import { ModelName } from '@dxos/ai';
@@ -17,13 +18,24 @@ import { acquireReleaseResource } from '@dxos/effect';
 import { ProcessManager } from '@dxos/functions-runtime';
 
 import { type McpServerConfig, AiContextBinder } from '../conversation';
+import { RoutineError } from '../errors';
 import { AgentProcess } from './agent-process';
+import { RoutineProcess, RoutineRunInput } from './routine-process';
 
 export interface Service {
   /**
    * Gets or creates a session for a feed.
    */
   getSession: (feed: Feed.Feed, options?: GetSessionOptions) => Effect.Effect<Session>;
+
+  /**
+   * Runs a routine to completion and returns the output.
+   * Spawns a short-lived process that terminates after the routine completes.
+   */
+  runRoutine: (
+    routineRef: Ref.Ref<any>,
+    options?: RunRoutineOptions,
+  ) => Effect.Effect<unknown, RoutineError, Database.Service | Feed.FeedService>;
 }
 
 export class AgentService extends Context.Tag('@dxos/assistant/AgentService')<AgentService, Service>() {}
@@ -69,8 +81,24 @@ export interface Session {
  */
 export const getSession = Effect.serviceFunctionEffect(AgentService, (service) => service.getSession);
 
+/**
+ * Runs a routine to completion and returns the output.
+ */
+export const runRoutine = Effect.serviceFunctionEffect(AgentService, (service) => service.runRoutine);
+
 export interface GetSessionOptions {
   readonly model?: ModelName;
+}
+
+export interface RunRoutineOptions {
+  readonly input?: unknown;
+  readonly systemInstructions?: string;
+  readonly model?: ModelName;
+  /**
+   * Use an existing feed for conversation context.
+   * When not provided, a new feed is created for the routine execution.
+   */
+  readonly feed?: Feed.Feed;
 }
 
 export interface CreateSessionOptions {
@@ -154,6 +182,49 @@ export const layer = (opts?: {
             const session = makeSession(handle, feed);
             sessionCache.set(feed.id, session);
             return session;
+          }),
+
+        runRoutine: (routineRef: Ref.Ref<any>, options?: RunRoutineOptions) =>
+          Effect.gen(function* () {
+            const routine = yield* Database.load(routineRef).pipe(Effect.orDie);
+            const routineDxn = Obj.getDXN(routine).toString();
+
+            const feed = options?.feed ?? (yield* Database.add(Feed.make()));
+            const feedDxn = Obj.getDXN(feed).toString();
+
+            const runInput: RoutineRunInput = {
+              routineDxn,
+              feedDxn,
+              input: options?.input,
+              systemInstructions: options?.systemInstructions,
+              model: options?.model,
+            };
+
+            const encodedInput = JSON.stringify(runInput);
+
+            const handle = yield* processManager.spawn(
+              RoutineProcess({ getMcpServers: opts?.getMcpServers }),
+              {
+                name: 'routine',
+                target: feedDxn,
+                traceMeta: {
+                  conversationId: feed.id,
+                },
+              },
+            );
+
+            const output = yield* Stream.runHead(handle.runAndExit({ inputs: [encodedInput] }));
+
+            if (Option.isNone(output)) {
+              return yield* Effect.fail(new RoutineError('Routine process produced no output.'));
+            }
+
+            const result = output.value;
+            if (result._tag === 'failure') {
+              return yield* Effect.fail(new RoutineError(result.message, { description: result.description }));
+            }
+
+            return result.value;
           }),
       };
     }),

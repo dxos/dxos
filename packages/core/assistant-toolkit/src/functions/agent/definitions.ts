@@ -9,6 +9,7 @@ import { Routine } from '@dxos/compute';
 import { Trace } from '@dxos/compute';
 import { Operation, OperationRegistry } from '@dxos/compute';
 import { Database, Feed, Ref } from '@dxos/echo';
+import { ProcessManager } from '@dxos/functions-runtime';
 
 import * as Chat from '../../types/Chat';
 
@@ -49,5 +50,6 @@ export const AgentPrompt = Operation.make({
     OpaqueToolkit.OpaqueToolkitProvider,
     OperationRegistry.Service,
     Trace.TraceService,
+    ProcessManager.Service,
   ],
 });
