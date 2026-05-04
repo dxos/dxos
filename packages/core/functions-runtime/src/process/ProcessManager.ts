@@ -823,12 +823,16 @@ export class ManagerImpl implements Manager {
         builtinCtx = Context.add(builtinCtx, ProcessOperationInvoker.Service, childInvoker);
       }
 
+      // Provide ProcessManager.Service so child processes can spawn further processes.
+      builtinCtx = Context.add(builtinCtx, Service, this);
+
       const builtinTagKeys = new Set([
         StorageService.StorageService.key,
         Scope.Scope.key,
         Trace.TraceService.key,
         Operation.Service.key,
         ProcessOperationInvoker.Service.key,
+        Service.key,
       ]);
       const externalServices = definition.services.filter((tag: Context.Tag<any, any>) => !builtinTagKeys.has(tag.key));
 

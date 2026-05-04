@@ -10,9 +10,10 @@ import * as Stream from 'effect/Stream';
 import { expect } from 'vitest';
 
 import { Blueprint } from '@dxos/compute';
+import { Routine } from '@dxos/compute';
 import { Trace } from '@dxos/compute';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { Feed } from '@dxos/echo';
+import { Database, Feed, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Process } from '@dxos/functions-runtime';
 import { ObjectId } from '@dxos/keys';
@@ -165,5 +166,99 @@ describe('Agent Executable', () => {
       TestHelpers.provideTestContext,
     ),
     { timeout: 120_000 },
+  );
+});
+
+describe('AgentService.runRoutine', () => {
+  const SimpleTestLayer = AssistantTestLayer({
+    types: [Organization.Organization, Feed.Feed, Blueprint.Blueprint, Routine.Routine],
+    tracing: 'console',
+    aiServicePreset: 'edge-remote',
+  });
+
+  it.scoped(
+    'runs a routine and returns output',
+    Effect.fnUntraced(
+      function* (_) {
+        const routine = yield* Database.add(
+          Routine.make({
+            name: 'Greeting',
+            description: 'Generate a greeting',
+            instructions: 'Say hello to the user and complete the job with the greeting as output.',
+          }),
+        );
+
+        yield* Database.flush();
+
+        const result = yield* AgentService.runRoutine(Ref.make(routine));
+
+        expect(result).toBe("Hello! 👋 Welcome! It's great to have you here. I hope you're having a wonderful day!");
+        log.info('runRoutine result', { result });
+      },
+      Effect.provide(SimpleTestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.scoped(
+    'runs a routine with input and returns structured output',
+    Effect.fnUntraced(
+      function* (_) {
+        const routine = yield* Database.add(
+          Routine.make({
+            name: 'Summarize',
+            description: 'Summarize the given text',
+            instructions: 'Summarize the provided input text in one sentence. Return the summary as the job output.',
+          }),
+        );
+
+        yield* Database.flush();
+
+        const result = yield* AgentService.runRoutine(Ref.make(routine), {
+          input: { text: 'The quick brown fox jumps over the lazy dog. It was a sunny day.' },
+        });
+
+        expect(result).toBe('A fox jumps over a lazy dog on a sunny day.');
+        log.info('runRoutine result with input', { result });
+      },
+      Effect.provide(SimpleTestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.scoped(
+    'process terminates after routine completes',
+    Effect.fnUntraced(
+      function* (_) {
+        const registry = yield* Registry.AtomRegistry;
+        const monitor = yield* Process.ProcessMonitorService;
+
+        const routine = yield* Database.add(
+          Routine.make({
+            name: 'Quick Task',
+            instructions: 'Complete the job immediately with the result: done',
+          }),
+        );
+
+        yield* Database.flush();
+
+        yield* AgentService.runRoutine(Ref.make(routine));
+
+        // Verify no lingering processes.
+        const processTree = registry.get(monitor.processTreeAtom);
+        const activeProcesses = processTree.filter(
+          (node) =>
+            node.state !== Process.State.SUCCEEDED &&
+            node.state !== Process.State.TERMINATED &&
+            node.state !== Process.State.FAILED,
+        );
+        expect(activeProcesses).toHaveLength(0);
+      },
+      Effect.provide(SimpleTestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
   );
 });
