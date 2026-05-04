@@ -13,10 +13,10 @@ import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
 import { Feed } from '@dxos/echo';
+import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, Trace } from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/operation';
 

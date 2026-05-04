@@ -112,7 +112,7 @@ export const createComputeGraph = (graph?: CanvasGraphModel<ComputeShape>) => {
 const linkTriggerToCompute = (graph: ComputeGraphModel, computeNode: ComputeNode, triggerData: TriggerShape) => {
   const functionTrigger = triggerData.functionTrigger?.target;
   invariant(functionTrigger);
-  Obj.change(functionTrigger, (functionTrigger) => {
+  Obj.update(functionTrigger, (functionTrigger) => {
     functionTrigger.function = Ref.make(graph.root);
     functionTrigger.inputNodeId = computeNode.id;
   });

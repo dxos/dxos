@@ -22,7 +22,7 @@ export default Update.pipe(
       const script = (yield* Database.load(loaded.source)) as Script.Script;
 
       if (name !== undefined || description !== undefined) {
-        Obj.change(script, (script) => {
+        Obj.update(script, (script) => {
           if (name !== undefined) {
             script.name = name;
           }
@@ -56,7 +56,7 @@ export default Update.pipe(
           });
         }
 
-        Obj.change(script, (script) => {
+        Obj.update(script, (script) => {
           script.changed = true;
         });
       }

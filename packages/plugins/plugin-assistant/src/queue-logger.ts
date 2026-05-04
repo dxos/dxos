@@ -34,7 +34,7 @@ export class QueueLogger implements SequenceLogger {
       const feed = space.db.add(Feed.make({ namespace: 'trace' }));
       queueDxn = Feed.getQueueDxn(feed) ?? undefined;
       invariant(queueDxn, 'New invocationTraceFeed has no queue DXN');
-      Obj.change(this._space.properties, (obj) => {
+      Obj.update(this._space.properties, (obj) => {
         obj.invocationTraceFeed = Ref.make(feed);
       });
     }

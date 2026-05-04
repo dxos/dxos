@@ -45,7 +45,7 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
     }
 
     const entry = JournalType.makeEntry();
-    Obj.change(journal, (journal) => {
+    Obj.update(journal, (journal) => {
       journal.entries[getDateString(date)] = Ref.make(entry);
     });
   }, [journal, date]);

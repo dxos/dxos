@@ -66,7 +66,10 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
     <Card.Root
       ref={rootRef}
       classNames={mx(
-        'absolute p-0 grid grid-rows-[min-content_1fr]',
+        // Card.Root is flex-col; stretch Column.Root to fill the cell and give the first surface
+        // row 1fr so it absorbs free space (e.g. the snippet body). Toolbar stays on row 1 (auto);
+        // any additional rows after row 2 auto-flow at min content.
+        'absolute p-0 [&>.dx-column-root]:grow [&>.dx-column-root]:[grid-template-rows:auto_minmax(0,1fr)]',
         dragState === 'dragging' && 'opacity-50',
         classNames,
       )}
@@ -87,9 +90,7 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
           />
         )}
       </Card.Toolbar>
-      <div role='none' {...{ inert: true }} className='pointer-events-none min-h-0 min-w-0'>
-        {children}
-      </div>
+      {children}
     </Card.Root>
   );
 };

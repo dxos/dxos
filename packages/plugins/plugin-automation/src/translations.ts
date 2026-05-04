@@ -14,7 +14,7 @@ export const translations = [
         'automation-panel.label': 'Automations',
         'script-automation.label': 'Automation',
         'automation-verbose.label': 'Manage automations',
-        'automation.description': 'You can manage all the triggers which automate your space here.',
+        'automation.description': 'Triggers that automate this space.',
 
         'runtime.label': 'Trigger runtime location',
         'runtime.description': 'Determines where the triggers in this space will execute.',
@@ -26,7 +26,7 @@ export const translations = [
         'functions-verbose.label': 'Manage deployed functions',
         'functions-registry-verbose.label': 'Functions registry',
         'functions-registry.description': 'Import functions from the registry',
-        'functions.description': 'You can manage all the functions deployed from your space on EDGE here.',
+        'functions.description': 'Functions deployed from this space on EDGE.',
         'show-source-button.label': 'Show source',
         'delete-function-button.label': 'Delete function',
 

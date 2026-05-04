@@ -20,7 +20,7 @@ import { objectFromJSON, objectToJSON } from './json-serializer';
 describe('Object JSON serializer', () => {
   test('should serialize and deserialize object', async () => {
     const contact = makeObject(TestSchema.Person, { name: 'Alice' });
-    Obj.change(contact, (contact) => {
+    Obj.update(contact, (contact) => {
       getMetaChecked(contact).keys.push({ id: '12345', source: 'example.com' });
     });
 

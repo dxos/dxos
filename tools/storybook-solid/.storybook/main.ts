@@ -46,10 +46,13 @@ export const config = ({ stories: baseStories, ...baseConfig }: Partial<Storyboo
     const { mergeConfig } = await import('vite');
     const { default: Inspect } = await import('vite-plugin-inspect');
     const { default: solidPlugin } = await import('vite-plugin-solid');
+    const { DxosLogPlugin } = await import('@dxos/vite-plugin-log');
 
     return mergeConfig(config, {
       plugins: [
         isTrue(process.env.DX_INSPECT) && Inspect(),
+
+        DxosLogPlugin(),
 
         solidPlugin(),
 

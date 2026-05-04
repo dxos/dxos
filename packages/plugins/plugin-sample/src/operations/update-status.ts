@@ -16,9 +16,9 @@ import { UpdateStatus } from './definitions';
 const handler: Operation.WithHandler<typeof UpdateStatus> = UpdateStatus.pipe(
   Operation.withHandler(({ item, status }) =>
     // `Effect.sync` wraps a synchronous side-effect. For async work, use `Effect.promise`.
-    // `Obj.change` provides a mutable draft for safe property assignment on ECHO objects.
+    // `Obj.update` provides a mutable draft for safe property assignment on ECHO objects.
     Effect.sync(() => {
-      Obj.change(item, (item) => {
+      Obj.update(item, (item) => {
         item.status = status;
       });
     }),

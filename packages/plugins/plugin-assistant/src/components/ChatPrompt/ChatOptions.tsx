@@ -87,28 +87,28 @@ export const ChatOptions = ({
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
                     <ViewPanel chat={chat} />
                   </Tabs.Panel>
-                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='model'>
-                    <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
-                  </Tabs.Panel>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='blueprints'>
                     <BlueprintsPanel blueprintRegistry={blueprintRegistry} db={db} context={context} />
                   </Tabs.Panel>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
                     <McpServersPanel db={db} />
                   </Tabs.Panel>
+                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='model'>
+                    <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
+                  </Tabs.Panel>
                   <Tabs.Tablist classNames={[styles.toolbar]}>
                     <Tabs.IconTab value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
-                    <Tabs.IconTab value='model' icon='ph--cpu--regular' label={t('chat-model.title')} />
                     <Tabs.IconTab
                       value='blueprints'
                       icon='ph--blueprint--regular'
-                      label={t('blueprints-in-context.title')}
+                      label={t('options.blueprints.title')}
                     />
                     <Tabs.IconTab
                       value='mcp-servers'
                       icon='ph--plugs-connected--regular'
-                      label={t('mcp-servers.title')}
+                      label={t('options.mcp.title')}
                     />
+                    <Tabs.IconTab value='model' icon='ph--cpu--regular' label={t('options.chat-model.title')} />
                   </Tabs.Tablist>
                 </Tabs.Viewport>
               </Tabs.Root>
@@ -214,7 +214,7 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
   );
 
   const handleToggle = useCallback((server: McpServer.McpServer, enabled: boolean) => {
-    Obj.change(server, (server) => {
+    Obj.update(server, (server) => {
       server.enabled = enabled;
     });
   }, []);

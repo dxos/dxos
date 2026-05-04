@@ -239,7 +239,7 @@ describe('CoreDatabase', () => {
       const partiallyLoadedLinks = range(3).map(() => createTextObject('test2'));
       const objectsToAdd = range(2).map(() => Obj.make(TestSchema.Expando, {}));
       const rootObject = Obj.make(TestSchema.Expando, {});
-      Obj.change(rootObject, (rootObject: any) => {
+      Obj.update(rootObject, (rootObject: any) => {
         [linksToRemove, loadedLinks, partiallyLoadedLinks]
           .flatMap((v: any[]) => v)
           .forEach((obj: any) => {

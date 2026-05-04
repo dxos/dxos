@@ -12,7 +12,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import * as AtomObj from './atom';
 
 describe('Echo Atom - Batch Updates', () => {
-  test('multiple updates to same object atom in single Obj.change fire single update', () => {
+  test('multiple updates to same object atom in single Obj.update fire single update', () => {
     const obj = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
@@ -33,14 +33,14 @@ describe('Echo Atom - Batch Updates', () => {
     const initialCount = updateCount;
     expect(initialCount).toBe(1); // Verify immediate update fired.
 
-    // Make multiple updates to the same object in a single Obj.change call.
-    Obj.change(obj, (obj) => {
+    // Make multiple updates to the same object in a single Obj.update call.
+    Obj.update(obj, (obj) => {
       obj.name = 'Updated1';
       obj.email = 'updated@example.com';
       obj.username = 'updated';
     });
 
-    // Should have fired once for initial + once for the Obj.change (not once per property update).
+    // Should have fired once for initial + once for the Obj.update (not once per property update).
     expect(updateCount).toBe(2);
 
     // Verify final state.
@@ -50,7 +50,7 @@ describe('Echo Atom - Batch Updates', () => {
     expect(finalValue.username).toBe('updated');
   });
 
-  test('multiple separate Obj.change calls fire separate updates', () => {
+  test('multiple separate Obj.update calls fire separate updates', () => {
     const obj = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
@@ -71,18 +71,18 @@ describe('Echo Atom - Batch Updates', () => {
     const initialCount = updateCount;
     expect(initialCount).toBe(1);
 
-    // Make multiple separate Obj.change calls.
-    Obj.change(obj, (obj) => {
+    // Make multiple separate Obj.update calls.
+    Obj.update(obj, (obj) => {
       obj.name = 'Updated1';
     });
-    Obj.change(obj, (obj) => {
+    Obj.update(obj, (obj) => {
       obj.email = 'updated@example.com';
     });
-    Obj.change(obj, (obj) => {
+    Obj.update(obj, (obj) => {
       obj.username = 'updated';
     });
 
-    // Should have fired once for initial + once per Obj.change call.
+    // Should have fired once for initial + once per Obj.update call.
     expect(updateCount).toBe(4);
 
     // Verify final state.
@@ -92,7 +92,7 @@ describe('Echo Atom - Batch Updates', () => {
     expect(finalValue.username).toBe('updated');
   });
 
-  test('multiple updates to same property atom in single Obj.change fire single update', () => {
+  test('multiple updates to same property atom in single Obj.update fire single update', () => {
     const obj = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
@@ -113,14 +113,14 @@ describe('Echo Atom - Batch Updates', () => {
     const initialCount = updateCount;
     expect(initialCount).toBe(1);
 
-    // Make multiple updates to the same property in a single Obj.change call.
-    Obj.change(obj, (obj) => {
+    // Make multiple updates to the same property in a single Obj.update call.
+    Obj.update(obj, (obj) => {
       obj.name = 'Updated1';
       obj.name = 'Updated2';
       obj.name = 'Updated3';
     });
 
-    // Should have fired once for initial + once for the Obj.change (not once per assignment).
+    // Should have fired once for initial + once for the Obj.update (not once per assignment).
     expect(updateCount).toBe(2);
 
     // Verify final state.

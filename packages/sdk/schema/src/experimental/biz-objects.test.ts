@@ -173,7 +173,7 @@ describe('analysis', () => {
 
     // Add a proposition using Ref.make (required for ECHO object references).
     const proposition = Proposition.make({ text: 'Unique decentralized object graph.' });
-    Obj.change(analysis, (analysis) => {
+    Obj.update(analysis, (analysis) => {
       analysis.strengths.push(Ref.make(proposition));
     });
 

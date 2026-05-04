@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/assistant-e-2-e",
+  "name": "@dxos/assistant-e2e",
   "version": "0.8.3",
   "description": "Assistant e2e tests.",
   "homepage": "https://dxos.org",
@@ -29,6 +29,7 @@
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/functions-runtime": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/types": "workspace:*",

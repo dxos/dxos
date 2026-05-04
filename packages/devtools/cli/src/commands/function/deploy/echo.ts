@@ -76,7 +76,7 @@ export const upsertFunctionObject: (opts: {
     });
     space.db.add(functionObject);
   }
-  Obj.change(functionObject, (functionObject) => {
+  Obj.update(functionObject, (functionObject) => {
     functionObject.key = uploadResult.meta.key ?? functionObject.key;
     functionObject.name = name ?? uploadResult.meta.name ?? functionObject.name;
     functionObject.version = uploadResult.version;
@@ -84,7 +84,7 @@ export const upsertFunctionObject: (opts: {
     functionObject.inputSchema = uploadResult.meta.inputSchema;
     functionObject.outputSchema = uploadResult.meta.outputSchema;
   });
-  Obj.change(functionObject, (functionObject) =>
+  Obj.update(functionObject, (functionObject) =>
     setUserFunctionIdInMetadata(Obj.getMeta(functionObject), uploadResult.functionId),
   );
   if (verbose) {
@@ -98,7 +98,7 @@ const makeObjectNavigableInComposer = Effect.fn(function* (space: Space, obj: Ob
   if (collectionRef) {
     const collection = yield* Database.load(collectionRef);
     if (collection) {
-      Obj.change(collection, (collection) => {
+      Obj.update(collection, (collection) => {
         collection.objects.push(Ref.make(collection));
       });
     }
@@ -126,7 +126,7 @@ export const upsertComposerScript = Effect.fn(function* ({
       () => functionObject.source!.load() as Promise<Script.Script>,
     )) as Script.Script;
     const source = (yield* Effect.tryPromise(() => script.source!.load())) as Text.Text;
-    Obj.change(source, (source: Obj.Mutable<Text.Text>) => {
+    Obj.update(source, (source: Obj.Mutable<Text.Text>) => {
       source.content = scriptFileContent;
     });
     if (verbose) {
@@ -134,7 +134,7 @@ export const upsertComposerScript = Effect.fn(function* ({
     }
   } else {
     const obj = yield* Database.add(Script.make({ name: scriptFileName, source: scriptFileContent }));
-    Obj.change(functionObject, (functionObject) => {
+    Obj.update(functionObject, (functionObject) => {
       functionObject.source = Ref.make(functionObject);
     });
     yield* makeObjectNavigableInComposer(space, obj);

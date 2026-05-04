@@ -40,7 +40,7 @@ export const updateFunctionMetadata = (
   meta: any,
   functionId: string,
 ) => {
-  Obj.change(storedFunction, (storedFunction) => {
+  Obj.update(storedFunction, (storedFunction) => {
     if (script.description !== undefined && script.description.trim() !== '') {
       storedFunction.description = script.description;
     } else if (meta.description) {

@@ -61,6 +61,7 @@
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",
+    "@dxos/functions-runtime": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@storybook/react-vite": "catalog:",

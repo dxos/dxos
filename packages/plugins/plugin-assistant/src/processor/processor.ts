@@ -14,7 +14,6 @@ import {
   type AiSession,
   createSystemPrompt,
   formatSystemPrompt,
-  AgentService,
   PartialBlock,
   ToolExecutionServices,
 } from '@dxos/assistant';
@@ -24,6 +23,7 @@ import { Trace, type CredentialsService, type QueueService } from '@dxos/compute
 import { Operation } from '@dxos/compute';
 import { type Database, Feed, Obj, Ref } from '@dxos/echo';
 import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
+import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import type { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Message } from '@dxos/types';

@@ -53,7 +53,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
     invariant(Type.isObjectSchema(schema));
     const newObject = db.add(Obj.make(schema, values));
     if (Obj.instanceOf(Tag.Tag, newObject)) {
-      Obj.change(object, (object) => {
+      Obj.update(object, (object) => {
         Obj.getMeta(object).tags = [...(Obj.getMeta(object).tags ?? []), Obj.getDXN(newObject).toString()];
       });
     }
@@ -68,10 +68,10 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
 
       const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
 
-      // Handle tags separately using Obj.change.
+      // Handle tags separately using Obj.update.
       const hasTagsChange = changedPaths.some((path) => splitJsonPath(path)[0] === 'tags');
       if (hasTagsChange) {
-        Obj.change(object, (object) => {
+        Obj.update(object, (object) => {
           Obj.getMeta(object).tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
         });
       }
@@ -79,7 +79,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
       // Handle other property changes.
       const nonTagPaths = changedPaths.filter((path) => splitJsonPath(path)[0] !== 'tags');
       if (nonTagPaths.length > 0) {
-        Obj.change(object, () => {
+        Obj.update(object, () => {
           for (const path of nonTagPaths) {
             const parts = splitJsonPath(path);
             const value = Obj.getValue(values, parts);

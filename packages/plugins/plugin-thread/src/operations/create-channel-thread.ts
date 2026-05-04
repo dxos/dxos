@@ -15,7 +15,7 @@ const handler: Operation.WithHandler<typeof CreateChannelThread> = CreateChannel
     Effect.sync(() => {
       const thread = Thread.make({ status: 'active' });
       const threadRef = Ref.make(thread);
-      Obj.change(input.channel, (obj) => {
+      Obj.update(input.channel, (obj) => {
         obj.threads.push(threadRef);
       });
       return { object: thread };

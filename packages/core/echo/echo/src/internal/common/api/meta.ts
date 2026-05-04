@@ -48,7 +48,7 @@ export const getKeys = (entity: AnyProperties, source: string): ForeignKey[] => 
 
 /**
  * Delete all keys from the entity for the specified source.
- * Must be called within an Obj.change or Relation.change callback.
+ * Must be called within an Obj.update or Relation.update callback.
  */
 export const deleteKeys = (entity: Mutable<AnyProperties>, source: string) => {
   const meta = getMetaChecked(entity);
@@ -62,7 +62,7 @@ export const deleteKeys = (entity: Mutable<AnyProperties>, source: string) => {
 
 /**
  * Add a tag to the entity.
- * Must be called within an Obj.change or Relation.change callback.
+ * Must be called within an Obj.update or Relation.update callback.
  */
 export const addTag = (entity: Mutable<AnyProperties>, tag: string) => {
   const meta = getMetaChecked(entity);
@@ -72,7 +72,7 @@ export const addTag = (entity: Mutable<AnyProperties>, tag: string) => {
 
 /**
  * Remove a tag from the entity.
- * Must be called within an Obj.change or Relation.change callback.
+ * Must be called within an Obj.update or Relation.update callback.
  */
 export const removeTag = (entity: Mutable<AnyProperties>, tag: string) => {
   const meta = getMetaChecked(entity);

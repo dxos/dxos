@@ -113,9 +113,9 @@ const mergeDeep = <T>(
   return { value: remote, source: 'remote' };
 };
 
-/** Mutates `integration.snapshots[foreignId] = snapshot` inside an `Obj.change`. */
+/** Mutates `integration.snapshots[foreignId] = snapshot` inside an `Obj.update`. */
 const writeSnapshot = (integration: Integration.Integration, foreignId: string, snapshot: object): void => {
-  Obj.change(integration, (integration) => {
+  Obj.update(integration, (integration) => {
     const m = integration as Obj.Mutable<typeof integration>;
     const existing = (m.snapshots ?? {}) as Record<string, unknown>;
     m.snapshots = { ...existing, [foreignId]: snapshot };
@@ -221,7 +221,7 @@ export const reconcileBoardCards: (
         }
 
         if (Object.keys(writes).length > 0) {
-          Obj.change(existing, (existing) => {
+          Obj.update(existing, (existing) => {
             const m = existing as unknown as Record<string, unknown>;
             for (const [k, v] of Object.entries(writes)) {
               m[k] = v;
@@ -263,7 +263,7 @@ export const reconcileBoardCards: (
     }
 
     if (newRefs.length > 0) {
-      Obj.change(kanban, (kanban) => {
+      Obj.update(kanban, (kanban) => {
         const m = kanban as Obj.Mutable<typeof kanban>;
         if (m.spec.kind === 'items') {
           m.spec.items = [...(m.spec.items as ReadonlyArray<Ref.Ref<Obj.Unknown>>), ...newRefs];
@@ -313,13 +313,13 @@ export const reconcileBoardCards: (
     );
 
     if (nameMerge.source === 'remote' && kanban.name !== nameMerge.value) {
-      Obj.change(kanban, (kanban) => {
+      Obj.update(kanban, (kanban) => {
         const m = kanban as Obj.Mutable<typeof kanban>;
         m.name = nameMerge.value;
       });
     }
     if (orderMerge.source === 'remote') {
-      Obj.change(kanban, (kanban) => {
+      Obj.update(kanban, (kanban) => {
         const m = kanban as Obj.Mutable<typeof kanban>;
         m.arrangement.order = orderMerge.value;
       });
@@ -329,7 +329,7 @@ export const reconcileBoardCards: (
       });
     }
     if (columnsMerge.source === 'remote') {
-      Obj.change(kanban, (kanban) => {
+      Obj.update(kanban, (kanban) => {
         const m = kanban as Obj.Mutable<typeof kanban>;
         const prev = m.arrangement.columns as Record<string, { ids: string[]; hidden?: boolean }>;
         const merged = columnsMerge.value as Record<string, { ids: string[]; hidden?: boolean }>;
@@ -442,7 +442,7 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
       // skip the local FK write so we don't end up with two FK entries on this object.
       const current = Obj.getMeta(target).keys.find((k) => k.source === TRELLO_SOURCE)?.id;
       if (!current) {
-        Obj.change(target, (target) => {
+        Obj.update(target, (target) => {
           Obj.deleteKeys(target, TRELLO_SOURCE);
           Obj.getMeta(target).keys.push({ source: TRELLO_SOURCE, id: result.id });
         });
@@ -625,7 +625,7 @@ const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.p
             if (!localObj) {
               localObj = yield* findOrCreateKanbanForBoard(remoteBoard);
               const materializedRef = Ref.make(localObj);
-              Obj.change(integrationObj, (integrationObj) => {
+              Obj.update(integrationObj, (integrationObj) => {
                 const mutable = integrationObj as Obj.Mutable<typeof integrationObj>;
                 const idx = mutable.targets.findIndex((t) => t.remoteId === foreignId);
                 if (idx >= 0) {
@@ -689,7 +689,7 @@ const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.p
                 // Update the target entry in place with success/failure status.
                 // Match by `remoteId` (stable across runs) with a fallback to
                 // local-object echo id for legacy entries that lack `remoteId`.
-                Obj.change(integrationObj, (integrationObj) => {
+                Obj.update(integrationObj, (integrationObj) => {
                   const m = integrationObj as Obj.Mutable<typeof integrationObj>;
                   const idx = m.targets.findIndex((t) => {
                     if (t.remoteId !== undefined) {

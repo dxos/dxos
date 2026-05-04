@@ -51,7 +51,7 @@ describe('SerializationModel', () => {
     }
 
     // Update message.
-    Obj.change(message, (message) => {
+    Obj.update(message, (message) => {
       message.blocks.push({ _tag: 'transcript', started: createDate(), text: 'Hello again!' });
     });
     model.updateChunk(message);
@@ -133,7 +133,7 @@ describe('SerializationModel', () => {
       expect(view.state.doc.toString()).to.eq('###### Alice\nHello world!\n\n');
 
       // Update message (add block).
-      Obj.change(message, (message) => {
+      Obj.update(message, (message) => {
         message.blocks.push({ _tag: 'transcript', started: createDate(), text: 'Hello again!' });
       });
       model.updateChunk(message);
@@ -141,7 +141,7 @@ describe('SerializationModel', () => {
       expect(view.state.doc.toString()).to.eq('###### Alice\nHello world!\nHello again!\n\n');
 
       // Update message (remove block).
-      Obj.change(message, (message) => {
+      Obj.update(message, (message) => {
         message.blocks.splice(0, 1);
       });
       model.updateChunk(message);

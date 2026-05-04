@@ -48,7 +48,7 @@ const handler: Operation.WithHandler<typeof SetIntegrationTargets> = SetIntegrat
         if (existingTarget && firstNewSel?.name) {
           const existing = (yield* Database.load(existingTarget)) as Obj.Unknown & { name?: string };
           if (!existing.name) {
-            Obj.change(existing, (existing) => {
+            Obj.update(existing, (existing) => {
               (existing as { name?: string }).name = firstNewSel.name;
             });
           }
@@ -57,7 +57,7 @@ const handler: Operation.WithHandler<typeof SetIntegrationTargets> = SetIntegrat
         let added = 0;
         let removed = 0;
 
-        Obj.change(obj, (obj) => {
+        Obj.update(obj, (obj) => {
           const mutable = obj as Obj.Mutable<typeof obj>;
 
           const next: (typeof obj.targets)[number][] = [];

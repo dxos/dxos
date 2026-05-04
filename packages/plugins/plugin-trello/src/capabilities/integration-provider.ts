@@ -37,7 +37,7 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
     const member = yield* TrelloApi.fetchMember().pipe(
       Effect.provide(Layer.succeed(TrelloApi.TrelloCredentials, creds)),
     );
-    Obj.change(accessToken, (accessToken) => {
+    Obj.update(accessToken, (accessToken) => {
       accessToken.account = member.email ?? member.username;
     });
   }).pipe(Effect.orDie);

@@ -286,7 +286,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
         );
         results.push(schema);
         if (input.name) {
-          Obj.change(schema.persistentSchema, (persistentSchema) => {
+          Obj.update(schema.persistentSchema, (persistentSchema) => {
             persistentSchema.name = input.name;
           });
         }
