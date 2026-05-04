@@ -91,16 +91,20 @@ export const DEFAULT_PACKAGES = [
   '@dxos/websocket-rpc',
 
   // packages/core
+  // `@dxos/blueprints`, `@dxos/functions`, and `@dxos/operation` are umbrella'd by
+  // `@dxos/compute` (which re-exports them) and composer-app no longer takes a direct
+  // dep on the underlying packages — listing them here would make `composerPlugin`
+  // externalize the bare specifier in plugin bundles while the host never publishes a
+  // corresponding import-map entry, producing a runtime `Failed to resolve module
+  // specifier` at install time. Plugins that still import them directly should migrate
+  // to `@dxos/compute`. `@dxos/functions-runtime` is similarly absent because it is
+  // not a host dep; add it back here only if composer-app starts importing it.
   '@dxos/ai',
   '@dxos/assistant',
   '@dxos/assistant-toolkit',
-  '@dxos/blueprints',
   '@dxos/compute',
   '@dxos/conductor',
-  '@dxos/functions',
-  '@dxos/functions-runtime',
   '@dxos/mcp-client',
-  '@dxos/operation',
   '@dxos/protocols',
 
   // packages/devtools
