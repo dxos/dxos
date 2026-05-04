@@ -21,6 +21,9 @@ import PluginImportSource from '@dxos/vite-plugin-import-source';
 // build the plugin first, which introduces a moon dep cycle through @dxos/log
 // (vite-plugin-log -> log -> ... -> log:test -> vite-plugin-log).
 import { DxosLogPlugin } from './tools/vite-plugin-log/src/plugin.ts';
+import { TEST_TAGS } from './vitest.tags';
+
+export { TEST_TAGS };
 
 const isDebug = !!process.env.VITEST_DEBUG;
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
@@ -50,6 +53,7 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
   return {
     test: {
       ...resolveReporterConfig(dirname),
+      tags: TEST_TAGS,
       // Suppress flaky WebSocket birpc teardown unhandled rejections from storybook test runner.
       ...(storybook ? { dangerouslyIgnoreUnhandledErrors: true } : {}),
       projects: [nodeProject, storybookProject, ...browserProjects].filter(

@@ -130,25 +130,32 @@ export class WorkerRuntime {
   async start(): Promise<void> {
     log('starting...');
     try {
+      log('worker-runtime: acquiring liveness lock (background)');
       void this._livenessLock.acquire();
 
       // Steal the lock from the other worker.
+      log('worker-runtime: broadcasting stop to displace previous worker');
       this._broadcastChannel = new BroadcastChannel(this._channel);
       this._broadcastChannel.postMessage({ action: 'stop' });
       this._broadcastChannel.onmessage = async (event) => {
         if (event.data?.action === 'stop') {
+          log('worker-runtime: received stop broadcast');
           await this.stop();
         }
       };
 
+      log('worker-runtime: acquiring storage lock');
       await this._acquireLock();
+      log('worker-runtime: storage lock acquired, resolving config');
       this._config = await this._configProvider();
+      log('worker-runtime: config resolved');
       this._signalTelemetryEnabled = this._config.get('runtime.client.signalTelemetryEnabled') ?? false;
       const observabilityGroup = this._config.get('runtime.client.observabilityGroup');
       if (observabilityGroup) {
         this._signalMetadataTags.group = observabilityGroup;
       }
       const signals = this._config.get('runtime.services.signaling');
+      log('worker-runtime: initializing client services host');
       this._clientServices.initialize({
         config: this._config,
         signalManager: this._config.get('runtime.client.edgeFeatures')?.signaling
@@ -158,8 +165,10 @@ export class WorkerRuntime {
             : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
         transportFactory: this._transportFactory,
       });
+      log('worker-runtime: client services host initialized, opening');
 
       await this._clientServices.open(new Context());
+      log('worker-runtime: client services host opened, signalling ready');
       this._ready.wake(undefined);
       log('started');
       setIdentityTags({

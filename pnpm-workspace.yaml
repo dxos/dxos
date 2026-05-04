@@ -5,6 +5,7 @@ packages:
   - vendor/**/*
   - '!packages/deprecated/**'
   - '!packages/sdk/examples/src/template'
+  - '!**/__fixtures__/**'
   - '!**/build/**'
   - '!**/dist/**'
   - '!**/out/**'
@@ -293,6 +294,7 @@ catalog:
   '@types/wtfnode': ^0.10.0
   '@types/yargs': ~16.0.1
   '@types/zen-observable': ^0.8.3
+  '@typescript/native-preview': 7.0.0-dev.20260421.2
   '@typescript/vfs': ^1.6.0
   '@uiw/codemirror-theme-vscode': ^4.25.2
   '@valtown/codemirror-continue': ^2.3.1
@@ -760,9 +762,7 @@ trustPolicyExclude:
   - rollup@3.30.0
   - mermaid@10.9.4
   - undici-types@6.20.0
-  # @swc/core ships without provenance attestation pnpm expects (used by dx-compile's SWC transpiler).
   - '@swc/core@1.13.5'
-  # Transitive deps without provenance.
   - semver@6.3.1
   - semver@5.7.2
   - ua-parser-js@1.0.41

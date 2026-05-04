@@ -1,7 +1,7 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   build:
-    command: pnpm exec tsc --noEmit
+    command: sh -c 'if [ "${DX_USE_TSC}" = "1" ]; then pnpm exec tsc --noEmit; else pnpm exec tsgo --noEmit; fi'
     deps:
       - ^:build
       - ^:compile

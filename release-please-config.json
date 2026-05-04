@@ -380,6 +380,16 @@
         },
         {
           "type": "json",
+          "path": "packages/core/introspect/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/introspect-mcp/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/mcp-client/package.json",
           "jsonpath": "$.version"
         },
@@ -541,6 +551,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-code/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -766,11 +781,6 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-spacetime/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-spec/package.json",
           "jsonpath": "$.version"
         },
         {

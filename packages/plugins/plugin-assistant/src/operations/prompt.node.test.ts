@@ -13,7 +13,6 @@ import { Routine } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { TestHelpers } from '@dxos/effect/testing';
 import { QueueService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { AutomationPlugin } from '@dxos/plugin-automation/cli';
@@ -30,8 +29,9 @@ ObjectId.dangerouslyDisableRandomness();
 describe('Agent prompt (composer plugin harness)', () => {
   // Hits AutomationPlugin compute runtime (plugin handlers, AiServiceLayer, blueprints).
   // Requires reachable edge AI (see repo DX_EDGE_AI_SERVICE_URL); not memoized like AssistantTestLayer tests.
-  test.runIf(TestHelpers.tagEnabled('llm'))(
+  test(
     'chat mode appends assistant messages to the chat queue',
+    { tags: ['llm'], timeout: 60_000 },
     async ({ expect }) => {
       await using harness = await createComposerTestApp({
         plugins: [ClientPlugin({}), AssistantPlugin(), AutomationPlugin()],
@@ -80,6 +80,5 @@ describe('Agent prompt (composer plugin harness)', () => {
         ),
       );
     },
-    60_000,
   );
 });

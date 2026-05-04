@@ -25,6 +25,7 @@ export type EditorViewProps = ThemedClassName<
  * Minimal text editor.
  * NOTE: This shouold not be used with the automerge extension.
  */
+// TODO(burdon): Move controller to Root component, then make composable.
 export const EditorView = forwardRef<EditorController, EditorViewProps>(
   ({ classNames, id, extensions, selectionEnd, focusable = true, value, onChange, ...props }, forwardedRef) => {
     const { parentRef, focusAttributes, view } = useTextEditor(
