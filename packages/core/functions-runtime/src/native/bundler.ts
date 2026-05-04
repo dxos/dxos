@@ -188,9 +188,15 @@ class BundleCreationError extends BaseError.extend('BundleCreationError', 'Bundl
 }
 
 const formatBytes = (bytes: number) => {
-  if (bytes < Unit.Kilobyte(1).unit.quotient) return Unit.Byte(bytes).toString();
-  if (bytes < Unit.Megabyte(1).unit.quotient) return Unit.Kilobyte(bytes).toString();
-  if (bytes < Unit.Gigabyte(1).unit.quotient) return Unit.Megabyte(bytes).toString();
+  if (bytes < Unit.Kilobyte(1).unit.quotient) {
+    return Unit.Byte(bytes).toString();
+  }
+  if (bytes < Unit.Megabyte(1).unit.quotient) {
+    return Unit.Kilobyte(bytes).toString();
+  }
+  if (bytes < Unit.Gigabyte(1).unit.quotient) {
+    return Unit.Megabyte(bytes).toString();
+  }
   return Unit.Gigabyte(bytes).toString();
 };
 
@@ -214,7 +220,9 @@ const findGitDir = (startPath: string): string | null => {
  * Adjust source paths to be relative to the repo root.
  */
 const postprocessSourceMap = (map: any, outDir: string, gitDir: string | null) => {
-  if (!gitDir) return map;
+  if (!gitDir) {
+    return map;
+  }
 
   // Update source paths to be relative to the output directory
   if (map.sources && Array.isArray(map.sources)) {

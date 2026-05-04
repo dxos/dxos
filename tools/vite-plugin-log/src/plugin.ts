@@ -111,7 +111,15 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
   };
 
   if (log?.enabled) {
+    const logFilter = log.logFilter ?? 'debug';
     Object.assign(plugin, {
+      config() {
+        return {
+          define: {
+            __DXOS_VITE_PLUGIN_LOG_FILTER__: JSON.stringify(logFilter),
+          },
+        };
+      },
       resolveId(id: string) {
         if (id === VITE_PLUGIN_LOG_RUNTIME_ID) {
           return runtimeAbsPath;

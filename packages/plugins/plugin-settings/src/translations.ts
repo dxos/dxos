@@ -10,8 +10,7 @@ export const translations = [
   {
     'en-US': {
       [meta.id]: {
-        'open-settings.label': 'Open settings',
-        'app-settings.label': 'Settings',
+        'plugin-settings.label': 'Plugin Settings',
       },
     },
   },

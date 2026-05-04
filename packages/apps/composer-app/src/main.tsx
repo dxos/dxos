@@ -33,6 +33,7 @@ import { ResetDialog } from './components';
 import { initializeObservability, PARAM_PROFILER, setupConfig } from './config';
 import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
 import { APP_KEY, LOG_STORE_DB_NAME } from './constants';
+import { showDevRssBanner } from './dev-rss-banner';
 import { downloadLogs } from './log-download';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
 import { startupProfiler } from './profiler';
@@ -66,9 +67,35 @@ declare global {
  * The CSS animation in `index.html` keeps painting on the compositor thread
  * regardless of main-thread work, so this is purely textual feedback.
  */
-const bootStatus = (text: string) => window.__bootLoader?.status(text);
+const bootStatus = (text: string) => window.__bootLoader?.status({ humanized: text });
+
+// Stamp every (re-)evaluation of this module so we can tell Vite HMR reloads
+// from a true page boot. Dev-only — production has no HMR and the diagnostic
+// would just be noise. `import.meta.env.DEV` is statically replaced at build
+// time, so the whole block tree-shakes out of prod bundles.
+const BOOT_ID = import.meta.env?.DEV ? Math.random().toString(36).slice(2, 10) : '';
+const MODULE_EVAL_TIME = Date.now();
+if (import.meta.env?.DEV) {
+  log('composer main: module evaluated', { bootId: BOOT_ID, t: MODULE_EVAL_TIME });
+  const importMeta = import.meta as any;
+  if (importMeta.hot) {
+    importMeta.hot.dispose(() => {
+      log('composer main: hmr dispose', { bootId: BOOT_ID, ageMs: Date.now() - MODULE_EVAL_TIME });
+    });
+  }
+}
 
 const main = async () => {
+  if (import.meta.env?.DEV) {
+    log('composer main: main() running', { bootId: BOOT_ID });
+    // Fire-and-forget: surfaces the latest entry from a dev RSS feed under
+    // the boot loader as a small distraction during cold boots. Routed
+    // through the Vite dev server's `/api/rss` proxy (see vite.config.ts)
+    // to dodge CORS. Tree-shakes out of prod via the `import.meta.env.DEV`
+    // gate above.
+    void showDevRssBanner();
+  }
+
   const url = new URL(window.location.href);
   const safeMode = isTrue(url.searchParams.get(PARAM_SAFE_MODE), false);
   if (safeMode) {
@@ -335,7 +362,11 @@ const main = async () => {
   const [builtinPlugins, remotePluginsResult] = await Promise.all([
     getPlugins(conf, {
       onPluginLoaded: (loaded, total) => {
-        bootStatus(`Loading plugins (${loaded}/${total})`);
+        // Pass `range` so the loader updates the existing line in place
+        // ("Loading plugins (12/80)") instead of appending a fresh entry per
+        // plugin tick — keeps the visible log compact and the boot trace
+        // collapses the (i/n) sequence into one transition.
+        window.__bootLoader?.status({ humanized: 'Loading plugins', range: { index: loaded, total } });
         // The ring spans two phases — plugin chunks (0 → 50%) and module
         // activation (50 → 100%, driven from `Placeholder` once React mounts).
         // Splitting the range keeps it monotonic across the boundary.
@@ -414,6 +445,7 @@ const main = async () => {
   };
 
   const root = document.getElementById('root')!;
+  log('composer main: rendering App', { bootId: BOOT_ID, strict: conf.isStrict });
   if (conf.isStrict) {
     createRoot(root).render(
       <StrictMode>

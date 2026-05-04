@@ -14,7 +14,7 @@ import { type ContentBlock, type Message } from '@dxos/types';
 
 import { createMessage } from '#testing';
 
-import { blockToMarkdown } from './registry';
+import { createBlockRenderer } from './registry';
 import { type BlockRenderer, MessageSyncer, type MessageThreadContext, type TextModel } from './sync';
 
 class TestDocument implements TextModel {
@@ -48,7 +48,7 @@ describe('reducers', () => {
     'basic sync',
     Effect.fn(function* ({ expect }) {
       const doc = new TestDocument();
-      const syncer = new MessageSyncer(doc, blockToMarkdown);
+      const syncer = new MessageSyncer(doc, createBlockRenderer('thinking'));
 
       const messages = [
         createMessage('user', [{ _tag: 'text', text: 'Hello' }]),
@@ -70,7 +70,7 @@ describe('reducers', () => {
     'sync with partial updates',
     Effect.fn(function* ({ expect }) {
       const doc = new TestDocument();
-      const syncer = new MessageSyncer(doc, blockToMarkdown);
+      const syncer = new MessageSyncer(doc, createBlockRenderer('thinking'));
 
       const messages = [
         createMessage('user', [{ _tag: 'text', text: 'Hello' }]),
@@ -105,7 +105,7 @@ describe('reducers', () => {
     'streaming reasoning with list-marker transitions does not duplicate opening tag',
     Effect.fn(function* ({ expect }) {
       const doc = new TestDocument();
-      const syncer = new MessageSyncer(doc, blockToMarkdown);
+      const syncer = new MessageSyncer(doc, createBlockRenderer('thinking'));
 
       const setReasoning = (message: Message.Message, text: string, pending: boolean) => {
         Obj.change(message, (message) => {
@@ -152,7 +152,7 @@ describe('reducers', () => {
     'reasoning block followed by text containing a non-registered xml tag',
     Effect.fn(function* ({ expect }) {
       const doc = new TestDocument();
-      const syncer = new MessageSyncer(doc, blockToMarkdown);
+      const syncer = new MessageSyncer(doc, createBlockRenderer('thinking'));
 
       const setReasoning = (message: Message.Message, text: string, pending: boolean) => {
         Obj.change(message, (message) => {

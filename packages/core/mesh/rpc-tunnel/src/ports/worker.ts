@@ -43,7 +43,7 @@ export const createWorkerPort = ({ port, channel, subscribe }: WorkerPortOptions
           return;
         }
 
-        log.debug('received', { message });
+        log.trace('received', { message });
         callback(new Uint8Array(message.payload));
       };
 

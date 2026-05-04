@@ -35,17 +35,17 @@ export const TemplateEditor = composable<HTMLDivElement, TemplateEditorProps>(
     const { t } = useTranslation(meta.id);
     const { themeMode } = useThemeContext();
     const { parentRef } = useTextEditor(() => {
-      const text = template.source?.target;
-      if (!text) {
+      const target = template.source?.target;
+      if (!target) {
         return {};
       }
 
       return {
-        initialValue: text.content ?? '',
+        initialValue: target.content ?? '',
         extensions: [
           createDataExtensions({
             id,
-            text: createDocAccessor(text, ['content']),
+            text: createDocAccessor(target, ['content']),
           }),
           createBasicExtensions({
             bracketMatching: false,

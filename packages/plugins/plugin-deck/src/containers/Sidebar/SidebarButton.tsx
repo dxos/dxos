@@ -80,13 +80,19 @@ export const ToggleComplementarySidebarButton = ({
     }
   }, [state, updateState, current, companions, invokePromise]);
 
+  const label = t(
+    state.complementarySidebarState === 'expanded'
+      ? 'close-complementary-sidebar.label'
+      : 'open-complementary-sidebar.label',
+  );
+
   return (
     <IconButton
       variant='ghost'
       classNames={['[&>svg]:-scale-x-100', classNames]}
       icon='ph--sidebar-simple--regular'
       iconOnly
-      label={t('open-complementary-sidebar.label')}
+      label={label}
       tooltipSide={inR0 ? 'left' : undefined}
       onClick={handleClick}
     />

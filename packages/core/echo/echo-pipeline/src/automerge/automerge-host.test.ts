@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { getHeads } from '@automerge/automerge';
-import * as Automerge from '@automerge/automerge';
+import * as A from '@automerge/automerge';
 import { type DocumentId, type Heads, generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
@@ -53,8 +52,8 @@ describe('AutomergeHost', () => {
     const host = await setupAutomergeHost({ level });
 
     // Create a document to get its binary representation
-    const document = Automerge.from({ text: 'Hello world' });
-    const binary = Automerge.save(document);
+    const document = A.from({ text: 'Hello world' });
+    const binary = A.save(document);
     const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
 
     // Start loading a non-existent document (should hang until created)
@@ -74,7 +73,7 @@ describe('AutomergeHost', () => {
     const level = await createLevel(tmpPath);
     const host = await setupAutomergeHost({ level });
     const handle = await host.createDoc({ text: 'Hello world' });
-    const expectedHeads = getHeads(handle.doc()!);
+    const expectedHeads = A.getHeads(handle.doc()!);
     await host.flush(Context.default());
 
     expect(await host.getHeads([handle.documentId])).toEqual([expectedHeads]);
@@ -94,7 +93,7 @@ describe('AutomergeHost', () => {
     const level = await createLevel(tmpPath);
     const host = await setupAutomergeHost({ level });
     const handles = await Promise.all(range(2, () => host.createDoc({ text: 'Hello world' })));
-    const expectedHeads: (Heads | undefined)[] = handles.map((handle) => getHeads(handle.doc()!));
+    const expectedHeads: (Heads | undefined)[] = handles.map((handle) => A.getHeads(handle.doc()!));
     await host.flush(Context.default());
 
     const ids = handles.map((handle) => handle.documentId);

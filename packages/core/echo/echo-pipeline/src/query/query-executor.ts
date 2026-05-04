@@ -305,6 +305,11 @@ export class QueryExecutor extends Resource {
   async execQuery(): Promise<QueryExecutionResult> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
+    log('exec query', {
+      queryId: this._id,
+      query: Query.pretty(Query.fromAst(this._query)),
+    });
+
     const prevResultSet = this._lastResultSet;
     const { workingSet, trace } = await this._execPlan(this._plan, []);
     this._lastResultSet = workingSet;

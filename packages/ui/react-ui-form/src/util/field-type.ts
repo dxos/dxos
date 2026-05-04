@@ -9,7 +9,7 @@ import { getAnnotation, isLiteralUnion } from '@dxos/effect';
 /**
  * Detected field type for a schema property.
  */
-export type SettingsFieldType = 'boolean' | 'string' | 'number' | 'select';
+export type SettingsFieldType = 'boolean' | 'string' | 'number' | 'select' | 'struct';
 
 export type SelectOption = {
   value: string | number;
@@ -22,6 +22,9 @@ export type SelectOption = {
 export const detectFieldType = (ast: SchemaAST.AST): SettingsFieldType | undefined => {
   if (isLiteralUnion(ast)) {
     return 'select';
+  }
+  if (SchemaAST.isTypeLiteral(ast)) {
+    return 'struct';
   }
 
   switch (ast._tag) {

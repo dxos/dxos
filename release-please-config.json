@@ -375,6 +375,16 @@
         },
         {
           "type": "json",
+          "path": "packages/core/introspect/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/introspect-mcp/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/mcp-client/package.json",
           "jsonpath": "$.version"
         },
@@ -540,6 +550,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-code/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-conductor/package.json",
           "jsonpath": "$.version"
         },
@@ -580,6 +595,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-doctor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-explorer/package.json",
           "jsonpath": "$.version"
         },
@@ -595,6 +615,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-gallery/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-graph/package.json",
           "jsonpath": "$.version"
         },
@@ -606,6 +631,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-inbox/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-integration/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -750,11 +780,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-spec/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-spotlight/package.json",
           "jsonpath": "$.version"
         },
@@ -800,17 +825,17 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-token-manager/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-transcription/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/plugins/plugin-transformer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-trello/package.json",
           "jsonpath": "$.version"
         },
         {

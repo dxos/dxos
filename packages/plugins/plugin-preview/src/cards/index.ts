@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './ExpandoCard';
 export * from './FormCard';
 export * from './JsonCard';
 export * from './OrganizationCard';

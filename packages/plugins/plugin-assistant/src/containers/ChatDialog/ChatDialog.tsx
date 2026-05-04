@@ -13,7 +13,7 @@ import { ChatDialog as NaturalChatDialog } from '@dxos/react-ui-chat';
 import { Chat, type ChatRootProps } from '#components';
 import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
 import { meta } from '#meta';
-import { AssistantCapabilities } from '#types';
+import { type Assistant, AssistantCapabilities } from '#types';
 
 export type ChatDialogProps = {
   chat?: ChatTypes.Chat;
@@ -28,13 +28,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
   const blueprintRegistry = useBlueprintRegistry();
-  const processor = useChatProcessor({
-    chat,
-    preset,
-    runtime,
-    blueprintRegistry,
-    settings,
-  });
+  const processor = useChatProcessor({ chat, preset, runtime, blueprintRegistry, settings });
 
   // TODO(burdon): Refocus when open.
   const [open, setOpen] = useState(true);
@@ -61,7 +55,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
       <NaturalChatDialog.Root open={open} expanded={expanded} onOpenChange={setOpen}>
         <NaturalChatDialog.Header title={t('assistant-dialog.title')} />
         <NaturalChatDialog.Content>
-          <Chat.Thread />
+          <Chat.Thread viewType={(chat.view as Assistant.ChatView | undefined) ?? settings.chatView} />
         </NaturalChatDialog.Content>
         <NaturalChatDialog.Footer classNames='p-1.5'>
           <Chat.Prompt {...chatProps} preset={preset?.id} online={online} onOnlineChange={setOnline} expandable />
