@@ -91,20 +91,23 @@ export const DEFAULT_PACKAGES = [
   '@dxos/websocket-rpc',
 
   // packages/core
-  // `@dxos/blueprints`, `@dxos/functions`, and `@dxos/operation` are umbrella'd by
-  // `@dxos/compute` (which re-exports them) and composer-app no longer takes a direct
-  // dep on the underlying packages — listing them here would make `composerPlugin`
-  // externalize the bare specifier in plugin bundles while the host never publishes a
-  // corresponding import-map entry, producing a runtime `Failed to resolve module
-  // specifier` at install time. Plugins that still import them directly should migrate
-  // to `@dxos/compute`. `@dxos/functions-runtime` is similarly absent because it is
-  // not a host dep; add it back here only if composer-app starts importing it.
+  // `@dxos/blueprints`, `@dxos/functions`, `@dxos/functions-runtime`, and
+  // `@dxos/operation` must remain in this list AND in composer-app's direct deps
+  // (even though `@dxos/compute` umbrella-re-exports the first three) so that the
+  // import-map plugin can resolve them from the host module graph. Removing them
+  // here would force every plugin that still imports them by their original name
+  // to inline its own copy, breaking shared-package identity (e.g. `instanceof
+  // Operation` across host/plugin boundaries) and inflating plugin bundles.
   '@dxos/ai',
   '@dxos/assistant',
   '@dxos/assistant-toolkit',
+  '@dxos/blueprints',
   '@dxos/compute',
   '@dxos/conductor',
+  '@dxos/functions',
+  '@dxos/functions-runtime',
   '@dxos/mcp-client',
+  '@dxos/operation',
   '@dxos/protocols',
 
   // packages/devtools

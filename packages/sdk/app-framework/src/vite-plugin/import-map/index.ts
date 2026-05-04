@@ -424,14 +424,23 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
       // Generate the source for each virtual wrapper module.
       // For CJS packages, explicitly re-export named exports (discovered via static analysis)
       // because Rollup's `export *` interop doesn't preserve them for CJS.
+      //
+      // Each wrapper also emits a local `__keepalive` export. Without this, Rolldown
+      // (Vite 8) tree-shakes wrappers whose `export *` re-exports happen to coincide
+      // with another already-emitted chunk's exports — typical for umbrella packages
+      // (e.g. `@dxos/compute` re-exports from `@dxos/operation`, so the operation
+      // wrapper looks "redundant" to Rolldown and gets merged away). A local const
+      // export has no upstream source for Rolldown to dedupe against, so the chunk
+      // is always preserved and the import-map entry resolves at runtime.
       load(id) {
         if (!id.startsWith(WRAPPER_PREFIX)) {
           return;
         }
         const specifier = id.slice(WRAPPER_PREFIX.length);
+        const keepalive = `export const __dxosImportMapKeepalive = ${JSON.stringify(specifier)};`;
         const resolvedId = resolvedIds[specifier];
         if (!resolvedId) {
-          return `export * from ${JSON.stringify(specifier)};\n`;
+          return `export * from ${JSON.stringify(specifier)};\n${keepalive}\n`;
         }
 
         const filePath = trimQueryString(resolvedId);
@@ -440,10 +449,10 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
         if (isCjs) {
           const named = getCjsNamedExports(filePath);
           if (named.length > 0) {
-            return `export { default, ${named.join(', ')} } from ${JSON.stringify(specifier)};\n`;
+            return `export { default, ${named.join(', ')} } from ${JSON.stringify(specifier)};\n${keepalive}\n`;
           }
         }
-        return `export * from ${JSON.stringify(specifier)};\n`;
+        return `export * from ${JSON.stringify(specifier)};\n${keepalive}\n`;
       },
 
       // After bundling, map each specifier to the URL of its emitted chunk. Preserves

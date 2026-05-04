@@ -2373,6 +2373,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../../core/blueprints
       '@dxos/brand':
         specifier: workspace:*
         version: link:../../ui/brand
@@ -2397,6 +2400,12 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -2412,6 +2421,9 @@ importers:
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant
