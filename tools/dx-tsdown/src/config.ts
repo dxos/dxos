@@ -44,7 +44,18 @@ const NODE_GLOBALS = ['global', 'Buffer', 'process'] as const;
 
 // Node built-in modules that @dxos/node-std provides browser shims for.
 // Keep in sync with packages/common/node-std/src/_/config.js.
-const NODE_STD_MODULES = ['fs/promises', 'assert', 'buffer', 'crypto', 'events', 'fs', 'path', 'process', 'stream', 'util'];
+const NODE_STD_MODULES = [
+  'fs/promises',
+  'assert',
+  'buffer',
+  'crypto',
+  'events',
+  'fs',
+  'path',
+  'process',
+  'stream',
+  'util',
+];
 
 /**
  * Rewrites `node:xxx` and bare built-in imports (e.g. `util`, `events`) to
