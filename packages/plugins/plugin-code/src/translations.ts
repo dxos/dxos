@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Spec } from '#types';
+import { CodeProject, Spec } from '#types';
 
 export const translations = [
   {
@@ -21,6 +21,17 @@ export const translations = [
         'rename-object.label': 'Rename spec',
         'delete-object.label': 'Delete spec',
         'object-deleted.label': 'Spec deleted',
+      },
+      [Type.getTypename(CodeProject.CodeProject)]: {
+        'typename.label': 'Code Project',
+        'typename.label_zero': 'Code Projects',
+        'typename.label_one': 'Code Project',
+        'typename.label_other': 'Code Projects',
+        'object-name.placeholder': 'New code project',
+        'add-object.label': 'Add code project',
+        'rename-object.label': 'Rename code project',
+        'delete-object.label': 'Delete code project',
+        'object-deleted.label': 'Code project deleted',
       },
       [meta.id]: {
         'plugin.name': 'Code',

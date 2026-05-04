@@ -49,7 +49,7 @@ export type EditorToolbarProps = ThemedClassName<
 >;
 
 export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, ...props }: EditorToolbarProps) => {
-  const menuActions = useEditorToolbarActionGraph(props);
+  const menuActions = useMarkdownMenuActions(props);
 
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
@@ -67,9 +67,9 @@ type ToolbarActionsProps = Pick<EditorToolbarActionGraphProps, 'state' | 'getVie
 //   E.g. for toolbar dropdowns which use active icon, the icon is not updated when the active item changes.
 //   This is currently only happening in the markdown plugin usage and should be reproduced in an editor story.
 // TODO(burdon): Some actions should toggle the state (e.g., toggle bullets on/off depending on the current state).
-const useEditorToolbarActionGraph = ({ state, getView, customActions, ...features }: ToolbarActionsProps) => {
+const useMarkdownMenuActions = ({ state, getView, customActions, ...features }: ToolbarActionsProps) => {
   const menuCreator = useMemo(
-    () => createToolbarActions({ state, getView, customActions, ...features }),
+    () => createMarkdownActions({ state, getView, customActions, ...features }),
     [
       state,
       getView,
@@ -87,7 +87,7 @@ const useEditorToolbarActionGraph = ({ state, getView, customActions, ...feature
   return useMenuActions(menuCreator);
 };
 
-const createToolbarActions = ({
+const createMarkdownActions = ({
   state,
   getView,
   customActions,
