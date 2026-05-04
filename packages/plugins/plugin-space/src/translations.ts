@@ -133,7 +133,7 @@ export const translations = [
         'spaces.label': 'Spaces',
         'space-settings.label': 'Spaces',
         'space-settings.description':
-          'Each space has its own settings, where you can adjust its properties, membership, integrations, and other objects specific to that space.',
+          'Per-space settings for properties, membership, integrations, and other space-specific objects.',
         'show-hidden-spaces.label': 'Show archived spaces',
         'show-hidden-spaces.description':
           'Display archived spaces in the sidebar so they can be accessed or unarchived.',
