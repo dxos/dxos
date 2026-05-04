@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { FunctionError } from '../errors';
+import { InvalidOperationInputError } from '../errors';
 import fibFunc from '../example/fib';
 import replyFunc from '../example/reply';
 import { wrapFunctionHandler } from './protocol';
@@ -43,7 +43,7 @@ describe('wrapFunctionHandler', () => {
     expect(result).toEqual({ result: '55' });
   });
 
-  test('throws FunctionError on invalid input schema for fibonacci', async ({ expect }) => {
+  test('throws InvalidOperationInputError on invalid input schema for fibonacci', async ({ expect }) => {
     const wrapped = wrapFunctionHandler(fibFunc);
 
     await expect(
@@ -53,6 +53,6 @@ describe('wrapFunctionHandler', () => {
           services: {},
         },
       }),
-    ).rejects.toThrow(FunctionError);
+    ).rejects.toThrow(InvalidOperationInputError);
   });
 });
