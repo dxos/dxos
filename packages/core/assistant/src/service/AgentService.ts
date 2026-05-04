@@ -204,7 +204,10 @@ export const layer = (opts?: {
               model: options?.model,
             };
 
-            const encodedInput = JSON.stringify(runInput);
+            const encodedInput = yield* Effect.try({
+              try: () => JSON.stringify(runInput),
+              catch: (error) => new RoutineError('Failed to encode routine input.', { description: String(error) }),
+            });
 
             const handle = yield* processManager.spawn(RoutineProcess({ getMcpServers: opts?.getMcpServers }), {
               name: 'routine',
