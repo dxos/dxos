@@ -16,7 +16,7 @@ import { FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 // To heavy to run in CI.
-describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e')).skip('Function', () => {
+describe.skip('Function', { tags: ['functions-e2e'] }, () => {
   const config = configPreset({ edge: 'local' });
 
   test('bundle anthropic function', { timeout: 120_000 }, async () => {

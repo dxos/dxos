@@ -23,13 +23,12 @@ import { identityProvider } from '../../src/providers/client-observability';
 // There are no assertions on trace structure — this is a manual smoke for eyeballing
 // the resulting trace tree in SigNoz. Run locally with:
 //
-// DX_TEST_TAGS=tracing-e2e \
 // DX_OTEL_ENDPOINT=https://ingest.eu.signoz.cloud:443 \
 // DX_OTEL_HEADERS='signoz-ingestion-key:<YOUR_SIGNOZ_INGESTION_KEY>' \
 // DX_TELEMETRY_TAG=tracing-e2e-$(uuidgen) \
-//   moon run observability:test -- --run test/e2e/tracing-invitation.test.ts
+//   moon run observability:test -- --run --tagsFilter=tracing-e2e test/e2e/tracing-invitation.test.ts
 //
-// ...and flip `describe.skip` to `describe` (or `describe.runIf(...)`) below.
+// ...and flip `describe.skip` to `describe` below.
 
 const LOCAL = false;
 const EDGE_URL = LOCAL ? 'http://localhost:8787' : 'https://edge-main.dxos.workers.dev';
@@ -74,7 +73,7 @@ const initTracing = (config: Config): Promise<Observability> =>
     runAndForwardErrors,
   );
 
-describe.skip('tracing invitation e2e (dev-only)', { timeout: 300_000, retry: 0 }, () => {
+describe.skip('tracing invitation e2e (dev-only)', { timeout: 300_000, retry: 0, tags: ['tracing-e2e'] }, () => {
   test('host + guest complete a DELEGATED space invitation via edge-main (tagged for SigNoz)', async ({ expect }) => {
     const clientTag = process.env.DX_TELEMETRY_TAG;
     expect(clientTag, 'DX_TELEMETRY_TAG must be set').toBeTruthy();
