@@ -64,14 +64,13 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
 
   return (
     <Card.Root
-      ref={rootRef}
       classNames={mx('absolute', dragState === 'dragging' && 'opacity-50', classNames)}
       style={getBoardRect(board, layout)}
       onClick={() => onSelect?.(item.id)}
+      ref={rootRef}
     >
       <Card.Toolbar>
         <Card.DragHandle ref={dragHandleRef} />
-        {/* TODO(burdon): Title. */}
         <Card.ToolbarSeparator variant='gap' />
         {dragState !== 'dragging' && (
           <Card.ToolbarIconButton

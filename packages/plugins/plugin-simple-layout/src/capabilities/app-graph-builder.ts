@@ -11,7 +11,7 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* GraphBuilder.createExtension({
-      id: 'org.dxos.plugin.simple-layout.not-found',
+      id: 'org.dxos.plugin.simpleLayout.not-found',
       match: NodeMatcher.whenRoot,
       connector: () => Effect.succeed([AppNode.makeNotFound()]),
     });

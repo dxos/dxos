@@ -1,5 +1,5 @@
 ---
-id: org.dxos.plugin.crx-bridge
+id: org.dxos.plugin.crxBridge
 name: CrxBridgePlugin
 version: 0.1.0
 ---

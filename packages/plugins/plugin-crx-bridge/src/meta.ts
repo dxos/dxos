@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.crx-bridge',
+  id: 'org.dxos.plugin.crxBridge',
   name: 'CRX Bridge',
   description: trim`
     Receives clippings from the Composer browser extension and materializes them
