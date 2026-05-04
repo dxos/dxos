@@ -356,8 +356,7 @@ export class Client {
       return this;
     }
 
-    log('client.initialize: initializing...', { id: this._instanceId });
-    log('client.initialize: importing service factory and protocol bundles');
+    log('initializing client');
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
     const { Runtime } = await import('@dxos/protocols/proto/dxos/config');
     log('client.initialize: imports loaded');
@@ -423,7 +422,7 @@ export class Client {
     }
 
     this._initialized = true;
-    log('client.initialize: initialized', { id: this._instanceId });
+    log('initialized client');
     return this;
   }
 
@@ -479,9 +478,9 @@ export class Client {
     await this._echoClient.open(ctx);
     log('client._open: echo client opened');
 
-    const mesh = new MeshProxy(this._services, this._instanceId);
-    const halo = new HaloProxy(this._services, this._instanceId);
-    const spaces = new SpaceList(this._config, this._services, this._echoClient, this._instanceId);
+    const mesh = new MeshProxy(this._services);
+    const halo = new HaloProxy(this._services);
+    const spaces = new SpaceList(this._config, this._services, this._echoClient);
 
     const shell = this._shellManager
       ? new Shell({

@@ -12,7 +12,6 @@ import { type FeedStore } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
-import { trace } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import type { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -66,7 +65,6 @@ export class SpaceManager {
   private readonly _networkManager: SwarmNetworkManager;
   private readonly _metadataStore: MetadataStore;
   private readonly _blobStore: BlobStore;
-  private readonly _instanceId = PublicKey.random().toHex();
   private readonly _disableP2pReplication: boolean;
 
   constructor({ feedStore, networkManager, metadataStore, blobStore, disableP2pReplication }: SpaceManagerProps) {
@@ -100,7 +98,6 @@ export class SpaceManager {
     onMemberRolesChanged,
     memberKey,
   }: ConstructSpaceProps): Promise<Space> {
-    log.trace('dxos.echo.space-manager.construct-space', trace.begin({ id: this._instanceId }));
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 
     // The genesis feed will be the same as the control feed if the space was created by the local agent.
@@ -131,7 +128,6 @@ export class SpaceManager {
     });
     this._spaces.set(space.key, space);
 
-    log.trace('dxos.echo.space-manager.construct-space', trace.end({ id: this._instanceId }));
     return space;
   }
 
@@ -139,8 +135,6 @@ export class SpaceManager {
     ctx: Context,
     params: RequestSpaceAdmissionCredentialProps,
   ): Promise<Credential> {
-    const traceKey = 'dxos.echo.space-manager.request-space-admission';
-    log.trace(traceKey, trace.begin({ id: this._instanceId }));
     log('requesting space admission credential...', { spaceKey: params.spaceKey });
 
     const onCredentialResolved = new Trigger<Credential>();
@@ -165,10 +159,8 @@ export class SpaceManager {
     try {
       await protocol.start(ctx);
       const credential = await onCredentialResolved.wait({ timeout: params.timeout });
-      log.trace(traceKey, trace.end({ id: this._instanceId }));
       return credential;
     } catch (err: any) {
-      log.trace(traceKey, trace.error({ id: this._instanceId, error: err }));
       throw err;
     } finally {
       await protocol.stop(ctx);

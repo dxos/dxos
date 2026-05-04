@@ -5,9 +5,8 @@
 import { Event, sleep, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RateLimitExceededError, TimeoutError, trace } from '@dxos/protocols';
+import { RateLimitExceededError, TimeoutError } from '@dxos/protocols';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { type JoinRequest, type LeaveRequest, type QueryRequest } from '@dxos/protocols/proto/dxos/edge/signal';
@@ -48,8 +47,6 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
 
   readonly onMessage = new Event<Message>();
 
-  private readonly _instanceId = PublicKey.random().toHex();
-
   constructor(
     private readonly _hosts: Runtime.Services.Signal[],
     private readonly _getMetadata?: () => any,
@@ -76,11 +73,8 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
 
   protected override async _open(): Promise<void> {
     log('open signal manager', { hosts: this._hosts });
-    log.trace('dxos.mesh.websocket-signal-manager.open', trace.begin({ id: this._instanceId }));
 
     await safeAwaitAll(this._servers.values(), (server) => server.open());
-
-    log.trace('dxos.mesh.websocket-signal-manager.open', trace.end({ id: this._instanceId }));
   }
 
   protected override async _close(): Promise<void> {
