@@ -21,6 +21,8 @@ concurrency:
 
 jobs:
   track-todos:
+    # TODOs link to internal GitHub issues via GITHUB_TOKEN write access — skip for fork PRs.
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
