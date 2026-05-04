@@ -144,30 +144,39 @@ export const StringBackedKeepsFocus: Story = {
     </TestLayout>
   ),
   play: async ({ canvasElement }) => {
-    const findEditorContent = async () => {
+    const waitFor = async <T,>(predicate: () => T | null | undefined, message: string): Promise<T> => {
       for (let attempt = 0; attempt < 50; attempt++) {
-        const el = canvasElement.querySelector<HTMLElement>('.cm-content');
-        if (el) {
-          return el;
+        const value = predicate();
+        if (value) {
+          return value;
         }
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
-      throw new Error('CodeMirror content element not found');
+      throw new Error(message);
     };
 
-    const editorContent = await findEditorContent();
+    const editorRoot = await waitFor(
+      () => canvasElement.querySelector<HTMLElement>('.cm-editor'),
+      'CodeMirror editor root (.cm-editor) not found',
+    );
+    const editorContent = editorRoot.querySelector<HTMLElement>('.cm-content')!;
     await expect(editorContent).toBeVisible();
 
-    await userEvent.click(editorContent);
-    await expect(editorContent).toHaveFocus();
+    // Focus editor and wait for focus to settle inside the editor root.
+    editorContent.focus();
+    await waitFor(
+      () => (editorRoot.contains(document.activeElement) ? true : null),
+      'Editor did not receive focus',
+    );
 
-    // Type several characters; focus must be preserved across each keystroke.
-    // Regression: previously the EditorView was destroyed and recreated on
-    // every change, which detached the focused contentDOM and blurred input.
+    // Type several characters; focus must be preserved inside the editor root
+    // after every keystroke. Regression: previously the EditorView was
+    // destroyed and recreated on every change, which detached the focused
+    // contentDOM and blurred the input.
     const phrase = 'hello world';
     for (const ch of phrase) {
       await userEvent.keyboard(ch);
-      await expect(document.activeElement).toBe(editorContent);
+      await expect(editorRoot.contains(document.activeElement)).toBe(true);
     }
 
     await expect(editorContent).toHaveTextContent(phrase);

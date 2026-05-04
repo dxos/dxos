@@ -58,17 +58,30 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
       return createEditorController(view);
     }, [id, view]);
 
-    // Set initial value and cursor position.
+    // Sync the editor doc to the controlled `value` prop, but only when they
+    // disagree. After internal typing the prop will already match the editor's
+    // doc, and dispatching anyway would race fast keystrokes — a stale rAF
+    // closure can replace doc content with an older value, dropping characters.
     useEffect(() => {
+      if (!view) {
+        return;
+      }
+      const next = value ?? '';
+      if (view.state.doc.toString() === next) {
+        return;
+      }
       requestAnimationFrame(() => {
-        view?.dispatch({
+        if (view.state.doc.toString() === next) {
+          return;
+        }
+        view.dispatch({
           annotations: initialSync,
-          changes: value ? [{ from: 0, to: view?.state.doc.length ?? 0, insert: value ?? '' }] : [],
-          selection: selectionEnd ? { anchor: view?.state.doc.length ?? 0 } : undefined,
+          changes: [{ from: 0, to: view.state.doc.length, insert: next }],
+          selection: selectionEnd ? { anchor: next.length } : undefined,
         });
 
         if (selectionEnd) {
-          view?.focus();
+          view.focus();
         }
       });
     }, [view, value, selectionEnd]);
