@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
+import { log } from '@dxos/log';
 import { type Observability, ObservabilityProvider } from '@dxos/observability';
 
 import { meta } from '#meta';
@@ -49,10 +50,12 @@ export default Capability.makeModule(
 
     // Ensure errors are tagged with enabled plugins to help with reproductions.
     const enabledPlugins = manager.getEnabled();
+    log('client-ready: tagging enabled plugins', { count: enabledPlugins.length });
     for (const plugin of enabledPlugins) {
       observability.setTags({ [`pluginEnabled-${plugin}`]: 'true' }, 'errors');
     }
 
+    log('client-ready: sending page.load event');
     yield* Effect.tryPromise(() =>
       invokePromise(ObservabilityOperation.SendEvent, {
         name: 'page.load',
@@ -62,16 +65,34 @@ export default Capability.makeModule(
         },
       }),
     );
+    log('client-ready: page.load event sent');
 
-    // Add client data providers.
+    // Each provider is logged individually because some provider setups perform
+    // RPC calls (e.g. runtimeMetricsProvider awaits SystemService.getPlatform());
+    // a hung worker pipe surfaces as a missing "added" log, so the last
+    // "adding ..." line points to the stall.
+    log('client-ready: adding identity data provider');
     yield* observability.addDataProvider(ObservabilityProvider.Client.identityProvider(client.services.services));
+    log('client-ready: identity data provider added');
+
+    log('client-ready: adding network metrics data provider');
     yield* observability.addDataProvider(ObservabilityProvider.Client.networkMetricsProvider(client.services.services));
+    log('client-ready: network metrics data provider added');
+
+    log('client-ready: adding runtime metrics data provider');
     yield* observability.addDataProvider(ObservabilityProvider.Client.runtimeMetricsProvider(client.services.services));
+    log('client-ready: runtime metrics data provider added');
+
+    log('client-ready: adding space metrics data provider');
     yield* observability.addDataProvider(ObservabilityProvider.Client.spacesMetricsProvider(client));
+    log('client-ready: space metrics data provider added');
 
     if (client.halo.identity.get()) {
+      log('client-ready: identity present, sending privacy notice');
       yield* Effect.tryPromise(() => sendPrivacyNotice());
+      log('client-ready: privacy notice sent');
     } else {
+      log('client-ready: no identity, deferring privacy notice');
       const subscription = client.halo.identity.subscribe(async (identity) => {
         if (identity && observability) {
           await sendPrivacyNotice();
@@ -80,6 +101,7 @@ export default Capability.makeModule(
       });
     }
 
+    log('client-ready: contributing observability capability');
     return Capability.contributes(ObservabilityCapabilities.Observability, observability, () => observability.close());
   }),
 );
