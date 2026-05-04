@@ -1,6 +1,6 @@
 // Copyright 2026 DXOS.org
 
-import { defineConfig } from '@dxos/dx-tsdown/config';
+import { defineConfig } from '../../../tsdown.base.config.ts';
 
 export default defineConfig({
   entry: ["src/_/config.js","src/assert.js","src/buffer.js","src/crypto.js","src/events.js","src/fs.js","src/fs/promises.js","src/globals.js","src/inject-globals.js","src/path.js","src/process.js","src/stream.js","src/util.js"],

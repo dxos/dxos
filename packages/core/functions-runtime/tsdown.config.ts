@@ -1,6 +1,6 @@
 // Copyright 2026 DXOS.org
 
-import { defineConfig } from '@dxos/dx-tsdown/config';
+import { defineConfig } from '../../../tsdown.base.config.ts';
 
 export default defineConfig({
   entry: ['src/bundler/index.ts', 'src/edge/index.ts', 'src/index.ts', 'src/native/index.ts', 'src/testing/index.ts'],
