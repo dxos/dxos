@@ -3,21 +3,26 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Script } from '@dxos/functions';
-import { GraphBuilder } from '@dxos/plugin-graph';
+import { GraphBuilder, type Node } from '@dxos/plugin-graph';
+import { SETTINGS_SECTION_TYPE } from '@dxos/plugin-space/types';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
+
+const matchSettingsSection = (node: Node.Node) =>
+  node.type === SETTINGS_SECTION_TYPE ? Option.some(true as const) : Option.none();
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'space-settings-automation',
-        match: AppNodeMatcher.whenSpace,
+        match: matchSettingsSection,
         connector: () =>
           Effect.succeed([
             AppNode.makeSettingsPanel({
@@ -31,7 +36,7 @@ export default Capability.makeModule(
       }),
       GraphBuilder.createExtension({
         id: 'space-settings-functions',
-        match: AppNodeMatcher.whenSpace,
+        match: matchSettingsSection,
         connector: () =>
           Effect.succeed([
             AppNode.makeSettingsPanel({
