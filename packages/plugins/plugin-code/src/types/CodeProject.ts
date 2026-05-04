@@ -19,6 +19,7 @@ export const CodeProject = Schema.Struct({
     typename: 'org.dxos.type.codeProject',
     version: '0.1.0',
   }),
+  Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: meta.icon!,
     hue: meta.iconHue,
@@ -26,8 +27,6 @@ export const CodeProject = Schema.Struct({
 );
 
 export interface CodeProject extends Schema.Schema.Type<typeof CodeProject> {}
-
-export const isCodeProject = (object: unknown): object is CodeProject => Schema.is(CodeProject)(object);
 
 export const make = ({ name, spec }: { name?: string; spec: Spec.Spec }) =>
   Obj.make(CodeProject, { name, spec: Ref.make(spec) });

@@ -535,8 +535,6 @@ export const CodeProject = Schema.Struct({
 
 export interface CodeProject extends Schema.Schema.Type<typeof CodeProject> {}
 
-export const isCodeProject = (object: unknown): object is CodeProject => Schema.is(CodeProject)(object);
-
 export const make = ({ name, spec }: { name?: string; spec: Ref.Ref<Spec> }) => Obj.make(CodeProject, { name, spec });
 ```
 
