@@ -8,8 +8,8 @@
 //
 
 import { execSync } from 'node:child_process';
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -120,8 +120,12 @@ function isDefaultEntry(entry) {
 }
 
 function isDefaultPlatforms(platforms) {
-  if (platforms.length === 0) return true; // inherits default
-  if (platforms.length !== 2) return false;
+  if (platforms.length === 0) {
+    return true; // inherits default
+  }
+  if (platforms.length !== 2) {
+    return false;
+  }
   return platforms.includes('browser') && platforms.includes('node');
 }
 
