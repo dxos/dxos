@@ -48,16 +48,16 @@
       "path": "../../core/assistant"
     },
     {
-      "path": "../../core/blueprints"
+      "path": "../../core/compute"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-react"
+      "path": "../../core/echo/echo-atom"
     },
     {
-      "path": "../../core/operation"
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../sdk/app-framework"
@@ -106,6 +106,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-preview"

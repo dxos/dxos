@@ -9,13 +9,15 @@ import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { AgentPrompt, LinearBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
-import { Blueprint, Prompt, Template } from '@dxos/blueprints';
+import { } from '@dxos/blueprints';
+import { Blueprint, Routine, Template } from '@dxos/compute';
+import { Reply, Script, Trigger } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { View } from '@dxos/echo';
-import { Reply, Script, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
-import { AssistantBlueprint, translations } from '@dxos/plugin-assistant';
+import { AssistantBlueprint } from '@dxos/plugin-assistant/blueprints';
+import { translations } from '@dxos/plugin-assistant/translations';
 import { ChessBlueprint, ChessFunctions } from '@dxos/plugin-chess/blueprints';
 import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
@@ -50,7 +52,7 @@ import {
   InboxModule,
   InvocationsModule,
   ProjectModule,
-  PromptModule,
+  RoutineModule,
   ResearchInputModule,
   ResearchOutputModule,
   ScriptModule,
@@ -238,7 +240,10 @@ export const WithBlueprints: Story = {
 export const WithChess: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
-      const { Chess, ChessPlugin } = await import('@dxos/plugin-chess');
+      const [{ Chess }, { ChessPlugin }] = await Promise.all([
+        import('@dxos/plugin-chess/types'),
+        import('@dxos/plugin-chess'),
+      ]);
       return {
         plugins: [ChessPlugin()],
         types: [Chess.Game],
@@ -246,7 +251,7 @@ export const WithChess: Story = {
     },
     config: config.remote,
     onInit: async ({ space }) => {
-      const { Chess } = await import('@dxos/plugin-chess');
+      const { Chess } = await import('@dxos/plugin-chess/types');
       // TODO(burdon): Add player DID (for user and assistant).
       space.db.add(
         Chess.make({
@@ -271,7 +276,7 @@ export const WithChess: Story = {
       );
     },
     onChatCreated: async ({ space, binder }) => {
-      const { Chess } = await import('@dxos/plugin-chess');
+      const { Chess } = await import('@dxos/plugin-chess/types');
       const objects = await space.db.query(Filter.type(Chess.Game)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
@@ -324,12 +329,12 @@ export const WithMail: Story = {
 export const WithGmail: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
-      const [{ InboxPlugin }, { TokenManagerPlugin }] = await Promise.all([
+      const [{ InboxPlugin }, { IntegrationPlugin }] = await Promise.all([
         import('@dxos/plugin-inbox'),
-        import('@dxos/plugin-token-manager'),
+        import('@dxos/plugin-integration'),
       ]);
       return {
-        plugins: [InboxPlugin(), TokenManagerPlugin()],
+        plugins: [InboxPlugin(), IntegrationPlugin()],
       };
     },
     config: config.persistent,
@@ -356,12 +361,12 @@ export const WithGmail: Story = {
 export const WithCalendar: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
-      const [{ InboxPlugin }, { TokenManagerPlugin }] = await Promise.all([
+      const [{ InboxPlugin }, { IntegrationPlugin }] = await Promise.all([
         import('@dxos/plugin-inbox'),
-        import('@dxos/plugin-token-manager'),
+        import('@dxos/plugin-integration'),
       ]);
       return {
-        plugins: [InboxPlugin(), TokenManagerPlugin()],
+        plugins: [InboxPlugin(), IntegrationPlugin()],
       };
     },
     config: config.remote,
@@ -388,7 +393,8 @@ export const WithCalendar: Story = {
 export const WithMap: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
-      const [{ Map, MapPlugin }, { TablePlugin }, { Table }, { createLocationSchema: _ }] = await Promise.all([
+      const [{ Map }, { MapPlugin }, { TablePlugin }, { Table }, { createLocationSchema: _ }] = await Promise.all([
+        import('@dxos/plugin-map/types'),
         import('@dxos/plugin-map'),
         import('@dxos/plugin-table'),
         import('@dxos/react-ui-table/types'),
@@ -401,8 +407,8 @@ export const WithMap: Story = {
     },
     config: config.remote,
     onInit: async ({ space }) => {
-      const [{ Map, MapPlugin: _ }, { Table }, { createLocationSchema }] = await Promise.all([
-        import('@dxos/plugin-map'),
+      const [{ Map }, { Table }, { createLocationSchema }] = await Promise.all([
+        import('@dxos/plugin-map/types'),
         import('@dxos/react-ui-table/types'),
         import('@dxos/plugin-map/testing'),
       ]);
@@ -436,8 +442,9 @@ export const WithMap: Story = {
 export const WithTrip: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
-      const [{ MarkdownPlugin }, { Map, MapPlugin }] = await Promise.all([
+      const [{ MarkdownPlugin }, { Map }, { MapPlugin }] = await Promise.all([
         import('@dxos/plugin-markdown'),
+        import('@dxos/plugin-map/types'),
         import('@dxos/plugin-map'),
       ]);
       return {
@@ -447,7 +454,7 @@ export const WithTrip: Story = {
     },
     config: config.remote,
     onInit: async ({ space }) => {
-      const { Map } = await import('@dxos/plugin-map');
+      const { Map } = await import('@dxos/plugin-map/types');
       // TODO(burdon): Table.
       const map = Map.make({ name: 'Trip' });
       space.db.add(map);
@@ -483,7 +490,7 @@ export const WithTrip: Story = {
       );
     },
     onChatCreated: async ({ space, binder }) => {
-      const { Map } = await import('@dxos/plugin-map');
+      const { Map } = await import('@dxos/plugin-map/types');
       const objects = await space.db.query(Filter.or(Filter.type(Map.Map), Filter.type(Markdown.Document))).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
@@ -497,7 +504,10 @@ export const WithTrip: Story = {
 export const WithBoard: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
-      const { Board, BoardPlugin } = await import('@dxos/plugin-board');
+      const [{ Board }, { BoardPlugin }] = await Promise.all([
+        import('@dxos/plugin-board/types'),
+        import('@dxos/plugin-board'),
+      ]);
       return {
         plugins: [BoardPlugin()],
         types: [Board.Board],
@@ -505,11 +515,11 @@ export const WithBoard: Story = {
     },
     config: config.remote,
     onInit: async ({ space }) => {
-      const { Board } = await import('@dxos/plugin-board');
+      const { Board } = await import('@dxos/plugin-board/types');
       space.db.add(Board.makeBoard());
     },
     onChatCreated: async ({ space, binder }) => {
-      const { Board } = await import('@dxos/plugin-board');
+      const { Board } = await import('@dxos/plugin-board/types');
       const objects = await space.db.query(Filter.type(Board.Board)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
@@ -646,7 +656,10 @@ export const WithTriggers: Story = {
 export const WithChessTrigger: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
-      const { Chess, ChessPlugin } = await import('@dxos/plugin-chess');
+      const [{ Chess }, { ChessPlugin }] = await Promise.all([
+        import('@dxos/plugin-chess/types'),
+        import('@dxos/plugin-chess'),
+      ]);
       return {
         plugins: [ChessPlugin()],
         types: [Chess.Game],
@@ -654,7 +667,7 @@ export const WithChessTrigger: Story = {
     },
     config: config.remote,
     onInit: async ({ space }) => {
-      const { Chess } = await import('@dxos/plugin-chess');
+      const { Chess } = await import('@dxos/plugin-chess/types');
       // TODO(burdon): Add player DID (for user and assistant).
       space.db.add(
         Chess.make({
@@ -712,7 +725,7 @@ export const WithResearchQueue: Story = {
       await space.queues.get(feedQueueDxn).append(orgs);
 
       const researchPrompt = space.db.add(
-        Prompt.make({
+        Routine.make({
           name: 'Research',
           description: 'Research organization',
           input: Schema.Struct({
@@ -741,7 +754,7 @@ export const WithResearchQueue: Story = {
   args: {
     modules: [
       [ResearchInputModule, ResearchOutputModule],
-      [TriggersModule, InvocationsModule, PromptModule, GraphModule],
+      [TriggersModule, InvocationsModule, RoutineModule, GraphModule],
     ],
     blueprints: [WebSearchBlueprint.key],
   },
@@ -839,7 +852,7 @@ export const WithProject: Story = {
       const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDxn));
 
       const researchPrompt = space.db.add(
-        Prompt.make({
+        Routine.make({
           name: 'Research',
           description: 'Research organization',
           input: Schema.Struct({
@@ -995,7 +1008,7 @@ export const WithPrompt: Story = {
     onInit: async ({ space }) => {
       space.db.add(Operation.serialize(AgentPrompt));
       space.db.add(
-        Prompt.make({
+        Routine.make({
           name: 'Research',
           description: 'Research organization',
           input: Schema.Struct({
@@ -1012,6 +1025,6 @@ export const WithPrompt: Story = {
     },
   }),
   args: {
-    modules: [[PromptModule], [InvocationsModule]],
+    modules: [[RoutineModule], [InvocationsModule]],
   },
 };

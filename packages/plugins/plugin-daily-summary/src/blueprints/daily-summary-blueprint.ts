@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Blueprint, Template } from '@dxos/blueprints';
+import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 import { DailySummaryHandlers, GenerateSummary } from './functions';

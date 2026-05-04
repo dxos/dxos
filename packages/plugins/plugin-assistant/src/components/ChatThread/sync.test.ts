@@ -1,8 +1,8 @@
-// @vitest-environment jsdom
-
 //
 // Copyright 2025 DXOS.org
 //
+
+// @vitest-environment jsdom
 
 import { EditorView } from '@codemirror/view';
 import { describe, it } from '@effect/vitest';
@@ -14,7 +14,7 @@ import { type ContentBlock, type Message } from '@dxos/types';
 
 import { createMessage } from '#testing';
 
-import { blockToMarkdown } from './registry';
+import { createBlockRenderer } from './registry';
 import { type BlockRenderer, MessageSyncer, type MessageThreadContext, type TextModel } from './sync';
 
 class TestDocument implements TextModel {
@@ -48,7 +48,7 @@ describe('reducers', () => {
     'basic sync',
     Effect.fn(function* ({ expect }) {
       const doc = new TestDocument();
-      const syncer = new MessageSyncer(doc, blockToMarkdown);
+      const syncer = new MessageSyncer(doc, createBlockRenderer('thinking'));
 
       const messages = [
         createMessage('user', [{ _tag: 'text', text: 'Hello' }]),
@@ -70,7 +70,7 @@ describe('reducers', () => {
     'sync with partial updates',
     Effect.fn(function* ({ expect }) {
       const doc = new TestDocument();
-      const syncer = new MessageSyncer(doc, blockToMarkdown);
+      const syncer = new MessageSyncer(doc, createBlockRenderer('thinking'));
 
       const messages = [
         createMessage('user', [{ _tag: 'text', text: 'Hello' }]),
@@ -105,7 +105,7 @@ describe('reducers', () => {
     'streaming reasoning with list-marker transitions does not duplicate opening tag',
     Effect.fn(function* ({ expect }) {
       const doc = new TestDocument();
-      const syncer = new MessageSyncer(doc, blockToMarkdown);
+      const syncer = new MessageSyncer(doc, createBlockRenderer('thinking'));
 
       const setReasoning = (message: Message.Message, text: string, pending: boolean) => {
         Obj.change(message, (message) => {
@@ -140,6 +140,74 @@ describe('reducers', () => {
       const closeTagCount = (doc.content.match(/<\/reasoning>/g) ?? []).length;
       expect(openTagCount).toBe(1);
       expect(closeTagCount).toBe(1);
+    }),
+  );
+
+  // Regression: prompt "respond with your name inside an xml tag" produces a streamed
+  // reasoning block followed by a text block containing a non-registered XML tag
+  // (`<name>Claude</name>`). The text block must appear in the document AFTER the
+  // closed reasoning block — the bug symptom is the reasoning tag rendering with no
+  // follow-up response visible.
+  it.effect(
+    'reasoning block followed by text containing a non-registered xml tag',
+    Effect.fn(function* ({ expect }) {
+      const doc = new TestDocument();
+      const syncer = new MessageSyncer(doc, createBlockRenderer('thinking'));
+
+      const setReasoning = (message: Message.Message, text: string, pending: boolean) => {
+        Obj.change(message, (message) => {
+          const block = message.blocks[0] as Mutable<ContentBlock.Reasoning>;
+          block.reasoningText = text;
+          block.pending = pending;
+        });
+      };
+
+      const setText = (message: Message.Message, text: string, pending: boolean) => {
+        Obj.change(message, (message) => {
+          const block = message.blocks[1] as Mutable<ContentBlock.Text>;
+          block.text = text;
+          block.pending = pending;
+        });
+      };
+
+      // Tick 1: reasoning starts streaming.
+      const messages = [createMessage('assistant', [{ _tag: 'reasoning', reasoningText: 'Thinking', pending: true }])];
+      syncer.update(messages);
+
+      // Tick 2: reasoning grows.
+      setReasoning(messages[0], 'Thinking about the answer', true);
+      syncer.update(messages);
+
+      // Tick 3: reasoning closes.
+      setReasoning(messages[0], 'Thinking about the answer', false);
+      syncer.update(messages);
+
+      // Tick 4: text block appears, pending and empty (model has started emitting but text is still '').
+      Obj.change(messages[0], (message) => {
+        message.blocks.push({ _tag: 'text', text: '', pending: true });
+      });
+      syncer.update(messages);
+
+      // Tick 5: partial text — opening tag only.
+      setText(messages[0], '<name>', true);
+      syncer.update(messages);
+
+      // Tick 6: full text streamed.
+      setText(messages[0], '<name>Claude</name>', true);
+      syncer.update(messages);
+
+      // Tick 7: text finalised.
+      setText(messages[0], '<name>Claude</name>', false);
+      syncer.update(messages);
+
+      // Both the closed reasoning tag and the response text must be present.
+      expect(doc.content).toContain('<reasoning>Thinking about the answer</reasoning>');
+      expect(doc.content).toContain('<name>Claude</name>');
+
+      const openReasoning = (doc.content.match(/<reasoning>/g) ?? []).length;
+      const closeReasoning = (doc.content.match(/<\/reasoning>/g) ?? []).length;
+      expect(openReasoning).toBe(1);
+      expect(closeReasoning).toBe(1);
     }),
   );
 

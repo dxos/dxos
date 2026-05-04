@@ -18,8 +18,6 @@ export const translations = [
         'observability-toast-action.label': 'Settings',
         'observability-toast-action.alt': 'Open settings to learn more or to disable.',
         'observability-toast-close.label': 'Okay',
-        'observability-enabled.label': 'Enable telemetry',
-        'observability-enabled.description': 'Send anonymous usage and performance data to help improve the product.',
         // TODO: Add link about telemetry privacy. Make it clearer that user data is not collected.
         'observability.description':
           'When enabled, basic usage data will used to improve the product. This may include performance metrics, error logs, and usage data. No personally identifiable information, other than your public key, is included with this data and no private data ever leaves your devices.',
@@ -28,6 +26,7 @@ export const translations = [
         'feedback-textarea.placeholder': 'Please enter your feedback, technical issue, or feature request.',
         'include-debug-logs.label': 'Include debug logs',
         'send-feedback.label': 'Send Feedback',
+        'download-logs.label': 'Download logs',
         'feedback-toast.label': 'Thank you for your feedback!',
         'feedback-toast.description': 'We will review your feedback and get back to you as soon as possible.',
       },

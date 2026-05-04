@@ -12,7 +12,7 @@ import type { AiModelResolver as AiModelResolver$, AiService as AiService$ } fro
 import type { OpaqueToolkit } from '@dxos/ai';
 import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
-import type { Definition as BlueprintDefinitionPayload } from '@dxos/blueprints';
+import type { Definition as BlueprintDefinitionPayload } from '@dxos/compute';
 import type { Database, DXN, Type } from '@dxos/echo';
 import type { AnchoredTo } from '@dxos/types';
 

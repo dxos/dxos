@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';

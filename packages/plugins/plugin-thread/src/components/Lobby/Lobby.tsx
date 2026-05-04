@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect-atom/atom-react';
-import React, { type FC, type PropsWithChildren, useEffect, useState } from 'react';
+import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -26,7 +26,8 @@ const SWARM_PEEK_INTERVAL = 1_000;
 
 type LobbyRootProps = PropsWithChildren<ThemedClassName>;
 
-const LobbyRoot: FC<LobbyRootProps> = ({ children }) => {
+// TODO(burdon): Make headless?
+const LobbyRoot = ({ children }: LobbyRootProps) => {
   return <div className='relative flex flex-col grow overflow-hidden group'>{children}</div>;
 };
 
@@ -38,7 +39,7 @@ LobbyRoot.displayName = 'LobbyRoot';
 
 type LobbyPreviewProps = {};
 
-const LobbyPreview: FC<LobbyPreviewProps> = () => {
+const LobbyPreview = (_props: LobbyPreviewProps) => {
   const { t } = useTranslation(meta.id);
   const call = useCapability(ThreadCapabilities.CallManager);
   const media = useAtomValue(call.mediaAtom);
@@ -88,7 +89,7 @@ type LobbyToolbarProps = ThemedClassName<
   } & Pick<ToolbarProps, 'onJoin'>
 >;
 
-const LobbyToolbar: FC<LobbyToolbarProps> = ({ roomId, ...props }) => {
+const LobbyToolbar = ({ roomId, ...props }: LobbyToolbarProps) => {
   const call = useCapability(ThreadCapabilities.CallManager);
   const [count, setCount] = useState<number>(0);
 

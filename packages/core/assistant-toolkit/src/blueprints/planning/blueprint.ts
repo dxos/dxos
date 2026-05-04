@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/compute';
 
 import { UpdateTasks } from './functions';
 

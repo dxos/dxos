@@ -4,7 +4,7 @@
 
 // Plugin settings surface — renders the plugin's settings in the global settings panel.
 // Uses `Settings` layout components from `@dxos/react-ui-form` for consistent structure:
-// `Settings.Viewport > Settings.Section > Settings.Item`.
+// `Settings.Viewport > Settings.Section > Settings.FieldSet` (auto-generated from schema).
 //
 // The component receives typed `settings` and `onSettingsChange` via
 // `AppSurface.SettingsArticleProps` — it never touches the atom directly.
@@ -13,11 +13,11 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Input, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import type { Settings } from '#types';
+import { Settings } from '#types';
 
 export type SampleSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
 
@@ -27,14 +27,12 @@ export const SampleSettings = ({ settings, onSettingsChange }: SampleSettingsPro
   return (
     <SettingsForm.Viewport>
       <SettingsForm.Section title={t('plugin.name')}>
-        <SettingsForm.Item title={t('show-status-indicator-setting.label')}>
-          <Input.Switch
-            checked={settings.showStatusIndicator ?? true}
-            onCheckedChange={(checked) =>
-              onSettingsChange?.((current) => ({ ...current, showStatusIndicator: !!checked }))
-            }
-          />
-        </SettingsForm.Item>
+        <SettingsForm.FieldSet
+          readonly={!onSettingsChange}
+          schema={Settings.Settings}
+          values={settings}
+          onValuesChanged={(values) => onSettingsChange?.(() => values)}
+        />
       </SettingsForm.Section>
     </SettingsForm.Viewport>
   );

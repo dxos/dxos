@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 import { AgentRules } from './definitions';
@@ -15,9 +15,9 @@ export default AgentRules.pipe(
       return trim`
         You can ask the user for qualifying questions about the agents.
         If agents should actively read incoming emails, query for mailboxes and add a subscription to them.
+        If the user wants the agent to run on a schedule (e.g. "every morning", "every 5 minutes"), set the agent's \`cron\` field to a standard cron expression (e.g. \`0 9 * * *\` for daily at 09:00, \`*/5 * * * *\` for every 5 minutes). Timer triggers bypass the qualifier and invoke the agent worker directly on the schedule.
         Use [query-blueprints] from the Blueprint Manager to query for available blueprints and their keys.
         Use [create-agent] function to create a new agent.
-        After creating an agent, explicitly remind the user to enable local triggers so the agent can be driven autonomously.
 
         Notable blueprints (query to get their keys):
 

@@ -29,7 +29,8 @@ import {
 } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import {
   SearchListInputContextProvider,
   SearchListItemContextProvider,
@@ -374,7 +375,7 @@ type SearchListViewportProps = {};
 
 const SearchListViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
-    <ScrollArea.Root {...composableProps(props)} role='listbox' thin padding ref={forwardedRef}>
+    <ScrollArea.Root {...composableProps(props)} role='listbox' centered padding thin ref={forwardedRef}>
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );

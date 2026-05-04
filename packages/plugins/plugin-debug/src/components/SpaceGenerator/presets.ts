@@ -5,13 +5,13 @@
 import * as Schema from 'effect/Schema';
 
 import { AgentPrompt, WebSearchBlueprint } from '@dxos/assistant-toolkit';
-import { Prompt } from '@dxos/blueprints';
+import { Routine } from '@dxos/compute';
+import { Trigger } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
-import { InboxOperation } from '@dxos/plugin-inbox';
+import { InboxOperation } from '@dxos/plugin-inbox/operations';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { type Space } from '@dxos/react-client/echo';
@@ -144,7 +144,7 @@ export const generator = () => ({
           );
 
           const researchPrompt = space.db.add(
-            Prompt.make({
+            Routine.make({
               name: 'Research',
               description: 'Research organization',
               input: Schema.Struct({

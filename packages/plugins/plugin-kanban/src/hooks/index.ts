@@ -3,6 +3,7 @@
 //
 
 export * from './useEchoChangeCallback';
+export * from './useItemsProjection';
 export * from './useKanbanBoardModel';
 export * from './useKanbanColumnEventHandler';
 export * from './useKanbanItemEventHandler';

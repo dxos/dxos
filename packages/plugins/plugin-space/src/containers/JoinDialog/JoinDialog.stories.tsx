@@ -10,7 +10,8 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Dialog } from '@dxos/react-ui';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { JoinDialog } from './JoinDialog';
 
 const DefaultStory = () => (

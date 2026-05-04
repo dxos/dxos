@@ -5,20 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import { getSpace, type Space } from '@dxos/client/echo';
+import { Operation } from '@dxos/compute';
 import { type Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 
 import { type Magazine, Subscription } from '../types';
-import { extractImageUrls, makeSnippet, stripHtml } from '../util';
+import { dxnToObjectId, extractImageUrls, makeSnippet, stripHtml } from '../util';
 import { CurateMagazine } from './definitions';
-
-/**
- * Extracts the bare ECHO object id from a DXN. Robust to DXN form differences
- * — `dxn:echo:@:<id>` (local), `dxn:echo:<spaceId>:<id>` (space-scoped),
- * `dxn:queue:<...>:<id>` (queue-scoped) — by always taking the last part.
- */
-const dxnToObjectId = (dxn: { parts: readonly any[] }): string => String(dxn.parts[dxn.parts.length - 1]);
 
 /**
  * Returns the canonical space.db proxy for a Post by id, if it has been

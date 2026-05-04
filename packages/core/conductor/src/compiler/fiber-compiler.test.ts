@@ -12,7 +12,7 @@ import { describe } from 'vitest';
 import { TestAiService } from '@dxos/ai/testing';
 import { Feed, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { logCustomEvent, Trace } from '@dxos/functions';
+import { Trace } from '@dxos/functions';
 import { CredentialsService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { DXN } from '@dxos/keys';
@@ -27,6 +27,7 @@ import {
   ValueBag,
   VoidOutput,
   defineComputeNode,
+  logCustomEvent,
   synchronizedComputeFunction,
 } from '../types';
 

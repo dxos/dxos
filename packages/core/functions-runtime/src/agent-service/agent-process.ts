@@ -25,9 +25,9 @@ import {
 } from '@dxos/assistant';
 import { Database, DXN, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { Trace } from '@dxos/functions';
+import { Trace } from '@dxos/compute';
+import { Operation, OperationRegistry } from '@dxos/compute';
 import { log } from '@dxos/log';
-import { Operation, OperationRegistry } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
 import { Process } from '../process';
@@ -119,6 +119,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               );
 
               log('begin request', { prompt });
+              log('trace agent request begin');
               yield* Trace.write(AgentRequestBegin, {});
               yield* session
                 .createRequest({

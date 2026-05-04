@@ -42,8 +42,8 @@ const DefaultStory = ({
 };
 
 const CompanionStory = () => {
-  const spaces = useSpaces();
-  const db = useDatabase(spaces[0].id);
+  const [space] = useSpaces();
+  const db = useDatabase(space?.id);
   const [mailbox] = useQuery(db, Filter.type(Mailbox.Mailbox));
   const feed = mailbox?.feed?.target;
 

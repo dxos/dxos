@@ -4,18 +4,33 @@
 
 /// <reference types="vite/client" />
 
-import { LogLevel, shortLevelName, log, type LogConfig, type LogEntry, type LogProcessor } from '@dxos/log';
+import {
+  shortLevelName,
+  log,
+  type LogConfig,
+  type LogEntry,
+  type LogProcessor,
+  parseFilter,
+  shouldLog,
+} from '@dxos/log';
 
 const MAX_CONTEXT_LENGTH = 500;
 
 /** Coalesce sends to one macrotask; adjust if needed. */
 const FLUSH_DEBOUNCE_MS = 16;
 
-const entryToNdjsonLine = (_config: LogConfig, entry: LogEntry): string | null => {
-  if (entry.level <= LogLevel.TRACE) {
-    return null;
-  }
+/**
+ * Injected by vite-plugin-log via `config.define`; when absent (_e.g._ prebundled artifact),
+ * falls back through `typeof` short-circuit to `debug`.
+ */
+declare const __DXOS_VITE_PLUGIN_LOG_FILTER__: string | undefined;
 
+const logFilterExpr =
+  typeof __DXOS_VITE_PLUGIN_LOG_FILTER__ !== 'undefined' ? __DXOS_VITE_PLUGIN_LOG_FILTER__ : 'debug';
+
+const vitePluginLogFilters = parseFilter(logFilterExpr);
+
+const entryToNdjsonLine = (_config: LogConfig, entry: LogEntry): string => {
   const { filename, line, context: scopeName } = entry.computedMeta;
 
   const record: Record<string, unknown> = {
@@ -78,10 +93,10 @@ const scheduleFlush = (): void => {
 };
 
 const viteLogForwardProcessor: LogProcessor = (config, entry) => {
-  const line = entryToNdjsonLine(config, entry);
-  if (line == null) {
+  if (!shouldLog(entry, vitePluginLogFilters)) {
     return;
   }
+  const line = entryToNdjsonLine(config, entry);
   buffer += line;
   scheduleFlush();
 };

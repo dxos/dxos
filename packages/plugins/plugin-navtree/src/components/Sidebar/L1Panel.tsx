@@ -2,22 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import React, { memo, useCallback, useMemo } from 'react';
 
 import { Node } from '@dxos/app-graph';
 import { isPinnedWorkspace } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Graph, useActionRunner, useConnections, useEdges } from '@dxos/plugin-graph';
+import { Graph, useActionRunner, useEdges } from '@dxos/plugin-graph';
 import { DensityProvider, IconButton, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { useAttended } from '@dxos/react-ui-attention';
 import { Tree } from '@dxos/react-ui-list';
 import { Menu, type MenuItem } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
-import { useActions, useIsAlternateTree, useLoadDescendents } from '#hooks';
+import { useActions, useLoadDescendents } from '#hooks';
 import { meta } from '#meta';
 
 import { NAV_TREE_ITEM } from '../NavTree';
@@ -84,49 +82,27 @@ const useIsActivatedWorkspace = (item: Node.Node): boolean => {
 const L1PanelContent = ({ path, item, onBack }: Pick<L1PanelProps, 'open' | 'path' | 'item' | 'onBack'>) => {
   const navTreeContext = useNavTreeContext();
 
-  const alternateTree = useAlternateTreeItem(item);
-  const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
-  const isAlternate = useIsAlternateTree(alternatePath, item);
-
   return (
     <DensityProvider density='fine'>
       <L1PanelHeader path={path} item={item} onBack={onBack} />
       <ScrollArea.Root thin orientation='vertical'>
         <ScrollArea.Viewport>
-          {isAlternate && alternateTree ? (
-            <Tree
-              model={navTreeContext.model}
-              id={alternateTree.id}
-              rootId={alternateTree.id}
-              path={alternatePath}
-              levelOffset={5}
-              gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
-              renderColumns={NavTreeItemColumns}
-              blockInstruction={navTreeContext.blockInstruction}
-              canDrop={navTreeContext.canDrop}
-              canSelect={navTreeContext.canSelect}
-              onOpenChange={navTreeContext.onOpenChange}
-              onSelect={navTreeContext.onSelect}
-              onItemHover={navTreeContext.onItemHover}
-            />
-          ) : (
-            <Tree
-              model={navTreeContext.model}
-              id={item.id}
-              rootId={item.id}
-              path={path}
-              levelOffset={5}
-              gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
-              draggable
-              renderColumns={NavTreeItemColumns}
-              blockInstruction={navTreeContext.blockInstruction}
-              canDrop={navTreeContext.canDrop}
-              canSelect={navTreeContext.canSelect}
-              onOpenChange={navTreeContext.onOpenChange}
-              onSelect={navTreeContext.onSelect}
-              onItemHover={navTreeContext.onItemHover}
-            />
-          )}
+          <Tree
+            model={navTreeContext.model}
+            id={item.id}
+            rootId={item.id}
+            path={path}
+            levelOffset={5}
+            gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
+            draggable
+            renderColumns={NavTreeItemColumns}
+            blockInstruction={navTreeContext.blockInstruction}
+            canDrop={navTreeContext.canDrop}
+            canSelect={navTreeContext.canSelect}
+            onOpenChange={navTreeContext.onOpenChange}
+            onSelect={navTreeContext.onSelect}
+            onItemHover={navTreeContext.onItemHover}
+          />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     </DensityProvider>
@@ -144,20 +120,6 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
 
   const { primaryAction, groupedActions, menuActions, onAction } = useL1MenuActions({ item, path });
   useLoadDescendents(item);
-
-  // TODO(wittjosiah): Hack to only show containsAttended when attended item is within alternate tree (e.g. settings).
-  //  Since every object in the space is a descendant of the space node, we'd otherwise always show containsAttended.
-  const alternateTree = useAlternateTreeItem(item);
-  const attended = useAttended();
-  const alternateTreeOpen = useMemo(() => {
-    if (!alternateTree) {
-      return true;
-    }
-    const hasAlternateAttended = attended.some(
-      (attendedId) => attendedId === alternateTree.id || attendedId.startsWith(alternateTree.id + '/'),
-    );
-    return !hasAlternateAttended;
-  }, [alternateTree, attended]);
 
   return (
     <div
@@ -196,115 +158,94 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
             caller={NAV_TREE_ITEM}
           />
         )}
-        {menuActions.length === 1 && (
-          <IconButton
-            density='coarse'
-            classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
-            variant='ghost'
-            icon={menuActions[0].properties?.icon ?? 'ph--placeholder--regular'}
-            iconOnly
-            label={toLocalizedString(menuActions[0].properties?.label, t)}
-            data-testid={menuActions[0].properties?.testId}
-            onClick={() => onAction(menuActions[0] as Node.Action)}
-          />
-        )}
-        {menuActions.length > 1 && (
-          <Menu.Root caller={NAV_TREE_ITEM} onAction={onAction}>
-            <Menu.Trigger asChild>
-              <IconButton
-                density='coarse'
-                classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
-                variant='ghost'
-                icon='ph--dots-three-vertical--regular'
-                iconOnly
-                label={t('tree-item-actions.label')}
-                data-testid='navtree.treeItem.actionsLevel0'
-              />
-            </Menu.Trigger>
-            <Menu.Content group={item} items={menuActions as MenuItem[]} />
-          </Menu.Root>
-        )}
-        {ItemEnd && <ItemEnd node={item} open={alternateTreeOpen} />}
+        <MenuActions item={item} menuActions={menuActions} onAction={onAction} />
+        {ItemEnd && <ItemEnd node={item} open />}
       </div>
     </div>
   );
 };
 
+type L1MenuActions = {
+  primaryAction: Node.ActionLike;
+  groupedActions: Record<string, Node.Action[]>;
+  menuActions: Node.Action[];
+  onAction: (action: Node.Action, params?: Node.InvokeProps) => void;
+};
+
 /**
- * Builds the menu actions for the L1 panel header, combining graph actions with a synthetic settings/back action.
+ * Header menu actions for an L1 workspace tab. Renders nothing for an empty
+ * `menuActions`, a single inline icon button for one action, and a
+ * `…`-menu trigger for multiple.
  */
-const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>) => {
+const MenuActions = ({
+  item,
+  menuActions,
+  onAction,
+}: {
+  item: Node.Node;
+} & Pick<L1MenuActions, 'menuActions' | 'onAction'>) => {
   const { t } = useTranslation(meta.id);
-  const { setAlternateTree } = useNavTreeContext();
-  const { graph } = useAppGraph();
+
+  if (menuActions.length === 0) {
+    return null;
+  }
+
+  if (menuActions.length === 1) {
+    return (
+      <IconButton
+        density='coarse'
+        classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
+        variant='ghost'
+        icon={menuActions[0].properties?.icon ?? 'ph--placeholder--regular'}
+        iconOnly
+        label={toLocalizedString(menuActions[0].properties?.label, t)}
+        data-testid={menuActions[0].properties?.testId}
+        onClick={() => onAction(menuActions[0] as Node.Action)}
+      />
+    );
+  }
+
+  return (
+    <Menu.Root caller={NAV_TREE_ITEM} onAction={onAction}>
+      <Menu.Trigger asChild>
+        <IconButton
+          density='coarse'
+          classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
+          variant='ghost'
+          icon='ph--dots-three-vertical--regular'
+          iconOnly
+          label={t('tree-item-actions.label')}
+          data-testid='navtree.treeItem.actionsLevel0'
+        />
+      </Menu.Trigger>
+      <Menu.Content group={item} items={menuActions as MenuItem[]} />
+    </Menu.Root>
+  );
+};
+
+/**
+ * Builds the menu actions for the L1 panel header.
+ */
+const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>): L1MenuActions => {
   const runAction = useActionRunner();
 
-  const alternateTree = useAlternateTreeItem(item);
-  const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
-  const isAlternate = useIsAlternateTree(alternatePath, item);
-
-  // Graph actions.
   const { actions: actionsProp, groupedActions } = useActions(item);
   const [primaryAction, ...secondaryActions] = actionsProp.toSorted((a, _b) =>
     a.properties?.disposition === 'list-item-primary' ? -1 : 1,
   );
 
-  const graphMenuActions = (
-    primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : actionsProp
-  )
+  const menuActions = (primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : actionsProp)
     .flatMap((action) => (Node.isAction(action) ? [action] : []))
     .filter((a) => ['list-item', 'list-item-primary'].includes(a.properties?.disposition));
 
-  // Synthetic settings/back action.
-  const settingsActionId = `${item.id}~settings`;
-  const settingsAction = useMemo((): Node.Action | undefined => {
-    if (!alternateTree) {
-      return undefined;
-    }
-    return {
-      id: settingsActionId,
-      type: Node.ActionType,
-      data: () => Effect.void,
-      properties: {
-        label: isAlternate
-          ? ['button-back.button', { ns: meta.id }]
-          : (alternateTree.properties.label ?? alternateTree.id),
-        icon: isAlternate
-          ? 'ph--arrow-u-down-left--regular'
-          : (alternateTree.properties.icon ?? 'ph--placeholder--regular'),
-        disposition: 'list-item',
-        testId: isAlternate ? 'navtree.backToSpace' : 'navtree.spaceSettings',
-      },
-    } as Node.Action;
-  }, [alternateTree, isAlternate, settingsActionId, t]);
-
-  const menuActions = useMemo(
-    () => [...graphMenuActions, ...(settingsAction ? [settingsAction] : [])],
-    [graphMenuActions, settingsAction],
-  );
-
   const onAction = useCallback(
     (action: Node.Action, params?: Node.InvokeProps) => {
-      if (action.id === settingsActionId) {
-        if (alternateTree && !isAlternate) {
-          Graph.expand(graph, alternateTree.id, 'child');
-        }
-        setAlternateTree?.(alternatePath, !isAlternate);
-      } else {
-        void runAction(action, { ...params, path });
-      }
+      void runAction(action, { ...params, path });
     },
-    [settingsActionId, setAlternateTree, alternatePath, isAlternate, runAction, graph, alternateTree, path],
+    [runAction, path],
   );
 
   return { primaryAction, groupedActions, menuActions, onAction };
-};
-
-/** Finds the first child with disposition 'alternate-tree' using graph connections directly. */
-const useAlternateTreeItem = (item: Node.Node): Node.Node | undefined => {
-  const { graph } = useAppGraph();
-  const connections = useConnections(graph, item.id, 'child');
-  return connections.find((node) => node.properties.disposition === 'alternate-tree');
 };
 
 export const L1Panel = memo(L1Panel$);

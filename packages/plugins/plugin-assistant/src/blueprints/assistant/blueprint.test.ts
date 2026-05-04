@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { AgentService } from '@dxos/functions-runtime';
 import { DatabaseBlueprint, DatabaseHandlers } from '@dxos/assistant-toolkit';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/compute';
 import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ObjectId } from '@dxos/keys';

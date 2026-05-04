@@ -5,9 +5,9 @@
 import { next as A, type Doc } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
-import { Operation } from '@dxos/operation';
 
 import { Update } from './definitions';
 

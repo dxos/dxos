@@ -11,10 +11,10 @@ import * as Stream from 'effect/Stream';
 
 import { ModelName } from '@dxos/ai';
 import { AiContextBinder, type McpServerConfig } from '@dxos/assistant';
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { type Trace } from '@dxos/functions';
+import { type Trace } from '@dxos/compute';
 
 import * as ProcessManager from '../process/ProcessManager';
 import { AgentProcess } from './agent-process';
@@ -115,11 +115,11 @@ export const layer = (opts?: {
    * Provider for space-level MCP server configs.
    */
   getMcpServers?: () => McpServerConfig[];
-}): Layer.Layer<AgentService, never, ProcessManager.ProcessManagerService> =>
+}): Layer.Layer<AgentService, never, ProcessManager.Service> =>
   Layer.effect(
     AgentService,
     Effect.gen(function* () {
-      const processManager = yield* ProcessManager.ProcessManagerService;
+      const processManager = yield* ProcessManager.Service;
       const sessionCache = new Map<string, Session>();
 
       return {

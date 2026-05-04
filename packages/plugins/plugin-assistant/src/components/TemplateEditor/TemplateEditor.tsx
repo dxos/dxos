@@ -6,7 +6,7 @@ import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import React from 'react';
 
-import { type Template } from '@dxos/blueprints';
+import { type Template } from '@dxos/compute';
 import { createDocAccessor } from '@dxos/echo-db';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
@@ -35,17 +35,17 @@ export const TemplateEditor = composable<HTMLDivElement, TemplateEditorProps>(
     const { t } = useTranslation(meta.id);
     const { themeMode } = useThemeContext();
     const { parentRef } = useTextEditor(() => {
-      const text = template.source?.target;
-      if (!text) {
+      const target = template.source?.target;
+      if (!target) {
         return {};
       }
 
       return {
-        initialValue: text.content ?? '',
+        initialValue: target.content ?? '',
         extensions: [
           createDataExtensions({
             id,
-            text: createDocAccessor(text, ['content']),
+            text: createDocAccessor(target, ['content']),
           }),
           createBasicExtensions({
             bracketMatching: false,

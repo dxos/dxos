@@ -14,7 +14,7 @@ import * as Match from 'effect/Match';
 import { AiService, ConsolePrinter, OpaqueToolkit, type ModelName } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { AiContextBinder, AiContextService, AiSession, AiSessionService, CompleteBlock } from '@dxos/assistant';
-import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Blueprint, Routine } from '@dxos/compute';
 import { Database, DXN, Feed, Tag, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { acquireReleaseResource } from '@dxos/effect';
@@ -28,8 +28,8 @@ import {
   ServiceNotAvailableError,
   Trace,
   Trigger,
-} from '@dxos/functions';
-import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
+} from '@dxos/compute';
+import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
 
 import * as FeedTraceSink from '../FeedTraceSink';
 import { AgentService } from '../agent-service';
@@ -72,7 +72,7 @@ export type AssistantTestServices =
   | OperationRegistry.Service
   | OpaqueToolkit.OpaqueToolkitProvider
   | Operation.Service
-  | ProcessManager.ProcessManagerService
+  | ProcessManager.Service
   | Process.ProcessMonitorService
   | Registry.AtomRegistry
   | OperationHandlerSet.OperationHandlerProvider
@@ -83,7 +83,7 @@ export type AssistantTestServices =
   | FeedTraceSink.FeedTraceSink;
 
 export const AssistantTestLayer = ({
-  aiServicePreset = 'direct',
+  aiServicePreset = 'edge-remote',
   model,
   operationHandlers = [],
   toolkits = [],
@@ -100,14 +100,14 @@ export const AssistantTestLayer = ({
   const operationHandlersSet = Array.isArray(operationHandlers)
     ? OperationHandlerSet.merge(...operationHandlers)
     : operationHandlers;
-  types.push(Blueprint.Blueprint, Prompt.Prompt, Operation.PersistentOperation, Feed.Feed, Trigger.Trigger, Tag.Tag);
+  types.push(Blueprint.Blueprint, Routine.Routine, Operation.PersistentOperation, Feed.Feed, Trigger.Trigger, Tag.Tag);
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
   return Layer.empty.pipe(
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
     Layer.provideMerge(AgentService.layer({ systemPrompt, model: resolvedModel })),
-    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
+    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
     Layer.provideMerge(
       Layer.effect(
         ServiceResolver.ServiceResolver,

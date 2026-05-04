@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Blueprint, Template } from '@dxos/blueprints';
+import { Blueprint, Template } from '@dxos/compute';
 
 import { AttachImage } from '#operations';
 import { defaultResearchSources, type ResearchSource } from '#sources';

@@ -7,18 +7,17 @@ import type * as Layer from 'effect/Layer';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type ComputeGraph, ValueBag, type WorkflowLoader } from '@dxos/conductor';
+import { QueueService } from '@dxos/compute';
+import { type ComputeGraph, ComputeNodeContext, ValueBag, type WorkflowLoader } from '@dxos/conductor';
 import { Context } from '@dxos/context';
 import { Database } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { runAndForwardErrors } from '@dxos/effect';
-import { createEventLogger, Trace } from '@dxos/functions';
-import { QueueService } from '@dxos/functions';
 import { type RuntimeServices, ServiceContainer } from '@dxos/functions-runtime';
 import { RemoteFunctionExecutionService } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { LogLevel, log } from '@dxos/log';
+import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Avatar, Input, type ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
@@ -137,7 +136,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
               Effect.withSpan('runWorkflow'),
               Effect.flatMap(ValueBag.unwrap),
               Effect.provide(createLocalExecutionContext(space)),
-              Effect.provide(Trace.writerLayerNoop),
+              Effect.provide(ComputeNodeContext.layerNoop),
               Effect.scoped,
             ),
         );
@@ -235,7 +234,11 @@ const RobotAvatar = () => (
 const createLocalExecutionContext = (space: Space): Layer.Layer<RuntimeServices> => {
   return new ServiceContainer()
     .setServices({
-      eventLogger: createEventLogger(LogLevel.INFO),
+      trace: {
+        write: (event, payload) => {
+          log.info(event.key, payload as object);
+        },
+      },
       database: Database.makeService(space.db),
       queues: QueueService.make(space.queues, undefined),
       functionCallService: RemoteFunctionExecutionService.mock(),

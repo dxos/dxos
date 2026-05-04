@@ -21,7 +21,7 @@ import {
   type ComputeGraph,
   type ComputeNode,
   createSheetName,
-} from '@dxos/compute';
+} from '@dxos/compute-hyperformula';
 import { invariant } from '@dxos/invariant';
 import { documentId, singleValueFacet } from '@dxos/ui-editor';
 

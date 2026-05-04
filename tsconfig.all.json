@@ -79,6 +79,9 @@
       "path": "packages/common/log/tsconfig.json"
     },
     {
+      "path": "packages/common/log-store-idb/tsconfig.json"
+    },
+    {
       "path": "packages/common/merkle-search-tree/tsconfig.json"
     },
     {
@@ -151,6 +154,9 @@
       "path": "packages/core/compute/tsconfig.json"
     },
     {
+      "path": "packages/core/compute-hyperformula/tsconfig.json"
+    },
+    {
       "path": "packages/core/conductor/tsconfig.json"
     },
     {
@@ -206,6 +212,12 @@
     },
     {
       "path": "packages/core/halo/keyring/tsconfig.json"
+    },
+    {
+      "path": "packages/core/introspect/tsconfig.json"
+    },
+    {
+      "path": "packages/core/introspect-mcp/tsconfig.json"
     },
     {
       "path": "packages/core/mcp-client/tsconfig.json"
@@ -304,6 +316,9 @@
       "path": "packages/plugins/plugin-client/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-code/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-conductor/tsconfig.json"
     },
     {
@@ -328,6 +343,9 @@
       "path": "packages/plugins/plugin-discord/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-doctor/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-explorer/tsconfig.json"
     },
     {
@@ -337,6 +355,9 @@
       "path": "packages/plugins/plugin-files/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-gallery/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-graph/tsconfig.json"
     },
     {
@@ -344,6 +365,9 @@
     },
     {
       "path": "packages/plugins/plugin-inbox/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-integration/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-iroh-beacon/tsconfig.json"
@@ -430,9 +454,6 @@
       "path": "packages/plugins/plugin-spacetime/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-spec/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-spotlight/tsconfig.json"
     },
     {
@@ -460,13 +481,13 @@
       "path": "packages/plugins/plugin-tictactoe/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-token-manager/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-transcription/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-transformer/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-trello/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-voxel/tsconfig.json"

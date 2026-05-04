@@ -7,24 +7,19 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, createObjectNode, getActiveSpace } from '@dxos/app-toolkit';
-import { type Space, isSpace } from '@dxos/client/echo';
+import { AppCapabilities, AppNode, AppNodeMatcher, createObjectNode, getActiveSpace } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
-import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SPACE_TYPE } from '@dxos/plugin-space/types';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { FeedOperation } from '#operations';
 import { Magazine, Subscription } from '#types';
-
-const whenSpace = (node: Node.Node): Option.Option<Space> =>
-  node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none();
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -46,7 +41,7 @@ export default Capability.makeModule(
       // Show Subscription.Feed objects as nodes under each space.
       GraphBuilder.createExtension({
         id: 'subscription-feeds',
-        match: whenSpace,
+        match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           const feeds = get(AtomQuery.make(space.db, Filter.type(Subscription.Feed)));
           if (feeds.length === 0) {

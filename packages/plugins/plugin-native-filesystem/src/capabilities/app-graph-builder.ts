@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
-import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SHARED } from '@dxos/plugin-space/types';
@@ -32,7 +32,6 @@ import { findDirectoryById } from '../util';
 import type { FilesystemManager } from './state';
 
 const FILESYSTEM_TYPE = `${meta.id}.workspace`;
-const SETTINGS_TYPE = `${meta.id}.settings`;
 const GENERAL_TYPE = `${meta.id}.general`;
 const DIRECTORY_TYPE = `${meta.id}.directory`;
 const MARKDOWN_PENDING_TYPE = `${meta.id}.markdown-pending`;
@@ -202,18 +201,6 @@ export default Capability.makeModule(
                   position: orderMap.get(workspace.id),
                   onRearrange,
                 },
-                nodes: [
-                  Node.make({
-                    id: 'settings',
-                    type: SETTINGS_TYPE,
-                    data: null,
-                    properties: {
-                      label: ['settings.panel.label', { ns: meta.id }],
-                      icon: 'ph--faders--regular',
-                      disposition: 'alternate-tree',
-                    },
-                  }),
-                ],
               });
             }),
           );
@@ -221,8 +208,8 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: 'settings-sections',
-        match: NodeMatcher.whenNodeType(SETTINGS_TYPE),
+        id: 'workspace-settings',
+        match: NodeMatcher.whenNodeType(FILESYSTEM_TYPE),
         connector: () =>
           Effect.succeed([
             Node.make({

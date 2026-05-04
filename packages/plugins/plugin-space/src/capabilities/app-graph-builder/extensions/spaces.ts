@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, getActiveSpace, getPersonalSpace, isPersonalSpace } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNodeMatcher, getActiveSpace, getPersonalSpace, isPersonalSpace } from '@dxos/app-toolkit';
 import { type Space, SpaceState } from '@dxos/client/echo';
+import { Operation } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { Migrations } from '@dxos/migrations';
-import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { CreateAtom, Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Expando } from '@dxos/schema';
@@ -26,11 +26,9 @@ import {
   CREATE_OBJECT_IN_SPACE_LABEL,
   MIGRATE_SPACE_LABEL,
   RENAME_SPACE_LABEL,
-  SETTINGS_PANEL_LABEL,
   checkPendingMigration,
   spaceActionsCache,
   spaceRearrangeCache,
-  whenSpace,
 } from './shared';
 
 //
@@ -175,7 +173,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 
     GraphBuilder.createExtension({
       id: 'actions',
-      match: whenSpace,
+      match: AppNodeMatcher.whenSpace,
       actions: (space, get) => {
         const [client] = get(capabilities.atom(ClientCapabilities.Client));
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
@@ -258,19 +256,6 @@ const constructSpaceNode = ({
       onRearrange,
       canDrop: CAN_DROP_SPACE,
     },
-    nodes: [
-      Node.make({
-        id: 'settings',
-        type: `${meta.id}.settings`,
-        data: null,
-        properties: {
-          label: SETTINGS_PANEL_LABEL,
-          icon: 'ph--faders--regular',
-          disposition: 'alternate-tree',
-          space,
-        },
-      }),
-    ],
   });
 };
 

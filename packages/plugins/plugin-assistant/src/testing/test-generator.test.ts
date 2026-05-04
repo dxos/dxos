@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
+import { ContextQueueService } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { ContextQueueService } from '@dxos/functions';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 import { type Queue } from '@dxos/react-client/echo';
 import { type Message } from '@dxos/types';

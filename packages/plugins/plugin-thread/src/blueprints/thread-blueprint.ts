@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Blueprint, Template } from '@dxos/blueprints';
+import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 import { ThreadOperation } from '#operations';

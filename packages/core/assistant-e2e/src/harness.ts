@@ -22,10 +22,10 @@ import {
   WebSearchToolkitOpaque,
 } from '@dxos/assistant-toolkit';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Blueprint, Routine } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
 import { TestHelpers, type TestTag } from '@dxos/effect/testing';
-import { Operation } from '@dxos/operation';
 import { InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
 import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/operations';
 import { Mailbox } from '@dxos/plugin-inbox/types';
@@ -66,9 +66,9 @@ interface AgentTestOptions {
 }
 
 export const agentTest: {
-  (options: AgentTestOptions, prompt: Prompt.Prompt): (ctx: TestContext) => Effect.Effect<void, any>;
-  (prompt: Prompt.Prompt): (ctx: TestContext) => Effect.Effect<void, any>;
-} = (...args: [AgentTestOptions, Prompt.Prompt] | [Prompt.Prompt]) => {
+  (options: AgentTestOptions, prompt: Routine.Routine): (ctx: TestContext) => Effect.Effect<void, any>;
+  (prompt: Routine.Routine): (ctx: TestContext) => Effect.Effect<void, any>;
+} = (...args: [AgentTestOptions, Routine.Routine] | [Routine.Routine]) => {
   const [options = {}, prompt] = args.length === 1 ? [undefined, args[0]] : args;
 
   const model =

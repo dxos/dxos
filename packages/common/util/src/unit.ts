@@ -20,11 +20,15 @@ export type UnitFormat<T = any> = (n: number, precision?: number) => UnitValue<T
 const createFormat = (unit: Unit): UnitFormat<string> => {
   return (n: number, precision = unit.precision ?? 0) => {
     const value = n / unit.quotient;
+    const formattedValue = value.toLocaleString('en-US', {
+      minimumFractionDigits: precision,
+      maximumFractionDigits: precision,
+    });
     return {
       unit,
       value,
-      formattedValue: value.toFixed(precision),
-      toString: () => `${value.toFixed(precision)}${unit.symbol}`,
+      formattedValue,
+      toString: () => `${formattedValue}${unit.symbol}`,
     };
   };
 };

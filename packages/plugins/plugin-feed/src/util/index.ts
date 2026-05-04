@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './dxn';
 export * from './extract';
 export * from './extract-article';
 export * from './feed-fetcher';

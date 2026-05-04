@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import { CommandConfig, Common, printList, spaceIdWithDefault, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Context } from '@dxos/context';
-import { Database, Filter } from '@dxos/echo';
+import { Database, Filter, Query } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 
 import { getTriggerRemoteStatus, printTrigger } from './util';
@@ -24,7 +24,9 @@ export const list = Command.make(
     const { json } = yield* CommandConfig;
 
     // Fetch local triggers
-    const triggers = yield* Database.runQuery(Filter.type(Trigger.Trigger));
+    const triggers = yield* Database.runQuery(
+      Query.select(Filter.type(Trigger.Trigger)).debugLabel('cli.trigger.list'),
+    );
 
     // Fetch remote cron triggers to check availability
     const remoteCronIds = yield* Effect.gen(function* () {

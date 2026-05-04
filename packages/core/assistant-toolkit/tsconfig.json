@@ -60,9 +60,6 @@
       "path": "../assistant"
     },
     {
-      "path": "../blueprints"
-    },
-    {
       "path": "../echo/echo"
     },
     {
@@ -72,13 +69,7 @@
       "path": "../echo/echo-protocol"
     },
     {
-      "path": "../functions"
-    },
-    {
       "path": "../functions-runtime"
-    },
-    {
-      "path": "../operation"
     }
   ]
 }

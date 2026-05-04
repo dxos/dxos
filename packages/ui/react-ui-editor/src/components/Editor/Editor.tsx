@@ -157,8 +157,6 @@ type EditorToolbarProps = Omit<NaturalEditorToolbarProps, 'getView' | 'state'>;
  */
 const EditorToolbar = (props: EditorToolbarProps) => {
   const { controller, state } = useEditorContext(EDITOR_TOOLBAR_NAME);
-
-  // TODO(burdon): Fix invariant.
   const getView = useCallback(() => {
     invariant(controller?.view);
     return controller?.view;
@@ -175,9 +173,9 @@ EditorToolbar.displayName = EDITOR_TOOLBAR_NAME;
 
 export const Editor = {
   Root: EditorRoot,
+  Toolbar: EditorToolbar,
   Content: EditorContent,
   View: EditorView,
-  Toolbar: EditorToolbar,
 };
 
 export type {

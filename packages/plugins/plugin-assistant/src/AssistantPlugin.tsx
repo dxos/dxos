@@ -9,15 +9,15 @@ import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { ContextBinding } from '@dxos/assistant';
 import { Agent, AgentBlueprint, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
-import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Blueprint, Routine } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Annotation, Feed, Obj, Type } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { DeckEvents } from '@dxos/plugin-deck/types';
-import { MarkdownEvents } from '@dxos/plugin-markdown';
+import { MarkdownEvents } from '@dxos/plugin-markdown/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { Text } from '@dxos/schema';
@@ -40,9 +40,8 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { AssistantOperation } from '#operations';
+import { translations } from '#translations';
 import { AssistantEvents } from '#types';
-
-import { translations } from './translations';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
@@ -88,13 +87,13 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         },
       },
       {
-        id: Type.getTypename(Prompt.Prompt),
+        id: Type.getTypename(Routine.Routine),
         metadata: {
-          icon: Annotation.IconAnnotation.get(Prompt.Prompt).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Prompt.Prompt).pipe(Option.getOrThrow).hue ?? 'white',
+          icon: Annotation.IconAnnotation.get(Routine.Routine).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Routine.Routine).pipe(Option.getOrThrow).hue ?? 'white',
           createObject: ((props, options) =>
             Effect.gen(function* () {
-              const object = Prompt.make(props);
+              const object = Routine.make(props);
               return yield* Operation.invoke(SpaceOperation.AddObject, {
                 object,
                 target: options.target,
@@ -152,7 +151,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       Feed.Feed,
       HasSubject.HasSubject,
       Message.Message,
-      Prompt.Prompt,
+      Routine.Routine,
       Agent.Agent,
       McpServer.McpServer,
       Plan.Plan,

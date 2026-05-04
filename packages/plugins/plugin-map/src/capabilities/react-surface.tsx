@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
@@ -67,12 +68,18 @@ export default Capability.makeModule(() =>
           prop: string;
           schema: Schema.Schema<any>;
           target: Database.Database | Collection.Collection | undefined;
+          fieldPropertyAst?: SchemaAST.AST;
         } => {
           const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, LocationAnnotationId);
           return !!annotation;
         },
-        component: ({ data: { target }, ...inputProps }) => {
-          const props = inputProps as any as FormFieldComponentProps;
+        component: ({ data: { target, fieldPropertyAst }, ...inputProps }) => {
+          const ast = fieldPropertyAst;
+          if (!ast) {
+            return null;
+          }
+
+          const props = { ...inputProps, type: ast } as any as FormFieldComponentProps;
           const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
           const { typename } = useFormValues('MapForm');
 

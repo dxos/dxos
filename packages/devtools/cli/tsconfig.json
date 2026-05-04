@@ -56,7 +56,7 @@
       "path": "../../core/assistant-toolkit"
     },
     {
-      "path": "../../core/blueprints"
+      "path": "../../core/compute"
     },
     {
       "path": "../../core/echo/echo"
@@ -65,16 +65,10 @@
       "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/functions"
-    },
-    {
       "path": "../../core/functions-runtime"
     },
     {
       "path": "../../core/mesh/edge-client"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"
@@ -93,6 +87,9 @@
     },
     {
       "path": "../../plugins/plugin-inbox"
+    },
+    {
+      "path": "../../plugins/plugin-integration"
     },
     {
       "path": "../../plugins/plugin-kanban"
@@ -123,9 +120,6 @@
     },
     {
       "path": "../../plugins/plugin-thread"
-    },
-    {
-      "path": "../../plugins/plugin-token-manager"
     },
     {
       "path": "../../plugins/plugin-transcription"

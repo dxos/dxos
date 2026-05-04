@@ -4,6 +4,5 @@
 
 export * from './meta';
 // TODO(wittjosiah): Remove. This is needed for debug plugin currently.
-export * from './operations';
 
 export * from './InboxPlugin';

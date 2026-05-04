@@ -11,7 +11,8 @@ import { List } from '@dxos/react-ui-list';
 import { HuePicker } from '@dxos/react-ui-pickers';
 import { hues, osTranslations, subtleHover } from '@dxos/ui-theme';
 
-import { translationKey } from '../../../translations';
+import { translationKey } from '#translations';
+
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 export const SelectOptionField = ({
