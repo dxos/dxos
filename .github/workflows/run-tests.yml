@@ -25,6 +25,8 @@ permissions:
 
 jobs:
   test:
+    # Gate fork PRs on maintainer approval. github context is inherited from the caller.
+    environment: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository && 'external-pr' || '' }}
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:${{ inputs.node-version }}
