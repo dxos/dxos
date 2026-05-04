@@ -82,22 +82,24 @@ export function rolldownLogMetaPlugin(options: LogMetaTransformOptions): Rolldow
       handler(
         code: string,
         id: string,
-        meta: { moduleType: string; ast?: Program; magicString?: RolldownMagicString },
+        meta: { moduleType: string; magicString?: RolldownMagicString },
       ) {
         const excludeId = options.excludeId ?? LOG_META_EXCLUDE_ID_DEFAULT;
         if (excludeId instanceof RegExp && excludeId.test(id)) {
           return null;
         }
-        if (!['js', 'jsx', 'ts', 'tsx'].includes(meta.moduleType)) {
+        const lang = meta.moduleType as 'ts' | 'tsx' | 'js' | 'jsx';
+        if (!['js', 'jsx', 'ts', 'tsx'].includes(lang)) {
           return null;
         }
-        const ms = meta.magicString ?? new RolldownMagicString(code);
-        if (!meta.ast) {
-          console.warn('No program', id);
-          return null;
-        }
-        applyTransform(ms, meta.ast, options.filename ?? id, { specs: options.to_transform });
-        return { code: ms };
+        // Always parse from source and build a fresh MagicString so positions
+        // are consistent. rolldown's meta.ast / meta.magicString may represent
+        // pre-transformed (e.g. type-stripped) code whose byte offsets diverge
+        // from the original TypeScript in `code`, producing wrong insertion points.
+        const ast = parseAst(code, { astType: lang.includes('ts') ? 'ts' : 'js', lang });
+        const ms = new RolldownMagicString(code);
+        applyTransform(ms, ast, options.filename ?? id, { specs: options.to_transform });
+        return { code: ms.toString() };
       },
     },
   } satisfies RolldownPlugin;
