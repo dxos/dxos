@@ -90,10 +90,7 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
           />
         )}
       </Card.Toolbar>
-      {/* `contents` keeps the surface output participating in Card.Root's Column grid so col-span/subgrid classes resolve. */}
-      <div role='none' {...{ inert: true }} className='contents pointer-events-none'>
-        {children}
-      </div>
+      {children}
     </Card.Root>
   );
 };
