@@ -234,8 +234,9 @@ export const translations = [
         'space-locked.description': 'Locking a space prevents new members from being invited to the space.',
 
         'settings.panel.label': 'Space Settings',
+        'settings-section.label': 'Settings',
         'open-current-space-settings.label': 'Open current space settings',
-        'space-settings-properties.label': 'Settings',
+        'space-settings-properties.label': 'General',
         'space-properties-settings-verbose.label': 'Manage space properties',
         'space-properties-settings.description': 'Display settings for this space.',
         'space-settings-schema.label': 'Types',
