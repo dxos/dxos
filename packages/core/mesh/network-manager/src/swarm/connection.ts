@@ -15,7 +15,6 @@ import {
   ConnectivityError,
   ProtocolError,
   TimeoutError,
-  trace,
 } from '@dxos/protocols';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
@@ -113,8 +112,6 @@ export class Connection {
   readonly stateChanged = new Event<ConnectionState>();
   readonly errors = new ErrorStream();
 
-  public _instanceId = PublicKey.random().toHex();
-
   public readonly transportStats = new Event<TransportStats>();
 
   private readonly _signalSendTask = new DeferredTask(this._ctx, async () => {
@@ -165,7 +162,7 @@ export class Connection {
    */
   async openConnection(): Promise<void> {
     invariant(this._state === ConnectionState.INITIAL, 'Invalid state.');
-    log.trace('dxos.mesh.connection.open-connection', trace.begin({ id: this._instanceId }));
+    log('opening connection');
     log.trace('dxos.mesh.connection.open', {
       sessionId: this.sessionId,
       topic: this.topic,
@@ -257,7 +254,7 @@ export class Connection {
 
     this._incomingSignalBuffer = [];
 
-    log.trace('dxos.mesh.connection.open-connection', trace.end({ id: this._instanceId }));
+    log('opened connection');
   }
 
   @synchronized

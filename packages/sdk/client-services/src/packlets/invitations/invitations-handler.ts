@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SwarmConnection, type SwarmNetworkManager, createTeleportProtocolFactory } from '@dxos/network-manager';
-import { InvalidInvitationError, InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
+import { InvalidInvitationError, InvalidInvitationExtensionRoleError } from '@dxos/protocols';
 import { type AdmissionKeypair, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AuthenticationResponse, type IntroductionResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
@@ -160,15 +160,14 @@ export class InvitationsHandler {
           });
 
           scheduleTask(connectionCtx, async () => {
-            const traceId = PublicKey.random().toHex();
             try {
-              log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.begin({ id: traceId }));
+              log('opening host invitation handler');
               log.verbose('connected', { ...protocol.toJSON() });
               const deviceKey = await extension.completedTrigger.wait({ timeout: invitation.timeout });
               log.verbose('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
               guardedState.set(extension, Invitation.State.SUCCESS);
               metrics.increment('dxos.invitation.success');
-              log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.end({ id: traceId }));
+              log('host invitation handler opened');
               admitted = true;
 
               if (!invitation.multiUse) {
@@ -187,7 +186,6 @@ export class InvitationsHandler {
                   log.error('failed', err);
                 }
               }
-              log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.error({ id: traceId, error: err }));
               // Close connection
               extensionsCtx.close(err);
             }
@@ -335,9 +333,8 @@ export class InvitationsHandler {
           });
 
           scheduleTask(connectionCtx, async () => {
-            const traceId = PublicKey.random().toHex();
             try {
-              log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.begin({ id: traceId }));
+              log('opening guest invitation handler');
 
               scheduleTask(
                 connectionCtx,
@@ -413,7 +410,7 @@ export class InvitationsHandler {
                 ...result,
                 state: Invitation.State.SUCCESS,
               });
-              log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.end({ id: traceId }));
+              log('guest invitation handler opened');
             } catch (err: any) {
               if (err instanceof TimeoutError) {
                 log.verbose('timeout', { ...protocol.toJSON() });
@@ -423,7 +420,6 @@ export class InvitationsHandler {
                 guardedState.error(extension, err);
               }
               extensionCtx.close(err);
-              log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.error({ id: traceId, error: err }));
             }
           });
         },

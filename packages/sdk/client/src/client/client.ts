@@ -31,7 +31,6 @@ import {
   InvalidConfigError,
   RemoteServiceConnectionError,
   RemoteServiceConnectionTimeout,
-  trace as Trace,
 } from '@dxos/protocols';
 import { type QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
@@ -357,7 +356,7 @@ export class Client {
       return this;
     }
 
-    log.trace('dxos.sdk.client.open', Trace.begin({ id: this._instanceId }));
+    log('initializing client');
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
     const { Runtime } = await import('@dxos/protocols/proto/dxos/config');
 
@@ -411,7 +410,7 @@ export class Client {
     }
 
     this._initialized = true;
-    log.trace('dxos.sdk.client.open', Trace.end({ id: this._instanceId }));
+    log('initialized client');
     return this;
   }
 
@@ -465,9 +464,9 @@ export class Client {
     await this._echoClient.open(ctx);
     log('client._open: echo client opened');
 
-    const mesh = new MeshProxy(this._services, this._instanceId);
-    const halo = new HaloProxy(this._services, this._instanceId);
-    const spaces = new SpaceList(this._config, this._services, this._echoClient, this._instanceId);
+    const mesh = new MeshProxy(this._services);
+    const halo = new HaloProxy(this._services);
+    const spaces = new SpaceList(this._config, this._services, this._echoClient);
 
     const shell = this._shellManager
       ? new Shell({
