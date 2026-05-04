@@ -21,8 +21,7 @@ import { ProcessManager } from '@dxos/functions-runtime';
 
 import { type McpServerConfig, AiContextBinder } from '../conversation';
 import { RoutineError } from '../errors';
-import { AgentProcess } from './agent-process';
-import { RoutineProcess, RoutineRunInput } from './routine-process';
+import { AgentProcess, RoutineRunInput } from './agent-process';
 
 export interface Service {
   /**
@@ -209,7 +208,7 @@ export const layer = (opts?: {
               catch: (error) => new RoutineError('Failed to encode routine input.', { description: String(error) }),
             });
 
-            const handle = yield* processManager.spawn(RoutineProcess({ getMcpServers: opts?.getMcpServers }), {
+            const handle = yield* processManager.spawn(AgentProcess({ getMcpServers: opts?.getMcpServers }), {
               name: 'routine',
               target: feedDxn,
               traceMeta: {
