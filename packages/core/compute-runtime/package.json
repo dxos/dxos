@@ -1,0 +1,64 @@
+{
+  "name": "@dxos/compute-runtime",
+  "version": "0.8.3",
+  "description": "Compute runtime: process manager, layer stack and runtime-level service resolution.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/neutral/index.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "default": "./dist/lib/neutral/testing/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {},
+  "dependencies": {
+    "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/functions": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/operation": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@effect-atom/atom": "catalog:",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/kv-store": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@effect/vitest": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
+  }
+}

@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvent } from '@dxos/app-framework';
-
-import { meta } from '#meta';
-
 export namespace AutomationEvents {
-  export const ComputeRuntimeReady = ActivationEvent.make(`${meta.id}.event.compute-runtime-ready`);
+  // The legacy `ComputeRuntimeReady` event was removed when the monolithic
+  // `AutomationCapabilities.ComputeRuntime` was dissolved into per-service
+  // `Capabilities.LayerSpec` contributions. Consumers that previously
+  // depended on it should sequence against `ActivationEvents.SetupLayer` or
+  // `ActivationEvents.ManagedRuntimeReady` from `@dxos/app-framework`.
 }

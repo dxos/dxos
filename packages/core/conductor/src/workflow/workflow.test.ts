@@ -8,8 +8,8 @@ import * as Layer from 'effect/Layer';
 import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
+import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { Feed, Obj, Ref } from '@dxos/echo';
-import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, Trace } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';

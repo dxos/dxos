@@ -5,11 +5,10 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { ActivationEvent, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Annotation } from '@dxos/echo';
-import { AutomationEvents } from '@dxos/plugin-automation/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
@@ -65,7 +64,7 @@ export const SheetPlugin = Plugin.define(meta).pipe(
     activate: SheetState,
   }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, AutomationEvents.ComputeRuntimeReady),
+    activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, ActivationEvents.ManagedRuntimeReady),
     activate: ComputeGraphRegistry,
   }),
   Plugin.addModule({

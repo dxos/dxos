@@ -4,24 +4,37 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Operation, ServiceResolver } from '@dxos/compute';
+import { type SpaceId } from '@dxos/keys';
 
 import { SheetCapabilities } from '#types';
 
-// Locally declare the Automation ComputeRuntime capability by ID to avoid direct import dependency.
-
+/**
+ * Builds the per-space compute graph registry by adapting the shared
+ * {@link Capabilities.ProcessManagerRuntime} into a
+ * {@link FunctionsRuntimeProvider} that resolves {@link Operation.Service}
+ * from the space's service layer.
+ */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const computeRuntimeResolver = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
-    // TODO(wittjosiah): This can probably be a module level import now due to lazy capability loading.
+    const processManagerRuntime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
+
     // Async import removes direct dependency on hyperformula.
     const { defaultPlugins, ComputeGraphRegistry } = yield* Effect.tryPromise(
       () => import('@dxos/compute-hyperformula'),
     );
+
     const computeGraphRegistry = new ComputeGraphRegistry({
       plugins: defaultPlugins,
-      computeRuntime: computeRuntimeResolver,
+      computeRuntime: {
+        getRuntime: (spaceId: SpaceId) => ({
+          runPromise: <A, E>(effect: Effect.Effect<A, E, Operation.Service>) =>
+            processManagerRuntime.runPromise(
+              effect.pipe(Effect.provide(ServiceResolver.provide({ space: spaceId }, Operation.Service))) as any,
+            ),
+        }),
+      },
     });
 
     return Capability.contributes(SheetCapabilities.ComputeGraphRegistry, computeGraphRegistry);

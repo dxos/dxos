@@ -19,15 +19,11 @@ import { ToolExecutionServices } from '@dxos/assistant';
 import { type ClientService, type ConfigService } from '@dxos/client';
 import { getProfilePath } from '@dxos/client-protocol';
 import { DX_DATA } from '@dxos/client-protocol';
-import { ServiceResolver, Trace } from '@dxos/compute';
-import { OperationHandlerSet } from '@dxos/compute';
+import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, type Key } from '@dxos/echo';
-import {
-  FunctionImplementationResolver,
-  ProcessManager,
-  TriggerDispatcher,
-  TriggerStateStore,
-} from '@dxos/functions-runtime';
+import { ServiceResolver, Trace } from '@dxos/functions';
+import { FunctionImplementationResolver, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
+import { OperationHandlerSet } from '@dxos/operation';
 
 import { operationHandlers as blueprintOperationHandlers, toolkits } from './blueprints';
 import { type AiChatServices, chatLayer } from './runtime';

@@ -7,15 +7,15 @@ import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
+import { runInSpace } from '@dxos/app-framework/plugin-runtime';
 import { AppCapabilities, AppNode, getActiveSpace, getPersonalSpace } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
-import { Blueprint, Routine } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { Blueprint, Routine } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { DXN, Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -45,11 +45,13 @@ export default Capability.makeModule(
               data: () =>
                 Effect.gen(function* () {
                   // TODO(dmaretskyi): This goes away when composer will have unified operation invocations.
-                  const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
                   const db = Obj.getDatabase(chat);
                   invariant(db);
-                  const runtime = yield* computeRuntime.getRuntime(db.spaceId).runtimeEffect;
-                  yield* Operation.invoke(AssistantOperation.UpdateChatName, { chat }).pipe(Effect.provide(runtime));
+                  yield* runInSpace(
+                    db.spaceId,
+                    [] as const,
+                    Operation.invoke(AssistantOperation.UpdateChatName, { chat }),
+                  );
                 }),
               properties: {
                 label: ['chat-update-name.label', { ns: meta.id }],

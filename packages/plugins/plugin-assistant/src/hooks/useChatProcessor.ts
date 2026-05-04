@@ -4,16 +4,22 @@
 
 import { type Registry, RegistryContext } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import { useContext, useMemo, useState } from 'react';
 
+import { AiService } from '@dxos/ai';
+import { Capabilities } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/ui';
 import { AiSession } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
-import { type Blueprint } from '@dxos/compute';
-import { Feed, Ref } from '@dxos/echo';
+import { type Blueprint } from '@dxos/blueprints';
+import { Database, Feed, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
+import { CredentialsService, QueueService, ServiceResolver } from '@dxos/functions';
+import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { type AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { OperationRegistry } from '@dxos/operation';
 import { type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
@@ -25,7 +31,7 @@ export type UseChatProcessorProps = {
   space?: Space;
   chat?: Chat.Chat;
   preset?: AiServicePreset;
-  runtime?: AutomationCapabilities.ComputeRuntime;
+  runtime?: Capabilities.ProcessManagerRuntime;
   blueprintRegistry?: Blueprint.Registry;
   settings?: Assistant.Settings;
 };
@@ -71,20 +77,32 @@ export const useChatProcessor = ({
   }, [space, chat?.feed.target]);
 
   const feed = chat?.feed.target;
+  const serviceResolver = useCapability(Capabilities.ServiceResolver);
 
   const processor = useMemo(() => {
-    if (!runtime || !session || !chat || !feed) {
+    if (!runtime || !session || !chat || !feed || !space) {
       return undefined;
     }
 
+    const spaceLayer = ServiceResolver.provide(
+      { space: space.id },
+      Database.Service,
+      QueueService,
+      Feed.FeedService,
+      CredentialsService,
+      AiService.AiService,
+      AgentService.AgentService,
+      OperationRegistry.Service,
+    ).pipe(Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)));
+
     log('creating processor', { preset, model: preset?.model, settings });
-    return new AiChatProcessor(session, runtime, feed, {
+    return new AiChatProcessor(session, runtime, feed, spaceLayer, {
       chat: chat ? Ref.make(chat) : undefined,
       observableRegistry,
       blueprintRegistry,
       model: preset?.model,
     });
-  }, [runtime, session, blueprintRegistry, preset, feed]);
+  }, [runtime, session, blueprintRegistry, preset, feed, space?.id]);
 
   return processor;
 };

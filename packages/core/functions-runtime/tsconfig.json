@@ -68,6 +68,9 @@
       "path": "../blueprints"
     },
     {
+      "path": "../compute-runtime"
+    },
+    {
       "path": "../echo/echo"
     },
     {

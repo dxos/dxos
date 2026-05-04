@@ -7,16 +7,16 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import { pipe } from 'effect/Function';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { Capabilities } from '@dxos/app-framework';
+import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Trace } from '@dxos/compute';
 import { Filter, Query } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
-import { FeedTraceSink, Process } from '@dxos/functions-runtime';
+import { Process, Trace } from '@dxos/functions';
+import { FeedTraceSink } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { useComputeRuntimeService } from '@dxos/plugin-automation/hooks';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
@@ -32,8 +32,8 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
   ({ space, onProcessTerminate, ...props }, forwardedRef) => {
     const { invokePromise } = useOperationInvoker();
     const { branches, commits } = useExecutionGraph(space);
-    const runtime = useComputeRuntimeService(Process.ProcessMonitorService, space.id);
-    const processes = useAtomValue(runtime?.processTreeAtom ?? atomEmpty);
+    const monitor = useCapability(Capabilities.ProcessMonitor);
+    const processes = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
 
     const handleCommitClick = useCallback(
       (commit: Commit) => {
@@ -98,8 +98,9 @@ type UseExecutionGraphOptions = {
 };
 
 const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOptions = {}): ExecutionGraph => {
-  const runtime = useComputeRuntimeService(Process.ProcessMonitorService, space.id);
-  const activeProcesses = useAtomValue(runtime?.processTreeAtom ?? atomEmpty);
+  const monitor = useCapability(Capabilities.ProcessMonitor);
+  const activeProcesses = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
+
   const atom = useMemo(
     () => getExecutionGraph(space, activeProcesses, { eventLimit }),
     [space, activeProcesses, eventLimit],

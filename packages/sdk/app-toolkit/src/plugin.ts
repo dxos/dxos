@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvents, Capabilities, Capability as Capability$, Plugin as Plugin$ } from '@dxos/app-framework';
 import { type Type } from '@dxos/echo';
+import { assertArgument } from '@dxos/invariant';
 
 import { AppActivationEvents } from './activation-events';
 import { AppCapabilities } from './capabilities';
@@ -29,6 +30,7 @@ export namespace AppPlugin {
   export function addAppGraphModule<T = void>(
     options: AppGraphModuleOptions,
   ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    assertArgument(typeof options.activate === 'function', 'activate', 'must be a function');
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'app-graph-builder',
       activatesOn: options.activatesOn ?? AppActivationEvents.SetupAppGraph,
@@ -93,6 +95,7 @@ export namespace AppPlugin {
   export function addSettingsModule<T = void>(
     options: SettingsModuleOptions,
   ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    assertArgument(typeof options.activate === 'function', 'activate', 'must be a function');
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'settings',
       activatesOn: options.activatesOn ?? AppActivationEvents.SetupSettings,
@@ -110,6 +113,7 @@ export namespace AppPlugin {
   export function addBlueprintDefinitionModule<T = void>(
     options: BlueprintDefinitionModuleOptions,
   ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    assertArgument(typeof options.activate === 'function', 'activate', 'must be a function');
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'blueprint-definition',
       activatesOn: options.activatesOn ?? AppActivationEvents.SetupArtifactDefinition,

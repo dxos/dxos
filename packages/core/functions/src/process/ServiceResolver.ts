@@ -11,10 +11,8 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
 
-import type { DXN, SpaceId } from '@dxos/keys';
-
 import { ServiceNotAvailableError } from '../errors';
-import * as Process from './Process';
+import type * as LayerSpec from './LayerSpec';
 
 const ServiceResolverTypeId = '~@dxos/functions/ServiceResolver' as const;
 type ServiceResolverTypeId = typeof ServiceResolverTypeId;
@@ -28,7 +26,7 @@ export interface ServiceResolver {
    */
   resolve<Tag extends Context.Tag<any, any>>(
     tag: Tag,
-    context: ResolutionContext,
+    context: LayerSpec.LayerContext,
   ): Effect.Effect<Context.Tag.Service<Tag>, ServiceNotAvailableError, Scope.Scope>;
 }
 
@@ -41,7 +39,7 @@ export const resolve = Effect.serviceFunctionEffect(ServiceResolver, (_) => _.re
 
 export const resolveAll = <const Tags extends readonly Context.Tag<any, any>[]>(
   tags: Tags,
-  context: ResolutionContext,
+  context: LayerSpec.LayerContext,
 ): Effect.Effect<Context.Context<Tags[number]>, ServiceNotAvailableError, Scope.Scope | ServiceResolver> =>
   Effect.gen(function* () {
     const services = yield* Effect.forEach(tags, (tag) =>
@@ -50,34 +48,9 @@ export const resolveAll = <const Tags extends readonly Context.Tag<any, any>[]>(
     return Context.mergeAll(...services);
   });
 
-/**
- * Provides context for service resolution.
- */
-export interface ResolutionContext {
-  /**
-   * Under which identity the process is running.
-   */
-  readonly identity?: string;
-
-  /**
-   * Under which space the process is running.
-   */
-  readonly space?: SpaceId;
-
-  /**
-   * DXN of the conversation feed the process is running in.
-   */
-  readonly conversation?: DXN.String;
-
-  /**
-   * Under which process the process is running.
-   */
-  readonly process?: Process.ID;
-}
-
 export const succeed = <I, S>(
   tag: Context.Tag<I, S>,
-  getService: (context: ResolutionContext) => Effect.Effect<S, ServiceNotAvailableError, Scope.Scope>,
+  getService: (context: LayerSpec.LayerContext) => Effect.Effect<S, ServiceNotAvailableError, Scope.Scope>,
 ): ServiceResolver => {
   return make((tag1, context) => {
     if (tag1.key !== tag.key) {
@@ -94,7 +67,7 @@ export const succeed = <I, S>(
 export const make = (
   resolveFn: <I, S>(
     tag: Context.Tag<I, S>,
-    context: ResolutionContext,
+    context: LayerSpec.LayerContext,
   ) => Effect.Effect<S, ServiceNotAvailableError, Scope.Scope>,
 ): ServiceResolver => ({
   [ServiceResolverTypeId]: ServiceResolverTypeId,
@@ -147,6 +120,26 @@ export const layerRequirements = <const Tags extends readonly Context.Tag<any, a
   ...tags: Tags
 ): Layer.Layer<ServiceResolver, never, Context.Tag.Identifier<Tags[number]>> =>
   Layer.effect(ServiceResolver, fromRequirements(...tags));
+
+/**
+ * Build a {@link Layer} that materialises the requested services by calling
+ * {@link resolveAll} against the {@link ServiceResolver} currently in context.
+ *
+ * The returned layer manages its own {@link Scope.Scope} and requires only a
+ * {@link ServiceResolver} (typically supplied by the process-manager runtime).
+ *
+ * @example
+ * ```ts
+ * processManagerRuntime.runPromise(
+ *   myEffect.pipe(Effect.provide(ServiceResolver.provide({ space }, Database.Service, QueueService))),
+ * );
+ * ```
+ */
+export const provide = <const Tags extends readonly Context.Tag<any, any>[]>(
+  context: LayerSpec.LayerContext,
+  ...tags: Tags
+): Layer.Layer<Context.Tag.Identifier<Tags[number]>, ServiceNotAvailableError, ServiceResolver> =>
+  Layer.scopedContext(resolveAll(tags, context));
 
 /**
  * Compose multiple resolvers left to right. Earlier resolvers take precedence:

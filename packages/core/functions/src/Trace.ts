@@ -86,6 +86,12 @@ export const Meta = Schema.Struct({
   processName: Schema.optional(Schema.String),
 
   /**
+   * Space the message was produced in.
+   * Stored as a string to avoid circular dependency on `@dxos/keys`.
+   */
+  space: Schema.optional(Schema.String),
+
+  /**
    * ID of the conversation feed object if present.
    */
   conversationId: Schema.optional(Obj.ID),
@@ -145,15 +151,45 @@ export const noopWriter: TraceWriter = {
 
 export const writerLayerNoop: Layer.Layer<TraceService> = Layer.succeed(TraceService, noopWriter);
 
-export const layerNoop: Layer.Layer<TraceSink> = Layer.succeed(TraceSink, {
+export const noopSink: Sink = {
   write: () => {},
-});
+};
+
+export const layerNoop: Layer.Layer<TraceSink> = Layer.succeed(TraceSink, noopSink);
 
 export const layerConsole: Layer.Layer<TraceSink> = Layer.succeed(TraceSink, {
   write: (message) => {
     console.log(message);
   },
 });
+
+/**
+ * Merge a set of sinks into a single sink.
+ *
+ * Each message is forwarded to every sink in order. Failures in one sink do not
+ * prevent downstream sinks from receiving the message.
+ */
+export const mergeSinks = (sinks: readonly Sink[]): Sink => {
+  if (sinks.length === 0) {
+    return noopSink;
+  }
+  // Intentionally no singleton fast path: the guarded wrapper is the
+  // contract of `mergeSinks`, so a throwing sink is always caught and
+  // logged regardless of how many sinks were passed in.
+  return {
+    write: (message) => {
+      for (const sink of sinks) {
+        try {
+          sink.write(message);
+        } catch (err) {
+          // Intentional: do not let one sink break the chain.
+          // eslint-disable-next-line no-console
+          console.error('[trace] sink.write threw', err);
+        }
+      }
+    },
+  };
+};
 
 export const testTraceService = (opts: { meta?: Meta } = {}): Layer.Layer<TraceService, never, TraceSink> =>
   Layer.effect(
@@ -211,6 +247,41 @@ export const OperationEnd = EventType('operation.end', {
     error: Schema.optional(Schema.String),
   }),
   isEphemeral: false,
+});
+
+/**
+ * Operation input. Emitted as an ephemeral event alongside {@link OperationStart}
+ * so subscribers (such as the undo/redo history tracker) can observe the raw
+ * input payload without persisting it to long-lived sinks.
+ */
+export const OperationInput = EventType('operation.input', {
+  schema: Schema.Struct({
+    /** Operation key. */
+    key: Schema.String,
+    /** Human-readable operation name. */
+    name: Schema.optional(Schema.String),
+    /** Raw operation input. Shape determined by the operation definition. */
+    input: Schema.Unknown,
+  }),
+  isEphemeral: true,
+});
+
+/**
+ * Operation output. Emitted as an ephemeral event just before
+ * {@link OperationEnd} for successful invocations so subscribers (such as the
+ * undo/redo history tracker) can observe the raw output payload without
+ * persisting it to long-lived sinks.
+ */
+export const OperationOutput = EventType('operation.output', {
+  schema: Schema.Struct({
+    /** Operation key. */
+    key: Schema.String,
+    /** Human-readable operation name. */
+    name: Schema.optional(Schema.String),
+    /** Raw operation output. Shape determined by the operation definition. */
+    output: Schema.Unknown,
+  }),
+  isEphemeral: true,
 });
 
 /**

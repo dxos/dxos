@@ -6,7 +6,7 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import React from 'react';
 
-import { Process } from '@dxos/functions-runtime';
+import { Process } from '@dxos/functions';
 import { Icon, IconButton, ScrollArea, Tooltip, Treegrid } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 import { Unit } from '@dxos/util';

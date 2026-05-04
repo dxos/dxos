@@ -9,4 +9,5 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/Trace.ts'
+      - '--entryPoint=src/process/StorageService.ts'
       - '--platform=neutral'

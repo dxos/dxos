@@ -117,7 +117,7 @@ describe('CPU limit', { tags: ['functions-e2e'] }, () => {
     await observeInvocations(space, 100);
   });
 
-  test.only('break CPU limit through natural exection', { timeout: 520_000 }, async ({ expect }) => {
+  test('break CPU limit through natural exection', { timeout: 520_000 }, async ({ expect }) => {
     const { client, space, functionsServiceClient } = await setup(config);
     const func = await deployFunction(
       space,

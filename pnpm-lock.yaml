@@ -1770,6 +1770,9 @@ catalogs:
     vite-node:
       specifier: ^6.0.0
       version: 6.0.0
+    vite-plugin-css-injected-by-js:
+      specifier: ^5.0.1
+      version: 5.0.1
     vite-plugin-devtools-json:
       specifier: ^0.4.1
       version: 0.4.1
@@ -4807,6 +4810,61 @@ importers:
         specifier: 'catalog:'
         version: 4.6.7
 
+  packages/core/compute-runtime:
+    dependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../functions
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../operation
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../protocols
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.5.1(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
+      '@effect/platform':
+        specifier: 'catalog:'
+        version: 0.94.4(effect@3.20.0)
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+    devDependencies:
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../echo/echo-db
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../common/kv-store
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 0.29.0(effect@3.20.0)(vitest@4.1.5)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.5(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(esbuild@0.28.0)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.12))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
   packages/core/conductor:
     dependencies:
       '@dxos/ai':
@@ -4821,6 +4879,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../blueprints
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../compute-runtime
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -5556,6 +5617,9 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../sdk/client-protocol
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../compute-runtime
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -6520,6 +6584,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../../core/blueprints
       '@dxos/cli-util':
         specifier: workspace:*
         version: link:../cli-util
@@ -6535,6 +6602,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute-runtime
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -6562,6 +6632,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/functions-runtime':
         specifier: workspace:*
         version: link:../../core/functions-runtime
@@ -6574,6 +6647,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant
@@ -7608,12 +7684,18 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../../core/blueprints
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute-runtime
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
@@ -7650,6 +7732,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/functions-runtime':
         specifier: workspace:*
         version: link:../../core/functions-runtime
@@ -7668,6 +7753,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -7949,6 +8037,9 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../sdk/client-protocol
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute-runtime
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
@@ -8372,9 +8463,15 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -15229,9 +15326,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/compute':
+      '@dxos/compute-runtime':
         specifier: workspace:*
-        version: link:../../core/compute
+        version: link:../../core/compute-runtime
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -15244,12 +15341,18 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -15274,12 +15377,21 @@ importers:
       '@dxos/web-context-react':
         specifier: workspace:*
         version: link:../../common/web-context-react
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.5.1(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
       '@effect/cli':
         specifier: 'catalog:'
         version: 0.73.2(@effect/platform@0.94.4(effect@3.20.0))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.20.0))(effect@3.20.0))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
+      '@effect/platform':
+        specifier: 'catalog:'
+        version: 0.94.4(effect@3.20.0)
       cjs-module-lexer:
         specifier: 'catalog:'
         version: 2.2.0
+      vite-plugin-css-injected-by-js:
+        specifier: 'catalog:'
+        version: 5.0.1(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
     devDependencies:
       '@dxos/brand':
         specifier: workspace:*
@@ -15299,9 +15411,6 @@ importers:
       '@effect-atom/atom-react':
         specifier: 'catalog:'
         version: 0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)(react@19.2.3)(scheduler@0.27.0)
-      '@effect/platform':
-        specifier: 'catalog:'
-        version: 0.94.4(effect@3.20.0)
       '@effect/vitest':
         specifier: 'catalog:'
         version: 0.29.0(effect@3.20.0)(vitest@4.1.5)
@@ -17673,9 +17782,15 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../../core/blueprints
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute-runtime
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
@@ -38784,6 +38899,11 @@ packages:
     resolution: {integrity: sha512-oj4PVrT+pDh6GYf5wfUXkcZyekYS8kKPfLPXVl8qe324Ec6l4K2DUKNadRbZ3LQl0qGcDz+PyOo7ZAh00Y+JjQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
+
+  vite-plugin-css-injected-by-js@5.0.1:
+    resolution: {integrity: sha512-JSB0jjN4VCKqG7XTUdrwiIl5gA+z2yi/tAl9WHo0X4sdyJ1yrmbLOEjf95TDoDIIuKr4GJIc7lMJG0CT88eEUQ==}
+    peerDependencies:
+      vite: '>=8.0.0'
 
   vite-plugin-devtools-json@0.4.1:
     resolution: {integrity: sha512-pN+QJL+NwZUV+Via8w/Sh6X2pDrVClIMDAXdl7+EteXKB6mcHhsFGGclmxrPx6ZPGKSK5ez5ns64oRpjE5wFCg==}
@@ -60928,6 +61048,10 @@ snapshots:
       - terser
       - tsx
       - yaml
+
+  vite-plugin-css-injected-by-js@5.0.1(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)):
+    dependencies:
+      vite: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   vite-plugin-devtools-json@0.4.1(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)):
     dependencies:

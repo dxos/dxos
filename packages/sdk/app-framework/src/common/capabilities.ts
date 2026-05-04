@@ -5,13 +5,24 @@
 import { type Atom, type Registry } from '@effect-atom/atom-react';
 import type * as Command$ from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
+import type * as Exit$ from 'effect/Exit';
+import type * as Fiber$ from 'effect/Fiber';
 import type * as Layer$ from 'effect/Layer';
 import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
+import type * as Runtime$ from 'effect/Runtime';
 import type { FC, PropsWithChildren } from 'react';
 
-import type { OperationInvoker as OperationInvoker$, OperationHandlerSet } from '@dxos/compute';
+import type { ProcessManager as ProcessManager$ } from '@dxos/compute-runtime';
+import type {
+  LayerSpec as LayerSpec$,
+  Process as Process$,
+  ServiceResolver as ServiceResolver$,
+  Trace as Trace$,
+} from '@dxos/functions';
+import { Operation as Operation$ } from '@dxos/operation';
+import type { OperationHandlerSet } from '@dxos/operation';
 
-import { Capability as Capability$, type PluginManager as PluginManager$ } from '../core';
+import { Capability as Capability$, Plugin as Plugin$, type PluginManager as PluginManager$ } from '../core';
 import type {
   HistoryTracker as HistoryTracker$,
   UndoMapping as UndoMapping$,
@@ -77,6 +88,127 @@ export const Command = Capability$.make<AnyCommand>('org.dxos.app-framework.capa
  */
 export const Layer = Capability$.make<Layer$.Layer<any, any, any>>('org.dxos.app-framework.capability.layer');
 
+/**
+ * Layer specification contributed by plugins.
+ *
+ * Plugins contribute {@link LayerSpec.LayerSpec} entries that are collected by the
+ * process-manager module and composed into a {@link LayerStack} which backs the
+ * {@link ProcessManagerRuntime}'s service resolver.
+ *
+ * @category Capability
+ */
+export const LayerSpec = Capability$.make<LayerSpec$.LayerSpec>('org.dxos.app-framework.capability.layer-spec');
+
+/**
+ * Context passed to {@link TraceSinkFactory} implementations when the
+ * process-manager capability materialises contributed sinks.
+ */
+export interface TraceSinkFactoryContext {
+  /**
+   * Service resolver backing the shared {@link ProcessManagerRuntime}. Use it
+   * to resolve per-space (or per-process) services like `FeedTraceSink` when
+   * building a routing sink.
+   */
+  readonly resolver: ServiceResolver$.ServiceResolver;
+}
+
+/**
+ * Factory that builds a {@link Trace$.Sink} when the process-manager
+ * capability is ready. Plugins that only need a static sink can ignore the
+ * context (e.g. `() => myConsoleSink`); plugins that need per-space routing
+ * can use {@link TraceSinkFactoryContext.resolver} to look up services.
+ */
+export type TraceSinkFactory = (ctx: TraceSinkFactoryContext) => Trace$.Sink;
+
+/**
+ * Trace sink contribution.
+ *
+ * Plugins contribute {@link TraceSinkFactory} functions; the process-manager
+ * capability invokes each factory with the runtime's
+ * {@link ServiceResolver$.ServiceResolver}, collects the resulting
+ * {@link Trace$.Sink}s, merges them via {@link Trace$.mergeSinks}, and
+ * installs the merged sink as {@link Trace$.TraceSink} in the runtime layer
+ * so every process writes to every contributed sink.
+ *
+ * @category Capability
+ */
+export const TraceSink = Capability$.make<TraceSinkFactory>('org.dxos.app-framework.capability.trace-sink');
+
+/**
+ * Service resolver backing the shared {@link ProcessManagerRuntime}.
+ *
+ * Contributed by the process-manager capability module. Consumers can combine
+ * it with {@link ServiceResolver$.provide} to build space-scoped layers without
+ * having to go through the process-manager runtime:
+ *
+ * @example
+ * ```ts
+ * const resolver = yield* Capability.get(Capabilities.ServiceResolver);
+ * yield* effect.pipe(
+ *   Effect.provide(
+ *     ServiceResolver.provide({ space }, Database.Service, QueueService).pipe(
+ *       Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, resolver)),
+ *     ),
+ *   ),
+ * );
+ * ```
+ *
+ * @category Capability
+ */
+export const ServiceResolver = Capability$.make<ServiceResolver$.ServiceResolver>(
+  'org.dxos.app-framework.capability.service-resolver',
+);
+
+/**
+ * Process monitor backing the shared {@link ProcessManagerRuntime}. Exposes the
+ * live process tree (including inactive/terminated entries) via
+ * {@link Process$.Monitor#processTreeAtom}.
+ *
+ * @category Capability
+ */
+export const ProcessMonitor = Capability$.make<Process$.Monitor>('org.dxos.app-framework.capability.process-monitor');
+
+/**
+ * Services that are always available when running effects through a {@link ProcessManagerRuntime}.
+ */
+export type ProcessManagerRuntimeServices =
+  | Capability$.Service
+  | Plugin$.Service
+  | ProcessManager$.ProcessManagerService
+  | Operation$.Service
+  | ProcessManager$.ProcessOperationInvoker.Service
+  | ServiceResolver$.ServiceResolver;
+
+/**
+ * Runtime that runs effects requiring a fixed set of capability-manager and
+ * process-manager services.
+ *
+ * The shape mirrors {@link ManagedRuntime$.ManagedRuntime} but deliberately does
+ * not expose `dispose` – lifecycle is driven by the host plugin manager.
+ */
+export interface ProcessManagerRuntime {
+  runPromise<A, E>(
+    effect: Effect.Effect<A, E, ProcessManagerRuntimeServices>,
+    options?: { readonly signal?: AbortSignal },
+  ): Promise<A>;
+  runPromiseExit<A, E>(
+    effect: Effect.Effect<A, E, ProcessManagerRuntimeServices>,
+    options?: { readonly signal?: AbortSignal },
+  ): Promise<Exit$.Exit<A, E>>;
+  runFork<A, E>(
+    effect: Effect.Effect<A, E, ProcessManagerRuntimeServices>,
+    options?: Runtime$.RunForkOptions,
+  ): Fiber$.RuntimeFiber<A, E>;
+  runSync<A, E>(effect: Effect.Effect<A, E, ProcessManagerRuntimeServices>): A;
+}
+
+/**
+ * @category Capability
+ */
+export const ProcessManagerRuntime = Capability$.make<ProcessManagerRuntime>(
+  'org.dxos.app-framework.capability.process-manager-runtime',
+);
+
 export type ManagedRuntime = ManagedRuntime$.ManagedRuntime<any, any>;
 
 /**
@@ -100,10 +232,14 @@ export type UndoMapping = UndoMapping$.UndoMapping;
  */
 export const UndoMapping = Capability$.make<UndoMapping[]>('org.dxos.app-framework.capability.undo-mapping');
 
-export type OperationInvoker = OperationInvoker$.OperationInvoker;
+/**
+ * Operation invoker backed by the process manager. Spawns a process per
+ * operation invocation; see {@link ProcessManager$.ProcessOperationInvoker}.
+ */
+export type OperationInvoker = Operation$.OperationService;
 
 /**
- * Operation invoker - provided by OperationPlugin.
+ * Operation invoker - provided by the process-manager capability.
  * @category Capability
  */
 export const OperationInvoker = Capability$.make<OperationInvoker>(

@@ -4,13 +4,13 @@
 
 import React, { useMemo } from 'react';
 
+import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { type Routine } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { type Routine } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { useComputeRuntimeCallback } from '@dxos/plugin-automation/hooks';
+import { Operation } from '@dxos/operation';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 
@@ -35,8 +35,9 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
     [subject, db],
   );
 
-  const handleRun = useComputeRuntimeCallback(
+  const handleRun = useSpaceCallback(
     db?.spaceId,
+    [] as const,
     () => {
       invariant(inputData);
       return Operation.invoke(AgentPrompt, inputData);

@@ -4,7 +4,7 @@
 
 import * as Option from 'effect/Option';
 
-import { Process } from '@dxos/functions-runtime';
+import { Process } from '@dxos/functions';
 
 export const makeProcess = (
   overrides: Partial<Process.Info> & Pick<Process.Info, 'pid' | 'state'> & { name: string },

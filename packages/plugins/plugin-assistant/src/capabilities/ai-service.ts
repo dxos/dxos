@@ -5,9 +5,10 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiModelResolver } from '@dxos/ai';
-import { Capability } from '@dxos/app-framework';
+import { AiModelResolver, AiService } from '@dxos/ai';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { LayerSpec } from '@dxos/functions';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -19,12 +20,24 @@ export default Capability.makeModule(
       AiModelResolver.AiModelResolver.fromModelMap({ name: 'Fallback' }, Effect.succeed({})), // Empty resolver as fallback.
     );
 
+    const aiServiceLayer: Layer.Layer<AiService.AiService> = AiModelResolver.AiModelResolver.buildAiService.pipe(
+      Layer.provide(combinedLayer),
+    );
+
+    const aiServiceSpec = LayerSpec.make(
+      {
+        affinity: 'application',
+        requires: [],
+        provides: [AiService.AiService],
+      },
+      () => aiServiceLayer,
+    );
+
     return [
-      // TODO(dmaretskyi): Read config from settings.
-      Capability.contributes(
-        AppCapabilities.AiServiceLayer,
-        AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provide(combinedLayer)),
-      ),
+      // Keep the original `AiServiceLayer` contribution for consumers that still read it
+      // directly (e.g. CLI / non-process-manager code paths).
+      Capability.contributes(AppCapabilities.AiServiceLayer, aiServiceLayer),
+      Capability.contributes(Capabilities.LayerSpec, aiServiceSpec),
     ];
   }),
 );

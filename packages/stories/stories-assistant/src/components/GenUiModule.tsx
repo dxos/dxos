@@ -17,11 +17,10 @@ import React, {
 } from 'react';
 
 import { AiService } from '@dxos/ai';
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker, useSpaceCallback } from '@dxos/app-framework/ui';
 import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { type Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
-import { useComputeRuntimeCallback } from '@dxos/plugin-automation/hooks';
 import {
   Button,
   ButtonGroup,
@@ -380,8 +379,9 @@ export const GenUiModule = ({ space }: ComponentProps) => {
 
   const invokerFn: InvokerFn = useCallback((op, args) => void invokePromise(op, args), [invokePromise]);
 
-  const handleGenerate = useComputeRuntimeCallback(
+  const handleGenerate = useSpaceCallback(
     space.id,
+    [AiService.AiService] as const,
     () =>
       Effect.gen(function* () {
         setGenerating(true);

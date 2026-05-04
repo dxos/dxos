@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Operation } from '@dxos/compute';
+import type { Operation } from '@dxos/operation';
 
 import type * as UndoMapping from './undo-mapping';
 
@@ -26,6 +26,7 @@ export type UndoMappingResult = {
  */
 export interface UndoRegistry {
   lookup: (operation: Operation.Definition<any, any>) => UndoMappingResult | undefined;
+  lookupByKey: (key: string) => UndoMappingResult | undefined;
 }
 
 //
@@ -36,9 +37,9 @@ export interface UndoRegistry {
  * Creates an UndoRegistry that looks up inverse operations.
  */
 export const make = (getMappings: () => UndoMapping.UndoMapping[]): UndoRegistry => {
-  const lookup = (operation: Operation.Definition<any, any>): UndoMappingResult | undefined => {
+  const lookupByKey = (key: string): UndoMappingResult | undefined => {
     const mappings = getMappings();
-    const mapping = mappings.find((m) => m.operation.meta.key === operation.meta.key);
+    const mapping = mappings.find((m) => m.operation.meta.key === key);
     if (!mapping) {
       return undefined;
     }
@@ -50,5 +51,8 @@ export const make = (getMappings: () => UndoMapping.UndoMapping[]): UndoRegistry
     };
   };
 
-  return { lookup };
+  const lookup = (operation: Operation.Definition<any, any>): UndoMappingResult | undefined =>
+    lookupByKey(operation.meta.key);
+
+  return { lookup, lookupByKey };
 };

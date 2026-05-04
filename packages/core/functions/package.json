@@ -22,6 +22,11 @@
       "source": "./src/Trace.ts",
       "types": "./dist/types/src/Trace.d.ts",
       "default": "./dist/lib/neutral/Trace.mjs"
+    },
+    "./StorageService": {
+      "source": "./src/process/StorageService.ts",
+      "types": "./dist/types/src/process/StorageService.d.ts",
+      "default": "./dist/lib/neutral/process/StorageService.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

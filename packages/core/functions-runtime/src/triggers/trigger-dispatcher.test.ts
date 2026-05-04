@@ -12,9 +12,9 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { Database } from '@dxos/echo';
-import { TestDatabaseLayer } from '@dxos/echo-db/testing';
+import { ProcessManager } from '@dxos/compute-runtime';
+import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
+import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import {
   CredentialsService,
   ExampleHandlers,
@@ -28,7 +28,6 @@ import { invariant } from '@dxos/invariant';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Person, Task } from '@dxos/types';
 
-import * as ProcessManager from '../process/ProcessManager';
 import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
 

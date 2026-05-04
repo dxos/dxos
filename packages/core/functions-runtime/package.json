@@ -56,6 +56,7 @@
     "@dxos/blueprints": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",

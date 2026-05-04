@@ -6,14 +6,16 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
+import { Capabilities } from '@dxos/app-framework';
+import { runInSpace } from '@dxos/app-framework/plugin-runtime';
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
 import { Routine } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
+import { QueueService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { AutomationPlugin } from '@dxos/plugin-automation/cli';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { ClientPlugin } from '@dxos/plugin-client/cli';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
@@ -36,42 +38,46 @@ describe('Agent prompt (composer plugin harness)', () => {
       });
 
       const { personalSpace } = await runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client)));
-      const computeProvider = await harness.waitForCapability(AutomationCapabilities.ComputeRuntime, {
+      const runtime = await harness.waitForCapability(Capabilities.ProcessManagerRuntime, {
         timeout: 30_000,
       });
 
-      await computeProvider.getRuntime(personalSpace.id).runPromise(
-        Effect.gen(function* () {
-          const feed = yield* Database.add(Feed.make());
+      await runtime.runPromise(
+        runInSpace(
+          personalSpace.id,
+          [Database.Service, Feed.FeedService, QueueService] as const,
+          Effect.gen(function* () {
+            const feed = yield* Database.add(Feed.make());
 
-          const messageCountBefore = yield* Feed.runQuery(feed, Filter.type(Message.Message)).pipe(
-            Effect.map(Array.length),
-          );
+            const messageCountBefore = yield* Feed.runQuery(feed, Filter.type(Message.Message)).pipe(
+              Effect.map(Array.length),
+            );
 
-          const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
-          const prompt = yield* Database.add(
-            Routine.make({
-              name: 'chat-mode-test',
-              instructions: 'Reply with a single word: ack.',
-              blueprints: [],
-              context: [],
-            }),
-          );
-          yield* Database.flush();
+            const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+            const prompt = yield* Database.add(
+              Routine.make({
+                name: 'chat-mode-test',
+                instructions: 'Reply with a single word: ack.',
+                blueprints: [],
+                context: [],
+              }),
+            );
+            yield* Database.flush();
 
-          const result = yield* Operation.invoke(AgentPrompt, {
-            prompt: Ref.make(prompt),
-            input: {},
-            chat: Ref.make(chat),
-          });
+            const result = yield* Operation.invoke(AgentPrompt, {
+              prompt: Ref.make(prompt),
+              input: {},
+              chat: Ref.make(chat),
+            });
 
-          const messageCountAfter = yield* Feed.runQuery(feed, Filter.type(Message.Message)).pipe(
-            Effect.map(Array.length),
-          );
+            const messageCountAfter = yield* Feed.runQuery(feed, Filter.type(Message.Message)).pipe(
+              Effect.map(Array.length),
+            );
 
-          expect(messageCountAfter).toBeGreaterThan(messageCountBefore);
-          expect(result).toBe('ack');
-        }),
+            expect(messageCountAfter).toBeGreaterThan(messageCountBefore);
+            expect(result).toBe('ack');
+          }),
+        ),
       );
     },
   );

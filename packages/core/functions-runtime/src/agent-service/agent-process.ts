@@ -23,16 +23,15 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
+import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, DXN, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { Trace } from '@dxos/functions';
+import { Process } from '@dxos/functions';
+import * as StorageService from '@dxos/functions/StorageService';
 import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/operation';
 import { trim } from '@dxos/util';
-
-import { Process } from '../process';
-import * as ProcessManager from '../process/ProcessManager';
-import * as StorageService from '../process/StorageService';
 
 interface AgentProcessOptions {
   systemPrompt?: string;

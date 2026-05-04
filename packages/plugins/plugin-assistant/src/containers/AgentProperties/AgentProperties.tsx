@@ -7,14 +7,13 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Agent, SyncTriggers } from '@dxos/assistant-toolkit';
-import { Operation } from '@dxos/compute';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { log } from '@dxos/log';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { Operation } from '@dxos/operation';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { FeedAnnotation } from '@dxos/schema';
@@ -27,8 +26,15 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(agent);
 
-  // TODO(burdon): Factor out (separate component from container)?
-  const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
+  const spaceId = Obj.getDatabase(agent)?.spaceId;
+
+  const syncTriggers = useSpaceCallback(
+    spaceId,
+    [] as const,
+    () => Operation.invoke(SyncTriggers, { agent: Ref.make(agent) }),
+    [agent],
+  );
+
   useEffect(() => {
     if (!db) {
       return;
@@ -36,17 +42,10 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
 
     return Obj.subscribe(agent, () => {
       queueMicrotask(() => {
-        const runtime = computeRuntime.getRuntime(db.spaceId);
-        runtime
-          .runPromise(
-            Operation.invoke(SyncTriggers, {
-              agent: Ref.make(agent),
-            }),
-          )
-          .catch((err) => log.catch(err));
+        syncTriggers().catch((err) => log.catch(err));
       });
     });
-  }, [db, agent, computeRuntime]);
+  }, [agent, syncTriggers]);
 
   // Build a filter matching objects of any schema annotated as a feed.
   const feedFilter = useMemo(() => {

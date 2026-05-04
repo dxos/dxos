@@ -261,6 +261,13 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
                 key: op.meta.key,
                 name: op.meta.name,
               });
+              // Emit ephemeral operation input event for live subscribers
+              // (history tracker, devtools) without persisting raw input.
+              yield* Trace.write(Trace.OperationInput, {
+                key: op.meta.key,
+                name: op.meta.name,
+                input,
+              });
 
               const opHandler = yield* OperationHandlerSet.getHandler(handler, op).pipe(Effect.orDie);
               const output = yield* opHandler
@@ -274,6 +281,13 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
               ctx.submitOutput(output);
               ctx.succeed();
 
+              // Emit ephemeral operation output event before the persisted
+              // end event so subscribers see output + completion together.
+              yield* Trace.write(Trace.OperationOutput, {
+                key: op.meta.key,
+                name: op.meta.name,
+                output,
+              });
               // Emit operation end event with success after side-effects complete.
               yield* Trace.write(Trace.OperationEnd, {
                 key: op.meta.key,
