@@ -108,9 +108,9 @@ describe('Trace timeline', () => {
             "
             ●     [atom] Agent processing request...
             ├──●  [user] Search for all organizations. How many are there?
-            │  ●  [check-circle] list-schemas - Success
-            │  ●  [check-circle] query - Success
-            ◆──╯  [check-circle] Agent completed request
+            │  ●  [function] List schemas - Success
+            │  ●  [function] Query - Success
+            ◆──╯  [atom] Agent completed request
             "
           `);
         },
