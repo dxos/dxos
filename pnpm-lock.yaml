@@ -3456,6 +3456,12 @@ importers:
         specifier: 'catalog:'
         version: 3.6.0(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
 
+  packages/common/ai-match:
+    dependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../log
+
   packages/common/async:
     dependencies:
       '@dxos/context':
