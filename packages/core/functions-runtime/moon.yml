@@ -24,6 +24,7 @@ tasks:
   build-runtime:
     command: node ./scripts/build-modules.mjs
     deps:
+      - ^:build
       - ^:compile
 
   # Executed manually: moon functions-runtime:upload-runtime -- --env dev

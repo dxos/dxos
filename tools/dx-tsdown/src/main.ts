@@ -4,7 +4,7 @@
 
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { build, type UserConfig } from 'tsdown';
 
 import { DEFAULT_LOG_META_TRANSFORM_SPEC, rolldownLogMetaPlugin } from './log-meta-plugin.ts';
@@ -55,6 +55,50 @@ const injectGlobalsPlugin = () =>
     },
   }) as any;
 
+/**
+ * Handles `?raw` import suffixes (Vite convention) by loading the file as a
+ * plain string and re-exporting it as the default export.
+ *
+ * Supports both relative paths (`./shader.glsl?raw`) and package subpath
+ * imports (`#query-lite?raw`) by delegating non-relative specifiers to
+ * rolldown's own resolver before wrapping the result.
+ */
+const rawImportPlugin = () =>
+  ({
+    name: 'dx-raw-import',
+    resolveId: {
+      async handler(this: any, id: string, importer?: string) {
+        if (!id.endsWith('?raw')) {
+          return;
+        }
+        const cleanId = id.slice(0, -4);
+        // For bare specifiers and package subpath imports (#...) delegate to
+        // rolldown's resolver so package.json "imports" / "exports" are honoured.
+        if (!cleanId.startsWith('.') && !cleanId.startsWith('/')) {
+          const resolved = await this.resolve(cleanId, importer, { skipSelf: true });
+          if (!resolved || resolved.external) {
+            return;
+          }
+          return { id: `\0raw:${resolved.id}` };
+        }
+        // Relative or absolute path — compute directly.
+        const base = importer ? dirname(importer.replace(/\?.*/, '')) : process.cwd();
+        const resolved = cleanId.startsWith('/') ? cleanId : join(base, cleanId);
+        return { id: `\0raw:${resolved}` };
+      },
+    },
+    load: {
+      async handler(id: string) {
+        if (!id.startsWith('\0raw:')) {
+          return;
+        }
+        const filePath = id.slice(5);
+        const content = await readFile(filePath, 'utf8');
+        return { code: `export default ${JSON.stringify(content)}` };
+      },
+    },
+  }) as any;
+
 const cleanDir = async (path: string) => {
   await rm(path, { recursive: true, force: true });
 };
@@ -82,8 +126,7 @@ const writeTsgoTsconfig = async (cwd: string): Promise<string> => {
 
   // Resolve include paths to absolute so they still point to the package
   // sources when the config is loaded from the temp dir.
-  const resolveGlobs = (arr?: string[]) =>
-    (arr ?? ['src']).map((p) => (p.startsWith('/') ? p : resolve(cwd, p)));
+  const resolveGlobs = (arr?: string[]) => (arr ?? ['src']).map((p) => (p.startsWith('/') ? p : resolve(cwd, p)));
 
   const config = {
     compilerOptions: {
@@ -144,9 +187,10 @@ export default async (options: TsdownExecutorOptions): Promise<{ success: boolea
   const configs: UserConfig[] = [];
 
   const wsExternalPlugin = workspaceExternalPlugin(bundlePackages);
+  const rawPlugin = rawImportPlugin();
 
   if (platforms.includes('browser')) {
-    const browserPlugins: any[] = [wsExternalPlugin, logPlugin];
+    const browserPlugins: any[] = [rawPlugin, wsExternalPlugin, logPlugin];
     if (injectGlobals) {
       browserPlugins.push(injectGlobalsPlugin());
     }
@@ -179,7 +223,7 @@ export default async (options: TsdownExecutorOptions): Promise<{ success: boolea
       platform: 'node',
       format: 'esm',
       outDir: `${outputPath}/node-esm`,
-      plugins: [wsExternalPlugin, logPlugin],
+      plugins: [rawPlugin, wsExternalPlugin, logPlugin],
     });
   }
 
@@ -190,7 +234,7 @@ export default async (options: TsdownExecutorOptions): Promise<{ success: boolea
       platform: 'neutral',
       format: 'esm',
       outDir: `${outputPath}/neutral`,
-      plugins: [wsExternalPlugin, logPlugin],
+      plugins: [rawPlugin, wsExternalPlugin, logPlugin],
     });
   }
 

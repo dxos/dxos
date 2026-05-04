@@ -79,11 +79,7 @@ export function rolldownLogMetaPlugin(options: LogMetaTransformOptions): Rolldow
     name: ROLLDOWN_LOG_META_PLUGIN_NAME,
     transform: {
       order: 'pre' as const,
-      handler(
-        code: string,
-        id: string,
-        meta: { moduleType: string; magicString?: RolldownMagicString },
-      ) {
+      handler(code: string, id: string, meta: { moduleType: string; magicString?: RolldownMagicString }) {
         const excludeId = options.excludeId ?? LOG_META_EXCLUDE_ID_DEFAULT;
         if (excludeId instanceof RegExp && excludeId.test(id)) {
           return null;
