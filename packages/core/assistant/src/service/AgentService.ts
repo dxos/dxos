@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -187,7 +188,9 @@ export const layer = (opts?: {
 
         runRoutine: (routineRef: Ref.Ref<Routine.Routine>, options?: RunRoutineOptions) =>
           Effect.gen(function* () {
-            const routine = yield* Database.load(routineRef).pipe(Effect.orDie);
+            const routine = yield* Database.load(routineRef).pipe(
+              Effect.mapError((err) => new RoutineError('Failed to load routine.', { description: String(err) })),
+            );
             const routineDxn = Obj.getDXN(routine).toString();
 
             const feed = options?.feed ?? (yield* Database.add(Feed.make()));
@@ -211,7 +214,12 @@ export const layer = (opts?: {
               },
             });
 
-            const outputs = yield* handle.runAndExit({ inputs: [encodedInput] }).pipe(Stream.runCollect);
+            const outputs = yield* handle.runAndExit({ inputs: [encodedInput] }).pipe(
+              Stream.runCollect,
+              Effect.catchAllCause((cause) =>
+                Effect.fail(new RoutineError('Routine process failed.', { description: Cause.pretty(cause) })),
+              ),
+            );
             const output = Chunk.head(outputs);
 
             if (Option.isNone(output)) {

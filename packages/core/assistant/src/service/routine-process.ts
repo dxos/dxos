@@ -5,6 +5,7 @@
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Array from 'effect/Array';
+import * as Cause from 'effect/Cause';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
@@ -75,38 +76,49 @@ export const RoutineProcess = (options: RoutineProcessOptions = {}) =>
         return {
           onInput: Effect.fnUntraced(
             function* (encodedInput: string) {
-              const runInput = yield* Schema.decodeUnknown(Schema.parseJson(RoutineRunInput))(encodedInput).pipe(
-                Effect.orDie,
-              );
+              const run = Effect.gen(function* () {
+                const runInput = yield* Schema.decodeUnknown(Schema.parseJson(RoutineRunInput))(encodedInput).pipe(
+                  Effect.mapError(
+                    (err) => new RoutineError('Invalid routine input payload.', { description: String(err) }),
+                  ),
+                );
 
-              log.info('routine process: received input', { routineDxn: runInput.routineDxn });
+                log.info('routine process: received input', { routineDxn: runInput.routineDxn });
 
-              const routine = yield* Database.resolve(DXN.parse(runInput.routineDxn), Routine.Routine).pipe(
-                Effect.orDie,
-              );
-              const feed = yield* Database.resolve(DXN.parse(runInput.feedDxn), Feed.Feed).pipe(Effect.orDie);
+                const routine = yield* Database.resolve(DXN.parse(runInput.routineDxn), Routine.Routine).pipe(
+                  Effect.mapError(
+                    (err) => new RoutineError('Failed to resolve routine.', { description: String(err) }),
+                  ),
+                );
+                const feed = yield* Database.resolve(DXN.parse(runInput.feedDxn), Feed.Feed).pipe(
+                  Effect.mapError((err) => new RoutineError('Failed to resolve feed.', { description: String(err) })),
+                );
 
-              const blueprints = yield* Function.pipe(
-                routine.blueprints,
-                Effect.forEach(Database.loadOption),
-                Effect.map(Array.filter(Option.isSome)),
-                Effect.map(Array.map((opt) => opt.value)),
-              );
+                const blueprints = yield* Function.pipe(
+                  routine.blueprints,
+                  Effect.forEach(Database.loadOption),
+                  Effect.map(Array.filter(Option.isSome)),
+                  Effect.map(Array.map((opt) => opt.value)),
+                );
 
-              const objects = yield* Function.pipe(
-                routine.context,
-                Effect.forEach(Database.loadOption),
-                Effect.map(Array.filter(Option.isSome)),
-                Effect.map(Array.map((opt) => opt.value)),
-              );
+                const objects = yield* Function.pipe(
+                  routine.context,
+                  Effect.forEach(Database.loadOption),
+                  Effect.map(Array.filter(Option.isSome)),
+                  Effect.map(Array.map((opt) => opt.value)),
+                );
 
-              const promptInstructions = yield* Database.load(routine.instructions.source).pipe(Effect.orDie);
-              let promptText = Template.process(promptInstructions.content, runInput.input);
-              if (runInput.input !== undefined) {
-                promptText += `\n<input>${JSON.stringify(runInput.input)}</input>`;
-              }
+                const promptInstructions = yield* Database.load(routine.instructions.source).pipe(
+                  Effect.mapError(
+                    (err) => new RoutineError('Failed to load routine instructions.', { description: String(err) }),
+                  ),
+                );
+                let promptText = Template.process(promptInstructions.content, runInput.input);
+                if (runInput.input !== undefined) {
+                  promptText += `\n<input>${JSON.stringify(runInput.input)}</input>`;
+                }
 
-              let systemText = trim`
+                let systemText = trim`
                 You are an agent running in the non-interactive mode.
                 The user is unable to see what you are doing, and cannot answer any questions.
                 Do not ask questions.
@@ -115,65 +127,76 @@ export const RoutineProcess = (options: RoutineProcessOptions = {}) =>
                 If no output is required, call [completeJob] with an empty object: {}
                 Do not stop until you call [completeJob].
               `;
-              if (runInput.systemInstructions) {
-                systemText += `\n\n${runInput.systemInstructions}`;
-              }
+                if (runInput.systemInstructions) {
+                  systemText += `\n\n${runInput.systemInstructions}`;
+                }
 
-              const modelLayer = AiService.model((runInput.model as ModelName) ?? '@anthropic/claude-opus-4-6');
+                const modelLayer = AiService.model((runInput.model as ModelName) ?? '@anthropic/claude-opus-4-6');
 
-              const runtime = yield* Effect.runtime<Feed.FeedService>();
-              const session = yield* acquireReleaseResource(() => new AiSession({ feed, runtime }));
+                const runtime = yield* Effect.runtime<Feed.FeedService>();
+                const session = yield* acquireReleaseResource(() => new AiSession({ feed, runtime }));
 
-              yield* Effect.promise(() =>
-                session.context.bind({
-                  blueprints: blueprints.map((blueprint) => Ref.make(blueprint)),
-                  objects: objects.map((object) => Ref.make(object as Obj.Unknown)),
-                }),
-              );
-
-              const resultSink = yield* Deferred.make<unknown, RoutineError>();
-
-              const completeJobToolkit = makeCompleteJobToolkit({ resultSink });
-
-              const runRequest = (prompt: string) =>
-                session
-                  .createRequest({
-                    prompt,
-                    system: systemText,
-                    toolkit: completeJobToolkit,
-                    mcpServers: options.getMcpServers?.(),
-                  })
-                  .pipe(
-                    Effect.provide(
-                      Layer.mergeAll(
-                        modelLayer,
-                        InlineToolExecutionService({ feed }),
-                        makeToolResolverFromOperations(),
-                      ),
-                    ),
-                  );
-
-              yield* runRequest(promptText);
-
-              const pollResult = yield* Deferred.poll(resultSink);
-
-              if (Option.isNone(pollResult)) {
-                yield* runRequest(
-                  'You must signal task completion by calling [completeJob] with the output or failure reason.',
+                yield* Effect.promise(() =>
+                  session.context.bind({
+                    blueprints: blueprints.map((blueprint) => Ref.make(blueprint)),
+                    objects: objects.map((object) => Ref.make(object as Obj.Unknown)),
+                  }),
                 );
-                const retryResult = yield* Deferred.poll(resultSink);
-                if (Option.isNone(retryResult)) {
-                  ctx.submitOutput({ _tag: 'failure', message: 'Agent did not signal task completion.' });
-                  ctx.succeed();
+
+                const resultSink = yield* Deferred.make<unknown, RoutineError>();
+
+                const completeJobToolkit = makeCompleteJobToolkit({ resultSink });
+
+                const runRequest = (prompt: string) =>
+                  session
+                    .createRequest({
+                      prompt,
+                      system: systemText,
+                      toolkit: completeJobToolkit,
+                      mcpServers: options.getMcpServers?.(),
+                    })
+                    .pipe(
+                      Effect.provide(
+                        Layer.mergeAll(
+                          modelLayer,
+                          InlineToolExecutionService({ feed }),
+                          makeToolResolverFromOperations(),
+                        ),
+                      ),
+                    );
+
+                yield* runRequest(promptText);
+
+                const pollResult = yield* Deferred.poll(resultSink);
+
+                if (Option.isNone(pollResult)) {
+                  yield* runRequest(
+                    'You must signal task completion by calling [completeJob] with the output or failure reason.',
+                  );
+                  const retryResult = yield* Deferred.poll(resultSink);
+                  if (Option.isNone(retryResult)) {
+                    ctx.submitOutput({ _tag: 'failure', message: 'Agent did not signal task completion.' });
+                    ctx.succeed();
+                    return;
+                  }
+                  yield* emitResultEffect(ctx, retryResult.value);
                   return;
                 }
-                yield* emitResultEffect(ctx, retryResult.value);
-                return;
-              }
 
-              yield* emitResultEffect(ctx, pollResult.value);
+                yield* emitResultEffect(ctx, pollResult.value);
+              });
+
+              yield* run.pipe(
+                Effect.mapError((err) => (err instanceof RoutineError ? err : new RoutineError(String(err)))),
+                Effect.catchAll((err) => emitResultEffect(ctx, Effect.fail(err))),
+                Effect.catchAllCause((cause) =>
+                  emitResultEffect(
+                    ctx,
+                    Effect.fail(new RoutineError('Routine process failed.', { description: Cause.pretty(cause) })),
+                  ),
+                ),
+              );
             },
-            Effect.orDie,
             Effect.scoped,
             Effect.provide(Trace.writerLayerNoop),
           ),
