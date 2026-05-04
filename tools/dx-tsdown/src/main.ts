@@ -22,6 +22,28 @@ export interface TsdownExecutorOptions {
 const NODE_GLOBALS = ['global', 'Buffer', 'process'] as const;
 
 /**
+ * Marks all @dxos/* workspace packages as external before rolldown resolves them.
+ *
+ * rolldown follows pnpm symlinks to their real paths (e.g. node_modules/@dxos/keys
+ * → packages/common/keys/src/index.ts). The real path doesn't contain "node_modules",
+ * so skipNodeModulesBundle's regex check misses it and the package gets bundled.
+ * This plugin intercepts at the specifier level — before any path resolution — and
+ * returns external:true for all @dxos/* imports that are not explicitly bundled.
+ */
+const workspaceExternalPlugin = (bundlePkgs: string[]) =>
+  ({
+    name: 'dx-workspace-external',
+    resolveId: {
+      order: 'pre' as const,
+      handler(id: string) {
+        if (id.startsWith('@dxos/') && !bundlePkgs.some((p) => id === p || id.startsWith(`${p}/`))) {
+          return { id, external: true };
+        }
+      },
+    },
+  }) as any;
+
+/**
  * Prepends `import "@dxos/node-std/globals"` to every browser output chunk.
  * Equivalent to dx-compile's --injectGlobals flag.
  */
@@ -121,8 +143,10 @@ export default async (options: TsdownExecutorOptions): Promise<{ success: boolea
 
   const configs: UserConfig[] = [];
 
+  const wsExternalPlugin = workspaceExternalPlugin(bundlePackages);
+
   if (platforms.includes('browser')) {
-    const browserPlugins: any[] = [logPlugin];
+    const browserPlugins: any[] = [wsExternalPlugin, logPlugin];
     if (injectGlobals) {
       browserPlugins.push(injectGlobalsPlugin());
     }
@@ -155,7 +179,7 @@ export default async (options: TsdownExecutorOptions): Promise<{ success: boolea
       platform: 'node',
       format: 'esm',
       outDir: `${outputPath}/node-esm`,
-      plugins: [logPlugin],
+      plugins: [wsExternalPlugin, logPlugin],
     });
   }
 
@@ -166,7 +190,7 @@ export default async (options: TsdownExecutorOptions): Promise<{ success: boolea
       platform: 'neutral',
       format: 'esm',
       outDir: `${outputPath}/neutral`,
-      plugins: [logPlugin],
+      plugins: [wsExternalPlugin, logPlugin],
     });
   }
 
