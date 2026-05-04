@@ -12,20 +12,19 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { CodeProject, Spec } from '#types';
 
-import CHESS_1_MDL from '../../../docs/examples/chess-1.mdl?raw';
 import { CodeArticle } from './CodeArticle';
 
-const DefaultStory = ({ content }: { content?: string }) => {
+const DefaultStory = () => {
   const spaces = useSpaces();
   const space = spaces[0];
   const [project, setProject] = useState<CodeProject.CodeProject | undefined>();
 
   useEffect(() => {
     if (space && !project) {
-      const spec = space.db.add(Spec.make({ content }));
-      setProject(space.db.add(CodeProject.make({ name: 'Chess', spec })));
+      const spec = space.db.add(Spec.make());
+      setProject(space.db.add(CodeProject.make({ name: 'Demo', spec })));
     }
-  }, [space, content, project]);
+  }, [space, project]);
 
   if (!project) {
     return <Loading />;
@@ -36,7 +35,7 @@ const DefaultStory = ({ content }: { content?: string }) => {
 
 const meta = {
   title: 'plugins/plugin-code/containers/CodeArticle',
-  render: (args: { content?: string }) => <DefaultStory {...args} />,
+  render: () => <DefaultStory />,
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true, types: [Spec.Spec, CodeProject.CodeProject] }),
     withTheme(),
@@ -53,9 +52,3 @@ export default meta;
 type Story = StoryObj;
 
 export const Default: Story = {};
-
-export const Chess: Story = {
-  args: {
-    content: CHESS_1_MDL,
-  },
-};

@@ -35,8 +35,6 @@ export const translations = [
       },
       [meta.id]: {
         'plugin.name': 'Code',
-        'view.spec.label': 'Spec',
-        'view.code.label': 'Code',
         'view.code.placeholder': 'Build output will appear here.',
         'api-key.label': 'Anthropic API key',
         'api-key.empty.placeholder': 'sk-ant-…',
