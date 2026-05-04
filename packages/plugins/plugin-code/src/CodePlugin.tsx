@@ -12,7 +12,7 @@ import { Annotation, Ref } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { ReactSurface } from '#capabilities';
+import { ReactSurface, Settings as SettingsCapability } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { CodeProject, Spec } from '#types';
@@ -68,6 +68,7 @@ export const CodePlugin = Plugin.define(meta).pipe(
     ],
   }),
   AppPlugin.addSchemaModule({ schema: [Spec.Spec, CodeProject.CodeProject] }),
+  AppPlugin.addSettingsModule({ activate: SettingsCapability }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,

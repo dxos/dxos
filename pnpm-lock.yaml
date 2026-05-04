@@ -8466,6 +8466,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space

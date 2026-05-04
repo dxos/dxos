@@ -20,6 +20,8 @@ import { addSearch } from './search';
 import { type EditorToolbarState } from './types';
 import { addViewMode } from './view-mode';
 
+// TODO(burdon): Enable toolbar variants (e.g., markdown, code).
+
 export type EditorToolbarFeatureFlags = Partial<{
   showHeadings: boolean;
   showFormatting: boolean;
@@ -63,10 +65,10 @@ export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, .
 type ToolbarActionsProps = Pick<EditorToolbarActionGraphProps, 'state' | 'getView' | 'customActions'> &
   EditorToolbarFeatureFlags;
 
+// TODO(burdon): Some actions should toggle the state (e.g., toggle bullets on/off depending on the current state).
 // TODO(wittjosiah): Toolbar re-rendering is causing this graph to be recreated and breaking reactivity in some cases.
 //   E.g. for toolbar dropdowns which use active icon, the icon is not updated when the active item changes.
 //   This is currently only happening in the markdown plugin usage and should be reproduced in an editor story.
-// TODO(burdon): Some actions should toggle the state (e.g., toggle bullets on/off depending on the current state).
 const useMarkdownMenuActions = ({ state, getView, customActions, ...features }: ToolbarActionsProps) => {
   const menuCreator = useMemo(
     () => createMarkdownActions({ state, getView, customActions, ...features }),
