@@ -66,7 +66,9 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
     <Card.Root
       ref={rootRef}
       classNames={mx(
-        'absolute p-0 grid grid-rows-[min-content_1fr]',
+        // Card.Root is flex-col; stretching the inner Column.Root to fill the cell
+        // and giving the surface row 1fr keeps the card from leaving a blank row at the bottom.
+        'absolute p-0 [&>.dx-column-root]:grow [&>.dx-column-root]:[grid-auto-rows:min-content] [&>.dx-column-root]:[align-content:space-between]',
         dragState === 'dragging' && 'opacity-50',
         classNames,
       )}
@@ -87,7 +89,8 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
           />
         )}
       </Card.Toolbar>
-      <div role='none' {...{ inert: true }} className='pointer-events-none min-h-0 min-w-0'>
+      {/* `contents` keeps the surface output participating in Card.Root's Column grid so col-span/subgrid classes resolve. */}
+      <div role='none' {...{ inert: true }} className='contents pointer-events-none'>
         {children}
       </div>
     </Card.Root>
