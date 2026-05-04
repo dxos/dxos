@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useMemo } from 'react';
+import { expect, userEvent } from 'storybook/test';
 
 import { Filter, Format, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
@@ -124,6 +125,53 @@ type Story = StoryObj<typeof meta>;
 
 export const StringBacked: Story = {
   render: () => <StringStory />,
+};
+
+// Regression test: keystrokes into a string-backed markdown field must not
+// blur the editor. Previously the EditorView was destroyed and recreated on
+// every change because `onChange` was a useTextEditor dep and form callbacks
+// are unstable across renders.
+export const StringBackedKeepsFocus: Story = {
+  render: () => (
+    <TestLayout>
+      <Form.Root schema={StringSchema} defaultValues={{ notes: '' }}>
+        <Form.Viewport>
+          <Form.Content>
+            <Form.FieldSet />
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
+    </TestLayout>
+  ),
+  play: async ({ canvasElement }) => {
+    const findEditorContent = async () => {
+      for (let attempt = 0; attempt < 50; attempt++) {
+        const el = canvasElement.querySelector<HTMLElement>('.cm-content');
+        if (el) {
+          return el;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      throw new Error('CodeMirror content element not found');
+    };
+
+    const editorContent = await findEditorContent();
+    await expect(editorContent).toBeVisible();
+
+    await userEvent.click(editorContent);
+    await expect(editorContent).toHaveFocus();
+
+    // Type several characters; focus must be preserved across each keystroke.
+    // Regression: previously the EditorView was destroyed and recreated on
+    // every change, which detached the focused contentDOM and blurred input.
+    const phrase = 'hello world';
+    for (const ch of phrase) {
+      await userEvent.keyboard(ch);
+      await expect(document.activeElement).toBe(editorContent);
+    }
+
+    await expect(editorContent).toHaveTextContent(phrase);
+  },
 };
 
 export const RefPopulated: Story = {

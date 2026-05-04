@@ -4,7 +4,7 @@
 
 import { Transaction } from '@codemirror/state';
 import { EditorView as NaturalEditorView } from '@codemirror/view';
-import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { initialSync } from '@dxos/ui-editor';
@@ -28,6 +28,12 @@ export type EditorViewProps = ThemedClassName<
 // TODO(burdon): Move controller to Root component, then make composable.
 export const EditorView = forwardRef<EditorController, EditorViewProps>(
   ({ classNames, id, extensions, selectionEnd, focusable = true, value, onChange, ...props }, forwardedRef) => {
+    // Hold the latest onChange in a ref so callers may pass an inline callback
+    // without forcing the underlying editor to be destroyed and recreated on
+    // every render — which would blur the focused input on each keystroke.
+    const onChangeRef = useRef(onChange);
+    onChangeRef.current = onChange;
+
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({
         id,
@@ -38,13 +44,13 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
           NaturalEditorView.updateListener.of(({ view, docChanged, transactions }) => {
             const isInitialSync = transactions.some((tr) => tr.annotation(Transaction.userEvent) === initialSync.value);
             if (!isInitialSync && docChanged) {
-              onChange?.(view.state.doc.toString());
+              onChangeRef.current?.(view.state.doc.toString());
             }
           }),
         ],
         ...props,
       }),
-      [id, extensions, selectionEnd, onChange],
+      [id, extensions, selectionEnd],
     );
 
     // External controller.
