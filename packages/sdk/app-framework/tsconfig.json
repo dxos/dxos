@@ -54,10 +54,10 @@
       "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../ui/brand"
+      "path": "../../core/protocols"
     },
     {
-      "path": "../../core/protocols"
+      "path": "../../ui/brand"
     },
     {
       "path": "../../ui/react-primitives/react-error-boundary"
