@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
-import { CredentialsService, Operation, QueueService, Trace } from '@dxos/compute';
+import { CredentialsService, Operation, Trace } from '@dxos/compute';
 import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { Integration } from '@dxos/plugin-integration/types';
 import { Actor, Message } from '@dxos/types';
