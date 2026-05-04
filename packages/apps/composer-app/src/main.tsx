@@ -78,6 +78,25 @@ declare global {
  */
 const bootStatus = (text: string) => window.__bootLoader?.status(text);
 
+/**
+ * Picks the platform-appropriate offline asset cache for third-party plugins.
+ *  - Tauri (desktop + iOS): filesystem cache exposed by `@dxos/plugin-native`.
+ *  - Web with a service worker: cache managed by `@dxos/plugin-pwa`'s SW.
+ *  - Otherwise (tests, unsupported environments): a no-op cache; plugins still
+ *    load but lose their offline guarantee.
+ */
+const createAssetCache = async (isTauri: boolean): Promise<PluginAssetCache.Cache> => {
+  if (isTauri) {
+    const { createTauriAssetCache } = await import('@dxos/plugin-native');
+    return createTauriAssetCache();
+  }
+  if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+    const { createServiceWorkerAssetCache } = await import('@dxos/plugin-pwa');
+    return createServiceWorkerAssetCache();
+  }
+  return PluginAssetCache.noop();
+};
+
 const main = async () => {
   const url = new URL(window.location.href);
   const safeMode = isTrue(url.searchParams.get(PARAM_SAFE_MODE), false);
@@ -357,21 +376,7 @@ const main = async () => {
   // `getPlugins` dynamic-imports every plugin chunk in parallel.
   // Run it concurrently with `UrlLoader.preload` (network-bound) so the two waits overlap.
   bootStatus('Loading plugins…');
-  // Pick the platform-appropriate offline asset cache for third-party plugins. Web uses the
-  // service worker registered by `@dxos/plugin-pwa`; Tauri (desktop + iOS) uses the Rust-side
-  // filesystem cache exposed by `@dxos/plugin-native`. The no-op fallback keeps tests and
-  // unsupported environments running without offline support.
-  const assetCache: PluginAssetCache.Cache = await (async () => {
-    if (isTauri) {
-      const { createTauriAssetCache } = await import('@dxos/plugin-native');
-      return createTauriAssetCache();
-    }
-    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-      const { createServiceWorkerAssetCache } = await import('@dxos/plugin-pwa');
-      return createServiceWorkerAssetCache();
-    }
-    return PluginAssetCache.noop();
-  })();
+  const assetCache = await createAssetCache(isTauri);
   const [builtinPlugins, remotePluginsResult] = await Promise.all([
     getPlugins(conf, {
       onPluginLoaded: (loaded, total) => {
@@ -392,9 +397,6 @@ const main = async () => {
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
-  // Hoist the uninstall hook out of the React component so its reference is stable —
-  // an inline arrow inside <Main> would be a new value on every render and would
-  // invalidate the `useApp` manager memo, looping the tree.
   const onPluginRemove = (id: string) => UrlLoader.uninstall(id, { cache: assetCache });
   const core = getCore(conf);
   const defaults = getDefaults(conf);
