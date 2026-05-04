@@ -3,23 +3,23 @@
 //
 
 /**
- * ESLint rule to enforce that the callback parameter name in Obj.change(),
- * Relation.change(), and Entity.change() matches the first argument name.
+ * ESLint rule to enforce that the callback parameter name in Obj.update(),
+ * Relation.update(), and Entity.update() matches the first argument name.
  *
  * @example
  * // ❌ Bad
- * Obj.change(trigger, (t) => { t.enabled = true; });
- * Obj.change(trigger, (mutableTrigger) => { mutableTrigger.enabled = true; });
+ * Obj.update(trigger, (t) => { t.enabled = true; });
+ * Obj.update(trigger, (mutableTrigger) => { mutableTrigger.enabled = true; });
  *
  * // ✅ Good
- * Obj.change(trigger, (trigger) => { trigger.enabled = true; });
+ * Obj.update(trigger, (trigger) => { trigger.enabled = true; });
  */
 export default {
   meta: {
     type: 'suggestion',
     docs: {
       description:
-        'Enforce callback parameter name matches the first argument in Obj.change, Relation.change, and Entity.change.',
+        'Enforce callback parameter name matches the first argument in Obj.update, Relation.update, and Entity.update.',
       category: 'Best Practices',
       recommended: true,
     },
@@ -27,7 +27,7 @@ export default {
     schema: [],
     messages: {
       mismatchedName:
-        'Callback parameter "{{callbackParam}}" should be "{{firstArg}}" to match the first argument of {{caller}}.change().',
+        'Callback parameter "{{callbackParam}}" should be "{{firstArg}}" to match the first argument of {{caller}}.update().',
     },
   },
   create(context) {
@@ -87,7 +87,7 @@ export default {
           callee.object.type !== 'Identifier' ||
           !['Obj', 'Relation', 'Entity'].includes(callee.object.name) ||
           callee.property.type !== 'Identifier' ||
-          callee.property.name !== 'change'
+          callee.property.name !== 'update'
         ) {
           return;
         }

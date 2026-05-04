@@ -123,7 +123,7 @@ export const useObject: {
       if (obj === undefined) {
         return;
       }
-      Obj.change(obj, (obj: any) => {
+      Obj.update(obj, (obj: any) => {
         if (typeof updateOrValue === 'function') {
           const returnValue = updateOrValue(property !== undefined ? obj[property] : obj);
           if (returnValue !== undefined) {
@@ -148,8 +148,9 @@ export const useObject: {
     // TODO(dxos): Property subscriptions on refs may not update correctly until the ref loads.
     useObjectValue(objOrRef);
     return [useObjectProperty(liveObj, property as any), callback];
+  } else {
+    return [useObjectValue(objOrRef), callback];
   }
-  return [useObjectValue(objOrRef), callback];
 }) as any;
 
 /**

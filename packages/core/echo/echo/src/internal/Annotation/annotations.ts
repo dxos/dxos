@@ -545,7 +545,7 @@ export const getLabel = (entity: AnyProperties): string | undefined => {
 
 /**
  * Set the label of an entity.
- * Must be called within an Obj.change or Relation.change callback.
+ * Must be called within an Obj.update or Relation.update callback.
  */
 export const setLabel = (entity: Mutable<AnyProperties>, label: string) => {
   const schema = getSchema(entity);
@@ -567,7 +567,7 @@ export const getDescription = (entity: AnyProperties): string | undefined => {
 
 /**
  * Set the description of an entity.
- * Must be called within an Obj.change or Relation.change callback.
+ * Must be called within an Obj.update or Relation.update callback.
  */
 export const setDescription = (entity: Mutable<AnyProperties>, description: string) => {
   const schema = getSchema(entity);

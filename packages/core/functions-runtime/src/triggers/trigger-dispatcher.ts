@@ -448,7 +448,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                   Array.last,
                 );
                 if (Option.isSome(lastSuccessfulInvocation)) {
-                  Obj.change(trigger, (trigger) => {
+                  Obj.update(trigger, (trigger) => {
                     Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
                     Obj.getMeta(trigger).keys.push({
                       source: KEY_QUEUE_CURSOR,

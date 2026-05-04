@@ -30,7 +30,7 @@ export const createFormat = (script: Script.Script) => {
           semi: true,
           singleQuote: true,
         });
-        Obj.change(script.source.target!, (obj) => {
+        Obj.update(script.source.target!, (obj) => {
           obj.content = formatted;
         });
       } catch (err: any) {

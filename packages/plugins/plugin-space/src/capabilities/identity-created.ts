@@ -24,7 +24,7 @@ export default Capability.makeModule(
 
     // Create root collection structure.
     yield* Effect.tryPromise(() => personalSpace.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
-    Obj.change(personalSpace.properties, (properties) => {
+    Obj.update(personalSpace.properties, (properties) => {
       properties[Collection.Collection.typename] = Ref.make(Collection.make());
       if (Migrations.versionProperty) {
         properties[Migrations.versionProperty] = Migrations.targetVersion;

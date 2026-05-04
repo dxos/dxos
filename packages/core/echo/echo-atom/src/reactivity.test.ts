@@ -28,8 +28,8 @@ describe('Echo Atom - Reactivity', () => {
     // Subscribe to enable reactivity.
     registry.subscribe(atom, () => {});
 
-    // Update the object via Obj.change.
-    Obj.change(obj, (obj) => {
+    // Update the object via Obj.update.
+    Obj.update(obj, (obj) => {
       obj.name = 'Updated';
     });
 
@@ -50,8 +50,8 @@ describe('Echo Atom - Reactivity', () => {
     // Subscribe to enable reactivity.
     registry.subscribe(atom, () => {});
 
-    // Update the property via Obj.change.
-    Obj.change(obj, (obj) => {
+    // Update the property via Obj.update.
+    Obj.update(obj, (obj) => {
       obj.name = 'Updated';
     });
 
@@ -82,8 +82,8 @@ describe('Echo Atom - Reactivity', () => {
       emailUpdateCount++;
     });
 
-    // Update only email property via Obj.change.
-    Obj.change(obj, (obj) => {
+    // Update only email property via Obj.update.
+    Obj.update(obj, (obj) => {
       obj.email = 'updated@example.com';
     });
 
@@ -109,8 +109,8 @@ describe('Echo Atom - Reactivity', () => {
     registry.subscribe(nameAtom, () => {});
     registry.subscribe(emailAtom, () => {});
 
-    // Update multiple properties via Obj.change.
-    Obj.change(obj, (obj) => {
+    // Update multiple properties via Obj.update.
+    Obj.update(obj, (obj) => {
       obj.name = 'Updated';
       obj.email = 'updated@example.com';
     });
@@ -140,15 +140,15 @@ describe('Echo Atom - Reactivity', () => {
     const initialCount = updateCount;
     expect(initialCount).toBe(1);
 
-    // Update object via Obj.change.
-    Obj.change(obj, (obj) => {
+    // Update object via Obj.update.
+    Obj.update(obj, (obj) => {
       obj.name = 'Updated';
     });
-    Obj.change(obj, (obj) => {
+    Obj.update(obj, (obj) => {
       obj.email = 'updated@example.com';
     });
 
-    // Updates fire through Obj.subscribe (one per Obj.change call).
+    // Updates fire through Obj.subscribe (one per Obj.update call).
     expect(updateCount).toBe(initialCount + 2);
 
     // Verify final state - returns snapshot (plain object).
@@ -167,7 +167,7 @@ describe('Echo Atom - Reactivity', () => {
     });
 
     actions.push('before');
-    Obj.change(obj, (obj) => {
+    Obj.update(obj, (obj) => {
       obj.name = 'Updated';
     });
     actions.push('after');
@@ -191,7 +191,7 @@ describe('Echo Atom - Reactivity', () => {
     });
 
     actions.push('before');
-    Obj.change(obj, (obj) => {
+    Obj.update(obj, (obj) => {
       obj.stringArray!.splice(1, 1);
     });
     actions.push('after');
@@ -222,7 +222,7 @@ describe('Echo Atom - Reactivity', () => {
     });
 
     // Reorder in place (e.g. move first to last).
-    Obj.change(obj, (obj) => {
+    Obj.update(obj, (obj) => {
       arrayMove(obj.stringArray!, 0, 2);
     });
 

@@ -76,7 +76,7 @@ export const ChatContainer = composable<HTMLDivElement, ChatContainerProps>(
         return false;
       }
 
-      Obj.change(thread, (thread) => {
+      Obj.update(thread, (thread) => {
         thread.messages.push(
           Ref.make(
             Obj.make(Message.Message, {

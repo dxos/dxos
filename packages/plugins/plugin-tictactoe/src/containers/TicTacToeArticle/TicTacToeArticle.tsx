@@ -63,7 +63,7 @@ export const TicTacToeArticle = ({ role, subject: game }: TicTacToeArticleProps)
       const moveEntry = `${marker}:${row},${col}`;
       const newMoves = moves ? `${moves};${moveEntry}` : moveEntry;
 
-      Obj.change(game, (game) => {
+      Obj.update(game, (game) => {
         const mutable = game as Obj.Mutable<typeof game>;
         mutable.board = result.board;
         mutable.moves = newMoves;
@@ -106,7 +106,7 @@ export const TicTacToeArticle = ({ role, subject: game }: TicTacToeArticleProps)
       const moveEntry = `O:${row},${col}`;
       const newMoves = currentMoves ? `${currentMoves};${moveEntry}` : moveEntry;
 
-      Obj.change(game, (game) => {
+      Obj.update(game, (game) => {
         const mutable = game as Obj.Mutable<typeof game>;
         mutable.board = newBoard;
         mutable.moves = newMoves;
@@ -124,7 +124,7 @@ export const TicTacToeArticle = ({ role, subject: game }: TicTacToeArticleProps)
   // New game handler.
   const handleNewGame = useCallback(() => {
     const newBoard = makeBoard(size);
-    Obj.change(game, (game) => {
+    Obj.update(game, (game) => {
       const mutable = game as Obj.Mutable<typeof game>;
       mutable.board = newBoard;
       mutable.moves = '';

@@ -228,7 +228,7 @@ const constructSpaceNode = ({
           nextOrder.map(({ id }) => id),
         );
 
-        Obj.change(spacesOrder, (spacesOrder: any) => {
+        Obj.update(spacesOrder, (spacesOrder: any) => {
           spacesOrder.order = nextOrder.map(({ id }) => id);
         });
       };

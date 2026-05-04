@@ -165,7 +165,7 @@ export const makeInitialized = (
 
     const inputQueue = yield* QueueService.createQueue();
 
-    Obj.change(agent, (agent) => {
+    Obj.update(agent, (agent) => {
       agent.chat = Ref.make(chat);
       agent.queue = Ref.fromDXN(inputQueue.dxn);
     });
@@ -216,7 +216,7 @@ export const resetChatHistory = (
       }),
     );
     Obj.setParent(feed, chat);
-    Obj.change(agent, (agent) => {
+    Obj.update(agent, (agent) => {
       agent.chat = Ref.make(chat);
     });
 

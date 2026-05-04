@@ -58,7 +58,7 @@ describe('reducers', () => {
       syncer.update(messages);
       expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!', ''].join('\n'));
 
-      Obj.change(messages[1], (obj) => {
+      Obj.update(messages[1], (obj) => {
         obj.blocks.push({ _tag: 'text', text: 'How can I help?' });
       });
       syncer.update(messages);
@@ -80,14 +80,14 @@ describe('reducers', () => {
       syncer.update(messages);
       expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!'].join('\n'));
 
-      Obj.change(messages[1], (obj) => {
+      Obj.update(messages[1], (obj) => {
         const block = obj.blocks[0] as Mutable<ContentBlock.Text>;
         block.text = 'Hi there! How are you?';
         block.pending = false;
       });
       syncer.update(messages);
 
-      Obj.change(messages[1], (obj) => {
+      Obj.update(messages[1], (obj) => {
         obj.blocks.push({ _tag: 'text', text: 'How can I help?' });
       });
       syncer.update(messages);
@@ -108,7 +108,7 @@ describe('reducers', () => {
       const syncer = new MessageSyncer(doc, createBlockRenderer('thinking'));
 
       const setReasoning = (message: Message.Message, text: string, pending: boolean) => {
-        Obj.change(message, (message) => {
+        Obj.update(message, (message) => {
           const block = message.blocks[0] as Mutable<ContentBlock.Reasoning>;
           block.reasoningText = text;
           block.pending = pending;
@@ -155,7 +155,7 @@ describe('reducers', () => {
       const syncer = new MessageSyncer(doc, createBlockRenderer('thinking'));
 
       const setReasoning = (message: Message.Message, text: string, pending: boolean) => {
-        Obj.change(message, (message) => {
+        Obj.update(message, (message) => {
           const block = message.blocks[0] as Mutable<ContentBlock.Reasoning>;
           block.reasoningText = text;
           block.pending = pending;
@@ -163,7 +163,7 @@ describe('reducers', () => {
       };
 
       const setText = (message: Message.Message, text: string, pending: boolean) => {
-        Obj.change(message, (message) => {
+        Obj.update(message, (message) => {
           const block = message.blocks[1] as Mutable<ContentBlock.Text>;
           block.text = text;
           block.pending = pending;
@@ -183,7 +183,7 @@ describe('reducers', () => {
       syncer.update(messages);
 
       // Tick 4: text block appears, pending and empty (model has started emitting but text is still '').
-      Obj.change(messages[0], (message) => {
+      Obj.update(messages[0], (message) => {
         message.blocks.push({ _tag: 'text', text: '', pending: true });
       });
       syncer.update(messages);
@@ -238,12 +238,12 @@ describe('reducers', () => {
       const messages = [createMessage('assistant', [{ _tag: 'reasoning', reasoningText: 'abc\n1.', pending: true }])];
 
       syncer.update(messages);
-      Obj.change(messages[0], (obj) => {
+      Obj.update(messages[0], (obj) => {
         const block = obj.blocks[0] as Mutable<ContentBlock.Reasoning>;
         block.reasoningText = 'abc\n1. ';
       });
       syncer.update(messages);
-      Obj.change(messages[0], (obj) => {
+      Obj.update(messages[0], (obj) => {
         const block = obj.blocks[0] as Mutable<ContentBlock.Reasoning>;
         block.reasoningText = 'abc\n1. tail';
         block.pending = false;

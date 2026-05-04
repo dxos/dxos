@@ -48,14 +48,14 @@ export const BlueprintEditor = ({ object }: BlueprintEditorProps) => {
     try {
       if (existingBlueprint) {
         const text = await existingBlueprint.instructions.source.load();
-        Obj.change(text, (text) => {
+        Obj.update(text, (text) => {
           text.content = instructions;
         });
 
         if (fn?.key) {
           const toolId = ToolId.make(fn.key);
           if (!existingBlueprint.tools?.includes(toolId)) {
-            Obj.change(existingBlueprint, (existingBlueprint) => {
+            Obj.update(existingBlueprint, (existingBlueprint) => {
               existingBlueprint.tools = [...(existingBlueprint.tools ?? []), toolId];
             });
           }

@@ -329,7 +329,7 @@ describe('Agent', () => {
         );
         expect(triggers.every((trigger) => trigger.enabled === false)).toBe(true);
 
-        Obj.change(agent, (agent) => {
+        Obj.update(agent, (agent) => {
           agent.enabled = true;
         });
         yield* Database.flush();

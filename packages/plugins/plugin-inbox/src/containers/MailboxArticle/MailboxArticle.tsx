@@ -38,17 +38,17 @@ export type MailboxArticleProps = AppSurface.ObjectArticleProps<
   }
 >;
 
-export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
+export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const settings = useAtomCapability(InboxCapabilities.Settings);
+  // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
+  const [mailbox] = useObject(subject);
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
   const currentId = useSelected(id, 'single');
   const db = Obj.getDatabase(mailbox);
   const showItem = useShowItem();
 
-  // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
-  useObject(mailbox);
   const feed = mailbox.feed?.target as Feed.Feed | undefined;
 
   const filterEditorRef = useRef<EditorController>(null);
@@ -56,7 +56,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
   // Menu state.
   const sortDescending = useAtomState(true);
-  const menuActions = useMailboxActions({ db, mailbox, sortDescending: sortDescending.atom });
+  const menuActions = useMailboxActions({ db, mailbox: subject, sortDescending: sortDescending.atom });
 
   // Build message-to-tags map from HasSubject relations incrementally.
   const messageTagsMap = useMessageTagsMap(db, feed);
@@ -177,13 +177,13 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             state: true,
             variant: 'virtual',
             anchor: filterSaveButtonRef.current,
-            props: { mailbox, filter: action.filter },
+            props: { mailbox: subject, filter: action.filter },
           });
           break;
         }
       }
     },
-    [db, id, mailbox, sortedMessages, invokePromise, showItem],
+    [db, id, mailbox.id, subject, sortedMessages, invokePromise, showItem],
   );
 
   return (
@@ -222,7 +222,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       )}
       <Panel.Content asChild>
         {isEmpty ? (
-          <InitializeMailbox mailbox={mailbox} />
+          <InitializeMailbox mailbox={subject} />
         ) : (
           <MessageStack
             id={id}
