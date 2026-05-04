@@ -32,8 +32,16 @@ env:
   TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
 
 # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
+#
+# `github.event_name` is part of the group so the `pull_request` queue is
+# isolated from the `pull_request_target` queue. PRs receive both events at the
+# same `github.ref`, and a shared group caused the no-op `pull_request_target`
+# run (which has no matching trigger here and exits as `skipped`) to cancel the
+# real `pull_request` run before its required `check` / `test` jobs reported
+# any status — leaving the branch-protection gate stuck on
+# "Expected — Waiting for status to be reported".
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 # https://moonrepo.dev/docs/guides/ci
