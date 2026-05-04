@@ -72,15 +72,15 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
   }, [post.link]);
 
   const handleMarkUnread = useCallback(() => {
-    Obj.update(subject, (post) => {
-      const mutable = post as Obj.Mutable<typeof post>;
+    Obj.update(subject, (subject) => {
+      const mutable = subject as Obj.Mutable<typeof subject>;
       mutable.readAt = undefined;
     });
   }, [subject]);
 
   const handleToggleArchive = useCallback(() => {
-    Obj.update(subject, (post) => {
-      const mutable = post as Obj.Mutable<typeof post>;
+    Obj.update(subject, (subject) => {
+      const mutable = subject as Obj.Mutable<typeof subject>;
       mutable.archived = !mutable.archived;
     });
   }, [subject]);
@@ -108,8 +108,8 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
     try {
       const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
       const { text, imageUrls } = await fetchArticle(post.link, { corsProxy });
-      Obj.update(subject, (post) => {
-        const mutable = post as Obj.Mutable<typeof post>;
+      Obj.update(subject, (subject) => {
+        const mutable = subject as Obj.Mutable<typeof subject>;
         if (text) {
           mutable.content = text;
         }
