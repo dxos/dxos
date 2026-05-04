@@ -26,6 +26,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/blueprints": "workspace:*",
     "@dxos/brand": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/compute": "workspace:*",
@@ -34,11 +35,14 @@
     "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/functions": "workspace:*",
+    "@dxos/functions-runtime": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log-store-idb": "workspace:*",
     "@dxos/migrations": "workspace:*",
     "@dxos/observability": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",
@@ -127,7 +131,9 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-joyride": "catalog:",
-    "solid-js": "catalog:"
+    "solid-js": "catalog:",
+    "workbox-precaching": "catalog:",
+    "workbox-routing": "catalog:"
   },
   "devDependencies": {
     "@babel/core": "catalog:",

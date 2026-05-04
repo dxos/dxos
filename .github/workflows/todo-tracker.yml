@@ -21,6 +21,9 @@ concurrency:
 
 jobs:
   track-todos:
+    # Skip for fork PRs (head.repo != base repo) — TODO linking requires GITHUB_TOKEN write access.
+    # workflow_dispatch has no pull_request context so allow it through unconditionally.
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1

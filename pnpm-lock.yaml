@@ -1833,6 +1833,12 @@ catalogs:
     wnfs:
       specifier: 0.2.2
       version: 0.2.2
+    workbox-precaching:
+      specifier: ^7.3.0
+      version: 7.4.0
+    workbox-routing:
+      specifier: ^7.3.0
+      version: 7.4.0
     workbox-window:
       specifier: ^7.4.0
       version: 7.4.0
@@ -2370,6 +2376,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../../core/blueprints
       '@dxos/brand':
         specifier: workspace:*
         version: link:../../ui/brand
@@ -2394,6 +2403,12 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -2409,6 +2424,9 @@ importers:
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant
@@ -2676,6 +2694,12 @@ importers:
       solid-js:
         specifier: 'catalog:'
         version: 1.9.11
+      workbox-precaching:
+        specifier: 'catalog:'
+        version: 7.4.0
+      workbox-routing:
+        specifier: 'catalog:'
+        version: 7.4.0
     devDependencies:
       '@babel/core':
         specifier: 'catalog:'
@@ -15329,6 +15353,9 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-error-boundary':
         specifier: workspace:*
         version: link:../../ui/react-primitives/react-error-boundary

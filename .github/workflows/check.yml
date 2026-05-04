@@ -2,6 +2,7 @@ name: Check
 
 on:
   pull_request:
+  pull_request_target:
   merge_group:
 
   push:
@@ -26,6 +27,14 @@ on:
         required: false
         default: false
 
+# Limit GITHUB_TOKEN to read-only for fork code execution safety.
+# pull-requests: write is needed for moonrepo/run-report-action to post PR comments.
+# packages: read is needed to pull the ghcr.io container image.
+permissions:
+  contents: read
+  pull-requests: write
+  packages: read
+
 env:
   DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
   DISCORD_TEST_REPORT_WEBHOOK: ${{ secrets.DISCORD_TEST_REPORT_WEBHOOK }}
@@ -33,12 +42,17 @@ env:
 
 # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 # https://moonrepo.dev/docs/guides/ci
 jobs:
   check:
+    # pull_request handles same-repo PRs; pull_request_target handles fork PRs.
+    # Skip pull_request_target for same-repo PRs to avoid double runs.
+    if: github.event_name != 'pull_request_target' || github.event.pull_request.head.repo.full_name != github.repository
+    # Gate fork PRs on maintainer approval before running fork code with secrets in scope.
+    environment: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository && 'external-pr' || '' }}
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -58,6 +72,9 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
+          # pull_request_target checks out the base branch by default; explicitly
+          # check out the PR head so we lint/build the contributor's actual code.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Extract branch
         id: extract_branch
@@ -84,108 +101,37 @@ jobs:
         run: pnpm install --resolution-only --no-frozen-lockfile
 
       - uses: 'moonrepo/run-report-action@v1'
-        if: (success() || failure()) && github.event_name == 'pull_request'
+        if: (success() || failure()) && github.event_name == 'pull_request_target'
         with:
           access-token: ${{ secrets.GITHUB_TOKEN }}
 
   test:
+    # pull_request handles same-repo PRs; pull_request_target handles fork PRs.
+    # Skip pull_request_target for same-repo PRs to avoid double runs.
+    if: github.event_name != 'pull_request_target' || github.event.pull_request.head.repo.full_name != github.repository
     strategy:
       matrix:
         node-version: ['24.11.1']
-    runs-on: depot-ubuntu-24.04-8
-    container:
-      image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 30
-    env:
-      NODE_VERSION: ${{ matrix.node-version }}
-      # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
-      # while still excluding the heavier opt-in tag families.
-      VITEST_TAGS_FILTER: '!llm && !sync && !sync-e2e && !functions-e2e && !tracing-e2e'
-      VITEST_ENV: 'node'
-      VITEST_COVERAGE: 'true'
-      VITEST_XML_REPORT: 'true'
-      # NOTE: Browser tests also require a process for chromium. Limiting to 4 provides headroom for those processes.
-      MOON_CONCURRENCY: 4
-    steps:
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && !inputs.e2e }}
-        with:
-          detached: true
-
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-          lfs: true
-
-      - name: Extract branch
-        id: extract_branch
-        uses: ./.github/actions/branch
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Install Playwright
-        run: pnpm run install-playwright
-
-      - name: Clean stale test results
-        run: rm -rf test-results
-
-      - name: Test Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        uses: trunk-io/analytics-uploader@v1
-        with:
-          junit-paths: 'test-results/**/results.xml'
-          org-slug: dxos
-          token: ${{ secrets.TRUNK_TOKEN }}
-          quarantine: true
-          run: moon run :test :test-browser :test-storybook --affected remote -- --no-file-parallelism
-
-      - name: Test All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        uses: trunk-io/analytics-uploader@v1
-        with:
-          junit-paths: 'test-results/**/results.xml'
-          org-slug: dxos
-          token: ${{ secrets.TRUNK_TOKEN }}
-          quarantine: true
-          run: moon exec --on-failure continue :test :test-browser :test-storybook -- --no-file-parallelism
-
-      - uses: 'moonrepo/run-report-action@v1'
-        if: (success() || failure()) && github.event_name == 'pull_request'
-        with:
-          access-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Test Results
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: vitest-report-${{ matrix.node-version }}
-          path: test-results
-          retention-days: 7
-
-      - uses: codecov/codecov-action@v5
-        if: ${{ matrix.node-version == '24.11.1' }}
-        with:
-          directory: ./coverage
-          fail_ci_if_error: false
-          handle_no_reports_found: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-          verbose: true
-
-      - name: Send test report
-        if: ${{ always() && github.event_name == 'schedule' }}
-        uses: ./.github/actions/test-report
-        with:
-          name: '${{ github.job }}-${{ matrix.node-version }}'
-          result: ${{ job.status }}
+    # Fork PRs: gate on maintainer approval AND isolate secrets — only TRUNK_TOKEN
+    # and CODECOV_TOKEN reach the test runner via the reusable workflow.
+    uses: ./.github/workflows/run-tests.yml
+    with:
+      sha: ${{ github.event.pull_request.head.sha || github.sha }}
+      node-version: ${{ matrix.node-version }}
+    secrets:
+      TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   e2e:
-    if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
+    # e2e only runs on direct pushes to release branches, never on PRs.
+    if: >-
+      github.event_name != 'pull_request_target' && (
+        startsWith(github.ref, 'refs/heads/main') ||
+        startsWith(github.ref, 'refs/heads/rc-') ||
+        startsWith(github.ref, 'refs/heads/hotfix-') ||
+        startsWith(github.ref, 'refs/heads/release-please-') ||
+        inputs.e2e
+      )
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -264,7 +210,7 @@ jobs:
           run: moon exec --on-failure continue :e2e --concurrency=1
 
       - uses: 'moonrepo/run-report-action@v1'
-        if: (success() || failure()) && github.event_name == 'pull_request'
+        if: (success() || failure()) && github.event_name == 'pull_request_target'
         with:
           access-token: ${{ secrets.GITHUB_TOKEN }}
 

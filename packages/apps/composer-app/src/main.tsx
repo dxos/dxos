@@ -15,7 +15,7 @@ import React, { StrictMode, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { type Plugin, UrlLoader } from '@dxos/app-framework';
+import { type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
 import { Placeholder, type PlaceholderComponentProps, useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Composer } from '@dxos/brand';
@@ -84,6 +84,28 @@ if (import.meta.env?.DEV) {
     });
   }
 }
+
+/**
+ * Picks the platform-appropriate offline asset cache for third-party plugins.
+ *  - Tauri (desktop + iOS): Rust-backed filesystem cache, served via the `dxos-plugin://` URI scheme.
+ *  - Web with a service worker: cache managed by the SW in `./sw.ts`.
+ *  - Otherwise (tests, unsupported environments): a no-op cache; plugins still
+ *    load but lose their offline guarantee.
+ *
+ * Each branch dynamic-imports its impl so vite emits per-platform chunks instead
+ * of dragging both into the initial bundle.
+ */
+const createAssetCache = async (isTauri: boolean): Promise<PluginAssetCache.Cache> => {
+  if (isTauri) {
+    const { createTauriAssetCache } = await import('./asset-cache/tauri');
+    return createTauriAssetCache();
+  }
+  if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+    const { createServiceWorkerAssetCache } = await import('./asset-cache/service-worker');
+    return createServiceWorkerAssetCache();
+  }
+  return PluginAssetCache.noop();
+};
 
 const main = async () => {
   if (import.meta.env?.DEV) {
@@ -359,6 +381,7 @@ const main = async () => {
   // `getPlugins` dynamic-imports every plugin chunk in parallel.
   // Run it concurrently with `UrlLoader.preload` (network-bound) so the two waits overlap.
   bootStatus('Loading plugins…');
+  const assetCache = await createAssetCache(isTauri);
   const [builtinPlugins, remotePluginsResult] = await Promise.all([
     getPlugins(conf, {
       onPluginLoaded: (loaded, total) => {
@@ -373,10 +396,7 @@ const main = async () => {
         window.__bootLoader?.progress((loaded / total) * 0.5);
       },
     }),
-    UrlLoader.preload().catch((error) => {
-      log.warn('failed to preload remote plugins', { error });
-      return [] as Plugin.Plugin[];
-    }),
+    runAndForwardErrors(UrlLoader.preload({ cache: assetCache })),
   ]);
 
   bootStatus('Starting Composer…');
@@ -384,7 +404,8 @@ const main = async () => {
   window.__bootLoader?.progress(0.5);
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
-  const pluginLoader = UrlLoader.make(builtinPlugins);
+  const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
+  const onPluginRemove = (id: string) => UrlLoader.uninstall(id, { cache: assetCache });
   const core = getCore(conf);
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
@@ -429,6 +450,7 @@ const main = async () => {
       fallback: Fallback,
       placeholder: ComposerPlaceholder,
       pluginLoader,
+      onPluginRemove,
       plugins,
       core,
       defaults,
