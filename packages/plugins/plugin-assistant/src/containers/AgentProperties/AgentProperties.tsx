@@ -85,7 +85,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
   // Create/remove agent subscription.
   const handleSubscriptionChange = useCallback(
     (object: Obj.Unknown, checked: boolean) => {
-      Obj.change(agent, (agent) => {
+      Obj.update(agent, (agent) => {
         if (checked) {
           agent.subscriptions.push(Ref.fromDXN(Obj.getDXN(object)));
         } else {

@@ -42,7 +42,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
       yield* Agent.resetChatHistory(agent);
       if (!agent.queue) {
         const queue = yield* QueueService.createQueue();
-        Obj.change(agent, (agent) => {
+        Obj.update(agent, (agent) => {
           agent.queue = Ref.fromDXN(queue.dxn);
         });
       }

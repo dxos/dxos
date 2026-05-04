@@ -214,7 +214,7 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
   );
 
   const handleToggle = useCallback((server: McpServer.McpServer, enabled: boolean) => {
-    Obj.change(server, (server) => {
+    Obj.update(server, (server) => {
       server.enabled = enabled;
     });
   }, []);

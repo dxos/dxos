@@ -79,7 +79,7 @@ const meta: Meta<typeof QueryEditor> = {
           { type: Person.Person, count: 50 },
         ]);
         objects.forEach((obj) => {
-          Obj.change(obj, (obj) => {
+          Obj.update(obj, (obj) => {
             Obj.getMeta(obj).tags = random.helpers.uniqueArray(Object.keys(tags), random.number.int(3));
           });
         });

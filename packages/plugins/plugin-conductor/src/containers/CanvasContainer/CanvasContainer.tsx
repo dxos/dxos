@@ -35,14 +35,14 @@ import {
 
 export type CanvasContainerProps = AppSurface.ObjectArticleProps<CanvasBoard.CanvasBoard>;
 
-export const CanvasContainer = ({ role, subject: canvas, attendableId: _attendableId }: CanvasContainerProps) => {
-  const id = Obj.getDXN(canvas as any).toString();
-  useObject(canvas);
+export const CanvasContainer = ({ role, subject, attendableId: _attendableId }: CanvasContainerProps) => {
+  const [canvas] = useObject(subject);
+  const id = Obj.getDXN(canvas).toString();
   const graph = useMemo(
-    () => CanvasGraphModel.create<ComputeShape>(canvas.layout, (fn) => Obj.change(canvas, fn)),
-    [canvas],
+    () => CanvasGraphModel.create<ComputeShape>(canvas.layout, (fn) => Obj.update(subject, fn)),
+    [subject, canvas.layout],
   );
-  const controller = useGraphController(canvas);
+  const controller = useGraphController(subject);
   const graphMonitor = useGraphMonitor(controller?.graph);
   const registry = useMemo(() => new ShapeRegistry(computeShapes), []);
   const editorRef = useRef<EditorController>(null);

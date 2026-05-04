@@ -793,7 +793,7 @@ export const WithProject: Story = {
       const tagDxn = Obj.getDXN(tag).toString();
 
       people.slice(0, 4).forEach((person) => {
-        Obj.change(person, (person) => {
+        Obj.update(person, (person) => {
           Obj.getMeta(person).tags = [tagDxn];
         });
       });
@@ -817,7 +817,7 @@ export const WithProject: Story = {
         }),
       );
       [dxosResearch, blueyardResearch].forEach((research) => {
-        Obj.change(research, (research) => {
+        Obj.update(research, (research) => {
           Obj.getMeta(research).tags = [tagDxn];
         });
       });
@@ -825,7 +825,7 @@ export const WithProject: Story = {
       const dxos = organizations.find((org) => org.name === 'DXOS')!;
       const blueyard = organizations.find((org) => org.name === 'BlueYard')!;
       [dxos, blueyard].forEach((organization) => {
-        Obj.change(organization, (organization) => {
+        Obj.update(organization, (organization) => {
           Obj.getMeta(organization).tags = [tagDxn];
         });
       });

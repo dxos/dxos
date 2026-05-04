@@ -19,7 +19,7 @@ const describeOutsideCI = process.env.CI ? describe.skip : describe;
 describeOutsideCI('makeDynamicTable', () => {
   /**
    * Base case: plain jsonSchema (not from Echo / JsonSchema.toJsonSchema). Does not exercise the path
-   * where projection or schema are reactive, so this does not reproduce the Obj.change regression.
+   * where projection or schema are reactive, so this does not reproduce the Obj.update regression.
    * Confirms makeDynamicTable + setProperties (title) works with plain objects.
    */
   test('makeDynamicTable with plain jsonSchema and properties with title does not throw', () => {
@@ -51,7 +51,7 @@ describeOutsideCI('makeDynamicTable', () => {
 
   /**
    * Regression test for the path where jsonSchema comes from getBaseSchema(typename, properties).
-   * That path uses Echo (ViewModel.make, JsonSchema.toJsonSchema); mutations must run inside Obj.change and on a
+   * That path uses Echo (ViewModel.make, JsonSchema.toJsonSchema); mutations must run inside Obj.update and on a
    * cloned schema. This test ensures that flow does not throw.
    */
   test('makeDynamicTable with jsonSchema from getBaseSchema(typename, properties) and properties with title does not throw', () => {

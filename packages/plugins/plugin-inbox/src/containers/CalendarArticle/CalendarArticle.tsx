@@ -29,16 +29,16 @@ const byDate =
 
 export type CalendarArticleProps = AppSurface.ObjectArticleProps<Calendar.Calendar>;
 
-export const CalendarArticle = ({ role, subject: calendar, attendableId }: CalendarArticleProps) => {
+export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const showItem = useShowItem();
+  // TODO(wittjosiah): Should be `const feed = useObjectValue(calendar.feed)`.
+  const [calendar] = useObject(subject);
   const id = attendableId ?? Obj.getDXN(calendar).toString();
   const currentId = useSelected(id, 'single');
   const db = Obj.getDatabase(calendar);
 
-  // TODO(wittjosiah): Should be `const feed = useObjectValue(calendar.feed)`.
-  useObject(calendar);
   const feed = calendar.feed?.target as Feed.Feed | undefined;
   const events = useQuery(
     db,
@@ -102,7 +102,7 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
           </Panel.Toolbar>
           <Panel.Content asChild>
             {isEmpty ? (
-              <NewCalendar calendar={calendar} />
+              <NewCalendar calendar={subject} />
             ) : (
               <EventStack id={id} events={events} currentId={currentId} onAction={handleAction} />
             )}

@@ -260,7 +260,7 @@ export default Capability.makeModule(
         if (!entry) {
           return;
         }
-        Obj.change(entry.token, (token) => {
+        Obj.update(entry.token, (token) => {
           token.token = decoded.accessToken;
         });
         yield* finalizePendingEntry(invoker, entry);

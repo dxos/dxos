@@ -46,7 +46,7 @@ export type UseFileUploadResult = {
  * const { open, enabled, input } = useFileUpload({
  *   subject: gallery,
  *   accept: 'image/*',
- *   onUpload: (info) => Obj.change(gallery, (obj) => { ... }),
+ *   onUpload: (info) => Obj.update(gallery, (obj) => { ... }),
  * });
  * // render: {input}
  * // wire: <Toolbar.IconButton disabled={!enabled} onClick={open} />

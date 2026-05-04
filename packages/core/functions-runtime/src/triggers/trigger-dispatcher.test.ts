@@ -518,7 +518,7 @@ describe('TriggerDispatcher', () => {
         expect(results.length).toBe(1);
 
         // Update the person object
-        Obj.change(person, (person) => {
+        Obj.update(person, (person) => {
           person.fullName = 'Robert Jones';
         });
         yield* Database.flush({ indexes: true });
@@ -563,7 +563,7 @@ describe('TriggerDispatcher', () => {
         expect(results.length).toBe(0);
 
         // Update the object
-        Obj.change(person, (person) => {
+        Obj.update(person, (person) => {
           person.fullName = 'Charles Brown';
         });
         yield* Database.flush({ indexes: true });

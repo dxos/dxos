@@ -3,12 +3,12 @@
 //
 
 /**
- * Error thrown when attempting to mutate an object outside of an Obj.change() context.
+ * Error thrown when attempting to mutate an object outside of an Obj.update() context.
  */
 export class MutationOutsideChangeContextError extends Error {
   constructor(operation: string, suggestion: string) {
     super(
-      `Cannot ${operation} outside of Obj.change(). Use Obj.change(obj, (mutableObj) => { ${suggestion} }) instead.`,
+      `Cannot ${operation} outside of Obj.update(). Use Obj.update(obj, (mutableObj) => { ${suggestion} }) instead.`,
     );
     this.name = 'MutationOutsideChangeContextError';
   }

@@ -17,7 +17,7 @@ describe('Obj.setValue', () => {
       email: 'john@example.com',
     });
 
-    Obj.change(person, (person) => Obj.setValue(person, ['address', 'city'], 'NYC'));
+    Obj.update(person, (person) => Obj.setValue(person, ['address', 'city'], 'NYC'));
 
     expect(person.address).toBeDefined();
     expect(person.address?.city).toBe('NYC');
@@ -30,7 +30,7 @@ describe('Obj.setValue', () => {
       email: 'john@example.com',
     });
 
-    Obj.change(person, (person) => Obj.setValue(person, ['fields', 0, 'label'], 'Phone'));
+    Obj.update(person, (person) => Obj.setValue(person, ['fields', 0, 'label'], 'Phone'));
 
     expect(Array.isArray(person.fields)).toBe(true);
     expect(person.fields?.[0].label).toBe('Phone');
@@ -45,7 +45,7 @@ describe('Obj.setValue', () => {
       email: 'john@example.com',
     });
 
-    Obj.change(person, (person) => Obj.setValue(person, ['address', 'coordinates', 'lat'], 40.7128));
+    Obj.update(person, (person) => Obj.setValue(person, ['address', 'coordinates', 'lat'], 40.7128));
 
     expect(person.address).toBeDefined();
     expect(person.address?.coordinates).toBeDefined();
@@ -69,7 +69,7 @@ describe('Obj.setValue', () => {
 
     const container = Obj.make(Container, { name: 'box' });
 
-    Obj.change(container, (container) => {
+    Obj.update(container, (container) => {
       Obj.setValue(container, ['items', 0, 'value'], 10);
       Obj.setValue(container, ['items', 1, 'value'], 20);
       Obj.setValue(container, ['items', 2, 'value'], 30);
@@ -88,7 +88,7 @@ describe('Obj.setValue', () => {
       email: 'john@example.com',
     });
 
-    Obj.change(person, (person) => Obj.setValue(person, ['age'], 25));
+    Obj.update(person, (person) => Obj.setValue(person, ['age'], 25));
 
     expect(person.age).toBe(25);
   });
@@ -100,7 +100,7 @@ describe('Obj.setValue', () => {
       email: 'john@example.com',
     });
 
-    Obj.change(person, (person) => Obj.setValue(person, ['address', 'city'], 'NYC'));
+    Obj.update(person, (person) => Obj.setValue(person, ['address', 'city'], 'NYC'));
 
     expect(person.address).toBeDefined();
     expect(person.address?.city).toBe('NYC');
@@ -114,7 +114,7 @@ describe('Obj.setValue', () => {
     });
 
     let result: any;
-    Obj.change(person, (person) => {
+    Obj.update(person, (person) => {
       result = Obj.setValue(person, ['age'], 30);
     });
 
@@ -129,7 +129,7 @@ describe('Obj.setValue', () => {
       age: 25,
     });
 
-    Obj.change(person, (person) => Obj.setValue(person, ['age'], 30));
+    Obj.update(person, (person) => Obj.setValue(person, ['age'], 30));
 
     expect(person.age).toBe(30);
   });
@@ -142,7 +142,7 @@ describe('Obj.setValue', () => {
       address: { city: 'Boston', state: 'MA', coordinates: {} },
     });
 
-    Obj.change(person, (person) => Obj.setValue(person, ['address', 'city'], 'NYC'));
+    Obj.update(person, (person) => Obj.setValue(person, ['address', 'city'], 'NYC'));
 
     expect(person.address?.city).toBe('NYC');
     expect(person.address?.state).toBe('MA');
@@ -160,7 +160,7 @@ describe('Obj.setValue', () => {
 
     const matrix = Obj.make(Matrix, {});
 
-    Obj.change(matrix, (matrix) => {
+    Obj.update(matrix, (matrix) => {
       Obj.setValue(matrix, ['values', 0, 0], 1);
       Obj.setValue(matrix, ['values', 0, 1], 2);
       Obj.setValue(matrix, ['values', 1, 0], 3);
@@ -180,7 +180,7 @@ describe('Obj.setValue', () => {
       email: 'john@example.com',
     });
 
-    Obj.change(person, (person) => {
+    Obj.update(person, (person) => {
       expect(() => Obj.setValue(person, [], 'value')).toThrow('Path must not be empty');
     });
   });
@@ -192,7 +192,7 @@ describe('Obj.setValue', () => {
       email: 'john@example.com',
     });
 
-    Obj.change(person, (person) => Obj.setValue(person, ['age'], 30));
+    Obj.update(person, (person) => Obj.setValue(person, ['age'], 30));
 
     expect(person.age).toBe(30);
   });
@@ -215,7 +215,7 @@ describe('Obj.setValue', () => {
     const container = Obj.make(Container, { name: 'box' });
 
     // Using string '0' for array index.
-    Obj.change(container, (container) => Obj.setValue(container, ['items', '0', 'value'], 42));
+    Obj.update(container, (container) => Obj.setValue(container, ['items', '0', 'value'], 42));
 
     expect(container.items?.[0].value).toBe(42);
   });
@@ -243,7 +243,7 @@ describe('Obj.setValue', () => {
 
     // This should work: setting a nested property on an array element.
     // The required 'id' field should be initialized with a default value.
-    Obj.change(todoList, (todoList) => Obj.setValue(todoList, ['tasks', 0, 'title'], 'Buy groceries'));
+    Obj.update(todoList, (todoList) => Obj.setValue(todoList, ['tasks', 0, 'title'], 'Buy groceries'));
 
     expect(todoList.tasks?.[0].id).toBe(''); // Default value for required String
     expect(todoList.tasks?.[0].title).toBe('Buy groceries');
@@ -270,7 +270,7 @@ describe('Obj.setValue', () => {
 
     const container = Obj.make(Container, { name: 'box' });
 
-    Obj.change(container, (container) => Obj.setValue(container, ['items', 0, 'label'], 'First Item'));
+    Obj.update(container, (container) => Obj.setValue(container, ['items', 0, 'label'], 'First Item'));
 
     // All required primitive fields should have default values.
     expect(container.items?.[0].id).toBe('');
