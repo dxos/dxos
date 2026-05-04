@@ -161,7 +161,7 @@ export const baseTheme = EditorView.baseTheme({
    * Height is set to match the corresponding line (which may have wrapped).
    */
   '.cm-gutterElement': {
-    lineHeight: 1.5,
+    lineHeight: '24px',
     fontSize: '12px',
   },
 

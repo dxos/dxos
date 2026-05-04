@@ -173,9 +173,9 @@ EditorToolbar.displayName = EDITOR_TOOLBAR_NAME;
 
 export const Editor = {
   Root: EditorRoot,
+  Toolbar: EditorToolbar,
   Content: EditorContent,
   View: EditorView,
-  Toolbar: EditorToolbar,
 };
 
 export type {

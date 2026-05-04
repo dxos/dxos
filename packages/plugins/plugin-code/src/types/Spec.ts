@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
+import { trim } from '@dxos/util';
 
 import { meta } from '../meta';
 
@@ -30,8 +31,18 @@ export interface Spec extends Schema.Schema.Type<typeof Spec> {}
 
 export const isSpec = (object: unknown): object is Spec => Schema.is(Spec)(object);
 
-export const make = ({ content = '', ...props }: Partial<{ name: string; content: string }> = {}) => {
+export const make = ({ content = DEFAULT_SPEC_CONTENT, ...props }: Partial<{ name: string; content: string }> = {}) => {
   const spec = Obj.make(Spec, { ...props, content: Ref.make(Text.make({ content })) });
   Obj.setParent(spec.content.target!, spec);
   return spec;
 };
+
+const DEFAULT_SPEC_CONTENT = trim`
+  ---
+  id: com.example.spec
+  name: Example spec
+  version: 0.1.0
+  ---
+
+  This is an example spec.
+`;

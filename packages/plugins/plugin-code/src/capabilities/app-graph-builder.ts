@@ -86,7 +86,7 @@ export default Capability.makeModule(
                     data: project,
                     properties: {
                       label: ['build.label', { ns: meta.id }],
-                      icon: 'ph--gear--regular',
+                      icon: 'ph--app-window--regular',
                       iconHue: 'indigo',
                     },
                   }),

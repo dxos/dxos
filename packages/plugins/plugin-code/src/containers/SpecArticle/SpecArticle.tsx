@@ -44,7 +44,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     const extensions = useMemo(
       () =>
         [
-          createBasicExtensions(),
+          createBasicExtensions({ lineNumbers: true }),
           createMarkdownExtensions({ codeLanguages: [mdlBlockDescription] }),
           createThemeExtensions({ themeMode, slots: documentSlots }),
           decorateMarkdown(),
@@ -64,10 +64,11 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
       <Editor.Root extensions={extensions}>
         <Panel.Root role={role} ref={forwardedRef}>
           <Panel.Toolbar classNames='bg-toolbar-surface'>
+            {/* TODO(burdon): Custom toolbar. */}
             <Editor.Toolbar role={role} attendableId={attendableId} />
           </Panel.Toolbar>
-          <Panel.Content asChild>
-            <Editor.View classNames={editorClassNames(role)} value={target?.content ?? ''} />
+          <Panel.Content>
+            <Editor.View classNames={editorClassNames(role)} />
           </Panel.Content>
         </Panel.Root>
       </Editor.Root>

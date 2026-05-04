@@ -21,7 +21,7 @@ export const CodeProject = Schema.Struct({
   }),
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
-    icon: meta.icon!,
+    icon: 'ph--app-window--regular',
     hue: meta.iconHue,
   }),
 );
