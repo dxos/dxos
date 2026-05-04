@@ -25,6 +25,7 @@ tasks:
       - '--outputPath=dist/plugin'
       - '--platform=node'
     deps:
+      - ^:build
       - ^:compile
       - dx-compile:compile
     inputs:

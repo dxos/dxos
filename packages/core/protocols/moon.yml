@@ -21,6 +21,7 @@ tasks:
       - '--outDir="./src/proto/gen"'
       - '--substitutions="./src/proto/substitutions.ts"'
     deps:
+      - ^:build
       - ^:compile
       - protobuf-compiler:compile
       - gen-buf

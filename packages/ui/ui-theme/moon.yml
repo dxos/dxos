@@ -22,6 +22,7 @@ tasks:
       - '--moduleFormat=esm'
       - '--platform=node'
     deps:
+      - ^:build
       - ^:compile
       - dx-compile:compile
     options:

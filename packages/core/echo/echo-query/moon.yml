@@ -26,6 +26,7 @@ tasks:
   prebuild-query-lite:
     command: pnpm exec tsdown --logLevel error
     deps:
+      - ^:build
       - ^:compile
     inputs:
       - src/query-lite/*
