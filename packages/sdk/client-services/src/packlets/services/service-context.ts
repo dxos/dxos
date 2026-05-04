@@ -104,7 +104,6 @@ export class ServiceContext extends Resource {
 
   private _deviceSpaceSync?: CredentialProcessor;
 
-
   constructor(
     public readonly storage: Storage,
     public readonly level: LevelDB,

@@ -9,13 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { type PeerInfo } from '@dxos/messaging';
-import {
-  CancelledError,
-  ConnectionResetError,
-  ConnectivityError,
-  ProtocolError,
-  TimeoutError,
-} from '@dxos/protocols';
+import { CancelledError, ConnectionResetError, ConnectivityError, ProtocolError, TimeoutError } from '@dxos/protocols';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { type SignalMessage, type SignalMessenger } from '../signal';

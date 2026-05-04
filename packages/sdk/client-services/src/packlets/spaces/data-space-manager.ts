@@ -144,7 +144,6 @@ export class DataSpaceManager extends Resource {
 
   private readonly _spaces = new ComplexMap<PublicKey, DataSpace>(PublicKey.hash);
 
-
   private readonly _spaceManager: SpaceManager;
   private readonly _metadataStore: MetadataStore;
   private readonly _keyring: Keyring;
@@ -245,7 +244,6 @@ export class DataSpaceManager extends Resource {
     }
 
     this.updated.emit();
-
   }
 
   @synchronized
