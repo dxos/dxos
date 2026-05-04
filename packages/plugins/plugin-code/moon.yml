@@ -7,17 +7,12 @@ tags:
   - pack
   - storybook
 tasks:
-  compile:
+  build:
     deps:
       - plugin-code:prebuild-lezer
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/operations/index.ts'
-      - '--entryPoint=src/translations.ts'
-      - '--entryPoint=src/types/index.ts'
-      - '--platform=browser'
   prebuild-lezer:
-    command: pnpm exec lezer-generator --typeScript ./src/extension/mdl.grammar -o ./src/extension/gen/mdl.ts
+    command: pnpm exec lezer-generator --typeScript ./src/extension/mdl.grammar -o
+      ./src/extension/gen/mdl.ts
     inputs:
       - src/extension/mdl.grammar
     outputs:

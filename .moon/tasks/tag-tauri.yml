@@ -8,12 +8,14 @@ tasks:
   tauri-dev:
     command: pnpm exec tauri dev
     deps:
+      - ^:build
       - ^:compile
     preset: server
   # https://tauri.app/develop/#developing-your-mobile-application
   tauri-ios:
     command: pnpm exec tauri ios dev
     deps:
+      - ^:build
       - ^:compile
     preset: server
   tauri-ios-build:

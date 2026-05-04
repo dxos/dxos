@@ -25,7 +25,7 @@
     },
     "#tcp-transport": {
       "source": "./src/transport/tcp/index.ts",
-      "types": "./dist/types/src/transport/tcp/index.d.ts",
+      "types": "./dist/types/transport/tcp/index.d.ts",
       "browser": "./dist/lib/browser/transport/tcp/index.mjs",
       "node": "./dist/lib/node-esm/transport/tcp/index.mjs",
       "import": "./dist/lib/browser/transport/tcp/index.mjs",
@@ -36,7 +36,7 @@
         "browser": "./src/transport/tcp/tcp-transport.browser.ts",
         "default": "./src/transport/tcp/tcp-transport.ts"
       },
-      "types": "./dist/types/src/transport/tcp/tcp-transport.d.ts",
+      "types": "./dist/types/transport/tcp/tcp-transport.d.ts",
       "browser": "./dist/lib/browser/transport/tcp/tcp-transport.browser.mjs",
       "default": "./dist/lib/node-esm/transport/tcp/tcp-transport.mjs"
     }
@@ -44,24 +44,24 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
+      "types": "./dist/types/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
     },
     "./transport/tcp": {
       "source": "./src/transport/tcp/index.ts",
-      "types": "./dist/types/src/transport/tcp/index.d.ts",
+      "types": "./dist/types/transport/tcp/index.d.ts",
       "browser": "./dist/lib/browser/transport/tcp/index.mjs",
       "node": "./dist/lib/node-esm/transport/tcp/index.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "files": [
     "testing.d.ts",
     "testing.js",

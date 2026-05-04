@@ -16,18 +16,18 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./main": {
       "source": "./src/main.ts",
-      "types": "./dist/types/src/main.d.ts",
+      "types": "./dist/types/main.d.ts",
       "browser": "./dist/lib/browser/main.mjs",
       "node": "./dist/lib/node-esm/main.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "scripts": {
     "run-tests": "moon run blade-runner:build && node ./dist/lib/node-esm/main.mjs"
   },

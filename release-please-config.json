@@ -1185,6 +1185,11 @@
         },
         {
           "type": "json",
+          "path": "tools/dx-tsdown/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "tools/lockfile-explorer/package.json",
           "jsonpath": "$.version"
         },

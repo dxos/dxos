@@ -4,8 +4,3 @@ tags:
   - ts-build
   - ts-test-browser
   - pack
-tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--platform=neutral'

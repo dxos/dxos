@@ -15,17 +15,17 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "default": "./dist/lib/browser/index.mjs"
     },
     "./manager": {
       "source": "./src/manager.tsx",
-      "types": "./dist/types/src/manager.d.ts",
+      "types": "./dist/types/manager.d.ts",
       "default": "./dist/lib/browser/manager.mjs"
     },
     "./preview": {
       "source": "./src/preview.tsx",
-      "types": "./dist/types/src/preview.d.ts",
+      "types": "./dist/types/preview.d.ts",
       "default": "./dist/lib/browser/preview.mjs"
     }
   },

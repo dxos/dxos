@@ -5,14 +5,7 @@ tags:
   - ts-test
   - pack
 tasks:
-  compile:
-    args:
-      - '--entryPoint=src/bundler/index.ts'
-      - '--entryPoint=src/edge/index.ts'
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/native/index.ts'
-      - '--entryPoint=src/testing/index.ts'
-      - '--platform=neutral'
+  build:
     deps:
       - prebuild
 
@@ -24,6 +17,7 @@ tasks:
   build-runtime:
     command: node ./scripts/build-modules.mjs
     deps:
+      - ^:build
       - ^:compile
 
   # Executed manually: moon functions-runtime:upload-runtime -- --env dev

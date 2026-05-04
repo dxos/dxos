@@ -5,19 +5,16 @@ tags:
   - ts-test
   - pack
 tasks:
-  compile:
+  build:
     deps:
       - prebuild
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--injectGlobals'
-      - '--platform=neutral'
   prebuild:
     deps:
       - echo-query:prebuild-lezer
       - echo-query:prebuild-query-lite
   prebuild-lezer:
-    command: pnpm exec lezer-generator --typeScript ./src/parser/query.grammar -o ./src/parser/gen/query.ts
+    command: pnpm exec lezer-generator --typeScript ./src/parser/query.grammar -o
+      ./src/parser/gen/query.ts
     inputs:
       - src/parser/query.grammar
     outputs:
@@ -26,6 +23,7 @@ tasks:
   prebuild-query-lite:
     command: pnpm exec tsdown --logLevel error
     deps:
+      - ^:build
       - ^:compile
     inputs:
       - src/query-lite/*

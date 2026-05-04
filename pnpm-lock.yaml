@@ -1961,6 +1961,9 @@ importers:
       '@dxos/dx-tools':
         specifier: workspace:*
         version: link:tools/dx-tools
+      '@dxos/dx-tsdown':
+        specifier: workspace:*
+        version: link:tools/dx-tsdown
       '@dxos/esbuild-plugins':
         specifier: workspace:*
         version: link:packages/common/esbuild-plugins
@@ -2245,7 +2248,7 @@ importers:
         version: 16.0.0
       tsdown:
         specifier: 'catalog:'
-        version: 0.16.8(@typescript/native-preview@7.0.0-dev.20260421.2)(oxc-resolver@11.9.0)(typescript@6.0.3)
+        version: 0.16.8(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@typescript/native-preview@7.0.0-dev.20260421.2)(oxc-resolver@11.9.0)(typescript@6.0.3)
       tsx:
         specifier: 'catalog:'
         version: 4.21.0
@@ -5305,7 +5308,7 @@ importers:
         version: 1.7.1
       tsdown:
         specifier: 'catalog:'
-        version: 0.16.8(@typescript/native-preview@7.0.0-dev.20260421.2)(oxc-resolver@11.9.0)(typescript@6.0.3)
+        version: 0.16.8(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@typescript/native-preview@7.0.0-dev.20260421.2)(oxc-resolver@11.9.0)(typescript@6.0.3)
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -20590,6 +20593,28 @@ importers:
         version: 16.0.4
 
   tools/dx-tools: {}
+
+  tools/dx-tsdown:
+    dependencies:
+      '@oxc-project/types':
+        specifier: 'catalog:'
+        version: 0.128.0
+      rolldown:
+        specifier: 'catalog:'
+        version: 1.0.0-rc.18
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.16.8(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@typescript/native-preview@7.0.0-dev.20260421.2)(oxc-resolver@11.9.0)(typescript@6.0.3)
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      yargs:
+        specifier: 'catalog:'
+        version: 16.2.0
+    devDependencies:
+      '@types/yargs':
+        specifier: 'catalog:'
+        version: 16.0.4
 
   tools/lockfile-explorer:
     dependencies:
@@ -42690,12 +42715,12 @@ snapshots:
 
   '@img/sharp-wasm32@0.33.5':
     dependencies:
-      '@emnapi/runtime': 1.7.1
+      '@emnapi/runtime': 1.10.0
     optional: true
 
   '@img/sharp-wasm32@0.34.5':
     dependencies:
-      '@emnapi/runtime': 1.7.1
+      '@emnapi/runtime': 1.10.0
     optional: true
 
   '@img/sharp-win32-arm64@0.34.5':
@@ -46263,14 +46288,20 @@ snapshots:
   '@rolldown/binding-openharmony-arm64@1.0.0-rc.18':
     optional: true
 
-  '@rolldown/binding-wasm32-wasi@1.0.0-beta.52':
+  '@rolldown/binding-wasm32-wasi@1.0.0-beta.52(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
     dependencies:
-      '@napi-rs/wasm-runtime': 1.1.0
+      '@napi-rs/wasm-runtime': 1.1.4(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
     optional: true
 
-  '@rolldown/binding-wasm32-wasi@1.0.0-beta.53':
+  '@rolldown/binding-wasm32-wasi@1.0.0-beta.53(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
     dependencies:
-      '@napi-rs/wasm-runtime': 1.1.0
+      '@napi-rs/wasm-runtime': 1.1.4(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
     optional: true
 
   '@rolldown/binding-wasm32-wasi@1.0.0-rc.17':
@@ -58553,7 +58584,7 @@ snapshots:
 
   robust-predicates@3.0.1: {}
 
-  rolldown-plugin-dts@0.18.3(@typescript/native-preview@7.0.0-dev.20260421.2)(oxc-resolver@11.9.0)(rolldown@1.0.0-beta.52)(typescript@6.0.3):
+  rolldown-plugin-dts@0.18.3(@typescript/native-preview@7.0.0-dev.20260421.2)(oxc-resolver@11.9.0)(rolldown@1.0.0-beta.52(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(typescript@6.0.3):
     dependencies:
       '@babel/generator': 7.28.5
       '@babel/parser': 7.28.5
@@ -58564,14 +58595,14 @@ snapshots:
       get-tsconfig: 4.13.0
       magic-string: 0.30.21
       obug: 2.1.1
-      rolldown: 1.0.0-beta.52
+      rolldown: 1.0.0-beta.52(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
     optionalDependencies:
       '@typescript/native-preview': 7.0.0-dev.20260421.2
       typescript: 6.0.3
     transitivePeerDependencies:
       - oxc-resolver
 
-  rolldown@1.0.0-beta.52:
+  rolldown@1.0.0-beta.52(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0):
     dependencies:
       '@oxc-project/types': 0.99.0
       '@rolldown/pluginutils': 1.0.0-beta.52
@@ -58586,12 +58617,15 @@ snapshots:
       '@rolldown/binding-linux-x64-gnu': 1.0.0-beta.52
       '@rolldown/binding-linux-x64-musl': 1.0.0-beta.52
       '@rolldown/binding-openharmony-arm64': 1.0.0-beta.52
-      '@rolldown/binding-wasm32-wasi': 1.0.0-beta.52
+      '@rolldown/binding-wasm32-wasi': 1.0.0-beta.52(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
       '@rolldown/binding-win32-arm64-msvc': 1.0.0-beta.52
       '@rolldown/binding-win32-ia32-msvc': 1.0.0-beta.52
       '@rolldown/binding-win32-x64-msvc': 1.0.0-beta.52
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
 
-  rolldown@1.0.0-beta.53:
+  rolldown@1.0.0-beta.53(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0):
     dependencies:
       '@oxc-project/types': 0.101.0
       '@rolldown/pluginutils': 1.0.0-beta.53
@@ -58606,9 +58640,12 @@ snapshots:
       '@rolldown/binding-linux-x64-gnu': 1.0.0-beta.53
       '@rolldown/binding-linux-x64-musl': 1.0.0-beta.53
       '@rolldown/binding-openharmony-arm64': 1.0.0-beta.53
-      '@rolldown/binding-wasm32-wasi': 1.0.0-beta.53
+      '@rolldown/binding-wasm32-wasi': 1.0.0-beta.53(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
       '@rolldown/binding-win32-arm64-msvc': 1.0.0-beta.53
       '@rolldown/binding-win32-x64-msvc': 1.0.0-beta.53
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
 
   rolldown@1.0.0-rc.17:
     dependencies:
@@ -60220,7 +60257,7 @@ snapshots:
       minimist: 1.2.8
       strip-bom: 3.0.0
 
-  tsdown@0.16.8(@typescript/native-preview@7.0.0-dev.20260421.2)(oxc-resolver@11.9.0)(typescript@6.0.3):
+  tsdown@0.16.8(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@typescript/native-preview@7.0.0-dev.20260421.2)(oxc-resolver@11.9.0)(typescript@6.0.3):
     dependencies:
       ansis: 4.2.0
       cac: 6.7.14
@@ -60229,17 +60266,19 @@ snapshots:
       empathic: 2.0.0
       hookable: 5.5.3
       obug: 2.1.1
-      rolldown: 1.0.0-beta.52
-      rolldown-plugin-dts: 0.18.3(@typescript/native-preview@7.0.0-dev.20260421.2)(oxc-resolver@11.9.0)(rolldown@1.0.0-beta.52)(typescript@6.0.3)
+      rolldown: 1.0.0-beta.52(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
+      rolldown-plugin-dts: 0.18.3(@typescript/native-preview@7.0.0-dev.20260421.2)(oxc-resolver@11.9.0)(rolldown@1.0.0-beta.52(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(typescript@6.0.3)
       semver: 7.7.3
       tinyexec: 1.0.2
       tinyglobby: 0.2.15
       tree-kill: 1.2.2
       unconfig-core: 7.4.2
-      unrun: 0.2.19
+      unrun: 0.2.19(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
     optionalDependencies:
       typescript: 6.0.3
     transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
       - '@ts-macro/tsc'
       - '@typescript/native-preview'
       - oxc-resolver
@@ -60649,9 +60688,12 @@ snapshots:
       '@unrs/resolver-binding-win32-ia32-msvc': 1.11.1
       '@unrs/resolver-binding-win32-x64-msvc': 1.11.1
 
-  unrun@0.2.19:
+  unrun@0.2.19(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0):
     dependencies:
-      rolldown: 1.0.0-beta.53
+      rolldown: 1.0.0-beta.53(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
 
   unstorage@1.17.5(@azure/identity@4.13.0)(idb-keyval@6.2.1):
     dependencies:

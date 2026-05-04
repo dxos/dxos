@@ -5,13 +5,7 @@ tags:
   - ts-test
 tasks:
   build:
-    options:
-      mergeOutputs: replace
-    outputs: []
-  compile:
     command: bun
-    args:
-      - ./scripts/build.ts
     options:
       mergeArgs: replace
       mergeInputs: append
@@ -38,7 +32,7 @@ tasks:
     args:
       - ./scripts/publish.ts
     deps:
-      - compile
+      - build
     inputs:
       - scripts/publish.ts
       - dist/**/*

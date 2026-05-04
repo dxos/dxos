@@ -4,10 +4,6 @@ tags:
   - ts-build
   - ts-test
 tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--platform=node'
   # Pre-build the on-disk symbol cache. First run takes ~80s on the real
   # monorepo; subsequent runs of any introspector (MCP server, tests, etc.)
   # load from cache in <1s until source files change.

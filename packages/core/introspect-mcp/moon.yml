@@ -4,10 +4,6 @@ tags:
   - ts-build
   - ts-test
 tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--platform=node'
   # Run the MCP server from source (no build step required thanks to
   # `tsx --conditions=source`). Long-running; designed to be piped to
   # an MCP client via stdio.

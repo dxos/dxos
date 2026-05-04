@@ -4,10 +4,11 @@ tasks:
     command: pnpm exec dx-killorphans vitest run --passWithNoTests --project=storybook
     deps:
       - esbuild-plugins:compile
-      - node-std:compile
-      - storybook-addon-logger:compile
+      - node-std:build
+      - storybook-addon-logger:build
       - vite-plugin-icons:compile
       - vite-plugin-import-source:compile
+      - ^:build
       - ^:compile
     inputs:
       - '@group(sources)'

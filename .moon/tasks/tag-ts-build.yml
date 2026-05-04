@@ -1,35 +1,22 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   build:
-    command: pnpm exec dx-build
+    command: pnpm exec tsdown
     deps:
-      - dx-build:compile
       - ^:build
+      # Ensure ts-compile dependency packages are compiled first.
       - ^:compile
-      - compile
-      # TODO(burdon): Add root moon.yml?
-      # - root:checkPackageCycles
     inputs:
       - /tsconfig.base.json
+      - /tsdown.base.config.ts
       - tsconfig.json
+      - tsdown.config.ts
       - '@group(sources)'
     outputs:
+      - dist/lib/
       - dist/types/
     options:
       timeout: 60
-  compile:
-    command: pnpm exec dx-compile
-    args:
-      - --outputPath=dist/lib
-    deps:
-      - dx-compile:compile
-      - ^:compile
-    inputs:
-      - '@group(production)'
-    outputs:
-      - dist/lib/
-    options:
-      timeout: 10
 
 inheritedBy:
   tags: ts-build

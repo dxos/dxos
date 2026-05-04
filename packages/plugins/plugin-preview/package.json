@@ -20,17 +20,17 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
+      "types": "./dist/types/translations.d.ts",
       "browser": "./dist/lib/browser/translations.mjs",
       "node": "./dist/lib/node-esm/translations.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "files": [
     "dist",
     "src"

@@ -32,48 +32,48 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./blueprints": {
       "source": "./src/blueprints/index.ts",
-      "types": "./dist/types/src/blueprints/index.d.ts",
+      "types": "./dist/types/blueprints/index.d.ts",
       "browser": "./dist/lib/browser/blueprints/index.mjs",
       "node": "./dist/lib/node-esm/blueprints/index.mjs"
     },
     "./cli": {
       "source": "./src/cli/index.ts",
-      "types": "./dist/types/src/cli/index.d.ts",
+      "types": "./dist/types/cli/index.d.ts",
       "browser": "./dist/lib/browser/cli/index.mjs",
       "node": "./dist/lib/node-esm/cli/index.mjs"
     },
     "./operations": {
       "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
+      "types": "./dist/types/operations/index.d.ts",
       "browser": "./dist/lib/browser/operations/index.mjs",
       "node": "./dist/lib/node-esm/operations/index.mjs"
     },
     "./testing": {
       "source": "./src/testing.ts",
-      "types": "./dist/types/src/testing.d.ts",
+      "types": "./dist/types/testing.d.ts",
       "browser": "./dist/lib/browser/testing.mjs",
       "node": "./dist/lib/node-esm/testing.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
+      "types": "./dist/types/translations.d.ts",
       "browser": "./dist/lib/browser/translations.mjs",
       "node": "./dist/lib/node-esm/translations.mjs"
     },
     "./types": {
       "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
+      "types": "./dist/types/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
       "node": "./dist/lib/node-esm/types/index.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "files": [
     "dist",
     "src"

@@ -53,6 +53,7 @@
     "@dxos/dx-build": "workspace:*",
     "@dxos/dx-compile": "workspace:*",
     "@dxos/dx-tools": "workspace:*",
+    "@dxos/dx-tsdown": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/eslint-plugin-rules": "workspace:*",
     "@dxos/keys": "workspace:*",

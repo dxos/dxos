@@ -13,10 +13,6 @@ tasks:
       mergeOutputs: replace
     outputs:
       - dist/bundle
-  compile:
-    args:
-      - '--entryPoint=src/react.ts'
-      - '--entryPoint=src/testing/index.ts'
   test:
     inputs:
       - vite.config.ts

@@ -12,5 +12,6 @@ export type {
 export { DEFAULT_LOG_META_TRANSFORM_SPEC } from './definitions.ts';
 
 export { DxosLogPlugin } from './plugin.ts';
+export { rolldownLogMetaPlugin } from './rolldown-log-meta-plugin.ts';
 
 export { transformLogMeta } from './transform.ts';

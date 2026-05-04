@@ -5,8 +5,3 @@ tags:
   - ts-test-storybook
   - pack
   - storybook
-tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/translations.ts'

@@ -6,8 +6,3 @@ tags:
   - ts-test
   - ts-test-storybook
   - storybook
-tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--platform=browser'

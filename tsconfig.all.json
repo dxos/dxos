@@ -697,6 +697,9 @@
       "path": "tools/dx-tools/tsconfig.json"
     },
     {
+      "path": "tools/dx-tsdown/tsconfig.json"
+    },
+    {
       "path": "tools/lockfile-explorer/tsconfig.json"
     },
     {
