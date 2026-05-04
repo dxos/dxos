@@ -80,7 +80,9 @@ const CardRoot = slottable<HTMLDivElement, CardRootOwnProps>(
         className={tx('card.root', { border, fullWidth }, className)}
         ref={forwardedRef}
       >
-        <Column.Root gutter={density === 'coarse' ? 'lg' : 'md'}>{children}</Column.Root>
+        <Column.Root classNames='overflow-hidden' gutter={density === 'coarse' ? 'lg' : 'md'}>
+          {children}
+        </Column.Root>
       </Comp>
     );
   },

@@ -44,7 +44,7 @@ export default Capability.makeModule(
     const updateNavigableCollections = () => {
       const enabled =
         manager.getEnabled().includes('org.dxos.plugin.stack') ||
-        manager.getEnabled().includes('org.dxos.plugin.simple-layout');
+        manager.getEnabled().includes('org.dxos.plugin.simpleLayout');
       const current = registry.get(ephemeralAtom);
       if (enabled !== current.navigableCollections) {
         registry.update(ephemeralAtom, (c) => ({ ...c, navigableCollections: enabled }));
