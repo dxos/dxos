@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { build, type UserConfig } from 'tsdown';
@@ -197,6 +197,25 @@ const runTscDts = async (tmpTsconfig: string, outDir: string): Promise<void> => 
   if (errors.length > 0) {
     console.warn(`[dx-tsdown] tsc: ${errors.length} type error(s) (declarations still emitted)`);
   }
+
+  // tsc emits .d.ts files next to source files when those files are outside
+  // rootDir (e.g. data/ files dynamically imported from src/). These are build
+  // artifacts that don't belong in the source tree — delete them.
+  const srcDir = options.rootDir ?? '';
+  await Promise.all(
+    program
+      .getSourceFiles()
+      .filter((f) => !f.fileName.includes('/node_modules/') && !f.fileName.startsWith(srcDir))
+      .map(async (f) => {
+        const dtsPath = f.fileName.replace(/\.tsx?$/, '.d.ts');
+        try {
+          await access(dtsPath);
+          await rm(dtsPath);
+        } catch {
+          // File doesn't exist — nothing to clean up.
+        }
+      }),
+  );
 };
 
 export default async (options: TsdownExecutorOptions): Promise<{ success: boolean }> => {
@@ -227,6 +246,12 @@ export default async (options: TsdownExecutorOptions): Promise<{ success: boolea
     hash: false,
     clean: false,
     sourcemap: true,
+    // Prefix internal rolldown chunks with "chunk-" so they never clash
+    // case-insensitively with entry-point output files (e.g. ref.mjs vs Ref.mjs).
+    // esbuild de-duplicates modules by normalised (case-folded) path, so without
+    // this prefix a second bundling pass (e.g. functions-runtime build-runtime)
+    // confuses the two files and reports "No matching export" errors.
+    outputOptions: { chunkFileNames: 'chunk-[name].mjs' },
   };
 
   const configs: UserConfig[] = [];
