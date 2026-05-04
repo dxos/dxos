@@ -234,12 +234,8 @@ describe('Trace timeline', () => {
           const graph = renderTimelineAscii(commits, branches);
           expect(`\n${graph}\n`).toMatchInlineSnapshot(`
                   "
-                  ●  [function] Reply
-                  ●  [function] Reply - Success
-                  ●  [function] Reply
-                  ●  [function] Reply - Success
-                  ●  [function] Reply
-                  ●  [function] Reply - Success
+                  ●  [function] Agent
+                  ●  [function] Agent - Success
                   "
                 `);
         },
