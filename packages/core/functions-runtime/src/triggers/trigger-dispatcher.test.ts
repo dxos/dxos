@@ -14,8 +14,7 @@ import * as Layer from 'effect/Layer';
 import { AiService } from '@dxos/ai';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import {
   CredentialsService,
   ExampleHandlers,

@@ -9,12 +9,12 @@ import * as Layer from 'effect/Layer';
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { AgentService } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed } from '@dxos/echo';
 import { CredentialsService, FunctionInvocationService, LayerSpec, QueueService } from '@dxos/functions';
+import { AgentService } from '@dxos/functions-runtime';
 import {
   FeedTraceSink,
   FunctionImplementationResolver,

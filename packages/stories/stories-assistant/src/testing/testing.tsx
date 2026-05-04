@@ -18,14 +18,7 @@ import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-fram
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { AiContextBinder } from '@dxos/assistant';
-import {
-  AgentHandlers,
-  DesignBlueprint,
-  MarkdownBlueprint,
-  MarkdownHandlers,
-  PlanningBlueprint,
-  PlanningHandlers,
-} from '@dxos/assistant-toolkit';
+import { AgentHandlers, PlanningBlueprint, PlanningHandlers } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
 import { Blueprint, Routine } from '@dxos/compute';
 import { ExampleHandlers, Trigger } from '@dxos/compute';
@@ -41,6 +34,8 @@ import { Assistant } from '@dxos/plugin-assistant/types';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client/types';
+import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
+import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin } from '@dxos/plugin-testing';
@@ -270,9 +265,8 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
       Effect.succeed([
         // TODO(burdon): Needs attention!!!
         Capability.contributes(AppCapabilities.BlueprintDefinition, MarkdownBlueprint),
-        Capability.contributes(AppCapabilities.BlueprintDefinition, DesignBlueprint),
         Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
-        Capability.contributes(Capabilities.OperationHandler, MarkdownHandlers),
+        Capability.contributes(Capabilities.OperationHandler, MarkdownOperationHandlerSet),
         Capability.contributes(Capabilities.OperationHandler, PlanningHandlers),
         Capability.contributes(Capabilities.OperationHandler, AgentHandlers),
         Capability.contributes(Capabilities.OperationHandler, ExampleHandlers),

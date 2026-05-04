@@ -5,12 +5,12 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { AgentService } from '@dxos/assistant';
-import { DatabaseBlueprint, DatabaseHandlers, ResearchBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
-import { AssistantTestLayer } from '@dxos/assistant/testing';
+import { DatabaseBlueprint, DatabaseHandlers, WebSearchBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/compute';
 import { Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { AgentService } from '@dxos/functions-runtime';
+import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
 // Import from the `/types` subpath rather than the package root to avoid
 // loading `MarkdownPlugin.tsx`, which trips on missing capability exports
@@ -45,7 +45,7 @@ const TestLayer = AssistantTestLayer({
     Person.Person,
     ProfileOf.ProfileOf,
   ],
-  blueprints: [CrmBlueprint.make(), DatabaseBlueprint.make(), ResearchBlueprint.make(), WebSearchBlueprint.make()],
+  blueprints: [CrmBlueprint.make(), DatabaseBlueprint.make(), WebSearchBlueprint.make()],
   tracing: 'pretty',
 });
 
@@ -56,12 +56,7 @@ describe('CRM Blueprint', () => {
       Effect.fnUntraced(
         function* (_) {
           const agent = yield* AgentService.createSession({
-            blueprints: [
-              CrmBlueprint.make(),
-              DatabaseBlueprint.make(),
-              ResearchBlueprint.make(),
-              WebSearchBlueprint.make(),
-            ],
+            blueprints: [CrmBlueprint.make(), DatabaseBlueprint.make(), WebSearchBlueprint.make()],
           });
           const msg = makeEmailMessage(fixture);
           yield* agent.submitPrompt(
@@ -87,12 +82,7 @@ describe('CRM Blueprint', () => {
     Effect.fnUntraced(
       function* (_) {
         const agent = yield* AgentService.createSession({
-          blueprints: [
-            CrmBlueprint.make(),
-            DatabaseBlueprint.make(),
-            ResearchBlueprint.make(),
-            WebSearchBlueprint.make(),
-          ],
+          blueprints: [CrmBlueprint.make(), DatabaseBlueprint.make(), WebSearchBlueprint.make()],
         });
         yield* agent.submitPrompt('research priya.adebayo@ventura-advisors.example');
         yield* agent.waitForCompletion();
