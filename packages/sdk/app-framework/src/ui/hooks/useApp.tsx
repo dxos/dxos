@@ -158,8 +158,7 @@ export const useApp = ({
   );
   const isExternalManager = !!pluginManager;
   const manager = useMemo(() => {
-    const mgr =
-      pluginManager ?? PluginManager.make({ pluginLoader, plugins, core, enabled, onRemove: onPluginRemove });
+    const mgr = pluginManager ?? PluginManager.make({ pluginLoader, plugins, core, enabled, onRemove: onPluginRemove });
     log('useApp: useMemo created/reused manager', { provided: !!pluginManager });
     return mgr;
   }, [pluginManager, pluginLoader, plugins, core, enabled, onPluginRemove]);

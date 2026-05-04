@@ -232,9 +232,7 @@ export const preload = (options: Options = {}): Effect.Effect<Plugin.Plugin[], n
     const results = yield* Effect.all(
       entries.map((entry) =>
         loadFromManifest(entry.url, cache).pipe(
-          Effect.tapError((error) =>
-            Effect.sync(() => log.warn('failed to preload remote plugin', { entry, error })),
-          ),
+          Effect.tapError((error) => Effect.sync(() => log.warn('failed to preload remote plugin', { entry, error }))),
           Effect.option,
         ),
       ),

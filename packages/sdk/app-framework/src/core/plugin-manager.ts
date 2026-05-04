@@ -543,9 +543,7 @@ class ManagerImpl implements PluginManager {
   private _runForkedFiber<E>(effect: Effect.Effect<void, E>): void {
     const fiber = Effect.runFork(effect);
     Effect.runSync(this._trackFiber(this._inFlightFibers, fiber));
-    Effect.runFork(
-      Fiber.await(fiber).pipe(Effect.andThen(() => this._untrackFiber(this._inFlightFibers, fiber))),
-    );
+    Effect.runFork(Fiber.await(fiber).pipe(Effect.andThen(() => this._untrackFiber(this._inFlightFibers, fiber))));
   }
 
   //

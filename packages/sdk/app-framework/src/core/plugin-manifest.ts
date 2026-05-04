@@ -80,9 +80,7 @@ export const fetchManifest = (manifestUrl: string): Effect.Effect<ResolvedManife
   Effect.gen(function* () {
     const response = yield* HttpClientRequest.get(manifestUrl).pipe(
       HttpClient.execute,
-      Effect.mapError(
-        (cause) => new PluginManifestError({ context: { manifestUrl, reason: 'fetch-failed' }, cause }),
-      ),
+      Effect.mapError((cause) => new PluginManifestError({ context: { manifestUrl, reason: 'fetch-failed' }, cause })),
     );
     if (response.status >= 400) {
       return yield* Effect.fail(
@@ -90,9 +88,7 @@ export const fetchManifest = (manifestUrl: string): Effect.Effect<ResolvedManife
       );
     }
     const manifest = yield* HttpClientResponse.schemaBodyJson(Manifest)(response).pipe(
-      Effect.mapError(
-        (cause) => new PluginManifestError({ context: { manifestUrl, reason: 'parse-failed' }, cause }),
-      ),
+      Effect.mapError((cause) => new PluginManifestError({ context: { manifestUrl, reason: 'parse-failed' }, cause })),
     );
     if (!manifest.assets.includes(PLUGIN_ENTRY_FILENAME)) {
       return yield* Effect.fail(
