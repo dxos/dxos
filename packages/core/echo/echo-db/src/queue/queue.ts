@@ -16,7 +16,7 @@ import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 
-import { QueryContextCoalescer, QueryResultImpl } from '../query';
+import { QueryContextCoalescer, QueryResultImpl, registerCoalescer, unregisterCoalescer } from '../query';
 import { QueueQueryContext } from './queue-query-context';
 import type { Queue } from './types';
 
@@ -138,6 +138,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     this._spaceId = spaceId ?? failedInvariant();
     this._queueId = queueId ?? failedInvariant();
     this._coalescer = new QueryContextCoalescer(() => new QueueQueryContext(this, this._ctx));
+    registerCoalescer(this._coalescer);
   }
 
   /**
@@ -393,6 +394,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   }
 
   async dispose() {
+    unregisterCoalescer(this._coalescer);
     this._coalescer.dispose();
     await this._ctx.dispose();
     await this._refreshTask.join();

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { Event, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -84,19 +84,19 @@ describe('QueryContextCoalescer', () => {
   });
 
   describe('handle sharing', () => {
-    test('same canonical key → one underlying context created', () => {
+    test('same canonical key → one underlying context created', ({ expect }) => {
       coalescer.getOrCreate(ast1);
       coalescer.getOrCreate(ast1WithLabel); // same semantic, different debugLabel
       expect(factoryCalls).toHaveLength(1);
     });
 
-    test('different semantic keys → separate underlying contexts', () => {
+    test('different semantic keys → separate underlying contexts', ({ expect }) => {
       coalescer.getOrCreate(ast1);
       coalescer.getOrCreate(ast2);
       expect(factoryCalls).toHaveLength(2);
     });
 
-    test('underlying update called once per unique key', () => {
+    test('underlying update called once per unique key', ({ expect }) => {
       coalescer.getOrCreate(ast1);
       coalescer.getOrCreate(ast1WithLabel);
       expect(factoryCalls[0].updateCalls).toHaveLength(1);
@@ -104,7 +104,7 @@ describe('QueryContextCoalescer', () => {
   });
 
   describe('refcount lifecycle', () => {
-    test('start() on N handles → underlying start() called once', () => {
+    test('start() on N handles → underlying start() called once', ({ expect }) => {
       const h1 = coalescer.getOrCreate(ast1);
       const h2 = coalescer.getOrCreate(ast1WithLabel);
       h1.start();
@@ -112,7 +112,7 @@ describe('QueryContextCoalescer', () => {
       expect(factoryCalls[0].startCalls).toHaveLength(1);
     });
 
-    test('stop() when one handle still running → underlying still active', async () => {
+    test('stop() when one handle still running → underlying still active', async ({ expect }) => {
       vi.useFakeTimers();
       const h1 = coalescer.getOrCreate(ast1);
       const h2 = coalescer.getOrCreate(ast1);
@@ -123,7 +123,7 @@ describe('QueryContextCoalescer', () => {
       expect(factoryCalls[0].stopCalls).toHaveLength(0);
     });
 
-    test('stop() when last handle stops → underlying stop() called after grace', async () => {
+    test('stop() when last handle stops → underlying stop() called after grace', async ({ expect }) => {
       vi.useFakeTimers();
       const h1 = coalescer.getOrCreate(ast1);
       h1.start();
@@ -133,7 +133,7 @@ describe('QueryContextCoalescer', () => {
       expect(factoryCalls[0].stopCalls).toHaveLength(1);
     });
 
-    test('new start() within grace period cancels the stop timer', async () => {
+    test('new start() within grace period cancels the stop timer', async ({ expect }) => {
       vi.useFakeTimers();
       const h1 = coalescer.getOrCreate(ast1);
       const h2 = coalescer.getOrCreate(ast1);
@@ -146,7 +146,7 @@ describe('QueryContextCoalescer', () => {
   });
 
   describe('getResults delegation', () => {
-    test('getResults() delegates to shared underlying context', () => {
+    test('getResults() delegates to shared underlying context', ({ expect }) => {
       const handle = coalescer.getOrCreate(ast1);
       handle.start();
       const expected = [{ id: 'a', result: {} }];
@@ -156,7 +156,7 @@ describe('QueryContextCoalescer', () => {
   });
 
   describe('changed event forwarding', () => {
-    test('changed event on underlying fires on all handles for same key', () => {
+    test('changed event on underlying fires on all handles for same key', ({ expect }) => {
       const h1 = coalescer.getOrCreate(ast1);
       const h2 = coalescer.getOrCreate(ast1WithLabel);
       let h1Fired = 0;
@@ -174,9 +174,8 @@ describe('QueryContextCoalescer', () => {
   });
 
   describe('run() deduplication', () => {
-    test('concurrent run() calls with same key share one underlying run', async () => {
+    test('concurrent run() calls with same key share one underlying run', async ({ expect }) => {
       const ctx = new MockQueryContext();
-      let calls = 0;
       ctx.setRunDelay(20);
       // Replace factory result with our controlled mock.
       factoryCalls = [];
@@ -200,7 +199,7 @@ describe('QueryContextCoalescer', () => {
       }
     });
 
-    test('sequential run() calls do not share in-flight promise', async () => {
+    test('sequential run() calls do not share in-flight promise', async ({ expect }) => {
       const ctx = new MockQueryContext();
       ctx.setRunDelay(1);
       factoryCalls = [];
@@ -218,7 +217,7 @@ describe('QueryContextCoalescer', () => {
       }
     });
 
-    test('per-caller timeout: short timeout rejects while long timeout resolves', async () => {
+    test('per-caller timeout: short timeout rejects while long timeout resolves', async ({ expect }) => {
       const ctx = new MockQueryContext();
       ctx.setRunDelay(100);
       factoryCalls = [];
@@ -244,7 +243,7 @@ describe('QueryContextCoalescer', () => {
       }
     });
 
-    test('one caller ctx cancellation does not prevent the other caller from resolving', async () => {
+    test('one caller ctx cancellation does not prevent the other caller from resolving', async ({ expect }) => {
       const ctx = new MockQueryContext();
       ctx.setRunDelay(50);
       factoryCalls = [];
@@ -270,7 +269,7 @@ describe('QueryContextCoalescer', () => {
   });
 
   describe('read-your-writes', () => {
-    test('run() after results change returns fresh data (no stale cache)', async () => {
+    test('run() after results change returns fresh data (no stale cache)', async ({ expect }) => {
       const ctx = new MockQueryContext();
       const c2 = new QueryContextCoalescer(() => {
         factoryCalls.push(ctx);
@@ -299,7 +298,7 @@ describe('QueryContextCoalescer', () => {
   });
 
   describe('dispose', () => {
-    test('dispose() stops all running entries', async () => {
+    test('dispose() stops all running entries', async ({ expect }) => {
       vi.useFakeTimers();
       const h1 = coalescer.getOrCreate(ast1);
       h1.start();

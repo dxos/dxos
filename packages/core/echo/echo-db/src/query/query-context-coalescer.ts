@@ -129,9 +129,11 @@ class CoalescedHandle<T extends AnyProperties, O extends Entity.Entity<T>> imple
     if (!entry.inFlight) {
       entry.lifetimeRuns++;
       // Use a fresh context so per-caller ctx cancellations don't abort the shared request.
-      entry.inFlight = entry.underlying.run(Context.default(), ast, { timeout: 60_000 }).finally(() => {
-        entry.inFlight = undefined;
-      });
+      entry.inFlight = entry.underlying
+        .run(Context.default(), ast, { timeout: Math.max(timeout, 60_000) })
+        .finally(() => {
+          entry.inFlight = undefined;
+        });
     }
 
     // Per-caller timeout wrapping the shared in-flight promise.
