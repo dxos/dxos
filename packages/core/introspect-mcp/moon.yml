@@ -57,3 +57,17 @@ tasks:
       - scripts/check-claude-config.mjs
     options:
       cache: false
+  # Download the prebuilt symbol cache from the most recent successful
+  # `Introspect Cache` GitHub Actions run on main and install it at
+  # node_modules/.cache/dxos-introspect/cache.json. Skips the ~80s cold-start
+  # ts-morph parse — entries are matched by per-package git tree SHA, so a
+  # cache built in CI reuses cleanly on any clone of the same commit. Re-run
+  # whenever you pull a batch of new commits.
+  #
+  # Requires the `gh` CLI authenticated against github.com (`gh auth login`).
+  fetch-cache:
+    command: node
+    args:
+      - scripts/fetch-cache.mjs
+    options:
+      cache: false

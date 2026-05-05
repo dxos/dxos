@@ -90,6 +90,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/effect-zod/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/errors/package.json",
           "jsonpath": "$.version"
         },
@@ -1071,6 +1076,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-masonry/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-mcp/package.json",
           "jsonpath": "$.version"
         },
         {

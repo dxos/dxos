@@ -3,6 +3,6 @@
 import { defineConfig } from '../../../tsdown.base.config.ts';
 
 export default defineConfig({
-  entry: ['src/index.ts', 'src/tools/index.ts'],
-  platform: ['node'],
+  entry: ['src/index.ts'],
+  injectGlobals: true,
 });
