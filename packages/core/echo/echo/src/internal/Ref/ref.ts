@@ -351,6 +351,12 @@ export interface RefResolver {
    */
   resolve(dxn: DXN): Promise<AnyProperties | undefined>;
 
+  /**
+   * Resolve schema synchronously from the in-memory schema registries.
+   * Returns undefined if the schema is not currently registered.
+   */
+  resolveSchemaSync(dxn: DXN): Schema.Schema.AnyNoContext | undefined;
+
   // TODO(dmaretskyi): Combine with `resolve`.
   resolveSchema(dxn: DXN): Promise<Schema.Schema.AnyNoContext | undefined>;
 }
@@ -581,6 +587,10 @@ export class StaticRefResolver implements RefResolver {
     }
 
     return this.objects.get(id);
+  }
+
+  resolveSchemaSync(dxn: DXN): Schema.Schema.AnyNoContext | undefined {
+    return this.schemas.get(dxn.toString());
   }
 
   async resolveSchema(dxn: DXN): Promise<Schema.Schema.AnyNoContext | undefined> {
