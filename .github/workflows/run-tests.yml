@@ -108,9 +108,3 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 
-      - name: Send test report
-        if: ${{ always() && github.event_name == 'schedule' }}
-        uses: ./.github/actions/test-report
-        with:
-          name: 'test-${{ inputs.node-version }}'
-          result: ${{ job.status }}
