@@ -21,12 +21,12 @@ import * as Ref from 'effect/Ref';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
+import { Process, ServiceResolver, Trace } from '@dxos/compute';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { DXN, Obj } from '@dxos/echo';
 import { Performance, runAndForwardErrors } from '@dxos/effect';
-import { Process, ServiceResolver, Trace } from '@dxos/compute';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
 import type { OperationInvoker } from '@dxos/operation';
 import type { ObjectId } from '@dxos/protocols';
 

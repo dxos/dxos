@@ -14,9 +14,9 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
+import { Operation, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
-import { Operation, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
 import { log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 

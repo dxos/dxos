@@ -5,13 +5,13 @@
 import * as Effect from 'effect/Effect';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
+import handlebars from 'handlebars';
 
 import { Database, Ref } from '@dxos/echo';
 import type { ObjectNotFoundError } from '@dxos/echo/Err';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
-import handlebars from 'handlebars';
 
 import { FunctionNotFoundError } from './Err';
 import * as Operation from './Operation';

@@ -5,9 +5,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Script } from '@dxos/compute';
-import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { Operation } from '@dxos/compute';
 import { type Database, Filter, Obj } from '@dxos/echo';
+import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { InvocationOutcome } from '@dxos/functions-runtime';
 import { type InvocationTraceEvent } from '@dxos/functions-runtime';
 import { createInvocationSpans } from '@dxos/functions-runtime';

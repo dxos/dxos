@@ -6,8 +6,6 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Blueprint } from '@dxos/compute';
 import {
   AgentBlueprint,
   AgentBlueprintHandlers,
@@ -26,6 +24,8 @@ import {
   MemoryBlueprint,
   AutomationBlueprint,
 } from '@dxos/assistant-toolkit';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Blueprint } from '@dxos/compute';
 
 import { AssistantBlueprint } from '#blueprints';
 

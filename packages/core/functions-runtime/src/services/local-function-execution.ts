@@ -184,7 +184,9 @@ export class FunctionImplementationResolver extends Context.Tag('@dxos/functions
       functionDef: Operation.Definition<I, O>,
     ): Effect.Effect<Operation.WithHandler<Operation.Definition<I, O>>, Err.FunctionNotFoundError>;
 
-    resolveByKey(key: string): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, Err.FunctionNotFoundError>;
+    resolveByKey(
+      key: string,
+    ): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, Err.FunctionNotFoundError>;
   }
 >() {
   static layerTest = ({ functions }: { functions: OperationHandlerSet.OperationHandlerSet }) =>

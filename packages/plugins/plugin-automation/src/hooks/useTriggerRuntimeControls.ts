@@ -7,8 +7,8 @@ import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { useEffect, useState } from 'react';
 
-import { type Database, Filter, Query } from '@dxos/echo';
 import { Trigger } from '@dxos/compute';
+import { type Database, Filter, Query } from '@dxos/echo';
 import { TriggerDispatcher, type TriggerDispatcherState } from '@dxos/functions-runtime';
 import { useQuery } from '@dxos/react-client/echo';
 

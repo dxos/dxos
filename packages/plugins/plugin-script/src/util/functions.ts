@@ -3,9 +3,9 @@
 //
 
 import { Script } from '@dxos/compute';
-import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { type Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
+import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { getInvocationUrl } from '@dxos/functions-runtime';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

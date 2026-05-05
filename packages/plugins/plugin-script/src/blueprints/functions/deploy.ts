@@ -7,10 +7,10 @@ import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 
 import { ClientService } from '@dxos/client';
 import { Script } from '@dxos/compute';
-import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
+import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { bundleFunction, initializeBundler } from '@dxos/functions-runtime/bundler';
 import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { FunctionRuntimeKind } from '@dxos/protocols';

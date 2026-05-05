@@ -7,8 +7,8 @@ import type * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 
 import type { AiService } from '@dxos/ai';
-import type { Database, Feed } from '@dxos/echo';
 import type { Credential, Operation, OperationRegistry, Trace } from '@dxos/compute';
+import type { Database, Feed } from '@dxos/echo';
 import type { QueueService } from '@dxos/functions';
 import { mapValues } from '@dxos/util';
 

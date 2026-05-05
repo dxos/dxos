@@ -8,9 +8,9 @@ import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { credentialsLayerConfig } from '@dxos/functions';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { TestHelpers } from '@dxos/effect/testing';
+import { credentialsLayerConfig } from '@dxos/functions';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 
 import { default as fetchMessages } from './fetch-messages';

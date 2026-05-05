@@ -9,12 +9,11 @@ import * as Exit from 'effect/Exit';
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as PubSub from 'effect/PubSub';
 
+import { Err, Operation } from '@dxos/compute';
 import { DynamicRuntime, unwrapExit } from '@dxos/effect';
 import { Performance } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-
-import { Err, Operation } from '@dxos/compute';
 
 import * as Scheduler from './scheduler';
 

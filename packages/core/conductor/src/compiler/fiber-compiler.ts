@@ -8,9 +8,9 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 
 import { AiService } from '@dxos/ai';
+import { Credential, Operation, OperationRegistry, Trace } from '@dxos/compute';
 import { raise } from '@dxos/debug';
 import { Database, Feed } from '@dxos/echo';
-import { Credential, Operation, OperationRegistry, Trace } from '@dxos/compute';
 import { QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';

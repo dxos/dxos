@@ -16,9 +16,10 @@ import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-fram
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AiContextBinder, AiContextService, AiSession, AiSessionService } from '@dxos/assistant';
 import { McpServer } from '@dxos/assistant-toolkit';
-import { Blueprint, Credential, Err } from '@dxos/compute';
 import { ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client-protocol';
+import { Blueprint, Credential, Err } from '@dxos/compute';
+import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Database, DXN, Feed, Filter, Obj } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
@@ -44,7 +45,6 @@ import {
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { AutomationCapabilities } from '#types';

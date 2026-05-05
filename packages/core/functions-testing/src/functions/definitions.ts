@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Database } from '@dxos/echo';
 import { Operation } from '@dxos/compute';
+import { Database } from '@dxos/echo';
 
 export const Fibonacci = Operation.make({
   meta: {

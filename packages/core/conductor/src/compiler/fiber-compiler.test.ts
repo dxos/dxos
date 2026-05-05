@@ -10,10 +10,10 @@ import * as Schema from 'effect/Schema';
 import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
+import { Operation, OperationRegistry, Trace } from '@dxos/compute';
 import { Feed, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { TestHelpers } from '@dxos/effect/testing';
-import { Operation, OperationRegistry, Trace } from '@dxos/compute';
 import { configuredCredentialsLayer } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
 

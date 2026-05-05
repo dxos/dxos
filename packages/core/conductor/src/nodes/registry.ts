@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { JSONPath } from 'jsonpath-plus';
 
+import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { View } from '@dxos/echo';
@@ -14,7 +15,6 @@ import { isInstanceOf } from '@dxos/echo/internal';
 import { QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
-import { Operation } from '@dxos/compute';
 import { getTypenameFromQuery } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';

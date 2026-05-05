@@ -9,12 +9,12 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useTypeOptions } from '@dxos/app-toolkit/ui';
+import { Script, Trigger } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
-import { Script, Trigger } from '@dxos/compute';
 import { KEY_QUEUE_CURSOR } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
-import { Operation } from '@dxos/compute';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, type IconButtonProps, Input, Separator, useTranslation } from '@dxos/react-ui';

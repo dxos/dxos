@@ -12,7 +12,6 @@ import * as Scope from 'effect/Scope';
 import type { AiService } from '@dxos/ai';
 import { Event, synchronized } from '@dxos/async';
 import { type Credential, Trace } from '@dxos/compute';
-import { type QueueService } from '@dxos/functions';
 import type { Operation, OperationRegistry } from '@dxos/compute';
 import {
   ComputeBeginEvent,
@@ -35,6 +34,7 @@ import {
 import { Resource } from '@dxos/context';
 import type { Database, Feed } from '@dxos/echo';
 import { unwrapExit } from '@dxos/effect';
+import { type QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 import { type ContentBlock } from '@dxos/types';

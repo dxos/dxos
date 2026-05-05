@@ -4,10 +4,10 @@
 
 import { type Client } from '@dxos/client';
 import { Script } from '@dxos/compute';
-import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
+import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { bundleFunction } from '@dxos/functions-runtime/bundler';
 import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { log } from '@dxos/log';

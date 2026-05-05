@@ -21,15 +21,15 @@ import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
+import { Process, Trigger, TriggerEvent } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { DXN, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
-import { Process, Trigger, TriggerEvent } from '@dxos/compute';
 import { QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/compute';
 
 import * as ProcessManager from '../process/ProcessManager';
 import { createInvocationPayload } from './input-builder';

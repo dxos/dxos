@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { Operation, Trigger } from '@dxos/compute';
+import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';

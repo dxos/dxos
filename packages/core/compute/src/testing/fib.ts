@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '../Operation';
-
 import { Fibonacci } from './index';
 
 export default Fibonacci.pipe(

@@ -5,9 +5,9 @@
 import { useEffect, useMemo } from 'react';
 
 import { Script } from '@dxos/compute';
-import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { Operation } from '@dxos/compute';
 import { Obj, Query, Ref } from '@dxos/echo';
+import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';

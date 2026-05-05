@@ -10,9 +10,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-
-import { withAuthorization } from '@dxos/functions';
 import { Database, Obj } from '@dxos/echo';
+import { withAuthorization } from '@dxos/functions';
 
 import { AccessTokenNotPopulatedError, IntegrationDatabaseMissingError } from '../errors';
 import { GetGoogleCalendars } from './definitions';

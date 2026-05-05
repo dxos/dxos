@@ -4,10 +4,10 @@
 
 import React, { type ChangeEvent, useCallback } from 'react';
 
-import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { type Script } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { getInvocationUrl } from '@dxos/functions-runtime';
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';

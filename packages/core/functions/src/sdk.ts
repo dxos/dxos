@@ -3,9 +3,8 @@
 //
 
 import { type AiService } from '@dxos/ai';
-import { type Database, type Feed } from '@dxos/echo';
-
 import { type Credential, type Operation, type Trace } from '@dxos/compute';
+import { type Database, type Feed } from '@dxos/echo';
 
 import { type FunctionInvocationService, type QueueService } from './services';
 

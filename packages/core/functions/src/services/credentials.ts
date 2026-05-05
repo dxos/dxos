@@ -10,11 +10,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 
+import { Credential } from '@dxos/compute';
 import { Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { AccessToken } from '@dxos/types';
-
-import { Credential } from '@dxos/compute';
 
 export class ConfiguredCredentialsService implements Context.Tag.Service<Credential.CredentialsService> {
   constructor(private readonly credentials: Credential.ServiceCredential[] = []) {}
@@ -79,9 +78,7 @@ export const credentialsLayerFromDatabase = ({ caching = false }: { caching?: bo
       const dbService = yield* Database.Service;
       const cache = new Map<string, Credential.ServiceCredential[]>();
 
-      const queryCredentials = async (
-        query: Credential.CredentialQuery,
-      ): Promise<Credential.ServiceCredential[]> => {
+      const queryCredentials = async (query: Credential.CredentialQuery): Promise<Credential.ServiceCredential[]> => {
         const cacheKey = JSON.stringify(query);
         if (caching && cache.has(cacheKey)) {
           return cache.get(cacheKey)!;

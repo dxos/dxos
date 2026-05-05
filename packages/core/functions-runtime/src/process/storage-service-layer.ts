@@ -14,7 +14,10 @@ import { StorageService } from '@dxos/compute';
  * Create a StorageService scoped under `prefix` in the given backing store.
  * All keys are transparently namespaced so processes cannot collide.
  */
-export const layer = (kvStore: KeyValueStore.KeyValueStore, prefix: string): Context.Tag.Service<StorageService.StorageService> => {
+export const layer = (
+  kvStore: KeyValueStore.KeyValueStore,
+  prefix: string,
+): Context.Tag.Service<StorageService.StorageService> => {
   const prefixed = KeyValueStore.prefix(kvStore, prefix);
   const knownKeys = new Set<string>();
 

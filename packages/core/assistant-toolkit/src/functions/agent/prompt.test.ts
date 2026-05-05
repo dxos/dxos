@@ -7,11 +7,11 @@ import * as Effect from 'effect/Effect';
 
 import { ContextBinding } from '@dxos/assistant';
 import { Routine } from '@dxos/compute';
-import { QueueService } from '@dxos/functions';
 import { Operation } from '@dxos/compute';
 import { OperationHandlerSet } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { QueueService } from '@dxos/functions';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
 import { Text } from '@dxos/schema';

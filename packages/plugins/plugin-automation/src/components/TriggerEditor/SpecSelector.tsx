@@ -4,8 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Filter, Query } from '@dxos/echo';
 import { Trigger } from '@dxos/compute';
+import { Filter, Query } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { type FormFieldComponentProps, SelectField, useFormFieldState } from '@dxos/react-ui-form';
 

@@ -8,8 +8,8 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { type Client, ClientService } from '@dxos/client';
-import { Context as DxosContext } from '@dxos/context';
 import { Err } from '@dxos/compute';
+import { Context as DxosContext } from '@dxos/context';
 import type { SpaceId } from '@dxos/keys';
 
 import { createEdgeClient } from '../edge';

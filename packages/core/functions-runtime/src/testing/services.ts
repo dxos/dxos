@@ -5,9 +5,9 @@
 import type * as Context from 'effect/Context';
 
 import type { Space } from '@dxos/client/echo';
+import { type Credential, type Trace } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { type QueueFactory } from '@dxos/echo-db';
-import { type Credential, type Trace } from '@dxos/compute';
 import { ConfiguredCredentialsService, QueueService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 

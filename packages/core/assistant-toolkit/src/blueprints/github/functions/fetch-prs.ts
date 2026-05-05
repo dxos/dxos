@@ -6,8 +6,8 @@ import * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
 
 import { Credential } from '@dxos/compute';
-import { withAuthorization } from '@dxos/functions';
 import { Operation } from '@dxos/compute';
+import { withAuthorization } from '@dxos/functions';
 
 import { FetchPrs } from './definitions';
 

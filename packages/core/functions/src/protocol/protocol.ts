@@ -10,6 +10,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiModelResolver, AiService } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
+import { Err, Operation, Trace } from '@dxos/compute';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, JsonSchema, Ref, type Type } from '@dxos/echo';
 import { EchoClient, type EchoDatabaseImpl, type QueueFactory, createFeedServiceLayer } from '@dxos/echo-db';
@@ -17,11 +18,15 @@ import { refFromEncodedReference } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { Err, Operation, Trace } from '@dxos/compute';
 import { type FunctionProtocol } from '@dxos/protocols';
 
 import { type FunctionServices } from '../sdk';
-import { configuredCredentialsLayer, credentialsLayerFromDatabase, FunctionInvocationService, QueueService } from '../services';
+import {
+  configuredCredentialsLayer,
+  credentialsLayerFromDatabase,
+  FunctionInvocationService,
+  QueueService,
+} from '../services';
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
 /**
