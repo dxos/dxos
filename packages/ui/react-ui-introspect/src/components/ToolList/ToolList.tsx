@@ -9,6 +9,7 @@
 
 import React, { useMemo } from 'react';
 
+import { ScrollArea } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import type { ToolEntry } from '../types';
@@ -27,36 +28,36 @@ export type ToolListProps = {
   className?: string;
 };
 
+// TODO(burdon): Reconcile with react-ui-list and react-ui-stack.
 export const ToolList = ({ tools, selected, onSelect, className }: ToolListProps) => {
-  // Sort by name for deterministic order — the tools map is unordered in
-  // principle, but a model browsing a long list benefits from alphabetical.
   const entries = useMemo(() => Object.entries(tools).sort(([a], [b]) => a.localeCompare(b)), [tools]);
 
   return (
-    <ul role='list' className={mx('flex flex-col gap-1 overflow-auto', className)}>
-      {entries.map(([name, tool]) => {
-        const isSelected = selected === name;
-        return (
-          <li key={name}>
-            <button
-              type='button'
-              aria-pressed={isSelected}
-              onClick={() => onSelect?.(name, tool)}
-              className={mx(
-                'w-full text-left rounded-md px-3 py-2 transition-colors',
-                'hover:bg-hoverSurface focus-visible:outline focus-visible:outline-2 focus-visible:outline-accentSurface',
-                isSelected ? 'bg-activeSurface text-accentText' : 'bg-baseSurface',
-              )}
-            >
-              <div className='font-mono text-xs text-subdueText'>{name}</div>
-              <div className='font-medium'>{tool.title}</div>
-              {tool.description && (
-                <div className='text-sm text-description line-clamp-2 mt-1'>{tool.description.trim()}</div>
-              )}
-            </button>
-          </li>
-        );
-      })}
-    </ul>
+    <ScrollArea.Root orientation='vertical' classNames={className}>
+      <ScrollArea.Viewport>
+        <ul role='list' className='flex flex-col'>
+          {entries.map(([name, tool]) => {
+            const isSelected = selected === name;
+            return (
+              <li key={name}>
+                <button
+                  type='button'
+                  aria-selected={isSelected}
+                  className={mx('w-full text-left px-3 py-2 transition-colors dx-hover dx-selected')}
+                  onClick={() => onSelect?.(name, tool)}
+                >
+                  {/* TODO(burdon): Tag. */}
+                  <div className='font-mono text-xs text-subdueText'>{name}</div>
+                  <div className='font-medium'>{tool.title}</div>
+                  {tool.description && (
+                    <div className='text-sm text-description line-clamp-2 mt-1'>{tool.description.trim()}</div>
+                  )}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
