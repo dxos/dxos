@@ -86,6 +86,7 @@
   "devDependencies": {
     "@dxos/assistant": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/functions-runtime": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@effect/vitest": "catalog:",
     "vite": "catalog:",

@@ -3,6 +3,7 @@
 //
 
 export * from './ChatActions';
+export * from './ChatMcpErrors';
 export * from './ChatOptions';
 export * from './ChatPresets';
 export * from './ChatPrompt';

@@ -27,7 +27,7 @@ const GoogleUserInfo = Schema.Struct({
 
 /**
  * Google `/oauth2/v3/userinfo` email, or `undefined` if missing token, `account` already set, or no email.
- * Callers persist via e.g. `Obj.change`. Tracer disabled on the request (Effect + CORS: https://github.com/Effect-TS/effect/issues/4568).
+ * Callers persist via e.g. `Obj.update`. Tracer disabled on the request (Effect + CORS: https://github.com/Effect-TS/effect/issues/4568).
  */
 const getAccountEmail = (accessToken: { token: string; account?: string }) =>
   Effect.gen(function* () {
@@ -55,7 +55,7 @@ const gmailOnTokenCreated: OnTokenCreated = ({ accessToken, integration, existin
   Effect.gen(function* () {
     const email = yield* getAccountEmail(accessToken);
     if (email) {
-      Obj.change(accessToken, (accessToken) => {
+      Obj.update(accessToken, (accessToken) => {
         accessToken.account = email;
       });
     }
@@ -70,7 +70,7 @@ const gmailOnTokenCreated: OnTokenCreated = ({ accessToken, integration, existin
       // Backfill name on the user's existing Mailbox if they hadn't named it.
       const existing = (yield* Effect.promise(() => existingTarget.load())) as Mailbox.Mailbox;
       if (!existing.name) {
-        Obj.change(existing, (existing) => {
+        Obj.update(existing, (existing) => {
           existing.name = defaultName;
         });
       }
@@ -80,7 +80,7 @@ const gmailOnTokenCreated: OnTokenCreated = ({ accessToken, integration, existin
       db.add(mailbox);
       targetRef = Ref.make(mailbox);
     }
-    Obj.change(integration, (integration) => {
+    Obj.update(integration, (integration) => {
       const mutable = integration as Obj.Mutable<typeof integration>;
       mutable.targets = [
         ...mutable.targets,
@@ -96,7 +96,7 @@ const calendarOnTokenCreated: OnTokenCreated = ({ accessToken }) =>
   Effect.gen(function* () {
     const email = yield* getAccountEmail(accessToken);
     if (email) {
-      Obj.change(accessToken, (accessToken) => {
+      Obj.update(accessToken, (accessToken) => {
         accessToken.account = email;
       });
     }

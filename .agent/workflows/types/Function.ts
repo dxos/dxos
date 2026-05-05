@@ -68,7 +68,7 @@ export const make = (props: Obj.MakeProps<typeof Function>) => Obj.make(Function
  * @param source - Source object to copy properties from.
  */
 export const setFrom = (target: Function, source: Function) => {
-  Obj.change(target, (target) => {
+  Obj.update(target, (target) => {
     target.key = source.key ?? target.key;
     target.name = source.name ?? target.name;
     target.version = source.version;

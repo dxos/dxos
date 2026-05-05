@@ -77,7 +77,7 @@ export const buildCollectionPartials = (
   acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
   role: 'branch' as const,
   onTransferStart: (child: Node.Node<Obj.Unknown>, index?: number) => {
-    Obj.change(collection, (collection) => {
+    Obj.update(collection, (collection) => {
       if (!collection.objects.find((object) => object.target === child.data)) {
         if (typeof index !== 'undefined') {
           collection.objects.splice(index, 0, Ref.make(child.data));
@@ -88,7 +88,7 @@ export const buildCollectionPartials = (
     });
   },
   onTransferEnd: (child: Node.Node<Obj.Unknown>, _destination: Node.Node) => {
-    Obj.change(collection, (collection) => {
+    Obj.update(collection, (collection) => {
       const idx = collection.objects.findIndex((object) => object.target === child.data);
       if (idx > -1) {
         collection.objects.splice(idx, 1);
@@ -98,7 +98,7 @@ export const buildCollectionPartials = (
   onCopy: async (child: Node.Node<Obj.Unknown>, index?: number) => {
     const newObject = await cloneObject(child.data, resolve, db);
     db.add(newObject);
-    Obj.change(collection, (collection) => {
+    Obj.update(collection, (collection) => {
       if (typeof index !== 'undefined') {
         collection.objects.splice(index, 0, Ref.make(newObject));
       } else {
@@ -173,7 +173,7 @@ export const createObjectNode = ({
     onRearrange = rearrangeCache.get(collectionDxn);
     if (!onRearrange) {
       onRearrange = (nextOrder: unknown[]) => {
-        Obj.change(parentCollection, (parentCollection) => {
+        Obj.update(parentCollection, (parentCollection) => {
           parentCollection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
         });
       };

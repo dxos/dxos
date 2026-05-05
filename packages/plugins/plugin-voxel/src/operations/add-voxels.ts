@@ -15,7 +15,7 @@ const handler: Operation.WithHandler<typeof AddVoxels> = AddVoxels.pipe(
     Effect.fn(function* ({ world, voxels }) {
       const loaded = (yield* Database.load(world)) as Voxel.World;
       let added = 0;
-      Obj.change(loaded, (loaded) => {
+      Obj.update(loaded, (loaded) => {
         if (!loaded.voxels) {
           loaded.voxels = {};
         }

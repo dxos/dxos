@@ -79,7 +79,7 @@ describe('PluginManager', () => {
       assert.strictEqual(added, testPlugin);
       assert.deepStrictEqual(manager.getPlugins(), [testPlugin]);
       assert.deepStrictEqual(manager.getEnabled(), []);
-      const removed = manager.remove(testMeta.id);
+      const removed = yield* manager.remove(testMeta.id);
       assert.isTrue(removed);
       assert.deepStrictEqual(manager.getPlugins(), []);
     }),
@@ -764,7 +764,7 @@ describe('PluginManager', () => {
       assert.strictEqual(eventsFiredUpdates.count, 1);
       assert.strictEqual(pendingResetUpdates.count, 4);
 
-      manager.remove(Plugin1.meta.id);
+      yield* manager.remove(Plugin1.meta.id);
       assert.strictEqual(pluginUpdates.count, 4);
       assert.strictEqual(enabledUpdates.count, 4);
       assert.strictEqual(modulesUpdates.count, 4);

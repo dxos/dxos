@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint } from '@dxos/compute';
 import { Trigger } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
@@ -100,7 +99,7 @@ const make = () =>
     },
   });
 
-const blueprint: AppCapabilities.BlueprintDefinition = {
+const blueprint: Blueprint.Definition = {
   key: BLUEPRINT_KEY,
   make,
 };

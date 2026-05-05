@@ -19,7 +19,7 @@ export const BotArticle = ({ role, subject: bot }: BotArticleProps) => {
 
   const handleSetToken = useCallback(
     (value: string) => {
-      Obj.change(bot, (bot) => {
+      Obj.update(bot, (bot) => {
         bot.token = value;
       });
     },
@@ -27,7 +27,7 @@ export const BotArticle = ({ role, subject: bot }: BotArticleProps) => {
   );
 
   const handleDisconnect = useCallback(() => {
-    Obj.change(bot, (bot) => {
+    Obj.update(bot, (bot) => {
       bot.guildId = undefined;
       bot.guildName = undefined;
       bot.channels = [];

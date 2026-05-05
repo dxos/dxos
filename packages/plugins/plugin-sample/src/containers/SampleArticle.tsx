@@ -40,11 +40,11 @@ export const SampleArticle = ({ role, subject, attendableId }: SampleArticleProp
   const { actions, onAction } = useMenuActions(attendableId);
 
   // `onValuesChanged` receives partial updates from the form.
-  // `Obj.change` provides a mutable draft for safe property assignment.
+  // `Obj.update` provides a mutable draft for safe property assignment.
   // ECHO objects are reactive proxies — changes replicate to other peers.
   const handleValuesChanged = useCallback(
     (values: Partial<{ name: string; description: string; status: 'active' | 'archived' | 'draft' }>) => {
-      Obj.change(subject, (subject) => {
+      Obj.update(subject, (subject) => {
         if (values.name !== undefined) {
           subject.name = values.name;
         }

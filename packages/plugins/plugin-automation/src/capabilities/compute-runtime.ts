@@ -14,7 +14,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { AgentService, AiContextBinder, AiContextService, AiSession, AiSessionService } from '@dxos/assistant';
+import { AiContextBinder, AiContextService, AiSession, AiSessionService } from '@dxos/assistant';
 import { McpServer } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
@@ -31,6 +31,7 @@ import {
   QueueService,
   ServiceNotAvailableError,
 } from '@dxos/functions';
+import { AgentService } from '@dxos/functions-runtime';
 import {
   FeedTraceSink,
   FunctionImplementationResolver,

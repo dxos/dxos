@@ -20,7 +20,7 @@ export const App = () => {
         <div
           key={task.id}
           onClick={() => {
-            Obj.change(task, (task) => {
+            Obj.update(task, (task) => {
               task.completed = true;
             });
           }}

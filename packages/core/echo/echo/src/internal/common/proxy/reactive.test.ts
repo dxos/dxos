@@ -15,14 +15,14 @@ describe('Obj.subscribe', () => {
       calls++;
     });
 
-    Obj.change(obj, (obj) => {
+    Obj.update(obj, (obj) => {
       obj.name = 'Updated';
     });
     expect(calls).toBeGreaterThan(0);
 
     unsubscribe();
     const seen = calls;
-    Obj.change(obj, (obj) => {
+    Obj.update(obj, (obj) => {
       obj.name = 'After unsubscribe';
     });
     expect(calls).toBe(seen);

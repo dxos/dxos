@@ -25,7 +25,7 @@ File: [packages/core/ai/src/resolvers/ChatCompletionsAdapter.ts](../../packages/
 
 ### TDD plan
 
-Tests go in [packages/core/ai/src/resolvers/ChatCompletionsAdapter.test.ts](../../packages/core/ai/src/resolvers/ChatCompletionsAdapter.test.ts). Existing tests hit real Ollama/LM Studio; they're `TestHelpers.taggedTest('llm')` so they only run with the `llm` tag. We'll add tests that use an in-process mock `HttpClient` layer so they run in CI.
+Tests go in [packages/core/ai/src/resolvers/ChatCompletionsAdapter.test.ts](../../packages/core/ai/src/resolvers/ChatCompletionsAdapter.test.ts). Existing tests hit real Ollama/LM Studio; they carry vitest's native `tags: ['llm']` option so they only run when `--tagsFilter=llm` is passed. We'll add tests that use an in-process mock `HttpClient` layer so they run in CI.
 
 1. RED: `generateText` times out when the HTTP response never arrives.
 2. GREEN: wrap the request body in `Effect.timeoutFail` with a configured `requestTimeout` (default e.g. 2 minutes).

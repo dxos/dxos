@@ -88,14 +88,14 @@ export const createMessageGenerator = (): MessageGenerator[] => [
 
     yield* Effect.promise(async () => {
       for await (const chunk of textStream(fullText, { wordsPerChunk: 2, chunkDelay: 60 })) {
-        Obj.change(message, (message) => {
+        Obj.update(message, (message) => {
           const block = message.blocks[0] as Mutable<ContentBlock.Text>;
           block.text += chunk;
         });
         // Queue queries only react to queue-level updates, not in-place object mutations.
         await queue.append([]);
       }
-      Obj.change(message, (message) => {
+      Obj.update(message, (message) => {
         const block = message.blocks[0] as Mutable<ContentBlock.Text>;
         block.pending = false;
       });

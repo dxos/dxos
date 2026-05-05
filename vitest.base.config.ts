@@ -21,6 +21,9 @@ import PluginImportSource from '@dxos/vite-plugin-import-source';
 // build the plugin first, which introduces a moon dep cycle through @dxos/log
 // (vite-plugin-log -> log -> ... -> log:test -> vite-plugin-log).
 import { DxosLogPlugin } from './tools/vite-plugin-log/src/plugin.ts';
+import { TEST_TAGS } from './vitest.tags';
+
+export { TEST_TAGS };
 
 const isDebug = !!process.env.VITEST_DEBUG;
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
@@ -42,8 +45,13 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
   return {
     test: {
       ...resolveReporterConfig(dirname),
-      // Suppress flaky WebSocket birpc teardown unhandled rejections from storybook test runner.
-      ...(storybook ? { dangerouslyIgnoreUnhandledErrors: true } : {}),
+      tags: TEST_TAGS,
+      // Suppress flaky vitest worker teardown unhandled rejections (e.g.
+      // `EnvironmentTeardownError: Closing rpc while "onUserConsoleLog" was
+      // pending` from node tests, WebSocket birpc errors from the storybook
+      // runner) — these surface as non-zero exits with no actual test
+      // failures and turn the entire job red.
+      dangerouslyIgnoreUnhandledErrors: true,
       projects: [nodeProject, storybookProject, ...browserProjects].filter(
         (project): project is UserWorkspaceConfig => project !== undefined,
       ),

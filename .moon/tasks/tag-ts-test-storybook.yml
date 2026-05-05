@@ -8,6 +8,7 @@ tasks:
       - storybook-addon-logger:build
       - vite-plugin-icons:compile
       - vite-plugin-import-source:compile
+      - vite-plugin-log:compile
       - ^:build
       - ^:compile
     inputs:

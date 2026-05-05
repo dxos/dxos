@@ -175,7 +175,7 @@ export default Commentary.pipe(
           );
 
           const documentRef = Ref.make(document);
-          Obj.change(rootCollection, (rootCollection) => {
+          Obj.update(rootCollection, (rootCollection) => {
             rootCollection.objects.push(documentRef);
           });
 

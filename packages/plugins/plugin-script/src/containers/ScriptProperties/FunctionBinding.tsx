@@ -39,7 +39,7 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
 
   const handleBindingBlur = useCallback(() => {
     if (fn) {
-      Obj.change(fn, (fn) => {
+      Obj.update(fn, (fn) => {
         fn.binding = binding;
       });
     }
@@ -60,7 +60,7 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
             disabled
             value={functionUrl}
             onChange={(event) => {
-              Obj.change(fn, (fn) => {
+              Obj.update(fn, (fn) => {
                 fn.name = event.target.value;
               });
             }}

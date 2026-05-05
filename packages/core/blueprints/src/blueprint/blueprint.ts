@@ -122,3 +122,11 @@ export const toolDefinitions = ({
   tools?: string[];
   operations?: Operation.Definition.Any[];
 }) => [...operations.map((op) => ToolId.make(op.meta.key)), ...tools.map((tool) => ToolId.make(tool))];
+
+/**
+ * Factory for the blueprints.
+ */
+export type Definition = {
+  key: string;
+  make: () => Blueprint;
+};

@@ -175,7 +175,7 @@ export default GoogleMailSync.pipe(
 
 const syncLabels = Effect.fn(function* (mailbox: Mailbox.Mailbox, userId: string) {
   const { labels } = yield* GoogleMail.listLabels(userId);
-  Obj.change(mailbox, (mailbox) => {
+  Obj.update(mailbox, (mailbox) => {
     labels.forEach((labelItem) => {
       (mailbox.labels ??= {})[labelItem.id] = labelItem.name;
     });

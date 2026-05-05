@@ -14,7 +14,7 @@ const handler: Operation.WithHandler<typeof SetToken> = SetToken.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ bot, token }) {
       const obj = (yield* Database.load(bot)) as Discord.Bot;
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         const mutable = obj as Obj.Mutable<typeof obj>;
         mutable.token = token;
       });

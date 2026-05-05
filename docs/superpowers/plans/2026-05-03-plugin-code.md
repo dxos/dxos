@@ -797,7 +797,7 @@ export const CodeSettings = ({ settings, onSettingsChange }: CodeSettingsProps) 
       return;
     }
     if (existing) {
-      Obj.change(existing, (token) => {
+      Obj.update(existing, (token) => {
         (token as Obj.Mutable<AccessToken.AccessToken>).token = draft.trim();
       });
     } else {

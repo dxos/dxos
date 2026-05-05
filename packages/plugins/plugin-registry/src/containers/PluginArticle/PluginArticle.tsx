@@ -46,7 +46,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   );
 
   const handleUninstall = useCallback(() => {
-    manager.remove(plugin.meta.id);
+    void runAndForwardErrors(manager.remove(plugin.meta.id));
   }, [manager, plugin.meta.id]);
 
   const handleInstall = useCallback(() => {

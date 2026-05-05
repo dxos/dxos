@@ -17,7 +17,7 @@ describe('Local AI', () => {
   it.effect(
     'create and query database objects',
     agentTest(
-      { model: 'gpt-oss:20b', inferenceProvider: 'ollama', disableLlmMemoization: true, testTag: 'llm' },
+      { model: 'gpt-oss:20b', inferenceProvider: 'ollama', disableLlmMemoization: true },
       Routine.make({
         instructions: trim`
           Create a new organization called "Cyberdyne Systems".
@@ -26,6 +26,6 @@ describe('Local AI', () => {
         blueprints: [Ref.make(DatabaseBlueprint.make())],
       }),
     ),
-    { timeout: DEFAULT_TEST_TIMEOUT },
+    { timeout: DEFAULT_TEST_TIMEOUT, tags: ['llm'] },
   );
 });

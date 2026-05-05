@@ -48,7 +48,7 @@ const handler: Operation.WithHandler<typeof UpdateChatName> = UpdateChatName.pip
 
         const newName = response.text.replaceAll(/[^a-zA-Z0-9\s]/g, '').trim();
 
-        Obj.change(chat, (chat) => {
+        Obj.update(chat, (chat) => {
           chat.name = newName;
         });
         log.info('chat name updated', { chat, newName: chat.name });

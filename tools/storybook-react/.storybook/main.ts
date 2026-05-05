@@ -96,6 +96,7 @@ export const createConfig = ({
     const { default: react } = await import('@vitejs/plugin-react-swc');
     const { mergeConfig } = await import('vite');
     const { default: inspect } = await import('vite-plugin-inspect');
+    const { DxosLogPlugin } = await import('@dxos/vite-plugin-log');
 
     const finalConfig = mergeConfig(
       {
@@ -285,6 +286,8 @@ export const createConfig = ({
           //
           // Custom DXOS plugins.
           //
+
+          DxosLogPlugin(),
 
           IconsPlugin({
             assetPath: (name, variant) =>

@@ -131,7 +131,7 @@ export default Capability.makeModule(
                           data: () =>
                             Effect.sync(() => {
                               const index = mailbox.filters.findIndex((f: any) => f.name === name);
-                              Obj.change(mailbox, (mailbox: any) => {
+                              Obj.update(mailbox, (mailbox: any) => {
                                 mailbox.filters.splice(index, 1);
                               });
                             }),

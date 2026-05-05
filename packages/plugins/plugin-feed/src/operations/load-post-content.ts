@@ -34,7 +34,7 @@ export default LoadPostContent.pipe(
           const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
           const { text, imageUrls } = await fetchArticle(post.link!, { corsProxy });
           const hero = imageUrls[0];
-          Obj.change(post, (post) => {
+          Obj.update(post, (post) => {
             const mutable = post as Obj.Mutable<typeof post>;
             if (text) {
               mutable.content = text;

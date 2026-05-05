@@ -55,7 +55,7 @@ describe('Echo Atom - Basic Functionality', () => {
     expect(registry.get(emailAtom)).toBe('test@example.com');
   });
 
-  test('atom updates when object is mutated via Obj.change', () => {
+  test('atom updates when object is mutated via Obj.update', () => {
     const obj = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
@@ -72,8 +72,8 @@ describe('Echo Atom - Basic Functionality', () => {
       { immediate: true },
     );
 
-    // Mutate object via Obj.change.
-    Obj.change(obj, (obj) => {
+    // Mutate object via Obj.update.
+    Obj.update(obj, (obj) => {
       obj.name = 'Updated';
     });
 
@@ -85,7 +85,7 @@ describe('Echo Atom - Basic Functionality', () => {
     expect(obj.name).toBe('Updated');
   });
 
-  test('property atom supports updater pattern via Obj.change', () => {
+  test('property atom supports updater pattern via Obj.update', () => {
     const obj = createObject(
       Obj.make(TestSchema.Task, {
         title: 'Task',
@@ -104,8 +104,8 @@ describe('Echo Atom - Basic Functionality', () => {
       { immediate: true },
     );
 
-    // Update through Obj.change.
-    Obj.change(obj, (obj) => {
+    // Update through Obj.update.
+    Obj.update(obj, (obj) => {
       obj.title = (obj.title ?? '') + ' Updated';
     });
 
@@ -140,7 +140,7 @@ describe('Echo Atom - Basic Functionality', () => {
     expect(propertyUpdateCount).toBe(1);
 
     // Mutate the standalone object.
-    Obj.change(obj, (obj) => {
+    Obj.update(obj, (obj) => {
       obj.name = 'Updated Standalone';
     });
 
@@ -244,7 +244,7 @@ describe('Echo Atom - Referential Equality', () => {
     expect(updateCount).toBe(1);
 
     // Mutate the object.
-    Obj.change(obj, (obj) => {
+    Obj.update(obj, (obj) => {
       obj.name = 'Updated';
     });
 
@@ -276,7 +276,7 @@ describe('Echo Atom - Referential Equality', () => {
     expect(updateCount).toBe(1);
 
     // Mutate the specific property.
-    Obj.change(obj, (obj) => {
+    Obj.update(obj, (obj) => {
       obj.name = 'Updated';
     });
 

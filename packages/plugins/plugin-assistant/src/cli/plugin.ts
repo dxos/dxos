@@ -5,7 +5,7 @@
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { ContextBinding } from '@dxos/assistant';
-import { Agent, Chat, McpServer, Memory, Plan, ResearchGraph } from '@dxos/assistant-toolkit';
+import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
 import { Blueprint, Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
@@ -50,7 +50,6 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       HasSubject.HasSubject,
       Message.Message,
       Routine.Routine,
-      ResearchGraph.ResearchGraph,
       Agent.Agent,
       McpServer.McpServer,
       Plan.Plan,

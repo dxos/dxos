@@ -373,7 +373,7 @@ export const deserialize = (record: PersistentOperation): Definition.Any => {
  * Update properties on the target operation record from the source operation record.
  */
 export const setFrom = (target: PersistentOperation, source: PersistentOperation) => {
-  Obj.change(target, (target) => {
+  Obj.update(target, (target) => {
     target.key = source.key ?? target.key;
     target.name = source.name ?? target.name;
     target.version = source.version;

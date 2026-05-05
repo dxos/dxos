@@ -5,7 +5,6 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { AgentService } from '@dxos/assistant';
 import {
   AgentHandlers,
   AgentPrompt,
@@ -15,13 +14,14 @@ import {
   WebSearchHandlers,
   WebSearchToolkitOpaque,
 } from '@dxos/assistant-toolkit';
-import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { Blueprint, Routine } from '@dxos/compute';
 import { ExampleHandlers, Reply, Trace, Trigger } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { AgentService } from '@dxos/functions-runtime';
 import { FeedTraceSink, TriggerDispatcher } from '@dxos/functions-runtime';
+import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
 import { dbg } from '@dxos/log';
 import { renderTimelineAscii } from '@dxos/react-ui-components';

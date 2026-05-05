@@ -33,13 +33,31 @@ export const PluginHealthSchema = Schema.Literal('ok', 'release-missing', 'manif
 export type PluginHealth = Schema.Schema.Type<typeof PluginHealthSchema>;
 
 /**
+ * Filename of the entry module every plugin must publish at the root of its bundle.
+ * The host dynamic-imports `<manifest URL base>/index.mjs` directly — no per-plugin
+ * configuration. `composerPlugin` outputs the bundle under this name so plugin authors
+ * never have to think about it.
+ */
+export const PLUGIN_ENTRY_FILENAME = 'index.mjs';
+
+/**
  * Shape of the manifest-asset JSON the registry service fetches from each plugin's latest release.
- * Extends {@link PluginMetaSchema} with an optional override for the module bundle filename
- * (defaults to `plugin.mjs`).
+ *
+ * Emitted by `@dxos/app-framework/vite-plugin`'s `composerPlugin` (see
+ * `MANIFEST_ASSET_NAME`). Lists every file the plugin needs at runtime — the entry
+ * module ({@link PLUGIN_ENTRY_FILENAME}) plus any sibling CSS, code-split chunks,
+ * fonts, etc. — so the host can eagerly precache the whole bundle for offline use.
+ * Paths in `assets` are relative to the manifest's URL.
  */
 export const PluginManifestSchema = Schema.Struct({
   ...PluginMetaSchema.fields,
-  moduleFile: Schema.optional(Schema.String),
+  /** Plugin version (semver). Sourced from the publishing project's `package.json`. */
+  version: Schema.String.pipe(Schema.nonEmptyString()),
+  /**
+   * Relative paths of every file the plugin needs at runtime, including the entry.
+   * Must include {@link PLUGIN_ENTRY_FILENAME}; consumers verify on parse.
+   */
+  assets: Schema.Array(Schema.String).pipe(Schema.minItems(1)),
 });
 export type PluginManifest = Schema.Schema.Type<typeof PluginManifestSchema>;
 
@@ -47,17 +65,17 @@ export type PluginManifest = Schema.Schema.Type<typeof PluginManifestSchema>;
  * Single hydrated plugin entry returned by the registry service.
  */
 export const PluginEntrySchema = Schema.Struct({
-  /** GitHub repository in `owner/name` form. */
-  repo: Schema.String.pipe(Schema.nonEmptyString()),
+  /** GitHub repository in `owner/name` form. Empty string for entries sourced from a `manifestUrl`. */
+  repo: Schema.String,
   /** Plugin metadata from the repo's latest-release `manifest.json`. */
   meta: PluginMetaSchema,
   /**
-   * URL from which Composer can dynamic-import the plugin module. The registry service is
-   * responsible for returning a URL that is CORS-safe for browser `import()` (e.g. served or
-   * proxied by the service itself); clients pass this value directly to the URL loader.
+   * URL of the plugin's `manifest.json`. Composer's URL loader fetches this, eagerly caches
+   * every declared asset via the platform `PluginAssetCache`, then dynamic-imports the entry.
+   * The URL must be CORS-safe and have its declared assets reachable as siblings.
    */
   moduleUrl: Schema.String,
-  /** Release tag the entry was resolved from (e.g. `v0.1.0`). */
+  /** Release tag the entry was resolved from (e.g. `v0.1.0`). Empty string for `manifestUrl` entries. */
   releaseTag: Schema.String,
   /** Health signal set by the service when an entry fails to refresh. */
   health: PluginHealthSchema,
@@ -80,17 +98,27 @@ export const GetPluginsResponseBodySchema = Schema.Struct({
 export type GetPluginsResponseBody = Schema.Schema.Type<typeof GetPluginsResponseBodySchema>;
 
 /**
+ * A catalog entry. Two flavours:
+ *  - `{ repo }`: the registry service hydrates from the GitHub repo's latest release.
+ *    Used by the production catalog.
+ *  - `{ manifestUrl }`: the registry service skips GitHub and fetches the manifest directly.
+ *    Used for local development against an in-progress plugin (e.g. served by `vite preview`)
+ *    so authors can iterate without publishing a release.
+ */
+export const RegistryEntrySchema = Schema.Union(
+  Schema.Struct({ repo: Schema.String.pipe(Schema.nonEmptyString()) }),
+  Schema.Struct({ manifestUrl: Schema.String.pipe(Schema.nonEmptyString()) }),
+);
+export type RegistryEntry = Schema.Schema.Type<typeof RegistryEntrySchema>;
+
+/**
  * Shape of the catalog manifest published in the upstream community-plugins repo.
  * Extra keys (e.g. `$schema`) are permitted.
  */
 export const RegistryManifestSchema = Schema.Struct(
   {
     version: Schema.Literal(1),
-    plugins: Schema.Array(
-      Schema.Struct({
-        repo: Schema.String,
-      }),
-    ),
+    plugins: Schema.Array(RegistryEntrySchema),
   },
   Schema.Record({ key: Schema.String, value: Schema.Unknown }),
 );

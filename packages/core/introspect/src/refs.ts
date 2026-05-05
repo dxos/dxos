@@ -27,6 +27,7 @@ export const parseRef = (ref: string): RefParts => {
       return { kind: 'symbol', package: pkg, name };
     }
   }
+
   throw new Error(`Invalid ref: ${ref}`);
 };
 

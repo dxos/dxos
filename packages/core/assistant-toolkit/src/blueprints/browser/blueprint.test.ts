@@ -6,29 +6,29 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AgentService } from '@dxos/assistant';
-import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Blueprint } from '@dxos/compute';
 import { OperationHandlerSet } from '@dxos/compute';
 import { Collection, Database, Feed, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { AgentService } from '@dxos/functions-runtime';
+import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
+import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
 import { WithProperties } from '@dxos/plugin-markdown/testing';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Person } from '@dxos/types';
 
 import { DatabaseBlueprint, DatabaseHandlers } from '../database';
-import { MarkdownHandlers } from '../markdown';
 import BrowserBlueprint from './blueprint';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  operationHandlers: OperationHandlerSet.merge(DatabaseHandlers, MarkdownHandlers),
+  operationHandlers: OperationHandlerSet.merge(DatabaseHandlers, MarkdownOperationHandlerSet),
   types: [Blueprint.Blueprint, Person.Person, Markdown.Document, SpaceProperties, Collection.Collection, Feed.Feed],
   blueprints: [BrowserBlueprint.make(), MarkdownBlueprint.make(), DatabaseBlueprint.make()],
   tracing: 'pretty',
@@ -56,8 +56,7 @@ describe('Browser', () => {
       WithProperties,
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
-      TestHelpers.taggedTest('sync'),
     ),
-    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
+    { timeout: MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000, tags: ['sync'] },
   );
 });

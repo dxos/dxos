@@ -651,6 +651,8 @@ catalog:
   webrtc-adapter: ^9.0.1
   websocket-stream: ^5.5.2
   wnfs: 0.2.2
+  workbox-precaching: ^7.3.0
+  workbox-routing: ^7.3.0
   workbox-window: ^7.4.0
   workerize-loader: ^2.0.2
   wrangler: ^4.59.1

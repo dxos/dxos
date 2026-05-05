@@ -283,7 +283,7 @@ const constructObjectActions = ({
                   const layout = yield* Capabilities.getAtomValue(AppCapabilities.Layout);
                   const isActive = layout.active.includes(nodeId);
 
-                  Obj.change(parentCollection, (parentCollection) => {
+                  Obj.update(parentCollection, (parentCollection) => {
                     parentCollection.objects.splice(index, 1);
                   });
 

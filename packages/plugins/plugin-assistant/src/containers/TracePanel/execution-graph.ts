@@ -9,9 +9,9 @@ import * as Pipeable from 'effect/Pipeable';
 import * as Predicate from 'effect/Predicate';
 import * as Struct from 'effect/Struct';
 
-import { AGENT_PROCESS_KEY, AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
+import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { Trace } from '@dxos/compute';
-import { Process } from '@dxos/functions-runtime';
+import { AGENT_PROCESS_KEY, Process } from '@dxos/functions-runtime';
 import { LogLevel, log } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
 

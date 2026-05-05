@@ -570,7 +570,7 @@ export class Client {
    */
   @synchronized
   async destroy(): Promise<void> {
-    log.info('client.destroy: destroying client', { initialized: this._initialized });
+    log.verbose('client.destroy: destroying client', { initialized: this._initialized });
     if (!this._initialized) {
       return;
     }
@@ -588,12 +588,12 @@ export class Client {
   }
 
   private async _close(): Promise<void> {
-    log.info('client._close: closing...');
+    log.verbose('client._close: closing...');
     this._statusTimeout && clearTimeout(this._statusTimeout);
     await this._statusStream?.close();
     await this._runtime?.close(this._ctx);
     await this._echoClient.close(this._ctx);
-    log.info('client._close: closing services...');
+    log.verbose('client._close: closing services...');
     await this._services?.close();
     this._edgeHttpClient = undefined;
     this._edgeApi = undefined;

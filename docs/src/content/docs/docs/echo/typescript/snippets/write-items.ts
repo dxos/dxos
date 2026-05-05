@@ -26,7 +26,7 @@ const result = await space.db
   .run();
 const object = result[0];
 
-// Mutate the object using Obj.change.
-Obj.change(object, (object) => {
+// Mutate the object using Obj.update.
+Obj.update(object, (object) => {
   object.completed = true;
 });
