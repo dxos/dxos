@@ -16,7 +16,16 @@ import { entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent } from './core-db';
 import { type EchoDatabaseImpl, RuntimeSchemaRegistry } from './proxy-db';
-import { GraphQueryContext, type QueryContext, QueryResultImpl, type QuerySource, SpaceQuerySource } from './query';
+import {
+  GraphQueryContext,
+  type QueryContext,
+  QueryContextCoalescer,
+  QueryResultImpl,
+  type QuerySource,
+  SpaceQuerySource,
+  registerCoalescer,
+  unregisterCoalescer,
+} from './query';
 import type { Queue, QueueFactory } from './queue';
 
 const TRACE_REF_RESOLUTION = false;
@@ -35,6 +44,17 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<Entity.Any>>>();
   private readonly _queryContexts = new Set<GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
+  private readonly _coalescer: QueryContextCoalescer;
+
+  constructor() {
+    this._coalescer = new QueryContextCoalescer(() => this._createLiveObjectQueryContext());
+    registerCoalescer(this._coalescer);
+  }
+
+  dispose(): void {
+    unregisterCoalescer(this._coalescer);
+    this._coalescer.dispose();
+  }
 
   get schemaRegistry(): RuntimeSchemaRegistry {
     return this._schemaRegistry;
@@ -109,7 +129,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
   private _query(queryOrFilter: Query.Any | Filter.Any) {
     const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
-    return new QueryResultImpl(this._createLiveObjectQueryContext(), query);
+    return new QueryResultImpl(this._coalescer.getOrCreate(query.ast), query);
   }
 
   /**

@@ -16,7 +16,7 @@ import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 
-import { QueryResultImpl } from '../query';
+import { QueryContextCoalescer, QueryResultImpl } from '../query';
 import { QueueQueryContext } from './queue-query-context';
 import type { Queue } from './types';
 
@@ -125,6 +125,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   private _error: Error | null = null;
   private _refreshId = 0;
   private _querying = false;
+  private readonly _coalescer: QueryContextCoalescer;
 
   constructor(
     private readonly _service: FeedProtocol.QueueService,
@@ -136,6 +137,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     this._subspaceTag = subspaceTag ?? failedInvariant();
     this._spaceId = spaceId ?? failedInvariant();
     this._queueId = queueId ?? failedInvariant();
+    this._coalescer = new QueryContextCoalescer(() => new QueueQueryContext(this, this._ctx));
   }
 
   /**
@@ -260,7 +262,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   private _query(queryOrFilter: Query.Any | Filter.Any) {
     const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
     const queryWithScope = query.from({ spaceIds: [this._spaceId], queues: [this._dxn.toString()] });
-    return new QueryResultImpl(new QueueQueryContext(this, this._ctx), queryWithScope);
+    return new QueryResultImpl(this._coalescer.getOrCreate(queryWithScope.ast), queryWithScope);
   }
 
   async sync({
@@ -391,6 +393,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   }
 
   async dispose() {
+    this._coalescer.dispose();
     await this._ctx.dispose();
     await this._refreshTask.join();
   }
