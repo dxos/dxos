@@ -213,12 +213,6 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
     [db],
   );
 
-  const handleToggle = useCallback((server: McpServer.McpServer, enabled: boolean) => {
-    Obj.update(server, (server) => {
-      server.enabled = enabled;
-    });
-  }, []);
-
   const handleRemove = useCallback(
     (server: McpServer.McpServer) => {
       db.remove(server);
@@ -229,24 +223,7 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
   return (
     <div className='p-form-chrome'>
       {servers.map((server) => (
-        <div key={server.id} className='flex items-center gap-2 px-form-chrome'>
-          <Input.Root>
-            <Input.Label srOnly>{server.name}</Input.Label>
-            <Input.Switch
-              checked={server.enabled !== false}
-              onCheckedChange={(checked) => handleToggle(server, !!checked)}
-            />
-          </Input.Root>
-          <span className='flex-1 truncate text-sm'>{server.name}</span>
-          <span className='truncate text-xs text-description'>{server.url}</span>
-          <IconButton
-            variant='ghost'
-            icon='ph--x--regular'
-            iconOnly
-            label={t('mcp-server-remove.label')}
-            onClick={() => handleRemove(server)}
-          />
-        </div>
+        <McpServerRow key={server.id} server={server} onRemove={handleRemove} />
       ))}
       {adding ? (
         <McpServerForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
@@ -260,6 +237,39 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
           />
         </div>
       )}
+    </div>
+  );
+};
+
+type McpServerRowProps = {
+  server: McpServer.McpServer;
+  onRemove: (server: McpServer.McpServer) => void;
+};
+
+/**
+ * `useQuery` returns live objects but only re-renders on result-identity changes,
+ * so we must subscribe to the per-server `enabled` field via `useObject` to keep the
+ * switch in sync with mutations made through the returned setter.
+ */
+const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
+  const { t } = useTranslation(meta.id);
+  const [enabled, setEnabled] = useObject(server, 'enabled');
+
+  return (
+    <div className='flex items-center gap-2 px-form-chrome'>
+      <Input.Root>
+        <Input.Label srOnly>{server.name}</Input.Label>
+        <Input.Switch checked={enabled !== false} onCheckedChange={(checked) => setEnabled(!!checked)} />
+      </Input.Root>
+      <span className='flex-1 truncate text-sm'>{server.name}</span>
+      <span className='truncate text-xs text-description'>{server.url}</span>
+      <IconButton
+        variant='ghost'
+        icon='ph--x--regular'
+        iconOnly
+        label={t('mcp-server-remove.label')}
+        onClick={() => onRemove(server)}
+      />
     </div>
   );
 };
