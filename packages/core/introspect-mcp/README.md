@@ -171,6 +171,7 @@ Runs the server attached to your terminal stdio, blocking for input. Send JSON-R
 | `moon run introspect-mcp:serve` | Raw stdio server, for piping requests in by hand. |
 | `moon run introspect-mcp:serve-http` | HTTP server on `localhost:39476/mcp`. Use this to wire the server into Composer's plugin-assistant or any other HTTP/SSE-only MCP client. |
 | `moon run introspect:index` | Pre-build the on-disk symbol cache (`<root>/node_modules/.cache/dxos-introspect/`). The cache makes server startup near-instant. |
+| `moon run introspect-mcp:fetch-cache` | Download the prebuilt cache from the latest CI run on main and install it locally. Skips the ~80s cold-start parse for ~95% of packages on a clean main checkout. Requires `gh` CLI authenticated (`gh auth login`). |
 
 ## Why `--conditions=source`?
 
@@ -180,11 +181,32 @@ The package.json `exports` field has a `source` condition pointing at `src/index
 
 The indexer stores extracted symbols at `<repo-root>/node_modules/.cache/dxos-introspect/cache.json` (~13 MB for 250 packages). Following the babel/swc/eslint convention so it's auto-gitignored and gets nuked by `pnpm clean`. Saves are atomic (write-temp-then-rename), so concurrent introspector processes can't corrupt each other.
 
-To force a fresh re-index:
+### Invalidation
+
+Each entry records:
+
+- the **git tree SHA** of `<package>/src` at HEAD when the entry was written, and
+- the most-recent **mtime** under `<package>/src`.
+
+On load, an entry is reused if the live tree SHA matches the cached one (portable across machines — same git ref → same SHA), and falls back to mtime equality otherwise (covers uncommitted local edits before they're committed). Anything that doesn't match is dropped and re-extracted on demand.
+
+A package with uncommitted changes under its `src/` is treated as not-in-git for tree-SHA purposes — its srcTreeSha is empty in both the live probe and any saved entry, so it always falls through to the mtime path. This means dirty work-in-progress edits never falsely match a CI-built cache.
+
+### Prebuilt cache from CI
+
+The [`Introspect Cache`](../../../.github/workflows/introspect-cache.yml) workflow runs on every commit to main and uploads the cache as a GitHub Actions artifact. To install it locally instead of building from scratch:
+
+```bash
+moon run introspect-mcp:fetch-cache
+```
+
+This calls `gh run download` against the most recent successful workflow run on main and drops the cache at the canonical path. Per-package validity is decided by tree SHA, so any package whose `src/` is unchanged from that commit is reused; the rest re-extract on demand. On a clean main checkout you typically get >95% reuse; first MCP server start drops from ~80s to a few seconds.
+
+### Force a fresh build
 
 ```bash
 rm -rf node_modules/.cache/dxos-introspect
 moon run introspect:index
 ```
 
-The cache also auto-invalidates on any source-file mtime change, so manual deletion is rarely needed.
+Otherwise the cache auto-invalidates per package whenever `src/` changes (tree SHA on commit, mtime in between).
