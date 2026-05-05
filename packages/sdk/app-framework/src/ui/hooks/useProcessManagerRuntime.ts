@@ -6,8 +6,8 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { type DependencyList, use, useCallback, useMemo } from 'react';
 
+import { ServiceResolver } from '@dxos/compute';
 import { unwrapExit } from '@dxos/effect';
-import { ServiceResolver } from '@dxos/functions';
 import type { SpaceId } from '@dxos/keys';
 
 import { Capabilities } from '../../common';

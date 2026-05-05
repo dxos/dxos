@@ -7,9 +7,10 @@ import * as Layer from 'effect/Layer';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ClientService } from '@dxos/client';
+import { Credential, LayerSpec } from '@dxos/compute';
 import { Database, Feed } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
-import { CredentialsService, LayerSpec, QueueService } from '@dxos/functions';
+import { credentialsLayerFromDatabase, QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 import { ClientCapabilities } from '#types';
@@ -20,7 +21,7 @@ import { ClientCapabilities } from '#types';
 // Contributes the core client/space service layer specs:
 //   - {@link ClientService} (application affinity).
 //   - {@link Database.Service}, {@link QueueService}, {@link Feed.FeedService},
-//     {@link CredentialsService} (space affinity).
+//     {@link Credential.CredentialsService} (space affinity).
 //
 // Specs are declared at module level and resolve the underlying
 // {@link ClientCapabilities.Client} through the Effect layer graph (via
@@ -113,9 +114,9 @@ const CredentialsLayerSpec = LayerSpec.make(
   {
     affinity: 'space',
     requires: [Database.Service],
-    provides: [CredentialsService],
+    provides: [Credential.CredentialsService],
   },
-  () => CredentialsService.layerFromDatabase(),
+  () => credentialsLayerFromDatabase(),
 );
 
 export default Capability.makeModule(() =>

@@ -10,11 +10,11 @@ import * as Stream from 'effect/Stream';
 import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
-import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
+import { Operation, OperationRegistry, Trace } from '@dxos/compute';
 import { Feed } from '@dxos/echo';
+import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { TestHelpers } from '@dxos/effect/testing';
-import { CredentialsService, Trace } from '@dxos/functions';
-import { Operation, OperationRegistry } from '@dxos/operation';
+import { configuredCredentialsLayer } from '@dxos/functions';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';
@@ -36,7 +36,7 @@ const TestLayer = Layer.empty.pipe(
     Layer.mergeAll(
       TestAiService(),
       TestDatabaseLayer(),
-      CredentialsService.configuredLayer([]),
+      configuredCredentialsLayer([]),
       Feed.notAvailable,
       Trace.writerLayerNoop,
     ),

@@ -4,10 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Trigger } from '@dxos/compute';
+import { Process } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
-import { Trigger } from '@dxos/functions';
-import { Process } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FunctionRuntimeKind, SerializedError } from '@dxos/protocols';

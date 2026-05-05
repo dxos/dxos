@@ -4,10 +4,10 @@
 
 import { describe, test } from 'vitest';
 
+import { Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 
 import { deployFunction, observeInvocations, setup, sync } from './testing';

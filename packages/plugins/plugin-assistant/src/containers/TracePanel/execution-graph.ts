@@ -10,7 +10,7 @@ import * as Predicate from 'effect/Predicate';
 import * as Struct from 'effect/Struct';
 
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
-import { Process, Trace } from '@dxos/functions';
+import { Process, Trace } from '@dxos/compute';
 import { AGENT_PROCESS_KEY } from '@dxos/functions-runtime';
 import { LogLevel, log } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';

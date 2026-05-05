@@ -12,15 +12,15 @@ import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
 import type * as Runtime$ from 'effect/Runtime';
 import type { FC, PropsWithChildren } from 'react';
 
-import type { ProcessManager as ProcessManager$ } from '@dxos/compute-runtime';
 import type {
   LayerSpec as LayerSpec$,
+  Operation as Operation$,
+  OperationHandlerSet,
   Process as Process$,
   ServiceResolver as ServiceResolver$,
   Trace as Trace$,
-} from '@dxos/functions';
-import { Operation as Operation$ } from '@dxos/operation';
-import type { OperationHandlerSet } from '@dxos/operation';
+} from '@dxos/compute';
+import type { ProcessManager as ProcessManager$ } from '@dxos/compute-runtime';
 
 import { Capability as Capability$, Plugin as Plugin$, type PluginManager as PluginManager$ } from '../core';
 import type {

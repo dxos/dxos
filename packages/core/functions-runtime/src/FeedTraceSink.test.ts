@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
+import { Trace } from '@dxos/compute';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
-import { Trace } from '@dxos/functions';
 
 import * as FeedTraceSink from './FeedTraceSink';
 

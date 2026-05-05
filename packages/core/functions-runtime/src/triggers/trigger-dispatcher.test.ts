@@ -12,20 +12,14 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
+import { Operation, OperationHandlerSet, ServiceResolver, Trace, Trigger } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
-import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
-import {
-  CredentialsService,
-  ExampleHandlers,
-  QueueService,
-  Reply,
-  ServiceResolver,
-  Trace,
-  Trigger,
-} from '@dxos/functions';
+import { ExampleHandlers, Reply } from '@dxos/compute/testing';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database } from '@dxos/echo';
+import { TestDatabaseLayer } from '@dxos/echo-db/testing';
+import { credentialsLayerConfig, QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Person, Task } from '@dxos/types';
 
 import { TriggerDispatcher } from './trigger-dispatcher';
@@ -37,7 +31,7 @@ import { TriggerStateStore } from './trigger-state-store';
  */
 const TestLayer = Layer.mergeAll(
   TriggerStateStore.layerMemory,
-  Layer.mergeAll(AiService.notAvailable, CredentialsService.layerConfig([]), FetchHttpClient.layer),
+  Layer.mergeAll(AiService.notAvailable, credentialsLayerConfig([]), FetchHttpClient.layer),
 ).pipe(
   Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
   Layer.provideMerge(ServiceResolver.layerRequirements(Database.Service)),

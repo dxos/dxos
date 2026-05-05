@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import { AiModelResolver, AiService } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { LayerSpec } from '@dxos/functions';
+import { LayerSpec } from '@dxos/compute';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

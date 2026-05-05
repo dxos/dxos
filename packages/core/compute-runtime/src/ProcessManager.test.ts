@@ -14,11 +14,10 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
+import { Operation, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
+import * as StorageService from '@dxos/compute/StorageService';
 import { Database } from '@dxos/echo';
-import { Process, ServiceResolver, Trace } from '@dxos/functions';
-import * as StorageService from '@dxos/functions/StorageService';
 import { log } from '@dxos/log';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Organization } from '@dxos/types';
 
 import * as ProcessManager from './ProcessManager';

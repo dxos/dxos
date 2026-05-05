@@ -16,11 +16,12 @@ import * as Queue from 'effect/Queue';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
+import { LayerSpec, Process, ServiceResolver, Trace } from '@dxos/compute';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
+import * as StorageService from '@dxos/compute/StorageService';
 import { DXN } from '@dxos/echo';
-import { LayerSpec, Process, ServiceResolver, StorageService, Trace } from '@dxos/functions';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import { ServiceNotAvailableError } from './errors';
 import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id';
@@ -372,7 +373,7 @@ export class ProcessManagerImpl implements Manager {
       };
 
       let builtinCtx = Context.empty().pipe(
-        Context.add(StorageService, storage),
+        Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
         Context.add(
           Trace.TraceService,
@@ -400,7 +401,7 @@ export class ProcessManagerImpl implements Manager {
       }
 
       const builtinTagKeys = new Set([
-        StorageService.key,
+        StorageService.StorageService.key,
         Scope.Scope.key,
         Trace.TraceService.key,
         Operation.Service.key,

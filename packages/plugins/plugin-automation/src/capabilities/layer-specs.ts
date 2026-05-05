@@ -9,11 +9,11 @@ import * as Layer from 'effect/Layer';
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
+import { Blueprint, Credential, LayerSpec, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed } from '@dxos/echo';
-import { CredentialsService, FunctionInvocationService, LayerSpec, QueueService } from '@dxos/functions';
+import { FunctionInvocationService, QueueService } from '@dxos/functions';
 import { AgentService } from '@dxos/functions-runtime';
 import {
   FeedTraceSink,
@@ -24,7 +24,6 @@ import {
   TriggerStateStore,
 } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
-import { OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 //
@@ -51,7 +50,7 @@ const FunctionInvocationSpec = LayerSpec.make(
       Feed.FeedService,
       QueueService,
       AiService.AiService,
-      CredentialsService,
+      Credential.CredentialsService,
       Database.Service,
       RemoteFunctionExecutionService,
       OperationHandlerSet.OperationHandlerProvider,

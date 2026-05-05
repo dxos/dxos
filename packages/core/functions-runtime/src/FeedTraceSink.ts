@@ -9,9 +9,10 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 
+import { Trace } from '@dxos/compute';
+import { ServiceResolver } from '@dxos/compute';
 import { Database, Feed, Filter, Order, Query } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { ServiceResolver, Trace } from '@dxos/functions';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 

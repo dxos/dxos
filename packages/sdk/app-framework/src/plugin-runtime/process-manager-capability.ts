@@ -8,9 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
+import { LayerSpec, Operation, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
 import { LayerStack, ProcessManager } from '@dxos/compute-runtime';
-import { LayerSpec, Process, ServiceResolver, Trace } from '@dxos/functions';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import { ActivationEvents, Capabilities } from '../common';
 import { Capability, Plugin } from '../core';

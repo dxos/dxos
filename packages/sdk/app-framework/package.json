@@ -102,6 +102,7 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",

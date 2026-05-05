@@ -4,8 +4,8 @@
 
 import * as Context from 'effect/Context';
 
+import { Process, Trace } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { Process, Trace } from '@dxos/functions';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 

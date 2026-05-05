@@ -9,12 +9,11 @@ import { runInSpace } from '@dxos/app-framework/plugin-runtime';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContextBinder } from '@dxos/assistant';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Routine, Template } from '@dxos/blueprints';
+import { Blueprint, Operation, Routine, Template } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Text } from '@dxos/schema';
 

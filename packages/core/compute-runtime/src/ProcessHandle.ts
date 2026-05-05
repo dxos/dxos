@@ -16,8 +16,9 @@ import * as Queue from 'effect/Queue';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
+import { Process, type Trace } from '@dxos/compute';
+import type * as StorageService from '@dxos/compute/StorageService';
 import { Performance } from '@dxos/effect';
-import { Process, type StorageService, type Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 import type * as ProcessManager from './ProcessManager';
@@ -61,7 +62,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
   readonly #scope: Scope.CloseableScope;
   readonly #registry: Registry.Registry;
   readonly #outputQueue: Queue.Queue<OutputItem<O>>;
-  readonly #storage: Context.Tag.Service<typeof StorageService>;
+  readonly #storage: StorageService.Service;
   readonly #traceSink: Trace.Sink;
 
   readonly #ephemeralBuffer = new EphemeralTraceBuffer();
@@ -79,7 +80,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
     services: Context.Context<R | Process.BaseServices>,
     registry: Registry.Registry,
     outputQueue: Queue.Queue<OutputItem<O>>,
-    storage: Context.Tag.Service<typeof StorageService>,
+    storage: StorageService.Service,
     key: string,
     params: Process.Params,
     environment: ProcessManager.Environment,

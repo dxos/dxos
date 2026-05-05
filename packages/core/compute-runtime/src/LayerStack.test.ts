@@ -9,8 +9,8 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
 
+import { LayerSpec } from '@dxos/compute';
 import { runAndForwardErrors } from '@dxos/effect';
-import { LayerSpec } from '@dxos/functions';
 import { SpaceId } from '@dxos/keys';
 
 import * as LayerStack from './LayerStack';

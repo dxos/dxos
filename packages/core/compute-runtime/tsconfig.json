@@ -26,6 +26,9 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../compute"
+    },
+    {
       "path": "../echo/echo"
     },
     {

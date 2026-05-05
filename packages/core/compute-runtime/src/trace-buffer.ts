@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Trace } from '@dxos/functions';
+import { Trace } from '@dxos/compute';
 
 /**
  * Compacting circular buffer of ephemeral trace events.

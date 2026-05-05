@@ -38,6 +38,7 @@
   ],
   "scripts": {},
   "dependencies": {
+    "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",

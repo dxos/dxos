@@ -12,14 +12,13 @@ import { Capabilities } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/ui';
 import { AiSession } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
-import { type Blueprint } from '@dxos/blueprints';
+import { type Blueprint, Credential, OperationRegistry, ServiceResolver } from '@dxos/compute';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
-import { CredentialsService, QueueService, ServiceResolver } from '@dxos/functions';
+import { QueueService } from '@dxos/functions';
 import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { OperationRegistry } from '@dxos/operation';
 import { type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
@@ -89,7 +88,7 @@ export const useChatProcessor = ({
       Database.Service,
       QueueService,
       Feed.FeedService,
-      CredentialsService,
+      Credential.CredentialsService,
       AiService.AiService,
       AgentService.AgentService,
       OperationRegistry.Service,

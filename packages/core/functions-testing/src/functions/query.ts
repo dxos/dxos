@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Database, Filter, Query as EchoQuery } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 
 import { QueryDb } from './definitions';
 

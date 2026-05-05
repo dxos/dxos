@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 
-import { ServiceResolver, type ServiceNotAvailableError } from '@dxos/functions';
+import { ServiceResolver, type ServiceNotAvailableError } from '@dxos/compute';
 import type { SpaceId } from '@dxos/keys';
 
 import { Capabilities } from '../common';

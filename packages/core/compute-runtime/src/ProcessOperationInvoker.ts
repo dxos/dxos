@@ -16,11 +16,12 @@ import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
 
+import { Process, Trace } from '@dxos/compute';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { DXN } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { Process, Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Operation, OperationHandlerSet, type OperationInvoker } from '@dxos/operation';
+import { type OperationInvoker } from '@dxos/operation';
 
 import type { ProcessNotFoundError } from './errors';
 import { ProcessManagerService } from './process-manager-service';

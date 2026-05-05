@@ -3,7 +3,8 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Blueprint, OperationHandlerSet } from '@dxos/compute';
 
 export const AiService = Capability.lazy<void, Capability.Any[]>('AiService', () => import('./ai-service'));
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
