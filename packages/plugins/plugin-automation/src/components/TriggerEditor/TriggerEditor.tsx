@@ -6,8 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
 import { DXN, type Database, Entity, Feed, Obj, type Query } from '@dxos/echo';
-import { Script, Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { Operation, Script, Trigger } from '@dxos/compute';
 import { Filter, Ref, useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';

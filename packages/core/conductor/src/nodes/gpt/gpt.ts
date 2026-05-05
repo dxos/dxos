@@ -15,10 +15,10 @@ import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolv
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Database, Ref } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
-import { QueueService, Trace } from '@dxos/functions';
+import { Operation, OperationRegistry, Trace } from '@dxos/compute';
+import { QueueService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation, OperationRegistry } from '@dxos/operation';
 import { Message } from '@dxos/types';
 
 import { ComputeCustomEvent, ComputeNodeContext, ValueBag, defineComputeNode } from '../../types';

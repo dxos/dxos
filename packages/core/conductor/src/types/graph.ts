@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 import { Graph } from '@dxos/graph';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 export const ComputeValueType = Schema.Literal('string', 'number', 'boolean', 'object');
 

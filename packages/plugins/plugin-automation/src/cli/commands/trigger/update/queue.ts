@@ -13,8 +13,7 @@ import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { DXN, Database, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { Operation, Trigger } from '@dxos/compute';
 
 import { Enabled, Input, Queue, TriggerId } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction, selectQueue, selectTrigger } from '../util';

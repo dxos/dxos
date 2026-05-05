@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { isNonNullable } from '@dxos/util';
 import type { Listeners } from '@dxos/vendor-hyperformula';
 import { ExportedCellChange, type HyperFormula } from '@dxos/vendor-hyperformula';

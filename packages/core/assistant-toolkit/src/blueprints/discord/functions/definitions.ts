@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { CredentialsService, Trace } from '@dxos/compute';
+import { Credential, Trace } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 
 // TODO(dmaretskyi): Extract.
@@ -67,5 +67,5 @@ export const FetchMessages = Operation.make({
     }),
   }),
   output: Schema.Any,
-  services: [CredentialsService, Trace.TraceService],
+  services: [Credential.CredentialsService, Trace.TraceService],
 });

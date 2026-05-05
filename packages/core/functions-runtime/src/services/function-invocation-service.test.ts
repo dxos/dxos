@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { FunctionInvocationService } from '@dxos/functions';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
 
 import { FunctionInvocationServiceLayer } from './function-invocation-service';
 import { FunctionImplementationResolver } from './local-function-execution';

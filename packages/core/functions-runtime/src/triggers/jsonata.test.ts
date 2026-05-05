@@ -7,7 +7,7 @@ import { assert, describe, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { Trigger, type TriggerEvent } from '@dxos/functions';
+import { Trigger, TriggerEvent } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 describe('jsonata', () => {

@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { ContextQueueService } from '@dxos/compute';
+import { ContextQueueService } from '@dxos/functions';
 import { Entity, Filter, Obj, Query, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';

@@ -11,7 +11,8 @@ import * as Scope from 'effect/Scope';
 
 import type { AiService } from '@dxos/ai';
 import { Event, synchronized } from '@dxos/async';
-import { type CredentialsService, type QueueService, Trace } from '@dxos/compute';
+import { type Credential, Trace } from '@dxos/compute';
+import { type QueueService } from '@dxos/functions';
 import type { Operation, OperationRegistry } from '@dxos/compute';
 import {
   ComputeBeginEvent,
@@ -97,7 +98,7 @@ export type ComputeServices =
   | Database.Service
   | Feed.FeedService
   | QueueService
-  | CredentialsService
+  | Credential.CredentialsService
   | Operation.Service
   | OperationRegistry.Service;
 

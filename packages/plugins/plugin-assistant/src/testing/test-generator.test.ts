@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
-import { ContextQueueService } from '@dxos/compute';
+import { ContextQueueService } from '@dxos/functions';
 import { Database } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';

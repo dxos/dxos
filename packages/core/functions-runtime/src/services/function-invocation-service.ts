@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import type { AiService } from '@dxos/ai';
 import { Context as DxosContext } from '@dxos/context';
 import { FunctionInvocationService } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { LocalFunctionExecutionService } from './local-function-execution';
 import type { RemoteFunctionExecutionService as RemoteFunctionExecutionServiceType } from './remote-function-execution-service';

@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Template } from '@dxos/compute';
-import { type FunctionNotFoundError } from '@dxos/compute';
+import { Err } from '@dxos/compute';
 import { type Operation, type OperationRegistry } from '@dxos/compute';
 import { type Database, Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
@@ -31,7 +31,7 @@ export const formatSystemPrompt = ({
   objects = [],
 }: Pick<AiRequestRunProps, 'system' | 'blueprints' | 'objects'>): Effect.Effect<
   string,
-  FunctionNotFoundError | ObjectNotFoundError,
+  Err.FunctionNotFoundError | ObjectNotFoundError,
   Database.Service | OperationRegistry.Service | Operation.Service
 > =>
   Effect.gen(function* () {

@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 
 import { Context } from '@dxos/context';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
-import * as OperationModule from '@dxos/operation';
+import * as OperationModule from '@dxos/compute';
 import { useClient } from '@dxos/react-client';
 import { Filter, Query, type Space, useQuery } from '@dxos/react-client/echo';
 import { IconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';

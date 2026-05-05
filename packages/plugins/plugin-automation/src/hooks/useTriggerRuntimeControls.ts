@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { useEffect, useState } from 'react';
 
 import { type Database, Filter, Query } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
+import { Trigger } from '@dxos/compute';
 import { TriggerDispatcher, type TriggerDispatcherState } from '@dxos/functions-runtime';
 import { useQuery } from '@dxos/react-client/echo';
 

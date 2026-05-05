@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { type CellValue } from '@dxos/vendor-hyperformula';
 import { DetailedCellError } from '@dxos/vendor-hyperformula';
 

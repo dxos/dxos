@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import { getPersonalSpace } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { QueueService } from '@dxos/compute';
+import { QueueService } from '@dxos/functions';
 import { Database, type Key } from '@dxos/echo';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { log } from '@dxos/log';

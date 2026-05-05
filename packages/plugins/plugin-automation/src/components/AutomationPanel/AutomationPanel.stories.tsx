@@ -6,8 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { Operation, Trigger } from '@dxos/compute';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';

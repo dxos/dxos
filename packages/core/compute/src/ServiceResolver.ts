@@ -13,7 +13,7 @@ import * as Scope from 'effect/Scope';
 
 import type { DXN, SpaceId } from '@dxos/keys';
 
-import { ServiceNotAvailableError } from '../errors';
+import { ServiceNotAvailableError } from './Err';
 import * as Process from './Process';
 
 const ServiceResolverTypeId = '~@dxos/functions/ServiceResolver' as const;

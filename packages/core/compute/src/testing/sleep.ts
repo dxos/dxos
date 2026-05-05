@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/operation';
+import * as Operation from '../Operation';
 
-import { Sleep } from './definitions';
+import { Sleep } from './index';
 
 export default Sleep.pipe(
   Operation.withHandler(

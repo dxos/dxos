@@ -17,7 +17,7 @@ import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { CredentialsService, Trace } from '@dxos/compute';
+import { Credential, Trace } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -28,7 +28,7 @@ import { FetchMessages, TimeRange } from './definitions';
 const DiscordConfigFromCredential = Layer.unwrapEffect(
   Effect.gen(function* () {
     return DiscordConfig.layer({
-      token: yield* CredentialsService.getApiKey({ service: 'discord.com' }),
+      token: yield* Credential.CredentialsService.getApiKey({ service: 'discord.com' }),
       rest: {
         baseUrl: 'https://api-proxy.dxos.workers.dev/discord.com/api/v10',
       },

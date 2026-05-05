@@ -8,7 +8,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Obj } from '@dxos/echo';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
 
 import { ComputeGraphRegistry, defaultPlugins } from './compute-graph-registry';
 import { TestBuilder, createMockedComputeRuntimeProvider } from './testing';

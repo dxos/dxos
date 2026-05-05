@@ -8,7 +8,7 @@ import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { CredentialsService } from '@dxos/compute';
+import { credentialsLayerConfig } from '@dxos/functions';
 import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
@@ -16,7 +16,7 @@ import { GoogleMail } from '../../../apis';
 import { GoogleCredentials } from '../../../services/google-credentials';
 
 const TestLayer = Layer.mergeAll(
-  CredentialsService.layerConfig([
+  credentialsLayerConfig([
     {
       service: 'google.com',
       // TODO(burdon): Rename `credential`.

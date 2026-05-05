@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { createEdgeIdentity } from '@dxos/client/edge';
-import type { OperationInvoker as OperationInvokerExports } from '@dxos/compute';
+import { OperationInvoker as OperationInvokerExports } from '@dxos/operation';
 import { Context as DxContext } from '@dxos/context';
 import { type Database, type Key, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';

@@ -14,132 +14,21 @@ import { Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { AccessToken } from '@dxos/types';
 
-export type CredentialQuery = {
-  service?: string;
-};
+import { Credential } from '@dxos/compute';
 
-// TODO(dmaretskyi): Unify with other apis.
-// packages/sdk/schema/src/common/access-token.ts
-export type ServiceCredential = {
-  service: string;
+export class ConfiguredCredentialsService implements Context.Tag.Service<Credential.CredentialsService> {
+  constructor(private readonly credentials: Credential.ServiceCredential[] = []) {}
 
-  // TODO(dmaretskyi): Build out.
-  apiKey?: string;
-};
-
-export class CredentialsService extends Context.Tag('@dxos/functions/CredentialsService')<
-  CredentialsService,
-  {
-    /**
-     * Query all.
-     */
-    queryCredentials: (query: CredentialQuery) => Promise<ServiceCredential[]>;
-
-    /**
-     * Get a single credential.
-     * @throws {Error} If no credential is found.
-     */
-    getCredential: (query: CredentialQuery) => Promise<ServiceCredential>;
-  }
->() {
-  static getCredential = (query: CredentialQuery): Effect.Effect<ServiceCredential, never, CredentialsService> =>
-    Effect.gen(function* () {
-      const credentials = yield* CredentialsService;
-      return yield* Effect.promise(() => credentials.getCredential(query));
-    });
-
-  static getApiKey = (query: CredentialQuery): Effect.Effect<Redacted.Redacted<string>, never, CredentialsService> =>
-    Effect.gen(function* () {
-      const credential = yield* CredentialsService.getCredential(query);
-      if (!credential.apiKey) {
-        throw new Error(`API key not found for service: ${query.service}`);
-      }
-      return Redacted.make(credential.apiKey);
-    });
-
-  static configuredLayer = (credentials: ServiceCredential[]) =>
-    Layer.succeed(CredentialsService, new ConfiguredCredentialsService(credentials));
-
-  static layerConfig = (
-    credentials: {
-      service: string;
-      apiKey: Config.Config<Redacted.Redacted<string>>;
-    }[],
-  ) =>
-    Layer.effect(
-      CredentialsService,
-      Effect.gen(function* () {
-        const serviceCredentials = yield* Effect.forEach(credentials, ({ service, apiKey }) =>
-          Effect.gen(function* () {
-            return {
-              service,
-              apiKey: Redacted.value(yield* apiKey),
-            };
-          }),
-        );
-
-        return new ConfiguredCredentialsService(serviceCredentials);
-      }),
-    );
-
-  static layerFromDatabase = ({ caching = false }: { caching?: boolean } = {}) =>
-    Layer.effect(
-      CredentialsService,
-      Effect.gen(function* () {
-        const dbService = yield* Database.Service;
-        const cache = new Map<string, ServiceCredential[]>();
-
-        const queryCredentials = async (query: CredentialQuery): Promise<ServiceCredential[]> => {
-          const cacheKey = JSON.stringify(query);
-          if (caching && cache.has(cacheKey)) {
-            return cache.get(cacheKey)!;
-          }
-
-          const accessTokens = await dbService.db.query(Query.type(AccessToken.AccessToken)).run();
-          const credentials = accessTokens
-            .filter((accessToken) => accessToken.source === query.service)
-            .map((accessToken) => ({
-              service: accessToken.source,
-              apiKey: accessToken.token,
-            }));
-
-          if (caching) {
-            cache.set(cacheKey, credentials);
-          }
-
-          return credentials;
-        };
-
-        return {
-          getCredential: async (query) => {
-            const credentials = await queryCredentials(query);
-            if (credentials.length === 0) {
-              throw new Error(`Credential not found for service: ${query.service}`);
-            }
-
-            return credentials[0];
-          },
-          queryCredentials: async (query) => {
-            return queryCredentials(query);
-          },
-        };
-      }),
-    );
-}
-
-export class ConfiguredCredentialsService implements Context.Tag.Service<CredentialsService> {
-  constructor(private readonly credentials: ServiceCredential[] = []) {}
-
-  addCredentials(credentials: ServiceCredential[]): ConfiguredCredentialsService {
+  addCredentials(credentials: Credential.ServiceCredential[]): ConfiguredCredentialsService {
     this.credentials.push(...credentials);
     return this;
   }
 
-  async queryCredentials(query: CredentialQuery): Promise<ServiceCredential[]> {
+  async queryCredentials(query: Credential.CredentialQuery): Promise<Credential.ServiceCredential[]> {
     return this.credentials.filter((credential) => credential.service === query.service);
   }
 
-  async getCredential(query: CredentialQuery): Promise<ServiceCredential> {
+  async getCredential(query: Credential.CredentialQuery): Promise<Credential.ServiceCredential> {
     const credential = this.credentials.find((credential) => credential.service === query.service);
     if (!credential) {
       throw new Error(`Credential not found for service: ${query.service}`);
@@ -157,3 +46,74 @@ export const withAuthorization = (token: string, kind?: 'Bearer' | 'Basic') =>
     const authorization = kind ? `${kind} ${token}` : token;
     return HttpClientRequest.setHeader(request, 'Authorization', authorization);
   });
+
+export const configuredCredentialsLayer = (credentials: Credential.ServiceCredential[]) =>
+  Layer.succeed(Credential.CredentialsService, new ConfiguredCredentialsService(credentials));
+
+export const credentialsLayerConfig = (
+  credentials: {
+    service: string;
+    apiKey: Config.Config<Redacted.Redacted<string>>;
+  }[],
+) =>
+  Layer.effect(
+    Credential.CredentialsService,
+    Effect.gen(function* () {
+      const serviceCredentials = yield* Effect.forEach(credentials, ({ service, apiKey }) =>
+        Effect.gen(function* () {
+          return {
+            service,
+            apiKey: Redacted.value(yield* apiKey),
+          };
+        }),
+      );
+
+      return new ConfiguredCredentialsService(serviceCredentials);
+    }),
+  );
+
+export const credentialsLayerFromDatabase = ({ caching = false }: { caching?: boolean } = {}) =>
+  Layer.effect(
+    Credential.CredentialsService,
+    Effect.gen(function* () {
+      const dbService = yield* Database.Service;
+      const cache = new Map<string, Credential.ServiceCredential[]>();
+
+      const queryCredentials = async (
+        query: Credential.CredentialQuery,
+      ): Promise<Credential.ServiceCredential[]> => {
+        const cacheKey = JSON.stringify(query);
+        if (caching && cache.has(cacheKey)) {
+          return cache.get(cacheKey)!;
+        }
+
+        const accessTokens = await dbService.db.query(Query.type(AccessToken.AccessToken)).run();
+        const credentials = accessTokens
+          .filter((accessToken) => accessToken.source === query.service)
+          .map((accessToken) => ({
+            service: accessToken.source,
+            apiKey: accessToken.token,
+          }));
+
+        if (caching) {
+          cache.set(cacheKey, credentials);
+        }
+
+        return credentials;
+      };
+
+      return {
+        getCredential: async (query) => {
+          const credentials = await queryCredentials(query);
+          if (credentials.length === 0) {
+            throw new Error(`Credential not found for service: ${query.service}`);
+          }
+
+          return credentials[0];
+        },
+        queryCredentials: async (query) => {
+          return queryCredentials(query);
+        },
+      };
+    }),
+  );

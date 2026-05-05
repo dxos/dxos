@@ -4,16 +4,70 @@
 
 import * as Effect from 'effect/Effect';
 import * as Record from 'effect/Record';
-import handlebars from 'handlebars';
+import * as Schema from 'effect/Schema';
 
-import { Database } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import type { ObjectNotFoundError } from '@dxos/echo/Err';
-import { FunctionNotFoundError } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation, OperationRegistry } from '@dxos/operation';
+import { Text } from '@dxos/schema';
+import handlebars from 'handlebars';
 
-import type { Template } from '../index';
+import { FunctionNotFoundError } from './Err';
+import * as Operation from './Operation';
+import * as OperationRegistry from './OperationRegistry';
+
+/**
+ * Template input kind determines how template variables are resolved.
+ */
+export const InputKind = Schema.Literal(
+  'value', // Literal value.
+  'pass-through',
+  'retriever',
+  'function',
+  'query',
+  'resolver',
+  'context',
+  'schema',
+);
+
+export type InputKind = Schema.Schema.Type<typeof InputKind>;
+
+/**
+ * Template input variable.
+ * E.g., {{foo}}
+ */
+export const Input = Schema.Struct({
+  name: Schema.String,
+  kind: Schema.optional(InputKind),
+  default: Schema.optional(Schema.Any),
+
+  /**
+   * Function to call if the kind is 'function'.
+   */
+  function: Schema.optional(Schema.String),
+});
+
+export type Input = Schema.Schema.Type<typeof Input>;
+
+/**
+ * Template type.
+ */
+export const Template = Schema.Struct({
+  source: Ref.Ref(Text.Text).annotations({ description: 'Handlebars template source' }),
+  inputs: Schema.optional(Schema.Array(Input)),
+});
+
+export interface Template extends Schema.Schema.Type<typeof Template> {}
+
+export const make = ({
+  id,
+  source,
+  inputs = [],
+}: { id?: string; source?: string; inputs?: Input[] } = {}): Template => ({
+  source: Ref.make(Text.make({ id, content: source })),
+  inputs,
+});
 
 /**
  * Process Handlebars template.
@@ -28,7 +82,7 @@ export const process = <Options extends {}>(source: string, variables: Partial<O
 };
 
 export const processTemplate = (
-  template: Template.Template,
+  template: Template,
 ): Effect.Effect<string, ObjectNotFoundError | FunctionNotFoundError, OperationRegistry.Service | Operation.Service> =>
   Effect.gen(function* () {
     const variables = yield* Effect.forEach(template.inputs ?? [], (input) =>

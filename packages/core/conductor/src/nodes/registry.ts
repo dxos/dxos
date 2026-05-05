@@ -14,7 +14,7 @@ import { isInstanceOf } from '@dxos/echo/internal';
 import { QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { getTypenameFromQuery } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';

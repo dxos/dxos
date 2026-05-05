@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 import { CommandConfig, Common, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { DXN } from '@dxos/echo';
 import { Database } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
+import { Trigger } from '@dxos/compute';
 
 import { TriggerId } from './options';
 import { printTriggerRemoved, selectTrigger } from './util';

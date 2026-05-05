@@ -9,8 +9,9 @@ import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { withAuthorization } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
+
+import { withAuthorization } from '@dxos/functions';
 import { Database, Obj } from '@dxos/echo';
 
 import { AccessTokenNotPopulatedError, IntegrationDatabaseMissingError } from '../errors';

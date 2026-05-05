@@ -8,8 +8,8 @@ import type * as Scope from 'effect/Scope';
 
 import type { AiService } from '@dxos/ai';
 import type { Database, Feed } from '@dxos/echo';
-import type { CredentialsService, QueueService, Trace } from '@dxos/functions';
-import type { Operation, OperationRegistry } from '@dxos/operation';
+import type { Credential, Operation, OperationRegistry, Trace } from '@dxos/compute';
+import type { QueueService } from '@dxos/functions';
 import { mapValues } from '@dxos/util';
 
 import { type ComputeNodeContext } from './compute-events';
@@ -102,7 +102,7 @@ export const ValueBag = Object.freeze({
 
 export type ComputeRequirements =
   | AiService.AiService
-  | CredentialsService
+  | Credential.CredentialsService
   | Database.Service
   | QueueService
   | Feed.FeedService

@@ -16,7 +16,7 @@ import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-fram
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AiContextBinder, AiContextService, AiSession, AiSessionService } from '@dxos/assistant';
 import { McpServer } from '@dxos/assistant-toolkit';
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint, Credential, Err } from '@dxos/compute';
 import { ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Resource } from '@dxos/context';
@@ -25,11 +25,10 @@ import { AtomObj } from '@dxos/echo-atom';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { acquireReleaseResource, asyncTaskTaggingLayer } from '@dxos/effect';
 import {
-  CredentialsService,
   FunctionInvocationService,
   feedServiceFromQueueServiceLayer,
   QueueService,
-  ServiceNotAvailableError,
+  credentialsLayerFromDatabase,
 } from '@dxos/functions';
 import { AgentService } from '@dxos/functions-runtime';
 import {
@@ -45,7 +44,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
+import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { AutomationCapabilities } from '#types';
@@ -212,7 +211,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                     ServiceResolver.succeed(AiContextService, (context) =>
                       Effect.gen(function* () {
                         if (!context.conversation) {
-                          return yield* Effect.fail(new ServiceNotAvailableError(AiContextService.key));
+                          return yield* Effect.fail(new Err.ServiceNotAvailableError(AiContextService.key));
                         }
                         const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(
                           Effect.orDie,
@@ -232,7 +231,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                     ServiceResolver.succeed(AiSessionService, (context) =>
                       Effect.gen(function* () {
                         if (!context.conversation) {
-                          return yield* Effect.fail(new ServiceNotAvailableError(AiSessionService.key));
+                          return yield* Effect.fail(new Err.ServiceNotAvailableError(AiSessionService.key));
                         }
                         const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(
                           Effect.orDie,
@@ -256,7 +255,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                       AiService.AiService,
                       OperationRegistry.Service,
                       Blueprint.RegistryService,
-                      CredentialsService,
+                      Credential.CredentialsService,
                     ),
                   );
                 }),
@@ -300,7 +299,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             ),
             Layer.provideMerge(opaqueToolkitProvider),
             Layer.provideMerge(aiServiceLayer),
-            Layer.provideMerge(CredentialsService.layerFromDatabase()),
+            Layer.provideMerge(credentialsLayerFromDatabase()),
             Layer.provideMerge(ClientService.fromClient(client)),
             Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
           )

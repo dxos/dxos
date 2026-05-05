@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/compute';
-import { QueueService } from '@dxos/compute';
+import { QueueService } from '@dxos/functions';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 

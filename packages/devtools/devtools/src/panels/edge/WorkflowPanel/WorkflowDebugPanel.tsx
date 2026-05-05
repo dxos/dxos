@@ -7,7 +7,7 @@ import type * as Layer from 'effect/Layer';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
-import { QueueService } from '@dxos/compute';
+import { QueueService } from '@dxos/functions';
 import { type ComputeGraph, ComputeNodeContext, ValueBag, type WorkflowLoader } from '@dxos/conductor';
 import { Context } from '@dxos/context';
 import { Database } from '@dxos/echo';

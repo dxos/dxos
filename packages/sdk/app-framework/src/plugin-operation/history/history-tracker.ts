@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import { type OperationInvoker } from '@dxos/compute';
+import { OperationInvoker } from '@dxos/operation';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 

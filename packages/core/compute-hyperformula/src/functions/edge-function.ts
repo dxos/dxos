@@ -8,7 +8,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { Filter } from '@dxos/client/echo';
 import { JsonSchema, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { isNonNullable } from '@dxos/util';
 import { type ProcedureAst } from '@dxos/vendor-hyperformula';
 import { type InterpreterState } from '@dxos/vendor-hyperformula';

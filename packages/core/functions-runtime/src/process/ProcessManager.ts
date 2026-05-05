@@ -23,10 +23,11 @@ import * as Stream from 'effect/Stream';
 
 import { DXN, Obj } from '@dxos/echo';
 import { Performance, runAndForwardErrors } from '@dxos/effect';
-import { Process, ServiceResolver, Trace } from '@dxos/functions';
+import { Process, ServiceResolver, Trace } from '@dxos/compute';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Operation, OperationHandlerSet, type OperationInvoker } from '@dxos/operation';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
+import type { OperationInvoker } from '@dxos/operation';
 import type { ObjectId } from '@dxos/protocols';
 
 import { ProcessNotFoundError, ServiceNotAvailableError } from '../errors';

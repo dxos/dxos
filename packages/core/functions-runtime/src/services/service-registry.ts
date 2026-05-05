@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import type * as Option from 'effect/Option';
 
-import { ServiceNotAvailableError } from '@dxos/functions';
+import { Err } from '@dxos/compute';
 
 export namespace ServiceRegistry {
   export interface Service {
@@ -22,15 +22,15 @@ export class ServiceRegistry extends Context.Tag('@dxos/functions/ServiceRegistr
   /**
    * Resolves the service from the registry.
    * @param tag Service tag to resolve.
-   * @throws {@link ServiceNotAvailableError} if the service is not found.
+   * @throws {@link Err.ServiceNotAvailableError} if the service is not found.
    * @returns Effect that resolve to the service.
    */
   static resolve: <T extends Context.Tag<any, any>>(
     tag: T,
-  ) => Effect.Effect<T, ServiceNotAvailableError, ServiceRegistry> = (tag) =>
+  ) => Effect.Effect<T, Err.ServiceNotAvailableError, ServiceRegistry> = (tag) =>
     ServiceRegistry.pipe(
       Effect.flatMap((_) => _.resolve(tag)),
-      Effect.mapError(() => new ServiceNotAvailableError(tag.key)),
+      Effect.mapError(() => new Err.ServiceNotAvailableError(tag.key)),
     );
 
   static provide: {
@@ -40,7 +40,7 @@ export class ServiceRegistry extends Context.Tag('@dxos/functions/ServiceRegistr
       effect: Effect.Effect<A, E, R>,
     ) => Effect.Effect<
       A,
-      E | ServiceNotAvailableError,
+      E | Err.ServiceNotAvailableError,
       Exclude<R, { [K in keyof Tags]: Context.Tag.Identifier<Tags[K]> }[number]> | ServiceRegistry
     >;
   } = (...tags) =>

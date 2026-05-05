@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiContextBinder, AiContextService } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/compute';
-import { QueueService } from '@dxos/compute';
+import { QueueService } from '@dxos/functions';
 import { Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';

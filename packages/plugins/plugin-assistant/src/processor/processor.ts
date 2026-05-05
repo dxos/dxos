@@ -20,7 +20,8 @@ import {
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/compute';
-import { Trace, type CredentialsService, type QueueService } from '@dxos/compute';
+import { type Credential, Trace } from '@dxos/compute';
+import { type QueueService } from '@dxos/functions';
 import { Operation } from '@dxos/compute';
 import { type Database, Feed, Obj, Ref } from '@dxos/echo';
 import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
@@ -36,7 +37,7 @@ import { UpdateChatName } from '../operations/definitions';
  * Retained for backward compatibility with CLI and update-name.
  */
 export type AiChatServices =
-  | CredentialsService
+  | Credential.CredentialsService
   | Database.Service
   | QueueService
   | AiService.AiService

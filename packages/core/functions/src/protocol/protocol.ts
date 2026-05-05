@@ -17,7 +17,7 @@ import { refFromEncodedReference } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { type FunctionProtocol } from '@dxos/protocols';
 
 import { FunctionError, InvalidOperationInputError, InvalidOperationOutputError } from '../errors';

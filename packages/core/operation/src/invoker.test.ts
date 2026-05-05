@@ -15,8 +15,8 @@ import * as Stream from 'effect/Stream';
 import * as TestClock from 'effect/TestClock';
 import { describe, expect, test } from 'vitest';
 
-import { NoHandlerError } from './errors';
-import * as Operation from './Operation';
+import { Err, Operation } from '@dxos/compute';
+
 import * as OperationInvoker from './OperationInvoker';
 
 const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>;
@@ -127,7 +127,7 @@ describe('OperationInvoker', () => {
 
       expect(result._tag).toBe('Left');
       if (result._tag === 'Left') {
-        expect(result.left).toBeInstanceOf(NoHandlerError);
+        expect(result.left).toBeInstanceOf(Err.NoHandlerError);
       }
     }),
   );
@@ -251,7 +251,7 @@ describe('OperationInvoker.invokePromise', () => {
     const result = await invoker.invokePromise(ToString, { value: 42 });
 
     expect(result.error).toBeDefined();
-    expect(result.error).toBeInstanceOf(NoHandlerError);
+    expect(result.error).toBeInstanceOf(Err.NoHandlerError);
   });
 });
 

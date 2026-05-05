@@ -17,7 +17,7 @@ import { FUNCTIONS_META_KEY, setUserFunctionIdInMetadata } from '@dxos/functions
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { safeParseJson } from '@dxos/util';
 

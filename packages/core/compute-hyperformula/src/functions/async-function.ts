@@ -8,7 +8,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import { type CleanupFn, debounce } from '@dxos/async';
 import type { Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
-import type { Operation } from '@dxos/operation';
+import type { Operation } from '@dxos/compute';
 import type { RawInterpreterValue, SimpleCellAddress } from '@dxos/vendor-hyperformula';
 import type { InterpreterState } from '@dxos/vendor-hyperformula';
 import type { InterpreterValue } from '@dxos/vendor-hyperformula';

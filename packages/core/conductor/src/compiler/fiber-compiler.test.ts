@@ -13,10 +13,9 @@ import { TestAiService } from '@dxos/ai/testing';
 import { Feed, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { TestHelpers } from '@dxos/effect/testing';
-import { Trace } from '@dxos/functions';
-import { CredentialsService } from '@dxos/functions';
+import { Operation, OperationRegistry, Trace } from '@dxos/compute';
+import { configuredCredentialsLayer } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
-import { Operation, OperationRegistry } from '@dxos/operation';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';
@@ -46,7 +45,7 @@ const TestLayer = Layer.empty.pipe(
     Layer.mergeAll(
       TestAiService(),
       TestDatabaseLayer(),
-      CredentialsService.configuredLayer([]),
+      configuredCredentialsLayer([]),
       Feed.notAvailable,
       Trace.writerLayerNoop,
     ),

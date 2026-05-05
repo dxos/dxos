@@ -5,7 +5,7 @@
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as Schema from 'effect/Schema';
 
-import { CredentialsService } from '@dxos/compute';
+import { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 
 export const FetchPrs = Operation.make({
@@ -23,5 +23,5 @@ export const FetchPrs = Operation.make({
     }),
   }),
   output: Schema.Any,
-  services: [CredentialsService, HttpClient.HttpClient],
+  services: [Credential.CredentialsService, HttpClient.HttpClient],
 });

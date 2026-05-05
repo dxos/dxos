@@ -9,7 +9,7 @@ import * as Ref from 'effect/Ref';
 
 import { log } from '@dxos/log';
 
-import type * as Operation from './Operation';
+import type { Operation } from '@dxos/compute';
 
 /**
  * Invocation function type for scheduling operations.

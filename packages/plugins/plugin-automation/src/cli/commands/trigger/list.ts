@@ -11,7 +11,7 @@ import { CommandConfig, Common, printList, spaceIdWithDefault, spaceLayer } from
 import { ClientService } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { Database, Filter, Query } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
+import { Trigger } from '@dxos/compute';
 
 import { getTriggerRemoteStatus, printTrigger } from './util';
 

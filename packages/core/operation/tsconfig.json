@@ -5,16 +5,7 @@
   ],
   "references": [
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/effect"
-    },
-    {
-      "path": "../../common/errors"
-    },
-    {
-      "path": "../../common/invariant"
     },
     {
       "path": "../../common/log"
@@ -23,13 +14,7 @@
       "path": "../../common/test-utils"
     },
     {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../sdk/schema"
-    },
-    {
-      "path": "../echo/echo"
+      "path": "../compute"
     },
     {
       "path": "../echo/echo-db"

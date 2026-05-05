@@ -16,9 +16,9 @@ import { Feed } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { CredentialsService, Trace } from '@dxos/functions';
+import { Operation, OperationRegistry, Trace } from '@dxos/compute';
+import { configuredCredentialsLayer } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Operation, OperationRegistry } from '@dxos/operation';
 
 import { type GptOutput, NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';
@@ -39,7 +39,7 @@ const TestLayer = Layer.empty.pipe(
     Layer.mergeAll(
       TestAiService(),
       TestDatabaseLayer(),
-      CredentialsService.configuredLayer([]),
+      configuredCredentialsLayer([]),
       Feed.notAvailable,
       Trace.writerLayerNoop,
     ),

@@ -9,7 +9,7 @@ import { type Space, type SpaceId } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import type { Operation } from '@dxos/operation';
+import type { Operation } from '@dxos/compute';
 import type { ConfigParams, FunctionPluginDefinition, FunctionTranslationsPackage } from '@dxos/vendor-hyperformula';
 import { HyperFormula } from '@dxos/vendor-hyperformula';
 

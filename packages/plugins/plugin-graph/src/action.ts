@@ -7,7 +7,8 @@ import * as Function from 'effect/Function';
 
 import { Capability, type CapabilityManager } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
-import { Operation, type OperationInvoker } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
+import { OperationInvoker } from '@dxos/operation';
 import { runAndForwardErrors } from '@dxos/effect';
 
 /**

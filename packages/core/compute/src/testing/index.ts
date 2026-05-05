@@ -1,10 +1,11 @@
 //
-// Copyright 2026 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/operation';
+import * as Operation from '../Operation';
+import * as OperationHandlerSet from '../OperationHandlerSet';
 
 export const Fibonacci = Operation.make({
   meta: {
@@ -47,3 +48,9 @@ export const Sleep = Operation.make({
   }),
   output: Schema.Void,
 });
+
+export const ExampleHandlers = OperationHandlerSet.lazy(
+  () => import('./fib'),
+  () => import('./reply'),
+  () => import('./sleep'),
+);

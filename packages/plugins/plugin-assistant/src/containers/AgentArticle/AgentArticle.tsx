@@ -11,7 +11,7 @@ import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
-import { QueueService } from '@dxos/compute';
+import { QueueService } from '@dxos/functions';
 import { Annotation, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';

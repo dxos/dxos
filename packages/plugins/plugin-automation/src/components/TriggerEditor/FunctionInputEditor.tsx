@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type Database, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { type JsonPath } from '@dxos/echo/internal';
-import { type Operation } from '@dxos/operation';
+import { type Operation } from '@dxos/compute';
 import { useOnTransition, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldStateProps, type FormRootProps, useFormValues } from '@dxos/react-ui-form';
 

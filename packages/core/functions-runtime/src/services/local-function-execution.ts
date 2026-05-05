@@ -21,7 +21,7 @@ import {
 } from '@dxos/functions';
 import { type FunctionServices } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
 
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
   LocalFunctionExecutionService,

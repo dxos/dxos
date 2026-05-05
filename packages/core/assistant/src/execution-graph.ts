@@ -3,7 +3,7 @@
 //
 
 import { AgentStatus } from '@dxos/ai';
-import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/compute';
+import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/functions';
 import { type Entity, Obj, type Ref } from '@dxos/echo';
 import { type ObjectId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';

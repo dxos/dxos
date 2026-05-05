@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
-import { Trigger } from '@dxos/functions';
+import { Trigger } from '@dxos/compute';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FunctionRuntimeKind, SerializedError } from '@dxos/protocols';

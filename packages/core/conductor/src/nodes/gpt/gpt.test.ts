@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import type { QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { Trace } from '@dxos/functions';
+import { Trace } from '@dxos/compute';
 import { type ServiceContainer } from '@dxos/functions-runtime';
 import { createTestServices } from '@dxos/functions-runtime/testing';
 import { log } from '@dxos/log';

@@ -15,7 +15,7 @@ import * as Option from 'effect/Option';
 import { CommandConfig, Common, spaceIdWithDefault, spaceLayer, withTypes } from '@dxos/cli-util';
 import { ClientService, ConfigService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { QueueService } from '@dxos/compute';
+import { QueueService } from '@dxos/functions';
 import { Database, Feed, Filter, type Key } from '@dxos/echo';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent, TriggerDispatcher } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';

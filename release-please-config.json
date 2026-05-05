@@ -265,11 +265,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/blueprints/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/compute/package.json",
           "jsonpath": "$.version"
         },

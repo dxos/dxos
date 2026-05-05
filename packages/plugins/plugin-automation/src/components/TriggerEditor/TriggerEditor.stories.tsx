@@ -7,9 +7,8 @@ import React, { useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
+import { Operation, Trigger } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { TestSchema, useClientStory, withClientProvider } from '@dxos/react-client/testing';

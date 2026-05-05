@@ -15,7 +15,8 @@ import {
   WebSearchToolkitOpaque,
 } from '@dxos/assistant-toolkit';
 import { Blueprint, Routine } from '@dxos/compute';
-import { ExampleHandlers, Reply, Trace, Trigger } from '@dxos/compute';
+import { ExampleHandlers, Reply } from '@dxos/compute/testing';
+import { Trace, Trigger } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';

@@ -1,7 +1,7 @@
 {
   "name": "@dxos/operation",
   "version": "0.8.3",
-  "description": "Unified Operation Primitives",
+  "description": "Operation Invoker",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -26,14 +26,9 @@
   ],
   "scripts": {},
   "dependencies": {
-    "@dxos/debug": "workspace:*",
-    "@dxos/echo": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/errors": "workspace:*",
-    "@dxos/invariant": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@dxos/schema": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/log": "workspace:*"
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",

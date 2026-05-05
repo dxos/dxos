@@ -11,7 +11,7 @@ import { describe, expect, test } from 'vitest';
 import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 
-import * as Operation from './Operation';
+import { Operation } from '@dxos/compute';
 
 describe('Operation', () => {
   describe('make', () => {

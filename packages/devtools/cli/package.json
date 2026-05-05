@@ -36,6 +36,7 @@
     "@dxos/effect": "workspace:*",
     "@dxos/effect-atom-solid": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/functions": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
