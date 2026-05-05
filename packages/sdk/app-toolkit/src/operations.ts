@@ -40,7 +40,7 @@ export namespace LayoutOperation {
       ),
     }),
     output: Schema.Void,
-  });
+  }).pipe(Operation.system);
 
   export const UpdateComplementary = Operation.make({
     meta: {
@@ -61,7 +61,7 @@ export namespace LayoutOperation {
       ),
     }),
     output: Schema.Void,
-  });
+  }).pipe(Operation.system);
 
   //
   // Dialog Operations
@@ -99,7 +99,7 @@ export namespace LayoutOperation {
       ),
     }),
     output: Schema.Void,
-  });
+  }).pipe(Operation.system);
 
   //
   // Popover Operations
@@ -170,7 +170,7 @@ export namespace LayoutOperation {
       ),
     ),
     output: Schema.Void,
-  });
+  }).pipe(Operation.system);
 
   //
   // Toast Operations
@@ -204,7 +204,7 @@ export namespace LayoutOperation {
     services: [Capability.Service],
     input: Toast,
     output: Schema.Void,
-  });
+  }).pipe(Operation.system);
 
   //
   // Layout Mode Operations
@@ -230,7 +230,7 @@ export namespace LayoutOperation {
       }),
     ),
     output: Schema.Void,
-  });
+  }).pipe(Operation.system);
 
   //
   // Workspace Operations
@@ -248,7 +248,7 @@ export namespace LayoutOperation {
       subject: Schema.String.annotations({ description: 'The id of the workspace to switch to.' }),
     }),
     output: Schema.Void,
-  });
+  }).pipe(Operation.system);
 
   export const RevertWorkspace = Operation.make({
     meta: {
@@ -309,7 +309,7 @@ export namespace LayoutOperation {
       ),
     }),
     output: Schema.Array(Schema.String).annotations({ description: 'The resolved navigation paths that were opened.' }),
-  });
+  }).pipe(Operation.system);
 
   export const Close = Operation.make({
     meta: {
@@ -323,7 +323,7 @@ export namespace LayoutOperation {
       subject: Schema.Array(Schema.String.annotations({ description: 'Ids of the items to close.' })),
     }),
     output: Schema.Void,
-  });
+  }).pipe(Operation.system);
 
   export const Set = Operation.make({
     meta: {
@@ -356,7 +356,7 @@ export namespace LayoutOperation {
       ref: Schema.optional(Schema.String.annotations({ description: 'A reference id for the scroll target.' })),
     }),
     output: Schema.Void,
-  });
+  }).pipe(Operation.system);
 
   export const Expose = Operation.make({
     meta: {

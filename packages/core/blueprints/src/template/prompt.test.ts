@@ -41,4 +41,38 @@ describe('prompt', () => {
     expect(prompt).to.include('## 2. Blueprints');
     expect(prompt).to.include(BLUEPRINTS[0]);
   });
+
+  test('supports helpers, block helpers, and {{#if}} conditionals', ({ expect }) => {
+    const template = trim`
+      ## {{section}}. Header
+
+      {{#if showList}}
+      Items:
+      {{#each items}}
+      - {{this}}
+      {{/each}}
+      {{/if}}
+
+      ## {{section}}. Footer
+    `;
+
+    const prompt = process(template, {
+      showList: true,
+      items: ['alpha', 'beta'],
+    });
+
+    expect(prompt).to.include('## 1. Header');
+    expect(prompt).to.include('## 2. Footer');
+    expect(prompt).to.include('- alpha');
+    expect(prompt).to.include('- beta');
+
+    const hidden = process(template, { showList: false });
+    expect(hidden).to.not.include('Items:');
+  });
+
+  test('section helper is isolated between calls', ({ expect }) => {
+    const template = '{{section}}-{{section}}';
+    expect(process(template, {})).toBe('1-2');
+    expect(process(template, {})).toBe('1-2');
+  });
 });

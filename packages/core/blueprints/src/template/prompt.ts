@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 import * as Record from 'effect/Record';
-import handlebars from 'handlebars';
 
 import { Database } from '@dxos/echo';
 import type { ObjectNotFoundError } from '@dxos/echo/Err';
@@ -12,6 +11,7 @@ import { FunctionNotFoundError } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/operation';
+import Handlebars from '@dxos/vendor-kbn-handlebars';
 
 import type { Template } from '../index';
 
@@ -21,8 +21,9 @@ import type { Template } from '../index';
 export const process = <Options extends {}>(source: string, variables: Partial<Options> = {}): string => {
   invariant(typeof source === 'string');
   let section = 0;
+  const handlebars = Handlebars.create();
   handlebars.registerHelper('section', () => String(++section));
-  const template = handlebars.compile(source.trim());
+  const template = handlebars.compileAST(source.trim());
   const output = template(variables);
   return output.trim().replace(/(\n\s*){3,}/g, '\n\n');
 };

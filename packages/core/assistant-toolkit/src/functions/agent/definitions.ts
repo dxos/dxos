@@ -9,6 +9,7 @@ import { Routine } from '@dxos/compute';
 import { Trace } from '@dxos/compute';
 import { Operation, OperationRegistry } from '@dxos/compute';
 import { Database, Feed, Ref } from '@dxos/echo';
+import { Text } from '@dxos/schema';
 
 import * as Chat from '../../types/Chat';
 
@@ -42,6 +43,9 @@ export const AgentPrompt = Operation.make({
     }),
   }),
   output: Schema.Any,
+  // ECHO types that the handler loads via Database.load(). Declaring them here ensures the
+  // runtime registers their schema before remote invocation (e.g. via the EDGE function service).
+  types: [Routine.Routine, Text.Text, Feed.Feed, Chat.Chat],
   services: [
     AiService.AiService,
     Database.Service,
@@ -50,4 +54,4 @@ export const AgentPrompt = Operation.make({
     OperationRegistry.Service,
     Trace.TraceService,
   ],
-});
+}).pipe(Operation.system);

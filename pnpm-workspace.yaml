@@ -458,6 +458,7 @@ catalog:
   jsonpointer: ^5.0.1
   jszip: ^3.10.1
   jwt-decode: ^4.0.0
+  kbn-handlebars: ^1.0.0
   keyborg: ^2.5.0
   knip: ^5.64.3
   koffi: ^2.8.0

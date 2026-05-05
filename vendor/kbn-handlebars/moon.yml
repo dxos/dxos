@@ -1,0 +1,9 @@
+id: vendor-kbn-handlebars
+layer: library
+language: typescript
+tags:
+  - pack
+workspace:
+  inheritedTasks:
+    exclude:
+      - lint

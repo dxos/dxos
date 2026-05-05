@@ -1281,6 +1281,9 @@ catalogs:
     jwt-decode:
       specifier: ^4.0.0
       version: 4.0.0
+    kbn-handlebars:
+      specifier: ^1.0.0
+      version: 1.0.0
     keyborg:
       specifier: ^2.5.0
       version: 2.6.0
@@ -4729,12 +4732,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@dxos/vendor-kbn-handlebars':
+        specifier: workspace:*
+        version: link:../../../vendor/kbn-handlebars
       effect:
         specifier: 3.20.0
         version: 3.20.0
-      handlebars:
-        specifier: 'catalog:'
-        version: 4.7.8
 
   packages/core/compute:
     dependencies:
@@ -5906,7 +5909,7 @@ importers:
         version: link:../../common/log
       '@modelcontextprotocol/sdk':
         specifier: '>=1.26.0'
-        version: 1.27.1(@cfworker/json-schema@4.1.1)
+        version: 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
       zod:
         specifier: ^4.0.0
         version: 4.3.6
@@ -5943,7 +5946,7 @@ importers:
         version: 0.33.2(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
       '@modelcontextprotocol/sdk':
         specifier: '>=1.26.0'
-        version: 1.27.1(@cfworker/json-schema@4.1.1)
+        version: 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
       effect:
         specifier: 3.20.0
         version: 3.20.0
@@ -21033,6 +21036,15 @@ importers:
         specifier: 'catalog:'
         version: 2.7.1
 
+  vendor/kbn-handlebars:
+    dependencies:
+      handlebars:
+        specifier: 'catalog:'
+        version: 4.7.8
+      kbn-handlebars:
+        specifier: 'catalog:'
+        version: 1.0.0
+
   vendor/quickjs:
     dependencies:
       '@jitl/quickjs-wasmfile-release-sync':
@@ -23778,6 +23790,7 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       '@cfworker/json-schema': ^4.1.1
+      zod: ^3.25 || ^4.0
     peerDependenciesMeta:
       '@cfworker/json-schema':
         optional: true
@@ -33857,6 +33870,9 @@ packages:
     resolution: {integrity: sha512-7VlC1hsEEolL9xNO05v9VjrvWZePkCVBJqj8ruICxYjZfHaHbaU53AlP+PODyFIXEnaEIEWi3wJy7FPZ95JAVg==}
     hasBin: true
 
+  kbn-handlebars@1.0.0:
+    resolution: {integrity: sha512-Y4zlSmLpgBogiRsvTpthkgLK0CS3O1kmGBJ6bawAlPUFHB2pKe8jl8NE6N8Z4XXVMgSc3tHZMoeSOR6iRE+ZAw==}
+
   keyborg@2.6.0:
     resolution: {integrity: sha512-o5kvLbuTF+o326CMVYpjlaykxqYP9DphFQZ2ZpgrvBouyvOxyEB7oqe8nOLFpiV5VCtz0D3pt8gXQYWpLpBnmA==}
 
@@ -43224,7 +43240,7 @@ snapshots:
 
   '@mixmark-io/domino@2.2.0': {}
 
-  '@modelcontextprotocol/sdk@1.27.1(@cfworker/json-schema@4.1.1)':
+  '@modelcontextprotocol/sdk@1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)':
     dependencies:
       '@hono/node-server': 1.19.9(hono@4.12.2)
       ajv: 8.18.0
@@ -49517,7 +49533,7 @@ snapshots:
     dependencies:
       '@cfworker/json-schema': 4.1.1
       '@cloudflare/ai-chat': 0.0.6(agents@0.3.10)(ai@6.0.97(zod@4.3.6))(react@19.2.3)(zod@4.3.6)
-      '@modelcontextprotocol/sdk': 1.27.1(@cfworker/json-schema@4.1.1)
+      '@modelcontextprotocol/sdk': 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
       ai: 6.0.97(zod@4.3.6)
       cron-schedule: 6.0.0
       escape-html: 1.0.3
@@ -54781,6 +54797,11 @@ snapshots:
   katex@0.16.23:
     dependencies:
       commander: 8.3.0
+
+  kbn-handlebars@1.0.0:
+    dependencies:
+      tslib: 2.8.1
+      typescript: 6.0.3
 
   keyborg@2.6.0: {}
 

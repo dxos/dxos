@@ -34,8 +34,8 @@
     "@dxos/operation": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "catalog:",
-    "handlebars": "catalog:"
+    "@dxos/vendor-kbn-handlebars": "workspace:*",
+    "effect": "catalog:"
   },
   "devDependencies": {},
   "peerDependencies": {

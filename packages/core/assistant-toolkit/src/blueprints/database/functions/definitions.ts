@@ -101,7 +101,7 @@ export const Query = Operation.make({
   }),
   output: Schema.Array(Schema.Unknown),
   services: [Database.Service],
-});
+}).pipe(Operation.system);
 
 export const Load = Operation.make({
   meta: {
@@ -121,7 +121,7 @@ export const Load = Operation.make({
   }),
   output: Schema.Unknown,
   services: [Database.Service],
-});
+}).pipe(Operation.system);
 
 export const ObjectCreate = Operation.make({
   meta: {
@@ -140,7 +140,7 @@ export const ObjectCreate = Operation.make({
   }),
   output: Schema.Unknown,
   services: [Database.Service],
-});
+}).pipe(Operation.system);
 
 export const ObjectUpdate = Operation.make({
   meta: {
@@ -158,7 +158,7 @@ export const ObjectUpdate = Operation.make({
   }),
   output: Schema.Unknown,
   services: [Database.Service],
-});
+}).pipe(Operation.system);
 
 export const ObjectDelete = Operation.make({
   meta: {
@@ -173,7 +173,7 @@ export const ObjectDelete = Operation.make({
   }),
   output: Schema.Void,
   services: [Database.Service],
-});
+}).pipe(Operation.system);
 
 export const SchemaAdd = Operation.make({
   meta: {
@@ -193,7 +193,7 @@ export const SchemaAdd = Operation.make({
   }),
   output: Schema.Void,
   services: [Database.Service],
-});
+}).pipe(Operation.system);
 
 export const SchemaList = Operation.make({
   meta: {
@@ -208,7 +208,7 @@ export const SchemaList = Operation.make({
   }),
   output: Schema.Array(Schema.Unknown),
   services: [Database.Service],
-});
+}).pipe(Operation.system);
 
 export const ContextAdd = Operation.make({
   meta: {
@@ -226,7 +226,7 @@ export const ContextAdd = Operation.make({
   }),
   output: Schema.Void,
   services: [AiContextService],
-});
+}).pipe(Operation.system);
 
 export const ContextRemove = Operation.make({
   meta: {
@@ -244,7 +244,7 @@ export const ContextRemove = Operation.make({
   }),
   output: Schema.Void,
   services: [AiContextService],
-});
+}).pipe(Operation.system);
 
 export const RelationCreate = Operation.make({
   meta: {
@@ -265,7 +265,7 @@ export const RelationCreate = Operation.make({
   }),
   output: Schema.Unknown,
   services: [Database.Service],
-});
+}).pipe(Operation.system);
 
 export const RelationDelete = Operation.make({
   meta: {
@@ -280,7 +280,7 @@ export const RelationDelete = Operation.make({
   }),
   output: Schema.Void,
   services: [Database.Service],
-});
+}).pipe(Operation.system);
 
 export const TagAdd = Operation.make({
   meta: {
@@ -298,7 +298,7 @@ export const TagAdd = Operation.make({
   }),
   output: Schema.Unknown,
   services: [Database.Service],
-});
+}).pipe(Operation.system);
 
 export const TagRemove = Operation.make({
   meta: {
@@ -315,4 +315,4 @@ export const TagRemove = Operation.make({
   }),
   output: Schema.Unknown,
   services: [Database.Service],
-});
+}).pipe(Operation.system);

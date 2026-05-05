@@ -5,10 +5,11 @@
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { AiModelResolver, AiService } from '@dxos/ai';
+import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, JsonSchema, Ref, type Type } from '@dxos/echo';
@@ -17,7 +18,7 @@ import { refFromEncodedReference } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
+import { Operation, OperationRegistry } from '@dxos/operation';
 import { type FunctionProtocol } from '@dxos/protocols';
 
 import { FunctionError, InvalidOperationInputError, InvalidOperationOutputError } from '../errors';
@@ -192,6 +193,11 @@ class FunctionContext extends Resource {
       functionInvocationService,
       operationServiceLayer,
       aiLayer,
+      // Defaults for operations that declare these services but expect the runtime to provide a
+      // sensible no-op (e.g. `AgentPrompt` running in a function worker without MCP servers or
+      // extra toolkits). Consumers can override by providing their own layer on top.
+      OpaqueToolkit.providerEmpty,
+      EmptyOperationRegistry,
       // TODO(dmaretskyi): Forward trace events.
       Trace.writerLayerNoop,
     );
@@ -208,6 +214,10 @@ const MockedOperationServiceLayer = Layer.succeed(Operation.Service, {
   schedule: () => Effect.die('Not implemented.'),
   invokePromise: async () => ({ error: new Error('Not implemented') }),
 } as any);
+
+const EmptyOperationRegistry = Layer.succeed(OperationRegistry.Service, {
+  resolve: () => Effect.succeed(Option.none()),
+});
 
 const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: EchoDatabaseImpl): unknown => {
   if (value == null) {
