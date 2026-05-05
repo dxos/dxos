@@ -4,4 +4,5 @@
 
 export * from './Accordion';
 export * from './List';
+export * from './RowList';
 export * from './Tree';

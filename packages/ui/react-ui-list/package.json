@@ -31,15 +31,18 @@
     "@dxos/echo": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-list": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-text-tooltip": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
+    "@fluentui/react-tabster": "catalog:",
     "@radix-ui/react-accordion": "catalog:",
     "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-slot": "catalog:"
+    "@radix-ui/react-slot": "catalog:",
+    "@radix-ui/react-use-controllable-state": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

@@ -19033,6 +19033,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/react-list':
+        specifier: workspace:*
+        version: link:../react-primitives/react-list
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
@@ -19051,6 +19054,9 @@ importers:
       '@effect-atom/atom-react':
         specifier: 'catalog:'
         version: 0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)(react@19.2.3)(scheduler@0.27.0)
+      '@fluentui/react-tabster':
+        specifier: 'catalog:'
+        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@radix-ui/react-accordion':
         specifier: 'catalog:'
         version: 1.2.3(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -19060,6 +19066,9 @@ importers:
       '@radix-ui/react-slot':
         specifier: 'catalog:'
         version: 1.1.2(@types/react@19.2.7)(react@19.2.3)
+      '@radix-ui/react-use-controllable-state':
+        specifier: 'catalog:'
+        version: 1.1.0(@types/react@19.2.7)(react@19.2.3)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
