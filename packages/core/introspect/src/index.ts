@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export { createIntrospector, type Introspector, type IntrospectorOptions, type SchemaFilter } from './introspector';
+export { createIntrospector, type Introspector, type IntrospectorOptions } from './introspector';
 export {
   formatCapabilityRef,
   formatOperationRef,
@@ -22,18 +22,15 @@ export {
 } from './refs';
 export type {
   Capability,
-  Operation,
+  Intent,
   Package,
   PackageDetail,
   PackageFilter,
   Plugin,
   PluginDetail,
   PluginFilter,
-  PluginModule,
-  SchemaDetail,
-  SchemaField,
-  SchemaSummary,
-  SchemaUsage,
+  PluginId,
+  Schema,
   SourceLocation,
   Surface,
   SymbolDetail,

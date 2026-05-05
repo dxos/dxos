@@ -33,43 +33,34 @@ import { trim } from '@dxos/util';
 
 import type { ToolLogger } from './logger';
 import {
-  FindSchemaUsageInput,
-  FindSymbolInput,
-  GetPackageInput,
-  GetPluginInput,
-  GetSchemaInput,
-  GetSymbolInput,
-  ListCapabilitiesInput,
-  ListOperationsInput,
-  ListPackagesInput,
-  ListPluginsInput,
-  ListSchemasInput,
-  ListSurfacesInput,
-  ListSymbolsInput,
-  type FindSchemaUsageArgs,
   type FindSymbolArgs,
+  FindSymbolInput,
   type GetPackageArgs,
-  type GetPluginArgs,
-  type GetSchemaArgs,
+  GetPackageInput,
   type GetSymbolArgs,
+  GetSymbolInput,
   type ListCapabilitiesArgs,
-  type ListOperationsArgs,
+  ListCapabilitiesInput,
+  type ListIntentsArgs,
+  ListIntentsInput,
   type ListPackagesArgs,
+  ListPackagesInput,
   type ListPluginsArgs,
+  ListPluginsInput,
   type ListSchemasArgs,
+  ListSchemasInput,
   type ListSurfacesArgs,
+  ListSurfacesInput,
   type ListSymbolsArgs,
+  ListSymbolsInput,
 } from './schemas';
 import {
   type ListOptions,
-  shapeFindSchemaUsage,
   shapeFindSymbol,
   shapeGetPackage,
-  shapeGetPlugin,
-  shapeGetSchema,
   shapeGetSymbol,
   shapeListCapabilities,
-  shapeListOperations,
+  shapeListIntents,
   shapeListPackages,
   shapeListPlugins,
   shapeListSchemas,
@@ -212,47 +203,29 @@ export const createToolDefinitions = (
   list_plugins: {
     title: 'List Composer plugins',
     description: trim`
-      List plugins detected in the monorepo. A plugin is a package whose src/ contains a \`Plugin.define(meta)\` call
-      and a meta.ts exporting \`Plugin.Meta\`. Use this to discover what plugins exist before drilling into one.
-      Returns lightweight rows; call get_plugin for the full breakdown of modules, surfaces, capabilities, and operations.
+      List plugins detected in the monorepo. A plugin is a package whose src/meta.ts exports a \`Plugin.Meta\`.
+      Use this to discover what plugins exist before drilling into surfaces / capabilities / intents / schemas.
+      Filter by \`id\` substring (e.g. "markdown") to narrow the list.
     `,
     inputSchema: ListPluginsInput,
     handler: (args: ListPluginsArgs) => {
-      const result = introspector.listPlugins({ query: args.query, pathPrefix: args.pathPrefix });
+      const result = introspector.listPlugins(args.id !== undefined ? { id: args.id } : undefined);
       const shaped = shapeListPlugins(result, pickListOptions(args));
       log({ tool: 'list_plugins', args, count: result.length, truncated: shaped.truncated });
       return shaped;
     },
   } satisfies ToolDefinition<ListPluginsArgs>,
 
-  get_plugin: {
-    title: 'Get plugin detail',
-    description: trim`
-      Fetch the full record for a single plugin by its meta id (e.g. "org.dxos.plugin.markdown").
-      Returns the plugin meta, the module helpers it composes, and the surfaces, capabilities, and operations
-      it contributes. Use after list_plugins or when the user references a plugin by id.
-    `,
-    inputSchema: GetPluginInput,
-    handler: (args: GetPluginArgs) => {
-      const detail = introspector.getPlugin(args.id);
-      log({ tool: 'get_plugin', args, found: detail !== null });
-      if (!detail) {
-        return { data: null, note: `No plugin with id ${args.id}` };
-      }
-      return shapeGetPlugin(detail);
-    },
-  } satisfies ToolDefinition<GetPluginArgs>,
-
   list_surfaces: {
     title: 'List surfaces',
     description: trim`
       List Surface.create({ id, role, ... }) contributions across the monorepo. Use this to discover available
       surface ids when wiring a new container, or to check whether a surface name is already taken.
-      Filter by \`pluginId\` to scope to a single plugin.
+      Filter by \`id\` (plugin id) to scope to a single plugin's surfaces.
     `,
     inputSchema: ListSurfacesInput,
     handler: (args: ListSurfacesArgs) => {
-      const result = introspector.listSurfaces(args.pluginId);
+      const result = introspector.listSurfaces(args.id);
       const shaped = shapeListSurfaces(result, pickListOptions(args));
       log({ tool: 'list_surfaces', args, count: result.length, truncated: shaped.truncated });
       return shaped;
@@ -263,83 +236,47 @@ export const createToolDefinitions = (
     title: 'List capability contributions',
     description: trim`
       List Capability.contributes(<key>, ...) calls across the monorepo. Use this to discover which capability
-      keys are produced (or required) by which plugins. Filter by \`pluginId\` to scope to a single plugin.
+      keys are produced (or required) by which plugins. Filter by \`id\` (plugin id) to scope to a single plugin.
     `,
     inputSchema: ListCapabilitiesInput,
     handler: (args: ListCapabilitiesArgs) => {
-      const result = introspector.listCapabilities(args.pluginId);
+      const result = introspector.listCapabilities(args.id);
       const shaped = shapeListCapabilities(result, pickListOptions(args));
       log({ tool: 'list_capabilities', args, count: result.length, truncated: shaped.truncated });
       return shaped;
     },
   } satisfies ToolDefinition<ListCapabilitiesArgs>,
 
-  list_operations: {
-    title: 'List operations',
+  list_intents: {
+    title: 'List intents',
     description: trim`
-      List Operation.make({ meta: { key, name, description } }) calls across the monorepo. Operations are the
-      unit of work dispatched through the OperationInvoker (formerly "intents"). Filter by \`pluginId\` to scope
-      to a single plugin.
+      List intents contributed by plugins (the unit of work dispatched through the IntentResolver).
+      Filter by \`id\` (plugin id) to scope to a single plugin.
     `,
-    inputSchema: ListOperationsInput,
-    handler: (args: ListOperationsArgs) => {
-      const result = introspector.listOperations(args.pluginId);
-      const shaped = shapeListOperations(result, pickListOptions(args));
-      log({ tool: 'list_operations', args, count: result.length, truncated: shaped.truncated });
+    inputSchema: ListIntentsInput,
+    handler: (args: ListIntentsArgs) => {
+      const result = introspector.listIntents(args.id);
+      const shaped = shapeListIntents(result, pickListOptions(args));
+      log({ tool: 'list_intents', args, count: result.length, truncated: shaped.truncated });
       return shaped;
     },
-  } satisfies ToolDefinition<ListOperationsArgs>,
+  } satisfies ToolDefinition<ListIntentsArgs>,
 
   list_schemas: {
     title: 'List schemas',
     description: trim`
-      List ECHO-registered types — anything passing through \`Type.object({ typename, version })\` or
-      \`Type.Obj(...)\` in the monorepo. Use this to discover what data types exist before reading their
-      shape with get_schema. Filter by \`pluginId\` (e.g. "org.dxos.plugin.markdown") to scope to a single
-      plugin's schemas, or by \`package\` for a single package.
+      List ECHO-registered types contributed by plugins (declared via addSchemaModule).
+      Use this to discover what data types exist before reading their shape.
+      Filter by \`id\` (plugin id, e.g. "org.dxos.plugin.markdown") to scope to a single plugin's schemas.
     `,
     inputSchema: ListSchemasInput,
     handler: (args: ListSchemasArgs) => {
-      const result = introspector.listSchemas({ package: args.package, pluginId: args.pluginId });
+      const result = introspector.listSchemas(args.id);
       const shaped = shapeListSchemas(result, pickListOptions(args));
       log({ tool: 'list_schemas', args, count: result.length, truncated: shaped.truncated });
       return shaped;
     },
   } satisfies ToolDefinition<ListSchemasArgs>,
-
-  get_schema: {
-    title: 'Get schema detail by typename',
-    description: trim`
-      Fetch the full record for one schema by its typename (e.g. "org.dxos.type.document").
-      Returns the field list, version, owning package, and source location. Use after list_schemas or
-      when the user references a typename directly.
-    `,
-    inputSchema: GetSchemaInput,
-    handler: (args: GetSchemaArgs) => {
-      const detail = introspector.getSchema(args.typename);
-      log({ tool: 'get_schema', args, found: detail !== null });
-      if (!detail) {
-        return { data: null, note: `No schema with typename ${args.typename}` };
-      }
-      return shapeGetSchema(detail);
-    },
-  } satisfies ToolDefinition<GetSchemaArgs>,
-
-  find_schema_usage: {
-    title: 'Find references to a schema typename',
-    description: trim`
-      List every line in the monorepo that mentions a typename. Useful for understanding where a
-      data type is consumed, referenced via \`Ref.Ref(...)\`, or wired into a plugin. Returns file + line +
-      snippet. The defining \`Type.object\` line is excluded — see get_schema for that.
-    `,
-    inputSchema: FindSchemaUsageInput,
-    handler: (args: FindSchemaUsageArgs) => {
-      const usages = introspector.findSchemaUsage(args.typename);
-      const shaped = shapeFindSchemaUsage(usages, pickListOptions(args));
-      log({ tool: 'find_schema_usage', args, count: usages.length, truncated: shaped.truncated });
-      return shaped;
-    },
-  } satisfies ToolDefinition<FindSchemaUsageArgs>,
 });
 
 /**

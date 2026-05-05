@@ -23,21 +23,18 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURE_ROOT = join(__dirname, '..', '..', '..', 'introspect', 'src', '__fixtures__');
 
 describe('@dxos/introspect-mcp/tools subpath export', () => {
-  test('createToolDefinitions returns the full 13-tool map', async ({ expect }) => {
-    const introspector = createIntrospector({ monorepoRoot: FIXTURE_ROOT, cache: false });
+  test('createToolDefinitions returns the full 10-tool map', async ({ expect }) => {
+    const introspector = createIntrospector({ rootPath: FIXTURE_ROOT, cache: false });
     await introspector.ready;
     try {
       const definitions = createToolDefinitions(introspector, noopLogger);
       const names = Object.keys(definitions).sort();
       expect(names).toEqual([
-        'find_schema_usage',
         'find_symbol',
         'get_package',
-        'get_plugin',
-        'get_schema',
         'get_symbol',
         'list_capabilities',
-        'list_operations',
+        'list_intents',
         'list_packages',
         'list_plugins',
         'list_schemas',
@@ -64,7 +61,7 @@ describe('@dxos/introspect-mcp/tools subpath export', () => {
     // Embedding scenario: a different runtime calls a handler directly,
     // bypassing the readiness gate / MCP envelope. We await `ready` here on
     // behalf of that runtime so the handler sees a populated index.
-    const introspector = createIntrospector({ monorepoRoot: FIXTURE_ROOT, cache: false });
+    const introspector = createIntrospector({ rootPath: FIXTURE_ROOT, cache: false });
     await introspector.ready;
     try {
       const { list_packages } = createToolDefinitions(introspector, noopLogger);

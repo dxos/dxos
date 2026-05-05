@@ -88,8 +88,8 @@ export const cacheFilePath = (rootPath: string): string => join(rootPath, DEFAUL
  * gets `srcTreeSha = ''` and we silently degrade to mtime-only invalidation.
  */
 export const computePackageMtimes = (rootPath: string, packagePaths: string[]): Record<string, CachePackageEntry> => {
-  const treeShas = readGitTreeShas(monorepoRoot);
-  const dirtyPaths = readGitDirtyPaths(monorepoRoot);
+  const treeShas = readGitTreeShas(rootPath);
+  const dirtyPaths = readGitDirtyPaths(rootPath);
   const entries: Record<string, CachePackageEntry> = {};
   for (const path of packagePaths) {
     const srcDir = join(rootPath, path, 'src');
