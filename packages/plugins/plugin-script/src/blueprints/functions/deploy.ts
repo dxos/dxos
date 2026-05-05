@@ -54,7 +54,7 @@ export default Deploy.pipe(
 
       Operation.setFrom(loaded, newFunction);
 
-      Obj.change(script, (script) => {
+      Obj.update(script, (script) => {
         script.changed = false;
       });
 

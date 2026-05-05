@@ -806,12 +806,12 @@ const handler: Operation.WithHandler<typeof SyncFeed> = SyncFeed.pipe(
         const channelDescription = isAtom ? channel.subtitle : channel.description;
 
         if (channelTitle && !subscriptionFeed.name) {
-          Obj.change(subscriptionFeed, (obj) => {
+          Obj.update(subscriptionFeed, (obj) => {
             obj.name = channelTitle;
           });
         }
         if (channelDescription && !subscriptionFeed.description) {
-          Obj.change(subscriptionFeed, (obj) => {
+          Obj.update(subscriptionFeed, (obj) => {
             obj.description = channelDescription;
           });
         }

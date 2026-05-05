@@ -121,14 +121,14 @@ const useTestBoardModel = (): TestBoardModelResult => {
           }),
         );
 
-        Obj.change(column, (column) => {
+        Obj.update(column, (column) => {
           column.items.push(Ref.make(item));
         });
 
         return item;
       },
       onItemDelete: (column: TestColumn, current: TestItem) => {
-        Obj.change(column, (column) => {
+        Obj.update(column, (column) => {
           if (!column.items) {
             return;
           }

@@ -52,7 +52,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
       await runtime.runPromise(
         Effect.gen(function* () {
           const queue = yield* QueueService.createQueue();
-          Obj.change(agent, (agent) => {
+          Obj.update(agent, (agent) => {
             agent.queue = Ref.fromDXN(queue.dxn);
           });
         }),

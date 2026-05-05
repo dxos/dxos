@@ -105,7 +105,7 @@ export const curateMagazine = async (space: Space, magazine: Magazine.Magazine):
       // trips `addCore`'s `!_objects.has(core.id)` invariant.
       const post = await reuseOrAdd(space.db, queuePost);
 
-      Obj.change(post, (post) => {
+      Obj.update(post, (post) => {
         const mutable = post as Obj.Mutable<typeof post>;
         mutable.snippet = snippet;
         if (imageUrl) {
@@ -119,7 +119,7 @@ export const curateMagazine = async (space: Space, magazine: Magazine.Magazine):
 
   let appended = 0;
   if (added.length > 0) {
-    Obj.change(magazine, (magazine) => {
+    Obj.update(magazine, (magazine) => {
       const mutable = magazine as Obj.Mutable<typeof magazine>;
       const existing = new Set(mutable.posts.map((ref) => dxnToObjectId(ref.dxn)));
       const fresh = added.filter((ref) => !existing.has(dxnToObjectId(ref.dxn)));

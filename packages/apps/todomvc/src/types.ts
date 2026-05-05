@@ -30,7 +30,7 @@ export type TodoList = Schema.Schema.Type<typeof TodoList>;
 
 export const createTodoList = (space: Space): TodoList => {
   const list = space.db.add(Obj.make(TodoList, { todos: [] }));
-  Obj.change(space.properties, (props: any) => {
+  Obj.update(space.properties, (props: any) => {
     props[TodoList.typename] = Ref.make(list);
   });
   return list;

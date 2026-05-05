@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.native-filesystem',
+  id: 'org.dxos.plugin.nativeFilesystem',
   name: 'Native Filesystem',
   description: trim`
     Native filesystem access for desktop builds.

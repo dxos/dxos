@@ -20,12 +20,12 @@ import { ensureStarTag, fetchArticle, hasMetaTag, toggleMetaTag, useStarTag } fr
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
 
-export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
+export const PostArticle = ({ role, subject }: PostArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   // Subscribe to the post so the toolbar icons (star, archive, mark-unread) re-render
-  // when their underlying state changes via Obj.change.
-  useObject(post);
+  // when their underlying state changes via Obj.update.
+  const [post] = useObject(subject);
   const db = Obj.getDatabase(post);
   const starTag = useStarTag(db);
 
@@ -45,10 +45,10 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
       return;
     }
     requestedContentFor.current = postId;
-    void invokePromise(FeedOperation.LoadPostContent, { post: Ref.make(post) }).catch((err) =>
+    void invokePromise(FeedOperation.LoadPostContent, { post: Ref.make(subject) }).catch((err) =>
       log.catch(err, { postLink: post.link }),
     );
-  }, [post, post.link, post.content, invokePromise]);
+  }, [subject, post.link, post.content, invokePromise]);
 
   // Reactive lookup of the source feed name. `post.feed?.target?.name` only renders
   // synchronously when the ref is already resolved; querying feeds via useQuery means
@@ -63,7 +63,7 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
   }, [post.feed, allFeeds]);
 
   const archived = Boolean(post.archived);
-  const starred = hasMetaTag(post, starTag);
+  const starred = hasMetaTag(subject, starTag);
 
   const handleOpenOriginal = useCallback(() => {
     if (post.link) {
@@ -72,18 +72,18 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
   }, [post.link]);
 
   const handleMarkUnread = useCallback(() => {
-    Obj.change(post, (post) => {
-      const mutable = post as Obj.Mutable<typeof post>;
+    Obj.update(subject, (subject) => {
+      const mutable = subject as Obj.Mutable<typeof subject>;
       mutable.readAt = undefined;
     });
-  }, [post]);
+  }, [subject]);
 
   const handleToggleArchive = useCallback(() => {
-    Obj.change(post, (post) => {
-      const mutable = post as Obj.Mutable<typeof post>;
+    Obj.update(subject, (subject) => {
+      const mutable = subject as Obj.Mutable<typeof subject>;
       mutable.archived = !mutable.archived;
     });
-  }, [post]);
+  }, [subject]);
 
   const handleToggleStar = useCallback(() => {
     if (!db) {
@@ -93,8 +93,8 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
     // value of `starTag` may be stale (e.g. undefined on first click before the
     // useQuery has populated).
     const tag = ensureStarTag(db);
-    toggleMetaTag(post, tag);
-  }, [db, post]);
+    toggleMetaTag(subject, tag);
+  }, [db, subject]);
 
   // Re-fetch the article body from the source. Same path MagazineArticle uses on
   // first open, but unconditional — overwrites any existing content/imageUrl so
@@ -108,8 +108,8 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
     try {
       const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
       const { text, imageUrls } = await fetchArticle(post.link, { corsProxy });
-      Obj.change(post, (post) => {
-        const mutable = post as Obj.Mutable<typeof post>;
+      Obj.update(subject, (subject) => {
+        const mutable = subject as Obj.Mutable<typeof subject>;
         if (text) {
           mutable.content = text;
         }
@@ -123,7 +123,7 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
     } finally {
       setRefreshing(false);
     }
-  }, [post, refreshing]);
+  }, [subject, post.link, refreshing]);
 
   return (
     <Panel.Root role={role}>
@@ -170,7 +170,7 @@ export const PostArticle = ({ role, subject: post }: PostArticleProps) => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <PostContent post={post} metadata={feedName ? [feedName] : undefined} />
+        <PostContent post={subject} metadata={feedName ? [feedName] : undefined} />
       </Panel.Content>
     </Panel.Root>
   );

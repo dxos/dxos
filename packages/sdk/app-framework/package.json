@@ -103,6 +103,7 @@
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -111,8 +112,7 @@
     "@dxos/web-context": "workspace:*",
     "@dxos/web-context-react": "workspace:*",
     "@effect/cli": "catalog:",
-    "cjs-module-lexer": "catalog:",
-    "vite-plugin-css-injected-by-js": "catalog:"
+    "cjs-module-lexer": "catalog:"
   },
   "devDependencies": {
     "@dxos/brand": "workspace:*",

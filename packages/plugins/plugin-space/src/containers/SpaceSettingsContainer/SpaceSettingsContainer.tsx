@@ -69,7 +69,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
       }
 
       if (changed['name'] || changed['icon'] || changed['hue']) {
-        Obj.change(space.properties, (obj) => {
+        Obj.update(space.properties, (obj) => {
           if (changed['name'] && newValues.name !== undefined) {
             obj.name = newValues.name;
           }

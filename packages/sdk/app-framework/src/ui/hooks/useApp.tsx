@@ -67,6 +67,7 @@ export type PlaceholderProps = {
 export type UseAppOptions = {
   pluginManager?: PluginManager.PluginManager;
   pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];
+  onPluginRemove?: PluginManager.ManagerOptions['onRemove'];
   plugins?: Plugin.Plugin[];
   core?: string[];
   defaults?: string[];
@@ -111,6 +112,7 @@ export type UseAppOptions = {
 export const useApp = ({
   pluginManager,
   pluginLoader: pluginLoaderProp,
+  onPluginRemove,
   plugins: pluginsProp,
   core: coreProp,
   defaults: defaultsProp,
@@ -156,10 +158,10 @@ export const useApp = ({
   );
   const isExternalManager = !!pluginManager;
   const manager = useMemo(() => {
-    const mgr = pluginManager ?? PluginManager.make({ pluginLoader, plugins, core, enabled });
+    const mgr = pluginManager ?? PluginManager.make({ pluginLoader, plugins, core, enabled, onRemove: onPluginRemove });
     log('useApp: useMemo created/reused manager', { provided: !!pluginManager });
     return mgr;
-  }, [pluginManager, pluginLoader, plugins, core, enabled]);
+  }, [pluginManager, pluginLoader, plugins, core, enabled, onPluginRemove]);
 
   useEffect(() => {
     if (!cacheEnabled) {

@@ -33,7 +33,7 @@ export const CodeSettings = ({ settings, onSettingsChange }: CodeSettingsProps) 
       return;
     }
     if (existing) {
-      Obj.change(existing, (existing) => {
+      Obj.update(existing, (existing) => {
         (existing as Obj.Mutable<typeof existing>).token = value;
       });
     } else {

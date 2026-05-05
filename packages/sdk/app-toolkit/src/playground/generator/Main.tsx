@@ -8,6 +8,7 @@ import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
+import { runAndForwardErrors } from '@dxos/effect';
 import { IconButton, List, ListItem } from '@dxos/react-ui';
 
 const Item = ({
@@ -45,7 +46,7 @@ export const Main = () => {
 
   const handleRemove = useCallback(
     async (id: string) => {
-      await manager.remove(id);
+      await runAndForwardErrors(manager.remove(id));
     },
     [manager],
   );

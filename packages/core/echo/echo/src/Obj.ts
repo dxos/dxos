@@ -304,7 +304,7 @@ export const clone: <T extends Unknown>(obj: T, opts?: CloneOptions) => T = objI
 
 /**
  * Makes all properties mutable recursively.
- * Used to provide a mutable view of an object within `Obj.change`.
+ * Used to provide a mutable view of an object within `Obj.update`.
  */
 export type Mutable<T> = internal.Mutable<T>;
 
@@ -312,33 +312,33 @@ export type Mutable<T> = internal.Mutable<T>;
  * Perform mutations on an echo object within a controlled context.
  *
  * All mutations within the callback are batched and trigger a single notification
- * when the callback completes. Direct mutations outside of `Obj.change` will throw
+ * when the callback completes. Direct mutations outside of `Obj.update` will throw
  * an error for echo objects.
  *
  * This function also works with nested objects within echo objects (e.g., Template structs)
  * that are reactive at runtime.
  *
- * @param obj - The echo object to mutate. Use `Relation.change` for relations.
+ * @param obj - The echo object to mutate. Use `Relation.update` for relations.
  * @param callback - The callback that performs mutations on the object.
  *
  * @example
  * ```ts
  * const person = Obj.make(Person, { name: 'John', age: 25 });
  *
- * // Mutate within Obj.change
- * Obj.change(person, (obj) => {
+ * // Mutate within Obj.update
+ * Obj.update(person, (obj) => {
  *   obj.name = 'Jane';
  *   obj.age = 30;
  * });
  * // ONE notification fires here
  *
  * // Direct mutation throws
- * person.name = 'Bob'; // Error: Cannot modify outside Obj.change()
+ * person.name = 'Bob'; // Error: Cannot modify outside Obj.update()
  * ```
  *
- * Note: Only accepts objects. Use `Relation.change` for relations.
+ * Note: Only accepts objects. Use `Relation.update` for relations.
  */
-export const change = <T extends Unknown>(obj: T, callback: internal.ChangeCallback<T>): void => {
+export const update = <T extends Unknown>(obj: T, callback: internal.ChangeCallback<T>): void => {
   internal.change(obj, callback);
 };
 
@@ -373,7 +373,7 @@ export const getValue = (obj: Unknown | Snapshot, path: readonly (string | numbe
  * whether to initialize nested data as an empty object or array.
  *
  * Similar to lodash.set and setDeep from @dxos/util, but schema-aware.
- * Must be called within an `Obj.change` callback.
+ * Must be called within an `Obj.update` callback.
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
@@ -387,7 +387,7 @@ export const getValue = (obj: Unknown | Snapshot, path: readonly (string | numbe
  * ```ts
  * const person = Obj.make(Person, { name: 'John' });
  * // Person schema has: addresses: Schema.Array(Address)
- * Obj.change(person, (obj) => {
+ * Obj.update(person, (obj) => {
  *   Obj.setValue(obj, ['addresses', 0, 'street'], '123 Main St');
  * });
  * // Creates: person.addresses = [{ street: '123 Main St' }]
@@ -520,7 +520,7 @@ export const Meta = internal.MetaId;
 export type ReadonlyMeta = internal.ReadonlyMeta;
 
 /**
- * Mutable meta type returned by `Obj.getMeta` inside an `Obj.change` callback.
+ * Mutable meta type returned by `Obj.getMeta` inside an `Obj.update` callback.
  */
 export type Meta = internal.Meta;
 
@@ -528,7 +528,7 @@ export type Meta = internal.Meta;
 // TODO(dmaretskyi): Allow returning undefined.
 /**
  * Get the metadata for an object.
- * Returns mutable meta when passed a mutable object (inside `Obj.change` callback).
+ * Returns mutable meta when passed a mutable object (inside `Obj.update` callback).
  * Returns read-only meta when passed a regular object or snapshot.
  *
  * @example
@@ -537,7 +537,7 @@ export type Meta = internal.Meta;
  * const meta = Obj.getMeta(person);  // ReadonlyMeta
  *
  * // Mutable access inside change callback
- * Obj.change(person, (obj) => {
+ * Obj.update(person, (obj) => {
  *   const meta = Obj.getMeta(obj);     // ObjectMeta (mutable)
  *   meta.tags ??= [];
  *   meta.tags.push('important');
@@ -562,7 +562,7 @@ export const getKeys: {
 
 /**
  * Delete all keys from the object for the specified source.
- * Must be called within an `Obj.change` callback.
+ * Must be called within an `Obj.update` callback.
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
@@ -571,7 +571,7 @@ export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => in
 
 /**
  * Add a tag to the object.
- * Must be called within an `Obj.change` callback.
+ * Must be called within an `Obj.update` callback.
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
@@ -580,7 +580,7 @@ export const addTag = (entity: Mutable<Unknown>, tag: string): void => internal.
 
 /**
  * Remove a tag from the object.
- * Must be called within an `Obj.change` callback.
+ * Must be called within an `Obj.update` callback.
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
@@ -606,7 +606,7 @@ export const getLabel = (entity: Unknown | Snapshot): string | undefined => inte
 
 /**
  * Set the label of the object.
- * Must be called within an `Obj.change` callback.
+ * Must be called within an `Obj.update` callback.
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
@@ -621,7 +621,7 @@ export const getDescription = (entity: Unknown | Snapshot): string | undefined =
 
 /**
  * Set the description of the object.
- * Must be called within an `Obj.change` callback.
+ * Must be called within an `Obj.update` callback.
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
@@ -744,7 +744,7 @@ const prepareAssignValue = (value: unknown): unknown =>
  * References are compared by target DXN; other values use Effect `Equal.equals` inside a structural region,
  * with recursive comparison for arrays and plain object-shaped property bags (excluding `id`).
  *
- * Must be called within an `Obj.change` callback.
+ * Must be called within an `Obj.update` callback.
  *
  * @returns Whether any property was updated.
  */

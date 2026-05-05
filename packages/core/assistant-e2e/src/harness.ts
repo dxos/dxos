@@ -20,11 +20,11 @@ import {
   WebSearchHandlers,
   WebSearchToolkitOpaque,
 } from '@dxos/assistant-toolkit';
-import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint, Routine } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
 import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/operations';
 import { Mailbox } from '@dxos/plugin-inbox/types';

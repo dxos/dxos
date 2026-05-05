@@ -155,7 +155,7 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
       for (const ref of scene.objects) {
         const obj = ref?.target;
         if (obj && (obj as any).id === selectedObjectId) {
-          Obj.change(obj, (obj) => {
+          Obj.update(obj, (obj) => {
             obj.color = editorState.hue;
           });
           break;

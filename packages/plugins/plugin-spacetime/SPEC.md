@@ -84,7 +84,7 @@ Instead implement tool handlers that operate on the runtime properties and then 
   - `ViewState.showGrid` synced to `SceneManager.showGrid` via canvas effect.
 - [x] Menu action and operation to create a new cube.
   - `EditorActions.onAdd` in `actions.ts`, wired through editor context.
-  - Creates `Model.Object` via `Model.make()`, adds `Ref` to scene via `Obj.change`.
+  - Creates `Model.Object` via `Model.make()`, adds `Ref` to scene via `Obj.update`.
   - Canvas subscribes to `objectCount` (via `useObject` on scene) and syncs new meshes reactively.
 - [x] Menu action and operation to delete the selected object.
 - [x] Show wireframe bounding box for selected object.
@@ -206,7 +206,7 @@ Pointer Event → Canvas Observer → ToolManager.handlePointer()
 ```
 
 During drag: tools call `mesh.position.set(...)` directly — no ECHO writes, no network replication.
-On pointer-up: tools call `Obj.change(obj, ...)` — single atomic ECHO mutation, replicates once.
+On pointer-up: tools call `Obj.update(obj, ...)` — single atomic ECHO mutation, replicates once.
 
 **Geometry persistence:**
 `Model.Object` stores both a `primitive` type and an optional `geometry` field (serialized Manifold mesh data). Objects start as primitives; after CSG operations (e.g., extrude) the result is serialized into `geometry`, and the object is no longer a simple primitive.

@@ -15,7 +15,7 @@ import { meta } from '#meta';
 import { TemplateEditor } from './TemplateEditor';
 
 /**
- * Callback type for mutating template within a parent object's Obj.change context.
+ * Callback type for mutating template within a parent object's Obj.update context.
  */
 export type TemplateChangeCallback = (mutate: (template: Obj.Mutable<Template.Template>) => void) => void;
 
@@ -25,7 +25,7 @@ export type TemplateFormProps = {
   schema?: Schema.Schema<any, any, any>;
   commandEditable?: boolean;
   /**
-   * Callback to mutate the template. Should wrap mutations in parent's Obj.change.
+   * Callback to mutate the template. Should wrap mutations in parent's Obj.update.
    * If not provided, the component is read-only.
    */
   onChange?: TemplateChangeCallback;

@@ -219,7 +219,7 @@ describe('Database', () => {
 
     const obj = Obj.make(TestSchema.Expando, {});
     expectObjects([...Obj.getMeta(obj).keys], []);
-    Obj.change(obj, (obj) => Obj.getMeta(obj).keys.push({ source: 'test', id: 'test-key' }));
+    Obj.update(obj, (obj) => Obj.getMeta(obj).keys.push({ source: 'test', id: 'test-key' }));
     expectObjects([...Obj.getMeta(obj).keys], [{ source: 'test', id: 'test-key' }]);
 
     db.add(obj);
@@ -272,7 +272,7 @@ describe('Database', () => {
       const container = db.add(Obj.make(TestSchema.Container, { objects: [] }));
       await db.flush();
 
-      Obj.change(container, (container) => {
+      Obj.update(container, (container) => {
         container.objects!.push(Ref.make(Obj.make(TestSchema.Expando, { foo: 100 })));
         container.objects!.push(Ref.make(Obj.make(TestSchema.Expando, { bar: 200 })));
       });
@@ -299,7 +299,7 @@ describe('Database', () => {
       const container = db.add(Obj.make(TestSchema.Container, { objects: [] }));
       await db.flush();
 
-      Obj.change(container, (container) => {
+      Obj.update(container, (container) => {
         container.objects!.push(Ref.make(Obj.make(TestSchema.Task, {})));
         container.objects!.push(Ref.make(Obj.make(TestSchema.Person, {})));
       });
@@ -317,13 +317,13 @@ describe('Database', () => {
   test('object fields', async () => {
     const task = Obj.make(TestSchema.Task, {});
 
-    Obj.change(task, (task) => {
+    Obj.update(task, (task) => {
       task.title = 'test';
     });
     expect(task.title).to.eq('test');
     expect(Obj.getMeta(task).keys).to.have.length(0);
 
-    Obj.change(task, (task) => Obj.getMeta(task).keys.push({ source: 'example', id: 'test' }));
+    Obj.update(task, (task) => Obj.getMeta(task).keys.push({ source: 'example', id: 'test' }));
     expect(Obj.getMeta(task).keys).to.have.length(1);
   });
 
@@ -399,7 +399,7 @@ describe('Database', () => {
     expect(Obj.versionValid(version2)).to.be.true;
     expect(Obj.compareVersions(version1, version2)).to.eq('equal');
 
-    Obj.change(task, (task) => {
+    Obj.update(task, (task) => {
       task.title = 'Main task 2';
     });
     const version3 = Obj.version(task as any);
@@ -414,7 +414,7 @@ describe('Database', () => {
       const root = newTask();
       expect(root.subTasks).to.have.length(0);
 
-      Obj.change(root, (root) => {
+      Obj.update(root, (root) => {
         range(3).forEach(() => root.subTasks!.push(Ref.make(newTask())));
         root.subTasks!.push(Ref.make(newTask()), Ref.make(newTask()));
       });
@@ -428,7 +428,7 @@ describe('Database', () => {
       root.subTasks!.forEach((task: any, i: number) => expect(task.target!.id).to.eq(ids[i]));
       expect(Array.from(root.subTasks!.values())).to.have.length(5);
 
-      Obj.change(root, (root) => {
+      Obj.update(root, (root) => {
         root.subTasks = [
           Ref.make(Obj.make(TestSchema.Task, {})),
           Ref.make(Obj.make(TestSchema.Task, {})),
@@ -442,10 +442,10 @@ describe('Database', () => {
 
     test('splice', async () => {
       const root = newTask();
-      Obj.change(root, (root) => {
+      Obj.update(root, (root) => {
         root.subTasks = range(3).map((_i) => Ref.make(newTask()));
       });
-      Obj.change(root, (root) => {
+      Obj.update(root, (root) => {
         root.subTasks!.splice(0, 2, Ref.make(newTask()));
       });
       expect(root.subTasks).to.have.length(2);
@@ -454,7 +454,7 @@ describe('Database', () => {
 
     test('array of plain objects', async () => {
       const root = Obj.make(TestSchema.Container, { records: [] });
-      Obj.change(root, (root) => {
+      Obj.update(root, (root) => {
         root.records!.push({
           title: 'test',
           contacts: [Ref.make(Obj.make(TestSchema.Person, { name: 'tester' }))],
@@ -471,19 +471,19 @@ describe('Database', () => {
     test('reset array', async () => {
       const { db, obj: root } = await addToDatabase(Obj.make(TestSchema.Container, { records: [] }));
 
-      Obj.change(root, (root) => {
+      Obj.update(root, (root) => {
         root.records!.push({ title: 'one' });
       });
       expect(root.records).to.have.length(1);
 
-      Obj.change(root, (root) => {
+      Obj.update(root, (root) => {
         root.records = [];
       });
       expect(root.records).to.have.length(0);
       await db.flush();
       expect(root.records).to.have.length(0);
 
-      Obj.change(root, (root) => {
+      Obj.update(root, (root) => {
         root.records!.push({ title: 'two' });
       });
       expect(root.records).to.have.length(1);

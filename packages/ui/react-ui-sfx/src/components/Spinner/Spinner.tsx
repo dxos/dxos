@@ -10,6 +10,13 @@ import { getSize, mx } from '@dxos/ui-theme';
 
 export type SpinnerState = 'pulse' | 'spin' | 'flash' | 'error';
 
+const stateClassNames: Record<SpinnerState, string> = {
+  pulse: 'bg-primary-500',
+  spin: 'bg-amber-500',
+  flash: 'bg-primary-500',
+  error: 'bg-rose-700 border-2 border-rose-fill',
+};
+
 export type SpinnerProps = ThemedClassName<{
   state?: SpinnerState;
   duration?: number;
@@ -23,12 +30,7 @@ export const Spinner = forwardRef<HTMLDivElement, SpinnerProps>(
       <AnimatePresence>
         <motion.div
           ref={forwardedRef}
-          className={mx(
-            'flex shrink-0 cursor-pointer',
-            getSize(size),
-            state === 'error' ? 'bg-rose-700 border-2 border-rose-fill' : 'bg-primary-500',
-            classNames,
-          )}
+          className={mx('flex shrink-0 cursor-pointer', getSize(size), stateClassNames[state], classNames)}
           transition={{
             ease: 'linear',
             duration: duration / 1_000,

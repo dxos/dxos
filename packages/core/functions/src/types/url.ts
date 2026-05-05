@@ -18,7 +18,7 @@ export const getUserFunctionIdInMetadata = (meta: Obj.ReadonlyMeta) => {
 
 /**
  * NOTE: functionId is backend ID, not ECHO object id.
- * Must be called inside Obj.changeMeta() since it mutates the meta.
+ * Must be called inside Obj.update() since it mutates the meta.
  */
 export const setUserFunctionIdInMetadata = (meta: Obj.Meta, functionId: string) => {
   const key = meta.keys.find((key) => key.source === FUNCTIONS_META_KEY);

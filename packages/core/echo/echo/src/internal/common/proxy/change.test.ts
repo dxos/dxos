@@ -9,17 +9,17 @@ import * as Relation from '../../../Relation';
 import { TestSchema } from '../../../testing';
 
 /**
- * Tests for Obj.change context enforcement and mutator type safety.
+ * Tests for Obj.update context enforcement and mutator type safety.
  *
  * These tests verify:
  * 1. Mutator functions require Mutable<T> at compile-time.
  * 2. getMeta returns ReadonlyMeta outside change callbacks and ObjectMeta inside.
- * 3. Mutations outside Obj.change throw at runtime.
+ * 3. Mutations outside Obj.update throw at runtime.
  * 4. Nested object/property mutations work correctly.
  * 5. Array mutations (push, pop, splice) require change context.
  * 6. Property delete requires change context.
  */
-describe('Obj.change enforcement', () => {
+describe('Obj.update enforcement', () => {
   describe('compile-time and runtime safety', () => {
     test('direct property mutation outside change throws', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
@@ -28,7 +28,7 @@ describe('Obj.change enforcement', () => {
       expect(() => {
         // @ts-expect-error Testing runtime error for readonly property mutation.
         obj.name = 'New Name';
-      }).toThrow(/outside of Obj.change/);
+      }).toThrow(/outside of Obj.update/);
     });
 
     test('Obj.setValue outside change throws', ({ expect }) => {
@@ -36,7 +36,7 @@ describe('Obj.change enforcement', () => {
 
       // No compile-time error: TypeScript's structural typing allows readonly objects
       // to be passed to Mutable<T> parameters. Enforcement is runtime-only.
-      expect(() => Obj.setValue(obj, ['name'], 'value')).toThrow(/outside of Obj.change/);
+      expect(() => Obj.setValue(obj, ['name'], 'value')).toThrow(/outside of Obj.update/);
     });
 
     test('Obj.addTag outside change throws', ({ expect }) => {
@@ -44,7 +44,7 @@ describe('Obj.change enforcement', () => {
 
       // No compile-time error: TypeScript's structural typing allows readonly objects
       // to be passed to Mutable<T> parameters. Enforcement is runtime-only.
-      expect(() => Obj.addTag(obj, 'tag')).toThrow(/outside of Obj.change/);
+      expect(() => Obj.addTag(obj, 'tag')).toThrow(/outside of Obj.update/);
     });
 
     test('getMeta mutation outside change throws', ({ expect }) => {
@@ -52,14 +52,14 @@ describe('Obj.change enforcement', () => {
       const meta = Obj.getMeta(obj);
 
       // Runtime errors for direct meta mutations.
-      expect(() => ((meta as any).keys = [])).toThrow(/outside of Obj.change/);
-      expect(() => ((meta as any).tags = ['tag'])).toThrow(/outside of Obj.change/);
+      expect(() => ((meta as any).keys = [])).toThrow(/outside of Obj.update/);
+      expect(() => ((meta as any).tags = ['tag'])).toThrow(/outside of Obj.update/);
     });
 
     test('getMeta returns mutable ObjectMeta inside change callback', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
 
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         const meta = Obj.getMeta(obj);
 
         // These should compile without errors because meta is ObjectMeta (mutable).
@@ -76,7 +76,7 @@ describe('Obj.change enforcement', () => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
 
       // These should compile without errors inside change callback.
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         Obj.addTag(obj, 'my-tag');
         Obj.setValue(obj, ['name'], 'Updated');
       });
@@ -97,7 +97,7 @@ describe('Obj.change enforcement', () => {
       expect(() => {
         // @ts-expect-error Testing runtime error for readonly property mutation.
         rel.title = 'Manager';
-      }).toThrow(/outside of Obj.change/);
+      }).toThrow(/outside of Obj.update/);
     });
 
     test('Relation.addTag outside change throws', ({ expect }) => {
@@ -110,7 +110,7 @@ describe('Obj.change enforcement', () => {
 
       // No compile-time error: TypeScript's structural typing allows readonly objects
       // to be passed to Mutable<T> parameters. Enforcement is runtime-only.
-      expect(() => Relation.addTag(rel, 'tag')).toThrow(/outside of Obj.change/);
+      expect(() => Relation.addTag(rel, 'tag')).toThrow(/outside of Obj.update/);
     });
   });
 
@@ -122,7 +122,7 @@ describe('Obj.change enforcement', () => {
       // Person schema uses 'name' as label field.
       expect(Obj.getLabel(obj)).toBe('John');
 
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         Obj.setLabel(obj, 'Jane');
       });
 
@@ -140,7 +140,7 @@ describe('Obj.change enforcement', () => {
 
       // setDescription only works if schema has description annotation.
       // For schemas without it, this is a no-op.
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         Obj.setDescription(obj, 'My Description');
       });
 
@@ -153,14 +153,14 @@ describe('Obj.change enforcement', () => {
 
       expect(Obj.getMeta(obj).tags).toBeUndefined();
 
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         Obj.addTag(obj, 'tag-1');
         Obj.addTag(obj, 'tag-2');
       });
 
       expect(Obj.getMeta(obj).tags).toEqual(['tag-1', 'tag-2']);
 
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         Obj.removeTag(obj, 'tag-1');
       });
 
@@ -170,7 +170,7 @@ describe('Obj.change enforcement', () => {
     test('deleteKeys removes foreign keys by source', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
 
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         const meta = Obj.getMeta(obj);
         meta.keys.push({ source: 'source-a', id: '1' });
         meta.keys.push({ source: 'source-a', id: '2' });
@@ -179,7 +179,7 @@ describe('Obj.change enforcement', () => {
 
       expect(Obj.getMeta(obj).keys).toHaveLength(3);
 
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         Obj.deleteKeys(obj, 'source-a');
       });
 
@@ -190,7 +190,7 @@ describe('Obj.change enforcement', () => {
     test('setValue sets nested properties', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
 
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         Obj.setValue(obj, ['name'], 'Updated Name');
       });
 
@@ -200,7 +200,7 @@ describe('Obj.change enforcement', () => {
     test('getMeta is mutable inside change and changes persist', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
 
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         const meta = Obj.getMeta(obj);
         meta.tags = ['tag-1', 'tag-2'];
         meta.keys.push({ source: 'external', id: '123' });
@@ -214,7 +214,7 @@ describe('Obj.change enforcement', () => {
     test('multiple mutations in single change all persist', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
 
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         obj.name = 'Name 1';
         obj.name = 'Name 2';
         obj.name = 'Name 3';
@@ -229,7 +229,7 @@ describe('Obj.change enforcement', () => {
   });
 
   describe('notifications', () => {
-    test('batched notifications - only one per Obj.change', ({ expect }) => {
+    test('batched notifications - only one per Obj.update', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'John' });
 
       let notificationCount = 0;
@@ -237,7 +237,7 @@ describe('Obj.change enforcement', () => {
         notificationCount++;
       });
 
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         obj.name = 'Jane';
         obj.age = 30;
       });
@@ -250,13 +250,13 @@ describe('Obj.change enforcement', () => {
   });
 
   describe('nested mutations', () => {
-    test('nested object property mutation within Obj.change', ({ expect }) => {
+    test('nested object property mutation within Obj.update', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, {
         name: 'John',
         address: { city: 'NYC', coordinates: {} },
       });
 
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         obj.address!.state = 'NY';
       });
 
@@ -264,13 +264,13 @@ describe('Obj.change enforcement', () => {
       expect(obj.address?.city).toBe('NYC');
     });
 
-    test('deeply nested property mutation within Obj.change (2 levels)', ({ expect }) => {
+    test('deeply nested property mutation within Obj.update (2 levels)', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, {
         name: 'John',
         address: { city: 'NYC', coordinates: { lat: 40.7128, lng: -74.006 } },
       });
 
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         obj.address!.coordinates!.lat = 51.5074;
         obj.address!.coordinates!.lng = -0.1278;
       });
@@ -279,7 +279,7 @@ describe('Obj.change enforcement', () => {
       expect(obj.address?.coordinates?.lng).toBe(-0.1278);
     });
 
-    test('nested object mutation outside Obj.change throws (1 level deep)', ({ expect }) => {
+    test('nested object mutation outside Obj.update throws (1 level deep)', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, {
         name: 'John',
         address: { city: 'NYC', coordinates: {} },
@@ -288,10 +288,10 @@ describe('Obj.change enforcement', () => {
       expect(() => {
         // @ts-expect-error - nested property assignment is readonly.
         obj.address!.city = 'LA';
-      }).toThrow(/outside of Obj.change/);
+      }).toThrow(/outside of Obj.update/);
     });
 
-    test('deeply nested mutation outside Obj.change throws (2 levels deep)', ({ expect }) => {
+    test('deeply nested mutation outside Obj.update throws (2 levels deep)', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, {
         name: 'John',
         address: { city: 'NYC', coordinates: { lat: 40.7128, lng: -74.006 } },
@@ -300,17 +300,17 @@ describe('Obj.change enforcement', () => {
       expect(() => {
         // @ts-expect-error - deeply nested property assignment should be caught.
         obj.address!.coordinates!.lat = 0;
-      }).toThrow(/outside of Obj.change/);
+      }).toThrow(/outside of Obj.update/);
     });
 
-    test('nested Obj.change calls work correctly', ({ expect }) => {
+    test('nested Obj.update calls work correctly', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'John' });
 
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         obj.name = 'Jane';
 
         // Nested change should work (already in change context).
-        Obj.change(obj, (obj) => {
+        Obj.update(obj, (obj) => {
           obj.age = 30;
         });
       });
@@ -323,7 +323,7 @@ describe('Obj.change enforcement', () => {
       const obj = Obj.make(TestSchema.Person, { name: 'John' });
 
       expect(() => {
-        Obj.change(obj, (obj) => {
+        Obj.update(obj, (obj) => {
           obj.name = 'Jane';
           throw new Error('Test error');
         });
@@ -333,18 +333,18 @@ describe('Obj.change enforcement', () => {
       expect(() => {
         // @ts-expect-error Testing runtime error for readonly property mutation.
         obj.name = 'Bob';
-      }).toThrow(/outside of Obj.change/);
+      }).toThrow(/outside of Obj.update/);
     });
   });
 
   describe('array mutations', () => {
-    test('array push within Obj.change', ({ expect }) => {
+    test('array push within Obj.update', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, {
         name: 'John',
         fields: [{ label: 'tag1', value: 'val1' }],
       });
 
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         obj.fields!.push({ label: 'tag2', value: 'val2' });
       });
 
@@ -352,7 +352,7 @@ describe('Obj.change enforcement', () => {
       expect(obj.fields![1].label).toBe('tag2');
     });
 
-    test('array pop within Obj.change', ({ expect }) => {
+    test('array pop within Obj.update', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, {
         name: 'John',
         fields: [
@@ -362,7 +362,7 @@ describe('Obj.change enforcement', () => {
       });
 
       let popped: any;
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         popped = obj.fields!.pop();
       });
 
@@ -370,7 +370,7 @@ describe('Obj.change enforcement', () => {
       expect(obj.fields).toHaveLength(1);
     });
 
-    test('array splice within Obj.change', ({ expect }) => {
+    test('array splice within Obj.update', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, {
         name: 'John',
         fields: [
@@ -380,7 +380,7 @@ describe('Obj.change enforcement', () => {
         ],
       });
 
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         obj.fields!.splice(1, 1, { label: 'x', value: 'x' });
       });
 
@@ -388,7 +388,7 @@ describe('Obj.change enforcement', () => {
       expect(obj.fields![1].label).toBe('x');
     });
 
-    test('array push outside Obj.change throws', ({ expect }) => {
+    test('array push outside Obj.update throws', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, {
         name: 'John',
         fields: [{ label: 'tag1', value: 'val1' }],
@@ -397,10 +397,10 @@ describe('Obj.change enforcement', () => {
       expect(() => {
         // @ts-expect-error Testing runtime error for readonly array mutation.
         obj.fields!.push({ label: 'tag2', value: 'val2' });
-      }).toThrow(/array\.push\(\).*outside of Obj\.change/);
+      }).toThrow(/array\.push\(\).*outside of Obj\.update/);
     });
 
-    test('array pop outside Obj.change throws', ({ expect }) => {
+    test('array pop outside Obj.update throws', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, {
         name: 'John',
         fields: [{ label: 'tag1', value: 'val1' }],
@@ -409,10 +409,10 @@ describe('Obj.change enforcement', () => {
       expect(() => {
         // @ts-expect-error Testing runtime error for readonly array mutation.
         obj.fields!.pop();
-      }).toThrow(/array\.pop\(\).*outside of Obj\.change/);
+      }).toThrow(/array\.pop\(\).*outside of Obj\.update/);
     });
 
-    test('array splice outside Obj.change throws', ({ expect }) => {
+    test('array splice outside Obj.update throws', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, {
         name: 'John',
         fields: [{ label: 'tag1', value: 'val1' }],
@@ -421,33 +421,33 @@ describe('Obj.change enforcement', () => {
       expect(() => {
         // @ts-expect-error Testing runtime error for readonly array mutation.
         obj.fields!.splice(0, 1);
-      }).toThrow(/array\.splice\(\).*outside of Obj\.change/);
+      }).toThrow(/array\.splice\(\).*outside of Obj\.update/);
     });
   });
 
   describe('property delete', () => {
-    test('delete property within Obj.change', ({ expect }) => {
+    test('delete property within Obj.update', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'John', age: 25 });
 
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         delete obj.age;
       });
 
       expect(obj.age).toBeUndefined();
     });
 
-    test('delete property outside Obj.change throws', ({ expect }) => {
+    test('delete property outside Obj.update throws', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'John', age: 25 });
 
       expect(() => {
         // @ts-expect-error Testing runtime error for readonly property delete.
         delete obj.age;
-      }).toThrow(/delete object property.*outside of Obj\.change/);
+      }).toThrow(/delete object property.*outside of Obj\.update/);
     });
   });
 
   describe('Relation mutators', () => {
-    test('Relation.getMeta is mutable inside Relation.change', ({ expect }) => {
+    test('Relation.getMeta is mutable inside Relation.update', ({ expect }) => {
       const source = Obj.make(TestSchema.Person, { name: 'Alice' });
       const target = Obj.make(TestSchema.Person, { name: 'Bob' });
       const rel = Relation.make(TestSchema.HasManager, {
@@ -455,7 +455,7 @@ describe('Obj.change enforcement', () => {
         [Relation.Target]: target,
       });
 
-      Relation.change(rel, (rel) => {
+      Relation.update(rel, (rel) => {
         const meta = Relation.getMeta(rel);
         meta.tags = ['rel-tag'];
         meta.keys.push({ source: 'rel-source', id: 'rel-key' });
@@ -473,13 +473,13 @@ describe('Obj.change enforcement', () => {
         [Relation.Target]: target,
       });
 
-      Relation.change(rel, (rel) => {
+      Relation.update(rel, (rel) => {
         Relation.addTag(rel, 'important');
       });
 
       expect(Relation.getMeta(rel).tags).toContain('important');
 
-      Relation.change(rel, (rel) => {
+      Relation.update(rel, (rel) => {
         Relation.removeTag(rel, 'important');
       });
 
@@ -494,7 +494,7 @@ describe('Obj.change enforcement', () => {
 
       // Direct assignment of root ECHO objects (created with Obj.make) is not allowed.
       expect(() => {
-        Obj.change(obj, (obj) => {
+        Obj.update(obj, (obj) => {
           obj.other = other;
         });
       }).toThrow(/Object references must be wrapped with `Ref\.make`/);
@@ -504,13 +504,13 @@ describe('Obj.change enforcement', () => {
       const obj = Obj.make(TestSchema.Expando, {});
 
       // Assign a plain object (not created with Obj.make).
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         obj.nested = { value: 'initial' };
       });
       expect(obj.nested.value).toBe('initial');
 
       // Modify plain nested object through parent's change context.
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         obj.nested.value = 'modified';
       });
       expect(obj.nested.value).toBe('modified');

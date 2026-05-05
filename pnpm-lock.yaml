@@ -1770,9 +1770,6 @@ catalogs:
     vite-node:
       specifier: ^6.0.0
       version: 6.0.0
-    vite-plugin-css-injected-by-js:
-      specifier: ^5.0.1
-      version: 5.0.1
     vite-plugin-devtools-json:
       specifier: ^0.4.1
       version: 0.4.1
@@ -1833,6 +1830,12 @@ catalogs:
     wnfs:
       specifier: 0.2.2
       version: 0.2.2
+    workbox-precaching:
+      specifier: ^7.3.0
+      version: 7.4.0
+    workbox-routing:
+      specifier: ^7.3.0
+      version: 7.4.0
     workbox-window:
       specifier: ^7.4.0
       version: 7.4.0
@@ -2370,6 +2373,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../../core/blueprints
       '@dxos/brand':
         specifier: workspace:*
         version: link:../../ui/brand
@@ -2394,6 +2400,12 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -2409,6 +2421,9 @@ importers:
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant
@@ -2676,6 +2691,12 @@ importers:
       solid-js:
         specifier: 'catalog:'
         version: 1.9.11
+      workbox-precaching:
+        specifier: 'catalog:'
+        version: 7.4.0
+      workbox-routing:
+        specifier: 'catalog:'
+        version: 7.4.0
     devDependencies:
       '@babel/core':
         specifier: 'catalog:'
@@ -4493,9 +4514,6 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
-      '@dxos/functions-runtime':
-        specifier: workspace:*
-        version: link:../functions-runtime
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -4572,6 +4590,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../functions-runtime
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant
@@ -4602,12 +4623,6 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../compute
-      '@dxos/conductor':
-        specifier: workspace:*
-        version: link:../conductor
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo/echo
@@ -4617,9 +4632,6 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo/echo-protocol
-      '@dxos/edge-client':
-        specifier: workspace:*
-        version: link:../mesh/edge-client
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -4638,15 +4650,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-markdown':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-markdown
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-mosaic
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
@@ -4665,9 +4671,6 @@ importers:
       '@effect/ai-anthropic':
         specifier: 'catalog:'
         version: 0.23.0(@effect/ai@0.33.2(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0))(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)
-      '@effect/experimental':
-        specifier: 'catalog:'
-        version: 0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.94.4(effect@3.20.0)
@@ -4678,6 +4681,9 @@ importers:
         specifier: 'catalog:'
         version: 1.7.0
     devDependencies:
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-markdown
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -5541,6 +5547,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../blueprints
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -5644,6 +5653,9 @@ importers:
       '@aws-sdk/client-s3':
         specifier: 3.955.0
         version: 3.955.0
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../assistant
       chess.js:
         specifier: 'catalog:'
         version: 1.4.0
@@ -7506,6 +7518,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
+      '@dxos/assistant-toolkit':
+        specifier: workspace:*
+        version: link:../../core/assistant-toolkit
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../../core/blueprints
@@ -8703,6 +8718,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -8865,6 +8883,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -10783,6 +10804,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -15226,6 +15250,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-error-boundary':
         specifier: workspace:*
         version: link:../../ui/react-primitives/react-error-boundary
@@ -15253,9 +15280,6 @@ importers:
       cjs-module-lexer:
         specifier: 'catalog:'
         version: 2.2.0
-      vite-plugin-css-injected-by-js:
-        specifier: 'catalog:'
-        version: 5.0.1(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
     devDependencies:
       '@dxos/brand':
         specifier: workspace:*
@@ -17664,6 +17688,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -20622,6 +20649,9 @@ importers:
       '@dxos/vite-plugin-icons':
         specifier: workspace:*
         version: link:../vite-plugin-icons
+      '@dxos/vite-plugin-log':
+        specifier: workspace:*
+        version: link:../vite-plugin-log
       '@storybook/addon-docs':
         specifier: 'catalog:'
         version: 10.3.6(@types/react@19.2.7)(esbuild@0.28.0)(rollup@3.30.0)(storybook@10.3.6(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(webpack@5.105.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.28.0))
@@ -20670,6 +20700,9 @@ importers:
       '@dxos/vite-plugin-import-source':
         specifier: workspace:*
         version: link:../vite-plugin-import-source
+      '@dxos/vite-plugin-log':
+        specifier: workspace:*
+        version: link:../vite-plugin-log
       '@storybook/addon-docs':
         specifier: 'catalog:'
         version: 10.3.6(@types/react@19.2.7)(esbuild@0.28.0)(rollup@3.30.0)(storybook@10.3.6(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(webpack@5.105.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.28.0))
@@ -20742,6 +20775,9 @@ importers:
       '@dxos/vite-plugin-icons':
         specifier: workspace:*
         version: link:../vite-plugin-icons
+      '@dxos/vite-plugin-log':
+        specifier: workspace:*
+        version: link:../vite-plugin-log
       '@storybook/addon-docs':
         specifier: 'catalog:'
         version: 10.3.6(@types/react@19.2.7)(esbuild@0.28.0)(rollup@3.30.0)(storybook@10.3.6(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(webpack@5.105.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.28.0))
@@ -38748,11 +38784,6 @@ packages:
     resolution: {integrity: sha512-oj4PVrT+pDh6GYf5wfUXkcZyekYS8kKPfLPXVl8qe324Ec6l4K2DUKNadRbZ3LQl0qGcDz+PyOo7ZAh00Y+JjQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
-
-  vite-plugin-css-injected-by-js@5.0.1:
-    resolution: {integrity: sha512-JSB0jjN4VCKqG7XTUdrwiIl5gA+z2yi/tAl9WHo0X4sdyJ1yrmbLOEjf95TDoDIIuKr4GJIc7lMJG0CT88eEUQ==}
-    peerDependencies:
-      vite: '>=8.0.0'
 
   vite-plugin-devtools-json@0.4.1:
     resolution: {integrity: sha512-pN+QJL+NwZUV+Via8w/Sh6X2pDrVClIMDAXdl7+EteXKB6mcHhsFGGclmxrPx6ZPGKSK5ez5ns64oRpjE5wFCg==}
@@ -60897,10 +60928,6 @@ snapshots:
       - terser
       - tsx
       - yaml
-
-  vite-plugin-css-injected-by-js@5.0.1(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)):
-    dependencies:
-      vite: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   vite-plugin-devtools-json@0.4.1(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)):
     dependencies:

@@ -7,17 +7,18 @@ import { describe, test } from 'vitest';
 import { serializeManifest } from './manifest';
 
 describe('serializeManifest', () => {
-  test('serializes plugin meta plus moduleFile', ({ expect }) => {
+  test('serializes plugin meta plus assets', ({ expect }) => {
     const json = serializeManifest(
-      { id: 'org.example.plugin', name: 'Example', description: 'Demo', tags: ['new'] },
-      { moduleFile: 'plugin.mjs' },
+      { id: 'org.example.plugin', name: 'Example', description: 'Demo', tags: ['new'], version: '1.2.3' },
+      { assets: ['index.mjs', 'style.css', 'chunks/lib-abc.js'] },
     );
     expect(JSON.parse(json)).toEqual({
       id: 'org.example.plugin',
       name: 'Example',
       description: 'Demo',
       tags: ['new'],
-      moduleFile: 'plugin.mjs',
+      version: '1.2.3',
+      assets: ['index.mjs', 'style.css', 'chunks/lib-abc.js'],
     });
   });
 });

@@ -80,7 +80,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
 
   const handleSave: TriggerEditorProps['onSave'] = (trigger) => {
     if (selected) {
-      Obj.change(selected, (selected) => {
+      Obj.update(selected, (selected) => {
         Object.assign(selected, trigger);
       });
     } else {
@@ -102,7 +102,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   };
 
   const handleResetCursor = async (trigger: Trigger.Trigger) => {
-    Obj.change(trigger, (trigger) => {
+    Obj.update(trigger, (trigger) => {
       Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
     });
     await space.db.flush({ indexes: true });

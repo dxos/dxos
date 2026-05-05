@@ -7,15 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import {
-  AgentPrompt,
-  LinearBlueprint,
-  MarkdownBlueprint,
-  ResearchBlueprint,
-  ResearchDataTypes,
-  ResearchGraph,
-  WebSearchBlueprint,
-} from '@dxos/assistant-toolkit';
+import { AgentPrompt, LinearBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Routine, Template } from '@dxos/compute';
 import { Reply, Script, Trigger } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
@@ -28,6 +20,7 @@ import { ChessBlueprint, ChessFunctions } from '@dxos/plugin-chess/blueprints';
 import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
 import { MapBlueprint } from '@dxos/plugin-map/blueprints';
+import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { ThreadBlueprint } from '@dxos/plugin-thread/blueprints';
 import { TranscriptionBlueprint } from '@dxos/plugin-transcription/blueprints';
@@ -78,6 +71,9 @@ import {
   organizations,
   testTypes,
 } from '../testing';
+
+/** Echo types used by research-related stories (replaces removed ResearchDataTypes). */
+const researchStoryEchoTypes = [Person.Person, Organization.Organization, Message.Message];
 
 const storybook: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Chat',
@@ -549,7 +545,7 @@ export const WithResearch: Story = {
       };
     },
     config: config.remote,
-    types: [...ResearchDataTypes, ResearchGraph.ResearchGraph, Feed.Feed],
+    types: [...researchStoryEchoTypes, Feed.Feed],
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
       space.db.add(Obj.make(Organization.Organization, { name: 'BlueYard Capital' }));
@@ -567,7 +563,7 @@ export const WithResearch: Story = {
     blueprints: [
       // AssistantBlueprint.key
       // TODO(burdon): Too many open-ended tools (querying for tools, querying for schema) confuses the model.
-      ResearchBlueprint.key,
+      WebSearchBlueprint.key,
     ],
   },
 };
@@ -717,7 +713,7 @@ export const WithResearchQueue: Story = {
   decorators: getDecorators({
     plugins: [],
     config: config.remote,
-    types: [...ResearchDataTypes, ResearchGraph.ResearchGraph, ResearchInputQueue, Feed.Feed],
+    types: [...researchStoryEchoTypes, ResearchInputQueue, Feed.Feed],
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
       const feed = space.db.add(Feed.make());
@@ -737,7 +733,7 @@ export const WithResearchQueue: Story = {
           output: Schema.Any,
           instructions:
             'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
-          blueprints: [Ref.make(ResearchBlueprint.make())],
+          blueprints: [Ref.make(WebSearchBlueprint.make())],
         }),
       );
 
@@ -759,7 +755,7 @@ export const WithResearchQueue: Story = {
       [ResearchInputModule, ResearchOutputModule],
       [TriggersModule, InvocationsModule, RoutineModule, GraphModule],
     ],
-    blueprints: [ResearchBlueprint.key],
+    blueprints: [WebSearchBlueprint.key],
   },
 };
 
@@ -797,7 +793,7 @@ export const WithProject: Story = {
       const tagDxn = Obj.getDXN(tag).toString();
 
       people.slice(0, 4).forEach((person) => {
-        Obj.change(person, (person) => {
+        Obj.update(person, (person) => {
           Obj.getMeta(person).tags = [tagDxn];
         });
       });
@@ -821,7 +817,7 @@ export const WithProject: Story = {
         }),
       );
       [dxosResearch, blueyardResearch].forEach((research) => {
-        Obj.change(research, (research) => {
+        Obj.update(research, (research) => {
           Obj.getMeta(research).tags = [tagDxn];
         });
       });
@@ -829,7 +825,7 @@ export const WithProject: Story = {
       const dxos = organizations.find((org) => org.name === 'DXOS')!;
       const blueyard = organizations.find((org) => org.name === 'BlueYard')!;
       [dxos, blueyard].forEach((organization) => {
-        Obj.change(organization, (organization) => {
+        Obj.update(organization, (organization) => {
           Obj.getMeta(organization).tags = [tagDxn];
         });
       });
@@ -869,7 +865,7 @@ export const WithProject: Story = {
 
             {{organization}}
           `,
-          blueprints: [Ref.make(ResearchBlueprint.make())],
+          blueprints: [Ref.make(WebSearchBlueprint.make())],
         }),
       );
 
@@ -1020,7 +1016,7 @@ export const WithPrompt: Story = {
           output: Schema.Any,
           instructions:
             'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
-          blueprints: [Ref.make(ResearchBlueprint.make())],
+          blueprints: [Ref.make(WebSearchBlueprint.make())],
         }),
       );
 

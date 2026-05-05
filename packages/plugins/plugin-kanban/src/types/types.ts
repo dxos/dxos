@@ -30,13 +30,13 @@ export type KanbanColumn<T extends BaseKanbanItem = BaseKanbanItem> = {
 export type ArrangedCards<T extends BaseKanbanItem = BaseKanbanItem> = KanbanColumn<T>[];
 
 /**
- * Callback type for wrapping mutations in Obj.change().
+ * Callback type for wrapping mutations in Obj.update().
  * Contains separate callbacks for kanban object and item mutations.
  */
 export type KanbanChangeCallback<T extends BaseKanbanItem> = {
   /** Callback to wrap kanban object mutations. */
   kanban: (mutate: (mutableKanban: Obj.Mutable<Kanban>) => void) => void;
 
-  /** Sets a field on an item, wrapping in Obj.change() if needed. */
+  /** Sets a field on an item, wrapping in Obj.update() if needed. */
   setItemField: (item: T, field: string, value: unknown) => void;
 };

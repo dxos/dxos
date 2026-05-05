@@ -22,11 +22,6 @@
       "source": "./src/extraction/index.ts",
       "types": "./dist/types/src/extraction/index.d.ts",
       "default": "./dist/lib/neutral/extraction/index.mjs"
-    },
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "default": "./dist/lib/neutral/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -49,7 +44,6 @@
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
-    "@dxos/functions-runtime": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

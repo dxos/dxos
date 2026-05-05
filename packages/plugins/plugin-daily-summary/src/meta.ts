@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.daily-summary',
+  id: 'org.dxos.plugin.dailySummary',
   name: 'Daily Summary',
   description: trim`
     Generates a daily summary of your activity by querying objects edited in the last day
