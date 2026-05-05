@@ -42,11 +42,10 @@ export const GetGitHubOrganizations = Operation.make({
 /**
  * Reconcile GitHub data for currently-selected org targets in an Integration.
  *
- * Pull-only for orgs, members, repos, and issue/PR comments. Bidirectional for
- * issues and PRs (both materialize as `Task` objects): pulls remote changes,
- * pushes locally-edited title/body/state back to GitHub. Updates per-target
- * `lastSyncAt`/`lastError`. Does **not** discover orgs or modify
- * `integration.targets` membership.
+ * Pull-only for all entity types (orgs, members, repos, issues/PRs as Tasks,
+ * issue/PR comments). Local edits to mapped fields are overwritten by remote
+ * on every sync; non-mapped fields are preserved. Push is deferred — see
+ * `operations/sync.ts` for the rationale.
  */
 export const SyncGitHubOrganization = Operation.make({
   meta: {
@@ -66,9 +65,6 @@ export const SyncGitHubOrganization = Operation.make({
       projects: Schema.Number,
       tasks: Schema.Number,
       comments: Schema.Number,
-    }),
-    pushed: Schema.Struct({
-      tasks: Schema.Number,
     }),
   }),
 });

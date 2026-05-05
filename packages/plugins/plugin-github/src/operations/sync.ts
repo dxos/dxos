@@ -10,7 +10,6 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Integration } from '@dxos/plugin-integration/types';
 import { Actor, Message, Organization, Person, Project, Task, Thread } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -19,6 +18,23 @@ import { GITHUB_SOURCE } from '../constants';
 import { IntegrationDatabaseMissingError, formatGitHubSyncFailure } from '../errors';
 import { GitHubApi } from '../services';
 import { SyncGitHubOrganization } from './definitions';
+
+// ────────────────────────────────────────────────────────────────────────────
+// Direction: pull-only.
+//
+// v1 of this plugin pulls Organization, Person, Project, Task (issue/PR), and
+// Thread/Message (comments) from GitHub into ECHO and never writes back. Push
+// is intentionally deferred — the open question is attribution: a user-to-server
+// OAuth token attributes any write to the authorizing user, which is wrong in
+// shared spaces; an installation token attributes to the GitHub App with body-
+// prefix attribution but needs server-side minting (KMS). Both options are real
+// follow-ups but neither is in scope here.
+//
+// Practical consequence: local edits to mapped fields (Task.title,
+// Task.description, Task.status, Org.name, etc.) are overwritten by the remote
+// value on every sync. Local edits to NON-mapped fields (Task.priority,
+// Task.estimate, Task.project, Person.notes, etc.) are preserved.
+// ────────────────────────────────────────────────────────────────────────────
 
 // ────────────────────────────────────────────────────────────────────────────
 // Cross-source duplicates — design intent.
@@ -59,50 +75,6 @@ const TARGET_CONCURRENCY = 2;
 /** Per-repo parallelism within an org's issue+PR fetches. */
 const REPO_CONCURRENCY = 4;
 
-/** Per-issue parallelism for comment fetches. */
-const COMMENT_CONCURRENCY = 4;
-
-// ── Three-way merge helpers (Task-only) ────────────────────────────────────
-
-const TASK_FIELDS = ['title', 'description', 'status'] as const;
-type TaskField = (typeof TASK_FIELDS)[number];
-type TaskSnapshot = Partial<Record<TaskField, unknown>>;
-
-const mergeField = <T>(
-  local: T,
-  remote: T,
-  snapshot: T | undefined,
-): { value: T; source: 'local' | 'remote' | 'unchanged' } => {
-  if (snapshot === undefined) {
-    return { value: remote, source: local === remote ? 'unchanged' : 'remote' };
-  }
-  const localChanged = local !== snapshot;
-  const remoteChanged = remote !== snapshot;
-  if (!localChanged && !remoteChanged) {
-    return { value: local, source: 'unchanged' };
-  }
-  if (!localChanged && remoteChanged) {
-    return { value: remote, source: 'remote' };
-  }
-  if (localChanged && !remoteChanged) {
-    return { value: local, source: 'local' };
-  }
-  return { value: remote, source: 'remote' };
-};
-
-const writeSnapshot = (integration: Integration.Integration, foreignId: string, snapshot: object): void => {
-  Obj.update(integration, (integration) => {
-    const m = integration as Obj.Mutable<typeof integration>;
-    const existing = (m.snapshots ?? {}) as Record<string, unknown>;
-    m.snapshots = { ...existing, [foreignId]: snapshot };
-  });
-};
-
-const readSnapshot = <T extends object>(integration: Integration.Integration, foreignId: string): T | undefined => {
-  const snapshots = (integration.snapshots ?? {}) as Record<string, unknown>;
-  return snapshots[foreignId] as T | undefined;
-};
-
 // ── Foreign-key + lookup helpers ────────────────────────────────────────────
 
 const fkFor = (id: string | number) => ({ source: GITHUB_SOURCE, id: String(id) });
@@ -128,16 +100,8 @@ const findByForeignId = <T>(schema: Schema.Schema<any, any>, id: string | number
  */
 const issueStateToTaskStatus = (state: string): 'todo' | 'done' => (state === 'closed' ? 'done' : 'todo');
 
-const taskStatusToIssueState = (status: string | undefined): 'open' | 'closed' =>
-  status === 'done' ? 'closed' : 'open';
+// ── Upsert helpers (all pull-only) ──────────────────────────────────────────
 
-// ── Upsert helpers (pull-only, except Task) ────────────────────────────────
-
-/**
- * Pull-only upsert for Organization. Local edits to mapped fields are
- * overwritten by remote values on every sync — see the consolidated TODO at
- * the top of this file for the planned match-to-existing flow.
- */
 const upsertOrganization = Effect.fn('upsertOrganization')(function* (org: GitHubApi.GitHubOrg) {
   const existing = yield* findByForeignId<Organization.Organization>(Organization.Organization, org.id);
   if (existing) {
@@ -224,48 +188,22 @@ const upsertProject = Effect.fn('upsertProject')(function* (repo: GitHubApi.GitH
 });
 
 /**
- * Three-way-merged upsert for an issue/PR → Task. Mapped fields:
- *  - title (from GitHub `title`)
- *  - description (from GitHub `body`)
- *  - status ('todo'/'done' derived from GitHub `state`)
- *
- * Anything else the user added locally (priority, estimate, assigned, labels
- * stored as inline tags) is preserved across syncs.
+ * Pull-only upsert for issue/PR → Task. Mapped fields (title, description,
+ * status) are overwritten by remote on every sync; non-mapped fields (priority,
+ * estimate, etc.) are preserved.
  */
 const upsertTask = Effect.fn('upsertTask')(function* (
-  integration: Integration.Integration,
   issue: GitHubApi.GitHubIssue,
   assignedPerson: Person.Person | undefined,
   project: Project.Project,
 ) {
-  const remoteFields: Record<TaskField, unknown> = {
-    title: issue.title,
-    description: issue.body ?? '',
-    status: issueStateToTaskStatus(issue.state),
-  };
-
   const existing = yield* findByForeignId<Task.Task>(Task.Task, issue.id);
-
   if (existing) {
-    const snapshot = readSnapshot<TaskSnapshot>(integration, String(issue.id)) ?? {};
-    const fields = existing as unknown as Record<string, unknown>;
-    const writes: Partial<Record<TaskField, unknown>> = {};
-    for (const k of TASK_FIELDS) {
-      const result = mergeField(fields[k], remoteFields[k], snapshot[k]);
-      if (result.source === 'remote' && fields[k] !== result.value) {
-        writes[k] = result.value;
-      }
-    }
-    if (Object.keys(writes).length > 0) {
-      Obj.update(existing, (existing) => {
-        const m = existing as unknown as Record<string, unknown>;
-        for (const [k, v] of Object.entries(writes)) {
-          m[k] = v;
-        }
-      });
-    }
     Obj.update(existing, (existing) => {
       const m = existing as Obj.Mutable<typeof existing>;
+      m.title = issue.title;
+      m.description = issue.body ?? '';
+      m.status = issueStateToTaskStatus(issue.state);
       if (assignedPerson && !m.assigned) {
         m.assigned = Ref.make(assignedPerson);
       }
@@ -278,10 +216,8 @@ const upsertTask = Effect.fn('upsertTask')(function* (
         m.project = Ref.make(project);
       }
     });
-    writeSnapshot(integration, String(issue.id), remoteFields);
     return { task: existing, created: false };
   }
-
   const created = Task.make({
     title: issue.title,
     description: issue.body ?? '',
@@ -293,17 +229,15 @@ const upsertTask = Effect.fn('upsertTask')(function* (
     Obj.getMeta(created).keys.push(fkFor(issue.id));
   });
   const persisted = yield* Database.add(created);
-  writeSnapshot(integration, String(issue.id), remoteFields);
   return { task: persisted, created: true };
 });
 
 /**
- * Pull-only upsert for issue/PR comments. One {@link Thread.Thread} per Task,
- * anchored via {@link AnchoredTo}; one {@link Message.Message} per remote
+ * Pull-only upsert for issue/PR comments. One {@link Thread.Thread} per Task
+ * (foreign-keyed `task:<task-fid>`); one {@link Message.Message} per remote
  * comment (foreign-keyed by comment.id). Local Messages without a foreign key
  * are preserved (the user might have added their own commentary). Remote
- * deletions of comments are NOT mirrored locally — would soft-delete here, but
- * we keep the existing Message in place so as not to lose history.
+ * deletions are NOT mirrored — keep history.
  */
 const syncCommentsForTask = Effect.fn('syncCommentsForTask')(function* (
   task: Task.Task,
@@ -392,63 +326,6 @@ const syncCommentsForTask = Effect.fn('syncCommentsForTask')(function* (
   return added;
 });
 
-// ── Push (Tasks only) ──────────────────────────────────────────────────────
-
-type PushPayload = {
-  task: Task.Task;
-  owner: string;
-  repo: string;
-  issueNumber: number;
-  diverged: GitHubApi.UpdateIssueInput;
-};
-
-const collectTaskPushes = (
-  integration: Integration.Integration,
-  taskByForeignId: Map<string, Task.Task>,
-  issueByForeignId: Map<string, GitHubApi.GitHubIssue>,
-  repoFullNameByIssueId: Map<string, string>,
-): PushPayload[] => {
-  const pushes: PushPayload[] = [];
-  for (const [fid, task] of taskByForeignId) {
-    if (Obj.isDeleted(task)) {
-      continue;
-    }
-    const issue = issueByForeignId.get(fid);
-    if (!issue) {
-      continue;
-    }
-    const fullName = repoFullNameByIssueId.get(fid);
-    if (!fullName) {
-      continue;
-    }
-    const [owner, repo] = fullName.split('/', 2);
-    if (!owner || !repo) {
-      continue;
-    }
-    const snapshot = readSnapshot<TaskSnapshot>(integration, fid) ?? {};
-    const fields = task as unknown as Record<string, unknown>;
-    const localTitle = typeof fields.title === 'string' ? fields.title : '';
-    const localDesc = typeof fields.description === 'string' ? fields.description : '';
-    const localStatus = typeof fields.status === 'string' ? fields.status : undefined;
-
-    const diverged: GitHubApi.UpdateIssueInput = {};
-    if (snapshot.title !== undefined && snapshot.title !== localTitle) {
-      diverged.title = localTitle;
-    }
-    if (snapshot.description !== undefined && snapshot.description !== localDesc) {
-      diverged.body = localDesc;
-    }
-    if (snapshot.status !== undefined && snapshot.status !== localStatus) {
-      diverged.state = taskStatusToIssueState(localStatus);
-    }
-    if (Object.keys(diverged).length === 0) {
-      continue;
-    }
-    pushes.push({ task, owner, repo, issueNumber: issue.number, diverged });
-  }
-  return pushes;
-};
-
 // ── Main handler ───────────────────────────────────────────────────────────
 
 const handler: Operation.WithHandler<typeof SyncGitHubOrganization> = SyncGitHubOrganization.pipe(
@@ -530,7 +407,6 @@ const handler: Operation.WithHandler<typeof SyncGitHubOrganization> = SyncGitHub
           let pulledProjects = 0;
           let pulledTasks = 0;
           let pulledComments = 0;
-          let pushedTasks = 0;
 
           const perTarget = yield* Effect.forEach(
             targetEntries,
@@ -563,10 +439,6 @@ const handler: Operation.WithHandler<typeof SyncGitHubOrganization> = SyncGitHub
                     // concurrency to keep us under GitHub's 5 000-req/hr
                     // primary rate limit and the per-endpoint secondary
                     // limits.
-                    const taskByForeignId = new Map<string, Task.Task>();
-                    const issueByForeignId = new Map<string, GitHubApi.GitHubIssue>();
-                    const repoFullNameByIssueId = new Map<string, string>();
-
                     yield* Effect.forEach(
                       repos,
                       (repo) =>
@@ -592,13 +464,10 @@ const handler: Operation.WithHandler<typeof SyncGitHubOrganization> = SyncGitHub
                               pulledPeople++;
                             }
 
-                            const { task, created } = yield* upsertTask(integrationObj, issue, assignedPerson, project);
+                            const { task, created } = yield* upsertTask(issue, assignedPerson, project);
                             if (created) {
                               pulledTasks++;
                             }
-                            taskByForeignId.set(String(issue.id), task);
-                            issueByForeignId.set(String(issue.id), issue);
-                            repoFullNameByIssueId.set(String(issue.id), repo.full_name);
 
                             // Pull comments. `issue.comments` is the count;
                             // skip the round-trip when zero.
@@ -614,39 +483,6 @@ const handler: Operation.WithHandler<typeof SyncGitHubOrganization> = SyncGitHub
                           }
                         }),
                       { concurrency: REPO_CONCURRENCY },
-                    );
-
-                    // Push diverged tasks.
-                    const pushes = collectTaskPushes(
-                      integrationObj,
-                      taskByForeignId,
-                      issueByForeignId,
-                      repoFullNameByIssueId,
-                    );
-                    yield* Effect.forEach(
-                      pushes,
-                      ({ task, owner, repo, issueNumber, diverged }) =>
-                        Effect.gen(function* () {
-                          yield* GitHubApi.updateIssue(owner, repo, issueNumber, diverged);
-                          // Refresh the snapshot so the next pull doesn't
-                          // detect divergence again.
-                          const fid = Obj.getMeta(task).keys.find((k) => k.source === GITHUB_SOURCE)?.id;
-                          if (fid) {
-                            const fields = task as unknown as Record<string, unknown>;
-                            writeSnapshot(integrationObj, fid, {
-                              title: fields.title,
-                              description: fields.description,
-                              status: fields.status,
-                            });
-                          }
-                          pushedTasks++;
-                        }).pipe(
-                          Effect.catchAll((err) => {
-                            log.warn('github push: updateIssue failed', { owner, repo, issueNumber, err });
-                            return Effect.void;
-                          }),
-                        ),
-                      { concurrency: COMMENT_CONCURRENCY },
                     );
                   }),
                 );
@@ -693,7 +529,6 @@ const handler: Operation.WithHandler<typeof SyncGitHubOrganization> = SyncGitHub
               tasks: pulledTasks,
               comments: pulledComments,
             },
-            pushed: { tasks: pushedTasks },
           };
         }).pipe(
           Effect.provide(Database.layer(db)),

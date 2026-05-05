@@ -110,20 +110,6 @@ const GitHubCommentSchema = Schema.Struct({
 });
 export type GitHubComment = Schema.Schema.Type<typeof GitHubCommentSchema>;
 
-/** Fields accepted by `PATCH /repos/{owner}/{repo}/issues/{number}`. */
-export type UpdateIssueInput = {
-  title?: string;
-  body?: string;
-  state?: 'open' | 'closed';
-  state_reason?: 'completed' | 'not_planned' | 'reopened' | null;
-};
-
-/** Fields accepted by `POST /repos/{owner}/{repo}/issues`. */
-export type CreateIssueInput = {
-  title: string;
-  body?: string;
-};
-
 // ── Credentials service ────────────────────────────────────────────────────
 
 /**
@@ -360,35 +346,4 @@ export const fetchIssueComments = (
         `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}/comments`,
       ),
     GitHubCommentSchema,
-  );
-
-/** PATCH /repos/{owner}/{repo}/issues/{number} — supports both issues and PRs. */
-export const updateIssue = (
-  owner: string,
-  repo: string,
-  issueNumber: number,
-  input: UpdateIssueInput,
-): GitHubEffect<GitHubIssue> =>
-  githubRequest(
-    (creds) =>
-      withAuth(
-        HttpClientRequest.patch(
-          `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}`,
-        ),
-        creds,
-      ).pipe(HttpClientRequest.bodyUnsafeJson(input)),
-    GitHubIssueSchema,
-  );
-
-/** POST /repos/{owner}/{repo}/issues — creates a new issue (NOT a PR). */
-export const createIssue = (owner: string, repo: string, input: CreateIssueInput): GitHubEffect<GitHubIssue> =>
-  githubRequest(
-    (creds) =>
-      withAuth(
-        HttpClientRequest.post(
-          `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues`,
-        ),
-        creds,
-      ).pipe(HttpClientRequest.bodyUnsafeJson(input)),
-    GitHubIssueSchema,
   );
