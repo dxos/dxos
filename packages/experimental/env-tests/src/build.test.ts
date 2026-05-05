@@ -42,6 +42,18 @@ describe('build tests', () => {
       forbid: [/vitest/, /rollup/],
     });
   });
+
+  // Phase 1 of the worker-safe RPC codec migration: ensure the @dxos/rpc envelope path
+  // does not pull `@protobufjs/codegen` (which uses `Function(...)` and crashes in
+  // `workerd`). Phase 2 will broaden this to ban `protobufjs` outright.
+  test('@dxos/rpc workerd bundle does not pull @protobufjs/codegen', async () => {
+    await runEnvTest({
+      imports: ['@dxos/rpc'],
+      conditions: ['workerd', 'worker', 'browser'],
+      external: ['*.wasm', 'node:async_hook'],
+      forbid: [/@protobufjs\/codegen/],
+    });
+  });
 });
 
 type EnvTestConfig = {

@@ -45,6 +45,9 @@
       "path": "../../core/mesh/edge-client"
     },
     {
+      "path": "../../core/mesh/rpc"
+    },
+    {
       "path": "../../sdk/app-framework"
     }
   ]

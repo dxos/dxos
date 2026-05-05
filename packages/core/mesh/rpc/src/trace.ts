@@ -3,9 +3,13 @@
 //
 
 import { Event } from '@dxos/async';
-import { MessageTrace } from '@dxos/protocols/proto/dxos/rpc';
 
 import { type RpcPort } from './rpc';
+// Sourced from the static, bufbuild-backed codec re-export — avoids pulling in the
+// protobufjs reflection schema that ships with `@dxos/protocols/proto/dxos/rpc`.
+import { type MessageTrace, MessageTrace_Direction } from './rpc-message-codec';
+
+export { type MessageTrace, MessageTrace_Direction };
 
 export class PortTracer {
   readonly message = new Event<MessageTrace>();
@@ -16,7 +20,8 @@ export class PortTracer {
     this._port = {
       send: (msg: Uint8Array) => {
         this.message.emit({
-          direction: MessageTrace.Direction.OUTGOING,
+          $typeName: 'dxos.rpc.MessageTrace',
+          direction: MessageTrace_Direction.OUTGOING,
           data: msg,
         });
 
@@ -25,7 +30,8 @@ export class PortTracer {
       subscribe: (cb: (msg: Uint8Array) => void) => {
         return this._wrappedPort.subscribe((msg) => {
           this.message.emit({
-            direction: MessageTrace.Direction.INCOMING,
+            $typeName: 'dxos.rpc.MessageTrace',
+            direction: MessageTrace_Direction.INCOMING,
             data: msg,
           });
           cb(msg);
