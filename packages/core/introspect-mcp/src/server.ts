@@ -38,6 +38,11 @@ export const createServer = (options: ServerOptions): McpServer => {
   const { introspector } = options;
   const log = registerLogger(options.logger);
 
+  // Every tool handler starts with `await introspector.ready` so it blocks on
+  // indexing — but only when the handler runs. `initialize` and `tools/list`
+  // are answered by the SDK from the static tool registry below, so MCP
+  // clients (Inspector, Claude Code, Composer) connect immediately even on a
+  // cold cache. Cold-start cost is paid once, on the first `tools/call`.
   const server = new McpServer({
     name: options.name ?? '@dxos/introspect-mcp',
     version: options.version ?? '0.0.0',
@@ -64,6 +69,7 @@ export const createServer = (options: ServerOptions): McpServer => {
       },
     },
     async (args) => {
+      await introspector.ready;
       const result = introspector.listPackages({
         name: args.name,
         pathPrefix: args.pathPrefix,
@@ -91,6 +97,7 @@ export const createServer = (options: ServerOptions): McpServer => {
       },
     },
     async (args) => {
+      await introspector.ready;
       const detail = introspector.getPackage(args.name);
       log({ tool: 'get_package', args, found: detail !== null });
       if (!detail) {
@@ -120,6 +127,7 @@ export const createServer = (options: ServerOptions): McpServer => {
       },
     },
     async (args) => {
+      await introspector.ready;
       const matches = introspector.listSymbols(args.package, args.kind);
       const shaped = shapeFindSymbol(matches);
       log({ tool: 'list_symbols', args, count: matches.length, truncated: shaped.truncated });
@@ -147,6 +155,7 @@ export const createServer = (options: ServerOptions): McpServer => {
       },
     },
     async (args) => {
+      await introspector.ready;
       const matches = introspector.findSymbol(args.query, args.kind);
       const shaped = shapeFindSymbol(matches);
       log({ tool: 'find_symbol', args, count: matches.length, truncated: shaped.truncated });
@@ -174,6 +183,7 @@ export const createServer = (options: ServerOptions): McpServer => {
       },
     },
     async (args) => {
+      await introspector.ready;
       const detail = introspector.getSymbol(args.ref, args.include);
       log({ tool: 'get_symbol', args, found: detail !== null });
       if (!detail) {
@@ -189,7 +199,7 @@ export const createServer = (options: ServerOptions): McpServer => {
   server.registerTool(
     'list_plugins',
     {
-      title: 'List DXOS plugins',
+      title: 'List Composer plugins',
       description:
         'List plugins detected in the monorepo. A plugin is a package whose src/ contains a `Plugin.define(meta)` call ' +
         'and a meta.ts exporting `Plugin.Meta`. Use this to discover what plugins exist before drilling into one. ' +
@@ -206,6 +216,7 @@ export const createServer = (options: ServerOptions): McpServer => {
       },
     },
     async (args) => {
+      await introspector.ready;
       const result = introspector.listPlugins({ query: args.query, pathPrefix: args.pathPrefix });
       const shaped = shapeListPlugins(result);
       log({ tool: 'list_plugins', args, count: result.length, truncated: shaped.truncated });
@@ -229,6 +240,7 @@ export const createServer = (options: ServerOptions): McpServer => {
       },
     },
     async (args) => {
+      await introspector.ready;
       const detail = introspector.getPlugin(args.id);
       log({ tool: 'get_plugin', args, found: detail !== null });
       if (!detail) {
@@ -254,6 +266,7 @@ export const createServer = (options: ServerOptions): McpServer => {
       },
     },
     async (args) => {
+      await introspector.ready;
       const result = introspector.listSurfaces(args.pluginId);
       const shaped = shapeListSurfaces(result);
       log({ tool: 'list_surfaces', args, count: result.length, truncated: shaped.truncated });
@@ -276,6 +289,7 @@ export const createServer = (options: ServerOptions): McpServer => {
       },
     },
     async (args) => {
+      await introspector.ready;
       const result = introspector.listCapabilities(args.pluginId);
       const shaped = shapeListCapabilities(result);
       log({ tool: 'list_capabilities', args, count: result.length, truncated: shaped.truncated });
@@ -299,6 +313,7 @@ export const createServer = (options: ServerOptions): McpServer => {
       },
     },
     async (args) => {
+      await introspector.ready;
       const result = introspector.listOperations(args.pluginId);
       const shaped = shapeListOperations(result);
       log({ tool: 'list_operations', args, count: result.length, truncated: shaped.truncated });
@@ -322,6 +337,7 @@ export const createServer = (options: ServerOptions): McpServer => {
       },
     },
     async (args) => {
+      await introspector.ready;
       const result = introspector.listSchemas(args.package);
       const shaped = shapeListSchemas(result);
       log({ tool: 'list_schemas', args, count: result.length, truncated: shaped.truncated });
@@ -345,6 +361,7 @@ export const createServer = (options: ServerOptions): McpServer => {
       },
     },
     async (args) => {
+      await introspector.ready;
       const detail = introspector.getSchema(args.typename);
       log({ tool: 'get_schema', args, found: detail !== null });
       if (!detail) {
@@ -370,6 +387,7 @@ export const createServer = (options: ServerOptions): McpServer => {
       },
     },
     async (args) => {
+      await introspector.ready;
       const usages = introspector.findSchemaUsage(args.typename);
       const shaped = shapeFindSchemaUsage(usages);
       log({ tool: 'find_schema_usage', args, count: usages.length, truncated: shaped.truncated });
