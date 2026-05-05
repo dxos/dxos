@@ -26,6 +26,8 @@ import { trim } from '@dxos/util';
 
 import type { ToolLogger } from './logger';
 import {
+  type ListOptions,
+  MAX_LIST_LIMIT,
   shapeFindSchemaUsage,
   shapeFindSymbol,
   shapeGetPackage,
@@ -40,6 +42,36 @@ import {
   shapeListSurfaces,
   type ToolResult,
 } from './shaping';
+
+/**
+ * Pagination + projection inputs shared by every list-style tool. Spread these
+ * into the tool's `inputSchema` so every list endpoint accepts the same two
+ * knobs without us defining them inline 9 times.
+ *
+ * The default behavior (no `limit`, no `compact`) matches the old hard-cap-of-30
+ * shape, so callers that don't pass these args see no change.
+ */
+const listOptionsSchema = {
+  limit: z
+    .number()
+    .int()
+    .positive()
+    .max(MAX_LIST_LIMIT)
+    .optional()
+    .describe(`Maximum number of items to return. Default 30; max ${MAX_LIST_LIMIT}.`),
+  compact: z
+    .boolean()
+    .optional()
+    .describe(
+      'If true, returns only the most-essential identifying fields (ref, id, name) for each item — about 1/4 the response size. Use when discovering what exists before drilling in with a get_* call.',
+    ),
+};
+
+/** Pull the list-options bag out of an args object before forwarding to a shaper. */
+const pickListOptions = (args: { limit?: number; compact?: boolean }): ListOptions => ({
+  limit: args.limit,
+  compact: args.compact,
+});
 
 /** A single MCP tool — static metadata plus a body that produces a `ToolResult`. */
 export type ToolDefinition<TArgs = Record<string, unknown>> = {
@@ -89,18 +121,19 @@ export const createToolDefinitions = (
         .optional()
         .describe('Restrict to packages whose path starts with this segment, e.g. "packages/plugins".'),
       privateOnly: z.boolean().optional().describe('If true, only include workspace-private packages.'),
+      ...listOptionsSchema,
     },
-    handler: (args: { name?: string; pathPrefix?: string; privateOnly?: boolean }) => {
+    handler: (args: ListOptions & { name?: string; pathPrefix?: string; privateOnly?: boolean }) => {
       const result = introspector.listPackages({
         name: args.name,
         pathPrefix: args.pathPrefix,
         privateOnly: args.privateOnly,
       });
-      const shaped = shapeListPackages(result);
+      const shaped = shapeListPackages(result, pickListOptions(args));
       log({ tool: 'list_packages', args, count: result.length, truncated: shaped.truncated });
       return shaped;
     },
-  } satisfies ToolDefinition<{ name?: string; pathPrefix?: string; privateOnly?: boolean }>,
+  } satisfies ToolDefinition<ListOptions & { name?: string; pathPrefix?: string; privateOnly?: boolean }>,
 
   get_package: {
     title: 'Get package detail',
@@ -135,14 +168,15 @@ export const createToolDefinitions = (
         .enum(['function', 'class', 'interface', 'type', 'enum', 'variable', 'namespace'])
         .optional()
         .describe('Optional filter on declaration kind.'),
+      ...listOptionsSchema,
     },
-    handler: (args: { package: string; kind?: SymbolKind }) => {
+    handler: (args: ListOptions & { package: string; kind?: SymbolKind }) => {
       const matches = introspector.listSymbols(args.package, args.kind);
-      const shaped = shapeFindSymbol(matches);
+      const shaped = shapeFindSymbol(matches, pickListOptions(args));
       log({ tool: 'list_symbols', args, count: matches.length, truncated: shaped.truncated });
       return shaped;
     },
-  } satisfies ToolDefinition<{ package: string; kind?: SymbolKind }>,
+  } satisfies ToolDefinition<ListOptions & { package: string; kind?: SymbolKind }>,
 
   find_symbol: {
     title: 'Find an exported symbol by name',
@@ -157,14 +191,15 @@ export const createToolDefinitions = (
         .enum(['function', 'class', 'interface', 'type', 'enum', 'variable', 'namespace'])
         .optional()
         .describe('Optional filter on declaration kind.'),
+      ...listOptionsSchema,
     },
-    handler: (args: { query: string; kind?: SymbolKind }) => {
+    handler: (args: ListOptions & { query: string; kind?: SymbolKind }) => {
       const matches = introspector.findSymbol(args.query, args.kind);
-      const shaped = shapeFindSymbol(matches);
+      const shaped = shapeFindSymbol(matches, pickListOptions(args));
       log({ tool: 'find_symbol', args, count: matches.length, truncated: shaped.truncated });
       return shaped;
     },
-  } satisfies ToolDefinition<{ query: string; kind?: SymbolKind }>,
+  } satisfies ToolDefinition<ListOptions & { query: string; kind?: SymbolKind }>,
 
   get_symbol: {
     title: 'Get symbol detail',
@@ -206,14 +241,15 @@ export const createToolDefinitions = (
         .string()
         .optional()
         .describe('Restrict to plugins whose owning package starts with this path, e.g. "packages/plugins".'),
+      ...listOptionsSchema,
     },
-    handler: (args: { query?: string; pathPrefix?: string }) => {
+    handler: (args: ListOptions & { query?: string; pathPrefix?: string }) => {
       const result = introspector.listPlugins({ query: args.query, pathPrefix: args.pathPrefix });
-      const shaped = shapeListPlugins(result);
+      const shaped = shapeListPlugins(result, pickListOptions(args));
       log({ tool: 'list_plugins', args, count: result.length, truncated: shaped.truncated });
       return shaped;
     },
-  } satisfies ToolDefinition<{ query?: string; pathPrefix?: string }>,
+  } satisfies ToolDefinition<ListOptions & { query?: string; pathPrefix?: string }>,
 
   get_plugin: {
     title: 'Get plugin detail',
@@ -244,14 +280,15 @@ export const createToolDefinitions = (
     `,
     inputSchema: {
       pluginId: z.string().optional().describe('Restrict to surfaces contributed by this plugin id.'),
+      ...listOptionsSchema,
     },
-    handler: (args: { pluginId?: string }) => {
+    handler: (args: ListOptions & { pluginId?: string }) => {
       const result = introspector.listSurfaces(args.pluginId);
-      const shaped = shapeListSurfaces(result);
+      const shaped = shapeListSurfaces(result, pickListOptions(args));
       log({ tool: 'list_surfaces', args, count: result.length, truncated: shaped.truncated });
       return shaped;
     },
-  } satisfies ToolDefinition<{ pluginId?: string }>,
+  } satisfies ToolDefinition<ListOptions & { pluginId?: string }>,
 
   list_capabilities: {
     title: 'List capability contributions',
@@ -261,14 +298,15 @@ export const createToolDefinitions = (
     `,
     inputSchema: {
       pluginId: z.string().optional().describe('Restrict to capabilities contributed by this plugin id.'),
+      ...listOptionsSchema,
     },
-    handler: (args: { pluginId?: string }) => {
+    handler: (args: ListOptions & { pluginId?: string }) => {
       const result = introspector.listCapabilities(args.pluginId);
-      const shaped = shapeListCapabilities(result);
+      const shaped = shapeListCapabilities(result, pickListOptions(args));
       log({ tool: 'list_capabilities', args, count: result.length, truncated: shaped.truncated });
       return shaped;
     },
-  } satisfies ToolDefinition<{ pluginId?: string }>,
+  } satisfies ToolDefinition<ListOptions & { pluginId?: string }>,
 
   list_operations: {
     title: 'List operations',
@@ -279,14 +317,15 @@ export const createToolDefinitions = (
     `,
     inputSchema: {
       pluginId: z.string().optional().describe('Restrict to operations defined within this plugin id.'),
+      ...listOptionsSchema,
     },
-    handler: (args: { pluginId?: string }) => {
+    handler: (args: ListOptions & { pluginId?: string }) => {
       const result = introspector.listOperations(args.pluginId);
-      const shaped = shapeListOperations(result);
+      const shaped = shapeListOperations(result, pickListOptions(args));
       log({ tool: 'list_operations', args, count: result.length, truncated: shaped.truncated });
       return shaped;
     },
-  } satisfies ToolDefinition<{ pluginId?: string }>,
+  } satisfies ToolDefinition<ListOptions & { pluginId?: string }>,
 
   list_schemas: {
     title: 'List schemas',
@@ -304,14 +343,15 @@ export const createToolDefinitions = (
           'Restrict to schemas defined in a package that declares this plugin id, e.g. "org.dxos.plugin.markdown".',
         ),
       package: z.string().optional().describe('Restrict to schemas defined within this exact package name.'),
+      ...listOptionsSchema,
     },
-    handler: (args: { pluginId?: string; package?: string }) => {
+    handler: (args: ListOptions & { pluginId?: string; package?: string }) => {
       const result = introspector.listSchemas({ package: args.package, pluginId: args.pluginId });
-      const shaped = shapeListSchemas(result);
+      const shaped = shapeListSchemas(result, pickListOptions(args));
       log({ tool: 'list_schemas', args, count: result.length, truncated: shaped.truncated });
       return shaped;
     },
-  } satisfies ToolDefinition<{ pluginId?: string; package?: string }>,
+  } satisfies ToolDefinition<ListOptions & { pluginId?: string; package?: string }>,
 
   get_schema: {
     title: 'Get schema detail by typename',
@@ -342,14 +382,15 @@ export const createToolDefinitions = (
     `,
     inputSchema: {
       typename: z.string().describe('Schema typename, e.g. "org.dxos.type.document".'),
+      ...listOptionsSchema,
     },
-    handler: (args: { typename: string }) => {
+    handler: (args: ListOptions & { typename: string }) => {
       const usages = introspector.findSchemaUsage(args.typename);
-      const shaped = shapeFindSchemaUsage(usages);
+      const shaped = shapeFindSchemaUsage(usages, pickListOptions(args));
       log({ tool: 'find_schema_usage', args, count: usages.length, truncated: shaped.truncated });
       return shaped;
     },
-  } satisfies ToolDefinition<{ typename: string }>,
+  } satisfies ToolDefinition<ListOptions & { typename: string }>,
 });
 
 // Re-exported here so callers don't have to import from `@dxos/introspect`

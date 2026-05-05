@@ -390,4 +390,89 @@ describe('introspect-mcp server', () => {
       ),
     ).toBe(true);
   });
+
+  // ----- limit + compact list options -----
+
+  test('list_symbols with `limit` overrides the default cap', async ({ expect }) => {
+    // pkg-a exports more than the default page would cap. With a small
+    // explicit limit, response truncates to exactly that count and the
+    // truncation note appears.
+    const result = await env.client.callTool({
+      name: 'list_symbols',
+      arguments: { package: '@fixture/pkg-a', limit: 1 },
+    });
+    const payload = parseToolText(result as any) as {
+      data: Array<{ ref: string }>;
+      truncated?: string;
+    };
+    expect(payload.data.length).toBe(1);
+    expect(payload.truncated).toBeDefined();
+    expect(payload.truncated).toContain('more results');
+  });
+
+  test('list_symbols with `compact: true` strips non-essential fields', async ({ expect }) => {
+    // Compact projection keeps only ref + name; full projection includes
+    // package, kind, summary. Verify the diff between the two.
+    const full = parseToolText(
+      (await env.client.callTool({
+        name: 'list_symbols',
+        arguments: { package: '@fixture/pkg-a' },
+      })) as any,
+    ) as { data: Array<Record<string, unknown>> };
+    const compact = parseToolText(
+      (await env.client.callTool({
+        name: 'list_symbols',
+        arguments: { package: '@fixture/pkg-a', compact: true },
+      })) as any,
+    ) as { data: Array<Record<string, unknown>> };
+
+    expect(full.data.length).toBe(compact.data.length);
+    expect(full.data.length).toBeGreaterThan(0);
+
+    // Compact rows have only `ref` and `name`. Full rows additionally include `kind` / `package`.
+    const compactKeys = Object.keys(compact.data[0]).sort();
+    expect(compactKeys).toEqual(['name', 'ref']);
+    const fullKeys = Object.keys(full.data[0]).sort();
+    expect(fullKeys).toContain('kind');
+    expect(fullKeys).toContain('package');
+  });
+
+  test('list_plugins with `compact` returns only ref/id/name', async ({ expect }) => {
+    const result = await env.client.callTool({
+      name: 'list_plugins',
+      arguments: { compact: true },
+    });
+    const payload = parseToolText(result as any) as { data: Array<Record<string, unknown>> };
+    expect(payload.data.length).toBeGreaterThan(0);
+    const keys = Object.keys(payload.data[0]).sort();
+    expect(keys).toEqual(['id', 'name', 'ref']);
+  });
+
+  test('list_schemas with `compact` returns only ref/typename', async ({ expect }) => {
+    const result = await env.client.callTool({
+      name: 'list_schemas',
+      arguments: { compact: true },
+    });
+    const payload = parseToolText(result as any) as { data: Array<Record<string, unknown>> };
+    expect(payload.data.length).toBeGreaterThan(0);
+    const keys = Object.keys(payload.data[0]).sort();
+    expect(keys).toEqual(['ref', 'typename']);
+  });
+
+  test('list tools reject `limit` outside [1, MAX_LIST_LIMIT]', async ({ expect }) => {
+    // Zod rejects non-positive / over-max limits at the schema layer, before
+    // the handler runs. The MCP SDK surfaces input-validation failures as a
+    // result with `isError: true` rather than a thrown error.
+    const tooSmall = (await env.client.callTool({
+      name: 'list_packages',
+      arguments: { limit: 0 },
+    })) as { isError?: boolean };
+    expect(tooSmall.isError).toBe(true);
+
+    const tooLarge = (await env.client.callTool({
+      name: 'list_packages',
+      arguments: { limit: 99999 },
+    })) as { isError?: boolean };
+    expect(tooLarge.isError).toBe(true);
+  });
 });

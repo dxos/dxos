@@ -3,10 +3,12 @@
 //
 
 // Response shaping for token budgets.
-
-// Default tool responses target ~500 tokens. Lists get truncated with a note
-// telling the caller how to refine. Single-record fetches don't get truncated;
-// callers opt into heavier fields via `include`.
+//
+// Tool responses target a sane default size for the LLM context (~30 list
+// items, single-record fetches kept compact via `include` opt-ins). Callers
+// that legitimately need a longer list pass `limit`; callers in "discovery
+// mode" (just want to see what exists) pass `compact: true` for a refs/ids-
+// only projection at roughly 1/4 the wire size.
 
 import type {
   Capability,
@@ -23,7 +25,14 @@ import type {
   SymbolMatch,
 } from '@dxos/introspect';
 
-const LIST_LIMIT = 30;
+/** Default number of items returned by list-style tools when no `limit` is passed. */
+export const DEFAULT_LIST_LIMIT = 30;
+/**
+ * Hard ceiling on `limit`. A runaway tool call shouldn't be able to dump every
+ * symbol in the monorepo (~thousands) into the model's context. Callers who
+ * truly need everything should iterate via filters (pluginId, package, etc.).
+ */
+export const MAX_LIST_LIMIT = 200;
 const SOURCE_PREVIEW = 1200;
 const JSDOC_PREVIEW = 600;
 
@@ -33,22 +42,60 @@ export type ToolResult = {
   truncated?: string;
 };
 
-export const shapeListPackages = (all: Package[]): ToolResult => {
-  const data = all.slice(0, LIST_LIMIT).map((p) => ({
-    name: p.name,
-    version: p.version,
-    private: p.private,
-    path: p.path,
-    description: p.description,
-  }));
-  if (all.length > LIST_LIMIT) {
+/**
+ * Per-call options every list-style shaper accepts. Both fields are optional
+ * — the defaults match the pre-existing behavior (limit=30, full projection).
+ */
+export type ListOptions = {
+  /** Override the default `DEFAULT_LIST_LIMIT`. Capped at `MAX_LIST_LIMIT`. */
+  limit?: number;
+  /**
+   * Return only the most-essential identifying fields (ref/id/name) instead
+   * of the full record. Use when discovering what exists before drilling in
+   * with a `get_*` call. Roughly 1/4 the token cost.
+   */
+  compact?: boolean;
+};
+
+type ShapeListConfig<T> = {
+  /** Full projection — what an LLM gets when `compact` is false/omitted. */
+  full: (item: T) => Record<string, unknown>;
+  /** Compact projection — refs/ids/names only. */
+  compact: (item: T) => Record<string, unknown>;
+  /** Suffix for the `truncated` note: "<N> more results — <hint>". */
+  truncationHint: string;
+};
+
+const shapeList = <T>(all: readonly T[], opts: ListOptions, config: ShapeListConfig<T>): ToolResult => {
+  const requested = opts.limit ?? DEFAULT_LIST_LIMIT;
+  const limit = Math.min(Math.max(0, Math.floor(requested)), MAX_LIST_LIMIT);
+  const project = opts.compact ? config.compact : config.full;
+  const data = all.slice(0, limit).map(project);
+  if (all.length > limit) {
     return {
       data,
-      truncated: `${all.length - LIST_LIMIT} more results — refine with name/pathPrefix or call get_package directly.`,
+      truncated: `${all.length - limit} more results — ${config.truncationHint}`,
     };
   }
   return { data };
 };
+
+//
+// Packages
+//
+
+export const shapeListPackages = (all: Package[], opts: ListOptions = {}): ToolResult =>
+  shapeList(all, opts, {
+    full: (p) => ({
+      name: p.name,
+      version: p.version,
+      private: p.private,
+      path: p.path,
+      description: p.description,
+    }),
+    compact: (p) => ({ name: p.name, path: p.path }),
+    truncationHint: 'raise `limit` (max 200), refine with `name`/`pathPrefix`, or call get_package directly.',
+  });
 
 export const shapeGetPackage = (detail: PackageDetail): ToolResult => ({
   data: {
@@ -65,22 +112,16 @@ export const shapeGetPackage = (detail: PackageDetail): ToolResult => ({
   },
 });
 
-export const shapeFindSymbol = (matches: SymbolMatch[]): ToolResult => {
-  const data = matches.slice(0, LIST_LIMIT).map((m) => ({
-    ref: m.ref,
-    name: m.name,
-    package: m.package,
-    kind: m.kind,
-    summary: m.summary,
-  }));
-  if (matches.length > LIST_LIMIT) {
-    return {
-      data,
-      truncated: `${matches.length - LIST_LIMIT} more results — refine the query or filter by kind.`,
-    };
-  }
-  return { data };
-};
+//
+// Symbols
+//
+
+export const shapeFindSymbol = (matches: SymbolMatch[], opts: ListOptions = {}): ToolResult =>
+  shapeList(matches, opts, {
+    full: (m) => ({ ref: m.ref, name: m.name, package: m.package, kind: m.kind, summary: m.summary }),
+    compact: (m) => ({ ref: m.ref, name: m.name }),
+    truncationHint: 'raise `limit` (max 200), refine the query, or filter by `kind`.',
+  });
 
 export const shapeGetSymbol = (detail: SymbolDetail): ToolResult => {
   const result: Record<string, unknown> = {
@@ -109,25 +150,15 @@ const truncate = (s: string, limit: number): string => {
 };
 
 //
-// Plugin / surface / capability / operation shaping.
+// Plugin / surface / capability / operation
 //
 
-export const shapeListPlugins = (all: Plugin[]): ToolResult => {
-  const data = all.slice(0, LIST_LIMIT).map((p) => ({
-    ref: p.ref,
-    id: p.id,
-    name: p.name,
-    package: p.package,
-    description: p.description,
-  }));
-  if (all.length > LIST_LIMIT) {
-    return {
-      data,
-      truncated: `${all.length - LIST_LIMIT} more results — refine with query/pathPrefix or call get_plugin directly.`,
-    };
-  }
-  return { data };
-};
+export const shapeListPlugins = (all: Plugin[], opts: ListOptions = {}): ToolResult =>
+  shapeList(all, opts, {
+    full: (p) => ({ ref: p.ref, id: p.id, name: p.name, package: p.package, description: p.description }),
+    compact: (p) => ({ ref: p.ref, id: p.id, name: p.name }),
+    truncationHint: 'raise `limit` (max 200), refine with `query`/`pathPrefix`, or call get_plugin directly.',
+  });
 
 export const shapeGetPlugin = (detail: PluginDetail): ToolResult => ({
   data: {
@@ -145,79 +176,52 @@ export const shapeGetPlugin = (detail: PluginDetail): ToolResult => ({
   },
 });
 
-export const shapeListSurfaces = (all: Surface[]): ToolResult => {
-  const data = all.slice(0, LIST_LIMIT).map((s) => ({
-    ref: s.ref,
-    id: s.id,
-    pluginId: s.pluginId,
-    package: s.package,
-    roles: s.roles,
-  }));
-  if (all.length > LIST_LIMIT) {
-    return {
-      data,
-      truncated: `${all.length - LIST_LIMIT} more results — filter by plugin id.`,
-    };
-  }
-  return { data };
-};
+export const shapeListSurfaces = (all: Surface[], opts: ListOptions = {}): ToolResult =>
+  shapeList(all, opts, {
+    full: (s) => ({ ref: s.ref, id: s.id, pluginId: s.pluginId, package: s.package, roles: s.roles }),
+    compact: (s) => ({ ref: s.ref, id: s.id }),
+    truncationHint: 'raise `limit` (max 200) or filter by `pluginId`.',
+  });
 
-export const shapeListCapabilities = (all: Capability[]): ToolResult => {
-  const data = all.slice(0, LIST_LIMIT).map((c) => ({
-    ref: c.ref,
-    key: c.key,
-    pluginId: c.pluginId,
-    package: c.package,
-  }));
-  if (all.length > LIST_LIMIT) {
-    return {
-      data,
-      truncated: `${all.length - LIST_LIMIT} more results — filter by plugin id.`,
-    };
-  }
-  return { data };
-};
+export const shapeListCapabilities = (all: Capability[], opts: ListOptions = {}): ToolResult =>
+  shapeList(all, opts, {
+    full: (c) => ({ ref: c.ref, key: c.key, pluginId: c.pluginId, package: c.package }),
+    compact: (c) => ({ ref: c.ref, key: c.key }),
+    truncationHint: 'raise `limit` (max 200) or filter by `pluginId`.',
+  });
 
-export const shapeListOperations = (all: Operation[]): ToolResult => {
-  const data = all.slice(0, LIST_LIMIT).map((o) => ({
-    ref: o.ref,
-    key: o.key,
-    name: o.name,
-    description: o.description,
-    pluginId: o.pluginId,
-    package: o.package,
-  }));
-  if (all.length > LIST_LIMIT) {
-    return {
-      data,
-      truncated: `${all.length - LIST_LIMIT} more results — filter by plugin id.`,
-    };
-  }
-  return { data };
-};
+export const shapeListOperations = (all: Operation[], opts: ListOptions = {}): ToolResult =>
+  shapeList(all, opts, {
+    full: (o) => ({
+      ref: o.ref,
+      key: o.key,
+      name: o.name,
+      description: o.description,
+      pluginId: o.pluginId,
+      package: o.package,
+    }),
+    compact: (o) => ({ ref: o.ref, key: o.key, name: o.name }),
+    truncationHint: 'raise `limit` (max 200) or filter by `pluginId`.',
+  });
 
 //
-// Schema shaping
+// Schemas
 //
 
-export const shapeListSchemas = (all: SchemaSummary[]): ToolResult => {
-  const data = all.slice(0, LIST_LIMIT).map((s) => ({
-    ref: s.ref,
-    typename: s.typename,
-    version: s.version,
-    name: s.name,
-    package: s.package,
-    pluginId: s.pluginId,
-    fieldCount: s.fieldCount,
-  }));
-  if (all.length > LIST_LIMIT) {
-    return {
-      data,
-      truncated: `${all.length - LIST_LIMIT} more results — filter by pluginId or package, or call get_schema directly.`,
-    };
-  }
-  return { data };
-};
+export const shapeListSchemas = (all: SchemaSummary[], opts: ListOptions = {}): ToolResult =>
+  shapeList(all, opts, {
+    full: (s) => ({
+      ref: s.ref,
+      typename: s.typename,
+      version: s.version,
+      name: s.name,
+      package: s.package,
+      pluginId: s.pluginId,
+      fieldCount: s.fieldCount,
+    }),
+    compact: (s) => ({ ref: s.ref, typename: s.typename }),
+    truncationHint: 'raise `limit` (max 200), filter by `pluginId`/`package`, or call get_schema directly.',
+  });
 
 export const shapeGetSchema = (detail: SchemaDetail): ToolResult => ({
   data: {
@@ -233,18 +237,9 @@ export const shapeGetSchema = (detail: SchemaDetail): ToolResult => ({
   },
 });
 
-export const shapeFindSchemaUsage = (usages: SchemaUsage[]): ToolResult => {
-  const data = usages.slice(0, LIST_LIMIT).map((u) => ({
-    file: u.file,
-    package: u.package,
-    line: u.line,
-    snippet: u.snippet,
-  }));
-  if (usages.length > LIST_LIMIT) {
-    return {
-      data,
-      truncated: `${usages.length - LIST_LIMIT} more references — narrow by reading specific files.`,
-    };
-  }
-  return { data };
-};
+export const shapeFindSchemaUsage = (usages: SchemaUsage[], opts: ListOptions = {}): ToolResult =>
+  shapeList(usages, opts, {
+    full: (u) => ({ file: u.file, package: u.package, line: u.line, snippet: u.snippet }),
+    compact: (u) => ({ file: u.file, line: u.line }),
+    truncationHint: 'raise `limit` (max 200) or read specific files directly.',
+  });

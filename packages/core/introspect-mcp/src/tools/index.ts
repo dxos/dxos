@@ -12,6 +12,8 @@
 
 export { createToolDefinitions, type ToolDefinition } from './tools';
 export {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
   shapeFindSchemaUsage,
   shapeFindSymbol,
   shapeGetPackage,
@@ -24,6 +26,7 @@ export {
   shapeListPlugins,
   shapeListSchemas,
   shapeListSurfaces,
+  type ListOptions,
   type ToolResult,
 } from './shaping';
 export { fileLogger, noopLogger, registerLogger, type ToolLogEntry, type ToolLogger } from './logger';
