@@ -52,7 +52,7 @@ export interface ProcessOperationInvoker {
 
 export class Service extends Context.Tag('@dxos/functions/ProcessOperationInvoker')<
   Service,
-  ProcessOperationInvoker
+  Operation.OperationService & OperationInvoker.OperationInvokerInternal & ProcessOperationInvoker
 >() {}
 
 const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T>): Effect.Effect<OperationFiber<T>> =>
@@ -106,7 +106,7 @@ export const make = (opts: {
   manager: ProcessManager.Manager;
   handlerSet: OperationHandlerSet.OperationHandlerSet;
   parentProcessId?: Process.ID;
-}): Operation.OperationService & ProcessOperationInvoker => {
+}): Operation.OperationService & OperationInvoker.OperationInvokerInternal & ProcessOperationInvoker => {
   const pubsub = Effect.runSync(PubSub.unbounded<OperationInvoker.InvocationEvent>());
   const pendingCount = Effect.runSync(Ref.make(0));
   const pendingFibers = new Set<Fiber.RuntimeFiber<any>>();
@@ -240,12 +240,28 @@ export const make = (opts: {
     }
   };
 
+  // The process-based invoker has no separate "core" path that bypasses
+  // event emission, so `_invokeCore` aliases `invoke`. HistoryTracker uses
+  // `_invokeCore` for undo invocations to avoid feedback loops; with the
+  // process-based invoker each undo still publishes an event, but the
+  // mapping registry filters undo operations out of the history.
+  const _invokeCore: OperationInvoker.OperationInvokerInternal['_invokeCore'] = (op, input, options) =>
+    invoke(op, input, options) as any;
+
+  const awaitFollowups: Effect.Effect<void> = Effect.suspend(() =>
+    Fiber.awaitAll(Array.from(pendingFibers)).pipe(Effect.asVoid),
+  );
+
   return {
     invoke,
     schedule,
     invokePromise,
     invokeFiber,
     attachFiber,
+    invocations: pubsub,
+    pendingFollowups: Ref.get(pendingCount),
+    awaitFollowups,
+    _invokeCore,
   };
 };
 

@@ -10,6 +10,9 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { LayerSpec, Operation, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
 import { LayerStack, ProcessManager } from '@dxos/compute-runtime';
+// Explicit import so the emitted `.d.ts` references the package via its public
+// alias instead of a relative `node_modules` path (TS2883).
+import { OperationInvoker } from '@dxos/operation';
 
 import { ActivationEvents, Capabilities } from '../common';
 import { Capability, Plugin } from '../core';
@@ -119,8 +122,15 @@ export default Capability.makeModule(
     );
 
     // Eagerly extract the operation invoker built by ProcessOperationInvoker.layer.
-    const operationInvoker = managedRuntime.runSync(
-      Effect.flatMap(Operation.Service, Effect.succeed) as Effect.Effect<Operation.OperationService, never, never>,
+    // Pulled via the ProcessOperationInvoker tag so the contributed value carries
+    // the full OperationInvoker interface (`invocations`, `pendingFollowups`,
+    // `awaitFollowups`, `_invokeCore`) that HistoryTracker requires.
+    const operationInvoker: OperationInvoker.OperationInvoker = managedRuntime.runSync(
+      Effect.flatMap(ProcessManager.ProcessOperationInvoker.Service, Effect.succeed) as unknown as Effect.Effect<
+        OperationInvoker.OperationInvoker,
+        never,
+        never
+      >,
     );
 
     return [
