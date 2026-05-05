@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import { type Operation } from '@dxos/compute';
 import { runAndForwardErrors } from '@dxos/effect';
-import { type Operation } from '@dxos/operation';
 
 import type { RuntimeServices, ServiceContainer } from '../services';
 

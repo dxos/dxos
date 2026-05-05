@@ -4,6 +4,25 @@
 
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 
+// Errors from @dxos/operation.
+
+export class InvokerNotInitializedError extends BaseError.extend(
+  'InvokerNotInitializedError',
+  'Invoker not initialized',
+) {
+  constructor() {
+    super();
+  }
+}
+
+export class NoHandlerError extends BaseError.extend('NoHandlerError', 'No handler found for operation. ') {
+  constructor(operationKey: string) {
+    super({ context: { operationKey } });
+  }
+}
+
+// Errors from @dxos/functions.
+
 export class ServiceNotAvailableError extends BaseError.extend('ServiceNotAvailable', 'Service not available') {
   constructor(service: string, options?: Omit<BaseErrorOptions, 'context'>) {
     super({ context: { service }, ...options, message: `Service not available: ${service}` });

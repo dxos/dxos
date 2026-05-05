@@ -15,10 +15,11 @@ import type * as Types from 'effect/Types';
 
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
 import type { ObjectId } from '@dxos/protocols';
 
-import * as Trace from '../Trace';
+import * as Operation from './Operation';
+import * as OperationHandlerSet from './OperationHandlerSet';
+import * as Trace from './Trace';
 
 //
 // Process.

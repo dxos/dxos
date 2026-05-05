@@ -5,8 +5,7 @@
 import { next as A, type Doc } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 
-import { type Script } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { type Script, Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
 

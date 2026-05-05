@@ -13,8 +13,7 @@ import * as Record from 'effect/Record';
 import * as Runtime from 'effect/Runtime';
 
 import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { type Blueprint } from '@dxos/compute';
-import { Operation, type OperationRegistry, Trace } from '@dxos/compute';
+import { type Blueprint, type OperationRegistry, Operation, Trace } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';

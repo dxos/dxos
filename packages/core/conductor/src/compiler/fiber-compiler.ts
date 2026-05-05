@@ -8,11 +8,11 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 
 import { AiService } from '@dxos/ai';
+import { Credential, Operation, OperationRegistry, Trace } from '@dxos/compute';
 import { raise } from '@dxos/debug';
 import { Database, Feed } from '@dxos/echo';
-import { CredentialsService, QueueService, Trace } from '@dxos/functions';
+import { QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { Operation, OperationRegistry } from '@dxos/operation';
 import { isNonNullable } from '@dxos/util';
 
 import { ComputeNodeError, InvalidValueError } from '../errors';
@@ -356,7 +356,7 @@ export class GraphExecutor {
       return Layer.mergeAll(
         Layer.succeed(AiService.AiService, yield* AiService.AiService),
         Layer.succeed(Scope.Scope, yield* Scope.Scope),
-        Layer.succeed(CredentialsService, yield* CredentialsService),
+        Layer.succeed(Credential.CredentialsService, yield* Credential.CredentialsService),
         Layer.succeed(Database.Service, yield* Database.Service),
         Layer.succeed(QueueService, yield* QueueService),
         Layer.succeed(Feed.FeedService, yield* Feed.FeedService),
