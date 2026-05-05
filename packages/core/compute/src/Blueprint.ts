@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { Annotation, Database, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, Filter, Obj, Type } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
