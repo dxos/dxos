@@ -60,6 +60,7 @@
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
+  type FocusEvent,
   type ForwardedRef,
   type KeyboardEvent,
   type MouseEvent,
@@ -89,6 +90,8 @@ type ListContextValue = {
   selectedId?: string;
   onSelect: (id: string) => void;
   variant: Variant;
+  /** When true, focusing an option also commits selection. */
+  selectionFollowsFocus: boolean;
 };
 
 const ListContext = createContext<ListContextValue | null>(null);
@@ -112,6 +115,14 @@ type RootProps = {
   defaultSelectedId?: string;
   /** Called when the user picks a different option. */
   onSelectChange?: (id: string) => void;
+  /**
+   * When true (default), focusing an option also commits selection — the
+   * "selection follows focus" pattern. Right for master/detail pickers
+   * where moving through the list previews the item. Set to false when
+   * the user must explicitly commit (Enter / click) — e.g. multi-step
+   * flows or destructive picks.
+   */
+  selectionFollowsFocus?: boolean;
   children?: ReactNode;
 };
 
@@ -120,6 +131,7 @@ const RootImpl = ({
   selectedId,
   defaultSelectedId,
   onSelectChange,
+  selectionFollowsFocus = true,
   children,
 }: RootProps & { variant: Variant }) => {
   // `useControllableState`'s `onChange` is typed `(state: string | undefined) => void`,
@@ -139,8 +151,8 @@ const RootImpl = ({
   const handleSelect = useCallback((id: string) => setResolvedSelected(id), [setResolvedSelected]);
 
   const ctx = useMemo<ListContextValue>(
-    () => ({ selectedId: resolvedSelected, onSelect: handleSelect, variant }),
-    [resolvedSelected, handleSelect, variant],
+    () => ({ selectedId: resolvedSelected, onSelect: handleSelect, variant, selectionFollowsFocus }),
+    [resolvedSelected, handleSelect, variant, selectionFollowsFocus],
   );
 
   return <ListContext.Provider value={ctx}>{children}</ListContext.Provider>;
@@ -175,6 +187,16 @@ type ViewportOwnProps = {
   'aria-label'?: string;
 };
 
+// Find all enabled `role='option'` descendants of `ul` in DOM order.
+// Disabled options stay in the tab order for screen-reader announcement
+// but are skipped by arrow / Home / End.
+const enabledOptions = (ul: HTMLElement | null): HTMLLIElement[] => {
+  if (!ul) {
+    return [];
+  }
+  return Array.from(ul.querySelectorAll<HTMLLIElement>('[role="option"]:not([aria-disabled="true"])'));
+};
+
 const renderViewport = (
   componentName: string,
   props: ThemedClassName<ViewportOwnProps & { children?: ReactNode }> & Record<string, unknown>,
@@ -182,11 +204,69 @@ const renderViewport = (
 ) => {
   // Touch the context to fail loudly if Viewport is used outside Root.
   useListContext(componentName);
+  // Tabster's arrow-group props are still applied as the canonical
+  // implementation per AUDIT.md. The explicit `onKeyDown` below is a
+  // belt-and-braces fallback that works even when tabster isn't
+  // initialized in the host environment (e.g. some Storybook contexts).
   const arrowGroup = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
 
   const { scroll = true, children, ...rest } = props as any;
   const variant = componentName === ROW_LIST_VIEWPORT_NAME ? 'row' : 'card';
   const listClassNames = variant === 'row' ? ROW_VIEWPORT_LIST_BASE : CARD_VIEWPORT_LIST_BASE;
+
+  // Explicit listbox keyboard navigation. Per WAI-ARIA listbox pattern:
+  //   ArrowDown — focus next enabled option
+  //   ArrowUp   — focus previous enabled option
+  //   Home      — focus first enabled option
+  //   End       — focus last enabled option
+  // No wraparound (matches the ARIA spec; tabster does wrap by default,
+  // but explicit handling here takes precedence and is more conventional
+  // for listboxes).
+  const handleListKeyDown = useCallback((event: KeyboardEvent<HTMLUListElement>) => {
+    const ul = event.currentTarget;
+    const options = enabledOptions(ul);
+    if (options.length === 0) {
+      return;
+    }
+    const focused = document.activeElement as HTMLElement | null;
+    const currentIndex = focused ? options.indexOf(focused as HTMLLIElement) : -1;
+
+    let nextIndex = -1;
+    switch (event.key) {
+      case 'ArrowDown':
+        nextIndex = currentIndex < 0 ? 0 : Math.min(currentIndex + 1, options.length - 1);
+        break;
+      case 'ArrowUp':
+        nextIndex = currentIndex < 0 ? options.length - 1 : Math.max(currentIndex - 1, 0);
+        break;
+      case 'Home':
+        nextIndex = 0;
+        break;
+      case 'End':
+        nextIndex = options.length - 1;
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    options[nextIndex]?.focus();
+  }, []);
+
+  // When focus first enters the listbox container itself (e.g. the user
+  // tabs onto the `<ul>`), redirect focus into a child option so arrow
+  // keys have an immediate starting point. Prefers the currently-selected
+  // option, then the first enabled option.
+  const handleListFocus = useCallback((event: FocusEvent<HTMLUListElement>) => {
+    if (event.target !== event.currentTarget) {
+      // Focus already landed on a child option — leave it alone.
+      return;
+    }
+    const ul = event.currentTarget;
+    const selected = ul.querySelector<HTMLLIElement>('[role="option"][aria-selected="true"]:not([aria-disabled="true"])');
+    const target = selected ?? enabledOptions(ul)[0] ?? null;
+    target?.focus();
+  }, []);
 
   // The listbox itself comes from `@dxos/react-list`'s `<List>`.
   // Without it, descendant `<ListItem>`s (used by `Row` / `Card`) fail
@@ -201,6 +281,8 @@ const renderViewport = (
       selectable
       {...composedListProps}
       {...arrowGroup}
+      onKeyDown={handleListKeyDown}
+      onFocus={handleListFocus}
       ref={forwardedRef as unknown as ForwardedRef<HTMLOListElement>}
     >
       {children}
@@ -253,8 +335,8 @@ const renderItem = (
   props: ThemedClassName<ItemOwnProps & { children?: ReactNode }> & Record<string, unknown>,
   forwardedRef: ForwardedRef<HTMLLIElement>,
 ) => {
-  const { id, disabled, onClick, children, ...rest } = props as any;
-  const { selectedId, onSelect } = useListContext(contextName);
+  const { id, disabled, onClick, onFocus, children, ...rest } = props as any;
+  const { selectedId, onSelect, selectionFollowsFocus } = useListContext(contextName);
   const isSelected = selectedId === id;
 
   const handleClick = useCallback(
@@ -281,6 +363,21 @@ const renderItem = (
     [disabled, id, onSelect],
   );
 
+  // Selection-follows-focus: when arrow keys move focus to this option
+  // (or any other path that focuses it without clicking), commit
+  // selection. The Root flag controls whether this fires; default is
+  // true, matching the master/detail picker convention. Disabled
+  // options are skipped earlier; the guard here is defense-in-depth.
+  const handleFocus = useCallback(
+    (event: FocusEvent<HTMLLIElement>) => {
+      if (!disabled && selectionFollowsFocus && selectedId !== id) {
+        onSelect(id);
+      }
+      onFocus?.(event);
+    },
+    [disabled, selectionFollowsFocus, selectedId, id, onSelect, onFocus],
+  );
+
   const composed = composableProps<HTMLLIElement>(rest, {
     classNames: [baseClassName, disabled && 'opacity-50 cursor-not-allowed'],
   });
@@ -298,6 +395,7 @@ const renderItem = (
       aria-disabled={disabled || undefined}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
+      onFocus={handleFocus}
       ref={forwardedRef}
     >
       {children}

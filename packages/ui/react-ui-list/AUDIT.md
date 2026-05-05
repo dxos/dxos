@@ -292,15 +292,28 @@ Specifically:
   story.
 - **`react-ui-stack`** is fully retired. All call sites move to
   `Mosaic.Stack` (the existing TODO).
-- **Keyboard navigation is `@fluentui/react-tabster`-only.** Every
-  list-shaped surface in the layered model uses tabster's
-  `useArrowNavigationGroup` (axis: vertical, `memorizeCurrent: true`)
-  for arrow-key traversal — no bespoke `onKeyDown` handlers, no
-  hand-rolled focus rings, no second focus-management library. This is
-  the rule for new code: if you're writing arrow-key handling for a
-  selectable list, you've probably skipped a layer. Existing tabster
-  consumers: `react-ui-search` `Listbox`, `react-ui-stack` `Stack`,
-  `react-ui-mosaic` `Focus.Group`, `react-ui-list` `RowList`.
+- **Keyboard navigation: `@fluentui/react-tabster` is the canonical
+  arrow-traversal layer; `react-ui-list` adds a thin explicit
+  `onKeyDown` on the listbox as belt-and-braces.** Every list-shaped
+  surface in the layered model uses tabster's `useArrowNavigationGroup`
+  (axis: vertical, `memorizeCurrent: true`) so plain Tab + arrow
+  navigation works without per-component wiring. New code should not
+  roll its own focus management or arrow-key handlers — if you're
+  reaching for that, you've probably skipped a layer.
+
+  `react-ui-list` `RowList.Viewport` additionally implements WAI-ARIA
+  listbox keyboard semantics directly (ArrowUp / ArrowDown / Home /
+  End, no wraparound) for two reasons: it works in environments where
+  tabster isn't initialized (some Storybook contexts), and tabster
+  alone doesn't cover behaviors specific to the listbox role —
+  selection-follows-focus and focus-on-entry (when the `<ul>` itself
+  receives focus, redirect to the selected option). Both are gated to
+  the listbox layer; downstream users of `RowList` get all of this for
+  free.
+
+  Existing tabster consumers: `react-ui-search` `Listbox`,
+  `react-ui-stack` `Stack`, `react-ui-mosaic` `Focus.Group`,
+  `react-ui-list` `RowList.Viewport`.
 
 - **The dx-* grammar** is documented in the README / a small
   `selection.css.md` next to `selected.css`. The rule:
