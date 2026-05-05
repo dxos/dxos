@@ -50,6 +50,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/ai-match/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/async/package.json",
           "jsonpath": "$.version"
         },
