@@ -17,9 +17,9 @@ import { EchoClient, type EchoDatabaseImpl, type QueueFactory, createFeedService
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { Operation, OperationRegistry } from '@dxos/operation';
-import { type FunctionProtocol } from '@dxos/protocols';
+import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol } from '@dxos/protocols';
 
 import { FunctionError, InvalidOperationInputError, InvalidOperationOutputError } from '../errors';
 import { type FunctionServices } from '../sdk';
@@ -167,55 +167,130 @@ class FunctionContext extends Resource {
     const credentials = dbLayer
       ? CredentialsService.layerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
       : CredentialsService.configuredLayer([]);
-    const functionInvocationService = MockedFunctionInvocationService;
-    const operationServiceLayer = MockedOperationServiceLayer;
 
     const aiLayer = this.context.services.functionsAiService
-      ? AiModelResolver.AiModelResolver.buildAiService.pipe(
-          Layer.provide(
-            AnthropicResolver.make().pipe(
-              Layer.provide(
-                AnthropicClient.layer({
-                  // Note: It doesn't matter what is base url here, it will be proxied to ai gateway in edge.
-                  apiUrl: 'http://internal/provider/anthropic',
-                }).pipe(Layer.provide(FunctionsAiHttpClient.layer(this.context.services.functionsAiService))),
-              ),
-            ),
-          ),
-        )
+      ? InternalAiServiceLayer(this.context.services.functionsAiService)
       : AiService.notAvailable;
+
+    const operationServiceLayer = this.context.services.functionsService
+      ? makeOperationServiceLayer(this.context.services.functionsService)
+      : unavailableOperationServiceLayer;
+
+    const operationRegistryLayer = this.context.services.functionsService
+      ? makeOperationRegistryLayer(this.context.services.functionsService, this.context.spaceId as SpaceId | undefined)
+      : emptyOperationRegistryLayer;
 
     return Layer.mergeAll(
       dbLayer,
       queuesLayer,
       feedLayer,
       credentials,
-      functionInvocationService,
       operationServiceLayer,
+      operationRegistryLayer,
       aiLayer,
-      // Defaults for operations that declare these services but expect the runtime to provide a
-      // sensible no-op (e.g. `AgentPrompt` running in a function worker without MCP servers or
-      // extra toolkits). Consumers can override by providing their own layer on top.
+      // Default for operations that declare `OpaqueToolkitProvider` but expect the runtime to
+      // provide a sensible no-op (e.g. `AgentPrompt` running in a function worker without MCP
+      // servers or extra toolkits). Consumers can override by providing their own layer on top.
       OpaqueToolkit.providerEmpty,
-      EmptyOperationRegistry,
+      // `FunctionInvocationService` is deprecated; new code should yield `Operation.Service`.
+      // The cloudflare wrapper provides only the unavailable layer to satisfy the (still-present)
+      // type union — handlers that yield it will die at invocation time.
+      FunctionInvocationService.layerNotAvailable,
       // TODO(dmaretskyi): Forward trace events.
       Trace.writerLayerNoop,
     );
   }
 }
 
-const MockedFunctionInvocationService = Layer.succeed(FunctionInvocationService, {
-  invokeFunction: () => Effect.die('Calling functions from functions is not implemented yet.'),
-  resolveFunction: () => Effect.die('Not implemented.'),
-});
+/**
+ * AI service layer that proxies HTTP requests through the EDGE-provided `FunctionsAiService`.
+ */
+const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiService) =>
+  AiModelResolver.AiModelResolver.buildAiService.pipe(
+    Layer.provide(
+      AnthropicResolver.make().pipe(
+        Layer.provide(
+          AnthropicClient.layer({
+            // Note: It doesn't matter what is base url here, it will be proxied to ai gateway in edge.
+            apiUrl: 'http://internal/provider/anthropic',
+          }).pipe(Layer.provide(FunctionsAiHttpClient.layer(functionsAiService))),
+        ),
+      ),
+    ),
+  );
 
-const MockedOperationServiceLayer = Layer.succeed(Operation.Service, {
-  invoke: () => Effect.die('Calling operations from functions is not implemented yet.'),
-  schedule: () => Effect.die('Not implemented.'),
-  invokePromise: async () => ({ error: new Error('Not implemented') }),
-} as any);
+/**
+ * Backs `Operation.Service` with the EDGE-provided `FunctionsService` so that operation
+ * handlers can invoke other deployed operations remotely. The `deployedId` on the operation
+ * definition is used as the routing key.
+ */
+const makeOperationServiceLayer = (
+  functionsService: EdgeFunctionEnv.FunctionsService,
+): Layer.Layer<Operation.Service> => {
+  const invokeRemote = async (
+    op: Operation.Definition.Any,
+    input: unknown,
+    options?: Operation.InvokeOptions,
+  ): Promise<{ data?: unknown; error?: Error }> => {
+    invariant(op.meta.deployedId, `Operation '${op.meta.key}' has no deployedId; cannot invoke remotely.`);
+    const result = await functionsService.invoke(op.meta.deployedId, input, {
+      spaceId: options?.spaceId,
+    });
+    if (result._kind === 'success') {
+      return { data: result.data };
+    }
+    return { error: ErrorCodec.decode(result.error) };
+  };
 
-const EmptyOperationRegistry = Layer.succeed(OperationRegistry.Service, {
+  return Layer.succeed(Operation.Service, {
+    invoke: ((op: Operation.Definition.Any, input: unknown, options?: Operation.InvokeOptions) =>
+      Effect.tryPromise(() => invokeRemote(op, input, options)).pipe(
+        Effect.orDie,
+        Effect.flatMap((outcome) =>
+          outcome.error ? Effect.die(outcome.error) : Effect.succeed(outcome.data as never),
+        ),
+      )) as Operation.OperationService['invoke'],
+    schedule: ((op: Operation.Definition.Any, input: unknown) =>
+      Effect.sync(() => {
+        invariant(op.meta.deployedId, `Operation '${op.meta.key}' has no deployedId; cannot schedule remotely.`);
+        // Fire and forget — schedule is intentionally non-awaiting.
+        void functionsService.invoke(op.meta.deployedId, input).catch(() => {
+          // Swallow errors — schedule is observability-only.
+        });
+      })) as Operation.OperationService['schedule'],
+    invokePromise: ((op: Operation.Definition.Any, input: unknown, options?: Operation.InvokeOptions) =>
+      invokeRemote(op, input, options).catch((error: unknown) => ({
+        error: error instanceof Error ? error : new Error(String(error)),
+      }))) as Operation.OperationService['invokePromise'],
+  } satisfies Operation.OperationService);
+};
+
+const unavailableOperationServiceLayer = Layer.succeed(Operation.Service, {
+  invoke: () => Effect.die('Operation.Service is not available: missing functionsService in EDGE context.'),
+  schedule: () => Effect.die('Operation.Service is not available: missing functionsService in EDGE context.'),
+  invokePromise: async () => ({
+    error: new Error('Operation.Service is not available: missing functionsService in EDGE context.'),
+  }),
+} as Operation.OperationService);
+
+/**
+ * Backs `OperationRegistry.Service` with the EDGE-provided `FunctionsService.query`. Returns
+ * the first persistent operation matching the requested key, or `Option.none()` when not found.
+ */
+const makeOperationRegistryLayer = (
+  functionsService: EdgeFunctionEnv.FunctionsService,
+  spaceId: SpaceId | undefined,
+): Layer.Layer<OperationRegistry.Service> =>
+  Layer.succeed(OperationRegistry.Service, {
+    resolve: (key: string) =>
+      Effect.gen(function* () {
+        const records = yield* Effect.tryPromise(() => functionsService.query({ spaceId })).pipe(Effect.orDie);
+        const match = (records as Operation.PersistentOperation[]).find((record) => record.key === key);
+        return match ? Option.some(Operation.deserialize(match)) : Option.none();
+      }),
+  });
+
+const emptyOperationRegistryLayer = Layer.succeed(OperationRegistry.Service, {
   resolve: () => Effect.succeed(Option.none()),
 });
 

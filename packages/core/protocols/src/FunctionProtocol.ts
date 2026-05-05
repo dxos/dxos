@@ -82,6 +82,12 @@ export interface Context {
      * Available if the function is invoked in context of a space.
      */
     functionsAiService?: EdgeFunctionEnv.FunctionsAiService;
+
+    /**
+     * Functions service.
+     * Available if the function is invoked in context of a space.
+     */
+    functionsService?: EdgeFunctionEnv.FunctionsService;
   };
 
   /**

@@ -26,5 +26,7 @@ export type FunctionServices =
   | QueueService
   | Feed.FeedService
   | Trace.TraceService
+  // TODO(dmaretskyi): `FunctionInvocationService` is being phased out in favour of `Operation.Service`;
+  // it's kept in the union until `functions-runtime/local-function-execution.ts` migrates.
   | FunctionInvocationService
   | Operation.Service;
