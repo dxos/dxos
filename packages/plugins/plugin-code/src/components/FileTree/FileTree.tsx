@@ -69,7 +69,7 @@ export const FileTree = ({ classNames, files, selectedPath, onSelect, emptyMessa
   }
 
   return (
-    <ul role='tree' className={mx('flex flex-col py-1 text-sm', classNames)}>
+    <ul role='list' className={mx('flex flex-col py-1 text-sm', classNames)}>
       {sortNodes(tree.children?.values() ?? []).map((node) => (
         <FileTreeNode key={node.path} node={node} depth={0} selectedPath={selectedPath} onSelect={onSelect} />
       ))}
@@ -92,9 +92,10 @@ const FileTreeNode = ({ node, depth, selectedPath, onSelect }: NodeProps) => {
 
   if (isFolder) {
     return (
-      <li role='treeitem' aria-expanded={expanded}>
+      <li role='listitem'>
         <button
           type='button'
+          aria-expanded={expanded}
           className='flex items-center gap-1 w-full text-start py-0.5 hover:bg-hoverSurface'
           style={indent}
           onClick={() => setExpanded((current) => !current)}
@@ -104,7 +105,7 @@ const FileTreeNode = ({ node, depth, selectedPath, onSelect }: NodeProps) => {
           <span className='truncate'>{node.name}</span>
         </button>
         {expanded && (
-          <ul role='group' className='flex flex-col'>
+          <ul role='list' className='flex flex-col'>
             {sortNodes(node.children!.values()).map((child) => (
               <FileTreeNode
                 key={child.path}
@@ -121,9 +122,10 @@ const FileTreeNode = ({ node, depth, selectedPath, onSelect }: NodeProps) => {
   }
 
   return (
-    <li role='treeitem' aria-selected={isSelected}>
+    <li role='listitem'>
       <button
         type='button'
+        aria-pressed={isSelected}
         className={mx(
           'flex items-center gap-1 w-full text-start py-0.5 hover:bg-hoverSurface',
           isSelected && 'bg-activeSurface text-accentText',

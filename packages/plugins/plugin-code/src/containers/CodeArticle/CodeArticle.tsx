@@ -39,7 +39,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(({ role,
 
   // Trigger re-render on files mutations.
   useObject(project);
-  const fileRefs = project.files ?? [];
+  const fileRefs = useMemo(() => project.files ?? [], [project.files]);
 
   const [resolvedFiles, setResolvedFiles] = useState<SourceFile.SourceFile[]>([]);
   useEffect(() => {
@@ -70,6 +70,8 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(({ role,
     [resolvedFiles, selectedPath],
   );
 
+  const fileEntries = useMemo(() => resolvedFiles.map(({ path }) => ({ path })), [resolvedFiles]);
+
   return (
     <Panel.Root role={role} ref={forwardedRef}>
       <Panel.Toolbar />
@@ -77,7 +79,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(({ role,
         <div role='none' className='grid grid-cols-[16rem_1fr] min-bs-0 bs-full overflow-hidden'>
           <div role='none' className='border-ie border-separator overflow-auto'>
             <FileTree
-              files={resolvedFiles.map(({ path }) => ({ path }))}
+              files={fileEntries}
               selectedPath={selectedPath}
               onSelect={setSelectedPath}
               emptyMessage={t('view.code.empty.placeholder')}

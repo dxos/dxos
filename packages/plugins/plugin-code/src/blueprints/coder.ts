@@ -44,7 +44,7 @@ const make = () =>
           - read-file: read a single file by path.
           - write-file: create or overwrite a file (whole-file write).
           - delete-file: remove a file.
-          - scaffold: seed a new project with package.json, src/plugin.ts, README.
+          - scaffold-project: seed a new project with package.json, src/plugin.ts, README.
 
         Workflow:
           1. Iterate on the Spec content with the user. Propose features, types,
@@ -54,7 +54,7 @@ const make = () =>
              list_symbols, find_symbol, get_symbol) to look up DXOS / Composer
              APIs before writing code. Prefer reading existing plugin examples
              over guessing API shapes.
-          4. Use scaffold to bootstrap a new project, then write-file to add
+          4. Use scaffold-project to bootstrap a new project, then write-file to add
              files and overwrite as you iterate. Read before you re-write.
           5. run-build-agent dispatches a build asynchronously when the user is
              ready. (Build infrastructure lands in a later phase; the call

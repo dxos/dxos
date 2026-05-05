@@ -17,21 +17,23 @@ const handler: Operation.WithHandler<typeof DeleteFile> = DeleteFile.pipe(
       const code = yield* Database.load(project);
       const fileRefs = code.files ?? [];
       const remaining: Ref.Ref<SourceFile.SourceFile>[] = [];
-      let deleted = false;
+      let target: SourceFile.SourceFile | undefined;
       for (const ref of fileRefs) {
         const file = yield* Database.load(ref);
         if (file.path === path) {
-          deleted = true;
+          target = file;
         } else {
           remaining.push(ref);
         }
       }
-      if (deleted) {
+      if (target) {
         Obj.update(code, (code) => {
           (code as Obj.Mutable<typeof code>).files = remaining;
         });
+        yield* Database.remove(target);
+        yield* Database.flush();
       }
-      return { path, deleted };
+      return { path, deleted: !!target };
     }),
   ),
 );

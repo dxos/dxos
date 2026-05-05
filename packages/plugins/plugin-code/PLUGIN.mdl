@@ -224,7 +224,7 @@ op runBuildAgent
 op listFiles
   desc: List the source files in a CodeProject (path + size).
   input:  { project: Ref<CodeProject> }
-  output: { files: { path: string, size: number }[] }
+  output: { files: { path: string, size: number }[] }   # sorted ascending by path
   effects: [echo:read]
   requires: [Database]
   note:   Operation key `org.dxos.function.code.list-files`.
@@ -541,9 +541,9 @@ test T-9: Scaffold seeds project files
 test T-10: Round-trip read/write/delete
   given: a CodeProject with one file at "src/foo.ts"
   when: op:writeFile is called with path "src/foo.ts" and content "X"
-  then: op:readFile returns content "X" and `created: false`
+  then: op:writeFile returns `created: false`; op:readFile returns content "X"
   when: op:writeFile is called with path "src/bar.ts" and content "Y"
-  then: op:readFile returns content "Y" and `created: true`
+  then: op:writeFile returns `created: true`; op:readFile returns content "Y"
   when: op:deleteFile is called with path "src/bar.ts"
   then: op:listFiles no longer reports "src/bar.ts"
 ```
