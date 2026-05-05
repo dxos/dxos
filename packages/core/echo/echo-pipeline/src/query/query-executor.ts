@@ -27,8 +27,7 @@ import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dx
 import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
 
 import type { AutomergeHost } from '../automerge';
-import type { InvalidationHint } from '../db-host';
-import type { SpaceStateManager } from '../db-host';
+import type { InvalidationHint, SpaceStateManager } from '../db-host';
 import { filterMatchObject, filterMatchObjectJSON } from '../filter';
 import { QueryError } from './errors';
 import type { QueryPlan } from './plan';
@@ -350,7 +349,7 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
   return scopes;
 };
 
-const setsOverlap = <T>(a: ReadonlySet<T>, b: Set<T>): boolean => {
+const setsOverlap = <T>(a: ReadonlySet<T>, b: ReadonlySet<T>): boolean => {
   const [smaller, larger]: [ReadonlySet<T>, ReadonlySet<T>] = a.size <= b.size ? [a, b] : [b, a];
   for (const item of smaller) {
     if (larger.has(item)) {

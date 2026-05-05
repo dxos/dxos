@@ -388,6 +388,7 @@ describe('IndexEngine', () => {
       expect(result.done).toBe(true);
       expect(result.spaces.size).toBe(0);
       expect(result.queues.size).toBe(0);
+      expect(result.documents.size).toBe(0);
       expect(result.types.size).toBe(0);
       expect(result.objects.size).toBe(0);
     }, Effect.provide(TestLayer)),

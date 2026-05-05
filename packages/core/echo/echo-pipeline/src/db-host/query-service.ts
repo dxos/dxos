@@ -57,7 +57,7 @@ type QueryInvalidationStats = {
   totalInvalidations: number;
   catchAllInvalidations: number;
   hintedInvalidations: number;
-  totalDirtyQueryMarks: number;
+  totalDirtyQueriesExecuted: number;
   totalExecutionBatches: number;
   averageDirtyPerBatch: number;
   averageQueriesActive: number;
@@ -78,7 +78,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
     totalInvalidations: 0,
     catchAllInvalidations: 0,
     hintedInvalidations: 0,
-    totalDirtyQueryMarks: 0,
+    totalDirtyQueriesExecuted: 0,
     totalExecutionBatches: 0,
     averageDirtyPerBatch: 0,
     averageQueriesActive: 0,
@@ -155,9 +155,11 @@ export class QueryServiceImpl extends Resource implements QueryService {
     if (!hint) {
       this.#pendingHint = 'all';
       this.#stats.catchAllInvalidations++;
-    } else if (this.#pendingHint !== 'all') {
-      this.#pendingHint = this.#pendingHint ? mergeHints(this.#pendingHint, hint) : hint;
+    } else {
       this.#stats.hintedInvalidations++;
+      if (this.#pendingHint !== 'all') {
+        this.#pendingHint = this.#pendingHint ? mergeHints(this.#pendingHint, hint) : hint;
+      }
     }
     this._updateQueries.schedule();
   }
@@ -248,8 +250,8 @@ export class QueryServiceImpl extends Resource implements QueryService {
     );
 
     this.#stats.totalExecutionBatches++;
-    this.#stats.totalDirtyQueryMarks += dirtyCount;
-    this.#stats.averageDirtyPerBatch = this.#stats.totalDirtyQueryMarks / this.#stats.totalExecutionBatches;
+    this.#stats.totalDirtyQueriesExecuted += dirtyCount;
+    this.#stats.averageDirtyPerBatch = this.#stats.totalDirtyQueriesExecuted / this.#stats.totalExecutionBatches;
     this.#stats.averageQueriesActive =
       (this.#stats.averageQueriesActive * (this.#stats.totalExecutionBatches - 1) + activeCount) /
       this.#stats.totalExecutionBatches;

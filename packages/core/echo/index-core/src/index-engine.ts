@@ -67,7 +67,7 @@ const accumulateIndexingResult = (acc: MutableIndexingResult, objects: readonly 
     if (obj.documentId) {
       acc.documents.add(obj.documentId);
     }
-    const t = (obj.data as any)[ATTR_TYPE];
+    const t = (obj.data as Record<string, unknown>)[ATTR_TYPE];
     if (t) {
       acc.types.add(String(t));
     }

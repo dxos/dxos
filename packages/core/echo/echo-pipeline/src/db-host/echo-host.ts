@@ -425,7 +425,9 @@ export class EchoHost extends Resource {
         done: combinedResult.done,
         spaces: combinedResult.spaces.size,
         queues: combinedResult.queues.size,
+        documents: combinedResult.documents.size,
         types: combinedResult.types.size,
+        objects: combinedResult.objects.size,
       });
       await sleep(1);
       if (!combinedResult.done) {
@@ -436,7 +438,7 @@ export class EchoHost extends Resource {
       }
 
       // Invalidate queries after index update — the indexer is the sole invalidation source.
-      const hint = hintFromIndexingResult(combinedResult as IndexingResult);
+      const hint = hintFromIndexingResult(combinedResult);
       if (hint) {
         this._queryService.invalidateQueries(hint);
       }

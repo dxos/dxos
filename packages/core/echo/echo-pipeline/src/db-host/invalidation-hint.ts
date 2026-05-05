@@ -21,10 +21,10 @@ export const hintFromIndexingResult = (r: IndexingResult): InvalidationHint | un
     return undefined;
   }
   return {
-    spaceIds: r.spaces.size > 0 ? (r.spaces as ReadonlySet<SpaceId>) : undefined,
-    queueIds: r.queues.size > 0 ? (r.queues as ReadonlySet<ObjectId>) : undefined,
+    spaceIds: r.spaces.size > 0 ? r.spaces : undefined,
+    queueIds: r.queues.size > 0 ? r.queues : undefined,
     typenames: r.types.size > 0 ? r.types : undefined,
-    objectIds: r.objects.size > 0 ? (r.objects as ReadonlySet<ObjectId>) : undefined,
+    objectIds: r.objects.size > 0 ? r.objects : undefined,
   };
 };
 

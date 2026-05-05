@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
@@ -53,7 +53,7 @@ const makeExecutor = (query: { ast: any }): QueryExecutor =>
 // ---------------------------------------------------------------------------
 
 describe('hintFromIndexingResult', () => {
-  test('returns undefined when nothing was indexed', () => {
+  test('returns undefined when nothing was indexed', ({ expect }) => {
     const result = hintFromIndexingResult({
       updated: 0,
       done: true,
@@ -66,7 +66,7 @@ describe('hintFromIndexingResult', () => {
     expect(result).toBeUndefined();
   });
 
-  test('converts populated result to hint with non-empty dimensions', () => {
+  test('converts populated result to hint with non-empty dimensions', ({ expect }) => {
     const spaceId = SpaceId.random();
     const objectId = ObjectId.random();
     const result = hintFromIndexingResult({
@@ -92,7 +92,7 @@ describe('hintFromIndexingResult', () => {
 // ---------------------------------------------------------------------------
 
 describe('mergeHints', () => {
-  test('unions constrained dimensions from both hints', () => {
+  test('unions constrained dimensions from both hints', ({ expect }) => {
     const s1 = SpaceId.random();
     const s2 = SpaceId.random();
     const merged = mergeHints(
@@ -105,7 +105,7 @@ describe('mergeHints', () => {
     expect(merged.typenames?.has('TypeB')).toBe(true);
   });
 
-  test('drops a dimension to unconstrained when either contributor is unconstrained', () => {
+  test('drops a dimension to unconstrained when either contributor is unconstrained', ({ expect }) => {
     const s = SpaceId.random();
     // b has no spaceIds → unconstrained on that dimension
     const merged = mergeHints(
@@ -119,7 +119,7 @@ describe('mergeHints', () => {
     expect(merged.typenames?.has('TypeB')).toBe(true);
   });
 
-  test('fully unconstrained result when one side has no constraints at all', () => {
+  test('fully unconstrained result when one side has no constraints at all', ({ expect }) => {
     const merged = mergeHints(
       makeHint({}), // fully unconstrained
       makeHint({ spaceIds: makeSpaceSet(SpaceId.random()), typenames: makeTypeSet('TypeA') }),
@@ -134,12 +134,12 @@ describe('mergeHints', () => {
 // ---------------------------------------------------------------------------
 
 describe('QueryExecutor.matchesHint — typed query', () => {
-  test('matches when hint typenames overlaps', () => {
+  test('matches when hint typenames overlaps', ({ expect }) => {
     const executor = makeExecutor(withSpace(Query.select(Filter.type(TestSchema.Person))));
     expect(executor.matchesHint(makeHint({ typenames: makeTypeSet(PERSON_DXN) }))).toBe(true);
   });
 
-  test('does NOT match when hint typenames are disjoint', () => {
+  test('does NOT match when hint typenames are disjoint', ({ expect }) => {
     const executor = makeExecutor(withSpace(Query.select(Filter.type(TestSchema.Person))));
     const hint = makeHint({
       spaceIds: makeSpaceSet(SPACE_ID),
@@ -148,12 +148,12 @@ describe('QueryExecutor.matchesHint — typed query', () => {
     expect(executor.matchesHint(hint)).toBe(false);
   });
 
-  test('matches when hint has no typenames constraint (unconstrained → always match)', () => {
+  test('matches when hint has no typenames constraint (unconstrained → always match)', ({ expect }) => {
     const executor = makeExecutor(withSpace(Query.select(Filter.type(TestSchema.Person))));
     expect(executor.matchesHint(makeHint({ spaceIds: makeSpaceSet(SPACE_ID) }))).toBe(true);
   });
 
-  test('does NOT match when hint spaceIds exclude this query space', () => {
+  test('does NOT match when hint spaceIds exclude this query space', ({ expect }) => {
     const executor = makeExecutor(withSpace(Query.select(Filter.type(TestSchema.Person))));
     const hint = makeHint({
       spaceIds: makeSpaceSet(SpaceId.random()),
@@ -162,7 +162,7 @@ describe('QueryExecutor.matchesHint — typed query', () => {
     expect(executor.matchesHint(hint)).toBe(false);
   });
 
-  test('Filter.or(typeA, typeB) matches hint with only typeA', () => {
+  test('Filter.or(typeA, typeB) matches hint with only typeA', ({ expect }) => {
     const executor = makeExecutor(
       withSpace(Query.select(Filter.or(Filter.type(TestSchema.Organization), Filter.type(TestSchema.Person)))),
     );
@@ -171,7 +171,7 @@ describe('QueryExecutor.matchesHint — typed query', () => {
     ).toBe(true);
   });
 
-  test('Filter.or(typeA, typeB) does NOT match hint with unrelated type', () => {
+  test('Filter.or(typeA, typeB) does NOT match hint with unrelated type', ({ expect }) => {
     const executor = makeExecutor(
       withSpace(Query.select(Filter.or(Filter.type(TestSchema.Organization), Filter.type(TestSchema.Person)))),
     );
@@ -188,7 +188,9 @@ describe('QueryExecutor.matchesHint — typed query', () => {
 // ---------------------------------------------------------------------------
 
 describe('QueryExecutor.matchesHint — non-simple queries always match', () => {
-  test('Filter.not(Filter.or(typeA, typeB)) query always matches (inverted TypeSelector → isSimple=false)', () => {
+  test('Filter.not(Filter.or(typeA, typeB)) query always matches (inverted TypeSelector → isSimple=false)', ({
+    expect,
+  }) => {
     const executor = makeExecutor(
       withSpace(
         Query.select(Filter.not(Filter.or(Filter.type(TestSchema.Organization), Filter.type(TestSchema.Person)))),
@@ -202,7 +204,7 @@ describe('QueryExecutor.matchesHint — non-simple queries always match', () => 
     expect(executor.matchesHint(hint)).toBe(true);
   });
 
-  test('Union query (Query.all) always matches (UnionStep → isSimple=false)', () => {
+  test('Union query (Query.all) always matches (UnionStep → isSimple=false)', ({ expect }) => {
     const executor = new QueryExecutor({
       indexEngine: {} as any,
       runtime: {} as any,
@@ -228,7 +230,7 @@ describe('QueryExecutor.matchesHint — non-simple queries always match', () => 
 // ---------------------------------------------------------------------------
 
 describe('QueryExecutor.matchesHint — queue scope derives spaceId', () => {
-  test('queue-only scope derives spaceId and matches space-scoped hint', () => {
+  test('queue-only scope derives spaceId and matches space-scoped hint', ({ expect }) => {
     const executor = new QueryExecutor({
       indexEngine: {} as any,
       runtime: {} as any,
@@ -247,7 +249,7 @@ describe('QueryExecutor.matchesHint — queue scope derives spaceId', () => {
     expect(executor.matchesHint(nonMatchingHint)).toBe(false);
   });
 
-  test('queue-only scope matches queue-scoped hint with the right queueId', () => {
+  test('queue-only scope matches queue-scoped hint with the right queueId', ({ expect }) => {
     const executor = new QueryExecutor({
       indexEngine: {} as any,
       runtime: {} as any,
