@@ -69,7 +69,7 @@ const ToolsExplorer = ({ serverUrl }: ToolsExplorerProps) => {
     };
   }, [serverUrl]);
 
-  const onSelect = useCallback((name: string) => {
+  const handleSelect = useCallback((name: string) => {
     setSelected(name);
     // Reset previous result when picking a new tool — stale results from a
     // different schema are confusing and can mislead debugging.
@@ -77,7 +77,7 @@ const ToolsExplorer = ({ serverUrl }: ToolsExplorerProps) => {
     setCallError(null);
   }, []);
 
-  const onSubmit = useCallback(
+  const handleSubmit = useCallback(
     async (args: Record<string, unknown>) => {
       if (!client || !selected) {
         return;
@@ -111,9 +111,9 @@ const ToolsExplorer = ({ serverUrl }: ToolsExplorerProps) => {
 
   return (
     <div className='grid grid-cols-[20rem_1fr] grid-rows-[1fr_1fr] h-full divide-x divide-y divide-separator'>
-      <ToolList tools={TOOL_METADATA} selected={selected} onSelect={onSelect} className='row-span-2' />
+      <ToolList tools={TOOL_METADATA} selected={selected} onSelect={handleSelect} className='row-span-2' />
       {selectedTool ? (
-        <ToolForm tool={selectedTool} onSubmit={onSubmit} />
+        <ToolForm tool={selectedTool} onSubmit={handleSubmit} />
       ) : (
         <div className='p-3 text-sm text-description italic'>Pick a tool from the list to render its input form.</div>
       )}
