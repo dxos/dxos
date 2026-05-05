@@ -81,6 +81,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",

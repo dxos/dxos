@@ -10,12 +10,16 @@ import { invariant } from '@dxos/invariant';
 
 import { ClientCapabilities } from '../types';
 import { RedeemToken } from './definitions';
+import { markRecoveryInProgress } from './recovery-flag';
 
 const handler: Operation.WithHandler<typeof RedeemToken> = RedeemToken.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (data) {
       const client = yield* Capability.get(ClientCapabilities.Client);
       invariant(client.services.services.IdentityService, 'IdentityService not available');
+      // Suppress the privacy notice for this session: the user is recovering
+      // an existing identity, not creating a new one.
+      markRecoveryInProgress();
       yield* Effect.promise(() =>
         client.services.services.IdentityService!.recoverIdentity(
           { token: data.token },

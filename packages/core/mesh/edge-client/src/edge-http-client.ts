@@ -14,6 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
+  type CheckEmailExistsResponse,
   type CreateAgentRequestBody,
   type CreateAgentResponseBody,
   type CreateSpaceRequest,
@@ -27,20 +28,31 @@ import {
   type ExportBundleRequest,
   type ExportBundleResponse,
   type FeedProtocol,
+  type GetAccountResponse,
   type GetAgentStatusResponseBody,
   type GetPluginsResponseBody,
   type GetNotarizationResponseBody,
   type ImportBundleRequest,
   type InitiateOAuthFlowRequest,
   type InitiateOAuthFlowResponse,
+  type IssueInvitationResponse,
   type JoinSpaceRequest,
   type JoinSpaceResponseBody,
+  type ListAccountInvitationsResponse,
+  type LoginRequest,
+  type LoginResponse,
   type ObjectId,
   type PostNotarizationRequestBody,
   type RecoverIdentityRequest,
   type RecoverIdentityResponseBody,
+  type RedeemInvitationCodeRequest,
+  type RedeemInvitationCodeResponse,
+  type RequestAccessRequest,
+  type RequestAccessResponse,
+  type ResendVerificationEmailResponse,
   type UploadFunctionRequest,
   type UploadFunctionResponseBody,
+  type ValidateInvitationCodeResponse,
 } from '@dxos/protocols';
 import {
   type QueryRequest as QueryRequestProto,
@@ -217,6 +229,96 @@ export class EdgeHttpClient {
     args?: EdgeHttpCallArgs,
   ): Promise<JoinSpaceResponseBody> {
     return this._call(ctx, new URL(`/spaces/${spaceId}/join`, this.baseUrl), { ...args, body, method: 'POST' });
+  }
+
+  //
+  // Account / Invitation
+  //
+
+  public async checkEmailExists(
+    ctx: Context,
+    body: { email: string },
+    args?: EdgeHttpCallArgs,
+  ): Promise<CheckEmailExistsResponse> {
+    return this._call(ctx, new URL('/account/email/exists', this.baseUrl), { ...args, body, method: 'POST' });
+  }
+
+  public async validateInvitationCode(
+    ctx: Context,
+    body: { code: string },
+    args?: EdgeHttpCallArgs,
+  ): Promise<ValidateInvitationCodeResponse> {
+    return this._call(ctx, new URL('/account/invitation-code/validate', this.baseUrl), {
+      ...args,
+      body,
+      method: 'POST',
+    });
+  }
+
+  public async redeemInvitationCode(
+    ctx: Context,
+    body: RedeemInvitationCodeRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<RedeemInvitationCodeResponse> {
+    return this._call(ctx, new URL('/account/invitation-code/redeem', this.baseUrl), {
+      ...args,
+      body,
+      method: 'POST',
+    });
+  }
+
+  /**
+   * Existing-account email login. Server inlines `token` for test emails (and
+   * as a fallback when no email transport is configured); regular emails are
+   * delivered out-of-band and the response is `{}`. Response is identical
+   * for unknown emails (enumeration-safe).
+   */
+  public async login(ctx: Context, body: LoginRequest, args?: EdgeHttpCallArgs): Promise<LoginResponse> {
+    return this._call(ctx, new URL('/account/login', this.baseUrl), {
+      ...args,
+      body,
+      method: 'POST',
+    });
+  }
+
+  public async requestAccess(
+    ctx: Context,
+    body: RequestAccessRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<RequestAccessResponse> {
+    return this._call(ctx, new URL('/account/request-access', this.baseUrl), {
+      ...args,
+      body,
+      method: 'POST',
+    });
+  }
+
+  // Account-bound endpoints below: do NOT set `auth: true`. That option pre-fetches
+  // `/auth` to grab a challenge before sending the body (an optimization for large
+  // POSTs). Hub-service has no `/auth` VP-challenge endpoint -- it has an admin login
+  // page at `/auth/login` that 302s and is not CORS-enabled, so the probe fails the
+  // browser's preflight. The regular request → 401 → handle WWW-Authenticate challenge
+  // → retry path handles auth correctly without the probe.
+  public async getAccount(ctx: Context, args?: EdgeHttpCallArgs): Promise<GetAccountResponse> {
+    return this._call(ctx, new URL('/account/me', this.baseUrl), { ...args, method: 'GET' });
+  }
+
+  public async listAccountInvitations(ctx: Context, args?: EdgeHttpCallArgs): Promise<ListAccountInvitationsResponse> {
+    return this._call(ctx, new URL('/account/invitations', this.baseUrl), { ...args, method: 'GET' });
+  }
+
+  public async issueAccountInvitation(ctx: Context, args?: EdgeHttpCallArgs): Promise<IssueInvitationResponse> {
+    return this._call(ctx, new URL('/account/invitations/issue', this.baseUrl), { ...args, method: 'POST' });
+  }
+
+  public async resendVerificationEmail(
+    ctx: Context,
+    args?: EdgeHttpCallArgs,
+  ): Promise<ResendVerificationEmailResponse> {
+    return this._call(ctx, new URL('/account/email/resend-verification', this.baseUrl), {
+      ...args,
+      method: 'POST',
+    });
   }
 
   //
@@ -515,8 +617,11 @@ export class EdgeHttpClient {
           continue;
         }
 
-        const body: EdgeFailure =
-          response.headers.get('Content-Type') === 'application/json' ? await response.clone().json() : undefined;
+        // Match `application/json` with optional parameters (e.g. `; charset=UTF-8` from Hono).
+        const contentType = response.headers.get('Content-Type') ?? '';
+        const body: EdgeFailure = contentType.startsWith('application/json')
+          ? await response.clone().json()
+          : undefined;
 
         invariant(!body?.success, 'Expected body to not be a failure response or undefined.');
 

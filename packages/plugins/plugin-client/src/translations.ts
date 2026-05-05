@@ -25,6 +25,35 @@ const pluginTranslations = [
         'qr-code.description':
           'Scan this QR code using the device you want to log in to, or copy the URL and share it with the new device.',
         'security.label': 'Security',
+        'account-panel.label': 'Account',
+        'invitations-panel.label': 'Invitations',
+        'account-section.title': 'Account',
+        'account-section.description':
+          'Your identity on this device is bound to a DXOS account that gates access to edge services like sync, agents, and AI.',
+        'invitations-section.title': 'Invitations',
+        'invitations-section.description':
+          'Share an invitation with someone you’d like to bring onto DXOS. Each code grants one-time access to create an account.',
+        'no-edge-access.title': 'No edge access',
+        'no-edge-access.description':
+          'This identity is not bound to a DXOS account, so features that depend on edge services will not work. Request access below to be notified when an invitation is available.',
+        'access-request-email.placeholder': 'you@example.com',
+        'access-request-submitted.message': 'Thanks — we’ll be in touch.',
+        'request-access.label': 'Request access',
+        'request-access.description': 'Enter your email and we’ll add you to the waiting list.',
+        'account-offline.title': 'Couldn’t reach the server',
+        'account-offline.description':
+          'Account information could not be refreshed. Reconnect to update; cached values are shown until then.',
+        'email.label': 'Email',
+        'resend-verification.label': 'Resend verification email',
+        'verification-sent.message': 'Verification email sent.',
+        'verification-cooldown.message': 'Please wait {{seconds}}s before resending.',
+        'verification-failed.message': 'Could not send verification email.',
+        'generate-invitation.label': 'Generate invitation',
+        'generate-invitation.description_zero': 'You have no invitations left to generate.',
+        'generate-invitation.description_one': 'You have {{count}} invitation left to generate.',
+        'generate-invitation.description_other': 'You have {{count}} invitations left to generate.',
+        'available-invitations.title': 'Available invitations',
+        'redeemed-invitations.title': 'Redeemed invitations',
         'reset-device.description': 'Log out from this device, erasing all the data on this device.',
         'join-new-identity.description':
           'Log out from this device, erasing all the data currently on this device, and use a QR code or URL to log in.',

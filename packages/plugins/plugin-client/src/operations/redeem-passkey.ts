@@ -13,12 +13,16 @@ import { invariant } from '@dxos/invariant';
 
 import { ClientCapabilities } from '../types';
 import { RedeemPasskey } from './definitions';
+import { markRecoveryInProgress } from './recovery-flag';
 
 const handler: Operation.WithHandler<typeof RedeemPasskey> = RedeemPasskey.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const client = yield* Capability.get(ClientCapabilities.Client);
       invariant(client.services.services.IdentityService, 'IdentityService not available');
+      // Suppress the privacy notice for this session: the user is recovering
+      // an existing identity, not creating a new one.
+      markRecoveryInProgress();
       const { deviceKey, controlFeedKey, challenge } = yield* Effect.promise(() =>
         client.services.services.IdentityService!.requestRecoveryChallenge(),
       );

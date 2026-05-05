@@ -20,7 +20,8 @@ export default Capability.makeModule(
 
     const token = searchProps.get('token') ?? undefined;
     const type = searchProps.get('type');
-    const tokenType = !token ? undefined : type === 'login' ? 'login' : 'verify';
+    // Only login tokens drive an automated client flow; ignore unknown types.
+    const tokenType = token && type === 'login' ? 'login' : undefined;
     const manager = new OnboardingManager({
       invokePromise,
       client,
@@ -30,6 +31,8 @@ export default Capability.makeModule(
       recoverIdentity: searchProps.get('recoverIdentity') === 'true',
       deviceInvitationCode: searchProps.get('deviceInvitationCode') ?? undefined,
       spaceInvitationCode: searchProps.get('spaceInvitationCode') ?? undefined,
+      accountInvitationCode: searchProps.get('accountInvitationCode') ?? undefined,
+      email: searchProps.get('email') ?? undefined,
     });
 
     // Don't block the `Startup` activation event on `initialize()`. The manager
