@@ -9,5 +9,21 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-form"
+    },
+    {
+      "path": "../react-ui-list"
+    },
+    {
+      "path": "../ui-theme"
+    }
+  ]
 }
