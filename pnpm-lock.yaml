@@ -4493,6 +4493,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../functions
       '@dxos/functions-runtime':
         specifier: workspace:*
         version: link:../functions-runtime
@@ -4702,9 +4705,6 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
-      '@dxos/functions':
-        specifier: workspace:*
-        version: link:../functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -5481,6 +5481,9 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../blueprints
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context

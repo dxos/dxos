@@ -10,11 +10,8 @@ export class ServiceNotAvailableError extends BaseError.extend('ServiceNotAvaila
   }
 }
 
-export class FunctionNotFoundError extends BaseError.extend('FunctionNotFound', 'Function not found') {
-  constructor(functionKey: string, options?: Omit<BaseErrorOptions, 'context'>) {
-    super({ context: { function: functionKey }, ...options });
-  }
-}
+// Re-exported from @dxos/operation for backward compatibility.
+export { FunctionNotFoundError } from '@dxos/operation';
 
 export class FunctionError extends BaseError.extend('FunctionError', 'Function invocation error') {}
 

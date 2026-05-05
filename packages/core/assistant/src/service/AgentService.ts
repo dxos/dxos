@@ -6,114 +6,47 @@
 
 import * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';
-import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { ModelName } from '@dxos/ai';
 import { Blueprint, Routine } from '@dxos/compute';
-import { type Trace } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
+import {
+  AgentService as AgentServiceTag,
+  type CreateSessionOptions,
+  type GetSessionOptions,
+  type RunRoutineOptions,
+  RoutineError,
+  type Session,
+  getSession,
+} from '@dxos/functions/AgentService';
 import { ProcessManager } from '@dxos/functions-runtime';
 
 import { type McpServerConfig, AiContextBinder } from '../conversation';
-import { RoutineError } from '../errors';
 import { AgentProcess } from './agent-process';
 
-export interface Service {
-  /**
-   * Gets or creates a session for a feed.
-   */
-  getSession: (feed: Feed.Feed, options?: GetSessionOptions) => Effect.Effect<Session>;
-
-  /**
-   * Runs a routine to completion and returns the output.
-   * Spawns a short-lived process that terminates after the routine completes.
-   */
-  runRoutine: (
-    routineRef: Ref.Ref<Routine.Routine>,
-    options?: RunRoutineOptions,
-  ) => Effect.Effect<unknown, RoutineError, Database.Service | Feed.FeedService>;
-}
-
-export class AgentService extends Context.Tag('@dxos/assistant/AgentService')<AgentService, Service>() {}
-
-/**
- * Handle to an agent session.
- */
-export interface Session {
-  /**
-   * The feed that the session is associated with.
-   */
-  readonly feed: Feed.Feed;
-
-  /**
-   * Submits a prompt to the agent.
-   */
-  submitPrompt: (prompt: string) => Effect.Effect<void>;
-
-  /**
-   * Wait until agent has completed its work.
-   */
-  waitForCompletion: () => Effect.Effect<void>;
-
-  /**
-   * Subscribe to ephemeral trace events (e.g., streaming partial messages).
-   * Replays buffered events, then streams new ones until the process ends.
-   */
-  subscribeEphemeral: () => Stream.Stream<Trace.Message>;
-
-  /**
-   * Adds context objects to the agent.
-   */
-  addContext: (context: Ref.Ref<Obj.Unknown>[]) => Effect.Effect<void, never, Feed.FeedService>;
-
-  /**
-   * Gets the context objects from the agent.
-   */
-  getContext: () => Effect.Effect<Ref.Ref<Obj.Unknown>[], never, Feed.FeedService>;
-}
-
-/**
- * Gets or creates a session for a feed.
- */
-export const getSession = Effect.serviceFunctionEffect(AgentService, (service) => service.getSession);
-
-/**
- * Runs a routine to completion and returns the output.
- */
-export const runRoutine = Effect.serviceFunctionEffect(AgentService, (service) => service.runRoutine);
-
-export interface GetSessionOptions {
-  readonly model?: ModelName;
-}
-
-export interface RunRoutineOptions {
-  readonly input?: unknown;
-  readonly systemInstructions?: string;
-  readonly model?: ModelName;
-  /**
-   * Use an existing feed for conversation context.
-   * When not provided, a new feed is created for the routine execution.
-   */
-  readonly feed?: Feed.Feed;
-}
-
-export interface CreateSessionOptions {
-  readonly blueprints?: Blueprint.Blueprint[];
-  readonly context?: Ref.Ref<Obj.Unknown>[];
-  readonly model?: ModelName;
-}
+// Re-export the full API from @dxos/functions for backward compatibility.
+export {
+  AgentService,
+  type Service,
+  type Session,
+  type GetSessionOptions,
+  type RunRoutineOptions,
+  type CreateSessionOptions,
+  RoutineError,
+  getSession,
+  runRoutine,
+} from '@dxos/functions/AgentService';
 
 export const createSession: (
   opts?: CreateSessionOptions,
 ) => Effect.Effect<
   Session,
   Blueprint.NotFoundError,
-  Database.Service | Feed.FeedService | Blueprint.RegistryService | AgentService
+  Database.Service | Feed.FeedService | Blueprint.RegistryService | AgentServiceTag
 > = Effect.fn('createSession')(function* (opts) {
   const blueprints = yield* Effect.forEach(opts?.blueprints ?? [], (blueprint) =>
     Blueprint.upsert(blueprint.key).pipe(Effect.map(Ref.make)),
@@ -138,15 +71,15 @@ export const layer = (opts?: {
   /**
    * Default model used by sessions that don't specify one explicitly.
    */
-  model?: ModelName;
+  model?: GetSessionOptions['model'];
 
   /**
    * Provider for space-level MCP server configs.
    */
   getMcpServers?: () => McpServerConfig[];
-}): Layer.Layer<AgentService, never, ProcessManager.Service> =>
+}): Layer.Layer<AgentServiceTag, never, ProcessManager.Service> =>
   Layer.effect(
-    AgentService,
+    AgentServiceTag,
     Effect.gen(function* () {
       const processManager = yield* ProcessManager.Service;
       const sessionCache = new Map<string, Session>();

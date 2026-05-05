@@ -25,7 +25,7 @@ import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
 import { type McpServerConfig, AiSession, type AiSessionRunProps } from '../conversation';
-import { RoutineError } from '../errors';
+import { RoutineError } from '@dxos/functions/AgentService';
 import { getOperationFromTool, makeToolExecutionService, makeToolResolverFromOperations } from '../functions';
 import { AgentRequestBegin, AgentRequestEnd } from '../tracing';
 

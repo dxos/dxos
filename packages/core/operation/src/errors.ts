@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { BaseError } from '@dxos/errors';
+import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 
 export class InvokerNotInitializedError extends BaseError.extend(
   'InvokerNotInitializedError',
@@ -16,5 +16,11 @@ export class InvokerNotInitializedError extends BaseError.extend(
 export class NoHandlerError extends BaseError.extend('NoHandlerError', 'No handler found for operation. ') {
   constructor(operationKey: string) {
     super({ context: { operationKey } });
+  }
+}
+
+export class FunctionNotFoundError extends BaseError.extend('FunctionNotFound', 'Function not found') {
+  constructor(functionKey: string, options?: Omit<BaseErrorOptions, 'context'>) {
+    super({ context: { function: functionKey }, ...options });
   }
 }

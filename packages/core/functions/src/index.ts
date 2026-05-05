@@ -4,6 +4,7 @@
 
 export * from './errors';
 export * from './example';
+export * as AgentService from './process/AgentService';
 export * as Process from './process/Process';
 export * as ServiceResolver from './process/ServiceResolver';
 export * from './process/StorageService';

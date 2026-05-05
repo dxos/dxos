@@ -36,9 +36,6 @@
       "path": "../echo/echo"
     },
     {
-      "path": "../functions"
-    },
-    {
       "path": "../operation"
     }
   ]

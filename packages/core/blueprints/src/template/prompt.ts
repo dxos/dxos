@@ -8,7 +8,7 @@ import handlebars from 'handlebars';
 
 import { Database } from '@dxos/echo';
 import type { ObjectNotFoundError } from '@dxos/echo/Err';
-import { FunctionNotFoundError } from '@dxos/functions';
+import { FunctionNotFoundError } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/operation';

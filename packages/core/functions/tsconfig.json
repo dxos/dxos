@@ -41,6 +41,9 @@
       "path": "../ai"
     },
     {
+      "path": "../blueprints"
+    },
+    {
       "path": "../echo/echo"
     },
     {

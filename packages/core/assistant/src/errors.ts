@@ -14,19 +14,5 @@ export class AiModelError extends BaseError.extend('AiModelError', 'AI model err
  */
 export class AiAssistantError extends BaseError.extend('AiAssistantError', 'AI assistant error') {}
 
-/**
- * Error produced when an agent fails to complete a routine.
- */
-export class RoutineError extends BaseError.extend('RoutineError') {
-  constructor(
-    message: string,
-    context: {
-      description?: string;
-    } = {},
-  ) {
-    super({
-      message,
-      context,
-    });
-  }
-}
+// Re-exported from @dxos/functions for backward compatibility.
+export { RoutineError } from '@dxos/functions/AgentService';
