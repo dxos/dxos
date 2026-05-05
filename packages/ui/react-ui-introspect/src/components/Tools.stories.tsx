@@ -25,6 +25,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { TOOL_METADATA } from '@dxos/introspect-mcp/tools';
+import { Message } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ToolForm } from './ToolForm';
@@ -100,11 +101,16 @@ const ToolsExplorer = ({ serverUrl }: ToolsExplorerProps) => {
 
   if (connectError) {
     return (
-      <div className='p-4 text-errorText'>
-        <strong>Connection failed:</strong> {connectError.message}
-        <p className='text-sm mt-2'>
-          Run <code>moon run introspect-mcp:serve-http</code> in another terminal, then reload.
-        </p>
+      <div className='p-4'>
+        <Message.Root valence='error'>
+          <Message.Title>Connection failed</Message.Title>
+          <Message.Content>
+            <p>{connectError.message}</p>
+            <p className='mt-2'>
+              Run <code>moon run introspect-mcp:serve-http</code> in another terminal, then reload.
+            </p>
+          </Message.Content>
+        </Message.Root>
       </div>
     );
   }
