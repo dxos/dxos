@@ -7,7 +7,14 @@ import { fileURLToPath } from 'node:url';
 import { beforeAll, describe, test } from 'vitest';
 
 import { createIntrospector, type Introspector } from './introspector';
-import { formatSymbolRef, parseRef } from './refs';
+import {
+  formatCapabilityRef,
+  formatOperationRef,
+  formatPluginRef,
+  formatSurfaceRef,
+  formatSymbolRef,
+  parseRef,
+} from './refs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURE_ROOT = join(__dirname, '__fixtures__');
@@ -22,6 +29,27 @@ describe('refs', () => {
     expect(() => parseRef('no-hash')).toThrow();
     expect(() => parseRef('#name')).toThrow();
     expect(() => parseRef('pkg#')).toThrow();
+  });
+
+  test('plugin/surface/capability/operation refs roundtrip', ({ expect }) => {
+    expect(parseRef(formatPluginRef('org.dxos.plugin.markdown'))).toEqual({
+      kind: 'plugin',
+      id: 'org.dxos.plugin.markdown',
+    });
+    expect(parseRef(formatSurfaceRef('org.dxos.plugin.markdown', 'surface.document'))).toEqual({
+      kind: 'surface',
+      owner: 'org.dxos.plugin.markdown',
+      id: 'surface.document',
+    });
+    expect(parseRef(formatCapabilityRef('Capabilities.ReactSurface', 'org.dxos.plugin.markdown'))).toEqual({
+      kind: 'capability',
+      key: 'Capabilities.ReactSurface',
+      owner: 'org.dxos.plugin.markdown',
+    });
+    expect(parseRef(formatOperationRef('org.dxos.function.markdown.create'))).toEqual({
+      kind: 'operation',
+      key: 'org.dxos.function.markdown.create',
+    });
   });
 });
 
@@ -41,7 +69,7 @@ describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
   test('lists fixture packages', ({ expect }) => {
     const all = introspector.listPackages();
     const names = all.map((p) => p.name).sort();
-    expect(names).toEqual(['@fixture/pkg-a', '@fixture/pkg-b']);
+    expect(names).toEqual(['@fixture/pkg-a', '@fixture/pkg-b', '@fixture/pkg-plugin']);
   });
 
   test('filters packages by name', ({ expect }) => {
@@ -49,7 +77,10 @@ describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
   });
 
   test('filters by privateOnly', ({ expect }) => {
-    expect(introspector.listPackages({ privateOnly: true }).map((p) => p.name)).toEqual(['@fixture/pkg-a']);
+    expect(introspector.listPackages({ privateOnly: true }).map((p) => p.name).sort()).toEqual([
+      '@fixture/pkg-a',
+      '@fixture/pkg-plugin',
+    ]);
   });
 
   test('getPackage returns workspace and external deps', ({ expect }) => {
@@ -160,5 +191,101 @@ describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
     expect(introspector.getSymbol('@fixture/pkg-a#nonexistent')).toBeNull();
     expect(introspector.getSymbol('@fixture/pkg-missing#thing')).toBeNull();
     expect(introspector.getSymbol('not-a-ref')).toBeNull();
+  });
+
+  // ----- Plugin / surface / capability / operation extraction (steps 4–5) -----
+
+  test('listPlugins detects the fixture plugin from meta + Plugin.define', ({ expect }) => {
+    const plugins = introspector.listPlugins();
+    const fixture = plugins.find((p) => p.id === 'com.example.plugin.fixture');
+    expect(fixture).toBeDefined();
+    expect(fixture!.name).toBe('Fixture Plugin');
+    expect(fixture!.package).toBe('@fixture/pkg-plugin');
+    expect(fixture!.entryFile).toContain('pkg-plugin/src/FixturePlugin.ts');
+    expect(fixture!.ref).toBe('plugin:com.example.plugin.fixture');
+  });
+
+  test('listPlugins ignores packages without Plugin.define (pkg-a is just an ECHO type)', ({ expect }) => {
+    const plugins = introspector.listPlugins();
+    expect(plugins.some((p) => p.package === '@fixture/pkg-a')).toBe(false);
+    expect(plugins.some((p) => p.package === '@fixture/pkg-b')).toBe(false);
+  });
+
+  test('listPlugins query filter matches against id, name, and package', ({ expect }) => {
+    expect(introspector.listPlugins({ query: 'fixture' }).map((p) => p.id)).toEqual([
+      'com.example.plugin.fixture',
+    ]);
+    expect(introspector.listPlugins({ query: 'PKG-PLUGIN' }).map((p) => p.id)).toEqual([
+      'com.example.plugin.fixture',
+    ]);
+    expect(introspector.listPlugins({ query: 'noplugin' })).toEqual([]);
+  });
+
+  test('getPlugin returns full detail with modules, surfaces, capabilities, operations', ({ expect }) => {
+    const detail = introspector.getPlugin('com.example.plugin.fixture');
+    expect(detail).not.toBeNull();
+    expect(detail!.id).toBe('com.example.plugin.fixture');
+
+    // Modules — pulled from the .pipe(...) chain. We expect entries for at least
+    // the addOperationHandlerModule, addSurfaceModule, and addModule helpers.
+    const helpers = detail!.modules.map((m) => m.helper).sort();
+    expect(helpers).toContain('addOperationHandlerModule');
+    expect(helpers).toContain('addSurfaceModule');
+    expect(helpers).toContain('addModule');
+
+    // Surfaces — both Surface.create calls land in the detail.
+    const surfaceIds = detail!.surfaces.map((s) => s.id).sort();
+    expect(surfaceIds).toEqual(['surface.fixture-article', 'surface.fixture-card']);
+    const card = detail!.surfaces.find((s) => s.id === 'surface.fixture-card');
+    expect(card!.roles).toEqual(['card']);
+    expect(card!.pluginId).toBe('com.example.plugin.fixture');
+    expect(card!.ref).toBe('surface:com.example.plugin.fixture:surface.fixture-card');
+    const article = detail!.surfaces.find((s) => s.id === 'surface.fixture-article');
+    expect(article!.roles).toEqual(['article', 'section']);
+
+    // Capabilities — readable as the source-text key (e.g. Capabilities.ReactSurface).
+    const keys = detail!.capabilities.map((c) => c.key).sort();
+    expect(keys).toContain('Capabilities.ReactSurface');
+    expect(keys).toContain('Capabilities.OperationHandler');
+    const reactSurface = detail!.capabilities.find((c) => c.key === 'Capabilities.ReactSurface');
+    expect(reactSurface!.pluginId).toBe('com.example.plugin.fixture');
+
+    // Operations — both definitions surface with their meta intact.
+    const opKeys = detail!.operations.map((o) => o.key).sort();
+    expect(opKeys).toEqual(['com.example.fixture.close', 'com.example.fixture.open']);
+    const open = detail!.operations.find((o) => o.key === 'com.example.fixture.open');
+    expect(open!.name).toBe('Open Fixture');
+    expect(open!.description).toBe('Opens a fixture document.');
+    expect(open!.pluginId).toBe('com.example.plugin.fixture');
+    expect(open!.ref).toBe('operation:com.example.fixture.open');
+
+    // Meta extras flow through (icon/iconHue/etc).
+    expect(detail!.meta.icon).toBe('ph--cube--regular');
+    expect(detail!.meta.iconHue).toBe('amber');
+  });
+
+  test('getPlugin returns null for unknown id', ({ expect }) => {
+    expect(introspector.getPlugin('com.example.plugin.missing')).toBeNull();
+  });
+
+  test('listSurfaces aggregates across all plugins and supports pluginId filter', ({ expect }) => {
+    const all = introspector.listSurfaces();
+    expect(all.map((s) => s.id).sort()).toEqual(['surface.fixture-article', 'surface.fixture-card']);
+
+    const filtered = introspector.listSurfaces('com.example.plugin.fixture');
+    expect(filtered.map((s) => s.id).sort()).toEqual(['surface.fixture-article', 'surface.fixture-card']);
+
+    expect(introspector.listSurfaces('com.example.plugin.missing')).toEqual([]);
+  });
+
+  test('listCapabilities aggregates across all plugins', ({ expect }) => {
+    const keys = introspector.listCapabilities().map((c) => c.key).sort();
+    expect(keys).toContain('Capabilities.ReactSurface');
+    expect(keys).toContain('Capabilities.OperationHandler');
+  });
+
+  test('listOperations aggregates across all plugins', ({ expect }) => {
+    const keys = introspector.listOperations().map((o) => o.key).sort();
+    expect(keys).toEqual(['com.example.fixture.close', 'com.example.fixture.open']);
   });
 });

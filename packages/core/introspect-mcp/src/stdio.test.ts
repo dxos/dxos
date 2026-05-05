@@ -36,10 +36,21 @@ describe('stdio integration', () => {
     await client?.close();
   });
 
-  test('subprocess starts and lists the five tools', async ({ expect }) => {
+  test('subprocess starts and lists every registered tool', async ({ expect }) => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name).sort();
-    expect(names).toEqual(['find_symbol', 'get_package', 'get_symbol', 'list_packages', 'list_symbols']);
+    expect(names).toEqual([
+      'find_symbol',
+      'get_package',
+      'get_plugin',
+      'get_symbol',
+      'list_capabilities',
+      'list_operations',
+      'list_packages',
+      'list_plugins',
+      'list_surfaces',
+      'list_symbols',
+    ]);
   });
 
   test('list_packages round-trips real JSON-RPC over stdio', async ({ expect }) => {

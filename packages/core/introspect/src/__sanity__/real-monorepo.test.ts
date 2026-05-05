@@ -36,6 +36,15 @@ describe.skipIf(!REAL)('real monorepo', () => {
     expect(detail).not.toBeNull();
     expect(detail!.kind).toBe('function');
 
+    // Plugin detection — narrow to a single known plugin so we don't pay the
+    // cost of scanning every package's plugin candidates. Markdown is a long-
+    // standing fixture; if its detection regresses we want to know.
+    const markdownDetail = intro.getPlugin('org.dxos.plugin.markdown');
+    expect(markdownDetail).not.toBeNull();
+    expect(markdownDetail!.package).toBe('@dxos/plugin-markdown');
+    expect(markdownDetail!.surfaces.length).toBeGreaterThan(0);
+    expect(markdownDetail!.operations.some((op) => op.key === 'org.dxos.function.markdown.create')).toBe(true);
+
     intro.dispose();
-  }, 180_000);
+  }, 600_000);
 });

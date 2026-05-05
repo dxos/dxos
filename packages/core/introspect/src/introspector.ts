@@ -2,20 +2,32 @@
 // Copyright 2026 DXOS.org
 //
 
+import { existsSync as nodeExistsSync, readFileSync as nodeReadFileSync } from 'node:fs';
+import { join as nodeJoin } from 'node:path';
+
 import {
   cacheFilePath,
   computePackageMtimes,
   discoverPackages,
+  emptyExtraction,
+  extractPluginArtifacts,
   extractSymbols,
   loadCache,
   type PackageSymbols,
+  type PluginExtraction,
   saveCache,
 } from './indexer';
 import { findSymbol as queryFindSymbol, getSymbol as queryGetSymbol } from './query';
 import {
+  type Capability,
+  type Operation,
   type Package,
   type PackageDetail,
   type PackageFilter,
+  type Plugin,
+  type PluginDetail,
+  type PluginFilter,
+  type Surface,
   type SymbolDetail,
   type SymbolInclude,
   type SymbolKind,
@@ -54,6 +66,16 @@ export type Introspector = {
   listSymbols: (packageName: string, kind?: SymbolKind) => SymbolMatch[];
   findSymbol: (query: string, kind?: SymbolKind) => SymbolMatch[];
   getSymbol: (ref: string, include?: SymbolInclude[]) => SymbolDetail | null;
+
+  // Plugin ecosystem.
+  listPlugins: (filter?: PluginFilter) => Plugin[];
+  getPlugin: (id: string) => PluginDetail | null;
+  /** Aggregate every surface contributed by every plugin (or non-plugin package) in the monorepo. */
+  listSurfaces: (pluginId?: string) => Surface[];
+  /** Aggregate every capability contribution. Filters by owning plugin id when provided. */
+  listCapabilities: (pluginId?: string) => Capability[];
+  /** Aggregate every operation definition. Filters by owning plugin id when provided. */
+  listOperations: (pluginId?: string) => Operation[];
 };
 
 export const createIntrospector = (options: IntrospectorOptions): Introspector => {
@@ -63,6 +85,7 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
   let packages: PackageDetail[] = [];
   let initialized = false;
   const symbolsByPackage = new Map<string, PackageSymbols>();
+  const pluginsByPackage = new Map<string, PluginExtraction>();
   let disposed = false;
 
   const ensureSymbols = (pkg: PackageDetail): PackageSymbols => {
@@ -74,6 +97,30 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     symbolsByPackage.set(pkg.name, extracted);
     return extracted;
   };
+
+  // Plugin/surface/capability/operation extraction is independent of the symbol
+  // pass: it runs its own ts-morph project and is gated by a cheap RegExp pre-filter,
+  // so we extract on demand and memoize the result per package.
+  const ensurePluginArtifacts = (pkg: PackageDetail): PluginExtraction => {
+    const cached = pluginsByPackage.get(pkg.name);
+    if (cached) {
+      return cached;
+    }
+    let result: PluginExtraction;
+    try {
+      result = extractPluginArtifacts({
+        packageName: pkg.name,
+        packagePath: pkg.path,
+        monorepoRoot,
+      });
+    } catch (err) {
+      console.error(`[introspect] plugin extraction failed for ${pkg.name}: ${String(err)}`);
+      result = emptyExtraction();
+    }
+    pluginsByPackage.set(pkg.name, result);
+    return result;
+  };
+
 
   const preWarmSymbols = async (): Promise<void> => {
     const total = packages.length;
@@ -154,6 +201,11 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
         await saveCache(cachePath, liveMtimes, packageNamesByPath, snapshot);
         console.error(`[introspect] saved symbol cache: ${Object.keys(snapshot).length} packages to ${cachePath}`);
       }
+      // Plugin extraction stays lazy: it's bounded per package by the
+      // candidate-file pre-filter, but parsing it eagerly for ~250 packages
+      // adds significant cold-start time with no win for short-lived MCP
+      // sessions that never call listPlugins. The first call to listPlugins/
+      // listSurfaces/etc. triggers extraction once, then memoizes per package.
     }
     initialized = true;
   })();
@@ -217,12 +269,119 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     return queryGetSymbol({ packages, loadSymbols: ensureSymbols }, ref, include);
   };
 
+  const allPluginExtractions = (): PluginExtraction[] => {
+    const out: PluginExtraction[] = [];
+    for (const pkg of packages) {
+      out.push(ensurePluginArtifacts(pkg));
+    }
+    return out;
+  };
+
+  const listPlugins = (filter?: PluginFilter): Plugin[] => {
+    assertReady();
+    const all = allPluginExtractions();
+    let result: Plugin[] = [];
+    for (const ex of all) {
+      if (ex.plugin) {
+        result.push(toPlugin(ex.plugin));
+      }
+    }
+    if (filter?.query) {
+      const needle = filter.query.toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.id.toLowerCase().includes(needle) ||
+          p.name.toLowerCase().includes(needle) ||
+          p.package.toLowerCase().includes(needle),
+      );
+    }
+    if (filter?.pathPrefix) {
+      const prefix = filter.pathPrefix;
+      const pkgPathByName = new Map(packages.map((p) => [p.name, p.path]));
+      result = result.filter((p) => {
+        const path = pkgPathByName.get(p.package);
+        return path !== undefined && (path === prefix || path.startsWith(`${prefix}/`));
+      });
+    }
+    result.sort((a, b) => a.id.localeCompare(b.id));
+    return result;
+  };
+
+  const getPlugin = (id: string): PluginDetail | null => {
+    assertReady();
+    // Fast path: locate the package whose `src/meta.ts` declares `id: '<id>'`
+    // before triggering full ts-morph extraction. Avoids scanning ~250
+    // packages for what's typically one or two file reads.
+    const owningPath = findPluginOwnerByMeta(monorepoRoot, packages, id);
+    if (owningPath) {
+      const pkg = packages.find((p) => p.path === owningPath);
+      if (pkg) {
+        const ex = ensurePluginArtifacts(pkg);
+        if (ex.plugin && ex.plugin.id === id) {
+          return ex.plugin;
+        }
+      }
+    }
+    // Fallback: full scan. Slow but correct for plugins whose meta.ts shape
+    // doesn't match the literal-string heuristic (e.g. an id derived from a
+    // constant import).
+    for (const ex of allPluginExtractions()) {
+      if (ex.plugin && ex.plugin.id === id) {
+        return ex.plugin;
+      }
+    }
+    return null;
+  };
+
+  const listSurfaces = (pluginId?: string): Surface[] => {
+    assertReady();
+    const out: Surface[] = [];
+    for (const ex of allPluginExtractions()) {
+      for (const surface of ex.surfaces) {
+        if (pluginId === undefined || surface.pluginId === pluginId) {
+          out.push(surface);
+        }
+      }
+    }
+    out.sort((a, b) => a.id.localeCompare(b.id));
+    return out;
+  };
+
+  const listCapabilities = (pluginId?: string): Capability[] => {
+    assertReady();
+    const out: Capability[] = [];
+    for (const ex of allPluginExtractions()) {
+      for (const cap of ex.capabilities) {
+        if (pluginId === undefined || cap.pluginId === pluginId) {
+          out.push(cap);
+        }
+      }
+    }
+    out.sort((a, b) => a.key.localeCompare(b.key));
+    return out;
+  };
+
+  const listOperations = (pluginId?: string): Operation[] => {
+    assertReady();
+    const out: Operation[] = [];
+    for (const ex of allPluginExtractions()) {
+      for (const op of ex.operations) {
+        if (pluginId === undefined || op.pluginId === pluginId) {
+          out.push(op);
+        }
+      }
+    }
+    out.sort((a, b) => a.key.localeCompare(b.key));
+    return out;
+  };
+
   const dispose = (): void => {
     if (disposed) {
       return;
     }
     disposed = true;
     symbolsByPackage.clear();
+    pluginsByPackage.clear();
   };
 
   return {
@@ -233,7 +392,53 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     listSymbols,
     findSymbol,
     getSymbol,
+    listPlugins,
+    getPlugin,
+    listSurfaces,
+    listCapabilities,
+    listOperations,
   };
+};
+
+const toPlugin = (p: PluginDetail): Plugin => ({
+  ref: p.ref,
+  id: p.id,
+  name: p.name,
+  description: p.description,
+  package: p.package,
+  entryFile: p.entryFile,
+});
+
+/**
+ * Cheap lookup: find which package's `src/meta.ts` declares `id: '<id>'` as a
+ * string literal. Used to avoid scanning every package when a caller already
+ * knows which plugin id they want.
+ */
+const findPluginOwnerByMeta = (
+  monorepoRoot: string,
+  packages: PackageDetail[],
+  id: string,
+): string | null => {
+  // Construct a needle that can't match accidentally — `id: '<id>'` (single quotes)
+  // OR `id: "<id>"` (double quotes). Plugin ids are URL-style strings so neither
+  // form embeds quotes itself.
+  const needles = [`id: '${id}'`, `id: "${id}"`];
+  for (const pkg of packages) {
+    const metaPath = nodeJoin(monorepoRoot, pkg.path, 'src', 'meta.ts');
+    if (!nodeExistsSync(metaPath)) {
+      continue;
+    }
+    let text: string;
+    try {
+      text = nodeReadFileSync(metaPath, 'utf8');
+    } catch {
+      continue;
+    }
+    if (needles.some((needle) => text.includes(needle))) {
+      return pkg.path;
+    }
+  }
+  return null;
 };
 
 const toPackage = (p: PackageDetail): Package => ({

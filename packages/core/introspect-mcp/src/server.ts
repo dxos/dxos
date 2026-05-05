@@ -8,7 +8,18 @@ import { z } from 'zod';
 import type { Introspector } from '@dxos/introspect';
 
 import { registerLogger, type ToolLogger } from './logger';
-import { shapeFindSymbol, shapeGetPackage, shapeGetSymbol, shapeListPackages, type ToolResult } from './shaping';
+import {
+  shapeFindSymbol,
+  shapeGetPackage,
+  shapeGetPlugin,
+  shapeGetSymbol,
+  shapeListCapabilities,
+  shapeListOperations,
+  shapeListPackages,
+  shapeListPlugins,
+  shapeListSurfaces,
+  type ToolResult,
+} from './shaping';
 
 export type ServerOptions = {
   introspector: Introspector;
@@ -166,6 +177,126 @@ export const createServer = (options: ServerOptions): McpServer => {
         return toToolResult({ data: null, note: `No symbol with ref ${args.ref}` });
       }
       return toToolResult(shapeGetSymbol(detail));
+    },
+  );
+
+  /**
+   * list_plugins
+   */
+  server.registerTool(
+    'list_plugins',
+    {
+      title: 'List DXOS plugins',
+      description:
+        'List plugins detected in the monorepo. A plugin is a package whose src/ contains a `Plugin.define(meta)` call ' +
+        'and a meta.ts exporting `Plugin.Meta`. Use this to discover what plugins exist before drilling into one. ' +
+        'Returns lightweight rows; call get_plugin for the full breakdown of modules, surfaces, capabilities, and operations.',
+      inputSchema: {
+        query: z.string().optional().describe('Substring of the plugin id, name, or owning package name (case-insensitive).'),
+        pathPrefix: z
+          .string()
+          .optional()
+          .describe('Restrict to plugins whose owning package starts with this path, e.g. "packages/plugins".'),
+      },
+    },
+    async (args) => {
+      const result = introspector.listPlugins({ query: args.query, pathPrefix: args.pathPrefix });
+      const shaped = shapeListPlugins(result);
+      log({ tool: 'list_plugins', args, count: result.length, truncated: shaped.truncated });
+      return toToolResult(shaped);
+    },
+  );
+
+  /**
+   * get_plugin
+   */
+  server.registerTool(
+    'get_plugin',
+    {
+      title: 'Get plugin detail',
+      description:
+        'Fetch the full record for a single plugin by its meta id (e.g. "org.dxos.plugin.markdown"). ' +
+        'Returns the plugin meta, the module helpers it composes, and the surfaces, capabilities, and operations ' +
+        'it contributes. Use after list_plugins or when the user references a plugin by id.',
+      inputSchema: {
+        id: z.string().describe('Plugin id from meta.ts, e.g. "org.dxos.plugin.markdown".'),
+      },
+    },
+    async (args) => {
+      const detail = introspector.getPlugin(args.id);
+      log({ tool: 'get_plugin', args, found: detail !== null });
+      if (!detail) {
+        return toToolResult({ data: null, note: `No plugin with id ${args.id}` });
+      }
+      return toToolResult(shapeGetPlugin(detail));
+    },
+  );
+
+  /**
+   * list_surfaces
+   */
+  server.registerTool(
+    'list_surfaces',
+    {
+      title: 'List surfaces',
+      description:
+        'List Surface.create({ id, role, ... }) contributions across the monorepo. Use this to discover available ' +
+        'surface ids when wiring a new container, or to check whether a surface name is already taken. ' +
+        'Filter by `pluginId` to scope to a single plugin.',
+      inputSchema: {
+        pluginId: z.string().optional().describe('Restrict to surfaces contributed by this plugin id.'),
+      },
+    },
+    async (args) => {
+      const result = introspector.listSurfaces(args.pluginId);
+      const shaped = shapeListSurfaces(result);
+      log({ tool: 'list_surfaces', args, count: result.length, truncated: shaped.truncated });
+      return toToolResult(shaped);
+    },
+  );
+
+  /**
+   * list_capabilities
+   */
+  server.registerTool(
+    'list_capabilities',
+    {
+      title: 'List capability contributions',
+      description:
+        'List Capability.contributes(<key>, ...) calls across the monorepo. Use this to discover which capability ' +
+        'keys are produced (or required) by which plugins. Filter by `pluginId` to scope to a single plugin.',
+      inputSchema: {
+        pluginId: z.string().optional().describe('Restrict to capabilities contributed by this plugin id.'),
+      },
+    },
+    async (args) => {
+      const result = introspector.listCapabilities(args.pluginId);
+      const shaped = shapeListCapabilities(result);
+      log({ tool: 'list_capabilities', args, count: result.length, truncated: shaped.truncated });
+      return toToolResult(shaped);
+    },
+  );
+
+  /**
+   * list_operations
+   */
+  server.registerTool(
+    'list_operations',
+    {
+      title: 'List operations',
+      description:
+        'List Operation.make({ meta: { key, name, description } }) calls across the monorepo. Operations are the ' +
+        'unit of work dispatched through the OperationInvoker (formerly "intents"). Filter by `pluginId` to scope ' +
+        'to a single plugin.',
+      inputSchema: {
+        pluginId: z.string().optional().describe('Restrict to operations defined within this plugin id.'),
+      },
+    },
+    async (args) => {
+      const result = introspector.listOperations(args.pluginId);
+      const shaped = shapeListOperations(result);
+      log({ tool: 'list_operations', args, count: result.length, truncated: shaped.truncated });
+      return toToolResult(shaped);
     },
   );
 

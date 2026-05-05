@@ -8,7 +8,17 @@
 // telling the caller how to refine. Single-record fetches don't get truncated;
 // callers opt into heavier fields via `include`.
 
-import type { Package, PackageDetail, SymbolDetail, SymbolMatch } from '@dxos/introspect';
+import type {
+  Capability,
+  Operation,
+  Package,
+  PackageDetail,
+  Plugin,
+  PluginDetail,
+  Surface,
+  SymbolDetail,
+  SymbolMatch,
+} from '@dxos/introspect';
 
 const LIST_LIMIT = 30;
 const SOURCE_PREVIEW = 1200;
@@ -93,4 +103,92 @@ const truncate = (s: string, limit: number): string => {
     return s;
   }
   return `${s.slice(0, limit)}\n... (truncated, ${s.length - limit} more chars)`;
+};
+
+// ---------------------------------------------------------------------------
+// Plugin / surface / capability / operation shaping.
+// ---------------------------------------------------------------------------
+
+export const shapeListPlugins = (all: Plugin[]): ToolResult => {
+  const data = all.slice(0, LIST_LIMIT).map((p) => ({
+    ref: p.ref,
+    id: p.id,
+    name: p.name,
+    package: p.package,
+    description: p.description,
+  }));
+  if (all.length > LIST_LIMIT) {
+    return {
+      data,
+      truncated: `${all.length - LIST_LIMIT} more results — refine with query/pathPrefix or call get_plugin directly.`,
+    };
+  }
+  return { data };
+};
+
+export const shapeGetPlugin = (detail: PluginDetail): ToolResult => ({
+  data: {
+    ref: detail.ref,
+    id: detail.id,
+    name: detail.name,
+    package: detail.package,
+    description: detail.description,
+    entryFile: detail.entryFile,
+    meta: detail.meta,
+    modules: detail.modules.map((m) => ({ helper: m.helper, id: m.id })),
+    surfaces: detail.surfaces.map((s) => ({ ref: s.ref, id: s.id, roles: s.roles })),
+    capabilities: detail.capabilities.map((c) => ({ ref: c.ref, key: c.key })),
+    operations: detail.operations.map((o) => ({ ref: o.ref, key: o.key, name: o.name })),
+  },
+});
+
+export const shapeListSurfaces = (all: Surface[]): ToolResult => {
+  const data = all.slice(0, LIST_LIMIT).map((s) => ({
+    ref: s.ref,
+    id: s.id,
+    pluginId: s.pluginId,
+    package: s.package,
+    roles: s.roles,
+  }));
+  if (all.length > LIST_LIMIT) {
+    return {
+      data,
+      truncated: `${all.length - LIST_LIMIT} more results — filter by plugin id.`,
+    };
+  }
+  return { data };
+};
+
+export const shapeListCapabilities = (all: Capability[]): ToolResult => {
+  const data = all.slice(0, LIST_LIMIT).map((c) => ({
+    ref: c.ref,
+    key: c.key,
+    pluginId: c.pluginId,
+    package: c.package,
+  }));
+  if (all.length > LIST_LIMIT) {
+    return {
+      data,
+      truncated: `${all.length - LIST_LIMIT} more results — filter by plugin id.`,
+    };
+  }
+  return { data };
+};
+
+export const shapeListOperations = (all: Operation[]): ToolResult => {
+  const data = all.slice(0, LIST_LIMIT).map((o) => ({
+    ref: o.ref,
+    key: o.key,
+    name: o.name,
+    description: o.description,
+    pluginId: o.pluginId,
+    package: o.package,
+  }));
+  if (all.length > LIST_LIMIT) {
+    return {
+      data,
+      truncated: `${all.length - LIST_LIMIT} more results — filter by plugin id.`,
+    };
+  }
+  return { data };
 };

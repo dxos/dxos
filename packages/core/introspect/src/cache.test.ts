@@ -80,7 +80,7 @@ describe('symbol cache reuse', { timeout: 30_000 }, () => {
     const pkgs = intro3.listPackages();
     const taskSym = intro3.getSymbol('@fixture/pkg-a#Task');
     intro3.dispose();
-    expect(pkgs.length).toBe(2);
+    expect(pkgs.length).toBe(3);
     expect(taskSym?.name).toBe('Task');
   });
 

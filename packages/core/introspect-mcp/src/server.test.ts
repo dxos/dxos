@@ -61,10 +61,21 @@ describe('introspect-mcp server', () => {
     await env.close();
   });
 
-  test('lists all five tools', async ({ expect }) => {
+  test('lists every tool', async ({ expect }) => {
     const { tools } = await env.client.listTools();
     const names = tools.map((t) => t.name).sort();
-    expect(names).toEqual(['find_symbol', 'get_package', 'get_symbol', 'list_packages', 'list_symbols']);
+    expect(names).toEqual([
+      'find_symbol',
+      'get_package',
+      'get_plugin',
+      'get_symbol',
+      'list_capabilities',
+      'list_operations',
+      'list_packages',
+      'list_plugins',
+      'list_surfaces',
+      'list_symbols',
+    ]);
   });
 
   test('list_symbols returns every symbol in a package', async ({ expect }) => {
@@ -193,5 +204,100 @@ describe('introspect-mcp server', () => {
     const payload = parseToolText(result as any) as { data: null; note: string };
     expect(payload.data).toBeNull();
     expect(payload.note).toContain('No symbol');
+  });
+
+  // ----- Plugin / surface / capability / operation tools (steps 4-5) -----
+
+  test('list_plugins returns the fixture plugin', async ({ expect }) => {
+    const result = await env.client.callTool({ name: 'list_plugins', arguments: {} });
+    const payload = parseToolText(result as any) as { data: Array<{ id: string; ref: string; name: string }> };
+    expect(payload.data.some((p) => p.id === 'com.example.plugin.fixture')).toBe(true);
+    const fixture = payload.data.find((p) => p.id === 'com.example.plugin.fixture');
+    expect(fixture!.ref).toBe('plugin:com.example.plugin.fixture');
+    expect(fixture!.name).toBe('Fixture Plugin');
+  });
+
+  test('list_plugins query filter narrows the result', async ({ expect }) => {
+    const result = await env.client.callTool({
+      name: 'list_plugins',
+      arguments: { query: 'fixture' },
+    });
+    const payload = parseToolText(result as any) as { data: Array<{ id: string }> };
+    expect(payload.data.map((p) => p.id)).toEqual(['com.example.plugin.fixture']);
+  });
+
+  test('get_plugin returns surfaces, capabilities, operations, and modules', async ({ expect }) => {
+    const result = await env.client.callTool({
+      name: 'get_plugin',
+      arguments: { id: 'com.example.plugin.fixture' },
+    });
+    const payload = parseToolText(result as any) as {
+      data: {
+        id: string;
+        modules: Array<{ helper: string }>;
+        surfaces: Array<{ id: string; roles?: string[] }>;
+        capabilities: Array<{ key: string }>;
+        operations: Array<{ key: string; name?: string }>;
+        meta: Record<string, unknown>;
+      };
+    };
+    expect(payload.data.id).toBe('com.example.plugin.fixture');
+    expect(payload.data.modules.map((m) => m.helper)).toContain('addSurfaceModule');
+    expect(payload.data.surfaces.map((s) => s.id).sort()).toEqual([
+      'surface.fixture-article',
+      'surface.fixture-card',
+    ]);
+    expect(payload.data.capabilities.map((c) => c.key)).toContain('Capabilities.ReactSurface');
+    expect(payload.data.operations.map((o) => o.key).sort()).toEqual([
+      'com.example.fixture.close',
+      'com.example.fixture.open',
+    ]);
+    expect(payload.data.meta.icon).toBe('ph--cube--regular');
+  });
+
+  test('get_plugin returns null with note for unknown plugin id', async ({ expect }) => {
+    const result = await env.client.callTool({
+      name: 'get_plugin',
+      arguments: { id: 'com.example.plugin.missing' },
+    });
+    const payload = parseToolText(result as any) as { data: null; note: string };
+    expect(payload.data).toBeNull();
+    expect(payload.note).toContain('No plugin');
+  });
+
+  test('list_surfaces aggregates fixture plugin surfaces', async ({ expect }) => {
+    const result = await env.client.callTool({ name: 'list_surfaces', arguments: {} });
+    const payload = parseToolText(result as any) as { data: Array<{ id: string; pluginId: string | null }> };
+    const ids = payload.data.map((s) => s.id).sort();
+    expect(ids).toEqual(['surface.fixture-article', 'surface.fixture-card']);
+    expect(payload.data.every((s) => s.pluginId === 'com.example.plugin.fixture')).toBe(true);
+  });
+
+  test('list_surfaces filter by pluginId', async ({ expect }) => {
+    const result = await env.client.callTool({
+      name: 'list_surfaces',
+      arguments: { pluginId: 'com.example.plugin.missing' },
+    });
+    const payload = parseToolText(result as any) as { data: unknown[] };
+    expect(payload.data).toEqual([]);
+  });
+
+  test('list_capabilities returns the contributed capability keys', async ({ expect }) => {
+    const result = await env.client.callTool({ name: 'list_capabilities', arguments: {} });
+    const payload = parseToolText(result as any) as { data: Array<{ key: string }> };
+    const keys = payload.data.map((c) => c.key).sort();
+    expect(keys).toContain('Capabilities.ReactSurface');
+    expect(keys).toContain('Capabilities.OperationHandler');
+  });
+
+  test('list_operations returns the operation definitions with names', async ({ expect }) => {
+    const result = await env.client.callTool({ name: 'list_operations', arguments: {} });
+    const payload = parseToolText(result as any) as {
+      data: Array<{ key: string; name?: string; description?: string }>;
+    };
+    const open = payload.data.find((o) => o.key === 'com.example.fixture.open');
+    expect(open).toBeDefined();
+    expect(open!.name).toBe('Open Fixture');
+    expect(open!.description).toBe('Opens a fixture document.');
   });
 });
