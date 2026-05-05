@@ -28,20 +28,8 @@ import {
   SyntaxKind,
 } from 'ts-morph';
 
-import {
-  formatCapabilityRef,
-  formatOperationRef,
-  formatPluginRef,
-  formatSurfaceRef,
-} from '../refs';
-import type {
-  Capability,
-  Operation,
-  PluginDetail,
-  PluginModule,
-  SourceLocation,
-  Surface,
-} from '../types';
+import { formatCapabilityRef, formatOperationRef, formatPluginRef, formatSurfaceRef } from '../refs';
+import type { Capability, Operation, PluginDetail, PluginModule, SourceLocation, Surface } from '../types';
 
 const warn = (msg: string, err?: unknown): void => {
   console.error(err ? `[introspect plugins] ${msg}: ${String(err)}` : `[introspect plugins] ${msg}`);
@@ -280,7 +268,7 @@ type MetaInfo = {
   id?: string;
   name?: string;
   description?: string;
-  extra: Record<string, string | string[] | undefined>;
+  extra: Record<string, string | string[]>;
 };
 
 const readPluginMeta = (file: SourceFile): MetaInfo | null => {

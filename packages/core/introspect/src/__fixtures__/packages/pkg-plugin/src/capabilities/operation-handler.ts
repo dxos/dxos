@@ -6,5 +6,4 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 
 import { FixtureOperationHandlerSet } from '../operations';
 
-export const OperationHandler = () =>
-  Capability.contributes(Capabilities.OperationHandler, FixtureOperationHandlerSet);
+export const OperationHandler = () => Capability.contributes(Capabilities.OperationHandler, FixtureOperationHandlerSet);

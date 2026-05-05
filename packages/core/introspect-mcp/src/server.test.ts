@@ -243,10 +243,7 @@ describe('introspect-mcp server', () => {
     };
     expect(payload.data.id).toBe('com.example.plugin.fixture');
     expect(payload.data.modules.map((m) => m.helper)).toContain('addSurfaceModule');
-    expect(payload.data.surfaces.map((s) => s.id).sort()).toEqual([
-      'surface.fixture-article',
-      'surface.fixture-card',
-    ]);
+    expect(payload.data.surfaces.map((s) => s.id).sort()).toEqual(['surface.fixture-article', 'surface.fixture-card']);
     expect(payload.data.capabilities.map((c) => c.key)).toContain('Capabilities.ReactSurface');
     expect(payload.data.operations.map((o) => o.key).sort()).toEqual([
       'com.example.fixture.close',

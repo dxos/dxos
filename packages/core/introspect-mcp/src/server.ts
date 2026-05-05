@@ -192,7 +192,10 @@ export const createServer = (options: ServerOptions): McpServer => {
         'and a meta.ts exporting `Plugin.Meta`. Use this to discover what plugins exist before drilling into one. ' +
         'Returns lightweight rows; call get_plugin for the full breakdown of modules, surfaces, capabilities, and operations.',
       inputSchema: {
-        query: z.string().optional().describe('Substring of the plugin id, name, or owning package name (case-insensitive).'),
+        query: z
+          .string()
+          .optional()
+          .describe('Substring of the plugin id, name, or owning package name (case-insensitive).'),
         pathPrefix: z
           .string()
           .optional()

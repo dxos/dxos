@@ -121,7 +121,6 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     return result;
   };
 
-
   const preWarmSymbols = async (): Promise<void> => {
     const total = packages.length;
     const startedAt = Date.now();
@@ -414,11 +413,7 @@ const toPlugin = (p: PluginDetail): Plugin => ({
  * string literal. Used to avoid scanning every package when a caller already
  * knows which plugin id they want.
  */
-const findPluginOwnerByMeta = (
-  monorepoRoot: string,
-  packages: PackageDetail[],
-  id: string,
-): string | null => {
+const findPluginOwnerByMeta = (monorepoRoot: string, packages: PackageDetail[], id: string): string | null => {
   // Construct a needle that can't match accidentally — `id: '<id>'` (single quotes)
   // OR `id: "<id>"` (double quotes). Plugin ids are URL-style strings so neither
   // form embeds quotes itself.

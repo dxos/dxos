@@ -105,8 +105,8 @@ export type PluginDetail = Plugin & {
   capabilities: Capability[];
   /** Operations defined within this plugin's package. */
   operations: Operation[];
-  /** Auxiliary metadata pulled from `meta.ts` (icon, source, etc.). */
-  meta: Record<string, string | string[] | undefined>;
+  /** Auxiliary metadata pulled from `meta.ts` (icon, source, etc.). Absent keys are simply omitted. */
+  meta: Record<string, string | string[]>;
 };
 
 export type PluginModule = {

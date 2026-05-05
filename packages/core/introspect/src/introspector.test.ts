@@ -51,6 +51,20 @@ describe('refs', () => {
       key: 'org.dxos.function.markdown.create',
     });
   });
+
+  test('capability ref roundtrips with scoped package owners', ({ expect }) => {
+    // Regression: parseRef previously used lastIndexOf('@'), which landed inside
+    // a scoped owner like '@dxos/plugin-markdown' and misattributed the scope
+    // to the key. Capability keys are JS identifiers — no `@` — so splitting on
+    // the first `@` always preserves the owner.
+    const ref = formatCapabilityRef('Capabilities.ReactSurface', '@dxos/plugin-markdown');
+    expect(ref).toBe('capability:Capabilities.ReactSurface@@dxos/plugin-markdown');
+    expect(parseRef(ref)).toEqual({
+      kind: 'capability',
+      key: 'Capabilities.ReactSurface',
+      owner: '@dxos/plugin-markdown',
+    });
+  });
 });
 
 describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
@@ -77,10 +91,12 @@ describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
   });
 
   test('filters by privateOnly', ({ expect }) => {
-    expect(introspector.listPackages({ privateOnly: true }).map((p) => p.name).sort()).toEqual([
-      '@fixture/pkg-a',
-      '@fixture/pkg-plugin',
-    ]);
+    expect(
+      introspector
+        .listPackages({ privateOnly: true })
+        .map((p) => p.name)
+        .sort(),
+    ).toEqual(['@fixture/pkg-a', '@fixture/pkg-plugin']);
   });
 
   test('getPackage returns workspace and external deps', ({ expect }) => {
@@ -212,12 +228,8 @@ describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
   });
 
   test('listPlugins query filter matches against id, name, and package', ({ expect }) => {
-    expect(introspector.listPlugins({ query: 'fixture' }).map((p) => p.id)).toEqual([
-      'com.example.plugin.fixture',
-    ]);
-    expect(introspector.listPlugins({ query: 'PKG-PLUGIN' }).map((p) => p.id)).toEqual([
-      'com.example.plugin.fixture',
-    ]);
+    expect(introspector.listPlugins({ query: 'fixture' }).map((p) => p.id)).toEqual(['com.example.plugin.fixture']);
+    expect(introspector.listPlugins({ query: 'PKG-PLUGIN' }).map((p) => p.id)).toEqual(['com.example.plugin.fixture']);
     expect(introspector.listPlugins({ query: 'noplugin' })).toEqual([]);
   });
 
@@ -279,13 +291,19 @@ describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
   });
 
   test('listCapabilities aggregates across all plugins', ({ expect }) => {
-    const keys = introspector.listCapabilities().map((c) => c.key).sort();
+    const keys = introspector
+      .listCapabilities()
+      .map((c) => c.key)
+      .sort();
     expect(keys).toContain('Capabilities.ReactSurface');
     expect(keys).toContain('Capabilities.OperationHandler');
   });
 
   test('listOperations aggregates across all plugins', ({ expect }) => {
-    const keys = introspector.listOperations().map((o) => o.key).sort();
+    const keys = introspector
+      .listOperations()
+      .map((o) => o.key)
+      .sort();
     expect(keys).toEqual(['com.example.fixture.close', 'com.example.fixture.open']);
   });
 });

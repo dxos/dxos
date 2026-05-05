@@ -43,12 +43,7 @@ export type OperationRefParts = {
   key: string;
 };
 
-export type RefParts =
-  | SymbolRefParts
-  | PluginRefParts
-  | SurfaceRefParts
-  | CapabilityRefParts
-  | OperationRefParts;
+export type RefParts = SymbolRefParts | PluginRefParts | SurfaceRefParts | CapabilityRefParts | OperationRefParts;
 
 export const formatSymbolRef = (pkg: string, name: string): string => `${pkg}#${name}`;
 export const formatPluginRef = (id: string): string => `plugin:${id}`;
@@ -76,7 +71,11 @@ export const parseRef = (ref: string): RefParts => {
     }
   } else if (ref.startsWith('capability:')) {
     const rest = ref.slice('capability:'.length);
-    const idx = rest.lastIndexOf('@');
+    // Capability keys are JS identifiers (no `@`), but owners may be scoped
+    // package names like `@dxos/plugin-foo`. Split on the FIRST `@` so scoped
+    // owners round-trip correctly — `lastIndexOf` would land on the `@` inside
+    // `@dxos` and misattribute the package scope to the key.
+    const idx = rest.indexOf('@');
     if (idx > 0) {
       const key = rest.slice(0, idx);
       const owner = rest.slice(idx + 1);
