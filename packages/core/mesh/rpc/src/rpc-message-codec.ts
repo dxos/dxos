@@ -49,8 +49,6 @@ export {
 export type RpcMessageInit = MessageInitShape<typeof RpcMessageSchema>;
 
 /**
-
-/**
  * Worker-safe binary codec for `dxos.rpc.RpcMessage`.
  */
 export const RpcMessageCodec = {

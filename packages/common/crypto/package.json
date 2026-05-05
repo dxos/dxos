@@ -25,12 +25,6 @@
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
-    },
-    "./subtle": {
-      "types": "./vendor/subtle.d.ts",
-      "browser": "./vendor/subtle-browser.mjs",
-      "node": "./vendor/subtle-node.mjs",
-      "default": "./vendor/subtle-browser.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
