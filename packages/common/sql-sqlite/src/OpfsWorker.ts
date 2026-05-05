@@ -81,7 +81,7 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError> =>
             case 'update_hook': {
               messageId = -1;
               sqlite3.update_hook(db, (_op, _db, table, rowid) => {
-                if (!table) return;
+                if (!table) {return;}
                 options.port.postMessage(['update_hook', table, Number(rowid)]);
               });
               return;
