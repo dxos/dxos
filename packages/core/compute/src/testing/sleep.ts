@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '../Operation';
-import { Sleep } from './index';
+import { Sleep } from './definitions';
 
 export default Sleep.pipe(
   Operation.withHandler(
