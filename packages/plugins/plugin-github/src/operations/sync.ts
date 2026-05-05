@@ -21,35 +21,34 @@ import { GitHubApi } from '../services';
 import { SyncGitHubOrganization } from './definitions';
 
 // ────────────────────────────────────────────────────────────────────────────
-// Match-to-existing TODOs (consolidated; do NOT scatter individual TODOs
-// across the upsert helpers below — track them here so we can plan the
-// follow-up as a single piece of work).
+// Cross-source duplicates — design intent.
 //
 // Today every upsert path in this file CREATES a fresh local object the first
 // time it sees a remote id, even when an equivalent object already exists in
-// the workspace. That's the simplest implementation and matches Trello's v1
-// behaviour, but it's wrong long-term: a user with a Person in their contacts
-// who is also on GitHub should have ONE Person ref'd from both sources, not
-// two.
+// the workspace (e.g. a Person you already have in contacts who is also a
+// GitHub member). That's the simplest implementation and matches Trello's v1
+// behaviour, but it's wrong long-term: the same real-world entity ends up as
+// multiple ECHO objects, and bulk actions / status drift become user-visible.
 //
-// Follow-ups, by entity type:
+// The chosen direction is NOT to merge foreign keys onto a single object.
+// Instead, we'll introduce a `SameAs` relation between distinct objects so
+// each plugin (github, linear, trello, …) keeps writing its own typed object
+// and stays cleanly in sync with its remote, while Composer renders linked
+// objects as a group and fans bulk actions across them. Tradeoffs vs. true
+// merge: reversible, respects per-system fields (Linear cycles, GitHub
+// labels) without coercing into a lossy common shape, and per-action conflict
+// handling instead of per-field three-way merges across heterogeneous sources.
 //
-// - Organization: prefer matching an existing Organization by `name` (exact
-//   case-insensitive) or by `website` host before creating new. After matching,
-//   add the GitHub foreign key to the existing Organization rather than minting
-//   a duplicate.
-// - Person: prefer matching by any `emails[].value` equal to the GitHub user's
-//   email (when readable), then by any `identities[].value` equal to
-//   `github.com/<login>`. Add the GitHub foreign key to the existing Person.
-// - Project (repo): prefer matching by exact `name` against existing Projects
-//   already attached to the matched Organization, then by `image` URL host.
-// - Task (issue/PR): no fuzzy match — issues/PRs are too low-level to have
-//   plausible cross-source duplicates. Foreign-key-only is correct.
-// - Thread/Message (comments): same as Task — no fuzzy match.
+// Follow-up work tracked separately:
+//   1. Land a `SameAs` relation type (likely in @dxos/types).
+//   2. Manual "link this object to that one" affordance (right-click /
+//      command palette).
+//   3. Automation pass — suggest candidate links from sync output (LLM or
+//      deterministic field match for Person/Organization/Project where it's
+//      reliable). Surfaced as suggestions, not auto-applied.
 //
-// All of the above need a second-pass UI flow to confirm matches with the user
-// before merging foreign keys, since auto-merge is destructive. Until then,
-// users will see duplicates after the first sync.
+// Until (1)–(3) land, this plugin produces duplicates on first sight when an
+// equivalent local object already exists. That is intentional v1 behaviour.
 // ────────────────────────────────────────────────────────────────────────────
 
 // ── Tunables ────────────────────────────────────────────────────────────────
