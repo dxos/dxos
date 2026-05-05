@@ -1,0 +1,34 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+// @import-as-namespace
+
+import * as Schema from 'effect/Schema';
+
+import { Annotation, Obj, Type } from '@dxos/echo';
+import { Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+
+export const Project = Schema.Struct({
+  name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName'), Schema.optional),
+  description: Schema.String.pipe(Schema.optional),
+  image: Format.URL.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
+}).pipe(
+  Type.object({
+    typename: 'org.dxos.type.project',
+    version: '0.1.0',
+  }),
+  Schema.annotations({ title: 'Project' }),
+  LabelAnnotation.set(['name']),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--check-square-offset--regular',
+    hue: 'indigo',
+  }),
+);
+
+export interface Project extends Schema.Schema.Type<typeof Project> {}
+
+export const make = (props: Partial<Obj.MakeProps<typeof Project>> = {}): Project =>
+  Obj.make(Project, {
+    ...props,
+  });
