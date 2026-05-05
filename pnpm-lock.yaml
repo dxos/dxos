@@ -5906,7 +5906,7 @@ importers:
         version: link:../../common/log
       '@modelcontextprotocol/sdk':
         specifier: '>=1.26.0'
-        version: 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
+        version: 1.27.1(@cfworker/json-schema@4.1.1)
       zod:
         specifier: ^4.0.0
         version: 4.3.6
@@ -5943,7 +5943,7 @@ importers:
         version: 0.33.2(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
       '@modelcontextprotocol/sdk':
         specifier: '>=1.26.0'
-        version: 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
+        version: 1.27.1(@cfworker/json-schema@4.1.1)
       effect:
         specifier: 3.20.0
         version: 3.20.0
@@ -8469,6 +8469,9 @@ importers:
       '@codemirror/autocomplete':
         specifier: 'catalog:'
         version: 6.19.0
+      '@codemirror/lang-javascript':
+        specifier: 'catalog:'
+        version: 6.2.4
       '@codemirror/lang-markdown':
         specifier: 'catalog:'
         version: 6.3.4
@@ -8532,6 +8535,9 @@ importers:
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../../ui/ui-editor
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -8554,9 +8560,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
-      '@dxos/ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/ui-theme
       '@lezer/generator':
         specifier: 'catalog:'
         version: 1.7.1
@@ -23775,7 +23778,6 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       '@cfworker/json-schema': ^4.1.1
-      zod: ^3.25 || ^4.0
     peerDependenciesMeta:
       '@cfworker/json-schema':
         optional: true
@@ -43222,7 +43224,7 @@ snapshots:
 
   '@mixmark-io/domino@2.2.0': {}
 
-  '@modelcontextprotocol/sdk@1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)':
+  '@modelcontextprotocol/sdk@1.27.1(@cfworker/json-schema@4.1.1)':
     dependencies:
       '@hono/node-server': 1.19.9(hono@4.12.2)
       ajv: 8.18.0
@@ -49515,7 +49517,7 @@ snapshots:
     dependencies:
       '@cfworker/json-schema': 4.1.1
       '@cloudflare/ai-chat': 0.0.6(agents@0.3.10)(ai@6.0.97(zod@4.3.6))(react@19.2.3)(zod@4.3.6)
-      '@modelcontextprotocol/sdk': 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
+      '@modelcontextprotocol/sdk': 1.27.1(@cfworker/json-schema@4.1.1)
       ai: 6.0.97(zod@4.3.6)
       cron-schedule: 6.0.0
       escape-html: 1.0.3

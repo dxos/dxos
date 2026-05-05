@@ -21,7 +21,7 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { CodeProject, Spec } from '#types';
+import { CodeProject, SourceFile, Spec } from '#types';
 
 const specIcon = Annotation.IconAnnotation.get(Spec.Spec).pipe(Option.getOrThrow);
 const codeProjectIcon = Annotation.IconAnnotation.get(CodeProject.CodeProject).pipe(Option.getOrThrow);
@@ -76,7 +76,7 @@ export const CodePlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Spec.Spec, CodeProject.CodeProject] }),
+  AppPlugin.addSchemaModule({ schema: [Spec.Spec, CodeProject.CodeProject, SourceFile.SourceFile] }),
   AppPlugin.addSettingsModule({ activate: SettingsCapability }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
