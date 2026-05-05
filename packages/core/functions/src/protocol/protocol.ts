@@ -17,10 +17,9 @@ import { refFromEncodedReference } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { Operation, Trace } from '@dxos/compute';
+import { Err, Operation, Trace } from '@dxos/compute';
 import { type FunctionProtocol } from '@dxos/protocols';
 
-import { FunctionError, InvalidOperationInputError, InvalidOperationOutputError } from '../errors';
 import { type FunctionServices } from '../sdk';
 import { configuredCredentialsLayer, credentialsLayerFromDatabase, FunctionInvocationService, QueueService } from '../services';
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
@@ -51,7 +50,7 @@ export const wrapFunctionHandler = (func: Operation.WithHandler<Operation.Defini
           serviceTags.includes(Feed.FeedService.key)) &&
         (!context.services.dataService || !context.services.queryService)
       ) {
-        throw new FunctionError({
+        throw new Err.FunctionError({
           message: 'Services not provided: dataService, queryService',
         });
       }
@@ -62,7 +61,7 @@ export const wrapFunctionHandler = (func: Operation.WithHandler<Operation.Defini
           try {
             Schema.validateSync(func.input, { onExcessProperty: 'error' })(data);
           } catch (error: any) {
-            throw new InvalidOperationInputError({
+            throw new Err.InvalidOperationInputError({
               message: `Operation input did not match schema (${func.meta.key}): ${error.message}`,
               cause: error,
             });
@@ -96,7 +95,7 @@ export const wrapFunctionHandler = (func: Operation.WithHandler<Operation.Defini
           try {
             Schema.validateSync(func.output, { onExcessProperty: 'error' })(result);
           } catch (error: any) {
-            throw new InvalidOperationOutputError({
+            throw new Err.InvalidOperationOutputError({
               message: `Operation output did not match schema (${func.meta.key}): ${error.message}`,
               cause: error,
             });
