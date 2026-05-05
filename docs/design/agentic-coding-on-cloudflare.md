@@ -26,7 +26,7 @@ Date: 2026-05-04
 
 ## Architecture overview
 
-```
+```text
 ┌────────────────── Composer (browser) ──────────────────┐
 │  plugin-code  ──chat──▶  plugin-assistant              │
 │       │                       │                        │
@@ -62,26 +62,27 @@ Date: 2026-05-04
 Lives alongside other coding-focused blueprints (likely `@dxos/assistant-coding` or as a coding bundle inside `@dxos/assistant`). It defines:
 
 - **System prompt** scoped to plugin authoring — covers `PLUGIN.mdl` conventions, capability/surface patterns, the import rules in `CLAUDE.md`, and the React conventions that already live in `.agents/sdk/`.
-- **Required tools** — the `code.*` operations below, plus `introspect-mcp` attached as a remote MCP server. Per #11226 a slow or failed introspect lookup degrades gracefully and doesn't break the chat.
+- **Required tools** — the `code.*` operations below, plus `introspect-mcp` attached as a remote MCP server. The agent calls introspect tools **directly via MCP** — there is no `code.search_api` proxy. MCP gives us streaming, schema-typed tools, and graceful degradation (#11226) for free; a hand-written wrapper would just add a translation layer with nothing to translate. The trade-off is that introspect's tool surface becomes part of the agent's tool budget; we mitigate by keeping its tool count small and well-named.
 - **Default model selection** — Sonnet 4.6+ for the inner edit loop, Opus for plan/scaffold turns where reasoning depth pays off.
 
 ### `code.*` operations
 
 Operations that the agent can invoke as tools. All take a `project_id` from blueprint context; all are HALO-authenticated.
 
-| Operation                         | Purpose                                                   |
-| --------------------------------- | --------------------------------------------------------- |
-| `code.scaffold(template, name)`   | Provision a sandbox + write initial files from template   |
-| `code.list_files(path)`           | Directory listing                                         |
-| `code.read_file(path)`            | Read file contents                                        |
-| `code.write_file(path, contents)` | Whole-file write (rare; prefer patch)                     |
-| `code.apply_patch(unified_diff)`  | Apply a unified diff to the sandbox FS                    |
-| `code.search_source(query)`       | ripgrep across the project                                |
-| `code.search_api(query)`          | Proxy to introspect-mcp for DXOS/Composer API lookup      |
-| `code.compile()`                  | Run typecheck + bundle; returns diagnostics + bundle hash |
-| `code.test(filter?)`              | Run vitest; returns pass/fail + failure output            |
-| `code.deploy(target)`             | Publish to dispatcher; `target ∈ {preview, release}`      |
-| `code.preview_url()`              | Resolve the live URL for the latest preview deploy        |
+| Operation                         | Purpose                                                                                                                              |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `code.scaffold(template, name)`   | Provision a sandbox + write initial files from template                                                                              |
+| `code.list_files(path)`           | Directory listing                                                                                                                    |
+| `code.read_file(path)`            | Read file contents                                                                                                                   |
+| `code.write_file(path, contents)` | Whole-file write (rare; prefer patch)                                                                                                |
+| `code.apply_patch(unified_diff)`  | Apply a unified diff to the sandbox FS                                                                                               |
+| `code.search_source(query)`       | ripgrep across the project                                                                                                           |
+| `code.compile()`                  | Run typecheck + bundle; returns diagnostics + bundle hash                                                                            |
+| `code.test(filter?)`              | Run vitest; returns pass/fail + failure output                                                                                       |
+| `code.deploy(target)`             | Phase 1: returns signed bundle download. Phase 2+: publishes to dispatcher and returns deployment URL. `target ∈ {preview, release}` |
+| `code.preview_url()`              | Resolve the live URL for the latest preview deploy (Phase 2+)                                                                        |
+
+DXOS/Composer API lookup is **not** in this list — that surface is provided by introspect-mcp's own tools (e.g. `search_symbols`, `get_symbol_docs`), which the blueprint exposes directly to the agent.
 
 Compile / test / deploy are long-running and **must stream**. We model them as operations that return a job handle, and provide a streaming subscription so chat surfaces progress live (build logs, test failures) rather than blocking until completion.
 
@@ -116,7 +117,7 @@ Four. Each is described as a focused service spec — small enough that the team
 
 **API** (HALO-authenticated; `project_id` derived from token claims):
 
-```
+```http
 POST /sandbox/:project_id/files         { path, contents }
 GET  /sandbox/:project_id/files/:path
 POST /sandbox/:project_id/patch         { unified_diff }
@@ -170,7 +171,7 @@ plugin_deployments (
 
 **Artifacts** (R2):
 
-```
+```text
 plugins/{id}/{version}/bundle.js
 plugins/{id}/{version}/source.tar.zst
 plugins/{id}/{version}/sourcemap.json
@@ -289,12 +290,12 @@ class PluginProject {
 
 ## Phasing
 
-| Phase | Scope                                                                | Deliverable                                        |
-| ----- | -------------------------------------------------------------------- | -------------------------------------------------- |
-| **1** | Sandbox service + `code.*` operations + `plugin-developer` blueprint | Author-from-chat works; "deploy" is a zip download |
-| **2** | Plugin Registry + Plugin Dispatcher                                  | Live preview URLs; one-click publish               |
-| **3** | Source Sync (GitHub App)                                             | Two-way GitHub sync; PR workflow                   |
-| **4** | Multi-author collab, marketplace, billing                            | Public plugin distribution                         |
+| Phase | Scope                                                                | Deliverable                                                                           |
+| ----- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| **1** | Sandbox service + `code.*` operations + `plugin-developer` blueprint | Author-from-chat works; `code.deploy` returns a signed zip download (no live serving) |
+| **2** | Plugin Registry + Plugin Dispatcher                                  | Live preview URLs; one-click publish                                                  |
+| **3** | Source Sync (GitHub App)                                             | Two-way GitHub sync; PR workflow                                                      |
+| **4** | Multi-author collab, marketplace, billing                            | Public plugin distribution                                                            |
 
 ## Open questions
 
