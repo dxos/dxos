@@ -249,8 +249,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
 
     this.#stats.totalExecutionBatches++;
     this.#stats.totalDirtyQueryMarks += dirtyCount;
-    this.#stats.averageDirtyPerBatch =
-      this.#stats.totalDirtyQueryMarks / this.#stats.totalExecutionBatches;
+    this.#stats.averageDirtyPerBatch = this.#stats.totalDirtyQueryMarks / this.#stats.totalExecutionBatches;
     this.#stats.averageQueriesActive =
       (this.#stats.averageQueriesActive * (this.#stats.totalExecutionBatches - 1) + activeCount) /
       this.#stats.totalExecutionBatches;

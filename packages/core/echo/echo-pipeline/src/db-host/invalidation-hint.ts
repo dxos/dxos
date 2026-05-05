@@ -39,7 +39,10 @@ export const mergeHints = (a: InvalidationHint, b: InvalidationHint): Invalidati
   objectIds: unionOrUndefined(a.objectIds, b.objectIds),
 });
 
-const unionOrUndefined = <T>(a: ReadonlySet<T> | undefined, b: ReadonlySet<T> | undefined): ReadonlySet<T> | undefined => {
+const unionOrUndefined = <T>(
+  a: ReadonlySet<T> | undefined,
+  b: ReadonlySet<T> | undefined,
+): ReadonlySet<T> | undefined => {
   if (a === undefined || b === undefined) {
     return undefined;
   }

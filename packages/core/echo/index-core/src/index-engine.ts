@@ -222,11 +222,7 @@ export class IndexEngine {
     ctx: Context,
     dataSource: IndexDataSource,
     opts: { spaceId: SpaceId | null; limit?: number },
-  ): Effect.Effect<
-    IndexingResult,
-    SqlError.SqlError,
-    SqlTransaction.SqlTransaction | SqlClient.SqlClient
-  > {
+  ): Effect.Effect<IndexingResult, SqlError.SqlError, SqlTransaction.SqlTransaction | SqlClient.SqlClient> {
     return Effect.gen(this, function* () {
       const result = makeEmptyIndexingResult();
 

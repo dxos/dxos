@@ -8,8 +8,8 @@ import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
-import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint';
 import { QueryExecutor } from '../query/query-executor';
+import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint';
 
 // ---------------------------------------------------------------------------
 // Helpers

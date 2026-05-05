@@ -360,10 +360,8 @@ const setsOverlap = <T>(a: ReadonlySet<T>, b: Set<T>): boolean => {
   return false;
 };
 
-const overlapsOrUnconstrained = <T>(
-  hintSet: ReadonlySet<T> | undefined,
-  scopeSet: Set<T> | null,
-): boolean => hintSet === undefined || scopeSet === null || setsOverlap(hintSet, scopeSet);
+const overlapsOrUnconstrained = <T>(hintSet: ReadonlySet<T> | undefined, scopeSet: Set<T> | null): boolean =>
+  hintSet === undefined || scopeSet === null || setsOverlap(hintSet, scopeSet);
 
 /**
  * Executes query plans against the IndexEngine and AutomergeHost.
