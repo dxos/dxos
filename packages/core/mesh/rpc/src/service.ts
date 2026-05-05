@@ -17,10 +17,12 @@ import { invariant } from '@dxos/invariant';
 
 import { RpcPeer, type RpcPeerOptions } from './rpc';
 
-const codecProtobufAnyToBufAny = (value: CodecProtobufAny): BufAny =>
+/** Convert codec-protobuf wire `Any` (`type_url`) to bufbuild `google.protobuf.Any`. */
+export const codecProtobufAnyToBufAny = (value: CodecProtobufAny): BufAny =>
   create(AnySchema, { typeUrl: value.type_url, value: value.value });
 
-const bufAnyToCodecProtobufAny = (value: BufAny): CodecProtobufAny => ({
+/** Convert bufbuild `google.protobuf.Any` to codec-protobuf wire `Any` (`type_url`). */
+export const bufAnyToCodecProtobufAny = (value: BufAny): CodecProtobufAny => ({
   type_url: value.typeUrl,
   value: value.value,
 });
@@ -149,13 +151,13 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
       requestedRpcs[serviceName] = requested[serviceName].createClient(
         {
           call: async (method, req, options) =>
-            codecProtobufAnyToBufAny(
+            bufAnyToCodecProtobufAny(
               await peer.call(`${serviceFqn}.${method}`, codecProtobufAnyToBufAny(req), options),
             ),
           callStream: (method, req, options) =>
             Stream.map(
               peer.callStream(`${serviceFqn}.${method}`, codecProtobufAnyToBufAny(req), options),
-              codecProtobufAnyToBufAny,
+              bufAnyToCodecProtobufAny,
             ),
         },
         encodingOptions,
@@ -198,9 +200,9 @@ export const createRpcClient = <S>(
 
   const client = serviceDef.createClient({
     call: async (method, req, options) =>
-      codecProtobufAnyToBufAny(await peer.call(method, codecProtobufAnyToBufAny(req), options)),
+      bufAnyToCodecProtobufAny(await peer.call(method, codecProtobufAnyToBufAny(req), options)),
     callStream: (method, req, options) =>
-      Stream.map(peer.callStream(method, codecProtobufAnyToBufAny(req), options), codecProtobufAnyToBufAny),
+      Stream.map(peer.callStream(method, codecProtobufAnyToBufAny(req), options), bufAnyToCodecProtobufAny),
   });
 
   return new ProtoRpcPeer(client, peer);

@@ -5,7 +5,14 @@
 import { type ClientServices } from '@dxos/client-protocol';
 import { type Any, type RequestOptions, type ServiceHandler, Stream } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
-import { RpcPeer, type RpcPeerOptions, type ServiceBundle, parseMethodName } from '@dxos/rpc';
+import {
+  RpcPeer,
+  type RpcPeerOptions,
+  type ServiceBundle,
+  bufAnyToCodecProtobufAny,
+  codecProtobufAnyToBufAny,
+  parseMethodName,
+} from '@dxos/rpc';
 import { MapCounter, trace } from '@dxos/tracing';
 import { type MaybePromise } from '@dxos/util';
 
@@ -53,32 +60,33 @@ export class ClientRpcServer {
       ...rpcOptions,
       callHandler: (method, params, options) => {
         const [serviceName, methodName] = parseMethodName(method);
-        const handler = (method: string, params: Any, handlerOptions?: RequestOptions) =>
-          this._getServiceHandler(serviceName).call(method, params, handlerOptions);
+        const codecParams = bufAnyToCodecProtobufAny(params);
+        const handler = (innerMethod: string, innerParams: Any, handlerOptions?: RequestOptions) =>
+          this._getServiceHandler(serviceName).call(innerMethod, innerParams, handlerOptions);
 
         this._callMetrics.inc(`${serviceName}.${methodName} request`);
 
-        if (this._handleCall) {
-          return this._handleCall(methodName, params, handler, options);
-        } else {
-          return handler(methodName, params, options);
-        }
+        const promise = this._handleCall
+          ? this._handleCall(methodName, codecParams, handler, options)
+          : Promise.resolve(handler(methodName, codecParams, options));
+        return promise.then(codecProtobufAnyToBufAny);
       },
       streamHandler: (method, params, options) => {
         const [serviceName, methodName] = parseMethodName(method);
-        const handler = (method: string, params: Any, handlerOptions?: RequestOptions) =>
-          this._getServiceHandler(serviceName).callStream(method, params, handlerOptions);
+        const codecParams = bufAnyToCodecProtobufAny(params);
+        const handler = (innerMethod: string, innerParams: Any, handlerOptions?: RequestOptions) =>
+          this._getServiceHandler(serviceName).callStream(innerMethod, innerParams, handlerOptions);
 
         this._callMetrics.inc(`${serviceName}.${methodName} request stream`);
 
-        if (this._handleStream) {
-          return Stream.map(Stream.unwrapPromise(this._handleStream(methodName, params, handler, options)), (data) => {
-            this._callMetrics.inc(`${serviceName}.${methodName} response stream`);
-            return data;
-          });
-        } else {
-          return handler(methodName, params, options);
-        }
+        const innerStream = this._handleStream
+          ? Stream.unwrapPromise(this._handleStream(methodName, codecParams, handler, options))
+          : handler(methodName, codecParams, options);
+
+        return Stream.map(innerStream, (data) => {
+          this._callMetrics.inc(`${serviceName}.${methodName} response stream`);
+          return codecProtobufAnyToBufAny(data);
+        });
       },
     });
   }
