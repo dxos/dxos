@@ -19,7 +19,7 @@ const MONOREPO_ROOT = join(__dirname, '..', '..', '..', '..', '..');
 
 describe.skipIf(!REAL)('real monorepo', () => {
   test('discovers a reasonable number of packages and well-known symbols', async ({ expect }) => {
-    const intro = createIntrospector({ monorepoRoot: MONOREPO_ROOT });
+    const intro = createIntrospector({ rootPath: MONOREPO_ROOT });
     await intro.ready;
 
     const packages = intro.listPackages();

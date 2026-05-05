@@ -13,12 +13,12 @@ import * as Struct from 'effect/Struct';
 
 import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
+import { Operation, OperationRegistry, Trace } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
-import { QueueService, Trace } from '@dxos/functions';
+import { QueueService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation, OperationRegistry } from '@dxos/operation';
 import { Message } from '@dxos/types';
 
 import { ComputeCustomEvent, ComputeNodeContext, ValueBag, defineComputeNode } from '../../types';

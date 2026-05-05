@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { CodeProject, Spec } from '#types';
+import { CodeProject, SourceFile, Spec } from '#types';
 
 export const translations = [
   {
@@ -33,6 +33,13 @@ export const translations = [
         'delete-object.label': 'Delete code project',
         'object-deleted.label': 'Code project deleted',
       },
+      [Type.getTypename(SourceFile.SourceFile)]: {
+        'typename.label': 'Source File',
+        'typename.label_zero': 'Source Files',
+        'typename.label_one': 'Source File',
+        'typename.label_other': 'Source Files',
+        'object-name.placeholder': 'New source file',
+      },
       [meta.id]: {
         'plugin.name': 'Code',
         'code-projects-section.label': 'Code Projects',
@@ -42,6 +49,7 @@ export const translations = [
         'browse-pane.label': 'Browse',
         'inspect-pane.label': 'Inspect',
         'output-pane.label': 'Output',
+        'view.code.empty.placeholder': 'No files yet. Ask the Coder to scaffold a project.',
         'api-key.label': 'Anthropic API key',
         'api-key.empty.placeholder': 'sk-ant-…',
         'api-key.set.placeholder': '•••• (set)',

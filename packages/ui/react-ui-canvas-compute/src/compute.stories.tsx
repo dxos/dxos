@@ -11,11 +11,11 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
-import { CredentialsService } from '@dxos/compute';
 import { Operation, OperationRegistry } from '@dxos/compute';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
+import { configuredCredentialsLayer } from '@dxos/functions';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -238,7 +238,7 @@ const ServiceLayer = Layer.empty.pipe(
     Layer.mergeAll(
       AiServiceTestingPreset('direct'),
       TestDatabaseLayer(),
-      CredentialsService.configuredLayer([]),
+      configuredCredentialsLayer([]),
       Feed.notAvailable,
     ),
   ),

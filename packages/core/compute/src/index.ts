@@ -2,10 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-// Umbrella re-exports of AI compute primitives.
-// Importing from `@dxos/compute` is equivalent to importing from the source
-// packages: `Blueprint` is the same `Blueprint` namespace as in
-// `@dxos/blueprints`, `Operation` is the same as in `@dxos/operation`, etc.
-export * from '@dxos/operation';
-export * from '@dxos/blueprints';
-export * from '@dxos/functions';
+export * as Blueprint from './Blueprint';
+export * as Credential from './Credential';
+export * from './errors';
+export * as Operation from './Operation';
+export * as OperationHandlerSet from './OperationHandlerSet';
+export * as OperationRegistry from './OperationRegistry';
+export * as Process from './Process';
+export * as Routine from './Routine';
+export * as Script from './Script';
+export * as ServiceResolver from './ServiceResolver';
+export * as StorageService from './StorageService';
+export * as Template from './Template';
+export * as Trace from './Trace';
+export * as Trigger from './Trigger';
+export * as TriggerEvent from './TriggerEvent';

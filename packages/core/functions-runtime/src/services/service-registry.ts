@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import type * as Option from 'effect/Option';
 
-import { ServiceNotAvailableError } from '@dxos/functions';
+import { ServiceNotAvailableError } from '@dxos/compute';
 
 export namespace ServiceRegistry {
   export interface Service {

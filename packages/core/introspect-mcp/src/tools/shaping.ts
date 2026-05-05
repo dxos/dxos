@@ -12,26 +12,25 @@
 
 import type {
   Capability,
-  Operation,
+  Intent,
   Package,
   PackageDetail,
   Plugin,
   PluginDetail,
-  SchemaDetail,
-  SchemaSummary,
-  SchemaUsage,
+  Schema,
   Surface,
   SymbolDetail,
   SymbolMatch,
 } from '@dxos/introspect';
-// `DEFAULT_LIST_LIMIT` / `MAX_LIST_LIMIT` / `ListOptions` live in
-// @dxos/introspect-tools because the schema constraints reference them.
-// Re-exported here so existing imports of `@dxos/introspect-mcp/tools` keep
-// working.
-import { DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT, type ListOptions } from '@dxos/introspect-tools';
 
-export { DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT, type ListOptions };
-
+/** Default number of items returned by list-style tools when no `limit` is passed. */
+export const DEFAULT_LIST_LIMIT = 30;
+/**
+ * Hard ceiling on `limit`. A runaway tool call shouldn't be able to dump every
+ * symbol in the monorepo (~thousands) into the model's context. Callers who
+ * truly need everything should iterate via filters (id, package, etc.).
+ */
+export const MAX_LIST_LIMIT = 200;
 const SOURCE_PREVIEW = 1200;
 const JSDOC_PREVIEW = 600;
 
@@ -41,10 +40,25 @@ export type ToolResult = {
   truncated?: string;
 };
 
+/**
+ * Per-call options every list-style shaper accepts. Both fields are optional
+ * — the defaults match the pre-existing behavior (limit=30, full projection).
+ */
+export type ListOptions = {
+  /** Override the default `DEFAULT_LIST_LIMIT`. Capped at `MAX_LIST_LIMIT`. */
+  limit?: number;
+  /**
+   * Return only the most-essential identifying fields (id / typename / name)
+   * instead of the full record. Use when discovering what exists before
+   * drilling in. Roughly 1/4 the token cost.
+   */
+  compact?: boolean;
+};
+
 type ShapeListConfig<T> = {
   /** Full projection — what an LLM gets when `compact` is false/omitted. */
   full: (item: T) => Record<string, unknown>;
-  /** Compact projection — refs/ids/names only. */
+  /** Compact projection — ids / typenames / names only. */
   compact: (item: T) => Record<string, unknown>;
   /** Suffix for the `truncated` note: "<N> more results — <hint>". */
   truncationHint: string;
@@ -134,96 +148,69 @@ const truncate = (s: string, limit: number): string => {
 };
 
 //
-// Plugin / surface / capability / operation
+// Plugin / surface / capability / intent / schema (main's flatter types)
 //
 
 export const shapeListPlugins = (all: Plugin[], opts: ListOptions = {}): ToolResult =>
   shapeList(all, opts, {
-    full: (p) => ({ ref: p.ref, id: p.id, name: p.name, package: p.package, description: p.description }),
-    compact: (p) => ({ ref: p.ref, id: p.id, name: p.name }),
-    truncationHint: 'raise `limit` (max 200), refine with `query`/`pathPrefix`, or call get_plugin directly.',
+    full: (p) => ({
+      id: p.id,
+      package: p.package,
+      name: p.name,
+      description: p.description,
+      icon: p.icon,
+      iconHue: p.iconHue,
+    }),
+    compact: (p) => ({ id: p.id, name: p.name }),
+    truncationHint: 'raise `limit` (max 200) or filter with `id` substring.',
   });
 
-export const shapeGetPlugin = (detail: PluginDetail): ToolResult => ({
+/**
+ * `PluginDetail` is the same shape as `Plugin` plus arrays of contributions.
+ * Returned by what would be `get_plugin` if the introspector exposed it; we
+ * synthesize this on the MCP side by combining `listPlugins` + the per-id
+ * `listSurfaces` / `listCapabilities` / `listIntents` / `listSchemas` calls.
+ */
+export const shapePluginDetail = (detail: PluginDetail): ToolResult => ({
   data: {
-    ref: detail.ref,
     id: detail.id,
-    name: detail.name,
     package: detail.package,
+    name: detail.name,
     description: detail.description,
-    entryFile: detail.entryFile,
-    meta: detail.meta,
-    modules: detail.modules.map((m) => ({ helper: m.helper, id: m.id })),
-    surfaces: detail.surfaces.map((s) => ({ ref: s.ref, id: s.id, roles: s.roles })),
-    capabilities: detail.capabilities.map((c) => ({ ref: c.ref, key: c.key })),
-    operations: detail.operations.map((o) => ({ ref: o.ref, key: o.key, name: o.name })),
+    icon: detail.icon,
+    iconHue: detail.iconHue,
+    metaLocation: detail.metaLocation,
+    surfaces: detail.surfaces.map((s) => ({ id: s.id, role: s.role })),
+    capabilities: detail.capabilities.map((c) => ({ type: c.type })),
+    intents: detail.intents.map((i) => ({ type: i.type })),
+    schemas: detail.schemas.map((s) => ({ name: s.name, typename: s.typename })),
   },
 });
 
 export const shapeListSurfaces = (all: Surface[], opts: ListOptions = {}): ToolResult =>
   shapeList(all, opts, {
-    full: (s) => ({ ref: s.ref, id: s.id, pluginId: s.pluginId, package: s.package, roles: s.roles }),
-    compact: (s) => ({ ref: s.ref, id: s.id }),
-    truncationHint: 'raise `limit` (max 200) or filter by `pluginId`.',
+    full: (s) => ({ pluginId: s.pluginId, id: s.id, role: s.role, location: s.location }),
+    compact: (s) => ({ pluginId: s.pluginId, id: s.id }),
+    truncationHint: 'raise `limit` (max 200) or filter by plugin `id`.',
   });
 
 export const shapeListCapabilities = (all: Capability[], opts: ListOptions = {}): ToolResult =>
   shapeList(all, opts, {
-    full: (c) => ({ ref: c.ref, key: c.key, pluginId: c.pluginId, package: c.package }),
-    compact: (c) => ({ ref: c.ref, key: c.key }),
-    truncationHint: 'raise `limit` (max 200) or filter by `pluginId`.',
+    full: (c) => ({ pluginId: c.pluginId, type: c.type, location: c.location }),
+    compact: (c) => ({ pluginId: c.pluginId, type: c.type }),
+    truncationHint: 'raise `limit` (max 200) or filter by plugin `id`.',
   });
 
-export const shapeListOperations = (all: Operation[], opts: ListOptions = {}): ToolResult =>
+export const shapeListIntents = (all: Intent[], opts: ListOptions = {}): ToolResult =>
   shapeList(all, opts, {
-    full: (o) => ({
-      ref: o.ref,
-      key: o.key,
-      name: o.name,
-      description: o.description,
-      pluginId: o.pluginId,
-      package: o.package,
-    }),
-    compact: (o) => ({ ref: o.ref, key: o.key, name: o.name }),
-    truncationHint: 'raise `limit` (max 200) or filter by `pluginId`.',
+    full: (i) => ({ pluginId: i.pluginId, type: i.type, location: i.location }),
+    compact: (i) => ({ pluginId: i.pluginId, type: i.type }),
+    truncationHint: 'raise `limit` (max 200) or filter by plugin `id`.',
   });
 
-//
-// Schemas
-//
-
-export const shapeListSchemas = (all: SchemaSummary[], opts: ListOptions = {}): ToolResult =>
+export const shapeListSchemas = (all: Schema[], opts: ListOptions = {}): ToolResult =>
   shapeList(all, opts, {
-    full: (s) => ({
-      ref: s.ref,
-      typename: s.typename,
-      version: s.version,
-      name: s.name,
-      package: s.package,
-      pluginId: s.pluginId,
-      fieldCount: s.fieldCount,
-    }),
-    compact: (s) => ({ ref: s.ref, typename: s.typename }),
-    truncationHint: 'raise `limit` (max 200), filter by `pluginId`/`package`, or call get_schema directly.',
-  });
-
-export const shapeGetSchema = (detail: SchemaDetail): ToolResult => ({
-  data: {
-    ref: detail.ref,
-    typename: detail.typename,
-    version: detail.version,
-    name: detail.name,
-    package: detail.package,
-    pluginId: detail.pluginId,
-    fieldCount: detail.fieldCount,
-    fields: detail.fields,
-    location: detail.location,
-  },
-});
-
-export const shapeFindSchemaUsage = (usages: SchemaUsage[], opts: ListOptions = {}): ToolResult =>
-  shapeList(usages, opts, {
-    full: (u) => ({ file: u.file, package: u.package, line: u.line, snippet: u.snippet }),
-    compact: (u) => ({ file: u.file, line: u.line }),
-    truncationHint: 'raise `limit` (max 200) or read specific files directly.',
+    full: (s) => ({ pluginId: s.pluginId, name: s.name, typename: s.typename, location: s.location }),
+    compact: (s) => ({ pluginId: s.pluginId, name: s.name, typename: s.typename }),
+    truncationHint: 'raise `limit` (max 200) or filter by plugin `id`.',
   });

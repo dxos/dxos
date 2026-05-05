@@ -270,11 +270,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/blueprints/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/compute/package.json",
           "jsonpath": "$.version"
         },
@@ -1086,6 +1081,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-masonry/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-mcp/package.json",
           "jsonpath": "$.version"
         },
         {

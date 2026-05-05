@@ -24,6 +24,8 @@ import {
   MemoryBlueprint,
   AutomationBlueprint,
 } from '@dxos/assistant-toolkit';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Blueprint } from '@dxos/compute';
 
 import { AssistantBlueprint } from '#blueprints';
 

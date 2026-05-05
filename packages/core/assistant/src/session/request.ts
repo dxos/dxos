@@ -23,9 +23,7 @@ import {
   type ToolResolverService,
   withoutToolCallParising,
 } from '@dxos/ai';
-import { type Blueprint } from '@dxos/compute';
-import { Trace } from '@dxos/compute';
-import { Operation, OperationRegistry } from '@dxos/compute';
+import { type Blueprint, Trace, Operation, OperationRegistry } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';

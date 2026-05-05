@@ -274,6 +274,10 @@ export class QueryExecutor extends Resource {
     this._plan = queryPlanner.createPlan(this._query);
   }
 
+  get queryId(): string {
+    return this._id;
+  }
+
   get query(): QueryAST.Query {
     return this._query;
   }

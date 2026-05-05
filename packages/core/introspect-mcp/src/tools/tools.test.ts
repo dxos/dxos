@@ -22,22 +22,22 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // subpath import test sees the same fixture set as the rest of the suite.
 const FIXTURE_ROOT = join(__dirname, '..', '..', '..', 'introspect', 'src', '__fixtures__');
 
-describe('@dxos/introspect-mcp/tools subpath export', () => {
-  test('createToolDefinitions returns the full 13-tool map', async ({ expect }) => {
-    const introspector = createIntrospector({ monorepoRoot: FIXTURE_ROOT, cache: false });
+// CI runners are slower than local; ts-morph indexing the 2-package fixture
+// takes ~4s on the GitHub runner, blowing past vitest's 5s default. Bump
+// the per-test timeout for both tests in this suite.
+describe('@dxos/introspect-mcp/tools subpath export', { timeout: 30_000 }, () => {
+  test('createToolDefinitions returns the full 10-tool map', async ({ expect }) => {
+    const introspector = createIntrospector({ rootPath: FIXTURE_ROOT, cache: false });
     await introspector.ready;
     try {
       const definitions = createToolDefinitions(introspector, noopLogger);
       const names = Object.keys(definitions).sort();
       expect(names).toEqual([
-        'find_schema_usage',
         'find_symbol',
         'get_package',
-        'get_plugin',
-        'get_schema',
         'get_symbol',
         'list_capabilities',
-        'list_operations',
+        'list_intents',
         'list_packages',
         'list_plugins',
         'list_schemas',
@@ -64,7 +64,7 @@ describe('@dxos/introspect-mcp/tools subpath export', () => {
     // Embedding scenario: a different runtime calls a handler directly,
     // bypassing the readiness gate / MCP envelope. We await `ready` here on
     // behalf of that runtime so the handler sees a populated index.
-    const introspector = createIntrospector({ monorepoRoot: FIXTURE_ROOT, cache: false });
+    const introspector = createIntrospector({ rootPath: FIXTURE_ROOT, cache: false });
     await introspector.ready;
     try {
       const { list_packages } = createToolDefinitions(introspector, noopLogger);

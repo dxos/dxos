@@ -20,8 +20,7 @@ import {
   WebSearchHandlers,
   WebSearchToolkitOpaque,
 } from '@dxos/assistant-toolkit';
-import { Blueprint, Routine } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { Blueprint, Routine, Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';

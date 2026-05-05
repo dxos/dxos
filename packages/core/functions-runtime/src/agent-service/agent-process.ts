@@ -23,11 +23,10 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
+import { Operation, OperationRegistry, Trace } from '@dxos/compute';
 import { Database, DXN, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Operation, OperationRegistry } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
 import { Process } from '../process';

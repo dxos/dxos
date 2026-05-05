@@ -15,8 +15,8 @@ import * as Stream from 'effect/Stream';
 import * as TestClock from 'effect/TestClock';
 import { describe, expect, test } from 'vitest';
 
-import { NoHandlerError } from './errors';
-import * as Operation from './Operation';
+import { NoHandlerError, Operation } from '@dxos/compute';
+
 import * as OperationInvoker from './OperationInvoker';
 
 const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>;

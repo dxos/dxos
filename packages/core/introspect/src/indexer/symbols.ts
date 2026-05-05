@@ -44,7 +44,7 @@ type PackageLike = {
  * Errors are logged and produce an empty result rather than throwing — the
  * indexer's job is best-effort coverage, not strict validation.
  */
-export const extractSymbols = (monorepoRoot: string, pkg: PackageLike): PackageSymbols => {
+export const extractSymbols = (rootPath: string, pkg: PackageLike): PackageSymbols => {
   const project = new Project({
     useInMemoryFileSystem: false,
     skipAddingFilesFromTsConfig: true,
@@ -67,7 +67,7 @@ export const extractSymbols = (monorepoRoot: string, pkg: PackageLike): PackageS
   // multi-hop barrels, and keeps each file's symbols visible at their original
   // declaration site — which is what callers actually want from getSymbol.
   const files = globSync('src/**/*.{ts,tsx}', {
-    cwd: join(monorepoRoot, pkg.path),
+    cwd: join(rootPath, pkg.path),
     ignore: ['**/*.test.{ts,tsx}', '**/*.stories.{ts,tsx}', '**/__fixtures__/**', '**/__tests__/**'],
     absolute: true,
     nodir: true,
@@ -85,7 +85,7 @@ export const extractSymbols = (monorepoRoot: string, pkg: PackageLike): PackageS
         if (declarations.length === 0) {
           continue;
         }
-        const extracted = describeSymbol(name, declarations, monorepoRoot, pkg.name);
+        const extracted = describeSymbol(name, declarations, rootPath, pkg.name);
         if (extracted) {
           symbols.push(extracted);
         }
@@ -133,7 +133,7 @@ const preferenceScore = (sym: ExtractedSymbol): number => {
 const describeSymbol = (
   name: string,
   declarations: readonly ExportedDeclarations[],
-  monorepoRoot: string,
+  rootPath: string,
   packageName: string,
 ): ExtractedSymbol | null => {
   // ECHO idiom emits a value AND a same-named interface companion:
@@ -148,7 +148,7 @@ const describeSymbol = (
   const start = primary.getStart();
   const lineCol = sourceFile.getLineAndColumnAtPos(start);
   const location: SourceLocation = {
-    file: relative(monorepoRoot, sourceFile.getFilePath()),
+    file: relative(rootPath, sourceFile.getFilePath()),
     line: lineCol.line,
     column: lineCol.column,
   };

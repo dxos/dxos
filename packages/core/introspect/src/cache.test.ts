@@ -13,7 +13,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { cacheFilePath } from './indexer/cache';
+import { cacheFilePath } from './indexer';
 import { createIntrospector } from './introspector';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -47,7 +47,7 @@ describe('symbol cache reuse', { timeout: 30_000 }, () => {
 
     // Cold: no cache yet.
     expect(existsSync(cachePath)).toBe(false);
-    const intro1 = createIntrospector({ monorepoRoot: root, cache: true, prewarm: true });
+    const intro1 = createIntrospector({ rootPath: root, cache: true, prewarm: true });
     await intro1.ready;
     intro1.dispose();
     expect(existsSync(cachePath)).toBe(true);
@@ -60,7 +60,7 @@ describe('symbol cache reuse', { timeout: 30_000 }, () => {
     // cache. We assert this by stat'ing — the file shouldn't be rewritten if
     // every package was reused. (We can't easily mock extractSymbols inside
     // an async IIFE, so this stat-based assertion is the cleanest signal.)
-    const intro2 = createIntrospector({ monorepoRoot: root, cache: true, prewarm: true });
+    const intro2 = createIntrospector({ rootPath: root, cache: true, prewarm: true });
     const start = Date.now();
     await intro2.ready;
     const elapsed = Date.now() - start;
@@ -75,7 +75,7 @@ describe('symbol cache reuse', { timeout: 30_000 }, () => {
     expect(cacheBytesAfter).toBe(cacheBytes);
 
     // Sanity: both introspectors saw the same symbols.
-    const intro3 = createIntrospector({ monorepoRoot: root, cache: true, prewarm: true });
+    const intro3 = createIntrospector({ rootPath: root, cache: true, prewarm: true });
     await intro3.ready;
     const pkgs = intro3.listPackages();
     const taskSym = intro3.getSymbol('@fixture/pkg-a#Task');
@@ -88,7 +88,7 @@ describe('symbol cache reuse', { timeout: 30_000 }, () => {
     const cachePath = cacheFilePath(root);
 
     // Cold pass to populate the cache.
-    const intro1 = createIntrospector({ monorepoRoot: root, cache: true, prewarm: true });
+    const intro1 = createIntrospector({ rootPath: root, cache: true, prewarm: true });
     await intro1.ready;
     intro1.dispose();
 
@@ -103,7 +103,7 @@ describe('symbol cache reuse', { timeout: 30_000 }, () => {
     await writeFile(target, `${original}\n// touched at ${Date.now()}\n`);
 
     // Warm pass — should reuse pkg-b but re-extract pkg-a.
-    const intro2 = createIntrospector({ monorepoRoot: root, cache: true, prewarm: true });
+    const intro2 = createIntrospector({ rootPath: root, cache: true, prewarm: true });
     await intro2.ready;
     intro2.dispose();
 
