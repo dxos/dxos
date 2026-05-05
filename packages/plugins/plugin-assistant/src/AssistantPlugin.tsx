@@ -234,3 +234,5 @@ const withComputeRuntime =
       const runtime = yield* provider.getRuntime(spaceId).runtimeEffect;
       return yield* effect.pipe(Effect.provide(runtime));
     });
+
+export default AssistantPlugin;

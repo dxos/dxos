@@ -54,3 +54,5 @@ export const SketchPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default SketchPlugin;

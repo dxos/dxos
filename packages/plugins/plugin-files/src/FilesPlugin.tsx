@@ -62,3 +62,5 @@ export const FilesPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default FilesPlugin;

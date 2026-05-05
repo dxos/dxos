@@ -2,8 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './components';
-export * from './meta';
-export * from './models';
+import { Plugin } from '@dxos/app-framework';
 
-export * from './VoxelPlugin';
+import { meta } from './meta';
+
+export const VoxelPlugin = Plugin.lazy(meta, () => import('./VoxelPlugin'));
+
+export * from './meta';
+
+export * from './components';
+export * from './models';
