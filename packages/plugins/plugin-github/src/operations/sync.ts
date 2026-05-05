@@ -236,6 +236,7 @@ const upsertTask = Effect.fn('upsertTask')(function* (
   integration: Integration.Integration,
   issue: GitHubApi.GitHubIssue,
   assignedPerson: Person.Person | undefined,
+  project: Project.Project,
 ) {
   const remoteFields: Record<TaskField, unknown> = {
     title: issue.title,
@@ -263,14 +264,20 @@ const upsertTask = Effect.fn('upsertTask')(function* (
         }
       });
     }
-    if (assignedPerson) {
-      Obj.update(existing, (existing) => {
-        const m = existing as Obj.Mutable<typeof existing>;
-        if (!m.assigned) {
-          m.assigned = Ref.make(assignedPerson);
-        }
-      });
-    }
+    Obj.update(existing, (existing) => {
+      const m = existing as Obj.Mutable<typeof existing>;
+      if (assignedPerson && !m.assigned) {
+        m.assigned = Ref.make(assignedPerson);
+      }
+      // Maintain the Task → Project ref. Only overwrite when missing or
+      // pointing somewhere else (e.g. transferred-repo edge case); leave a
+      // user-set project alone if it already matches.
+      const currentProjectId = m.project?.dxn.asEchoDXN()?.echoId;
+      const projectId = Ref.make(project).dxn.asEchoDXN()?.echoId;
+      if (!m.project || (currentProjectId && projectId && currentProjectId !== projectId)) {
+        m.project = Ref.make(project);
+      }
+    });
     writeSnapshot(integration, String(issue.id), remoteFields);
     return { task: existing, created: false };
   }
@@ -280,6 +287,7 @@ const upsertTask = Effect.fn('upsertTask')(function* (
     description: issue.body ?? '',
     status: issueStateToTaskStatus(issue.state),
     assigned: assignedPerson ? Ref.make(assignedPerson) : undefined,
+    project: Ref.make(project),
   });
   Obj.update(created, (created) => {
     Obj.getMeta(created).keys.push(fkFor(issue.id));
@@ -563,6 +571,12 @@ const handler: Operation.WithHandler<typeof SyncGitHubOrganization> = SyncGitHub
                       repos,
                       (repo) =>
                         Effect.gen(function* () {
+                          const project = projectByRepoId.get(repo.id);
+                          if (!project) {
+                            // upsertProject ran for every repo above; this is
+                            // unreachable but keeps the types honest.
+                            return;
+                          }
                           const issues = yield* GitHubApi.fetchRepoIssues(repo.owner.login, repo.name);
                           for (const issue of issues) {
                             // Resolve assignee — first assignee only for v1.
@@ -578,7 +592,7 @@ const handler: Operation.WithHandler<typeof SyncGitHubOrganization> = SyncGitHub
                               pulledPeople++;
                             }
 
-                            const { task, created } = yield* upsertTask(integrationObj, issue, assignedPerson);
+                            const { task, created } = yield* upsertTask(integrationObj, issue, assignedPerson, project);
                             if (created) {
                               pulledTasks++;
                             }
