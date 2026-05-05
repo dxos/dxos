@@ -11,9 +11,8 @@ import { Node } from '@dxos/plugin-graph';
 
 import { AppGraphBuilder, FileSettings, FileState, Markdown, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { FileCapabilities } from '#types';
-
-import { translations } from './translations';
 
 // TODO(burdon): Rename package plugin-file (singular).
 

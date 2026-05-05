@@ -7,8 +7,7 @@ import { AppPlugin } from '@dxos/app-toolkit';
 
 // import { IntentResolver } from './capabilities';
 import { meta } from '#meta';
-
-import { translations } from './translations';
+import { translations } from '#translations';
 
 export const TransformerPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [], id: 'schema' }),

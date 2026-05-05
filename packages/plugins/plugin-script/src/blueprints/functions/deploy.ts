@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 
 import { ClientService } from '@dxos/client';
+import { getUserFunctionIdInMetadata, type Script } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
-import { getUserFunctionIdInMetadata, type Script } from '@dxos/functions';
 import { bundleFunction, initializeBundler } from '@dxos/functions-runtime/bundler';
 import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-runtime/edge';
-import { Operation } from '@dxos/operation';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 import { getSpace } from '@dxos/react-client/echo';
 
@@ -54,7 +54,7 @@ export default Deploy.pipe(
 
       Operation.setFrom(loaded, newFunction);
 
-      Obj.change(script, (script) => {
+      Obj.update(script, (script) => {
         script.changed = false;
       });
 

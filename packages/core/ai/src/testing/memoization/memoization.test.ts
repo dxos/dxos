@@ -36,7 +36,7 @@ const layerTest = DateToolkit.toLayer({
 
 const TestLayer = Layer.mergeAll(testingLayer, layerTest, AiService.model('@anthropic/claude-sonnet-4-0')).pipe(
   Layer.provideMerge(MemoizedAiService.layerTest()),
-  Layer.provide(AiServiceTestingPreset('direct')),
+  Layer.provide(AiServiceTestingPreset('edge-remote')),
 );
 
 describe('memoization', () => {

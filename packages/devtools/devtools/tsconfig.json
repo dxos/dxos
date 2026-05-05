@@ -64,6 +64,9 @@
       "path": "../../core/assistant"
     },
     {
+      "path": "../../core/compute"
+    },
+    {
       "path": "../../core/conductor"
     },
     {
@@ -82,9 +85,6 @@
       "path": "../../core/echo/echo-protocol"
     },
     {
-      "path": "../../core/functions"
-    },
-    {
       "path": "../../core/functions-runtime"
     },
     {
@@ -98,9 +98,6 @@
     },
     {
       "path": "../../core/mesh/rpc"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"

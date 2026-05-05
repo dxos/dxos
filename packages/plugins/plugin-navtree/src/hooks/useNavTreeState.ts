@@ -12,7 +12,7 @@ import { NavTreeCapabilities } from '#types';
 export type UseNavTreeStateResult = {
   getItem: (path: string[]) => NavTreeCapabilities.NavTreeItemState;
   getItemAtom: (path: string[]) => Atom.Atom<NavTreeCapabilities.NavTreeItemState>;
-  setItem: (path: string[], key: 'open' | 'current' | 'alternateTree', next: boolean) => void;
+  setItem: (path: string[], key: 'open' | 'current', next: boolean) => void;
 };
 
 /**
@@ -32,11 +32,4 @@ export const useNavTreeItemState = (path: string[]): NavTreeCapabilities.NavTree
   const pathKey = useMemo(() => path.join('~'), [path]);
   const atom = useMemo(() => getItemAtom(path), [getItemAtom, pathKey]);
   return useAtomValue(atom);
-};
-
-/**
- * Hook that subscribes to the alternateTree state for a tree item.
- */
-export const useIsAlternateTree = (path: string[], _item?: any): boolean => {
-  return useNavTreeItemState(path).alternateTree ?? false;
 };

@@ -5,7 +5,7 @@
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { type ModelCapabilities } from '@dxos/ai';
-import { Template } from '@dxos/blueprints';
+import { Template } from '@dxos/compute';
 
 import FORMAT from './instructions/format.tpl?raw';
 import SYSTEM from './instructions/system.tpl?raw';

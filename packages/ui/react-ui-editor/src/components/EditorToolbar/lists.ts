@@ -7,7 +7,8 @@ import { type EditorView } from '@codemirror/view';
 import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 import { List, addList, removeList } from '@dxos/ui-editor';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { type EditorToolbarState } from './types';
 
 const listStyles = {

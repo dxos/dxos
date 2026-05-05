@@ -6,6 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj, Type } from '@dxos/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { type ProjectionModel } from '@dxos/schema';
 
 import { AppCapabilities } from '../../capabilities';
@@ -79,17 +80,27 @@ export const allOf = <TFilters extends ReadonlyArray<Surface.Filter<any>>>(
 
 /**
  * Filter: matches an ECHO object at the given role token's subject position.
+ *
+ * An optional `predicate` narrows on the rest of the data — most useful for
+ * surfaces that distinguish variants by a flag (e.g. `editable`, `compact`)
+ * without having to hand-roll a fully typed `Surface.Filter`.
  */
 export const object: {
   <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.AnyEntity>(
     token: TToken,
     schema: S,
+    predicate?: (data: NonNullable<TokenData<TToken>>) => boolean,
   ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Schema.Schema.Type<S> }>;
   <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.AnyEntity[]>(
     token: TToken,
     schemas: [...S],
+    predicate?: (data: NonNullable<TokenData<TToken>>) => boolean,
   ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Schema.Schema.Type<S[number]> }>;
-} = (token: Surface.RoleToken<any>, schemaOrSchemas: Type.AnyEntity | Type.AnyEntity[]): Surface.Filter<any> => {
+} = (
+  token: Surface.RoleToken<any>,
+  schemaOrSchemas: Type.AnyEntity | Type.AnyEntity[],
+  predicate?: (data: any) => boolean,
+): Surface.Filter<any> => {
   const schemas = Array.isArray(schemaOrSchemas) ? schemaOrSchemas : [schemaOrSchemas];
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
@@ -106,7 +117,10 @@ export const object: {
     ) {
       return false;
     }
-    return schemas.some((schema) => Obj.instanceOf(schema, subject));
+    if (!schemas.some((schema) => Obj.instanceOf(schema, subject))) {
+      return false;
+    }
+    return predicate ? predicate(data) : true;
   };
   return { bindings: [{ role: token.role, guard }] };
 };
@@ -242,7 +256,7 @@ export const Article: Surface.RoleToken<ArticleData<any>> = Surface.makeType('ar
 export type ArticleData<Subject = unknown, Props extends {} = {}, CompanionTo = unknown> = {
   attendableId: string;
   subject: Subject;
-  properties?: Record<string, any>;
+  properties?: Record<string, any>; // TODO(burdon): What is this for?
   variant?: string;
   path?: string[];
   popoverAnchorId?: string;
@@ -255,7 +269,7 @@ export type ArticleProps<Subject = unknown, Props extends {} = {}, CompanionTo =
   Props,
   CompanionTo
 > & {
-  role: 'article' | (string & {});
+  role?: 'article' | (string & {});
 };
 
 /** Surface data for article-role ECHO object. */
@@ -287,10 +301,37 @@ export const settings = (
     if (typeof data !== 'object' || data === null) {
       return false;
     }
+
     const subject = (data as { subject?: unknown }).subject;
     return AppCapabilities.isSettings(subject) && subject.prefix === prefix;
   };
   return { bindings: [{ role: token.role, guard }] };
+};
+
+//
+// SpaceArticle
+//
+// Article-shaped surface whose container resolves a Space (typically via
+// `useActiveSpace()` in the surface callback). Reuses the `Article` role token
+// — the deck plugin keeps passing standard `ArticleData` — and only specializes
+// the props the consumer expects by adding a non-null `space` field synthesized
+// at the surface boundary.
+//
+
+/**
+ * Surface data for an article whose container receives a resolved Space.
+ * `subject` from `ArticleData` is widened to optional — Space-scoped articles
+ * often render at routes whose subject is a literal id rather than an object,
+ * and the container reads `space` (synthesized at the surface boundary) instead.
+ */
+export type SpaceArticleData<Props extends {} = {}> = Omit<ArticleData<unknown>, 'subject'> & {
+  subject?: unknown;
+  space: Space;
+} & Props;
+
+/** Component props for an article whose container receives a resolved Space. */
+export type SpaceArticleProps<Props extends {} = {}> = SpaceArticleData<Props> & {
+  role?: 'article' | (string & {});
 };
 
 //
@@ -306,9 +347,11 @@ export const Slide: Surface.RoleToken<SectionData<any>> = Surface.makeType('slid
 /** Role token for the `tabpanel` role. Shares the article data shape. */
 export const Tabpanel: Surface.RoleToken<ArticleData<any>> = Surface.makeType('tabpanel');
 
-/** Role token for the `related` role. Related panels may render in both
+/**
+ * Role token for the `related` role. Related panels may render in both
  * plank (attendable) and popover (non-attendable) contexts, so `attendableId`
- * is optional here. */
+ * is optional here.
+ */
 export const Related: Surface.RoleToken<{ attendableId?: string; subject: any }> = Surface.makeType('related');
 
 /**
@@ -322,7 +365,7 @@ export type SectionData<Subject = unknown, Props extends {} = {}> = {
 
 /** Component props for section role. */
 export type SectionProps<Subject = unknown, Props extends {} = {}> = SectionData<Subject, Props> & {
-  role: 'section' | (string & {});
+  role?: 'section' | (string & {});
 };
 
 /** Surface data for section-role ECHO object. */
@@ -357,7 +400,7 @@ export type ObjectPropertiesProps<
   Subject extends Obj.Unknown | undefined = Obj.Unknown,
   Props extends {} = {},
 > = ObjectPropertiesData<Subject, Props> & {
-  role: 'object-properties' | (string & {});
+  role?: 'object-properties' | (string & {});
 };
 
 //
@@ -372,11 +415,15 @@ export type CardData<Subject = unknown, Props extends {} = {}> = {
   subject: Subject;
   /** Optional projection model (set by form/kanban/pipeline consumers that pre-project the subject). */
   projection?: ProjectionModel;
+  /** Paths to omit from the card body (caller-defined redundancy; e.g. Kanban hides pivot). Dynamic-schema cards honor this; fixed-shape cards may ignore. */
+  ignorePaths?: ReadonlyArray<string>;
+  /** When true, card surfaces should render an editable variant of the subject (full-bleed editor) rather than a read-only preview. Hosts opt in per-cell — e.g. plugin-board passes editable for in-place editing in grid cells. */
+  editable?: boolean;
 } & Props;
 
 /** Component props for card role. */
 export type CardProps<Subject = unknown, Props extends {} = {}> = CardData<Subject, Props> & {
-  role: 'card--content' | (string & {});
+  role?: 'card--content' | (string & {});
 };
 
 /** Surface data for card-role ECHO object. */
@@ -475,7 +522,7 @@ export type NavigationData<Props extends {} = {}> = {
 
 /** Component props for navigation role. */
 export type NavigationProps<Props extends {} = {}> = NavigationData<Props> & {
-  role: 'navigation' | (string & {});
+  role?: 'navigation' | (string & {});
 };
 
 /** Surface data for menu-footer role. */
@@ -485,7 +532,7 @@ export type MenuFooterData<Subject = unknown, Props extends {} = {}> = {
 
 /** Component props for menu-footer role. */
 export type MenuFooterProps<Subject = unknown, Props extends {} = {}> = MenuFooterData<Subject, Props> & {
-  role: 'menu-footer' | (string & {});
+  role?: 'menu-footer' | (string & {});
 };
 
 /** Surface data for navbar-end role. */
@@ -495,7 +542,7 @@ export type NavbarEndData<Subject = unknown, Props extends {} = {}> = {
 
 /** Component props for navbar-end role. */
 export type NavbarEndProps<Subject = unknown, Props extends {} = {}> = NavbarEndData<Subject, Props> & {
-  role: 'navbar-end' | (string & {});
+  role?: 'navbar-end' | (string & {});
 };
 
 /** Surface data for document-title role. */
@@ -505,5 +552,5 @@ export type DocumentTitleData<Subject = unknown, Props extends {} = {}> = {
 
 /** Component props for document-title role. */
 export type DocumentTitleProps<Subject = unknown, Props extends {} = {}> = DocumentTitleData<Subject, Props> & {
-  role: 'document-title' | (string & {});
+  role?: 'document-title' | (string & {});
 };

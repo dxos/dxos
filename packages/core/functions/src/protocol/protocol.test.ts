@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { FunctionError } from '../errors';
+import { InvalidOperationInputError } from '../errors';
 import fibFunc from '../example/fib';
 import replyFunc from '../example/reply';
 import { wrapFunctionHandler } from './protocol';
@@ -13,7 +13,7 @@ describe('wrapFunctionHandler', () => {
   test('wraps reply function and executes handler', async ({ expect }) => {
     const wrapped = wrapFunctionHandler(replyFunc);
 
-    expect(wrapped.meta.key).toBe('example.org/function/reply');
+    expect(wrapped.meta.key).toBe('org.example.function.reply');
     expect(wrapped.meta.name).toBe('Reply');
 
     const testData = { message: 'hello' };
@@ -30,7 +30,7 @@ describe('wrapFunctionHandler', () => {
   test('wraps fibonacci function with valid input', async ({ expect }) => {
     const wrapped = wrapFunctionHandler(fibFunc);
 
-    expect(wrapped.meta.key).toBe('example.org/function/fib');
+    expect(wrapped.meta.key).toBe('org.example.function.fib');
     expect(wrapped.meta.name).toBe('Fibonacci');
 
     const result = await wrapped.handler({
@@ -43,7 +43,7 @@ describe('wrapFunctionHandler', () => {
     expect(result).toEqual({ result: '55' });
   });
 
-  test('throws FunctionError on invalid input schema for fibonacci', async ({ expect }) => {
+  test('throws InvalidOperationInputError on invalid input schema for fibonacci', async ({ expect }) => {
     const wrapped = wrapFunctionHandler(fibFunc);
 
     await expect(
@@ -53,6 +53,6 @@ describe('wrapFunctionHandler', () => {
           services: {},
         },
       }),
-    ).rejects.toThrow(FunctionError);
+    ).rejects.toThrow(InvalidOperationInputError);
   });
 });

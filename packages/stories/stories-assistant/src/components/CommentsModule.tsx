@@ -6,7 +6,8 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Assistant, useContextBinder } from '@dxos/plugin-assistant';
+import { useContextBinder } from '@dxos/plugin-assistant';
+import { Assistant } from '@dxos/plugin-assistant/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 
 import { type ComponentProps } from './types';

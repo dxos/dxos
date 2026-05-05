@@ -8,7 +8,7 @@ import { For, Match, Switch, createEffect, createMemo, createSignal, useContext 
 
 import { type ModelName } from '@dxos/ai';
 import { type AiSession, GenerationObserver } from '@dxos/assistant';
-import { type Blueprint } from '@dxos/blueprints';
+import { type Blueprint } from '@dxos/compute';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { useAtomValue } from '@dxos/effect-atom-solid';
 import { log } from '@dxos/log';

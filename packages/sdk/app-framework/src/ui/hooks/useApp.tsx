@@ -30,8 +30,33 @@ export type StartupProgress = {
   total: number;
   /** Fractional progress (0-1). */
   progress: number;
-  /** Human-readable label for the currently activating module. */
-  status?: string;
+  /**
+   * Raw activation event key (e.g. `org.dxos.app-framework.event.startup`).
+   * Set on event-level transitions, *and* on module-level transitions where
+   * it carries the parent activation event that first triggered the
+   * module's load (plumbed through `_loadCapabilitiesForModules` →
+   * `_loadModule`). Consumers can use this either as the primary id (when
+   * {@link module} is absent) or as an extra "context" field alongside
+   * {@link module}.
+   */
+  event?: string;
+  /**
+   * Raw module id (e.g. `org.dxos.plugin.observability.module.ReactSurface`)
+   * when the in-flight activation is module-level. When present,
+   * {@link event} may also be set, identifying the parent activation that
+   * triggered this module's load.
+   */
+  module?: string;
+  /**
+   * Pre-humanized label for the currently surfaced transition (module
+   * label if {@link module} is set, otherwise the event label), supplied
+   * for consumers that want a sensible default. Hosts that prefer to
+   * render their own label can read the raw {@link event}/{@link module}
+   * fields and ignore this — the framework leaves the policy choice
+   * (which transitions to surface, how to format them, whether to drop
+   * sub-modules entirely) to the host's `Placeholder`.
+   */
+  humanizedName?: string;
 };
 
 export type PlaceholderProps = {
@@ -42,6 +67,7 @@ export type PlaceholderProps = {
 export type UseAppOptions = {
   pluginManager?: PluginManager.PluginManager;
   pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];
+  onPluginRemove?: PluginManager.ManagerOptions['onRemove'];
   plugins?: Plugin.Plugin[];
   core?: string[];
   defaults?: string[];
@@ -86,6 +112,7 @@ export type UseAppOptions = {
 export const useApp = ({
   pluginManager,
   pluginLoader: pluginLoaderProp,
+  onPluginRemove,
   plugins: pluginsProp,
   core: coreProp,
   defaults: defaultsProp,
@@ -131,10 +158,10 @@ export const useApp = ({
   );
   const isExternalManager = !!pluginManager;
   const manager = useMemo(() => {
-    const mgr = pluginManager ?? PluginManager.make({ pluginLoader, plugins, core, enabled });
+    const mgr = pluginManager ?? PluginManager.make({ pluginLoader, plugins, core, enabled, onRemove: onPluginRemove });
     log('useApp: useMemo created/reused manager', { provided: !!pluginManager });
     return mgr;
-  }, [pluginManager, pluginLoader, plugins, core, enabled]);
+  }, [pluginManager, pluginLoader, plugins, core, enabled, onPluginRemove]);
 
   useEffect(() => {
     if (!cacheEnabled) {
@@ -164,38 +191,89 @@ export const useApp = ({
       module: 'org.dxos.app-framework.atom-registry',
     });
 
-    // Poll manager atoms for progress (avoids PubSub subscription race).
-    const progressInterval = setInterval(() => {
-      if (readyRef.current) {
-        clearInterval(progressInterval);
-        return;
-      }
-      const active = manager.getActive();
-      const modules = manager.getModules();
-      const total = modules.length;
-      const activated = active.length;
-      const lastModule = active.length > 0 ? active[active.length - 1] : undefined;
-      setStartupProgress({
-        activated,
-        total,
-        progress: total > 0 ? activated / total : 0,
-        status: lastModule ? humanizeModuleId(lastModule) : undefined,
-      });
-    }, 100);
-
     const fiber = Effect.gen(function* () {
       const queue = yield* PubSub.subscribe(manager.activation);
       const listener = yield* Effect.forkDaemon(
         Queue.take(queue).pipe(
-          Effect.tap(({ event, state, error: error$ }) =>
+          Effect.tap(({ event, state, module, error: error$ }) =>
             Effect.sync(() => {
-              if (event === ActivationEvents.Startup.id && state === 'activated') {
+              // Event-level Startup activated (no `module` field) fires once,
+              // after every module triggered by Startup has finished. Module
+              // activations now also carry their parent event id (so the trace
+              // can attribute a module to its triggering event), which means
+              // each module activated under Startup publishes
+              // `{ event: 'startup', state: 'activated', module: <id> }`. Without
+              // the `!module` guard the listener would mark the app ready on
+              // the *first* such module rather than waiting for the event-level
+              // completion — leaving downstream capabilities (operation-invoker,
+              // app-graph, …) un-registered when the placeholder dismisses.
+              if (event === ActivationEvents.Startup.id && state === 'activated' && !module) {
                 clearTimeout(timeoutId);
-                clearInterval(progressInterval);
                 setReady(true);
                 readyRef.current = true;
                 // Trigger startup profiler dump if available.
                 (globalThis as any).composer?.profiler?.dump();
+                // Notify any host observability layer that startup completed.
+                // A `CustomEvent` keeps this generic — app-framework doesn't
+                // import a provider, and consumers can capture the startup
+                // summary without us picking one.
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('app-framework:startup-activated'));
+                }
+                return;
+              }
+              // `activating` is the start-of-load signal. Surface the raw
+              // `module` (or `event`) plus a pre-humanized label so the
+              // host placeholder can decide what to render — show
+              // everything, suppress noisy sub-modules, group by plugin,
+              // or apply its own formatting. We intentionally do NOT touch
+              // these fields on `activated`: pairing the two would cause
+              // back-to-back identical updates to the host's effect, which
+              // the boot loader treats as a re-trigger because
+              // `progress.progress` moved. Leaving the label alone on
+              // completion keeps it accurate ("now activating X") until
+              // the next module starts.
+              if (module && state === 'activating' && !readyRef.current) {
+                setStartupProgress((current) => ({
+                  ...current,
+                  // `event` here is the activation event that first
+                  // triggered this module load (plumbed through
+                  // `_loadCapabilitiesForModules` → `_loadModule`).
+                  // Falsy/empty falls back to undefined so consumers can
+                  // tell "no parent context" from "parent context: <X>".
+                  event: event || undefined,
+                  module,
+                  humanizedName: humanizeModuleId(module),
+                }));
+              }
+              // Update the activation count when a module commits. The
+              // ring's fraction comes from this; `event`/`module`/
+              // `humanizedName` were set by the matching `activating`
+              // message above and are left alone so the count can advance
+              // without re-firing the host's status callback.
+              if (module && state === 'activated' && !readyRef.current) {
+                const active = manager.getActive();
+                const total = manager.getModules().length;
+                setStartupProgress((current) => ({
+                  ...current,
+                  activated: active.length,
+                  total,
+                  progress: total > 0 ? active.length / total : 0,
+                }));
+              }
+              // Event-level `activating` (no `module`) — fired at the start
+              // of `_activateModulesForEvent` and recursively for each
+              // before/after event. Surfaces a label during the gap before
+              // the first module-level message lands; subsequent module
+              // updates immediately overwrite this with a more specific
+              // label.
+              if (event && !module && state === 'activating' && !readyRef.current) {
+                setStartupProgress((current) => ({
+                  ...current,
+                  event,
+                  module: undefined,
+                  humanizedName: humanizeEventKey(event),
+                }));
               }
               if (error$ && !readyRef.current) {
                 setError(error$);
@@ -232,13 +310,15 @@ export const useApp = ({
     return () => {
       log('useApp: effect cleanup');
       clearTimeout(timeoutId);
-      clearInterval(progressInterval);
       void runAndForwardErrors(Fiber.interrupt(fiber));
       if (!isExternalManager) {
         void runAndForwardErrors(manager.shutdown());
       }
     };
   }, [manager]);
+
+  const progressRef = useRef(startupProgress);
+  progressRef.current = startupProgress;
 
   return useCallback(
     () => (
@@ -251,7 +331,7 @@ export const useApp = ({
                 ready={ready}
                 error={error}
                 debounce={debounce}
-                progress={startupProgress}
+                progress={progressRef.current}
               />
             </RegistryContext.Provider>
           </ContextProtocolProvider>
@@ -269,21 +349,65 @@ const setupDevtools = (manager: PluginManager.PluginManager) => {
 
 /**
  * Extracts a human-readable label from a module ID.
- * E.g., "org.dxos.plugin.markdown.module.ReactSurface" → "Markdown".
+ *
+ * Module IDs follow `org.dxos.plugin.<plugin-slug>.module.<module-name>`,
+ * where `<plugin-slug>` is kebab-case and `<module-name>` is either an
+ * explicit string (often kebab-case, e.g. `'observability'`, `'namespace'`)
+ * or a capability tag in PascalCase from `Capability.getModuleTag(...)`
+ * (e.g. `'ReactSurface'`, `'AppGraphBuilder'`). The output is
+ * `"Title Case Plugin: kebab-module"` so the visible status names both the
+ * plugin and the aspect being activated, helping disambiguate the multiple
+ * modules a plugin contributes.
+ *
+ * Examples:
+ *   - "org.dxos.plugin.markdown.module.ReactSurface" → "Markdown: react-surface"
+ *   - "org.dxos.plugin.observability.module.AppGraphBuilder" → "Observability: app-graph-builder"
+ *   - "org.dxos.plugin.observability.module.observability" → "Observability"
+ *     (the module name matches the plugin slug — collapsed to avoid
+ *     "Observability: observability" noise.)
  */
 const humanizeModuleId = (moduleId: string): string => {
-  // Extract plugin name from pattern: org.dxos.plugin.<name>.module.<capability>
-  const pluginMatch = moduleId.match(/\.plugin\.([^.]+)\./);
-  if (pluginMatch) {
-    const name = pluginMatch[1];
-    // Convert kebab-case to title case.
-    return name
-      .split('-')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+  const match = moduleId.match(/\.plugin\.([^.]+)\.module\.(.+)$/);
+  if (!match) {
+    // Fallback: use the last segment.
+    const parts = moduleId.split('.');
+    return parts[parts.length - 1];
   }
+  const [, pluginSlug, moduleName] = match;
+  const pluginLabel = pluginSlug
+    .split('-')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+  // Normalise the module name to kebab-case so PascalCase capability tags
+  // ("ReactSurface") read consistently with explicit kebab IDs
+  // ("operation-handler"). The two-step substitution handles consecutive
+  // uppercase runs (`URLLoader` → `url-loader`) without splitting them
+  // mid-acronym.
+  const moduleLabel = moduleName
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+    .toLowerCase();
+  // Capability modules whose name matches the plugin slug (e.g. the
+  // observability plugin's `observability` capability module) would render
+  // as "Observability: observability" — drop the redundant suffix.
+  if (moduleLabel === pluginSlug) {
+    return pluginLabel;
+  }
+  return `${pluginLabel}: ${moduleLabel}`;
+};
 
-  // Fallback: use the last segment.
-  const parts = moduleId.split('.');
-  return parts[parts.length - 1];
+/**
+ * Extracts a human-readable label from an activation event key.
+ * E.g., "org.dxos.app-framework.event.setup-react-surface" → "Setup React Surface".
+ */
+const humanizeEventKey = (eventKey: string): string => {
+  // Strip a leading specifier (composite key form: "<id>:<specifier>").
+  const id = eventKey.split(':')[0];
+  // Match the trailing segment after `.event.`.
+  const match = id.match(/\.event\.(.+)$/);
+  const slug = match ? match[1] : (id.split('.').pop() ?? id);
+  return slug
+    .split('-')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 };

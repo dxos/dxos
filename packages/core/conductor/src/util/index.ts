@@ -3,5 +3,6 @@
 //
 
 export * from './ast';
+export * from './defect-logger';
 export * from './graphviz';
 export * from './stream';

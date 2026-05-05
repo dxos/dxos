@@ -89,6 +89,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/log-store-idb"
+    },
+    {
       "path": "../../common/merkle-search-tree"
     },
     {
@@ -245,7 +248,16 @@
       "path": "../../plugins/plugin-client"
     },
     {
+      "path": "../../plugins/plugin-code"
+    },
+    {
       "path": "../../plugins/plugin-conductor"
+    },
+    {
+      "path": "../../plugins/plugin-crx"
+    },
+    {
+      "path": "../../plugins/plugin-crx-bridge"
     },
     {
       "path": "../../plugins/plugin-daily-summary"
@@ -260,6 +272,9 @@
       "path": "../../plugins/plugin-discord"
     },
     {
+      "path": "../../plugins/plugin-doctor"
+    },
+    {
       "path": "../../plugins/plugin-explorer"
     },
     {
@@ -269,6 +284,9 @@
       "path": "../../plugins/plugin-files"
     },
     {
+      "path": "../../plugins/plugin-gallery"
+    },
+    {
       "path": "../../plugins/plugin-graph"
     },
     {
@@ -276,6 +294,9 @@
     },
     {
       "path": "../../plugins/plugin-inbox"
+    },
+    {
+      "path": "../../plugins/plugin-integration"
     },
     {
       "path": "../../plugins/plugin-iroh-beacon"
@@ -362,9 +383,6 @@
       "path": "../../plugins/plugin-spacetime"
     },
     {
-      "path": "../../plugins/plugin-spec"
-    },
-    {
       "path": "../../plugins/plugin-spotlight"
     },
     {
@@ -389,19 +407,16 @@
       "path": "../../plugins/plugin-tictactoe"
     },
     {
-      "path": "../../plugins/plugin-token-manager"
+      "path": "../../plugins/plugin-transcription"
     },
     {
-      "path": "../../plugins/plugin-transcription"
+      "path": "../../plugins/plugin-trello"
     },
     {
       "path": "../../plugins/plugin-voxel"
     },
     {
       "path": "../../plugins/plugin-wnfs"
-    },
-    {
-      "path": "../../plugins/plugin-youtube"
     },
     {
       "path": "../../plugins/plugin-zen"

@@ -12,7 +12,7 @@ import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { FormBuilder } from '@dxos/cli-util';
-import { Annotation, Database, Entity, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, Entity, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { getProperties } from '@dxos/effect';
 import { Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
@@ -300,7 +300,9 @@ export const selectFunction = Effect.fn(function* () {
  * Queries the database for triggers and prompts the user to select one.
  */
 export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
-  const triggers = yield* Database.runQuery(Filter.type(Trigger.Trigger));
+  const triggers = yield* Database.runQuery(
+    Query.select(Filter.type(Trigger.Trigger)).debugLabel('cli.trigger.selectTrigger'),
+  );
   const filteredTriggers = kind ? triggers.filter((trigger) => trigger.spec?.kind === kind) : triggers;
 
   if (filteredTriggers.length === 0) {

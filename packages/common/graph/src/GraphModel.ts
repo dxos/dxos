@@ -13,7 +13,7 @@ import { type MakeOptional, isTruthy, removeBy } from '@dxos/util';
 import * as Graph from './Graph';
 
 /**
- * Optional function to wrap mutations (e.g., for ECHO objects that require Obj.change).
+ * Optional function to wrap mutations (e.g., for ECHO objects that require Obj.update).
  */
 export type GraphChangeFunction = (fn: () => void) => void;
 
@@ -34,7 +34,7 @@ export class ReadonlyGraphModel<
   /**
    * NOTE: Pass in simple Graph or Live.
    * @param graph - The graph data.
-   * @param change - Optional function to wrap mutations (e.g., Obj.change for ECHO objects).
+   * @param change - Optional function to wrap mutations (e.g., Obj.update for ECHO objects).
    */
   constructor(graph?: Graph.Graph<Node, Edge>, change?: GraphChangeFunction) {
     this._graph = graph ?? {

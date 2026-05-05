@@ -40,16 +40,6 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "bundler": [
-        "dist/types/src/bundler/index.d.ts"
-      ],
-      "edge": [
-        "dist/types/src/edge/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist/lib",
     "dist/types",
@@ -63,6 +53,7 @@
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/blueprints": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -100,6 +91,7 @@
     "@automerge/automerge": "catalog:",
     "@aws-sdk/client-s3": "3.955.0",
     "@dxos/ai": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/types": "workspace:*",
     "chess.js": "catalog:",
     "date-fns": "catalog:",
@@ -109,6 +101,9 @@
     "papaparse": "catalog:",
     "turndown": "catalog:",
     "yaml": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/assistant": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

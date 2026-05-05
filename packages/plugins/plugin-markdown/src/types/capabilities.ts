@@ -7,7 +7,8 @@ import { type Atom } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { type EditorStateStore, type EditorViewMode } from '@dxos/ui-editor';
+import { type EditorStateStore } from '@dxos/ui-editor';
+import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { meta } from '#meta';
 

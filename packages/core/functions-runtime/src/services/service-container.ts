@@ -9,11 +9,11 @@ import * as Layer from 'effect/Layer';
 import { AiService } from '@dxos/ai';
 import { Database, Feed } from '@dxos/echo';
 import {
-  ComputeEventLogger,
   ConfiguredCredentialsService,
   CredentialsService,
   FunctionInvocationService,
   QueueService,
+  Trace,
 } from '@dxos/functions';
 import { Operation, OperationRegistry } from '@dxos/operation';
 import { entries } from '@dxos/util';
@@ -29,7 +29,7 @@ const SERVICES = {
   ai: AiService.AiService,
   credentials: CredentialsService,
   database: Database.Service,
-  eventLogger: ComputeEventLogger,
+  trace: Trace.TraceService,
   functionInvocationService: FunctionInvocationService,
   functionCallService: RemoteFunctionExecutionService,
   operationService: Operation.Service,
@@ -112,7 +112,7 @@ export class ServiceContainer {
       this._services.queues != null ? Layer.succeed(QueueService, this._services.queues) : QueueService.notAvailable;
     const feeds =
       this._services.feeds != null ? Layer.succeed(Feed.FeedService, this._services.feeds) : Feed.notAvailable;
-    const eventLogger = Layer.succeed(ComputeEventLogger, this._services.eventLogger ?? ComputeEventLogger.noop);
+    const trace = Layer.succeed(Trace.TraceService, this._services.trace ?? Trace.noopWriter);
     const functionCallService = Layer.succeed(
       RemoteFunctionExecutionService,
       this._services.functionCallService ?? RemoteFunctionExecutionService.mock(),
@@ -134,7 +134,7 @@ export class ServiceContainer {
       database,
       queues,
       feeds,
-      eventLogger,
+      trace,
       functionCallService,
       operationService,
       operationRegistryService,

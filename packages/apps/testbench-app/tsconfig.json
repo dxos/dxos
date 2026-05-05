@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../../../tools/vite-plugin-log"
+    },
+    {
       "path": "../../common/async"
     },
     {

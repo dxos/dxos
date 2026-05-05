@@ -29,7 +29,7 @@ export * from './replacer';
 export * from './scroll-past-end';
 export * from './scroller';
 export * from './selection';
+export * from './snippets';
 export * from './state';
 export * from './submit';
 export * from './tags';
-export * from './typewriter';

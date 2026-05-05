@@ -119,7 +119,9 @@ export const networkMetricsProvider = (clientServices: Partial<ClientServices>):
 export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>): DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
+    log('runtimeMetricsProvider: requesting platform from SystemService');
     const platform = yield* Effect.promise(() => clientServices.SystemService!.getPlatform());
+    log('runtimeMetricsProvider: platform received');
     invariant(platform, 'platform is required');
 
     observability.setTags({

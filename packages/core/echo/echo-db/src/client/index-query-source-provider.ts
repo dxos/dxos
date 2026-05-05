@@ -2,11 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Array from 'effect/Array';
+
 import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
-import { type Entity, type Hypergraph, Obj, type QueryResult } from '@dxos/echo';
+import { Entity, type Hypergraph, Obj, Query, type QueryResult } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
+import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId, type QueueSubspaceTag, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -121,7 +124,7 @@ export class IndexQuerySource implements QuerySource {
   ): void {
     const queryId = nextQueryId++;
 
-    log('queryIndex', { queryId });
+    log('queryIndex', { queryId, query: Query.pretty(Query.fromAst(query)) });
     const start = Date.now();
     let currentCtx: Context;
 
@@ -165,6 +168,7 @@ export class IndexQuerySource implements QuerySource {
 
           log('queryIndex raw results', {
             queryId,
+            query: Query.pretty(Query.fromAst(query)),
             length: response.results?.length ?? 0,
           });
 
@@ -172,9 +176,17 @@ export class IndexQuerySource implements QuerySource {
             (response.results ?? []).map((result) => this._filterMapResult(ctx, start, result)),
           );
           const results = processedResults.filter(isNonNullable);
+          const resultsWithNoSchema = results.filter((_) => _.result && !Entity.getSchema(_.result));
+          if (resultsWithNoSchema.length > 0) {
+            log.warn('unable to resolve schema for queried objects', {
+              count: resultsWithNoSchema.length,
+              types: Array.dedupe(results.map((_) => _.result && Entity.getTypeDXN(_.result)?.toString())),
+            });
+          }
 
           log('queryIndex processed results', {
             queryId,
+            query: Query.pretty(Query.fromAst(query)),
             fetchedFromIndex: response.results?.length ?? 0,
             loaded: results.length,
           });
@@ -234,11 +246,21 @@ export class IndexQuerySource implements QuerySource {
         context: { space: result.spaceId as SpaceId, queue: queueDxn },
       });
       const database = this._params.graph.getDatabase(result.spaceId as SpaceId);
-      const object = await Obj.fromJSON(json, {
-        refResolver,
-        dxn: queueDxn.extend([result.id as ObjectId]),
-        database,
-      });
+      let object;
+      try {
+        object = await Obj.fromJSON(json, {
+          refResolver,
+          dxn: queueDxn.extend([result.id as ObjectId]),
+          database,
+        });
+      } catch (err) {
+        const typeDxn = typeof json[ATTR_TYPE] === 'string' ? json[ATTR_TYPE] : '<unknown>';
+        if (!emittedSchemaValidationWarnings.has(typeDxn)) {
+          emittedSchemaValidationWarnings.add(typeDxn);
+          log.warn('object failed schema validation', { type: typeDxn, error: err });
+        }
+        return null;
+      }
       const queryResult: QueryResult.EntityEntry = {
         id: result.id,
         result: object,
@@ -280,3 +302,8 @@ export class IndexQuerySource implements QuerySource {
  * Used for logging.
  */
 let nextQueryId = 1;
+
+/**
+ * Keyed by the type DXN.
+ */
+const emittedSchemaValidationWarnings = new Set<string>();

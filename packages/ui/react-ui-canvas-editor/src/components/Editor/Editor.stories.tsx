@@ -12,7 +12,7 @@ import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Form, TupleField } from '@dxos/react-ui-form';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createGraph } from '@dxos/schema';
 import { TestSchema, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
@@ -92,7 +92,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
             </Form.Root>
           )}
 
-          {sidebar === 'json' && <Json.Data data={{ graph: graph?.graph }} classNames='text-xs' />}
+          {sidebar === 'json' && <JsonHighlighter data={{ graph: graph?.graph }} classNames='text-xs' />}
         </Container>
       )}
     </div>

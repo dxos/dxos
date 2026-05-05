@@ -16,11 +16,11 @@ import {
   createIntent,
 } from '@dxos/app-framework';
 import { type OperationInvoker } from '@dxos/app-framework/plugin-operation/invoker';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
 
 import { meta } from '#meta';
-import { DeckOperation } from '#operations';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -59,8 +59,8 @@ export default Capability.makeModule(() =>
           invariant(invokePromise, 'No operation invoker');
 
           if (part === 'multi') {
-            const { error } = await invokePromise(DeckOperation.ChangeCompanion, {
-              companion: id,
+            const { error } = await invokePromise(LayoutOperation.UpdateCompanion, {
+              subject: id,
             });
             if (error) {
               return ToolResult.Error(error.message);

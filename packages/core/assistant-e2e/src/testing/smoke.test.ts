@@ -4,7 +4,7 @@
 
 import { describe, it } from '@effect/vitest';
 
-import { Prompt } from '@dxos/blueprints';
+import { Routine } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
@@ -16,7 +16,7 @@ describe('Smoke', () => {
   it.effect(
     'succeeds',
     agentTest(
-      Prompt.make({
+      Routine.make({
         instructions: trim`
           Do nothing and succeed.
         `,
@@ -31,7 +31,7 @@ describe('Smoke', () => {
       {
         expect: 'failure',
       },
-      Prompt.make({
+      Routine.make({
         instructions: trim`
           Do nothing and fail.
         `,

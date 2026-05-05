@@ -15,13 +15,13 @@ import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolv
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Database, Ref } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
-import { ComputeEventLogger, QueueService, Trace } from '@dxos/functions';
+import { QueueService, Trace } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation, OperationRegistry } from '@dxos/operation';
 import { Message } from '@dxos/types';
 
-import { ValueBag, defineComputeNode } from '../../types';
+import { ComputeCustomEvent, ComputeNodeContext, ValueBag, defineComputeNode } from '../../types';
 import { StreamSchema } from '../../util';
 
 export const GptMessage = Schema.Struct({
@@ -134,13 +134,14 @@ export const gptNode = defineComputeNode({
     log.info('generating', { systemPrompt, prompt, historyMessages, tools });
 
     const tokenPubSub = yield* PubSub.unbounded<Response.StreamPart<any>>();
-    const logger = yield* ComputeEventLogger;
+    const { nodeId } = yield* ComputeNodeContext;
+    const traceWriter = yield* Trace.TraceService;
     const observer = GenerationObserver.make({
       onPart: (event) =>
         Effect.gen(function* () {
-          logger.log({ type: 'custom', nodeId: logger.nodeId!, event });
+          yield* Trace.write(ComputeCustomEvent, { nodeId, event });
           yield* PubSub.publish(tokenPubSub, event);
-        }),
+        }).pipe(Effect.provideService(Trace.TraceService, traceWriter)),
     });
 
     const request = new AiRequest({ observer });

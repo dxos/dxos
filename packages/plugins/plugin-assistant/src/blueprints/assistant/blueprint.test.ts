@@ -5,12 +5,12 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { AgentService } from '@dxos/assistant';
 import { DatabaseBlueprint, DatabaseHandlers } from '@dxos/assistant-toolkit';
-import { AssistantTestLayer } from '@dxos/assistant/testing';
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/compute';
 import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { AgentService } from '@dxos/functions-runtime';
+import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
 import { Organization } from '@dxos/types';
 

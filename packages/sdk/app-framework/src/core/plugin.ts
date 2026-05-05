@@ -167,6 +167,11 @@ export type Meta = {
   description?: string;
 
   /**
+   * Name of the author or organization that created the plugin.
+   */
+  author?: string;
+
+  /**
    * URL of home page.
    */
   homePage?: string;

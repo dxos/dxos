@@ -39,7 +39,9 @@ const DefaultStory = (props: MasonryRootProps) => {
 
   return (
     <Masonry.Root {...props} Tile={StoryItem}>
-      <Masonry.Content items={organizations} />
+      <Masonry.Content>
+        <Masonry.Viewport items={organizations} />
+      </Masonry.Content>
     </Masonry.Root>
   );
 };

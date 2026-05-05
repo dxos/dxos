@@ -6,6 +6,8 @@ import { WidgetType } from '@codemirror/view';
 
 import { Domino } from '@dxos/ui';
 
+import { styles } from './defaults';
+
 export class ReferenceWidget extends WidgetType {
   constructor(
     private text: string,
@@ -20,7 +22,7 @@ export class ReferenceWidget extends WidgetType {
 
   override toDOM() {
     return Domino.of('div')
-      .classNames('pt-2 pb-2')
+      .classNames(styles.padding)
       .append(
         Domino.of('dx-anchor' as any)
           .classNames('dx-tag--anchor')

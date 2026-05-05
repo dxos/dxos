@@ -21,10 +21,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo"
+      "path": "../../core/compute"
     },
     {
-      "path": "../../core/functions"
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/protocols"

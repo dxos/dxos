@@ -96,7 +96,7 @@ export const getDeployedFunctions = async (
       outputSchema: versionMeta.outputSchema,
     });
 
-    Obj.change(fn, (fn) => setUserFunctionIdInMetadata(Obj.getMeta(fn), record.id));
+    Obj.update(fn, (fn) => setUserFunctionIdInMetadata(Obj.getMeta(fn), record.id));
     return [fn];
   });
 

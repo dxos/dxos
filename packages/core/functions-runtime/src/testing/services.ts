@@ -8,16 +8,16 @@ import type { Space } from '@dxos/client/echo';
 import { Database } from '@dxos/echo';
 import { type QueueFactory } from '@dxos/echo-db';
 import {
-  type ComputeEventLogger,
   ConfiguredCredentialsService,
   type CredentialsService,
   QueueService,
   type ServiceCredential,
+  type Trace,
 } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 
 import { ServiceContainer } from '../services';
-import { consoleLogger, noopLogger } from './logger';
+import { consoleTraceWriter, noopTraceWriter } from './logger';
 
 // TODO(burdon): Factor out.
 export type OneOf<T> = {
@@ -59,11 +59,11 @@ export type TestServiceOptions = {
   space?: Space;
 
   /**
-   * Logging configuration.
+   * Trace writer configuration.
    */
   logging?: {
     enabled?: boolean;
-    logger?: Context.Tag.Service<ComputeEventLogger>;
+    trace?: Context.Tag.Service<Trace.TraceService>;
   };
 
   /**
@@ -89,7 +89,7 @@ export const createTestServices = ({
     // ai: createAiService(ai),
     credentials: createCredentialsService(credentials),
     database: space || db ? Database.makeService(space?.db || db!) : undefined,
-    eventLogger: (logging?.logger ?? logging?.enabled) ? consoleLogger : noopLogger,
+    trace: logging?.trace ?? (logging?.enabled ? consoleTraceWriter : noopTraceWriter),
     queues: space || queues ? QueueService.make(space?.queues || queues!, undefined) : undefined,
   });
 };

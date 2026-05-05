@@ -30,7 +30,7 @@ const TestViewWrapper = Schema.Struct({
     typename: 'test/ViewWrapper',
     version: '0.1.0',
   }),
-  ViewAnnotation.set(true),
+  ViewAnnotation.set(['view']),
 );
 
 describe('buildViewIndex', () => {
@@ -103,7 +103,7 @@ describe('buildViewIndex', () => {
     const userSchemas = db.schemaRegistry
       .query({ location: ['runtime'] })
       .runSync()
-      .filter((schema) => !ViewAnnotation.get(schema).pipe((opt) => opt._tag === 'Some' && opt.value));
+      .filter((schema) => !ViewAnnotation.has(schema));
     const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, userSchemas);
 
     expect(viewIndex.typenamesWithViews.size).toBe(0);

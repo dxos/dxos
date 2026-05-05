@@ -6,7 +6,7 @@ import * as Predicate from 'effect/Predicate';
 
 import { Event, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Obj, type QueryResult, type Ref } from '@dxos/echo';
+import { type Obj, Query, type QueryResult, type Ref } from '@dxos/echo';
 import { filterMatchObject } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { type ObjectId } from '@dxos/keys';
@@ -124,16 +124,19 @@ export class GraphQueryContext implements QueryContext {
       try {
         log('run query', {
           resolver: Object.getPrototypeOf(s).constructor.name,
+          query: Query.pretty(Query.fromAst(query)),
         });
         const results = await asyncTimeout<QueryResult.EntityEntry[]>(s.run(ctx, query), timeout);
         log('run query results', {
           resolver: Object.getPrototypeOf(s).constructor.name,
           count: results.length,
+          query: Query.pretty(Query.fromAst(query)),
         });
         return results;
       } catch (err) {
         log('run query error', {
           resolver: Object.getPrototypeOf(s).constructor.name,
+          query: Query.pretty(Query.fromAst(query)),
           error: err,
         });
         throw err;

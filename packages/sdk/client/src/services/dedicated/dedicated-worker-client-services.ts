@@ -75,18 +75,30 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
   }
 
   override async _open(): Promise<void> {
+    log('dedicated-worker-client-services: opening', { clientId: this.#clientId });
+    log('dedicated-worker-client-services: creating coordinator');
     this.#coordinator = await this.#createCoordinator();
+    log('dedicated-worker-client-services: coordinator created');
     this.#watchLeader();
+    log('dedicated-worker-client-services: leader watch started');
     this.#connectTask.open();
+    log('dedicated-worker-client-services: running initial connect task');
     await this.#connectTask.runBlocking();
+    log('dedicated-worker-client-services: initial connect task returned, awaiting initial connection');
     await this.#initialConnection.wait();
+    log('dedicated-worker-client-services: initial connection established');
   }
 
   override async _close(): Promise<void> {
+    log('dedicated-worker-client-services: closing');
     await this.#connectTask.close();
+    log('dedicated-worker-client-services: connect task closed');
     await this.#services?.close();
+    log('dedicated-worker-client-services: services proxy closed');
     await this.#connection?.close();
+    log('dedicated-worker-client-services: shared worker connection closed');
     await this.#leaderSession?.close();
+    log('dedicated-worker-client-services: leader session closed');
   }
 
   /**
@@ -95,14 +107,19 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
   #watchLeader() {
     queueMicrotask(async () => {
       try {
+        log('dedicated-worker-client-services: requesting leader lock', { clientId: this.#clientId });
         await navigator.locks.request(LEADER_LOCK_KEY, { mode: 'exclusive', signal: this._ctx.signal }, async () => {
           // I am the leader now.
+          log('dedicated-worker-client-services: leader lock acquired (this tab is leader)', {
+            clientId: this.#clientId,
+          });
           invariant(this.#coordinator);
           invariant(!this.#leaderSession);
           this.#leaderSession = new LeaderSession(this.#createWorker, this.#coordinator, this.#config, this.#clientId);
           const done = new Trigger();
           this._ctx.onDispose(() => done.wake());
           this.#leaderSession.onClose.on((error) => {
+            log('dedicated-worker-client-services: leader session closed', { hasError: !!error });
             this.#leaderSession = undefined;
             if (error) {
               done.throw(error);
@@ -110,11 +127,16 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
               done.wake();
             }
           });
+          log('dedicated-worker-client-services: opening leader session');
           await this.#leaderSession.open();
+          log('dedicated-worker-client-services: leader session opened');
           await done.wait(); // Hold until the leader session is closed.
+          log('dedicated-worker-client-services: leader session done');
         });
+        log('dedicated-worker-client-services: leader lock released');
       } catch (error: any) {
         if (isAbortError(error)) {
+          log('dedicated-worker-client-services: leader watch aborted');
           return;
         }
         log.catch(error);
@@ -142,7 +164,8 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
     };
 
     try {
-      log('trying to connect');
+      log('trying to connect', { clientId: this.#clientId });
+      log('dedicated-worker-client-services: requesting port from leader (waiting for provide-port)');
       const { appPort, systemPort, leaderId, livenessLockKey } = await new Promise<
         WorkerCoordinatorMessage & { type: 'provide-port' }
       >((resolve) => {
@@ -150,9 +173,15 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
 
         const unsubscribe = this.#coordinator.onMessage.on((message) => {
           if (message.type === 'provide-port' && message.clientId === this.#clientId) {
+            log('dedicated-worker-client-services: received provide-port from leader', {
+              leaderId: message.leaderId,
+            });
             unsubscribe();
             resolve(message);
           } else if (message.type === 'new-leader') {
+            log('dedicated-worker-client-services: new leader announced, requesting port', {
+              leaderId: message.leaderId,
+            });
             // New leader announced, request a port from them.
             this.#coordinator?.sendMessage({
               type: 'request-port',
@@ -198,20 +227,24 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
       });
       log('opened SharedWorkerConnection');
 
+      log('dedicated-worker-client-services: opening client services proxy (app port)');
       this.#services = new ClientServicesProxy(createWorkerPort({ port: appPort }));
       await this.#services.open();
+      log('dedicated-worker-client-services: client services proxy opened');
 
       if (this.#isInitialConnection) {
+        log('dedicated-worker-client-services: initial connection complete');
         this.#isInitialConnection = false;
         this.#initialConnection.wake();
       } else {
         // Call all reconnection callbacks and wait for them to complete.
-        log('reconnecting, calling callbacks');
+        log('reconnecting, calling callbacks', { count: this.#reconnectCallbacks.length });
         await Promise.all(this.#reconnectCallbacks.map((cb) => cb()));
         log('reconnected');
         this.reconnected.emit();
       }
     } catch (err: any) {
+      log.warn('dedicated-worker-client-services: connect task failed, will reschedule', { err });
       this.#initialConnection.throw(err);
       log.catch(err);
       void ctx.dispose();
@@ -283,6 +316,7 @@ class LeaderSession extends Resource {
 
     log('waiting for worker to start listening');
     await listening.wait();
+    log('worker is listening, sending init message', { leaderId: this.#leaderId });
     this.#sendMessage({
       type: 'init',
       clientId: this.#leaderId,
@@ -291,7 +325,7 @@ class LeaderSession extends Resource {
     });
     log('waiting for worker to be ready');
     const { livenessLockKey } = await ready.wait();
-    log('leader ready');
+    log('leader ready', { leaderId: this.#leaderId });
 
     // Listen for worker termination.
     void navigator.locks.request(livenessLockKey, () => {
@@ -328,11 +362,13 @@ class LeaderSession extends Resource {
   }
 
   protected override async _close(): Promise<void> {
+    log('leader-session: closing', { leaderId: this.#leaderId });
     if (isWorker(this.#worker)) {
       this.#worker?.terminate();
     } else if (this.#worker instanceof MessagePort) {
       this.#worker.close();
     }
+    log('leader-session: closed');
   }
 
   #sendMessage(msg: DedicatedWorkerMessage) {

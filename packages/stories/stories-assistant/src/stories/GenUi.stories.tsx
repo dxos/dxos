@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { translations } from '@dxos/plugin-assistant';
+import { translations } from '@dxos/plugin-assistant/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { GenUiModule } from '../components';

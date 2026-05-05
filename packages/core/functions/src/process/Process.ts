@@ -14,6 +14,7 @@ import * as Scope from 'effect/Scope';
 import type * as Types from 'effect/Types';
 
 import { assertArgument } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 import type { ObjectId } from '@dxos/protocols';
 
@@ -255,6 +256,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
           onInput: (input: Operation.Definition.Input<Op>) =>
             Effect.gen(function* () {
               // Emit operation start event.
+              log('operation process invoking', { key: op.meta.key, name: op.meta.name });
               yield* Trace.write(Trace.OperationStart, {
                 key: op.meta.key,
                 name: op.meta.name,

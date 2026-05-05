@@ -7,9 +7,9 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { type PublicKey } from '@dxos/client';
+import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { type ComplexMap } from '@dxos/util';
 
 import { meta } from '#meta';

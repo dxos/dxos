@@ -16,7 +16,7 @@ const random = (min: number, max: number) => Math.floor(Math.random() * (max - m
  */
 export const createTree = (spec: NumberOrNumberArray[] = [], createText?: () => string): Tree => {
   const tree = new Tree();
-  Obj.change(tree.tree, () => {
+  Obj.update(tree.tree, () => {
     tree.root.data = { text: 'root' };
   });
 

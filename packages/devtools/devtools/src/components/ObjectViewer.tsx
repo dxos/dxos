@@ -6,7 +6,7 @@ import React, { type ComponentType, type JSX, useCallback } from 'react';
 
 import { DXN } from '@dxos/keys';
 import { Button, Clipboard, Input } from '@dxos/react-ui';
-import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 
 export type ObjectViewerProps = {
   object: any;
@@ -22,8 +22,6 @@ export type ObjectViewerProps = {
  * Renders a JSON object with navigatable DXN links.
  */
 export const ObjectViewer = ({ object, id, onNavigate }: ObjectViewerProps) => {
-  const text = JSON.stringify(object, null, 2);
-
   const rowRenderer = ({
     rows,
     stylesheet,
@@ -85,9 +83,7 @@ export const ObjectViewer = ({ object, id, onNavigate }: ObjectViewerProps) => {
           </div>
         </Clipboard.Provider>
       )}
-      <SyntaxHighlighter language='json' classNames='text-sm' renderer={rowRenderer}>
-        {text}
-      </SyntaxHighlighter>
+      <JsonHighlighter data={object} classNames='text-sm' renderer={rowRenderer} />
     </>
   );
 };

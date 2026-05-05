@@ -432,6 +432,11 @@ export const QueryOptions = Schema.Struct({
    * @default false
    */
   skipSchemaValidation: Schema.optional(Schema.Boolean),
+
+  /**
+   * Diagnostics-only label for logs / tooling (not used by execution semantics).
+   */
+  debugLabel: Schema.optional(Schema.String),
 });
 
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}

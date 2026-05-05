@@ -161,7 +161,7 @@ export const createReferences = <S extends Type.AnyObj>(schema: S, db: Database.
 
     // Set all references within a change context.
     if (refsToSet.length > 0) {
-      Obj.change(obj as any, (mutableObj: any) => {
+      Obj.update(obj as any, (mutableObj: any) => {
         for (const { name, ref } of refsToSet) {
           mutableObj[name] = ref;
         }

@@ -11,7 +11,6 @@ export const translations = [
     'en-US': {
       [meta.id]: {
         'app-menu.label': 'App menu',
-        'open-settings.label': 'Settings',
         'open-commands.label': 'Search commands',
         'commands-dialog.title': 'Commands',
         'command-list-input.placeholder': 'Search for commands…',

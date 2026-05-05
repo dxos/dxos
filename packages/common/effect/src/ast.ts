@@ -331,6 +331,20 @@ export const isLiteralUnion = (node: SchemaAST.AST): node is SchemaAST.Union<Sch
 };
 
 /**
+ * Extracts the literal values from a schema that is a union of literals
+ * (e.g. `Schema.Literal('a', 'b')` or `Schema.Union(Schema.Literal('a'), Schema.Literal('b'))`).
+ * Returns an empty array if the schema is not a literal union.
+ */
+export const getLiteralValues = <S extends Schema.Schema<any, any, any>>(
+  schema: S,
+): ReadonlyArray<Schema.Schema.Type<S>> => {
+  if (!isLiteralUnion(schema.ast)) {
+    return [];
+  }
+  return schema.ast.types.map((node) => node.literal as Schema.Schema.Type<S>);
+};
+
+/**
  * Determines if the node is an array type.
  */
 export const isArrayType = (node: SchemaAST.AST): node is SchemaAST.TupleType => {

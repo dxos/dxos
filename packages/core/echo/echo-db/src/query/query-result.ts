@@ -6,7 +6,7 @@ import { type CleanupFn, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Entity, type QueryResult } from '@dxos/echo';
-import { type Query } from '@dxos/echo';
+import { Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
@@ -45,7 +45,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     };
     QUERIES.add(this._diagnostic);
 
-    log('construct', { filter: this._query.ast });
+    log('construct', { query: Query.pretty(this._query) });
   }
 
   get query(): Query.Query<T> {
@@ -129,13 +129,13 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
   subscribe(callback?: (query: QueryResult.QueryResult<T>) => void, opts?: QueryResult.SubscriptionOptions): CleanupFn {
     invariant(!(!callback && opts?.fire), 'Cannot fire without a callback.');
 
-    log('subscribe', { filter: this._query.ast, active: this._isActive });
+    log('subscribe', { query: Query.pretty(this._query), active: this._isActive });
     this._subscribers++;
     const unsubscribeFromEvent = callback ? this._event.on(callback) : undefined;
     this._handleQueryLifecycle();
 
     const unsubscribe = () => {
-      log('unsubscribe', { filter: this._query.ast, active: this._isActive });
+      log('unsubscribe', { query: Query.pretty(this._query), active: this._isActive });
       this._subscribers--;
       unsubscribeFromEvent?.();
       this._handleQueryLifecycle();
@@ -205,10 +205,10 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
 
   private _handleQueryLifecycle(): void {
     if (this._subscribers === 0 && this._isActive) {
-      log('stop query', { filter: this._query.ast });
+      log('stop query', { query: Query.pretty(this._query) });
       this._stop();
     } else if (this._subscribers > 0 && !this._isActive) {
-      log('start query', { filter: this._query.ast });
+      log('start query', { query: Query.pretty(this._query) });
       this._start();
     }
   }

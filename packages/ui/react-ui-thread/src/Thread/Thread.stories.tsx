@@ -11,9 +11,10 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-theme';
 
+import { translations } from '#translations';
+
 import { MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity, MessageStoryText } from '../testing';
-import { translations } from '../translations';
 import { Thread } from './Thread';
 
 random.seed(1);

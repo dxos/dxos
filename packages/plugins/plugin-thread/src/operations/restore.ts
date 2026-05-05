@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { sleep } from '@dxos/async';
+import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 
 import { Restore } from './definitions';

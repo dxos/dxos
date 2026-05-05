@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-// Suppress Lit dev mode warning (https://lit.dev/msg/dev-mode).
-(globalThis as any).litIssuedWarnings ??= new Set();
-(globalThis as any).litIssuedWarnings.add('dev-mode');
+// NOTE: lit dev-mode warning suppression lives inline in `index.html` because
+// ES module imports below this point are hoisted above any executable
+// statement, so the same suppression here would run after lit's
+// `queueMicrotask` warning has already fired.
 
 import '@dxos-theme';
 
@@ -14,22 +15,26 @@ import React, { StrictMode, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { type Plugin, UrlLoader } from '@dxos/app-framework';
-import { useApp } from '@dxos/app-framework/ui';
+import { type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
+import { Placeholder, type PlaceholderComponentProps, useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
+import { Composer } from '@dxos/brand';
 import { runAndForwardErrors } from '@dxos/effect';
-import { LogBuffer, LogLevel, log } from '@dxos/log';
+import { LogLevel, log } from '@dxos/log';
+import { IdbLogStore } from '@dxos/log-store-idb';
 import { Observability } from '@dxos/observability';
-import { observabilityTranslations } from '@dxos/plugin-observability';
+import { translations as observabilityTranslations } from '@dxos/plugin-observability/translations';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { defaultTx } from '@dxos/ui-theme';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
-import { Placeholder, ResetDialog } from './components';
+import { ResetDialog } from './components';
 import { initializeObservability, PARAM_PROFILER, setupConfig } from './config';
 import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
-import { APP_KEY } from './constants';
+import { APP_KEY, LOG_STORE_DB_NAME } from './constants';
+import { showDevRssBanner } from './dev-rss-banner';
+import { downloadLogs } from './log-download';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
 import { startupProfiler } from './profiler';
 import { translations } from './translations';
@@ -51,10 +56,68 @@ declare global {
   }
 
   // Debug hook: run `downloadLogs()` from devtools to save buffered logs (same as Reset dialog).
-  var downloadLogs: () => void;
+  var downloadLogs: () => Promise<void>;
 }
 
+// `window.__bootLoader` is declared globally by `@dxos/app-framework/ui`
+// (alongside the React `Placeholder` that calls `dismiss()`).
+
+/**
+ * Updates the native-DOM boot loader text. No-op once React has replaced #root.
+ * The CSS animation in `index.html` keeps painting on the compositor thread
+ * regardless of main-thread work, so this is purely textual feedback.
+ */
+const bootStatus = (text: string) => window.__bootLoader?.status({ humanized: text });
+
+// Stamp every (re-)evaluation of this module so we can tell Vite HMR reloads
+// from a true page boot. Dev-only — production has no HMR and the diagnostic
+// would just be noise. `import.meta.env.DEV` is statically replaced at build
+// time, so the whole block tree-shakes out of prod bundles.
+const BOOT_ID = import.meta.env?.DEV ? Math.random().toString(36).slice(2, 10) : '';
+const MODULE_EVAL_TIME = Date.now();
+if (import.meta.env?.DEV) {
+  log('composer main: module evaluated', { bootId: BOOT_ID, t: MODULE_EVAL_TIME });
+  const importMeta = import.meta as any;
+  if (importMeta.hot) {
+    importMeta.hot.dispose(() => {
+      log('composer main: hmr dispose', { bootId: BOOT_ID, ageMs: Date.now() - MODULE_EVAL_TIME });
+    });
+  }
+}
+
+/**
+ * Picks the platform-appropriate offline asset cache for third-party plugins.
+ *  - Tauri (desktop + iOS): Rust-backed filesystem cache, served via the `dxos-plugin://` URI scheme.
+ *  - Web with a service worker: cache managed by the SW in `./sw.ts`.
+ *  - Otherwise (tests, unsupported environments): a no-op cache; plugins still
+ *    load but lose their offline guarantee.
+ *
+ * Each branch dynamic-imports its impl so vite emits per-platform chunks instead
+ * of dragging both into the initial bundle.
+ */
+const createAssetCache = async (isTauri: boolean): Promise<PluginAssetCache.Cache> => {
+  if (isTauri) {
+    const { createTauriAssetCache } = await import('./asset-cache/tauri');
+    return createTauriAssetCache();
+  }
+  if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+    const { createServiceWorkerAssetCache } = await import('./asset-cache/service-worker');
+    return createServiceWorkerAssetCache();
+  }
+  return PluginAssetCache.noop();
+};
+
 const main = async () => {
+  if (import.meta.env?.DEV) {
+    log('composer main: main() running', { bootId: BOOT_ID });
+    // Fire-and-forget: surfaces the latest entry from a dev RSS feed under
+    // the boot loader as a small distraction during cold boots. Routed
+    // through the Vite dev server's `/api/rss` proxy (see vite.config.ts)
+    // to dodge CORS. Tree-shakes out of prod via the `import.meta.env.DEV`
+    // gate above.
+    void showDevRssBanner();
+  }
+
   const url = new URL(window.location.href);
   const safeMode = isTrue(url.searchParams.get(PARAM_SAFE_MODE), false);
   if (safeMode) {
@@ -62,7 +125,11 @@ const main = async () => {
     setSafeModeUrl(false);
   }
 
-  const profiler = isTrue(url.searchParams.get(PARAM_PROFILER), false) ? startupProfiler() : undefined;
+  // The startup profiler is on by default in dev so every devloop produces
+  // a BENCHMARKS row without remembering `?profiler=1`. Production explicitly
+  // opts in (or out) via the URL parameter.
+  const profilerEnabled = isTrue(url.searchParams.get(PARAM_PROFILER), Boolean(import.meta.env?.DEV));
+  const profiler = profilerEnabled ? startupProfiler() : undefined;
 
   const logLevel = url.searchParams.get(PARAM_LOG_LEVEL) ?? (safeMode ? 'debug' : undefined);
   if (logLevel) {
@@ -72,33 +139,24 @@ const main = async () => {
 
   TRACE_PROCESSOR.setInstanceTag('app');
 
-  const logBuffer = new LogBuffer();
-  log.addProcessor(logBuffer.logProcessor);
+  const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME });
+  log.addProcessor(logStore.processor);
 
-  // Mirrors `useFileDownload` from `@dxos/react-ui` (used by `ResetDialog`).
-  const downloadFile = (data: Blob | string, filename: string) => {
-    const url = typeof data === 'string' ? data : URL.createObjectURL(data);
-    const element = document.createElement('a');
-    element.setAttribute('href', url);
-    element.setAttribute('download', filename);
-    element.setAttribute('target', 'download');
-    element.click();
-  };
-
-  // TODO(dmaretskyi): Hookup to a button in the sidebar/devtools.
-  globalThis.downloadLogs = () => {
-    const ndjson = logBuffer.serialize();
-    const file = new Blob([ndjson], { type: 'application/x-ndjson' });
-    const fileName = `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson`;
-    downloadFile(file, fileName);
-  };
+  // Devtools convenience — also surfaced via the help panel and ResetDialog UI.
+  globalThis.downloadLogs = () => downloadLogs(logStore);
 
   profiler?.mark('dynamic-imports:start');
+  bootStatus('Loading framework…');
 
-  const { Config, defs, SaveConfig } = await import('@dxos/config');
-  const { createClientServices } = await import('@dxos/react-client');
-  const { Migrations } = await import('@dxos/migrations');
-  const { __COMPOSER_MIGRATIONS__ } = await import('./migrations');
+  // Load these in parallel; HTTP/2 multiplexes the four chunks and even on
+  // local-disk the parser can interleave parses.
+  const [{ Config, defs, SaveConfig }, { createClientServices }, { Migrations }, { __COMPOSER_MIGRATIONS__ }] =
+    await Promise.all([
+      import('@dxos/config'),
+      import('@dxos/react-client'),
+      import('@dxos/migrations'),
+      import('./migrations'),
+    ]);
 
   profiler?.mark('dynamic-imports:end');
   profiler?.measure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
@@ -109,9 +167,9 @@ const main = async () => {
   Migrations.define(APP_KEY, __COMPOSER_MIGRATIONS__);
 
   profiler?.mark('config:start');
+  bootStatus('Reading configuration…');
 
   let config = await setupConfig();
-
   if (shouldRunStorageResetMigration(config.values.runtime?.app?.env?.DX_ENVIRONMENT)) {
     await runStorageResetMigration();
     window.location.replace(window.location.href);
@@ -145,7 +203,60 @@ const main = async () => {
 
   // Intentionally do not await; the buffering backend in TRACE_PROCESSOR captures
   // early spans and replays them once the real OTEL backend registers.
-  const observability = initializeObservability(config, isTauri, logBuffer);
+  const observability = initializeObservability(config, isTauri, logStore);
+
+  // Capture a one-shot `composer.startup` event when the framework dispatches
+  // `app-framework:startup-activated`. Includes total ms, per-phase ms, top-5
+  // slowest modules, transferred bytes (best-effort), and the boot-loader
+  // visibility mark. Reads `performance.getEntriesByType` directly so production
+  // builds without `?profiler=1` still get data.
+  const captureStartupSummary = (): Record<string, string | number | boolean | undefined> => {
+    const measures = performance.getEntriesByType('measure');
+    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+    const bootMark = performance.getEntriesByName('boot:html-parsed')[0];
+    const firstInteractive = performance.getEntriesByName('app-framework:first-interactive')[0];
+    const phaseDuration = (name: string): number =>
+      Math.round(measures.find((measure) => measure.name === `startup:${name}`)?.duration ?? 0);
+    const moduleEntries = measures
+      .filter((measure) => measure.name.startsWith('module:'))
+      .sort((first, second) => second.duration - first.duration);
+    const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+    const transferredBytes = Math.round(resources.reduce((total, resource) => total + (resource.transferSize ?? 0), 0));
+    // Flatten the top-5 modules into individual primitive keys (`top1Module`,
+    // `top1Ms`, …) — observability `Attributes` only accept string | number |
+    // boolean | undefined, and per-key fields are easier to filter on in
+    // PostHog than a JSON blob.
+    const summary: Record<string, string | number | boolean | undefined> = {
+      totalMs: phaseDuration('total'),
+      dynamicImportsMs: phaseDuration('dynamic-imports'),
+      configMs: phaseDuration('config'),
+      servicesMs: phaseDuration('services'),
+      pluginsInitMs: phaseDuration('plugins-init'),
+      bootLoaderVisibleMs: bootMark ? Math.round(bootMark.startTime) : undefined,
+      firstInteractiveMs: firstInteractive ? Math.round(firstInteractive.startTime) : undefined,
+      domContentLoadedMs: navigation ? Math.round(navigation.domContentLoadedEventEnd) : undefined,
+      transferredBytes,
+      moduleCount: moduleEntries.length,
+    };
+    moduleEntries.slice(0, 5).forEach((entry, index) => {
+      summary[`top${index + 1}Module`] = entry.name.replace('module:', '');
+      summary[`top${index + 1}Ms`] = Math.round(entry.duration);
+    });
+    return summary;
+  };
+  window.addEventListener(
+    'app-framework:startup-activated',
+    () => {
+      const summary = captureStartupSummary();
+      void observability
+        .then((obs) => {
+          obs.events.captureEvent('composer.startup', summary);
+          log.info('startup summary captured', summary);
+        })
+        .catch((error) => log.catch(error));
+    },
+    { once: true },
+  );
   const observabilityDisabled = await Observability.isObservabilityDisabled(APP_KEY);
   const observabilityGroup = await Observability.getObservabilityGroup(APP_KEY);
 
@@ -185,6 +296,7 @@ const main = async () => {
   const useSingleClientMode = isTauri && isMobile;
 
   profiler?.mark('services:start');
+  bootStatus('Starting services…');
 
   // Decide the deployment mode for client services. The factory is a dumb switch on
   // `runtime.client.services_mode` — the app is responsible for picking the right mode from its
@@ -255,7 +367,7 @@ const main = async () => {
     config,
     services,
     observability,
-    logBuffer,
+    logStore,
 
     isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
     isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA),
@@ -266,15 +378,34 @@ const main = async () => {
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
 
-  const builtinPlugins = getPlugins(conf);
-  let remotePlugins: Plugin.Plugin[] = [];
-  try {
-    remotePlugins = await UrlLoader.preload();
-  } catch (error) {
-    log.warn('failed to preload remote plugins', { error });
-  }
+  // `getPlugins` dynamic-imports every plugin chunk in parallel.
+  // Run it concurrently with `UrlLoader.preload` (network-bound) so the two waits overlap.
+  bootStatus('Loading plugins…');
+  const assetCache = await createAssetCache(isTauri);
+  const [builtinPlugins, remotePluginsResult] = await Promise.all([
+    getPlugins(conf, {
+      onPluginLoaded: (loaded, total) => {
+        // Pass `range` so the loader updates the existing line in place
+        // ("Loading plugins (12/80)") instead of appending a fresh entry per
+        // plugin tick — keeps the visible log compact and the boot trace
+        // collapses the (i/n) sequence into one transition.
+        window.__bootLoader?.status({ humanized: 'Loading plugins', range: { index: loaded, total } });
+        // The ring spans two phases — plugin chunks (0 → 50%) and module
+        // activation (50 → 100%, driven from `Placeholder` once React mounts).
+        // Splitting the range keeps it monotonic across the boundary.
+        window.__bootLoader?.progress((loaded / total) * 0.5);
+      },
+    }),
+    runAndForwardErrors(UrlLoader.preload({ cache: assetCache })),
+  ]);
+
+  bootStatus('Starting Composer…');
+  // Park the ring at 50% — chunks done, activation about to take over.
+  window.__bootLoader?.progress(0.5);
+  const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
-  const pluginLoader = UrlLoader.make(builtinPlugins);
+  const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
+  const onPluginRemove = (id: string) => UrlLoader.uninstall(id, { cache: assetCache });
   const core = getCore(conf);
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
@@ -299,7 +430,7 @@ const main = async () => {
         <Tooltip.Provider>
           <ResetDialog
             error={error}
-            logBuffer={logBuffer}
+            logStore={logStore}
             observability={observability}
             needRefresh={needRefresh}
             onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
@@ -310,24 +441,33 @@ const main = async () => {
     );
   };
 
+  const ComposerPlaceholder = (props: PlaceholderComponentProps) => (
+    <Placeholder {...props} logo={(logoProps) => <Composer {...logoProps} />} />
+  );
+
   const Main = () => {
     const App = useApp({
       fallback: Fallback,
-      placeholder: Placeholder,
+      placeholder: ComposerPlaceholder,
       pluginLoader,
+      onPluginRemove,
       plugins,
       core,
       defaults,
       setupEvents,
       cacheEnabled: true,
       safeMode,
-      debounce: 1_000,
+      // The useLoading state machine ticks every `debounce` ms (Loading → FadeIn → FadeOut → Done),
+      // so the gap between `Startup` activated and `<Placeholder>` dismissed is at least 2× debounce.
+      // The boot loader covers the pre-React phase, so we don't need a longer fade to hide a flash.
+      debounce: 200,
     });
 
     return <App />;
   };
 
   const root = document.getElementById('root')!;
+  log('composer main: rendering App', { bootId: BOOT_ID, strict: conf.isStrict });
   if (conf.isStrict) {
     createRoot(root).render(
       <StrictMode>
@@ -337,6 +477,8 @@ const main = async () => {
   } else {
     createRoot(root).render(<Main />);
   }
+  // The boot loader is dismissed from `Placeholder.tsx`'s `useLayoutEffect` (gated on `stage >= 1`),
+  // so it stays visible until React has actually committed its replacement.
 };
 
 void main();

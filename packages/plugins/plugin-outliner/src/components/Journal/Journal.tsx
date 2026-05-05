@@ -37,13 +37,15 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
     [journalSnapshot],
   );
 
+  const hasTodayEntry = useMemo(() => entryRefs.some(({ dateKey }) => dateKey === getDateString()), [entryRefs]);
+
   const handleCreateEntry = useCallback(() => {
     if (!journal) {
       return;
     }
 
     const entry = JournalType.makeEntry();
-    Obj.change(journal, (journal) => {
+    Obj.update(journal, (journal) => {
       journal.entries[getDateString(date)] = Ref.make(entry);
     });
   }, [journal, date]);
@@ -51,11 +53,6 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
   return (
     <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
       <ScrollArea.Viewport>
-        {entryRefs.length === 0 && (
-          <div className='p-2'>
-            <IconButton label={t('create-entry.label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
-          </div>
-        )}
         {entryRefs.map(({ dateKey, ref }, i) => (
           <JournalEntry
             key={dateKey}
@@ -65,6 +62,11 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
             autoFocus={i === entryRefs.length - 1}
           />
         ))}
+        {!hasTodayEntry && (
+          <div className='p-2'>
+            <IconButton label={t('start-today.label')} icon='ph--calendar-plus--regular' onClick={handleCreateEntry} />
+          </div>
+        )}
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
@@ -127,7 +129,7 @@ const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntry
         showSelected={false}
         {...props}
       >
-        <Outline.Content classNames='pt-2 pb-2' />
+        <Outline.Content classNames='py-2' />
       </Outline.Root>
     </div>
   );

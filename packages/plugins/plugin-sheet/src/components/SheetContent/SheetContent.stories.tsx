@@ -7,15 +7,15 @@ import React from 'react';
 
 import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { testFunctionPlugins } from '@dxos/compute/testing';
+import { testFunctionPlugins } from '@dxos/compute-hyperformula/testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '#testing';
+import { translations } from '#translations';
 import { Sheet } from '#types';
 
-import { translations } from '../../translations';
 import { useComputeGraph } from '../ComputeGraph';
 import { SheetRoot } from '../SheetRoot';
 import { SheetContent } from './SheetContent';

@@ -1,0 +1,63 @@
+layer: application
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--platform=node'
+  # Run the MCP server from source (no build step required thanks to
+  # `tsx --conditions=source`). Long-running; designed to be piped to
+  # an MCP client via stdio.
+  serve:
+    command: pnpm
+    args:
+      - exec
+      - tsx
+      - '--conditions=source'
+      - src/cli.ts
+    preset: server
+  # Run the MCP server over HTTP (Streamable HTTP transport on /mcp). Lets
+  # plugin-assistant (and other HTTP/SSE-only MCP clients) connect by URL.
+  # Add the resulting URL (`http://localhost:39476/mcp`) as an MCP server
+  # in plugin-assistant's settings with protocol = http.
+  serve-http:
+    command: pnpm
+    args:
+      - exec
+      - tsx
+      - '--conditions=source'
+      - src/cli.ts
+      - '--http'
+      - '39476'
+    preset: server
+  # Launch the MCP Inspector against this server with all paths absolutized.
+  # Useful for interactive testing.
+  inspect:
+    command: node
+    args:
+      - scripts/inspect.mjs
+    preset: server
+  # End-to-end sanity check: spawns the Inspector, authenticates against the
+  # proxy with the printed token, and confirms /config returns 200. Catches
+  # stale-process port collisions, broken auth, and spawn failures before
+  # they manifest as a vague browser-side "Connection Error".
+  sanity:
+    command: node
+    args:
+      - scripts/sanity.mjs
+    options:
+      cache: false
+  # Verify the Claude Code MCP entry in ~/.claude/settings.json works
+  # end-to-end: spawns the server with the exact command + args Claude Code
+  # would use, completes the JSON-RPC handshake, lists tools, and invokes
+  # list_packages. Run this BEFORE restarting Claude Code to confirm the
+  # entry is valid; if it passes, restart and the server will connect.
+  check:
+    command: node
+    args:
+      - scripts/check-claude-config.mjs
+    options:
+      cache: false

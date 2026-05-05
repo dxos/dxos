@@ -7,7 +7,7 @@ import React from 'react';
 import { expect, within } from 'storybook/test';
 
 import { log } from '@dxos/log';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 
 import { useClient } from '../client';
@@ -16,7 +16,7 @@ import { type WithClientProviderProps, withClientProvider, withMultiClientProvid
 
 const SpaceInfo = ({ space }: { space: Space }) => {
   const name = space.isOpen ? space.properties.name : '';
-  return <SyntaxHighlighter language='json'>{JSON.stringify({ id: space.id, name }, null, 2)}</SyntaxHighlighter>;
+  return <JsonHighlighter data={{ id: space.id, name }} />;
 };
 
 const DefaultStory = () => {
@@ -28,7 +28,7 @@ const DefaultStory = () => {
 
   return (
     <div className='flex flex-col divide-y divide-separator border border-separator'>
-      <SyntaxHighlighter language='json'>{JSON.stringify(client.toJSON(), null, 2)}</SyntaxHighlighter>
+      <JsonHighlighter data={client.toJSON()} />
       {spaces.map((space) => (
         <SpaceInfo key={space.id} space={space} />
       ))}

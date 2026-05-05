@@ -61,9 +61,6 @@
       "path": "../../core/assistant-toolkit"
     },
     {
-      "path": "../../core/blueprints"
-    },
-    {
       "path": "../../core/compute"
     },
     {
@@ -79,9 +76,6 @@
       "path": "../../core/echo/echo-query"
     },
     {
-      "path": "../../core/functions"
-    },
-    {
       "path": "../../core/functions-runtime"
     },
     {
@@ -92,9 +86,6 @@
     },
     {
       "path": "../../core/mesh/rpc-tunnel"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"
@@ -190,6 +181,9 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-integration"
+    },
+    {
       "path": "../plugin-markdown"
     },
     {
@@ -203,9 +197,6 @@
     },
     {
       "path": "../plugin-theme"
-    },
-    {
-      "path": "../plugin-token-manager"
     }
   ]
 }

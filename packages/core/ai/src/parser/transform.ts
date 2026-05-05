@@ -15,6 +15,8 @@ export type StreamBlock =
       content: StreamBlock[];
       closing?: boolean;
       selfClosing?: boolean;
+      /** Set to true once the matching closing tag has been observed in the source. */
+      closed?: boolean;
     }
   | { type: 'text'; content: string }
   | { type: 'json'; disposition?: string; content: string };

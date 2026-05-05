@@ -14,10 +14,10 @@ import {
   getWorkspaceFromPath,
   toUrlPath,
 } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 import { Node } from '@dxos/plugin-graph';
 import { isTauri } from '@dxos/util';
 

@@ -3,8 +3,8 @@
 //
 
 import { AgentStatus } from '@dxos/ai';
+import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/compute';
 import { type Entity, Obj, type Ref } from '@dxos/echo';
-import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/functions';
 import { type ObjectId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
@@ -199,13 +199,19 @@ export class ExecutionGraph {
    */
   private _updatePendingToolResults(toolCallId: string, agentStatusId: string) {
     const toolResultId = this._pendingToolResults.get(toolCallId);
-    if (!toolResultId) return;
+    if (!toolResultId) {
+      return;
+    }
 
     const toolResultCommit = this._commits.find((c) => c.id === toolResultId);
-    if (!toolResultCommit) return;
+    if (!toolResultCommit) {
+      return;
+    }
 
     const toolCallCommitId = this._toolCallCommitIds.get(toolCallId);
-    if (!toolCallCommitId) return;
+    if (!toolCallCommitId) {
+      return;
+    }
 
     // Replace tool call commit with AgentStatus commit.
     const toolCallIndex = toolResultCommit.parents.indexOf(toolCallCommitId);
@@ -221,7 +227,9 @@ export class ExecutionGraph {
    */
   private _handleLateToolResultUpdate(toolCallId: string, toolResultId: string) {
     const toolCallCommitId = this._toolCallCommitIds.get(toolCallId);
-    if (!toolCallCommitId) return;
+    if (!toolCallCommitId) {
+      return;
+    }
 
     const messageId = toolCallCommitId.split('_toolCall_')[0];
     const toolCallBranch = `${messageId}_${toolCallId}`;
@@ -372,7 +380,9 @@ const createBlockCommit = (
   const timestamp = new Date(message.created);
   switch (block._tag) {
     case 'text':
-      if (!block.text.trim().length) return null;
+      if (!block.text.trim().length) {
+        return null;
+      }
       return {
         id: getGenericBlockId(message.id, idx),
         branch,

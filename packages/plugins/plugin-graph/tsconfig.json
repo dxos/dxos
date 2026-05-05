@@ -32,7 +32,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/operation"
+      "path": "../../core/compute"
     },
     {
       "path": "../../sdk/app-framework"

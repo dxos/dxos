@@ -14,13 +14,13 @@ import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { TestSchema, useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { translations as formTranslations } from '@dxos/react-ui-form';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { functions } from '#testing';
+import { translations } from '#translations';
 
-import { translations } from '../../translations';
 import { TriggerEditor, type TriggerEditorProps } from './TriggerEditor';
 
 const types = [

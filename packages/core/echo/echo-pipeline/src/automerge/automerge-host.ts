@@ -512,11 +512,6 @@ export class AutomergeHost extends Resource {
     this.documentsSaved.emit();
   }
 
-  @trace.info({ depth: null })
-  private _automergePeers(): PeerId[] {
-    return this._repo.peers;
-  }
-
   private async _isDocumentInRemoteCollection(params: RemoteDocumentExistenceCheckProps): Promise<boolean> {
     for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
       const remoteCollections = this._collectionSynchronizer.getRemoteCollectionStates(collectionId);

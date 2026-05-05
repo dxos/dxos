@@ -64,9 +64,9 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
   const context = getContextFromEntry(entry);
   if (context) {
     if (Object.keys(context).length === 1 && 'error' in context) {
-      args.push(context.error);
+      args.push(unwrapEffectError(context.error));
     } else if (Object.keys(context).length === 1 && 'err' in context) {
-      args.push(context.err);
+      args.push(unwrapEffectError(context.err));
     } else {
       args.push(context);
     }
@@ -137,3 +137,13 @@ const TEST_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
 };
 
 export const BROWSER_PROCESSOR: LogProcessor = CONFIG.useTestProcessor ? TEST_BROWSER_PROCESSOR : APP_BROWSER_PROCESSOR;
+
+// effect-specific
+const originalSymbol = Symbol.for('effect/OriginalAnnotation');
+
+const unwrapEffectError = (error: any) => {
+  if (typeof error === 'object' && error !== null && originalSymbol in error) {
+    return error[originalSymbol];
+  }
+  return error;
+};

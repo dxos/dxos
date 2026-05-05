@@ -80,7 +80,6 @@ export const Numbers: Story = {
     const [count, setCount] = useState(123);
     const str = String(count).padStart(n, '0');
     useEffect(() => {
-      // TODO(burdon): Use animation frame.
       const i = setInterval(() => setCount((count) => count + 1), 1_000);
       return () => clearInterval(i);
     }, []);

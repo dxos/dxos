@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Script } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { Script } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { CollectionModel } from '@dxos/schema';
 
 import { Create } from './definitions';

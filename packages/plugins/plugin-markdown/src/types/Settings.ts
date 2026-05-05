@@ -53,10 +53,10 @@ export const Settings = Schema.mutable(
         description: 'Show developer tools and diagnostics for the editor.',
       }),
     ),
-    typewriter: Schema.optional(
+    snippets: Schema.optional(
       Schema.String.annotations({
-        title: 'Typewriter script',
-        description: 'Script to replay typed input for testing purposes.',
+        title: 'Snippets',
+        description: 'Input snippets to replay for testing purposes.',
       }),
     ),
   }),

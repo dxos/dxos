@@ -9,7 +9,6 @@ import { random } from '@dxos/random';
 import { Domino } from '@dxos/ui';
 import {
   type EditorSelectionState,
-  type RenderCallback,
   decorateMarkdown,
   folding,
   formattingKeymap,
@@ -17,6 +16,7 @@ import {
   linkTooltip,
   table,
 } from '@dxos/ui-editor';
+import { type RenderCallback } from '@dxos/ui-editor/types';
 import { safeUrl } from '@dxos/util';
 
 import { str } from '../../util';

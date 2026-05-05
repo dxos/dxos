@@ -14,7 +14,7 @@ import { SyntaxHighlighter } from './SyntaxHighlighter';
 const meta = {
   title: 'ui/react-ui-syntax-highlighter/SyntaxHighlighter',
   component: SyntaxHighlighter,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', scroll: true })],
   parameters: {
     layout: 'fullscreen',
   },
@@ -27,8 +27,8 @@ type Story = StoryObj<typeof SyntaxHighlighter>;
 export const Default: Story = {
   args: {
     language: 'json',
-    classNames: 'text-sm',
     children: TEXT,
+    copyButton: true,
   },
 };
 

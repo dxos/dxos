@@ -12,8 +12,9 @@ import { useTranslation } from 'react-i18next';
 import { composable, composableProps, slottable, type ToolbarStyleProps } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
+import { translationKey } from '#translations';
+
 import { useThemeContext } from '../../hooks';
-import { translationKey } from '../../translations';
 import {
   Button,
   ButtonGroup,

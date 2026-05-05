@@ -53,6 +53,7 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@dxos/vite-plugin-log": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "partykit": "catalog:",

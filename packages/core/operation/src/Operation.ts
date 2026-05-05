@@ -373,7 +373,7 @@ export const deserialize = (record: PersistentOperation): Definition.Any => {
  * Update properties on the target operation record from the source operation record.
  */
 export const setFrom = (target: PersistentOperation, source: PersistentOperation) => {
-  Obj.change(target, (target) => {
+  Obj.update(target, (target) => {
     target.key = source.key ?? target.key;
     target.name = source.name ?? target.name;
     target.version = source.version;
@@ -390,14 +390,18 @@ export const setFrom = (target: PersistentOperation, source: PersistentOperation
  * Options for operation invocation.
  */
 export interface InvokeOptions {
-  /** Space ID to provide database context for the handler. */
+  /**
+   * Space ID to provide database context for the handler.
+   */
   spaceId?: Key.SpaceId;
   /**
-   * DXN string of the conversation feed (queue). Passed to the process environment so nested operations
-   * can resolve AiContextService and related services.
+   * DXN string of the conversation feed (queue).
+   * Passed to the process environment so nested operations can resolve AiContextService and related services.
    */
   conversation?: DXN.String;
-  /** Optional process-runtime tracing metadata (consumed by `@dxos/functions-runtime` when wired). */
+  /**
+   * Optional process-runtime tracing metadata (consumed by `@dxos/functions-runtime` when wired).
+   */
   tracing?: unknown;
 }
 

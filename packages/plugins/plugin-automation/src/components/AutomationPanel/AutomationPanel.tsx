@@ -10,7 +10,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Context } from '@dxos/context';
-import { Filter, Obj, Tag } from '@dxos/echo';
+import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { Script, Trigger } from '@dxos/functions';
 import { KEY_QUEUE_CURSOR } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
@@ -43,7 +43,10 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   const client = useClient();
   const functionsServiceClient = useMemo(() => FunctionsServiceClient.fromClient(client), [client]);
   const functions = useQuery(space.db, Filter.type(Operation.PersistentOperation));
-  const triggers = useQuery(space.db, Filter.type(Trigger.Trigger));
+  const triggers = useQuery(
+    space.db,
+    Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-automation.AutomationPanel'),
+  );
   const filteredTriggers = useMemo(() => {
     return object ? triggers.filter(triggerMatch(object)) : triggers;
   }, [object, triggers]);
@@ -77,7 +80,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
 
   const handleSave: TriggerEditorProps['onSave'] = (trigger) => {
     if (selected) {
-      Obj.change(selected, (selected) => {
+      Obj.update(selected, (selected) => {
         Object.assign(selected, trigger);
       });
     } else {
@@ -99,7 +102,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   };
 
   const handleResetCursor = async (trigger: Trigger.Trigger) => {
-    Obj.change(trigger, (trigger) => {
+    Obj.update(trigger, (trigger) => {
       Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
     });
     await space.db.flush({ indexes: true });

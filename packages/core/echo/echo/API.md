@@ -80,7 +80,7 @@ const task = Obj.make(Task, {
 });
 
 // Mutate (batched, single notification)
-Obj.change(task, (t) => {
+Obj.update(task, (t) => {
   t.title = 'Updated';
   Obj.setValue(t, ['nested', 0, 'field'], 'value');
 });
@@ -103,7 +103,7 @@ const rel = Relation.make(AnchoredTo, {
 });
 
 // Mutate
-Relation.change(rel, (r) => {
+Relation.update(rel, (r) => {
   r.anchor = 'section-2';
 });
 
@@ -172,7 +172,7 @@ const items = yield * Feed.runQuery(feed, Filter.type(Person));
 
 ECHO has two representations for every object and relation: **live** and **snapshot**.
 
-**Live object** -- A reactive proxy backed by the ECHO database. Reading a property always returns the latest value, including changes made locally, by other parts of the app, or replicated from a remote peer. Live objects can be mutated inside `Obj.change` (or `Relation.change`). Subscribing to a live object (`Obj.subscribe`) fires callbacks whenever any property changes.
+**Live object** -- A reactive proxy backed by the ECHO database. Reading a property always returns the latest value, including changes made locally, by other parts of the app, or replicated from a remote peer. Live objects can be mutated inside `Obj.update` (or `Relation.update`). Subscribing to a live object (`Obj.subscribe`) fires callbacks whenever any property changes.
 
 **Snapshot** -- An immutable, point-in-time copy of a live object's state. Property values are frozen at the moment the snapshot was created and will never change, regardless of subsequent mutations or remote replication. Snapshots are useful when you need a stable reference to an object's state, for example when rendering a list or computing a diff.
 
@@ -227,11 +227,11 @@ Mutation APIs reject snapshots:
 
 ```ts
 // All of these are type errors and/or throw at runtime:
-Obj.change(snapshot, (s) => {
+Obj.update(snapshot, (s) => {
   s.name = 'Bob';
 }); // Error
 Obj.subscribe(snapshot, () => {}); // Error
-Relation.change(relSnap, (r) => {
+Relation.update(relSnap, (r) => {
   r.anchor = 'x';
 }); // Error
 ```

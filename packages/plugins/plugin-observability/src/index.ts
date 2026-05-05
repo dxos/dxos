@@ -6,4 +6,3 @@ export { ObservabilityCapabilities, ObservabilityEvents } from './types';
 export * from './components';
 export * from './meta';
 export * from './ObservabilityPlugin';
-export { translations as observabilityTranslations } from './translations';

@@ -7,5 +7,6 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/translations.ts'
       - '--platform=browser'
       - '--ignorePackage=virtual:pwa-register'

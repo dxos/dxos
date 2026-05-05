@@ -8,8 +8,8 @@ import React, { useContext } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -19,9 +19,9 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { ComputeGraphContext, useComputeGraph } from '#components';
 import { SheetOperation } from '#operations';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '#testing';
+import { translations } from '#translations';
 import { Sheet } from '#types';
 
-import { translations } from '../../translations';
 import RangeList from '../RangeList';
 import { SheetContainer } from './SheetContainer';
 

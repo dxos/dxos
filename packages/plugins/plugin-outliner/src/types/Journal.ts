@@ -106,7 +106,7 @@ export const getOrCreateEntry = async (
   }
 
   const entry = db.add(makeEntry(date)) as JournalEntry;
-  Obj.change(journal, (journal) => {
+  Obj.update(journal, (journal) => {
     journal.entries[dateKey] = Ref.make(entry);
   });
   return entry;

@@ -49,7 +49,9 @@ export const StatusBar = (props: StatusBarProps) => {
 export function toCircled(char: string): string {
   const upper = char.toUpperCase();
   const code = upper.codePointAt(0);
-  if (!code) return char;
+  if (!code) {
+    return char;
+  }
   // A-Z -> Ⓐ-Ⓩ
   if (code >= 65 && code <= 90) {
     return String.fromCodePoint(0x24b6 + (code - 65));

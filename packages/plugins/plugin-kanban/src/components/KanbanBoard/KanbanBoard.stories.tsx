@@ -17,9 +17,9 @@ import { Organization } from '@dxos/types';
 
 import { createEchoChangeCallback as createKanbanChangeCallback } from '#hooks';
 import { KanbanCardTileSimple } from '#testing';
+import { translations } from '#translations';
 import { Kanban } from '#types';
 
-import { translations } from '../../translations';
 import { KanbanBoard } from './KanbanBoard';
 
 random.seed(1);
@@ -79,7 +79,9 @@ const DefaultStory = () => {
 
   const handleCardAdd = useCallback(
     (columnValue: string | undefined) => {
-      if (!state || !columnFieldPath || !registry) return undefined;
+      if (!state || !columnFieldPath || !registry) {
+        return undefined;
+      }
       const card = Obj.make(Organization.Organization, {
         ...createOrg(),
         ...(columnFieldPath ? { [columnFieldPath]: columnValue } : {}),
@@ -93,7 +95,9 @@ const DefaultStory = () => {
 
   const handleCardRemove = useCallback(
     (card: Obj.Unknown) => {
-      if (!registry) return;
+      if (!registry) {
+        return;
+      }
       const current = registry.get(items) ?? [];
       registry.set(
         items,

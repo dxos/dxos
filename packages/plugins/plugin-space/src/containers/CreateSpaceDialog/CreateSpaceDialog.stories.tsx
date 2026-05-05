@@ -11,7 +11,8 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { Dialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { CreateSpaceDialog } from './CreateSpaceDialog';
 
 const DefaultStory = () => (

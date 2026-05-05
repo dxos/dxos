@@ -7,7 +7,8 @@ import React, { useCallback, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../translations';
+import { translations } from '#translations';
+
 import { SampleItemView, type SampleItemViewProps } from './SampleItemView';
 
 type StatusValue = 'active' | 'archived' | 'draft';

@@ -51,6 +51,7 @@ export const layerLive: Layer.Layer<Trace.TraceSink | FeedTraceSink, never, Data
             const messages = buffer;
             buffer = [];
             if (messages.length > 0) {
+              log('trace feed append batch', { count: messages.length, feedId: feed.id });
               yield* Feed.append(feed, messages);
             }
           }
@@ -66,6 +67,7 @@ export const layerLive: Layer.Layer<Trace.TraceSink | FeedTraceSink, never, Data
           const messages = buffer;
           buffer = [];
           if (messages.length > 0) {
+            log('trace feed append batch (flush now)', { count: messages.length, feedId: feed.id });
             yield* Feed.append(feed, messages);
           }
         }).pipe(Effect.provide(runtime));
@@ -75,7 +77,12 @@ export const layerLive: Layer.Layer<Trace.TraceSink | FeedTraceSink, never, Data
       return Context.mergeAll(
         Trace.TraceSink.context({
           write: (message) => {
-            log('write trace message', { message });
+            log('trace message buffered', {
+              feedId: feed.id,
+              pid: message.meta.pid,
+              isEphemeral: message.isEphemeral,
+              eventTypes: message.events.map((event) => event.type),
+            });
             buffer.push(message);
             scheduleFlush();
           },

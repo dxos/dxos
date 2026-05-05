@@ -1,0 +1,69 @@
+{
+  "name": "@dxos/plugin-trello",
+  "version": "0.8.3",
+  "private": true,
+  "description": "DXOS plugin that integrates Trello as a sync source via the generic Integration mechanism.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "imports": {
+    "#capabilities": "./src/capabilities/index.ts",
+    "#meta": "./src/meta.ts",
+    "#operations": "./src/operations/index.ts"
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/compute": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-atom": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-integration": "workspace:*",
+    "@dxos/plugin-kanban": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 export class Log extends Schema.TaggedClass<Log>()('org.dxos.test.logger.log', {
   input: Schema.Struct({

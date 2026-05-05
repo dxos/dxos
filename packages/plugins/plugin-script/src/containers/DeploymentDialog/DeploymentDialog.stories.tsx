@@ -13,7 +13,8 @@ import { Dialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { AccessToken } from '@dxos/types';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { DeploymentDialog } from './DeploymentDialog';
 
 const DeploymentDialogStory = () => {

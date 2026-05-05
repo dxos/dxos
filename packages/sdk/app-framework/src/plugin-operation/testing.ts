@@ -9,7 +9,7 @@ import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { Operation, type OperationInvoker } from '@dxos/operation';
+import { Operation, type OperationInvoker } from '@dxos/compute';
 
 //
 // Test Operations

@@ -6,10 +6,11 @@ import React, { type Dispatch, type SetStateAction, useMemo, useState } from 're
 import { QR } from 'react-qr-rounded';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
-import { type Space, useSpaceInvitations } from '@dxos/react-client/echo';
+import { useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { Button, Clipboard, Icon, useId, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
@@ -40,10 +41,9 @@ const handleInvitationEvent = (invitation: Invitation, subscription: ZenObservab
   }
 };
 
-export type MembersContainerProps = {
-  space: Space;
+export type MembersContainerProps = AppSurface.SpaceArticleProps<{
   createInvitationUrl: (invitationCode: string) => string;
-};
+}>;
 
 export const MembersContainer = ({ space, createInvitationUrl }: MembersContainerProps) => {
   const { t } = useTranslation(meta.id);

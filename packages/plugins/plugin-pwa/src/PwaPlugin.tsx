@@ -10,8 +10,7 @@ import { AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
 
 import { meta } from '#meta';
-
-import { translations } from './translations';
+import { translations } from '#translations';
 
 export const PwaPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),

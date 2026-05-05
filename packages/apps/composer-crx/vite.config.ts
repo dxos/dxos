@@ -119,6 +119,14 @@ export default defineConfig({
             js: ['src/content.ts'],
           },
         ],
+        // Expose the icon sprite to pages so the picker's SVG `<use href=...>`
+        // references resolve when it's injected into arbitrary sites.
+        web_accessible_resources: [
+          {
+            resources: ['icons.svg'],
+            matches: ['http://*/*', 'https://*/*'],
+          },
+        ],
       },
     }),
 

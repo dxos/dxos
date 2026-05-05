@@ -8,7 +8,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { Obj } from '@dxos/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 // TODO(burdon): Create generic container with wireframe mode.
@@ -29,11 +29,7 @@ export const Wireframe = ({ classNames, label, object }: WireframeProps) => {
           <div>{label}</div>
           <div>{`[${width}x${height}]`}</div>
         </div>
-        {object && (
-          <SyntaxHighlighter language='json' classNames='text-xs opacity-75 rounded-sm'>
-            {JSON.stringify(object, undefined, 2)}
-          </SyntaxHighlighter>
-        )}
+        {object && <JsonHighlighter data={object} classNames='text-xs opacity-75 rounded-sm' />}
       </div>
       <svg width={width} height={height} className='bg-transparent *:text-subdued'>
         <rect x={0} y={0} width={width} height={height} strokeWidth={1} fill='none' />

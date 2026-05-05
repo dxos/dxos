@@ -42,7 +42,7 @@
       "path": "../../core/assistant"
     },
     {
-      "path": "../../core/blueprints"
+      "path": "../../core/compute"
     },
     {
       "path": "../../core/echo/echo"
@@ -52,12 +52,6 @@
     },
     {
       "path": "../../core/echo/echo-react"
-    },
-    {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"

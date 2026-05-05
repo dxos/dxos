@@ -6,9 +6,9 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { type Atom, type Registry } from '@effect-atom/atom-react';
 
+import { type OperationInvoker } from '@dxos/compute';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
-import { type OperationInvoker } from '@dxos/operation';
 import { type Markdown } from '@dxos/plugin-markdown/types';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { comments, createExternalCommentSync } from '@dxos/ui-editor';
@@ -73,7 +73,7 @@ export const threads = (
             const name = getName(doc, anchor.anchor);
             const thread = Relation.getSource(anchor) as Thread.Thread;
             if (name && name !== thread.name) {
-              Obj.change(thread, (thread) => {
+              Obj.update(thread, (thread) => {
                 thread.name = name;
               });
             }
@@ -130,7 +130,7 @@ export const threads = (
 
         const thread = query.results.find((object) => Relation.getSource(object).id === id);
         if (thread) {
-          Relation.change(thread, (thread) => {
+          Relation.update(thread, (thread) => {
             thread.anchor = undefined;
           });
         }
@@ -139,10 +139,10 @@ export const threads = (
         const draft = registry.get(stateAtom).drafts[objectId]?.find((d) => Relation.getDXN(d).toString() === id);
         if (draft) {
           const thread = Relation.getSource(draft) as Thread.Thread;
-          Obj.change(thread, (thread) => {
+          Obj.update(thread, (thread) => {
             thread.name = getName(doc, cursor);
           });
-          Relation.change(draft, (draft) => {
+          Relation.update(draft, (draft) => {
             draft.anchor = cursor;
           });
         }
@@ -151,10 +151,10 @@ export const threads = (
         if (relation) {
           const thread = Relation.getSource(relation);
           if (Obj.instanceOf(Thread.Thread, thread)) {
-            Obj.change(thread, (thread) => {
+            Obj.update(thread, (thread) => {
               thread.name = getName(doc, cursor);
             });
-            Relation.change(relation, (relation) => {
+            Relation.update(relation, (relation) => {
               relation.anchor = cursor;
             });
           }

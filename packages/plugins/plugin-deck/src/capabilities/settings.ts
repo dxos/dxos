@@ -20,7 +20,7 @@ export default Capability.makeModule(() =>
         showHints: false,
         enableDeck: false,
         enableStatusbar: false,
-        enableNativeRedirect: !import.meta.env.DEV,
+        enableNativeRedirect: false,
         encapsulatedPlanks: false,
       }),
     });

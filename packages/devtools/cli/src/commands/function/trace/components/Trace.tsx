@@ -5,9 +5,10 @@
 import * as Option from 'effect/Option';
 import { createEffect, createSignal, onCleanup } from 'solid-js';
 
+import { getUserFunctionIdInMetadata } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { type Queue, type QueueAPI } from '@dxos/echo-db';
-import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import {
   InvocationOutcome,
   type InvocationSpan,
@@ -17,7 +18,6 @@ import {
   createInvocationSpans,
 } from '@dxos/functions-runtime';
 import { type DXN } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
 
 import { type Column, Table } from '../../../../components';
 import { theme } from '../../../../theme';
@@ -157,8 +157,12 @@ const formatTime = (timestamp: number): string => {
 
 // Helper: Format invocation outcome as status string.
 const formatStatus = (outcome?: InvocationOutcome): string => {
-  if (outcome === InvocationOutcome.SUCCESS) return 'OK';
-  if (outcome === InvocationOutcome.FAILURE) return 'ERR';
+  if (outcome === InvocationOutcome.SUCCESS) {
+    return 'OK';
+  }
+  if (outcome === InvocationOutcome.FAILURE) {
+    return 'ERR';
+  }
   return outcome ?? 'UNKNOWN';
 };
 

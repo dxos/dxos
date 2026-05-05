@@ -9,13 +9,13 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
 import { AiContextBinder, AiContextService } from '@dxos/assistant';
-import { type Blueprint } from '@dxos/blueprints';
-import { Annotation, Database, Feed, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { type Blueprint } from '@dxos/compute';
+import { QueueService } from '@dxos/compute';
+import { Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { acquireReleaseResource } from '@dxos/effect';
-import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { QueueAnnotation, Text } from '@dxos/schema';
 
@@ -29,9 +29,20 @@ export const Agent = Schema.Struct({
   name: Schema.optional(Schema.String),
 
   /**
+   * When false, agent triggers are disabled after sync-triggers runs.
+   */
+  enabled: Schema.optional(Schema.Boolean).annotations({
+    title: 'Enabled',
+    description: 'Master switch for agent automation; propagated to all triggers on sync.',
+  }),
+
+  /**
    * Instructions for the agent.
    */
-  instructions: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+  instructions: Ref.Ref(Text.Text).pipe(
+    Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
+    Schema.annotations({ title: 'Instructions' }),
+  ),
 
   /**
    * Primary chat for the agent.
@@ -39,12 +50,11 @@ export const Agent = Schema.Struct({
   // TODO(dmaretskyi): Multiple chats; RB: branching hierarchy.
   chat: Schema.optional(Ref.Ref(Chat.Chat).pipe(FormInputAnnotation.set(false))),
 
-  // TODO(burdon): Is this used?
+  // TODO(burdon): Is this used? Should it be an artifact?
+  // Format.FormatAnnotation.set(Format.TypeFormat.Markdown)
   plan: Ref.Ref(Plan.Plan).pipe(FormInputAnnotation.set(false)),
 
-  // TODO(burdon): Currently Memory.Memory objects are global to the space.
-
-  // TODO(burdon): Create ref to document to manage memories.
+  // TODO(burdon): Currently Memory.Memory objects are global to the space; make them artifacts?
   artifacts: Schema.Array(
     Schema.Struct({
       // TODO(dmaretskyi): Consider gettings names from the artifact itself using Obj.getLabel.
@@ -76,6 +86,15 @@ export const Agent = Schema.Struct({
   filterEvents: Schema.optional(Schema.Boolean).annotations({
     title: 'Filter events',
     description: 'Allow the agent to filter events.',
+  }),
+
+  /**
+   * Cron expression for a timer trigger that invokes the agent worker on a schedule.
+   * The timer trigger bypasses the qualifier and goes straight to the agent worker.
+   */
+  cron: Schema.optional(Schema.String).annotations({
+    title: 'Cron',
+    description: 'Cron expression for a timer trigger that invokes the agent on a schedule.',
   }),
 }).pipe(
   Type.object({
@@ -116,6 +135,7 @@ export const makeInitialized = (
       artifacts: props.artifacts ?? [],
       subscriptions: props.subscriptions ?? [],
       filterEvents: props.filterEvents ?? true,
+      enabled: props.enabled ?? true,
     });
     yield* Database.add(agent);
     const feed = yield* Database.add(Feed.make());
@@ -145,7 +165,7 @@ export const makeInitialized = (
 
     const inputQueue = yield* QueueService.createQueue();
 
-    Obj.change(agent, (agent) => {
+    Obj.update(agent, (agent) => {
       agent.chat = Ref.make(chat);
       agent.queue = Ref.fromDXN(inputQueue.dxn);
     });
@@ -196,7 +216,7 @@ export const resetChatHistory = (
       }),
     );
     Obj.setParent(feed, chat);
-    Obj.change(agent, (agent) => {
+    Obj.update(agent, (agent) => {
       agent.chat = Ref.make(chat);
     });
 

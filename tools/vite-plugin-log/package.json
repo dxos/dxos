@@ -31,14 +31,26 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "test": "vitest run --passWithNoTests --project=node"
+  },
   "devDependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
-    "vite": "catalog:"
+    "@oxc-project/types": "catalog:",
+    "rolldown": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
+    "rolldown": ">=1.0.0-beta.0",
     "vite": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "rolldown": {
+      "optional": true
+    }
   }
 }

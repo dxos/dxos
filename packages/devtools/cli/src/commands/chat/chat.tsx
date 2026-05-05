@@ -4,6 +4,7 @@
 
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
+import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
@@ -17,7 +18,6 @@ import { type AiSession } from '@dxos/assistant';
 import { CommandConfig, Common, withTypes } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Filter } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
 
@@ -33,6 +33,7 @@ import {
   types,
 } from '../../util';
 import { Chat } from './components';
+import { runNonInteractive } from './non-interactive';
 import { ChatProcessor } from './processor';
 
 export const chat = Command.make(
@@ -59,10 +60,16 @@ export const chat = Command.make(
       Options.withAlias('b'),
       Options.repeated,
     ),
+    prompt: Options.text('prompt').pipe(
+      Options.withDescription(
+        'When set, runs the agent loop non-interactively with this prompt and exits — no TUI. Combine with --json to get structured object output.',
+      ),
+      Options.optional,
+    ),
   },
   (options) =>
     Effect.gen(function* () {
-      const { verbose, logLevel } = yield* CommandConfig;
+      const { verbose, logLevel, json } = yield* CommandConfig;
 
       // Configure logging.
       const logBuffer = createLogBuffer();
@@ -94,10 +101,15 @@ export const chat = Command.make(
       });
       const [conversation, setConversation] = createSignal<AiSession | undefined>(undefined);
 
-      invariant(client.halo.identity);
+      if (!client.halo.identity) {
+        yield* Console.error('No HALO identity configured. Run `dx halo create --displayName "<name>"` first.');
+        return;
+      }
       const space = getPersonalSpace(client) ?? client.spaces.get()[0];
       if (!space) {
-        log.error('no space available for chat');
+        yield* Console.error(
+          'No space available for chat. Run `dx halo create` (creates one automatically) or `dx space create --name "<name>"`.',
+        );
         return;
       }
 
@@ -131,6 +143,24 @@ export const chat = Command.make(
         setConversation(next);
         return next;
       };
+
+      // Non-interactive mode: --prompt runs the agent loop to completion and
+      // exits without rendering the TUI. JSON output emits an array of
+      // `{kind, dxn}` for the objects created or updated during the session.
+      const nonInteractivePrompt = Option.getOrUndefined(options.prompt);
+      if (nonInteractivePrompt !== undefined) {
+        yield* Effect.promise(async () => {
+          await runNonInteractive({
+            space,
+            processor,
+            blueprints: [...options.blueprints],
+            prompt: nonInteractivePrompt,
+            model,
+            json,
+          });
+        });
+        return;
+      }
 
       yield* Effect.promise(async () => {
         log.info('initializing', { blueprints: options.blueprints.length });

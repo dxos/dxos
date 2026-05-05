@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Plugin } from '@dxos/app-framework';
+import { PERSONAL_SPACE_TAG } from '@dxos/app-toolkit';
 import { CommandConfig, flushAndSync, spaceLayer } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
@@ -43,13 +44,11 @@ export const handler = Effect.fn(function* ({
   }
 
   // Create personal space for the CLI identity.
-  const { PERSONAL_SPACE_TAG, setPersonalSpace } = yield* Effect.tryPromise(() => import('@dxos/app-toolkit'));
   const space = yield* Effect.promise(() =>
     client.spaces.create({}, { tags: [PERSONAL_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
   );
   yield* Effect.promise(() => space.waitUntilReady());
   yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
-  setPersonalSpace(space);
   yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
 
   if (json) {

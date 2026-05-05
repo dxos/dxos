@@ -14,13 +14,13 @@ import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Filter, Ref, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { translations as stackTranslations } from '@dxos/react-ui-stack';
+import { translations as stackTranslations } from '@dxos/react-ui-stack/translations';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 
+import { translations } from '#translations';
 import { Board } from '#types';
 
-import { translations } from '../../translations';
 import { BoardContainer } from './BoardContainer';
 
 random.seed(0);
@@ -86,7 +86,7 @@ const meta = {
               yield* Effect.promise(() => space.waitUntilReady());
               const board = space.db.add(createBoard());
 
-              Obj.change(board, (board) => {
+              Obj.update(board, (board) => {
                 // Add some sample items
                 Array.from({ length: 10 }).map(() => {
                   const org = createOrg();

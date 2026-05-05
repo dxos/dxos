@@ -35,6 +35,7 @@
     "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/shell": "workspace:*",
+    "@dxos/ui": "workspace:*",
     "agents": "catalog:",
     "ai": "catalog:",
     "react": "catalog:",

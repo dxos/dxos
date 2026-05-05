@@ -6,41 +6,41 @@ import { describe, test } from 'vitest';
 
 import {
   extractDxnsFromObject,
-  extractDxnsFromString,
+  extractDxnFromString,
   extractFirstDxnFromToolInput,
   extractFirstDxnFromToolResult,
 } from './dxn-extractor';
 
 describe('dxn-extractor', () => {
-  describe('extractDxnsFromString', () => {
+  describe('extractDxnFromString', () => {
     test('extracts plain DXN from string', ({ expect }) => {
-      const result = extractDxnsFromString('Found object dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
+      const result = extractDxnFromString('Found object dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
       expect(result).toHaveLength(1);
       expect(result[0].toString()).toBe('dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
     });
 
     test('extracts @dxn prefixed reference from string', ({ expect }) => {
-      const result = extractDxnsFromString('Reference to @dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4 in text');
+      const result = extractDxnFromString('Reference to @dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4 in text');
       expect(result).toHaveLength(1);
       expect(result[0].toString()).toBe('dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
     });
 
     test('extracts multiple DXNs from string', ({ expect }) => {
-      const result = extractDxnsFromString(
+      const result = extractDxnFromString(
         'Objects: dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4 and @dxn:queue:data:SPACE:QUEUE:01KG7R1ZXWFMWQ4DA1Q6TN1DG5',
       );
       expect(result).toHaveLength(2);
     });
 
     test('deduplicates DXNs', ({ expect }) => {
-      const result = extractDxnsFromString(
+      const result = extractDxnFromString(
         'Same object dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4 and dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
       );
       expect(result).toHaveLength(1);
     });
 
     test('returns empty array for string without DXNs', ({ expect }) => {
-      const result = extractDxnsFromString('No DXNs here');
+      const result = extractDxnFromString('No DXNs here');
       expect(result).toHaveLength(0);
     });
   });

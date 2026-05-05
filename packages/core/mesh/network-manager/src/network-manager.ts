@@ -8,7 +8,6 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Messenger, type PeerInfo, type SignalManager } from '@dxos/messaging';
-import { trace } from '@dxos/protocols';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { ComplexMap } from '@dxos/util';
 
@@ -77,7 +76,6 @@ export class SwarmNetworkManager {
   private readonly _signalConnection: SignalConnection;
   private readonly _connectionLimiter: ConnectionLimiter;
   private readonly _connectionLog?: ConnectionLog;
-  private readonly _instanceId = PublicKey.random().toHex();
   private _peerInfo?: PeerInfo = undefined;
 
   private _connectionState = ConnectionState.ONLINE;
@@ -131,10 +129,10 @@ export class SwarmNetworkManager {
   }
 
   async open(): Promise<void> {
-    log.trace('dxos.mesh.network-manager.open', trace.begin({ id: this._instanceId }));
+    log('opening network manager');
     await this._messenger.open();
     await this._signalManager.open();
-    log.trace('dxos.mesh.network-manager.open', trace.end({ id: this._instanceId }));
+    log('opened network manager');
   }
 
   async close(ctx: Context): Promise<void> {

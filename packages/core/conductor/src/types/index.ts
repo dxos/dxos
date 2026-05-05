@@ -3,6 +3,7 @@
 //
 
 export * from './compute';
+export * from './compute-events';
 export * from './graph';
 export * from './model';
 export * from './schema';

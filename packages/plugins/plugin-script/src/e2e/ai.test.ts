@@ -7,16 +7,16 @@ import { test } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
+import { Operation } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
-import { Operation } from '@dxos/operation';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 // To heavy to run in CI.
-describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e')).skip('Function', () => {
+describe.skip('Function', { tags: ['functions-e2e'] }, () => {
   const config = configPreset({ edge: 'local' });
 
   test('bundle anthropic function', { timeout: 120_000 }, async () => {

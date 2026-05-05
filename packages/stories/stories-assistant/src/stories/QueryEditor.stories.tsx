@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Obj, Tag } from '@dxos/echo';
-import { translations } from '@dxos/plugin-assistant';
+import { translations } from '@dxos/plugin-assistant/translations';
 import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
 import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
@@ -79,7 +79,7 @@ const meta: Meta<typeof QueryEditor> = {
           { type: Person.Person, count: 50 },
         ]);
         objects.forEach((obj) => {
-          Obj.change(obj, (obj) => {
+          Obj.update(obj, (obj) => {
             Obj.getMeta(obj).tags = random.helpers.uniqueArray(Object.keys(tags), random.number.int(3));
           });
         });

@@ -19,8 +19,8 @@ import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
 import { SearchContextProvider } from '#hooks';
+import { translations } from '#translations';
 
-import { translations } from '../../translations';
 import { SearchArticle } from './SearchArticle';
 
 random.seed(0);
@@ -34,14 +34,13 @@ const DefaultStory = () => {
 
   return (
     <SearchContextProvider>
-      <SearchArticle space={space} />
+      <SearchArticle role='article' space={space} attendableId={space.id} />
     </SearchContextProvider>
   );
 };
 
 const meta = {
   title: 'plugins/plugin-search/containers/SearchArticle',
-  component: SearchArticle,
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
@@ -71,7 +70,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof SearchArticle>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

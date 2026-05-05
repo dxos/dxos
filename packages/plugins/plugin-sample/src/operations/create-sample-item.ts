@@ -9,7 +9,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { SampleItem } from '#types';
 

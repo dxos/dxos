@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Obj, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 import { Thread } from '@dxos/types';
 
@@ -19,7 +19,7 @@ const handler: Operation.WithHandler<typeof RestoreMessage> = RestoreMessage.pip
       const db = Obj.getDatabase(thread);
       invariant(db, 'Database not found');
 
-      Obj.change(thread, (thread) => {
+      Obj.update(thread, (thread) => {
         thread.messages.splice(messageIndex, 0, Ref.make(message));
       });
 

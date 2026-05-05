@@ -19,8 +19,9 @@ import { Button, useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
+import { translations } from '#translations';
+
 import { useTextEditor } from '../hooks';
-import { translations } from '../translations';
 
 const initialContent = 'Hello world!';
 

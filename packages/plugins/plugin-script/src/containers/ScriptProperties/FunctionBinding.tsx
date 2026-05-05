@@ -4,11 +4,11 @@
 
 import React, { type ChangeEvent, useCallback } from 'react';
 
+import { getUserFunctionIdInMetadata } from '@dxos/compute';
+import { type Script } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { getUserFunctionIdInMetadata } from '@dxos/functions';
-import { type Script } from '@dxos/functions';
 import { getInvocationUrl } from '@dxos/functions-runtime';
-import { Operation } from '@dxos/operation';
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
 import { Clipboard, Input, useControlledState, useTranslation } from '@dxos/react-ui';
@@ -39,7 +39,7 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
 
   const handleBindingBlur = useCallback(() => {
     if (fn) {
-      Obj.change(fn, (fn) => {
+      Obj.update(fn, (fn) => {
         fn.binding = binding;
       });
     }
@@ -60,7 +60,7 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
             disabled
             value={functionUrl}
             onChange={(event) => {
-              Obj.change(fn, (fn) => {
+              Obj.update(fn, (fn) => {
                 fn.name = event.target.value;
               });
             }}

@@ -7,7 +7,7 @@ import React, { type PropsWithChildren } from 'react';
 import { Input, type Label, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
 
 const SETTINGS_PANEL_NAME = 'Settings.Panel';
 const SETTINGS_ITEM_NAME = 'Settings.Item';

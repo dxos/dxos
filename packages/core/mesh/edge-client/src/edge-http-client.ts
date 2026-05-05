@@ -52,6 +52,17 @@ import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
 import { HttpConfig, encodeAuthHeader, withLogging, withRetryConfig } from './http-client';
 import { getEdgeUrlWithProtocol } from './utils';
 
+/**
+ * HTTP wire shape returned by `/queue/.../query`. Unlike `FeedProtocol.QueryResult`
+ * (the RPC proto type, which transports object payloads as JSON strings), the edge
+ * HTTP endpoint embeds each object directly in the response JSON.
+ */
+export type EdgeQueryQueueResponse = {
+  objects?: unknown[];
+  nextCursor?: string;
+  prevCursor?: string;
+};
+
 const DEFAULT_RETRY_TIMEOUT = 1500;
 const DEFAULT_RETRY_JITTER = 500;
 const DEFAULT_MAX_RETRIES_COUNT = 3;
@@ -238,7 +249,7 @@ export class EdgeHttpClient {
     spaceId: SpaceId,
     query: FeedProtocol.QueueQuery,
     args?: EdgeHttpCallArgs,
-  ): Promise<FeedProtocol.QueryResult> {
+  ): Promise<EdgeQueryQueueResponse> {
     const queueId = query.queueIds?.[0];
     invariant(queueId, 'queueId required');
     return this._call(

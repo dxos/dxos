@@ -12,7 +12,7 @@ import type { AiModelResolver as AiModelResolver$, AiService as AiService$ } fro
 import type { OpaqueToolkit } from '@dxos/ai';
 import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
-import type { Blueprint } from '@dxos/blueprints';
+import type { Definition as BlueprintDefinitionPayload } from '@dxos/compute';
 import type { Database, DXN, Type } from '@dxos/echo';
 import type { AnchoredTo } from '@dxos/types';
 
@@ -126,16 +126,10 @@ export namespace AppCapabilities {
    */
   export const Toolkit = Capability$.make<Toolkit>('org.dxos.app-framework.capability.ai-toolkit');
 
-  // TODO(burdon): Move type upstream (into blueprint package).
-  export type BlueprintDefinition = {
-    key: string;
-    make: () => Blueprint.Blueprint;
-  };
-
   /**
    * @category Capability
    */
-  export const BlueprintDefinition = Capability$.make<BlueprintDefinition>(
+  export const BlueprintDefinition = Capability$.make<BlueprintDefinitionPayload>(
     'org.dxos.app-framework.capability.blueprint-definition',
   );
 

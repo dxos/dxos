@@ -16,7 +16,9 @@ export default Capability.makeModule(
     const computeRuntimeResolver = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
     // TODO(wittjosiah): This can probably be a module level import now due to lazy capability loading.
     // Async import removes direct dependency on hyperformula.
-    const { defaultPlugins, ComputeGraphRegistry } = yield* Effect.tryPromise(() => import('@dxos/compute'));
+    const { defaultPlugins, ComputeGraphRegistry } = yield* Effect.tryPromise(
+      () => import('@dxos/compute-hyperformula'),
+    );
     const computeGraphRegistry = new ComputeGraphRegistry({
       plugins: defaultPlugins,
       computeRuntime: computeRuntimeResolver,

@@ -3,7 +3,7 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
-import { translations as componentsTranslations } from '@dxos/react-ui-components';
+import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -61,8 +61,10 @@ export const translations = [
 
         'sync-mailbox.label': 'Sync mailbox',
         'sync-mailbox-error.title': 'Failed to sync mailbox',
+        'sync-mailbox-success.title': 'Mailbox sync complete',
         'sync-calendar.label': 'Sync calendar',
         'sync-calendar-error.title': 'Failed to sync calendar',
+        'sync-calendar-success.title': 'Calendar sync complete',
 
         'show-contact.label': 'Show contact',
         'create-contact.label': 'Create contact',
@@ -132,8 +134,6 @@ export const translations = [
         'saved-filter-name.label': 'Filter name',
 
         'settings.title': 'Inbox settings',
-        'settings.threads.label': 'Group by thread',
-        'settings.threads.description': 'Group messages and responses that belong to the same conversation.',
       },
     },
   },

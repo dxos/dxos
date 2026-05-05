@@ -37,10 +37,10 @@ export type FieldProjection = {
 };
 
 /**
- * Callback type for wrapping mutations in Obj.change().
+ * Callback type for wrapping mutations in Obj.update().
  * Contains separate callbacks for projection and schema mutations
- * since Obj.change() cannot be nested.
- * Note: Callbacks return void because Obj.change() returns void.
+ * since Obj.update() cannot be nested.
+ * Note: Callbacks return void because Obj.update() returns void.
  * Uses Mutable<T> to allow mutations within the callbacks since schemas are readonly by default.
  */
 export type ProjectionChangeCallback = {
@@ -56,7 +56,7 @@ export type ProjectionChangeCallback = {
  *
  * Note: Type assertions are needed because:
  * 1. PersistentSchema's type doesn't include [KindId] but runtime value does
- * 2. Inside Obj.change, the mutable object has different type constraints
+ * 2. Inside Obj.update, the mutable object has different type constraints
  *
  * @param view - The ECHO-backed view object.
  * @param schema - Optional EchoSchema. If not provided, schema mutations will throw.
@@ -65,11 +65,11 @@ export const createEchoChangeCallback = (
   view: View.View,
   schema?: EchoSchema | Types.DeepMutable<JsonSchemaType>,
 ): ProjectionChangeCallback => ({
-  // Inside Obj.change, v is Mutable<View.View>, so v.projection is already mutable.
-  projection: (mutate) => Obj.change(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
+  // Inside Obj.update, v is Mutable<View.View>, so v.projection is already mutable.
+  projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
   schema:
     schema instanceof EchoSchema
-      ? (mutate) => Obj.change(schema.persistentSchema as unknown as Obj.Unknown, (s: any) => mutate(s.jsonSchema))
+      ? (mutate) => Obj.update(schema.persistentSchema as unknown as Obj.Unknown, (s: any) => mutate(s.jsonSchema))
       : schema
         ? (mutate) => mutate(schema)
         : () => {
@@ -101,7 +101,7 @@ export type ProjectionModelProps = {
   /** The base JSON schema of the data being projected. */
   baseSchema: JsonSchemaType;
   /**
-   * Callbacks to wrap mutations in Obj.change().
+   * Callbacks to wrap mutations in Obj.update().
    * Use createEchoChangeCallback() for ECHO-backed objects or createDirectChangeCallback() for plain objects.
    */
   change: ProjectionChangeCallback;
@@ -484,7 +484,7 @@ export class ProjectionModel {
 
     const snapshot = JSON.parse(JSON.stringify(current)) as FieldProjection;
 
-    // Calculate field index before deleting (Obj.change returns void, so we can't get return values from the callback).
+    // Calculate field index before deleting (Obj.update returns void, so we can't get return values from the callback).
     const fieldIndex = this._view.projection.fields.findIndex((field) => field.id === fieldId);
 
     // Delete field from projection.
