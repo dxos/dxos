@@ -43,6 +43,9 @@
       "path": "packages/common/effect-atom-solid/tsconfig.json"
     },
     {
+      "path": "packages/common/effect-zod/tsconfig.json"
+    },
+    {
       "path": "packages/common/errors/tsconfig.json"
     },
     {
@@ -620,6 +623,9 @@
     },
     {
       "path": "packages/ui/react-ui-grid/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-introspect/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-list/tsconfig.json"

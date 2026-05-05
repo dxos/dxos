@@ -10,7 +10,13 @@
 //
 // Importable as `@dxos/introspect-mcp/tools` (see package.json `exports`).
 
-export { createToolDefinitions, inputSchemaToZod, type ToolDefinition } from './tools';
+export {
+  TOOL_METADATA,
+  createToolDefinitions,
+  inputSchemaToZod,
+  type ToolDefinition,
+  type ToolMetadata,
+} from './tools';
 export {
   FindSchemaUsageInput,
   FindSymbolInput,
