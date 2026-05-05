@@ -47,8 +47,17 @@ export const ToolForm = ({ tool, defaultValues, onSubmit, onCancel, className }:
         )}
       </header>
       <Form.Root
+        // `defaultValues` makes the form uncontrolled — it owns its own
+        // internal state via useFormHandler. Passing `values` instead would
+        // require an `onValuesChanged` callback to write changes back; users
+        // would otherwise see edits get reverted on every render.
+        //
+        // The `key` forces a remount when the parent swaps tool — without
+        // it React reconciles in place and the previous tool's values stick,
+        // re-validating against the new (incompatible) schema.
+        key={tool.title}
         schema={tool.inputSchema as any}
-        values={(defaultValues ?? {}) as any}
+        defaultValues={(defaultValues ?? {}) as any}
         onSave={(values) => onSubmit?.(values as Record<string, unknown>)}
         onCancel={onCancel}
       >
