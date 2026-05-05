@@ -1,0 +1,87 @@
+{
+  "name": "@dxos/plugin-slack",
+  "version": "0.8.3",
+  "private": true,
+  "description": "Slack channel integration for Composer Agent.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "imports": {
+    "#capabilities": "./src/capabilities/index.ts",
+    "#components": "./src/components/index.ts",
+    "#containers": "./src/containers/index.ts",
+    "#hooks": "./src/hooks/index.ts",
+    "#meta": "./src/meta.ts",
+    "#types": "./src/types/index.ts"
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs"
+    },
+    "./meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "browser": "./dist/lib/browser/meta.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "meta": [
+        "dist/types/src/meta.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/blueprints": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-atom": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/operation": "workspace:*",
+    "@dxos/plugin-assistant": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-components": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "@types/react": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-components": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
