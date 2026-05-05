@@ -270,8 +270,8 @@ class PluginProject {
 > User in `plugin-code`: _"Add a panel that lists all unread Slack threads."_
 
 1. `plugin-assistant` invokes `plugin-developer` blueprint with project context (current `PluginProject`, recent file edits).
-2. Agent calls `code.search_api("Slack")` → introspect returns no results.
-3. Agent calls `code.search_api("MCP server")` → introspect returns plugin-mcp examples.
+2. Agent calls introspect-mcp tool `find_symbol("Slack")` → no DXOS/Composer API match.
+3. Agent calls introspect-mcp tool `find_symbol("MCP server")` and `get_symbol(...)` on the top hit → returns plugin-mcp examples.
 4. Agent proposes a plan in chat → user approves.
 5. Agent calls `code.read_file("src/plugin.ts")`, then `code.apply_patch(...)` to add the panel.
 6. Agent calls `code.compile()` → diagnostics streamed → 1 type error.
