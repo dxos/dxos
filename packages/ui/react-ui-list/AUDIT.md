@@ -284,6 +284,16 @@ Specifically:
   story.
 - **`react-ui-stack`** is fully retired. All call sites move to
   `Mosaic.Stack` (the existing TODO).
+- **Keyboard navigation is `@fluentui/react-tabster`-only.** Every
+  list-shaped surface in the layered model uses tabster's
+  `useArrowNavigationGroup` (axis: vertical, `memorizeCurrent: true`)
+  for arrow-key traversal — no bespoke `onKeyDown` handlers, no
+  hand-rolled focus rings, no second focus-management library. This is
+  the rule for new code: if you're writing arrow-key handling for a
+  selectable list, you've probably skipped a layer. Existing tabster
+  consumers: `react-ui-search` `Listbox`, `react-ui-stack` `Stack`,
+  `react-ui-mosaic` `Focus.Group`, `react-ui-list` `RowList`.
+
 - **The dx-* grammar** is documented in the README / a small
   `selection.css.md` next to `selected.css`. The rule:
   - `aria-selected` ↔ `dx-selected`.

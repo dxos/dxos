@@ -14,25 +14,22 @@ random.seed(1);
 
 type TestItem = { id: string; name: string; description: string };
 
-const items: TestItem[] = Array.from({ length: 12 }, (_, i) => ({
+const items: TestItem[] = Array.from({ length: 24 }, (_, i) => ({
   id: `item-${i}`,
   name: `Item ${i + 1}`,
   description: random.lorem.sentence(),
 }));
 
 //
-// RowList — dense rows with bottom dividers.
+// RowList — dense rows with bottom dividers. The list fills its parent
+// (column layout supplies full height + a sane default width) thanks to
+// `dx-container` baked into the base class.
 //
 
 const RowListStory = () => {
   const [selected, setSelected] = useState<string | undefined>(items[0].id);
   return (
-    <RowList
-      classNames='w-[28rem] max-h-[24rem] overflow-auto border border-separator rounded-md'
-      selectedId={selected}
-      onSelectChange={setSelected}
-      aria-label='Items'
-    >
+    <RowList selectedId={selected} onSelectChange={setSelected} aria-label='Items'>
       {items.map((item) => (
         <Row key={item.id} id={item.id}>
           <div className='font-medium'>{item.name}</div>
@@ -50,12 +47,7 @@ const RowListStory = () => {
 const CardListStory = () => {
   const [selected, setSelected] = useState<string | undefined>();
   return (
-    <CardList
-      classNames='w-[28rem] max-h-[24rem] overflow-auto p-2'
-      selectedId={selected}
-      onSelectChange={setSelected}
-      aria-label='Items'
-    >
+    <CardList classNames='p-2' selectedId={selected} onSelectChange={setSelected} aria-label='Items'>
       {items.map((item) => (
         <Card key={item.id} id={item.id}>
           <div className='font-medium'>{item.name}</div>
@@ -67,19 +59,14 @@ const CardListStory = () => {
 };
 
 //
-// Mixed disabled state.
+// Disabled rows.
 //
 
 const DisabledStory = () => {
   const [selected, setSelected] = useState<string | undefined>(items[0].id);
   return (
-    <RowList
-      classNames='w-[28rem] border border-separator rounded-md'
-      selectedId={selected}
-      onSelectChange={setSelected}
-      aria-label='Items'
-    >
-      {items.slice(0, 5).map((item, i) => (
+    <RowList selectedId={selected} onSelectChange={setSelected} aria-label='Items'>
+      {items.slice(0, 6).map((item, i) => (
         <Row key={item.id} id={item.id} disabled={i === 2}>
           <div className='font-medium'>
             {item.name}
@@ -89,6 +76,36 @@ const DisabledStory = () => {
         </Row>
       ))}
     </RowList>
+  );
+};
+
+//
+// Master/detail — list is one half of a layout, NOT filling everything.
+// Demonstrates that wrapping in a sized parent (or overriding classNames)
+// composes cleanly with the dx-container default.
+//
+
+const MasterDetailStory = () => {
+  const [selected, setSelected] = useState<string | undefined>(items[0].id);
+  const detail = items.find(({ id }) => id === selected);
+  return (
+    <div role='none' className='dx-container grid grid-cols-[20rem_1fr] divide-x divide-separator'>
+      <RowList selectedId={selected} onSelectChange={setSelected} aria-label='Items'>
+        {items.map((item) => (
+          <Row key={item.id} id={item.id}>
+            <div className='font-medium'>{item.name}</div>
+          </Row>
+        ))}
+      </RowList>
+      <div role='region' aria-label='Detail' className='dx-container p-4 overflow-auto'>
+        {detail && (
+          <>
+            <h2 className='text-lg font-semibold'>{detail.name}</h2>
+            <p className='text-description mt-2'>{detail.description}</p>
+          </>
+        )}
+      </div>
+    </div>
   );
 };
 
@@ -104,3 +121,4 @@ type Story = StoryObj<typeof meta>;
 export const Rows: Story = { render: RowListStory };
 export const Cards: Story = { render: CardListStory };
 export const WithDisabled: Story = { render: DisabledStory };
+export const MasterDetail: Story = { render: MasterDetailStory };

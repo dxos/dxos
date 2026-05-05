@@ -24,6 +24,20 @@
 //   - The container is `role="listbox"` and supports up/down arrow keys.
 //   - Enter / Space on the focused option commits selection.
 //
+// Container sizing:
+//
+//   The base class includes `dx-container` (= `flex-1 min-h-0 min-w-0
+//   h-full w-full overflow-hidden`), so when the list is the only child
+//   of a flex column it fills the available space. For master/detail
+//   layouts where the list is one pane, override `classNames` or wrap
+//   in your own sized container.
+//
+// Composability:
+//
+//   `RowList`, `CardList`, `Row`, and `Card` are all built with
+//   `slottable()` from `@dxos/ui-theme` — they accept `asChild` to
+//   delegate rendering and `classNames` for theme overrides.
+//
 // What it deliberately does NOT do:
 //
 //   - Virtualization or drag-and-drop. Reach for `@dxos/react-ui-mosaic`
@@ -32,24 +46,24 @@
 //     `selectedIds: Set<string>` mode can be added when there's a real
 //     consumer; the underlying primitive already supports it.
 //   - Wrapping in a `ScrollArea`. Pass one in around the list if needed
-//     (most callers do).
+//     (most callers don't, since `dx-container`'s overflow:hidden +
+//     a child `overflow:auto` element handles long lists).
 
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
+import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
-  type ComponentPropsWithoutRef,
   type KeyboardEvent,
+  type MouseEvent,
   type ReactNode,
   createContext,
-  forwardRef,
   useCallback,
   useContext,
   useMemo,
 } from 'react';
 
 import { List, ListItem } from '@dxos/react-list';
-import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { composableProps, slottable } from '@dxos/ui-theme';
 
 const ROW_LIST_NAME = 'RowList';
 const ROW_NAME = 'Row';
@@ -76,7 +90,15 @@ const useRowListContext = (componentName: string): RowListContextValue => {
 // RowList / CardList container.
 //
 
-type ListContainerOwnProps = {
+// Base classes shared by both variants — fills available space and
+// participates in scroll if a parent constrains height. Variant-specific
+// gap/layout is appended below.
+const CONTAINER_BASE = 'dx-container flex flex-col';
+const ROW_LIST_BASE = `${CONTAINER_BASE}`;
+// Cards gap on their own surface; container is padded so the cards float.
+const CARD_LIST_BASE = `${CONTAINER_BASE} gap-2`;
+
+type RowListOwnProps = {
   /**
    * Currently-selected option id. Pair with `onSelectChange` for a
    * controlled list. Omit (and pass `defaultSelectedId` instead) for
@@ -95,76 +117,67 @@ type ListContainerOwnProps = {
    * tech announces this when focus enters the list.
    */
   'aria-label'?: string;
-  children?: ReactNode;
 };
 
-type RowListProps = ThemedClassName<ListContainerOwnProps> &
-  Omit<ComponentPropsWithoutRef<'ol'>, keyof ListContainerOwnProps | 'role' | 'className'>;
+const renderListContainer = (
+  variant: 'row' | 'card',
+  baseClassName: string,
+  {
+    asChild,
+    selectedId,
+    defaultSelectedId,
+    onSelectChange,
+    children,
+    ...props
+  }: RowListOwnProps & { asChild?: boolean; children?: ReactNode } & Record<string, unknown>,
+  forwardedRef: React.ForwardedRef<HTMLOListElement>,
+) => {
+  const arrowGroup = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
 
-const ListContainer = forwardRef<
-  HTMLOListElement,
-  RowListProps & { variant: 'row' | 'card'; baseClassName: string }
->(
-  (
-    {
-      selectedId,
-      defaultSelectedId,
-      onSelectChange,
-      classNames,
-      variant,
-      baseClassName,
-      children,
-      ...rootProps
+  const [resolvedSelected, setResolvedSelected] = useControllableState({
+    prop: selectedId,
+    defaultProp: defaultSelectedId,
+    onChange: onSelectChange,
+  });
+
+  const handleSelect = useCallback(
+    (id: string) => {
+      setResolvedSelected(id);
     },
-    forwardedRef,
-  ) => {
-    const arrowGroup = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
+    [setResolvedSelected],
+  );
 
-    const [resolvedSelected, setResolvedSelected] = useControllableState({
-      prop: selectedId,
-      defaultProp: defaultSelectedId,
-      onChange: onSelectChange,
-    });
+  const ctx = useMemo<RowListContextValue>(
+    () => ({ selectedId: resolvedSelected, onSelect: handleSelect, variant }),
+    [resolvedSelected, handleSelect, variant],
+  );
 
-    const handleSelect = useCallback(
-      (id: string) => {
-        setResolvedSelected(id);
-      },
-      [setResolvedSelected],
-    );
+  // Reconciles classNames + className (from a parent Slot) with our base.
+  const composed = composableProps<HTMLOListElement>({ ...props } as any, { classNames: baseClassName });
 
-    const ctx = useMemo<RowListContextValue>(
-      () => ({ selectedId: resolvedSelected, onSelect: handleSelect, variant }),
-      [resolvedSelected, handleSelect, variant],
-    );
-
-    return (
-      <RowListContext.Provider value={ctx}>
-        <List
-          variant='unordered'
-          selectable
-          {...rootProps}
-          {...arrowGroup}
-          ref={forwardedRef}
-          className={mx(baseClassName, classNames)}
-        >
+  return (
+    <RowListContext.Provider value={ctx}>
+      {asChild ? (
+        <Slot {...composed} {...arrowGroup} ref={forwardedRef}>
+          {children as React.ReactElement}
+        </Slot>
+      ) : (
+        <List variant='unordered' selectable {...composed} {...arrowGroup} ref={forwardedRef}>
           {children}
         </List>
-      </RowListContext.Provider>
-    );
-  },
+      )}
+    </RowListContext.Provider>
+  );
+};
+
+const RowList = slottable<HTMLOListElement, RowListOwnProps>((props, forwardedRef) =>
+  renderListContainer('row', ROW_LIST_BASE, props as any, forwardedRef),
 );
-
-ListContainer.displayName = 'RowList.Container';
-
-const RowList = forwardRef<HTMLOListElement, RowListProps>((props, forwardedRef) => (
-  <ListContainer {...props} variant='row' baseClassName='flex flex-col' ref={forwardedRef} />
-));
 RowList.displayName = ROW_LIST_NAME;
 
-const CardList = forwardRef<HTMLOListElement, RowListProps>((props, forwardedRef) => (
-  <ListContainer {...props} variant='card' baseClassName='flex flex-col gap-2' ref={forwardedRef} />
-));
+const CardList = slottable<HTMLOListElement, RowListOwnProps>((props, forwardedRef) =>
+  renderListContainer('card', CARD_LIST_BASE, props as any, forwardedRef),
+);
 CardList.displayName = CARD_LIST_NAME;
 
 //
@@ -177,78 +190,102 @@ type ItemOwnProps = {
   /** Disable selection / dim the row. */
   disabled?: boolean;
   /** Optional click handler in addition to selection. */
-  onClick?: (event: React.MouseEvent<HTMLLIElement>) => void;
-  children?: ReactNode;
+  onClick?: (event: MouseEvent<HTMLLIElement>) => void;
 };
-
-type RowProps = ThemedClassName<ItemOwnProps> &
-  Omit<ComponentPropsWithoutRef<'li'>, keyof ItemOwnProps | 'role' | 'className'>;
 
 // Row paddings are tighter than Card's; rows touch with a divider, cards
 // gap with their own surface (matches the gap on the container above).
 const ROW_BASE = 'dx-hover dx-selected px-3 py-2 cursor-pointer outline-none border-b border-separator last:border-b-0';
 const CARD_BASE = 'dx-hover dx-selected px-3 py-2 cursor-pointer outline-none rounded-md bg-baseSurface';
 
-const Item = forwardRef<HTMLLIElement, RowProps & { contextName: string; baseClassName: string }>(
-  ({ id, disabled, onClick, classNames, contextName, baseClassName, children, ...rest }, forwardedRef) => {
-    const { selectedId, onSelect } = useRowListContext(contextName);
-    const isSelected = selectedId === id;
+const renderItem = (
+  contextName: string,
+  baseClassName: string,
+  {
+    asChild,
+    id,
+    disabled,
+    onClick,
+    children,
+    ...props
+  }: ItemOwnProps & { asChild?: boolean; children?: ReactNode } & Record<string, unknown>,
+  forwardedRef: React.ForwardedRef<HTMLLIElement>,
+) => {
+  const { selectedId, onSelect } = useRowListContext(contextName);
+  const isSelected = selectedId === id;
 
-    const handleClick = useCallback(
-      (event: React.MouseEvent<HTMLLIElement>) => {
-        if (disabled) {
-          return;
-        }
+  const handleClick = useCallback(
+    (event: MouseEvent<HTMLLIElement>) => {
+      if (disabled) {
+        return;
+      }
+      onSelect(id);
+      onClick?.(event);
+    },
+    [disabled, id, onSelect, onClick],
+  );
+
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLLIElement>) => {
+      if (disabled) {
+        return;
+      }
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
         onSelect(id);
-        onClick?.(event);
-      },
-      [disabled, id, onSelect, onClick],
-    );
+      }
+    },
+    [disabled, id, onSelect],
+  );
 
-    const handleKeyDown = useCallback(
-      (event: KeyboardEvent<HTMLLIElement>) => {
-        if (disabled) {
-          return;
-        }
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          onSelect(id);
-        }
-      },
-      [disabled, id, onSelect],
-    );
+  const composed = composableProps<HTMLLIElement>({ ...props } as any, {
+    classNames: [baseClassName, disabled && 'opacity-50 cursor-not-allowed'],
+  });
 
+  // Tabster focuses each option as you arrow through; without tabIndex
+  // the option isn't reachable. Disabled items stay in the tab order so
+  // users can read them but can't pick.
+  const tabIndex = disabled ? -1 : 0;
+
+  if (asChild) {
     return (
-      <ListItem
-        {...rest}
-        // Tabster focuses each option as you arrow through; without
-        // tabIndex the option isn't reachable. Disabled items stay in the
-        // tab order so users can read them but can't pick.
-        tabIndex={disabled ? -1 : 0}
-        selected={isSelected}
+      <Slot
+        {...composed}
+        tabIndex={tabIndex}
         aria-disabled={disabled || undefined}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         ref={forwardedRef}
-        className={mx(baseClassName, disabled && 'opacity-50 cursor-not-allowed', classNames)}
       >
-        {children}
-      </ListItem>
+        {children as React.ReactElement}
+      </Slot>
     );
-  },
+  }
+
+  return (
+    <ListItem
+      {...composed}
+      tabIndex={tabIndex}
+      selected={isSelected}
+      aria-disabled={disabled || undefined}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      ref={forwardedRef}
+    >
+      {children}
+    </ListItem>
+  );
+};
+
+const Row = slottable<HTMLLIElement, ItemOwnProps>((props, forwardedRef) =>
+  renderItem(ROW_NAME, ROW_BASE, props as any, forwardedRef),
 );
-
-Item.displayName = 'RowList.Item';
-
-const Row = forwardRef<HTMLLIElement, RowProps>((props, forwardedRef) => (
-  <Item {...props} contextName={ROW_NAME} baseClassName={ROW_BASE} ref={forwardedRef} />
-));
 Row.displayName = ROW_NAME;
 
-const Card = forwardRef<HTMLLIElement, RowProps>((props, forwardedRef) => (
-  <Item {...props} contextName={CARD_NAME} baseClassName={CARD_BASE} ref={forwardedRef} />
-));
+const Card = slottable<HTMLLIElement, ItemOwnProps>((props, forwardedRef) =>
+  renderItem(CARD_NAME, CARD_BASE, props as any, forwardedRef),
+);
 Card.displayName = CARD_NAME;
 
 export { RowList, CardList, Row, Card };
-export type { RowListProps, RowProps };
+export type { RowListOwnProps as RowListProps, ItemOwnProps as RowProps };
