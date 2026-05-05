@@ -358,7 +358,13 @@ describe('introspect-mcp server', () => {
     };
     expect(payload.data.length).toBeGreaterThan(0);
     expect(payload.data.some((u) => u.package === '@fixture/pkg-plugin')).toBe(true);
-    // Defining `Type.object` line is filtered out.
-    expect(payload.data.every((u) => !u.snippet.includes('Type.object'))).toBe(true);
+    // Defining `Type.object({ typename })` line is filtered out — but lines
+    // that mention `Type.object` in passing (comments, annotations) survive.
+    expect(
+      payload.data.every(
+        (u) =>
+          !((u.snippet.includes('Type.object') || u.snippet.includes('Type.Obj')) && u.snippet.includes('typename')),
+      ),
+    ).toBe(true);
   });
 });

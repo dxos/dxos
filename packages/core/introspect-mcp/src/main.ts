@@ -132,10 +132,13 @@ export const main = async (argv: string[] = process.argv.slice(2)): Promise<void
   // Result: clients connect immediately and the first real query pays the
   // one-time cold-start cost. Subsequent calls hit the cache and are fast.
   const introspector = createIntrospector({ monorepoRoot: args.root });
-  // Surface fatal indexing errors to stderr; otherwise an unhandled rejection
-  // would tear the process down silently.
+  // Surface fatal indexing errors to stderr and exit. A live but
+  // permanently-unusable process is worse than a clean failure: every tool
+  // call would block forever on `await introspector.ready` once the rejected
+  // promise is awaited, leaving the MCP client hung with no signal.
   introspector.ready.catch((err) => {
     console.error('[introspect-mcp] indexer failed:', err);
+    process.exit(1);
   });
 
   const server = createServer({

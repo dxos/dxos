@@ -325,8 +325,10 @@ describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
     const taskOnly = introspector.listSchemas('@fixture/pkg-a');
     expect(taskOnly.map((s) => s.typename)).toEqual(['com.example.type.Task']);
 
-    const noteOnly = introspector.listSchemas('@fixture/pkg-plugin');
-    expect(noteOnly.map((s) => s.typename)).toEqual(['com.example.type.Note']);
+    // pkg-plugin defines two schemas: Note (in src/types.ts) and Tag (in
+    // src/features/Tag.ts, used to test the recursive scan).
+    const pluginSchemas = introspector.listSchemas('@fixture/pkg-plugin');
+    expect(pluginSchemas.map((s) => s.typename).sort()).toEqual(['com.example.type.Note', 'com.example.type.Tag']);
 
     expect(introspector.listSchemas('@fixture/missing')).toEqual([]);
   });
@@ -375,12 +377,45 @@ describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
     // At least one usage from pkg-plugin (the cross-package reference).
     expect(usages.some((u) => u.package === '@fixture/pkg-plugin')).toBe(true);
 
-    // The defining `Type.object` line in pkg-a/src/Task.ts must be filtered out.
-    expect(usages.every((u) => !u.snippet.includes('Type.object'))).toBe(true);
+    // The defining line itself is filtered out: pkg-a/src/Task.ts has the
+    // `Type.object({ typename: 'com.example.type.Task' })` call and no usage
+    // should report that exact line. We check for the specific shape — a
+    // mention with both `Type.object` AND `typename` on the same line — rather
+    // than rejecting every `Type.object` substring (which would over-suppress
+    // unrelated comments and annotations on different lines).
+    expect(
+      usages.every(
+        (u) =>
+          !((u.snippet.includes('Type.object') || u.snippet.includes('Type.Obj')) && u.snippet.includes('typename')),
+      ),
+    ).toBe(true);
   });
 
   test('findSchemaUsage returns [] for unknown typename', ({ expect }) => {
     expect(introspector.findSchemaUsage('com.example.type.missing')).toEqual([]);
+  });
+
+  test('listSchemas finds schemas in nested feature folders', ({ expect }) => {
+    // Regression: an earlier version of `findSchemaCandidateFiles` only
+    // globbed a hard-coded folder set (types/, schemas/, capabilities/,
+    // operations/, plus top-level *.ts) and silently missed schemas declared
+    // in nested feature folders. The fixture's Tag schema lives at
+    // pkg-plugin/src/features/Tag.ts to verify the recursive scan picks it up.
+    const all = introspector.listSchemas();
+    expect(all.some((s) => s.typename === 'com.example.type.Tag')).toBe(true);
+  });
+
+  test('findSchemaUsage skip-heuristic does not drop unrelated Type.object lines', ({ expect }) => {
+    // Regression: an earlier skip rule discarded any line containing
+    // `Type.object` / `Type.Obj`, which over-suppressed comments and
+    // annotations that happen to mention the call name without being a
+    // definition. The tightened rule requires BOTH `Type.object` AND a
+    // `typename:` key on the same line. Fixture pkg-plugin/types.ts has a
+    // comment reading "Inputs flow through Type.object — see
+    // com.example.type.Task" that the new heuristic must preserve.
+    const usages = introspector.findSchemaUsage('com.example.type.Task');
+    const refLine = usages.find((u) => u.snippet.includes('flow through Type.object'));
+    expect(refLine).toBeDefined();
   });
 
   test('findSchemaUsage scans non-schema-defining packages too', ({ expect }) => {

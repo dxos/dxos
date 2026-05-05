@@ -76,19 +76,12 @@ export const findSchemaCandidateFiles = (monorepoRoot: string, packagePath: stri
     return [];
   }
   const candidates = new Set<string>();
-  const patterns = [
-    // Top-level files: most schemas live under `src/types/...`, but smaller
-    // packages put them directly at `src/<Name>.ts`. The readFileSync
-    // trigger-pattern check below prevents this from being expensive.
-    '*.ts',
-    'types/**/*.ts',
-    'types.ts',
-    'schema.ts',
-    'schemas/**/*.ts',
-    // Some packages keep schemas alongside operations / capabilities. Cheap to include.
-    'operations/**/*.ts',
-    'capabilities/**/*.ts',
-  ];
+  // Recursive `**/*.ts` covers every TS file under src/ — including nested
+  // feature folders (`src/features/tasks/Task.ts`) where a smaller percentage
+  // of plugins keep schemas. The trigger-pattern check below (readFileSync +
+  // substring search) is the actual cost gate, not the glob; the per-package
+  // src/ tree is small enough that scanning everything is cheap.
+  const patterns = ['**/*.ts'];
   for (const pattern of patterns) {
     let matches: string[];
     try {
@@ -418,16 +411,18 @@ export const findUsages = (
       if (idx < 0) {
         continue;
       }
-      // Skip the *defining* line (the Type.object call) — we already report that
-      // via getSchema. Heuristic: if the line contains both `typename` and
-      // `Type.object`/`Type.Obj`, treat it as the definition. The caller's
-      // location field is the canonical answer for "where is this defined."
-      if (
-        lines[i].includes('Type.object') ||
-        lines[i].includes('Type.Obj') ||
-        // Or the typename literally on the same line as Schema.Struct.
-        false
-      ) {
+      // Skip the *defining* line (the Type.object call). We already report
+      // the definition via getSchema, and double-counting is noise.
+      //
+      // Heuristic: a line is the definition only when it contains BOTH the
+      // `Type.object` / `Type.Obj` call AND a `typename` key. A bare
+      // Type.object call without `typename` on the same line means the
+      // option-bag spans multiple lines and the typename match here is a
+      // separate reference (e.g. an annotation referring to another type),
+      // which we DO want to surface.
+      const hasTypeObjectCall = lines[i].includes('Type.object') || lines[i].includes('Type.Obj');
+      const hasTypenameKey = lines[i].includes('typename');
+      if (hasTypeObjectCall && hasTypenameKey) {
         continue;
       }
       usages.push({

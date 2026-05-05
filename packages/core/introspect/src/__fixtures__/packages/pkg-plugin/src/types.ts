@@ -9,6 +9,13 @@ import * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
 
+// Sibling reference: the line below mentions com.example.type.Task AND
+// Type.object, but NOT in a `typename:` position. The skip-heuristic in
+// findSchemaUsage must NOT discard this — only lines that are themselves a
+// definition (Type.object + typename:) get skipped.
+//
+// Inputs flow through Type.object — see com.example.type.Task for the shape.
+
 /**
  * Note item — fixture ECHO type, references Task by typename string so tests
  * can exercise findSchemaUsage across packages.

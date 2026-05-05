@@ -34,15 +34,26 @@ export type ServerOptions = {
   logger?: ToolLogger;
 };
 
+type McpToolResult = { content: Array<{ type: 'text'; text: string }> };
+
 export const createServer = (options: ServerOptions): McpServer => {
   const { introspector } = options;
   const log = registerLogger(options.logger);
 
-  // Every tool handler starts with `await introspector.ready` so it blocks on
-  // indexing — but only when the handler runs. `initialize` and `tools/list`
-  // are answered by the SDK from the static tool registry below, so MCP
-  // clients (Inspector, Claude Code, Composer) connect immediately even on a
-  // cold cache. Cold-start cost is paid once, on the first `tools/call`.
+  // Every tool handler is wrapped with `withReady` so it blocks on indexing
+  // before running — but ONLY when the handler runs. `initialize` and
+  // `tools/list` are answered by the SDK from the static tool registry below,
+  // so MCP clients (Inspector, Claude Code, Composer) connect immediately
+  // even on a cold cache. Cold-start cost is paid once, on the first
+  // `tools/call`. Centralizing this in a wrapper means a future tool can't
+  // accidentally skip the readiness gate by forgetting the await.
+  const withReady =
+    <TArgs>(handler: (args: TArgs) => Promise<McpToolResult>) =>
+    async (args: TArgs): Promise<McpToolResult> => {
+      await introspector.ready;
+      return handler(args);
+    };
+
   const server = new McpServer({
     name: options.name ?? '@dxos/introspect-mcp',
     version: options.version ?? '0.0.0',
@@ -68,8 +79,7 @@ export const createServer = (options: ServerOptions): McpServer => {
         privateOnly: z.boolean().optional().describe('If true, only include workspace-private packages.'),
       },
     },
-    async (args) => {
-      await introspector.ready;
+    withReady(async (args) => {
       const result = introspector.listPackages({
         name: args.name,
         pathPrefix: args.pathPrefix,
@@ -78,7 +88,7 @@ export const createServer = (options: ServerOptions): McpServer => {
       const shaped = shapeListPackages(result);
       log({ tool: 'list_packages', args, count: result.length, truncated: shaped.truncated });
       return toToolResult(shaped);
-    },
+    }),
   );
 
   /**
@@ -96,15 +106,14 @@ export const createServer = (options: ServerOptions): McpServer => {
         name: z.string().describe('Exact package name, e.g. "@dxos/echo".'),
       },
     },
-    async (args) => {
-      await introspector.ready;
+    withReady(async (args) => {
       const detail = introspector.getPackage(args.name);
       log({ tool: 'get_package', args, found: detail !== null });
       if (!detail) {
         return toToolResult({ data: null, note: `No package named ${args.name}` });
       }
       return toToolResult(shapeGetPackage(detail));
-    },
+    }),
   );
 
   /**
@@ -126,13 +135,12 @@ export const createServer = (options: ServerOptions): McpServer => {
           .describe('Optional filter on declaration kind.'),
       },
     },
-    async (args) => {
-      await introspector.ready;
+    withReady(async (args) => {
       const matches = introspector.listSymbols(args.package, args.kind);
       const shaped = shapeFindSymbol(matches);
       log({ tool: 'list_symbols', args, count: matches.length, truncated: shaped.truncated });
       return toToolResult(shaped);
-    },
+    }),
   );
 
   /**
@@ -154,13 +162,12 @@ export const createServer = (options: ServerOptions): McpServer => {
           .describe('Optional filter on declaration kind.'),
       },
     },
-    async (args) => {
-      await introspector.ready;
+    withReady(async (args) => {
       const matches = introspector.findSymbol(args.query, args.kind);
       const shaped = shapeFindSymbol(matches);
       log({ tool: 'find_symbol', args, count: matches.length, truncated: shaped.truncated });
       return toToolResult(shaped);
-    },
+    }),
   );
 
   /**
@@ -182,15 +189,14 @@ export const createServer = (options: ServerOptions): McpServer => {
           .describe('Optional fields to expand; default returns signature + summary only.'),
       },
     },
-    async (args) => {
-      await introspector.ready;
+    withReady(async (args) => {
       const detail = introspector.getSymbol(args.ref, args.include);
       log({ tool: 'get_symbol', args, found: detail !== null });
       if (!detail) {
         return toToolResult({ data: null, note: `No symbol with ref ${args.ref}` });
       }
       return toToolResult(shapeGetSymbol(detail));
-    },
+    }),
   );
 
   /**
@@ -215,13 +221,12 @@ export const createServer = (options: ServerOptions): McpServer => {
           .describe('Restrict to plugins whose owning package starts with this path, e.g. "packages/plugins".'),
       },
     },
-    async (args) => {
-      await introspector.ready;
+    withReady(async (args) => {
       const result = introspector.listPlugins({ query: args.query, pathPrefix: args.pathPrefix });
       const shaped = shapeListPlugins(result);
       log({ tool: 'list_plugins', args, count: result.length, truncated: shaped.truncated });
       return toToolResult(shaped);
-    },
+    }),
   );
 
   /**
@@ -239,15 +244,14 @@ export const createServer = (options: ServerOptions): McpServer => {
         id: z.string().describe('Plugin id from meta.ts, e.g. "org.dxos.plugin.markdown".'),
       },
     },
-    async (args) => {
-      await introspector.ready;
+    withReady(async (args) => {
       const detail = introspector.getPlugin(args.id);
       log({ tool: 'get_plugin', args, found: detail !== null });
       if (!detail) {
         return toToolResult({ data: null, note: `No plugin with id ${args.id}` });
       }
       return toToolResult(shapeGetPlugin(detail));
-    },
+    }),
   );
 
   /**
@@ -265,13 +269,12 @@ export const createServer = (options: ServerOptions): McpServer => {
         pluginId: z.string().optional().describe('Restrict to surfaces contributed by this plugin id.'),
       },
     },
-    async (args) => {
-      await introspector.ready;
+    withReady(async (args) => {
       const result = introspector.listSurfaces(args.pluginId);
       const shaped = shapeListSurfaces(result);
       log({ tool: 'list_surfaces', args, count: result.length, truncated: shaped.truncated });
       return toToolResult(shaped);
-    },
+    }),
   );
 
   /**
@@ -288,13 +291,12 @@ export const createServer = (options: ServerOptions): McpServer => {
         pluginId: z.string().optional().describe('Restrict to capabilities contributed by this plugin id.'),
       },
     },
-    async (args) => {
-      await introspector.ready;
+    withReady(async (args) => {
       const result = introspector.listCapabilities(args.pluginId);
       const shaped = shapeListCapabilities(result);
       log({ tool: 'list_capabilities', args, count: result.length, truncated: shaped.truncated });
       return toToolResult(shaped);
-    },
+    }),
   );
 
   /**
@@ -312,13 +314,12 @@ export const createServer = (options: ServerOptions): McpServer => {
         pluginId: z.string().optional().describe('Restrict to operations defined within this plugin id.'),
       },
     },
-    async (args) => {
-      await introspector.ready;
+    withReady(async (args) => {
       const result = introspector.listOperations(args.pluginId);
       const shaped = shapeListOperations(result);
       log({ tool: 'list_operations', args, count: result.length, truncated: shaped.truncated });
       return toToolResult(shaped);
-    },
+    }),
   );
 
   /**
@@ -336,13 +337,12 @@ export const createServer = (options: ServerOptions): McpServer => {
         package: z.string().optional().describe('Restrict to schemas defined within this exact package name.'),
       },
     },
-    async (args) => {
-      await introspector.ready;
+    withReady(async (args) => {
       const result = introspector.listSchemas(args.package);
       const shaped = shapeListSchemas(result);
       log({ tool: 'list_schemas', args, count: result.length, truncated: shaped.truncated });
       return toToolResult(shaped);
-    },
+    }),
   );
 
   /**
@@ -360,15 +360,14 @@ export const createServer = (options: ServerOptions): McpServer => {
         typename: z.string().describe('Schema typename, e.g. "org.dxos.type.document".'),
       },
     },
-    async (args) => {
-      await introspector.ready;
+    withReady(async (args) => {
       const detail = introspector.getSchema(args.typename);
       log({ tool: 'get_schema', args, found: detail !== null });
       if (!detail) {
         return toToolResult({ data: null, note: `No schema with typename ${args.typename}` });
       }
       return toToolResult(shapeGetSchema(detail));
-    },
+    }),
   );
 
   /**
@@ -386,13 +385,12 @@ export const createServer = (options: ServerOptions): McpServer => {
         typename: z.string().describe('Schema typename, e.g. "org.dxos.type.document".'),
       },
     },
-    async (args) => {
-      await introspector.ready;
+    withReady(async (args) => {
       const usages = introspector.findSchemaUsage(args.typename);
       const shaped = shapeFindSchemaUsage(usages);
       log({ tool: 'find_schema_usage', args, count: usages.length, truncated: shaped.truncated });
       return toToolResult(shaped);
-    },
+    }),
   );
 
   return server;
