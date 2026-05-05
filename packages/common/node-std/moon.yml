@@ -7,18 +7,10 @@ workspace:
     exclude:
       - lint
 tasks:
-  # Override the inherited tsdown build with a no-op: node-std bundles npm CJS polyfills
-  # that require esbuild (dx-compile) for correct browser output. The compile task below
-  # produces dist/lib/; rolldown cannot inline CJS relative requires (e.g. util/support/types).
+  # Override the inherited tsdown build with dx-compile (esbuild): node-std bundles npm CJS polyfills
+  # that contain relative requires (e.g. util → ./support/types) which rolldown cannot inline inside
+  # __commonJSMin factories. esbuild properly handles all transitive CJS requires.
   build:
-    command: echo
-    args:
-      - 'node-std:build skipped (uses compile task instead)'
-    options:
-      mergeArgs: replace
-      mergeOutputs: replace
-    outputs: []
-  compile:
     command: pnpm exec dx-compile
     args:
       - '--entryPoint=src/_/config.js'
@@ -83,10 +75,12 @@ tasks:
       - '--bundlePackage=which-typed-array'
     deps:
       - dx-compile:compile
-      - ^:compile
+      - ^:build
     inputs:
       - 'src/**/*'
     outputs:
       - dist/lib/
     options:
+      mergeArgs: replace
+      mergeOutputs: replace
       timeout: 30
