@@ -8,10 +8,10 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
-import { CredentialsService, withAuthorization } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { Credential, Operation } from '@dxos/compute';
 import { Filter, Obj, Query, Ref, type Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
+import { withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Person, Pipeline, Task } from '@dxos/types';
 
@@ -79,7 +79,7 @@ export const LINEAR_UPDATED_AT_KEY = 'linear.app/updatedAt';
 export default SyncIssues.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ team }) {
-      const credential = yield* CredentialsService.getCredential({ service: 'linear.app' });
+      const credential = yield* Credential.CredentialsService.getCredential({ service: 'linear.app' });
       const client = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(credential.apiKey!)));
 
       const after = yield* getLatestUpdateTimestamp(team, Task.Task);

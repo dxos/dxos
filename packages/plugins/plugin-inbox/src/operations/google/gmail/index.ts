@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { Operation } from '@dxos/compute';
-import { OperationHandlerSet } from '@dxos/compute';
+import { type Operation, OperationHandlerSet } from '@dxos/compute';
 
 import Send from './send';
 import Sync from './sync';

@@ -1,10 +1,10 @@
 //
-// Copyright 2026 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/operation';
+import * as Operation from '../Operation';
 
 export const Fibonacci = Operation.make({
   meta: {
