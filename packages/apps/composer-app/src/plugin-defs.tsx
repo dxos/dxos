@@ -386,7 +386,7 @@ export const getPlugins = async (
       config,
       services,
       shareableLinkOrigin: origin,
-      onReset: ({ target }) =>
+      onReset: ({ target }: { target?: string }) =>
         Effect.sync(() => {
           localStorage.clear();
           if (target === 'deviceInvitation') {
