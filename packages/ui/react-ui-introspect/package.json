@@ -27,7 +27,7 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/introspect-mcp": "workspace:*",
+    "@dxos/introspect-tools": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",

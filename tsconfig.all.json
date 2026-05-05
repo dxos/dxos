@@ -223,6 +223,9 @@
       "path": "packages/core/introspect-mcp/tsconfig.json"
     },
     {
+      "path": "packages/core/introspect-tools/tsconfig.json"
+    },
+    {
       "path": "packages/core/mcp-client/tsconfig.json"
     },
     {

@@ -2,22 +2,38 @@
 // Copyright 2026 DXOS.org
 //
 
-// Tool definitions, response shapers, the logger interface, and the Effect
-// Schema input definitions — everything needed to plug DXOS introspection
-// into an MCP-compatible host without pulling in the stdio/HTTP server
-// machinery, and everything needed for downstream consumers (like
-// `react-ui-form`) to render forms from the same schemas.
+// Server-side tool wiring: handler-bearing definitions, response shapers, and
+// the logger interface. Pure metadata + Effect Schema inputs live upstream
+// in `@dxos/introspect-tools` (browser-safe — no Node-only deps); we
+// re-export them here for back-compat with the existing
+// `@dxos/introspect-mcp/tools` subpath import.
 //
-// Importable as `@dxos/introspect-mcp/tools` (see package.json `exports`).
+// Browser code that doesn't need to invoke tools should import from
+// `@dxos/introspect-tools` directly.
 
+// Server-only:
+export { createToolDefinitions, inputSchemaToZod, type ToolDefinition } from './tools';
 export {
-  TOOL_METADATA,
-  createToolDefinitions,
-  inputSchemaToZod,
-  type ToolDefinition,
-  type ToolMetadata,
-} from './tools';
+  shapeFindSchemaUsage,
+  shapeFindSymbol,
+  shapeGetPackage,
+  shapeGetPlugin,
+  shapeGetSchema,
+  shapeGetSymbol,
+  shapeListCapabilities,
+  shapeListOperations,
+  shapeListPackages,
+  shapeListPlugins,
+  shapeListSchemas,
+  shapeListSurfaces,
+  type ToolResult,
+} from './shaping';
+export { fileLogger, noopLogger, registerLogger, type ToolLogEntry, type ToolLogger } from './logger';
+
+// Re-exported from @dxos/introspect-tools for back-compat. New consumers
+// should import these directly from `@dxos/introspect-tools`.
 export {
+  DEFAULT_LIST_LIMIT,
   FindSchemaUsageInput,
   FindSymbolInput,
   GetPackageInput,
@@ -32,6 +48,8 @@ export {
   ListSchemasInput,
   ListSurfacesInput,
   ListSymbolsInput,
+  MAX_LIST_LIMIT,
+  TOOL_METADATA,
   type FindSchemaUsageArgs,
   type FindSymbolArgs,
   type GetPackageArgs,
@@ -40,28 +58,11 @@ export {
   type GetSymbolArgs,
   type ListCapabilitiesArgs,
   type ListOperationsArgs,
+  type ListOptions,
   type ListPackagesArgs,
   type ListPluginsArgs,
   type ListSchemasArgs,
   type ListSurfacesArgs,
   type ListSymbolsArgs,
-} from './schemas';
-export {
-  DEFAULT_LIST_LIMIT,
-  MAX_LIST_LIMIT,
-  shapeFindSchemaUsage,
-  shapeFindSymbol,
-  shapeGetPackage,
-  shapeGetPlugin,
-  shapeGetSchema,
-  shapeGetSymbol,
-  shapeListCapabilities,
-  shapeListOperations,
-  shapeListPackages,
-  shapeListPlugins,
-  shapeListSchemas,
-  shapeListSurfaces,
-  type ListOptions,
-  type ToolResult,
-} from './shaping';
-export { fileLogger, noopLogger, registerLogger, type ToolLogEntry, type ToolLogger } from './logger';
+  type ToolMetadata,
+} from '@dxos/introspect-tools';

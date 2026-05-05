@@ -24,7 +24,7 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { TOOL_METADATA } from '@dxos/introspect-mcp/tools';
+import { TOOL_METADATA } from '@dxos/introspect-tools';
 import { Message } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -101,29 +101,25 @@ const ToolsExplorer = ({ serverUrl }: ToolsExplorerProps) => {
 
   if (connectError) {
     return (
-      <div className='p-4'>
-        <Message.Root valence='error'>
-          <Message.Title>Connection failed</Message.Title>
-          <Message.Content>
-            <p>{connectError.message}</p>
-            <p className='mt-2'>
-              Run <code>moon run introspect-mcp:serve-http</code> in another terminal, then reload.
-            </p>
-          </Message.Content>
-        </Message.Root>
-      </div>
+      <Message.Root classNames='m-4' valence='error'>
+        <Message.Title>Connection failed</Message.Title>
+        <Message.Content>{connectError.message}</Message.Content>
+        <Message.Content>
+          Run <code>moon run introspect-mcp:serve-http</code> in another terminal, then reload.
+        </Message.Content>
+      </Message.Root>
     );
   }
 
   return (
-    <div className='grid grid-cols-[20rem_1fr] grid-rows-[1fr_1fr] h-full divide-x divide-y divide-separator'>
-      <ToolList tools={TOOL_METADATA} selected={selected} onSelect={handleSelect} className='row-span-2' />
-      {selectedTool ? (
-        <ToolForm tool={selectedTool} onSubmit={handleSubmit} />
-      ) : (
-        <div className='p-3 text-sm text-description italic'>Pick a tool from the list to render its input form.</div>
-      )}
-      <ToolResults result={result} error={callError} loading={running} />
+    <div className='dx-container grid grid-cols-[30rem_1fr] divide-x divide-separator'>
+      <div className='dx-container grid grid-rows-[1fr_2fr] divide-y divide-separator'>
+        <ToolList tools={TOOL_METADATA} selected={selected} onSelect={handleSelect} />
+        {selectedTool && <ToolForm tool={selectedTool} onSubmit={handleSubmit} />}
+      </div>
+      <div className='dx-container grid'>
+        <ToolResults result={result} error={callError} loading={running} />
+      </div>
     </div>
   );
 };
@@ -131,8 +127,10 @@ const ToolsExplorer = ({ serverUrl }: ToolsExplorerProps) => {
 const meta: Meta<typeof ToolsExplorer> = {
   title: 'ui/react-ui-introspect/ToolsExplorer',
   component: ToolsExplorer,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'h-screen' })],
-  parameters: { layout: 'fullscreen' },
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  parameters: {
+    layout: 'fullscreen',
+  },
 };
 
 export default meta;

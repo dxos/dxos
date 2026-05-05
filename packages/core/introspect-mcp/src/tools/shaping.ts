@@ -24,15 +24,14 @@ import type {
   SymbolDetail,
   SymbolMatch,
 } from '@dxos/introspect';
+// `DEFAULT_LIST_LIMIT` / `MAX_LIST_LIMIT` / `ListOptions` live in
+// @dxos/introspect-tools because the schema constraints reference them.
+// Re-exported here so existing imports of `@dxos/introspect-mcp/tools` keep
+// working.
+import { DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT, type ListOptions } from '@dxos/introspect-tools';
 
-/** Default number of items returned by list-style tools when no `limit` is passed. */
-export const DEFAULT_LIST_LIMIT = 30;
-/**
- * Hard ceiling on `limit`. A runaway tool call shouldn't be able to dump every
- * symbol in the monorepo (~thousands) into the model's context. Callers who
- * truly need everything should iterate via filters (pluginId, package, etc.).
- */
-export const MAX_LIST_LIMIT = 200;
+export { DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT, type ListOptions };
+
 const SOURCE_PREVIEW = 1200;
 const JSDOC_PREVIEW = 600;
 
@@ -40,21 +39,6 @@ export type ToolResult = {
   data: unknown;
   note?: string;
   truncated?: string;
-};
-
-/**
- * Per-call options every list-style shaper accepts. Both fields are optional
- * — the defaults match the pre-existing behavior (limit=30, full projection).
- */
-export type ListOptions = {
-  /** Override the default `DEFAULT_LIST_LIMIT`. Capped at `MAX_LIST_LIMIT`. */
-  limit?: number;
-  /**
-   * Return only the most-essential identifying fields (ref/id/name) instead
-   * of the full record. Use when discovering what exists before drilling in
-   * with a `get_*` call. Roughly 1/4 the token cost.
-   */
-  compact?: boolean;
 };
 
 type ShapeListConfig<T> = {

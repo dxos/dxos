@@ -7,7 +7,7 @@
 // tool; click to select. Selection is controlled — the parent owns the
 // currently-selected tool name and renders the form / results panel for it.
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
@@ -30,10 +30,10 @@ export type ToolListProps = {
 export const ToolList = ({ tools, selected, onSelect, className }: ToolListProps) => {
   // Sort by name for deterministic order — the tools map is unordered in
   // principle, but a model browsing a long list benefits from alphabetical.
-  const entries = React.useMemo(() => Object.entries(tools).sort(([a], [b]) => a.localeCompare(b)), [tools]);
+  const entries = useMemo(() => Object.entries(tools).sort(([a], [b]) => a.localeCompare(b)), [tools]);
 
   return (
-    <ul role='list' className={mx('flex flex-col gap-1 overflow-auto p-2', className)}>
+    <ul role='list' className={mx('flex flex-col gap-1 overflow-auto', className)}>
       {entries.map(([name, tool]) => {
         const isSelected = selected === name;
         return (

@@ -4,23 +4,24 @@
 
 // Effect Schema input definitions for every MCP tool.
 //
-// These are the source of truth: `tools.ts` converts them to zod at registration
-// time (the MCP SDK requires zod), and downstream consumers like
-// `react-ui-form` can import them directly to render forms.
+// These are the source of truth: introspect-mcp converts them to zod at
+// registration time (the MCP SDK requires zod), and downstream consumers
+// like react-ui-form / react-ui-introspect import them directly to render
+// forms.
 //
-// Convention: every field's description goes on the OUTERMOST wrapper.
-//   - Optional fields: `.annotations({ description })` on `Schema.optional(...)`.
-//   - Required fields: `.annotations({ description })` on the primitive itself.
+// Convention for annotations on every field:
+//   - `title`       — short label react-ui-form shows above the input.
+//   - `description` — longer text shown as helper / LLM trigger guidance.
 //
-// Skipping a description leaves the field labeled with Effect's stdlib default
-// ("a string", "a number") which is unhelpful for LLM trigger accuracy and
-// confusing in form UIs. Always supply one.
+// Both are placed on the OUTERMOST wrapper:
+//   - Optional fields: `.annotations({ ... })` on `Schema.optional(...)`.
+//   - Required fields: `.annotations({ ... })` on the primitive itself.
 
 import * as Schema from 'effect/Schema';
 
 import { trim } from '@dxos/util';
 
-import { DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT } from './shaping';
+import { DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT } from './limits';
 
 /**
  * Pagination + projection options shared by every list-style tool. Spread its
@@ -31,11 +32,13 @@ export const ListOptionsInput = Schema.Struct({
   limit: Schema.optional(
     Schema.Number.pipe(Schema.int(), Schema.positive(), Schema.lessThanOrEqualTo(MAX_LIST_LIMIT)),
   ).annotations({
+    title: 'Limit',
     description: trim`
       Maximum number of items to return. Default ${DEFAULT_LIST_LIMIT}; max ${MAX_LIST_LIMIT}.
     `,
   }),
   compact: Schema.optional(Schema.Boolean).annotations({
+    title: 'Compact',
     description: trim`
       If true, returns only the most-essential identifying fields (ref, id, name) for each item —
       about 1/4 the response size. Use when discovering what exists before drilling in with a get_* call.
@@ -53,19 +56,25 @@ const IncludeEnum = Schema.Literal('source', 'jsdoc');
 
 export const ListPackagesInput = Schema.Struct({
   name: Schema.optional(Schema.String).annotations({
+    title: 'Name filter',
     description: 'Substring of the package name (case-insensitive).',
   }),
   pathPrefix: Schema.optional(Schema.String).annotations({
+    title: 'Path prefix',
     description: 'Restrict to packages whose path starts with this segment, e.g. "packages/plugins".',
   }),
   privateOnly: Schema.optional(Schema.Boolean).annotations({
+    title: 'Private only',
     description: 'If true, only include workspace-private packages.',
   }),
   ...ListOptionsInput.fields,
 });
 
 export const GetPackageInput = Schema.Struct({
-  name: Schema.String.annotations({ description: 'Exact package name, e.g. "@dxos/echo".' }),
+  name: Schema.String.annotations({
+    title: 'Package name',
+    description: 'Exact package name, e.g. "@dxos/echo".',
+  }),
 });
 
 //
@@ -73,22 +82,36 @@ export const GetPackageInput = Schema.Struct({
 //
 
 export const ListSymbolsInput = Schema.Struct({
-  package: Schema.String.annotations({ description: 'Exact package name, e.g. "@dxos/ai".' }),
-  kind: Schema.optional(SymbolKindEnum).annotations({ description: 'Optional filter on declaration kind.' }),
+  package: Schema.String.annotations({
+    title: 'Package name',
+    description: 'Exact package name, e.g. "@dxos/ai".',
+  }),
+  kind: Schema.optional(SymbolKindEnum).annotations({
+    title: 'Kind',
+    description: 'Optional filter on declaration kind.',
+  }),
   ...ListOptionsInput.fields,
 });
 
 export const FindSymbolInput = Schema.Struct({
-  query: Schema.String.annotations({ description: 'Symbol name or partial name (case-insensitive).' }),
-  kind: Schema.optional(SymbolKindEnum).annotations({ description: 'Optional filter on declaration kind.' }),
+  query: Schema.String.annotations({
+    title: 'Query',
+    description: 'Symbol name or partial name (case-insensitive).',
+  }),
+  kind: Schema.optional(SymbolKindEnum).annotations({
+    title: 'Kind',
+    description: 'Optional filter on declaration kind.',
+  }),
   ...ListOptionsInput.fields,
 });
 
 export const GetSymbolInput = Schema.Struct({
   ref: Schema.String.annotations({
+    title: 'Symbol ref',
     description: 'Symbol ref in the form "<package>#<name>", e.g. "@dxos/echo#Expando".',
   }),
   include: Schema.optional(Schema.Array(IncludeEnum)).annotations({
+    title: 'Include',
     description: 'Optional fields to expand; default returns signature + summary only.',
   }),
 });
@@ -99,20 +122,26 @@ export const GetSymbolInput = Schema.Struct({
 
 export const ListPluginsInput = Schema.Struct({
   query: Schema.optional(Schema.String).annotations({
+    title: 'Query',
     description: 'Substring of the plugin id, name, or owning package name (case-insensitive).',
   }),
   pathPrefix: Schema.optional(Schema.String).annotations({
+    title: 'Path prefix',
     description: 'Restrict to plugins whose owning package starts with this path, e.g. "packages/plugins".',
   }),
   ...ListOptionsInput.fields,
 });
 
 export const GetPluginInput = Schema.Struct({
-  id: Schema.String.annotations({ description: 'Plugin id from meta.ts, e.g. "org.dxos.plugin.markdown".' }),
+  id: Schema.String.annotations({
+    title: 'Plugin id',
+    description: 'Plugin id from meta.ts, e.g. "org.dxos.plugin.markdown".',
+  }),
 });
 
 export const ListSurfacesInput = Schema.Struct({
   pluginId: Schema.optional(Schema.String).annotations({
+    title: 'Plugin id',
     description: 'Restrict to surfaces contributed by this plugin id.',
   }),
   ...ListOptionsInput.fields,
@@ -120,6 +149,7 @@ export const ListSurfacesInput = Schema.Struct({
 
 export const ListCapabilitiesInput = Schema.Struct({
   pluginId: Schema.optional(Schema.String).annotations({
+    title: 'Plugin id',
     description: 'Restrict to capabilities contributed by this plugin id.',
   }),
   ...ListOptionsInput.fields,
@@ -127,6 +157,7 @@ export const ListCapabilitiesInput = Schema.Struct({
 
 export const ListOperationsInput = Schema.Struct({
   pluginId: Schema.optional(Schema.String).annotations({
+    title: 'Plugin id',
     description: 'Restrict to operations defined within this plugin id.',
   }),
   ...ListOptionsInput.fields,
@@ -138,10 +169,12 @@ export const ListOperationsInput = Schema.Struct({
 
 export const ListSchemasInput = Schema.Struct({
   pluginId: Schema.optional(Schema.String).annotations({
+    title: 'Plugin id',
     description:
       'Restrict to schemas defined in a package that declares this plugin id, e.g. "org.dxos.plugin.markdown".',
   }),
   package: Schema.optional(Schema.String).annotations({
+    title: 'Package',
     description: 'Restrict to schemas defined within this exact package name.',
   }),
   ...ListOptionsInput.fields,
@@ -149,12 +182,14 @@ export const ListSchemasInput = Schema.Struct({
 
 export const GetSchemaInput = Schema.Struct({
   typename: Schema.String.annotations({
+    title: 'Typename',
     description: 'Schema typename, e.g. "org.dxos.type.document".',
   }),
 });
 
 export const FindSchemaUsageInput = Schema.Struct({
   typename: Schema.String.annotations({
+    title: 'Typename',
     description: 'Schema typename, e.g. "org.dxos.type.document".',
   }),
   ...ListOptionsInput.fields,

@@ -26,30 +26,6 @@ export type ToolResultsProps = {
   className?: string;
 };
 
-const tryParseMcpEnvelope = (value: unknown): unknown => {
-  // The MCP SDK returns `{ content: [{ type: 'text', text: '<json>' }, ...] }`
-  // for our tools. Unwrap that one common shape so callers don't have to
-  // remember to pre-parse. Anything else is rendered verbatim.
-  if (
-    value &&
-    typeof value === 'object' &&
-    'content' in value &&
-    Array.isArray((value as { content: unknown }).content)
-  ) {
-    const text = (value as { content: Array<{ type?: string; text?: string }> }).content.find(
-      (c) => c?.type === 'text' && typeof c.text === 'string',
-    )?.text;
-    if (text) {
-      try {
-        return JSON.parse(text);
-      } catch {
-        return text;
-      }
-    }
-  }
-  return value;
-};
-
 export const ToolResults = ({ result, error, loading, className }: ToolResultsProps) => {
   if (loading) {
     return (
@@ -78,4 +54,28 @@ export const ToolResults = ({ result, error, loading, className }: ToolResultsPr
       <JsonHighlighter data={tryParseMcpEnvelope(result)} />
     </div>
   );
+};
+
+const tryParseMcpEnvelope = (value: unknown): unknown => {
+  // The MCP SDK returns `{ content: [{ type: 'text', text: '<json>' }, ...] }`
+  // for our tools. Unwrap that one common shape so callers don't have to
+  // remember to pre-parse. Anything else is rendered verbatim.
+  if (
+    value &&
+    typeof value === 'object' &&
+    'content' in value &&
+    Array.isArray((value as { content: unknown }).content)
+  ) {
+    const text = (value as { content: Array<{ type?: string; text?: string }> }).content.find(
+      (c) => c?.type === 'text' && typeof c.text === 'string',
+    )?.text;
+    if (text) {
+      try {
+        return JSON.parse(text);
+      } catch {
+        return text;
+      }
+    }
+  }
+  return value;
 };
