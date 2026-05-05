@@ -12,23 +12,23 @@ export type MessageStyleProps = {
 };
 
 export const messageRoot: ComponentFunction<MessageStyleProps> = ({ valence }, etc) => {
-  return mx('grid grid-cols-[min-content_1fr] gap-x-2 p-trim-sm rounded-sm', messageValence(valence), etc);
+  return mx('grid grid-cols-[2rem_1fr_2rem] p-1 rounded-sm', messageValence(valence), etc);
 };
 
 export const messageHeader: ComponentFunction<MessageStyleProps> = (_, etc) => {
-  return mx('col-span-2 grid grid-cols-subgrid items-center', etc);
+  return mx('col-span-full grid grid-cols-subgrid items-center', etc);
 };
 
 export const messageTitle: ComponentFunction<MessageStyleProps> = (_, etc) => {
-  return mx('col-start-2 gap-trim-sm [&>svg]:inline-block', etc);
+  return mx('col-start-2 truncate', etc);
 };
 
 export const messageIcon: ComponentFunction<MessageStyleProps> = (_, etc) => {
-  return mx('col-start-1', etc);
+  return mx('col-start-1 grid place-items-center', etc);
 };
 
 export const messageContent: ComponentFunction<MessageStyleProps> = (_, etc) => {
-  return mx('grid grid-cols-subgrid col-start-2 first:font-medium', etc);
+  return mx('col-start-2 grid grid-cols-subgrid first:font-medium', etc);
 };
 
 export const messageTheme: Theme<MessageStyleProps> = {

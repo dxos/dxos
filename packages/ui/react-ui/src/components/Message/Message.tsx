@@ -6,12 +6,16 @@ import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useId } from '@dxos/react-hooks';
 import { type Elevation, type MessageValence } from '@dxos/ui-types';
 
+import { translationKey } from '#translations';
+
 import { useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
+import { IconButton } from '../Button';
 import { Icon } from '../Icon';
 
 const messageIcons: Record<MessageValence, string> = {
@@ -84,23 +88,36 @@ MessageRoot.displayName = MESSAGE_NAME;
 //
 
 type MessageTitleProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primitive.h2>>, 'id'> & {
-  asChild?: boolean;
   icon?: string;
+  onClose?: () => void;
 };
 
 const MESSAGE_TITLE_NAME = 'MessageTitle';
 
 const MessageTitle = forwardRef<HTMLHeadingElement, MessageTitleProps>(
-  ({ asChild, classNames, children, icon: iconProp, ...props }, forwardedRef) => {
+  ({ classNames, children, icon: iconProp, onClose }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
     const { tx } = useThemeContext();
     const { titleId, valence } = useMessageContext(MESSAGE_TITLE_NAME);
-    const Comp = asChild ? Slot : Primitive.h2;
     const icon = iconProp ?? messageIcons[valence];
     return (
-      <Comp {...props} className={tx('message.header', {}, classNames)} id={titleId} ref={forwardedRef}>
-        {!icon && valence === 'neutral' ? <div /> : <Icon icon={icon} classNames={tx('message.icon', { valence })} />}
-        <span className={tx('message.title', {}, classNames)}>{children}</span>
-      </Comp>
+      <div role='none' className={tx('message.header', {}, classNames)} id={titleId} ref={forwardedRef}>
+        {icon && (
+          <div role='none' className={tx('message.icon', { valence })}>
+            <Icon icon={icon} />
+          </div>
+        )}
+        <h2 className={tx('message.title', {}, classNames)}>{children}</h2>
+        {onClose && (
+          <IconButton
+            variant='ghost'
+            icon='ph--x--regular'
+            iconOnly
+            label={t('toolbar-close.label')}
+            onClick={onClose}
+          />
+        )}
+      </div>
     );
   },
 );

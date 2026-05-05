@@ -14,7 +14,7 @@ import * as Runtime from 'effect/Runtime';
 
 import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { type Blueprint } from '@dxos/compute';
-import { Operation, type OperationRegistry } from '@dxos/compute';
+import { Operation, type OperationRegistry, Trace } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
@@ -32,6 +32,7 @@ import {
   createToolkit,
   formatSystemPrompt,
 } from '../session';
+import { McpServerError } from '../tracing';
 import { AiContextBinder, AiContextService } from './context';
 
 export interface McpServerConfig {
@@ -270,7 +271,7 @@ const aiContextFromSession = Layer.effect(
 const connectMcpServers = (
   blueprints: readonly Blueprint.Blueprint[],
   spaceMcpServers: readonly McpServerConfig[] = [],
-): Effect.Effect<OpaqueToolkit.OpaqueToolkit[]> => {
+): Effect.Effect<OpaqueToolkit.OpaqueToolkit[], never, Trace.TraceService> => {
   const blueprintServers: McpToolkit.McpToolkitOptions[] = pipe(
     blueprints,
     Array.flatMap((_) => _.mcpServers ?? []),
@@ -291,7 +292,41 @@ const connectMcpServers = (
         Effect.tap((toolkit): void =>
           log.info('Connected to MCP server', { url: options.url, tools: Object.keys(toolkit.toolkit.tools).length }),
         ),
-        Effect.tapDefect((error) => Effect.sync(() => log.warn('Failed to connect to MCP server', { error }))),
+        // Surface typed connection failures via ephemeral trace + warn log, then drop the server.
+        Effect.tapError((error) =>
+          Effect.gen(function* () {
+            log.warn('Failed to connect to MCP server', {
+              url: error.url,
+              kind: error.kind,
+              message: error.message,
+            });
+            yield* Trace.write(McpServerError, {
+              url: error.url,
+              kind: error.kind,
+              message: error.message,
+            });
+          }),
+        ),
+        // Catch unexpected defects too (e.g. malformed tool schemas) so a single broken
+        // server can never abort the whole turn — surface them through the same channel.
+        Effect.catchAllDefect((defect) =>
+          Effect.gen(function* () {
+            const message = defect instanceof Error ? defect.message : String(defect);
+            log.warn('Unexpected MCP defect', { url: options.url, message });
+            yield* Trace.write(McpServerError, {
+              url: options.url,
+              kind: options.kind,
+              message: `Unexpected MCP failure: ${message}`,
+            });
+            return yield* Effect.fail(
+              new McpToolkit.McpConnectionError({
+                url: options.url,
+                kind: options.kind,
+                message,
+              }),
+            );
+          }),
+        ),
         Effect.either,
       ),
     ),

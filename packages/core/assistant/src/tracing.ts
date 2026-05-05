@@ -41,3 +41,17 @@ export const AgentRequestEnd = Trace.EventType('assistant.agentRequestEnd', {
   schema: Schema.Struct({}),
   isEphemeral: false,
 });
+
+/**
+ * Emitted when an MCP server connection fails for a request turn.
+ * Ephemeral so that misconfigured/unreachable servers don't pollute the durable feed,
+ * but can still be surfaced to the user via the live ephemeral event stream.
+ */
+export const McpServerError = Trace.EventType('assistant.mcpServerError', {
+  schema: Schema.Struct({
+    url: Schema.String,
+    kind: Schema.Literal('sse', 'http'),
+    message: Schema.String,
+  }),
+  isEphemeral: true,
+});
