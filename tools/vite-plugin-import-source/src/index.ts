@@ -20,6 +20,16 @@ interface PluginImportSourceOptions {
   verbose?: boolean;
 }
 
+// Default conditions used before `configResolved` has run. Vitest workers
+// can occasionally invoke `resolveId` before `configResolved` resolves,
+// at which point a closure-scoped `resolver` would still be undefined and
+// the plugin would silently fall through to Vite's default resolver — which
+// does not know about the `source` condition, so `#xxx` self-imports fail
+// to resolve to the source files. Pre-initialising with a sensible default
+// keeps the first resolution correct even before Vite's exact conditions
+// are known; `configResolved` then upgrades to the full condition list.
+const DEFAULT_CONDITIONS = ['source', 'import', 'module', 'default'];
+
 /**
  * Prefer "source" condition for specifc packages.
  */
@@ -28,7 +38,7 @@ const PluginImportSource = ({
   exclude = [],
   verbose = process.env.IMPORT_SOURCE_DEBUG === '1' || process.env.IMPORT_SOURCE_DEBUG === 'true',
 }: PluginImportSourceOptions = {}): Plugin => {
-  let resolver: ResolverFactory;
+  let resolver: ResolverFactory = new ResolverFactory({ conditionNames: DEFAULT_CONDITIONS });
 
   const globOptions = { dot: true };
   const isMatch = (filePath: string) =>
@@ -47,7 +57,7 @@ const PluginImportSource = ({
       verbose && console.log(`[plugin-import-source] Include: ${include.join(', ')}`);
       verbose && console.log(`[plugin-import-source] Exclude: ${exclude.join(', ')}`);
 
-      // Create resolver with 'source' prepended to Vite's conditions.
+      // Replace the bootstrap resolver with one configured from Vite's exact conditions.
       resolver = new ResolverFactory({ conditionNames });
     },
 
