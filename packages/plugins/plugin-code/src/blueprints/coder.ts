@@ -5,11 +5,31 @@
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { DeleteFile, ListFiles, ReadFile, RunBuildAgent, ScaffoldProject, VerifySpec, WriteFile } from '#operations';
+import {
+  DeleteFile,
+  HelloWorld,
+  ListFiles,
+  ReadFile,
+  ResetProject,
+  RunBuildAgent,
+  ScaffoldProject,
+  VerifySpec,
+  WriteFile,
+} from '#operations';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.coder';
 
-const operations = [VerifySpec, RunBuildAgent, ListFiles, ReadFile, WriteFile, DeleteFile, ScaffoldProject];
+const operations = [
+  VerifySpec,
+  RunBuildAgent,
+  ListFiles,
+  ReadFile,
+  WriteFile,
+  DeleteFile,
+  ScaffoldProject,
+  HelloWorld,
+  ResetProject,
+];
 
 /**
  * URL of the introspect-mcp server. The agent uses its tools (list_packages,
@@ -45,6 +65,11 @@ const make = () =>
           - write-file: create or overwrite a file (whole-file write).
           - delete-file: remove a file.
           - scaffold-project: seed a new project with package.json, src/plugin.ts, README.
+          - hello-world: sanity tool that writes a single src/hello.ts. Use when
+            the user asks you to "build hello world" or to verify the file
+            abstraction is wired up end-to-end.
+          - reset-project: delete every file in the project. Destructive — only
+            run when the user explicitly asks to clear or reset the project.
 
         Workflow:
           1. Iterate on the Spec content with the user. Propose features, types,

@@ -152,3 +152,40 @@ export const ScaffoldProject = Operation.make({
   }),
   services: [Database.Service],
 });
+
+export const HelloWorld = Operation.make({
+  meta: {
+    key: 'org.dxos.function.code.hello-world',
+    name: 'Hello World',
+    description:
+      'Sanity-check operation: writes (or overwrites) a single `src/hello.ts` file containing a Hello World program. ' +
+      'Useful for end-to-end verification that the agent can manipulate the file abstraction.',
+  },
+  input: Schema.Struct({
+    project: Ref.Ref(CodeProject.CodeProject).annotations({
+      description: 'The CodeProject to write the file into.',
+    }),
+  }),
+  output: Schema.Struct({
+    path: Schema.String,
+    created: Schema.Boolean,
+  }),
+  services: [Database.Service],
+});
+
+export const ResetProject = Operation.make({
+  meta: {
+    key: 'org.dxos.function.code.reset',
+    name: 'Reset Project',
+    description: 'Delete every source file in a CodeProject. Destructive; intended for testing.',
+  },
+  input: Schema.Struct({
+    project: Ref.Ref(CodeProject.CodeProject).annotations({
+      description: 'The CodeProject to clear.',
+    }),
+  }),
+  output: Schema.Struct({
+    removed: Schema.Number,
+  }),
+  services: [Database.Service],
+});

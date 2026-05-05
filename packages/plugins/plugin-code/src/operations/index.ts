@@ -12,8 +12,20 @@ const Handlers = OperationHandlerSet.lazy(
   () => import('./write-file'),
   () => import('./delete-file'),
   () => import('./scaffold-project'),
+  () => import('./hello-world'),
+  () => import('./reset-project'),
 );
 
-export { DeleteFile, ListFiles, ReadFile, RunBuildAgent, ScaffoldProject, VerifySpec, WriteFile } from './definitions';
+export {
+  DeleteFile,
+  HelloWorld,
+  ListFiles,
+  ReadFile,
+  ResetProject,
+  RunBuildAgent,
+  ScaffoldProject,
+  VerifySpec,
+  WriteFile,
+} from './definitions';
 
 export const CodeHandlers = Handlers;

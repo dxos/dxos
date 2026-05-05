@@ -277,6 +277,34 @@ op scaffoldProject
   note:   Operation key `org.dxos.function.code.scaffold`.
 ```
 
+```mdl
+op helloWorld
+  desc: |
+    Sanity-check operation. Writes (or overwrites) a single `src/hello.ts`
+    file containing a Hello World program. Used to verify end-to-end that
+    the agent can manipulate the file abstraction and that the result
+    surfaces in the CodeArticle.
+  input:  { project: Ref<CodeProject> }
+  output: { path: string, created: boolean }
+  effects: [echo:read, echo:write]
+  requires: [Database]
+  note:   Operation key `org.dxos.function.code.hello-world`.
+```
+
+```mdl
+op resetProject
+  desc: |
+    Delete every source file in a CodeProject. Destructive; intended for
+    testing and iteration when the agent needs a clean slate. Removes
+    each SourceFile (and its owned Text) from ECHO and clears the
+    project's `files` array.
+  input:  { project: Ref<CodeProject> }
+  output: { removed: number }
+  effects: [echo:read, echo:write]
+  requires: [Database]
+  note:   Operation key `org.dxos.function.code.reset`.
+```
+
 ## Blueprints
 
 ```mdl
@@ -296,6 +324,8 @@ type CoderBlueprint
       - op:writeFile
       - op:deleteFile
       - op:scaffoldProject
+      - op:helloWorld
+      - op:resetProject
     mcpServers:
       - introspect-mcp        # remote MCP, http; tools: list_packages,
                               # get_package, list_symbols, find_symbol,
@@ -449,6 +479,25 @@ feat F-10: Coder integrates introspect-mcp
           the agent simply has no API search tools available.
 ```
 
+```mdl
+feat F-11: Sanity + reset operations
+
+  req F-11.1: op:helloWorld writes (or overwrites) `src/hello.ts` containing a
+              minimal Hello World program; idempotent.
+  req F-11.2: op:resetProject removes every SourceFile from `project.files`
+              and calls Database.remove + flush so the underlying ECHO
+              objects are not leaked.
+  req F-11.3: Both operations are wired into the CoderBlueprint tool set.
+  req F-11.4:
+    when: the user asks the agent to "build hello world"
+    then: the agent invokes op:helloWorld and `src/hello.ts` shows up in the
+          FileTree on the next render.
+  req F-11.5:
+    when: the user asks the agent to "reset the project"
+    then: the agent invokes op:resetProject and the FileTree shows the
+          empty-state placeholder.
+```
+
 ## Acceptance
 
 ```mdl
@@ -561,8 +610,33 @@ test T-12: Coder blueprint exposes file tools
   when: AppCapabilities.BlueprintDefinition is queried for `org.dxos.blueprint.coder`
   then:
     - the blueprint's tool set includes listFiles, readFile, writeFile,
-      deleteFile, and scaffoldProject
+      deleteFile, scaffoldProject, helloWorld, and resetProject
     - the blueprint declares an introspect-mcp remote MCP server
+```
+
+```mdl
+test T-13: Hello World sanity round-trip
+  given: a CodeProject with no files
+  when: op:helloWorld is invoked
+  then:
+    - `project.files` includes exactly one SourceFile at path "src/hello.ts"
+    - the result is `{ path: "src/hello.ts", created: true }`
+  when: op:helloWorld is invoked a second time
+  then: the result is `{ path: "src/hello.ts", created: false }` and the
+        file count is unchanged (idempotent overwrite)
+```
+
+```mdl
+test T-14: Reset clears project files
+  given: a CodeProject with N (>0) files
+  when: op:resetProject is invoked
+  then:
+    - the result is `{ removed: N }`
+    - `project.files` is empty
+    - each previously-referenced SourceFile has been removed from ECHO
+      (`Database.remove` + flush)
+  when: op:resetProject is invoked on an already-empty project
+  then: the result is `{ removed: 0 }`
 ```
 
 ---
