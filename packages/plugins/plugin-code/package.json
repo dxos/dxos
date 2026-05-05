@@ -16,6 +16,7 @@
   "imports": {
     "#blueprints": "./src/blueprints/index.ts",
     "#capabilities": "./src/capabilities/index.ts",
+    "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
@@ -53,6 +54,7 @@
   ],
   "dependencies": {
     "@codemirror/autocomplete": "catalog:",
+    "@codemirror/lang-javascript": "catalog:",
     "@codemirror/lang-markdown": "catalog:",
     "@codemirror/language": "catalog:",
     "@codemirror/lint": "catalog:",
@@ -74,6 +76,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@lezer/common": "catalog:",
@@ -83,7 +86,6 @@
   },
   "devDependencies": {
     "@dxos/storybook-utils": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
     "@lezer/generator": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
