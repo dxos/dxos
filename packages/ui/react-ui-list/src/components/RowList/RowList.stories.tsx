@@ -21,22 +21,24 @@ const items: TestItem[] = Array.from({ length: 24 }, (_, i) => ({
 }));
 
 //
-// RowList — dense rows with bottom dividers. The list fills its parent
-// (column layout supplies full height + a sane default width) thanks to
-// `dx-container` baked into the base class.
+// RowList — dense rows with bottom dividers. Viewport carries
+// `dx-container`, so when it's the only child of a flex column it
+// fills the available space and scrolls (ScrollArea-backed).
 //
 
-const RowListStory = () => {
+const RowsStory = () => {
   const [selected, setSelected] = useState<string | undefined>(items[0].id);
   return (
-    <RowList selectedId={selected} onSelectChange={setSelected} aria-label='Items'>
-      {items.map((item) => (
-        <Row key={item.id} id={item.id}>
-          <div className='font-medium'>{item.name}</div>
-          <div className='text-sm text-description line-clamp-1'>{item.description}</div>
-        </Row>
-      ))}
-    </RowList>
+    <RowList.Root selectedId={selected} onSelectChange={setSelected}>
+      <RowList.Viewport aria-label='Items'>
+        {items.map((item) => (
+          <Row key={item.id} id={item.id}>
+            <div className='font-medium'>{item.name}</div>
+            <div className='text-sm text-description line-clamp-1'>{item.description}</div>
+          </Row>
+        ))}
+      </RowList.Viewport>
+    </RowList.Root>
   );
 };
 
@@ -44,17 +46,19 @@ const RowListStory = () => {
 // CardList — gapped cards on a separate surface.
 //
 
-const CardListStory = () => {
+const CardsStory = () => {
   const [selected, setSelected] = useState<string | undefined>();
   return (
-    <CardList classNames='p-2' selectedId={selected} onSelectChange={setSelected} aria-label='Items'>
-      {items.map((item) => (
-        <Card key={item.id} id={item.id}>
-          <div className='font-medium'>{item.name}</div>
-          <div className='text-sm text-description'>{item.description}</div>
-        </Card>
-      ))}
-    </CardList>
+    <CardList.Root selectedId={selected} onSelectChange={setSelected}>
+      <CardList.Viewport aria-label='Items'>
+        {items.map((item) => (
+          <Card key={item.id} id={item.id}>
+            <div className='font-medium'>{item.name}</div>
+            <div className='text-sm text-description'>{item.description}</div>
+          </Card>
+        ))}
+      </CardList.Viewport>
+    </CardList.Root>
   );
 };
 
@@ -65,24 +69,25 @@ const CardListStory = () => {
 const DisabledStory = () => {
   const [selected, setSelected] = useState<string | undefined>(items[0].id);
   return (
-    <RowList selectedId={selected} onSelectChange={setSelected} aria-label='Items'>
-      {items.slice(0, 6).map((item, i) => (
-        <Row key={item.id} id={item.id} disabled={i === 2}>
-          <div className='font-medium'>
-            {item.name}
-            {i === 2 && ' (disabled)'}
-          </div>
-          <div className='text-sm text-description line-clamp-1'>{item.description}</div>
-        </Row>
-      ))}
-    </RowList>
+    <RowList.Root selectedId={selected} onSelectChange={setSelected}>
+      <RowList.Viewport aria-label='Items'>
+        {items.slice(0, 6).map((item, i) => (
+          <Row key={item.id} id={item.id} disabled={i === 2}>
+            <div className='font-medium'>
+              {item.name}
+              {i === 2 && ' (disabled)'}
+            </div>
+            <div className='text-sm text-description line-clamp-1'>{item.description}</div>
+          </Row>
+        ))}
+      </RowList.Viewport>
+    </RowList.Root>
   );
 };
 
 //
-// Master/detail — list is one half of a layout, NOT filling everything.
-// Demonstrates that wrapping in a sized parent (or overriding classNames)
-// composes cleanly with the dx-container default.
+// Master/detail — list is one pane of a layout. Wrapping the list in a
+// sized parent composes cleanly with the Viewport's `dx-container`.
 //
 
 const MasterDetailStory = () => {
@@ -90,13 +95,15 @@ const MasterDetailStory = () => {
   const detail = items.find(({ id }) => id === selected);
   return (
     <div role='none' className='dx-container grid grid-cols-[20rem_1fr] divide-x divide-separator'>
-      <RowList selectedId={selected} onSelectChange={setSelected} aria-label='Items'>
-        {items.map((item) => (
-          <Row key={item.id} id={item.id}>
-            <div className='font-medium'>{item.name}</div>
-          </Row>
-        ))}
-      </RowList>
+      <RowList.Root selectedId={selected} onSelectChange={setSelected}>
+        <RowList.Viewport aria-label='Items'>
+          {items.map((item) => (
+            <Row key={item.id} id={item.id}>
+              <div className='font-medium'>{item.name}</div>
+            </Row>
+          ))}
+        </RowList.Viewport>
+      </RowList.Root>
       <div role='region' aria-label='Detail' className='dx-container p-4 overflow-auto'>
         {detail && (
           <>
@@ -109,6 +116,39 @@ const MasterDetailStory = () => {
   );
 };
 
+//
+// Toolbar + viewport siblings — Root is headless, so layout is the
+// caller's responsibility. Wrap in your own flex column.
+//
+
+const WithToolbarStory = () => {
+  const [selected, setSelected] = useState<string | undefined>(items[0].id);
+  const [filter, setFilter] = useState('');
+  const filtered = items.filter((item) => item.name.toLowerCase().includes(filter.toLowerCase()));
+  return (
+    <RowList.Root selectedId={selected} onSelectChange={setSelected}>
+      <div role='none' className='dx-container flex flex-col'>
+        <div role='none' className='border-b border-separator p-2'>
+          <input
+            type='text'
+            placeholder='Filter…'
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+            className='w-full bg-transparent outline-none'
+          />
+        </div>
+        <RowList.Viewport aria-label='Items'>
+          {filtered.map((item) => (
+            <Row key={item.id} id={item.id}>
+              <div className='font-medium'>{item.name}</div>
+            </Row>
+          ))}
+        </RowList.Viewport>
+      </div>
+    </RowList.Root>
+  );
+};
+
 const meta = {
   title: 'ui/react-ui-list/RowList',
   decorators: [withTheme(), withLayout({ layout: 'column' })],
@@ -118,7 +158,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Rows: Story = { render: RowListStory };
-export const Cards: Story = { render: CardListStory };
+export const Rows: Story = { render: RowsStory };
+export const Cards: Story = { render: CardsStory };
 export const WithDisabled: Story = { render: DisabledStory };
 export const MasterDetail: Story = { render: MasterDetailStory };
+export const WithToolbar: Story = { render: WithToolbarStory };

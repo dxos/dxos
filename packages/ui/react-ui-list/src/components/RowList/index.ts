@@ -3,4 +3,4 @@
 //
 
 export { RowList, CardList, Row, Card } from './RowList';
-export type { RowListProps, RowProps } from './RowList';
+export type { RowListRootProps, RowListViewportProps, RowProps } from './RowList';

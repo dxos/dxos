@@ -2,57 +2,65 @@
 // Copyright 2026 DXOS.org
 //
 
-// `RowList` / `CardList` — opinionated, ARIA-correct, keyboard-navigable
-// list containers built on `@dxos/react-list`.
+// `RowList` / `CardList` — Radix-style compound list components.
 //
-// The split between "row" and "card" is purely visual: both expose the
-// same `role="listbox"` / `role="option"` semantics, the same controlled-
-// or-uncontrolled `selectedId` model, and the same arrow-key navigation
-// from `@fluentui/react-tabster`. Pick the variant that matches the
-// content density:
+// Two namespaces, same shape: a headless `Root` and a scrollable
+// `Viewport`. The split between row and card is purely visual — both
+// expose the same `role="listbox"` / `role="option"` semantics, the
+// same `selectedId` model, and the same arrow-key navigation via
+// `@fluentui/react-tabster`. Pick the variant by the item component
+// you nest inside the viewport:
 //
-//   - `RowList` / `Row`   — dense rows with bottom dividers; for tool
-//                           pickers, file lists, settings rows, etc.
-//   - `CardList` / `Card` — gapped cards with their own surface; for
-//                           message previews, search results, etc.
+//   <RowList.Root selectedId={…} onSelectChange={…}>
+//     <RowList.Viewport aria-label='Tools'>
+//       <Row id='a'>…</Row>
+//       <Row id='b'>…</Row>
+//     </RowList.Viewport>
+//   </RowList.Root>
 //
-// What this layer guarantees by construction (so call sites can't drift):
+//   <CardList.Root selectedId={…} onSelectChange={…}>
+//     <CardList.Viewport aria-label='Results'>
+//       <Card id='a'>…</Card>
+//     </CardList.Viewport>
+//   </CardList.Root>
 //
-//   - `aria-selected` is set on the option whose id matches `selectedId`.
-//   - `dx-selected` and `dx-hover` are applied automatically — pair is
-//     correct (see `ui-theme/src/css/components/selected.md`).
-//   - The container is `role="listbox"` and supports up/down arrow keys.
-//   - Enter / Space on the focused option commits selection.
+// Why headless Root + a Viewport (and not a single component):
 //
-// Container sizing:
+//   - `Root` is headless (renders no DOM, just a context provider).
+//     Matches Radix Select / Dialog / Tabs. Selection state lives here
+//     so any descendant — Viewport, Toolbar, Footer — can read it.
+//   - `Viewport` owns the listbox role, the scroll surface, the
+//     `aria-label`, and `dx-container` for filling its parent. It
+//     wraps `ScrollArea.Root` + `ScrollArea.Viewport` so long lists
+//     scroll with DXOS-styled scrollbars by default. Set
+//     `scroll={false}` to opt out (popover-style usage).
 //
-//   The base class includes `dx-container` (= `flex-1 min-h-0 min-w-0
-//   h-full w-full overflow-hidden`), so when the list is the only child
-//   of a flex column it fills the available space. For master/detail
-//   layouts where the list is one pane, override `classNames` or wrap
-//   in your own sized container.
+// Toolbars, footers, and other non-listbox chrome are caller-supplied
+// siblings around `Viewport` inside `Root` (see story `WithToolbar`).
+// Wrap them in your own `dx-container flex flex-col` div — Root is
+// intentionally headless so layout is the caller's responsibility.
 //
-// Composability:
+// `Viewport`, `Row`, and `Card` are `slottable()` from `@dxos/ui-theme`
+// — they accept `asChild` to delegate rendering and merge `classNames`
+// + parent-Slot `className` via `composableProps()`. (`Root` is plain
+// React; no DOM = nothing to slot.)
 //
-//   `RowList`, `CardList`, `Row`, and `Card` are all built with
-//   `slottable()` from `@dxos/ui-theme` — they accept `asChild` to
-//   delegate rendering and `classNames` for theme overrides.
+// Keyboard:
 //
-// What it deliberately does NOT do:
+//   Per AUDIT.md, list-shaped components in this layer use tabster's
+//   `useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true })`
+//   only. No bespoke `onKeyDown` arrow handlers. Enter / Space on the
+//   focused option commits selection.
 //
-//   - Virtualization or drag-and-drop. Reach for `@dxos/react-ui-mosaic`
-//     when you need either.
-//   - Multi-select. The current API exposes a single `selectedId`. A
-//     `selectedIds: Set<string>` mode can be added when there's a real
-//     consumer; the underlying primitive already supports it.
-//   - Wrapping in a `ScrollArea`. Pass one in around the list if needed
-//     (most callers don't, since `dx-container`'s overflow:hidden +
-//     a child `overflow:auto` element handles long lists).
+// What this layer deliberately does NOT do:
+//
+//   - Virtualization or drag-and-drop. Reach for `@dxos/react-ui-mosaic`.
+//   - Multi-select. Single `selectedId` for now.
 
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
-import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
+  type ForwardedRef,
   type KeyboardEvent,
   type MouseEvent,
   type ReactNode,
@@ -63,125 +71,165 @@ import React, {
 } from 'react';
 
 import { List, ListItem } from '@dxos/react-list';
+import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { composableProps, slottable } from '@dxos/ui-theme';
 
-const ROW_LIST_NAME = 'RowList';
+const ROW_LIST_VIEWPORT_NAME = 'RowList.Viewport';
+const CARD_LIST_VIEWPORT_NAME = 'CardList.Viewport';
 const ROW_NAME = 'Row';
-const CARD_LIST_NAME = 'CardList';
 const CARD_NAME = 'Card';
 
-type RowListContextValue = {
+//
+// Context.
+//
+
+type Variant = 'row' | 'card';
+
+type ListContextValue = {
   selectedId?: string;
   onSelect: (id: string) => void;
-  variant: 'row' | 'card';
+  variant: Variant;
 };
 
-const RowListContext = createContext<RowListContextValue | null>(null);
+const ListContext = createContext<ListContextValue | null>(null);
 
-const useRowListContext = (componentName: string): RowListContextValue => {
-  const ctx = useContext(RowListContext);
+const useListContext = (componentName: string): ListContextValue => {
+  const ctx = useContext(ListContext);
   if (!ctx) {
-    throw new Error(`<${componentName}> must be used inside <RowList> or <CardList>`);
+    throw new Error(`<${componentName}> must be used inside <RowList.Root> or <CardList.Root>`);
   }
   return ctx;
 };
 
 //
-// RowList / CardList container.
+// Root — headless context provider. Renders no DOM.
 //
 
-// Base classes shared by both variants — fills available space and
-// participates in scroll if a parent constrains height. Variant-specific
-// gap/layout is appended below.
-const CONTAINER_BASE = 'dx-container flex flex-col';
-const ROW_LIST_BASE = `${CONTAINER_BASE}`;
-// Cards gap on their own surface; container is padded so the cards float.
-const CARD_LIST_BASE = `${CONTAINER_BASE} gap-2`;
-
-type RowListOwnProps = {
-  /**
-   * Currently-selected option id. Pair with `onSelectChange` for a
-   * controlled list. Omit (and pass `defaultSelectedId` instead) for
-   * uncontrolled.
-   */
+type RootProps = {
+  /** Currently-selected option id (controlled). */
   selectedId?: string;
   /** Initial selection for uncontrolled mode. */
   defaultSelectedId?: string;
-  /**
-   * Called when the user picks a different option (click, Enter, or
-   * Space). Receives the option's `id` prop.
-   */
+  /** Called when the user picks a different option. */
   onSelectChange?: (id: string) => void;
-  /**
-   * Accessible label for the listbox. Strongly recommended; assistive
-   * tech announces this when focus enters the list.
-   */
-  'aria-label'?: string;
+  children?: ReactNode;
 };
 
-const renderListContainer = (
-  variant: 'row' | 'card',
-  baseClassName: string,
-  {
-    asChild,
-    selectedId,
-    defaultSelectedId,
-    onSelectChange,
-    children,
-    ...props
-  }: RowListOwnProps & { asChild?: boolean; children?: ReactNode } & Record<string, unknown>,
-  forwardedRef: React.ForwardedRef<HTMLOListElement>,
-) => {
-  const arrowGroup = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
-
-  const [resolvedSelected, setResolvedSelected] = useControllableState({
+const RootImpl = ({
+  variant,
+  selectedId,
+  defaultSelectedId,
+  onSelectChange,
+  children,
+}: RootProps & { variant: Variant }) => {
+  // `useControllableState`'s `onChange` is typed `(state: string | undefined) => void`,
+  // but our public `onSelectChange` is `(id: string) => void` (an `id` is always
+  // a string when emitted from a click / Enter). Wrap to satisfy the type
+  // without leaking `undefined` to callers.
+  const [resolvedSelected, setResolvedSelected] = useControllableState<string | undefined>({
     prop: selectedId,
     defaultProp: defaultSelectedId,
-    onChange: onSelectChange,
+    onChange: (next) => {
+      if (next !== undefined) {
+        onSelectChange?.(next);
+      }
+    },
   });
 
-  const handleSelect = useCallback(
-    (id: string) => {
-      setResolvedSelected(id);
-    },
-    [setResolvedSelected],
-  );
+  const handleSelect = useCallback((id: string) => setResolvedSelected(id), [setResolvedSelected]);
 
-  const ctx = useMemo<RowListContextValue>(
+  const ctx = useMemo<ListContextValue>(
     () => ({ selectedId: resolvedSelected, onSelect: handleSelect, variant }),
     [resolvedSelected, handleSelect, variant],
   );
 
-  // Reconciles classNames + className (from a parent Slot) with our base.
-  const composed = composableProps<HTMLOListElement>({ ...props } as any, { classNames: baseClassName });
+  return <ListContext.Provider value={ctx}>{children}</ListContext.Provider>;
+};
+
+const RowListRoot = (props: RootProps) => <RootImpl {...props} variant='row' />;
+RowListRoot.displayName = 'RowList.Root';
+
+const CardListRoot = (props: RootProps) => <RootImpl {...props} variant='card' />;
+CardListRoot.displayName = 'CardList.Root';
+
+//
+// Viewport — listbox + ScrollArea + dx-container.
+//
+
+// Variant-specific layout for the listbox `<ul>`. Rows touch (no gap;
+// items carry the divider). Cards float on the surface with a small gap.
+const ROW_VIEWPORT_LIST_BASE = 'flex flex-col';
+const CARD_VIEWPORT_LIST_BASE = 'flex flex-col gap-2 p-2';
+
+type ViewportOwnProps = {
+  /**
+   * Disable the ScrollArea wrapper (e.g. when the list lives inside a
+   * popover that owns its own scroll). The listbox still renders.
+   */
+  scroll?: boolean;
+  /**
+   * Accessible label for the listbox. Strongly recommended; assistive
+   * tech announces this when focus enters the list. Falls onto the
+   * listbox `<ul>` where `role="listbox"` lives.
+   */
+  'aria-label'?: string;
+};
+
+const renderViewport = (
+  componentName: string,
+  props: ThemedClassName<ViewportOwnProps & { children?: ReactNode }> & Record<string, unknown>,
+  forwardedRef: ForwardedRef<HTMLUListElement>,
+) => {
+  // Touch the context to fail loudly if Viewport is used outside Root.
+  useListContext(componentName);
+  const arrowGroup = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
+
+  const { scroll = true, children, ...rest } = props as any;
+  const variant = componentName === ROW_LIST_VIEWPORT_NAME ? 'row' : 'card';
+  const listClassNames = variant === 'row' ? ROW_VIEWPORT_LIST_BASE : CARD_VIEWPORT_LIST_BASE;
+
+  // The listbox itself comes from `@dxos/react-list`'s `<List>`.
+  // Without it, descendant `<ListItem>`s (used by `Row` / `Card`) fail
+  // their Radix context-scope check. `selectable` flips `<List>` to
+  // `<ul role='listbox'>` and gates the `role='option'` + `aria-selected`
+  // on `<ListItem>`. The arrow-nav group lands on this ul because it's
+  // the focusable container.
+  const composedListProps = composableProps<HTMLUListElement>(rest, { classNames: listClassNames });
+  const listbox = (
+    <List
+      variant='unordered'
+      selectable
+      {...composedListProps}
+      {...arrowGroup}
+      ref={forwardedRef as unknown as ForwardedRef<HTMLOListElement>}
+    >
+      {children}
+    </List>
+  );
+
+  if (!scroll) {
+    return listbox;
+  }
 
   return (
-    <RowListContext.Provider value={ctx}>
-      {asChild ? (
-        <Slot {...composed} {...arrowGroup} ref={forwardedRef}>
-          {children as React.ReactElement}
-        </Slot>
-      ) : (
-        <List variant='unordered' selectable {...composed} {...arrowGroup} ref={forwardedRef}>
-          {children}
-        </List>
-      )}
-    </RowListContext.Provider>
+    <ScrollArea.Root orientation='vertical' classNames='dx-container'>
+      <ScrollArea.Viewport>{listbox}</ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 
-const RowList = slottable<HTMLOListElement, RowListOwnProps>((props, forwardedRef) =>
-  renderListContainer('row', ROW_LIST_BASE, props as any, forwardedRef),
+const RowListViewport = slottable<HTMLUListElement, ViewportOwnProps>((props, forwardedRef) =>
+  renderViewport(ROW_LIST_VIEWPORT_NAME, props as any, forwardedRef),
 );
-RowList.displayName = ROW_LIST_NAME;
+RowListViewport.displayName = ROW_LIST_VIEWPORT_NAME;
 
-const CardList = slottable<HTMLOListElement, RowListOwnProps>((props, forwardedRef) =>
-  renderListContainer('card', CARD_LIST_BASE, props as any, forwardedRef),
+const CardListViewport = slottable<HTMLUListElement, ViewportOwnProps>((props, forwardedRef) =>
+  renderViewport(CARD_LIST_VIEWPORT_NAME, props as any, forwardedRef),
 );
-CardList.displayName = CARD_LIST_NAME;
+CardListViewport.displayName = CARD_LIST_VIEWPORT_NAME;
 
 //
-// Row / Card option.
+// Row / Card — option items.
 //
 
 type ItemOwnProps = {
@@ -194,24 +242,19 @@ type ItemOwnProps = {
 };
 
 // Row paddings are tighter than Card's; rows touch with a divider, cards
-// gap with their own surface (matches the gap on the container above).
-const ROW_BASE = 'dx-hover dx-selected px-3 py-2 cursor-pointer outline-none border-b border-separator last:border-b-0';
+// sit on their own surface with rounded corners.
+const ROW_BASE =
+  'dx-hover dx-selected px-3 py-2 cursor-pointer outline-none border-b border-separator last:border-b-0';
 const CARD_BASE = 'dx-hover dx-selected px-3 py-2 cursor-pointer outline-none rounded-md bg-baseSurface';
 
 const renderItem = (
   contextName: string,
   baseClassName: string,
-  {
-    asChild,
-    id,
-    disabled,
-    onClick,
-    children,
-    ...props
-  }: ItemOwnProps & { asChild?: boolean; children?: ReactNode } & Record<string, unknown>,
-  forwardedRef: React.ForwardedRef<HTMLLIElement>,
+  props: ThemedClassName<ItemOwnProps & { children?: ReactNode }> & Record<string, unknown>,
+  forwardedRef: ForwardedRef<HTMLLIElement>,
 ) => {
-  const { selectedId, onSelect } = useRowListContext(contextName);
+  const { id, disabled, onClick, children, ...rest } = props as any;
+  const { selectedId, onSelect } = useListContext(contextName);
   const isSelected = selectedId === id;
 
   const handleClick = useCallback(
@@ -238,7 +281,7 @@ const renderItem = (
     [disabled, id, onSelect],
   );
 
-  const composed = composableProps<HTMLLIElement>({ ...props } as any, {
+  const composed = composableProps<HTMLLIElement>(rest, {
     classNames: [baseClassName, disabled && 'opacity-50 cursor-not-allowed'],
   });
 
@@ -246,21 +289,6 @@ const renderItem = (
   // the option isn't reachable. Disabled items stay in the tab order so
   // users can read them but can't pick.
   const tabIndex = disabled ? -1 : 0;
-
-  if (asChild) {
-    return (
-      <Slot
-        {...composed}
-        tabIndex={tabIndex}
-        aria-disabled={disabled || undefined}
-        onClick={handleClick}
-        onKeyDown={handleKeyDown}
-        ref={forwardedRef}
-      >
-        {children as React.ReactElement}
-      </Slot>
-    );
-  }
 
   return (
     <ListItem
@@ -287,5 +315,19 @@ const Card = slottable<HTMLLIElement, ItemOwnProps>((props, forwardedRef) =>
 );
 Card.displayName = CARD_NAME;
 
+//
+// Public namespaces.
+//
+
+const RowList = {
+  Root: RowListRoot,
+  Viewport: RowListViewport,
+};
+
+const CardList = {
+  Root: CardListRoot,
+  Viewport: CardListViewport,
+};
+
 export { RowList, CardList, Row, Card };
-export type { RowListOwnProps as RowListProps, ItemOwnProps as RowProps };
+export type { RootProps as RowListRootProps, ViewportOwnProps as RowListViewportProps, ItemOwnProps as RowProps };

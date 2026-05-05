@@ -264,15 +264,23 @@ defers everything else upward:
 Specifically:
 
 - **`react-primitives/react-list`** stays as the structural ARIA
-  primitive. It's used by `react-ui-list` only.
-- **`react-ui-list`** is rebuilt as the elemental, opinionated layer:
-  - Add `Row` / `Card` item primitives (matching the row vs card
-    facet) that compose `react-primitives/react-list` for ARIA.
-  - Add `RowList` / `CardList` containers (no virt, no DnD) that
-    handle keyboard nav and pair `aria-selected`/`aria-current` with
-    `dx-selected`/`dx-current` automatically.
+  primitive. It's used by `react-ui-list` only. **Flat, scroll-agnostic,
+  not compound** — by design. Compound APIs and ScrollArea integration
+  belong in `react-ui-list`, never in the primitive.
+- **`react-ui-list`** is rebuilt as the elemental, opinionated layer.
+  Compound, Radix-style API:
+  - `RowList.Root` / `CardList.Root` — **headless** context provider
+    (no DOM); owns selection state. Layout is the caller's
+    responsibility, matching Radix `Select.Root` / `Dialog.Root`.
+  - `RowList.Viewport` / `CardList.Viewport` — `role="listbox"`,
+    arrow-nav (tabster), `aria-label`, and `dx-container` for filling
+    its parent. Wraps `ScrollArea.Root` + `ScrollArea.Viewport` by
+    default; opt out via `scroll={false}` for popover-style usage.
+  - `Row` / `Card` — `role="option"` items with the right `dx-*` ↔
+    `aria-selected` pairing by construction.
   - Keep `Tree` and `Accordion` (still unique).
-  - Delete the `@deprecated` `List`.
+  - Delete the `@deprecated` `List` (Phase 6 — see consumer survey
+    below).
 - **`react-ui-search`** is refactored to compose `react-ui-list`'s
   `RowList` instead of holding its own. The search-specific bits
   (debounced input, auto-select-first, scroll-into-view) become a
@@ -420,37 +428,35 @@ import { RowList, Row } from '@dxos/react-ui-list';
 export const ToolList = ({ tools, selected, onSelect, className }: ToolListProps) => {
   const entries = useMemo(() => Object.entries(tools).sort(([a], [b]) => a.localeCompare(b)), [tools]);
   return (
-    <RowList
-      classNames={className}
-      selectedId={selected}
-      onSelect={(id) => onSelect?.(id, tools[id])}
-      ariaLabel='MCP tools'
-    >
-      {entries.map(([name, tool]) => (
-        <Row id={name} key={name}>
-          <div className='font-mono text-xs text-subdueText'>{name}</div>
-          <div className='font-medium'>{tool.title}</div>
-          {tool.description && (
-            <div className='text-sm text-description line-clamp-2 mt-1'>
-              {tool.description.trim()}
-            </div>
-          )}
-        </Row>
-      ))}
-    </RowList>
+    <RowList.Root selectedId={selected} onSelectChange={(id) => onSelect?.(id, tools[id])}>
+      <RowList.Viewport classNames={className} aria-label='MCP tools'>
+        {entries.map(([name, tool]) => (
+          <Row id={name} key={name}>
+            <div className='font-mono text-xs text-subdueText'>{name}</div>
+            <div className='font-medium'>{tool.title}</div>
+            {tool.description && (
+              <div className='text-sm text-description line-clamp-2 mt-1'>
+                {tool.description.trim()}
+              </div>
+            )}
+          </Row>
+        ))}
+      </RowList.Viewport>
+    </RowList.Root>
   );
 };
 ```
 
-`RowList` provides:
+`RowList.Root` + `RowList.Viewport` provide:
 
 - `role="listbox"` / `role="option"` via `react-primitives/react-list`.
 - `aria-selected` set automatically on the `Row` whose id matches
   `selectedId`.
 - `dx-selected dx-hover` paired correctly.
-- Keyboard nav (arrow keys, Home/End, Enter to commit) via tabster.
-- Optional `scrollArea` prop wrapping the list in `ScrollArea.Root` /
-  `Viewport` (saves the call site from boilerplate).
+- Keyboard nav (arrow keys, Enter / Space to commit) via
+  `@fluentui/react-tabster`.
+- `ScrollArea.Root` + `Viewport` wrapper baked into `Viewport` by
+  default (set `scroll={false}` to opt out for popover-style usage).
 
 Net diff for `ToolList`: ~30 lines deleted, no styling regressions, no
 ARIA mismatches possible by construction.
