@@ -64,7 +64,7 @@ export const ToolForm = ({ tool, defaultValues, onSubmit, onCancel, className }:
         <Form.Content>
           <Form.FieldSet />
           <Form.Actions>
-            <Form.Submit>Run tool</Form.Submit>
+            <Form.Submit label='Run tool' />
           </Form.Actions>
         </Form.Content>
       </Form.Root>

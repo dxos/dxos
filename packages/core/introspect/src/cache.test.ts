@@ -66,8 +66,8 @@ describe('symbol cache reuse', { timeout: 30_000 }, () => {
     const elapsed = Date.now() - start;
     intro2.dispose();
 
-    // Fixture has 3 packages (pkg-a, pkg-b, pkg-plugin); cold run is well under
-    // 500ms but warm should be even faster — and crucially the file contents are identical.
+    // Fixture has 2 packages; cold run is well under 500ms but warm should
+    // be even faster — and crucially the file contents are identical.
     // Threshold is generous to absorb CI disk/CPU contention; the byte-equality
     // assertion below is the real "no re-extraction" signal.
     expect(elapsed).toBeLessThan(5_000);
@@ -80,7 +80,7 @@ describe('symbol cache reuse', { timeout: 30_000 }, () => {
     const pkgs = intro3.listPackages();
     const taskSym = intro3.getSymbol('@fixture/pkg-a#Task');
     intro3.dispose();
-    expect(pkgs.length).toBe(3);
+    expect(pkgs.length).toBe(2);
     expect(taskSym?.name).toBe('Task');
   });
 

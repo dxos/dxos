@@ -17,14 +17,11 @@ import { effectFieldsToZod } from '@dxos/effect-zod';
 import { trim } from '@dxos/util';
 
 import {
-  FindSchemaUsageInput,
   FindSymbolInput,
   GetPackageInput,
-  GetPluginInput,
-  GetSchemaInput,
   GetSymbolInput,
   ListCapabilitiesInput,
-  ListOperationsInput,
+  ListIntentsInput,
   ListPackagesInput,
   ListPluginsInput,
   ListSchemasInput,
@@ -114,27 +111,18 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
   list_plugins: {
     title: 'List Composer plugins',
     description: trim`
-      List plugins detected in the monorepo. A plugin is a package whose src/ contains a \`Plugin.define(meta)\` call
-      and a meta.ts exporting \`Plugin.Meta\`. Use this to discover what plugins exist before drilling into one.
-      Returns lightweight rows; call get_plugin for the full breakdown of modules, surfaces, capabilities, and operations.
+      List plugins detected in the monorepo. A plugin is a package whose src/meta.ts exports a \`Plugin.Meta\`.
+      Use this to discover what plugins exist before drilling into surfaces / capabilities / intents / schemas.
+      Filter by \`id\` substring (e.g. "markdown") to narrow the list.
     `,
     inputSchema: ListPluginsInput,
-  },
-  get_plugin: {
-    title: 'Get plugin detail',
-    description: trim`
-      Fetch the full record for a single plugin by its meta id (e.g. "org.dxos.plugin.markdown").
-      Returns the plugin meta, the module helpers it composes, and the surfaces, capabilities, and operations
-      it contributes. Use after list_plugins or when the user references a plugin by id.
-    `,
-    inputSchema: GetPluginInput,
   },
   list_surfaces: {
     title: 'List surfaces',
     description: trim`
       List Surface.create({ id, role, ... }) contributions across the monorepo. Use this to discover available
       surface ids when wiring a new container, or to check whether a surface name is already taken.
-      Filter by \`pluginId\` to scope to a single plugin.
+      Filter by \`id\` (plugin id) to scope to a single plugin's surfaces.
     `,
     inputSchema: ListSurfacesInput,
   },
@@ -142,46 +130,26 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
     title: 'List capability contributions',
     description: trim`
       List Capability.contributes(<key>, ...) calls across the monorepo. Use this to discover which capability
-      keys are produced (or required) by which plugins. Filter by \`pluginId\` to scope to a single plugin.
+      keys are produced (or required) by which plugins. Filter by \`id\` (plugin id) to scope to a single plugin.
     `,
     inputSchema: ListCapabilitiesInput,
   },
-  list_operations: {
-    title: 'List operations',
+  list_intents: {
+    title: 'List intents',
     description: trim`
-      List Operation.make({ meta: { key, name, description } }) calls across the monorepo. Operations are the
-      unit of work dispatched through the OperationInvoker (formerly "intents"). Filter by \`pluginId\` to scope
-      to a single plugin.
+      List intents contributed by plugins (the unit of work dispatched through the IntentResolver).
+      Filter by \`id\` (plugin id) to scope to a single plugin.
     `,
-    inputSchema: ListOperationsInput,
+    inputSchema: ListIntentsInput,
   },
   list_schemas: {
     title: 'List schemas',
     description: trim`
-      List ECHO-registered types — anything passing through \`Type.object({ typename, version })\` or
-      \`Type.Obj(...)\` in the monorepo. Use this to discover what data types exist before reading their
-      shape with get_schema. Filter by \`pluginId\` (e.g. "org.dxos.plugin.markdown") to scope to a single
-      plugin's schemas, or by \`package\` for a single package.
+      List ECHO-registered types contributed by plugins (declared via addSchemaModule).
+      Use this to discover what data types exist before reading their shape.
+      Filter by \`id\` (plugin id, e.g. "org.dxos.plugin.markdown") to scope to a single plugin's schemas.
     `,
     inputSchema: ListSchemasInput,
-  },
-  get_schema: {
-    title: 'Get schema detail by typename',
-    description: trim`
-      Fetch the full record for one schema by its typename (e.g. "org.dxos.type.document").
-      Returns the field list, version, owning package, and source location. Use after list_schemas or
-      when the user references a typename directly.
-    `,
-    inputSchema: GetSchemaInput,
-  },
-  find_schema_usage: {
-    title: 'Find references to a schema typename',
-    description: trim`
-      List every line in the monorepo that mentions a typename. Useful for understanding where a
-      data type is consumed, referenced via \`Ref.Ref(...)\`, or wired into a plugin. Returns file + line +
-      snippet. The defining \`Type.object\` line is excluded — see get_schema for that.
-    `,
-    inputSchema: FindSchemaUsageInput,
   },
 };
 

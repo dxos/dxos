@@ -4,18 +4,13 @@
 
 // Effect Schema input definitions for every MCP tool.
 //
-// These are the source of truth: introspect-mcp converts them to zod at
-// registration time (the MCP SDK requires zod), and downstream consumers
-// like react-ui-form / react-ui-introspect import them directly to render
-// forms.
+// These are the source of truth: `@dxos/introspect-mcp` converts them to zod
+// at registration time (the MCP SDK requires zod), and downstream consumers
+// like `react-ui-form` import them directly to render forms.
 //
-// Convention for annotations on every field:
-//   - `title`       — short label react-ui-form shows above the input.
-//   - `description` — longer text shown as helper / LLM trigger guidance.
-//
-// Both are placed on the OUTERMOST wrapper:
-//   - Optional fields: `.annotations({ ... })` on `Schema.optional(...)`.
-//   - Required fields: `.annotations({ ... })` on the primitive itself.
+// Convention: every field's description goes on the OUTERMOST wrapper.
+//   - Optional fields: `.annotations({ description })` on `Schema.optional(...)`.
+//   - Required fields: `.annotations({ description })` on the primitive itself.
 
 import * as Schema from 'effect/Schema';
 
@@ -27,6 +22,9 @@ import { DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT } from './limits';
  * Pagination + projection options shared by every list-style tool. Spread its
  * `.fields` into a tool's `Schema.Struct({...})` so the same pair of knobs
  * appears on every list endpoint without copy-paste.
+ *
+ * The default behavior (no `limit`, no `compact`) matches the old hard-cap-of-30
+ * shape, so callers that don't pass these args see no change.
  */
 export const ListOptionsInput = Schema.Struct({
   limit: Schema.optional(
@@ -40,8 +38,8 @@ export const ListOptionsInput = Schema.Struct({
   compact: Schema.optional(Schema.Boolean).annotations({
     title: 'Compact',
     description: trim`
-      If true, returns only the most-essential identifying fields (ref, id, name) for each item —
-      about 1/4 the response size. Use when discovering what exists before drilling in with a get_* call.
+      If true, returns only the most-essential identifying fields for each item — about 1/4 the response size.
+      Use when discovering what exists before drilling in.
     `,
   }),
 });
@@ -83,7 +81,7 @@ export const GetPackageInput = Schema.Struct({
 
 export const ListSymbolsInput = Schema.Struct({
   package: Schema.String.annotations({
-    title: 'Package name',
+    title: 'Package',
     description: 'Exact package name, e.g. "@dxos/ai".',
   }),
   kind: Schema.optional(SymbolKindEnum).annotations({
@@ -117,83 +115,33 @@ export const GetSymbolInput = Schema.Struct({
 });
 
 //
-// Plugins / surfaces / capabilities / operations
+// Plugins / surfaces / capabilities / intents / schemas
+//
+// Main's API exposes a single optional `id` filter on each of these — the
+// plugin id (e.g. "org.dxos.plugin.markdown"). `listPlugins` accepts a
+// `PluginFilter` object with `id` for substring matching.
 //
 
 export const ListPluginsInput = Schema.Struct({
-  query: Schema.optional(Schema.String).annotations({
-    title: 'Query',
-    description: 'Substring of the plugin id, name, or owning package name (case-insensitive).',
-  }),
-  pathPrefix: Schema.optional(Schema.String).annotations({
-    title: 'Path prefix',
-    description: 'Restrict to plugins whose owning package starts with this path, e.g. "packages/plugins".',
-  }),
-  ...ListOptionsInput.fields,
-});
-
-export const GetPluginInput = Schema.Struct({
-  id: Schema.String.annotations({
+  id: Schema.optional(Schema.String).annotations({
     title: 'Plugin id',
-    description: 'Plugin id from meta.ts, e.g. "org.dxos.plugin.markdown".',
+    description: 'Substring of the plugin id (case-insensitive). Omit to list every plugin.',
   }),
+  ...ListOptionsInput.fields,
 });
 
-export const ListSurfacesInput = Schema.Struct({
-  pluginId: Schema.optional(Schema.String).annotations({
+const PluginIdFilter = Schema.Struct({
+  id: Schema.optional(Schema.String).annotations({
     title: 'Plugin id',
-    description: 'Restrict to surfaces contributed by this plugin id.',
+    description: 'Restrict to contributions from this plugin id (e.g. "org.dxos.plugin.markdown").',
   }),
   ...ListOptionsInput.fields,
 });
 
-export const ListCapabilitiesInput = Schema.Struct({
-  pluginId: Schema.optional(Schema.String).annotations({
-    title: 'Plugin id',
-    description: 'Restrict to capabilities contributed by this plugin id.',
-  }),
-  ...ListOptionsInput.fields,
-});
-
-export const ListOperationsInput = Schema.Struct({
-  pluginId: Schema.optional(Schema.String).annotations({
-    title: 'Plugin id',
-    description: 'Restrict to operations defined within this plugin id.',
-  }),
-  ...ListOptionsInput.fields,
-});
-
-//
-// Schemas
-//
-
-export const ListSchemasInput = Schema.Struct({
-  pluginId: Schema.optional(Schema.String).annotations({
-    title: 'Plugin id',
-    description:
-      'Restrict to schemas defined in a package that declares this plugin id, e.g. "org.dxos.plugin.markdown".',
-  }),
-  package: Schema.optional(Schema.String).annotations({
-    title: 'Package',
-    description: 'Restrict to schemas defined within this exact package name.',
-  }),
-  ...ListOptionsInput.fields,
-});
-
-export const GetSchemaInput = Schema.Struct({
-  typename: Schema.String.annotations({
-    title: 'Typename',
-    description: 'Schema typename, e.g. "org.dxos.type.document".',
-  }),
-});
-
-export const FindSchemaUsageInput = Schema.Struct({
-  typename: Schema.String.annotations({
-    title: 'Typename',
-    description: 'Schema typename, e.g. "org.dxos.type.document".',
-  }),
-  ...ListOptionsInput.fields,
-});
+export const ListSurfacesInput = PluginIdFilter;
+export const ListCapabilitiesInput = PluginIdFilter;
+export const ListIntentsInput = PluginIdFilter;
+export const ListSchemasInput = PluginIdFilter;
 
 //
 // Inferred TypeScript types — handy for downstream consumers.
@@ -205,10 +153,7 @@ export type ListSymbolsArgs = typeof ListSymbolsInput.Type;
 export type FindSymbolArgs = typeof FindSymbolInput.Type;
 export type GetSymbolArgs = typeof GetSymbolInput.Type;
 export type ListPluginsArgs = typeof ListPluginsInput.Type;
-export type GetPluginArgs = typeof GetPluginInput.Type;
 export type ListSurfacesArgs = typeof ListSurfacesInput.Type;
 export type ListCapabilitiesArgs = typeof ListCapabilitiesInput.Type;
-export type ListOperationsArgs = typeof ListOperationsInput.Type;
+export type ListIntentsArgs = typeof ListIntentsInput.Type;
 export type ListSchemasArgs = typeof ListSchemasInput.Type;
-export type GetSchemaArgs = typeof GetSchemaInput.Type;
-export type FindSchemaUsageArgs = typeof FindSchemaUsageInput.Type;
