@@ -23,17 +23,9 @@ export default Capability.makeModule<IntegrationProviderEntry[]>(
         source: '',
         label: 'Custom Token',
       },
-      // TODO(wittjosiah): Implement github, linear, slack as dedicated plugins instead of presets.
+      // GitHub is implemented as a dedicated plugin (`@dxos/plugin-github`).
+      // TODO(wittjosiah): Implement linear, slack as dedicated plugins instead of presets.
       /*
-      {
-        id: 'github',
-        source: 'github.com',
-        label: 'GitHub',
-        oauth: {
-          provider: OAuthProvider.GITHUB,
-          scopes: ['repo', 'read:user'],
-        },
-      },
       {
         id: 'linear',
         source: 'linear.app',

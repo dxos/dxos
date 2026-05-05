@@ -287,6 +287,9 @@
       "path": "../../plugins/plugin-gallery"
     },
     {
+      "path": "../../plugins/plugin-github"
+    },
+    {
       "path": "../../plugins/plugin-graph"
     },
     {
