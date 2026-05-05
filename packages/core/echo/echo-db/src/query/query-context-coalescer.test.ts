@@ -161,8 +161,12 @@ describe('QueryContextCoalescer', () => {
       const h2 = coalescer.getOrCreate(ast1WithLabel);
       let h1Fired = 0;
       let h2Fired = 0;
-      h1.changed.on(() => { h1Fired++; });
-      h2.changed.on(() => { h2Fired++; });
+      h1.changed.on(() => {
+        h1Fired++;
+      });
+      h2.changed.on(() => {
+        h2Fired++;
+      });
       factoryCalls[0].changed.emit();
       expect(h1Fired).toBe(1);
       expect(h2Fired).toBe(1);
@@ -279,7 +283,10 @@ describe('QueryContextCoalescer', () => {
         expect(r1).toHaveLength(1);
 
         // Simulate write: update results.
-        ctx.setResults([{ id: 'a', result: {} }, { id: 'b', result: {} }]);
+        ctx.setResults([
+          { id: 'a', result: {} },
+          { id: 'b', result: {} },
+        ]);
         const r2 = await handle.run(Context.default(), ast1);
         expect(r2).toHaveLength(2);
 
