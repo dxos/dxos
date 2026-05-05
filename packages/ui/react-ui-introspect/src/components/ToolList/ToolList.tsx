@@ -33,7 +33,7 @@ export const ToolList = ({ tools, selected, onSelect, className }: ToolListProps
   const entries = useMemo(() => Object.entries(tools).sort(([a], [b]) => a.localeCompare(b)), [tools]);
 
   return (
-    <ScrollArea.Root orientation='vertical' classNames={className}>
+    <ScrollArea.Root classNames={className} orientation='vertical' thin>
       <ScrollArea.Viewport>
         <ul role='list' className='flex flex-col'>
           {entries.map(([name, tool]) => {
@@ -46,8 +46,7 @@ export const ToolList = ({ tools, selected, onSelect, className }: ToolListProps
                   className={mx('w-full text-left px-3 py-2 transition-colors dx-hover dx-selected')}
                   onClick={() => onSelect?.(name, tool)}
                 >
-                  {/* TODO(burdon): Tag. */}
-                  <div className='font-mono text-xs text-subdueText'>{name}</div>
+                  <div className='font-mono text-xs text-info-text'>{name}</div>
                   <div className='font-medium'>{tool.title}</div>
                   {tool.description && (
                     <div className='text-sm text-description line-clamp-2 mt-1'>{tool.description.trim()}</div>
