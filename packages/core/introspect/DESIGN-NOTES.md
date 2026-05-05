@@ -1,7 +1,45 @@
 # @dxos/introspect — Design Notes
 
 Phase 1 covers steps 1–3 of the build spec: scaffold + package/symbol indexing + a thin MCP server with four tools.
-Plugin/surface/capability/intent/schema/idiom layers are deferred.
+Phase 2 covers steps 4–5: plugin detection, surfaces, capabilities, and operations (the SPEC's "intents" — see note below).
+Phase 3 (this iteration) covers step 6: ECHO-registered schemas — `listSchemas`, `getSchema`, `findSchemaUsage`.
+Curation/idioms, composition, UI, and the file watcher remain deferred.
+
+## Plugin / surface / capability / operation extraction
+
+Strategy: plugins are detected by walking each package's canonical files (`src/index.ts`, `src/meta.ts`, `src/*Plugin.{ts,tsx}`, `src/capabilities/**`, `src/operations/**`) for one of these literal call patterns:
+
+- `Plugin.define(` — plugin entry
+- `Plugin.Meta` — typed meta export
+- `Surface.create(` — surface contribution
+- `Capability.contributes(` — capability contribution
+- `Operation.make(` — operation definition
+
+When a package has any candidate file, a per-package ts-morph project parses just those files and walks every `CallExpression` for the four target shapes. Surfaces, capabilities, and operations get backfilled with the owning plugin id once `meta.ts` is read.
+
+What we don't do (per spec, "log and skip rather than guess"):
+
+- Evaluate dynamic capability builders
+- Follow re-exports across packages
+- Resolve template-literal-derived plugin ids beyond the simple string-literal case in `meta.ts`
+
+### Schemas
+
+Detection target: ECHO-registered types only — anything piped through `Type.object({ typename, version })` or `Type.Obj({ typename, version })`. Plain `Schema.Struct` calls without a typename are skipped on purpose: they're internal building blocks, not externally-referenced types, so there's no stable identity to key off.
+
+For each registration we walk back through the parent `.pipe(...)` chain to find the underlying `Schema.Struct({...})` and capture its top-level field names + the variable name (if any). Field type strings are kept verbatim (capped at ~200 chars) so callers see the actual `Schema.optional(Schema.String)` etc. without re-parsing.
+
+`findSchemaUsage` is a textual scan across the same set of candidate files used by the schema extractor. It excludes the _defining_ line (the `Type.object(...)` call) so callers don't get back the same answer as `getSchema`. Cross-package references are picked up only when the consuming file mentions the typename literally — typenames in DXOS are URL-style strings unique enough that false positives are rare.
+
+### "Intents" → "operations"
+
+The current DXOS API uses `Operation.make({ meta: { key, name, description } })` and dispatches via `OperationInvoker`. This is the renamed successor to what the SPEC calls "intents". The introspector exposes this as `listOperations` / `traceOperation` (the latter is still future work — step 8 covers composition queries).
+
+### Performance — lazy by design
+
+Plugin extraction is **not** part of `ready`. It runs on first call to `listPlugins` / `listSurfaces` / `listCapabilities` / `listOperations`, then memoizes per package. For a single-target lookup, `getPlugin(id)` short-circuits via a literal-text scan of every package's `meta.ts` so it doesn't pay the full-monorepo extraction cost.
+
+This is deliberate: the symbols cache (steps 1–3) already adds ~80 s of cold-start parsing. Adding eager plugin extraction on top makes startup unworkable for the typical MCP-session lifecycle.
 
 ## Things confirmed by reading the real codebase
 
