@@ -115,9 +115,7 @@ const fkFor = (id: string | number) => ({ source: GITHUB_SOURCE, id: String(id) 
  */
 const findByForeignId = <T>(schema: Schema.Schema<any, any>, id: string | number) =>
   Effect.gen(function* () {
-    const results = yield* Database.runQuery(
-      Query.select(Filter.foreignKeys(schema as never, [fkFor(id)])),
-    );
+    const results = yield* Database.runQuery(Query.select(Filter.foreignKeys(schema as never, [fkFor(id)])));
     return results.length > 0 ? (results[0] as T) : undefined;
   });
 
@@ -353,9 +351,7 @@ const syncCommentsForTask = Effect.fn('syncCommentsForTask')(function* (
     const existing = existingByFid.get(String(comment.id));
     const senderLogin = comment.user?.login ?? 'unknown';
     const sender = authorByLogin.get(senderLogin);
-    const senderActor: Actor.Actor = sender
-      ? { name: senderLogin, contact: Ref.make(sender) }
-      : { name: senderLogin };
+    const senderActor: Actor.Actor = sender ? { name: senderLogin, contact: Ref.make(sender) } : { name: senderLogin };
     if (existing) {
       Obj.update(existing, (existing) => {
         const m = existing as Obj.Mutable<typeof existing>;
@@ -458,9 +454,7 @@ const handler: Operation.WithHandler<typeof SyncGitHubOrganization> = SyncGitHub
       }
 
       const integrationId = integration.dxn.asEchoDXN()?.echoId ?? 'unknown';
-      const toastIdSuffix = orgRef
-        ? `${integrationId}.${orgRef.dxn.asEchoDXN()?.echoId ?? 'unknown'}`
-        : integrationId;
+      const toastIdSuffix = orgRef ? `${integrationId}.${orgRef.dxn.asEchoDXN()?.echoId ?? 'unknown'}` : integrationId;
 
       const outcome = yield* Effect.either(
         Effect.gen(function* () {

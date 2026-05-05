@@ -254,9 +254,7 @@ const githubPaginated = <T>(
     const arraySchema = Schema.Array(itemSchema);
 
     let nextUrl: string | undefined;
-    let request = withAuth(buildInitial(creds), creds).pipe(
-      HttpClientRequest.appendUrlParam('per_page', '100'),
-    );
+    let request = withAuth(buildInitial(creds), creds).pipe(HttpClientRequest.appendUrlParam('per_page', '100'));
     const out: T[] = [];
 
     for (let page = 0; page < MAX_PAGES; page++) {
@@ -341,9 +339,9 @@ export const fetchRepoIssues = (
   options: { since?: string } = {},
 ): GitHubEffect<readonly GitHubIssue[]> =>
   githubPaginated((_creds) => {
-    let req = HttpClientRequest.get(`${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues`).pipe(
-      HttpClientRequest.appendUrlParam('state', 'all'),
-    );
+    let req = HttpClientRequest.get(
+      `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues`,
+    ).pipe(HttpClientRequest.appendUrlParam('state', 'all'));
     if (options.since) {
       req = req.pipe(HttpClientRequest.appendUrlParam('since', options.since));
     }
