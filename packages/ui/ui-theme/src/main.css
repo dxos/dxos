@@ -11,7 +11,17 @@
  */
 @layer properties, theme, dx-tokens, user-tokens, base, tw-base, dx-base, components, tw-components, dx-components, utilities;
 
-@import 'tailwindcss';
+/**
+ * `source(none)` disables Tailwind 4's automatic content discovery (which
+ * scans the project root, including `publicDir`). With auto-detection on,
+ * every write to `public/icons.svg` from `vite-plugin-icons` triggers a
+ * Tailwind CSS regeneration, which invalidates `main.css` through its
+ * import graph and produces a 3–5-ping HMR storm per icon-sprite write
+ * during cold-start (icons land in tight bursts as plugin chunks stream
+ * in). Explicit `@source` directives below replace the auto-scan with a
+ * stable, source-only set.
+ */
+@import 'tailwindcss' source(none);
 
 /* @theme extensions */
 @import './css/theme/animation.css';
@@ -54,7 +64,24 @@
 @import './css/integrations/tldraw.css';
 
 /**
- * Force-emit CSS variables for the full color palette for all: 
+ * With `source(none)` on the Tailwind import above, these are the *only*
+ * paths Tailwind scans for utility classes. Cover every workspace source
+ * directory so lazy-loaded plugin / UI / SDK chunks don't surface new
+ * utilities mid-session, and root-level HTML entrypoints (index.html,
+ * internal.html, …) are visible too.
+ *
+ * Paths are relative to this file (`packages/ui/ui-theme/src/main.css`):
+ *   ../../../          → `packages/`
+ *   ../../../../tools/ → `tools/`
+ *
+ * Tailwind ignores `node_modules` and common build/output dirs by default,
+ * so a broad workspace glob is safe.
+ */
+@source "../../../**/*.{ts,tsx,html}";
+@source "../../../../tools/**/*.{ts,tsx,html}";
+
+/**
+ * Force-emit CSS variables for the full color palette for all:
  * --color-{hue}-{shade}
  * --color-{hue}-{style}
  */
