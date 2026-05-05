@@ -54,3 +54,7 @@ export const ExampleHandlers = OperationHandlerSet.lazy(
   () => import('./reply'),
   () => import('./sleep'),
 );
+
+export { default as FibonacciHandler } from './fib';
+export { default as ReplyHandler } from './reply';
+export { default as SleepHandler } from './sleep';

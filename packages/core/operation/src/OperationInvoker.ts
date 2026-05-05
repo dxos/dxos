@@ -9,9 +9,9 @@ import * as Exit from 'effect/Exit';
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as PubSub from 'effect/PubSub';
 
-import type { Key } from '@dxos/echo';
 import { DynamicRuntime, unwrapExit } from '@dxos/effect';
 import { Performance } from '@dxos/effect';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { Err, Operation } from '@dxos/compute';
@@ -34,7 +34,7 @@ export type InvocationEvent<I = any, O = any> = {
  * Resolves a spaceId to a context containing Database.Service.
  * Provided by the caller to avoid coupling to client/echo.
  */
-export type DatabaseResolver = (spaceId: Key.SpaceId) => Effect.Effect<Context.Context<any>>;
+export type DatabaseResolver = (spaceId: SpaceId) => Effect.Effect<Context.Context<any>>;
 
 //
 // Public Interface
@@ -49,7 +49,7 @@ export interface OperationInvoker {
     ...args: void extends I
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
-  ) => Effect.Effect<O, Err.Err.NoHandlerError>;
+  ) => Effect.Effect<O, Err.NoHandlerError>;
   /**
    * Schedule an operation to run as a followup.
    * The followup is tracked and won't be cancelled when the parent operation completes.
