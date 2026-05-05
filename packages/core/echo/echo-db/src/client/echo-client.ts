@@ -125,7 +125,6 @@ export class EchoClient extends Resource {
     }
     this._databases.clear();
     this._queues.clear();
-    this._graph.dispose();
   }
 
   // TODO(dmaretskyi): Make async?

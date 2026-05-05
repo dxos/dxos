@@ -28,11 +28,14 @@ type SharedEntry<T extends AnyProperties, O extends Entity.Entity<T>> = {
   inFlight: Promise<QueryResult.EntityEntry<O>[]> | undefined;
   /** Grace-period timer for deferred stop. */
   stopTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Maximum timeout (ms) requested by any caller that joined the current in-flight run. */
+  maxRequestedTimeout: number;
   /** Total run() calls dispatched to underlying — for diagnostics. */
   lifetimeRuns: number;
 };
 
 type CoalescerInternals<T extends AnyProperties, O extends Entity.Entity<T>> = {
+  isDisposed(): boolean;
   getOrCreateEntry(key: string, ast: QueryAST.Query): SharedEntry<T, O>;
   deleteEntry(key: string): void;
 };
@@ -54,6 +57,10 @@ class CoalescedHandle<T extends AnyProperties, O extends Entity.Entity<T>> imple
   }
 
   update(ast: QueryAST.Query): void {
+    if (this.#internals.isDisposed()) {
+      return;
+    }
+
     const newKey = canonicalQueryKey(ast);
     if (this.#entry?.key === newKey) {
       return;
@@ -125,13 +132,18 @@ class CoalescedHandle<T extends AnyProperties, O extends Entity.Entity<T>> imple
       return entry.underlying.run(ctx, ast, opts);
     }
 
+    // Track the maximum timeout across all callers joining this in-flight run.
+    entry.maxRequestedTimeout = Math.max(entry.maxRequestedTimeout, timeout);
+
     if (!entry.inFlight) {
       entry.lifetimeRuns++;
       // Use a fresh context so per-caller ctx cancellations don't abort the shared request.
+      // Use a 5-minute floor so the underlying outlives any realistic per-caller timeout.
       entry.inFlight = entry.underlying
-        .run(Context.default(), ast, { timeout: Math.max(timeout, 60_000) })
+        .run(Context.default(), ast, { timeout: Math.max(entry.maxRequestedTimeout, 5 * 60_000) })
         .finally(() => {
           entry.inFlight = undefined;
+          entry.maxRequestedTimeout = 0;
         });
     }
 
@@ -162,6 +174,9 @@ class CoalescedHandle<T extends AnyProperties, O extends Entity.Entity<T>> imple
   }
 
   #incrementRef(entry: SharedEntry<T, O>): void {
+    if (this.#internals.isDisposed()) {
+      return;
+    }
     if (entry.stopTimer !== undefined) {
       clearTimeout(entry.stopTimer);
       entry.stopTimer = undefined;
@@ -215,6 +230,7 @@ export class QueryContextCoalescer<
   constructor(factory: () => QueryContext<T, O>) {
     this.#factory = factory;
     this.#internals = {
+      isDisposed: () => this.#disposed,
       getOrCreateEntry: (key, ast) => this.#getOrCreateEntry(key, ast),
       deleteEntry: (key) => this.#deleteEntry(key),
     };
@@ -222,6 +238,9 @@ export class QueryContextCoalescer<
 
   /** Returns a handle that shares an underlying context with any other handle for the same canonical key. */
   getOrCreate(ast: QueryAST.Query): QueryContext<T, O> {
+    if (this.#disposed) {
+      throw new Error('QueryContextCoalescer is disposed.');
+    }
     const handle = new CoalescedHandle<T, O>(this.#internals);
     handle.update(ast);
     return handle;
@@ -248,15 +267,22 @@ export class QueryContextCoalescer<
     for (const entry of this.#entries.values()) {
       if (entry.stopTimer !== undefined) {
         clearTimeout(entry.stopTimer);
+        entry.stopTimer = undefined;
       }
       if (entry.isRunning) {
         entry.underlying.stop();
+        entry.isRunning = false;
       }
+      entry.refcount = 0;
+      entry.inFlight = undefined;
     }
     this.#entries.clear();
   }
 
   #getOrCreateEntry(key: string, _ast: QueryAST.Query): SharedEntry<T, O> {
+    if (this.#disposed) {
+      throw new Error('QueryContextCoalescer is disposed.');
+    }
     let entry = this.#entries.get(key);
     if (!entry) {
       entry = {
@@ -267,6 +293,7 @@ export class QueryContextCoalescer<
         isRunning: false,
         inFlight: undefined,
         stopTimer: undefined,
+        maxRequestedTimeout: 0,
         lifetimeRuns: 0,
       };
       this.#entries.set(key, entry);
