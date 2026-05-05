@@ -22,11 +22,6 @@
       "source": "./src/extraction/index.ts",
       "types": "./dist/types/extraction/index.d.ts",
       "default": "./dist/lib/neutral/extraction/index.mjs"
-    },
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/testing/index.d.ts",
-      "default": "./dist/lib/neutral/testing/index.mjs"
     }
   },
   "types": "dist/types/index.d.ts",
