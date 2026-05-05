@@ -10,8 +10,9 @@
  * @since 1.0.0
  */
 /// <reference lib="webworker" />
-import { SqlError } from '@effect/sql/SqlError';
+import * as SqlError from '@effect/sql/SqlError';
 import * as WaSqlite from '@effect/wa-sqlite';
+// oxlint-disable-next-line @dxos/rules/effect-subpath-imports
 import SQLiteESMFactory from '@effect/wa-sqlite/dist/wa-sqlite.mjs';
 import * as Effect from 'effect/Effect';
 
@@ -40,7 +41,7 @@ export interface OpfsWorkerConfig {
  * @category constructor
  * @since 1.0.0
  */
-export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError> =>
+export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.SqlError> =>
   Effect.gen(function* () {
     const factory = yield* Effect.promise(() => SQLiteESMFactory());
     const sqlite3 = WaSqlite.Factory(factory);
@@ -49,7 +50,7 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError> =>
     const db = yield* Effect.acquireRelease(
       Effect.try({
         try: () => sqlite3.open_v2(options.dbName, undefined, 'opfs'),
-        catch: (cause) => new SqlError({ cause, message: 'Failed to open database' }),
+        catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to open database' }),
       }),
       (db) => Effect.sync(() => sqlite3.close(db)),
     );
@@ -81,7 +82,9 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError> =>
             case 'update_hook': {
               messageId = -1;
               sqlite3.update_hook(db, (_op, _db, table, rowid) => {
-                if (!table) {return;}
+                if (!table) {
+                  return;
+                }
                 options.port.postMessage(['update_hook', table, Number(rowid)]);
               });
               return;
