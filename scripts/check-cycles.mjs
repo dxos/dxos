@@ -6,7 +6,15 @@ import madge from 'madge';
 const CONFIG = {
   // TODO(dmaretskyi): Add more packages.
   include: ['packages/{common,core}/**/*.{ts,tsx}'],
-  ignoreGlobs: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '**/scripts/**', '**/tsdown.config.ts', '**/tsdown.*.config.ts'],
+  ignoreGlobs: [
+    '**/node_modules/**',
+    '**/dist/**',
+    '**/build/**',
+    '**/coverage/**',
+    '**/scripts/**',
+    '**/tsdown.config.ts',
+    '**/tsdown.*.config.ts',
+  ],
   ignorePathSegments: ['gen/', 'dist/'],
   gitignore: true,
 };
