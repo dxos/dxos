@@ -597,7 +597,7 @@ describe('FtsIndex', () => {
             documentId: null,
             recordId: null,
             updatedAt: Date.now(),
-            data: { id: ObjectId.random(), value: 'alpha' },
+            data: { id: ObjectId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'alpha' },
           },
           {
             spaceId,
@@ -605,7 +605,7 @@ describe('FtsIndex', () => {
             documentId: null,
             recordId: null,
             updatedAt: Date.now(),
-            data: { id: ObjectId.random(), value: 'beta' },
+            data: { id: ObjectId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'beta' },
           },
         ];
 
@@ -638,7 +638,7 @@ describe('FtsIndex', () => {
           documentId: null,
           recordId: null,
           updatedAt: Date.now(),
-          data: { id: ObjectId.random(), value: 'present' },
+          data: { id: ObjectId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'present' },
         };
 
         yield* metaIndex.update([object]);
@@ -671,7 +671,7 @@ describe('FtsIndex', () => {
           documentId: null,
           recordId: null,
           updatedAt: Date.now(),
-          data: { id: ObjectId.random(), index: i },
+          data: { id: ObjectId.random(), [ATTR_TYPE]: TYPE_PERSON, index: i },
         }));
 
         yield* metaIndex.update(objects);
