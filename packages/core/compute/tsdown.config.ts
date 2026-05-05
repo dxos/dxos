@@ -3,5 +3,6 @@
 import { defineConfig } from '../../../tsdown.base.config.ts';
 
 export default defineConfig({
+  entry: ['src/index.ts', 'src/StorageService.ts', 'src/testing/index.ts'],
   platform: ['neutral'],
 });

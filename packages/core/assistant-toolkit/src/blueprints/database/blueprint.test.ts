@@ -5,8 +5,7 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Blueprint } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { Blueprint, Operation } from '@dxos/compute';
 import { Database, Entity, Feed, Filter, Obj, Query, Ref, Relation, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';

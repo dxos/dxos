@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Trace } from '@dxos/functions';
+import { Trace } from '@dxos/compute';
 
 /**
  * Compute graph node started executing.

@@ -6,8 +6,8 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 
-import { Blueprint } from '../blueprint';
-import * as Template from '../template';
+import * as Blueprint from './Blueprint';
+import * as Template from './Template';
 
 /**
  * Executable instructions, which may use Blueprints.
@@ -44,7 +44,7 @@ export const Routine = Schema.Struct({
   /**
    * Blueprints that the routine may utilize.
    */
-  blueprints: Schema.Array(Ref.Ref(Blueprint)),
+  blueprints: Schema.Array(Ref.Ref(Blueprint.Blueprint)),
 
   /**
    * Additional context that the routine may utilize.
@@ -70,7 +70,7 @@ export const make = (params: {
   input?: Schema.Schema.AnyNoContext;
   output?: Schema.Schema.AnyNoContext;
   instructions?: string;
-  blueprints?: Ref.Ref<Blueprint>[];
+  blueprints?: Ref.Ref<Blueprint.Blueprint>[];
   context?: any[];
 }): Routine =>
   Obj.make(Routine, {

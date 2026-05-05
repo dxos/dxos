@@ -3,6 +3,5 @@
 import { defineConfig } from '../../../tsdown.base.config.ts';
 
 export default defineConfig({
-  entry: ['src/index.ts', 'src/Trace.ts'],
   platform: ['neutral'],
 });

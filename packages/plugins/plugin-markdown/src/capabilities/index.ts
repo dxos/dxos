@@ -3,7 +3,8 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Blueprint, OperationHandlerSet } from '@dxos/compute';
 
 export const AnchorSort = Capability.lazy('AnchorSort', () => import('./anchor-sort'));
 export const AppGraphSerializer = Capability.lazy('AppGraphSerializer', () => import('./app-graph-serializer'));

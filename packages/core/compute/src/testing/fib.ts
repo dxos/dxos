@@ -4,8 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/operation';
-
+import * as Operation from '../Operation';
 import { Fibonacci } from './definitions';
 
 export default Fibonacci.pipe(
