@@ -2,27 +2,39 @@
 // Copyright 2026 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { AnySchema, type Any } from '@bufbuild/protobuf/wkt';
 import { describe, expect, test } from 'vitest';
 
-import { type Any, type ProtoCodec } from '@dxos/codec-protobuf';
+import { type ProtoCodec } from '@dxos/codec-protobuf';
 import { schema } from '@dxos/protocols/proto';
 import { type RpcMessage as LegacyRpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 
-import { RpcMessageCodec, toBufAny, toCodecAny, type RpcMessageInit } from './rpc-message-codec';
+import { RpcMessageCodec, type RpcMessageInit } from './rpc-message-codec';
 
 // Pin both codecs against the same wire format (proto3) to catch any divergence between the
 // legacy protobufjs-reflection codec and the bufbuild static codec used in Workers.
 const legacyCodec: ProtoCodec<LegacyRpcMessage> = schema.getCodecForType('dxos.rpc.RpcMessage');
 
-const samplePayload: Any = {
-  type_url: 'example.testing.SomeMessage',
+const samplePayload: Any = create(AnySchema, {
+  typeUrl: 'example.testing.SomeMessage',
   value: new Uint8Array([1, 2, 3, 4, 5]),
+});
+
+const expectBufAnyBytesEqual = (a: Any | undefined, b: Any) => {
+  expect(a).toBeDefined();
+  expect(a!.typeUrl).toEqual(b.typeUrl);
+  expect(Array.from(a!.value)).toEqual(Array.from(b.value));
 };
 
-const expectPayloadShape = (decoded: Any | undefined, expected: Any) => {
+/** Legacy codec returns snake_case `Any` helper objects (`type_url`). */
+const expectLegacyPayloadMatchesBufAny = (
+  decoded: { type_url?: string; value?: Uint8Array } | undefined,
+  expected: Any,
+) => {
   expect(decoded).toBeDefined();
-  expect(decoded!.type_url).toEqual(expected.type_url);
-  expect(Array.from(decoded!.value)).toEqual(Array.from(expected.value));
+  expect(decoded!.type_url).toEqual(expected.typeUrl);
+  expect(Array.from(decoded!.value ?? [])).toEqual(Array.from(expected.value));
 };
 
 describe('RpcMessageCodec', () => {
@@ -56,14 +68,18 @@ describe('RpcMessageCodec', () => {
       }
     });
 
-    test('request with Any payload + traceContext', () => {
+    test('request with payload + traceContext', () => {
       const init: RpcMessageInit = {
         content: {
           case: 'request',
           value: {
             id: 7,
             method: 'TestService.Echo',
-            payload: toBufAny(samplePayload),
+            payload: {
+              $typeName: 'google.protobuf.Any',
+              typeUrl: samplePayload.typeUrl,
+              value: samplePayload.value,
+            },
             stream: false,
             traceContext: {
               traceparent: '00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01',
@@ -79,7 +95,7 @@ describe('RpcMessageCodec', () => {
         expect(req.id).toEqual(7);
         expect(req.method).toEqual('TestService.Echo');
         expect(req.stream).toEqual(false);
-        expect(req.payload?.typeUrl).toEqual(samplePayload.type_url);
+        expect(req.payload?.typeUrl).toEqual(samplePayload.typeUrl);
         expect(Array.from(req.payload?.value ?? [])).toEqual(Array.from(samplePayload.value));
         expect(req.traceContext?.traceparent).toEqual('00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01');
         expect(req.traceContext?.tracestate).toEqual('rojo=00f067aa0ba902b7');
@@ -90,7 +106,16 @@ describe('RpcMessageCodec', () => {
       const init: RpcMessageInit = {
         content: {
           case: 'request',
-          value: { id: 8, method: 'NoTrace', payload: toBufAny(samplePayload), stream: true },
+          value: {
+            id: 8,
+            method: 'NoTrace',
+            payload: {
+              $typeName: 'google.protobuf.Any',
+              typeUrl: samplePayload.typeUrl,
+              value: samplePayload.value,
+            },
+            stream: true,
+          },
         },
       };
       const decoded = RpcMessageCodec.decode(RpcMessageCodec.encode(init));
@@ -104,13 +129,23 @@ describe('RpcMessageCodec', () => {
       const init: RpcMessageInit = {
         content: {
           case: 'response',
-          value: { id: 1, content: { case: 'payload', value: toBufAny(samplePayload) } },
+          value: {
+            id: 1,
+            content: {
+              case: 'payload',
+              value: {
+                $typeName: 'google.protobuf.Any',
+                typeUrl: samplePayload.typeUrl,
+                value: samplePayload.value,
+              },
+            },
+          },
         },
       };
       const decoded = RpcMessageCodec.decode(RpcMessageCodec.encode(init));
       if (decoded.content.case === 'response' && decoded.content.value.content.case === 'payload') {
         expect(decoded.content.value.id).toEqual(1);
-        expect(decoded.content.value.content.value.typeUrl).toEqual(samplePayload.type_url);
+        expect(decoded.content.value.content.value.typeUrl).toEqual(samplePayload.typeUrl);
       }
     });
 
@@ -157,13 +192,17 @@ describe('RpcMessageCodec', () => {
     // Wire format must stay identical between protobufjs reflection and bufbuild static
     // descriptors so peers running mixed versions stay interoperable.
 
-    test('legacy → bufbuild: request + Any payload', () => {
+    test('legacy → bufbuild: request + payload', () => {
       const legacyBytes = legacyCodec.encode(
         {
           request: {
             id: 11,
             method: 'TestService.Echo',
-            payload: { '@type': 'google.protobuf.Any', ...samplePayload } as any,
+            payload: {
+              '@type': 'google.protobuf.Any',
+              type_url: samplePayload.typeUrl,
+              value: samplePayload.value,
+            } as any,
             stream: false,
           },
         },
@@ -175,19 +214,23 @@ describe('RpcMessageCodec', () => {
       if (decoded.content.case === 'request') {
         expect(decoded.content.value.id).toEqual(11);
         expect(decoded.content.value.method).toEqual('TestService.Echo');
-        expect(decoded.content.value.payload?.typeUrl).toEqual(samplePayload.type_url);
+        expect(decoded.content.value.payload?.typeUrl).toEqual(samplePayload.typeUrl);
         expect(Array.from(decoded.content.value.payload?.value ?? [])).toEqual(Array.from(samplePayload.value));
       }
     });
 
-    test('bufbuild → legacy: request + Any payload', () => {
+    test('bufbuild → legacy: request + payload', () => {
       const init: RpcMessageInit = {
         content: {
           case: 'request',
           value: {
             id: 12,
             method: 'TestService.Echo',
-            payload: toBufAny(samplePayload),
+            payload: {
+              $typeName: 'google.protobuf.Any',
+              typeUrl: samplePayload.typeUrl,
+              value: samplePayload.value,
+            },
             stream: false,
           },
         },
@@ -198,7 +241,7 @@ describe('RpcMessageCodec', () => {
       expect(legacyDecoded.request).toBeDefined();
       expect(legacyDecoded.request!.id).toEqual(12);
       expect(legacyDecoded.request!.method).toEqual('TestService.Echo');
-      expectPayloadShape(legacyDecoded.request!.payload, samplePayload);
+      expectLegacyPayloadMatchesBufAny(legacyDecoded.request!.payload, samplePayload);
     });
 
     test('legacy → bufbuild → legacy: bytes equal', () => {
@@ -206,7 +249,11 @@ describe('RpcMessageCodec', () => {
         {
           response: {
             id: 21,
-            payload: { '@type': 'google.protobuf.Any', ...samplePayload } as any,
+            payload: {
+              '@type': 'google.protobuf.Any',
+              type_url: samplePayload.typeUrl,
+              value: samplePayload.value,
+            } as any,
           },
         },
         { preserveAny: true },
@@ -219,29 +266,7 @@ describe('RpcMessageCodec', () => {
       const back = legacyCodec.decode(reEncoded, { preserveAny: true });
       expect(back.response).toBeDefined();
       expect(back.response!.id).toEqual(21);
-      expectPayloadShape(back.response!.payload, samplePayload);
-    });
-  });
-
-  describe('Any translation helpers', () => {
-    test('toBufAny preserves bytes and renames type_url → typeUrl', () => {
-      const buf = toBufAny(samplePayload);
-      expect(buf.typeUrl).toEqual(samplePayload.type_url);
-      expect(Array.from(buf.value)).toEqual(Array.from(samplePayload.value));
-      expect(buf.$typeName).toEqual('google.protobuf.Any');
-    });
-
-    test('toCodecAny preserves bytes and renames typeUrl → type_url', () => {
-      const buf = toBufAny(samplePayload);
-      const codec = toCodecAny(buf);
-      expect(codec.type_url).toEqual(samplePayload.type_url);
-      expect(Array.from(codec.value)).toEqual(Array.from(samplePayload.value));
-      expect(codec['@type']).toEqual('google.protobuf.Any');
-    });
-
-    test('toBufAny / toCodecAny pass through undefined', () => {
-      expect(toBufAny(undefined)).toBeUndefined();
-      expect(toCodecAny(undefined)).toBeUndefined();
+      expectLegacyPayloadMatchesBufAny(back.response!.payload, samplePayload);
     });
   });
 });

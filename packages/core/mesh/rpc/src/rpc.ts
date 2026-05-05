@@ -8,7 +8,7 @@ import { Trigger, asyncTimeout, synchronized } from '@dxos/async';
 // NOTE: `Stream` is imported from the dedicated `./stream` subpath rather than the package
 // root so the Worker bundle does not pull in `@dxos/codec-protobuf`'s `Schema`/`protobufjs`
 // reflection module just to reach the stream class.
-import { type Any, type RequestOptions } from '@dxos/codec-protobuf';
+import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Context, ContextRpcCodec } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
@@ -23,14 +23,15 @@ import { decodeRpcError } from './errors';
 // forbidden in Cloudflare Workers / `workerd` (string-based code generation is
 // disallowed). The static, bufbuild-backed codec below is Worker-safe.
 import {
+  type Any,
   type Request,
   type Response,
   type RpcMessageInit,
   ResponseSchema,
   RpcMessageCodec,
-  toBufAny,
-  toCodecAny,
 } from './rpc-message-codec';
+
+export type { Any } from './rpc-message-codec';
 
 const DEFAULT_TIMEOUT = 30_000;
 const BYE_SEND_TIMEOUT = 2_000;
@@ -127,7 +128,7 @@ export class RpcPeer {
   private readonly _params: RpcPeerOptions;
 
   private readonly _outgoingRequests = new Map<number, PendingRpcRequest>();
-  private readonly _localStreams = new Map<number, Stream<any>>();
+  private readonly _localStreams = new Map<number, Stream<Any>>();
   private readonly _remoteOpenTrigger = new Trigger();
 
   /**
@@ -443,7 +444,7 @@ export class RpcPeer {
           value: {
             id,
             method,
-            payload: toBufAny(request),
+            payload: request,
             stream: false,
             ...(traceContext ? { traceContext } : {}),
           },
@@ -470,7 +471,7 @@ export class RpcPeer {
     }
 
     if (response.content.case === 'payload') {
-      return toCodecAny(response.content.value)!;
+      return response.content.value;
     } else if (response.content.case === 'error') {
       throw decodeRpcError(response.content.value, method);
     } else {
@@ -501,7 +502,7 @@ export class RpcPeer {
             close(decodeRpcError(response.content.value, method));
             break;
           case 'payload':
-            next(toCodecAny(response.content.value)!);
+            next(response.content.value!);
             break;
           default:
             throw new Error('Malformed response.');
@@ -534,7 +535,7 @@ export class RpcPeer {
             value: {
               id,
               method,
-              payload: toBufAny(request),
+              payload: request,
               stream: true,
               ...(traceContext ? { traceContext } : {}),
             },
@@ -585,14 +586,13 @@ export class RpcPeer {
       invariant(req.payload);
       invariant(req.method);
 
-      const response = await this._params.callHandler(
-        req.method,
-        toCodecAny(req.payload)!,
-        this._getHandlerRpcOptions(req),
-      );
+      const response = await this._params.callHandler(req.method, req.payload, this._getHandlerRpcOptions(req));
       return {
         id: req.id,
-        content: { case: 'payload', value: toBufAny(response) },
+        content: {
+          case: 'payload',
+          value: response,
+        },
       };
     } catch (err) {
       return {
@@ -609,11 +609,7 @@ export class RpcPeer {
       invariant(req.payload);
       invariant(req.method);
 
-      const responseStream = this._params.streamHandler(
-        req.method,
-        toCodecAny(req.payload)!,
-        this._getHandlerRpcOptions(req),
-      );
+      const responseStream = this._params.streamHandler(req.method, req.payload!, this._getHandlerRpcOptions(req));
       responseStream.onReady(() => {
         callback({
           id: req.id,
@@ -625,7 +621,7 @@ export class RpcPeer {
         (msg) => {
           callback({
             id: req.id,
-            content: { case: 'payload', value: toBufAny(msg) },
+            content: { case: 'payload', value: msg },
           });
         },
         (error) => {

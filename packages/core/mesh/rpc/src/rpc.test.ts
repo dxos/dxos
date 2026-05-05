@@ -2,21 +2,22 @@
 // Copyright 2021 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { AnySchema, type Any } from '@bufbuild/protobuf/wkt';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
-import { type Any, Stream, type TaggedType } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { log } from '@dxos/log';
-import { type TYPES } from '@dxos/protocols/proto';
 
 import { RpcPeer } from './rpc';
 import { createLinkedPorts, encodeMessage } from './testing';
 
-const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => ({
-  '@type': 'google.protobuf.Any',
-  type_url: 'dxos.test',
-  value: encodeMessage(value),
-});
+const createPayload = (value = ''): Any =>
+  create(AnySchema, {
+    typeUrl: 'dxos.test',
+    value: encodeMessage(value),
+  });
 
 // TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.
 

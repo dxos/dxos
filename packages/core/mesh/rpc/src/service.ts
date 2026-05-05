@@ -2,15 +2,28 @@
 // Copyright 2021 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { AnySchema, type Any as BufAny } from '@bufbuild/protobuf/wkt';
+
 import {
+  type Any as CodecProtobufAny,
   type EncodingOptions,
   type ServiceDescriptor,
   type ServiceHandler,
   type ServiceProvider,
 } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { invariant } from '@dxos/invariant';
 
 import { RpcPeer, type RpcPeerOptions } from './rpc';
+
+const codecProtobufAnyToBufAny = (value: CodecProtobufAny): BufAny =>
+  create(AnySchema, { typeUrl: value.type_url, value: value.value });
+
+const bufAnyToCodecProtobufAny = (value: BufAny): CodecProtobufAny => ({
+  type_url: value.typeUrl,
+  value: value.value,
+});
 
 /**
  * Map of service definitions.
@@ -109,7 +122,9 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
         throw new Error(`Service not supported: ${serviceName}`);
       }
 
-      return exposedRpcs[serviceName].call(methodName, request, options);
+      return exposedRpcs[serviceName]
+        .call(methodName, bufAnyToCodecProtobufAny(request), options)
+        .then(codecProtobufAnyToBufAny);
     },
 
     streamHandler: (method, request, options) => {
@@ -118,7 +133,10 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
         throw new Error(`Service not supported: ${serviceName}`);
       }
 
-      return exposedRpcs[serviceName].callStream(methodName, request, options);
+      return Stream.map(
+        exposedRpcs[serviceName].callStream(methodName, bufAnyToCodecProtobufAny(request), options),
+        codecProtobufAnyToBufAny,
+      );
     },
   });
 
@@ -130,8 +148,15 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
 
       requestedRpcs[serviceName] = requested[serviceName].createClient(
         {
-          call: (method, req, options) => peer.call(`${serviceFqn}.${method}`, req, options),
-          callStream: (method, req, options) => peer.callStream(`${serviceFqn}.${method}`, req, options),
+          call: async (method, req, options) =>
+            codecProtobufAnyToBufAny(
+              await peer.call(`${serviceFqn}.${method}`, codecProtobufAnyToBufAny(req), options),
+            ),
+          callStream: (method, req, options) =>
+            Stream.map(
+              peer.callStream(`${serviceFqn}.${method}`, codecProtobufAnyToBufAny(req), options),
+              codecProtobufAnyToBufAny,
+            ),
         },
         encodingOptions,
       );
@@ -172,8 +197,10 @@ export const createRpcClient = <S>(
   });
 
   const client = serviceDef.createClient({
-    call: peer.call.bind(peer),
-    callStream: peer.callStream.bind(peer),
+    call: async (method, req, options) =>
+      codecProtobufAnyToBufAny(await peer.call(method, codecProtobufAnyToBufAny(req), options)),
+    callStream: (method, req, options) =>
+      Stream.map(peer.callStream(method, codecProtobufAnyToBufAny(req), options), codecProtobufAnyToBufAny),
   });
 
   return new ProtoRpcPeer(client, peer);
@@ -195,8 +222,10 @@ export const createRpcServer = <S>({ service, handlers, ...rest }: RpcServerOpti
   const server = service.createServer(handlers);
   return new RpcPeer({
     ...rest,
-    callHandler: server.call.bind(server),
-    streamHandler: server.callStream.bind(server),
+    callHandler: async (method, request, options) =>
+      codecProtobufAnyToBufAny(await server.call(method, bufAnyToCodecProtobufAny(request), options)),
+    streamHandler: (method, request, options) =>
+      Stream.map(server.callStream(method, bufAnyToCodecProtobufAny(request), options), codecProtobufAnyToBufAny),
   });
 };
 
@@ -238,22 +267,27 @@ export const createBundledRpcServer = <S>({ services, handlers, ...rest }: RpcBu
   return new RpcPeer({
     ...rest,
 
-    callHandler: (method, request) => {
+    callHandler: async (method, request, options) => {
       const [serviceName, methodName] = parseMethodName(method);
       if (!rpc[serviceName]) {
         throw new Error(`Service not supported: ${serviceName}`);
       }
 
-      return rpc[serviceName].call(methodName, request);
+      return codecProtobufAnyToBufAny(
+        await rpc[serviceName].call(methodName, bufAnyToCodecProtobufAny(request), options),
+      );
     },
 
-    streamHandler: (method, request) => {
+    streamHandler: (method, request, options) => {
       const [serviceName, methodName] = parseMethodName(method);
       if (!rpc[serviceName]) {
         throw new Error(`Service not supported: ${serviceName}`);
       }
 
-      return rpc[serviceName].callStream(methodName, request);
+      return Stream.map(
+        rpc[serviceName].callStream(methodName, bufAnyToCodecProtobufAny(request), options),
+        codecProtobufAnyToBufAny,
+      );
     },
   });
 };
