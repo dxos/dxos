@@ -99,8 +99,20 @@ const SearchTile = forwardRef<HTMLDivElement, SearchTileProps>(({ data, location
     setCurrentId(result.id);
   }, [result.id, setCurrentId]);
 
+  // Navigation / current pattern: clicking a result navigates to its
+  // detail. `dx-current` pairs with the `aria-current` attribute that
+  // `Mosaic.Tile` now sets from the `current` prop. `dx-selected`
+  // (master/detail option pattern) would be the wrong grammar here.
+  // See `ui-theme/src/css/components/selected.md`.
   return (
-    <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={result.id} data={data} location={location}>
+    <Mosaic.Tile
+      asChild
+      classNames='dx-hover dx-current'
+      id={result.id}
+      data={data}
+      location={location}
+      current={current}
+    >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root ref={forwardedRef}>
           <Card.Toolbar>
