@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { random } from '@dxos/random';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Card, CardList, Row, RowList } from './RowList';
@@ -118,7 +119,8 @@ const MasterDetailStory = () => {
 
 //
 // Toolbar + viewport siblings — Root is headless, so layout is the
-// caller's responsibility. Wrap in your own flex column.
+// caller's responsibility. `Panel` (toolbar / content / statusbar
+// grid) is the canonical chrome wrapper.
 //
 
 const WithToolbarStory = () => {
@@ -127,24 +129,28 @@ const WithToolbarStory = () => {
   const filtered = items.filter((item) => item.name.toLowerCase().includes(filter.toLowerCase()));
   return (
     <RowList.Root selectedId={selected} onSelectChange={setSelected}>
-      <div role='none' className='dx-container flex flex-col'>
-        <div role='none' className='border-b border-separator p-2'>
-          <input
-            type='text'
-            placeholder='Filter…'
-            value={filter}
-            onChange={(event) => setFilter(event.target.value)}
-            className='w-full bg-transparent outline-none'
-          />
-        </div>
-        <RowList.Viewport aria-label='Items'>
-          {filtered.map((item) => (
-            <Row key={item.id} id={item.id}>
-              <div className='font-medium'>{item.name}</div>
-            </Row>
-          ))}
-        </RowList.Viewport>
-      </div>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <input
+              type='text'
+              placeholder='Filter…'
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+              className='w-full bg-transparent outline-none'
+            />
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <RowList.Viewport aria-label='Items'>
+            {filtered.map((item) => (
+              <Row key={item.id} id={item.id}>
+                <div className='font-medium'>{item.name}</div>
+              </Row>
+            ))}
+          </RowList.Viewport>
+        </Panel.Content>
+      </Panel.Root>
     </RowList.Root>
   );
 };
@@ -159,7 +165,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Rows: Story = { render: RowsStory };
+
 export const Cards: Story = { render: CardsStory };
+
 export const WithDisabled: Story = { render: DisabledStory };
+
 export const MasterDetail: Story = { render: MasterDetailStory };
+
 export const WithToolbar: Story = { render: WithToolbarStory };
