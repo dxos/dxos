@@ -167,6 +167,19 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
 };
 
 /**
+ * Marks an operation as a system operation, provided by the DXOS platform.
+ */
+export const system = <const O extends Operation.Definition.Any>(op: O): O => {
+  return {
+    ...op,
+    meta: {
+      ...op.meta,
+      deployedId: `system-operation:${op.meta.key}`,
+    },
+  };
+};
+
+/**
  * Attaches a handler to an Operation definition.
  * The handler may use any services declared in the operation, plus Operation.Service (always available).
  * Dual API: can be called directly or used in a pipe.
