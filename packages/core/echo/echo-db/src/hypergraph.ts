@@ -23,8 +23,6 @@ import {
   QueryResultImpl,
   type QuerySource,
   SpaceQuerySource,
-  registerCoalescer,
-  unregisterCoalescer,
 } from './query';
 import type { Queue, QueueFactory } from './queue';
 
@@ -48,11 +46,9 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
   constructor() {
     this._coalescer = new QueryContextCoalescer(() => this._createLiveObjectQueryContext());
-    registerCoalescer(this._coalescer);
   }
 
   dispose(): void {
-    unregisterCoalescer(this._coalescer);
     this._coalescer.dispose();
   }
 

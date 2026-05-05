@@ -8,7 +8,6 @@ import { type Entity, Query, type QueryResult } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
-import { trace } from '@dxos/tracing';
 
 import { canonicalQueryKey } from './canonical-query-key';
 import { type QueryContext } from './query-context';
@@ -290,23 +289,3 @@ export type CoalescerDiagnostic = {
   hasInflight: boolean;
   lifetimeRuns: number;
 };
-
-const COALESCERS = new Set<QueryContextCoalescer>();
-
-/** Register a coalescer instance for the global diagnostic. */
-export const registerCoalescer = (coalescer: QueryContextCoalescer): void => {
-  COALESCERS.add(coalescer);
-};
-
-/** Unregister a coalescer instance from the global diagnostic. */
-export const unregisterCoalescer = (coalescer: QueryContextCoalescer): void => {
-  COALESCERS.delete(coalescer);
-};
-
-trace.diagnostic({
-  id: 'client-query-coalescer',
-  name: 'Query Coalescer (Client)',
-  fetch: () => {
-    return Array.from(COALESCERS).flatMap((c) => c.diagnostics);
-  },
-});

@@ -2555,6 +2555,79 @@ describe('Query', () => {
       expect(names).toEqual(['Child1', 'Child2']);
     });
   });
+
+  describe('Query coalescing', () => {
+    test('queries with same filter but different debugLabel share reactivity', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      await db.flush();
+
+      const q1 = db.query(Query.select(Filter.type(TestSchema.Expando)));
+      const q2 = db.query(Query.select(Filter.type(TestSchema.Expando)).debugLabel('my-label'));
+
+      let q1Count = 0;
+      let q2Count = 0;
+      const unsub1 = q1.subscribe(() => {
+        q1Count++;
+      });
+      const unsub2 = q2.subscribe(() => {
+        q2Count++;
+      });
+      onTestFinished(() => {
+        unsub1();
+        unsub2();
+      });
+
+      db.add(Obj.make(TestSchema.Expando, { value: 2 }));
+      await db.flush({ updates: true });
+
+      expect(q1Count).toBeGreaterThan(0);
+      expect(q2Count).toBeGreaterThan(0);
+      expect(q1.results).toHaveLength(2);
+      expect(q2.results).toHaveLength(2);
+    });
+
+    test('stopping one subscription does not break a sibling with the same query', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      await db.flush();
+
+      const q1 = db.query(Query.select(Filter.type(TestSchema.Expando)));
+      const q2 = db.query(Query.select(Filter.type(TestSchema.Expando)).debugLabel('sibling'));
+
+      let q2Count = 0;
+      const unsub1 = q1.subscribe(() => {});
+      const unsub2 = q2.subscribe(() => {
+        q2Count++;
+      });
+      onTestFinished(() => unsub2());
+
+      // Stop q1 — q2 must remain active.
+      unsub1();
+
+      db.add(Obj.make(TestSchema.Expando, { value: 2 }));
+      await db.flush({ updates: true });
+
+      expect(q2Count).toBeGreaterThan(0);
+      expect(q2.results).toHaveLength(2);
+    });
+
+    test('run() on queries with same filter returns consistent results', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      db.add(Obj.make(TestSchema.Expando, { value: 2 }));
+      await db.flush();
+
+      const q1 = db.query(Query.select(Filter.type(TestSchema.Expando)));
+      const q2 = db.query(Query.select(Filter.type(TestSchema.Expando)).debugLabel('run-label'));
+
+      const [r1, r2] = await Promise.all([q1.run(), q2.run()]);
+
+      expect(r1).toHaveLength(2);
+      expect(r2).toHaveLength(2);
+      expect(r1.map((o) => o.id).sort()).toEqual(r2.map((o) => o.id).sort());
+    });
+  });
 });
 
 const createObjects = async (peer: EchoTestPeer, db: EchoDatabase, options: { count: number }) => {
