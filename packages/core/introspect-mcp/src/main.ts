@@ -76,7 +76,7 @@ const parseArgs = (argv: string[]): Args => {
       process.exit(1);
     }
   }
-  const resolvedRoot = root ? resolveRoot(root) : findMonorepoRoot(process.cwd());
+  const resolvedRoot = root ? resolveRoot(root) : findrootPath(process.cwd());
   if (!resolvedRoot) {
     console.error('Could not find monorepo root (looking for pnpm-workspace.yaml). Pass --root explicitly.');
     process.exit(1);
@@ -86,7 +86,7 @@ const parseArgs = (argv: string[]): Args => {
 
 const resolveRoot = (root: string): string => (isAbsolute(root) ? root : resolve(process.cwd(), root));
 
-const findMonorepoRoot = (start: string): string | null => {
+const findrootPath = (start: string): string | null => {
   let cursor = start;
   while (true) {
     if (existsSync(`${cursor}/pnpm-workspace.yaml`)) {
@@ -118,7 +118,7 @@ const printUsage = (): void => {
 
 export const main = async (argv: string[] = process.argv.slice(2)): Promise<void> => {
   const args = parseArgs(argv);
-  const introspector = createIntrospector({ monorepoRoot: args.root });
+  const introspector = createIntrospector({ rootPath: args.root });
   await introspector.ready;
 
   const server = createServer({
