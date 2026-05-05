@@ -31,7 +31,6 @@
 // integration point that doesn't break across Effect minor versions.
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { z } from 'zod';
 
 const DescriptionAnnotationId = Symbol.for('effect/annotation/Description');
@@ -48,7 +47,7 @@ export const effectFieldsToZod = <Fields extends Schema.Struct.Fields>(
   const out: Record<string, z.ZodTypeAny> = {};
   for (const [name, prop] of Object.entries(schema.fields)) {
     try {
-      out[name] = propToZod((prop as { ast: SchemaAST.AST }).ast);
+      out[name] = propToZod((prop as { ast: AnyAst }).ast);
     } catch (err) {
       throw new Error(`effectFieldsToZod: failed to convert field "${name}": ${(err as Error).message}`);
     }
@@ -57,18 +56,32 @@ export const effectFieldsToZod = <Fields extends Schema.Struct.Fields>(
 };
 
 /**
+ * `Schema.PropertySignature` (the AST node a struct's `.fields[name].ast` is)
+ * isn't part of the main `SchemaAST.AST` union — it's a separate hierarchy.
+ * We use a structural type here that matches both shapes we encounter:
+ *
+ *   - struct field signatures: `{ _tag: 'PropertySignatureDeclaration', type, isOptional, ... }`
+ *   - bare types (required fields, walked recursively): everything in `SchemaAST.AST`
+ *
+ * Treating `_tag` as a free string and downcasting selectively lets us handle
+ * both without reaching for `as unknown as never` workarounds.
+ */
+type AnyAst = { _tag: string; annotations?: Record<symbol, unknown> } & Record<string, unknown>;
+
+/**
  * Convert one struct field's AST. Property signatures wrap the actual schema
  * AST with optional/readonly metadata; required fields are the AST directly.
  */
-const propToZod = (ast: SchemaAST.AST): z.ZodTypeAny => {
+const propToZod = (ast: AnyAst): z.ZodTypeAny => {
   if (ast._tag === 'PropertySignatureDeclaration') {
     // `Schema.optional(X)` produces a PropertySignatureDeclaration whose `type`
     // is `Union(X, UndefinedKeyword)`. Peel UndefinedKeyword before recursing
     // so the converter operates on the user-facing type, then mark optional.
     const description = readDescription(ast);
-    const innerAst = unwrapOptionalUnion(ast.type, ast.isOptional);
+    const isOptional = Boolean(ast.isOptional);
+    const innerAst = unwrapOptionalUnion(ast.type as AnyAst, isOptional);
     let zod = astToZod(innerAst);
-    if (ast.isOptional) {
+    if (isOptional) {
       zod = zod.optional();
     }
     if (description !== undefined) {
@@ -84,21 +97,21 @@ const propToZod = (ast: SchemaAST.AST): z.ZodTypeAny => {
  * `optional(X)` as `Union(X, UndefinedKeyword)`; if that's what we have AND
  * the prop is optional, return X. Otherwise pass through unchanged.
  */
-const unwrapOptionalUnion = (ast: SchemaAST.AST, isOptional: boolean): SchemaAST.AST => {
+const unwrapOptionalUnion = (ast: AnyAst, isOptional: boolean): AnyAst => {
   if (!isOptional || ast._tag !== 'Union') {
     return ast;
   }
-  const types = ast.types.filter((t) => t._tag !== 'UndefinedKeyword');
+  const types = (ast.types as AnyAst[]).filter((t) => t._tag !== 'UndefinedKeyword');
   if (types.length === 1) {
     return types[0];
   }
   // Multi-branch union after stripping undefined — preserve as a Union; the
   // top-level switch handles literal-only unions (enums). Anything else
   // throws with a clear message.
-  return { ...ast, types };
+  return { ...ast, types } as AnyAst;
 };
 
-const astToZod = (ast: SchemaAST.AST): z.ZodTypeAny => {
+const astToZod = (ast: AnyAst): z.ZodTypeAny => {
   let zod: z.ZodTypeAny;
   switch (ast._tag) {
     case 'StringKeyword':
@@ -113,30 +126,28 @@ const astToZod = (ast: SchemaAST.AST): z.ZodTypeAny => {
     case 'Literal':
       // `z.literal` accepts string | number | boolean | null. Effect's literal
       // value is already constrained to those by Schema.Literal's signature.
-      zod = z.literal((ast as { literal: string | number | boolean | null }).literal);
+      zod = z.literal(ast.literal as string | number | boolean | null);
       break;
     case 'Union': {
       // Only support unions where every branch is a string literal — that's
       // what `Schema.Literal('a', 'b', 'c')` produces, and it maps directly
       // to `z.enum`. Other unions (mixed types, refinements) aren't currently
       // used in our tool inputs and would need a richer conversion.
-      const types = (ast as { types: SchemaAST.AST[] }).types;
-      const allStringLiteral = types.every(
-        (t) => t._tag === 'Literal' && typeof (t as { literal: unknown }).literal === 'string',
-      );
+      const types = ast.types as AnyAst[];
+      const allStringLiteral = types.every((t) => t._tag === 'Literal' && typeof t.literal === 'string');
       if (!allStringLiteral) {
         throw new Error(
           `unsupported Union — only enum-of-string-literals supported, got branches: ${types.map((t) => t._tag).join(', ')}`,
         );
       }
-      const values = types.map((t) => (t as { literal: string }).literal) as [string, ...string[]];
+      const values = types.map((t) => t.literal as string) as [string, ...string[]];
       zod = z.enum(values);
       break;
     }
     case 'TupleType': {
       // `Schema.Array(X)` produces a TupleType with a single rest element of
       // type X. Fixed tuples (`Schema.Tuple(...)`) aren't currently used.
-      const tuple = ast as { rest?: ReadonlyArray<{ type: SchemaAST.AST }>; elements?: ReadonlyArray<unknown> };
+      const tuple = ast as { rest?: ReadonlyArray<{ type: AnyAst }>; elements?: ReadonlyArray<unknown> };
       if (tuple.elements && tuple.elements.length > 0) {
         throw new Error('fixed-length tuples are not supported — use Schema.Array(X)');
       }
@@ -175,13 +186,11 @@ const astToZod = (ast: SchemaAST.AST): z.ZodTypeAny => {
   return zod;
 };
 
-const collectRefinements = (
-  ast: SchemaAST.AST,
-): { base: SchemaAST.AST; jsonSchemas: Array<Record<string, unknown>> } => {
+const collectRefinements = (ast: AnyAst): { base: AnyAst; jsonSchemas: Array<Record<string, unknown>> } => {
   const jsonSchemas: Array<Record<string, unknown>> = [];
-  let cursor: SchemaAST.AST = ast;
+  let cursor: AnyAst = ast;
   while (cursor._tag === 'Refinement') {
-    const js = (cursor as { annotations?: Record<symbol, unknown> }).annotations?.[JSONSchemaAnnotationId];
+    const js = cursor.annotations?.[JSONSchemaAnnotationId];
     if (typeof js === 'object' && js !== null) {
       jsonSchemas.push(js as Record<string, unknown>);
     } else {
@@ -189,7 +198,7 @@ const collectRefinements = (
         'Refinement is missing a JSONSchema annotation — only Effect stdlib refinements (int, positive, lessThanOrEqualTo, etc.) are currently supported',
       );
     }
-    cursor = (cursor as { from: SchemaAST.AST }).from;
+    cursor = cursor.from as AnyAst;
   }
   // Innermost refinements were pushed first; reverse so outer refinements
   // (e.g. `lessThanOrEqualTo`) apply LAST, after `.int().positive()` etc.
@@ -229,8 +238,8 @@ const applyJsonSchemaRefinement = (zod: z.ZodTypeAny, js: Record<string, unknown
   return z0;
 };
 
-const readDescription = (ast: SchemaAST.AST): string | undefined => {
-  const annotations = (ast as { annotations?: Record<symbol, unknown> }).annotations;
+const readDescription = (ast: AnyAst): string | undefined => {
+  const annotations = ast.annotations;
   if (!annotations) {
     return undefined;
   }
