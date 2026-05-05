@@ -6,6 +6,8 @@ tags:
 tasks:
   build:
     command: bun
+    args:
+      - ./scripts/build.ts
     options:
       mergeArgs: replace
       mergeInputs: append
