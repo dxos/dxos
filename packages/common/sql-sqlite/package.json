@@ -55,6 +55,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/log": "workspace:*",
     "@dxos/wa-sqlite": "catalog:",
     "@effect/experimental": "catalog:",
     "@effect/platform": "catalog:",

@@ -4177,6 +4177,9 @@ importers:
 
   packages/common/sql-sqlite:
     dependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../log
       '@dxos/wa-sqlite':
         specifier: 'catalog:'
         version: 0.2.1
