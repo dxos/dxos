@@ -4,7 +4,7 @@ tasks:
     command: pnpm exec dx-killorphans vitest run --passWithNoTests --project="browser-*"
     deps:
       - esbuild-plugins:compile
-      - node-std:build
+      - node-std:compile
       - vite-plugin-icons:compile
       - vite-plugin-import-source:compile
       - ^:build
