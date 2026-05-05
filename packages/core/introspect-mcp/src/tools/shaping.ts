@@ -108,9 +108,9 @@ const truncate = (s: string, limit: number): string => {
   return `${s.slice(0, limit)}\n... (truncated, ${s.length - limit} more chars)`;
 };
 
-// ---------------------------------------------------------------------------
+//
 // Plugin / surface / capability / operation shaping.
-// ---------------------------------------------------------------------------
+//
 
 export const shapeListPlugins = (all: Plugin[]): ToolResult => {
   const data = all.slice(0, LIST_LIMIT).map((p) => ({
@@ -196,9 +196,9 @@ export const shapeListOperations = (all: Operation[]): ToolResult => {
   return { data };
 };
 
-// ---------------------------------------------------------------------------
-// Schema shaping.
-// ---------------------------------------------------------------------------
+//
+// Schema shaping
+//
 
 export const shapeListSchemas = (all: SchemaSummary[]): ToolResult => {
   const data = all.slice(0, LIST_LIMIT).map((s) => ({

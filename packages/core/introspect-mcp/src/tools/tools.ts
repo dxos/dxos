@@ -43,17 +43,26 @@ import {
 
 /** A single MCP tool — static metadata plus a body that produces a `ToolResult`. */
 export type ToolDefinition<TArgs = Record<string, unknown>> = {
-  /** Human-readable title surfaced by Inspector / Composer. */
+  /**
+   * Human-readable title surfaced by Inspector / Composer.
+   */
   title: string;
+
   /**
    * LLM-targeted description. Models read this to decide WHEN to call the
    * tool — write it for trigger accuracy, not for human reading. State both
    * what the tool does and the situations it's the right answer for.
    */
   description: string;
-  /** Zod input schema; describes go straight to the MCP client. */
+
+  /**
+   * Zod input schema; describes go straight to the MCP client.
+   */
   inputSchema: Record<string, z.ZodTypeAny>;
-  /** Tool body. Must NOT await `introspector.ready` — the server gates that uniformly. */
+
+  /**
+   * Tool body. Must NOT await `introspector.ready` — the server gates that uniformly.
+   */
   handler: (args: TArgs) => ToolResult | Promise<ToolResult>;
 };
 

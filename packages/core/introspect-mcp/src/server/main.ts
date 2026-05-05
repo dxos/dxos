@@ -15,7 +15,7 @@ import { dirname, isAbsolute, resolve } from 'node:path';
 
 import { createIntrospector } from '@dxos/introspect';
 
-import { fileLogger } from './logger';
+import { fileLogger } from '../tools';
 import { createServer } from './server';
 
 type Args = {

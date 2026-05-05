@@ -6,9 +6,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import type { Introspector } from '@dxos/introspect';
 
-import { registerLogger, type ToolLogger } from './logger';
-import { type ToolResult } from './shaping';
-import { createToolDefinitions } from './tools';
+import { createToolDefinitions, registerLogger, type ToolLogger, type ToolResult } from '../tools';
 
 export type ServerOptions = {
   introspector: Introspector;

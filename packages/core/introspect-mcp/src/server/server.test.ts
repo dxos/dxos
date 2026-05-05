@@ -15,7 +15,7 @@ import { createServer } from './server';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Reuse the @dxos/introspect package's fixtures so the two test suites stay in sync.
-const FIXTURE_ROOT = join(__dirname, '..', '..', 'introspect', 'src', '__fixtures__');
+const FIXTURE_ROOT = join(__dirname, '..', '..', '..', 'introspect', 'src', '__fixtures__');
 
 type Connected = {
   client: Client;

@@ -17,6 +17,11 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/node/index.mjs"
+    },
+    "./tools": {
+      "source": "./src/tools/index.ts",
+      "types": "./dist/types/src/tools/index.d.ts",
+      "default": "./dist/lib/node/tools/index.mjs"
     }
   },
   "bin": {
