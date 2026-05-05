@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 
 import { ClientService } from '@dxos/client';
-import { getUserFunctionIdInMetadata, type Script } from '@dxos/compute';
+import { Script } from '@dxos/compute';
+import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';

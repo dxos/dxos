@@ -9,6 +9,8 @@ import * as Layer from 'effect/Layer';
 import type { AiService } from '@dxos/ai';
 import { Context as DxosContext } from '@dxos/context';
 import { FunctionInvocationService } from '@dxos/functions';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 
 import { LocalFunctionExecutionService } from './local-function-execution';

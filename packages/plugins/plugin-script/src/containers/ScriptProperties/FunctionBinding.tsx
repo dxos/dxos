@@ -4,7 +4,7 @@
 
 import React, { type ChangeEvent, useCallback } from 'react';
 
-import { getUserFunctionIdInMetadata } from '@dxos/compute';
+import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { type Script } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';

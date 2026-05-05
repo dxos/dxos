@@ -2,9 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as Blueprint from './Blueprint';
-export * as Credential from './Credential';
-export * as Err from './Err';
+import * as Blueprint from './Blueprint';
+import * as Credential from './Credential';
+import * as Err from './Err';
+
+export { Blueprint, Credential, Err };
 export * as Operation from './Operation';
 export * as OperationHandlerSet from './OperationHandlerSet';
 export * as OperationRegistry from './OperationRegistry';

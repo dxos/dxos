@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Script, getUserFunctionIdInMetadata } from '@dxos/compute';
+import { Script } from '@dxos/compute';
+import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { type Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { getInvocationUrl } from '@dxos/functions-runtime';

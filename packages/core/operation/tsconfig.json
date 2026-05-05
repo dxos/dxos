@@ -8,6 +8,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -15,6 +18,9 @@
     },
     {
       "path": "../compute"
+    },
+    {
+      "path": "../echo/echo"
     },
     {
       "path": "../echo/echo-db"

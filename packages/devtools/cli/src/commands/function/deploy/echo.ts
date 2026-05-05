@@ -10,7 +10,8 @@ import path from 'node:path';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { Filter, type Space } from '@dxos/client/echo';
-import { Script, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/compute';
+import { Script } from '@dxos/compute';
+import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref, type Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';

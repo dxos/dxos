@@ -6,6 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { APP_SCHEME, AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Err } from '@dxos/compute';
 import { runAndForwardErrors } from '@dxos/effect';
 import { isTauri } from '@dxos/util';
 

@@ -5,6 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Credential } from '@dxos/compute';
 import { createUrl, makeGoogleApiRequest } from '../google-api';
 import { Event, ListEventsResponse } from './types';
 

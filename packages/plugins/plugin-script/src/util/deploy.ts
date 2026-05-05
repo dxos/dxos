@@ -3,7 +3,8 @@
 //
 
 import { type Client } from '@dxos/client';
-import { type Script, getUserFunctionIdInMetadata } from '@dxos/compute';
+import { Script } from '@dxos/compute';
+import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';

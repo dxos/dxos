@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FUNCTIONS_PRESET_META_KEY, type Script } from '@dxos/compute';
+import { Script } from '@dxos/compute';
+import { FUNCTIONS_PRESET_META_KEY } from '@dxos/functions';
 import { Obj } from '@dxos/echo';
 import { createMenuAction } from '@dxos/react-ui-menu';
 
