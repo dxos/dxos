@@ -21037,7 +21037,7 @@ importers:
         version: 2.7.1
 
   vendor/kbn-handlebars:
-    dependencies:
+    devDependencies:
       handlebars:
         specifier: 'catalog:'
         version: 4.7.8

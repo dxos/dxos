@@ -2,8 +2,21 @@ id: vendor-kbn-handlebars
 layer: library
 language: typescript
 tags:
+  - vendor
   - pack
 workspace:
   inheritedTasks:
     exclude:
       - lint
+
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.js'
+      - '--platform=neutral'
+      - '--mainFields=browser,module,main'
+      - '--bundlePackage=kbn-handlebars'
+      - '--bundlePackage=handlebars'
+      - '--bundlePackage=tslib'
+      - '--bundlePackage=source-map'
+      - '--ignorePackage=fs'

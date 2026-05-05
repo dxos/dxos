@@ -14,17 +14,18 @@
   "exports": {
     ".": {
       "types": "./src/index.d.ts",
-      "default": "./src/index.js"
+      "default": "./dist/lib/neutral/index.mjs"
     }
   },
   "files": [
+    "dist",
     "src"
   ],
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
     "handlebars": "catalog:",
     "kbn-handlebars": "catalog:"
   },
-  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }

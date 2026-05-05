@@ -2,20 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-// `kbn-handlebars` is published as CommonJS-with-`__esModule` (its compiled `module.exports`
-// looks like `{ default: Handlebars, compileFnName, __esModule: true }`). Node's ESM-CJS
-// interop and workerd both expose the entire `module.exports` as the synthetic ESM default —
-// they do *not* honour the `__esModule` marker. As a result, `import H from 'kbn-handlebars'`
-// hands us the namespace object rather than the `Handlebars` instance, and `H.create` is
-// `undefined`.
-//
-// We unwrap the inner default here so downstream consumers can always do
-// `import Handlebars from '@dxos/vendor-kbn-handlebars'` and call `Handlebars.create()`.
-// The `?? cjs` fallback covers bundlers (e.g. esbuild with synthetic-default-imports) that
-// already perform the unwrap.
-import cjs from 'kbn-handlebars';
+// `kbn-handlebars` is published as CommonJS-with-`__esModule`. esbuild's `__toESM`
+// helper (in Node-compatibility mode, which it uses by default) hands us the entire
+// `module.exports` as the synthetic default — i.e. `{ default: <real Handlebars>,
+// compileFnName }` — rather than the inner `default`. We unwrap once here so the
+// bundle exports the patched Handlebars singleton (with `.create()`, `.compileAST()`,
+// `.registerHelper()`) directly to consumers.
+import kbnExports from 'kbn-handlebars';
 
-const handlebars = cjs?.default ?? cjs;
+const Handlebars = kbnExports.default ?? kbnExports;
 
-export default handlebars;
-export const compileFnName = cjs?.compileFnName ?? handlebars?.compileFnName;
+export default Handlebars;
+export const compileFnName = kbnExports.compileFnName ?? Handlebars?.compileFnName;
