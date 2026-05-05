@@ -22,7 +22,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // subpath import test sees the same fixture set as the rest of the suite.
 const FIXTURE_ROOT = join(__dirname, '..', '..', '..', 'introspect', 'src', '__fixtures__');
 
-describe('@dxos/introspect-mcp/tools subpath export', () => {
+// CI runners are slower than local; ts-morph indexing the 2-package fixture
+// takes ~4s on the GitHub runner, blowing past vitest's 5s default. Bump
+// the per-test timeout for both tests in this suite.
+describe('@dxos/introspect-mcp/tools subpath export', { timeout: 30_000 }, () => {
   test('createToolDefinitions returns the full 10-tool map', async ({ expect }) => {
     const introspector = createIntrospector({ rootPath: FIXTURE_ROOT, cache: false });
     await introspector.ready;
