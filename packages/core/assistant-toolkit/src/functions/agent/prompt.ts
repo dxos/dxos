@@ -36,9 +36,6 @@ export default AgentPrompt.pipe(
         model: data.model,
         feed,
       }).pipe(
-        // AgentService.layer() is provided inline because this handler may run
-        // inside a child process where AgentService is not injected via ServiceResolver.
-        Effect.provide(AgentService.layer()),
         Effect.mapError((err) => new PromptError(err.message, { description: err.context?.description as string })),
       );
     }, Effect.scoped),

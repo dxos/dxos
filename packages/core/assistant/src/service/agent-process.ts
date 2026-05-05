@@ -4,13 +4,11 @@
 
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
-import * as Array from 'effect/Array';
 import * as Cause from 'effect/Cause';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
@@ -26,7 +24,7 @@ import { Process, ProcessManager, StorageService } from '@dxos/functions-runtime
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { type McpServerConfig, AiSession } from '../conversation';
+import { type McpServerConfig, AiSession, type AiSessionRunProps } from '../conversation';
 import { RoutineError } from '../errors';
 import { getOperationFromTool, makeToolExecutionService, makeToolResolverFromOperations } from '../functions';
 import { AgentRequestBegin, AgentRequestEnd } from '../tracing';
@@ -39,39 +37,28 @@ interface AgentProcessOptions {
    * Provider for space-level MCP server configs, called on each turn.
    */
   getMcpServers?: () => McpServerConfig[];
+
+  /**
+   * When set, the process executes this routine once then terminates.
+   */
+  routineDxn?: string;
+  systemInstructions?: string;
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
 
-export const RoutineRunInput = Schema.Struct({
-  routineDxn: Schema.String,
-  feedDxn: Schema.String,
-  input: Schema.optional(Schema.Any),
-  systemInstructions: Schema.optional(Schema.String),
-  model: Schema.optional(Schema.String),
-});
-export type RoutineRunInput = Schema.Schema.Type<typeof RoutineRunInput>;
-
-const RoutineRunOutput = Schema.Union(
-  Schema.TaggedStruct('success', { value: Schema.Any }),
-  Schema.TaggedStruct('failure', {
-    message: Schema.String,
-    description: Schema.optional(Schema.String),
-  }),
-);
-export type RoutineRunOutput = Schema.Schema.Type<typeof RoutineRunOutput>;
-
 /**
  * Hosts a persistent, suspendible AiAgent that can process a number of prompts.
- * Also handles one-shot routine execution when the input is a JSON-encoded {@link RoutineRunInput}.
- * The process target is a queue DXN string.
+ * Also handles one-shot routine execution when {@link AgentProcessOptions.routineDxn} is set;
+ * in that mode the process emits the routine output and self-terminates.
+ * The process target is a feed DXN string.
  */
 export const AgentProcess = (options: AgentProcessOptions) =>
   Process.make(
     {
       key: AGENT_PROCESS_KEY,
-      input: Schema.String,
-      output: RoutineRunOutput,
+      input: Schema.Any,
+      output: Schema.Any,
       services: [
         Database.Service,
         OpaqueToolkit.OpaqueToolkitProvider,
@@ -87,7 +74,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
       Effect.gen(function* () {
         const feedDxn = ctx.params.target;
         if (feedDxn == null) {
-          return yield* Effect.die(new Error('Agent executable requires spawn options.target set to a queue DXN.'));
+          return yield* Effect.die(new Error('Agent executable requires spawn options.target set to a feed DXN.'));
         }
         const feed = yield* Database.resolve(DXN.parse(feedDxn), Feed.Feed).pipe(Effect.orDie);
         const runtime = yield* Effect.runtime<Feed.FeedService>();
@@ -97,20 +84,118 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const toolCallManager = new ToolCallManager(storageService);
         yield* toolCallManager.load();
 
-        return {
-          onInput: Effect.fnUntraced(function* (input: string) {
-            // Detect routine mode: try to decode as RoutineRunInput.
-            const routineInput = yield* Schema.decodeUnknown(Schema.parseJson(RoutineRunInput))(input).pipe(
-              Effect.option,
+        // Shared request builder — captures mcpServers wiring in one place.
+        const createRequest = <R = never>(req: Omit<AiSessionRunProps<R>, 'mcpServers'>) =>
+          session.createRequest({
+            ...(req as AiSessionRunProps<R>),
+            mcpServers: options.getMcpServers?.(),
+          });
+
+        const handleRoutineInput = (rawInput: unknown) => {
+          const run = Effect.gen(function* () {
+            const routineDxn = options.routineDxn!;
+            log.info('routine input: received', { routineDxn });
+
+            const routine = yield* Database.resolve(DXN.parse(routineDxn), Routine.Routine).pipe(
+              Effect.mapError((err) => new RoutineError('Failed to resolve routine.', { description: String(err) })),
             );
-            if (Option.isSome(routineInput)) {
-              yield* runRoutineInput(ctx, session, feed, routineInput.value, options);
+
+            const blueprintResults = yield* Effect.forEach(routine.blueprints, Database.loadOption);
+            const blueprints = blueprintResults.flatMap((opt, i) => {
+              if (Option.isNone(opt)) {
+                log.warn('routine: blueprint not found, skipping', { routineDxn, ref: routine.blueprints[i] });
+                return [];
+              }
+              return [opt.value];
+            });
+
+            const objectResults = yield* Effect.forEach(routine.context, Database.loadOption);
+            const objects = objectResults.flatMap((opt, i) => {
+              if (Option.isNone(opt)) {
+                log.warn('routine: context object not found, skipping', { routineDxn, ref: routine.context[i] });
+                return [];
+              }
+              return [opt.value];
+            });
+
+            const promptInstructions = yield* Database.load(routine.instructions.source).pipe(
+              Effect.mapError(
+                (err) => new RoutineError('Failed to load routine instructions.', { description: String(err) }),
+              ),
+            );
+            let promptText = Template.process(promptInstructions.content, rawInput as Record<string, unknown>);
+            if (rawInput !== undefined && rawInput !== null) {
+              promptText += `\n<input>${JSON.stringify(rawInput)}</input>`;
+            }
+
+            let systemText = trim`
+              You are an agent running in the non-interactive mode.
+              The user is unable to see what you are doing, and cannot answer any questions.
+              Do not ask questions.
+              Complete the task before you, and at the end call [completeJob] with the output.
+              If you are unable to complete the task, call [completeJob] with the failure reason.
+              If no output is required, call [completeJob] with an empty object: {}
+              Do not stop until you call [completeJob].
+            `;
+            if (options.systemInstructions) {
+              systemText += `\n\n${options.systemInstructions}`;
+            }
+
+            const modelLayer = AiService.model((options.model as ModelName) ?? '@anthropic/claude-opus-4-6');
+
+            yield* Effect.promise(() =>
+              session.context.bind({
+                blueprints: blueprints.map((blueprint) => Ref.make(blueprint)),
+                objects: objects.map((object) => Ref.make(object as Obj.Unknown)),
+              }),
+            );
+
+            const resultSink = yield* Deferred.make<unknown, RoutineError>();
+            const completeJobToolkit = makeCompleteJobToolkit({ resultSink });
+
+            const runRequest = (prompt: string) =>
+              createRequest({ prompt, system: systemText, toolkit: completeJobToolkit }).pipe(
+                Effect.provide(
+                  Layer.mergeAll(modelLayer, RoutineToolExecutionService({ feed }), makeToolResolverFromOperations()),
+                ),
+              );
+
+            yield* runRequest(promptText);
+
+            const pollResult = yield* Deferred.poll(resultSink);
+            if (Option.isNone(pollResult)) {
+              yield* runRequest(
+                'You must signal task completion by calling [completeJob] with the output or failure reason.',
+              );
+              const retryResult = yield* Deferred.poll(resultSink);
+              if (Option.isNone(retryResult)) {
+                return yield* Effect.fail(new RoutineError('Agent did not signal task completion.'));
+              }
+              return yield* retryResult.value;
+            }
+
+            return yield* pollResult.value;
+          });
+
+          return run.pipe(
+            Effect.mapError((err) => (err instanceof RoutineError ? err : new RoutineError(String(err)))),
+            Effect.scoped,
+          );
+        };
+
+        return {
+          onInput: Effect.fnUntraced(function* (input: unknown) {
+            if (options.routineDxn != null) {
+              const result = yield* handleRoutineInput(input).pipe(Effect.orDie);
+              ctx.submitOutput(result);
+              ctx.succeed();
               return;
             }
 
             // Agent mode: queue prompt for alarm-driven processing.
-            log('agent onInput received', { promptLength: input.length, backlog: inputQueue.length });
-            inputQueue.push({ _tag: 'prompt', content: input });
+            const prompt = String(input);
+            log('agent onInput received', { promptLength: prompt.length, backlog: inputQueue.length });
+            inputQueue.push({ _tag: 'prompt', content: prompt });
             log('agent onInput persisting queue', { depth: inputQueue.length });
             yield* AgentEventsKey.set(inputQueue);
             log('agent onInput persisted', { depth: inputQueue.length });
@@ -147,15 +232,9 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               log('begin request', { prompt });
               log('trace agent request begin');
               yield* Trace.write(AgentRequestBegin, {});
-              yield* session
-                .createRequest({
-                  prompt,
-                  // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
-                  // toolkit: AsynchronousExectionToolkit,
-                  system: options.systemPrompt,
-                  mcpServers: options.getMcpServers?.(),
-                })
-                .pipe(Effect.ensuring(Trace.write(AgentRequestEnd, {})));
+              yield* createRequest({ prompt, system: options.systemPrompt }).pipe(
+                Effect.ensuring(Trace.write(AgentRequestEnd, {})),
+              );
               log('end request');
               yield* AgentEventsKey.set(inputQueue);
               if (inputQueue.length > 0) {
@@ -215,150 +294,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
   );
 
 //
-// Routine execution.
+// Routine-mode helpers.
 //
-
-type RoutineCtx = Process.ProcessContext<string, RoutineRunOutput>;
-
-const runRoutineInput = (
-  ctx: RoutineCtx,
-  session: AiSession,
-  feed: Feed.Feed,
-  runInput: RoutineRunInput,
-  options: AgentProcessOptions,
-) => {
-  const run = Effect.gen(function* () {
-    log.info('routine input: received', { routineDxn: runInput.routineDxn });
-
-    const routine = yield* Database.resolve(DXN.parse(runInput.routineDxn), Routine.Routine).pipe(
-      Effect.mapError((err) => new RoutineError('Failed to resolve routine.', { description: String(err) })),
-    );
-
-    const blueprintResults = yield* Effect.forEach(routine.blueprints, Database.loadOption);
-    const blueprints = blueprintResults.flatMap((opt, i) => {
-      if (Option.isNone(opt)) {
-        log.warn('routine: blueprint not found, skipping', {
-          routineDxn: runInput.routineDxn,
-          ref: routine.blueprints[i],
-        });
-        return [];
-      }
-      return [opt.value];
-    });
-
-    const objectResults = yield* Effect.forEach(routine.context, Database.loadOption);
-    const objects = objectResults.flatMap((opt, i) => {
-      if (Option.isNone(opt)) {
-        log.warn('routine: context object not found, skipping', {
-          routineDxn: runInput.routineDxn,
-          ref: routine.context[i],
-        });
-        return [];
-      }
-      return [opt.value];
-    });
-
-    const promptInstructions = yield* Database.load(routine.instructions.source).pipe(
-      Effect.mapError((err) => new RoutineError('Failed to load routine instructions.', { description: String(err) })),
-    );
-    let promptText = Template.process(promptInstructions.content, runInput.input);
-    if (runInput.input !== undefined) {
-      promptText += `\n<input>${JSON.stringify(runInput.input)}</input>`;
-    }
-
-    let systemText = trim`
-      You are an agent running in the non-interactive mode.
-      The user is unable to see what you are doing, and cannot answer any questions.
-      Do not ask questions.
-      Complete the task before you, and at the end call [completeJob] with the output.
-      If you are unable to complete the task, call [completeJob] with the failure reason.
-      If no output is required, call [completeJob] with an empty object: {}
-      Do not stop until you call [completeJob].
-    `;
-    if (runInput.systemInstructions) {
-      systemText += `\n\n${runInput.systemInstructions}`;
-    }
-
-    const modelLayer = AiService.model((runInput.model as ModelName) ?? '@anthropic/claude-opus-4-6');
-
-    yield* Effect.promise(() =>
-      session.context.bind({
-        blueprints: blueprints.map((blueprint) => Ref.make(blueprint)),
-        objects: objects.map((object) => Ref.make(object as Obj.Unknown)),
-      }),
-    );
-
-    const resultSink = yield* Deferred.make<unknown, RoutineError>();
-    const completeJobToolkit = makeCompleteJobToolkit({ resultSink });
-
-    const runRequest = (prompt: string) =>
-      session
-        .createRequest({
-          prompt,
-          system: systemText,
-          toolkit: completeJobToolkit,
-          mcpServers: options.getMcpServers?.(),
-        })
-        .pipe(
-          Effect.provide(
-            Layer.mergeAll(modelLayer, RoutineToolExecutionService({ feed }), makeToolResolverFromOperations()),
-          ),
-        );
-
-    yield* runRequest(promptText);
-
-    const pollResult = yield* Deferred.poll(resultSink);
-
-    if (Option.isNone(pollResult)) {
-      yield* runRequest('You must signal task completion by calling [completeJob] with the output or failure reason.');
-      const retryResult = yield* Deferred.poll(resultSink);
-      if (Option.isNone(retryResult)) {
-        ctx.submitOutput({ _tag: 'failure', message: 'Agent did not signal task completion.' });
-        ctx.succeed();
-        return;
-      }
-      yield* emitRoutineResult(ctx, retryResult.value);
-      return;
-    }
-
-    yield* emitRoutineResult(ctx, pollResult.value);
-  });
-
-  return run.pipe(
-    Effect.mapError((err) => (err instanceof RoutineError ? err : new RoutineError(String(err)))),
-    Effect.catchAll((err) => emitRoutineResult(ctx, Effect.fail(err))),
-    Effect.catchAllCause((cause) =>
-      emitRoutineResult(
-        ctx,
-        Effect.fail(new RoutineError('Routine process failed.', { description: Cause.pretty(cause) })),
-      ),
-    ),
-    Effect.scoped,
-  );
-};
-
-const emitRoutineResult = (
-  ctx: RoutineCtx,
-  resultEffect: Effect.Effect<unknown, RoutineError, never>,
-): Effect.Effect<void> =>
-  resultEffect.pipe(
-    Effect.matchEffect({
-      onFailure: (err) =>
-        Effect.sync(() => {
-          ctx.submitOutput({
-            _tag: 'failure',
-            message: err.message,
-            description: err.context?.description as string | undefined,
-          });
-          ctx.succeed();
-        }),
-      onSuccess: (value) =>
-        Effect.sync(() => {
-          ctx.submitOutput({ _tag: 'success', value });
-          ctx.succeed();
-        }),
-    }),
-  );
 
 const makeCompleteJobToolkit = (options: { resultSink: Deferred.Deferred<unknown, RoutineError> }) => {
   class CompleteJobToolkit extends Toolkit.make(

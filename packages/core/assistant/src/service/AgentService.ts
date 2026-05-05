@@ -21,7 +21,7 @@ import { ProcessManager } from '@dxos/functions-runtime';
 
 import { type McpServerConfig, AiContextBinder } from '../conversation';
 import { RoutineError } from '../errors';
-import { AgentProcess, RoutineRunInput } from './agent-process';
+import { AgentProcess } from './agent-process';
 
 export interface Service {
   /**
@@ -167,7 +167,7 @@ export const layer = (opts?: {
             });
             const processes = yield* processManager.list({ target, key: executable.key });
 
-            let handle: ProcessManager.Handle<string, void>;
+            let handle: ProcessManager.Handle<any, any>;
             if (processes.length > 0) {
               handle = processes[0];
             } else {
@@ -195,28 +195,23 @@ export const layer = (opts?: {
             const feed = options?.feed ?? (yield* Database.add(Feed.make()));
             const feedDxn = Obj.getDXN(feed).toString();
 
-            const runInput: RoutineRunInput = {
-              routineDxn,
-              feedDxn,
-              input: options?.input,
-              systemInstructions: options?.systemInstructions,
-              model: options?.model,
-            };
-
-            const encodedInput = yield* Effect.try({
-              try: () => JSON.stringify(runInput),
-              catch: (error) => new RoutineError('Failed to encode routine input.', { description: String(error) }),
-            });
-
-            const handle = yield* processManager.spawn(AgentProcess({ getMcpServers: opts?.getMcpServers }), {
-              name: 'routine',
-              target: feedDxn,
-              traceMeta: {
-                conversationId: feed.id,
+            const handle = yield* processManager.spawn(
+              AgentProcess({
+                getMcpServers: opts?.getMcpServers,
+                routineDxn,
+                systemInstructions: options?.systemInstructions,
+                model: options?.model,
+              }),
+              {
+                name: 'routine',
+                target: feedDxn,
+                traceMeta: {
+                  conversationId: feed.id,
+                },
               },
-            });
+            );
 
-            const outputs = yield* handle.runAndExit({ inputs: [encodedInput] }).pipe(
+            const outputs = yield* handle.runAndExit({ inputs: [options?.input] }).pipe(
               Stream.runCollect,
               Effect.catchAllCause((cause) =>
                 Effect.fail(new RoutineError('Routine process failed.', { description: Cause.pretty(cause) })),
@@ -228,18 +223,13 @@ export const layer = (opts?: {
               return yield* Effect.fail(new RoutineError('Routine process produced no output.'));
             }
 
-            const result = output.value;
-            if (result._tag === 'failure') {
-              return yield* Effect.fail(new RoutineError(result.message, { description: result.description }));
-            }
-
-            return result.value;
+            return output.value;
           }),
       };
     }),
   );
 
-const makeSession = (process: ProcessManager.Handle<string, void>, feed: Feed.Feed): Session => ({
+const makeSession = (process: ProcessManager.Handle<any, any>, feed: Feed.Feed): Session => ({
   feed,
   submitPrompt: (prompt: string) => process.submitInput(prompt),
   waitForCompletion: () => process.runToCompletion(),

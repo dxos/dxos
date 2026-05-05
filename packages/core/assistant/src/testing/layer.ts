@@ -10,6 +10,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, OpaqueToolkit, type ModelName } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
@@ -161,6 +162,22 @@ export const AssistantTestLayer = ({
                 return session;
               }).pipe(Effect.provide(services)),
             ),
+            // AgentService is resolved from the ambient fiber context rather than captured at
+            // layer-build time, because it sits above the ServiceResolver in the layer graph
+            // (AgentService → ProcessManager → ServiceResolver forms a cycle).
+            ServiceResolver.succeed(AgentService.AgentService, (_context) =>
+              Effect.context<never>().pipe(
+                Effect.map((ctx) =>
+                  Context.getOption(ctx as Context.Context<AgentService.AgentService>, AgentService.AgentService),
+                ),
+                Effect.flatMap(
+                  Option.match({
+                    onSome: (service) => Effect.succeed(service),
+                    onNone: () => Effect.fail(new ServiceNotAvailableError(AgentService.AgentService.key)),
+                  }),
+                ),
+              ),
+            ),
             yield* ServiceResolver.fromRequirements(
               Database.Service,
               OpaqueToolkit.OpaqueToolkitProvider,
@@ -200,7 +217,7 @@ export const AssistantTestLayer = ({
     Layer.provideMerge(KeyValueStore.layerMemory),
     Layer.provideMerge(Registry.layer),
     Layer.orDie,
-  );
+  ) as unknown as Layer.Layer<AssistantTestServices, never, TestContextService>;
 };
 
 interface TestLayerWithTriggersOptions extends TestLayerOptions {}
