@@ -276,7 +276,6 @@ jobs:
           # Omit DEPOT_TOKEN if branch is 'production', otherwise include it.
           DEPOT_TOKEN: ${{ github.ref == 'refs/heads/production' && '' || secrets.DEPOT_TOKEN }}
           NODE_ENV: production
-          NODE_OPTIONS: '--max_old_space_size=12288'
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
@@ -390,7 +389,6 @@ jobs:
           IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
           IOS_MOBILE_PROVISION: ${{ secrets.IOS_MOBILE_PROVISION }}
           NODE_ENV: production
-          NODE_OPTIONS: '--max_old_space_size=12288'
 
       - name: Upload assets to CN
         timeout-minutes: 30

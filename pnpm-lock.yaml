@@ -372,6 +372,9 @@ catalogs:
     '@opentui/solid':
       specifier: 0.1.61
       version: 0.1.61
+    '@oxc-project/runtime':
+      specifier: ^0.129.0
+      version: 0.129.0
     '@oxc-project/types':
       specifier: 0.128.0
       version: 0.128.0
@@ -2078,6 +2081,9 @@ importers:
       '@typescript/native-preview':
         specifier: 'catalog:'
         version: 7.0.0-dev.20260421.2
+      '@vitejs/plugin-react':
+        specifier: 'catalog:'
+        version: 6.0.1(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       '@vitejs/plugin-react-swc':
         specifier: 'catalog:'
         version: 4.3.0(@swc/helpers@0.5.17)(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
@@ -2652,6 +2658,9 @@ importers:
       '@fontsource/poiret-one':
         specifier: 'catalog:'
         version: 5.2.8
+      '@oxc-project/runtime':
+        specifier: 'catalog:'
+        version: 0.129.0
       '@tauri-apps/api':
         specifier: 'catalog:'
         version: 2.10.1
@@ -24799,6 +24808,10 @@ packages:
   '@oslojs/encoding@1.1.0':
     resolution: {integrity: sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ==}
 
+  '@oxc-project/runtime@0.129.0':
+    resolution: {integrity: sha512-0+S67blQakgeNqoKGozOUp5rQBrz2ynXZ2QIINXZPiafsD0YL0UogB9hAWc1S7k6VSNwKYC/N7MqT0V6IzpHkQ==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+
   '@oxc-project/types@0.101.0':
     resolution: {integrity: sha512-nuFhqlUzJX+gVIPPfuE6xurd4lST3mdcWOhyK/rZO0B9XWMKm79SuszIQEnSMmmDhq1DC8WWVYGVd+6F93o1gQ==}
 
@@ -44588,6 +44601,8 @@ snapshots:
       - web-tree-sitter
 
   '@oslojs/encoding@1.1.0': {}
+
+  '@oxc-project/runtime@0.129.0': {}
 
   '@oxc-project/types@0.101.0': {}
 
