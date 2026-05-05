@@ -183,11 +183,11 @@ export class QueryServiceImpl extends Resource implements QueryService {
             query.sendResults(query.executor.getResults());
           }
         } catch (err) {
-          log.warn('query execution failed', {
+          log.catch(err, {
             queryId: query.executor.queryId,
             query: JSON.stringify(query.executor.query),
-            err,
           });
+          query.onError(err as Error);
         }
       }),
     );
