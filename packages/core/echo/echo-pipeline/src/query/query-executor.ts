@@ -273,24 +273,37 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
 
         // Extract queueIds from explicit queue DXNs and derive spaceIds from them.
         if (step.scope.queues && step.scope.queues.length > 0 && !step.scope.allQueuesFromSpaces) {
+          let parseFailed = false;
+          const derivedQueueIds = new Set<ObjectId>();
+          const derivedSpaceIds = new Set<SpaceId>();
           for (const queueDxnStr of step.scope.queues as DXN.String[]) {
             try {
               const queueDxn = DXN.parse(queueDxnStr).asQueueDXN();
               if (queueDxn) {
-                if (!scopes.queueIds) {
-                  scopes.queueIds = new Set();
-                }
-                scopes.queueIds.add(queueDxn.queueId as ObjectId);
-                // Derive spaceId from the queue DXN so space-scoped hints can skip this query.
-                if (!scopes.spaceIds) {
-                  scopes.spaceIds = new Set();
-                }
-                scopes.spaceIds.add(queueDxn.spaceId as SpaceId);
+                derivedQueueIds.add(queueDxn.queueId as ObjectId);
+                derivedSpaceIds.add(queueDxn.spaceId as SpaceId);
               }
             } catch {
-              // Ignore unparseable DXNs; leave the dimension unconstrained.
+              parseFailed = true;
             }
           }
+
+          if (!parseFailed) {
+            if (derivedQueueIds.size > 0) {
+              scopes.queueIds ??= new Set<ObjectId>();
+              for (const id of derivedQueueIds) {
+                scopes.queueIds.add(id);
+              }
+            }
+            if (derivedSpaceIds.size > 0) {
+              scopes.spaceIds ??= new Set<SpaceId>();
+              for (const id of derivedSpaceIds) {
+                // Derive spaceId from the queue DXN so space-scoped hints can skip this query.
+                scopes.spaceIds.add(id);
+              }
+            }
+          }
+          // On any parse error, leave queue-derived dimensions unconstrained.
         }
 
         // Extract typename / objectId constraints from selector.
