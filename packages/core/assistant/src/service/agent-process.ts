@@ -45,7 +45,7 @@ interface AgentProcessOptions {
   systemInstructions?: string;
 }
 
-export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
+export const AGENT_PROCESS_KEY = 'org.dxos.process.agent';
 
 /**
  * Hosts a persistent, suspendible AiAgent that can process a number of prompts.
@@ -84,7 +84,6 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const toolCallManager = new ToolCallManager(storageService);
         yield* toolCallManager.load();
 
-        // Shared request builder — captures mcpServers wiring in one place.
         const createRequest = <R = never>(req: Omit<AiSessionRunProps<R>, 'mcpServers'>) =>
           session.createRequest({
             ...(req as AiSessionRunProps<R>),
@@ -100,7 +99,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               Effect.mapError((err) => new RoutineError('Failed to resolve routine.', { description: String(err) })),
             );
 
-            const blueprintResults = yield* Effect.forEach(routine.blueprints, Database.loadOption);
+            const [blueprintResults, objectResults] = yield* Effect.all(
+              [
+                Effect.forEach(routine.blueprints, Database.loadOption, { concurrency: 'unbounded' }),
+                Effect.forEach(routine.context, Database.loadOption, { concurrency: 'unbounded' }),
+              ],
+              { concurrency: 2 },
+            );
             const blueprints = blueprintResults.flatMap((opt, i) => {
               if (Option.isNone(opt)) {
                 log.warn('routine: blueprint not found, skipping', { routineDxn, ref: routine.blueprints[i] });
@@ -108,8 +113,6 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               }
               return [opt.value];
             });
-
-            const objectResults = yield* Effect.forEach(routine.context, Database.loadOption);
             const objects = objectResults.flatMap((opt, i) => {
               if (Option.isNone(opt)) {
                 log.warn('routine: context object not found, skipping', { routineDxn, ref: routine.context[i] });
@@ -513,19 +516,22 @@ const AsynchronousExectionToolkitLayer = AsynchronousExectionToolkit.toLayer(
     return {
       'poll-tools': ({ ids, wait, timeout = 10_000 }) =>
         Effect.gen(function* () {
-          return yield* Effect.forEach(ids, (pid) =>
-            invoker.attachFiber<unknown>(Process.ID.make(pid)).pipe(
-              Effect.flatMap((_) => _.await),
-              Effect.timeout(Duration.millis(timeout)),
-              Effect.flatMap(
-                Exit.match({
-                  onSuccess: (value) => Effect.succeed(toolResultResponse(pid, value)),
-                  onFailure: (cause) => Effect.succeed(toolErrorResponse(pid, Cause.pretty(cause))),
-                }),
+          return yield* Effect.forEach(
+            ids,
+            (pid) =>
+              invoker.attachFiber<unknown>(Process.ID.make(pid)).pipe(
+                Effect.flatMap((_) => _.await),
+                Effect.timeout(Duration.millis(timeout)),
+                Effect.flatMap(
+                  Exit.match({
+                    onSuccess: (value) => Effect.succeed(toolResultResponse(pid, value)),
+                    onFailure: (cause) => Effect.succeed(toolErrorResponse(pid, Cause.pretty(cause))),
+                  }),
+                ),
+                Effect.catchTag('ProcessNotFoundError', () => Effect.succeed(`Process not found: ${pid}`)),
+                Effect.catchTag('TimeoutException', () => Effect.succeed(`Process still running: ${pid}`)),
               ),
-              Effect.catchTag('ProcessNotFoundError', () => Effect.succeed(`Process not found: ${pid}`)),
-              Effect.catchTag('TimeoutException', () => Effect.succeed(`Process still running: ${pid}`)),
-            ),
+            { concurrency: 'unbounded' },
           );
         }),
     };

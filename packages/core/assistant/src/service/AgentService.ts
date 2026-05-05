@@ -167,7 +167,7 @@ export const layer = (opts?: {
             });
             const processes = yield* processManager.list({ target, key: executable.key });
 
-            let handle: ProcessManager.Handle<any, any>;
+            let handle: ProcessManager.Handle<string, unknown>;
             if (processes.length > 0) {
               handle = processes[0];
             } else {
@@ -229,7 +229,7 @@ export const layer = (opts?: {
     }),
   );
 
-const makeSession = (process: ProcessManager.Handle<any, any>, feed: Feed.Feed): Session => ({
+const makeSession = (process: ProcessManager.Handle<string, unknown>, feed: Feed.Feed): Session => ({
   feed,
   submitPrompt: (prompt: string) => process.submitInput(prompt),
   waitForCompletion: () => process.runToCompletion(),

@@ -166,10 +166,7 @@ export const AssistantTestLayer = ({
             // layer-build time, because it sits above the ServiceResolver in the layer graph
             // (AgentService → ProcessManager → ServiceResolver forms a cycle).
             ServiceResolver.succeed(AgentService.AgentService, (_context) =>
-              Effect.context<never>().pipe(
-                Effect.map((ctx) =>
-                  Context.getOption(ctx as Context.Context<AgentService.AgentService>, AgentService.AgentService),
-                ),
+              Effect.serviceOption(AgentService.AgentService).pipe(
                 Effect.flatMap(
                   Option.match({
                     onSome: (service) => Effect.succeed(service),
