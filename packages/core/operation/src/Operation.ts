@@ -167,14 +167,16 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
 };
 
 /**
- * Marks an operation as a system operation, provided by the DXOS platform.
+ * Marks an operation as intrinsic — provided directly by the DXOS platform runtime rather than
+ * deployed as a user function. The `intrinsic:<key>` deployedId routes invocations to the
+ * built-in implementation registered with the runtime.
  */
-export const system = <const O extends Operation.Definition.Any>(op: O): O => {
+export const intrinsic = <const O extends Operation.Definition.Any>(op: O): O => {
   return {
     ...op,
     meta: {
       ...op.meta,
-      deployedId: `system-operation:${op.meta.key}`,
+      deployedId: `intrinsic:${op.meta.key}`,
     },
   };
 };
