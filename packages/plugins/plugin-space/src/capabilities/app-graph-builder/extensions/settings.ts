@@ -73,7 +73,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
                 properties: {
                   label: ['members-panel.label', { ns: meta.id }],
                   icon: 'ph--users--regular',
-                  iconHue: 'lime',
+                  iconHue: 'indigo',
                   space,
                   testId: 'spacePlugin.members',
                 },
