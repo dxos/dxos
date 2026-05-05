@@ -14,7 +14,7 @@ import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
+describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
   test('deploys FOREX (effect) function and invokes it via EDGE (main)', { timeout: 120_000 }, async () => {
     const config = configPreset({ edge: 'main' });
     await testDeploy(config);

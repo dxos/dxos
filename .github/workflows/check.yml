@@ -101,7 +101,9 @@ jobs:
     timeout-minutes: 30
     env:
       NODE_VERSION: ${{ matrix.node-version }}
-      DX_TEST_TAGS: 'flaky'
+      # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
+      # while still excluding the heavier opt-in tag families.
+      VITEST_TAGS_FILTER: '!llm && !sync && !sync-e2e && !functions-e2e && !tracing-e2e'
       VITEST_ENV: 'node'
       VITEST_COVERAGE: 'true'
       VITEST_XML_REPORT: 'true'

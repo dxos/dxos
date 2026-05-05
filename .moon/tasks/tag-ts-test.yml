@@ -1,7 +1,12 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   test:
-    command: pnpm exec dx-killorphans vitest run --passWithNoTests --project=node
+    # `$VITEST_TAGS_FILTER` selects which tagged suites run via vitest's native
+    # `--tagsFilter` flag (boolean expression over tag names). The default skips
+    # all opt-in tags (flaky, LLM, sync, e2e) so local + PR CI runs only fast
+    # unit tests. CI overrides this via the `VITEST_TAGS_FILTER` env to opt-in
+    # specific tags (e.g. `flaky`).
+    command: bash -c 'pnpm exec dx-killorphans vitest run --passWithNoTests --project=node --tagsFilter="${VITEST_TAGS_FILTER:-!flaky && !llm && !sync && !sync-e2e && !functions-e2e && !tracing-e2e}"'
     deps:
       - esbuild-plugins:compile
       - node-std:compile
@@ -16,6 +21,7 @@ tasks:
       - $VITEST_DEBUG
       - $VITEST_ENV
       - $VITEST_XML_REPORT
+      - $VITEST_TAGS_FILTER
       - $ALLOW_LLM_GENERATION
     outputs:
       - /coverage/$project/node/**

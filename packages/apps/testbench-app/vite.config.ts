@@ -74,11 +74,25 @@ export default defineConfig(
             shell: path.resolve(dirname, './shell.html'),
           },
           output: {
-            manualChunks: {
-              react: ['react', 'react-dom', 'react-router-dom'],
-              dxos: ['@dxos/react-client'],
-              ui: ['@dxos/react-ui', '@dxos/ui-theme'],
-              editor: ['@dxos/react-ui-editor'],
+            // Rolldown (used by Vite 8) requires `manualChunks` to be a function — the
+            // record form that worked in Rollup is rejected at runtime.
+            manualChunks: (id: string) => {
+              if (
+                id.includes('/node_modules/react/') ||
+                id.includes('/node_modules/react-dom/') ||
+                id.includes('/node_modules/react-router-dom/')
+              ) {
+                return 'react';
+              }
+              if (id.includes('/node_modules/@dxos/react-client/')) {
+                return 'dxos';
+              }
+              if (id.includes('/node_modules/@dxos/react-ui/') || id.includes('/node_modules/@dxos/ui-theme/')) {
+                return 'ui';
+              }
+              if (id.includes('/node_modules/@dxos/react-ui-editor/')) {
+                return 'editor';
+              }
             },
           },
         },
