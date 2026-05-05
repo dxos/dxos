@@ -93,6 +93,7 @@
     "@dxos/plugin-sidekick": "workspace:*",
     "@dxos/plugin-simple-layout": "workspace:*",
     "@dxos/plugin-sketch": "workspace:*",
+    "@dxos/plugin-slack": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-spacetime": "workspace:*",
     "@dxos/plugin-spotlight": "workspace:*",

@@ -59,6 +59,7 @@ import { SheetPlugin } from '@dxos/plugin-sheet';
 import { SidekickPlugin } from '@dxos/plugin-sidekick';
 import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
 import { SketchPlugin } from '@dxos/plugin-sketch';
+import { SlackPlugin } from '@dxos/plugin-slack';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { SpacetimePlugin } from '@dxos/plugin-spacetime';
 import { SpotlightPlugin } from '@dxos/plugin-spotlight';
@@ -257,6 +258,7 @@ export const getPlugins = ({
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
+    SlackPlugin(),
     SpacetimePlugin(),
     SpacePlugin({
       observability: true,
