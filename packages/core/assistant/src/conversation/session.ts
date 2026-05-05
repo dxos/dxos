@@ -32,8 +32,8 @@ import {
   createToolkit,
   formatSystemPrompt,
 } from '../session';
-import { AiContextBinder, AiContextService } from './context';
 import { McpServerError } from '../tracing';
+import { AiContextBinder, AiContextService } from './context';
 
 export interface McpServerConfig {
   url: string;
