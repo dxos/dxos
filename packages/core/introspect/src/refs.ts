@@ -115,6 +115,7 @@ export const parseRef = (ref: string): RefParts => {
       }
     }
   }
+
   throw new Error(`Invalid ref: ${ref}`);
 };
 

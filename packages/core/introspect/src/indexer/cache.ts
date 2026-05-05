@@ -73,7 +73,7 @@ const CACHE_VERSION = 3;
 // cache indexes. Cons: a fresh `pnpm install` wipes it (rebuild ~80s once).
 const DEFAULT_CACHE_PATH = 'node_modules/.cache/dxos-introspect/cache.json';
 
-export const cacheFilePath = (monorepoRoot: string): string => join(monorepoRoot, DEFAULT_CACHE_PATH);
+export const cacheFilePath = (rootPath: string): string => join(rootPath, DEFAULT_CACHE_PATH);
 
 /**
  * Compute the current src/ mtime + git tree SHA for every package. Used both
@@ -87,15 +87,12 @@ export const cacheFilePath = (monorepoRoot: string): string => join(monorepoRoot
  * Both calls are best-effort: if the cwd isn't a git checkout, every package
  * gets `srcTreeSha = ''` and we silently degrade to mtime-only invalidation.
  */
-export const computePackageMtimes = (
-  monorepoRoot: string,
-  packagePaths: string[],
-): Record<string, CachePackageEntry> => {
+export const computePackageMtimes = (rootPath: string, packagePaths: string[]): Record<string, CachePackageEntry> => {
   const treeShas = readGitTreeShas(monorepoRoot);
   const dirtyPaths = readGitDirtyPaths(monorepoRoot);
   const entries: Record<string, CachePackageEntry> = {};
   for (const path of packagePaths) {
-    const srcDir = join(monorepoRoot, path, 'src');
+    const srcDir = join(rootPath, path, 'src');
     let srcMtime = 0;
     if (existsSync(srcDir)) {
       try {

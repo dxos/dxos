@@ -76,7 +76,7 @@ const parseArgs = (argv: string[]): Args => {
       process.exit(1);
     }
   }
-  const resolvedRoot = root ? resolveRoot(root) : findMonorepoRoot(process.cwd());
+  const resolvedRoot = root ? resolveRoot(root) : findrootPath(process.cwd());
   if (!resolvedRoot) {
     console.error('Could not find monorepo root (looking for pnpm-workspace.yaml). Pass --root explicitly.');
     process.exit(1);
@@ -86,7 +86,7 @@ const parseArgs = (argv: string[]): Args => {
 
 const resolveRoot = (root: string): string => (isAbsolute(root) ? root : resolve(process.cwd(), root));
 
-const findMonorepoRoot = (start: string): string | null => {
+const findrootPath = (start: string): string | null => {
   let cursor = start;
   while (true) {
     if (existsSync(`${cursor}/pnpm-workspace.yaml`)) {
@@ -131,7 +131,7 @@ export const main = async (argv: string[] = process.argv.slice(2)): Promise<void
   //
   // Result: clients connect immediately and the first real query pays the
   // one-time cold-start cost. Subsequent calls hit the cache and are fast.
-  const introspector = createIntrospector({ monorepoRoot: args.root });
+  const introspector = createIntrospector({ rootPath: args.root });
   // Surface fatal indexing errors to stderr and exit. A live but
   // permanently-unusable process is worse than a clean failure: every tool
   // call would block forever on `await introspector.ready` once the rejected
