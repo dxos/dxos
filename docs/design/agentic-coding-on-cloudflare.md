@@ -265,6 +265,19 @@ class PluginProject {
 3. On deploy, sandbox uploads bundle to registry; registry tags the deployment with the current ECHO commit hash (synthesized from object hashes).
 4. Optional: user enables GitHub sync — Source Sync DO handles the rest.
 
+### Sync model: ECHO ↔ sandbox
+
+The sync contract is **one-way and ECHO-canonical** — the sandbox is a materialized cache, never a peer.
+
+- **All file CRUD operations write to ECHO first.** `code.write_file`, `code.apply_patch`, `code.scaffold`, etc. mutate `SourceFile` objects in the user's space and return only after the ECHO write resolves.
+- **The sandbox DO subscribes to `SourceTree` mutations.** On the next `code.compile` / `code.test` invocation, the DO diffs the live ECHO tree against the container's last-applied snapshot and materializes the delta into the container FS before invoking the toolchain. There is no eager push — propagation is lazy and on-demand.
+- **The container FS is never the source of truth.** Build artifacts (`node_modules`, `dist`, vitest caches) live only in the container and are not written back to ECHO. If the container is evicted, those are rebuilt; user source is unaffected.
+- **`plugin-code`'s file UI subscribes to the ECHO `SourceTree` directly,** so agent-driven edits, human edits, and remote-collaborator edits all surface through the same reactive path. The UI does not poll the sandbox.
+- **Failure recovery is straightforward** because there's no distributed write. If a `code.write_file` fails, ECHO is unchanged and the agent can retry. If a sandbox materialization fails mid-build, the DO discards its partial snapshot and re-materializes from ECHO on the next attempt — ECHO state is the floor it can always return to.
+- **Conflict resolution is delegated to ECHO.** Concurrent edits to the same `SourceFile` (agent + human, or two collaborators) are reconciled by ECHO's existing CRDT semantics; the sandbox just observes the resolved state on its next pull.
+
+The corollary: there is no need for a transactional edit log between EDGE services and the sandbox. The agent's operation log is implicitly captured as ECHO mutations on the user's space, which already gives us history, undo, and audit.
+
 ## End-to-end flow
 
 > User in `plugin-code`: _"Add a panel that lists all unread Slack threads."_
