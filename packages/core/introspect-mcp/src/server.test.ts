@@ -53,12 +53,15 @@ describe('introspect-mcp server', () => {
   // what an LLM client would see when querying the real monorepo.
   let env: Connected;
 
+  // CI hosts have shown the introspector + MCP transport handshake exceeding the default 10s
+  // hook timeout under load; bump it so we don't get a teardown cascade (env undefined in
+  // afterAll) when the host is busy.
   beforeAll(async () => {
     env = await connect();
-  });
+  }, 30_000);
 
   afterAll(async () => {
-    await env.close();
+    await env?.close();
   });
 
   test('lists all five tools', async ({ expect }) => {
