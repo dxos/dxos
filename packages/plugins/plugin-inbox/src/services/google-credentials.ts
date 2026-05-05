@@ -6,7 +6,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { CredentialsService } from '@dxos/compute';
+import { Credential } from '@dxos/compute';
 import { Database, type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Integration } from '@dxos/plugin-integration/types';
@@ -19,7 +19,7 @@ const makeService = (cachedToken: string | undefined): Context.Tag.Service<Googl
   get: () =>
     cachedToken
       ? Effect.succeed(cachedToken)
-      : Effect.map(CredentialsService.getCredential({ service: 'google.com' }), (c) => c.apiKey!),
+      : Effect.map(Credential.CredentialsService.getCredential({ service: 'google.com' }), (c) => c.apiKey!),
 });
 
 /**
@@ -34,7 +34,7 @@ export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
   GoogleCredentials,
   {
     /** Returns the Google API token. */
-    get: () => Effect.Effect<string, never, CredentialsService>;
+    get: () => Effect.Effect<string, never, Credential.CredentialsService>;
   }
 >() {
   /**

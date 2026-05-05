@@ -49,13 +49,13 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../compute"
+    },
+    {
       "path": "../echo/echo"
     },
     {
       "path": "../echo/echo-db"
-    },
-    {
-      "path": "../operation"
     }
   ]
 }

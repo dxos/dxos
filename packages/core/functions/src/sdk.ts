@@ -3,11 +3,10 @@
 //
 
 import { type AiService } from '@dxos/ai';
+import { type Credential, type Operation, type Trace } from '@dxos/compute';
 import { type Database, type Feed } from '@dxos/echo';
-import { type Trace } from '@dxos/functions';
-import type { Operation } from '@dxos/operation';
 
-import { type CredentialsService, type FunctionInvocationService, type QueueService } from './services';
+import { type FunctionInvocationService, type QueueService } from './services';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
@@ -20,7 +19,7 @@ import { type CredentialsService, type FunctionInvocationService, type QueueServ
  */
 export type FunctionServices =
   | AiService.AiService
-  | CredentialsService
+  | Credential.CredentialsService
   | Database.Service
   // TODO(wittjosiah): Remove QueueService — use Feed.FeedService instead.
   | QueueService

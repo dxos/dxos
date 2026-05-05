@@ -12,6 +12,7 @@ export interface TaskCardProps {
 
 /**
  * Renders a Task — fixture React component exercising the useObject pattern.
+ * Targets schemas with typename `com.example.type.Task`.
  */
 export const TaskCard = ({ task: taskProp }: TaskCardProps) => {
   const [task, update] = useObject(taskProp);

@@ -7,9 +7,11 @@ import * as Layer from 'effect/Layer';
 
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { AiService } from '@dxos/ai';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Credential } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Context as DxosContext } from '@dxos/context';
 import { FunctionInvocationService } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 
 import { LocalFunctionExecutionService } from './local-function-execution';
 import type { RemoteFunctionExecutionService as RemoteFunctionExecutionServiceType } from './remote-function-execution-service';

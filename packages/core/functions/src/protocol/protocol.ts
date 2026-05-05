@@ -11,6 +11,14 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
+import {
+  FunctionError,
+  InvalidOperationInputError,
+  InvalidOperationOutputError,
+  Operation,
+  OperationRegistry,
+  Trace,
+} from '@dxos/compute';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, JsonSchema, Ref, type Type } from '@dxos/echo';
 import { EchoClient, type EchoDatabaseImpl, type QueueFactory, createFeedServiceLayer } from '@dxos/echo-db';
@@ -18,13 +26,15 @@ import { refFromEncodedReference } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
-import { Operation, OperationRegistry } from '@dxos/operation';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol } from '@dxos/protocols';
 
-import { FunctionError, InvalidOperationInputError, InvalidOperationOutputError } from '../errors';
 import { type FunctionServices } from '../sdk';
-import { CredentialsService, FunctionInvocationService, QueueService } from '../services';
-import * as Trace from '../Trace';
+import {
+  configuredCredentialsLayer,
+  credentialsLayerFromDatabase,
+  FunctionInvocationService,
+  QueueService,
+} from '../services';
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
 /**
@@ -165,8 +175,8 @@ class FunctionContext extends Resource {
     const queuesLayer = this.queues ? QueueService.layer(this.queues) : QueueService.notAvailable;
     const feedLayer = this.queues ? createFeedServiceLayer(this.queues) : Feed.notAvailable;
     const credentials = dbLayer
-      ? CredentialsService.layerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
-      : CredentialsService.configuredLayer([]);
+      ? credentialsLayerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
+      : configuredCredentialsLayer([]);
 
     const aiLayer = this.context.services.functionsAiService
       ? InternalAiServiceLayer(this.context.services.functionsAiService)

@@ -11,10 +11,9 @@ import * as FiberRef from 'effect/FiberRef';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
+import { FunctionsAiMemoizationMissError, FunctionsAiUpstreamError } from '@dxos/compute';
 import { log } from '@dxos/log';
 import { type EdgeFunctionEnv, ErrorCodec } from '@dxos/protocols';
-
-import { FunctionsAiMemoizationMissError, FunctionsAiUpstreamError } from '../errors';
 
 /**
  * Copy pasted from https://github.com/Effect-TS/effect/blob/main/packages/platform/src/internal/fetchHttpClient.ts

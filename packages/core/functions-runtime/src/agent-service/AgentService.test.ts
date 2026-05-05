@@ -10,14 +10,12 @@ import * as Stream from 'effect/Stream';
 import { expect } from 'vitest';
 
 import { PartialBlock } from '@dxos/assistant';
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint, Operation, OperationHandlerSet, Trace } from '@dxos/compute';
 import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { Trace } from '@dxos/functions';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 

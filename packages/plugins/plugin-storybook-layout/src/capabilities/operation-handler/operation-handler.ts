@@ -7,11 +7,10 @@ import * as Effect from 'effect/Effect';
 import { Capability, Capabilities } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
-import type { OperationHandlerSet as OperationHandlerSet$ } from '@dxos/compute';
 
 import { LayoutState } from '#types';
 
-export default Capability.makeModule<OperationHandlerSet$.OperationHandlerSet>(
+export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(
   Effect.fnUntraced(function* () {
     const layout = yield* Capability.get(LayoutState);
     return Capability.contributes(

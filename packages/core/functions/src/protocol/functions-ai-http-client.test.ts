@@ -10,9 +10,8 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import { describe, test } from 'vitest';
 
+import { FunctionsAiMemoizationMissError, FunctionsAiUpstreamError } from '@dxos/compute';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
-
-import { FunctionsAiMemoizationMissError, FunctionsAiUpstreamError } from '../errors';
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
 const makeStubService = (response: Response): EdgeFunctionEnv.FunctionsAiService => ({
