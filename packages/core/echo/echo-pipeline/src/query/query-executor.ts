@@ -27,6 +27,7 @@ import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dx
 import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
 
 import type { AutomergeHost } from '../automerge';
+import type { InvalidationHint } from '../db-host';
 import type { SpaceStateManager } from '../db-host';
 import { filterMatchObject, filterMatchObjectJSON } from '../filter';
 import { QueryError } from './errors';
@@ -232,6 +233,139 @@ const MAX_DEPTH_FOR_DELETION_TRACING = 10;
 const MAX_DEPTH_FOR_CHILD_OF_TRACING = 10;
 
 /**
+ * Cached scope constraints extracted from a query plan.
+ * Used to quickly determine whether an invalidation hint can affect this query.
+ *
+ * A null dimension means the query is unconstrained on that dimension (matches any value).
+ */
+type QueryScopes = {
+  /**
+   * False for text-search, traversal, union, set-difference, or child-of queries.
+   * When false, matchesHint always returns true (conservative: always re-execute).
+   */
+  isSimple: boolean;
+  spaceIds: Set<SpaceId> | null;
+  queueIds: Set<ObjectId> | null;
+  typenames: Set<string> | null;
+  objectIds: Set<ObjectId> | null;
+};
+
+const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
+  const scopes: QueryScopes = {
+    isSimple: true,
+    spaceIds: null,
+    queueIds: null,
+    typenames: null,
+    objectIds: null,
+  };
+
+  for (const step of plan.steps) {
+    switch (step._tag) {
+      case 'SelectStep': {
+        // Extract spaceIds from scope.
+        if (step.scope.spaceIds && step.scope.spaceIds.length > 0) {
+          if (!scopes.spaceIds) {
+            scopes.spaceIds = new Set();
+          }
+          for (const spaceId of step.scope.spaceIds) {
+            scopes.spaceIds.add(spaceId as SpaceId);
+          }
+        }
+
+        // Extract queueIds from explicit queue DXNs and derive spaceIds from them.
+        if (step.scope.queues && step.scope.queues.length > 0 && !step.scope.allQueuesFromSpaces) {
+          for (const queueDxnStr of step.scope.queues as DXN.String[]) {
+            try {
+              const queueDxn = DXN.parse(queueDxnStr).asQueueDXN();
+              if (queueDxn) {
+                if (!scopes.queueIds) {
+                  scopes.queueIds = new Set();
+                }
+                scopes.queueIds.add(queueDxn.queueId as ObjectId);
+                // Derive spaceId from the queue DXN so space-scoped hints can skip this query.
+                if (!scopes.spaceIds) {
+                  scopes.spaceIds = new Set();
+                }
+                scopes.spaceIds.add(queueDxn.spaceId as SpaceId);
+              }
+            } catch {
+              // Ignore unparseable DXNs; leave the dimension unconstrained.
+            }
+          }
+        }
+
+        // Extract typename / objectId constraints from selector.
+        switch (step.selector._tag) {
+          case 'TypeSelector': {
+            if (step.selector.inverted) {
+              // Inverted type selectors come from Filter.not — mark as non-simple.
+              scopes.isSimple = false;
+            } else {
+              if (!scopes.typenames) {
+                scopes.typenames = new Set();
+              }
+              for (const typename of step.selector.typename) {
+                scopes.typenames.add(typename as string);
+              }
+            }
+            break;
+          }
+          case 'IdSelector': {
+            if (!scopes.objectIds) {
+              scopes.objectIds = new Set();
+            }
+            for (const id of step.selector.objectIds) {
+              scopes.objectIds.add(id);
+            }
+            break;
+          }
+          case 'TextSelector': {
+            scopes.isSimple = false;
+            break;
+          }
+          default:
+            // WildcardSelector, TimestampSelector — no type/id constraint.
+            break;
+        }
+        break;
+      }
+      case 'FilterStep': {
+        // child-of filters require transitive parent traversal which can't be hinted.
+        if (step.filter.type === 'child-of') {
+          scopes.isSimple = false;
+        }
+        break;
+      }
+      case 'TraverseStep':
+      case 'UnionStep':
+      case 'SetDifferenceStep':
+        scopes.isSimple = false;
+        break;
+      default:
+        // ClearWorkingSetStep, FilterDeletedStep, OrderStep, LimitStep are fine.
+        break;
+    }
+  }
+
+  return scopes;
+};
+
+const setsOverlap = <T>(a: ReadonlySet<T>, b: Set<T>): boolean => {
+  const [smaller, larger]: [ReadonlySet<T>, ReadonlySet<T>] = a.size <= b.size ? [a, b] : [b, a];
+  for (const item of smaller) {
+    if (larger.has(item)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const overlapsOrUnconstrained = <T>(
+  hintSet: ReadonlySet<T> | undefined,
+  scopeSet: Set<T> | null,
+): boolean => hintSet === undefined || scopeSet === null || setsOverlap(hintSet, scopeSet);
+
+/**
  * Executes query plans against the IndexEngine and AutomergeHost.
  *
  * The QueryExecutor is responsible for:
@@ -255,6 +389,7 @@ export class QueryExecutor extends Resource {
   private readonly _reactivity: QueryReactivity;
 
   private _plan: QueryPlan.Plan;
+  #scopes: QueryScopes;
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
   private _lastResultSet: QueryItem[] = [];
 
@@ -272,6 +407,7 @@ export class QueryExecutor extends Resource {
 
     const queryPlanner = new QueryPlanner();
     this._plan = queryPlanner.createPlan(this._query);
+    this.#scopes = extractScopes(this._plan);
   }
 
   get query(): QueryAST.Query {
@@ -299,6 +435,25 @@ export class QueryExecutor extends Resource {
 
         documentJson: item.doc ? JSON.stringify(item.doc) : item.data ? JSON.stringify(item.data) : undefined,
       }),
+    );
+  }
+
+  /**
+   * Returns true if the given invalidation hint could affect this query's result set.
+   * When false, the query can safely be skipped for this invalidation cycle.
+   *
+   * Conservative: returns true for complex queries (traversals, text-search, unions) and
+   * for any dimension where either the hint or the query is unconstrained.
+   */
+  matchesHint(hint: InvalidationHint): boolean {
+    if (!this.#scopes.isSimple) {
+      return true;
+    }
+    return (
+      overlapsOrUnconstrained(hint.spaceIds, this.#scopes.spaceIds) &&
+      overlapsOrUnconstrained(hint.queueIds, this.#scopes.queueIds) &&
+      overlapsOrUnconstrained(hint.typenames, this.#scopes.typenames) &&
+      overlapsOrUnconstrained(hint.objectIds, this.#scopes.objectIds)
     );
   }
 
