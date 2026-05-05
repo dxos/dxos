@@ -12,9 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../common/log"
-    },
-    {
       "path": "../../common/storybook-utils"
     },
     {
@@ -31,9 +28,6 @@
     },
     {
       "path": "../ui-theme"
-    },
-    {
-      "path": "../ui-types"
     }
   ]
 }

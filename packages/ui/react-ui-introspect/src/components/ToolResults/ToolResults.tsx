@@ -69,7 +69,10 @@ const tryParseMcpEnvelope = (value: unknown): unknown => {
     const text = (value as { content: Array<{ type?: string; text?: string }> }).content.find(
       (c) => c?.type === 'text' && typeof c.text === 'string',
     )?.text;
-    if (text) {
+    // Explicit undefined check — an empty string is a legitimate payload
+    // (e.g. a tool returning `""` should render as an empty result, not
+    // fall through to dumping the raw envelope).
+    if (text !== undefined) {
       try {
         return JSON.parse(text);
       } catch {

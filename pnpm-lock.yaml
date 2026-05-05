@@ -19043,12 +19043,6 @@ importers:
 
   packages/ui/react-ui-introspect:
     dependencies:
-      '@dxos/introspect-tools':
-        specifier: workspace:*
-        version: link:../../core/introspect-tools
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
@@ -19061,19 +19055,22 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
-      '@dxos/ui-types':
-        specifier: workspace:*
-        version: link:../ui-types
-      '@modelcontextprotocol/sdk':
-        specifier: '>=1.26.0'
-        version: 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
       effect:
         specifier: 3.20.0
         version: 3.20.0
     devDependencies:
+      '@dxos/introspect-tools':
+        specifier: workspace:*
+        version: link:../../core/introspect-tools
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@modelcontextprotocol/sdk':
+        specifier: '>=1.26.0'
+        version: 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.3.6(esbuild@0.28.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(rollup@3.30.0)(storybook@10.3.6(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@6.0.3)(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(webpack@5.105.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.28.0))
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.7

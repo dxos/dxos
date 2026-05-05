@@ -35,13 +35,21 @@ export const ToolList = ({ tools, selected, onSelect, className }: ToolListProps
   return (
     <ScrollArea.Root classNames={className} orientation='vertical' thin>
       <ScrollArea.Viewport>
-        <ul role='list' className='flex flex-col'>
+        {/*
+         * `role='listbox'` + `role='option'` on the rows makes
+         * `aria-selected` semantically valid for assistive tech (it's only
+         * meaningful on roles like `option`, `tab`, `gridcell`, `row`).
+         * Pairs with the `dx-selected` utility, which binds visual styling
+         * to the same `aria-selected` attribute.
+         */}
+        <ul role='listbox' className='flex flex-col'>
           {entries.map(([name, tool]) => {
             const isSelected = selected === name;
             return (
-              <li key={name}>
+              <li key={name} role='presentation'>
                 <button
                   type='button'
+                  role='option'
                   aria-selected={isSelected}
                   className={mx('w-full text-left px-3 py-2 transition-colors dx-hover dx-selected')}
                   onClick={() => onSelect?.(name, tool)}
