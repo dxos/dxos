@@ -162,3 +162,57 @@ export type Operation = {
   /** Source location of the `Operation.make` call. */
   location: SourceLocation;
 };
+
+// ---------------------------------------------------------------------------
+// Schemas.
+//
+// ECHO-registered types — anything piped through `Type.object({ typename, version })`
+// or `Type.Obj({ typename, version })`. Plain `Schema.Struct` definitions without a
+// typename are skipped: they're internal building blocks, not externally-referenced
+// types, so there's no stable identity to key off.
+// ---------------------------------------------------------------------------
+
+export type SchemaField = {
+  /** Field name as written in the `Schema.Struct({...})` literal. */
+  name: string;
+  /**
+   * Trimmed source text of the field's value, e.g. `Schema.optional(Schema.String)`
+   * or `Ref.Ref(Text.Text)`. Useful for surfacing types without re-parsing.
+   */
+  type: string;
+  /** True when the type expression is wrapped in `Schema.optional(...)`. */
+  optional: boolean;
+};
+
+export type SchemaSummary = {
+  /** Stable ref, e.g. `schema:org.dxos.type.document`. */
+  ref: string;
+  /** Typename from `Type.object({ typename })`. */
+  typename: string;
+  /** Version from `Type.object({ version })`, if present. */
+  version?: string;
+  /** Variable name the schema is bound to in source (e.g. `Document`). */
+  name?: string;
+  /** Owning package name. */
+  package: string;
+  /** Number of fields in the underlying `Schema.Struct(...)`. */
+  fieldCount: number;
+};
+
+export type SchemaDetail = SchemaSummary & {
+  /** Field list extracted from the `Schema.Struct({...})` literal. */
+  fields: SchemaField[];
+  /** Source location of the `Schema.Struct(...)` (or equivalent) call. */
+  location: SourceLocation;
+};
+
+export type SchemaUsage = {
+  /** Source file containing the typename reference, relative to repo root. */
+  file: string;
+  /** Owning package name. */
+  package: string;
+  /** 1-based line number of the reference. */
+  line: number;
+  /** Trimmed source text of the line, for context without a Read call. */
+  snippet: string;
+};

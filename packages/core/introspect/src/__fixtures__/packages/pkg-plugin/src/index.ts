@@ -5,3 +5,4 @@
 export { FixturePlugin } from './FixturePlugin';
 export { meta } from './meta';
 export * from './operations';
+export { Note } from './types';

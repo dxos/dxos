@@ -11,6 +11,7 @@ import {
   formatCapabilityRef,
   formatOperationRef,
   formatPluginRef,
+  formatSchemaRef,
   formatSurfaceRef,
   formatSymbolRef,
   parseRef,
@@ -49,6 +50,10 @@ describe('refs', () => {
     expect(parseRef(formatOperationRef('org.dxos.function.markdown.create'))).toEqual({
       kind: 'operation',
       key: 'org.dxos.function.markdown.create',
+    });
+    expect(parseRef(formatSchemaRef('org.dxos.type.document'))).toEqual({
+      kind: 'schema',
+      typename: 'org.dxos.type.document',
     });
   });
 
@@ -305,5 +310,76 @@ describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
       .map((o) => o.key)
       .sort();
     expect(keys).toEqual(['com.example.fixture.close', 'com.example.fixture.open']);
+  });
+
+  // ----- Schema extraction (step 6) -----
+
+  test('listSchemas detects every ECHO-registered fixture schema', ({ expect }) => {
+    const schemas = introspector.listSchemas();
+    const typenames = schemas.map((s) => s.typename).sort();
+    expect(typenames).toContain('com.example.type.Task');
+    expect(typenames).toContain('com.example.type.Note');
+  });
+
+  test('listSchemas filters by package', ({ expect }) => {
+    const taskOnly = introspector.listSchemas('@fixture/pkg-a');
+    expect(taskOnly.map((s) => s.typename)).toEqual(['com.example.type.Task']);
+
+    const noteOnly = introspector.listSchemas('@fixture/pkg-plugin');
+    expect(noteOnly.map((s) => s.typename)).toEqual(['com.example.type.Note']);
+
+    expect(introspector.listSchemas('@fixture/missing')).toEqual([]);
+  });
+
+  test('listSchemas summary captures version, package, name, and field count', ({ expect }) => {
+    const all = introspector.listSchemas();
+    const note = all.find((s) => s.typename === 'com.example.type.Note');
+    expect(note).toBeDefined();
+    expect(note!.version).toBe('0.2.0');
+    expect(note!.package).toBe('@fixture/pkg-plugin');
+    expect(note!.name).toBe('Note');
+    expect(note!.fieldCount).toBe(3);
+    expect(note!.ref).toBe('schema:com.example.type.Note');
+  });
+
+  test('getSchema returns full field detail for Task', ({ expect }) => {
+    const detail = introspector.getSchema('com.example.type.Task');
+    expect(detail).not.toBeNull();
+    expect(detail!.typename).toBe('com.example.type.Task');
+    expect(detail!.version).toBe('0.1.0');
+    expect(detail!.name).toBe('Task');
+    expect(detail!.package).toBe('@fixture/pkg-a');
+    const fieldNames = detail!.fields.map((f) => f.name).sort();
+    expect(fieldNames).toEqual(['description', 'done', 'title']);
+
+    const description = detail!.fields.find((f) => f.name === 'description');
+    expect(description!.optional).toBe(true);
+    expect(description!.type).toContain('Schema.optional');
+
+    const done = detail!.fields.find((f) => f.name === 'done');
+    expect(done!.optional).toBe(false);
+    expect(done!.type).toContain('Schema.Boolean');
+  });
+
+  test('getSchema returns null for unknown typename', ({ expect }) => {
+    expect(introspector.getSchema('com.example.type.missing')).toBeNull();
+  });
+
+  test('findSchemaUsage finds cross-package references via typename string', ({ expect }) => {
+    // Note's `relatedTo` field carries the Task typename in a JSDoc/annotation
+    // string. The textual scan should pick that up while excluding Task's
+    // *defining* line (the Type.object call).
+    const usages = introspector.findSchemaUsage('com.example.type.Task');
+    expect(usages.length).toBeGreaterThan(0);
+
+    // At least one usage from pkg-plugin (the cross-package reference).
+    expect(usages.some((u) => u.package === '@fixture/pkg-plugin')).toBe(true);
+
+    // The defining `Type.object` line in pkg-a/src/Task.ts must be filtered out.
+    expect(usages.every((u) => !u.snippet.includes('Type.object'))).toBe(true);
+  });
+
+  test('findSchemaUsage returns [] for unknown typename', ({ expect }) => {
+    expect(introspector.findSchemaUsage('com.example.type.missing')).toEqual([]);
   });
 });

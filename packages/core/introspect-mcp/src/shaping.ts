@@ -15,6 +15,9 @@ import type {
   PackageDetail,
   Plugin,
   PluginDetail,
+  SchemaDetail,
+  SchemaSummary,
+  SchemaUsage,
   Surface,
   SymbolDetail,
   SymbolMatch,
@@ -188,6 +191,57 @@ export const shapeListOperations = (all: Operation[]): ToolResult => {
     return {
       data,
       truncated: `${all.length - LIST_LIMIT} more results — filter by plugin id.`,
+    };
+  }
+  return { data };
+};
+
+// ---------------------------------------------------------------------------
+// Schema shaping.
+// ---------------------------------------------------------------------------
+
+export const shapeListSchemas = (all: SchemaSummary[]): ToolResult => {
+  const data = all.slice(0, LIST_LIMIT).map((s) => ({
+    ref: s.ref,
+    typename: s.typename,
+    version: s.version,
+    name: s.name,
+    package: s.package,
+    fieldCount: s.fieldCount,
+  }));
+  if (all.length > LIST_LIMIT) {
+    return {
+      data,
+      truncated: `${all.length - LIST_LIMIT} more results — filter by package or call get_schema directly.`,
+    };
+  }
+  return { data };
+};
+
+export const shapeGetSchema = (detail: SchemaDetail): ToolResult => ({
+  data: {
+    ref: detail.ref,
+    typename: detail.typename,
+    version: detail.version,
+    name: detail.name,
+    package: detail.package,
+    fieldCount: detail.fieldCount,
+    fields: detail.fields,
+    location: detail.location,
+  },
+});
+
+export const shapeFindSchemaUsage = (usages: SchemaUsage[]): ToolResult => {
+  const data = usages.slice(0, LIST_LIMIT).map((u) => ({
+    file: u.file,
+    package: u.package,
+    line: u.line,
+    snippet: u.snippet,
+  }));
+  if (usages.length > LIST_LIMIT) {
+    return {
+      data,
+      truncated: `${usages.length - LIST_LIMIT} more references — narrow by reading specific files.`,
     };
   }
   return { data };

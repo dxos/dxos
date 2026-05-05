@@ -63,14 +63,17 @@ describe('http integration', () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name).sort();
     expect(names).toEqual([
+      'find_schema_usage',
       'find_symbol',
       'get_package',
       'get_plugin',
+      'get_schema',
       'get_symbol',
       'list_capabilities',
       'list_operations',
       'list_packages',
       'list_plugins',
+      'list_schemas',
       'list_surfaces',
       'list_symbols',
     ]);

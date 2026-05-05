@@ -9,14 +9,17 @@ import type { Introspector } from '@dxos/introspect';
 
 import { registerLogger, type ToolLogger } from './logger';
 import {
+  shapeFindSchemaUsage,
   shapeFindSymbol,
   shapeGetPackage,
   shapeGetPlugin,
+  shapeGetSchema,
   shapeGetSymbol,
   shapeListCapabilities,
   shapeListOperations,
   shapeListPackages,
   shapeListPlugins,
+  shapeListSchemas,
   shapeListSurfaces,
   type ToolResult,
 } from './shaping';
@@ -299,6 +302,77 @@ export const createServer = (options: ServerOptions): McpServer => {
       const result = introspector.listOperations(args.pluginId);
       const shaped = shapeListOperations(result);
       log({ tool: 'list_operations', args, count: result.length, truncated: shaped.truncated });
+      return toToolResult(shaped);
+    },
+  );
+
+  /**
+   * list_schemas
+   */
+  server.registerTool(
+    'list_schemas',
+    {
+      title: 'List ECHO-registered schemas',
+      description:
+        'List ECHO-registered types — anything passing through `Type.object({ typename, version })` or ' +
+        '`Type.Obj(...)` in the monorepo. Use this to discover what data types exist before reading their ' +
+        'shape with get_schema. Filter by `package` to scope to a single package.',
+      inputSchema: {
+        package: z.string().optional().describe('Restrict to schemas defined within this exact package name.'),
+      },
+    },
+    async (args) => {
+      const result = introspector.listSchemas(args.package);
+      const shaped = shapeListSchemas(result);
+      log({ tool: 'list_schemas', args, count: result.length, truncated: shaped.truncated });
+      return toToolResult(shaped);
+    },
+  );
+
+  /**
+   * get_schema
+   */
+  server.registerTool(
+    'get_schema',
+    {
+      title: 'Get schema detail by typename',
+      description:
+        'Fetch the full record for one schema by its typename (e.g. "org.dxos.type.document"). ' +
+        'Returns the field list, version, owning package, and source location. Use after list_schemas or ' +
+        'when the user references a typename directly.',
+      inputSchema: {
+        typename: z.string().describe('Schema typename, e.g. "org.dxos.type.document".'),
+      },
+    },
+    async (args) => {
+      const detail = introspector.getSchema(args.typename);
+      log({ tool: 'get_schema', args, found: detail !== null });
+      if (!detail) {
+        return toToolResult({ data: null, note: `No schema with typename ${args.typename}` });
+      }
+      return toToolResult(shapeGetSchema(detail));
+    },
+  );
+
+  /**
+   * find_schema_usage
+   */
+  server.registerTool(
+    'find_schema_usage',
+    {
+      title: 'Find references to a schema typename',
+      description:
+        'List every line in the monorepo that mentions a typename. Useful for understanding where a ' +
+        'data type is consumed, referenced via `Ref.Ref(...)`, or wired into a plugin. Returns file + line + ' +
+        'snippet. The defining `Type.object` line is excluded — see get_schema for that.',
+      inputSchema: {
+        typename: z.string().describe('Schema typename, e.g. "org.dxos.type.document".'),
+      },
+    },
+    async (args) => {
+      const usages = introspector.findSchemaUsage(args.typename);
+      const shaped = shapeFindSchemaUsage(usages);
+      log({ tool: 'find_schema_usage', args, count: usages.length, truncated: shaped.truncated });
       return toToolResult(shaped);
     },
   );

@@ -10,11 +10,15 @@ import {
   computePackageMtimes,
   discoverPackages,
   emptyExtraction,
+  emptySchemaExtraction,
   extractPluginArtifacts,
+  extractSchemas,
   extractSymbols,
+  findUsages as findSchemaUsagesInFiles,
   loadCache,
   type PackageSymbols,
   type PluginExtraction,
+  type SchemaExtraction,
   saveCache,
 } from './indexer';
 import { findSymbol as queryFindSymbol, getSymbol as queryGetSymbol } from './query';
@@ -27,6 +31,9 @@ import {
   type Plugin,
   type PluginDetail,
   type PluginFilter,
+  type SchemaDetail,
+  type SchemaSummary,
+  type SchemaUsage,
   type Surface,
   type SymbolDetail,
   type SymbolInclude,
@@ -76,6 +83,14 @@ export type Introspector = {
   listCapabilities: (pluginId?: string) => Capability[];
   /** Aggregate every operation definition. Filters by owning plugin id when provided. */
   listOperations: (pluginId?: string) => Operation[];
+
+  // Schemas (ECHO-registered types).
+  /** List ECHO-registered schemas. Optional package filter. */
+  listSchemas: (packageName?: string) => SchemaSummary[];
+  /** Fetch a schema's full detail (typename, version, fields, location). */
+  getSchema: (typename: string) => SchemaDetail | null;
+  /** Find every line that mentions a typename across the monorepo's candidate files. */
+  findSchemaUsage: (typename: string) => SchemaUsage[];
 };
 
 export const createIntrospector = (options: IntrospectorOptions): Introspector => {
@@ -86,6 +101,7 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
   let initialized = false;
   const symbolsByPackage = new Map<string, PackageSymbols>();
   const pluginsByPackage = new Map<string, PluginExtraction>();
+  const schemasByPackage = new Map<string, SchemaExtraction>();
   let disposed = false;
 
   const ensureSymbols = (pkg: PackageDetail): PackageSymbols => {
@@ -96,6 +112,25 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     const extracted = extractSymbols(monorepoRoot, pkg);
     symbolsByPackage.set(pkg.name, extracted);
     return extracted;
+  };
+
+  // Schema extraction follows the same lazy/per-package pattern as plugins:
+  // gated by a cheap RegExp pre-filter (`Type.object(` etc.), parsed with its
+  // own ts-morph project, then memoized so listSchemas iterates the cache.
+  const ensureSchemas = (pkg: PackageDetail): SchemaExtraction => {
+    const cached = schemasByPackage.get(pkg.name);
+    if (cached) {
+      return cached;
+    }
+    let result: SchemaExtraction;
+    try {
+      result = extractSchemas({ packageName: pkg.name, packagePath: pkg.path, monorepoRoot });
+    } catch (err) {
+      console.error(`[introspect] schema extraction failed for ${pkg.name}: ${String(err)}`);
+      result = emptySchemaExtraction();
+    }
+    schemasByPackage.set(pkg.name, result);
+    return result;
   };
 
   // Plugin/surface/capability/operation extraction is independent of the symbol
@@ -374,6 +409,56 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     return out;
   };
 
+  const listSchemas = (packageName?: string): SchemaSummary[] => {
+    assertReady();
+    const out: SchemaSummary[] = [];
+    for (const pkg of packages) {
+      if (packageName !== undefined && pkg.name !== packageName) {
+        continue;
+      }
+      const ex = ensureSchemas(pkg);
+      for (const schema of ex.schemas) {
+        out.push(toSchemaSummary(schema));
+      }
+    }
+    out.sort((a, b) => a.typename.localeCompare(b.typename));
+    return out;
+  };
+
+  const getSchema = (typename: string): SchemaDetail | null => {
+    assertReady();
+    // Fast path: locate the package whose schema files mention the typename
+    // literal before parsing the world. Each candidate file is read once
+    // (already done by findSchemaCandidateFiles' pre-filter), so this is
+    // bounded by file count, not parse depth.
+    for (const pkg of packages) {
+      const ex = ensureSchemas(pkg);
+      const match = ex.schemas.find((s) => s.typename === typename);
+      if (match) {
+        return match;
+      }
+    }
+    return null;
+  };
+
+  const findSchemaUsage = (typename: string): SchemaUsage[] => {
+    assertReady();
+    const usages: SchemaUsage[] = [];
+    for (const pkg of packages) {
+      const ex = ensureSchemas(pkg);
+      if (ex.candidateFiles.length === 0) {
+        continue;
+      }
+      const found = findSchemaUsagesInFiles(monorepoRoot, pkg.name, ex.candidateFiles, typename);
+      for (const u of found) {
+        usages.push(u);
+      }
+    }
+    // Deterministic order: by file then line.
+    usages.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
+    return usages;
+  };
+
   const dispose = (): void => {
     if (disposed) {
       return;
@@ -381,6 +466,7 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     disposed = true;
     symbolsByPackage.clear();
     pluginsByPackage.clear();
+    schemasByPackage.clear();
   };
 
   return {
@@ -396,8 +482,20 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     listSurfaces,
     listCapabilities,
     listOperations,
+    listSchemas,
+    getSchema,
+    findSchemaUsage,
   };
 };
+
+const toSchemaSummary = (s: SchemaDetail): SchemaSummary => ({
+  ref: s.ref,
+  typename: s.typename,
+  version: s.version,
+  name: s.name,
+  package: s.package,
+  fieldCount: s.fieldCount,
+});
 
 const toPlugin = (p: PluginDetail): Plugin => ({
   ref: p.ref,

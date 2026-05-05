@@ -43,13 +43,25 @@ export type OperationRefParts = {
   key: string;
 };
 
-export type RefParts = SymbolRefParts | PluginRefParts | SurfaceRefParts | CapabilityRefParts | OperationRefParts;
+export type SchemaRefParts = {
+  kind: 'schema';
+  typename: string;
+};
+
+export type RefParts =
+  | SymbolRefParts
+  | PluginRefParts
+  | SurfaceRefParts
+  | CapabilityRefParts
+  | OperationRefParts
+  | SchemaRefParts;
 
 export const formatSymbolRef = (pkg: string, name: string): string => `${pkg}#${name}`;
 export const formatPluginRef = (id: string): string => `plugin:${id}`;
 export const formatSurfaceRef = (owner: string, id: string): string => `surface:${owner}:${id}`;
 export const formatCapabilityRef = (key: string, owner: string): string => `capability:${key}@${owner}`;
 export const formatOperationRef = (key: string): string => `operation:${key}`;
+export const formatSchemaRef = (typename: string): string => `schema:${typename}`;
 
 export const parseRef = (ref: string): RefParts => {
   if (ref.startsWith('plugin:')) {
@@ -87,6 +99,11 @@ export const parseRef = (ref: string): RefParts => {
     const key = ref.slice('operation:'.length);
     if (key.length > 0) {
       return { kind: 'operation', key };
+    }
+  } else if (ref.startsWith('schema:')) {
+    const typename = ref.slice('schema:'.length);
+    if (typename.length > 0) {
+      return { kind: 'schema', typename };
     }
   } else {
     const hash = ref.lastIndexOf('#');

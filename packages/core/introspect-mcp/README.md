@@ -1,12 +1,18 @@
 # @dxos/introspect-mcp
 
 MCP server that exposes [@dxos/introspect](../introspect) over stdio.
-Lets LLM tools (Claude Code, etc.) query the DXOS monorepo's package and symbol graph.
+Lets LLM tools (Claude Code, etc.) query the DXOS monorepo's package, symbol, and plugin graph.
 
-This package is **phase 1**: five tools wired to package and symbol queries.
-More tools will land as the core indexer grows (plugins, capabilities, schemas, idioms).
+Coverage so far:
+- **Phase 1** — packages and symbols.
+- **Phase 2** — plugins, surfaces, capabilities, operations (extracted statically from `Plugin.define` / `Surface.create` / `Capability.contributes` / `Operation.make`).
+- **Phase 3** — ECHO-registered schemas (`Type.object` / `Type.Obj`).
+
+Idioms, composition queries, and UI components are next (see [SPEC.md](../introspect/SPEC.md#build-order)).
 
 ## Tools
+
+### Packages & symbols
 
 | Tool | Purpose |
 | --- | --- |
@@ -16,7 +22,37 @@ More tools will land as the core indexer grows (plugins, capabilities, schemas, 
 | `find_symbol` | Locate an exported symbol by name (case-insensitive); ranks exact > prefix > substring. |
 | `get_symbol` | Detail for one symbol by ref. Pass `include=["source"]` to expand the body. |
 
+### Plugin ecosystem
+
+| Tool | Purpose |
+| --- | --- |
+| `list_plugins` | List detected plugins (any package with a `Plugin.define(meta)` call + `meta.ts`). |
+| `get_plugin` | Full record for one plugin by id: meta, modules wired via `.pipe(...)`, and the surfaces / capabilities / operations it contributes. |
+| `list_surfaces` | Aggregate every `Surface.create({ id, role, ... })` contribution. Filter by `pluginId`. |
+| `list_capabilities` | Aggregate every `Capability.contributes(<key>, ...)` call. Filter by `pluginId`. |
+| `list_operations` | Aggregate every `Operation.make({ meta: { key, name, description } })` definition. Filter by `pluginId`. |
+
+### Schemas (ECHO-registered types)
+
+| Tool | Purpose |
+| --- | --- |
+| `list_schemas` | List every `Schema.Struct(...).pipe(Type.object({ typename, version }))` registration. Filter by `package`. |
+| `get_schema` | Detail for one schema by typename: full field list, version, owning package, source location. |
+| `find_schema_usage` | Every line in the monorepo that mentions a typename — references, JSDoc, plugin wiring. The defining `Type.object` line is excluded. |
+
 Tool descriptions are written for LLM trigger accuracy — they describe *when* to use a tool, not just what it does.
+
+## Try it (browser UI)
+
+Quickest hands-on path — launches the official [MCP Inspector](https://github.com/modelcontextprotocol/inspector) against this server, with all paths pre-baked:
+
+```bash
+moon run introspect-mcp:inspect
+```
+
+The terminal prints a URL containing `?MCP_PROXY_AUTH_TOKEN=...`. Open *that exact URL* in your browser, click **Connect** → **Tools** → **List Tools** → pick a tool → **Run Tool**.
+
+See [Test it from a browser (MCP Inspector)](#test-it-from-a-browser-mcp-inspector) below for troubleshooting.
 
 ## Running it
 

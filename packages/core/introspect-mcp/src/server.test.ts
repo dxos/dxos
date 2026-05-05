@@ -65,14 +65,17 @@ describe('introspect-mcp server', () => {
     const { tools } = await env.client.listTools();
     const names = tools.map((t) => t.name).sort();
     expect(names).toEqual([
+      'find_schema_usage',
       'find_symbol',
       'get_package',
       'get_plugin',
+      'get_schema',
       'get_symbol',
       'list_capabilities',
       'list_operations',
       'list_packages',
       'list_plugins',
+      'list_schemas',
       'list_surfaces',
       'list_symbols',
     ]);
@@ -296,5 +299,66 @@ describe('introspect-mcp server', () => {
     expect(open).toBeDefined();
     expect(open!.name).toBe('Open Fixture');
     expect(open!.description).toBe('Opens a fixture document.');
+  });
+
+  // ----- Schema tools (step 6) -----
+
+  test('list_schemas returns every fixture schema', async ({ expect }) => {
+    const result = await env.client.callTool({ name: 'list_schemas', arguments: {} });
+    const payload = parseToolText(result as any) as {
+      data: Array<{ typename: string; ref: string; version?: string; fieldCount: number }>;
+    };
+    const typenames = payload.data.map((s) => s.typename).sort();
+    expect(typenames).toContain('com.example.type.Task');
+    expect(typenames).toContain('com.example.type.Note');
+    const note = payload.data.find((s) => s.typename === 'com.example.type.Note');
+    expect(note!.ref).toBe('schema:com.example.type.Note');
+    expect(note!.fieldCount).toBe(3);
+  });
+
+  test('list_schemas filters by package', async ({ expect }) => {
+    const result = await env.client.callTool({
+      name: 'list_schemas',
+      arguments: { package: '@fixture/pkg-a' },
+    });
+    const payload = parseToolText(result as any) as { data: Array<{ typename: string }> };
+    expect(payload.data.map((s) => s.typename)).toEqual(['com.example.type.Task']);
+  });
+
+  test('get_schema returns full field detail', async ({ expect }) => {
+    const result = await env.client.callTool({
+      name: 'get_schema',
+      arguments: { typename: 'com.example.type.Task' },
+    });
+    const payload = parseToolText(result as any) as {
+      data: { typename: string; fields: Array<{ name: string; optional: boolean; type: string }> };
+    };
+    expect(payload.data.typename).toBe('com.example.type.Task');
+    const description = payload.data.fields.find((f) => f.name === 'description');
+    expect(description!.optional).toBe(true);
+  });
+
+  test('get_schema returns null with note for unknown typename', async ({ expect }) => {
+    const result = await env.client.callTool({
+      name: 'get_schema',
+      arguments: { typename: 'com.example.type.missing' },
+    });
+    const payload = parseToolText(result as any) as { data: null; note: string };
+    expect(payload.data).toBeNull();
+    expect(payload.note).toContain('No schema');
+  });
+
+  test('find_schema_usage finds cross-package references', async ({ expect }) => {
+    const result = await env.client.callTool({
+      name: 'find_schema_usage',
+      arguments: { typename: 'com.example.type.Task' },
+    });
+    const payload = parseToolText(result as any) as {
+      data: Array<{ file: string; package: string; line: number; snippet: string }>;
+    };
+    expect(payload.data.length).toBeGreaterThan(0);
+    expect(payload.data.some((u) => u.package === '@fixture/pkg-plugin')).toBe(true);
+    // Defining `Type.object` line is filtered out.
+    expect(payload.data.every((u) => !u.snippet.includes('Type.object'))).toBe(true);
   });
 });
