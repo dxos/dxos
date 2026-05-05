@@ -5904,6 +5904,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@modelcontextprotocol/sdk':
         specifier: '>=1.26.0'
         version: 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)

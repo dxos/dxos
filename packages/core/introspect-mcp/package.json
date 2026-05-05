@@ -33,6 +33,7 @@
   "dependencies": {
     "@dxos/introspect": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@modelcontextprotocol/sdk": "catalog:",
     "zod": "^4.0.0"
   },
