@@ -5,7 +5,14 @@ tags:
   - ts-test
 tasks:
   build:
+    # cli is a native binary built with bun, not a TypeScript library.
+    # Override the inherited tsdown command with a no-op so the standard
+    # :build flow succeeds without trying to compile the bun-specific entry.
+    command: echo
+    args:
+      - 'cli:build skipped (native binary package)'
     options:
+      mergeArgs: replace
       mergeOutputs: replace
     outputs: []
   compile:
