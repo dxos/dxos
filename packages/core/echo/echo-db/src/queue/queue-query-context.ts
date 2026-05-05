@@ -118,7 +118,9 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
   }
 
   #assertTypenamesResolvable(query: QueryAST.Query): void {
-    if (this.#schemaResolver == null) return;
+    if (this.#schemaResolver == null) {
+      return;
+    }
     assertQueryTypenamesResolvable(query, this.#schemaResolver);
   }
 
@@ -126,7 +128,9 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
     entries: QueryResult.EntityEntry<T>[],
     query: QueryAST.Query | undefined,
   ): QueryResult.EntityEntry<T>[] {
-    if (this.#schemaResolver == null || query == null) return entries;
+    if (this.#schemaResolver == null || query == null) {
+      return entries;
+    }
     return filterEntriesWithResolvableSchema(query, entries, this.#schemaResolver);
   }
 }

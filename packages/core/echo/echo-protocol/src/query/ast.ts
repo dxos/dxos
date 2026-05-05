@@ -566,10 +566,14 @@ export const collectTypenames = (query: Query): string[] => {
       Match.when({ type: 'select' }, ({ filter }) => collectFilterTypenames(filter, typenames)),
       Match.when({ type: 'filter' }, ({ filter }) => collectFilterTypenames(filter, typenames)),
       Match.when({ type: 'relation' }, ({ filter }) => {
-        if (filter) collectFilterTypenames(filter, typenames);
+        if (filter) {
+          collectFilterTypenames(filter, typenames);
+        }
       }),
       Match.when({ type: 'incoming-references' }, ({ typename }) => {
-        if (typename != null) typenames.push(typename);
+        if (typename != null) {
+          typenames.push(typename);
+        }
       }),
       Match.orElse(() => {}),
     );

@@ -25,7 +25,9 @@ const queryTargetsQueue = (query: QueryAST.Query): boolean => {
  */
 export const isSchemaValidationSkipped = (query: QueryAST.Query): boolean => {
   const options = QueryAST.getEffectiveOptions(query);
-  if (options?.skipSchemaValidation === true) return true;
+  if (options?.skipSchemaValidation === true) {
+    return true;
+  }
   return queryTargetsQueue(query);
 };
 
@@ -63,9 +65,13 @@ export const assertQueryTypenamesResolvable = (query: QueryAST.Query, resolver: 
 };
 
 const hasResolvableSchema = (entity: Entity.Unknown | null | undefined, resolver: Ref.Resolver): boolean => {
-  if (entity == null) return false;
+  if (entity == null) {
+    return false;
+  }
   const typeDxn = Entity.getTypeDXN(entity);
-  if (typeDxn == null) return true;
+  if (typeDxn == null) {
+    return true;
+  }
   return canResolveSchema(typeDxn, resolver);
 };
 
@@ -97,7 +103,9 @@ export const filterEntriesWithResolvableSchema = <T extends Entity.Unknown, E ex
     return entries as E[];
   }
   return entries.filter((entry) => {
-    if (entry.result == null) return true;
+    if (entry.result == null) {
+      return true;
+    }
     return hasResolvableSchema(entry.result, resolver);
   });
 };

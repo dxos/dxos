@@ -117,7 +117,9 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
       }
       case DXN.kind.TYPE: {
         const components = dxn.asTypeDXN();
-        if (!components) return undefined;
+        if (!components) {
+          return undefined;
+        }
         return this.query({ typename: components.type, version: components.version }).runSync()[0];
       }
       default:

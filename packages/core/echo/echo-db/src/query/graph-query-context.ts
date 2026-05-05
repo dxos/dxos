@@ -150,7 +150,9 @@ export class GraphQueryContext implements QueryContext {
   }
 
   private _assertTypenamesResolvable(query: QueryAST.Query): void {
-    if (this._params.schemaResolver == null) return;
+    if (this._params.schemaResolver == null) {
+      return;
+    }
     assertQueryTypenamesResolvable(query, this._params.schemaResolver);
   }
 
@@ -158,7 +160,9 @@ export class GraphQueryContext implements QueryContext {
     entries: QueryResult.EntityEntry[],
     query: QueryAST.Query | undefined = this._query,
   ): QueryResult.EntityEntry[] {
-    if (this._params.schemaResolver == null || query == null) return entries;
+    if (this._params.schemaResolver == null || query == null) {
+      return entries;
+    }
     return filterEntriesWithResolvableSchema(query, entries, this._params.schemaResolver);
   }
 
