@@ -15,7 +15,7 @@ import { dirname, isAbsolute, resolve } from 'node:path';
 
 import { createIntrospector } from '@dxos/introspect';
 
-import { fileLogger } from './logger';
+import { fileLogger } from '../tools';
 import { createServer } from './server';
 
 type Args = {
@@ -118,8 +118,28 @@ const printUsage = (): void => {
 
 export const main = async (argv: string[] = process.argv.slice(2)): Promise<void> => {
   const args = parseArgs(argv);
+
+  // Kick off indexing in the background. We deliberately DON'T await
+  // `introspector.ready` here — on a cold cache that's ~80s of ts-morph
+  // parsing, longer than most MCP clients (Inspector, Claude Code, Composer)
+  // will wait for `initialize` / `tools/list`. Each tool handler awaits
+  // `introspector.ready` itself before doing work, so:
+  //
+  //   - `initialize`     responds instantly (MCP handshake — no introspector calls)
+  //   - `tools/list`     responds instantly (registered statically in createServer)
+  //   - `tools/call`     waits for indexing, then runs
+  //
+  // Result: clients connect immediately and the first real query pays the
+  // one-time cold-start cost. Subsequent calls hit the cache and are fast.
   const introspector = createIntrospector({ rootPath: args.root });
-  await introspector.ready;
+  // Surface fatal indexing errors to stderr and exit. A live but
+  // permanently-unusable process is worse than a clean failure: every tool
+  // call would block forever on `await introspector.ready` once the rejected
+  // promise is awaited, leaving the MCP client hung with no signal.
+  introspector.ready.catch((err) => {
+    console.error('[introspect-mcp] indexer failed:', err);
+    process.exit(1);
+  });
 
   const server = createServer({
     introspector,

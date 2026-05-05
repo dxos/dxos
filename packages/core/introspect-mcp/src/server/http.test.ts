@@ -15,8 +15,10 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const CLI_PATH = join(__dirname, 'cli.ts');
-const FIXTURE_ROOT = join(__dirname, '..', '..', 'introspect', 'src', '__fixtures__');
+// cli.ts lives at src/cli.ts (kept at the package's public entry path so
+// .mcp.json / moon tasks / scripts can keep referencing it unchanged).
+const CLI_PATH = join(__dirname, '..', 'cli.ts');
+const FIXTURE_ROOT = join(__dirname, '..', '..', '..', 'introspect', 'src', '__fixtures__');
 
 // Pick a high port that's unlikely to collide with a running dev tool.
 const PORT = 39476;
@@ -59,10 +61,21 @@ describe('http integration', () => {
     serverProcess?.kill('SIGTERM');
   });
 
-  test('subprocess starts in HTTP mode and lists the five tools', async ({ expect }) => {
+  test('subprocess starts in HTTP mode and lists every registered tool', async ({ expect }) => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name).sort();
-    expect(names).toEqual(['find_symbol', 'get_package', 'get_symbol', 'list_packages', 'list_symbols']);
+    expect(names).toEqual([
+      'find_symbol',
+      'get_package',
+      'get_symbol',
+      'list_capabilities',
+      'list_intents',
+      'list_packages',
+      'list_plugins',
+      'list_schemas',
+      'list_surfaces',
+      'list_symbols',
+    ]);
   });
 
   test('list_packages round-trips JSON-RPC over HTTP', async ({ expect }) => {
