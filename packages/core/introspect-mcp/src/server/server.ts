@@ -6,7 +6,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import type { Introspector } from '@dxos/introspect';
 
-import { createToolDefinitions, registerLogger, type ToolLogger, type ToolResult } from '../tools';
+import { createToolDefinitions, inputSchemaToZod, registerLogger, type ToolLogger, type ToolResult } from '../tools';
 
 export type ServerOptions = {
   introspector: Introspector;
@@ -45,8 +45,9 @@ export const createServer = (options: ServerOptions): McpServer => {
     };
 
   // Tool metadata + handlers live in `tools.ts`. This server is just the
-  // wiring: register each tool from the map, gating handlers behind
-  // `withReady` and wrapping their `ToolResult` in the MCP content envelope.
+  // wiring: register each tool from the map, converting its Effect Schema
+  // input to zod (the MCP SDK's required form), gating handlers behind
+  // `withReady`, and wrapping their `ToolResult` in the MCP content envelope.
   const definitions = createToolDefinitions(introspector, log);
   for (const [name, def] of Object.entries(definitions)) {
     server.registerTool(
@@ -54,7 +55,7 @@ export const createServer = (options: ServerOptions): McpServer => {
       {
         title: def.title,
         description: def.description,
-        inputSchema: def.inputSchema,
+        inputSchema: inputSchemaToZod(def.inputSchema),
       },
       withReady(def.handler),
     );

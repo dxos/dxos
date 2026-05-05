@@ -45,10 +45,14 @@ describe('@dxos/introspect-mcp/tools subpath export', () => {
         'list_symbols',
       ]);
       // Every entry must carry the metadata MCP wants from a tool definition.
+      // `inputSchema` is an Effect `Schema.Struct(...)` (which is callable —
+      // hence `function` typeof) carrying a `.fields` record. The server
+      // converts it to zod via `inputSchemaToZod` at registration time.
       for (const def of Object.values(definitions)) {
         expect(typeof def.title).toBe('string');
         expect(typeof def.description).toBe('string');
-        expect(typeof def.inputSchema).toBe('object');
+        expect(def.inputSchema).toBeDefined();
+        expect(typeof (def.inputSchema as { fields?: unknown }).fields).toBe('object');
         expect(typeof def.handler).toBe('function');
       }
     } finally {

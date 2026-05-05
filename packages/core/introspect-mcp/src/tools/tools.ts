@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-// Tool definitions — the static metadata + the handler body for every MCP
-// tool the introspect-mcp server exposes.
+// Tool definitions — the metadata + handler body for every MCP tool the
+// introspect-mcp server exposes.
 //
 // Centralizing this map gives us:
 //
@@ -13,21 +13,55 @@
 //   - A natural surface to extend without touching server-construction logic
 //     — adding a tool is a single new entry in this map.
 //
+// Input schemas are authored in Effect Schema (see `./schemas.ts`) so that
+// downstream consumers like `react-ui-form` can render forms from the same
+// definitions. The MCP SDK requires zod, so we convert at registration time
+// via `effectFieldsToZod`.
+//
 // Each handler returns a `ToolResult` (data + optional note + optional
 // truncated marker); the server wraps that in the MCP `content` envelope.
 // Handlers DO NOT call `await introspector.ready` themselves — the server
 // applies that gate uniformly via `withReady`, so a future tool can't
 // accidentally skip it.
 
-import { z } from 'zod';
+import * as Schema from 'effect/Schema';
+import type { z } from 'zod';
 
+import { effectFieldsToZod } from '@dxos/effect-zod';
 import type { Introspector } from '@dxos/introspect';
 import { trim } from '@dxos/util';
 
 import type { ToolLogger } from './logger';
 import {
+  FindSchemaUsageInput,
+  FindSymbolInput,
+  GetPackageInput,
+  GetPluginInput,
+  GetSchemaInput,
+  GetSymbolInput,
+  ListCapabilitiesInput,
+  ListOperationsInput,
+  ListPackagesInput,
+  ListPluginsInput,
+  ListSchemasInput,
+  ListSurfacesInput,
+  ListSymbolsInput,
+  type FindSchemaUsageArgs,
+  type FindSymbolArgs,
+  type GetPackageArgs,
+  type GetPluginArgs,
+  type GetSchemaArgs,
+  type GetSymbolArgs,
+  type ListCapabilitiesArgs,
+  type ListOperationsArgs,
+  type ListPackagesArgs,
+  type ListPluginsArgs,
+  type ListSchemasArgs,
+  type ListSurfacesArgs,
+  type ListSymbolsArgs,
+} from './schemas';
+import {
   type ListOptions,
-  MAX_LIST_LIMIT,
   shapeFindSchemaUsage,
   shapeFindSymbol,
   shapeGetPackage,
@@ -43,41 +77,21 @@ import {
   type ToolResult,
 } from './shaping';
 
-/**
- * Pagination + projection inputs shared by every list-style tool. Spread these
- * into the tool's `inputSchema` so every list endpoint accepts the same two
- * knobs without us defining them inline 9 times.
- *
- * The default behavior (no `limit`, no `compact`) matches the old hard-cap-of-30
- * shape, so callers that don't pass these args see no change.
- */
-const listOptionsSchema = {
-  limit: z
-    .number()
-    .int()
-    .positive()
-    .max(MAX_LIST_LIMIT)
-    .optional()
-    .describe(`Maximum number of items to return. Default 30; max ${MAX_LIST_LIMIT}.`),
-  compact: z
-    .boolean()
-    .optional()
-    .describe(
-      'If true, returns only the most-essential identifying fields (ref, id, name) for each item — about 1/4 the response size. Use when discovering what exists before drilling in with a get_* call.',
-    ),
-};
-
 /** Pull the list-options bag out of an args object before forwarding to a shaper. */
 const pickListOptions = (args: { limit?: number; compact?: boolean }): ListOptions => ({
   limit: args.limit,
   compact: args.compact,
 });
 
-/** A single MCP tool — static metadata plus a body that produces a `ToolResult`. */
+/**
+ * A single MCP tool — metadata + handler. The `inputSchema` field is the
+ * Effect `Schema.Struct` that defines the input shape; the server converts
+ * it to zod at registration via `effectFieldsToZod`. Authoring in Effect
+ * Schema gives `react-ui-form` and other downstream consumers a single
+ * source of truth.
+ */
 export type ToolDefinition<TArgs = Record<string, unknown>> = {
-  /**
-   * Human-readable title surfaced by Inspector / Composer.
-   */
+  /** Human-readable title surfaced by Inspector / Composer. */
   title: string;
 
   /**
@@ -88,13 +102,13 @@ export type ToolDefinition<TArgs = Record<string, unknown>> = {
   description: string;
 
   /**
-   * Zod input schema; describes go straight to the MCP client.
+   * Effect Schema struct describing the tool's input. The server converts
+   * to zod for the MCP SDK; downstream consumers (react-ui-form, etc.) can
+   * use this directly.
    */
-  inputSchema: Record<string, z.ZodTypeAny>;
+  inputSchema: Schema.Struct<any>;
 
-  /**
-   * Tool body. Must NOT await `introspector.ready` — the server gates that uniformly.
-   */
+  /** Tool body. Must NOT await `introspector.ready` — the server gates that uniformly. */
   handler: (args: TArgs) => ToolResult | Promise<ToolResult>;
 };
 
@@ -114,16 +128,8 @@ export const createToolDefinitions = (
       Supports filtering by name substring, path prefix (e.g. "packages/plugins"), or workspace-private only.
       Returns lightweight rows; call get_package for dependency and entry-point detail.
     `,
-    inputSchema: {
-      name: z.string().optional().describe('Substring of the package name (case-insensitive).'),
-      pathPrefix: z
-        .string()
-        .optional()
-        .describe('Restrict to packages whose path starts with this segment, e.g. "packages/plugins".'),
-      privateOnly: z.boolean().optional().describe('If true, only include workspace-private packages.'),
-      ...listOptionsSchema,
-    },
-    handler: (args: ListOptions & { name?: string; pathPrefix?: string; privateOnly?: boolean }) => {
+    inputSchema: ListPackagesInput,
+    handler: (args: ListPackagesArgs) => {
       const result = introspector.listPackages({
         name: args.name,
         pathPrefix: args.pathPrefix,
@@ -133,7 +139,7 @@ export const createToolDefinitions = (
       log({ tool: 'list_packages', args, count: result.length, truncated: shaped.truncated });
       return shaped;
     },
-  } satisfies ToolDefinition<ListOptions & { name?: string; pathPrefix?: string; privateOnly?: boolean }>,
+  } satisfies ToolDefinition<ListPackagesArgs>,
 
   get_package: {
     title: 'Get package detail',
@@ -142,10 +148,8 @@ export const createToolDefinitions = (
       Returns workspace and external dependencies, entry points, and metadata.
       Use after list_packages or when the user references a package directly.
     `,
-    inputSchema: {
-      name: z.string().describe('Exact package name, e.g. "@dxos/echo".'),
-    },
-    handler: (args: { name: string }) => {
+    inputSchema: GetPackageInput,
+    handler: (args: GetPackageArgs) => {
       const detail = introspector.getPackage(args.name);
       log({ tool: 'get_package', args, found: detail !== null });
       if (!detail) {
@@ -153,7 +157,7 @@ export const createToolDefinitions = (
       }
       return shapeGetPackage(detail);
     },
-  } satisfies ToolDefinition<{ name: string }>,
+  } satisfies ToolDefinition<GetPackageArgs>,
 
   list_symbols: {
     title: 'List all exported symbols of a package',
@@ -162,21 +166,14 @@ export const createToolDefinitions = (
       Use this when the user wants to know what a specific package offers, or to browse a package after get_package.
       Returns lightweight rows with refs you can pass to get_symbol; capped at 30 — refine with \`kind\` or call get_symbol directly.
     `,
-    inputSchema: {
-      package: z.string().describe('Exact package name, e.g. "@dxos/ai".'),
-      kind: z
-        .enum(['function', 'class', 'interface', 'type', 'enum', 'variable', 'namespace'])
-        .optional()
-        .describe('Optional filter on declaration kind.'),
-      ...listOptionsSchema,
-    },
-    handler: (args: ListOptions & { package: string; kind?: SymbolKind }) => {
+    inputSchema: ListSymbolsInput,
+    handler: (args: ListSymbolsArgs) => {
       const matches = introspector.listSymbols(args.package, args.kind);
       const shaped = shapeFindSymbol(matches, pickListOptions(args));
       log({ tool: 'list_symbols', args, count: matches.length, truncated: shaped.truncated });
       return shaped;
     },
-  } satisfies ToolDefinition<ListOptions & { package: string; kind?: SymbolKind }>,
+  } satisfies ToolDefinition<ListSymbolsArgs>,
 
   find_symbol: {
     title: 'Find an exported symbol by name',
@@ -185,21 +182,14 @@ export const createToolDefinitions = (
       Use this when the user references something by name and you need to locate which package owns it before reading more.
       Returns refs you can pass to get_symbol. Ranking: exact match, then prefix, then substring.
     `,
-    inputSchema: {
-      query: z.string().describe('Symbol name or partial name (case-insensitive).'),
-      kind: z
-        .enum(['function', 'class', 'interface', 'type', 'enum', 'variable', 'namespace'])
-        .optional()
-        .describe('Optional filter on declaration kind.'),
-      ...listOptionsSchema,
-    },
-    handler: (args: ListOptions & { query: string; kind?: SymbolKind }) => {
+    inputSchema: FindSymbolInput,
+    handler: (args: FindSymbolArgs) => {
       const matches = introspector.findSymbol(args.query, args.kind);
       const shaped = shapeFindSymbol(matches, pickListOptions(args));
       log({ tool: 'find_symbol', args, count: matches.length, truncated: shaped.truncated });
       return shaped;
     },
-  } satisfies ToolDefinition<ListOptions & { query: string; kind?: SymbolKind }>,
+  } satisfies ToolDefinition<FindSymbolArgs>,
 
   get_symbol: {
     title: 'Get symbol detail',
@@ -208,22 +198,16 @@ export const createToolDefinitions = (
       Default response is signature + JSDoc summary + source location.
       Pass include=["source"] to expand the full declaration text, include=["jsdoc"] for the full JSDoc body.
     `,
-    inputSchema: {
-      ref: z.string().describe('Symbol ref in the form "<package>#<name>", e.g. "@dxos/echo#Expando".'),
-      include: z
-        .array(z.enum(['source', 'jsdoc']))
-        .optional()
-        .describe('Optional fields to expand; default returns signature + summary only.'),
-    },
-    handler: (args: { ref: string; include?: Array<'source' | 'jsdoc'> }) => {
-      const detail = introspector.getSymbol(args.ref, args.include);
+    inputSchema: GetSymbolInput,
+    handler: (args: GetSymbolArgs) => {
+      const detail = introspector.getSymbol(args.ref, args.include as Array<'source' | 'jsdoc'> | undefined);
       log({ tool: 'get_symbol', args, found: detail !== null });
       if (!detail) {
         return { data: null, note: `No symbol with ref ${args.ref}` };
       }
       return shapeGetSymbol(detail);
     },
-  } satisfies ToolDefinition<{ ref: string; include?: Array<'source' | 'jsdoc'> }>,
+  } satisfies ToolDefinition<GetSymbolArgs>,
 
   list_plugins: {
     title: 'List Composer plugins',
@@ -232,24 +216,14 @@ export const createToolDefinitions = (
       and a meta.ts exporting \`Plugin.Meta\`. Use this to discover what plugins exist before drilling into one.
       Returns lightweight rows; call get_plugin for the full breakdown of modules, surfaces, capabilities, and operations.
     `,
-    inputSchema: {
-      query: z
-        .string()
-        .optional()
-        .describe('Substring of the plugin id, name, or owning package name (case-insensitive).'),
-      pathPrefix: z
-        .string()
-        .optional()
-        .describe('Restrict to plugins whose owning package starts with this path, e.g. "packages/plugins".'),
-      ...listOptionsSchema,
-    },
-    handler: (args: ListOptions & { query?: string; pathPrefix?: string }) => {
+    inputSchema: ListPluginsInput,
+    handler: (args: ListPluginsArgs) => {
       const result = introspector.listPlugins({ query: args.query, pathPrefix: args.pathPrefix });
       const shaped = shapeListPlugins(result, pickListOptions(args));
       log({ tool: 'list_plugins', args, count: result.length, truncated: shaped.truncated });
       return shaped;
     },
-  } satisfies ToolDefinition<ListOptions & { query?: string; pathPrefix?: string }>,
+  } satisfies ToolDefinition<ListPluginsArgs>,
 
   get_plugin: {
     title: 'Get plugin detail',
@@ -258,10 +232,8 @@ export const createToolDefinitions = (
       Returns the plugin meta, the module helpers it composes, and the surfaces, capabilities, and operations
       it contributes. Use after list_plugins or when the user references a plugin by id.
     `,
-    inputSchema: {
-      id: z.string().describe('Plugin id from meta.ts, e.g. "org.dxos.plugin.markdown".'),
-    },
-    handler: (args: { id: string }) => {
+    inputSchema: GetPluginInput,
+    handler: (args: GetPluginArgs) => {
       const detail = introspector.getPlugin(args.id);
       log({ tool: 'get_plugin', args, found: detail !== null });
       if (!detail) {
@@ -269,7 +241,7 @@ export const createToolDefinitions = (
       }
       return shapeGetPlugin(detail);
     },
-  } satisfies ToolDefinition<{ id: string }>,
+  } satisfies ToolDefinition<GetPluginArgs>,
 
   list_surfaces: {
     title: 'List surfaces',
@@ -278,17 +250,14 @@ export const createToolDefinitions = (
       surface ids when wiring a new container, or to check whether a surface name is already taken.
       Filter by \`pluginId\` to scope to a single plugin.
     `,
-    inputSchema: {
-      pluginId: z.string().optional().describe('Restrict to surfaces contributed by this plugin id.'),
-      ...listOptionsSchema,
-    },
-    handler: (args: ListOptions & { pluginId?: string }) => {
+    inputSchema: ListSurfacesInput,
+    handler: (args: ListSurfacesArgs) => {
       const result = introspector.listSurfaces(args.pluginId);
       const shaped = shapeListSurfaces(result, pickListOptions(args));
       log({ tool: 'list_surfaces', args, count: result.length, truncated: shaped.truncated });
       return shaped;
     },
-  } satisfies ToolDefinition<ListOptions & { pluginId?: string }>,
+  } satisfies ToolDefinition<ListSurfacesArgs>,
 
   list_capabilities: {
     title: 'List capability contributions',
@@ -296,17 +265,14 @@ export const createToolDefinitions = (
       List Capability.contributes(<key>, ...) calls across the monorepo. Use this to discover which capability
       keys are produced (or required) by which plugins. Filter by \`pluginId\` to scope to a single plugin.
     `,
-    inputSchema: {
-      pluginId: z.string().optional().describe('Restrict to capabilities contributed by this plugin id.'),
-      ...listOptionsSchema,
-    },
-    handler: (args: ListOptions & { pluginId?: string }) => {
+    inputSchema: ListCapabilitiesInput,
+    handler: (args: ListCapabilitiesArgs) => {
       const result = introspector.listCapabilities(args.pluginId);
       const shaped = shapeListCapabilities(result, pickListOptions(args));
       log({ tool: 'list_capabilities', args, count: result.length, truncated: shaped.truncated });
       return shaped;
     },
-  } satisfies ToolDefinition<ListOptions & { pluginId?: string }>,
+  } satisfies ToolDefinition<ListCapabilitiesArgs>,
 
   list_operations: {
     title: 'List operations',
@@ -315,17 +281,14 @@ export const createToolDefinitions = (
       unit of work dispatched through the OperationInvoker (formerly "intents"). Filter by \`pluginId\` to scope
       to a single plugin.
     `,
-    inputSchema: {
-      pluginId: z.string().optional().describe('Restrict to operations defined within this plugin id.'),
-      ...listOptionsSchema,
-    },
-    handler: (args: ListOptions & { pluginId?: string }) => {
+    inputSchema: ListOperationsInput,
+    handler: (args: ListOperationsArgs) => {
       const result = introspector.listOperations(args.pluginId);
       const shaped = shapeListOperations(result, pickListOptions(args));
       log({ tool: 'list_operations', args, count: result.length, truncated: shaped.truncated });
       return shaped;
     },
-  } satisfies ToolDefinition<ListOptions & { pluginId?: string }>,
+  } satisfies ToolDefinition<ListOperationsArgs>,
 
   list_schemas: {
     title: 'List schemas',
@@ -335,23 +298,14 @@ export const createToolDefinitions = (
       shape with get_schema. Filter by \`pluginId\` (e.g. "org.dxos.plugin.markdown") to scope to a single
       plugin's schemas, or by \`package\` for a single package.
     `,
-    inputSchema: {
-      pluginId: z
-        .string()
-        .optional()
-        .describe(
-          'Restrict to schemas defined in a package that declares this plugin id, e.g. "org.dxos.plugin.markdown".',
-        ),
-      package: z.string().optional().describe('Restrict to schemas defined within this exact package name.'),
-      ...listOptionsSchema,
-    },
-    handler: (args: ListOptions & { pluginId?: string; package?: string }) => {
+    inputSchema: ListSchemasInput,
+    handler: (args: ListSchemasArgs) => {
       const result = introspector.listSchemas({ package: args.package, pluginId: args.pluginId });
       const shaped = shapeListSchemas(result, pickListOptions(args));
       log({ tool: 'list_schemas', args, count: result.length, truncated: shaped.truncated });
       return shaped;
     },
-  } satisfies ToolDefinition<ListOptions & { pluginId?: string; package?: string }>,
+  } satisfies ToolDefinition<ListSchemasArgs>,
 
   get_schema: {
     title: 'Get schema detail by typename',
@@ -360,10 +314,8 @@ export const createToolDefinitions = (
       Returns the field list, version, owning package, and source location. Use after list_schemas or
       when the user references a typename directly.
     `,
-    inputSchema: {
-      typename: z.string().describe('Schema typename, e.g. "org.dxos.type.document".'),
-    },
-    handler: (args: { typename: string }) => {
+    inputSchema: GetSchemaInput,
+    handler: (args: GetSchemaArgs) => {
       const detail = introspector.getSchema(args.typename);
       log({ tool: 'get_schema', args, found: detail !== null });
       if (!detail) {
@@ -371,7 +323,7 @@ export const createToolDefinitions = (
       }
       return shapeGetSchema(detail);
     },
-  } satisfies ToolDefinition<{ typename: string }>,
+  } satisfies ToolDefinition<GetSchemaArgs>,
 
   find_schema_usage: {
     title: 'Find references to a schema typename',
@@ -380,19 +332,20 @@ export const createToolDefinitions = (
       data type is consumed, referenced via \`Ref.Ref(...)\`, or wired into a plugin. Returns file + line +
       snippet. The defining \`Type.object\` line is excluded — see get_schema for that.
     `,
-    inputSchema: {
-      typename: z.string().describe('Schema typename, e.g. "org.dxos.type.document".'),
-      ...listOptionsSchema,
-    },
-    handler: (args: ListOptions & { typename: string }) => {
+    inputSchema: FindSchemaUsageInput,
+    handler: (args: FindSchemaUsageArgs) => {
       const usages = introspector.findSchemaUsage(args.typename);
       const shaped = shapeFindSchemaUsage(usages, pickListOptions(args));
       log({ tool: 'find_schema_usage', args, count: usages.length, truncated: shaped.truncated });
       return shaped;
     },
-  } satisfies ToolDefinition<ListOptions & { typename: string }>,
+  } satisfies ToolDefinition<FindSchemaUsageArgs>,
 });
 
-// Re-exported here so callers don't have to import from `@dxos/introspect`
-// just to type a `kind` arg.
-type SymbolKind = 'function' | 'class' | 'interface' | 'type' | 'enum' | 'variable' | 'namespace';
+/**
+ * Materialize a `ToolDefinition`'s `inputSchema` (Effect Struct) into the
+ * `Record<string, z.ZodTypeAny>` shape the MCP SDK's `registerTool` requires.
+ * Called once per tool at server startup; throws with a clear message if a
+ * tool's input uses a schema pattern the converter doesn't support.
+ */
+export const inputSchemaToZod = (struct: Schema.Struct<any>): Record<string, z.ZodTypeAny> => effectFieldsToZod(struct);
