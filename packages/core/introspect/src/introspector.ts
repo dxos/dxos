@@ -85,12 +85,24 @@ export type Introspector = {
   listOperations: (pluginId?: string) => Operation[];
 
   // Schemas (ECHO-registered types).
-  /** List ECHO-registered schemas. Optional package filter. */
-  listSchemas: (packageName?: string) => SchemaSummary[];
+  /**
+   * List ECHO-registered schemas. Optional filter narrows by owning package
+   * name (`@dxos/plugin-markdown`) and/or owning plugin id
+   * (`org.dxos.plugin.markdown`). Plugin scoping is the more common path —
+   * schemas defined in a plugin's package are reported with that plugin's id.
+   */
+  listSchemas: (filter?: SchemaFilter) => SchemaSummary[];
   /** Fetch a schema's full detail (typename, version, fields, location). */
   getSchema: (typename: string) => SchemaDetail | null;
   /** Find every line that mentions a typename across the monorepo's candidate files. */
   findSchemaUsage: (typename: string) => SchemaUsage[];
+};
+
+export type SchemaFilter = {
+  /** Restrict to schemas defined in this exact package. */
+  package?: string;
+  /** Restrict to schemas defined in a package that declares this plugin id. */
+  pluginId?: string;
 };
 
 export const createIntrospector = (options: IntrospectorOptions): Introspector => {
@@ -409,16 +421,29 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     return out;
   };
 
-  const listSchemas = (packageName?: string): SchemaSummary[] => {
+  /**
+   * Look up the plugin id for a package, if it declares one. Cached per
+   * package via ensurePluginArtifacts. Used to backfill SchemaSummary.pluginId
+   * without coupling the schema extractor to the plugin extractor.
+   */
+  const pluginIdForPackage = (pkg: PackageDetail): string | null => {
+    return ensurePluginArtifacts(pkg).plugin?.id ?? null;
+  };
+
+  const listSchemas = (filter?: SchemaFilter): SchemaSummary[] => {
     assertReady();
     const out: SchemaSummary[] = [];
     for (const pkg of packages) {
-      if (packageName !== undefined && pkg.name !== packageName) {
+      if (filter?.package !== undefined && pkg.name !== filter.package) {
+        continue;
+      }
+      const pluginId = pluginIdForPackage(pkg);
+      if (filter?.pluginId !== undefined && pluginId !== filter.pluginId) {
         continue;
       }
       const ex = ensureSchemas(pkg);
       for (const schema of ex.schemas) {
-        out.push(toSchemaSummary(schema));
+        out.push(toSchemaSummary({ ...schema, pluginId }));
       }
     }
     out.sort((a, b) => a.typename.localeCompare(b.typename));
@@ -427,15 +452,13 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
 
   const getSchema = (typename: string): SchemaDetail | null => {
     assertReady();
-    // Fast path: locate the package whose schema files mention the typename
-    // literal before parsing the world. Each candidate file is read once
-    // (already done by findSchemaCandidateFiles' pre-filter), so this is
-    // bounded by file count, not parse depth.
+    // Iterate packages so we can attach the owning plugin id (if any) at the
+    // same time we find the schema. Each `ensureSchemas` call is memoized.
     for (const pkg of packages) {
       const ex = ensureSchemas(pkg);
       const match = ex.schemas.find((s) => s.typename === typename);
       if (match) {
-        return match;
+        return { ...match, pluginId: pluginIdForPackage(pkg) };
       }
     }
     return null;
@@ -498,6 +521,7 @@ const toSchemaSummary = (s: SchemaDetail): SchemaSummary => ({
   version: s.version,
   name: s.name,
   package: s.package,
+  pluginId: s.pluginId,
   fieldCount: s.fieldCount,
 });
 

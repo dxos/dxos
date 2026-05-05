@@ -328,17 +328,24 @@ export const createServer = (options: ServerOptions): McpServer => {
   server.registerTool(
     'list_schemas',
     {
-      title: 'List ECHO-registered schemas',
+      title: 'List schemas',
       description:
         'List ECHO-registered types — anything passing through `Type.object({ typename, version })` or ' +
         '`Type.Obj(...)` in the monorepo. Use this to discover what data types exist before reading their ' +
-        'shape with get_schema. Filter by `package` to scope to a single package.',
+        'shape with get_schema. Filter by `pluginId` (e.g. "org.dxos.plugin.markdown") to scope to a single ' +
+        "plugin's schemas, or by `package` for a single package.",
       inputSchema: {
+        pluginId: z
+          .string()
+          .optional()
+          .describe(
+            'Restrict to schemas defined in a package that declares this plugin id, e.g. "org.dxos.plugin.markdown".',
+          ),
         package: z.string().optional().describe('Restrict to schemas defined within this exact package name.'),
       },
     },
     withReady(async (args) => {
-      const result = introspector.listSchemas(args.package);
+      const result = introspector.listSchemas({ package: args.package, pluginId: args.pluginId });
       const shaped = shapeListSchemas(result);
       log({ tool: 'list_schemas', args, count: result.length, truncated: shaped.truncated });
       return toToolResult(shaped);

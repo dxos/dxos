@@ -36,7 +36,7 @@ Idioms, composition queries, and UI components are next (see [SPEC.md](../intros
 
 | Tool | Purpose |
 | --- | --- |
-| `list_schemas` | List every ECHO-registered type — `Schema.Struct(...).pipe(Type.object({ typename, version }))` and the lowercase `Type.Obj(...)` variant used inside `@dxos/echo` internals. Filter by `package`. |
+| `list_schemas` | List every ECHO-registered type — `Schema.Struct(...).pipe(Type.object({ typename, version }))` and the lowercase `Type.Obj(...)` variant used inside `@dxos/echo` internals. Filter by `pluginId` (most common — narrows to a single plugin's schemas) or `package`. |
 | `get_schema` | Detail for one schema by typename: full field list, version, owning package, source location. |
 | `find_schema_usage` | Every line in the monorepo that mentions a typename — references, JSDoc, plugin wiring. The defining `Type.object` line is excluded. |
 

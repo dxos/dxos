@@ -325,6 +325,29 @@ describe('introspect-mcp server', () => {
     expect(payload.data.map((s) => s.typename)).toEqual(['com.example.type.Task']);
   });
 
+  test('list_schemas filters by pluginId', async ({ expect }) => {
+    const result = await env.client.callTool({
+      name: 'list_schemas',
+      arguments: { pluginId: 'com.example.plugin.fixture' },
+    });
+    const payload = parseToolText(result as any) as {
+      data: Array<{ typename: string; pluginId: string | null }>;
+    };
+    expect(payload.data.map((s) => s.typename).sort()).toEqual(['com.example.type.Note', 'com.example.type.Tag']);
+    expect(payload.data.every((s) => s.pluginId === 'com.example.plugin.fixture')).toBe(true);
+  });
+
+  test('list_schemas surfaces pluginId in summary', async ({ expect }) => {
+    const result = await env.client.callTool({ name: 'list_schemas', arguments: {} });
+    const payload = parseToolText(result as any) as {
+      data: Array<{ typename: string; pluginId: string | null }>;
+    };
+    const note = payload.data.find((s) => s.typename === 'com.example.type.Note');
+    expect(note!.pluginId).toBe('com.example.plugin.fixture');
+    const task = payload.data.find((s) => s.typename === 'com.example.type.Task');
+    expect(task!.pluginId).toBeNull();
+  });
+
   test('get_schema returns full field detail', async ({ expect }) => {
     const result = await env.client.callTool({
       name: 'get_schema',

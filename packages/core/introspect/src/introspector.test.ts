@@ -322,15 +322,35 @@ describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
   });
 
   test('listSchemas filters by package', ({ expect }) => {
-    const taskOnly = introspector.listSchemas('@fixture/pkg-a');
+    const taskOnly = introspector.listSchemas({ package: '@fixture/pkg-a' });
     expect(taskOnly.map((s) => s.typename)).toEqual(['com.example.type.Task']);
 
     // pkg-plugin defines two schemas: Note (in src/types.ts) and Tag (in
     // src/features/Tag.ts, used to test the recursive scan).
-    const pluginSchemas = introspector.listSchemas('@fixture/pkg-plugin');
+    const pluginSchemas = introspector.listSchemas({ package: '@fixture/pkg-plugin' });
     expect(pluginSchemas.map((s) => s.typename).sort()).toEqual(['com.example.type.Note', 'com.example.type.Tag']);
 
-    expect(introspector.listSchemas('@fixture/missing')).toEqual([]);
+    expect(introspector.listSchemas({ package: '@fixture/missing' })).toEqual([]);
+  });
+
+  test('listSchemas filters by pluginId', ({ expect }) => {
+    // pkg-plugin declares the fixture plugin (`com.example.plugin.fixture`)
+    // and owns two schemas. pkg-a is a plain library — its Task schema has
+    // pluginId=null and won't match a plugin filter.
+    const fixtureSchemas = introspector.listSchemas({ pluginId: 'com.example.plugin.fixture' });
+    expect(fixtureSchemas.map((s) => s.typename).sort()).toEqual(['com.example.type.Note', 'com.example.type.Tag']);
+    expect(fixtureSchemas.every((s) => s.pluginId === 'com.example.plugin.fixture')).toBe(true);
+
+    expect(introspector.listSchemas({ pluginId: 'com.example.plugin.missing' })).toEqual([]);
+  });
+
+  test('listSchemas summary surfaces pluginId for plugin packages, null for libraries', ({ expect }) => {
+    const all = introspector.listSchemas();
+    const note = all.find((s) => s.typename === 'com.example.type.Note');
+    expect(note!.pluginId).toBe('com.example.plugin.fixture');
+    // pkg-a is a plain ECHO-types library — no Plugin.define call, so null.
+    const task = all.find((s) => s.typename === 'com.example.type.Task');
+    expect(task!.pluginId).toBeNull();
   });
 
   test('listSchemas summary captures version, package, name, and field count', ({ expect }) => {

@@ -195,6 +195,12 @@ export type SchemaSummary = {
   name?: string;
   /** Owning package name. */
   package: string;
+  /**
+   * Owning plugin id when the schema's package declares a plugin (i.e. has a
+   * `Plugin.define(meta)` + `meta.ts`). Null when the package is a plain
+   * library that just happens to export schemas.
+   */
+  pluginId: string | null;
   /** Number of fields in the underlying `Schema.Struct(...)`. */
   fieldCount: number;
 };

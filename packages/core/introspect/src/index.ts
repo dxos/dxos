@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export { createIntrospector, type Introspector, type IntrospectorOptions } from './introspector';
+export { createIntrospector, type Introspector, type IntrospectorOptions, type SchemaFilter } from './introspector';
 export {
   formatCapabilityRef,
   formatOperationRef,

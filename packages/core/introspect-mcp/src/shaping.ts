@@ -207,12 +207,13 @@ export const shapeListSchemas = (all: SchemaSummary[]): ToolResult => {
     version: s.version,
     name: s.name,
     package: s.package,
+    pluginId: s.pluginId,
     fieldCount: s.fieldCount,
   }));
   if (all.length > LIST_LIMIT) {
     return {
       data,
-      truncated: `${all.length - LIST_LIMIT} more results — filter by package or call get_schema directly.`,
+      truncated: `${all.length - LIST_LIMIT} more results — filter by pluginId or package, or call get_schema directly.`,
     };
   }
   return { data };
@@ -225,6 +226,7 @@ export const shapeGetSchema = (detail: SchemaDetail): ToolResult => ({
     version: detail.version,
     name: detail.name,
     package: detail.package,
+    pluginId: detail.pluginId,
     fieldCount: detail.fieldCount,
     fields: detail.fields,
     location: detail.location,

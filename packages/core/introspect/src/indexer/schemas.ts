@@ -244,6 +244,9 @@ const readSchemaFromTypeObjectCall = (
       version,
       name: undefined,
       package: packageName,
+      // Backfilled by the introspector if the owning package declares a plugin.
+      // The schema extractor stays decoupled from the plugin extractor here.
+      pluginId: null,
       fieldCount: 0,
       fields: [],
       location,
@@ -266,6 +269,8 @@ const readSchemaFromTypeObjectCall = (
     version,
     name: findEnclosingVariableName(pipeCall) ?? undefined,
     package: packageName,
+    // Backfilled by the introspector if the owning package declares a plugin.
+    pluginId: null,
     fieldCount: fields.length,
     fields,
     location,
