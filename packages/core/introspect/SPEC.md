@@ -51,7 +51,7 @@ Export a single `createIntrospector(options)` factory:
 
 ```ts
 type IntrospectorOptions = {
-  monorepoRoot: string;
+  rootPath: string;
   watch?: boolean; // default true
   curationPath?: string; // default <root>/.dxos-introspect/
 };
@@ -60,37 +60,35 @@ type Introspector = {
   ready: Promise<void>; // resolves when initial index is built
   dispose: () => void;
 
-  // Package & symbol
+  // Packages
   listPackages(filter?: PackageFilter): Package[];
   getPackage(name: string): PackageDetail | null;
+
+  // Symbols
   findSymbol(query: string, kind?: SymbolKind): SymbolMatch[];
   getSymbol(ref: SymbolRef, include?: SymbolInclude[]): SymbolDetail | null;
 
-  // Plugin ecosystem
+  // Plugins
   listPlugins(filter?: PluginFilter): Plugin[];
   getPlugin(id: string): PluginDetail | null;
-  listSurfaces(): Surface[];
-  listCapabilities(): Capability[];
-  listIntents(): Intent[];
-
-  // Schemas
-  listSchemas(packageName?: string): SchemaSummary[];
-  getSchema(typename: string): SchemaDetail | null;
-  findSchemaUsage(typename: string): SchemaUsage[];
-
-  // Composition
-  whatWorksWith(ref: PluginRef | SurfaceRef | CapabilityRef): CompositionResult;
-  traceIntent(id: string): IntentTrace;
-  findExamples(pattern: IdiomPattern): Example[];
+  listSurfaces(id?: string): Surface[];
+  listCapabilities(id?: string): Capability[];
+  listIntents(id?: string): Intent[];
+  listSchemas(id?: string): Schema[];
 
   // UI
   listUiComponents(packageName?: string): UiComponent[];
   getComponent(ref: ComponentRef, include?: ComponentInclude[]): ComponentDetail | null;
   findStylingTokens(query: string): StylingToken[];
 
+  // Composition
+  whatWorksWith(ref: PluginRef | SurfaceRef | CapabilityRef): CompositionResult;
+  traceIntent(id: string): IntentTrace;
+
   // Idioms
   listIdioms(): IdiomSummary[];
   getIdiom(name: string): Idiom | null;
+  findExamples(pattern: IdiomPattern): Example[];
 
   // Fallback
   searchCode(query: string, scope?: ScopeFilter): CodeMatch[];
@@ -231,7 +229,7 @@ Read config from `.dxos-introspect/mcp.config.json` if present:
 
 ```json
 {
-  "monorepoRoot": "...",
+  "rootPath": "...",
   "transport": "stdio" | "http",
   "httpPort": 3947,
   "logPath": ".dxos-introspect/logs/"

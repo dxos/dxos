@@ -6,11 +6,11 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { beforeAll, describe, test } from 'vitest';
 
+import { formatSymbolRef, parseRef } from '../refs';
 import { createIntrospector, type Introspector } from './introspector';
-import { formatSymbolRef, parseRef } from './refs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const FIXTURE_ROOT = join(__dirname, '__fixtures__');
+const FIXTURE_ROOT = join(__dirname, '..', '__fixtures__');
 
 describe('refs', () => {
   test('roundtrip', ({ expect }) => {
@@ -34,7 +34,7 @@ describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
   let introspector: Introspector;
 
   beforeAll(async () => {
-    introspector = createIntrospector({ monorepoRoot: FIXTURE_ROOT, cache: false });
+    introspector = createIntrospector({ rootPath: FIXTURE_ROOT, cache: false });
     await introspector.ready;
   });
 

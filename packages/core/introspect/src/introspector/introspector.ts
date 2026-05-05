@@ -6,26 +6,42 @@ import {
   cacheFilePath,
   computePackageMtimes,
   discoverPackages,
+  extractPlugins,
   extractSymbols,
   loadCache,
   type PackageSymbols,
+  type PluginRecord,
   saveCache,
-} from './indexer';
-import { findSymbol as queryFindSymbol, getSymbol as queryGetSymbol } from './query';
+} from '../indexer';
+import { findSymbol as queryFindSymbol, getSymbol as queryGetSymbol } from '../query';
 import {
+  type Capability,
+  type Intent,
   type Package,
   type PackageDetail,
   type PackageFilter,
+  type Plugin,
+  type PluginFilter,
+  type Schema,
+  type Surface,
   type SymbolDetail,
   type SymbolInclude,
   type SymbolKind,
   type SymbolMatch,
-} from './types';
+} from '../types';
 
 export type IntrospectorOptions = {
-  monorepoRoot: string;
-  /** Reserved for step 10 (file watching). Currently a no-op. */
+  /**
+   * The root directory of the monorepo.
+   */
+  rootPath: string;
+
+  /**
+   * Reserved for step 10 (file watching). Currently a no-op.
+   * @default false
+   */
   watch?: boolean;
+
   /**
    * If true (default), populate the symbol cache for every package before
    * `ready` resolves. Pre-warm makes startup take longer (~80s on the real
@@ -33,10 +49,11 @@ export type IntrospectorOptions = {
    * defer extraction to the first call that needs it (lazy mode).
    */
   prewarm?: boolean;
+
   /**
    * If true (default), persist the symbol cache to disk and reuse it across
    * runs when no source files have changed. The cache lives at
-   * `<monorepoRoot>/.dxos-introspect/cache.json`. Pass `false` to disable
+   * `<rootPath>/.dxos-introspect/cache.json`. Pass `false` to disable
    * (e.g. for tests).
    */
   cache?: boolean;
@@ -48,29 +65,79 @@ export type IntrospectorOptions = {
 export type Introspector = {
   ready: Promise<void>;
   dispose: () => void;
+
+  //
+  // Packages
+  //
+
+  /**
+   * List all packages.
+   */
   listPackages: (filter?: PackageFilter) => Package[];
+  /**
+   * Get a package by name.
+   */
   getPackage: (name: string) => PackageDetail | null;
-  /** Enumerate every exported symbol declared by a package. Returns [] if the package is unknown. */
+
+  //
+  // Symbols
+  //
+
+  /**
+   * Enumerate every exported symbol declared by a package. Returns [] if the package is unknown.
+   */
   listSymbols: (packageName: string, kind?: SymbolKind) => SymbolMatch[];
+  /**
+   * Locate an exported symbol by name (case-insensitive); ranks exact > prefix > substring.
+   */
   findSymbol: (query: string, kind?: SymbolKind) => SymbolMatch[];
+  /**
+   * Detail for one symbol by ref. Pass `include=["source"]` to expand the body.
+   */
   getSymbol: (ref: string, include?: SymbolInclude[]) => SymbolDetail | null;
+
+  //
+  // Plugins
+  //
+
+  /**
+   * List all plugins, optionally filtered by id substring.
+   */
+  listPlugins: (filter?: PluginFilter) => Plugin[];
+  /**
+   * List surfaces contributed by a single plugin (when `id` is given), or by every plugin.
+   */
+  listSurfaces: (id?: string) => Surface[];
+  /**
+   * List capabilities contributed by a single plugin (when `id` is given), or by every plugin.
+   */
+  listCapabilities: (id?: string) => Capability[];
+  /**
+   * List intents contributed by a single plugin (when `id` is given), or by every plugin.
+   */
+  listIntents: (id?: string) => Intent[];
+  /**
+   * List ECHO schemas registered by a single plugin (when `id` is given), or by every plugin.
+   */
+  listSchemas: (id?: string) => Schema[];
 };
 
 export const createIntrospector = (options: IntrospectorOptions): Introspector => {
-  const { monorepoRoot, prewarm = true, cache = true } = options;
-  const cachePath = cacheFilePath(monorepoRoot);
+  const { rootPath, prewarm = true, cache = true } = options;
+  const cachePath = cacheFilePath(rootPath);
 
   let packages: PackageDetail[] = [];
+  let pluginRecords: PluginRecord[] = [];
   let initialized = false;
-  const symbolsByPackage = new Map<string, PackageSymbols>();
   let disposed = false;
 
+  const symbolsByPackage = new Map<string, PackageSymbols>();
   const ensureSymbols = (pkg: PackageDetail): PackageSymbols => {
     const cached = symbolsByPackage.get(pkg.name);
     if (cached) {
       return cached;
     }
-    const extracted = extractSymbols(monorepoRoot, pkg);
+    const extracted = extractSymbols(rootPath, pkg);
     symbolsByPackage.set(pkg.name, extracted);
     return extracted;
   };
@@ -112,14 +179,14 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
   };
 
   const ready = (async () => {
-    packages = await discoverPackages(monorepoRoot);
+    packages = await discoverPackages(rootPath);
 
     let liveMtimes: Record<string, ReturnType<typeof computePackageMtimes>[string]> = {};
     let packageNamesByPath: Record<string, string> = {};
     if (cache) {
       packageNamesByPath = Object.fromEntries(packages.map((p) => [p.path, p.name]));
       liveMtimes = computePackageMtimes(
-        monorepoRoot,
+        rootPath,
         packages.map((p) => p.path),
       );
       const loaded = await loadCache(cachePath, liveMtimes, packageNamesByPath);
@@ -155,6 +222,12 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
         console.error(`[introspect] saved symbol cache: ${Object.keys(snapshot).length} packages to ${cachePath}`);
       }
     }
+
+    // Plugin extraction is cheap (only scans `packages/plugins/*/src/meta.ts`
+    // and the plugin's own source) so we always do it eagerly. Caching is
+    // a future enhancement once we measure the cost on the real monorepo.
+    pluginRecords = extractPlugins(rootPath, packages);
+
     initialized = true;
   })();
 
@@ -217,12 +290,50 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     return queryGetSymbol({ packages, loadSymbols: ensureSymbols }, ref, include);
   };
 
+  const matchPlugins = (id: string | undefined): PluginRecord[] => {
+    if (!id) {
+      return pluginRecords;
+    }
+    return pluginRecords.filter((record) => record.plugin.id === id);
+  };
+
+  const listPlugins = (filter?: PluginFilter): Plugin[] => {
+    assertReady();
+    let result = pluginRecords.map((record) => record.plugin);
+    if (filter?.id) {
+      const needle = filter.id.toLowerCase();
+      result = result.filter((p) => p.id.toLowerCase().includes(needle));
+    }
+    return result;
+  };
+
+  const listSurfaces = (id?: string): Surface[] => {
+    assertReady();
+    return matchPlugins(id).flatMap((record) => record.surfaces);
+  };
+
+  const listCapabilities = (id?: string): Capability[] => {
+    assertReady();
+    return matchPlugins(id).flatMap((record) => record.capabilities);
+  };
+
+  const listIntents = (id?: string): Intent[] => {
+    assertReady();
+    return matchPlugins(id).flatMap((record) => record.intents);
+  };
+
+  const listSchemas = (id?: string): Schema[] => {
+    assertReady();
+    return matchPlugins(id).flatMap((record) => record.schemas);
+  };
+
   const dispose = (): void => {
     if (disposed) {
       return;
     }
     disposed = true;
     symbolsByPackage.clear();
+    pluginRecords = [];
   };
 
   return {
@@ -233,13 +344,18 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     listSymbols,
     findSymbol,
     getSymbol,
+    listPlugins,
+    listSurfaces,
+    listCapabilities,
+    listIntents,
+    listSchemas,
   };
 };
 
-const toPackage = (p: PackageDetail): Package => ({
-  name: p.name,
-  version: p.version,
-  private: p.private,
-  path: p.path,
-  description: p.description,
+const toPackage = (pkg: PackageDetail): Package => ({
+  name: pkg.name,
+  version: pkg.version,
+  private: pkg.private,
+  path: pkg.path,
+  description: pkg.description,
 });

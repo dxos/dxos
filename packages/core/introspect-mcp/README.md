@@ -128,13 +128,13 @@ Runs the server attached to your terminal stdio, blocking for input. Send JSON-R
 
 | Command | What it does |
 | --- | --- |
-| `moon run introspect-mcp:test` | Unit + integration tests (in-memory and real-stdio subprocess), ~3s |
-| `moon run introspect-mcp:check` | End-to-end: spawns the server with the exact command from `.mcp.json` and round-trips a tool call. **Run before restarting Claude Code.** |
-| `moon run introspect-mcp:inspect` | Launch the MCP Inspector (browser UI) against this server, with all paths absolutized. Cold cache may take ~80s; subsequent runs <1s. |
-| `moon run introspect-mcp:sanity` | Inspector + proxy auth check — confirms the launcher succeeds and the proxy responds with a valid auth token. |
-| `moon run introspect-mcp:serve` | Raw stdio server, for piping requests in by hand. |
-| `moon run introspect-mcp:serve-http` | HTTP server on `localhost:39476/mcp`. Use this to wire the server into Composer's plugin-assistant or any other HTTP/SSE-only MCP client. |
-| `moon run introspect:index` | Pre-build the on-disk symbol cache (`<root>/node_modules/.cache/dxos-introspect/`). The cache makes server startup near-instant. |
+| `moon run introspect-mcp:test`        | Unit + integration tests (in-memory and real-stdio subprocess), ~3s |
+| `moon run introspect-mcp:check`       | End-to-end: spawns the server with the exact command from `.mcp.json` and round-trips a tool call. **Run before restarting Claude Code.** |
+| `moon run introspect-mcp:inspect`     | Launch the MCP Inspector (browser UI) against this server, with all paths absolutized. Cold cache may take ~80s; subsequent runs <1s. |
+| `moon run introspect-mcp:sanity`      | Inspector + proxy auth check — confirms the launcher succeeds and the proxy responds with a valid auth token. |
+| `moon run introspect-mcp:serve`       | Raw stdio server, for piping requests in by hand. |
+| `moon run introspect-mcp:serve-http`  | HTTP server on `localhost:39476/mcp`. Use this to wire the server into Composer's plugin-assistant or any other HTTP/SSE-only MCP client. |
+| `moon run introspect:index`           | Pre-build the on-disk symbol cache (`<root>/node_modules/.cache/dxos-introspect/`). The cache makes server startup near-instant. |
 
 ## Why `--conditions=source`?
 

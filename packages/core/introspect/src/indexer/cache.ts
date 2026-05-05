@@ -58,19 +58,16 @@ const CACHE_VERSION = 2;
 // cache indexes. Cons: a fresh `pnpm install` wipes it (rebuild ~80s once).
 const DEFAULT_CACHE_PATH = 'node_modules/.cache/dxos-introspect/cache.json';
 
-export const cacheFilePath = (monorepoRoot: string): string => join(monorepoRoot, DEFAULT_CACHE_PATH);
+export const cacheFilePath = (rootPath: string): string => join(rootPath, DEFAULT_CACHE_PATH);
 
 /**
  * Compute the current src/ mtime for every package. Used both to build the
  * cache and to decide which cached entries are still valid.
  */
-export const computePackageMtimes = (
-  monorepoRoot: string,
-  packagePaths: string[],
-): Record<string, CachePackageEntry> => {
+export const computePackageMtimes = (rootPath: string, packagePaths: string[]): Record<string, CachePackageEntry> => {
   const entries: Record<string, CachePackageEntry> = {};
   for (const path of packagePaths) {
-    const srcDir = join(monorepoRoot, path, 'src');
+    const srcDir = join(rootPath, path, 'src');
     let srcMtime = 0;
     if (existsSync(srcDir)) {
       try {
