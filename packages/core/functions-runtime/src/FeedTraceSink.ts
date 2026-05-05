@@ -9,8 +9,8 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 
+import { Trace } from '@dxos/compute';
 import { Database, Feed, Filter, Order, Query } from '@dxos/echo';
-import { Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 export const TRACE_FEED_KIND = 'dxos.org.feed.trace';

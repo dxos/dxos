@@ -6,9 +6,10 @@ import { describe, test } from 'vitest';
 
 import {
   Blueprint,
+  Credential,
+  FunctionNotFoundError,
   Operation,
   OperationHandlerSet,
-  OperationInvoker,
   OperationRegistry,
   Process,
   Routine,
@@ -25,7 +26,6 @@ describe('umbrella re-exports', () => {
   test('top-level re-exports preserve source-package namespace nesting', ({ expect }) => {
     // Operation primitives.
     expect(Operation).toBeDefined();
-    expect(OperationInvoker).toBeDefined();
     expect(OperationHandlerSet).toBeDefined();
     expect(OperationRegistry).toBeDefined();
 
@@ -43,5 +43,9 @@ describe('umbrella re-exports', () => {
     expect(Trace).toBeDefined();
     expect(ServiceResolver).toBeDefined();
     expect(StorageService).toBeDefined();
+    expect(Credential).toBeDefined();
+
+    // Error classes exported top-level.
+    expect(FunctionNotFoundError).toBeDefined();
   });
 });

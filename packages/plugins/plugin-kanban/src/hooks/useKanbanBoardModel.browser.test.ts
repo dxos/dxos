@@ -146,7 +146,7 @@ describe('useKanbanBoardModel', () => {
     expect(orderBefore).toEqual(['__uncategorized__', 'a', 'b']);
 
     act(() => {
-      Obj.change(kanban, (kanban) => {
+      Obj.update(kanban, (kanban) => {
         kanban.arrangement.order = ['b', 'a'];
       });
     });
@@ -187,7 +187,7 @@ describe('useKanbanBoardModel', () => {
     });
 
     act(() => {
-      Obj.change(kanban, (kanban) => {
+      Obj.update(kanban, (kanban) => {
         kanban.arrangement.columns['a'] = {
           ids: [item3.id, item1.id, item2.id],
         };
@@ -225,7 +225,7 @@ describe('useKanbanBoardModel', () => {
     });
 
     act(() => {
-      Obj.change(kanban, (kanban) => {
+      Obj.update(kanban, (kanban) => {
         kanban.arrangement.columns['b'] = { ids: [itemB.id] };
       });
     });

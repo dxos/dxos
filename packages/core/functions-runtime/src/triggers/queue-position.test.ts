@@ -19,7 +19,7 @@ describe('queue-position', () => {
 
     test('returns the position id when the key is present', ({ expect }) => {
       const person = Obj.make(Person.Person, { fullName: 'Alice' });
-      Obj.change(person, (person) => {
+      Obj.update(person, (person) => {
         Obj.getMeta(person).keys.push({ source: FeedProtocol.KEY_QUEUE_POSITION, id: '42' });
       });
       expect(getQueuePosition(person)).toBe('42');
@@ -28,7 +28,7 @@ describe('queue-position', () => {
 
   describe('filterReadyQueueItems', () => {
     const stamp = <T extends Obj.Any>(obj: T, position: string): T => {
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         Obj.getMeta(obj).keys.push({ source: FeedProtocol.KEY_QUEUE_POSITION, id: position });
       });
       return obj;

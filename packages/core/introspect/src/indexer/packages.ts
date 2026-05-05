@@ -39,19 +39,19 @@ type PackageJson = {
  * globbing `packages/**\/package.json` when Moon is not on PATH or the command
  * fails — this keeps the package usable in fixture trees that don't ship Moon.
  */
-export const discoverPackages = async (monorepoRoot: string): Promise<PackageDetail[]> => {
-  const fromMoon = await tryMoon(monorepoRoot);
+export const discoverPackages = async (rootPath: string): Promise<PackageDetail[]> => {
+  const fromMoon = await tryMoon(rootPath);
   if (fromMoon) {
     return fromMoon;
   }
-  return await fromGlob(monorepoRoot);
+  return await fromGlob(rootPath);
 };
 
-const tryMoon = async (monorepoRoot: string): Promise<PackageDetail[] | null> => {
+const tryMoon = async (rootPath: string): Promise<PackageDetail[] | null> => {
   // Moon walks up to find its workspace root, so calling it from a directory
   // that isn't itself a Moon workspace would return the parent's project graph.
   // Gate on `.moon/` existing in the given root to avoid that.
-  if (!existsSync(join(monorepoRoot, '.moon'))) {
+  if (!existsSync(join(rootPath, '.moon'))) {
     return null;
   }
   try {
@@ -59,7 +59,7 @@ const tryMoon = async (monorepoRoot: string): Promise<PackageDetail[] | null> =>
     // a hung moon process can't block `introspector.ready` indefinitely — fall
     // through to glob if it doesn't return promptly.
     const { stdout } = await execAsync('moon query projects', {
-      cwd: monorepoRoot,
+      cwd: rootPath,
       maxBuffer: 32 * 1024 * 1024,
       timeout: 30_000,
     });
@@ -70,35 +70,35 @@ const tryMoon = async (monorepoRoot: string): Promise<PackageDetail[] | null> =>
     if (sources.length === 0) {
       return null;
     }
-    return await loadPackages(monorepoRoot, sources);
+    return await loadPackages(rootPath, sources);
   } catch (err) {
     warn('moon query failed, falling back to glob', err);
     return null;
   }
 };
 
-const fromGlob = async (monorepoRoot: string): Promise<PackageDetail[]> => {
+const fromGlob = async (rootPath: string): Promise<PackageDetail[]> => {
   const matches = await glob('packages/**/package.json', {
-    cwd: monorepoRoot,
+    cwd: rootPath,
     ignore: ['**/node_modules/**', '**/dist/**', '**/build/**'],
     nodir: true,
   });
   const sources = matches.map((m) => normalizePath(m).replace(/\/package\.json$/, ''));
-  return await loadPackages(monorepoRoot, sources);
+  return await loadPackages(rootPath, sources);
 };
 
-const loadPackages = async (monorepoRoot: string, sources: string[]): Promise<PackageDetail[]> => {
+const loadPackages = async (rootPath: string, sources: string[]): Promise<PackageDetail[]> => {
   // Dedupe normalized sources, then read all package.json files concurrently.
   // Sequential await burns wall-clock on large monorepos for no benefit.
   const unique = [...new Set(sources.map(normalizePath))];
-  const settled = await Promise.all(unique.map((src) => readPackageJson(monorepoRoot, src)));
+  const settled = await Promise.all(unique.map((src) => readPackageJson(rootPath, src)));
   const results = settled.filter((pkg): pkg is PackageDetail => pkg !== null);
   results.sort((a, b) => a.name.localeCompare(b.name));
   return results;
 };
 
-const readPackageJson = async (monorepoRoot: string, source: string): Promise<PackageDetail | null> => {
-  const pkgPath = join(monorepoRoot, source, 'package.json');
+const readPackageJson = async (rootPath: string, source: string): Promise<PackageDetail | null> => {
+  const pkgPath = join(rootPath, source, 'package.json');
   if (!existsSync(pkgPath)) {
     return null;
   }

@@ -16,7 +16,7 @@ const handler: Operation.WithHandler<typeof ToggleResolved> = ToggleResolved.pip
     Effect.fnUntraced(function* (input) {
       const thread = input.thread;
 
-      Obj.change(thread, (thread) => {
+      Obj.update(thread, (thread) => {
         if (thread.status === 'active' || thread.status === undefined) {
           thread.status = 'resolved';
         } else if (thread.status === 'resolved') {

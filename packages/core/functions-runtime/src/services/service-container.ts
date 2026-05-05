@@ -7,15 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
+import { Credential, Operation, OperationRegistry, Trace } from '@dxos/compute';
 import { Database, Feed } from '@dxos/echo';
-import {
-  ConfiguredCredentialsService,
-  CredentialsService,
-  FunctionInvocationService,
-  QueueService,
-  Trace,
-} from '@dxos/functions';
-import { Operation, OperationRegistry } from '@dxos/operation';
+import { ConfiguredCredentialsService, FunctionInvocationService, QueueService } from '@dxos/functions';
 import { entries } from '@dxos/util';
 
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';
@@ -27,7 +21,7 @@ import { RemoteFunctionExecutionService } from './remote-function-execution-serv
  */
 const SERVICES = {
   ai: AiService.AiService,
-  credentials: CredentialsService,
+  credentials: Credential.CredentialsService,
   database: Database.Service,
   trace: Trace.TraceService,
   functionInvocationService: FunctionInvocationService,
@@ -101,7 +95,7 @@ export class ServiceContainer {
     const ai =
       this._services.ai != null ? Layer.succeed(AiService.AiService, this._services.ai) : AiService.notAvailable;
     const credentials = Layer.succeed(
-      CredentialsService,
+      Credential.CredentialsService,
       this._services.credentials ?? new ConfiguredCredentialsService(),
     );
     const database =

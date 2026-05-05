@@ -14,23 +14,30 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { AgentService, AiContextBinder, AiContextService, AiSession, AiSessionService } from '@dxos/assistant';
+import { AiContextBinder, AiContextService, AiSession, AiSessionService } from '@dxos/assistant';
 import { McpServer } from '@dxos/assistant-toolkit';
-import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client-protocol';
+import {
+  Blueprint,
+  Credential,
+  Operation,
+  OperationHandlerSet,
+  OperationRegistry,
+  ServiceNotAvailableError,
+} from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Database, DXN, Feed, Filter, Obj } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { acquireReleaseResource, asyncTaskTaggingLayer } from '@dxos/effect';
 import {
-  CredentialsService,
   FunctionInvocationService,
   feedServiceFromQueueServiceLayer,
   QueueService,
-  ServiceNotAvailableError,
+  credentialsLayerFromDatabase,
 } from '@dxos/functions';
+import { AgentService } from '@dxos/functions-runtime';
 import {
   FeedTraceSink,
   FunctionImplementationResolver,
@@ -44,7 +51,6 @@ import {
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { AutomationCapabilities } from '#types';
@@ -255,7 +261,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                       AiService.AiService,
                       OperationRegistry.Service,
                       Blueprint.RegistryService,
-                      CredentialsService,
+                      Credential.CredentialsService,
                     ),
                   );
                 }),
@@ -299,7 +305,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             ),
             Layer.provideMerge(opaqueToolkitProvider),
             Layer.provideMerge(aiServiceLayer),
-            Layer.provideMerge(CredentialsService.layerFromDatabase()),
+            Layer.provideMerge(credentialsLayerFromDatabase()),
             Layer.provideMerge(ClientService.fromClient(client)),
             Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
           )

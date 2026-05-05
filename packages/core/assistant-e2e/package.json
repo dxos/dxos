@@ -1,6 +1,7 @@
 {
   "name": "@dxos/assistant-e2e",
   "version": "0.8.3",
+  "private": true,
   "description": "Assistant e2e tests.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -29,6 +30,7 @@
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/functions-runtime": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/types": "workspace:*",

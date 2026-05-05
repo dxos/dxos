@@ -14,13 +14,13 @@ import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
-import { CredentialsService, type QueueService, Trace } from '@dxos/compute';
-import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
+import { type Credential, Trace, Operation, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
 import { type Database, Feed, type Key } from '@dxos/echo';
+import { type QueueService, credentialsLayerFromDatabase } from '@dxos/functions';
 
 export type AiChatServices =
   | AiService.AiService
-  | CredentialsService
+  | Credential.CredentialsService
   | Database.Service
   | Feed.FeedService
   | Operation.Service
@@ -81,7 +81,7 @@ export const chatLayer = ({
     Layer.provideMerge(OperationRegistry.layer),
     Layer.provideMerge(OperationHandlerSet.provide(functions)),
     Layer.provideMerge(aiServiceLayer),
-    Layer.provideMerge(CredentialsService.layerFromDatabase()),
+    Layer.provideMerge(credentialsLayerFromDatabase()),
     Layer.provideMerge(spaceLayer(spaceId, true)),
     Layer.provideMerge(Trace.writerLayerNoop),
     Layer.provideMerge(Feed.notAvailable),

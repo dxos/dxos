@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.map-solid',
+  id: 'org.dxos.plugin.mapSolid',
   name: 'Maps (Solid)',
   description: trim`
     Map surface for SolidJS.

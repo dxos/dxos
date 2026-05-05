@@ -1,0 +1,303 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import {
+  type ArrayLiteralExpression,
+  type CallExpression,
+  type Identifier,
+  type ObjectLiteralExpression,
+  Project,
+  ScriptTarget,
+  type SourceFile,
+  SyntaxKind,
+} from 'ts-morph';
+
+import type { Capability, Intent, Plugin, PluginId, Schema, SourceLocation, Surface } from '../types';
+
+// stderr-only — stdout is reserved for the MCP JSON-RPC stream.
+const warn = (msg: string, err?: unknown): void => {
+  console.error(err ? `[introspect plugins] ${msg}: ${String(err)}` : `[introspect plugins] ${msg}`);
+};
+
+export type PluginRecord = {
+  plugin: Plugin;
+  surfaces: Surface[];
+  capabilities: Capability[];
+  intents: Intent[];
+  schemas: Schema[];
+};
+
+type PackageLike = {
+  name: string;
+  path: string;
+};
+
+/**
+ * Discover plugins among the monorepo's packages and statically extract their
+ * surfaces, capabilities, intents, and schemas.
+ *
+ * A "plugin" is any package containing a top-level `meta` export whose value
+ * is annotated as `Plugin.Meta` and whose object literal carries a `string`
+ * `id` property. Extraction is best-effort: dynamic / computed contributions
+ * fall through and produce no records rather than throwing.
+ */
+export const extractPlugins = (rootPath: string, packages: readonly PackageLike[]): PluginRecord[] => {
+  const records: PluginRecord[] = [];
+  for (const pkg of packages) {
+    const record = tryExtract(rootPath, pkg);
+    if (record) {
+      records.push(record);
+    }
+  }
+  return records;
+};
+
+const tryExtract = (rootPath: string, pkg: PackageLike): PluginRecord | null => {
+  const metaPath = join(rootPath, pkg.path, 'src', 'meta.ts');
+  if (!existsSync(metaPath)) {
+    return null;
+  }
+
+  const project = new Project({
+    useInMemoryFileSystem: false,
+    skipAddingFilesFromTsConfig: true,
+    skipFileDependencyResolution: true,
+    compilerOptions: { target: ScriptTarget.ESNext, allowJs: false, jsx: 4 /* Preserve */ },
+  });
+
+  let metaSource: SourceFile;
+  try {
+    metaSource = project.addSourceFileAtPath(metaPath);
+  } catch (err) {
+    warn(`failed to read ${metaPath}`, err);
+    return null;
+  }
+
+  const meta = readPluginMeta(metaSource, pkg);
+  if (!meta) {
+    return null;
+  }
+
+  // Walk every .ts/.tsx file under src/ — capabilities and surfaces typically
+  // live in a `capabilities/` directory, schemas in the main plugin file, etc.
+  const srcDir = join(rootPath, pkg.path, 'src');
+  let allFiles: SourceFile[];
+  try {
+    project.addSourceFilesAtPaths([
+      `${srcDir}/**/*.ts`,
+      `${srcDir}/**/*.tsx`,
+      `!${srcDir}/**/*.test.ts`,
+      `!${srcDir}/**/*.test.tsx`,
+      `!${srcDir}/**/*.stories.tsx`,
+    ]);
+    allFiles = project.getSourceFiles();
+  } catch (err) {
+    warn(`failed to load source files for ${pkg.name}`, err);
+    allFiles = [metaSource];
+  }
+
+  const surfaces: Surface[] = [];
+  const capabilities: Capability[] = [];
+  const intents: Intent[] = [];
+  const schemas: Schema[] = [];
+
+  for (const sourceFile of allFiles) {
+    extractFromFile(sourceFile, rootPath, meta.id, { surfaces, capabilities, intents, schemas });
+  }
+
+  return {
+    plugin: meta,
+    surfaces,
+    capabilities,
+    intents,
+    schemas,
+  };
+};
+
+const readPluginMeta = (file: SourceFile, pkg: PackageLike): Plugin | null => {
+  // Match `export const meta: Plugin.Meta = { ... };`
+  const metaDecl = file.getVariableDeclaration('meta');
+  if (!metaDecl) {
+    return null;
+  }
+  const initializer = metaDecl.getInitializerIfKind(SyntaxKind.ObjectLiteralExpression);
+  if (!initializer) {
+    return null;
+  }
+
+  const id = readStringProperty(initializer, 'id');
+  if (!id) {
+    return null;
+  }
+
+  return {
+    id,
+    package: pkg.name,
+    name: readStringProperty(initializer, 'name'),
+    description: readStringProperty(initializer, 'description'),
+    icon: readStringProperty(initializer, 'icon'),
+    iconHue: readStringProperty(initializer, 'iconHue'),
+    metaLocation: locationOf(file, metaDecl.getStart()),
+  };
+};
+
+type Buckets = {
+  surfaces: Surface[];
+  capabilities: Capability[];
+  intents: Intent[];
+  schemas: Schema[];
+};
+
+const SURFACE_CALL = 'Surface.create';
+const CAPABILITY_CONTRIBUTES_CALL = 'Capability.contributes';
+const ADD_SCHEMA_MODULE_CALL = 'addSchemaModule';
+
+const extractFromFile = (file: SourceFile, rootPath: string, pluginId: PluginId, buckets: Buckets): void => {
+  for (const call of file.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+    const callee = call.getExpression().getText();
+
+    if (callee.endsWith(SURFACE_CALL)) {
+      const surface = readSurface(call, pluginId, file);
+      if (surface) {
+        buckets.surfaces.push(surface);
+      }
+      continue;
+    }
+
+    if (callee.endsWith(CAPABILITY_CONTRIBUTES_CALL)) {
+      const args = call.getArguments();
+      const typeArg = args[0];
+      if (!typeArg || typeArg.getKind() !== SyntaxKind.PropertyAccessExpression) {
+        continue;
+      }
+      const type = typeArg.getText();
+      const location = locationOf(file, call.getStart());
+      buckets.capabilities.push({ pluginId, type, location });
+      // Heuristic: contributions named *Intent* / *IntentResolver* count as
+      // intent contributions too. Plugins frequently route intents through a
+      // specifically-named capability slot rather than a dedicated module.
+      if (/intent/i.test(type)) {
+        buckets.intents.push({ pluginId, type, location });
+      }
+      continue;
+    }
+
+    if (callee.endsWith(ADD_SCHEMA_MODULE_CALL)) {
+      readSchemas(call, pluginId, file, buckets.schemas);
+      continue;
+    }
+  }
+};
+
+const readSurface = (call: CallExpression, pluginId: PluginId, file: SourceFile): Surface | null => {
+  const arg = call.getArguments()[0];
+  if (!arg || arg.getKind() !== SyntaxKind.ObjectLiteralExpression) {
+    return null;
+  }
+  const obj = arg as ObjectLiteralExpression;
+  const id = readStringProperty(obj, 'id');
+  if (!id) {
+    return null;
+  }
+  const role = readRoleProperty(obj);
+  return {
+    pluginId,
+    id,
+    role,
+    location: locationOf(file, call.getStart()),
+  };
+};
+
+const readSchemas = (call: CallExpression, pluginId: PluginId, file: SourceFile, into: Schema[]): void => {
+  // `AppPlugin.addSchemaModule({ schema: [Spec.Spec, CodeProject.CodeProject, ...] })`
+  const arg = call.getArguments()[0];
+  if (!arg || arg.getKind() !== SyntaxKind.ObjectLiteralExpression) {
+    return;
+  }
+  const obj = arg as ObjectLiteralExpression;
+  const schemaProp = obj.getProperty('schema');
+  if (!schemaProp) {
+    return;
+  }
+  const initializer = schemaProp.getFirstChildByKind(SyntaxKind.ArrayLiteralExpression);
+  if (!initializer) {
+    return;
+  }
+  const arr = initializer as ArrayLiteralExpression;
+  for (const element of arr.getElements()) {
+    const text = element.getText();
+    into.push({
+      pluginId,
+      name: text,
+      location: locationOf(file, element.getStart()),
+    });
+  }
+};
+
+const readStringProperty = (obj: ObjectLiteralExpression, name: string): string | undefined => {
+  const prop = obj.getProperty(name);
+  if (!prop || prop.getKind() !== SyntaxKind.PropertyAssignment) {
+    return undefined;
+  }
+  const initializer = prop.asKindOrThrow(SyntaxKind.PropertyAssignment).getInitializer();
+  if (!initializer) {
+    return undefined;
+  }
+  if (initializer.getKind() === SyntaxKind.StringLiteral) {
+    return initializer.asKindOrThrow(SyntaxKind.StringLiteral).getLiteralValue();
+  }
+  if (initializer.getKind() === SyntaxKind.NoSubstitutionTemplateLiteral) {
+    return initializer.asKindOrThrow(SyntaxKind.NoSubstitutionTemplateLiteral).getLiteralValue();
+  }
+  return undefined;
+};
+
+const readRoleProperty = (obj: ObjectLiteralExpression): string[] => {
+  const prop = obj.getProperty('role');
+  if (!prop || prop.getKind() !== SyntaxKind.PropertyAssignment) {
+    return [];
+  }
+  const initializer = prop.asKindOrThrow(SyntaxKind.PropertyAssignment).getInitializer();
+  if (!initializer) {
+    return [];
+  }
+  if (initializer.getKind() === SyntaxKind.StringLiteral) {
+    return [initializer.asKindOrThrow(SyntaxKind.StringLiteral).getLiteralValue()];
+  }
+  if (initializer.getKind() === SyntaxKind.ArrayLiteralExpression) {
+    const arr = initializer.asKindOrThrow(SyntaxKind.ArrayLiteralExpression);
+    return arr
+      .getElements()
+      .map((element) =>
+        element.getKind() === SyntaxKind.StringLiteral
+          ? element.asKindOrThrow(SyntaxKind.StringLiteral).getLiteralValue()
+          : undefined,
+      )
+      .filter((value): value is string => typeof value === 'string');
+  }
+  return [];
+};
+
+const locationOf = (file: SourceFile, position: number): SourceLocation => {
+  const { line, column } = file.getLineAndColumnAtPos(position);
+  // Use a path relative to the monorepo root if it's a child, else absolute.
+  const filePath = file.getFilePath();
+  return {
+    file: relativePath(filePath, file),
+    line,
+    column,
+  };
+};
+
+const relativePath = (filePath: string, _file: SourceFile): string => {
+  // Walk up to find the closest `packages/` segment so the location is
+  // monorepo-relative without needing the rootPath threaded through.
+  const idx = filePath.indexOf('/packages/');
+  return idx >= 0 ? filePath.slice(idx + 1) : filePath;
+};
+
+// Suppress unused-import warning while keeping the type available for callers.
+export type { Identifier };

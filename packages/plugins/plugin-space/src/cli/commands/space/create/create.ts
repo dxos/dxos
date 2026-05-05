@@ -22,7 +22,7 @@ export const handler = Effect.fn(function* ({ name }: { name: Option.Option<stri
   yield* Effect.tryPromise(() => space.waitUntilReady());
 
   if (Option.isSome(name)) {
-    Obj.change(space.properties, (obj) => {
+    Obj.update(space.properties, (obj) => {
       obj.name = Option.getOrUndefined(name);
     });
   }

@@ -12,6 +12,8 @@ import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Credential } from '@dxos/compute';
 import { Operation, Trace } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -175,7 +177,7 @@ export default GoogleMailSync.pipe(
 
 const syncLabels = Effect.fn(function* (mailbox: Mailbox.Mailbox, userId: string) {
   const { labels } = yield* GoogleMail.listLabels(userId);
-  Obj.change(mailbox, (mailbox) => {
+  Obj.update(mailbox, (mailbox) => {
     labels.forEach((labelItem) => {
       (mailbox.labels ??= {})[labelItem.id] = labelItem.name;
     });

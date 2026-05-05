@@ -194,7 +194,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     // 2. Selection: record `{ remoteId, name }` for board A. The generic
     // `SetIntegrationTargets` op is covered by its own test; here we just
     // simulate the dialog's effect on `integration.targets`.
-    Obj.change(integration, (integration) => {
+    Obj.update(integration, (integration) => {
       const m = integration as Obj.Mutable<typeof integration>;
       m.targets = [{ remoteId: boardA.id, name: boardA.name }];
     });
@@ -237,7 +237,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
       .pipe(Effect.provide(layer), runAndForwardErrors);
 
     // Select both boards by recording `{ remoteId, name }` entries.
-    Obj.change(integration, (integration) => {
+    Obj.update(integration, (integration) => {
       const m = integration as Obj.Mutable<typeof integration>;
       m.targets = discovered.targets.map((t) => ({ remoteId: t.id, name: t.name }));
     });

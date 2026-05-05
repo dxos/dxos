@@ -9,12 +9,12 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useTypeOptions } from '@dxos/app-toolkit/ui';
+import { Script, Trigger } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
-import { Script, Trigger } from '@dxos/functions';
 import { KEY_QUEUE_CURSOR } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
-import { Operation } from '@dxos/operation';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, type IconButtonProps, Input, Separator, useTranslation } from '@dxos/react-ui';
@@ -80,7 +80,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
 
   const handleSave: TriggerEditorProps['onSave'] = (trigger) => {
     if (selected) {
-      Obj.change(selected, (selected) => {
+      Obj.update(selected, (selected) => {
         Object.assign(selected, trigger);
       });
     } else {
@@ -102,7 +102,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   };
 
   const handleResetCursor = async (trigger: Trigger.Trigger) => {
-    Obj.change(trigger, (trigger) => {
+    Obj.update(trigger, (trigger) => {
       Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
     });
     await space.db.flush({ indexes: true });

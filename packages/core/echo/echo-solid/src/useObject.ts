@@ -160,7 +160,7 @@ export function useObject<T extends Obj.Unknown, K extends keyof T>(
       return;
     }
 
-    Obj.change(obj, (obj: any) => {
+    Obj.update(obj, (obj: any) => {
       if (typeof updateOrValue === 'function') {
         const returnValue = (updateOrValue as (obj: unknown) => unknown)(property !== undefined ? obj[property] : obj);
         if (returnValue !== undefined) {
@@ -182,8 +182,9 @@ export function useObject<T extends Obj.Unknown, K extends keyof T>(
     // For property subscriptions on refs, we subscribe to trigger re-render on load.
     useObjectValue(registry, objOrRef);
     return [useObjectProperty(registry, liveObj, property), callback as ObjectPropUpdateCallback<T[K]>];
+  } else {
+    return [useObjectValue(registry, objOrRef), callback as ObjectUpdateCallback<T>];
   }
-  return [useObjectValue(registry, objOrRef), callback as ObjectUpdateCallback<T>];
 }
 
 /**

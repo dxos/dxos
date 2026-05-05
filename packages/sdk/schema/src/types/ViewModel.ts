@@ -60,9 +60,9 @@ export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivo
     },
   });
 
-  // Create change callback that wraps mutations in Obj.change.
+  // Create change callback that wraps mutations in Obj.update.
   const changeCallback: ProjectionChangeCallback = {
-    projection: (mutate) => Obj.change(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
+    projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
     schema: (mutate) => mutate(jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema>),
   };
 
@@ -92,7 +92,7 @@ export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivo
 
   // Sort fields to match the order in the params.
   if (fields) {
-    Obj.change(view, (view) => {
+    Obj.update(view, (view) => {
       (view.projection.fields as Mutable<View.Projection>['fields']).sort((a, b) => {
         const indexA = fields.indexOf(a.path);
         const indexB = fields.indexOf(b.path);
@@ -104,7 +104,7 @@ export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivo
   if (pivotFieldName) {
     const fieldId = projection.getFieldId(pivotFieldName);
     if (fieldId) {
-      Obj.change(view, (view) => {
+      Obj.update(view, (view) => {
         view.projection.pivotFieldId = fieldId;
       });
     }
@@ -139,9 +139,9 @@ export const makeWithReferences = async ({
     pivotFieldName,
   });
 
-  // Create change callback that wraps mutations in Obj.change.
+  // Create change callback that wraps mutations in Obj.update.
   const changeCallback: ProjectionChangeCallback = {
-    projection: (mutate) => Obj.change(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
+    projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
     schema: (mutate) => mutate(jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema>),
   };
 

@@ -54,6 +54,12 @@
       "path": "../../core/echo/echo-db"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../ui/brand"
     },
     {

@@ -4,10 +4,10 @@
 
 import { describe, test } from 'vitest';
 
+import { Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 
 import { deployFunction, observeInvocations, setup, sync } from './testing';
@@ -88,7 +88,7 @@ describe('CPU limit', { tags: ['functions-e2e'] }, () => {
     }
 
     {
-      Obj.change(trigger, (trigger) => {
+      Obj.update(trigger, (trigger) => {
         trigger.input!.iterations = 100;
       });
       await sync(space);
@@ -136,13 +136,13 @@ describe('CPU limit', { tags: ['functions-e2e'] }, () => {
     await sync(space);
     await observeInvocations(space, 5);
 
-    Obj.change(trigger, (trigger) => {
+    Obj.update(trigger, (trigger) => {
       trigger.input!.iterations = 1_000_000_000;
     });
     await sync(space);
     await observeInvocations(space, 10);
 
-    Obj.change(trigger, (trigger) => {
+    Obj.update(trigger, (trigger) => {
       trigger.input!.iterations = 100;
     });
     await sync(space);

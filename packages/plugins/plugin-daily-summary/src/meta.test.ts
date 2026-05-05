@@ -8,7 +8,7 @@ import { meta } from '#meta';
 
 describe('plugin meta', () => {
   test('has correct id', () => {
-    expect(meta.id).toBe('org.dxos.plugin.daily-summary');
+    expect(meta.id).toBe('org.dxos.plugin.dailySummary');
   });
 
   test('has required fields', () => {

@@ -275,7 +275,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
       invariant(!readonly);
-      Obj.change(view, (view) => {
+      Obj.update(view, (view) => {
         // NOTE(ZaymonFC): Using arrayMove here causes a race condition with the kanban model.
         const fields = [...view.projection.fields];
         const [moved] = fields.splice(fromIndex, 1);

@@ -86,7 +86,7 @@ const meta = {
               yield* Effect.promise(() => space.waitUntilReady());
               const board = space.db.add(createBoard());
 
-              Obj.change(board, (board) => {
+              Obj.update(board, (board) => {
                 // Add some sample items
                 Array.from({ length: 10 }).map(() => {
                   const org = createOrg();

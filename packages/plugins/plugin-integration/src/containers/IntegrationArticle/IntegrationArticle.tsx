@@ -20,17 +20,17 @@ export type IntegrationArticleProps = AppSurface.ObjectArticleProps<Integration.
 
 export const IntegrationArticle = ({ subject }: IntegrationArticleProps) => {
   const { t } = useTranslation(meta.id);
-  useObject(subject);
-  const accessToken = subject.accessToken.target;
-  const provider = useIntegrationProvider(subject.providerId);
+  const [integration] = useObject(subject);
+  const accessToken = integration.accessToken.target;
+  const provider = useIntegrationProvider(integration.providerId);
   const { available: syncTargetsAvailable, loading, openChecklist } = useSyncTargetsChecklist(subject);
   const { available: syncAvailable, syncing, sync } = useSyncIntegration(subject);
 
-  const hasTargets = (subject.targets ?? []).length > 0;
+  const hasTargets = (integration.targets ?? []).length > 0;
   const sourceLine = accessToken
     ? `${accessToken.source}${accessToken.account ? ` · ${accessToken.account}` : ''}`
     : undefined;
-  const headerTitle = subject.name ?? accessToken?.account ?? accessToken?.source ?? '';
+  const headerTitle = integration.name ?? accessToken?.account ?? accessToken?.source ?? '';
 
   return (
     <Settings.Viewport>
@@ -102,7 +102,7 @@ export const IntegrationArticle = ({ subject }: IntegrationArticleProps) => {
               </p>
             </Settings.Panel>
           ) : (
-            subject.targets.map((_target, idx) => (
+            integration.targets.map((_target, idx) => (
               <TargetRow key={idx} integration={subject} targetIndex={idx} optionsSchema={provider?.optionsSchema} />
             ))
           )}
@@ -140,7 +140,7 @@ const TargetRow = ({
 
   const handleValuesChanged = useCallback(
     (values: Record<string, unknown>) => {
-      Obj.change(integration, (integration) => {
+      Obj.update(integration, (integration) => {
         const m = integration as Obj.Mutable<typeof integration>;
         const next = [...m.targets];
         if (!next[targetIndex]) {

@@ -35,6 +35,12 @@ export type ManagerOptions = {
   core?: string[];
   enabled?: string[];
   registry?: Registry.Registry;
+  /**
+   * Hook called when a plugin is removed via {@link PluginManager.remove}. Used by the
+   * host app to clean up persisted state (e.g. evict offline-cached plugin assets).
+   * Failures are logged and swallowed; removal still succeeds even if the hook fails.
+   */
+  onRemove?: (id: string) => Effect.Effect<void, unknown>;
 };
 
 export type ActivationMessage = {
@@ -77,7 +83,7 @@ export interface PluginManager {
    */
   add(id: string): Effect.Effect<Plugin.Plugin, Error>;
   enable(id: string): Effect.Effect<boolean, Error>;
-  remove(id: string): boolean;
+  remove(id: string): Effect.Effect<boolean, Error>;
   disable(id: string): Effect.Effect<boolean, Error>;
   // TODO(wittjosiah): Improve error typing.
   activate(
@@ -119,6 +125,7 @@ class ManagerImpl implements PluginManager {
   private readonly _eventsFiredAtom: Atom.Writable<string[]>;
   private readonly _pendingResetAtom: Atom.Writable<string[]>;
   private readonly _pluginLoader: ManagerOptions['pluginLoader'];
+  private readonly _onRemove: ManagerOptions['onRemove'];
   private readonly _capabilities = new Map<string, Capability.Any[]>();
   private readonly _moduleMemoMap = new Map<Plugin.PluginModule['id'], Deferred.Deferred<Capability.Any[], Error>>();
   private readonly _moduleSemaphores = new Map<Plugin.PluginModule['id'], Effect.Semaphore>();
@@ -134,6 +141,7 @@ class ManagerImpl implements PluginManager {
     core = plugins.map(({ meta }) => meta.id),
     enabled = [],
     registry,
+    onRemove,
   }: ManagerOptions) {
     this.registry = registry ?? Registry.make();
     this.capabilities = CapabilityManager.make({
@@ -141,6 +149,7 @@ class ManagerImpl implements PluginManager {
     });
 
     this._pluginLoader = pluginLoader;
+    this._onRemove = onRemove;
     this._pluginsAtom = Atom.make(plugins).pipe(Atom.keepAlive);
     this._coreAtom = Atom.make(core).pipe(Atom.keepAlive);
     this._enabledAtom = Atom.make(enabled).pipe(Atom.keepAlive);
@@ -270,15 +279,25 @@ class ManagerImpl implements PluginManager {
    * Removes a plugin from the manager.
    * @param id The id of the plugin.
    */
-  remove(id: string): boolean {
-    log('remove plugin', { id });
-    const result = this.disable(id);
-    if (!result) {
-      return false;
-    }
+  remove(id: string): Effect.Effect<boolean, Error> {
+    return Effect.gen(this, function* () {
+      log('remove plugin', { id });
+      const disabled = yield* this.disable(id);
+      if (!disabled) {
+        return false;
+      }
 
-    this._removePlugin(id);
-    return true;
+      this._removePlugin(id);
+      if (this._onRemove) {
+        this._runForkedFiber(
+          this._onRemove(id).pipe(
+            Effect.tapError((error) => Effect.sync(() => log.warn('plugin remove hook failed', { id, error }))),
+            Effect.ignore,
+          ),
+        );
+      }
+      return true;
+    });
   }
 
   /**
@@ -515,6 +534,18 @@ class ManagerImpl implements PluginManager {
     fiber: Fiber.Fiber<unknown, unknown>,
   ): Effect.Effect<void> {
     return Ref.update(ref, (fibers) => fibers.filter((trackedFiber) => trackedFiber !== fiber));
+  }
+
+  /**
+   * Spawns an effect on the default runtime and registers the resulting fiber in
+   * `_inFlightFibers` so {@link shutdown} can interrupt it. Used from sync entry
+   * points like {@link remove} where there is no enclosing Effect to fork from;
+   * inside an Effect chain prefer the existing track/await/untrack pattern.
+   */
+  private _runForkedFiber<E>(effect: Effect.Effect<void, E>): void {
+    const fiber = Effect.runFork(effect);
+    Effect.runSync(this._trackFiber(this._inFlightFibers, fiber));
+    Effect.runFork(Fiber.await(fiber).pipe(Effect.andThen(() => this._untrackFiber(this._inFlightFibers, fiber))));
   }
 
   //

@@ -17,8 +17,18 @@
 import { existsSync } from 'node:fs';
 import { dirname, isAbsolute, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseArgs } from 'node:util';
 
-import { createIntrospector } from '../src/index';
+import { createIntrospector } from '../src';
+
+const USAGE = [
+  'Usage: build-index [options]',
+  '',
+  'Options:',
+  '  --root <path>   Monorepo root (default: discovered from this script via pnpm-workspace.yaml)',
+  '  -v, --verbose   Log per-package progress and per-phase timing',
+  '  -h, --help      Show this help',
+].join('\n');
 
 const findRepoRoot = (start: string): string | null => {
   let cursor = start;
@@ -34,27 +44,67 @@ const findRepoRoot = (start: string): string | null => {
   }
 };
 
-const args = process.argv.slice(2);
-const rootArg = (() => {
-  const idx = args.indexOf('--root');
-  return idx >= 0 ? args[idx + 1] : undefined;
-})();
+let values: { root?: string; verbose?: boolean; help?: boolean };
+try {
+  ({ values } = parseArgs({
+    options: {
+      root: { type: 'string' },
+      verbose: { type: 'boolean', short: 'v', default: false },
+      help: { type: 'boolean', short: 'h', default: false },
+    },
+    strict: true,
+    allowPositionals: false,
+  }));
+} catch (error) {
+  console.error(error instanceof Error ? error.message : String(error));
+  console.error(USAGE);
+  process.exit(1);
+}
+
+if (values.help) {
+  console.error(USAGE);
+  process.exit(0);
+}
+
+const verbose = values.verbose === true;
+const log = (message: string) => console.error(`[build-index] ${message}`);
+const logVerbose = (message: string) => {
+  if (verbose) {
+    log(message);
+  }
+};
 
 const here = dirname(fileURLToPath(import.meta.url));
-const root = rootArg ? (isAbsolute(rootArg) ? rootArg : resolve(process.cwd(), rootArg)) : findRepoRoot(here);
+const root = values.root
+  ? isAbsolute(values.root)
+    ? values.root
+    : resolve(process.cwd(), values.root)
+  : findRepoRoot(here);
 
 if (!root) {
   console.error('Could not find pnpm-workspace.yaml. Pass --root explicitly.');
   process.exit(1);
 }
 
-console.error(`[build-index] root: ${root}`);
+log(`root: ${root}`);
+logVerbose('options: prewarm=true cache=true');
 const start = Date.now();
 
-const intro = createIntrospector({ monorepoRoot: root, prewarm: true, cache: true });
+const intro = createIntrospector({ rootPath: root, prewarm: true, cache: true });
+
+const readyAt = verbose ? Date.now() : 0;
 await intro.ready;
+if (verbose) {
+  logVerbose(`ready in ${((Date.now() - readyAt) / 1000).toFixed(1)}s`);
+}
+
+const packages = intro.listPackages();
+if (verbose) {
+  for (const pkg of packages) {
+    logVerbose(`indexed ${pkg.name}`);
+  }
+}
 
 const elapsed = ((Date.now() - start) / 1000).toFixed(1);
-const packageCount = intro.listPackages().length;
-console.error(`[build-index] done in ${elapsed}s — ${packageCount} packages indexed.`);
+log(`done in ${elapsed}s — ${packages.length} packages indexed.`);
 intro.dispose();

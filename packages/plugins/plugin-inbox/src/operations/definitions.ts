@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
-import { CredentialsService, Operation, QueueService, Trace } from '@dxos/compute';
+import { Credential, Operation, Trace } from '@dxos/compute';
 import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { Integration } from '@dxos/plugin-integration/types';
 import { Actor, Message } from '@dxos/types';
@@ -121,7 +121,7 @@ export const GmailSend = Operation.make({
     id: Schema.String,
     threadId: Schema.String,
   }),
-  services: [CredentialsService],
+  services: [Credential.CredentialsService],
 });
 
 export const GoogleMailSync = Operation.make({
@@ -160,7 +160,7 @@ export const GoogleMailSync = Operation.make({
   output: Schema.Struct({
     newMessages: Schema.Number,
   }),
-  services: [Database.Service, Feed.FeedService, CredentialsService, Trace.TraceService],
+  services: [Database.Service, Feed.FeedService, Credential.CredentialsService, Trace.TraceService],
 });
 
 // TODO(wittjosiah): Factor out notify of failures to invocation option.
@@ -203,7 +203,7 @@ export const GoogleCalendarSync = Operation.make({
   output: Schema.Struct({
     newEvents: Schema.Number,
   }),
-  services: [Database.Service, Feed.FeedService, CredentialsService],
+  services: [Database.Service, Feed.FeedService, Credential.CredentialsService],
 });
 
 // TODO(wittjosiah): Factor out notify of failures to invocation option.
@@ -249,38 +249,6 @@ export const ReadEmail = Operation.make({
   }),
   services: [Database.Service, Feed.FeedService],
 });
-
-export const SummarizeMailbox = Operation.make({
-  meta: {
-    key: `${INBOX_OPERATION}.summarize-mailbox`,
-    name: 'Summarize mailbox',
-    description: 'Write a summary of all of the emails in the mailbox.',
-  },
-  input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
-      description: 'Reference to the mailbox object.',
-    }),
-    skip: Schema.Number.pipe(
-      Schema.annotations({
-        description: 'The number of messages to skip.',
-      }),
-      Schema.optional,
-    ),
-    limit: Schema.Number.pipe(
-      Schema.annotations({
-        description: 'The maximum number of messages to read. Do not provide a value unless directly asked.',
-      }),
-      Schema.optional,
-    ),
-  }),
-  output: Schema.Struct({
-    summary: Schema.String.annotations({
-      description: 'The summary of the mailbox.',
-    }),
-  }),
-  services: [Database.Service, Feed.FeedService, AiService.AiService, QueueService],
-});
-
 export const ClassifyEmail = Operation.make({
   meta: {
     key: `${INBOX_OPERATION}.classify-email`,
