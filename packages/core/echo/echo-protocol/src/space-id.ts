@@ -2,7 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { subtleCrypto } from '@dxos/crypto';
+// NOTE: Use `@dxos/crypto/subtle` rather than `@dxos/crypto` to avoid pulling
+// the keypair / hypercore-crypto path (sodium-javascript -> sha512-wasm) into
+// Worker bundles. workerd disallows `WebAssembly.Module(buffer)` at module
+// load, which sha512-wasm does at the top level.
+import { subtleCrypto } from '@dxos/crypto/subtle';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 

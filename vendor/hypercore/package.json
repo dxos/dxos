@@ -13,6 +13,7 @@
   "exports": {
     "./hypercore": {
       "types": "./src/hypercore.d.ts",
+      "workerd": "./src/hypercore-stub.js",
       "default": "./dist/lib/browser/hypercore.mjs"
     },
     "./hypercore-crypto": {

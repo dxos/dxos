@@ -16,6 +16,19 @@ import { type ConfigKey, type DeepIndex, type ParseKey } from './types';
 type MappingSpec = Record<string, { path: string; type?: string }>;
 const configRootType = schema.getCodecForType('dxos.config.Config');
 
+// `protobufjs.Type.verify` lazily compiles a verifier via `util.codegen` (i.e.
+// `Function(...)`), which Cloudflare `workerd` blocks. Probe once and skip the
+// pre-flight verify on platforms that disallow string-based code generation.
+const _supportsProtobufjsCodegen = (() => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-implied-eval, no-new-func
+    new Function('return true')();
+    return true;
+  } catch {
+    return false;
+  }
+})();
+
 /**
  * Maps the given objects onto a flattened set of (key x values).
  * Expects parsed yaml content of the form:
@@ -105,9 +118,11 @@ export const validateConfig = (config: ConfigProto): ConfigProto => {
     throw new InvalidConfigError({ message: `Invalid config version: ${config.version}` });
   }
 
-  const error = configRootType.protoType.verify(config);
-  if (error) {
-    throw new InvalidConfigError({ message: String(error) });
+  if (_supportsProtobufjsCodegen) {
+    const error = configRootType.protoType.verify(config);
+    if (error) {
+      throw new InvalidConfigError({ message: String(error) });
+    }
   }
 
   return config;

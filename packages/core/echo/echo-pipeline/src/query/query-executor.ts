@@ -226,7 +226,11 @@ declare global {
   }
 }
 
-const TRACE_QUERY_EXECUTION = !!import.meta.env.DX_TRACE_QUERY_EXECUTION;
+// `import.meta.env` is a Vite/ESM-only construct; workerd evaluates `.env`
+// against a non-existent object, throwing `Cannot read properties of undefined`
+// at module load. Guard with optional chaining so the worker bundle can load
+// echo-pipeline's query-executor (e.g. via `@dxos/client-services`).
+const TRACE_QUERY_EXECUTION = !!(import.meta as any)?.env?.DX_TRACE_QUERY_EXECUTION;
 
 const MAX_DEPTH_FOR_DELETION_TRACING = 10;
 const MAX_DEPTH_FOR_CHILD_OF_TRACING = 10;
@@ -829,9 +833,9 @@ export class QueryExecutor extends Resource {
                   try {
                     return isEncodedReference(ref)
                       ? {
-                          ref: DXN.parse(ref['/']),
-                          spaceId: item.spaceId,
-                        }
+                        ref: DXN.parse(ref['/']),
+                        spaceId: item.spaceId,
+                      }
                       : null;
                   } catch {
                     log.warn('invalid reference', { ref: ref['/'] });
