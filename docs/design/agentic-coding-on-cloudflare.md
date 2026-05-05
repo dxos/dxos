@@ -69,19 +69,19 @@ Lives alongside other coding-focused blueprints (likely `@dxos/assistant-coding`
 
 Operations that the agent can invoke as tools. All take a `project_id` from blueprint context; all are HALO-authenticated.
 
-| Operation | Purpose |
-|---|---|
-| `code.scaffold(template, name)` | Provision a sandbox + write initial files from template |
-| `code.list_files(path)` | Directory listing |
-| `code.read_file(path)` | Read file contents |
-| `code.write_file(path, contents)` | Whole-file write (rare; prefer patch) |
-| `code.apply_patch(unified_diff)` | Apply a unified diff to the sandbox FS |
-| `code.search_source(query)` | ripgrep across the project |
-| `code.search_api(query)` | Proxy to introspect-mcp for DXOS/Composer API lookup |
-| `code.compile()` | Run typecheck + bundle; returns diagnostics + bundle hash |
-| `code.test(filter?)` | Run vitest; returns pass/fail + failure output |
-| `code.deploy(target)` | Publish to dispatcher; `target ∈ {preview, release}` |
-| `code.preview_url()` | Resolve the live URL for the latest preview deploy |
+| Operation                         | Purpose                                                   |
+| --------------------------------- | --------------------------------------------------------- |
+| `code.scaffold(template, name)`   | Provision a sandbox + write initial files from template   |
+| `code.list_files(path)`           | Directory listing                                         |
+| `code.read_file(path)`            | Read file contents                                        |
+| `code.write_file(path, contents)` | Whole-file write (rare; prefer patch)                     |
+| `code.apply_patch(unified_diff)`  | Apply a unified diff to the sandbox FS                    |
+| `code.search_source(query)`       | ripgrep across the project                                |
+| `code.search_api(query)`          | Proxy to introspect-mcp for DXOS/Composer API lookup      |
+| `code.compile()`                  | Run typecheck + bundle; returns diagnostics + bundle hash |
+| `code.test(filter?)`              | Run vitest; returns pass/fail + failure output            |
+| `code.deploy(target)`             | Publish to dispatcher; `target ∈ {preview, release}`      |
+| `code.preview_url()`              | Resolve the live URL for the latest preview deploy        |
 
 Compile / test / deploy are long-running and **must stream**. We model them as operations that return a job handle, and provide a streaming subscription so chat surfaces progress live (build logs, test failures) rather than blocking until completion.
 
@@ -102,12 +102,14 @@ Four. Each is described as a focused service spec — small enough that the team
 **Purpose:** Per-project ephemeral filesystem + toolchain (pnpm, tsc, esbuild, vitest).
 
 **Implementation:**
+
 - **Cloudflare Containers** running a thin sidecar that exposes an HTTP API (read/write/list/exec).
 - **One container per active project**, fronted by a **Durable Object** that serializes commands, streams logs, and persists FS to R2 between sessions.
 
 **Why containers, not Workers?** tsc + pnpm + vitest in worker isolates is a fight not worth having. Containers run the standard Node toolchain unmodified and let us reuse the same Dockerfile we use locally. The Cloudflare Sandbox SDK is worth a spike — it may obviate parts of the DO+Container coordinator we'd otherwise hand-roll.
 
 **Lifecycle:**
+
 1. **Cold start** — DO pulls last FS snapshot from R2 → boots container → restores tree.
 2. **Warm** — requests routed to running container.
 3. **Idle 15min** — snapshot to R2, stop container, free quota.
@@ -124,6 +126,7 @@ DELETE /sandbox/:project_id
 ```
 
 **Resource model:**
+
 - Per-user concurrent-sandbox cap (e.g. 3).
 - Per-sandbox CPU + memory cap.
 - Outbound network: deny by default; allow-list npm registry (cached through an R2-backed mirror to keep cold starts cheap).
@@ -185,6 +188,7 @@ plugins/{id}/{version}/manifest.json
 **Purpose:** Serve compiled plugins as live workers.
 
 **Implementation:** **Workers for Platforms** dispatch namespace.
+
 - Each plugin deployment uploads its bundle as a script to the namespace, named `<plugin-id>--<env>`.
 - A dispatcher worker resolves `/p/:plugin_id/*` → `namespace.get(<plugin-id>--prod)`.
 - Per-plugin bindings (KV namespace, R2 bucket scoped to the plugin, queues) are provisioned at deploy time, declared in the plugin manifest.
@@ -193,6 +197,7 @@ plugins/{id}/{version}/manifest.json
 **Why Workers for Platforms:** this is the same primitive Cloudflare uses to host SaaS-customer code. It gives us script isolation, per-tenant outbound limits, and a clean namespace per environment without us writing our own multi-tenant runtime.
 
 **Quotas:**
+
 - CPU time per request, sub-request count, and total request count enforced at the namespace level.
 - Per-plugin request budget surfaced back to the author in plugin-code.
 
@@ -203,6 +208,7 @@ plugins/{id}/{version}/manifest.json
 **Purpose:** Two-way sync between an ECHO source space and a GitHub repo.
 
 **Implementation:**
+
 - **GitHub App** installed on the user's repo grants commit + push.
 - **Worker + Durable Object** per `(plugin, repo)` binding.
 - Webhook receives upstream pushes → applies as a commit to the ECHO source space (using the same diff/patch path the agent uses for `code.apply_patch`).
@@ -233,10 +239,10 @@ This is **optional**: a plugin can live entirely in ECHO. Source Sync gives deve
 
 ```ts
 class SourceFile {
-  path: string;       // "src/plugin.ts"
+  path: string; // "src/plugin.ts"
   content: string;
   encoding: 'utf8' | 'base64';
-  mode: number;       // POSIX file mode
+  mode: number; // POSIX file mode
 }
 
 class SourceTree {
@@ -246,7 +252,7 @@ class SourceTree {
 class PluginProject {
   source: Ref<SourceTree>;
   buildConfig: BuildConfig;
-  registryPluginId?: string;          // set after first deploy
+  registryPluginId?: string; // set after first deploy
   githubBinding?: Ref<GithubBinding>; // set if Source Sync is enabled
 }
 ```
@@ -260,7 +266,7 @@ class PluginProject {
 
 ## End-to-end flow
 
-> User in `plugin-code`: *"Add a panel that lists all unread Slack threads."*
+> User in `plugin-code`: _"Add a panel that lists all unread Slack threads."_
 
 1. `plugin-assistant` invokes `plugin-developer` blueprint with project context (current `PluginProject`, recent file edits).
 2. Agent calls `code.search_api("Slack")` → introspect returns no results.
@@ -283,12 +289,12 @@ class PluginProject {
 
 ## Phasing
 
-| Phase | Scope | Deliverable |
-|---|---|---|
+| Phase | Scope                                                                | Deliverable                                        |
+| ----- | -------------------------------------------------------------------- | -------------------------------------------------- |
 | **1** | Sandbox service + `code.*` operations + `plugin-developer` blueprint | Author-from-chat works; "deploy" is a zip download |
-| **2** | Plugin Registry + Plugin Dispatcher | Live preview URLs; one-click publish |
-| **3** | Source Sync (GitHub App) | Two-way GitHub sync; PR workflow |
-| **4** | Multi-author collab, marketplace, billing | Public plugin distribution |
+| **2** | Plugin Registry + Plugin Dispatcher                                  | Live preview URLs; one-click publish               |
+| **3** | Source Sync (GitHub App)                                             | Two-way GitHub sync; PR workflow                   |
+| **4** | Multi-author collab, marketplace, billing                            | Public plugin distribution                         |
 
 ## Open questions
 
