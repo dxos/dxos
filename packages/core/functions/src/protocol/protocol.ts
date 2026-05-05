@@ -17,13 +17,12 @@ import { refFromEncodedReference } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { Operation } from '@dxos/compute';
+import { Operation, Trace } from '@dxos/compute';
 import { type FunctionProtocol } from '@dxos/protocols';
 
 import { FunctionError, InvalidOperationInputError, InvalidOperationOutputError } from '../errors';
 import { type FunctionServices } from '../sdk';
-import { CredentialsService, FunctionInvocationService, QueueService } from '../services';
-import * as Trace from '../Trace';
+import { configuredCredentialsLayer, credentialsLayerFromDatabase, FunctionInvocationService, QueueService } from '../services';
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
 /**
@@ -164,8 +163,8 @@ class FunctionContext extends Resource {
     const queuesLayer = this.queues ? QueueService.layer(this.queues) : QueueService.notAvailable;
     const feedLayer = this.queues ? createFeedServiceLayer(this.queues) : Feed.notAvailable;
     const credentials = dbLayer
-      ? CredentialsService.layerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
-      : CredentialsService.configuredLayer([]);
+      ? credentialsLayerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
+      : configuredCredentialsLayer([]);
     const functionInvocationService = MockedFunctionInvocationService;
     const operationServiceLayer = MockedOperationServiceLayer;
 

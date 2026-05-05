@@ -9,25 +9,17 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
+import { Credential, Err, Operation, OperationHandlerSet, Trace } from '@dxos/compute';
 import { Database, Feed, Query } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import {
-  CredentialsService,
-  FunctionError,
-  FunctionInvocationService,
-  FunctionNotFoundError,
-  QueueService,
-  Trace,
-} from '@dxos/functions';
-import { type FunctionServices } from '@dxos/functions';
+import { FunctionInvocationService, type FunctionServices, QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
 
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
   LocalFunctionExecutionService,
   {
     invokeFunction<I, O>(functionDef: Operation.Definition<I, O>, input: I): Effect.Effect<O>;
-    resolveFunction(key: string): Effect.Effect<Operation.Definition.Any, FunctionNotFoundError>;
+    resolveFunction(key: string): Effect.Effect<Operation.Definition.Any, Err.FunctionNotFoundError>;
   }
 >() {
   static layerLive = Layer.effect(
@@ -35,7 +27,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
     Effect.gen(function* () {
       const resolver = yield* FunctionImplementationResolver;
       const ai = yield* AiService.AiService;
-      const credentials = yield* CredentialsService;
+      const credentials = yield* Credential.CredentialsService;
       const database = yield* Database.Service;
       const queues = yield* QueueService;
       const feedService = yield* Feed.FeedService;
@@ -49,7 +41,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
               return output as O;
             }).pipe(
               Effect.provideService(AiService.AiService, ai),
-              Effect.provideService(CredentialsService, credentials),
+              Effect.provideService(Credential.CredentialsService, credentials),
               Effect.provideService(Database.Service, database),
               Effect.provideService(QueueService, queues),
               Effect.provideService(Feed.FeedService, feedService),
@@ -88,7 +80,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
               return resolved.right;
             }
 
-            return yield* Effect.fail(new FunctionNotFoundError(key));
+            return yield* Effect.fail(new Err.FunctionNotFoundError(key));
           }).pipe(Effect.provideService(Database.Service, database)),
       };
     }),
@@ -116,7 +108,7 @@ const invokeOperation = (
       const assertInput = operationDef.input.pipe(Schema.asserts);
       (assertInput as any)(input);
     } catch (err) {
-      throw new FunctionError({
+      throw new Err.FunctionError({
         message: 'Invalid function input',
         context: { name: operationDef.meta.name },
         cause: err,
@@ -164,7 +156,7 @@ const invokeOperation = (
     }).pipe(
       Effect.orDie,
       Effect.catchAllDefect((defect) =>
-        Effect.die(new FunctionError({ context: { name: operationDef.meta.name }, cause: defect })),
+        Effect.die(new Err.FunctionError({ context: { name: operationDef.meta.name }, cause: defect })),
       ),
     );
 
@@ -175,7 +167,7 @@ const invokeOperation = (
       const assertOutput = operationDef.output?.pipe(Schema.asserts);
       (assertOutput as any)(data);
     } catch (err) {
-      throw new FunctionError({
+      throw new Err.FunctionError({
         message: 'Invalid function output',
         context: { name: operationDef.meta.name },
         cause: err,
@@ -190,9 +182,9 @@ export class FunctionImplementationResolver extends Context.Tag('@dxos/functions
   {
     resolveFunctionImplementation<I, O>(
       functionDef: Operation.Definition<I, O>,
-    ): Effect.Effect<Operation.WithHandler<Operation.Definition<I, O>>, FunctionNotFoundError>;
+    ): Effect.Effect<Operation.WithHandler<Operation.Definition<I, O>>, Err.FunctionNotFoundError>;
 
-    resolveByKey(key: string): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, FunctionNotFoundError>;
+    resolveByKey(key: string): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, Err.FunctionNotFoundError>;
   }
 >() {
   static layerTest = ({ functions }: { functions: OperationHandlerSet.OperationHandlerSet }) =>
@@ -204,7 +196,7 @@ export class FunctionImplementationResolver extends Context.Tag('@dxos/functions
           resolveFunctionImplementation: <I, O>(functionDef: Operation.Definition<I, O>) => {
             const resolved = handlers.find((f) => f.meta.key === functionDef.meta.key);
             if (!resolved) {
-              return Effect.fail(new FunctionNotFoundError(functionDef.meta.name ?? functionDef.meta.key));
+              return Effect.fail(new Err.FunctionNotFoundError(functionDef.meta.name ?? functionDef.meta.key));
             }
 
             return Effect.succeed(resolved);
@@ -214,7 +206,7 @@ export class FunctionImplementationResolver extends Context.Tag('@dxos/functions
             Effect.gen(function* () {
               const resolved = handlers.find((_) => _.meta.key === key);
               if (!resolved) {
-                return yield* Effect.fail(new FunctionNotFoundError(key));
+                return yield* Effect.fail(new Err.FunctionNotFoundError(key));
               }
               return resolved;
             }),
