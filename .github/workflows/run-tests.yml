@@ -17,6 +17,8 @@ on:
         required: true
       CODECOV_TOKEN:
         required: false
+      DISCORD_TEST_REPORT_WEBHOOK:
+        required: false
 
 permissions:
   contents: read
@@ -114,3 +116,5 @@ jobs:
         with:
           name: 'test-${{ inputs.node-version }}'
           result: ${{ job.status }}
+        env:
+          DISCORD_TEST_REPORT_WEBHOOK: ${{ secrets.DISCORD_TEST_REPORT_WEBHOOK }}

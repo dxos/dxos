@@ -128,6 +128,7 @@ jobs:
     secrets:
       TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      DISCORD_TEST_REPORT_WEBHOOK: ${{ secrets.DISCORD_TEST_REPORT_WEBHOOK }}
 
   e2e:
     # e2e only runs on direct pushes to release branches, never on PRs.
