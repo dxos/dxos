@@ -4,8 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Credential, Trace } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { Credential, Trace, Operation } from '@dxos/compute';
 
 // TODO(dmaretskyi): Extract.
 const TimeRangeSchema = Schema.String.pipe(Schema.pattern(/\d+(s|m|h|d)/)).annotations({

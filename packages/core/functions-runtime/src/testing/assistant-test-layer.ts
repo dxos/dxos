@@ -17,12 +17,12 @@ import { AiContextBinder, AiContextService, AiSession, AiSessionService, Complet
 import {
   Blueprint,
   Credential,
-  Err,
   Operation,
   OperationHandlerSet,
   OperationRegistry,
   Process,
   Routine,
+  ServiceNotAvailableError,
   ServiceResolver,
   Trace,
   Trigger,
@@ -122,7 +122,7 @@ export const AssistantTestLayer = ({
             ServiceResolver.succeed(AiContextService, (context) =>
               Effect.gen(function* () {
                 if (!context.conversation) {
-                  return yield* Effect.fail(new Err.ServiceNotAvailableError(AiContextService.key));
+                  return yield* Effect.fail(new ServiceNotAvailableError(AiContextService.key));
                 }
                 const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
                 const runtime = yield* Effect.runtime<Feed.FeedService>();
@@ -139,7 +139,7 @@ export const AssistantTestLayer = ({
             ServiceResolver.succeed(AiSessionService, (context) =>
               Effect.gen(function* () {
                 if (!context.conversation) {
-                  return yield* Effect.fail(new Err.ServiceNotAvailableError(AiSessionService.key));
+                  return yield* Effect.fail(new ServiceNotAvailableError(AiSessionService.key));
                 }
                 const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
                 const runtime = yield* Effect.runtime<Feed.FeedService>();

@@ -4,8 +4,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Script } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { Script, Operation } from '@dxos/compute';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { InvocationOutcome } from '@dxos/functions-runtime';

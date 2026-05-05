@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import {
   Blueprint,
   Credential,
-  Err,
+  FunctionNotFoundError,
   Operation,
   OperationHandlerSet,
   OperationRegistry,
@@ -44,6 +44,8 @@ describe('umbrella re-exports', () => {
     expect(ServiceResolver).toBeDefined();
     expect(StorageService).toBeDefined();
     expect(Credential).toBeDefined();
-    expect(Err).toBeDefined();
+
+    // Error classes exported top-level.
+    expect(FunctionNotFoundError).toBeDefined();
   });
 });

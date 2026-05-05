@@ -18,8 +18,14 @@ import { AiContextBinder, AiContextService, AiSession, AiSessionService } from '
 import { McpServer } from '@dxos/assistant-toolkit';
 import { ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Blueprint, Credential, Err } from '@dxos/compute';
-import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
+import {
+  Blueprint,
+  Credential,
+  Operation,
+  OperationHandlerSet,
+  OperationRegistry,
+  ServiceNotAvailableError,
+} from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Database, DXN, Feed, Filter, Obj } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
@@ -211,7 +217,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                     ServiceResolver.succeed(AiContextService, (context) =>
                       Effect.gen(function* () {
                         if (!context.conversation) {
-                          return yield* Effect.fail(new Err.ServiceNotAvailableError(AiContextService.key));
+                          return yield* Effect.fail(new ServiceNotAvailableError(AiContextService.key));
                         }
                         const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(
                           Effect.orDie,
@@ -231,7 +237,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                     ServiceResolver.succeed(AiSessionService, (context) =>
                       Effect.gen(function* () {
                         if (!context.conversation) {
-                          return yield* Effect.fail(new Err.ServiceNotAvailableError(AiSessionService.key));
+                          return yield* Effect.fail(new ServiceNotAvailableError(AiSessionService.key));
                         }
                         const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(
                           Effect.orDie,

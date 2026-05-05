@@ -14,8 +14,7 @@ import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
-import { type Credential, Trace } from '@dxos/compute';
-import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
+import { type Credential, Trace, Operation, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
 import { type Database, Feed, type Key } from '@dxos/echo';
 import { type QueueService, credentialsLayerFromDatabase } from '@dxos/functions';
 

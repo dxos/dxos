@@ -9,7 +9,7 @@ import * as Exit from 'effect/Exit';
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as PubSub from 'effect/PubSub';
 
-import { Err, Operation } from '@dxos/compute';
+import { InvokerNotInitializedError, NoHandlerError, Operation } from '@dxos/compute';
 import { DynamicRuntime, unwrapExit } from '@dxos/effect';
 import { Performance } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';
@@ -48,7 +48,7 @@ export interface OperationInvoker {
     ...args: void extends I
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
-  ) => Effect.Effect<O, Err.NoHandlerError>;
+  ) => Effect.Effect<O, NoHandlerError>;
   /**
    * Schedule an operation to run as a followup.
    * The followup is tracked and won't be cancelled when the parent operation completes.
@@ -85,7 +85,7 @@ export interface OperationInvokerInternal extends OperationInvoker {
     op: Operation.Definition<I, O>,
     input: I,
     options?: Operation.InvokeOptions,
-  ) => Effect.Effect<O, Err.NoHandlerError>;
+  ) => Effect.Effect<O, NoHandlerError>;
 }
 
 //
@@ -157,7 +157,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     ...args: void extends I
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
-  ): Effect.Effect<O, Err.NoHandlerError> => {
+  ): Effect.Effect<O, NoHandlerError> => {
     const input = args[0] as I;
     const options = args[1] as Operation.InvokeOptions | undefined;
     return Effect.gen(this, function* () {
@@ -195,7 +195,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
 
   private _resolveHandler(
     operation: Operation.Definition<any, any>,
-  ): Effect.Effect<Operation.Handler<any, any, Err.NoHandlerError, Operation.Service> | undefined> {
+  ): Effect.Effect<Operation.Handler<any, any, NoHandlerError, Operation.Service> | undefined> {
     return Effect.gen(this, function* () {
       const match = yield* this._getHandlers().pipe(
         // Last registration wins so plugins can override earlier handlers (e.g. story testing hooks).
@@ -214,12 +214,12 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     op: Operation.Definition<I, O>,
     input: I,
     options?: Operation.InvokeOptions,
-  ): Effect.Effect<O, Err.NoHandlerError> => {
+  ): Effect.Effect<O, NoHandlerError> => {
     return Effect.gen(this, function* () {
       const handler = yield* this._resolveHandler(op);
       if (!handler) {
         // TODO(burdon): Only throw in development mode.
-        return yield* Effect.fail(new Err.NoHandlerError(op.meta.key));
+        return yield* Effect.fail(new NoHandlerError(op.meta.key));
       }
 
       // TODO(burdon): Add debug flag to composer to enable this.
@@ -307,7 +307,7 @@ export const make = (
 
   const invokeFn: Scheduler.InvokeFn = (op, input, options) => {
     if (!ref.invoker) {
-      return Effect.fail(new Err.InvokerNotInitializedError());
+      return Effect.fail(new InvokerNotInitializedError());
     }
     return ref.invoker._invokeCore(op, input, options);
   };

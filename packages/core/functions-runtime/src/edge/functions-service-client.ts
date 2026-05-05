@@ -3,7 +3,7 @@
 //
 
 import { type Client } from '@dxos/client';
-import { Err, Operation } from '@dxos/compute';
+import { FunctionError, Operation } from '@dxos/compute';
 import { type Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { type EdgeHttpClient } from '@dxos/edge-client';
@@ -175,7 +175,7 @@ export class FunctionsServiceClient {
         input,
       );
     } catch (error) {
-      throw Err.FunctionError.wrap({ message: 'Failed to invoke function', ifTypeDiffers: true })(error);
+      throw FunctionError.wrap({ message: 'Failed to invoke function', ifTypeDiffers: true })(error);
     }
   }
 

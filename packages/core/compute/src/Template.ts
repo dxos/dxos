@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
 
-import { FunctionNotFoundError } from './Err';
+import { FunctionNotFoundError } from './errors';
 import * as Operation from './Operation';
 import * as OperationRegistry from './OperationRegistry';
 

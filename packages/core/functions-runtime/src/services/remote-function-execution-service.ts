@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { type Client, ClientService } from '@dxos/client';
-import { Err } from '@dxos/compute';
+import { FunctionError } from '@dxos/compute';
 import { Context as DxosContext } from '@dxos/context';
 import type { SpaceId } from '@dxos/keys';
 
@@ -38,7 +38,7 @@ export class RemoteFunctionExecutionService extends Context.Tag('@dxos/functions
           return yield* Effect.promise(() =>
             edgeClient.invokeFunction(ctx, { functionId: cleanedId, spaceId }, input),
           ).pipe(
-            Effect.mapError(Err.FunctionError.wrap()),
+            Effect.mapError(FunctionError.wrap()),
             Effect.orDie, // TODO(dmaretskyi): Checked error.
           );
         }),
@@ -63,7 +63,7 @@ export class RemoteFunctionExecutionService extends Context.Tag('@dxos/functions
               return yield* Effect.promise(() =>
                 edgeClient.invokeFunction(ctx, { functionId: cleanedId, spaceId }, input),
               ).pipe(
-                Effect.mapError(Err.FunctionError.wrap()),
+                Effect.mapError(FunctionError.wrap()),
                 Effect.orDie, // TODO(dmaretskyi): Checked error.
               );
             }),

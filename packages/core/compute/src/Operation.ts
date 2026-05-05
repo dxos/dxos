@@ -11,7 +11,7 @@ import type * as Types from 'effect/Types';
 
 import { Annotation, JsonSchema, Obj, Ref, Type, type DXN, type Key } from '@dxos/echo';
 
-import type { NoHandlerError } from './Err';
+import type { NoHandlerError } from './errors';
 import type { Operation } from './index';
 
 // @import-as-namespace

@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Credential, Err, Operation, OperationHandlerSet, Trace } from '@dxos/compute';
+import { Credential, FunctionError, FunctionNotFoundError, Operation, OperationHandlerSet, Trace } from '@dxos/compute';
 import { Database, Feed, Query } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { FunctionInvocationService, type FunctionServices, QueueService } from '@dxos/functions';
@@ -19,7 +19,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
   LocalFunctionExecutionService,
   {
     invokeFunction<I, O>(functionDef: Operation.Definition<I, O>, input: I): Effect.Effect<O>;
-    resolveFunction(key: string): Effect.Effect<Operation.Definition.Any, Err.FunctionNotFoundError>;
+    resolveFunction(key: string): Effect.Effect<Operation.Definition.Any, FunctionNotFoundError>;
   }
 >() {
   static layerLive = Layer.effect(
@@ -80,7 +80,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
               return resolved.right;
             }
 
-            return yield* Effect.fail(new Err.FunctionNotFoundError(key));
+            return yield* Effect.fail(new FunctionNotFoundError(key));
           }).pipe(Effect.provideService(Database.Service, database)),
       };
     }),
@@ -108,7 +108,7 @@ const invokeOperation = (
       const assertInput = operationDef.input.pipe(Schema.asserts);
       (assertInput as any)(input);
     } catch (err) {
-      throw new Err.FunctionError({
+      throw new FunctionError({
         message: 'Invalid function input',
         context: { name: operationDef.meta.name },
         cause: err,
@@ -156,7 +156,7 @@ const invokeOperation = (
     }).pipe(
       Effect.orDie,
       Effect.catchAllDefect((defect) =>
-        Effect.die(new Err.FunctionError({ context: { name: operationDef.meta.name }, cause: defect })),
+        Effect.die(new FunctionError({ context: { name: operationDef.meta.name }, cause: defect })),
       ),
     );
 
@@ -167,7 +167,7 @@ const invokeOperation = (
       const assertOutput = operationDef.output?.pipe(Schema.asserts);
       (assertOutput as any)(data);
     } catch (err) {
-      throw new Err.FunctionError({
+      throw new FunctionError({
         message: 'Invalid function output',
         context: { name: operationDef.meta.name },
         cause: err,
@@ -182,11 +182,9 @@ export class FunctionImplementationResolver extends Context.Tag('@dxos/functions
   {
     resolveFunctionImplementation<I, O>(
       functionDef: Operation.Definition<I, O>,
-    ): Effect.Effect<Operation.WithHandler<Operation.Definition<I, O>>, Err.FunctionNotFoundError>;
+    ): Effect.Effect<Operation.WithHandler<Operation.Definition<I, O>>, FunctionNotFoundError>;
 
-    resolveByKey(
-      key: string,
-    ): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, Err.FunctionNotFoundError>;
+    resolveByKey(key: string): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, FunctionNotFoundError>;
   }
 >() {
   static layerTest = ({ functions }: { functions: OperationHandlerSet.OperationHandlerSet }) =>
@@ -198,7 +196,7 @@ export class FunctionImplementationResolver extends Context.Tag('@dxos/functions
           resolveFunctionImplementation: <I, O>(functionDef: Operation.Definition<I, O>) => {
             const resolved = handlers.find((f) => f.meta.key === functionDef.meta.key);
             if (!resolved) {
-              return Effect.fail(new Err.FunctionNotFoundError(functionDef.meta.name ?? functionDef.meta.key));
+              return Effect.fail(new FunctionNotFoundError(functionDef.meta.name ?? functionDef.meta.key));
             }
 
             return Effect.succeed(resolved);
@@ -208,7 +206,7 @@ export class FunctionImplementationResolver extends Context.Tag('@dxos/functions
             Effect.gen(function* () {
               const resolved = handlers.find((_) => _.meta.key === key);
               if (!resolved) {
-                return yield* Effect.fail(new Err.FunctionNotFoundError(key));
+                return yield* Effect.fail(new FunctionNotFoundError(key));
               }
               return resolved;
             }),

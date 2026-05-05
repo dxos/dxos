@@ -9,8 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { Trace } from '@dxos/compute';
-import { Operation, OperationRegistry } from '@dxos/compute';
+import { Trace, Operation, OperationRegistry } from '@dxos/compute';
 import { Collection, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { CollectionModel } from '@dxos/schema';

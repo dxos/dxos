@@ -10,7 +10,13 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiModelResolver, AiService } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
-import { Err, Operation, Trace } from '@dxos/compute';
+import {
+  FunctionError,
+  InvalidOperationInputError,
+  InvalidOperationOutputError,
+  Operation,
+  Trace,
+} from '@dxos/compute';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, JsonSchema, Ref, type Type } from '@dxos/echo';
 import { EchoClient, type EchoDatabaseImpl, type QueueFactory, createFeedServiceLayer } from '@dxos/echo-db';
@@ -55,7 +61,7 @@ export const wrapFunctionHandler = (func: Operation.WithHandler<Operation.Defini
           serviceTags.includes(Feed.FeedService.key)) &&
         (!context.services.dataService || !context.services.queryService)
       ) {
-        throw new Err.FunctionError({
+        throw new FunctionError({
           message: 'Services not provided: dataService, queryService',
         });
       }
@@ -66,7 +72,7 @@ export const wrapFunctionHandler = (func: Operation.WithHandler<Operation.Defini
           try {
             Schema.validateSync(func.input, { onExcessProperty: 'error' })(data);
           } catch (error: any) {
-            throw new Err.InvalidOperationInputError({
+            throw new InvalidOperationInputError({
               message: `Operation input did not match schema (${func.meta.key}): ${error.message}`,
               cause: error,
             });
@@ -100,7 +106,7 @@ export const wrapFunctionHandler = (func: Operation.WithHandler<Operation.Defini
           try {
             Schema.validateSync(func.output, { onExcessProperty: 'error' })(result);
           } catch (error: any) {
-            throw new Err.InvalidOperationOutputError({
+            throw new InvalidOperationOutputError({
               message: `Operation output did not match schema (${func.meta.key}): ${error.message}`,
               cause: error,
             });

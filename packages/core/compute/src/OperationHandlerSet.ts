@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { assertArgument } from '@dxos/invariant';
 
-import { NoHandlerError } from './Err';
+import { NoHandlerError } from './errors';
 import type * as Operation from './Operation';
 
 export const TypeId = '~@dxos/operation/OperationHandlerSet' as const;

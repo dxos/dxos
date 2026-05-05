@@ -5,8 +5,7 @@
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as Schema from 'effect/Schema';
 
-import { Credential } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { Credential, Operation } from '@dxos/compute';
 
 export const FetchPrs = Operation.make({
   meta: {

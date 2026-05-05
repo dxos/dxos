@@ -14,8 +14,6 @@ import {
   getWorkspaceFromPath,
   toUrlPath,
 } from '@dxos/app-toolkit';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Err } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';

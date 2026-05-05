@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Err } from '@dxos/compute';
+import { InvalidOperationInputError } from '@dxos/compute';
 import { FibonacciHandler, ReplyHandler } from '@dxos/compute/testing';
 
 import { wrapFunctionHandler } from './protocol';
@@ -53,6 +53,6 @@ describe('wrapFunctionHandler', () => {
           services: {},
         },
       }),
-    ).rejects.toThrow(Err.InvalidOperationInputError);
+    ).rejects.toThrow(InvalidOperationInputError);
   });
 });

@@ -13,8 +13,6 @@ import { PERSONAL_SPACE_TAG } from '@dxos/app-toolkit';
 import { CommandConfig, flushAndSync, spaceLayer } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Err } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
