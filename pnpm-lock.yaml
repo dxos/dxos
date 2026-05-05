@@ -21038,6 +21038,9 @@ importers:
 
   vendor/kbn-handlebars:
     devDependencies:
+      esbuild:
+        specifier: '>=0.28.0'
+        version: 0.28.0
       handlebars:
         specifier: 'catalog:'
         version: 4.7.8

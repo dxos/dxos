@@ -11,12 +11,18 @@ workspace:
 
 tasks:
   compile:
-    args:
-      - '--entryPoint=src/index.js'
-      - '--platform=neutral'
-      - '--mainFields=browser,module,main'
-      - '--bundlePackage=kbn-handlebars'
-      - '--bundlePackage=handlebars'
-      - '--bundlePackage=tslib'
-      - '--bundlePackage=source-map'
-      - '--ignorePackage=fs'
+    command: node build.mjs
+    options:
+      mergeArgs: replace
+      mergeInputs: replace
+      mergeOutputs: replace
+      mergeDeps: replace
+    args: []
+    deps:
+      - ^:compile
+    inputs:
+      - 'src/**/*'
+      - 'build.mjs'
+      - 'package.json'
+    outputs:
+      - dist/

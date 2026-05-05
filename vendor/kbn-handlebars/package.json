@@ -23,6 +23,7 @@
   ],
   "dependencies": {},
   "devDependencies": {
+    "esbuild": "catalog:",
     "handlebars": "catalog:",
     "kbn-handlebars": "catalog:"
   },
