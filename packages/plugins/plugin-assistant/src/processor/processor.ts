@@ -19,11 +19,10 @@ import {
   ToolExecutionServices,
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
-import { type Blueprint } from '@dxos/compute';
-import { Trace, type CredentialsService, type QueueService } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { type Blueprint, type Credential, Trace, Operation } from '@dxos/compute';
 import { type Database, Feed, Obj, Ref } from '@dxos/echo';
 import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
+import { type QueueService } from '@dxos/functions';
 import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import type { AutomationCapabilities } from '@dxos/plugin-automation/types';
@@ -36,7 +35,7 @@ import { UpdateChatName } from '../operations/definitions';
  * Retained for backward compatibility with CLI and update-name.
  */
 export type AiChatServices =
-  | CredentialsService
+  | Credential.CredentialsService
   | Database.Service
   | QueueService
   | AiService.AiService

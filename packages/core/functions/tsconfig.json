@@ -41,13 +41,13 @@
       "path": "../ai"
     },
     {
+      "path": "../compute"
+    },
+    {
       "path": "../echo/echo"
     },
     {
       "path": "../echo/echo-db"
-    },
-    {
-      "path": "../operation"
     },
     {
       "path": "../protocols"

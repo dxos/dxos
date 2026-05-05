@@ -13,9 +13,8 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
+import { Operation, Trigger } from '@dxos/compute';
 import { Database, Filter, JsonSchema, Ref } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 
 import { Cron, Enabled, Input } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction } from '../util';

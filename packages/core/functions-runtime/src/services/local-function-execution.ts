@@ -9,19 +9,11 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
+import { Credential, FunctionError, FunctionNotFoundError, Operation, OperationHandlerSet, Trace } from '@dxos/compute';
 import { Database, Feed, Query } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import {
-  CredentialsService,
-  FunctionError,
-  FunctionInvocationService,
-  FunctionNotFoundError,
-  QueueService,
-  Trace,
-} from '@dxos/functions';
-import { type FunctionServices } from '@dxos/functions';
+import { FunctionInvocationService, type FunctionServices, QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
   LocalFunctionExecutionService,
@@ -35,7 +27,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
     Effect.gen(function* () {
       const resolver = yield* FunctionImplementationResolver;
       const ai = yield* AiService.AiService;
-      const credentials = yield* CredentialsService;
+      const credentials = yield* Credential.CredentialsService;
       const database = yield* Database.Service;
       const queues = yield* QueueService;
       const feedService = yield* Feed.FeedService;
@@ -49,7 +41,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
               return output as O;
             }).pipe(
               Effect.provideService(AiService.AiService, ai),
-              Effect.provideService(CredentialsService, credentials),
+              Effect.provideService(Credential.CredentialsService, credentials),
               Effect.provideService(Database.Service, database),
               Effect.provideService(QueueService, queues),
               Effect.provideService(Feed.FeedService, feedService),
