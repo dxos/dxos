@@ -446,10 +446,14 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     const usages: SchemaUsage[] = [];
     for (const pkg of packages) {
       const ex = ensureSchemas(pkg);
-      if (ex.candidateFiles.length === 0) {
+      // Scan every TS file in the package, not just the schema-defining ones —
+      // a consumer that references a typename without declaring its own schema
+      // (e.g. a plugin file invoking `Operation.invoke(Task, ...)`) still needs
+      // to surface in the usage list.
+      if (ex.usageScanFiles.length === 0) {
         continue;
       }
-      const found = findSchemaUsagesInFiles(monorepoRoot, pkg.name, ex.candidateFiles, typename);
+      const found = findSchemaUsagesInFiles(monorepoRoot, pkg.name, ex.usageScanFiles, typename);
       for (const u of found) {
         usages.push(u);
       }

@@ -36,7 +36,7 @@ Idioms, composition queries, and UI components are next (see [SPEC.md](../intros
 
 | Tool | Purpose |
 | --- | --- |
-| `list_schemas` | List every `Schema.Struct(...).pipe(Type.object({ typename, version }))` registration. Filter by `package`. |
+| `list_schemas` | List every ECHO-registered type — `Schema.Struct(...).pipe(Type.object({ typename, version }))` and the lowercase `Type.Obj(...)` variant used inside `@dxos/echo` internals. Filter by `package`. |
 | `get_schema` | Detail for one schema by typename: full field list, version, owning package, source location. |
 | `find_schema_usage` | Every line in the monorepo that mentions a typename — references, JSDoc, plugin wiring. The defining `Type.object` line is excluded. |
 
@@ -106,7 +106,7 @@ Then in Composer:
    - **Server URL**: `http://localhost:39476/mcp`
    - **Protocol**: `http`
    - **API key**: leave empty (no auth — see below)
-3. Save and toggle **enabled**. The five tools (`list_packages`, `get_package`, `list_symbols`, `find_symbol`, `get_symbol`) become available to the assistant.
+3. Save and toggle **enabled**. Every tool listed in the [Tools](#tools) section above becomes available to the assistant — packages and symbols, plugin ecosystem (plugins / surfaces / capabilities / operations), and ECHO-registered schemas.
 
 **Auth:** by default the HTTP server accepts unauthenticated requests on localhost only. To require a bearer token (e.g. when running from a remote machine), pass `--api-key <token>` to `cli.ts` and put the same token in Composer's MCP server **API key** field.
 

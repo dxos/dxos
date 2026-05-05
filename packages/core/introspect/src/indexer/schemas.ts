@@ -52,11 +52,17 @@ export type SchemaExtractionInput = {
 export type SchemaExtraction = {
   /** ECHO-registered schemas defined in this package. */
   schemas: SchemaDetail[];
-  /** Source files searched, kept for follow-up `findSchemaUsage` scans. */
-  candidateFiles: string[];
+  /**
+   * Broader file set used by `findSchemaUsage` — every TS source file in the
+   * package, not just the ones that *define* schemas. A package that only
+   * references a typename (e.g. via `Operation.invoke(SomeType, ...)` or a
+   * doc comment) won't appear in the narrower extraction set, but we still
+   * want its mentions surfaced as usages.
+   */
+  usageScanFiles: string[];
 };
 
-export const emptySchemaExtraction = (): SchemaExtraction => ({ schemas: [], candidateFiles: [] });
+export const emptySchemaExtraction = (): SchemaExtraction => ({ schemas: [], usageScanFiles: [] });
 
 /**
  * Pre-filter: schemas conventionally live under `src/types/` or are exported
@@ -111,14 +117,41 @@ export const findSchemaCandidateFiles = (monorepoRoot: string, packagePath: stri
 };
 
 /**
+ * Enumerate every TS source file under a package's `src/` (test / story /
+ * fixture files excluded). Used as the search space for `findSchemaUsage`,
+ * which needs to surface typename mentions in any file — including packages
+ * that consume schemas without defining their own.
+ */
+export const findUsageScanFiles = (monorepoRoot: string, packagePath: string): string[] => {
+  const srcDir = join(monorepoRoot, packagePath, 'src');
+  if (!existsSync(srcDir)) {
+    return [];
+  }
+  try {
+    return globSync('**/*.{ts,tsx}', {
+      cwd: srcDir,
+      ignore: ['**/*.test.{ts,tsx}', '**/*.stories.{ts,tsx}', '**/__fixtures__/**', '**/__tests__/**'],
+      absolute: true,
+      nodir: true,
+    });
+  } catch {
+    return [];
+  }
+};
+
+/**
  * Parse a package's schema-bearing files and extract every ECHO-registered type.
- * Returns an empty result when the package has no candidate files.
+ * Returns the narrow set of *defining* schemas plus the broader file list used
+ * for textual usage scans.
  */
 export const extractSchemas = (input: SchemaExtractionInput): SchemaExtraction => {
   const { packageName, packagePath, monorepoRoot } = input;
+  // Broad scan set is computed unconditionally — even if a package defines no
+  // schemas, its files might *reference* one defined elsewhere.
+  const usageScanFiles = findUsageScanFiles(monorepoRoot, packagePath);
   const candidateFiles = findSchemaCandidateFiles(monorepoRoot, packagePath);
   if (candidateFiles.length === 0) {
-    return emptySchemaExtraction();
+    return { schemas: [], usageScanFiles };
   }
 
   const project = new Project({
@@ -179,7 +212,7 @@ export const extractSchemas = (input: SchemaExtractionInput): SchemaExtraction =
 
   return {
     schemas: [...byTypename.values()].sort((a, b) => a.typename.localeCompare(b.typename)),
-    candidateFiles,
+    usageScanFiles,
   };
 };
 

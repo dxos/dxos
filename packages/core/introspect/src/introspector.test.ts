@@ -382,4 +382,17 @@ describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
   test('findSchemaUsage returns [] for unknown typename', ({ expect }) => {
     expect(introspector.findSchemaUsage('com.example.type.missing')).toEqual([]);
   });
+
+  test('findSchemaUsage scans non-schema-defining packages too', ({ expect }) => {
+    // Regression: an earlier draft reused the schema *extractor's* candidate-
+    // file set (only files containing `Type.object`/`Type.Obj`) as the search
+    // space for usage scans. That dropped every package that referenced a
+    // typename without defining its own schema.
+    //
+    // pkg-b has no `Type.object` calls — it's a React component package — so
+    // its files were skipped entirely. Adding a typename mention to its
+    // JSDoc proves the broader `usageScanFiles` set walks every src file.
+    const usages = introspector.findSchemaUsage('com.example.type.Task');
+    expect(usages.some((u) => u.package === '@fixture/pkg-b')).toBe(true);
+  });
 });
