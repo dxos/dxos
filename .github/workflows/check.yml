@@ -105,7 +105,7 @@ jobs:
         run: pnpm install --resolution-only --no-frozen-lockfile
 
       - uses: 'moonrepo/run-report-action@v1'
-        if: (success() || failure()) && github.event_name == 'pull_request_target'
+        if: (success() || failure()) && (github.event_name == 'pull_request' || github.event_name == 'pull_request_target')
         with:
           access-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -217,7 +217,7 @@ jobs:
           run: moon exec --on-failure continue :e2e --concurrency=1
 
       - uses: 'moonrepo/run-report-action@v1'
-        if: (success() || failure()) && github.event_name == 'pull_request_target'
+        if: (success() || failure()) && (github.event_name == 'pull_request' || github.event_name == 'pull_request_target')
         with:
           access-token: ${{ secrets.GITHUB_TOKEN }}
 
