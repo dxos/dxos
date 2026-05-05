@@ -14,7 +14,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const repoRoot = join(__dirname, '../../..');
+const repoRoot = join(__dirname, '..');
 
 const result = execSync('grep -rl "ts-build" --include="moon.yml" .', {
   cwd: repoRoot,

@@ -12,9 +12,9 @@ import { dirname, join, resolve } from 'node:path';
 import { type UserConfig } from 'tsdown';
 import ts from 'typescript';
 
-import { DEFAULT_LOG_META_TRANSFORM_SPEC, rolldownLogMetaPlugin } from './tools/dx-tsdown/src/log-meta-plugin.ts';
+import { DEFAULT_LOG_META_TRANSFORM_SPEC, rolldownLogMetaPlugin } from './tools/log-meta-plugin.ts';
 
-export { DEFAULT_LOG_META_TRANSFORM_SPEC, rolldownLogMetaPlugin } from './tools/dx-tsdown/src/log-meta-plugin.ts';
+export { DEFAULT_LOG_META_TRANSFORM_SPEC, rolldownLogMetaPlugin } from './tools/log-meta-plugin.ts';
 
 export interface DxTsdownOptions {
   /**

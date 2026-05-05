@@ -1964,9 +1964,6 @@ importers:
       '@dxos/dx-tools':
         specifier: workspace:*
         version: link:tools/dx-tools
-      '@dxos/dx-tsdown':
-        specifier: workspace:*
-        version: link:tools/dx-tsdown
       '@dxos/esbuild-plugins':
         specifier: workspace:*
         version: link:packages/common/esbuild-plugins
@@ -2009,6 +2006,9 @@ importers:
       '@octokit/rest':
         specifier: 'catalog:'
         version: 22.0.1
+      '@oxc-project/types':
+        specifier: 'catalog:'
+        version: 0.128.0
       '@phosphor-icons/core':
         specifier: 'catalog:'
         version: 2.1.1
@@ -2228,6 +2228,9 @@ importers:
       resize-observer-polyfill:
         specifier: 'catalog:'
         version: 1.5.1
+      rolldown:
+        specifier: 'catalog:'
+        version: 1.0.0-rc.18
       rollup:
         specifier: 'catalog:'
         version: 3.30.0
@@ -20623,28 +20626,6 @@ importers:
         version: 16.0.4
 
   tools/dx-tools: {}
-
-  tools/dx-tsdown:
-    dependencies:
-      '@oxc-project/types':
-        specifier: 'catalog:'
-        version: 0.128.0
-      rolldown:
-        specifier: 'catalog:'
-        version: 1.0.0-rc.18
-      tsdown:
-        specifier: 'catalog:'
-        version: 0.16.8(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@typescript/native-preview@7.0.0-dev.20260421.2)(oxc-resolver@11.9.0)(typescript@6.0.3)
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
-      yargs:
-        specifier: 'catalog:'
-        version: 16.2.0
-    devDependencies:
-      '@types/yargs':
-        specifier: 'catalog:'
-        version: 16.0.4
 
   tools/lockfile-explorer:
     dependencies:

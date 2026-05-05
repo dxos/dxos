@@ -4,7 +4,7 @@
 //
 // Script: generate tsdown.config.ts for every ts-build package.
 // Reads each package's moon.yml, extracts the build args, and emits
-// a tsdown.config.ts that imports from @dxos/dx-tsdown/config.
+// a tsdown.config.ts that imports from tsdown.base.config.ts.
 //
 
 import { execSync } from 'node:child_process';
@@ -13,7 +13,7 @@ import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const repoRoot = join(__dirname, '../../..');
+const repoRoot = join(__dirname, '..');
 
 // Find all moon.yml files with ts-build tag.
 const result = execSync('grep -rl "ts-build" --include="moon.yml" .', {
