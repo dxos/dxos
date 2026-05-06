@@ -2,6 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './meta';
+import { Plugin } from '@dxos/app-framework';
 
-export * from './BoardPlugin';
+import { meta } from './meta';
+
+export const BoardPlugin = Plugin.lazy(meta, () => import('./BoardPlugin'));
+
+export * from './meta';

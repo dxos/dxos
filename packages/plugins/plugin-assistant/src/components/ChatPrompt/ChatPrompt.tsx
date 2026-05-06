@@ -21,6 +21,7 @@ import { meta } from '#meta';
 import { type AiChatProcessor } from '../../processor';
 import { type ChatEvent } from '../Chat/events';
 import { ChatActions, type ChatActionsProps } from './ChatActions';
+import { ChatMcpErrors } from './ChatMcpErrors';
 import { ChatOptions } from './ChatOptions';
 import { type ChatPresetsProps } from './ChatPresets';
 import { ChatReferences } from './ChatReferences';
@@ -126,6 +127,8 @@ export const ChatPrompt = ({
         classNames,
       )}
     >
+      <ChatMcpErrors processor={processor} />
+
       <div role='none' className='flex p-2 gap-2'>
         <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
         <ChatEditor
@@ -151,7 +154,7 @@ export const ChatPrompt = ({
             onPresetChange={onPresetChange}
           />
 
-          <div role='none' className='flex grow overflow-x-auto scrollbar-none'>
+          <div role='none' className='flex h-8 grow overflow-x-auto scrollbar-none'>
             <ChatReferences db={db} context={processor.context} />
           </div>
 
@@ -166,7 +169,7 @@ export const ChatPrompt = ({
             {online !== undefined && (
               <Input.Root>
                 <Input.Label srOnly>{t('online-switch.label')}</Input.Label>
-                <Input.Switch classNames='mx-2' checked={online} onCheckedChange={onOnlineChange} />
+                <Input.Switch classNames='mx-1' checked={online} onCheckedChange={onOnlineChange} />
               </Input.Root>
             )}
           </ChatActions>

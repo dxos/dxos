@@ -29,3 +29,5 @@ export const NativePlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default NativePlugin;

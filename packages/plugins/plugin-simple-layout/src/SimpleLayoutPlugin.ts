@@ -55,3 +55,5 @@ export const SimpleLayoutPlugin = Plugin.define<SimpleLayoutPluginOptions>(meta)
   }),
   Plugin.make,
 );
+
+export default SimpleLayoutPlugin;

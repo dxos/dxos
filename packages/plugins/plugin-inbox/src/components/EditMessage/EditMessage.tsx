@@ -54,7 +54,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
 
     const handleValuesChanged = useCallback<NonNullable<FormRootProps<MessageProperties>['onValuesChanged']>>(
       (values) => {
-        Obj.change(message, (message) => {
+        Obj.update(message, (message) => {
           const properties = (message.properties ??= {});
           if (values.to !== undefined) {
             properties.to = values.to;
@@ -75,7 +75,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
 
     const handleBodyChanged = useCallback<NonNullable<EditorViewProps['onChange']>>(
       (value) => {
-        Obj.change(message, (message) => {
+        Obj.update(message, (message) => {
           const blocks = (message.blocks ??= []);
           const textBlock = blocks.find((b) => b._tag === 'text');
           if (textBlock && 'text' in textBlock) {

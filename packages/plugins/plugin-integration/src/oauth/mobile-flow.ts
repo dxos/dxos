@@ -101,7 +101,7 @@ export const performMobileOAuthFlow = ({
     }
 
     // Update the access token with the received value.
-    Obj.change(accessToken, (accessToken) => {
+    Obj.update(accessToken, (accessToken) => {
       accessToken.token = accessTokenValue;
     });
 

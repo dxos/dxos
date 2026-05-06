@@ -50,3 +50,5 @@ export const DiscordPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default DiscordPlugin;

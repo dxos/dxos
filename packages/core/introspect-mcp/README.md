@@ -1,12 +1,18 @@
 # @dxos/introspect-mcp
 
 MCP server that exposes [@dxos/introspect](../introspect) over stdio.
-Lets LLM tools (Claude Code, etc.) query the DXOS monorepo's package and symbol graph.
+Lets LLM tools (Claude Code, etc.) query the DXOS monorepo's package, symbol, and plugin graph.
 
-This package is **phase 1**: five tools wired to package and symbol queries.
-More tools will land as the core indexer grows (plugins, capabilities, schemas, idioms).
+Coverage so far:
+- **Phase 1** — packages and symbols.
+- **Phase 2** — plugins, surfaces, capabilities, operations (extracted statically from `Plugin.define` / `Surface.create` / `Capability.contributes` / `Operation.make`).
+- **Phase 3** — ECHO-registered schemas (`Type.object` / `Type.Obj`).
+
+Idioms, composition queries, and UI components are next (see [SPEC.md](../introspect/SPEC.md#build-order)).
 
 ## Tools
+
+### Packages & symbols
 
 | Tool | Purpose |
 | --- | --- |
@@ -16,7 +22,37 @@ More tools will land as the core indexer grows (plugins, capabilities, schemas, 
 | `find_symbol` | Locate an exported symbol by name (case-insensitive); ranks exact > prefix > substring. |
 | `get_symbol` | Detail for one symbol by ref. Pass `include=["source"]` to expand the body. |
 
+### Plugin ecosystem
+
+| Tool | Purpose |
+| --- | --- |
+| `list_plugins` | List detected plugins (any package with a `Plugin.define(meta)` call + `meta.ts`). |
+| `get_plugin` | Full record for one plugin by id: meta, modules wired via `.pipe(...)`, and the surfaces / capabilities / operations it contributes. |
+| `list_surfaces` | Aggregate every `Surface.create({ id, role, ... })` contribution. Filter by `pluginId`. |
+| `list_capabilities` | Aggregate every `Capability.contributes(<key>, ...)` call. Filter by `pluginId`. |
+| `list_operations` | Aggregate every `Operation.make({ meta: { key, name, description } })` definition. Filter by `pluginId`. |
+
+### Schemas (ECHO-registered types)
+
+| Tool | Purpose |
+| --- | --- |
+| `list_schemas` | List every ECHO-registered type — `Schema.Struct(...).pipe(Type.object({ typename, version }))` and the lowercase `Type.Obj(...)` variant used inside `@dxos/echo` internals. Filter by `pluginId` (most common — narrows to a single plugin's schemas) or `package`. |
+| `get_schema` | Detail for one schema by typename: full field list, version, owning package, source location. |
+| `find_schema_usage` | Every line in the monorepo that mentions a typename — references, JSDoc, plugin wiring. The defining `Type.object` line is excluded. |
+
 Tool descriptions are written for LLM trigger accuracy — they describe *when* to use a tool, not just what it does.
+
+## Try it (browser UI)
+
+Quickest hands-on path — launches the official [MCP Inspector](https://github.com/modelcontextprotocol/inspector) against this server, with all paths pre-baked:
+
+```bash
+moon run introspect-mcp:inspect
+```
+
+The terminal prints a URL containing `?MCP_PROXY_AUTH_TOKEN=...`. Open *that exact URL* in your browser, click **Connect** → **Tools** → **List Tools** → pick a tool → **Run Tool**.
+
+See [Test it from a browser (MCP Inspector)](#test-it-from-a-browser-mcp-inspector) below for troubleshooting.
 
 ## Running it
 
@@ -70,7 +106,7 @@ Then in Composer:
    - **Server URL**: `http://localhost:39476/mcp`
    - **Protocol**: `http`
    - **API key**: leave empty (no auth — see below)
-3. Save and toggle **enabled**. The five tools (`list_packages`, `get_package`, `list_symbols`, `find_symbol`, `get_symbol`) become available to the assistant.
+3. Save and toggle **enabled**. Every tool listed in the [Tools](#tools) section above becomes available to the assistant — packages and symbols, plugin ecosystem (plugins / surfaces / capabilities / operations), and ECHO-registered schemas.
 
 **Auth:** by default the HTTP server accepts unauthenticated requests on localhost only. To require a bearer token (e.g. when running from a remote machine), pass `--api-key <token>` to `cli.ts` and put the same token in Composer's MCP server **API key** field.
 
@@ -128,13 +164,14 @@ Runs the server attached to your terminal stdio, blocking for input. Send JSON-R
 
 | Command | What it does |
 | --- | --- |
-| `moon run introspect-mcp:test` | Unit + integration tests (in-memory and real-stdio subprocess), ~3s |
-| `moon run introspect-mcp:check` | End-to-end: spawns the server with the exact command from `.mcp.json` and round-trips a tool call. **Run before restarting Claude Code.** |
-| `moon run introspect-mcp:inspect` | Launch the MCP Inspector (browser UI) against this server, with all paths absolutized. Cold cache may take ~80s; subsequent runs <1s. |
-| `moon run introspect-mcp:sanity` | Inspector + proxy auth check — confirms the launcher succeeds and the proxy responds with a valid auth token. |
-| `moon run introspect-mcp:serve` | Raw stdio server, for piping requests in by hand. |
-| `moon run introspect-mcp:serve-http` | HTTP server on `localhost:39476/mcp`. Use this to wire the server into Composer's plugin-assistant or any other HTTP/SSE-only MCP client. |
-| `moon run introspect:index` | Pre-build the on-disk symbol cache (`<root>/node_modules/.cache/dxos-introspect/`). The cache makes server startup near-instant. |
+| `moon run introspect-mcp:test`        | Unit + integration tests (in-memory and real-stdio subprocess), ~3s |
+| `moon run introspect-mcp:check`       | End-to-end: spawns the server with the exact command from `.mcp.json` and round-trips a tool call. **Run before restarting Claude Code.** |
+| `moon run introspect-mcp:inspect`     | Launch the MCP Inspector (browser UI) against this server, with all paths absolutized. Cold cache may take ~80s; subsequent runs <1s. |
+| `moon run introspect-mcp:sanity`      | Inspector + proxy auth check — confirms the launcher succeeds and the proxy responds with a valid auth token. |
+| `moon run introspect-mcp:serve`       | Raw stdio server, for piping requests in by hand. |
+| `moon run introspect-mcp:serve-http`  | HTTP server on `localhost:39476/mcp`. Use this to wire the server into Composer's plugin-assistant or any other HTTP/SSE-only MCP client. |
+| `moon run introspect:index`           | Pre-build the on-disk symbol cache (`<root>/node_modules/.cache/dxos-introspect/`). The cache makes server startup near-instant. |
+| `moon run introspect-mcp:fetch-cache` | Download the prebuilt cache from the latest CI run on main and install it locally. Skips the ~80s cold-start parse for ~95% of packages on a clean main checkout. Requires `gh` CLI authenticated (`gh auth login`). |
 
 ## Why `--conditions=source`?
 
@@ -144,11 +181,32 @@ The package.json `exports` field has a `source` condition pointing at `src/index
 
 The indexer stores extracted symbols at `<repo-root>/node_modules/.cache/dxos-introspect/cache.json` (~13 MB for 250 packages). Following the babel/swc/eslint convention so it's auto-gitignored and gets nuked by `pnpm clean`. Saves are atomic (write-temp-then-rename), so concurrent introspector processes can't corrupt each other.
 
-To force a fresh re-index:
+### Invalidation
+
+Each entry records:
+
+- the **git tree SHA** of `<package>/src` at HEAD when the entry was written, and
+- the most-recent **mtime** under `<package>/src`.
+
+On load, an entry is reused if the live tree SHA matches the cached one (portable across machines — same git ref → same SHA), and falls back to mtime equality otherwise (covers uncommitted local edits before they're committed). Anything that doesn't match is dropped and re-extracted on demand.
+
+A package with uncommitted changes under its `src/` is treated as not-in-git for tree-SHA purposes — its srcTreeSha is empty in both the live probe and any saved entry, so it always falls through to the mtime path. This means dirty work-in-progress edits never falsely match a CI-built cache.
+
+### Prebuilt cache from CI
+
+The [`Introspect Cache`](../../../.github/workflows/introspect-cache.yml) workflow runs on every commit to main and uploads the cache as a GitHub Actions artifact. To install it locally instead of building from scratch:
+
+```bash
+moon run introspect-mcp:fetch-cache
+```
+
+This calls `gh run download` against the most recent successful workflow run on main and drops the cache at the canonical path. Per-package validity is decided by tree SHA, so any package whose `src/` is unchanged from that commit is reused; the rest re-extract on demand. On a clean main checkout you typically get >95% reuse; first MCP server start drops from ~80s to a few seconds.
+
+### Force a fresh build
 
 ```bash
 rm -rf node_modules/.cache/dxos-introspect
 moon run introspect:index
 ```
 
-The cache also auto-invalidates on any source-file mtime change, so manual deletion is rarely needed.
+Otherwise the cache auto-invalidates per package whenever `src/` changes (tree SHA on commit, mtime in between).

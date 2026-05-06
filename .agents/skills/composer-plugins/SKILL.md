@@ -133,20 +133,20 @@ Create a basic storybook for each.
 
 ### Reactivity: wrap subjects with `useObject`
 
-A surface receiving an ECHO subject via `AppSurface.ObjectArticleProps<T>` MUST call `useObject(subject)` and read from the returned snapshot. Without it, mutations to nested arrays/structs (e.g. `Obj.change(obj, m => m.images = [...])`) do not trigger re-render until you navigate away and back — the prop reference stays stable; the subscription lives in `useObject`.
+A surface receiving an ECHO subject via `AppSurface.ObjectArticleProps<T>` MUST call `useObject(subject)` and read from the returned snapshot. Without it, mutations to nested arrays/structs (e.g. `Obj.update(obj, m => m.images = [...])`) do not trigger re-render until you navigate away and back — the prop reference stays stable; the subscription lives in `useObject`.
 
 ```tsx
 const [gallery] = useObject(subject);
 // reads (gallery.images) re-render reactively
 // writes still go through the original subject:
 const handleDelete = (i: number) =>
-  Obj.change(subject, (obj) => {
+  Obj.update(subject, (obj) => {
     const m = obj as Obj.Mutable<Gallery.Gallery>;
     m.images = (m.images ?? []).filter((_, idx) => idx !== i);
   });
 ```
 
-The snapshot type is narrow — cast as needed (`obj as Obj.Mutable<T>` inside `Obj.change`, or `as T` for read access of fields not surfaced on `Snapshot<T>`).
+The snapshot type is narrow — cast as needed (`obj as Obj.Mutable<T>` inside `Obj.update`, or `as T` for read access of fields not surfaced on `Snapshot<T>`).
 
 ### Toolbar wiring: `MenuBuilder` + `useMenuActions` + `attendableId`
 

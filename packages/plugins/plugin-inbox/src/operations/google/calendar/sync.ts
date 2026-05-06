@@ -13,6 +13,8 @@ import * as Predicate from 'effect/Predicate';
 import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
 
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query, Ref as EchoRef } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -54,7 +56,7 @@ const persistCalendarCursor = (
   if (idx < 0) {
     return;
   }
-  Obj.change(integration, (integration) => {
+  Obj.update(integration, (integration) => {
     const mutable = integration as Obj.Mutable<typeof integration>;
     mutable.targets[idx] = { ...mutable.targets[idx], cursor: lastUpdate };
   });
@@ -70,7 +72,7 @@ const clearLegacyLastSyncedUpdate = (calendar: Calendar.Calendar) => {
   if (readLegacyLastSyncedUpdate(calendar) === undefined) {
     return;
   }
-  Obj.change(calendar, (calendar) => {
+  Obj.update(calendar, (calendar) => {
     delete (calendar as { lastSyncedUpdate?: string }).lastSyncedUpdate;
   });
 };
@@ -210,7 +212,7 @@ export default GoogleCalendarSync.pipe(
             if (target.remoteId) {
               const created = yield* findOrCreateCalendar(target.remoteId, target.name ?? 'Calendar');
               const remoteId = target.remoteId;
-              Obj.change(integrationObj, (integrationObj) => {
+              Obj.update(integrationObj, (integrationObj) => {
                 const mutable = integrationObj as Obj.Mutable<typeof integrationObj>;
                 const idx = mutable.targets.findIndex((t) => t.remoteId === remoteId);
                 if (idx >= 0) {

@@ -90,6 +90,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/effect-zod/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/errors/package.json",
           "jsonpath": "$.version"
         },
@@ -265,11 +270,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/blueprints/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/compute/package.json",
           "jsonpath": "$.version"
         },
@@ -381,6 +381,11 @@
         {
           "type": "json",
           "path": "packages/core/introspect-mcp/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/introspect-tools/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1060,6 +1065,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-introspect/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-list/package.json",
           "jsonpath": "$.version"
         },
@@ -1071,6 +1081,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-masonry/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-mcp/package.json",
           "jsonpath": "$.version"
         },
         {

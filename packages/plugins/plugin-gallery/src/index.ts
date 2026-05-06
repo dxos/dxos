@@ -2,5 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './GalleryPlugin';
+import { Plugin } from '@dxos/app-framework';
+
+import { meta } from './meta';
+
+export const GalleryPlugin = Plugin.lazy(meta, () => import('./GalleryPlugin'));
+
 export * from './meta';

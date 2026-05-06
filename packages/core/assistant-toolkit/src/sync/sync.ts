@@ -69,7 +69,7 @@ export const syncObjects: (
 });
 
 const copyObjectData = (existing: Obj.Unknown, newObj: Obj.Unknown) => {
-  Obj.change(existing, (existing) => {
+  Obj.update(existing, (existing) => {
     // Copy properties from newObj to existing.
     for (const key of Object.keys(newObj)) {
       if (typeof key !== 'string' || key === 'id') {

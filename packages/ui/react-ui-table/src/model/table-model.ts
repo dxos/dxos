@@ -38,7 +38,7 @@ export type FieldSortType = {
 import { type SelectionMode, SelectionModel } from './selection-model';
 
 /**
- * Callback type for wrapping mutations in Obj.change().
+ * Callback type for wrapping mutations in Obj.update().
  * Contains separate callbacks for table object and row mutations.
  */
 export type TableChangeCallback<T extends TableRow> = {
@@ -53,10 +53,10 @@ export type TableChangeCallback<T extends TableRow> = {
  * Use this when the table and rows are stored in the ECHO database.
  */
 export const createEchoChangeCallback = <T extends TableRow>(table: Table.Table): TableChangeCallback<T> => ({
-  table: (mutate) => Obj.change(table, (table) => mutate(table as unknown as Table.Table)),
+  table: (mutate) => Obj.update(table, (table) => mutate(table as unknown as Table.Table)),
   row: (row, mutate) => {
     if (Obj.isObject(row)) {
-      Obj.change(row, (row) => mutate(row as T));
+      Obj.update(row, (row) => mutate(row as T));
     } else {
       mutate(row);
     }
@@ -112,7 +112,7 @@ export type TableModelProps<T extends TableRow = TableRow> = {
   projection: ProjectionModel;
   db?: Database.Database;
   /**
-   * Callbacks to wrap mutations in Obj.change().
+   * Callbacks to wrap mutations in Obj.update().
    * Use createEchoChangeCallback() for ECHO-backed objects or createDirectChangeCallback() for plain objects.
    */
   change?: TableChangeCallback<T>;
@@ -894,13 +894,13 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       if (field) {
         // Persist sort to view.query.ast
         const newQuery = baseQuery.orderBy(Order.property<any>(field.path as string, inMemorySort.direction));
-        Obj.change(view, (view) => {
+        Obj.update(view, (view) => {
           view.query.ast = newQuery.ast as Mutable<typeof newQuery.ast>;
         });
       }
     } else {
       // Clear sort from view.query.ast
-      Obj.change(view, (view) => {
+      Obj.update(view, (view) => {
         view.query.ast = baseQuery.ast as Mutable<typeof baseQuery.ast>;
       });
     }

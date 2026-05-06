@@ -279,7 +279,7 @@ const handler: Operation.WithHandler<typeof AttachImage> = AttachImage.pipe(
           new Error('Subject must be a Person or Organization (image field is only defined on those types)'),
         );
       }
-      Entity.change(target as Entity.Any, (obj) => {
+      Entity.update(target as Entity.Any, (obj) => {
         (obj as { image?: string }).image = uploadedUrl;
       });
 

@@ -126,16 +126,10 @@ export namespace AppCapabilities {
    */
   export const Toolkit = Capability$.make<Toolkit>('org.dxos.app-framework.capability.ai-toolkit');
 
-  // TODO(burdon): Move type upstream (into blueprint package).
-  export type BlueprintDefinition = {
-    key: string;
-    make: () => Blueprint.Blueprint;
-  };
-
   /**
    * @category Capability
    */
-  export const BlueprintDefinition = Capability$.make<BlueprintDefinition>(
+  export const BlueprintDefinition = Capability$.make<Blueprint.Definition>(
     'org.dxos.app-framework.capability.blueprint-definition',
   );
 

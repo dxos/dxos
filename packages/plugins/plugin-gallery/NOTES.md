@@ -50,10 +50,10 @@ asChild` cleanly.
 
 - A surface receiving an ECHO subject via `AppSurface.ObjectArticleProps<T>`
   MUST call `useObject(subject)` and read from the snapshot. Without it,
-  mutations to nested arrays/structs (e.g. `Obj.change(obj, m => m.images = [...])`)
+  mutations to nested arrays/structs (e.g. `Obj.update(obj, m => m.images = [...])`)
   do not trigger re-render until you navigate away and back.
 - Reads come from the snapshot, but writes still target the original subject
-  via `Obj.change(subject, ...)`. Cast inside the change callback:
+  via `Obj.update(subject, ...)`. Cast inside the change callback:
   `const m = obj as Obj.Mutable<T>; m.images = [...]`.
 - For `useMemo` deps over snapshot arrays, depend on both the array and its
   `.length` so mutations trigger recompute even if the snapshot keeps a

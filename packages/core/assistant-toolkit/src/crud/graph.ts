@@ -11,7 +11,6 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { ContextQueueService } from '@dxos/compute';
 import { Entity, Filter, Obj, Query, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
@@ -27,6 +26,7 @@ import {
   getTypeIdentifierAnnotation,
 } from '@dxos/echo/internal';
 import { mapAst } from '@dxos/effect';
+import { ContextQueueService } from '@dxos/functions';
 import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, isNonNullable, trim } from '@dxos/util';

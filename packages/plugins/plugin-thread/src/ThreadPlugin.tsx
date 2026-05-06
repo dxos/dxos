@@ -128,3 +128,5 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default ThreadPlugin;

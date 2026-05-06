@@ -17,7 +17,7 @@ const makePost = (props: {
 }): Subscription.Post => {
   const post = Obj.make(Subscription.Post, { title: props.title, published: props.published });
   if (props.starred && props.starDxn) {
-    Obj.change(post, (post) => {
+    Obj.update(post, (post) => {
       Obj.getMeta(post).tags = [props.starDxn!];
     });
   }

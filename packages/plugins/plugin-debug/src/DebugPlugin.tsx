@@ -53,3 +53,5 @@ const setupDevtools = () => {
     location.pathname = '/';
   };
 };
+
+export default DebugPlugin;

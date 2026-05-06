@@ -217,7 +217,7 @@ export class AddObjectAction implements ActionHandler {
       });
     }
 
-    Obj.change(scene, (sceneObj) => {
+    Obj.update(scene, (sceneObj) => {
       sceneObj.objects.push(Ref.make(object));
     });
     Obj.setParent(object, scene);
@@ -286,7 +286,7 @@ export class DeleteObjectsAction implements ActionHandler {
     ctx.setSelection(null);
 
     // Remove from ECHO scene.
-    Obj.change(scene, (sceneObj) => {
+    Obj.update(scene, (sceneObj) => {
       for (const objId of selectedObjectIds) {
         const index = sceneObj.objects.findIndex((ref) => (ref?.target as any)?.id === objId);
         if (index !== -1) {
@@ -391,7 +391,7 @@ export class JoinObjectsAction implements ActionHandler {
     // Clear selection before disposing.
     ctx.setSelection(null);
 
-    Obj.change(scene, (sceneObj) => {
+    Obj.update(scene, (sceneObj) => {
       for (const objId of objectsToDelete) {
         const index = sceneObj.objects.findIndex((ref) => (ref?.target as any)?.id === objId);
         if (index !== -1) {
@@ -499,7 +499,7 @@ export class SubtractObjectsAction implements ActionHandler {
 
     ctx.setSelection(null);
 
-    Obj.change(scene, (sceneObj) => {
+    Obj.update(scene, (sceneObj) => {
       for (const objId of objectsToDelete) {
         const index = sceneObj.objects.findIndex((ref) => (ref?.target as any)?.id === objId);
         if (index !== -1) {

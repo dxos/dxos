@@ -31,7 +31,7 @@ const handler: Operation.WithHandler<typeof DeleteMessage> = DeleteMessage.pipe(
         return { messageIndex: -1 };
       }
 
-      Obj.change(thread, (thread) => {
+      Obj.update(thread, (thread) => {
         thread.messages.splice(msgIndex, 1);
       });
 

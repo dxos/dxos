@@ -16,7 +16,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddSchema> = SpaceOpe
       const db = input.db;
       const schemas = yield* Effect.promise(() => db.schemaRegistry.register([input.schema]));
       const schema = schemas[0];
-      Obj.change(schema.persistentSchema, (obj) => {
+      Obj.update(schema.persistentSchema, (obj) => {
         if (input.name) {
           obj.name = input.name;
         }

@@ -48,6 +48,9 @@
       "path": "../../core/echo/echo-db"
     },
     {
+      "path": "../../core/functions-runtime"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {

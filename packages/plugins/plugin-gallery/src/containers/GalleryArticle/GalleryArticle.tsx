@@ -45,7 +45,7 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
     accept: 'image/*',
     onUpload: async (info, file) => {
       const { width, height } = await loadImageDimensions(file);
-      Obj.change(subject, (subject) => {
+      Obj.update(subject, (subject) => {
         const mutable = subject as Obj.Mutable<Gallery.Gallery>;
         const next = [...(mutable.images ?? [])];
         next.push({ url: info.url, type: info.type, name: info.name, width, height });
@@ -56,7 +56,7 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
 
   const handleDelete = useCallback(
     (index: number) => {
-      Obj.change(subject, (subject) => {
+      Obj.update(subject, (subject) => {
         const mutable = subject as Obj.Mutable<Gallery.Gallery>;
         const next = [...(mutable.images ?? [])];
         next.splice(index, 1);

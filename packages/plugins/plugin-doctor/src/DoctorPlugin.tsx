@@ -15,3 +15,5 @@ export const DoctorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );
+
+export default DoctorPlugin;

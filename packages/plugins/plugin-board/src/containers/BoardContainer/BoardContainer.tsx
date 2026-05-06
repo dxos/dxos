@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, type Obj as ObjNs, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
@@ -31,12 +31,13 @@ type PickerState = {
 export type BoardContainerProps = AppSurface.ObjectArticleProps<BoardType.Board>;
 
 export const BoardContainer = ({ role, subject: board, attendableId }: BoardContainerProps) => {
-  const controller = useRef<BoardController>(null);
+  const { hasAttention } = useAttention(attendableId);
+  const db = Obj.getDatabase(board);
   const [boardItems] = useObject(board, 'items');
   const itemsAtom = useMemo(
     () =>
       Atom.make((get) => {
-        const result: ObjNs.Unknown[] = [];
+        const result: Obj.Unknown[] = [];
         for (const ref of boardItems ?? []) {
           const obj = get(AtomObj.makeWithReactive(ref));
           if (obj) {
@@ -48,11 +49,11 @@ export const BoardContainer = ({ role, subject: board, attendableId }: BoardCont
     [boardItems],
   );
   const items = useAtomValue(itemsAtom);
+
+  const controller = useRef<BoardController>(null);
   const addTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [pickerState, setPickerState] = useState<PickerState | null>(null);
-  const { hasAttention } = useAttention(attendableId);
 
-  const db = Obj.getDatabase(board);
   // TODO(burdon): Use search.
   const objects = useQuery(db, Filter.everything());
   const options = useMemo<ObjectPickerContentProps['options']>(
@@ -82,7 +83,7 @@ export const BoardContainer = ({ role, subject: board, attendableId }: BoardCont
       // Toolbar "+" omits position → fall back to the picker over existing objects.
       if (position) {
         const doc = db.add(Markdown.make());
-        Obj.change(board, (board) => {
+        Obj.update(board, (board) => {
           board.items.push(Ref.make(doc));
           board.layout.cells[doc.id.toString()] = position;
         });
@@ -100,7 +101,7 @@ export const BoardContainer = ({ role, subject: board, attendableId }: BoardCont
     (id) => {
       // TODO(burdon): Impl. DXN.equals and pass in DXN from `id`.
       const idx = board.items.findIndex((ref) => ref.dxn.asEchoDXN()?.echoId === id);
-      Obj.change(board, (board) => {
+      Obj.update(board, (board) => {
         if (idx !== -1) {
           board.items.splice(idx, 1);
         }
@@ -113,7 +114,7 @@ export const BoardContainer = ({ role, subject: board, attendableId }: BoardCont
   const handleMove = useCallback<NonNullable<BoardRootProps['onMove']>>(
     (id, position) => {
       const layout = board.layout.cells[id];
-      Obj.change(board, (board) => {
+      Obj.update(board, (board) => {
         board.layout.cells[id] = { ...layout, ...position };
       });
     },
@@ -133,7 +134,7 @@ export const BoardContainer = ({ role, subject: board, attendableId }: BoardCont
       }
 
       // Create a reference to the selected object and add it to the board.
-      Obj.change(board, (board) => {
+      Obj.update(board, (board) => {
         board.items.push(Ref.make(selectedObject));
 
         // Set the layout position for the new item.

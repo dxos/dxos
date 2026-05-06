@@ -22,7 +22,7 @@ type DefaultStoryProps = {
 const DefaultStory = ({ valence, title, body }: DefaultStoryProps) => (
   <div className='w-[30rem]'>
     <Message.Root valence={valence}>
-      {title && <Message.Title>{title}</Message.Title>}
+      {title && <Message.Title onClose={() => console.log('close')}>{title}</Message.Title>}
       {body && <Message.Content>{body}</Message.Content>}
     </Message.Root>
   </div>

@@ -145,7 +145,7 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
 
   const handleAxisResize = useCallback<NonNullable<GridContentProps['onAxisResize']>>(
     ({ axis, size, index: numericIndex }) => {
-      Obj.change(model.sheet, (sheet) => {
+      Obj.update(model.sheet, (sheet) => {
         if (axis === 'row') {
           const rowId = sheet.rows[parseInt(numericIndex)];
           sheet.rowMeta[rowId] ??= {};

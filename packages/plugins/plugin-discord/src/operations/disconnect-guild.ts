@@ -14,7 +14,7 @@ const handler: Operation.WithHandler<typeof DisconnectGuild> = DisconnectGuild.p
   Operation.withHandler(
     Effect.fn(function* ({ bot }) {
       const obj = (yield* Database.load(bot)) as Discord.Bot;
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         const mutable = obj as Obj.Mutable<typeof obj>;
         mutable.guildId = undefined;
         mutable.guildName = undefined;

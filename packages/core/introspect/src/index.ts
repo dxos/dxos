@@ -3,12 +3,36 @@
 //
 
 export { createIntrospector, type Introspector, type IntrospectorOptions } from './introspector';
-export { formatSymbolRef, isSymbolRef, parseRef, type RefParts, type SymbolRefParts } from './refs';
+export {
+  formatCapabilityRef,
+  formatOperationRef,
+  formatPluginRef,
+  formatSchemaRef,
+  formatSurfaceRef,
+  formatSymbolRef,
+  isSymbolRef,
+  parseRef,
+  type CapabilityRefParts,
+  type OperationRefParts,
+  type PluginRefParts,
+  type RefParts,
+  type SchemaRefParts,
+  type SurfaceRefParts,
+  type SymbolRefParts,
+} from './refs';
 export type {
+  Capability,
+  Intent,
   Package,
   PackageDetail,
   PackageFilter,
+  Plugin,
+  PluginDetail,
+  PluginFilter,
+  PluginId,
+  Schema,
   SourceLocation,
+  Surface,
   SymbolDetail,
   SymbolInclude,
   SymbolKind,

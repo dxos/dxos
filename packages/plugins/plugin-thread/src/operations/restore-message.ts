@@ -19,7 +19,7 @@ const handler: Operation.WithHandler<typeof RestoreMessage> = RestoreMessage.pip
       const db = Obj.getDatabase(thread);
       invariant(db, 'Database not found');
 
-      Obj.change(thread, (thread) => {
+      Obj.update(thread, (thread) => {
         thread.messages.splice(messageIndex, 0, Ref.make(message));
       });
 

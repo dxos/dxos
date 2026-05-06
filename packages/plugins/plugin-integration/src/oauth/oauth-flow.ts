@@ -195,7 +195,7 @@ export const performOAuthFlow = Effect.fn(function* (
       return yield* Effect.fail(new Error(`OAuth flow failed: ${oauthResult.reason}`));
     }
 
-    Obj.change(accessToken, (accessToken) => {
+    Obj.update(accessToken, (accessToken) => {
       accessToken.token = oauthResult.accessToken;
     });
   }).pipe(Effect.ensuring(server.stop().pipe(Effect.catchAll(() => Effect.void))));

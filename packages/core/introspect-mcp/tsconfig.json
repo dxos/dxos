@@ -10,10 +10,19 @@
   ],
   "references": [
     {
+      "path": "../../common/effect-zod"
+    },
+    {
       "path": "../../common/log"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../introspect"
+    },
+    {
+      "path": "../introspect-tools"
     }
   ]
 }

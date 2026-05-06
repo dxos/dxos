@@ -1,30 +1,17 @@
 # @dxos/introspect
 
-Indexes packages and exported symbols across the DXOS monorepo. Pure data results — adapters (MCP, Composer plugin) sit on top.
+Indexes packages and exported symbols across the DXOS monorepo. 
+Pure data results — adapters (MCP, Composer plugin) sit on top.
 
-This package is **phase 1**: package walking + symbol extraction. Plugins, surfaces, capabilities, intents, schemas, idioms, and file watching are deferred to later phases.
+## Development
 
-## API
+To build the index:
 
-```ts
-import { createIntrospector } from '@dxos/introspect';
-
-const intro = createIntrospector({ monorepoRoot: '/path/to/dxos' });
-await intro.ready;
-
-intro.listPackages({ pathPrefix: 'packages/plugins' });
-intro.getPackage('@dxos/echo');
-intro.findSymbol('Expando');
-intro.getSymbol('@dxos/echo-schema#Expando', ['source']);
-
-intro.dispose();
+```bash
+moon run introspect:index
+# OR
+pnpm exec tsx --conditions=source packages/core/introspect/scripts/build-index.ts
 ```
-
-All result types are plain serializable data — no classes, no methods, no Promises in the output. JSON-safe.
-
-## Refs
-
-Symbol refs are `<package>#<name>`, e.g. `@dxos/echo-schema#Expando`. Use `formatSymbolRef` and `parseRef` rather than string-manipulating.
 
 ## Indexing strategy
 

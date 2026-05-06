@@ -20,9 +20,9 @@ export type PostCardProps = AppSurface.ObjectCardProps<Subscription.Post>;
  * `AppSurface.Card` slot — Card.Root is supplied by the surface host
  * (popovers, sections, related-objects), so the body emits Card.Content only.
  */
-export const PostCard = ({ subject: post }: PostCardProps) => {
+export const PostCard = ({ subject }: PostCardProps) => {
   // Re-render on in-place mutations (readAt, archived, content fetched lazily, …).
-  useObject(post);
+  const [post] = useObject(subject);
 
   // Resolve the source feed's display name when present. `post.feed?.target?.name` only
   // resolves synchronously when the ref is already loaded; querying via useQuery means

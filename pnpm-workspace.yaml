@@ -143,6 +143,7 @@ catalog:
   '@opentui/core-linux-x64': 0.1.61
   '@opentui/core-win32-x64': 0.1.61
   '@opentui/solid': 0.1.61
+  '@oxc-project/runtime': ^0.129.0
   '@oxc-project/types': 0.128.0
   '@peermetrics/webrtc-stats': 5.7.1
   '@phosphor-icons/core': ^2.1.1
@@ -651,6 +652,8 @@ catalog:
   webrtc-adapter: ^9.0.1
   websocket-stream: ^5.5.2
   wnfs: 0.2.2
+  workbox-precaching: ^7.3.0
+  workbox-routing: ^7.3.0
   workbox-window: ^7.4.0
   workerize-loader: ^2.0.2
   wrangler: ^4.59.1
@@ -661,6 +664,7 @@ catalog:
   yargs: ~16.2.0
   zen-observable: ^0.10.0
   zen-push: ^0.3.1
+  zod: ^4.0.0
   zone.js: ^0.15.0
   zx: ^8.8.5
 

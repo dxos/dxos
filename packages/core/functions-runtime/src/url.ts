@@ -23,7 +23,7 @@ export const getUserFunctionIdInMetadata = (meta: ObjectMeta) => {
 
 /**
  * NOTE: functionId is backend ID, not ECHO object id.
- * Must be called within an Obj.change callback to get mutable meta.
+ * Must be called within an Obj.update callback to get mutable meta.
  */
 export const setUserFunctionIdInMetadata = (meta: Mutable<ObjectMeta>, functionId: string) => {
   const key = meta.keys.find((key) => key.source === FUNCTIONS_META_KEY);

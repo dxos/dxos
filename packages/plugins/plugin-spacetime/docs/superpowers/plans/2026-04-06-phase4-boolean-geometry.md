@@ -641,7 +641,7 @@ After committing the primary object, commit companions:
 for (const companion of this._drag.companions) {
   const companionObj = ctx.getObject(companion.objectId);
   if (companionObj) {
-    Obj.change(companionObj, (obj) => {
+    Obj.update(companionObj, (obj) => {
       obj.position = {
         x: companion.mesh.position.x,
         y: companion.mesh.position.y,
@@ -952,7 +952,7 @@ const handleJoinSelected = useCallback(() => {
   });
 
   // Delete source objects, add new one.
-  Obj.change(scene, (obj) => {
+  Obj.update(scene, (obj) => {
     for (const objId of objectsToDelete) {
       const index = obj.objects.findIndex((ref) => (ref?.target as any)?.id === objId);
       if (index !== -1) {

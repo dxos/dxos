@@ -70,7 +70,6 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
-    "@dxos/blueprints": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/functions": "workspace:*",
@@ -86,6 +85,7 @@
   "devDependencies": {
     "@dxos/assistant": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/functions-runtime": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@effect/vitest": "catalog:",
     "vite": "catalog:",
