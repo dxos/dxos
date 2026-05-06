@@ -10,12 +10,14 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapability, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/react-client/echo';
-import { Thread } from '@dxos/types';
+import { Channel, Thread } from '@dxos/types';
 
 import { ThreadSettings } from '#components';
 import { CallDebugPanel, CallSidebar, ChannelContainer, ChatContainer, ThreadCompanion } from '#containers';
 import { meta } from '#meta';
-import { Channel, ThreadCapabilities, type Settings } from '#types';
+import { ThreadCapabilities, type Settings } from '#types';
+
+import { ChannelChat } from '../containers/ChannelContainer';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -35,12 +37,11 @@ export default Capability.makeModule(() =>
         ),
         component: ({ data: { companionTo: channel } }) => {
           const space = getSpace(channel);
-          const thread = channel.defaultThread.target;
-          if (!space || !thread) {
+          if (!space) {
             return null;
           }
 
-          return <ChatContainer thread={thread} space={space} />;
+          return <ChannelChat channel={channel} space={space} />;
         },
       }),
       Surface.create({

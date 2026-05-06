@@ -3,3 +3,4 @@
 //
 
 export { ChannelContainer as default } from './ChannelContainer';
+export { ChannelChat } from './ChannelChat';

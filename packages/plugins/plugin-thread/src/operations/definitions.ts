@@ -6,15 +6,13 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, Key, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Key, Obj, Ref } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { Actor, AnchoredTo, Message, Thread } from '@dxos/types';
+import { Actor, AnchoredTo, Channel, Message, Thread } from '@dxos/types';
 
 import { meta } from '#meta';
-
-import { Channel } from '../types';
 
 const THREAD_OPERATION = `${meta.id}.operation`;
 
@@ -50,6 +48,17 @@ export const CreateChannelThread = Operation.make({
   output: Schema.Struct({
     object: Thread.Thread,
   }),
+});
+
+export const AppendChannelMessage = Operation.make({
+  meta: { key: `${THREAD_OPERATION}.append-channel-message`, name: 'Append Channel Message' },
+  services: [Capability.Service, Feed.FeedService],
+  input: Schema.Struct({
+    channel: Channel.Channel,
+    sender: Actor.Actor,
+    text: Schema.String,
+  }),
+  output: Schema.Void,
 });
 
 export const Create = Operation.make({

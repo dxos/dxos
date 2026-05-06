@@ -12,12 +12,11 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { type CallState, type MediaState, ThreadCapabilities } from '@dxos/plugin-thread';
-import { type Channel } from '@dxos/plugin-thread/types';
 import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { type Space } from '@dxos/react-client/echo';
-import { type Message } from '@dxos/types';
+import { type Channel, type Message } from '@dxos/types';
 
 import { MeetingOperation } from '#operations';
 import { Meeting, MeetingCapabilities } from '#types';

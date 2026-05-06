@@ -14,10 +14,11 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { Channel, ThreadCapabilities } from '@dxos/plugin-thread/types';
+import { ThreadCapabilities } from '@dxos/plugin-thread/types';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
 import { linkedSegment } from '@dxos/react-ui-attention';
+import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 import { MeetingOperation } from '#operations';

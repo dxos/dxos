@@ -15,11 +15,10 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown/types';
 import { corePlugins } from '@dxos/plugin-testing';
-import { Channel } from '@dxos/plugin-thread/types';
 import { Query, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { Message, Thread, Transcript } from '@dxos/types';
+import { Channel, Message, Thread, Transcript } from '@dxos/types';
 
 import { Meeting } from '#types';
 

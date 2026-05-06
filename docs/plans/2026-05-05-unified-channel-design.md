@@ -16,10 +16,11 @@ DXOS has accumulated several chat-shaped data types with overlapping shape but i
 - `AiSession` (`core/assistant`) — runtime that drives `Feed.append`/`Feed.query` over a chat's feed.
 
 Symptoms:
+
 - Comment threads materialize one ECHO/AutoMerge object per `Message`. Doesn't scale to externally-synced sources (Slack channels: 100k+ messages).
 - "Which type do I use?" decisions for plugin authors. The answer today is a coin flip between `Thread` and `Mailbox`-shaped.
 - A unified inbox / cross-conversation search / AI summarization has to enumerate types instead of querying one shape.
-- The draft Slack PR adds a *third* feed-backed schema with the same `{ name, feed, ... }` shape.
+- The draft Slack PR adds a _third_ feed-backed schema with the same `{ name, feed, ... }` shape.
 
 ## Decision
 
@@ -29,14 +30,14 @@ Introduce a single feed-backed conversation primitive — **`Channel`** — for 
 
 ### Type landscape (initial)
 
-| Plugin | Type | How it's distinguished | Storage |
-|---|---|---|---|
-| `plugin-slack` | `Channel` | meta key `{ source: 'slack', id: ... }` | feed |
-| `plugin-discord` | `Channel` | meta key `{ source: 'discord', id: ... }` | feed |
-| Native DXOS DM | `Channel` | no extras — just a `Channel` | feed |
-| `plugin-thread` (comments) | `Thread` *(unchanged)* | AutoMerge `messages: Ref<Message>[]`, `AnchoredTo(Thread, range)` | AutoMerge graph |
-| `plugin-inbox` (Mailbox) | `Mailbox` | filters, draft handling, label-as-folder | feed |
-| `assistant-toolkit` (AI Chat) | `AiChat` | `view`, `CompanionTo` artifacts, always-respond loop | feed |
+| Plugin                        | Type                   | How it's distinguished                                            | Storage         |
+| ----------------------------- | ---------------------- | ----------------------------------------------------------------- | --------------- |
+| `plugin-slack`                | `Channel`              | meta key `{ source: 'slack', id: ... }`                           | feed            |
+| `plugin-discord`              | `Channel`              | meta key `{ source: 'discord', id: ... }`                         | feed            |
+| Native DXOS DM                | `Channel`              | no extras — just a `Channel`                                      | feed            |
+| `plugin-thread` (comments)    | `Thread` _(unchanged)_ | AutoMerge `messages: Ref<Message>[]`, `AnchoredTo(Thread, range)` | AutoMerge graph |
+| `plugin-inbox` (Mailbox)      | `Mailbox`              | filters, draft handling, label-as-folder                          | feed            |
+| `assistant-toolkit` (AI Chat) | `AiChat`               | `view`, `CompanionTo` artifacts, always-respond loop              | feed            |
 
 The existing `Channel` wrapper in `plugin-thread` (the `defaultThread + threads[]` AutoMerge object) gets renamed or replaced to free the `Channel` typename for `@dxos/types`. This is a small, contained change — that wrapper has limited consumers.
 
@@ -47,10 +48,7 @@ The existing `Channel` wrapper in `plugin-thread` (the `defaultThread + threads[
 export const Channel = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
-}).pipe(
-  Type.object({ typename: 'org.dxos.type.channel', version: '0.1.0' }),
-  FeedAnnotation.set(true),
-);
+}).pipe(Type.object({ typename: 'org.dxos.type.channel', version: '0.1.0' }), FeedAnnotation.set(true));
 
 export const make = (props: Omit<Obj.MakeProps<typeof Channel>, 'feed'> = {}) => {
   const feed = Feed.make();
@@ -63,6 +61,7 @@ export const make = (props: Omit<Obj.MakeProps<typeof Channel>, 'feed'> = {}) =>
 The factory mirrors the existing `Mailbox` pattern: create the backing `Feed`, then call `Obj.setParent(feed, channel)` so the feed object's parent is the channel. This is required so the feed is properly scoped to the channel for app-graph traversal, lifecycle, and cleanup. (TODO upstream: declare parent relationship in the schema instead of imperatively in `make()` — same TODO `Mailbox.make` carries.)
 
 The schema deliberately stays thin. Variation lives in:
+
 - **Relations**: `CompanionTo` (assistant config / artifacts). `AnchoredTo` is reserved for the future comment-thread migration.
 - **Meta keys** on the `Channel` for external sync identity (`{ source: 'slack', id: 'T123/C456' }`). Plugin-slack queries by meta to find its channels.
 - **Per-message state**: threading via `Message.threadId` and `Message.parentMessage` (already on `Message`). Status changes via system events appended to the feed (when statuses are wanted).
@@ -76,9 +75,9 @@ The defining criterion for `Channel` is **interaction pattern and UI shape**: an
 - **`Mailbox`** is an email client. The UI is list/reading-pane, not a turn-taking chat surface. Interaction is pull-based (refresh, scan, open), threading is reconstructed from headers, drafts are first-class, label-as-folder is the navigation model. Trying to render mail in a chat UI loses what makes mail useful.
 - **`AiChat`** is a single-player assistant interface. The UI is turn-taking with the user, reasoning blocks shown inline, tool calls visualized, view modes (`normal | summary | thinking | debug`) for controlling what surface area you see. The "always respond" loop is core to the experience. Trying to render an AiChat in a chat UI loses the turn semantics and the AI-specific affordances.
 
-The schema-level differences (`Mailbox.filters` and draft handling; `AiChat.view` and `CompanionTo` artifacts) are *consequences* of these distinct interaction models, not the root cause for keeping them separate. Forcing a single union schema with optional `view`/`filters` fields would create a god-schema whose UI dispatch logic eventually re-invents three separate surfaces anyway.
+The schema-level differences (`Mailbox.filters` and draft handling; `AiChat.view` and `CompanionTo` artifacts) are _consequences_ of these distinct interaction models, not the root cause for keeping them separate. Forcing a single union schema with optional `view`/`filters` fields would create a god-schema whose UI dispatch logic eventually re-invents three separate surfaces anyway.
 
-The shared layer for cross-cutting infrastructure (search, AI summarization, unified inbox) is the *protocol* — `feed: Ref<Feed>` of `Message` entries, marked by `FeedAnnotation` — which all three types satisfy. That's the right level of unification; schema unification would be too aggressive.
+The shared layer for cross-cutting infrastructure (search, AI summarization, unified inbox) is the _protocol_ — `feed: Ref<Feed>` of `Message` entries, marked by `FeedAnnotation` — which all three types satisfy. That's the right level of unification; schema unification would be too aggressive.
 
 **Test for future plugins:** "Would this render naturally in a Slack-like multi-party chat surface?" If yes, use `Channel`. If no, define your own type that still uses `feed: Ref<Feed>` of `Message`s so it participates in the shared protocol.
 
@@ -97,6 +96,7 @@ Future shape (for a follow-up migration): **one `Channel` per document** holding
 Trade-off (when the migration happens): a comment-heavy doc gets one larger feed instead of N small feeds. This is the right scale unit — "all comments on this doc" is the natural query — and avoids per-thread feed overhead for typically short conversations.
 
 Reasons to defer:
+
 - Comment data is live in user spaces; a migration script needs care.
 - `AnchoredTo` retargeting touches the editor / decoration plumbing in `plugin-thread`.
 - The native-channel work doesn't require it; comments can ride along later.
@@ -106,12 +106,14 @@ Reasons to defer:
 Two distinct interaction patterns, two types:
 
 ### `AiChat` — single-player assistant
+
 - 1:1 between the user and their assistant.
 - "Always respond" semantics: every user message triggers a turn.
 - Driven by `AiSession` running an always-respond loop over the chat's feed.
 - `view` field for per-chat display preference; `CompanionTo` for bound artifacts/blueprints.
 
 ### `Channel` — multi-player conversation, AI as participant
+
 - N humans (and bots) participating.
 - "Respond on demand" semantics: AI replies only when @-mentioned.
 - The `Channel` schema doesn't know about AI. AI participation is a trigger registered by `plugin-assistant`:
@@ -119,7 +121,7 @@ Two distinct interaction patterns, two types:
   2. When a `Message` lands in the feed with an `@assistant` mention block, the trigger constructs an `AiSession` over **the channel's own feed**, runs one turn, appends the response.
   3. `AiSession` exits. No follow-up until the next mention.
 
-The runtime symmetry: **`AiSession` drives an AI turn over any `Feed<Message>`**. What differs between `AiChat` and `Channel` is *when* a session is spun up — every user message vs. only on mention.
+The runtime symmetry: **`AiSession` drives an AI turn over any `Feed<Message>`**. What differs between `AiChat` and `Channel` is _when_ a session is spun up — every user message vs. only on mention.
 
 This is why `AiChat` stays a separate type: the always-respond loop has different transactional shape (UI blocks for the turn, streaming reasoning blocks, implicit single-participant assumption). A Channel reply from AI is just another async message; turn semantics are absent.
 
@@ -131,8 +133,8 @@ A foundational assumption: `Ref<Message>` to a message stored in a feed resolves
 
 These stay distinct — they encode different semantics:
 
-- **`AnchoredTo(target, anchor)`** — spatial/positional binding. A comment-thread root anchors to a doc range. Used for things that have a *location* in another object.
-- **`CompanionTo(channel, artifact)`** — artifact/configuration binding. An AI Chat has companion blueprints, attached objects, configured personas. Used for things conceptually *attached* to a chat without occupying a position.
+- **`AnchoredTo(target, anchor)`** — spatial/positional binding. A comment-thread root anchors to a doc range. Used for things that have a _location_ in another object.
+- **`CompanionTo(channel, artifact)`** — artifact/configuration binding. An AI Chat has companion blueprints, attached objects, configured personas. Used for things conceptually _attached_ to a chat without occupying a position.
 
 `Channel` uses `CompanionTo` for things like per-channel assistant config. `AnchoredTo` is reserved for the future comment-thread migration; native channels (Slack/Discord/DMs) don't need it.
 
@@ -156,7 +158,7 @@ Concrete change set for this PR:
    - `src/operations/set-active.ts`
    - `src/containers/MeetingsList/MeetingsList.tsx`
    - `src/containers/MeetingContainer/MeetingContainer.stories.tsx`
-   Wherever meeting code reads `channel.defaultThread` or `channel.threads`, switch to "the channel's feed of messages" or drop the indirection if it was only being used to find the single chat for the meeting.
+     Wherever meeting code reads `channel.defaultThread` or `channel.threads`, switch to "the channel's feed of messages" or drop the indirection if it was only being used to find the single chat for the meeting.
 4. **Update `plugin-transcription`** — `src/stories/useIsSpeaking.tsx` (one story).
 5. **Update tests and stories** broken by the shape change. No live-data migration (fresh enough feature).
 

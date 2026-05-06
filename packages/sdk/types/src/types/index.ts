@@ -5,6 +5,7 @@
 import * as AccessToken from './AccessToken';
 import * as Actor from './Actor';
 import * as AnchoredTo from './AnchoredTo';
+import * as Channel from './Channel';
 import * as ContentBlock from './ContentBlock';
 import * as Employer from './Employer';
 import * as Event from './Event';
@@ -40,6 +41,7 @@ export {
   // Common object types
   //
   AccessToken,
+  Channel,
   Event,
   Message,
   Organization,

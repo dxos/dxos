@@ -17,14 +17,14 @@ import { Button, ElevationProvider, Input, Panel, useTranslation } from '@dxos/r
 import { Settings } from '@dxos/react-ui-form';
 import { Menu, MenuRootProps, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
+import { type Channel } from '@dxos/types';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { Call } from '#components';
 import { meta } from '#meta';
 import { ThreadCapabilities } from '#types';
-import { type Channel } from '#types';
 
-import { ChatContainer } from '../ChatContainer';
+import { ChannelChat } from './ChannelChat';
 
 export type ChannelContainerProps = AppSurface.ObjectArticleProps<
   Channel.Channel | undefined,
@@ -140,14 +140,14 @@ export const ChannelContainer = ({
     );
   }
 
-  if (channel && channel.defaultThread.target && space) {
+  if (channel && space) {
     return (
       <Panel.Root classNames='dx-document'>
         <Panel.Toolbar asChild>
           <ChannelToolbar attendableId={attendableId} role={role} onJoinCall={handleJoin} />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <ChatContainer space={space} thread={channel.defaultThread.target} />
+          <ChannelChat space={space} channel={channel} />
         </Panel.Content>
       </Panel.Root>
     );

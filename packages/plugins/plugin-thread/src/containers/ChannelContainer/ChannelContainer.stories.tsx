@@ -9,6 +9,7 @@ import React from 'react';
 import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { Feed } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -16,10 +17,9 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';
 import { Query, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
-import { Message, Thread } from '@dxos/types';
+import { Channel, Message, Thread } from '@dxos/types';
 
 import { translations } from '#translations';
-import { Channel } from '#types';
 
 import { ThreadPlugin } from '../../ThreadPlugin';
 import { ChannelContainer, type ChannelContainerProps } from './ChannelContainer';
@@ -43,11 +43,13 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
-      capabilities: [Capability.contributes(AppCapabilities.Schema, [Channel.Channel, Thread.Thread, Message.Message])],
+      capabilities: [
+        Capability.contributes(AppCapabilities.Schema, [Channel.Channel, Feed.Feed, Thread.Thread, Message.Message]),
+      ],
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Channel.Channel, Thread.Thread, Message.Message],
+          types: [Channel.Channel, Feed.Feed, Thread.Thread, Message.Message],
           config: new Config({
             runtime: {
               services: {
