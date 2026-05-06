@@ -112,6 +112,10 @@ export class EchoClient extends Resource {
   }
 
   protected override async _close(ctx: Context): Promise<void> {
+    // Reset coalescer before unregistering databases so that stale GraphQueryContext
+    // instances (held alive by the 200ms grace timer) are stopped now, while databases
+    // are still open. This prevents them from being re-used in the next open cycle.
+    this._graph._resetCoalescer();
     if (this._indexQuerySourceProvider) {
       this._graph.unregisterQuerySourceProvider(this._indexQuerySourceProvider);
     }

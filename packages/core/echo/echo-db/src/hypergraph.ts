@@ -48,6 +48,14 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     this._coalescer = new QueryContextCoalescer(() => this._createLiveObjectQueryContext());
   }
 
+  /**
+   * Stop all active coalesced query contexts without permanently disposing the coalescer.
+   * Called from EchoClient._close() so stale contexts don't bleed into the next open cycle.
+   */
+  _resetCoalescer(): void {
+    this._coalescer.reset();
+  }
+
   dispose(): void {
     this._coalescer.dispose();
   }

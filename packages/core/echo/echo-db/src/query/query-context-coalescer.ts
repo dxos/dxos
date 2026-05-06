@@ -258,12 +258,14 @@ export class QueryContextCoalescer<
     }));
   }
 
-  /** Tear down all shared entries. Call when the parent database or queue closes. */
-  dispose(): void {
+  /**
+   * Stop all running entries and clear the map without marking the coalescer as permanently disposed.
+   * Use this when the parent resource closes but may reopen (e.g. EchoClient lifecycle).
+   */
+  reset(): void {
     if (this.#disposed) {
       return;
     }
-    this.#disposed = true;
     for (const entry of this.#entries.values()) {
       if (entry.stopTimer !== undefined) {
         clearTimeout(entry.stopTimer);
@@ -277,6 +279,15 @@ export class QueryContextCoalescer<
       entry.inFlight = undefined;
     }
     this.#entries.clear();
+  }
+
+  /** Tear down all shared entries permanently. Call when the parent resource is fully destroyed. */
+  dispose(): void {
+    if (this.#disposed) {
+      return;
+    }
+    this.#disposed = true;
+    this.reset();
   }
 
   #getOrCreateEntry(key: string, _ast: QueryAST.Query): SharedEntry<T, O> {
