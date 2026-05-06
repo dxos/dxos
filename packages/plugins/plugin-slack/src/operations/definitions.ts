@@ -4,8 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { Integration } from '@dxos/plugin-integration/types';
 
 import { meta } from '#meta';
@@ -25,30 +26,33 @@ const RemoteTarget = Schema.Struct({
  * reachable from the integration's token.
  *
  * Read-only: returns one descriptor per remote conversation, NEVER creates a
- * local Chat. Materialization happens lazily in `SyncSlackChannel` on first
+ * local Channel. Materialization happens lazily in `SyncSlackChannel` on first
  * sync of a target, so unselected conversations leave no trace in the space.
  */
 export const GetSlackChannels = Operation.make({
   meta: {
     key: `${SLACK_OPERATION}.get-slack-channels`,
     name: 'Get Slack Channels',
-    description: 'List Slack conversations reachable from an integration without materializing local Chats.',
+    description: 'List Slack conversations reachable from an integration without materializing local Channels.',
   },
+  // Database.Service / Feed.FeedService are provided inside the handler from
+  // the integration's database and the resolved space's queues — same pattern
+  // as plugin-thread's `AppendChannelMessage`.
+  services: [Capability.Service],
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration),
   }),
   output: Schema.Struct({
     targets: Schema.Array(RemoteTarget),
   }),
-  services: [Database.Service],
 });
 
 /**
  * Pull-only sync of currently-selected Slack targets in an Integration.
  *
- * For each selected conversation: load (or create) a local `Chat` keyed by
+ * For each selected conversation: load (or create) a local `Channel` keyed by
  * the Slack conversation id, ask Slack for messages newer than
- * `target.cursor`, and append them to the chat's feed as `@dxos/types`
+ * `target.cursor`, and append them to the channel's feed as `@dxos/types`
  * `Message` objects. `Message.threadId` carries Slack's `thread_ts` so
  * threaded replies are reconstructable on read without a separate object
  * type.
@@ -59,15 +63,15 @@ export const SyncSlackChannel = Operation.make({
     name: 'Sync Slack Channel',
     description: 'Reconcile messages for currently-selected Slack targets in an Integration.',
   },
+  services: [Capability.Service],
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration),
-    /** Optional: narrow to a single target Chat. */
-    chat: Ref.Ref(Obj.Unknown).pipe(Schema.optional),
+    /** Optional: narrow to a single target Channel. */
+    channel: Ref.Ref(Obj.Unknown).pipe(Schema.optional),
   }),
   output: Schema.Struct({
     pulled: Schema.Struct({
       added: Schema.Number,
     }),
   }),
-  services: [Database.Service, Feed.FeedService],
 });

@@ -51,7 +51,7 @@ const conversationKind = (conversation: SlackApi.SlackConversation): string => {
 
 /**
  * Discovery only — list Slack conversations reachable from the integration's
- * token and return one descriptor per item. Read-only: NO local Chat objects
+ * token and return one descriptor per item. Read-only: NO local Channel objects
  * are created here. Materialization happens lazily in `SyncSlackChannel` on
  * first sync of a target.
  */

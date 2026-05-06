@@ -5,16 +5,20 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
+import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-db';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Chat, ContentBlock, Message } from '@dxos/types';
+import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { Channel, ContentBlock, Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
 import { SLACK_SOURCE } from '../constants';
-import { formatSlackSyncFailure } from '../errors';
+import { IntegrationDatabaseMissingError, formatSlackSyncFailure } from '../errors';
 import { SlackApi } from '../services';
 import { SyncSlackChannel } from './definitions';
 
@@ -40,7 +44,7 @@ const tsToIso = (ts: string): string => {
   return new Date(seconds * 1000).toISOString();
 };
 
-const friendlyChatName = (conversation: SlackConversation): string => {
+const friendlyChannelName = (conversation: SlackConversation): string => {
   if (conversation.name && conversation.name.length > 0) {
     return conversation.is_channel || conversation.is_group ? `#${conversation.name}` : conversation.name;
   }
@@ -98,37 +102,37 @@ const mapSlackMessage = (
 };
 
 /**
- * Finds an existing Chat whose foreign key matches the given Slack conversation id.
+ * Finds an existing Channel whose foreign key matches the given Slack conversation id.
  */
-export const findChatForConversation: (
+export const findChannelForConversation: (
   conversationId: string,
-) => Effect.Effect<Chat.Chat | undefined, never, Database.Service> = Effect.fn('findChatForConversation')(
+) => Effect.Effect<Channel.Channel | undefined, never, Database.Service> = Effect.fn('findChannelForConversation')(
   function* (conversationId) {
     const existing = yield* Database.runQuery(
-      Query.select(Filter.foreignKeys(Chat.Chat, [{ source: SLACK_SOURCE, id: conversationId }])),
+      Query.select(Filter.foreignKeys(Channel.Channel, [{ source: SLACK_SOURCE, id: conversationId }])),
     );
-    return existing.length > 0 ? (existing[0] as Chat.Chat) : undefined;
+    return existing.length > 0 ? (existing[0] as Channel.Channel) : undefined;
   },
 );
 
 /**
- * Finds an existing Chat for a Slack conversation, or creates a fresh one (with
- * the foreign key set and a backing feed). Idempotent: re-running on the same
- * `(space, conversation)` returns the same Chat.
+ * Finds an existing Channel for a Slack conversation, or creates a fresh one
+ * (with the foreign key set and a backing feed). Idempotent: re-running on the
+ * same `(space, conversation)` returns the same Channel.
  */
-export const findOrCreateChatForConversation: (
+export const findOrCreateChannelForConversation: (
   conversation: SlackConversation,
-) => Effect.Effect<Chat.Chat, never, Database.Service> = Effect.fn('findOrCreateChatForConversation')(
+) => Effect.Effect<Channel.Channel, never, Database.Service> = Effect.fn('findOrCreateChannelForConversation')(
   function* (conversation) {
-    const existing = yield* findChatForConversation(conversation.id);
+    const existing = yield* findChannelForConversation(conversation.id);
     if (existing) {
       return existing;
     }
-    const chat = Chat.make({
+    const channel = Channel.make({
       [Obj.Meta]: { keys: [{ source: SLACK_SOURCE, id: conversation.id }] },
-      name: friendlyChatName(conversation),
+      name: friendlyChannelName(conversation),
     });
-    return yield* Database.add(chat);
+    return yield* Database.add(channel);
   },
 );
 
@@ -177,22 +181,37 @@ const TARGET_CONCURRENCY = 3;
  * Reconciles messages for currently-selected Slack targets on the Integration.
  *
  * Pull-only. Per target:
- *  1. Resolve (or materialize) the local Chat keyed by the Slack conversation id.
+ *  1. Resolve (or materialize) the local Channel keyed by the Slack conversation id.
  *  2. Ask Slack for messages since `target.cursor` (or all history on first sync).
  *  3. Resolve referenced user ids in one batch (cached per sync).
  *  4. Map each Slack message → `@dxos/types` Message and append the batch to
- *     the chat's feed.
+ *     the channel's feed.
  *  5. Update `target.cursor` to the newest `ts` seen so the next sync is incremental.
  *
  * Failure on one target writes `lastError` on that target only and continues
  * with the next; targets are processed in parallel up to `TARGET_CONCURRENCY`.
+ *
+ * `Database.Service` and `Feed.FeedService` are provided inside the handler.
+ * The integration's `target` ref carries the database; the space (and its
+ * `queues`, used to build `Feed.FeedService`) is resolved via the Client
+ * capability — same shape as `plugin-thread`'s `AppendChannelMessage`.
  */
 const handler: Operation.WithHandler<typeof SyncSlackChannel> = SyncSlackChannel.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ integration, chat: chatRef }) {
+    Effect.fn(function* ({ integration, channel: channelRef }) {
+      const integrationTarget = integration.target;
+      const db = integrationTarget ? Obj.getDatabase(integrationTarget) : undefined;
+      if (!db) {
+        return yield* Effect.fail(new IntegrationDatabaseMissingError());
+      }
+
+      const client = yield* Capability.get(ClientCapabilities.Client);
+      const space = client.spaces.get(db.spaceId);
+      invariant(space, 'Space not found');
+
       const integrationId = integration.dxn.asEchoDXN()?.echoId ?? 'unknown';
-      const toastIdSuffix = chatRef
-        ? `${integrationId}.${chatRef.dxn.asEchoDXN()?.echoId ?? 'unknown'}`
+      const toastIdSuffix = channelRef
+        ? `${integrationId}.${channelRef.dxn.asEchoDXN()?.echoId ?? 'unknown'}`
         : integrationId;
 
       const outcome = yield* Effect.either(
@@ -205,10 +224,10 @@ const handler: Operation.WithHandler<typeof SyncSlackChannel> = SyncSlackChannel
           const allConversations = yield* SlackApi.fetchConversations();
           const conversationsById = new Map(allConversations.map((c) => [c.id, c]));
 
-          const chatFilterId = chatRef?.dxn.asEchoDXN()?.echoId;
+          const channelFilterId = channelRef?.dxn.asEchoDXN()?.echoId;
           type TargetEntry = {
             entry: (typeof integrationObj.targets)[number];
-            chat: Chat.Chat;
+            channel: Channel.Channel;
             conversationId: string;
             conversation: SlackConversation;
           };
@@ -227,7 +246,7 @@ const handler: Operation.WithHandler<typeof SyncSlackChannel> = SyncSlackChannel
               continue;
             }
             if (!localObj) {
-              localObj = yield* findOrCreateChatForConversation(conversation);
+              localObj = yield* findOrCreateChannelForConversation(conversation);
               const materializedRef = Ref.make(localObj);
               Obj.update(integrationObj, (integrationObj) => {
                 const mutable = integrationObj as Obj.Mutable<typeof integrationObj>;
@@ -239,19 +258,19 @@ const handler: Operation.WithHandler<typeof SyncSlackChannel> = SyncSlackChannel
             }
 
             const targetEchoId = Ref.make(localObj).dxn.asEchoDXN()?.echoId;
-            if (chatFilterId && targetEchoId !== chatFilterId) {
+            if (channelFilterId && targetEchoId !== channelFilterId) {
               continue;
             }
-            if (!Chat.instanceOf(localObj)) {
+            if (!Channel.instanceOf(localObj)) {
               continue;
             }
 
-            targetEntries.push({ entry: target, chat: localObj, conversationId: foreignId, conversation });
+            targetEntries.push({ entry: target, channel: localObj, conversationId: foreignId, conversation });
           }
 
           const perTarget = yield* Effect.forEach(
             targetEntries,
-            ({ chat: targetChat, conversationId, conversation }) =>
+            ({ channel: targetChannel, conversationId, conversation }) =>
               Effect.gen(function* () {
                 const result = yield* Effect.either(
                   Effect.gen(function* () {
@@ -274,7 +293,7 @@ const handler: Operation.WithHandler<typeof SyncSlackChannel> = SyncSlackChannel
                       return { added: 0 };
                     }
 
-                    const feed = yield* Database.load(targetChat.feed);
+                    const feed = yield* Database.load(targetChannel.feed);
                     yield* Feed.append(feed, mapped);
 
                     const newestTs = sorted[sorted.length - 1].ts;
@@ -287,12 +306,12 @@ const handler: Operation.WithHandler<typeof SyncSlackChannel> = SyncSlackChannel
                     });
 
                     // Mirror the conversation's display name onto the local
-                    // Chat if we just learned a better one (first sync, or
+                    // Channel if we just learned a better one (first sync, or
                     // the channel was renamed remotely).
-                    const desiredName = friendlyChatName(conversation);
-                    if (targetChat.name !== desiredName) {
-                      Obj.update(targetChat, (targetChat) => {
-                        (targetChat as Obj.Mutable<typeof targetChat>).name = desiredName;
+                    const desiredName = friendlyChannelName(conversation);
+                    if (targetChannel.name !== desiredName) {
+                      Obj.update(targetChannel, (targetChannel) => {
+                        (targetChannel as Obj.Mutable<typeof targetChannel>).name = desiredName;
                       });
                     }
 
@@ -341,7 +360,11 @@ const handler: Operation.WithHandler<typeof SyncSlackChannel> = SyncSlackChannel
             pulled = { added: pulled.added + result.added };
           }
           return { pulled };
-        }).pipe(Effect.provide(SlackApi.SlackCredentials.fromIntegration(integration))),
+        }).pipe(
+          Effect.provide(Database.layer(db)),
+          Effect.provide(createFeedServiceLayer(space.queues)),
+          Effect.provide(SlackApi.SlackCredentials.fromIntegration(integration)),
+        ),
       );
 
       if (outcome._tag === 'Right') {
