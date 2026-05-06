@@ -132,6 +132,24 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
         },
       },
       {
+        id: Project.Project.typename,
+        metadata: {
+          icon: Annotation.IconAnnotation.get(Project.Project).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Project.Project).pipe(Option.getOrThrow).hue ?? 'white',
+          inputSchema: Project.Project,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Project.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
+        },
+      },
+      {
         id: Task.Task.typename,
         metadata: {
           icon: Annotation.IconAnnotation.get(Task.Task).pipe(Option.getOrThrow).icon,
