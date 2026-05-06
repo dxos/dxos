@@ -28,19 +28,12 @@ export type ToolResultsProps = {
 
 type State = 'loading' | 'error' | 'empty' | 'result';
 
-const VARIANTS: Record<State, ThemedClassName<Pick<HTMLAttributes<HTMLDivElement>, 'role' | 'aria-live'>>> = {
-  loading: {
-    classNames: 'p-3 text-sm text-description',
-    role: 'status',
-    'aria-live': 'polite',
-  },
+const VARIANTS: Record<State, ThemedClassName<Pick<HTMLAttributes<HTMLDivElement>, 'role'>>> = {
+  // `role='status'` implies `aria-live='polite'` — no need to set both.
+  loading: { classNames: 'p-3 text-sm text-description', role: 'status' },
   error: { classNames: 'p-3' },
-  empty: {
-    classNames: 'p-3 text-sm text-description italic',
-  },
-  result: {
-    classNames: 'p-3 overflow-auto',
-  },
+  empty: { classNames: 'p-3 text-sm text-description italic' },
+  result: { classNames: 'p-3 overflow-auto' },
 };
 
 export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
