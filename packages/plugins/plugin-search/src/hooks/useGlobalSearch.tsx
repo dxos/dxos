@@ -6,14 +6,14 @@ import React, { type PropsWithChildren, createContext, useCallback, useContext, 
 
 import { raise } from '@dxos/debug';
 import { type Entity } from '@dxos/echo';
-import { GlobalFilterProvider } from '@dxos/react-ui-search';
+import { GlobalFilterProvider } from '@dxos/react-ui-list';
 
 import { type SearchResult } from '#types';
 
 import { filterObjectsSync, queryStringToMatch } from './sync';
 
 // Re-export for backward compatibility.
-export { useGlobalFilteredObjects, GlobalFilterProvider } from '@dxos/react-ui-search';
+export { useGlobalFilteredObjects, GlobalFilterProvider } from '@dxos/react-ui-list';
 
 type SearchContextType = {
   match?: RegExp;

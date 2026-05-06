@@ -6,10 +6,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { withAttention } from '@dxos/react-ui-attention/testing';
+import { type SearchResult } from '@dxos/react-ui-list';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type SearchResult } from '../../types';
 import { SearchStack, type SearchStackProps } from './SearchStack';
 
 const createMockResults = (count: number): SearchResult[] => {

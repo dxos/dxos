@@ -10,7 +10,7 @@ import { type DxGridPlaneCells } from '@dxos/lit-grid';
 import { random } from '@dxos/random';
 import { DropdownMenu } from '@dxos/react-ui';
 import { toPlaneCellIndex } from '@dxos/react-ui-grid';
-import { Combobox, type ComboboxRootProps, useSearchListResults } from '@dxos/react-ui-search';
+import { Combobox, type ComboboxRootProps, useSearchListResults } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid';

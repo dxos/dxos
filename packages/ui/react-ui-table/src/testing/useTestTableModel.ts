@@ -10,7 +10,7 @@ import { isMutable } from '@dxos/echo/internal';
 import { random } from '@dxos/random';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientStory } from '@dxos/react-client/testing';
-import { useGlobalFilteredObjects } from '@dxos/react-ui-search';
+import { useGlobalFilteredObjects } from '@dxos/react-ui-list';
 import { type ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 import { type TableController } from '../components';

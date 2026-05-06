@@ -11,7 +11,7 @@ import { useLayout } from '@dxos/app-toolkit/ui';
 import { Entity, Obj, Query } from '@dxos/echo';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Dialog, useTranslation } from '@dxos/react-ui';
-import { SearchList } from '@dxos/react-ui-search';
+import { SearchList } from '@dxos/react-ui-list';
 import { Text } from '@dxos/schema';
 
 import { useGlobalSearch, useGlobalSearchResults } from '#hooks';

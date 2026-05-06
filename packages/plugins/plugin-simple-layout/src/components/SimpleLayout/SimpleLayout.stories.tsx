@@ -13,7 +13,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { SearchPlugin } from '@dxos/plugin-search';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { corePlugins } from '@dxos/plugin-testing';
-import { translations as searchTranslation } from '@dxos/react-ui-search/translations';
+import { translations as searchTranslation } from '@dxos/react-ui-list/translations';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { ReactRoot, ReactSurface, State } from '#capabilities';

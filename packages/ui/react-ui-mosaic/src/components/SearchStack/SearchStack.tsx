@@ -5,10 +5,10 @@
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Card, ScrollArea } from '@dxos/react-ui';
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { type SearchResult } from '@dxos/react-ui-list';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { type SearchResult } from '../../types';
+import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '../..';
 
 export type SearchStackAction = {
   type: 'select';

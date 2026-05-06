@@ -8,7 +8,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Entity, Query } from '@dxos/echo';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
-import { SearchList } from '@dxos/react-ui-search';
+import { SearchList } from '@dxos/react-ui-list';
 import { Text } from '@dxos/schema';
 import { isTauri, getHostPlatform } from '@dxos/util';
 

@@ -84,10 +84,10 @@
       "path": "../react-ui-grid"
     },
     {
-      "path": "../react-ui-menu"
+      "path": "../react-ui-list"
     },
     {
-      "path": "../react-ui-search"
+      "path": "../react-ui-menu"
     },
     {
       "path": "../react-ui-stack"

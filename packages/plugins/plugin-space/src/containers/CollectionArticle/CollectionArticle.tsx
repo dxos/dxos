@@ -11,8 +11,8 @@ import { Obj } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
 import { ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
+import { SearchPanel, useSearchListResults } from '@dxos/react-ui-list';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
-import { SearchPanel, useSearchListResults } from '@dxos/react-ui-search';
 import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';

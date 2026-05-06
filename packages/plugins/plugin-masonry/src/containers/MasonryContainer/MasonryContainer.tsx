@@ -14,9 +14,9 @@ import { Annotation, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { type View } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, Toolbar } from '@dxos/react-ui';
+import { SearchList, useSearchListResults } from '@dxos/react-ui-list';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
-import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
