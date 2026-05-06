@@ -3,5 +3,5 @@
 import { defineConfig } from '../../../tsdown.base.config.ts';
 
 export default defineConfig({
-  entry: ['src/react.ts', 'src/testing/index.ts'],
+  entry: ['src/index.ts', 'src/react.ts', 'src/testing/index.ts'],
 });
