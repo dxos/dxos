@@ -72,3 +72,5 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default WnfsPlugin;

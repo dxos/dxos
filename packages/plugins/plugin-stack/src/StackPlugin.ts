@@ -34,3 +34,5 @@ export const StackPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );
+
+export default StackPlugin;

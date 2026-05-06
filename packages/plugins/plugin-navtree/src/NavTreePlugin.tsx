@@ -73,3 +73,5 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default NavTreePlugin;

@@ -19,3 +19,5 @@ export const TransformerPlugin = Plugin.define(meta).pipe(
   // }),
   Plugin.make,
 );
+
+export default TransformerPlugin;

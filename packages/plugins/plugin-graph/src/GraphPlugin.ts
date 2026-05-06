@@ -23,3 +23,5 @@ export const GraphPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default GraphPlugin;

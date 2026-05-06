@@ -28,3 +28,5 @@ export const HelpPlugin = Plugin.define<HelpPluginOptions>(meta).pipe(
   })),
   Plugin.make,
 );
+
+export default HelpPlugin;
