@@ -34,26 +34,23 @@ const items: StoryItem[] = Array.from({ length: 24 }, (_, i) => ({
 // the listbox role).
 //
 
-// `data-[selected=true]:` variants must live on the same element that
-// has the `data-selected` attribute — which `Picker.Item` sets on its
-// rendered `<div>`. Putting the highlight classes on `Picker.Item`'s
-// `classNames` (not on inner children) is the canonical pattern.
-const itemClasses =
-  'px-2 py-1 cursor-pointer rounded-xs hover:bg-hover-overlay data-[selected=true]:bg-accent-surface data-[selected=true]:text-accent-surface-text';
+// `Picker.Item` carries `dx-hover dx-selected` by default — same
+// grammar as `Row`. Stories add only padding / sizing.
+const itemPadding = 'px-2 py-1 rounded-xs';
 
 const DefaultStory = () => {
   const [picked, setPicked] = useState<string | undefined>();
   return (
     <div className='flex flex-col gap-2 w-[24rem] border border-separator p-2 rounded-md'>
       <Picker.Root>
-        <Picker.Input placeholder='Click here, then ↑/↓ to navigate, Enter to pick' autoFocus />
+        <Picker.Input placeholder='↑/↓ to navigate, Enter to pick' autoFocus />
         <ul role='listbox' className='flex flex-col mt-2 max-h-[20rem] overflow-auto'>
           {items.map((item) => (
             <Picker.Item
               key={item.value}
               value={item.value}
               onSelect={() => setPicked(item.value)}
-              classNames={itemClasses}
+              classNames={itemPadding}
             >
               {item.label}
             </Picker.Item>
@@ -91,7 +88,7 @@ const FilteringStory = () => {
               key={item.value}
               value={item.value}
               onSelect={() => setPicked(item.value)}
-              classNames={itemClasses}
+              classNames={itemPadding}
             >
               {item.label}
             </Picker.Item>
@@ -131,7 +128,7 @@ const WithDisabledStory = () => {
                 value={item.value}
                 disabled={disabled}
                 onSelect={() => setPicked(item.value)}
-                classNames={[itemClasses, disabled && 'opacity-50 cursor-not-allowed']}
+                classNames={itemPadding}
               >
                 {item.label}
                 {disabled && ' (disabled)'}

@@ -350,6 +350,12 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
 
     const Comp: any = asChild ? Slot : 'div';
 
+    // Default styling: pair `aria-selected` with `dx-selected` and add
+    // `dx-hover` for the standard hover affordance. Same grammar `Row`
+    // uses (see `ui-theme/src/css/components/selected.md`); callers can
+    // append / override via `classNames`. `dx-selected` only fires when
+    // `aria-selected="true"`, which we set below from the virtual
+    // highlight — so unfocused items render plain.
     return (
       <Comp
         {...props}
@@ -367,8 +373,12 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
         data-selected={isSelected}
         data-disabled={disabled}
         data-value={value}
+        // tabIndex={-1} — combobox pattern keeps browser focus on the
+        // input; the selected option is highlighted via `aria-selected`,
+        // not via DOM focus. Differs from `Row` (listbox pattern,
+        // tabIndex={0}). See header comment.
         tabIndex={-1}
-        className={mx(classNames)}
+        className={mx('dx-hover dx-selected', disabled && 'opacity-50 cursor-not-allowed', classNames)}
         onClick={handleClick}
       >
         {children}
