@@ -16,7 +16,8 @@
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
-    "#meta": "./src/meta.ts"
+    "#meta": "./src/meta.ts",
+    "#translations": "./src/translations.ts"
   },
   "exports": {
     ".": {

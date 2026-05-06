@@ -6,9 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, Type } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { translations as tableTranslations } from '@dxos/react-ui-table/translations';
+import { Operation } from '@dxos/compute';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { SpaceCapabilities, SpaceEvents, type CreateObject } from '@dxos/plugin-space/types';
 import { Table } from '@dxos/react-ui-table/types';
@@ -18,7 +20,7 @@ import { BlueprintDefinition, OperationHandler, ReactSurface } from '#capabiliti
 import { meta } from '#meta';
 import { CreateTableSchema, TableOperation } from '#operations';
 
-import { translations } from './translations';
+import { translations } from '#translations';
 
 export const TablePlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
@@ -52,17 +54,8 @@ export const TablePlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Table.Table] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: AppActivationEvents.SetupTranslations,
-    activate: Effect.fnUntraced(function* () {
-      // Lazy-loaded to avoid pulling atlaskit CJS deps at module eval time (browser-only CJS).
-      const [{ translations: formTranslations }, { translations: tableTranslations }] = yield* Effect.all([
-        Effect.promise(() => import('@dxos/react-ui-form')),
-        Effect.promise(() => import('@dxos/react-ui-table')),
-      ]);
-      return Capability.contributes(AppCapabilities.Translations, [...translations, ...formTranslations, ...tableTranslations]);
-    }),
+  AppPlugin.addTranslationsModule({
+    translations: [...translations, ...formTranslations, ...tableTranslations],
   }),
   Plugin.addModule({
     id: 'on-space-created',
@@ -86,3 +79,5 @@ export const TablePlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default TablePlugin;

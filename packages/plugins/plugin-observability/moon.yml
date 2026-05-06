@@ -14,3 +14,4 @@ tasks:
       - '--entryPoint=src/ObservabilityPlugin.node.ts'
       - '--entryPoint=src/types/index.ts'
       - '--entryPoint=src/operations/index.ts'
+      - '--entryPoint=src/translations.ts'

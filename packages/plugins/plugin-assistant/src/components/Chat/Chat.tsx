@@ -18,7 +18,7 @@ import { type Queue, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
-import { type MarkdownStreamController } from '@dxos/react-ui-components';
+import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
@@ -34,6 +34,7 @@ import {
   ChatOptions,
   type ChatPresetsProps,
   ChatReferences,
+  ChatStatus,
   ChatStatusIndicator,
 } from '../ChatPrompt';
 import { ChatThread as NaturalChatThread, type ChatThreadProps as NaturalChatThreadProps } from '../ChatThread';
@@ -460,12 +461,32 @@ const ChatPrompt = ({
 ChatPrompt.displayName = CHAT_PROMPT_NAME;
 
 //
+// Content
+//
+
+const CHAT_CONTENT_NAME = 'Chat.Content';
+
+type ChatContentProps = {};
+
+const ChatContent = composable<HTMLDivElement, ChatContentProps>(({ children, ...props }, forwardedRef) => {
+  return (
+    <div {...composableProps(props, { classNames: 'dx-expander flex flex-col' })} ref={forwardedRef}>
+      {children}
+    </div>
+  );
+});
+
+ChatContent.displayName = CHAT_CONTENT_NAME;
+
+//
 // Chat
 //
 
 export const Chat = {
   Root: ChatRoot,
   Toolbar: ChatToolbar,
+  Content: ChatContent,
+  Status: ChatStatus,
   Viewport: ChatViewport,
   Thread: ChatThread,
   Prompt: ChatPrompt,

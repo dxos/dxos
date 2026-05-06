@@ -11,7 +11,7 @@ import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui'
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { AiContextBinder } from '@dxos/assistant';
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';

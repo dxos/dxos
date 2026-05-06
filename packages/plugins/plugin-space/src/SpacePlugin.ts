@@ -7,13 +7,16 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, Ref, Tag, Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { AttentionEvents } from '@dxos/plugin-attention/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
+import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { DataTypes, createDefaultSchema } from '@dxos/schema';
+import { translations as shellTranslations } from '@dxos/shell/react';
 import {
   AnchoredTo,
   Employer,
@@ -48,7 +51,7 @@ import { SpaceOperation } from '#operations';
 import { SpaceEvents } from '#types';
 import { type CreateObject, type SpacePluginOptions } from '#types';
 
-import { translations } from './translations';
+import { translations } from '#translations';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addMetadataModule({
@@ -171,24 +174,8 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     ],
   }),
   AppPlugin.addSettingsModule({ activate: SpaceSettings }),
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: AppActivationEvents.SetupTranslations,
-    activate: Effect.fnUntraced(function* () {
-      // Lazy-loaded to avoid pulling atlaskit/shell CJS deps at module eval time (browser-only CJS).
-      const [{ translations: componentsTranslations }, { translations: formTranslations }, { translations: shellTranslations }] =
-        yield* Effect.all([
-          Effect.promise(() => import('@dxos/react-ui-components')),
-          Effect.promise(() => import('@dxos/react-ui-form')),
-          Effect.promise(() => import('@dxos/shell/react')),
-        ]);
-      return Capability.contributes(AppCapabilities.Translations, [
-        ...translations,
-        ...componentsTranslations,
-        ...formTranslations,
-        ...shellTranslations,
-      ]);
-    }),
+  AppPlugin.addTranslationsModule({
+    translations: [...translations, ...componentsTranslations, ...formTranslations, ...shellTranslations],
   }),
   Plugin.addModule({
     id: 'SpaceState',

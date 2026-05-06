@@ -24,6 +24,7 @@
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#translations": "./src/translations.ts",
     "#plugin": {
       "source": "./src/ChessPlugin.node.ts",
       "types": "./src/ChessPlugin.tsx",
