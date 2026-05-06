@@ -17,6 +17,13 @@
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
+    "#plugin": {
+      "source": "./src/DebugPlugin.node.ts",
+      "types": "./src/DebugPlugin.tsx",
+      "browser": "./src/DebugPlugin.tsx",
+      "node": "./src/DebugPlugin.node.ts",
+      "default": "./src/DebugPlugin.node.ts"
+    },
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
   },

@@ -17,6 +17,13 @@
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#plugin": {
+      "source": "./src/WnfsPlugin.node.ts",
+      "types": "./src/WnfsPlugin.tsx",
+      "browser": "./src/WnfsPlugin.tsx",
+      "node": "./src/WnfsPlugin.node.ts",
+      "default": "./src/WnfsPlugin.node.ts"
+    },
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
   },

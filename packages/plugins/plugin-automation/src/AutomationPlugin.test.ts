@@ -4,27 +4,23 @@
 
 import { describe, test } from 'vitest';
 
-import { AppActivationEvents } from '@dxos/app-toolkit';
+import { ClientPlugin } from '@dxos/plugin-client';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { AutomationPlugin } from './AutomationPlugin';
+import { AutomationPlugin } from './index';
 import { meta } from './meta';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
 describe('AutomationPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    // Skip autoStart: ReactSurface and AppGraphBuilder are browser-only.
-    // Note: #capabilities resolves to capabilities/node.ts in Node tests, which only
-    // exports ComputeRuntime. AppGraphBuilder/OperationHandler/ReactSurface are undefined
-    // in this environment and cannot be tested here.
     await using harness = await createComposerTestApp({
-      plugins: [AutomationPlugin()],
-      autoStart: false,
+      plugins: [ClientPlugin({}), AutomationPlugin()],
     });
 
-    // schema activates on SetupSchema; safe in Node (no browser deps).
-    await harness.fire(AppActivationEvents.SetupSchema);
-    expect(harness.manager.getActive()).toContain(moduleId('schema'));
+    // After autoStart: AppGraphBuilder, schema, OperationHandler all auto-cascade.
+    expect(harness.manager.getActive()).toEqual(
+      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('schema'), moduleId('OperationHandler')]),
+    );
   });
 });

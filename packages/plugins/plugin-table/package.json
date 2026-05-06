@@ -18,6 +18,13 @@
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#plugin": {
+      "source": "./src/TablePlugin.node.ts",
+      "types": "./src/TablePlugin.tsx",
+      "browser": "./src/TablePlugin.tsx",
+      "node": "./src/TablePlugin.node.ts",
+      "default": "./src/TablePlugin.node.ts"
+    },
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
   },

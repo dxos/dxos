@@ -15,7 +15,14 @@
   "imports": {
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
-    "#meta": "./src/meta.ts"
+    "#meta": "./src/meta.ts",
+    "#plugin": {
+      "source": "./src/MapPlugin.node.ts",
+      "types": "./src/MapPlugin.tsx",
+      "browser": "./src/MapPlugin.tsx",
+      "node": "./src/MapPlugin.node.ts",
+      "default": "./src/MapPlugin.node.ts"
+    }
   },
   "exports": {
     ".": {

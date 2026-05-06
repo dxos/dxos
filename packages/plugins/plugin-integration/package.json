@@ -19,6 +19,13 @@
     "#hooks": "./src/hooks/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#plugin": {
+      "source": "./src/IntegrationPlugin.node.ts",
+      "types": "./src/IntegrationPlugin.ts",
+      "browser": "./src/IntegrationPlugin.ts",
+      "node": "./src/IntegrationPlugin.node.ts",
+      "default": "./src/IntegrationPlugin.node.ts"
+    },
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
   },

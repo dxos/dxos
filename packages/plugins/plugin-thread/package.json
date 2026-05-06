@@ -20,6 +20,13 @@
     "#hooks": "./src/hooks/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#plugin": {
+      "source": "./src/ThreadPlugin.node.ts",
+      "types": "./src/ThreadPlugin.tsx",
+      "browser": "./src/ThreadPlugin.tsx",
+      "node": "./src/ThreadPlugin.node.ts",
+      "default": "./src/ThreadPlugin.node.ts"
+    },
     "#testing": "./src/testing/index.ts",
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"

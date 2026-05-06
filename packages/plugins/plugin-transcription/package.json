@@ -19,6 +19,13 @@
     "#hooks": "./src/hooks/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#plugin": {
+      "source": "./src/TranscriptionPlugin.node.ts",
+      "types": "./src/TranscriptionPlugin.tsx",
+      "browser": "./src/TranscriptionPlugin.tsx",
+      "node": "./src/TranscriptionPlugin.node.ts",
+      "default": "./src/TranscriptionPlugin.node.ts"
+    },
     "#testing": "./src/testing/index.ts",
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"

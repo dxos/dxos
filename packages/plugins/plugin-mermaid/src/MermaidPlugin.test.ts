@@ -16,9 +16,9 @@ const moduleId = (name: string) => `${meta.id}.module.${name}`;
 describe('MermaidPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     // Use createTestApp directly — only RuntimePlugin and OperationPlugin are needed.
+    // MermaidPlugin has no surface module so SetupReactSurface firing harmlessly is fine.
     await using harness = await createTestApp({
       plugins: [OperationPlugin(), RuntimePlugin(), MermaidPlugin()],
-      autoStart: false,
     });
 
     // The markdown module activates on MarkdownEvents.SetupExtensions,

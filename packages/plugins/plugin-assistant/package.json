@@ -20,6 +20,13 @@
     "#hooks": "./src/hooks/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#plugin": {
+      "source": "./src/AssistantPlugin.node.ts",
+      "types": "./src/AssistantPlugin.tsx",
+      "browser": "./src/AssistantPlugin.tsx",
+      "node": "./src/AssistantPlugin.node.ts",
+      "default": "./src/AssistantPlugin.node.ts"
+    },
     "#testing": "./src/testing/index.ts",
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
@@ -117,7 +124,6 @@
     "@dxos/keys": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",

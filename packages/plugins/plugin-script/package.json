@@ -20,6 +20,13 @@
     "#hooks": "./src/hooks/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#plugin": {
+      "source": "./src/ScriptPlugin.node.ts",
+      "types": "./src/ScriptPlugin.tsx",
+      "browser": "./src/ScriptPlugin.tsx",
+      "node": "./src/ScriptPlugin.node.ts",
+      "default": "./src/ScriptPlugin.node.ts"
+    },
     "#testing": "./src/testing/index.ts",
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"

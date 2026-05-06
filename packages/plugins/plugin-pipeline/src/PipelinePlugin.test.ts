@@ -4,25 +4,21 @@
 
 import { describe, test } from 'vitest';
 
-import { ActivationEvents } from '@dxos/app-framework';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { meta } from './meta';
-import { PipelinePlugin } from './PipelinePlugin';
+import { PipelinePlugin } from './index';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
 describe('PipelinePlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    // Skip autoStart: ReactSurface imports browser-only deps that fail in Node.
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin({}), PipelinePlugin()],
-      autoStart: false,
     });
 
-    await harness.fire(ActivationEvents.Startup);
-
+    // After autoStart: AppGraphBuilder, metadata, schema all auto-cascade.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('metadata'), moduleId('schema')]),
     );
