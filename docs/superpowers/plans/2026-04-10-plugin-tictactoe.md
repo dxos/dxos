@@ -1437,7 +1437,7 @@ const handler: Operation.WithHandler<typeof MakeMove> = MakeMove.pipe(
       const moveEntry = `${marker}:${row},${col}`;
       const moves = obj.moves ? `${obj.moves};${moveEntry}` : moveEntry;
 
-      Obj.change(obj, (game) => {
+      Obj.update(obj, (game) => {
         const mutable = game as Obj.Mutable<typeof game>;
         mutable.board = result.board;
         mutable.status = status;
@@ -1488,7 +1488,7 @@ const handler: Operation.WithHandler<typeof AiMove> = AiMove.pipe(
       const moveEntry = `${marker}:${row},${col}`;
       const moves = obj.moves ? `${obj.moves};${moveEntry}` : moveEntry;
 
-      Obj.change(obj, (game) => {
+      Obj.update(obj, (game) => {
         const mutable = game as Obj.Mutable<typeof game>;
         mutable.board = newBoard;
         mutable.status = status;
@@ -1810,7 +1810,7 @@ export const TicTacToeArticle = ({ role, subject: game }: TicTacToeArticleProps)
       const moveEntry = `${marker}:${row},${col}`;
       const moves = game.moves ? `${game.moves};${moveEntry}` : moveEntry;
 
-      Obj.change(game, (draft) => {
+      Obj.update(game, (draft) => {
         const mutable = draft as Obj.Mutable<typeof draft>;
         mutable.board = result.board;
         mutable.status = newStatus;
@@ -1847,7 +1847,7 @@ export const TicTacToeArticle = ({ role, subject: game }: TicTacToeArticleProps)
       const moveEntry = `O:${row},${col}`;
       const moves = game.moves ? `${game.moves};${moveEntry}` : moveEntry;
 
-      Obj.change(game, (draft) => {
+      Obj.update(game, (draft) => {
         const mutable = draft as Obj.Mutable<typeof draft>;
         mutable.board = newBoard;
         mutable.status = newStatus;
@@ -1861,7 +1861,7 @@ export const TicTacToeArticle = ({ role, subject: game }: TicTacToeArticleProps)
 
   const handleNewGame = useCallback(() => {
     const newBoard = makeBoard(game.size);
-    Obj.change(game, (draft) => {
+    Obj.update(game, (draft) => {
       const mutable = draft as Obj.Mutable<typeof draft>;
       mutable.board = newBoard;
       mutable.status = 'playing';

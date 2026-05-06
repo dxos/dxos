@@ -5,10 +5,10 @@
 import React, { forwardRef, useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { DeckOperation } from '#operations';
 import { type DeckAction, type LayoutMode } from '#types';
 
 export type PlankControlHandler = (event: DeckAction.PartAdjustment) => void;
@@ -37,7 +37,7 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompanionC
     const { t } = useTranslation(meta.id);
     const { invokePromise } = useOperationInvoker();
     const handleCloseCompanion = useCallback(() => {
-      return invokePromise(DeckOperation.ChangeCompanion, { companion: null });
+      return invokePromise(LayoutOperation.UpdateCompanion, { subject: null });
     }, [invokePromise]);
     return (
       <div ref={forwardedRef} className='contents dx-app-no-drag'>

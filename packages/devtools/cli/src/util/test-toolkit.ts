@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import type * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 export const toolkit = Toolkit.make(
   Tool.make('time', {

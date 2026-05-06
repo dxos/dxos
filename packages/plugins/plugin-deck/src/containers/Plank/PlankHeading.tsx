@@ -58,7 +58,7 @@ export const PlankHeading = memo(
     debug = false,
   }: PlankHeadingProps) => {
     const { t } = useTranslation(meta.id);
-    const { graph, onAdjust, onChangeCompanion } = usePlankContext('PlankHeading');
+    const { graph, onAdjust, onUpdateCompanion } = usePlankContext('PlankHeading');
     const runAction = useActionRunner();
     const breakpoint = useBreakpoints();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
@@ -131,10 +131,10 @@ export const PlankHeading = memo(
         const target = (event.target as HTMLElement).closest('[data-id]') as HTMLElement | null;
         const tabId = target?.dataset?.id;
         if (tabId) {
-          onChangeCompanion?.(tabId);
+          onUpdateCompanion?.(tabId);
         }
       },
-      [onChangeCompanion],
+      [onUpdateCompanion],
     );
 
     return (

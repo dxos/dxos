@@ -11,7 +11,8 @@ import { type ActionGraphProps, createGapSeparator, createMenuAction, createMenu
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { NavBar } from './NavBar';
 
 const MAIN_MENU_GROUP_ID = 'navbar-main-menu';

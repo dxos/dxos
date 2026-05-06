@@ -9,6 +9,7 @@ import type { DXN, ObjectId } from '@dxos/keys';
 
 import * as internal from './internal';
 import type * as Relation from './Relation';
+import type * as Type from './Type';
 
 // Re-export KindId and SnapshotKindId from internal.
 export const KindId = internal.KindId;
@@ -132,6 +133,12 @@ export const getDXN = (entity: Unknown | Snapshot): DXN => internal.getDXN(entit
 export const getTypeDXN = internal.getTypeDXN;
 
 /**
+ * Get the schema of an entity.
+ * Returns the branded ECHO schema used to create the entity.
+ */
+export const getSchema: (entity: Unknown | Snapshot) => Type.AnyEntity | undefined = internal.getSchema as any;
+
+/**
  * Get the typename of an entity's type.
  */
 export const getTypename = (entity: Unknown | Snapshot): string | undefined => internal.getTypename(entity);
@@ -191,7 +198,7 @@ export const subscribe = (entity: Unknown, callback: () => void): (() => void) =
 //
 
 /**
- * Used to provide a mutable view of an entity within `Entity.change`.
+ * Used to provide a mutable view of an entity within `Entity.update`.
  */
 export type Mutable<T> = internal.Mutable<T>;
 
@@ -199,7 +206,7 @@ export type Mutable<T> = internal.Mutable<T>;
  * Perform mutations on an entity (object or relation) within a change context.
  *
  * Entities are read-only by default. Mutations are batched and notifications fire
- * when the callback completes. Direct mutations outside of `Entity.change` will throw
+ * when the callback completes. Direct mutations outside of `Entity.update` will throw
  * at runtime.
  *
  * @param entity - The echo entity (object or relation) to mutate.
@@ -207,30 +214,30 @@ export type Mutable<T> = internal.Mutable<T>;
  *
  * @example
  * ```typescript
- * // Mutate within Entity.change
- * Entity.change(entity, (obj) => {
+ * // Mutate within Entity.update
+ * Entity.update(entity, (obj) => {
  *   obj.name = 'Updated';
  *   obj.count = 42;
  * });
  *
  * // Direct mutation throws
- * entity.name = 'Bob'; // Error: Cannot modify outside Entity.change()
+ * entity.name = 'Bob'; // Error: Cannot modify outside Entity.update()
  * ```
  *
- * Note: For type-specific operations, prefer `Obj.change` or `Relation.change`.
+ * Note: For type-specific operations, prefer `Obj.update` or `Relation.update`.
  */
-export const change = <T extends Unknown>(entity: T, callback: internal.ChangeCallback<T>): void => {
+export const update = <T extends Unknown>(entity: T, callback: internal.ChangeCallback<T>): void => {
   internal.change(entity, callback);
 };
 
 /**
  * Add a tag to an entity.
- * Must be called within an `Entity.change`, `Obj.change`, or `Relation.change` callback.
+ * Must be called within an `Entity.update`, `Obj.update`, or `Relation.update` callback.
  */
 export const addTag = (entity: Mutable<Unknown>, tag: string): void => internal.addTag(entity, tag);
 
 /**
  * Remove a tag from an entity.
- * Must be called within an `Entity.change`, `Obj.change`, or `Relation.change` callback.
+ * Must be called within an `Entity.update`, `Obj.update`, or `Relation.update` callback.
  */
 export const removeTag = (entity: Mutable<Unknown>, tag: string): void => internal.removeTag(entity, tag);

@@ -19,7 +19,7 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
   const { invokePromise } = useOperationInvoker();
 
   const handleDone = useCallback(() => {
-    Obj.change(mailbox, (mailbox) => {
+    Obj.update(mailbox, (mailbox) => {
       (mailbox.filters ??= []).push({ name, filter });
     });
     void invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });

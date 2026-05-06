@@ -56,12 +56,14 @@ export const makeDeckCompanion = <TData = any>({
   icon,
   data,
   position,
+  joyride,
 }: {
   id: string;
   label: Label;
   icon: string;
   data: TData;
   position?: Position;
+  joyride?: string;
 }): Node.NodeArg<TData> => ({
   id,
   type: DECK_COMPANION_TYPE,
@@ -71,6 +73,7 @@ export const makeDeckCompanion = <TData = any>({
     icon,
     disposition: 'hidden',
     ...(position !== undefined && { position }),
+    ...(joyride !== undefined && { joyride }),
   },
 });
 
@@ -84,6 +87,7 @@ export const makeSection = ({
   type,
   label,
   icon,
+  iconHue = 'neutral',
   space,
   position,
   testId,
@@ -92,6 +96,7 @@ export const makeSection = ({
   type: string;
   label: Label;
   icon: string;
+  iconHue?: string;
   space: Space;
   position?: Position;
   testId?: string;
@@ -102,7 +107,7 @@ export const makeSection = ({
   properties: {
     label,
     icon,
-    iconHue: 'neutral',
+    iconHue,
     role: 'branch',
     draggable: false,
     droppable: false,
@@ -116,22 +121,35 @@ export const makeSection = ({
 // Settings helpers.
 //
 
-/** Build a plugin-contributed section node for the space settings panel. */
+/**
+ * Build a plugin-contributed section node for the space settings panel.
+ * @deprecated Use `makeSection` instead.
+ */
 export const makeSettingsPanel = ({
   id,
   type,
   label,
   icon,
+  iconHue,
+  position,
 }: {
   id: string;
   type: string;
   label: Label;
   icon: string;
+  /** Hue for the panel's icon. Omit to leave unset (default rendering). */
+  iconHue?: string;
+  position?: Position;
 }): Node.NodeArg<string> => ({
   id,
   type,
   data: type,
-  properties: { label, icon },
+  properties: {
+    label,
+    icon,
+    ...(iconHue !== undefined && { iconHue }),
+    ...(position !== undefined && { position }),
+  },
 });
 
 //

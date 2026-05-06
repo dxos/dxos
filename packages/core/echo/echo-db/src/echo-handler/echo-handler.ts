@@ -1079,7 +1079,7 @@ type CreateObjectReturn<T> = T extends Obj.Unknown ? T : Entity.Entity<T>;
 // TODO(burdon): Document lifecycle.
 export const createObject = <T extends AnyProperties>(obj: T): CreateObjectReturn<T> => {
   assertArgument(!isEchoObject(obj), 'obj', 'Object is already an ECHO object');
-  const schema = Obj.getSchema(obj);
+  const schema = Obj.getSchema(obj as unknown as Obj.Unknown);
   if (schema != null) {
     validateSchema(schema);
   }

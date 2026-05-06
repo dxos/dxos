@@ -199,7 +199,7 @@ describe('Query', () => {
 
     test('filter by foreign keys', async () => {
       const obj = Obj.make(TestSchema.Expando, { value: 100 });
-      Obj.change(obj, (obj) => Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' }));
+      Obj.update(obj, (obj) => Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' }));
       db.add(obj);
 
       await db.flush();
@@ -211,7 +211,7 @@ describe('Query', () => {
 
     test('filter by foreign keys without flushing index', async () => {
       const obj = Obj.make(TestSchema.Expando, { value: 100 });
-      Obj.change(obj, (obj) => Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' }));
+      Obj.update(obj, (obj) => Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' }));
       db.add(obj);
 
       const objects = await db
@@ -408,7 +408,7 @@ describe('Query', () => {
       }
       const cutoff = secondAfterFlush * 1000;
 
-      Obj.change(obj, (obj: any) => {
+      Obj.update(obj, (obj: any) => {
         obj.value = 999;
       });
       await db.flush();
@@ -1505,6 +1505,29 @@ describe('Query', () => {
       expect(parentChildren).toHaveLength(1);
       expect(parentChildren[0]).toMatchObject({ name: 'Child' });
     });
+
+    test('traverse to children of a feed returns feed queue items', async () => {
+      const feedPeer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
+      const feedDb = await feedPeer.createDatabase();
+      const queues = feedPeer.client.constructQueueFactory(feedDb.spaceId);
+
+      const feed = feedDb.add(Feed.make({ name: 'test-feed' }));
+      const feedDxn = Feed.getQueueDxn(feed)!;
+      const queue = queues.get(feedDxn);
+
+      // Space-only task (should NOT appear as a child of the feed).
+      feedDb.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
+      await queue.append([
+        Obj.make(TestSchema.Task, { title: 'Feed Task 1' }),
+        Obj.make(TestSchema.Task, { title: 'Feed Task 2' }),
+      ]);
+      await feedDb.flush();
+
+      const objects = await feedDb.query(Query.select(Filter.id(feed.id)).children()).run();
+      expect(objects).toHaveLength(2);
+      const titles = objects.map((obj: any) => obj.title).sort();
+      expect(titles).toEqual(['Feed Task 1', 'Feed Task 2']);
+    });
   });
 
   describe.skip('text search (old indexer)', () => {
@@ -1693,7 +1716,7 @@ describe('Query', () => {
       }
 
       // Update the object.
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         obj.title = 'Updated Title';
       });
       await db.flush();
@@ -2054,7 +2077,7 @@ describe('Query', () => {
       query.subscribe(() => {
         updateCount++;
       });
-      Obj.change(objects[0], (o: any) => {
+      Obj.update(objects[0], (o: any) => {
         o.title = 'Task 0a';
       });
       await sleep(10);
@@ -2253,7 +2276,7 @@ describe('Query', () => {
       });
       onTestFinished(() => unsub());
 
-      Obj.change(contact, (contact) => {
+      Obj.update(contact, (contact) => {
         contact.name = name;
       });
       db.add(Obj.make(TestSchema.Person, {}));

@@ -20,6 +20,7 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#testing": "./src/testing/index.ts",
+    "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
   },
   "exports": {
@@ -28,6 +29,18 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs",
       "types": "./dist/types/src/index.d.ts"
+    },
+    "./components": {
+      "source": "./src/components/index.ts",
+      "browser": "./dist/lib/browser/components/index.mjs",
+      "node": "./dist/lib/node-esm/components/index.mjs",
+      "types": "./dist/types/src/components/index.d.ts"
+    },
+    "./hooks": {
+      "source": "./src/hooks/index.ts",
+      "browser": "./dist/lib/browser/hooks/index.mjs",
+      "node": "./dist/lib/node-esm/hooks/index.mjs",
+      "types": "./dist/types/src/hooks/index.d.ts"
     },
     "./blueprints": {
       "source": "./src/blueprints/index.ts",
@@ -41,6 +54,12 @@
       "node": "./dist/lib/node-esm/operations/index.mjs",
       "types": "./dist/types/src/operations/index.d.ts"
     },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "browser": "./dist/lib/browser/translations.mjs",
+      "node": "./dist/lib/node-esm/translations.mjs"
+    },
     "./types": {
       "source": "./src/types/index.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
@@ -49,19 +68,6 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "blueprints": [
-        "dist/types/src/blueprints/index.d.ts"
-      ],
-      "operations": [
-        "dist/types/src/operations/index.d.ts"
-      ],
-      "types": [
-        "dist/types/src/types/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"
@@ -74,20 +80,18 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/blueprints": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
-    "@dxos/functions": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",

@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 import { type PostHogConfig } from 'posthog-js';
 
 import { type Config } from '@dxos/config';
-import { LogBuffer, log } from '@dxos/log';
+import { log } from '@dxos/log';
+import { type IdbLogStore } from '@dxos/log-store-idb';
 
 import { type Extension } from '../../observability-extension';
 import { stubExtension } from '../stub';
@@ -18,8 +19,12 @@ export type ExtensionsOptions = {
   /** Deployment environment, e.g. `production` or `staging`. */
   environment?: string;
   posthog?: Partial<PostHogConfig>;
-  /** Shared log buffer for debug log dumps. Creates a local one if not provided. */
-  logBuffer?: LogBuffer;
+  /**
+   * Shared persistent log store for debug log dumps.
+   * The owning app is expected to register `logStore.processor` with `log` itself —
+   * this extension only consumes the buffered logs (via `export()`).
+   */
+  logStore?: IdbLogStore;
 };
 
 /** Upload serialized logs to the feedback-logs endpoint. Returns the R2 key on success. */
@@ -48,7 +53,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   release,
   environment,
   posthog: posthogConfig,
-  logBuffer: externalLogBuffer,
+  logStore,
 }) {
   if (typeof window === 'undefined') {
     log('PostHog is being stubbed because it is running in a worker.');
@@ -65,7 +70,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   const { default: posthog } = yield* Effect.promise(() => import('posthog-js'));
   const { logProcessor } = yield* Effect.promise(() => import('./log-processor'));
-  const logBuffer = externalLogBuffer ?? new LogBuffer();
   let feedbackSurveyAvailable: boolean | null = null;
   let unregisterPosthogProcessors: (() => void) | undefined;
 
@@ -103,10 +107,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         }
         unregisterPosthogProcessors?.();
         const removePosthogLog = log.addProcessor(logProcessor);
-        const removeLogBuffer = log.addProcessor(logBuffer.logProcessor);
         unregisterPosthogProcessors = () => {
           removePosthogLog();
-          removeLogBuffer();
         };
       }),
     close: () =>
@@ -155,8 +157,11 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
             }
 
             let debugLogDumpKey: string | null = null;
-            if (form.includeLogs !== false && logBuffer.size > 0) {
-              debugLogDumpKey = (await uploadLogs(logBuffer.serialize())) ?? 'failed';
+            if (form.includeLogs !== false && logStore !== undefined) {
+              const ndjson = await logStore.export();
+              if (ndjson.length > 0) {
+                debugLogDumpKey = (await uploadLogs(ndjson)) ?? 'failed';
+              }
             }
 
             // https://posthog.com/docs/surveys/implementing-custom-surveys

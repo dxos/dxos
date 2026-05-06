@@ -13,7 +13,8 @@
     "vite.config.ts"
   ],
   "include": [
-    "src"
+    "src",
+    "src/**/*.json"
   ],
   "references": [
     {
@@ -57,9 +58,6 @@
     },
     {
       "path": "../../core/assistant-toolkit"
-    },
-    {
-      "path": "../../core/blueprints"
     },
     {
       "path": "../../core/compute"

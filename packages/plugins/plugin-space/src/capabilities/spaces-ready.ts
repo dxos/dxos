@@ -6,7 +6,13 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, getPersonalSpace, getSpacePath, setPersonalSpace } from '@dxos/app-toolkit';
+import {
+  AppCapabilities,
+  LayoutOperation,
+  getSpacePath,
+  resolvePersonalSpace,
+  setPersonalSpace,
+} from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -29,34 +35,6 @@ const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
 
 // E.g., dxn:echo:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
 const ECHO_DXN_LENGTH = 3 + 1 + 4 + 1 + 33 + 1 + 26;
-
-/**
- * Resolve the personal space, migrating from legacy DefaultSpace credential if needed.
- * Returns undefined for new users who haven't created an identity yet.
- */
-const resolvePersonalSpace = (client: {
-  spaces: { get(): Space[]; get(id: any): Space | undefined };
-  halo: { queryCredentials(options: { type: string }): any[] };
-}): { space: Space; fromCredential: boolean } | undefined => {
-  // Check for personal space via tags or __DEFAULT__ property.
-  const found = getPersonalSpace(client);
-  if (found) {
-    return { space: found, fromCredential: false };
-  }
-
-  // Migration: read the legacy DefaultSpace credential from HALO.
-  const defaultSpaceCredential = client.halo.queryCredentials({
-    type: 'dxos.halo.credentials.DefaultSpace',
-  })[0];
-  if (!defaultSpaceCredential) {
-    // New user — no credential, no personal space yet.
-    return undefined;
-  }
-
-  const defaultSpaceId = defaultSpaceCredential.subject.assertion.spaceId;
-  const space = client.spaces.get(defaultSpaceId);
-  return space ? { space, fromCredential: true } : undefined;
-};
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -81,12 +59,11 @@ export default Capability.makeModule(
       if (personalSpaceInitialized) {
         return;
       }
-
-      await personalSpace.waitUntilReady();
+      // Set before any await so concurrent subscribe callbacks don't start a second initialization.
       personalSpaceInitialized = true;
 
-      // Only set the __DEFAULT__ property when migrating from the legacy credential.
-      // Spaces created with the personal tag don't need it.
+      await personalSpace.waitUntilReady();
+
       if (fromCredential) {
         setPersonalSpace(personalSpace);
       }
@@ -168,10 +145,12 @@ export default Capability.makeModule(
     subscriptions.add(
       client.spaces.subscribe(async (spaces) => {
         // TODO(wittjosiah): Remove. This is a hack to be able to migrate the personal space properties.
-        const resolved = resolvePersonalSpace(client);
-        if (resolved?.space && resolved.space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
-          const personalSpace = resolved.space;
-          await personalSpace.internal.migrate();
+        const personalSpaceForMigration = resolvePersonalSpace(client);
+        if (
+          personalSpaceForMigration?.space &&
+          personalSpaceForMigration.space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION
+        ) {
+          await personalSpaceForMigration.space.internal.migrate();
         }
 
         spaces

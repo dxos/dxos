@@ -16,10 +16,9 @@ import {
   SchemaDefs,
 } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { ClientEvents } from '#types';
 import { type ClientPluginOptions } from '#types';
-
-import { translations } from './translations';
 
 export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
@@ -69,3 +68,5 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   ),
   Plugin.make,
 );
+
+export default ClientPlugin;

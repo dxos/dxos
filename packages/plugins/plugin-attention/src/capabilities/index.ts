@@ -3,7 +3,7 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/operation';
+import { OperationHandlerSet } from '@dxos/compute';
 
 export const Keyboard = Capability.lazy('Keyboard', () => import('./keyboard'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(

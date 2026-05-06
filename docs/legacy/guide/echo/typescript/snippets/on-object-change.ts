@@ -26,7 +26,7 @@ async () => {
     names.push(object.name);
   });
 
-  Obj.change(object, (obj) => {
+  Obj.update(object, (obj) => {
     obj.name = 'buy cookies';
   });
 

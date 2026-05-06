@@ -18,6 +18,7 @@ import { Annotation, type Database, Entity, Filter, Obj, Query, Relation } from 
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { TREEGRID_PARENT_OF_SEPARATOR, DropdownMenu, Icon, IconButton, Treegrid } from '@dxos/react-ui';
 import { TreeItemToggle, paddingIndentation } from '@dxos/react-ui-list';
 import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
@@ -240,6 +241,7 @@ class ObjectsTreeModel {
   }
 
   #makeNodeAtom(anchor: string | null): Atom.Atom<ObjectsTreeItem[]> {
+    log('makeNodeAtom', { anchor });
     if (typeof anchor === 'string') {
       invariant(ObjectId.isValid(anchor));
 
@@ -287,7 +289,7 @@ class ObjectsTreeModel {
   }
 
   #mapEntityToTreeItems(entity: Entity.Snapshot, anchor: string | null): ObjectsTreeItem {
-    const { icon, hue } = Option.fromNullable(Obj.getSchema(entity)).pipe(
+    const { icon, hue } = Option.fromNullable(Entity.getSchema(entity)).pipe(
       Option.flatMap(Annotation.IconAnnotation.get),
       Option.getOrElse(() => ({
         icon: Obj.isSnapshot(entity) ? DEFAULT_OBJECT_ICON : DEFAULT_RELATION_ICON,

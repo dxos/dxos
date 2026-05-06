@@ -5,10 +5,48 @@
 import { assert, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import { runAndForwardErrors } from '@dxos/effect';
+
 import * as Plugin from './plugin';
+import * as PluginAssetCache from './plugin-asset-cache';
 import * as UrlLoader from './url-loader';
 
 const testMeta = { id: 'org.dxos.plugin.test', name: 'Test' };
+
+const memoryStorage = (initial: string | null = null): UrlLoader.Storage => {
+  let value = initial;
+  return {
+    get: () => value,
+    set: (_key, next) => {
+      value = next;
+    },
+  };
+};
+
+type CacheCall = { method: 'cache' | 'evict' | 'resolve'; pluginId: string; urls?: readonly string[]; url?: string };
+
+const recordingCache = (): { cache: PluginAssetCache.Cache; calls: CacheCall[] } => {
+  const calls: CacheCall[] = [];
+  return {
+    calls,
+    cache: {
+      cache: (pluginId, urls) =>
+        Effect.sync(() => {
+          calls.push({ method: 'cache', pluginId, urls });
+        }),
+      evict: (pluginId) =>
+        Effect.sync(() => {
+          calls.push({ method: 'evict', pluginId });
+        }),
+      resolve: (pluginId, url) =>
+        Effect.sync(() => {
+          calls.push({ method: 'resolve', pluginId, url });
+          return url;
+        }),
+      list: () => Effect.succeed([] as readonly string[]),
+    },
+  };
+};
 
 describe('UrlLoader', () => {
   describe('isLocalUrl', () => {
@@ -69,7 +107,7 @@ describe('UrlLoader', () => {
         get: () => null,
         set: () => {},
       };
-      const result = await UrlLoader.preload({ storage });
+      const result = await runAndForwardErrors(UrlLoader.preload({ storage }));
       expect(result).toEqual([]);
     });
 
@@ -78,7 +116,7 @@ describe('UrlLoader', () => {
         get: () => '{{invalid json',
         set: () => {},
       };
-      const result = await UrlLoader.preload({ storage });
+      const result = await runAndForwardErrors(UrlLoader.preload({ storage }));
       expect(result).toEqual([]);
     });
 
@@ -87,7 +125,7 @@ describe('UrlLoader', () => {
         get: () => 'null',
         set: () => {},
       };
-      const result = await UrlLoader.preload({ storage });
+      const result = await runAndForwardErrors(UrlLoader.preload({ storage }));
       expect(result).toEqual([]);
     });
 
@@ -96,7 +134,7 @@ describe('UrlLoader', () => {
         get: () => '{}',
         set: () => {},
       };
-      const result = await UrlLoader.preload({ storage });
+      const result = await runAndForwardErrors(UrlLoader.preload({ storage }));
       expect(result).toEqual([]);
     });
 
@@ -105,8 +143,36 @@ describe('UrlLoader', () => {
         get: () => '[{"title":"no url"}]',
         set: () => {},
       };
-      const result = await UrlLoader.preload({ storage });
+      const result = await runAndForwardErrors(UrlLoader.preload({ storage }));
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('uninstall', () => {
+    it('removes the persisted entry and evicts cached assets', async ({ expect }) => {
+      const storage = memoryStorage('[{"id":"p1","url":"https://x/p1.json"},{"id":"p2","url":"https://x/p2.json"}]');
+      const { cache, calls } = recordingCache();
+      await runAndForwardErrors(UrlLoader.uninstall('p1', { storage, cache }));
+      expect(UrlLoader.getRemoteEntries({ storage })).toEqual([{ id: 'p2', url: 'https://x/p2.json' }]);
+      expect(calls).toEqual([{ method: 'evict', pluginId: 'p1' }]);
+    });
+
+    it('still removes entry when cache eviction fails', async ({ expect }) => {
+      const storage = memoryStorage('[{"id":"p1","url":"https://x/p1.json"}]');
+      const cache: PluginAssetCache.Cache = {
+        cache: () => Effect.void,
+        evict: () =>
+          Effect.fail(
+            new PluginAssetCache.PluginAssetCacheError({
+              context: { operation: 'evict', pluginId: 'p1' },
+              cause: 'boom',
+            }),
+          ),
+        resolve: (_id, url) => Effect.succeed(url),
+        list: () => Effect.succeed([] as readonly string[]),
+      };
+      await runAndForwardErrors(UrlLoader.uninstall('p1', { storage, cache }));
+      expect(UrlLoader.getRemoteEntries({ storage })).toEqual([]);
     });
   });
 });

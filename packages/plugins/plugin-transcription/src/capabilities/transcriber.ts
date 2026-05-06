@@ -43,6 +43,7 @@ export default Capability.makeModule(
       onSegments,
       transcriberConfig,
       recorderConfig,
+      transcribe,
     }) => {
       // Initialize audio transcription.
       return new Transcriber({
@@ -59,6 +60,7 @@ export default Capability.makeModule(
           },
         }),
         onSegments,
+        transcribe,
       });
     };
 

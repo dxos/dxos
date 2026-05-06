@@ -7,27 +7,37 @@ import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueS
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { AgentService, AiContextBinder, AiContextService, AiSession, AiSessionService } from '@dxos/assistant';
+import { AiContextBinder, AiContextService, AiSession, AiSessionService } from '@dxos/assistant';
 import { McpServer } from '@dxos/assistant-toolkit';
-import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
+import { SpaceProperties } from '@dxos/client-protocol';
+import {
+  Blueprint,
+  Credential,
+  Operation,
+  OperationHandlerSet,
+  OperationRegistry,
+  ServiceNotAvailableError,
+} from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Database, DXN, Feed, Filter, Obj } from '@dxos/echo';
+import { AtomObj } from '@dxos/echo-atom';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { acquireReleaseResource, asyncTaskTaggingLayer } from '@dxos/effect';
 import {
-  CredentialsService,
   FunctionInvocationService,
   feedServiceFromQueueServiceLayer,
   QueueService,
-  ServiceNotAvailableError,
+  credentialsLayerFromDatabase,
 } from '@dxos/functions';
+import { AgentService } from '@dxos/functions-runtime';
 import {
   FeedTraceSink,
   FunctionImplementationResolver,
@@ -40,7 +50,7 @@ import {
 } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
-import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
+import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { AutomationCapabilities } from '#types';
@@ -66,6 +76,12 @@ declare global {
 }
 
 const isDev = import.meta.env.DEV ?? false;
+
+/** Node / test environments have no `localStorage`; browser keeps persistent trigger state. */
+const triggerStateStoreLayer =
+  typeof globalThis.localStorage !== 'undefined'
+    ? TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage))
+    : TriggerStateStore.layerMemory;
 
 /**
  * Adapts plugin capabilities to runtime layers.
@@ -93,11 +109,14 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
 
   getRuntime(spaceId: SpaceId): AutomationCapabilities.ComputeRuntime {
     if (this.#runtimes.has(spaceId)) {
+      log('getRuntime cache hit', { spaceId });
       return this.#runtimes.get(spaceId)!;
     }
+    log('getRuntime building', { spaceId });
 
-    const layer = Layer.unwrapEffect(
+    const layer = Layer.unwrapScoped(
       Effect.gen(this, function* () {
+        log('compute runtime layer build: start', { spaceId });
         const client = this.#capabilities.get(ClientCapabilities.Client);
         const aiServiceLayer =
           this.#capabilities.get(AppCapabilities.AiServiceLayer) ?? Layer.die('AiService not found');
@@ -121,17 +140,57 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
 
         const space = client.spaces.get(spaceId);
         invariant(space, `Invalid space: ${spaceId}`);
+        log('compute runtime layer build: waiting for space ready', { spaceId });
+        const waitStarted = Date.now();
         yield* Effect.promise(() => space.waitUntilReady());
+        log('compute runtime layer build: space ready', { spaceId, waitMs: Date.now() - waitStarted });
 
         // Maintain a live query of space-level MCP server configs.
         const mcpQuery = space.db.query(Filter.type(McpServer.McpServer));
         this.#subscriptions.set(spaceId, mcpQuery.subscribe());
 
-        return Layer.mergeAll(
-          TriggerDispatcher.layer({ timeControl: 'natural' }),
-          Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints)),
+        log('compute runtime layer build: composing inner layer', { spaceId });
+        return Layer.scopedDiscard(
+          Effect.gen(function* () {
+            log('compute runtime inner layer: acquiring services', { spaceId });
+            const registry = yield* Registry.AtomRegistry;
+            const triggerDispatcher = yield* TriggerDispatcher;
+            log('compute runtime inner layer: services acquired', { spaceId });
+            // Track the in-flight start/stop so a new transition cancels the previous one
+            // (preserving ordering on rapid toggles) and surfaces failures via the Effect logger.
+            let inFlight: Fiber.RuntimeFiber<unknown, unknown> | undefined;
+            const transition = (effect: Effect.Effect<unknown, unknown>) => {
+              if (inFlight) {
+                Effect.runFork(Fiber.interrupt(inFlight));
+              }
+              inFlight = Effect.runFork(
+                effect.pipe(
+                  Effect.tapErrorCause((cause) => Effect.logError('trigger dispatcher transition failed', cause)),
+                ),
+              );
+            };
+            const unsubscribe = registry.subscribe(
+              AtomObj.make(space.properties),
+              (properties: Obj.Snapshot<SpaceProperties>) => {
+                const computeEnvironment = properties.computeEnvironment ?? 'local';
+                transition(computeEnvironment === 'local' ? triggerDispatcher.start() : triggerDispatcher.stop());
+              },
+              { immediate: true },
+            );
+            yield* Effect.addFinalizer(() =>
+              Effect.sync(() => {
+                log('compute runtime inner layer: finalize', { spaceId });
+                unsubscribe();
+                if (inFlight) {
+                  Effect.runFork(Fiber.interrupt(inFlight));
+                }
+              }),
+            );
+            log('compute runtime inner layer: acquire complete', { spaceId });
+          }),
         )
           .pipe(
+            Layer.provideMerge(TriggerDispatcher.layer({ timeControl: 'natural' })),
             Layer.provideMerge(
               AgentService.layer({
                 getMcpServers: () =>
@@ -202,7 +261,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                       AiService.AiService,
                       OperationRegistry.Service,
                       Blueprint.RegistryService,
-                      CredentialsService,
+                      Credential.CredentialsService,
                     ),
                   );
                 }),
@@ -212,11 +271,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             Layer.provideMerge(Layer.succeed(Capability.Service, this.#capabilities)),
             Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, registry)),
             Layer.provideMerge(
-              Layer.mergeAll(
-                FeedTraceSink.layerLive,
-                TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
-                KeyValueStore.layerMemory,
-              ),
+              Layer.mergeAll(FeedTraceSink.layerLive, triggerStateStoreLayer, KeyValueStore.layerMemory),
             ),
             Layer.provideMerge(OperationRegistry.layer),
             Layer.provideMerge(feedServiceFromQueueServiceLayer),
@@ -250,17 +305,20 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             ),
             Layer.provideMerge(opaqueToolkitProvider),
             Layer.provideMerge(aiServiceLayer),
-            Layer.provideMerge(CredentialsService.layerFromDatabase()),
+            Layer.provideMerge(credentialsLayerFromDatabase()),
             Layer.provideMerge(ClientService.fromClient(client)),
             Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
+          )
+          .pipe(
             Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
             Layer.provideMerge(space ? createFeedServiceLayer(space.queues) : Feed.notAvailable),
-          )
-          .pipe(Layer.provideMerge(isDev ? asyncTaskTaggingLayer() : Layer.empty));
+            Layer.provideMerge(isDev ? asyncTaskTaggingLayer() : Layer.empty),
+          );
       }),
     );
 
     const runtime = ManagedRuntime.make(layer);
+    log('getRuntime ready (managed runtime created)', { spaceId });
     this.#runtimes.set(spaceId, runtime);
     return runtime;
   }

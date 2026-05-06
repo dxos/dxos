@@ -11,7 +11,8 @@ import { keymap, listener } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { hexToEmoji, hexToHue, isTruthy } from '@dxos/util';
 
-import { translationKey } from '../translations';
+import { translationKey } from '#translations';
+
 import { type MessageMetadata } from '../types';
 
 const avatarSize = 7;
@@ -26,8 +27,8 @@ export const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
     { authorImgSrc, authorId, authorName, authorAvatarProps, continues = true, children, classNames, ...rootProps },
     forwardedRef,
   ) => {
+    // Must wrap the message since Avatar.Label may be used in the content.
     return (
-      // Must wrap the message since Avatar.Label may be used in the content.
       <Avatar.Root>
         <div
           role='none'

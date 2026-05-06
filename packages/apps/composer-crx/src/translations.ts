@@ -14,6 +14,7 @@ export const translations = [
         'composer.description': 'DXOS.org',
         'chat.placeholder': 'Ask or search for anything...',
         'chat.clear.button': 'Clear',
+        'clip.button': 'Clip',
         'settings.dev-mode.label': 'Developer Mode',
         'settings.space-mode.label': 'Space Mode',
         'settings.space-id.label': 'Space ID',

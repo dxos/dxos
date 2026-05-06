@@ -5,7 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
+import { SelectionSchema } from '@dxos/react-ui-attention';
 
 import { Label } from './translations';
 
@@ -366,6 +367,41 @@ export namespace LayoutOperation {
     services: [Capability.Service],
     input: Schema.Struct({
       subject: Schema.String.annotations({ description: 'The id of the item to expose.' }),
+    }),
+    output: Schema.Void,
+  });
+
+  //
+  // Companion Operations
+  //
+
+  export const UpdateCompanion = Operation.make({
+    meta: {
+      key: `${LAYOUT_PLUGIN}.operation.update-companion`,
+      name: 'Update Companion',
+      description: 'Update the companion plank for a primary plank.',
+    },
+    services: [Capability.Service],
+    input: Schema.Struct({
+      subject: Schema.Union(Schema.String, Schema.Null),
+    }),
+    output: Schema.Void,
+  });
+
+  //
+  // Selection Operations
+  //
+
+  export const Select = Operation.make({
+    meta: {
+      key: `${LAYOUT_PLUGIN}.operation.select`,
+      name: 'Select',
+      description: 'Select items in an attention context.',
+    },
+    services: [Capability.Service],
+    input: Schema.Struct({
+      contextId: Schema.String.annotations({ description: 'The id of the attention context.' }),
+      subject: SelectionSchema.annotations({ description: 'The selection to apply.' }),
     }),
     output: Schema.Void,
   });

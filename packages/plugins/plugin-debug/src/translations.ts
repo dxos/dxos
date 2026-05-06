@@ -17,6 +17,7 @@ export const translations = [
         'devtools-overview.label': 'Stats',
         'space-objects.label': 'Database',
         'debug.label': 'Debug',
+        'generate-objects.label': 'Generate Objects',
         'debug-app-graph.label': 'App Graph',
 
         'settings.wireframe.label': 'Show wireframes.',

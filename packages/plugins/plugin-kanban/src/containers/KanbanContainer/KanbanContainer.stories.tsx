@@ -23,17 +23,17 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Filter, type Space, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout } from '@dxos/react-ui/testing';
 import { ViewModel, getTypenameFromQuery } from '@dxos/schema';
 // TODO(wittjosiah): Replace with echo/testing.
 import { Organization, Person } from '@dxos/types';
 
 import { useProjectionModel } from '#hooks';
+import { translations } from '#translations';
 import { Kanban } from '#types';
 
 import { KanbanPlugin } from '../../KanbanPlugin';
-import { translations } from '../../translations';
 
 random.seed(0);
 
@@ -88,7 +88,9 @@ const DefaultComponent = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const [kanban] = useQuery(space?.db, Filter.type(Kanban.Kanban));
-  const typename = kanban?.view.target?.query ? getTypenameFromQuery(kanban.view.target.query.ast) : undefined;
+  const viewRef = kanban && kanban.spec.kind === 'view' ? kanban.spec.view : undefined;
+  const view = viewRef?.target;
+  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(space?.db, typename);
   const projection = useProjectionModel(schema, kanban, registry);
 
@@ -97,15 +99,15 @@ const DefaultComponent = () => {
   const handleUpdateQuery = useCallback(
     (newQuery: QueryAST.Query) => {
       invariant(schema);
-      invariant(kanban?.view.target);
+      invariant(view);
       if (Type.isMutable(schema)) {
         schema.updateTypename(getTypenameFromQuery(newQuery));
       }
-      Obj.change(kanban.view.target, (view) => {
+      Obj.update(view, (view) => {
         view.query.ast = newQuery as Mutable<QueryAST.Query>;
       });
     },
-    [kanban, schema],
+    [view, schema],
   );
 
   const handleDeleteField = useCallback(
@@ -117,7 +119,7 @@ const DefaultComponent = () => {
     [schema, projection],
   );
 
-  if (!schema || !kanban?.view.target) {
+  if (!schema || !view) {
     return null;
   }
 
@@ -128,16 +130,18 @@ const DefaultComponent = () => {
         <ViewEditor
           registry={space?.db.schemaRegistry}
           schema={schema}
-          view={kanban.view.target}
+          view={view}
           onQueryChanged={handleUpdateQuery}
           onDelete={schema && Type.isMutable(schema) ? handleDeleteField : undefined}
         />
-        <Json.Root data={{ view: kanban.view.target, schema }}>
-          <Json.Content>
-            <Json.Filter />
-            <Json.Data classNames='text-xs' />
-          </Json.Content>
-        </Json.Root>
+        <Syntax.Root data={{ view, schema }}>
+          <Syntax.Content>
+            <Syntax.Filter />
+            <Syntax.Viewport>
+              <Syntax.Code classNames='text-xs' />
+            </Syntax.Viewport>
+          </Syntax.Content>
+        </Syntax.Root>
       </div>
     </div>
   );

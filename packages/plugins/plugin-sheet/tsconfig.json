@@ -54,6 +54,9 @@
       "path": "../../core/compute"
     },
     {
+      "path": "../../core/compute-hyperformula"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -61,12 +64,6 @@
     },
     {
       "path": "../../core/echo/echo-generator"
-    },
-    {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"

@@ -72,4 +72,32 @@ describe('domino', () => {
     const svg = Domino.of('svg', Domino.SVG).append(Domino.of('circle', Domino.SVG)).root;
     expect(svg.querySelector('circle')).toBeTruthy();
   });
+
+  test('Domino on() respects AddEventListenerOptions (once)', () => {
+    let count = 0;
+    const el = Domino.of('button').on('click', () => count++, { once: true }).root;
+    el.click();
+    el.click();
+    expect(count).toBe(1);
+  });
+
+  test('Domino mount() attaches to parent and stays chainable', () => {
+    const parent = document.createElement('div');
+    const el = Domino.of('span').text('hi').mount(parent).classNames('mounted').root;
+    expect(parent.firstChild).toBe(el);
+    expect(el.textContent).toBe('hi');
+    expect(el.classList.contains('mounted')).toBe(true);
+  });
+
+  test('Domino.iconsUrl can be overridden at module level', () => {
+    const original = Domino.iconsUrl;
+    try {
+      Domino.iconsUrl = 'https://example.test/icons.svg';
+      expect(Domino.icon('foo')).toBe('https://example.test/icons.svg#foo');
+      const svg = Domino.svg('foo').root;
+      expect(svg.querySelector('use')?.getAttribute('href')).toBe('https://example.test/icons.svg#foo');
+    } finally {
+      Domino.iconsUrl = original;
+    }
+  });
 });

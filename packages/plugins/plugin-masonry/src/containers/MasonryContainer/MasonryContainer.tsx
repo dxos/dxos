@@ -87,7 +87,9 @@ export const MasonryContainer = ({
             </Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content>
-            <MasonryComponent.Content items={results} getId={(data: any) => data?.id} />
+            <MasonryComponent.Content>
+              <MasonryComponent.Viewport items={results} getId={(data: any) => data?.id} />
+            </MasonryComponent.Content>
           </Panel.Content>
         </Panel.Root>
       </SearchList.Root>

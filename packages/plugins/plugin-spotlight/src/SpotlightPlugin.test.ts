@@ -18,7 +18,12 @@ describe('SpotlightPlugin', () => {
       plugins: [SpotlightPlugin()],
     });
 
-    // Operation handlers are not loaded on startup — SetupOperationHandler fires lazily when an operation is invoked.
+    // State, SpotlightDismiss, and ReactRoot all activate on Startup.
+    expect(harness.manager.getActive()).toEqual(
+      expect.arrayContaining([moduleId('State'), moduleId('SpotlightDismiss'), moduleId('ReactRoot')]),
+    );
+
+    // OperationHandler fires lazily when an operation is invoked.
     await harness.fire(ActivationEvents.SetupOperationHandler);
     expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
   });

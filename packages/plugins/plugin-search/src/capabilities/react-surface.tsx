@@ -21,17 +21,27 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: SEARCH_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof SearchDialog>>(AppSurface.Dialog, SEARCH_DIALOG),
-        component: ({ data }) => (
-          <SearchContextProvider>
-            <SearchDialog {...data.props} />
-          </SearchContextProvider>
-        ),
+        component: ({ data }) => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          return (
+            <SearchContextProvider>
+              <SearchDialog {...data.props} space={space} />
+            </SearchContextProvider>
+          );
+        },
       }),
       Surface.create({
         id: `${SEARCH_DIALOG}.search-input`,
         role: 'search-input',
         component: () => {
           const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
 
           return (
             <SearchContextProvider>

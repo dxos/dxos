@@ -90,10 +90,10 @@ export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): DXN 
  * Example: `org.dxos.type.message`
  */
 // TODO(wittjosiah): Factor out to DXN spec.
-// TODO(wittjosiah): Switch to atproto NSID regex once legacy typenames are fully migrated:
-//   /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/
 export const TypenameSchema = Schema.String.pipe(
-  Schema.pattern(/^[a-zA-Z][a-zA-Z0-9]*(\.[a-zA-Z][a-zA-Z0-9-]*){2,}$/),
+  Schema.pattern(
+    /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/,
+  ),
 ).annotations({
   description: 'Fully qualified globally unique typename in reverse-DNS form.',
   example: 'org.dxos.type.message',
@@ -545,7 +545,7 @@ export const getLabel = (entity: AnyProperties): string | undefined => {
 
 /**
  * Set the label of an entity.
- * Must be called within an Obj.change or Relation.change callback.
+ * Must be called within an Obj.update or Relation.update callback.
  */
 export const setLabel = (entity: Mutable<AnyProperties>, label: string) => {
   const schema = getSchema(entity);
@@ -567,7 +567,7 @@ export const getDescription = (entity: AnyProperties): string | undefined => {
 
 /**
  * Set the description of an entity.
- * Must be called within an Obj.change or Relation.change callback.
+ * Must be called within an Obj.update or Relation.update callback.
  */
 export const setDescription = (entity: Mutable<AnyProperties>, description: string) => {
   const schema = getSchema(entity);

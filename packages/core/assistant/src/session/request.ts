@@ -23,11 +23,9 @@ import {
   type ToolResolverService,
   withoutToolCallParising,
 } from '@dxos/ai';
-import { type Blueprint } from '@dxos/blueprints';
+import { type Blueprint, Trace, Operation, OperationRegistry } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
-import { Trace } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Operation, OperationRegistry } from '@dxos/operation';
 import { ContentBlock, Message } from '@dxos/types';
 
 import { type AiAssistantError } from '../errors';
@@ -62,7 +60,7 @@ export type AiRequestOptions = {
 };
 
 export type AiRequestRunProps<R = never> = {
-  prompt: string;
+  prompt: string | ContentBlock.Any[];
   // TODO(wittjosiah): Rename to systemPrompt.
   system?: string;
   history?: Message.Message[];
@@ -72,7 +70,7 @@ export type AiRequestRunProps<R = never> = {
 };
 
 export type AiRequestBeginProps = {
-  prompt: string;
+  prompt: string | ContentBlock.Any[];
   system?: string;
   history?: Message.Message[];
   objects?: Obj.Unknown[];

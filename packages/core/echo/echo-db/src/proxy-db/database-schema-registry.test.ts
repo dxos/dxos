@@ -248,7 +248,7 @@ describe('schema registry', () => {
     const TestSchema = makeTestSchema();
     const [schema] = await db.schemaRegistry.register([TestSchema]);
     const object = db.add(Obj.make(schema, { name: 'Test' }));
-    Obj.change(object, (object) => {
+    Obj.update(object, (object) => {
       object.name = 'Test2';
     });
     expect(object.name).toEqual('Test2');
@@ -265,7 +265,7 @@ describe('schema registry', () => {
     );
 
     schema.addFields({ newField: Schema.String });
-    Obj.change(object, (object) => {
+    Obj.update(object, (object) => {
       object.newField = 'Test3';
     });
     expect(object.newField).toEqual('Test3');

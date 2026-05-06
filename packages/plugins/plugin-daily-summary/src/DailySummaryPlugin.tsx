@@ -7,8 +7,7 @@ import { AppPlugin } from '@dxos/app-toolkit';
 
 import { AppGraphBuilder, BlueprintDefinition, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
-
-import { translations } from './translations';
+import { translations } from '#translations';
 
 export const DailySummaryPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
@@ -17,3 +16,5 @@ export const DailySummaryPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );
+
+export default DailySummaryPlugin;

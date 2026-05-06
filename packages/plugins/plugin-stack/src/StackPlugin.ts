@@ -8,9 +8,8 @@ import { type Obj } from '@dxos/echo';
 
 import { ReactSurface } from '#capabilities';
 import { SECTION_IDENTIFIER, meta } from '#meta';
+import { translations } from '#translations';
 import { StackViewType } from '#types';
-
-import { translations } from './translations';
 
 export const StackPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
@@ -35,3 +34,5 @@ export const StackPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );
+
+export default StackPlugin;

@@ -11,3 +11,4 @@ tasks:
     args:
       - '--entryPoint=src/data.ts'
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/translations.ts'

@@ -4,16 +4,15 @@
 
 import React from 'react';
 
-import { type Space } from '@dxos/react-client/echo';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 
-import { FunctionsPanel } from '../../components/FunctionsPanel';
-import { FunctionsRegistry } from '../../components/FunctionsRegistry';
+import { FunctionsPanel, FunctionsRegistry } from '../../components';
 
-export const FunctionsContainer = ({ space }: { space: Space }) => {
+export const FunctionsContainer = ({ space }: AppSurface.SpaceArticleProps) => {
   const { t } = useTranslation(meta.id);
   return (
     <Settings.Viewport>

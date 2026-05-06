@@ -17,9 +17,16 @@ export const useInputSurfaceLookup = (baseData?: Record<string, any>): FormField
   const pluginManager = usePluginManager();
   return useCallback<FormFieldProvider>(
     ({ schema, prop, fieldProps }) => {
-      const data = { prop, schema, ...baseData };
+      const data = {
+        prop,
+        schema,
+        /** Property Schema AST (`fieldProps.type`). Not spread as React prop `type` — Surface peels `type` for role tokens. */
+        fieldPropertyAst: fieldProps.type,
+        ...baseData,
+      };
+      const { type: _fieldPropertyAstExcluded, ...surfaceFieldProps } = fieldProps as Record<string, any>;
       if (Surface.isAvailable(pluginManager.capabilities, { role: 'form-input', data })) {
-        return <Surface.Surface role='form-input' data={data} {...(fieldProps as Record<string, any>)} />;
+        return <Surface.Surface role='form-input' data={data} {...surfaceFieldProps} />;
       }
     },
     [pluginManager, baseData],

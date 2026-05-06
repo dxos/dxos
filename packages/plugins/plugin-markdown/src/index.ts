@@ -8,7 +8,4 @@ export * from './meta';
 export * from './types';
 export * from './util';
 
-export * from './MarkdownPlugin';
-
-export { MarkdownEditor, MarkdownEditorProvider } from './components';
-export type { MarkdownEditorEditorRootProps } from './components';
+export { MarkdownPlugin } from '#plugin';

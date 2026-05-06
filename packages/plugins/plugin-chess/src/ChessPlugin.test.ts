@@ -4,13 +4,10 @@
 
 import { describe, test } from 'vitest';
 
-import { ActivationEvents } from '@dxos/app-framework';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-// Use the CLI variant — the main ClientPlugin references capabilities that resolve to undefined under Node.
-import { ClientPlugin } from '@dxos/plugin-client/cli';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { ChessPlugin } from './ChessPlugin';
+import { ChessPlugin } from './index';
 import { meta } from './meta';
 import { Print } from './operations';
 
@@ -19,20 +16,18 @@ const moduleId = (name: string) => `${meta.id}.module.${name}`;
 describe('ChessPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin({}), ChessPlugin()],
+      plugins: [ChessPlugin()],
     });
 
-    // Modules expected to be active after a normal startup.
-    expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('metadata'), moduleId('schema'), moduleId('ReactSurface')]),
-    );
+    // metadata activates on SetupMetadata (fired by GraphPlugin during Startup).
+    expect(harness.manager.getActive()).toContain(moduleId('metadata'));
 
-    // SetupArtifactDefinition is fired by AssistantPlugin, which can't be included here due to a workspace cycle.
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-    expect(harness.manager.getActive()).toContain(moduleId('BlueprintDefinition'));
+    // schema activates on SetupSchema — fired explicitly here (normally fired by ClientPlugin).
+    await harness.fire(AppActivationEvents.SetupSchema);
+    expect(harness.manager.getActive()).toContain(moduleId('schema'));
 
-    // Operation handlers are not loaded on startup — SetupOperationHandler fires lazily when an operation is invoked.
-    await harness.fire(ActivationEvents.SetupOperationHandler);
+    // OperationHandler activates on SetupOperationHandler — fired automatically by OperationPlugin
+    // during Startup, so it is already active.
     expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
   });
 

@@ -14,17 +14,17 @@ import {
   type AiSession,
   createSystemPrompt,
   formatSystemPrompt,
-  AgentService,
+  McpServerError,
   PartialBlock,
   ToolExecutionServices,
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
-import { type Blueprint } from '@dxos/blueprints';
+import { type Blueprint, type Credential, Trace, Operation } from '@dxos/compute';
 import { type Database, Feed, Obj, Ref } from '@dxos/echo';
 import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
-import { Trace, type CredentialsService, type QueueService } from '@dxos/functions';
+import { type QueueService } from '@dxos/functions';
+import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 import type { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Message } from '@dxos/types';
 
@@ -35,7 +35,7 @@ import { UpdateChatName } from '../operations/definitions';
  * Retained for backward compatibility with CLI and update-name.
  */
 export type AiChatServices =
-  | CredentialsService
+  | Credential.CredentialsService
   | Database.Service
   | QueueService
   | AiService.AiService
@@ -105,6 +105,13 @@ export class AiChatProcessor {
   /** Last error. */
   public readonly error = Atom.make<Option.Option<Error>>(Option.none());
 
+  /**
+   * MCP server connection errors observed during the most recent request.
+   * Misconfigured/unreachable servers are dropped from the toolkit so the chat
+   * keeps working; the entries here let the UI display which servers failed.
+   */
+  public readonly mcpErrors = Atom.make<readonly Trace.PayloadType<typeof McpServerError>[]>([]);
+
   constructor(
     private readonly _conversation: AiSession,
     private readonly _runtime: AutomationCapabilities.ComputeRuntime,
@@ -159,6 +166,7 @@ export class AiChatProcessor {
     try {
       this.#lastRequest = requestProp;
       this.#registry.set(this.error, Option.none());
+      this.#registry.set(this.mcpErrors, []);
       this.#registry.set(this.active, true);
 
       const effect = Effect.gen(this, function* () {
@@ -172,6 +180,8 @@ export class AiChatProcessor {
               for (const event of message.events) {
                 if (Trace.isOfType(PartialBlock, event)) {
                   this.#handleEphemeralMessage(event.data);
+                } else if (Trace.isOfType(McpServerError, event)) {
+                  this.#handleMcpError(event.data);
                 }
               }
             }),
@@ -240,6 +250,13 @@ export class AiChatProcessor {
   }
 
   /**
+   * Clears the recorded MCP server errors (e.g. after the user dismisses the warning banner).
+   */
+  dismissMcpErrors(): void {
+    this.#registry.set(this.mcpErrors, []);
+  }
+
+  /**
    * Update the current chat's name.
    */
   async updateName(chat: Chat.Chat): Promise<void> {
@@ -284,6 +301,20 @@ export class AiChatProcessor {
         return [...pending, message];
       });
     }
+  }
+
+  /**
+   * Records a per-server MCP failure, deduped by url+kind so repeat misconfigurations
+   * across turns do not spam the UI.
+   */
+  #handleMcpError(event: Trace.PayloadType<typeof McpServerError>) {
+    log.warn('MCP server error', event);
+    this.#registry.update(this.mcpErrors, (errors) => {
+      if (errors.some((existing) => existing.url === event.url && existing.kind === event.kind)) {
+        return errors;
+      }
+      return [...errors, event];
+    });
   }
 
   /**

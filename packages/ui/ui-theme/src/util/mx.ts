@@ -89,6 +89,9 @@ export const composableProps = <P extends HTMLElement = HTMLElement>(
   className: mx(defaultClassNames, className, classNames),
 });
 
+/** Symbol used to mark components created by `composable()` or `slottable()`. */
+const COMPOSABLE = Symbol.for('dxos.composable');
+
 /**
  * Factory for slottable components.
  * The implementation receives full `HTMLAttributes<E>` so it can destructure `role`, `style`, etc.
@@ -109,9 +112,6 @@ export const composableProps = <P extends HTMLElement = HTMLElement>(
  * );
  * ```
  */
-/** Symbol used to mark components created by `composable()` or `slottable()`. */
-const COMPOSABLE = Symbol.for('dxos.composable');
-
 export function slottable<E extends HTMLElement, P extends object = {}>(
   render: (props: SlottableProps<P> & HTMLAttributes<E>, forwardedRef: ForwardedRef<E>) => ReactNode,
 ): ForwardRefExoticComponent<SlottableProps<P> & RefAttributes<E>> {

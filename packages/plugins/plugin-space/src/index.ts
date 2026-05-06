@@ -4,8 +4,7 @@
 
 export { SpaceCapabilities, SpaceEvents } from './types';
 
-export * from './components';
 export * from './meta';
 export * from './util';
 
-export * from './SpacePlugin';
+export { SpacePlugin } from '#plugin';

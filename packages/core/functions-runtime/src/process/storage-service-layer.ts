@@ -8,13 +8,16 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { StorageService } from '@dxos/functions';
+import { StorageService } from '@dxos/compute';
 
 /**
  * Create a StorageService scoped under `prefix` in the given backing store.
  * All keys are transparently namespaced so processes cannot collide.
  */
-export const layer = (kvStore: KeyValueStore.KeyValueStore, prefix: string): Context.Tag.Service<StorageService> => {
+export const layer = (
+  kvStore: KeyValueStore.KeyValueStore,
+  prefix: string,
+): Context.Tag.Service<StorageService.StorageService> => {
   const prefixed = KeyValueStore.prefix(kvStore, prefix);
   const knownKeys = new Set<string>();
 

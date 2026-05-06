@@ -7,8 +7,7 @@ import { AppPlugin } from '@dxos/app-toolkit';
 
 import { AppGraphBuilder, PresenterSettings, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
-
-import { translations } from './translations';
+import { translations } from '#translations';
 
 // TODO(burdon): Only scale markdown content.
 // TODO(burdon): Map stack content; Slide content type (e.g., markdown, sketch, IPFS image, table, etc.)
@@ -20,3 +19,5 @@ export const PresenterPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );
+
+export default PresenterPlugin;

@@ -3,9 +3,6 @@
 //
 
 export * from './credentials';
-export { ConfiguredCredentialsService, type ServiceCredential } from './credentials';
-export * from './event-logger';
-export { createEventLogger, createDefectLogger } from './event-logger';
 export * from './function-invocation-service';
 export * from './queues';
 export { MESSAGE_PROPERTY_TOOL_CALL_ID } from './tracing';

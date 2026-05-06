@@ -25,6 +25,7 @@ export default Capability.makeModule(
               icon: 'ph--question--regular',
               data: null,
               position: 'hoist',
+              joyride: 'welcome/feedback',
             }),
           ]),
       }),

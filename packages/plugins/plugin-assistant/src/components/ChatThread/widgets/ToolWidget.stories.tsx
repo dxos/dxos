@@ -7,7 +7,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ContentBlock } from '@dxos/types';
 
-import { translations } from '../../../translations';
+import { translations } from '#translations';
+
 import { ToolWidget, type ToolWidgetProps } from './ToolWidget';
 
 const baseWidgetProps = {

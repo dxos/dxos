@@ -18,6 +18,13 @@
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#plugin": {
+      "source": "./src/RegistryPlugin.node.ts",
+      "types": "./src/RegistryPlugin.tsx",
+      "browser": "./src/RegistryPlugin.tsx",
+      "node": "./src/RegistryPlugin.node.ts",
+      "default": "./src/RegistryPlugin.node.ts"
+    },
     "#types": "./src/types.ts"
   },
   "exports": {
@@ -47,6 +54,7 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/cli-util": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",

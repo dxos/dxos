@@ -7,12 +7,12 @@ import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Annotation, type Obj, Ref } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
-import { Operation } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
-import { translations as editorTranslations } from '@dxos/react-ui-editor';
+import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 import { Text } from '@dxos/schema';
 
 import { MarkdownBlueprint } from '#blueprints';
@@ -27,9 +27,9 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { MarkdownOperation } from '#operations';
+import { translations } from '#translations';
 import { Markdown, MarkdownEvents } from '#types';
 
-import { translations } from './translations';
 import { serializer } from './util';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
@@ -80,6 +80,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addTranslationsModule({ translations: [...translations, ...editorTranslations] }),
   Plugin.addModule({
+    id: 'MarkdownSettings',
     activatesOn: AppActivationEvents.SetupSettings,
     activate: MarkdownSettings,
   }),
@@ -92,13 +93,17 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
     activate: MarkdownState,
   }),
   Plugin.addModule({
+    id: 'AppGraphSerializer',
     activatesOn: AppActivationEvents.AppGraphReady,
     activate: AppGraphSerializer,
   }),
   Plugin.addModule({
     // TODO(wittjosiah): More relevant event?
+    id: 'AnchorSort',
     activatesOn: AppActivationEvents.AppGraphReady,
     activate: AnchorSort,
   }),
   Plugin.make,
 );
+
+export default MarkdownPlugin;

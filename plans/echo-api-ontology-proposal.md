@@ -80,7 +80,7 @@ Types:
 - type `Entity.Unknown` - instance of an entity, but properties are not known. **DONE** (`Entity.Unknown` exists as interface extending `OfKind<Kind>`)
 - type `Entity.Any` - instance of an entity, but exposes arbitrary properties (on the way to deprecation). **DONE** (`Entity.Any` exists with `[key: string]: unknown`)
 - type `Entity.Properties<T extends Entity.Base>` - properties of an entity of instance type `T`. **DONE** (`Entity.Properties<T>` exists, omitting `id`, `KindId`, `Source`, `Target`)
-- type `Entity.Snapshot<T extends Entity.Base>` - snapshot of an entity of instance type `T`. Readonly; cannot be mutated with `Obj.change` **PARTIAL** (`Entity.Snapshot` exists as a non-generic interface; generic `Snapshot<T>` is on `Obj.Snapshot<T>` and `Relation.Snapshot<T>` separately, not `Entity.Snapshot<T>`)
+- type `Entity.Snapshot<T extends Entity.Base>` - snapshot of an entity of instance type `T`. Readonly; cannot be mutated with `Obj.update` **PARTIAL** (`Entity.Snapshot` exists as a non-generic interface; generic `Snapshot<T>` is on `Obj.Snapshot<T>` and `Relation.Snapshot<T>` separately, not `Entity.Snapshot<T>`)
 
 ## `Obj` module
 
@@ -92,7 +92,7 @@ Types:
 - type `Obj.Unknown` - instance of an object, but properties are not known. **DONE**
 - type `Obj.Any` - instance of an object, but exposes arbitrary properties (on the way to deprecation). **DONE**
 - type `Obj.Properties<T extends Obj.Base>` - properties of an object of instance type `T`. **NOT DONE** (`Obj.Properties` is not exported; `Entity.Properties<T>` exists at the Entity level)
-- type `Obj.Snapshot<T extends Obj.Base>` - snapshot of an object of instance type `T`. Readonly; cannot be mutated with `Obj.change` **DONE** (`Obj.Snapshot<T>` exists as a generic type)
+- type `Obj.Snapshot<T extends Obj.Base>` - snapshot of an object of instance type `T`. Readonly; cannot be mutated with `Obj.update` **DONE** (`Obj.Snapshot<T>` exists as a generic type)
 
 Constants:
 
@@ -103,7 +103,7 @@ Functions:
 
 - function `Obj.make(schema: Type.Obj<T>, props: Obj.Properties<T>)` - create a new object of instance type `T`. **DONE**
 - function `Obj.snapshot(obj: Obj.Obj<T>)` - get a snapshot of an object of instance type `T`. **DONE** (named `Obj.getSnapshot`)
-- function `Obj.change(obj: Obj.Obj<T>, callback: (obj: Obj.Mutable<T>) => void)` - mutate an object of instance type `T`. **DONE**
+- function `Obj.update(obj: Obj.Obj<T>, callback: (obj: Obj.Mutable<T>) => void)` - mutate an object of instance type `T`. **DONE**
 
 ## `Relation` module
 
@@ -117,7 +117,7 @@ Types:
 - type `Relation.Source<T extends Relation.Base>` - get source of the relation. **DONE** (named `Relation.SourceOf<T>`)
 - type `Relation.Target<T extends Relation.Base>` - get target of the relation. **DONE** (named `Relation.TargetOf<T>`)
 - type `Relation.Properties<T extends Relation.Base>` - properties of a relation of instance type `T`. **NOT DONE** (`Relation.Properties` is not exported; `Entity.Properties<T>` exists at the Entity level)
-- type `Relation.Snapshot<T extends Relation.Base>` - snapshot of a relation of instance type `T`. Readonly; cannot be mutated with `Relation.change` **DONE** (`Relation.Snapshot<T>` exists as a generic type)
+- type `Relation.Snapshot<T extends Relation.Base>` - snapshot of a relation of instance type `T`. Readonly; cannot be mutated with `Relation.update` **DONE** (`Relation.Snapshot<T>` exists as a generic type)
 
 Constants:
 
@@ -130,7 +130,7 @@ Functions:
 
 - function `Relation.make(schema: Type.Relation<T>, props: Relation.Properties<T>)` - create a new relation of instance type `T`. **DONE**
 - function `Relation.snapshot(relation: Relation.Relation<T>)` - get a snapshot of a relation of instance type `T`. **DONE** (named `Relation.getSnapshot`)
-- function `Relation.change(relation: Relation.Relation<T>, callback: (relation: Relation.Mutable<T>) => void)` - mutate a relation of instance type `T`. **DONE**
+- function `Relation.update(relation: Relation.Relation<T>, callback: (relation: Relation.Mutable<T>) => void)` - mutate a relation of instance type `T`. **DONE**
 
 ## `Ref` module
 

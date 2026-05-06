@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
@@ -12,9 +13,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-type SchemaPanelProps = { space: Space };
-
-export const SchemaContainer = ({ space }: SchemaPanelProps) => {
+export const SchemaContainer = ({ space }: AppSurface.SpaceArticleProps) => {
   const { t } = useTranslation(meta.id);
   const schemas = useQuerySpaceSchemas(space);
 

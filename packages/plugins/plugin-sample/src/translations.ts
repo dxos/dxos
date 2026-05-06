@@ -40,7 +40,6 @@ export const translations = [
         'object-actions-section.label': 'Actions',
         'related-companion.label': 'Related',
         'deck-companion.label': 'Sample Panel',
-        'show-status-indicator-setting.label': 'Show status indicator',
       },
     },
   },

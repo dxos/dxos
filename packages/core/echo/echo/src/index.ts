@@ -15,6 +15,7 @@ export * as Feed from './Feed';
 export * as Filter from './Filter';
 export * as Format from './Format';
 export * as Hypergraph from './Hypergraph';
+export * as Json from './Json';
 export * as JsonSchema from './JsonSchema';
 export * as Key from './Key';
 export * as Migration from './Migration';

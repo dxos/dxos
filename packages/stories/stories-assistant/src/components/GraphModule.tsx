@@ -5,27 +5,28 @@
 import * as Match from 'effect/Match';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { ResearchGraph } from '@dxos/assistant-toolkit';
-import { Feed, Filter, Query } from '@dxos/echo';
+import { Feed, Filter } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { useFlush } from '@dxos/plugin-assistant';
-import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
+import { useFlush } from '@dxos/plugin-assistant/hooks';
+import { D3ForceGraph } from '@dxos/plugin-explorer/components';
+import { useGraphModel } from '@dxos/plugin-explorer/hooks';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { StackItem } from '@dxos/react-ui-stack';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
+import { ResearchInputQueue } from '../testing';
 import { type ComponentProps } from './types';
 
 export const GraphModule = ({ space }: ComponentProps) => {
   const [filter, setFilter] = useState<Filter.Any>();
   const [open, setOpen] = useState(false);
 
-  const [researchGraph] = useQuery(space.db, Query.type(ResearchGraph.ResearchGraph));
-  const feed = researchGraph?.queue.target;
+  const [researchInput] = useQuery(space.db, Filter.type(ResearchInputQueue));
+  const feed = researchInput?.feed.target;
   const queue = useQueue(feed ? Feed.getQueueDxn(feed) : undefined);
 
   // TODO(burdon): Clean-up API.
@@ -57,7 +58,7 @@ export const GraphModule = ({ space }: ComponentProps) => {
             'overflow-hidden bg-base-surface border border-subdued-separator opacity-80',
           )}
         >
-          <Json.Data classNames='text-sm' data={filter} />
+          <JsonHighlighter classNames='text-sm' data={filter} />
         </div>
       )}
 

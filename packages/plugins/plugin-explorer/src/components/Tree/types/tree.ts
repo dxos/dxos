@@ -185,7 +185,7 @@ export class Tree {
   clear(): void {
     const root = this._tree.nodes[this._tree.root];
     root.children.length = 0;
-    Obj.change(this._tree, (obj) => {
+    Obj.update(this._tree, (obj) => {
       obj.nodes = {
         [root.id]: root,
       };
@@ -202,7 +202,7 @@ export class Tree {
     }
 
     const nodeToAdd = node;
-    Obj.change(this._tree, (obj) => {
+    Obj.update(this._tree, (obj) => {
       obj.nodes[nodeToAdd.id] = nodeToAdd;
       parent.children.splice(index ?? parent.children.length, 0, nodeToAdd.id);
     });
@@ -218,12 +218,12 @@ export class Tree {
       return undefined;
     }
 
-    Obj.change(this._tree, (obj) => {
+    Obj.update(this._tree, (obj) => {
       delete obj.nodes[node.id];
     });
     const idx = parent.children.findIndex((child) => child === id);
     if (idx !== -1) {
-      Obj.change(this._tree, () => {
+      Obj.update(this._tree, () => {
         parent.children.splice(idx, 1);
       });
     }
@@ -242,7 +242,7 @@ export class Tree {
     }
 
     const child = node.children[from];
-    Obj.change(this._tree, () => {
+    Obj.update(this._tree, () => {
       node.children.splice(from, 1);
       node.children.splice(to, 0, child);
     });
@@ -264,7 +264,7 @@ export class Tree {
     }
 
     const previous = this.getNode(parent.children[idx - 1]);
-    Obj.change(this._tree, () => {
+    Obj.update(this._tree, () => {
       parent.children.splice(idx, 1);
       previous.children.push(node.id);
     });
@@ -287,19 +287,19 @@ export class Tree {
     // Remove node from parent and get following siblings.
     const nodeIdx = parent.children.findIndex((id) => id === node.id);
     let rest: Key.ObjectId[] = [];
-    Obj.change(this._tree, () => {
+    Obj.update(this._tree, () => {
       const removed = parent.children.splice(nodeIdx, parent.children.length - nodeIdx);
       rest = removed.slice(1); // Skip the node itself.
     });
 
     // Add to ancestor.
     const parentIdx = this.getChildNodes(ancestor).findIndex((n) => n.id === parent.id);
-    Obj.change(this._tree, () => {
+    Obj.update(this._tree, () => {
       ancestor.children.splice(parentIdx + 1, 0, node.id);
     });
 
     // Transplant following siblings to current node.
-    Obj.change(this._tree, () => {
+    Obj.update(this._tree, () => {
       node.children.push(...rest);
     });
   }

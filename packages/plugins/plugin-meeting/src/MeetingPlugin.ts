@@ -17,9 +17,8 @@ import {
   ReactSurface,
 } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { Meeting, MeetingCapabilities } from '#types';
-
-import { translations } from './translations';
 
 const StateReady = AppActivationEvents.createStateEvent(meta.id);
 const SettingsReady = AppActivationEvents.createSettingsEvent(MeetingCapabilities.Settings.identifier);
@@ -59,3 +58,5 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default MeetingPlugin;

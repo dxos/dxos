@@ -56,11 +56,13 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
           eventHandler={eventHandler}
           Tile={itemTile as FC<MosaicTileProps<Obj.Unknown>>}
         />
-        {onCardAdd && (
-          <Board.Column.Footer
-            onAdd={() => onCardAdd(column.columnValue === UNCATEGORIZED_VALUE ? undefined : column.columnValue)}
-          />
-        )}
+        <Board.Column.Footer
+          onAdd={
+            onCardAdd
+              ? () => onCardAdd(column.columnValue === UNCATEGORIZED_VALUE ? undefined : column.columnValue)
+              : undefined
+          }
+        />
       </Board.Column.Root>
     );
   },

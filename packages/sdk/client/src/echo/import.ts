@@ -13,9 +13,7 @@ export type ImportSpaceOptions = {
 };
 
 export const importSpace = async (db: EchoDatabase, data: SerializedSpace, options?: ImportSpaceOptions) => {
-  const [properties] = await db
-    .query(Filter.or(Filter.type(SpaceProperties), Filter.type(LegacySpaceProperties)))
-    .run();
+  const [properties] = await db.query(Filter.type(SpaceProperties)).run();
 
   await new Serializer().import(db, data, {
     onObject: async (object) => {

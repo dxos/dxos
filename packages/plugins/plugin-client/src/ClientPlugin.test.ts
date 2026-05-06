@@ -5,8 +5,8 @@
 import { describe, test } from 'vitest';
 
 import { ActivationEvents } from '@dxos/app-framework';
-// Use the CLI variant — the main ClientPlugin references capabilities that resolve to undefined under Node.
-import { ClientPlugin } from '@dxos/plugin-client/cli';
+// #plugin resolves to ClientPlugin.node.ts under the source condition used by vitest.
+import { ClientPlugin } from '@dxos/plugin-client';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { meta } from './meta';

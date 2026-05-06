@@ -24,6 +24,13 @@
     "#hooks": "./src/hooks/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#plugin": {
+      "source": "./src/SpacePlugin.node.ts",
+      "types": "./src/SpacePlugin.ts",
+      "browser": "./src/SpacePlugin.ts",
+      "node": "./src/SpacePlugin.node.ts",
+      "default": "./src/SpacePlugin.node.ts"
+    },
     "#types": "./src/types/index.ts"
   },
   "exports": {
@@ -34,9 +41,9 @@
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./cli": {
-      "source": "./src/cli/index.ts",
-      "types": "./dist/types/src/cli/index.d.ts",
-      "node": "./dist/lib/node-esm/cli/index.mjs"
+      "source": "./src/SpacePlugin.node.ts",
+      "types": "./dist/types/src/SpacePlugin.node.d.ts",
+      "node": "./dist/lib/node-esm/SpacePlugin.node.mjs"
     },
     "./meta": {
       "source": "./src/meta.ts",
@@ -81,10 +88,10 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/blueprints": "workspace:*",
     "@dxos/cli-util": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",

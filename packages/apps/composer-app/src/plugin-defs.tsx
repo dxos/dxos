@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework';
 import { APP_DOMAIN } from '@dxos/app-toolkit';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
-import { type LogBuffer } from '@dxos/log';
+import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
 import { AssistantPlugin } from '@dxos/plugin-assistant';
 import { AttentionPlugin } from '@dxos/plugin-attention';
@@ -15,16 +15,22 @@ import { AutomationPlugin } from '@dxos/plugin-automation';
 import { BoardPlugin } from '@dxos/plugin-board';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { CodePlugin } from '@dxos/plugin-code';
 import { ConductorPlugin } from '@dxos/plugin-conductor';
+import { CrxPlugin } from '@dxos/plugin-crx';
+import { CrxBridgePlugin } from '@dxos/plugin-crx-bridge';
 import { DailySummaryPlugin } from '@dxos/plugin-daily-summary';
 import { DebugPlugin } from '@dxos/plugin-debug';
 import { DeckPlugin } from '@dxos/plugin-deck';
 import { DiscordPlugin } from '@dxos/plugin-discord';
+import { DoctorPlugin } from '@dxos/plugin-doctor';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { FeedPlugin } from '@dxos/plugin-feed';
+import { GalleryPlugin } from '@dxos/plugin-gallery';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { HelpPlugin } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
+import { IntegrationPlugin } from '@dxos/plugin-integration';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon';
 import { KanbanPlugin } from '@dxos/plugin-kanban';
 import { MapPlugin } from '@dxos/plugin-map';
@@ -53,7 +59,6 @@ import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
 import { SketchPlugin } from '@dxos/plugin-sketch';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { SpacetimePlugin } from '@dxos/plugin-spacetime';
-import { SpecPlugin } from '@dxos/plugin-spec';
 import { SpotlightPlugin } from '@dxos/plugin-spotlight';
 import { StackPlugin } from '@dxos/plugin-stack';
 import { StatusBarPlugin } from '@dxos/plugin-status-bar';
@@ -61,15 +66,15 @@ import { TablePlugin } from '@dxos/plugin-table';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { ThreadPlugin } from '@dxos/plugin-thread';
 import { TicTacToePlugin } from '@dxos/plugin-tictactoe';
-import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
+import { TrelloPlugin } from '@dxos/plugin-trello';
 import { VoxelPlugin } from '@dxos/plugin-voxel';
 import { WnfsPlugin } from '@dxos/plugin-wnfs';
-import { YouTubePlugin } from '@dxos/plugin-youtube';
 import { ZenPlugin } from '@dxos/plugin-zen';
 import { isTruthy } from '@dxos/util';
 
 import { steps } from './help';
+import { downloadLogs } from './log-download';
 import { WelcomePlugin } from './plugins';
 
 const APP_LINK_ORIGIN = new URL('https://' + APP_DOMAIN).origin;
@@ -79,7 +84,7 @@ export type State = {
   config: Config;
   services: ClientServicesProvider;
   observability: Promise<Observability.Observability>;
-  logBuffer: LogBuffer;
+  logStore: IdbLogStore;
 };
 
 export type PluginConfig = State & {
@@ -103,8 +108,11 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     AttentionPlugin.meta.id,
     AutomationPlugin.meta.id,
     ClientPlugin.meta.id,
+    CrxPlugin.meta.id,
+    CrxBridgePlugin.meta.id,
     GraphPlugin.meta.id,
     HelpPlugin.meta.id,
+    IntegrationPlugin.meta.id,
     layoutPluginId,
     isTauri && !isMobile && !isPopover && NativePlugin.meta.id,
     OperationPlugin.meta.id,
@@ -119,7 +127,6 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     SpacePlugin.meta.id,
     StatusBarPlugin.meta.id,
     ThemePlugin.meta.id,
-    TokenManagerPlugin.meta.id,
     WelcomePlugin.meta.id,
   ]
     .filter(isTruthy)
@@ -129,6 +136,7 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
 export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] =>
   [
     // Default
+    GalleryPlugin.meta.id,
     InboxPlugin.meta.id,
     KanbanPlugin.meta.id,
     MarkdownPlugin.meta.id,
@@ -139,7 +147,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     ThreadPlugin.meta.id,
     WnfsPlugin.meta.id,
 
-    SpecPlugin.meta.id,
+    CodePlugin.meta.id,
 
     // Dev
     isDev && DebugPlugin.meta.id,
@@ -150,7 +158,6 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     // Labs
     (isDev || isLabs) && [
       AssistantPlugin.meta.id,
-      DailySummaryPlugin.meta.id,
       DiscordPlugin.meta.id,
       FeedPlugin.meta.id,
       IrohBeaconPlugin.meta.id,
@@ -170,7 +177,7 @@ export const getPlugins = ({
   config,
   services,
   observability,
-  logBuffer,
+  logStore,
   isDev,
   isLocal,
   isLabs,
@@ -204,11 +211,15 @@ export const getPlugins = ({
         }),
     }),
     ConductorPlugin(),
+    CrxPlugin(),
+    CrxBridgePlugin(),
     DailySummaryPlugin(),
-    DebugPlugin({ logBuffer }),
+    DebugPlugin({ logStore }),
     DiscordPlugin(),
+    DoctorPlugin(),
     ExplorerPlugin(),
     FeedPlugin(),
+    GalleryPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),
@@ -223,11 +234,12 @@ export const getPlugins = ({
     MeetingPlugin(),
     MermaidPlugin(),
     isTauri && !isMobile && !isPopover && NativePlugin(),
-    NativeFilesystemPlugin(),
+    isTauri && !isMobile && !isPopover && NativeFilesystemPlugin(),
     NavTreePlugin(),
     ObservabilityPlugin({
       namespace: appKey,
       observability: () => observability,
+      downloadLogs: () => downloadLogs(logStore),
     }),
     OutlinerPlugin(),
     PipelinePlugin(),
@@ -239,7 +251,7 @@ export const getPlugins = ({
     isLocal && SamplePlugin(),
     ScriptPlugin(),
     SearchPlugin(),
-    isLabs && SidekickPlugin(),
+    (isDev || isLabs) && SidekickPlugin(),
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
@@ -248,7 +260,7 @@ export const getPlugins = ({
       observability: true,
       shareableLinkOrigin: origin,
     }),
-    SpecPlugin(),
+    CodePlugin(),
     StackPlugin(),
     StatusBarPlugin(),
     TablePlugin(),
@@ -259,12 +271,12 @@ export const getPlugins = ({
     }),
     TicTacToePlugin(),
     ThreadPlugin(),
-    TokenManagerPlugin(),
+    IntegrationPlugin(),
     TranscriptionPlugin(),
+    TrelloPlugin(),
     VoxelPlugin(),
     WelcomePlugin(),
     WnfsPlugin(),
-    YouTubePlugin(),
     ZenPlugin(),
   ]
     .filter(isTruthy)

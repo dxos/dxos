@@ -1,31 +1,29 @@
 # @dxos/cli
 
-## Run locally
+## Run locally (from source)
 
-To run the CLI locally first compile it:
+The `./bin/dx` wrapper runs the CLI directly from TypeScript source via bun, with no build step required. Source-mode resolution is enabled by `--conditions=source` in the wrapper plus a small dev preload (`scripts/dev-preload.ts`) that scopes the `@opentui/solid` babel transform to the CLI's own sources.
+
+```bash
+cd packages/devtools/cli
+./bin/dx --help
+```
+
+Set `DX_DEBUG=debug` (or `verbose`, `info`, `warn`, `error`) for log output:
+
+```bash
+DX_DEBUG=debug ./bin/dx chat
+```
+
+## Compile standalone binary
+
+To produce a single-file binary for distribution:
 
 ```bash
 moon run cli:compile
 ```
 
-Once it's compiled it can be run from the cli package:
-
-```bash
-./dist/<platform>/dx
-```
-
-## Development
-
-```bash
-moon run cli:dev -- --help
-```
-
-Running with vite-node (reads all workspace packages directly from source, so rebuilds are not required):
-
-```bash
-cd packages/devtools/cli
-./dxnext
-```
+The compiled binaries land under `dist/cli-<platform>-<arch>/dx`.
 
 ## Admin Commands
 

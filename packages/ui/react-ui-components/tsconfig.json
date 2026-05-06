@@ -73,6 +73,9 @@
       "path": "../react-ui-markdown"
     },
     {
+      "path": "../react-ui-sfx"
+    },
+    {
       "path": "../react-ui-syntax-highlighter"
     },
     {

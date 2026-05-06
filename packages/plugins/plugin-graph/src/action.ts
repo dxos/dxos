@@ -7,8 +7,9 @@ import * as Function from 'effect/Function';
 
 import { Capability, type CapabilityManager } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
+import { Operation } from '@dxos/compute';
 import { runAndForwardErrors } from '@dxos/effect';
-import { Operation, type OperationInvoker } from '@dxos/operation';
+import { OperationInvoker } from '@dxos/operation';
 
 /**
  * Run an action with required layers: Operation.Service, Capability.Service, and captured context.

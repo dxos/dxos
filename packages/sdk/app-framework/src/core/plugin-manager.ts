@@ -16,12 +16,25 @@ import * as Ref from 'effect/Ref';
 
 import { runAndForwardErrors } from '@dxos/effect';
 import { Performance } from '@dxos/effect';
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
 import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
 import * as CapabilityManager from './capability-manager';
 import * as Plugin from './plugin';
+
+/**
+ * Tagged error for failures during the constructor-launched core/enabled
+ * `enable()` chain. Surfaces via {@link PluginManager.activate}'s wait on
+ * `_initialization` so a caller blocked on initialization gets a typed
+ * failure (with the original error preserved as `cause`) instead of an
+ * untyped `Error`.
+ */
+export class PluginInitializationError extends BaseError.extend(
+  'PluginInitializationError',
+  'Plugin manager initialization failed',
+) {}
 
 /**
  * Identifier denoting a Manager.
@@ -35,6 +48,12 @@ export type ManagerOptions = {
   core?: string[];
   enabled?: string[];
   registry?: Registry.Registry;
+  /**
+   * Hook called when a plugin is removed via {@link PluginManager.remove}. Used by the
+   * host app to clean up persisted state (e.g. evict offline-cached plugin assets).
+   * Failures are logged and swallowed; removal still succeeds even if the hook fails.
+   */
+  onRemove?: (id: string) => Effect.Effect<void, unknown>;
 };
 
 export type ActivationMessage = {
@@ -70,9 +89,14 @@ export interface PluginManager {
   getEventsFired(): readonly string[];
   getPendingReset(): readonly string[];
 
-  add(id: string): Effect.Effect<boolean, Error>;
+  /**
+   * Loads a plugin via the plugin loader and registers it without enabling it.
+   * Returns the loaded plugin so callers can enable it by its canonical id
+   * (which may differ from the locator used to load it, e.g. URL loaders).
+   */
+  add(id: string): Effect.Effect<Plugin.Plugin, Error>;
   enable(id: string): Effect.Effect<boolean, Error>;
-  remove(id: string): boolean;
+  remove(id: string): Effect.Effect<boolean, Error>;
   disable(id: string): Effect.Effect<boolean, Error>;
   // TODO(wittjosiah): Improve error typing.
   activate(
@@ -114,14 +138,29 @@ class ManagerImpl implements PluginManager {
   private readonly _eventsFiredAtom: Atom.Writable<string[]>;
   private readonly _pendingResetAtom: Atom.Writable<string[]>;
   private readonly _pluginLoader: ManagerOptions['pluginLoader'];
+  private readonly _onRemove: ManagerOptions['onRemove'];
   private readonly _capabilities = new Map<string, Capability.Any[]>();
   private readonly _moduleMemoMap = new Map<Plugin.PluginModule['id'], Deferred.Deferred<Capability.Any[], Error>>();
   private readonly _moduleSemaphores = new Map<Plugin.PluginModule['id'], Effect.Semaphore>();
+  // Coalesces concurrent `_resolveLazyPlugin` calls per plugin id. Without
+  // this, two callers entering `enable(id)` before the swap completes would
+  // each invoke `mod.default(options)` and produce distinct module objects,
+  // defeating `_addModule`'s reference-equality dedupe and racing the
+  // `_pluginsAtom` swap.
+  private readonly _resolvingPlugins = new Map<string, Deferred.Deferred<Plugin.Plugin, Plugin.LazyPluginError>>();
   private readonly _activatingEvents = Effect.runSync(Ref.make<string[]>([]));
   private readonly _activatingModules = Effect.runSync(Ref.make<string[]>([]));
   private readonly _inFlightFibers = Effect.runSync(Ref.make<Array<Fiber.Fiber<unknown, unknown>>>([]));
   private readonly _shutdownSemaphore = Effect.runSync(Effect.makeSemaphore(1));
   private readonly _shuttingDown = Effect.runSync(Ref.make(false));
+  // Tracks the constructor-launched core/enabled `enable()` calls so that
+  // `activate` can wait for module registration before dispatching events.
+  // Lazy plugins make `enable` asynchronous (a dynamic `import()` happens
+  // inside it), so without this synchronization an `activate` triggered
+  // immediately after `make` could fire on an empty module set. Failures
+  // are wrapped in `PluginInitializationError` so awaiters get a tagged
+  // error rather than the wide `Error` produced by the underlying chain.
+  private readonly _initialization = Effect.runSync(Deferred.make<void, PluginInitializationError>());
 
   constructor({
     pluginLoader,
@@ -129,6 +168,7 @@ class ManagerImpl implements PluginManager {
     core = plugins.map(({ meta }) => meta.id),
     enabled = [],
     registry,
+    onRemove,
   }: ManagerOptions) {
     this.registry = registry ?? Registry.make();
     this.capabilities = CapabilityManager.make({
@@ -136,6 +176,7 @@ class ManagerImpl implements PluginManager {
     });
 
     this._pluginLoader = pluginLoader;
+    this._onRemove = onRemove;
     this._pluginsAtom = Atom.make(plugins).pipe(Atom.keepAlive);
     this._coreAtom = Atom.make(core).pipe(Atom.keepAlive);
     this._enabledAtom = Atom.make(enabled).pipe(Atom.keepAlive);
@@ -144,7 +185,19 @@ class ManagerImpl implements PluginManager {
     this._eventsFiredAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
     this._pendingResetAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
     plugins.forEach((plugin) => this._addPlugin(plugin));
-    void Effect.all([...core, ...enabled].map((id) => this.enable(id))).pipe(runAndForwardErrors);
+    // Dedupe before mapping to `enable` — `core` and `enabled` may overlap (an
+    // app-supplied plugin can be in both), and concurrent `enable(id)` calls
+    // for the same id are not idempotent (each would re-run the lazy resolve
+    // and double-register modules). `new Set([...])` preserves first-seen
+    // order which matches the natural core-before-enabled precedence.
+    const initialIds = [...new Set([...core, ...enabled])];
+    void Effect.all(initialIds.map((id) => this.enable(id)))
+      .pipe(
+        Effect.mapError((cause) => new PluginInitializationError({ cause })),
+        Effect.tap(() => Deferred.succeed(this._initialization, undefined)),
+        Effect.tapErrorCause((cause) => Deferred.failCause(this._initialization, cause)),
+      )
+      .pipe(runAndForwardErrors);
   }
 
   get plugins(): Atom.Atom<readonly Plugin.Plugin[]> {
@@ -220,14 +273,15 @@ class ManagerImpl implements PluginManager {
 
   /**
    * Adds a plugin to the manager via the plugin loader.
+   * The plugin is registered but not enabled; call `enable` separately to activate it.
    * @param id The id of the plugin.
    */
-  add(id: string): Effect.Effect<boolean, Error> {
+  add(id: string): Effect.Effect<Plugin.Plugin, Error> {
     return Effect.gen(this, function* () {
       log('add plugin', { id });
       const plugin = yield* this._pluginLoader(id);
       this._addPlugin(plugin);
-      return yield* this.enable(plugin.meta.id);
+      return plugin;
     });
   }
 
@@ -238,10 +292,12 @@ class ManagerImpl implements PluginManager {
   enable(id: string): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       log('enable plugin', { id });
-      const plugin = this._getPlugin(id);
-      if (!plugin) {
+      const stub = this._getPlugin(id);
+      if (!stub) {
         return false;
       }
+
+      const plugin = yield* this._resolveLazyPlugin(stub);
 
       this._update(this._enabledAtom, (enabled) => (enabled.includes(id) ? enabled : [...enabled, id]));
 
@@ -261,18 +317,74 @@ class ManagerImpl implements PluginManager {
   }
 
   /**
+   * Resolves a lazy plugin stub (returned by {@link Plugin.lazy}) to its
+   * loaded form and swaps it into `_pluginsAtom`. Returns the input unchanged
+   * when the plugin is already resolved, so callers can `yield*` this
+   * unconditionally. The lazy stub carries `meta` synchronously but its
+   * `modules` list is empty until the loader resolves; the swap ensures
+   * subsequent enable/disable operations see the resolved plugin.
+   *
+   * Concurrent calls for the same id are coalesced via `_resolvingPlugins`:
+   * the first caller starts the resolution, every subsequent caller awaits
+   * the same `Deferred`. On failure we publish a `lazy:<id>` error message
+   * and skip the atom swap so the failure is observable to the activation
+   * subscriber and a retry can be attempted.
+   */
+  private _resolveLazyPlugin(plugin: Plugin.Plugin): Effect.Effect<Plugin.Plugin, Plugin.LazyPluginError> {
+    return Effect.gen(this, function* () {
+      if (!Plugin.isLazy(plugin)) {
+        return plugin;
+      }
+      const id = plugin.meta.id;
+
+      const existing = this._resolvingPlugins.get(id);
+      if (existing) {
+        return yield* Deferred.await(existing);
+      }
+      const deferred = yield* Deferred.make<Plugin.Plugin, Plugin.LazyPluginError>();
+      this._resolvingPlugins.set(id, deferred);
+
+      return yield* Effect.gen(this, function* () {
+        log('resolving lazy plugin', { id });
+        yield* PubSub.publish(this.activation, { event: '', state: 'activating', module: `lazy:${id}` });
+        const resolvedPlugin = yield* Plugin.resolveLazy(plugin);
+        this._update(this._pluginsAtom, (plugins) => plugins.map((p) => (p.meta.id === id ? resolvedPlugin : p)));
+        yield* PubSub.publish(this.activation, { event: '', state: 'activated', module: `lazy:${id}` });
+        return resolvedPlugin;
+      }).pipe(
+        Effect.tapError((error) =>
+          PubSub.publish(this.activation, { event: '', state: 'error', module: `lazy:${id}`, error }),
+        ),
+        Effect.tap((value) => Deferred.succeed(deferred, value)),
+        Effect.tapErrorCause((cause) => Deferred.failCause(deferred, cause)),
+        Effect.ensuring(Effect.sync(() => this._resolvingPlugins.delete(id))),
+      );
+    });
+  }
+
+  /**
    * Removes a plugin from the manager.
    * @param id The id of the plugin.
    */
-  remove(id: string): boolean {
-    log('remove plugin', { id });
-    const result = this.disable(id);
-    if (!result) {
-      return false;
-    }
+  remove(id: string): Effect.Effect<boolean, Error> {
+    return Effect.gen(this, function* () {
+      log('remove plugin', { id });
+      const disabled = yield* this.disable(id);
+      if (!disabled) {
+        return false;
+      }
 
-    this._removePlugin(id);
-    return true;
+      this._removePlugin(id);
+      if (this._onRemove) {
+        this._runForkedFiber(
+          this._onRemove(id).pipe(
+            Effect.tapError((error) => Effect.sync(() => log.warn('plugin remove hook failed', { id, error }))),
+            Effect.ignore,
+          ),
+        );
+      }
+      return true;
+    });
   }
 
   /**
@@ -320,6 +432,12 @@ class ManagerImpl implements PluginManager {
         log('skipping activation during shutdown', { key, ...params });
         return false;
       }
+
+      // Wait for the constructor's core/enabled `enable()` chain — including
+      // any async dynamic imports for lazy plugins — to finish registering
+      // modules. Without this, dispatching to an empty module set is the
+      // observable symptom of the race.
+      yield* Deferred.await(this._initialization);
 
       return yield* Effect.withFiberRuntime<boolean, Error>((fiber) =>
         this._activateEvent(key, params, fiber).pipe(
@@ -509,6 +627,18 @@ class ManagerImpl implements PluginManager {
     fiber: Fiber.Fiber<unknown, unknown>,
   ): Effect.Effect<void> {
     return Ref.update(ref, (fibers) => fibers.filter((trackedFiber) => trackedFiber !== fiber));
+  }
+
+  /**
+   * Spawns an effect on the default runtime and registers the resulting fiber in
+   * `_inFlightFibers` so {@link shutdown} can interrupt it. Used from sync entry
+   * points like {@link remove} where there is no enclosing Effect to fork from;
+   * inside an Effect chain prefer the existing track/await/untrack pattern.
+   */
+  private _runForkedFiber<E>(effect: Effect.Effect<void, E>): void {
+    const fiber = Effect.runFork(effect);
+    Effect.runSync(this._trackFiber(this._inFlightFibers, fiber));
+    Effect.runFork(Fiber.await(fiber).pipe(Effect.andThen(() => this._untrackFiber(this._inFlightFibers, fiber))));
   }
 
   //
@@ -702,7 +832,7 @@ class ManagerImpl implements PluginManager {
   ): Effect.Effect<Capability.Any[][], Error> {
     return Function.pipe(
       modules,
-      Array.map((mod) => this._loadModule(mod)),
+      Array.map((mod) => this._loadModule(mod, key)),
       Effect.allWith({ concurrency: 'unbounded' }),
       Effect.catchAll((error) => {
         return Effect.gen(this, function* () {
@@ -721,8 +851,12 @@ class ManagerImpl implements PluginManager {
       modules,
       Array.zip(capabilities),
       Array.map(([module, capabilitySet]) => this._contributeCapabilities(module, capabilitySet)),
-      // TODO(wittjosiah): This currently can't be run in parallel.
-      //   Running this with concurrency causes races with `allOf` activation events.
+      // TODO(wittjosiah): This currently can't be run in parallel, and inserting
+      //   any yield between contributions (`Effect.yieldNow()`, `Effect.sleep(0)`)
+      //   races the `allOf` activation-event resolver — observed as a System
+      //   Error dialog on warm reloads. Contributions must stay strictly
+      //   synchronous within an event; React paint slots have to be found at
+      //   event boundaries higher up the call chain.
       Effect.all,
       Effect.asVoid,
     );
@@ -737,7 +871,14 @@ class ManagerImpl implements PluginManager {
     return semaphore;
   }
 
-  private _loadModule = (module: Plugin.PluginModule): Effect.Effect<Capability.Any[], Error> =>
+  // `parentEvent` is the activation event that first triggered this module
+  // load — included in `activating`/`activated` PubSub messages so subscribers
+  // (e.g. the boot loader's status listener) can associate a module with its
+  // triggering event in the trace. The same module may be referenced by
+  // multiple events, but module loads are memoized via `_moduleMemoMap`, so
+  // only the first event to need it will appear here; later events await the
+  // cached deferred without re-publishing.
+  private _loadModule = (module: Plugin.PluginModule, parentEvent: string): Effect.Effect<Capability.Any[], Error> =>
     Effect.gen(this, function* () {
       const semaphore = this._getModuleSemaphore(module.id);
 
@@ -753,9 +894,9 @@ class ManagerImpl implements PluginManager {
         this._moduleMemoMap.set(module.id, deferred);
 
         const loadEffect = Effect.gen(this, function* () {
-          log('loading module', { module: module.id });
+          log('loading module', { module: module.id, parentEvent });
           performance.mark(`module:${module.id}:start`);
-          yield* PubSub.publish(this.activation, { event: '', state: 'activating', module: module.id });
+          yield* PubSub.publish(this.activation, { event: parentEvent, state: 'activating', module: module.id });
           const [duration, capabilities] = yield* module
             .activate()
             .pipe(
@@ -767,9 +908,10 @@ class ManagerImpl implements PluginManager {
           const elapsed = Duration.toMillis(duration);
           performance.mark(`module:${module.id}:end`);
           performance.measure(`module:${module.id}`, `module:${module.id}:start`, `module:${module.id}:end`);
-          yield* PubSub.publish(this.activation, { event: '', state: 'activated', module: module.id });
+          yield* PubSub.publish(this.activation, { event: parentEvent, state: 'activated', module: module.id });
           log('loaded module', {
             module: module.id,
+            parentEvent,
             elapsed,
             failed: false,
           });

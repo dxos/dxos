@@ -66,13 +66,6 @@
       "node": "./src/node/util.js"
     }
   },
-  "typesVersions": {
-    "*": {
-      "_/config": [
-        "types/_/config.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src/node",

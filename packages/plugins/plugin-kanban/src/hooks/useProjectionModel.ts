@@ -30,11 +30,11 @@ export const useProjectionModel = <S extends Type.AnyEntity>(
 
   useAsyncEffect(
     async (controller) => {
-      if (!schema || !kanban) {
+      if (!schema || !kanban || kanban.spec.kind !== 'view') {
         return;
       }
       try {
-        const view = await kanban.view.load();
+        const view = await kanban.spec.view.load();
         if (controller.signal.aborted) {
           return;
         }

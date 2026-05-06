@@ -159,7 +159,7 @@ export const createMarkdownDocuments = (
       const state = registry.get(stateAtom);
       const fileResult = findFileById(state.workspaces, fileId);
       if (fileResult && doc.name !== fileResult.file.name) {
-        Obj.change(doc, (doc) => {
+        Obj.update(doc, (doc) => {
           doc.name = fileResult.file.name;
         });
       }
@@ -270,7 +270,7 @@ export const createMarkdownDocuments = (
     const existing = documentsByFileId.get(file.id);
     if (existing) {
       if (existing.name !== file.name) {
-        Obj.change(existing, (existing) => {
+        Obj.update(existing, (existing) => {
           existing.name = file.name;
         });
       }
@@ -365,7 +365,7 @@ export const createMarkdownDocuments = (
         ensureFileWatcher(file);
 
         if (target.name !== file.name) {
-          Obj.change(target, (target) => {
+          Obj.update(target, (target) => {
             target.name = file.name;
           });
         }

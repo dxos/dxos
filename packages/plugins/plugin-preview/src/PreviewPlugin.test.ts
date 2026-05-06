@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { ActivationEvents } from '@dxos/app-framework';
-import { ClientPlugin } from '@dxos/plugin-client/cli';
+import { ClientPlugin } from '@dxos/plugin-client';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { meta } from './meta';
@@ -23,6 +23,10 @@ describe('PreviewPlugin', () => {
 
     await harness.fire(ActivationEvents.Startup);
 
-    expect(harness.manager.getActive()).toContain(moduleId('schema'));
+    // schema activates on SetupSchema (fired by ClientPlugin during Startup).
+    // preview-popover activates on Startup.
+    expect(harness.manager.getActive()).toEqual(
+      expect.arrayContaining([moduleId('schema'), moduleId('preview-popover')]),
+    );
   });
 });

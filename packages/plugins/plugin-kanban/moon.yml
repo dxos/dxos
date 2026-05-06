@@ -3,6 +3,7 @@ language: typescript
 tags:
   - e2e
   - ts-build
+  - ts-test
   - ts-test-browser
   - ts-test-storybook
   - pack
@@ -13,6 +14,7 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/blueprints/index.ts'
       - '--entryPoint=src/operations/index.ts'
+      - '--entryPoint=src/translations.ts'
       - '--entryPoint=src/types/index.ts'
       - '--platform=browser'
       - '--platform=node'

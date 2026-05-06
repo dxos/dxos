@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { ClientPlugin } from '@dxos/plugin-client/cli';
+import { ClientPlugin } from '@dxos/plugin-client';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { MasonryPlugin } from './MasonryPlugin';

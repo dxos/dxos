@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { ClientService } from '@dxos/client';
+import { Operation } from '@dxos/compute';
 import { Database, Feed, Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
 const FunctionRef = Ref.Ref(Operation.PersistentOperation).annotations({
@@ -24,7 +24,7 @@ const FUNCTION_FORMAT = trim`
   import * as Effect from 'effect/Effect';
   import * as Schema from 'effect/Schema';
 
-  import { Operation } from '@dxos/operation';
+  import { Operation } from '@dxos/compute';
 
   const MyFunction = Operation.make({
     meta: {

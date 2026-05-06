@@ -7,9 +7,8 @@ import { AppPlugin } from '@dxos/app-toolkit';
 
 import { AppGraphBuilder, HelpState, OperationHandler, ReactRoot, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { type Step } from '#types';
-
-import { translations } from './translations';
 
 export type HelpPluginOptions = { steps?: Step[] };
 
@@ -29,3 +28,5 @@ export const HelpPlugin = Plugin.define<HelpPluginOptions>(meta).pipe(
   })),
   Plugin.make,
 );
+
+export default HelpPlugin;

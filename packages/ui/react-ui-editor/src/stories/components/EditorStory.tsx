@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useMergeRefs, useThemeContext } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import {
   type DebugNode,
   type ThemeExtensionsOptions,
@@ -77,12 +77,14 @@ export const EditorStory = forwardRef<EditorController, EditorStoryProps>(
               </pre>
             )}
             {(debug === 'tree' || debug === 'raw+tree') && (
-              <Json.Root data={tree}>
-                <Json.Content>
-                  <Json.Filter />
-                  <Json.Data classNames='p-1 text-xs' />
-                </Json.Content>
-              </Json.Root>
+              <Syntax.Root data={tree}>
+                <Syntax.Content>
+                  <Syntax.Filter />
+                  <Syntax.Viewport>
+                    <Syntax.Code classNames='p-1 text-xs' />
+                  </Syntax.Viewport>
+                </Syntax.Content>
+              </Syntax.Root>
             )}
           </div>
         )}

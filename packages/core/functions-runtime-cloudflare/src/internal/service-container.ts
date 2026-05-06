@@ -83,7 +83,7 @@ export class ServiceContainer {
       subspaceTag,
       spaceId,
       queueId,
-      objects: objects as FeedProtocol.InsertIntoQueueRequest['objects'],
+      objects: objects.map((obj) => JSON.stringify(obj)),
     });
   }
 }

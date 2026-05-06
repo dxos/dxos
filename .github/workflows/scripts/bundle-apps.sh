@@ -20,8 +20,7 @@ for APP_PATH in "${APPS[@]}"; do
     export LOG_FILTER="error"
   fi
 
-  # Don't use the cache when bundling the app for deployment to avoid any caching issues causing bad builds.
-  moon run "$APP:bundle" --force
+  moon run "$APP:bundle"
 
   popd
 done

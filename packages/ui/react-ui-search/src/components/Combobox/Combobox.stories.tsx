@@ -8,7 +8,8 @@ import React from 'react';
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { useSearchListResults } from '../SearchList/hooks';
 import { Combobox } from './Combobox';
 

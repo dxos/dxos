@@ -7,16 +7,13 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, Ref, Tag, Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionEvents } from '@dxos/plugin-attention/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
-import { translations as componentsTranslations } from '@dxos/react-ui-components';
-import { translations as formTranslations } from '@dxos/react-ui-form';
 import { DataTypes, createDefaultSchema } from '@dxos/schema';
-import { translations as shellTranslations } from '@dxos/shell/react';
 import {
   AnchoredTo,
   Employer,
@@ -174,10 +171,27 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     ],
   }),
   AppPlugin.addSettingsModule({ activate: SpaceSettings }),
-  AppPlugin.addTranslationsModule({
-    translations: [...translations, ...componentsTranslations, ...formTranslations, ...shellTranslations],
+  Plugin.addModule({
+    id: 'translations',
+    activatesOn: AppActivationEvents.SetupTranslations,
+    activate: Effect.fnUntraced(function* () {
+      // Lazy-loaded to avoid pulling atlaskit/shell CJS deps at module eval time (browser-only CJS).
+      const [{ translations: componentsTranslations }, { translations: formTranslations }, { translations: shellTranslations }] =
+        yield* Effect.all([
+          Effect.promise(() => import('@dxos/react-ui-components')),
+          Effect.promise(() => import('@dxos/react-ui-form')),
+          Effect.promise(() => import('@dxos/shell/react')),
+        ]);
+      return Capability.contributes(AppCapabilities.Translations, [
+        ...translations,
+        ...componentsTranslations,
+        ...formTranslations,
+        ...shellTranslations,
+      ]);
+    }),
   }),
   Plugin.addModule({
+    id: 'SpaceState',
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
@@ -198,7 +212,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       };
 
       return {
-        id: Capability.getModuleTag(ReactSurface),
+        id: Capability.getModuleTag(ReactSurface) ?? 'surfaces',
         activatesOn: ActivationEvents.SetupReactSurface,
         // TODO(wittjosiah): Should occur before the settings dialog is loaded when surfaces activation is more granular.
         firesBeforeActivation: [SpaceEvents.SetupSettingsPanel],
@@ -208,7 +222,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   ),
   Plugin.addModule(
     ({ shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost' }) => ({
-      id: Capability.getModuleTag(AppGraphBuilder),
+      id: Capability.getModuleTag(AppGraphBuilder) ?? 'app-graph-builder',
       activatesOn: AppActivationEvents.SetupAppGraph,
       activate: () => AppGraphBuilder({ shareableLinkOrigin }),
     }),
@@ -235,15 +249,18 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   ),
   // TODO(wittjosiah): This could probably be deferred.
   Plugin.addModule({
+    id: 'AppGraphSerializer',
     activatesOn: AppActivationEvents.AppGraphReady,
     activate: AppGraphSerializer,
   }),
   Plugin.addModule({
+    id: 'IdentityCreated',
     activatesOn: ClientEvents.IdentityCreated,
     firesAfterActivation: [SpaceEvents.PersonalSpaceReady],
     activate: IdentityCreated,
   }),
   Plugin.addModule({
+    id: 'SpacesReady',
     activatesOn: ActivationEvent.allOf(
       ActivationEvents.OperationInvokerReady,
       AppActivationEvents.LayoutReady,
@@ -255,10 +272,12 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     activate: SpacesReady,
   }),
   Plugin.addModule({
+    id: 'Migrations',
     activatesOn: ClientEvents.SetupMigration,
     activate: Migrations,
   }),
   Plugin.addModule({
+    id: 'Repair',
     activatesOn: ClientEvents.SpacesReady,
     activate: Repair,
   }),

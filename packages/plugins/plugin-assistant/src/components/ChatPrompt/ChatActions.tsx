@@ -33,17 +33,8 @@ export const ChatActions = ({
   const { t } = useTranslation(meta.id);
 
   return (
-    <div className={mx('flex items-center me-1', classNames)}>
+    <div className={mx('flex items-center', classNames)}>
       {children}
-
-      <IconButton
-        disabled={!processing}
-        variant='ghost'
-        icon='ph--x--regular'
-        iconOnly
-        label={t('cancel-processing.button')}
-        onClick={() => onEvent?.({ type: 'cancel' })}
-      />
 
       {microphone && (
         <IconButton
@@ -70,6 +61,15 @@ export const ChatActions = ({
           onClick={() => onEvent?.({ type: 'toggle-debug' })}
         />
       )}
+
+      <IconButton
+        disabled={!processing}
+        variant='ghost'
+        icon='ph--x--regular'
+        iconOnly
+        label={t('cancel-processing.button')}
+        onClick={() => onEvent?.({ type: 'cancel' })}
+      />
     </div>
   );
 };

@@ -1,0 +1,24 @@
+{
+  "name": "@dxos/vite-plugin-log-example",
+  "version": "0.0.0",
+  "private": true,
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@dxos/log": "workspace:*",
+    "@dxos/vite-plugin-log": "workspace:*",
+    "vite": "catalog:"
+  }
+}

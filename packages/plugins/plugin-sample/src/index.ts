@@ -7,4 +7,4 @@
 // Types and operations are available via the `./types` and `./operations` subpath exports.
 
 export { meta } from './meta';
-export { SamplePlugin } from './SamplePlugin';
+export { SamplePlugin } from '#plugin';

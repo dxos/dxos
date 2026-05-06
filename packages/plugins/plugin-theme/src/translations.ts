@@ -116,6 +116,8 @@ export const translations = [
         'connect.label': 'Connect',
         'reconnect.label': 'Reconnect',
         'cancel.label': 'Cancel',
+        'save.label': 'Save',
+        'saving.label': 'Saving…',
         'done.label': 'Done',
         'delete.label': 'Delete',
         'delete-object.description': 'Delete item?',

@@ -5,7 +5,7 @@
 import { type Registry, RegistryContext } from '@effect-atom/atom-react';
 import { useContext, useEffect } from 'react';
 
-import { type CompleteCellRange, inRange } from '@dxos/compute';
+import { type CompleteCellRange, inRange } from '@dxos/compute-hyperformula';
 import { Obj } from '@dxos/echo';
 import {
   type ActionGraphProps,
@@ -103,13 +103,13 @@ const createStyleActions = ({ model, state, stateAtom, registry, cursorFallbackR
         ) {
           // this value should be unset
           if (index >= 0) {
-            Obj.change(model.sheet, (obj) => {
+            Obj.update(model.sheet, (obj) => {
               obj.ranges?.splice(index, 1);
             });
           }
           registry.set(stateAtom, { ...currentState, [nextRangeEntity.value]: false });
         } else {
-          Obj.change(model.sheet, (obj) => {
+          Obj.update(model.sheet, (obj) => {
             obj.ranges?.push(nextRangeEntity);
           });
           registry.set(stateAtom, { ...currentState, [nextRangeEntity.value]: true });

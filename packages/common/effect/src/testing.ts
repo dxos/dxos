@@ -6,12 +6,6 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import type { TestContext } from 'vitest';
 
-// TODO(dmaretskyi): Add all different test tags here.
-export type TestTag =
-  | 'flaky' // Flaky tests.
-  | 'llm' // Tests with AI.
-  | 'sync'; // Sync with external services.
-
 export namespace TestHelpers {
   /**
    * Skip the test if the condition is false.
@@ -57,26 +51,6 @@ export namespace TestHelpers {
     <A, E, R>(effect: Effect.Effect<A, E, R>, ctx: TestContext): Effect.Effect<A, E, R> =>
       Effect.gen(function* () {
         if (condition) {
-          ctx.skip();
-        } else {
-          return yield* effect;
-        }
-      });
-
-  export const tagEnabled = (tag: TestTag) => process.env.DX_TEST_TAGS?.includes(tag);
-
-  /**
-   * Skips this test if the tag is not in the list of tags to run.
-   * Tags are specified in the `DX_TEST_TAGS` environment variable.
-   *
-   * @param tag
-   * @returns
-   */
-  export const taggedTest =
-    (tag: TestTag) =>
-    <A, E, R>(effect: Effect.Effect<A, E, R>, ctx: TestContext): Effect.Effect<A, E, R> =>
-      Effect.gen(function* () {
-        if (!tagEnabled(tag)) {
           ctx.skip();
         } else {
           return yield* effect;

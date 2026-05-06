@@ -59,8 +59,8 @@ export class LocalQueueServiceImpl implements QueueService {
           limit: query.limit,
         });
 
-        const objects = result.blocks.map(
-          (block: FeedProtocol.Block) => EchoFeedCodec.decode(block.data, block.position ?? undefined) as ObjectJSON,
+        const objects = result.blocks.map((block: FeedProtocol.Block) =>
+          JSON.stringify(EchoFeedCodec.decode(block.data, block.position ?? undefined) as ObjectJSON),
         );
 
         const lastBlock = result.blocks[result.blocks.length - 1];
@@ -87,11 +87,11 @@ export class LocalQueueServiceImpl implements QueueService {
     );
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(this, function* () {
-        const messages = objects!.map((obj) => ({
+        const messages = (objects ?? []).map((encoded) => ({
           spaceId: spaceId,
           feedId: queueId!,
           feedNamespace,
-          data: EchoFeedCodec.encode(obj as ObjectJSON),
+          data: EchoFeedCodec.encode(JSON.parse(encoded) as ObjectJSON),
         }));
 
         yield* this.#feedStore.appendLocal(messages);

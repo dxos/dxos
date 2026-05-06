@@ -6,24 +6,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Option from 'effect/Option';
 
 import { Process } from '@dxos/functions-runtime';
+import { log } from '@dxos/log';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+
+import { makeProcess } from '#testing';
 
 import { ProcessTree } from './ProcessTree';
 
-const makeProcess = (
-  overrides: Partial<Process.Info> & Pick<Process.Info, 'pid' | 'state'> & { name: string },
-): Process.Info => ({
-  parentPid: null,
-  key: `test.process.${overrides.name}`,
-  params: { name: overrides.name, target: null },
-  error: null,
-  startedAt: Date.now() - 10_000,
-  completedAt: Option.none(),
-  metrics: { wallTime: 0, inputCount: 0, outputCount: 0 },
-  ...overrides,
-});
-
-const seedProcesses: Process.Info[] = [
+const processes: Process.Info[] = [
   makeProcess({
     pid: Process.ID.make('97793611-815e-4a67-bc04-60fa67b2c987'),
     name: 'Trigger watcher',
@@ -73,7 +63,7 @@ const seedProcesses: Process.Info[] = [
 const meta: Meta<typeof ProcessTree> = {
   title: 'plugins/plugin-assistant/components/ProcessTree',
   component: ProcessTree,
-  decorators: [withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' }), withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' })],
 } satisfies Meta<typeof ProcessTree>;
 
 export default meta;
@@ -82,28 +72,12 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    processes: seedProcesses,
-  },
-};
-
-export const AllRunning: Story = {
-  args: {
-    processes: [
-      makeProcess({
-        pid: Process.ID.make('1344bac8-745b-44a6-9af6-dc19509a7844'),
-        name: 'Agent alpha',
-        state: Process.State.RUNNING,
-      }),
-      makeProcess({
-        pid: Process.ID.make('b7c9787a-6705-47dc-a197-d37f1adfa338'),
-        name: 'Agent beta',
-        state: Process.State.RUNNING,
-      }),
-      makeProcess({
-        pid: Process.ID.make('43493533-a94c-4072-b18f-c0e0fd806bf5'),
-        name: 'Agent gamma',
-        state: Process.State.RUNNING,
-      }),
-    ],
+    processes: processes,
+    onProcessSelect: (process) => {
+      log.info('select', process);
+    },
+    onProcessTerminate: (process) => {
+      log.info('terminate', process);
+    },
   },
 };

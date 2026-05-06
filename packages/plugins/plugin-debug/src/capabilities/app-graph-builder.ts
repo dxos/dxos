@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, getSpaceIdFromPath } from '@dxos/app-toolkit';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { meta as spaceMeta } from '@dxos/plugin-space/meta';
+import { SPACE_TYPE } from '@dxos/plugin-space/types';
 import { getParentId } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
@@ -19,10 +19,9 @@ const DEVTOOLS_TYPE = `${meta.id}.devtools`;
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      // Devtools node.
       GraphBuilder.createExtension({
         id: 'devtools',
-        match: NodeMatcher.whenAny(NodeMatcher.whenRoot, NodeMatcher.whenNodeType(`${spaceMeta.id}.settings`)),
+        match: NodeMatcher.whenAny(NodeMatcher.whenRoot, NodeMatcher.whenNodeType(SPACE_TYPE)),
         connector: (node, get) =>
           Effect.gen(function* () {
             const client = yield* Capability.get(ClientCapabilities.Client);
@@ -44,19 +43,6 @@ export default Capability.makeModule(
                   position: 'fallback',
                 },
                 nodes: [
-                  ...(space && node.type === `${spaceMeta.id}.settings`
-                    ? [
-                        Node.make({
-                          id: 'debug',
-                          type: `${meta.id}.space`,
-                          data: { space, type: `${meta.id}.space` },
-                          properties: {
-                            label: ['debug.label', { ns: meta.id }],
-                            icon: 'ph--bug--regular',
-                          },
-                        }),
-                      ]
-                    : []),
                   Node.make({
                     id: 'app-graph',
                     type: `${meta.id}.app-graph`,
@@ -66,6 +52,19 @@ export default Capability.makeModule(
                       icon: 'ph--graph--regular',
                     },
                   }),
+                  ...(space && node.type === SPACE_TYPE
+                    ? [
+                        Node.make({
+                          id: 'debug',
+                          type: `${meta.id}.space`,
+                          data: { space, type: `${meta.id}.space` },
+                          properties: {
+                            label: ['generate-objects.label', { ns: meta.id }],
+                            icon: 'ph--dice-five--regular',
+                          },
+                        }),
+                      ]
+                    : []),
                   Node.make({
                     id: Devtools.Client.id,
                     data: null,

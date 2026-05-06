@@ -14,6 +14,8 @@ describe('build tests', () => {
       imports: [
         // Place import specifiers that must be running at EDGE here.
         // NOTE: They also need to be added to package.json of this package.
+        '@dxos/assistant-toolkit',
+        '@dxos/assistant',
         '@dxos/echo-db',
         '@dxos/echo',
         '@dxos/keys',

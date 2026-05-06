@@ -4,8 +4,7 @@
 
 export { TranscriptionCapabilities } from './types';
 
-export * from './components';
-export * from './hooks';
+// TODO(wittjosiah): Transcription components/hooks should not be exported from the main entry point.
 export * from './meta';
 export * from './transcriber';
 

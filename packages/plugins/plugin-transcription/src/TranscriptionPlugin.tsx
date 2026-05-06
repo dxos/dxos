@@ -12,8 +12,8 @@ import { Message, Transcript } from '@dxos/types';
 
 import { BlueprintDefinition, OperationHandler, ReactSurface, Transcriber } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 
-import { translations } from './translations';
 import { renderByline } from './util';
 
 export const TranscriptionPlugin = Plugin.define(meta).pipe(
@@ -52,3 +52,5 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default TranscriptionPlugin;

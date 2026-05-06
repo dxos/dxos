@@ -9,9 +9,9 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { type Player } from '@dxos/react-ui-gameboard';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { translations } from '#translations';
 import { Chess } from '#types';
 
-import { translations } from '../../translations';
 import { Chessboard, type ChessboardController, type ChessboardInfoProps } from './Chessboard';
 
 const SAMPLE_PGN =

@@ -1,33 +1,24 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import { describe, test } from 'vitest';
 
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { meta } from './meta';
-import { ObservabilityPlugin } from './ObservabilityPlugin';
+// Use the node variant: no-options, no browser dependencies.
+import { ObservabilityPlugin } from './ObservabilityPlugin.node';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
 describe('ObservabilityPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    // Skip autoStart: ReactSurface imports atlaskit CSS which is CJS-only and fails in Node.
-    // Fire only Startup to verify AppGraphBuilder and OperationHandler.
     await using harness = await createComposerTestApp({
-      plugins: [
-        ObservabilityPlugin({
-          namespace: 'test',
-          observability: async () => ({}) as any,
-        }),
-      ],
-      autoStart: false,
+      plugins: [ObservabilityPlugin()],
     });
 
-    await harness.fire(AppActivationEvents.SetupAppGraph);
-
-    expect(harness.manager.getActive()).toContain(moduleId('AppGraphBuilder'));
+    // OperationHandler fires automatically (OperationPlugin fires SetupOperationHandler during Startup).
+    expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
   });
 });

@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { Plugin, UrlLoader } from '@dxos/app-framework';
 import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
@@ -21,6 +21,9 @@ import { getPluginPath, meta } from '#meta';
 import { useAutoTags, useCommunityPlugins } from '../../hooks';
 
 const sortEntries = (a: PluginEntry, b: PluginEntry) =>
+  (a.meta.name ?? a.meta.id).localeCompare(b.meta.name ?? b.meta.id);
+
+const sortPlugins = (a: Plugin.Plugin, b: Plugin.Plugin) =>
   (a.meta.name ?? a.meta.id).localeCompare(b.meta.name ?? b.meta.id);
 
 /**
@@ -47,9 +50,17 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
     const { entries, loading, error } = useCommunityPlugins();
     const enabled = useAtomValue(manager.enabled);
     const plugins = useAtomValue(manager.plugins);
-    const installedIds = useMemo(() => new Set(plugins.map((plugin) => plugin.meta.id)), [plugins]);
+    const installedIds = useMemo(() => plugins.map((plugin) => plugin.meta.id), [plugins]);
     const allSettings = useCapabilities(AppCapabilities.Settings);
     const extraTagsById = useAutoTags(entries);
+
+    // Snapshot of installed plugin ids at mount time. Used to sort installed
+    // plugins to the top without having newly-installed rows jump up mid-session.
+    const [installedSnapshot] = useState<ReadonlySet<string>>(
+      () => new Set(manager.getPlugins().map((plugin) => plugin.meta.id)),
+    );
+
+    const [installingIds, setInstallingIds] = useState<readonly string[]>([]);
 
     const sortedEntries = useMemo(() => [...entries].sort(sortEntries), [entries]);
     const moduleUrlById = useMemo(() => {
@@ -60,32 +71,30 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
       return map;
     }, [sortedEntries]);
 
-    // Plugins the user loaded by URL that aren't in the Edge catalog belong in
-    // the community section — otherwise they'd be invisible (they're filtered
-    // out of Official/Recommended by `useRemotePluginIds`).
-    const displayPlugins = useMemo(() => {
+    // Single list with installed-at-mount plugins sorted to the top. Sort order
+    // is based on the mount-time snapshot so rows don't jump as the user
+    // installs plugins during the session.
+    const items = useMemo(() => {
       const catalogIds = new Set(sortedEntries.map((entry) => entry.meta.id));
       const remoteIds = new Set(UrlLoader.getRemoteEntries().map((entry) => entry.id));
       const fromCatalog = sortedEntries.map(toDisplayPlugin);
-      const fromUrl = plugins.filter((plugin) => remoteIds.has(plugin.meta.id) && !catalogIds.has(plugin.meta.id));
-      return [...fromCatalog, ...fromUrl].sort((a, b) =>
-        (a.meta.name ?? a.meta.id).localeCompare(b.meta.name ?? b.meta.id),
-      );
-    }, [sortedEntries, plugins]);
+      const fromUrlOnly = plugins.filter((plugin) => remoteIds.has(plugin.meta.id) && !catalogIds.has(plugin.meta.id));
+      const installedFirst = [...fromCatalog, ...fromUrlOnly].sort((a, b) => {
+        const aInstalled = installedSnapshot.has(a.meta.id);
+        const bInstalled = installedSnapshot.has(b.meta.id);
+        if (aInstalled !== bInstalled) {
+          return aInstalled ? -1 : 1;
+        }
+        return sortPlugins(a, b);
+      });
+      return installedFirst;
+    }, [sortedEntries, installedSnapshot, plugins]);
 
     const handleChange = useCallback(
       (pluginId: string, nextEnabled: boolean) =>
         Effect.gen(function* () {
           if (nextEnabled) {
-            if (installedIds.has(pluginId)) {
-              yield* manager.enable(pluginId);
-            } else {
-              const moduleUrl = moduleUrlById[pluginId];
-              if (!moduleUrl) {
-                return;
-              }
-              yield* manager.add(moduleUrl);
-            }
+            yield* manager.enable(pluginId);
           } else {
             yield* manager.disable(pluginId);
           }
@@ -95,7 +104,29 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
             properties: { plugin: pluginId, enabled: nextEnabled, source: 'community' },
           });
         }).pipe(runAndForwardErrors),
-      [invoke, manager, installedIds, moduleUrlById],
+      [invoke, manager],
+    );
+
+    const handleInstall = useCallback(
+      (pluginId: string) => {
+        const moduleUrl = moduleUrlById[pluginId];
+        if (!moduleUrl) {
+          return;
+        }
+        setInstallingIds((prev) => (prev.includes(pluginId) ? prev : [...prev, pluginId]));
+        void void Effect.gen(function* () {
+          const plugin = yield* manager.add(moduleUrl);
+          yield* manager.enable(plugin.meta.id);
+          yield* invoke(ObservabilityOperation.SendEvent, {
+            name: 'plugins.install',
+            properties: { plugin: plugin.meta.id, source: 'community' },
+          });
+        }).pipe(
+          Effect.ensuring(Effect.sync(() => setInstallingIds((prev) => prev.filter((pid) => pid !== pluginId)))),
+          runAndForwardErrors,
+        );
+      },
+      [invoke, manager, moduleUrlById],
     );
 
     const handleClick = useCallback(
@@ -121,13 +152,16 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
     return (
       <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
         <ScrollArea.Viewport>
-          {displayPlugins.length > 0 ? (
+          {items.length > 0 ? (
             <PluginList
-              plugins={displayPlugins}
+              plugins={items}
+              installed={installedIds}
+              installing={installingIds}
               enabled={enabled}
               extraTagsById={extraTagsById}
               onClick={handleClick}
               onChange={handleChange}
+              onInstall={handleInstall}
               hasSettings={hasSettings}
               onSettings={handleSettings}
             />

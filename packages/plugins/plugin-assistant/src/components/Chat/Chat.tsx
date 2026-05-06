@@ -13,7 +13,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 import { type Chat as ChatModule } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj } from '@dxos/echo';
-import { useVoiceInput } from '@dxos/plugin-transcription';
+import { useVoiceInput } from '@dxos/plugin-transcription/hooks';
 import { type Queue, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';

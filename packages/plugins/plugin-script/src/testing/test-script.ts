@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Script, Operation } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
-import { Script } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { type Space } from '@dxos/react-client/echo';
 
 /**

@@ -26,7 +26,7 @@ export type KanbanCardProps = Pick<MosaicTileProps<Obj.Unknown>, 'location' | 'd
 export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(({ data, location, debug }, forwardedRef) => {
   const { t } = useTranslation(meta.id);
   const { model } = useBoard(KANBAN_CARD_TILE_NAME);
-  const { projection, onCardRemove } = useKanbanBoard(KANBAN_CARD_TILE_NAME);
+  const { projection, columnFieldPath, onCardRemove } = useKanbanBoard(KANBAN_CARD_TILE_NAME);
   const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
   const dragHandleRef = useCallback((el: HTMLButtonElement | null) => setDragHandle(el), []);
 
@@ -74,7 +74,19 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(({ data, l
               <Menu.Content items={menuItems} />
             </Card.Toolbar>
             <Card.Content>
-              {projection && <Surface.Surface type={AppSurface.Card} limit={1} data={{ subject: data, projection }} />}
+              {projection && (
+                <Surface.Surface
+                  type={AppSurface.Card}
+                  limit={1}
+                  data={{
+                    subject: data,
+                    projection,
+                    // Hide the pivot field: its value is already conveyed by
+                    // which column the card sits in.
+                    ignorePaths: columnFieldPath ? [columnFieldPath] : undefined,
+                  }}
+                />
+              )}
             </Card.Content>
           </Card.Root>
         </Focus.Item>

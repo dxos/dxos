@@ -21,8 +21,8 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
-  id-token: write # Required for npm trusted publisher OIDC
+  contents: write # Required to upload release assets.
+  id-token: write # Required for npm trusted publisher OIDC.
 
 jobs:
   publish:
@@ -54,8 +54,6 @@ jobs:
           COMPOSER_APP_TEST_POSTHOG_PROJECT_ID: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_PROJECT_ID }}
           COMPOSER_APP_TEST_POSTHOG_FEEDBACK_SURVEY_ID: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_FEEDBACK_SURVEY_ID }}
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
-          DX_OTEL_ENDPOINT: ${{ secrets.DX_OTEL_ENDPOINT }}
-          DX_OTEL_HEADERS: ${{ secrets.DX_OTEL_HEADERS }}
           DX_POSTHOG_API_HOST: ${{ secrets.DX_POSTHOG_API_HOST }}
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
@@ -88,7 +86,6 @@ jobs:
         run: .github/workflows/scripts/bundle-apps.sh
         env:
           NODE_ENV: production
-          NODE_OPTIONS: '--max_old_space_size=12288'
 
       - name: Upload Composer Source Maps to PostHog
         if: env.POSTHOG_CLI_API_KEY != '' && env.COMPOSER_APP_POSTHOG_PROJECT_ID != ''
@@ -102,11 +99,6 @@ jobs:
             --release-name composer \
             --release-version "$GITHUB_SHA"
 
-      - name: Delete Source Maps
-        run: |
-          find packages/apps/composer-app/out/composer -name '*.map' -delete
-          echo "Deleted source maps before deploy"
-
       - name: Deploy Apps
         run: .github/workflows/scripts/deploy-apps.sh
         env:
@@ -116,7 +108,6 @@ jobs:
         run: moon run devtools-extension:bundle
         env:
           NODE_ENV: production
-          NODE_OPTIONS: '--max_old_space_size=12288'
 
       - name: Gather Artifacts for Devtools extension
         run: |
@@ -129,5 +120,5 @@ jobs:
         uses: fnkr/github-action-ghr@v1
         env:
           GHR_PATH: artifacts/
-          GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_DXOS_BOT_PAT }}
         if: github.event_name == 'release' && github.event.action == 'published'

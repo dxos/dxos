@@ -62,16 +62,6 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ],
-      "transport/tcp": [
-        "dist/types/src/transport/tcp/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "testing.d.ts",
     "testing.js",

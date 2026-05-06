@@ -3,4 +3,4 @@
 //
 
 export * from './meta';
-export * from './TokenManagerPlugin';
+export { TokenManagerPlugin } from '#plugin';

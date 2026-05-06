@@ -1,0 +1,96 @@
+---
+//
+// Copyright 2026 DXOS.org
+//
+
+import { getCollection, render } from 'astro:content';
+
+import Comments from '@bryanguffey/astro-standard-site/components/Comments.astro';
+
+import BlogLayout from '../../layouts/BlogLayout.astro';
+import IconChevronRight from '../../components/svg/IconChevronRight.astro';
+
+const canonicalUrl = new URL(`/blog/${Astro.params.slug}`, Astro.site ?? 'https://dxos.org').href;
+
+export const getStaticPaths = async () => {
+  const posts = await getCollection('blog');
+  return posts.map((post) => ({
+    params: { slug: post.data.slug },
+    props: { post },
+  }));
+};
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+---
+<BlogLayout
+  title={post.data.title}
+  description={post.data.description}
+  ogImage={post.data.featureImage}
+>
+  {post.data.documentAtUri && (
+    <link slot="head" rel="site.standard.document" href={post.data.documentAtUri} />
+  )}
+  <div style="padding-top: 6rem;">
+    <div class="container-large" style="max-width: 48rem;">
+      <a href="/blog" class="button is-link" style="margin-bottom: 2rem; display: inline-flex; align-items: center; gap: 0.25rem; opacity: 0.6; font-size: 0.875rem;">
+        <div class="icon-embed-xsmall w-embed" style="transform: rotate(180deg);">
+          <IconChevronRight />
+        </div>
+        <div>All posts</div>
+      </a>
+
+      {post.data.featureImage && (
+        <div style="margin-bottom: 2rem; border-radius: 0.75rem; overflow: hidden; aspect-ratio: 16/9;">
+          <img
+            src={post.data.featureImage}
+            alt={post.data.title}
+            style="width: 100%; height: 100%; object-fit: cover;"
+          />
+        </div>
+      )}
+
+      <div class="all-caps" style="margin-bottom: 0.75rem;">
+        {formatDate(post.data.date)}
+      </div>
+
+      <h1 class="heading-style-h1" style="margin-bottom: 1rem;">{post.data.title}</h1>
+
+      <div class="text-style-muted" style="margin-bottom: 3rem; font-size: 0.875rem;">
+        By {post.data.author}
+        {post.data.tags.length > 0 && (
+          <span style="margin-left: 1rem; opacity: 0.6;">
+            {post.data.tags.join(' · ')}
+          </span>
+        )}
+      </div>
+
+      <article class="blog-article">
+        <Content />
+      </article>
+
+      {post.data.bskyPostUri && (
+        <div style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.08);">
+          <Comments
+            bskyPostUri={post.data.bskyPostUri}
+            canonicalUrl={canonicalUrl}
+          />
+        </div>
+      )}
+
+      <div style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.08);">
+        <a href="/blog" class="button is-link" style="display: inline-flex; align-items: center; gap: 0.25rem;">
+          <div class="icon-embed-xsmall w-embed" style="transform: rotate(180deg);">
+            <IconChevronRight />
+          </div>
+          <div>Back to all posts</div>
+        </a>
+      </div>
+
+      <div class="spacer-xxhuge"></div>
+    </div>
+  </div>
+</BlogLayout>

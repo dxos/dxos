@@ -8,7 +8,7 @@ import React from 'react';
 import { DEFAULT_INPUT, DefaultOutput, JsonTransformInput } from '@dxos/conductor';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 
 import { useComputeNodeState } from '../hooks';
 import { Box, createFunctionAnchors, getHeight } from './common';
@@ -49,12 +49,14 @@ export const JsonComponent = ({ shape, ...props }: JsonComponentProps) => {
 
   return (
     <Box shape={shape}>
-      <Json.Root data={value}>
-        <Json.Content>
-          <Json.Filter />
-          <Json.Data classNames='text-xs' />
-        </Json.Content>
-      </Json.Root>
+      <Syntax.Root data={value}>
+        <Syntax.Content>
+          <Syntax.Filter />
+          <Syntax.Viewport>
+            <Syntax.Code classNames='text-xs' />
+          </Syntax.Viewport>
+        </Syntax.Content>
+      </Syntax.Root>
     </Box>
   );
 };

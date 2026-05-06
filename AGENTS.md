@@ -49,6 +49,10 @@
 - Avoid re-exports. Prefer importing symbols directly from the package that defines them.
 - Use barrel imports whenever possible.
 - Prefer ES `#private` fields/methods over TypeScript `private` keyword in new code. Existing `_private` convention is fine to keep.
+- For files imported as a namespace (i.e., marked with `// @import-as-namespace`), avoid prefixing top-level types with the namespace name. Inside `Foo.ts` prefer `Manager`, `Service`, `Options` over `FooManager`, `FooService`, `FooOptions` — callers see `Foo.Manager` either way.
+- Common suffix for constructor option-bag types is `Options` (e.g., `SpawnOptions`, `ManagerImplOptions`) — pick this over `Opts`/`Props`/`Config` for consistency.
+- Consider taking an options object when a constructor or function has more than a few readonly props, especially when several are optional or share a logical grouping.
+- Class member ordering (consider): static fields → public readonly → public mutable → private readonly (incl. constructor-injected) → private mutable → constructor → public methods → private methods. Within each group, rank properties roughly from most-important to least — importance signals include "further up the stack" (closer to public API), required over optional, readonly over mutable.
 
 ### React
 
@@ -61,10 +65,12 @@
 
 ## Workflow
 
-- Never work on main; if not already in a worktree, create a new git worktree for the branch you are working on.
-- IMPORTANT: Do not change the branch or worktree after you have started unless you are instructed to directly by the user.
-- When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
-- Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
+- Never work on `main`
+  - Before working on code, suggest to the user a worktree name then create the worktree using this or the name provided by the user (adding the agent-name prefix, e.g., `claude/`).
+  - When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
+  - Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
+  - If there are unstaged changes, stash these and move them into the worktree.
+  - IMPORTANT: Do not change the branch or worktree name after you have started unless you are instructed to directly by the user.
 - Check `moon.yml` for available package tasks
 - Run linter at natural stopping points
 - Confirm work complete before final build/lint check

@@ -3,7 +3,7 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
-import { translations as searchTranslations } from '@dxos/react-ui-search';
+import { translations as searchTranslations } from '@dxos/react-ui-search/translations';
 
 import { meta } from '#meta';
 

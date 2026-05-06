@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { Config, useConfig } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/react-ui/testing';
 
 const testVideo = new URL('../testing/video.mp4', import.meta.url).href;
@@ -167,7 +167,7 @@ const DefaultStory = ({ source }: DefaultStoryProps) => {
           Re-pull video
         </Button>
       </div>
-      <Json.Data data={metrics} />
+      <JsonHighlighter data={metrics} />
     </div>
   );
 };
@@ -209,7 +209,7 @@ export const InaudibleAudioStreamTrack = {
 
     return (
       <div className='flex flex-col gap-4 items-center'>
-        <Json.Data data={metrics} />
+        <JsonHighlighter data={metrics} />
         <Button onClick={rePullTrack}>Re-pull audio</Button>
       </div>
     );
@@ -222,7 +222,7 @@ export const BlackVideoStreamTrack = {
     const { rePullTrack, metrics } = pushAndPullTrack(videoStreamTrack);
     return (
       <div className='flex flex-col gap-4 items-center'>
-        <Json.Data data={metrics} />
+        <JsonHighlighter data={metrics} />
         <Button onClick={rePullTrack}>Re-pull audio</Button>
       </div>
     );

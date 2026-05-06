@@ -27,7 +27,7 @@ export const Table = Schema.Struct({
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
-  ViewAnnotation.set(true),
+  ViewAnnotation.set(['view']),
   Annotation.IconAnnotation.set({
     icon: 'ph--table--regular',
     hue: 'green',

@@ -14,10 +14,6 @@ export type PostStackAction = { type: 'current'; postId: string };
 
 export type PostStackActionHandler = (action: PostStackAction) => void;
 
-//
-// PostStack
-//
-
 export type PostStackProps = {
   id: string;
   posts?: Subscription.Post[];
@@ -77,10 +73,6 @@ export const PostStack = composable<HTMLDivElement, PostStackProps>(
 
 PostStack.displayName = 'PostStack';
 
-//
-// PostTile
-//
-
 type PostTileData = {
   post: Subscription.Post;
   onAction?: PostStackActionHandler;
@@ -89,20 +81,26 @@ type PostTileData = {
 type PostTileProps = Pick<MosaicTileProps<PostTileData>, 'data' | 'location' | 'current'>;
 
 const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, current }, forwardedRef) => {
-  const { post } = data;
+  const post = data?.post;
   const { setCurrentId } = useMosaicContainer('PostTile');
   const { t } = useTranslation(Subscription.Post.typename);
 
   const handleCurrentChange = useCallback(() => {
-    setCurrentId(post.id);
-  }, [post.id, setCurrentId]);
+    if (post) {
+      setCurrentId(post.id);
+    }
+  }, [post, setCurrentId]);
+
+  if (!post) {
+    return null;
+  }
 
   const published = post.published ? new Date(post.published).toLocaleDateString() : undefined;
 
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current' id={post.id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root ref={forwardedRef}>
+        <Card.Root ref={forwardedRef} fullWidth>
           <Card.Toolbar>
             <Card.IconBlock>
               <Card.Icon icon='ph--dot-outline--regular' />

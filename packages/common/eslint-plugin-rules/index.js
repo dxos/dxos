@@ -5,7 +5,7 @@
 import fs from 'node:fs';
 
 import comment from './rules/comment.js';
-import consistentChangeParam from './rules/consistent-change-param.js';
+import consistentUpdateParam from './rules/consistent-update-param.js';
 import effectSubpathImports from './rules/effect-subpath-imports.js';
 import header from './rules/header.js';
 import importAsNamespace from './rules/import-as-namespace.js';
@@ -24,7 +24,7 @@ const plugin = {
   },
   rules: {
     comment,
-    'consistent-change-param': consistentChangeParam,
+    'consistent-update-param': consistentUpdateParam,
     'effect-subpath-imports': effectSubpathImports,
     header,
     'import-as-namespace': importAsNamespace,

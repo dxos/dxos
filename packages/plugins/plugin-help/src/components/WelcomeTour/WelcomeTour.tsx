@@ -163,6 +163,7 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunni
         callback={callback}
         floaterProps={floaterProps}
         tooltipComponent={Tooltip}
+        spotlightPadding={0}
       />
     </HelpContext.Provider>
   );

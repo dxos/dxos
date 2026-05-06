@@ -207,6 +207,93 @@ describe('parser', () => {
       }),
     );
 
+    // Regression: an unrecognized XML-style tag in the model's text response (e.g. the user
+    // asks "respond with your name inside an xml tag" and the model emits `<name>Claude</name>`)
+    // used to be silently dropped because `makeContentBlock` returned `undefined` for any tag
+    // not in `ModelTags`. The parser must instead preserve the original text.
+    it.effect(
+      'unknown xml-style tag is preserved as literal text',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([...text(['<name>Claude</name>'])])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect)
+          .pipe(Effect.map(Chunk.toArray));
+
+        expect(result).toEqual([
+          {
+            _tag: 'text',
+            text: '<name>Claude</name>',
+          },
+        ] satisfies ContentBlock.Any[]);
+      }),
+    );
+
+    // Regression: an *unclosed* unrecognized tag must NOT have a synthetic `</tag>`
+    // appended. Reconstructing one corrupts the response text — the chat doc would render
+    // a phantom close tag mid-message and confuse downstream parsers.
+    it.effect(
+      'unclosed unknown xml-style tag is preserved without a synthetic close',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([...text(['You sent `<foo>`, which looks like a tag'])])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect)
+          .pipe(Effect.map(Chunk.toArray));
+
+        expect(result).toEqual([
+          { _tag: 'text', text: 'You sent `' },
+          { _tag: 'text', text: '<foo>`, which looks like a tag' },
+        ] satisfies ContentBlock.Any[]);
+      }),
+    );
+
+    // Regression: the model writes a sentence that contains an unrecognized tag — the
+    // surrounding text plus the tag must all be preserved (the tag splits the stream into
+    // separate text blocks at the state-machine boundaries, but no content is dropped).
+    it.effect(
+      'unknown xml-style tag mixed with surrounding text is preserved',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([...text(['My name is <name>Claude</name>.'])])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect)
+          .pipe(Effect.map(Chunk.toArray));
+
+        expect(result).toEqual([
+          { _tag: 'text', text: 'My name is ' },
+          { _tag: 'text', text: '<name>Claude</name>' },
+          { _tag: 'text', text: '.' },
+        ] satisfies ContentBlock.Any[]);
+      }),
+    );
+
+    // Repro: third <reasoning> block in a chat doc — multi-line content with newlines,
+    // list items, single + double quotes, mixed with `<status>` and `<toolCall/>` tags
+    // around it. Verify all three reasoning blocks are preserved verbatim.
+    it.effect(
+      'multi-line reasoning content with quotes and list items is preserved',
+      Effect.fn(function* ({ expect }) {
+        const r1 = '<reasoning>The user wants me to summarize.</reasoning>';
+        const r2 = '<reasoning>The magazine has 10 posts already curated.</reasoning>';
+        const r3 = [
+          '<reasoning>The magazine has 10 posts, but several are duplicates. Unique articles:',
+          '1. "FBI affidavit quotes White House press dinner shooting suspect expressing rage at \'a pedophile, rapist and traitor\' – US politics live" - About Cole Allen.',
+          '2. "Australia news live: UK inquiry says \'cracks already beginning to show\' on Aukus" - Live blog.',
+          '5. "\'Shortcomings and failures\' could sink Aukus nuclear submarines plan" - UK inquiry warns.</reasoning>',
+        ].join('\n');
+        const input = [r1, '<status>Loading…</status>', r2, '<status>OK</status>', r3, 'Done.'].join('\n');
+
+        const result = yield* makeInputStream([...text(splitByCharacter(input))])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect)
+          .pipe(Effect.map(Chunk.toArray));
+
+        const reasonings = result.filter((b) => b._tag === 'text' && b.text.startsWith('<reasoning>'));
+        expect(reasonings).toHaveLength(3);
+        expect(reasonings[0]).toEqual({ _tag: 'text', text: r1 });
+        expect(reasonings[1]).toEqual({ _tag: 'text', text: r2 });
+        expect(reasonings[2]).toEqual({ _tag: 'text', text: r3 });
+      }),
+    );
+
     it.effect(
       'works when every character is streamed individually',
       Effect.fn(function* ({ expect }) {

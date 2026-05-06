@@ -6,4 +6,5 @@ export * from './useAppGraph';
 export * from './useActiveSpace';
 export * from './useLayout';
 export * from './useObjectMenuItems';
+export * from './useShowItem';
 export * from './useTypeOptions';

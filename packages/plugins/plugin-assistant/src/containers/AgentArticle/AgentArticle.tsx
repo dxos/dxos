@@ -52,7 +52,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
       await runtime.runPromise(
         Effect.gen(function* () {
           const queue = yield* QueueService.createQueue();
-          Obj.change(agent, (agent) => {
+          Obj.update(agent, (agent) => {
             agent.queue = Ref.fromDXN(queue.dxn);
           });
         }),
@@ -111,7 +111,9 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
             )}
 
             <Masonry.Root Tile={MasonryArtifactTile}>
-              <Masonry.Content items={artifacts} getId={(item: Obj.Unknown) => item.id} padding thin centered />
+              <Masonry.Content padding thin centered>
+                <Masonry.Viewport items={artifacts} getId={(item: Obj.Unknown) => item.id} />
+              </Masonry.Content>
             </Masonry.Root>
           </>
         )}

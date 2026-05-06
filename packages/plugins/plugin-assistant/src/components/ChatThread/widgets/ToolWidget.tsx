@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useTranslation } from '@dxos/react-ui';
 import { NumericTabs, TextCrawl, TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock, type Message } from '@dxos/types';
 import { type XmlWidgetProps } from '@dxos/ui-editor';
 import { isNonNullable, safeParseJson } from '@dxos/util';
@@ -140,7 +140,7 @@ const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
             selected={selected}
             onSelect={handleSelect}
           />
-          <Json.Data
+          <JsonHighlighter
             data={items[selected]?.content}
             classNames='p-1 text-xs bg-transparent'
             replacer={{
