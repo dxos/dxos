@@ -23,7 +23,14 @@ type SelectionContextValue = {
   selection: SelectionManager;
 };
 
-const [SelectionContextProvider, useSelectionContext] = createContext<SelectionContextValue>(SELECTION_NAME);
+// Default value lets consumers like `useSelected` render outside a
+// `SelectionProvider` (e.g. isolated stories) without throwing —
+// `selection` reads as `undefined` and the hook falls back to the
+// per-mode default result. Without this default, Radix `createContext`
+// throws "Selection must be used within Selection" on every consumer.
+const [SelectionContextProvider, useSelectionContext] = createContext<SelectionContextValue>(SELECTION_NAME, {
+  selection: undefined as unknown as SelectionManager,
+});
 
 /**
  * Manages selection state across the app for multiple contexts.
@@ -103,8 +110,14 @@ export const useSelectionActions = (contextIds: string[]): UseSelectionActions =
   const stableContextIds = useMemo(() => contextIds, [JSON.stringify(contextIds)]);
   const { selection } = useSelectionContext(SELECTION_NAME);
 
+  // No-op when rendered outside a `SelectionProvider` (e.g. an isolated
+  // story or a test harness) — `selection` is `undefined` from the
+  // context default value. Matches the pre-co-locate behaviour.
   const singleSelect = useCallback(
     (id: string) => {
+      if (!selection) {
+        return;
+      }
       for (const contextId of stableContextIds) {
         selection.updateSingle(contextId, id);
       }
@@ -114,6 +127,9 @@ export const useSelectionActions = (contextIds: string[]): UseSelectionActions =
 
   const multiSelect = useCallback(
     (ids: string[]) => {
+      if (!selection) {
+        return;
+      }
       for (const contextId of stableContextIds) {
         selection.updateMulti(contextId, ids);
       }
@@ -123,6 +139,9 @@ export const useSelectionActions = (contextIds: string[]): UseSelectionActions =
 
   const rangeSelect = useCallback(
     (from: string, to: string) => {
+      if (!selection) {
+        return;
+      }
       for (const contextId of stableContextIds) {
         selection.updateRange(contextId, from, to);
       }
@@ -132,6 +151,9 @@ export const useSelectionActions = (contextIds: string[]): UseSelectionActions =
 
   const toggle = useCallback(
     (id: string) => {
+      if (!selection) {
+        return;
+      }
       for (const contextId of stableContextIds) {
         selection.toggleSelection(contextId, id);
       }
@@ -140,6 +162,9 @@ export const useSelectionActions = (contextIds: string[]): UseSelectionActions =
   );
 
   const clear = useCallback(() => {
+    if (!selection) {
+      return;
+    }
     for (const contextId of stableContextIds) {
       selection.clearSelection(contextId);
     }
