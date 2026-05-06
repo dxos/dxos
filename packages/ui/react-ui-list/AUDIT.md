@@ -646,12 +646,15 @@ opening a draft PR.
   `onKeyDown` arrow handlers. If tabster appears not to fire, fix
   initialization (it auto-inits via `useTabster` on first hook call)
   rather than duplicating the logic.
-- **`current` ≠ `selection`.** "Current" tracks where focus/nav is
-  (single item, follows arrows / clicks / focus; `aria-current` +
-  `dx-current`). "Selection" is an explicit action (e.g. clicking a
-  checkbox) and can be multi-select; pairs with `aria-selected` +
-  `dx-selected`. Don't conflate them in API names — a focus-follows-
-  nav model wants `currentId`, not `selectedId`.
+- **Match the codebase's selection vocabulary.** Single-mode selection
+  IS what some draft designs called "current"; the codebase doesn't
+  make a `current` ≠ `selection` distinction at the API level (see
+  `useSelected(_, 'single')` from `@dxos/react-ui-attention`, used
+  throughout plugins). Use `selectedId` / `onSelectChange` /
+  `aria-selected` / `dx-selected` for picker-style lists. Reserve
+  `aria-current` (and `dx-current`) for "you-are-here" navigation
+  patterns specifically (navtree, breadcrumbs, current page in a
+  paged document) — not for the selected option in a listbox.
 - **No `Own` suffix on prop types.** Internal `*OwnProps` is noise;
   codebase convention is plain `*Props` (`ScrollAreaRootProps`,
   `PanelRootProps`, `ListboxRootProps`).
@@ -670,3 +673,12 @@ opening a draft PR.
   utility. Toggle-button semantics (`aria-pressed`) don't pair with
   the row-selection utilities. See
   `packages/ui/ui-theme/src/css/components/selected.md`.
+- **Estimates: report all three numbers.** When asked "how long?", give
+  the first-vibe estimate AND the post-decomposition estimate AND, when
+  reporting actuals, compare against both — not just whichever number
+  fits. Without the discipline the agent will quietly cherry-pick the
+  most flattering anchor. The honest format is: "first vibe was X;
+  after breaking it down I refined to Y; actual was Z." Tracking the
+  ratio across tasks is what calibrates the agent over time. (Caveat:
+  AI execution time and human implementation time are different
+  distributions — say which you mean.)
