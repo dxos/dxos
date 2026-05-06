@@ -7,6 +7,7 @@ import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 
 import { type Context } from '@dxos/context';
+import { ATTR_TYPE } from '@dxos/echo/internal';
 import type { ObjectId, SpaceId } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
@@ -22,6 +23,59 @@ import {
   ReverseRefIndex,
   type ReverseRefQuery,
 } from './indexes';
+
+/**
+ * Result of a single indexing pass over a data source.
+ * Carries enough metadata for callers to build targeted invalidation hints.
+ */
+export type IndexingResult = {
+  updated: number;
+  done: boolean;
+  spaces: ReadonlySet<SpaceId>;
+  queues: ReadonlySet<ObjectId>;
+  documents: ReadonlySet<string>;
+  types: ReadonlySet<string>;
+  objects: ReadonlySet<ObjectId>;
+};
+
+type MutableIndexingResult = {
+  updated: number;
+  done: boolean;
+  spaces: Set<SpaceId>;
+  queues: Set<ObjectId>;
+  documents: Set<string>;
+  types: Set<string>;
+  objects: Set<ObjectId>;
+};
+
+const makeEmptyIndexingResult = (): MutableIndexingResult => ({
+  updated: 0,
+  done: true,
+  spaces: new Set(),
+  queues: new Set(),
+  documents: new Set(),
+  types: new Set(),
+  objects: new Set(),
+});
+
+const accumulateIndexingResult = (acc: MutableIndexingResult, objects: readonly IndexerObject[]) => {
+  for (const obj of objects) {
+    acc.spaces.add(obj.spaceId);
+    if (obj.queueId) {
+      acc.queues.add(obj.queueId);
+    }
+    if (obj.documentId) {
+      acc.documents.add(obj.documentId);
+    }
+    const t = (obj.data as Record<string, unknown>)[ATTR_TYPE];
+    if (t) {
+      acc.types.add(String(t));
+    }
+    if (obj.data.id) {
+      acc.objects.add(obj.data.id as ObjectId);
+    }
+  }
+};
 
 /**
  * Cursor into indexable data-source.
@@ -168,37 +222,37 @@ export class IndexEngine {
     ctx: Context,
     dataSource: IndexDataSource,
     opts: { spaceId: SpaceId | null; limit?: number },
-  ): Effect.Effect<
-    { updated: number; done: boolean },
-    SqlError.SqlError,
-    SqlTransaction.SqlTransaction | SqlClient.SqlClient
-  > {
+  ): Effect.Effect<IndexingResult, SqlError.SqlError, SqlTransaction.SqlTransaction | SqlClient.SqlClient> {
     return Effect.gen(this, function* () {
-      let updated = 0;
-      let done = true;
+      const result = makeEmptyIndexingResult();
 
-      const { updated: updatedFtsIndex, done: doneFtsIndex } = yield* this.#update(ctx, this.#ftsIndex, dataSource, {
+      const {
+        updated: updatedFtsIndex,
+        done: doneFtsIndex,
+        objects: ftsObjects,
+      } = yield* this.#update(ctx, this.#ftsIndex, dataSource, {
         indexName: 'fts5',
         spaceId: opts.spaceId,
         limit: opts.limit,
       });
-      updated += updatedFtsIndex;
-      done = done && doneFtsIndex;
+      result.updated += updatedFtsIndex;
+      result.done = result.done && doneFtsIndex;
+      accumulateIndexingResult(result, ftsObjects);
 
-      const { updated: updatedReverseRefIndex, done: doneReverseRefIndex } = yield* this.#update(
-        ctx,
-        this.#reverseRefIndex,
-        dataSource,
-        {
-          indexName: 'reverseRef',
-          spaceId: opts.spaceId,
-          limit: opts.limit,
-        },
-      );
-      updated += updatedReverseRefIndex;
-      done = done && doneReverseRefIndex;
+      const {
+        updated: updatedReverseRefIndex,
+        done: doneReverseRefIndex,
+        objects: reverseRefObjects,
+      } = yield* this.#update(ctx, this.#reverseRefIndex, dataSource, {
+        indexName: 'reverseRef',
+        spaceId: opts.spaceId,
+        limit: opts.limit,
+      });
+      result.updated += updatedReverseRefIndex;
+      result.done = result.done && doneReverseRefIndex;
+      accumulateIndexingResult(result, reverseRefObjects);
 
-      return { updated, done };
+      return result as IndexingResult;
     }).pipe(Effect.withSpan('IndexEngine.update'));
   }
 
@@ -217,7 +271,7 @@ export class IndexEngine {
     source: IndexDataSource,
     opts: { indexName: string; spaceId: SpaceId | null; limit?: number },
   ): Effect.Effect<
-    { updated: number; done: boolean },
+    { updated: number; done: boolean; objects: readonly IndexerObject[] },
     SqlError.SqlError,
     SqlTransaction.SqlTransaction | SqlClient.SqlClient
   > {
@@ -236,7 +290,7 @@ export class IndexEngine {
             limit: opts.limit,
           });
           if (objects.length === 0) {
-            return { updated: 0, done: true };
+            return { updated: 0, done: true, objects: [] as readonly IndexerObject[] };
           }
 
           // Ensure objects exist in ObjectMetaIndex.
@@ -257,7 +311,7 @@ export class IndexEngine {
               }),
             ),
           );
-          return { updated: objects.length, done: false };
+          return { updated: objects.length, done: false, objects };
         }),
       );
     }).pipe(Effect.withSpan('IndexEngine.#update'));

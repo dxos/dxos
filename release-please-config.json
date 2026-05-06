@@ -385,6 +385,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/introspect-tools/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/mcp-client/package.json",
           "jsonpath": "$.version"
         },
@@ -1056,6 +1061,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-grid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-introspect/package.json",
           "jsonpath": "$.version"
         },
         {

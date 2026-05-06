@@ -59,3 +59,5 @@ export const KanbanPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default KanbanPlugin;

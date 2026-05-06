@@ -77,3 +77,5 @@ export const IntegrationPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default IntegrationPlugin;

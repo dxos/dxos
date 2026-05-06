@@ -2,6 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './meta';
+import { Plugin } from '@dxos/app-framework';
 
-export * from './KanbanPlugin';
+import { meta } from './meta';
+
+export const KanbanPlugin = Plugin.lazy(meta, () => import('./KanbanPlugin'));
+
+export * from './meta';

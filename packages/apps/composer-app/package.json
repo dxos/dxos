@@ -135,6 +135,7 @@
     "@effect/ai-openai": "catalog:",
     "@effect/platform-browser": "catalog:",
     "@fontsource/poiret-one": "catalog:",
+    "@oxc-project/runtime": "catalog:",
     "@radix-ui/react-context-menu": "catalog:",
     "@radix-ui/react-dialog": "catalog:",
     "@radix-ui/react-dropdown-menu": "catalog:",

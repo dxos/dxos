@@ -220,6 +220,9 @@
       "path": "packages/core/introspect-mcp/tsconfig.json"
     },
     {
+      "path": "packages/core/introspect-tools/tsconfig.json"
+    },
+    {
       "path": "packages/core/mcp-client/tsconfig.json"
     },
     {
@@ -620,6 +623,9 @@
     },
     {
       "path": "packages/ui/react-ui-grid/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-introspect/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-list/tsconfig.json"

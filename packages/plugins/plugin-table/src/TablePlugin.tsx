@@ -76,3 +76,5 @@ export const TablePlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default TablePlugin;
