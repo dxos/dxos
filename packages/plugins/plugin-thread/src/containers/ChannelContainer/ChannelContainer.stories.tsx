@@ -69,17 +69,15 @@ const meta = {
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
               const channel = personalSpace.db.add(Channel.make({ name: 'general' }));
-              const feed = yield* Effect.tryPromise(() => channel.feed!.tryLoad());
-              if (feed) {
-                const seed = [
-                  Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'Hello, channel.' }] }),
-                  Message.make({
-                    sender: { role: 'user' },
-                    blocks: [{ _tag: 'text', text: 'Messages are stored in the feed.' }],
-                  }),
-                ];
-                yield* Feed.append(feed, seed).pipe(Effect.provide(createFeedServiceLayer(personalSpace.queues)));
-              }
+              const feed = yield* Effect.promise(() => channel.feed.load());
+              const seed = [
+                Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'Hello, channel.' }] }),
+                Message.make({
+                  sender: { role: 'user' },
+                  blocks: [{ _tag: 'text', text: 'Messages are stored in the feed.' }],
+                }),
+              ];
+              yield* Feed.append(feed, seed).pipe(Effect.provide(createFeedServiceLayer(personalSpace.queues)));
             }),
         }),
         SpacePlugin({}),
