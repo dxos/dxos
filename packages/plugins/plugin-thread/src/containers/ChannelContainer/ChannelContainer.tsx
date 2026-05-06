@@ -3,7 +3,7 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type ChangeEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -14,19 +14,24 @@ import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { type Space, getSpace, useMembers, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button, ElevationProvider, Input, Panel, useTranslation } from '@dxos/react-ui';
+import { Button, ElevationProvider, Input, Panel, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { Menu, MenuRootProps, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
+import { MessageTextbox, type MessageTextboxProps } from '@dxos/react-ui-thread';
 import { type Channel, Message } from '@dxos/types';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { isNonNullable } from '@dxos/util';
 
-import { Call, Chat } from '#components';
+import { Call, MessagePanel } from '#components';
 import { useStatus } from '#hooks';
 import { meta } from '#meta';
 import { ThreadCapabilities } from '#types';
 
+import { command } from '../../extensions';
 import { ThreadOperation } from '../../operations';
+import { getMessageMetadata } from '../../util';
 
 export type ChannelContainerProps = AppSurface.ObjectArticleProps<
   Channel.Channel | undefined,
@@ -164,14 +169,17 @@ export type ChannelChatProps = {
 };
 
 /**
- * Renders the messages in a feed-backed {@link Channel}. Threading via
- * `Message.threadId` is intentionally not reconstructed in this round.
+ * Slack-style channel chat: composer pinned to the bottom of the panel, messages
+ * scrolling above it (newest at the bottom). Threading via `Message.threadId` is
+ * intentionally not reconstructed in this round.
  */
 export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
   ({ space, channel, ...props }, forwardedRef) => {
-    const id = Obj.getDXN(channel).toString();
+    const { t } = useTranslation(meta.id);
+    const { themeMode } = useThemeContext();
     const identity = useIdentity()!;
     const members = useMembers(space.id);
+    const id = Obj.getDXN(channel).toString();
     const activity = useStatus(space, id);
     const { invokePromise } = useOperationInvoker();
 
@@ -181,26 +189,72 @@ export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
       feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
     ) as Message.Message[];
 
-    const handleSend = (text: string) => {
+    const scrollRef = useRef<HTMLDivElement | null>(null);
+    const sentinelRef = useRef<HTMLDivElement | null>(null);
+    const scrollToEnd = (behavior: ScrollBehavior) =>
+      setTimeout(() => sentinelRef.current?.scrollIntoView({ behavior, block: 'end' }), 10);
+    useLayoutEffect(() => {
+      scrollToEnd('instant');
+    }, []);
+    useLayoutEffect(() => {
+      scrollToEnd('smooth');
+    }, [messages.length]);
+
+    const [autoFocus, setAutoFocus] = useState(false);
+    const [_count, _setCount] = useState(0);
+    const messageRef = useRef('');
+    const textboxMetadata = getMessageMetadata(id, identity);
+    const extensions = useMemo(
+      () => [
+        createBasicExtensions({ placeholder: t('message.placeholder') }),
+        createThemeExtensions({ themeMode }),
+        listener({ onChange: ({ text }) => (messageRef.current = text) }),
+        command,
+      ],
+      [themeMode, _count],
+    );
+
+    const handleSend: MessageTextboxProps['onSend'] = () => {
+      const text = messageRef.current;
+      if (!text?.length) {
+        return false;
+      }
+
       void invokePromise(ThreadOperation.AppendChannelMessage, {
         channel,
         sender: { identityDid: identity.did },
         text,
       });
+      messageRef.current = '';
+      setAutoFocus(true);
+      _setCount((count) => count + 1);
       return true;
     };
 
     return (
-      <Chat
-        {...composableProps(props, { classNames: 'place-self-stretch bs-full' })}
-        id={id}
-        identity={identity}
-        members={members}
-        messages={messages}
-        activity={activity}
-        onSend={handleSend}
+      <div
+        {...composableProps(props, {
+          classNames: 'flex flex-col bs-full min-h-0 dx-attention-surface bg-[var(--surface-bg)]',
+        })}
         ref={forwardedRef}
-      />
+        id={id}
+      >
+        <div ref={scrollRef} className='flex-1 min-h-0 overflow-y-auto'>
+          <div className='flex flex-col justify-end min-h-full'>
+            {messages.filter(isNonNullable).map((message) => (
+              <div key={message.id} className={mx('grid grid-cols-[var(--dx-rail-size)_1fr] w-full')}>
+                <MessagePanel message={message} members={members} />
+              </div>
+            ))}
+            <div ref={sentinelRef} />
+          </div>
+        </div>
+
+        <div className='shrink-0 grid grid-cols-[var(--dx-rail-size)_1fr]'>
+          <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleSend} {...textboxMetadata} />
+        </div>
+        <div className='shrink-0 px-2 pb-1 text-xs text-description'>{activity ? t('activity.message') : null}</div>
+      </div>
     );
   },
 );
