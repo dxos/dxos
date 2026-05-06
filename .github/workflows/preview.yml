@@ -42,11 +42,7 @@ jobs:
         run: moon run composer-app:bundle
         env:
           NODE_ENV: production
-          NODE_OPTIONS: '--max_old_space_size=12288'
           LOG_FILTER: error
-
-      - name: Delete source maps
-        run: find packages/apps/composer-app/out/composer -name '*.map' -delete
 
       - name: Write deploy metadata
         run: |
