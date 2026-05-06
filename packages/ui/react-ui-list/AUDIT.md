@@ -246,9 +246,9 @@ defers everything else upward:
                                        │ depends on
                     ┌──────────────────┴───────────────────────┐
                     │  react-ui-list (renamed in spirit)       │
-                    │    Row, Card, RowList, CardList          │
+                    │    RowList.Root/Viewport/Content + Row   │
                     │    Tree, Accordion                       │
-                    │    aria-selected/aria-current grammar    │
+                    │    aria-current grammar (current item)   │
                     │    dx-* utility pairing                  │
                     │    keyboard nav (tabster) for plain rows │
                     └──────────────────┬───────────────────────┘
@@ -268,19 +268,34 @@ Specifically:
   not compound** — by design. Compound APIs and ScrollArea integration
   belong in `react-ui-list`, never in the primitive.
 - **`react-ui-list`** is rebuilt as the elemental, opinionated layer.
-  Compound, Radix-style API:
-  - `RowList.Root` / `CardList.Root` — **headless** context provider
-    (no DOM); owns selection state. Layout is the caller's
-    responsibility, matching Radix `Select.Root` / `Dialog.Root`.
-  - `RowList.Viewport` / `CardList.Viewport` — `role="listbox"`,
-    arrow-nav (tabster), `aria-label`, and `dx-container` for filling
-    its parent. Wraps `ScrollArea.Root` + `ScrollArea.Viewport` by
-    default; opt out via `scroll={false}` for popover-style usage.
-  - `Row` / `Card` — `role="option"` items with the right `dx-*` ↔
-    `aria-selected` pairing by construction.
+  Compound, Radix-style API (single visual variant — denser/wider/
+  card-style rendering is a `classNames` styling concern, not a
+  separate component):
+  - `RowList.Root` — **headless** context provider (no DOM). Owns the
+    `currentId` model. Layout is the caller's responsibility, matching
+    Radix `Select.Root` / `Dialog.Root`.
+  - `RowList.Viewport` — `ScrollArea.Root` + `ScrollArea.Viewport`.
+    Always scrolls. Forwards ScrollArea knobs (`thin`, `padding`,
+    `centered`) so callers don't have to wrap manually. Carries
+    `dx-container` for filling its parent.
+  - `RowList.Content` — the `<ul role='listbox'>` holding the items.
+    Carries the tabster arrow-nav group and the `aria-label`.
+  - `Row` — `role='option'` item with `aria-current="true"` on the
+    current row, paired with `dx-current` styling.
   - Keep `Tree` and `Accordion` (still unique).
-  - Delete the `@deprecated` `List` (Phase 6 — see consumer survey
-    below).
+  - Update the `@deprecated` `List` note; consumer migration +
+    deletion move to Phase 6 (count is ~10, not 3 as initially
+    estimated).
+
+  **Current vs selection.** This layer tracks "current" — the item the
+  user has navigated to. One item, follows click / arrow / focus,
+  `aria-current` + `dx-current`. **Selection** is a separately-tracked
+  model not yet implemented here: an explicit action (e.g. clicking a
+  checkbox) on top of navigation, capable of multi-select, paired with
+  `aria-selected` + `dx-selected`. When it lands it'll likely be a
+  reactive atom owning `Set<string>` so subscribers can re-render
+  per-row without re-rendering the whole list. Current and selection
+  can coexist on the same row.
 - **`react-ui-search`** is refactored to compose `react-ui-list`'s
   `RowList` instead of holding its own. The search-specific bits
   (debounced input, auto-select-first, scroll-into-view) become a
@@ -292,28 +307,19 @@ Specifically:
   story.
 - **`react-ui-stack`** is fully retired. All call sites move to
   `Mosaic.Stack` (the existing TODO).
-- **Keyboard navigation: `@fluentui/react-tabster` is the canonical
-  arrow-traversal layer; `react-ui-list` adds a thin explicit
-  `onKeyDown` on the listbox as belt-and-braces.** Every list-shaped
-  surface in the layered model uses tabster's `useArrowNavigationGroup`
-  (axis: vertical, `memorizeCurrent: true`) so plain Tab + arrow
-  navigation works without per-component wiring. New code should not
-  roll its own focus management or arrow-key handlers — if you're
-  reaching for that, you've probably skipped a layer.
-
-  `react-ui-list` `RowList.Viewport` additionally implements WAI-ARIA
-  listbox keyboard semantics directly (ArrowUp / ArrowDown / Home /
-  End, no wraparound) for two reasons: it works in environments where
-  tabster isn't initialized (some Storybook contexts), and tabster
-  alone doesn't cover behaviors specific to the listbox role —
-  selection-follows-focus and focus-on-entry (when the `<ul>` itself
-  receives focus, redirect to the selected option). Both are gated to
-  the listbox layer; downstream users of `RowList` get all of this for
-  free.
+- **Keyboard navigation is `@fluentui/react-tabster`-only.** Every
+  list-shaped surface in the layered model uses tabster's
+  `useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true })`
+  for arrow-key traversal — no bespoke `onKeyDown` arrow handlers.
+  Tabster's `useTabster` lazy-initializes the runtime on first hook
+  call, so no app-level provider setup is required. `RowList.Content`
+  adds one focus-on-entry handler (when the `<ul>` itself receives
+  focus, redirect to the current option) — that's a listbox-pattern
+  concern tabster doesn't cover, not arrow handling.
 
   Existing tabster consumers: `react-ui-search` `Listbox`,
   `react-ui-stack` `Stack`, `react-ui-mosaic` `Focus.Group`,
-  `react-ui-list` `RowList.Viewport`.
+  `react-ui-list` `RowList.Content`.
 
 - **The dx-* grammar** is documented in the README / a small
   `selection.css.md` next to `selected.css`. The rule:
@@ -379,10 +385,13 @@ Estimated: 1 PR, small (mostly docs + minor API tightening).
 
 ### Phase 4 — Rebuild `react-ui-list` around it
 
-- Add `Row`, `Card`, `RowList`, `CardList` built on
-  `react-primitives/react-list`. `RowList` handles keyboard nav
-  (tabster arrow group + WAI-ARIA listbox semantics) and the `dx-*`
-  pairing automatically.
+- Add `RowList.{Root,Viewport,Content}` + `Row` built on
+  `react-primitives/react-list`. Single visual variant; styling
+  variants (denser, card-like, wider) are caller-supplied via
+  `classNames`. Keyboard nav delegated to tabster
+  (`useArrowNavigationGroup`); `Content` redirects focus into the
+  current option on first entry. `aria-current` ↔ `dx-current`
+  pairing automatic.
 - Update the `@deprecated` `List` note to point at the right
   replacement per use case (`RowList` for selectable pickers,
   `Mosaic.Stack` for reorderable card stacks). **Do not delete it**
@@ -461,45 +470,55 @@ import { RowList, Row } from '@dxos/react-ui-list';
 export const ToolList = ({ tools, selected, onSelect, className }: ToolListProps) => {
   const entries = useMemo(() => Object.entries(tools).sort(([a], [b]) => a.localeCompare(b)), [tools]);
   return (
-    <RowList.Root selectedId={selected} onSelectChange={(id) => onSelect?.(id, tools[id])}>
-      <RowList.Viewport classNames={className} aria-label='MCP tools'>
-        {entries.map(([name, tool]) => (
-          <Row id={name} key={name}>
-            <div className='font-mono text-xs text-subdueText'>{name}</div>
-            <div className='font-medium'>{tool.title}</div>
-            {tool.description && (
-              <div className='text-sm text-description line-clamp-2 mt-1'>
-                {tool.description.trim()}
-              </div>
-            )}
-          </Row>
-        ))}
+    <RowList.Root currentId={selected} onCurrentChange={(id) => onSelect?.(id, tools[id])}>
+      <RowList.Viewport classNames={className}>
+        <RowList.Content aria-label='MCP tools'>
+          {entries.map(([name, tool]) => (
+            <Row id={name} key={name}>
+              <div className='font-mono text-xs text-subdueText'>{name}</div>
+              <div className='font-medium'>{tool.title}</div>
+              {tool.description && (
+                <div className='text-sm text-description line-clamp-2 mt-1'>
+                  {tool.description.trim()}
+                </div>
+              )}
+            </Row>
+          ))}
+        </RowList.Content>
       </RowList.Viewport>
     </RowList.Root>
   );
 };
 ```
 
-`RowList.Root` + `RowList.Viewport` provide:
+`RowList.Root` + `RowList.Viewport` + `RowList.Content` provide:
 
-- `role="listbox"` / `role="option"` via `react-primitives/react-list`.
-- `aria-selected` set automatically on the `Row` whose id matches
-  `selectedId`.
-- `dx-selected dx-hover` paired correctly.
-- Keyboard nav (arrow keys, Enter / Space to commit) via
-  `@fluentui/react-tabster`.
-- `ScrollArea.Root` + `Viewport` wrapper baked into `Viewport` by
-  default (set `scroll={false}` to opt out for popover-style usage).
+- `role="listbox"` on `Content`, `role="option"` on each `Row`.
+- `aria-current="true"` on the `Row` whose id matches `currentId`.
+- `dx-current dx-hover` pairing automatic (and correct).
+- `ScrollArea.Root` + `ScrollArea.Viewport` baked into `Viewport`,
+  with `thin` / `padding` / `centered` knobs forwarded.
+- Keyboard nav (arrow keys) via `@fluentui/react-tabster`'s
+  `useArrowNavigationGroup`. Focus-on-entry redirect to the current
+  option, so arrow keys have an immediate starting point.
 
 Net diff for `ToolList`: ~30 lines deleted, no styling regressions, no
 ARIA mismatches possible by construction.
 
 ## 9. Open questions
 
-- Do `Tree` and `Accordion` belong in the same package as `RowList` /
-  `CardList`? Probably yes for now (one import path, common dx-*
-  grammar) but worth re-asking once the package settles.
-- Should `react-ui-mosaic`'s `Tile` adopt `react-ui-list`'s `Card`?
+- Do `Tree` and `Accordion` belong in the same package as `RowList`?
+  Probably yes for now (one import path, common dx-* grammar) but
+  worth re-asking once the package settles.
+- Card-style rendering (denser/wider/per-row surface) is currently a
+  caller styling concern. If a "card preset" turns out to recur, it's
+  a `classNames` recipe at the theme level — not a separate
+  component. Worth revisiting once a few real call sites land.
+- When the **selection model** lands (separate from `current`,
+  multi-select capable, reactive atom), how does it compose with
+  `currentId`? Most likely two parallel models on `Root` and a
+  per-row checkbox-style affordance.
+- Should `react-ui-mosaic`'s `Tile` adopt the `Row` styling?
   Yes if the visual shape is compatible — to be settled when Phase 4
   lands.
 - Is there value in a `Group` primitive (header + collapsible body

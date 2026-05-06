@@ -2,69 +2,83 @@
 // Copyright 2026 DXOS.org
 //
 
-// `RowList` / `CardList` — Radix-style compound list components.
+// `RowList` — Radix-style compound navigation list.
 //
-// Two namespaces, same shape: a headless `Root` and a scrollable
-// `Viewport`. The split between row and card is purely visual — both
-// expose the same `role="listbox"` / `role="option"` semantics, the
-// same `selectedId` model, and the same arrow-key navigation via
-// `@fluentui/react-tabster`. Pick the variant by the item component
-// you nest inside the viewport:
+// Compound shape (matches Radix Select / Toolbar / Tabs):
 //
-//   <RowList.Root selectedId={…} onSelectChange={…}>
-//     <RowList.Viewport aria-label='Tools'>
-//       <Row id='a'>…</Row>
-//       <Row id='b'>…</Row>
+//   <RowList.Root currentId={…} onCurrentChange={…}>
+//     <RowList.Viewport thin padding>
+//       <RowList.Content aria-label='Tools'>
+//         <Row id='a'>…</Row>
+//         <Row id='b'>…</Row>
+//       </RowList.Content>
 //     </RowList.Viewport>
 //   </RowList.Root>
 //
-//   <CardList.Root selectedId={…} onSelectChange={…}>
-//     <CardList.Viewport aria-label='Results'>
-//       <Card id='a'>…</Card>
-//     </CardList.Viewport>
-//   </CardList.Root>
+//   - `Root`     — headless context provider (no DOM). Owns the
+//                  `currentId` model.
+//   - `Viewport` — `ScrollArea.Root` + `ScrollArea.Viewport`. Always
+//                  scrolls. Forwards ScrollArea knobs (`thin`, `padding`,
+//                  `centered`) so callers don't have to wrap manually.
+//   - `Content`  — the `<ul>` holding the items. Carries the listbox
+//                  role, the tabster arrow-nav group, and the
+//                  `aria-label`.
+//   - `Row`      — option item (`<li>` with `aria-current` on the
+//                  current row, paired with `dx-current` styling).
 //
-// Why headless Root + a Viewport (and not a single component):
+// Single visual variant. Card-style rendering, denser/wider rows,
+// dividers, etc. are styling concerns layered on via `classNames` —
+// not separate components. (An earlier draft exposed `Card`/`CardList`;
+// pulled out so the layer has one shape and styling is a separate
+// problem.)
 //
-//   - `Root` is headless (renders no DOM, just a context provider).
-//     Matches Radix Select / Dialog / Tabs. Selection state lives here
-//     so any descendant — Viewport, Toolbar, Footer — can read it.
-//   - `Viewport` owns the listbox role, the scroll surface, the
-//     `aria-label`, and `dx-container` for filling its parent. It
-//     wraps `ScrollArea.Root` + `ScrollArea.Viewport` so long lists
-//     scroll with DXOS-styled scrollbars by default. Set
-//     `scroll={false}` to opt out (popover-style usage).
+// Current vs selection — what THIS layer tracks:
 //
-// Toolbars, footers, and other non-listbox chrome are caller-supplied
-// siblings around `Viewport` inside `Root` (see story `WithToolbar`).
-// Wrap them in your own `dx-container flex flex-col` div — Root is
-// intentionally headless so layout is the caller's responsibility.
+//   This layer tracks "current" — the item the user has navigated to
+//   (via click, arrow keys, or focus). One item at a time.
+//   `aria-current="true"` on the row, paired with `dx-current` styling.
 //
-// `Viewport`, `Row`, and `Card` are `slottable()` from `@dxos/ui-theme`
-// — they accept `asChild` to delegate rendering and merge `classNames`
-// + parent-Slot `className` via `composableProps()`. (`Root` is plain
-// React; no DOM = nothing to slot.)
+//   "Selection" is a deliberately separate concern: an explicit action
+//   on top of navigation (e.g. clicking a checkbox, double-clicking,
+//   pressing Enter to commit), capable of multi-select. When that lands
+//   it'll be a separate model property — likely a reactive atom owning
+//   `Set<string>` — and pair with `aria-selected` / `dx-selected`. The
+//   two can coexist on the same row (current ≠ selected). For now this
+//   layer offers only the navigation half; selection is a future
+//   expansion point.
+//
+// Composability:
+//
+//   `Viewport`, `Content`, and `Row` are all `slottable()` from
+//   `@dxos/ui-theme` — accept `asChild`, merge `classNames` + parent-
+//   Slot `className` via `composableProps()`. `Root` is plain React;
+//   it renders no DOM, so there's nothing to slot.
 //
 // Keyboard:
 //
-//   Per AUDIT.md, list-shaped components in this layer use tabster's
 //   `useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true })`
-//   only. No bespoke `onKeyDown` arrow handlers. Enter / Space on the
-//   focused option commits selection.
+//   from `@fluentui/react-tabster` is applied to `Content`. Tabster
+//   auto-initializes (`useTabster` lazy-creates the runtime) so no
+//   provider setup is required at the app/storybook level. ArrowUp /
+//   ArrowDown move focus among options.
+//
+//   When focus first lands on the `<ul>` itself (e.g. user tabs in),
+//   `Content` redirects focus into the current option (or the first
+//   one) so arrow keys have an immediate starting point.
 //
 // What this layer deliberately does NOT do:
 //
 //   - Virtualization or drag-and-drop. Reach for `@dxos/react-ui-mosaic`.
-//   - Multi-select. Single `selectedId` for now.
+//   - Multi-select / explicit-action selection (see "Current vs
+//     selection" above; future expansion point).
 
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type FocusEvent,
   type ForwardedRef,
-  type KeyboardEvent,
   type MouseEvent,
-  type ReactNode,
+  type PropsWithChildren,
   createContext,
   useCallback,
   useContext,
@@ -72,26 +86,22 @@ import React, {
 } from 'react';
 
 import { List, ListItem } from '@dxos/react-list';
-import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { ScrollArea, type ScrollAreaRootProps } from '@dxos/react-ui';
 import { composableProps, slottable } from '@dxos/ui-theme';
 
 const ROW_LIST_VIEWPORT_NAME = 'RowList.Viewport';
-const CARD_LIST_VIEWPORT_NAME = 'CardList.Viewport';
+const ROW_LIST_CONTENT_NAME = 'RowList.Content';
 const ROW_NAME = 'List.Row';
-const CARD_NAME = 'List.Card';
 
 //
 // Context.
 //
 
-type Variant = 'row' | 'card';
-
 type ListContextValue = {
-  selectedId?: string;
-  onSelect: (id: string) => void;
-  variant: Variant;
-  /** When true, focusing an option also commits selection. */
-  selectionFollowsFocus: boolean;
+  /** The currently-navigated / focused option id. */
+  currentId?: string;
+  /** Set the current option (called from click, arrow nav, focus). */
+  setCurrent: (id: string) => void;
 };
 
 const ListContext = createContext<ListContextValue | null>(null);
@@ -99,7 +109,7 @@ const ListContext = createContext<ListContextValue | null>(null);
 const useListContext = (componentName: string): ListContextValue => {
   const ctx = useContext(ListContext);
   if (!ctx) {
-    throw new Error(`<${componentName}> must be used inside <RowList.Root> or <CardList.Root>`);
+    throw new Error(`<${componentName}> must be used inside <RowList.Root>`);
   }
   return ctx;
 };
@@ -108,338 +118,234 @@ const useListContext = (componentName: string): ListContextValue => {
 // Root — headless context provider. Renders no DOM.
 //
 
-type RootProps = {
-  /** Currently-selected option id (controlled). */
-  selectedId?: string;
-  /** Initial selection for uncontrolled mode. */
-  defaultSelectedId?: string;
-  /** Called when the user picks a different option. */
-  onSelectChange?: (id: string) => void;
+type RootProps = PropsWithChildren<{
+  /** Currently-navigated option id (controlled). */
+  currentId?: string;
+  /** Initial current option for uncontrolled mode. */
+  defaultCurrentId?: string;
   /**
-   * When true (default), focusing an option also commits selection — the
-   * "selection follows focus" pattern. Right for master/detail pickers
-   * where moving through the list previews the item. Set to false when
-   * the user must explicitly commit (Enter / click) — e.g. multi-step
-   * flows or destructive picks.
+   * Called when the user navigates to a different option (click, arrow
+   * keys, focus). Receives the option's `id` prop.
    */
-  selectionFollowsFocus?: boolean;
-  children?: ReactNode;
-};
+  onCurrentChange?: (id: string) => void;
+}>;
 
-const RootImpl = ({
-  variant,
-  selectedId,
-  defaultSelectedId,
-  onSelectChange,
-  selectionFollowsFocus = true,
-  children,
-}: RootProps & { variant: Variant }) => {
+const Root = ({ currentId, defaultCurrentId, onCurrentChange, children }: RootProps) => {
   // `useControllableState`'s `onChange` is typed `(state: string | undefined) => void`,
-  // but our public `onSelectChange` is `(id: string) => void` (an `id` is always
-  // a string when emitted from a click / Enter). Wrap to satisfy the type
-  // without leaking `undefined` to callers.
-  const [resolvedSelected, setResolvedSelected] = useControllableState<string | undefined>({
-    prop: selectedId,
-    defaultProp: defaultSelectedId,
+  // but our public `onCurrentChange` is `(id: string) => void` (an `id` is always
+  // a string when emitted). Wrap to satisfy the type without leaking
+  // `undefined` to callers.
+  const [resolved, setResolved] = useControllableState<string | undefined>({
+    prop: currentId,
+    defaultProp: defaultCurrentId,
     onChange: (next) => {
       if (next !== undefined) {
-        onSelectChange?.(next);
+        onCurrentChange?.(next);
       }
     },
   });
 
-  const handleSelect = useCallback((id: string) => setResolvedSelected(id), [setResolvedSelected]);
+  const setCurrent = useCallback((id: string) => setResolved(id), [setResolved]);
 
   const ctx = useMemo<ListContextValue>(
-    () => ({ selectedId: resolvedSelected, onSelect: handleSelect, variant, selectionFollowsFocus }),
-    [resolvedSelected, handleSelect, variant, selectionFollowsFocus],
+    () => ({ currentId: resolved, setCurrent }),
+    [resolved, setCurrent],
   );
 
   return <ListContext.Provider value={ctx}>{children}</ListContext.Provider>;
 };
 
-const RowListRoot = (props: RootProps) => <RootImpl {...props} variant='row' />;
-RowListRoot.displayName = 'RowList.Root';
-
-const CardListRoot = (props: RootProps) => <RootImpl {...props} variant='card' />;
-CardListRoot.displayName = 'CardList.Root';
+Root.displayName = 'RowList.Root';
 
 //
-// Viewport — listbox + ScrollArea + dx-container.
+// Viewport — ScrollArea wrapper. Always scrolls; forwards ScrollArea knobs.
 //
 
-// Variant-specific layout for the listbox `<ul>`. Rows touch (no gap;
-// items carry the divider). Cards float on the surface with a small gap.
-const ROW_VIEWPORT_LIST_BASE = 'flex flex-col';
-const CARD_VIEWPORT_LIST_BASE = 'flex flex-col gap-2 p-2';
+// Subset of ScrollArea.Root props that make sense on a list viewport.
+// `orientation` is fixed to 'vertical' — pass other knobs (autoHide,
+// snap, …) directly via `<RowList.Viewport asChild><ScrollArea.Root …>`.
+type ViewportOwnProps = Pick<ScrollAreaRootProps, 'thin' | 'padding' | 'centered'>;
 
-type ViewportOwnProps = {
-  /**
-   * Disable the ScrollArea wrapper (e.g. when the list lives inside a
-   * popover that owns its own scroll). The listbox still renders.
-   */
-  scroll?: boolean;
+const Viewport = slottable<HTMLDivElement, ViewportOwnProps>((props, forwardedRef) => {
+  const { thin, padding, centered, children, ...rest } = props as PropsWithChildren<
+    ViewportOwnProps & Record<string, unknown>
+  >;
+  const composed = composableProps<HTMLDivElement>(rest, { classNames: 'dx-container' });
+  return (
+    <ScrollArea.Root
+      orientation='vertical'
+      thin={thin}
+      padding={padding}
+      centered={centered}
+      {...composed}
+      ref={forwardedRef}
+    >
+      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
+});
+
+Viewport.displayName = ROW_LIST_VIEWPORT_NAME;
+
+//
+// Content — the listbox `<ul>` (tabster arrow group + aria-label).
+//
+
+type ContentOwnProps = {
   /**
    * Accessible label for the listbox. Strongly recommended; assistive
-   * tech announces this when focus enters the list. Falls onto the
-   * listbox `<ul>` where `role="listbox"` lives.
+   * tech announces this when focus enters the list.
    */
   'aria-label'?: string;
 };
 
-// Find all `role='option'` descendants of `ul` in DOM order. Per the
-// WAI-ARIA APG listbox pattern, disabled options stay in the focus
-// traversal so screen readers can announce them; the per-option click /
-// Enter handlers (and selection-follows-focus) early-return when the
-// option is disabled, so focus moves over them but selection doesn't.
-const allOptions = (ul: HTMLElement | null): HTMLLIElement[] => {
+// Find the first non-disabled `role='option'` descendant in DOM order.
+// Used as the focus-on-entry target so we don't land on a disabled row.
+const firstEnabledOption = (ul: HTMLElement | null): HTMLLIElement | null => {
   if (!ul) {
-    return [];
+    return null;
   }
-  return Array.from(ul.querySelectorAll<HTMLLIElement>('[role="option"]'));
+  return ul.querySelector<HTMLLIElement>('[role="option"]:not([aria-disabled="true"])');
 };
 
-// Variant of `allOptions` that excludes disabled — used only as a default
-// focus target (we don't want to land focus on a disabled row when the
-// listbox itself first receives focus).
-const enabledOptions = (ul: HTMLElement | null): HTMLLIElement[] =>
-  allOptions(ul).filter((option) => option.getAttribute('aria-disabled') !== 'true');
+const Content = slottable<HTMLUListElement, ContentOwnProps>((props, forwardedRef) => {
+  // Touch the context so Content fails loudly if used outside Root.
+  useListContext(ROW_LIST_CONTENT_NAME);
 
-const renderViewport = (
-  componentName: string,
-  props: ThemedClassName<ViewportOwnProps & { children?: ReactNode }> & Record<string, unknown>,
-  forwardedRef: ForwardedRef<HTMLUListElement>,
-) => {
-  // Touch the context to fail loudly if Viewport is used outside Root.
-  useListContext(componentName);
-  // Tabster's arrow-group props are still applied as the canonical
-  // implementation per AUDIT.md. The explicit `onKeyDown` below is a
-  // belt-and-braces fallback that works even when tabster isn't
-  // initialized in the host environment (e.g. some Storybook contexts).
+  // Tabster arrow-key navigation. `useTabster` auto-initializes the
+  // runtime on first call, so no app/storybook-level setup is required.
+  // The data attributes returned here go onto the focusable container
+  // — the `<ul>` rendered by the primitive `<List>`.
   const arrowGroup = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
 
-  const { scroll = true, children, ...rest } = props as any;
-  const variant = componentName === ROW_LIST_VIEWPORT_NAME ? 'row' : 'card';
-  const listClassNames = variant === 'row' ? ROW_VIEWPORT_LIST_BASE : CARD_VIEWPORT_LIST_BASE;
+  const { children, ...rest } = props as PropsWithChildren<ContentOwnProps & Record<string, unknown>>;
 
-  // Explicit listbox keyboard navigation. Per WAI-ARIA listbox pattern:
-  //   ArrowDown — focus next option (disabled included, for SR announcement)
-  //   ArrowUp   — focus previous option
-  //   Home      — focus first option
-  //   End       — focus last option
-  // No wraparound (matches the ARIA spec; tabster wraps by default, but
-  // explicit handling here takes precedence and is more conventional for
-  // listboxes). Selection on disabled options is suppressed by per-option
-  // handlers, not by skipping them in traversal.
-  const handleListKeyDown = useCallback((event: KeyboardEvent<HTMLUListElement>) => {
-    const ul = event.currentTarget;
-    const options = allOptions(ul);
-    if (options.length === 0) {
-      return;
-    }
-    const focused = document.activeElement as HTMLElement | null;
-    const currentIndex = focused ? options.indexOf(focused as HTMLLIElement) : -1;
-
-    let nextIndex = -1;
-    switch (event.key) {
-      case 'ArrowDown':
-        nextIndex = currentIndex < 0 ? 0 : Math.min(currentIndex + 1, options.length - 1);
-        break;
-      case 'ArrowUp':
-        nextIndex = currentIndex < 0 ? options.length - 1 : Math.max(currentIndex - 1, 0);
-        break;
-      case 'Home':
-        nextIndex = 0;
-        break;
-      case 'End':
-        nextIndex = options.length - 1;
-        break;
-      default:
-        return;
-    }
-
-    event.preventDefault();
-    options[nextIndex]?.focus();
-  }, []);
-
-  // When focus first enters the listbox container itself (e.g. the user
-  // tabs onto the `<ul>`), redirect focus into a child option so arrow
-  // keys have an immediate starting point. Prefers the currently-selected
-  // option, then the first enabled option.
-  const handleListFocus = useCallback((event: FocusEvent<HTMLUListElement>) => {
+  // When focus first enters the `<ul>` itself (e.g. user tabs in),
+  // redirect into the current option (or the first enabled one) so
+  // arrow keys have an immediate starting point. Tabster doesn't do
+  // this — it manages traversal once focus is already on a child.
+  const handleFocus = useCallback((event: FocusEvent<HTMLUListElement>) => {
     if (event.target !== event.currentTarget) {
-      // Focus already landed on a child option — leave it alone.
       return;
     }
     const ul = event.currentTarget;
-    const selected = ul.querySelector<HTMLLIElement>(
-      '[role="option"][aria-selected="true"]:not([aria-disabled="true"])',
+    const current = ul.querySelector<HTMLLIElement>(
+      '[role="option"][aria-current="true"]:not([aria-disabled="true"])',
     );
-    const target = selected ?? enabledOptions(ul)[0] ?? null;
+    const target = current ?? firstEnabledOption(ul);
     target?.focus();
   }, []);
 
-  // The listbox itself comes from `@dxos/react-list`'s `<List>`.
-  // Without it, descendant `<ListItem>`s (used by `Row` / `Card`) fail
-  // their Radix context-scope check. `selectable` flips `<List>` to
-  // `<ul role='listbox'>` and gates the `role='option'` + `aria-selected`
-  // on `<ListItem>`. The arrow-nav group lands on this ul because it's
-  // the focusable container.
-  const composedListProps = composableProps<HTMLUListElement>(rest, { classNames: listClassNames });
-  const listbox = (
+  // Render via the primitive `<List>` so descendant `<ListItem>`s
+  // satisfy their Radix context-scope check. We don't pass `selectable`
+  // — this layer tracks `aria-current`, not `aria-selected` (see header
+  // "Current vs selection"); the primitive only sets `aria-selected`
+  // when `selectable` is true.
+  const composed = composableProps<HTMLUListElement>(rest, { classNames: 'flex flex-col' });
+  return (
     <List
       variant='unordered'
-      selectable
-      {...composedListProps}
+      {...composed}
       {...arrowGroup}
-      onKeyDown={handleListKeyDown}
-      onFocus={handleListFocus}
+      role='listbox'
+      onFocus={handleFocus}
       ref={forwardedRef as unknown as ForwardedRef<HTMLOListElement>}
     >
       {children}
     </List>
   );
+});
 
-  if (!scroll) {
-    return listbox;
-  }
-
-  return (
-    <ScrollArea.Root orientation='vertical' classNames='dx-container'>
-      <ScrollArea.Viewport>{listbox}</ScrollArea.Viewport>
-    </ScrollArea.Root>
-  );
-};
-
-const RowListViewport = slottable<HTMLUListElement, ViewportOwnProps>((props, forwardedRef) =>
-  renderViewport(ROW_LIST_VIEWPORT_NAME, props as any, forwardedRef),
-);
-RowListViewport.displayName = ROW_LIST_VIEWPORT_NAME;
-
-const CardListViewport = slottable<HTMLUListElement, ViewportOwnProps>((props, forwardedRef) =>
-  renderViewport(CARD_LIST_VIEWPORT_NAME, props as any, forwardedRef),
-);
-CardListViewport.displayName = CARD_LIST_VIEWPORT_NAME;
+Content.displayName = ROW_LIST_CONTENT_NAME;
 
 //
-// Row / Card — option items.
+// Row — option item.
 //
 
-type ItemOwnProps = {
-  /** Stable identifier; matched against the parent's `selectedId`. */
+type RowProps = PropsWithChildren<{
+  /** Stable identifier; matched against the parent's `currentId`. */
   id: string;
-  /** Disable selection / dim the row. */
+  /** Disable the row — focusable but doesn't update current, dimmed. */
   disabled?: boolean;
-  /** Optional click handler in addition to selection. */
+  /** Optional click handler in addition to navigation. */
   onClick?: (event: MouseEvent<HTMLLIElement>) => void;
-};
+  /** Optional focus handler in addition to current-follows-focus. */
+  onFocus?: (event: FocusEvent<HTMLLIElement>) => void;
+}>;
 
-// Row paddings are tighter than Card's; rows touch with a divider, cards
-// sit on their own surface with rounded corners.
-const ROW_BASE = 'dx-hover dx-selected px-3 py-2 cursor-pointer outline-none border-b border-separator last:border-b-0';
-const CARD_BASE = 'dx-hover dx-selected px-3 py-2 cursor-pointer outline-none rounded-md bg-baseSurface';
+// `dx-current` pairs with `aria-current="true"` (set per-option below);
+// see `ui-theme/src/css/components/selected.md`.
+const ROW_BASE = 'dx-hover dx-current px-3 py-2 cursor-pointer outline-none border-b border-separator last:border-b-0';
 
-const renderItem = (
-  contextName: string,
-  baseClassName: string,
-  props: ThemedClassName<ItemOwnProps & { children?: ReactNode }> & Record<string, unknown>,
-  forwardedRef: ForwardedRef<HTMLLIElement>,
-) => {
-  const { id, disabled, onClick, onFocus, children, ...rest } = props as any;
-  const { selectedId, onSelect, selectionFollowsFocus } = useListContext(contextName);
-  const isSelected = selectedId === id;
+const Row = slottable<HTMLLIElement, RowProps>((props, forwardedRef) => {
+  const { id, disabled, onClick, onFocus, children, ...rest } = props as RowProps & Record<string, unknown>;
+  const { currentId, setCurrent } = useListContext(ROW_NAME);
+  const isCurrent = currentId === id;
 
   const handleClick = useCallback(
     (event: MouseEvent<HTMLLIElement>) => {
       if (disabled) {
         return;
       }
-      onSelect(id);
+      setCurrent(id);
       onClick?.(event);
     },
-    [disabled, id, onSelect, onClick],
+    [disabled, id, setCurrent, onClick],
   );
 
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLLIElement>) => {
-      if (disabled) {
-        return;
-      }
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        onSelect(id);
-      }
-    },
-    [disabled, id, onSelect],
-  );
-
-  // Selection-follows-focus: when arrow keys move focus to this option
-  // (or any other path that focuses it without clicking), commit
-  // selection. The Root flag controls whether this fires; default is
-  // true, matching the master/detail picker convention. Disabled
-  // options are skipped earlier; the guard here is defense-in-depth.
+  // Current-follows-focus: arrow nav (and any focus path) updates
+  // `currentId` so the model stays in sync with what the user is
+  // looking at. Disabled rows are still focusable for screen-reader
+  // announcement but don't update the current model.
   const handleFocus = useCallback(
     (event: FocusEvent<HTMLLIElement>) => {
-      if (!disabled && selectionFollowsFocus && selectedId !== id) {
-        onSelect(id);
+      if (!disabled && currentId !== id) {
+        setCurrent(id);
       }
       onFocus?.(event);
     },
-    [disabled, selectionFollowsFocus, selectedId, id, onSelect, onFocus],
+    [disabled, currentId, id, setCurrent, onFocus],
   );
 
   const composed = composableProps<HTMLLIElement>(rest, {
-    classNames: [baseClassName, disabled && 'opacity-50 cursor-not-allowed'],
+    classNames: [ROW_BASE, disabled && 'opacity-50 cursor-not-allowed'],
   });
 
-  // Tabster focuses each option as you arrow through; without tabIndex
-  // the option isn't reachable. Per WAI-ARIA APG listbox guidance,
-  // disabled options remain keyboard-navigable for screen-reader
-  // announcement — selection is prevented by `handleClick` /
-  // `handleKeyDown` / `handleFocus` guards above, not by removing
-  // disabled items from the tab order.
-  const tabIndex = 0;
-
+  // Per WAI-ARIA APG listbox guidance, disabled options remain
+  // keyboard-navigable for SR announcement; the current model is not
+  // updated for disabled rows (see `handleFocus` / `handleClick` above).
   return (
     <ListItem
       {...composed}
-      tabIndex={tabIndex}
-      selected={isSelected}
+      role='option'
+      tabIndex={0}
+      aria-current={isCurrent ? 'true' : undefined}
       aria-disabled={disabled || undefined}
       onClick={handleClick}
-      onKeyDown={handleKeyDown}
       onFocus={handleFocus}
       ref={forwardedRef}
     >
       {children}
     </ListItem>
   );
-};
+});
 
-const Row = slottable<HTMLLIElement, ItemOwnProps>((props, forwardedRef) =>
-  renderItem(ROW_NAME, ROW_BASE, props as any, forwardedRef),
-);
 Row.displayName = ROW_NAME;
 
-const Card = slottable<HTMLLIElement, ItemOwnProps>((props, forwardedRef) =>
-  renderItem(CARD_NAME, CARD_BASE, props as any, forwardedRef),
-);
-Card.displayName = CARD_NAME;
-
 //
-// Public namespaces.
+// Public namespace.
 //
 
 const RowList = {
-  Root: RowListRoot,
-  Viewport: RowListViewport,
+  Root,
+  Viewport,
+  Content,
 };
 
-const CardList = {
-  Root: CardListRoot,
-  Viewport: CardListViewport,
+export { RowList, Row };
+export type {
+  RootProps as RowListRootProps,
+  ViewportOwnProps as RowListViewportProps,
+  ContentOwnProps as RowListContentProps,
+  RowProps,
 };
-
-export { RowList, CardList, Row, Card };
-
-export type { RootProps as RowListRootProps, ViewportOwnProps as RowListViewportProps, ItemOwnProps as RowProps };

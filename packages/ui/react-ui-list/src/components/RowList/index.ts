@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export { RowList, CardList, Row, Card } from './RowList';
-export type { RowListRootProps, RowListViewportProps, RowProps } from './RowList';
+export { RowList, Row } from './RowList';
+export type { RowListRootProps, RowListViewportProps, RowListContentProps, RowProps } from './RowList';
