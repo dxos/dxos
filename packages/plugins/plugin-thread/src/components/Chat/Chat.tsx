@@ -93,13 +93,9 @@ export const Chat = composable<HTMLDivElement, ChatProps>(
     useLayoutEffect(() => {
       scrollToEnd('instant');
     }, []);
-
-    // For bottom-composer (channel) mode, also scroll-to-end when new messages arrive.
-    useLayoutEffect(() => {
-      if (bottomComposer) {
-        scrollToEnd('smooth');
-      }
-    }, [messages.length, bottomComposer]);
+    // NOTE: Auto-scroll on new messages is intentionally not implemented here. Smooth-scroll
+    // animations were causing ResizeObserver feedback loops with CodeMirror/ScrollArea. The
+    // proper fix is "scroll only if user is already at the bottom" — deferred to a follow-up.
 
     const handleSend = () => {
       const text = messageRef.current;
