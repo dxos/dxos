@@ -42,25 +42,25 @@ Per the brief, "list-like" is parameterized along:
 
 Mapping packages to facets up front:
 
-| Package / Component                  | Row | Card | Drag | Virt | Nav (current) | Sel (selected) | Multi-sel | KbdNav |
-| ------------------------------------ | :-: | :--: | :--: | :--: | :-----------: | :------------: | :-------: | :----: |
-| react-primitives `react-list`        |  ✓  |   —  |   —  |   —  |       —       |        ✓ (ARIA only) | ✓ (`aria-multiselectable`) |   —    |
-| react-ui-list `List` (deprecated)    |  ✓  |   —  |   ✓  |   —  |       —       |        —        |     —     |   —    |
-| react-ui-list `Tree`                 |  ✓  |   —  |   ✓  |   —  |       ✓       |        —        |     —     |   ✓    |
-| react-ui-list `Accordion`            |  ✓  |   —  |   —  |   —  |       —       |        —        |     —     |   ✓    |
-| react-ui-mosaic `Stack`              |  ✓  |   ✓  |   ✓  |   —  |       ✓       |  via `Focus`    |  via `Focus` |  partial |
-| react-ui-mosaic `VirtualStack`       |  ✓  |   ✓  |   ✓  |   ✓  |       ✓       |  via `Focus`    |  via `Focus` |  partial |
-| react-ui-mosaic `Board`              |  —  |   ✓  |   ✓  |   —  |       ✓       |        —        |     —     |   —    |
-| react-ui-stack `Stack` (legacy)      |  ✓  |   ✓  |   ✓  |   —  |       —       |        —        |     —     |   ✓    |
-| react-ui-search `Listbox`            |  ✓  |   —  |   —  |   —  |       —       |        ✓        |     —     |   ✓ (tabster) |
-| react-ui-search `SearchList`         |  ✓  |   —  |   —  |   —  |       —       |        ✓        |     —     |   ✓ (custom) |
-| react-ui-search `SearchStack`        |  —  |   ✓  |   —  |   ✓  |       ✓       |        ✓        |     —     |   partial |
-| ad-hoc plugin lists (×9)             |  ✓  |   —  |   —  |   —  |  inconsistent |   inconsistent  |     —     |   —    |
-| `ToolList` (react-ui-introspect)     |  ✓  |   —  |   —  |   —  |       —       |        ✓        |     —     |   —    |
+| Package / Component               | Row | Card | Drag | Virt | Nav (current) | Sel (selected) |         Multi-sel          |   KbdNav    |
+| --------------------------------- | :-: | :--: | :--: | :--: | :-----------: | :------------: | :------------------------: | :---------: |
+| react-primitives `react-list`     |  ✓  |  —   |  —   |  —   |       —       | ✓ (ARIA only)  | ✓ (`aria-multiselectable`) |      —      |
+| react-ui-list `List` (deprecated) |  ✓  |  —   |  ✓   |  —   |       —       |       —        |             —              |      —      |
+| react-ui-list `Tree`              |  ✓  |  —   |  ✓   |  —   |       ✓       |       —        |             —              |      ✓      |
+| react-ui-list `Accordion`         |  ✓  |  —   |  —   |  —   |       —       |       —        |             —              |      ✓      |
+| react-ui-mosaic `Stack`           |  ✓  |  ✓   |  ✓   |  —   |       ✓       |  via `Focus`   |        via `Focus`         |   partial   |
+| react-ui-mosaic `VirtualStack`    |  ✓  |  ✓   |  ✓   |  ✓   |       ✓       |  via `Focus`   |        via `Focus`         |   partial   |
+| react-ui-mosaic `Board`           |  —  |  ✓   |  ✓   |  —   |       ✓       |       —        |             —              |      —      |
+| react-ui-stack `Stack` (legacy)   |  ✓  |  ✓   |  ✓   |  —   |       —       |       —        |             —              |      ✓      |
+| react-ui-search `Listbox`         |  ✓  |  —   |  —   |  —   |       —       |       ✓        |             —              | ✓ (tabster) |
+| react-ui-search `SearchList`      |  ✓  |  —   |  —   |  —   |       —       |       ✓        |             —              | ✓ (custom)  |
+| react-ui-search `SearchStack`     |  —  |  ✓   |  —   |  ✓   |       ✓       |       ✓        |             —              |   partial   |
+| ad-hoc plugin lists (×9)          |  ✓  |  —   |  —   |  —   | inconsistent  |  inconsistent  |             —              |      —      |
+| `ToolList` (react-ui-introspect)  |  ✓  |  —   |  —   |  —   |       —       |       ✓        |             —              |      —      |
 
 Headline reads as: virtualization + DnD + cards live in `react-ui-mosaic`;
 ARIA-correct selection (Listbox/SearchList) lives in `react-ui-search`;
-drag-and-drop *trees* live in `react-ui-list`. Plain selectable rows are
+drag-and-drop _trees_ live in `react-ui-list`. Plain selectable rows are
 duplicated across at least four call sites.
 
 ## 3. Inventory
@@ -128,8 +128,8 @@ This is the modern story. It's also the heaviest layer to pull in.
 
 - `List` (`role="listbox"` when `selectable=true`,
   `aria-multiselectable` when configured), `ListItem` (`role="option"`
-  + `aria-selected`), `ListItemHeading`, `ListItemOpenTrigger`,
-  `ListItemCollapsibleContent` (Radix Collapsible).
+  - `aria-selected`), `ListItemHeading`, `ListItemOpenTrigger`,
+    `ListItemCollapsibleContent` (Radix Collapsible).
 - Pure structure / ARIA. No styling, no keyboard nav.
 - **Zero consumers**. Source file carries a TODO to reconcile with
   `react-ui-list`.
@@ -139,19 +139,20 @@ This is the modern story. It's also the heaviest layer to pull in.
 Nine call sites where a plugin rolls its own list with `<ul>`/`<li>`
 and inline `<button>`:
 
-| File                                                                                | Rough purpose                |
-| ----------------------------------------------------------------------------------- | ---------------------------- |
-| `plugin-code/src/components/FileTree/FileTree.tsx`                                  | File tree (most sophisticated of the bunch — `aria-expanded`, depth indent). |
-| `plugin-sidekick/src/components/ActionItems.tsx`                                    | Todo list with checkboxes.   |
-| `plugin-meeting/src/containers/MeetingsList/MeetingsList.tsx`                       | Wraps `react-ui-list` `List.Root` but with a custom `<div role='list'>` inner layer. |
-| `plugin-assistant/src/components/ChatPrompt/ChatReferences.tsx`                     | Tag pills.                   |
-| `plugin-script/src/containers/DeploymentDialog/DeploymentDialog.tsx`                | Template list.               |
-| `plugin-assistant/src/components/ChatPrompt/ChatMcpErrors.tsx`                      | Error list.                  |
-| `plugin-help/.../WelcomeTour.stories.tsx`                                           | Demo.                        |
-| `react-ui-introspect/src/components/ToolList/ToolList.tsx`                          | MCP tool browser.            |
-| (one more in plugin-script)                                                         | —                            |
+| File                                                                 | Rough purpose                                                                        |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `plugin-code/src/components/FileTree/FileTree.tsx`                   | File tree (most sophisticated of the bunch — `aria-expanded`, depth indent).         |
+| `plugin-sidekick/src/components/ActionItems.tsx`                     | Todo list with checkboxes.                                                           |
+| `plugin-meeting/src/containers/MeetingsList/MeetingsList.tsx`        | Wraps `react-ui-list` `List.Root` but with a custom `<div role='list'>` inner layer. |
+| `plugin-assistant/src/components/ChatPrompt/ChatReferences.tsx`      | Tag pills.                                                                           |
+| `plugin-script/src/containers/DeploymentDialog/DeploymentDialog.tsx` | Template list.                                                                       |
+| `plugin-assistant/src/components/ChatPrompt/ChatMcpErrors.tsx`       | Error list.                                                                          |
+| `plugin-help/.../WelcomeTour.stories.tsx`                            | Demo.                                                                                |
+| `react-ui-introspect/src/components/ToolList/ToolList.tsx`           | MCP tool browser.                                                                    |
+| (one more in plugin-script)                                          | —                                                                                    |
 
 These are universally:
+
 - Row layout, no virtualization, single-select.
 - ~half pair `aria-selected` with `dx-selected` correctly; the rest are
   inconsistent.
@@ -163,25 +164,25 @@ These are universally:
 Definitions live in `packages/ui/ui-theme/src/css/components/{selected,focus}.css`
 and `utilities.css`.
 
-| Class           | Bound selector              | Notes                                                  |
-| --------------- | --------------------------- | ------------------------------------------------------ |
-| `dx-hover`      | `hover:`                    | Cursor + hover bg/text. No ARIA dependency.            |
-| `dx-highlighted`| `data-[highlighted]:`       | Radix highlighted state. **No call sites in audit.**   |
-| `dx-current`    | `aria-[current=true]:`      | Highlight bg + ring pseudo (`dx-ring-pseudo`).         |
-| `dx-selected`   | `aria-selected:`            | Selected bg + text + bold + tracking transition.       |
-| `dx-ring-pseudo`| `::after` ring scaffolding  | Used by `dx-current`.                                  |
-| `dx-focus-ring*`| `:focus-visible:`           | Many variants — overlay, group, main, etc.             |
-| `dx-active`     | **not defined**             | Used in code anyway (notably `ToolList`'s first draft) — the class is a no-op. |
+| Class            | Bound selector             | Notes                                                                          |
+| ---------------- | -------------------------- | ------------------------------------------------------------------------------ |
+| `dx-hover`       | `hover:`                   | Cursor + hover bg/text. No ARIA dependency.                                    |
+| `dx-highlighted` | `data-[highlighted]:`      | Radix highlighted state. **No call sites in audit.**                           |
+| `dx-current`     | `aria-[current=true]:`     | Highlight bg + ring pseudo (`dx-ring-pseudo`).                                 |
+| `dx-selected`    | `aria-selected:`           | Selected bg + text + bold + tracking transition.                               |
+| `dx-ring-pseudo` | `::after` ring scaffolding | Used by `dx-current`.                                                          |
+| `dx-focus-ring*` | `:focus-visible:`          | Many variants — overlay, group, main, etc.                                     |
+| `dx-active`      | **not defined**            | Used in code anyway (notably `ToolList`'s first draft) — the class is a no-op. |
 
 Mismatches found at concrete call sites:
 
-| File:line                                                          | Has class                       | Has ARIA          | Verdict                             |
-| ------------------------------------------------------------------ | ------------------------------- | ----------------- | ----------------------------------- |
-| `react-ui-list` `ListItem.tsx:188`                                 | `dx-selected dx-hover`          | `aria-selected`   | **OK** — canonical pattern.         |
-| `react-ui-search` `Listbox.tsx:133`                                | `dx-focus-ring`                 | `aria-selected`   | OK.                                 |
-| `react-ui-search` `SearchStack.tsx:103`                            | `dx-current dx-hover dx-selected` | none           | **Broken** — three classes, no ARIA. |
-| `react-ui-mosaic` `DefaultStackTile.tsx:31`                        | `dx-current dx-hover`           | none              | **Broken** — `dx-current` only fires on `aria-[current=true]`. |
-| `react-ui-introspect` `ToolList.tsx` (initial draft)               | `dx-active`                     | `aria-pressed`    | **Doubly wrong** — class undefined; `aria-pressed` is toggle-button semantics, not row-selection. |
+| File:line                                            | Has class                         | Has ARIA        | Verdict                                                                                           |
+| ---------------------------------------------------- | --------------------------------- | --------------- | ------------------------------------------------------------------------------------------------- |
+| `react-ui-list` `ListItem.tsx:188`                   | `dx-selected dx-hover`            | `aria-selected` | **OK** — canonical pattern.                                                                       |
+| `react-ui-search` `Listbox.tsx:133`                  | `dx-focus-ring`                   | `aria-selected` | OK.                                                                                               |
+| `react-ui-search` `SearchStack.tsx:103`              | `dx-current dx-hover dx-selected` | none            | **Broken** — three classes, no ARIA.                                                              |
+| `react-ui-mosaic` `DefaultStackTile.tsx:31`          | `dx-current dx-hover`             | none            | **Broken** — `dx-current` only fires on `aria-[current=true]`.                                    |
+| `react-ui-introspect` `ToolList.tsx` (initial draft) | `dx-active`                       | `aria-pressed`  | **Doubly wrong** — class undefined; `aria-pressed` is toggle-button semantics, not row-selection. |
 
 Findings:
 
@@ -207,7 +208,7 @@ Findings:
    ARIA inconsistently — see `ToolList`, `FileTree`, `MeetingsList`) or
    bundles in heavy machinery (Mosaic's DnD + virtualizer) for things
    that don't need it. The natural home for a 50-line "list of
-   selectable rows with correct ARIA + dx-* grammar" is missing.
+   selectable rows with correct ARIA + dx-\* grammar" is missing.
 
 3. **`react-ui-list` is poorly named for its actual contents**. It's
    really a "tree + accordion + (deprecated) list" package. Tree is
@@ -296,11 +297,12 @@ Specifically:
   reactive atom owning `Set<string>` so subscribers can re-render
   per-row without re-rendering the whole list. Current and selection
   can coexist on the same row.
+
 - **`react-ui-search`** is refactored to compose `react-ui-list`'s
   `RowList` instead of holding its own. The search-specific bits
   (debounced input, auto-select-first, scroll-into-view) become a
   thin layer on top: `<SearchList>` = `<SearchInput>` + `<RowList>`
-  + filtering hook.
+  - filtering hook.
 - **`react-ui-mosaic`** stays focused on virtualization, DnD, and
   card/board layouts. It can adopt `react-ui-list`'s `Card` primitive
   for tile content where helpful, but keeps its independent container
@@ -321,7 +323,7 @@ Specifically:
   `react-ui-stack` `Stack`, `react-ui-mosaic` `Focus.Group`,
   `react-ui-list` `RowList.Content`.
 
-- **The dx-* grammar** is documented in the README / a small
+- **The dx-\* grammar** is documented in the README / a small
   `selection.css.md` next to `selected.css`. The rule:
   - `aria-selected` ↔ `dx-selected`.
   - `aria-current` ↔ `dx-current`.
@@ -343,7 +345,7 @@ on the evidence:
   for Mosaic.
 
 Mosaic still wins for card stacks, virtualized timelines, and
-drag-and-drop trees. It's the *upper* layer, not the *only* layer.
+drag-and-drop trees. It's the _upper_ layer, not the _only_ layer.
 
 ## 7. Migration plan
 
@@ -399,7 +401,7 @@ Estimated: 1 PR, small (mostly docs + minor API tightening).
   estimated) and they use a different primitive (drag handles +
   delete buttons), so consumer migration moves to Phase 6.
 - Keep `Tree` and `Accordion` unchanged.
-- New name discussion *optional* — `@dxos/react-ui-list` still fits
+- New name discussion _optional_ — `@dxos/react-ui-list` still fits
   the new contents. (If we ever rename, propose `@dxos/react-ui-rows`
   or merge `Tree`/`Accordion` into `react-ui-disclosure` — out of
   scope here.)
@@ -478,9 +480,7 @@ export const ToolList = ({ tools, selected, onSelect, className }: ToolListProps
               <div className='font-mono text-xs text-subdueText'>{name}</div>
               <div className='font-medium'>{tool.title}</div>
               {tool.description && (
-                <div className='text-sm text-description line-clamp-2 mt-1'>
-                  {tool.description.trim()}
-                </div>
+                <div className='text-sm text-description line-clamp-2 mt-1'>{tool.description.trim()}</div>
               )}
             </Row>
           ))}
@@ -508,7 +508,7 @@ ARIA mismatches possible by construction.
 ## 9. Open questions
 
 - Do `Tree` and `Accordion` belong in the same package as `RowList`?
-  Probably yes for now (one import path, common dx-* grammar) but
+  Probably yes for now (one import path, common dx-\* grammar) but
   worth re-asking once the package settles.
 - Card-style rendering (denser/wider/per-row surface) is currently a
   caller styling concern. If a "card preset" turns out to recur, it's
@@ -553,3 +553,11 @@ Files cited in this audit (paths relative to repo root):
 - `packages/plugins/plugin-feed/src/components/PostStack/PostStack.tsx`
 - `packages/plugins/plugin-inbox/src/components/MessageStack/MessageStack.tsx`
 - `packages/ui/react-ui-introspect/src/components/ToolList/ToolList.tsx`
+
+## 11. Corrections
+
+- PropsWithChildren
+- slottable vs. composable
+- use react-ui components rather than raw DOM elements
+- use minimal custom classnames
+- use radix composite components; typically Root should be headless; Viewport will contain ScrollArea.Root; use radix useContext

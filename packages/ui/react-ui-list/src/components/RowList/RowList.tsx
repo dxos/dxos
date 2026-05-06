@@ -19,7 +19,7 @@
 //                  `currentId` model.
 //   - `Viewport` — `ScrollArea.Root` + `ScrollArea.Viewport`. Always
 //                  scrolls. Forwards ScrollArea knobs (`thin`, `padding`,
-//                  `centered`) so callers don't have to wrap manually.
+//                  `centered`).
 //   - `Content`  — the `<ul>` holding the items. Carries the listbox
 //                  role, the tabster arrow-nav group, and the
 //                  `aria-label`.
@@ -28,9 +28,7 @@
 //
 // Single visual variant. Card-style rendering, denser/wider rows,
 // dividers, etc. are styling concerns layered on via `classNames` —
-// not separate components. (An earlier draft exposed `Card`/`CardList`;
-// pulled out so the layer has one shape and styling is a separate
-// problem.)
+// not separate components.
 //
 // Current vs selection — what THIS layer tracks:
 //
@@ -44,15 +42,19 @@
 //   it'll be a separate model property — likely a reactive atom owning
 //   `Set<string>` — and pair with `aria-selected` / `dx-selected`. The
 //   two can coexist on the same row (current ≠ selected). For now this
-//   layer offers only the navigation half; selection is a future
-//   expansion point.
+//   layer offers only the navigation half.
 //
 // Composability:
 //
-//   `Viewport`, `Content`, and `Row` are all `slottable()` from
-//   `@dxos/ui-theme` — accept `asChild`, merge `classNames` + parent-
-//   Slot `className` via `composableProps()`. `Root` is plain React;
-//   it renders no DOM, so there's nothing to slot.
+//   `Viewport`, `Content`, and `Row` are all `composable()` from
+//   `@dxos/ui-theme` — they merge `classNames` + parent-Slot
+//   `className` via `composableProps()` and accept any standard HTML
+//   attributes. None expose `asChild`: Viewport can't (two nested
+//   elements, no coherent slot target), and Content / Row would need
+//   to abandon the `@dxos/react-list` primitive's context to honor it
+//   — not worth the complexity for this layer. If a consumer needs a
+//   `<button>`-as-row or a `<div>`-as-listbox, drop down to
+//   `@dxos/react-list` directly.
 //
 // Keyboard:
 //
@@ -73,46 +75,40 @@
 //     selection" above; future expansion point).
 
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
+import { createContextScope } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type FocusEvent,
   type ForwardedRef,
   type MouseEvent,
   type PropsWithChildren,
-  createContext,
   useCallback,
-  useContext,
-  useMemo,
 } from 'react';
 
 import { List, ListItem } from '@dxos/react-list';
 import { ScrollArea, type ScrollAreaRootProps } from '@dxos/react-ui';
-import { composableProps, slottable } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/ui-theme';
 
+const ROW_LIST_NAME = 'RowList';
 const ROW_LIST_VIEWPORT_NAME = 'RowList.Viewport';
 const ROW_LIST_CONTENT_NAME = 'RowList.Content';
 const ROW_NAME = 'List.Row';
 
 //
-// Context.
+// Context — Radix-scoped so future composition (a tree of nested
+// RowLists, or a parent like a Combobox embedding RowList) can read
+// the right scope.
 //
 
-type ListContextValue = {
+type RowListContextValue = {
   /** The currently-navigated / focused option id. */
   currentId?: string;
   /** Set the current option (called from click, arrow nav, focus). */
   setCurrent: (id: string) => void;
 };
 
-const ListContext = createContext<ListContextValue | null>(null);
-
-const useListContext = (componentName: string): ListContextValue => {
-  const ctx = useContext(ListContext);
-  if (!ctx) {
-    throw new Error(`<${componentName}> must be used inside <RowList.Root>`);
-  }
-  return ctx;
-};
+const [createRowListContext, createRowListScope] = createContextScope(ROW_LIST_NAME, []);
+const [RowListProvider, useRowListContext] = createRowListContext<RowListContextValue>(ROW_LIST_NAME);
 
 //
 // Root — headless context provider. Renders no DOM.
@@ -147,12 +143,11 @@ const Root = ({ currentId, defaultCurrentId, onCurrentChange, children }: RootPr
 
   const setCurrent = useCallback((id: string) => setResolved(id), [setResolved]);
 
-  const ctx = useMemo<ListContextValue>(
-    () => ({ currentId: resolved, setCurrent }),
-    [resolved, setCurrent],
+  return (
+    <RowListProvider scope={undefined} currentId={resolved} setCurrent={setCurrent}>
+      {children}
+    </RowListProvider>
   );
-
-  return <ListContext.Provider value={ctx}>{children}</ListContext.Provider>;
 };
 
 Root.displayName = 'RowList.Root';
@@ -162,13 +157,17 @@ Root.displayName = 'RowList.Root';
 //
 
 // Subset of ScrollArea.Root props that make sense on a list viewport.
-// `orientation` is fixed to 'vertical' — pass other knobs (autoHide,
-// snap, …) directly via `<RowList.Viewport asChild><ScrollArea.Root …>`.
-type ViewportOwnProps = Pick<ScrollAreaRootProps, 'thin' | 'padding' | 'centered'>;
+// `orientation` is fixed to 'vertical' — for other knobs (autoHide,
+// snap, …) build your own ScrollArea wrapper and skip Viewport.
+//
+// `Viewport` is `composable()` rather than `slottable()` because there
+// is no coherent `asChild` semantic for a wrapper that always renders
+// two nested elements (`ScrollArea.Root` containing `ScrollArea.Viewport`).
+type ViewportProps = Pick<ScrollAreaRootProps, 'thin' | 'padding' | 'centered'>;
 
-const Viewport = slottable<HTMLDivElement, ViewportOwnProps>((props, forwardedRef) => {
+const Viewport = composable<HTMLDivElement, ViewportProps>((props, forwardedRef) => {
   const { thin, padding, centered, children, ...rest } = props as PropsWithChildren<
-    ViewportOwnProps & Record<string, unknown>
+    ViewportProps & Record<string, unknown>
   >;
   const composed = composableProps<HTMLDivElement>(rest, { classNames: 'dx-container' });
   return (
@@ -191,7 +190,7 @@ Viewport.displayName = ROW_LIST_VIEWPORT_NAME;
 // Content — the listbox `<ul>` (tabster arrow group + aria-label).
 //
 
-type ContentOwnProps = {
+type ContentProps = {
   /**
    * Accessible label for the listbox. Strongly recommended; assistive
    * tech announces this when focus enters the list.
@@ -208,17 +207,17 @@ const firstEnabledOption = (ul: HTMLElement | null): HTMLLIElement | null => {
   return ul.querySelector<HTMLLIElement>('[role="option"]:not([aria-disabled="true"])');
 };
 
-const Content = slottable<HTMLUListElement, ContentOwnProps>((props, forwardedRef) => {
+const Content = composable<HTMLUListElement, ContentProps>((props, forwardedRef) => {
   // Touch the context so Content fails loudly if used outside Root.
-  useListContext(ROW_LIST_CONTENT_NAME);
+  useRowListContext(ROW_LIST_CONTENT_NAME, undefined);
 
   // Tabster arrow-key navigation. `useTabster` auto-initializes the
   // runtime on first call, so no app/storybook-level setup is required.
-  // The data attributes returned here go onto the focusable container
-  // — the `<ul>` rendered by the primitive `<List>`.
+  // The data attributes returned here go onto the focusable container —
+  // the `<ul>` rendered by the primitive `<List>`.
   const arrowGroup = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
 
-  const { children, ...rest } = props as PropsWithChildren<ContentOwnProps & Record<string, unknown>>;
+  const { children, ...rest } = props as PropsWithChildren<ContentProps & Record<string, unknown>>;
 
   // When focus first enters the `<ul>` itself (e.g. user tabs in),
   // redirect into the current option (or the first enabled one) so
@@ -277,9 +276,9 @@ type RowProps = PropsWithChildren<{
 // see `ui-theme/src/css/components/selected.md`.
 const ROW_BASE = 'dx-hover dx-current px-3 py-2 cursor-pointer outline-none border-b border-separator last:border-b-0';
 
-const Row = slottable<HTMLLIElement, RowProps>((props, forwardedRef) => {
+const Row = composable<HTMLLIElement, RowProps>((props, forwardedRef) => {
   const { id, disabled, onClick, onFocus, children, ...rest } = props as RowProps & Record<string, unknown>;
-  const { currentId, setCurrent } = useListContext(ROW_NAME);
+  const { currentId, setCurrent } = useRowListContext(ROW_NAME, undefined);
   const isCurrent = currentId === id;
 
   const handleClick = useCallback(
@@ -342,10 +341,5 @@ const RowList = {
   Content,
 };
 
-export { RowList, Row };
-export type {
-  RootProps as RowListRootProps,
-  ViewportOwnProps as RowListViewportProps,
-  ContentOwnProps as RowListContentProps,
-  RowProps,
-};
+export { RowList, Row, createRowListScope };
+export type { RootProps as RowListRootProps, ViewportProps as RowListViewportProps, ContentProps as RowListContentProps, RowProps };
