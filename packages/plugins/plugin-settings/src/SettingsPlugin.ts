@@ -15,3 +15,5 @@ export const SettingsPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );
+
+export default SettingsPlugin;
