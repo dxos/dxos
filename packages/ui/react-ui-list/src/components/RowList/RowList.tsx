@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-// `RowList` — Radix-style compound navigation list.
+// `RowList` — Radix-style compound listbox / single-select picker.
 //
 // Compound shape (matches Radix Select / Toolbar / Tabs):
 //
-//   <RowList.Root currentId={…} onCurrentChange={…}>
+//   <RowList.Root selectedId={…} onSelectChange={…}>
 //     <RowList.Viewport thin padding>
 //       <RowList.Content aria-label='Tools'>
 //         <Row id='a'>…</Row>
@@ -16,33 +16,32 @@
 //   </RowList.Root>
 //
 //   - `Root`     — headless context provider (no DOM). Owns the
-//                  `currentId` model.
+//                  single-select `selectedId` model.
 //   - `Viewport` — `ScrollArea.Root` + `ScrollArea.Viewport`. Always
 //                  scrolls. Forwards ScrollArea knobs (`thin`, `padding`,
 //                  `centered`).
-//   - `Content`  — the `<ul>` holding the items. Carries the listbox
-//                  role, the tabster arrow-nav group, and the
-//                  `aria-label`.
-//   - `Row`      — option item (`<li>` with `aria-current` on the
-//                  current row, paired with `dx-current` styling).
+//   - `Content`  — the `<ul role="listbox">` holding the items. Carries
+//                  the tabster arrow-nav group and the `aria-label`.
+//   - `Row`      — `<li role="option">` with `aria-selected` on the
+//                  selected row, paired with `dx-selected` styling. See
+//                  `ui-theme/src/css/components/selected.md`.
 //
 // Single visual variant. Card-style rendering, denser/wider rows,
 // dividers, etc. are styling concerns layered on via `classNames` —
 // not separate components.
 //
-// Current vs selection — what THIS layer tracks:
+// Selection model:
 //
-//   This layer tracks "current" — the item the user has navigated to
-//   (via click, arrow keys, or focus). One item at a time.
-//   `aria-current="true"` on the row, paired with `dx-current` styling.
+//   This layer ships single-select (`selectedId: string | undefined`).
+//   Selection follows focus, so arrow keys + click both update it. This
+//   matches the codebase's existing `useSelected(_, 'single')` convention
+//   from `@dxos/react-ui-attention`.
 //
-//   "Selection" is a deliberately separate concern: an explicit action
-//   on top of navigation (e.g. clicking a checkbox, double-clicking,
-//   pressing Enter to commit), capable of multi-select. When that lands
-//   it'll be a separate model property — likely a reactive atom owning
-//   `Set<string>` — and pair with `aria-selected` / `dx-selected`. The
-//   two can coexist on the same row (current ≠ selected). For now this
-//   layer offers only the navigation half.
+//   Multi-select (`selectedIds: ReadonlySet<string>` + per-row checkbox
+//   affordance) is a future expansion point. When it lands it'll likely
+//   plumb through `react-ui-attention`'s `SelectionManager` for
+//   cross-context state sharing — but RowList itself can stay
+//   provider-agnostic, with consumers wiring it as they need.
 //
 // Composability:
 //
@@ -65,14 +64,13 @@
 //   ArrowDown move focus among options.
 //
 //   When focus first lands on the `<ul>` itself (e.g. user tabs in),
-//   `Content` redirects focus into the current option (or the first
+//   `Content` redirects focus into the selected option (or the first
 //   one) so arrow keys have an immediate starting point.
 //
 // What this layer deliberately does NOT do:
 //
 //   - Virtualization or drag-and-drop. Reach for `@dxos/react-ui-mosaic`.
-//   - Multi-select / explicit-action selection (see "Current vs
-//     selection" above; future expansion point).
+//   - Multi-select (see "Selection model" above; future expansion).
 
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { createContextScope } from '@radix-ui/react-context';
@@ -96,10 +94,10 @@ const ROW_NAME = 'List.Row';
 //
 
 type RowListContextValue = {
-  /** The currently-navigated / focused option id. */
-  currentId?: string;
-  /** Set the current option (called from click, arrow nav, focus). */
-  setCurrent: (id: string) => void;
+  /** The currently-selected option id. */
+  selectedId?: string;
+  /** Set the selected option (called from click, arrow nav, focus). */
+  setSelected: (id: string) => void;
 };
 
 const [createRowListContext, createRowListScope] = createContextScope(ROW_LIST_NAME, []);
@@ -110,36 +108,36 @@ const [RowListProvider, useRowListContext] = createRowListContext<RowListContext
 //
 
 type RootProps = PropsWithChildren<{
-  /** Currently-navigated option id (controlled). */
-  currentId?: string;
-  /** Initial current option for uncontrolled mode. */
-  defaultCurrentId?: string;
+  /** Currently-selected option id (controlled). */
+  selectedId?: string;
+  /** Initial selected option for uncontrolled mode. */
+  defaultSelectedId?: string;
   /**
-   * Called when the user navigates to a different option (click, arrow
-   * keys, focus). Receives the option's `id` prop.
+   * Called when the user picks a different option (click, arrow keys,
+   * focus). Receives the option's `id` prop.
    */
-  onCurrentChange?: (id: string) => void;
+  onSelectChange?: (id: string) => void;
 }>;
 
-const Root = ({ currentId, defaultCurrentId, onCurrentChange, children }: RootProps) => {
+const Root = ({ selectedId, defaultSelectedId, onSelectChange, children }: RootProps) => {
   // `useControllableState`'s `onChange` is typed `(state: string | undefined) => void`,
-  // but our public `onCurrentChange` is `(id: string) => void` (an `id` is always
+  // but our public `onSelectChange` is `(id: string) => void` (an `id` is always
   // a string when emitted). Wrap to satisfy the type without leaking
   // `undefined` to callers.
   const [resolved, setResolved] = useControllableState<string | undefined>({
-    prop: currentId,
-    defaultProp: defaultCurrentId,
+    prop: selectedId,
+    defaultProp: defaultSelectedId,
     onChange: (next) => {
       if (next !== undefined) {
-        onCurrentChange?.(next);
+        onSelectChange?.(next);
       }
     },
   });
 
-  const setCurrent = useCallback((id: string) => setResolved(id), [setResolved]);
+  const setSelected = useCallback((id: string) => setResolved(id), [setResolved]);
 
   return (
-    <RowListProvider scope={undefined} currentId={resolved} setCurrent={setCurrent}>
+    <RowListProvider scope={undefined} selectedId={resolved} setSelected={setSelected}>
       {children}
     </RowListProvider>
   );
@@ -215,7 +213,7 @@ const Content = composable<HTMLUListElement, ContentProps>((props, forwardedRef)
   const { children, ...rest } = props as PropsWithChildren<ContentProps & Record<string, unknown>>;
 
   // When focus first enters the `<ul>` itself (e.g. user tabs in),
-  // redirect into the current option (or the first enabled one) so
+  // redirect into the selected option (or the first enabled one) so
   // arrow keys have an immediate starting point. Tabster doesn't do
   // this — it manages traversal once focus is already on a child.
   const handleFocus = useCallback((event: FocusEvent<HTMLUListElement>) => {
@@ -223,16 +221,17 @@ const Content = composable<HTMLUListElement, ContentProps>((props, forwardedRef)
       return;
     }
     const ul = event.currentTarget;
-    const current = ul.querySelector<HTMLLIElement>('[role="option"][aria-current="true"]:not([aria-disabled="true"])');
-    const target = current ?? firstEnabledOption(ul);
+    const selected = ul.querySelector<HTMLLIElement>(
+      '[role="option"][aria-selected="true"]:not([aria-disabled="true"])',
+    );
+    const target = selected ?? firstEnabledOption(ul);
     target?.focus();
   }, []);
 
   // Render via the primitive `<List>` so descendant `<ListItem>`s
   // satisfy their Radix context-scope check. We don't pass `selectable`
-  // — this layer tracks `aria-current`, not `aria-selected` (see header
-  // "Current vs selection"); the primitive only sets `aria-selected`
-  // when `selectable` is true.
+  // — we set `role='listbox'` and `aria-selected` ourselves in `Row`,
+  // so the primitive's listbox-mode plumbing isn't needed.
   const composed = composableProps<HTMLUListElement>(rest, { classNames: 'flex flex-col' });
   return (
     <List
@@ -255,48 +254,48 @@ Content.displayName = ROW_LIST_CONTENT_NAME;
 //
 
 type RowProps = PropsWithChildren<{
-  /** Stable identifier; matched against the parent's `currentId`. */
+  /** Stable identifier; matched against the parent's `selectedId`. */
   id: string;
-  /** Disable the row — focusable but doesn't update current, dimmed. */
+  /** Disable the row — focusable but doesn't update selection, dimmed. */
   disabled?: boolean;
-  /** Optional click handler in addition to navigation. */
+  /** Optional click handler in addition to selection. */
   onClick?: (event: MouseEvent<HTMLLIElement>) => void;
-  /** Optional focus handler in addition to current-follows-focus. */
+  /** Optional focus handler in addition to selection-follows-focus. */
   onFocus?: (event: FocusEvent<HTMLLIElement>) => void;
 }>;
 
-// `dx-current` pairs with `aria-current="true"` (set per-option below);
+// `dx-selected` pairs with `aria-selected="true"` (set per-option below);
 // see `ui-theme/src/css/components/selected.md`.
-const ROW_BASE = 'dx-hover dx-current px-3 py-2 cursor-pointer outline-none border-b border-separator last:border-b-0';
+const ROW_BASE = 'dx-hover dx-selected px-3 py-2 cursor-pointer outline-none border-b border-separator last:border-b-0';
 
 const Row = composable<HTMLLIElement, RowProps>((props, forwardedRef) => {
   const { id, disabled, onClick, onFocus, children, ...rest } = props as RowProps & Record<string, unknown>;
-  const { currentId, setCurrent } = useRowListContext(ROW_NAME, undefined);
-  const isCurrent = currentId === id;
+  const { selectedId, setSelected } = useRowListContext(ROW_NAME, undefined);
+  const isSelected = selectedId === id;
 
   const handleClick = useCallback(
     (event: MouseEvent<HTMLLIElement>) => {
       if (disabled) {
         return;
       }
-      setCurrent(id);
+      setSelected(id);
       onClick?.(event);
     },
-    [disabled, id, setCurrent, onClick],
+    [disabled, id, setSelected, onClick],
   );
 
-  // Current-follows-focus: arrow nav (and any focus path) updates
-  // `currentId` so the model stays in sync with what the user is
+  // Selection-follows-focus: arrow nav (and any focus path) updates
+  // `selectedId` so the model stays in sync with what the user is
   // looking at. Disabled rows are still focusable for screen-reader
-  // announcement but don't update the current model.
+  // announcement but don't update the selection model.
   const handleFocus = useCallback(
     (event: FocusEvent<HTMLLIElement>) => {
-      if (!disabled && currentId !== id) {
-        setCurrent(id);
+      if (!disabled && selectedId !== id) {
+        setSelected(id);
       }
       onFocus?.(event);
     },
-    [disabled, currentId, id, setCurrent, onFocus],
+    [disabled, selectedId, id, setSelected, onFocus],
   );
 
   const composed = composableProps<HTMLLIElement>(rest, {
@@ -304,14 +303,14 @@ const Row = composable<HTMLLIElement, RowProps>((props, forwardedRef) => {
   });
 
   // Per WAI-ARIA APG listbox guidance, disabled options remain
-  // keyboard-navigable for SR announcement; the current model is not
+  // keyboard-navigable for SR announcement; the selection model is not
   // updated for disabled rows (see `handleFocus` / `handleClick` above).
   return (
     <ListItem
       {...composed}
       role='option'
       tabIndex={0}
-      aria-current={isCurrent ? 'true' : undefined}
+      aria-selected={isSelected}
       aria-disabled={disabled || undefined}
       onClick={handleClick}
       onFocus={handleFocus}
@@ -324,18 +323,28 @@ const Row = composable<HTMLLIElement, RowProps>((props, forwardedRef) => {
 
 Row.displayName = ROW_NAME;
 
+/**
+ * Read selection state for a single id, from inside any descendant of
+ * `<RowList.Root>`. Returns `true` when the row is currently selected.
+ * Lets composing components (e.g. `Listbox.OptionIndicator`) react to
+ * selection without re-rendering on unrelated changes.
+ */
+const useRowListSelection = (id: string): boolean => {
+  const { selectedId } = useRowListContext('useRowListSelection', undefined);
+  return selectedId === id;
+};
+
 //
 // Public namespace.
 //
 
-// TODO(burdon): Rename List and replace existing List component.
 const RowList = {
   Root,
   Viewport,
   Content,
 };
 
-export { RowList, Row, createRowListScope };
+export { RowList, Row, createRowListScope, useRowListSelection };
 export type {
   RootProps as RowListRootProps,
   ViewportProps as RowListViewportProps,

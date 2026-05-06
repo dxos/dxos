@@ -51,7 +51,7 @@ export const ToolList = ({ tools, selected, onSelect, classNames }: ToolListProp
   );
 
   return (
-    <RowList.Root currentId={selected ?? undefined} onCurrentChange={handleCurrentChange}>
+    <RowList.Root selectedId={selected ?? undefined} onSelectChange={handleCurrentChange}>
       <RowList.Viewport classNames={classNames} thin>
         <RowList.Content aria-label='MCP tools'>
           {entries.map(([name, tool]) => (

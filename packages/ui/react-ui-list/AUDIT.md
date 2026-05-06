@@ -1,6 +1,24 @@
 # List & Selection Components — Audit and Rationalization Plan
 
-Status: draft. No code changes proposed in this branch — this document is the deliverable.
+Status: living. Phases 1-4 + parts of 5 + parts of 6 have shipped; sections
+below describe the proposed end-state with deferred items called out
+explicitly. Updates as of the consolidation PR:
+
+- **`@dxos/react-ui-search` is gone.** `Listbox` / `Combobox` /
+  `SearchList` / `SearchPanel` moved to `@dxos/react-ui-list`;
+  `SearchStack` moved to `@dxos/react-ui-mosaic`.
+- **`RowList` uses `aria-selected` + `dx-selected`** (renamed from the
+  draft's `aria-current` + `dx-current`). The codebase's existing
+  `useSelected(_, 'single')` convention from `@dxos/react-ui-attention`
+  treats single-mode selection as the same concept; the original
+  "current ≠ selection" distinction was an over-design. `aria-current`
+  remains reserved for "you-are-here" navigation patterns (navtree,
+  breadcrumbs).
+- **`Listbox` composes `RowList`** internally (Phase 5a). Same public
+  API, less duplicate code.
+- **`SearchList` does NOT yet compose `RowList`** — 545 lines with
+  debounce / auto-select / scroll-into-view semantics that need careful
+  migration. Deferred to a follow-up PR.
 
 Scope: every "list-shaped" component layer in `packages/ui/*` plus consumer
 patterns in `packages/plugins/*` and `packages/apps/composer-app`. Tables

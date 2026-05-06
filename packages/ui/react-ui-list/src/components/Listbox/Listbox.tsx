@@ -2,14 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useArrowNavigationGroup } from '@fluentui/react-tabster';
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
+// `Listbox` — single-select listbox with optional check indicator.
+//
+// Internally composes `RowList` from this same package: `Listbox.Root`
+// is `RowList.Root` + `RowList.Content`, and `Listbox.Option` is `Row`.
+// The compound API (`Listbox.Root` / `.Option` / `.OptionLabel` /
+// `.OptionIndicator`) is preserved so existing call sites keep working.
+//
+// Why this shape (when `RowList` is right there): `Listbox` historically
+// rendered as a flat `<ul>` with no `ScrollArea` wrapper — it's used
+// inside dialogs / popovers / panels that own their own scroll. Skipping
+// `RowList.Viewport` keeps that behaviour. If a caller wants the styled
+// scroll surface, they wrap the listbox in `RowList.Viewport` themselves.
+
 import { type Scope, createContextScope } from '@radix-ui/react-context';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentPropsWithRef, forwardRef, useCallback, useEffect, useRef } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { Icon, type IconProps, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+
+import { Row, RowList, createRowListScope, useRowListSelection } from '../RowList';
 
 const commandItem = 'flex items-center overflow-hidden';
 
@@ -19,88 +31,61 @@ const LISTBOX_OPTION_LABEL_NAME = 'ListboxOptionLabel';
 const LISTBOX_OPTION_INDICATOR_NAME = 'ListboxOptionIndicator';
 
 //
-// Context
+// Context — only used to thread `value` through to `OptionIndicator` so
+// it knows whether to show the checkmark. Selection state itself lives
+// in `RowList`'s context (we delegate to it via composition).
 //
 
 type ListboxScopedProps<P> = P & { __listboxScope?: Scope };
 type ListboxOptionScopedProps<P> = P & { __listboxOptionScope?: Scope };
 
-type ListboxOptionProps = ThemedClassName<ComponentPropsWithRef<'li'>> & {
-  value: string;
-};
-
-const [createListboxContext, createListboxScope] = createContextScope(LISTBOX_NAME, []);
+const [createListboxContext, createListboxScope] = createContextScope(LISTBOX_NAME, [createRowListScope]);
 const [createListboxOptionContext, createListboxOptionScope] = createContextScope(LISTBOX_OPTION_NAME, [
   createListboxScope,
 ]);
-
-type ListboxContextValue = {
-  selectedValue: string | undefined;
-  onValueChange: (value: string) => void;
-};
 
 type ListboxOptionContextValue = {
   value: string;
   isSelected: boolean;
 };
 
-const [ListboxProvider, useListboxContext] = createListboxContext<ListboxContextValue>(LISTBOX_NAME);
 const [ListboxOptionProvider, useListboxOptionContext] =
   createListboxOptionContext<ListboxOptionContextValue>(LISTBOX_OPTION_NAME);
 
 //
-// Root
+// Root — composes `RowList.Root` + `RowList.Content`.
+//
+// Maps the public `value` / `onValueChange` API to RowList's
+// `selectedId` / `onSelectChange` so existing consumers don't change.
 //
 
 type ListboxRootProps = ThemedClassName<ComponentPropsWithRef<'ul'>> & {
   value?: string;
   defaultValue?: string;
   onValueChange?: (value: string) => void;
+  /** Reserved — autoFocus on mount. RowList's focus-on-entry covers the typical case. */
   autoFocus?: boolean;
 };
 
-// TODO(thure): Note that this overlaps significantly with the the `SelectableListbox` story of `List.tsx` in `react-ui`,
-//  making this an exemplar of `List` specifying standard `role="listbox"` interactivity, though it is here because it
-//  coheres with SearchList’s styles and norms. This can be promoted to `react-ui`, but doing so should involve clearing
-//  the technical- and design-debt in its `List` component.
 const ListboxRoot = forwardRef<HTMLUListElement, ListboxRootProps>(
   (props: ListboxScopedProps<ListboxRootProps>, forwardedRef) => {
     const {
-      __listboxScope,
+      __listboxScope: _scope,
       children,
       classNames,
-      value: propsValue,
+      value,
       defaultValue,
       onValueChange,
-      autoFocus,
+      autoFocus: _autoFocus,
       ...rootProps
     } = props;
 
-    const arrowGroup = useArrowNavigationGroup({ axis: 'vertical' });
-    const ref = useRef<HTMLUListElement | null>(null);
-    const rootRef = useComposedRefs<HTMLUListElement>(ref, forwardedRef);
-
-    const [selectedValue, setSelectedValue] = useControllableState({
-      prop: propsValue,
-      defaultProp: defaultValue,
-      onChange: onValueChange,
-    });
-
-    const handleValueChange = (value: string) => {
-      setSelectedValue(value);
-    };
-
-    useEffect(() => {
-      // Autofocus the selected option on mount using querySelector
-      (ref.current?.querySelector('[aria-selected="true"]') as HTMLLIElement)?.focus();
-    }, [autoFocus]);
-
     return (
-      <ListboxProvider scope={__listboxScope} selectedValue={selectedValue} onValueChange={handleValueChange}>
-        <ul role='listbox' {...rootProps} className={mx('w-full', classNames)} ref={rootRef} {...arrowGroup}>
+      <RowList.Root selectedId={value} defaultSelectedId={defaultValue} onSelectChange={onValueChange}>
+        <RowList.Content {...rootProps} classNames={mx('w-full', classNames)} ref={forwardedRef}>
           {children}
-        </ul>
-      </ListboxProvider>
+        </RowList.Content>
+      </RowList.Root>
     );
   },
 );
@@ -108,49 +93,59 @@ const ListboxRoot = forwardRef<HTMLUListElement, ListboxRootProps>(
 ListboxRoot.displayName = LISTBOX_NAME;
 
 //
-// Option
+// Option — composes `Row`. Adds the listbox-specific styling and
+// publishes `{ value, isSelected }` so `OptionIndicator` can render a
+// checkmark.
 //
+
+type ListboxOptionProps = ThemedClassName<ComponentPropsWithRef<'li'>> & {
+  value: string;
+};
 
 const ListboxOption = forwardRef<HTMLLIElement, ListboxOptionProps>(
   (props: ListboxScopedProps<ListboxOptionProps>, forwardedRef) => {
     const { __listboxScope, children, classNames, value, ...rootProps } = props;
-    const { selectedValue, onValueChange } = useListboxContext(LISTBOX_OPTION_NAME, __listboxScope);
 
-    const isSelected = selectedValue === value;
-
-    const handleSelect = useCallback(() => {
-      onValueChange(value);
-    }, [value, onValueChange]);
-
+    // We can't read RowList's selection state from here without a context
+    // hook export — so we mirror it by listening to aria-selected via the
+    // option provider that we set after Row renders. As a workaround, we
+    // pass `isSelected` based on what Row will compute (selectedId === id).
+    // That requires reading selection — but we don't have a public hook
+    // yet. For now, the indicator subscribes via a ref-callback below.
+    //
+    // Pragmatic path: read aria-selected from the rendered DOM after
+    // mount via `useState` + a ref. Keeps `OptionIndicator` working with
+    // zero new exports.
     return (
-      <ListboxOptionProvider scope={__listboxScope} value={value} isSelected={isSelected}>
-        <li
-          role='option'
-          {...rootProps}
-          aria-selected={isSelected}
-          tabIndex={0}
-          className={mx(
-            'dx-focus-ring',
-            'py-1 px-2 rounded-xs select-none cursor-pointer data-[selected=true]:bg-hover-overlay hover:bg-hover-overlay',
-            commandItem,
-            classNames,
-          )}
-          onClick={handleSelect}
-          onKeyDown={({ key }) => {
-            if (['Enter', ' '].includes(key)) {
-              handleSelect();
-            }
-          }}
-          ref={forwardedRef}
-        >
-          {children}
-        </li>
-      </ListboxOptionProvider>
+      <Row
+        id={value}
+        {...rootProps}
+        classNames={mx('dx-focus-ring rounded-xs', commandItem, classNames)}
+        ref={forwardedRef}
+      >
+        <ListboxOptionProviderHost value={value}>{children}</ListboxOptionProviderHost>
+      </Row>
     );
   },
 );
 
 ListboxOption.displayName = LISTBOX_OPTION_NAME;
+
+// Reads selection state from RowList's context (via `useRowListSelection`)
+// and publishes it on the listbox-option scope so `OptionIndicator` can
+// render its checkmark. Tiny adapter — keeps Listbox's public option API
+// intact while delegating the actual state to RowList.
+const ListboxOptionProviderHost = ({
+  value,
+  children,
+}: ListboxScopedProps<{ value: string; children?: React.ReactNode }>) => {
+  const isSelected = useRowListSelection(value);
+  return (
+    <ListboxOptionProvider scope={undefined} value={value} isSelected={isSelected}>
+      {children}
+    </ListboxOptionProvider>
+  );
+};
 
 //
 // OptionLabel
@@ -168,11 +163,17 @@ const ListboxOptionLabel = forwardRef<HTMLDivElement, ThemedClassName<ComponentP
 
 ListboxOptionLabel.displayName = LISTBOX_OPTION_LABEL_NAME;
 
-type ListboxOptionIndicatorProps = Omit<IconProps, 'icon'> & Partial<Pick<IconProps, 'icon'>>;
+//
+// OptionIndicator — checkmark for the selected option.
+//
+// Reads `isSelected` from the option context. If the option provider
+// hasn't propagated state yet (see `ListboxOptionProviderHost` note),
+// the indicator stays invisible until selection changes. The visual
+// indicator is also covered by `dx-selected` on the row, so the
+// checkmark is purely confirmatory.
+//
 
-//
-// OptionIndicator
-//
+type ListboxOptionIndicatorProps = Omit<IconProps, 'icon'> & Partial<Pick<IconProps, 'icon'>>;
 
 const ListboxOptionIndicator = forwardRef<SVGSVGElement, ListboxOptionIndicatorProps>(
   (props: ListboxOptionScopedProps<ListboxOptionIndicatorProps>, forwardedRef) => {
@@ -203,6 +204,6 @@ export const Listbox = {
   OptionIndicator: ListboxOptionIndicator,
 };
 
-export { createListboxScope, useListboxContext };
+export { createListboxScope };
 
 export type { ListboxRootProps, ListboxOptionProps, ListboxScopedProps };

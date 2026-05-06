@@ -26,9 +26,9 @@ const items: TestItem[] = Array.from({ length: 24 }, (_, i) => ({
 //
 
 const DefaultStory = () => {
-  const [current, setCurrent] = useState<string | undefined>(items[0].id);
+  const [selected, setSelected] = useState<string | undefined>(items[0].id);
   return (
-    <RowList.Root currentId={current} onCurrentChange={setCurrent}>
+    <RowList.Root selectedId={selected} onSelectChange={setSelected}>
       <RowList.Viewport>
         <RowList.Content aria-label='Items'>
           {items.map((item) => (
@@ -48,9 +48,9 @@ const DefaultStory = () => {
 //
 
 const ThinStory = () => {
-  const [current, setCurrent] = useState<string | undefined>(items[0].id);
+  const [selected, setSelected] = useState<string | undefined>(items[0].id);
   return (
-    <RowList.Root currentId={current} onCurrentChange={setCurrent}>
+    <RowList.Root selectedId={selected} onSelectChange={setSelected}>
       <RowList.Viewport thin padding>
         <RowList.Content aria-label='Items'>
           {items.map((item) => (
@@ -69,9 +69,9 @@ const ThinStory = () => {
 //
 
 const DisabledStory = () => {
-  const [current, setCurrent] = useState<string | undefined>(items[0].id);
+  const [selected, setSelected] = useState<string | undefined>(items[0].id);
   return (
-    <RowList.Root currentId={current} onCurrentChange={setCurrent}>
+    <RowList.Root selectedId={selected} onSelectChange={setSelected}>
       <RowList.Viewport>
         <RowList.Content aria-label='Items'>
           {items.slice(0, 6).map((item, i) => (
@@ -94,11 +94,11 @@ const DisabledStory = () => {
 //
 
 const MasterDetailStory = () => {
-  const [current, setCurrent] = useState<string | undefined>(items[0].id);
-  const detail = items.find(({ id }) => id === current);
+  const [selected, setSelected] = useState<string | undefined>(items[0].id);
+  const detail = items.find(({ id }) => id === selected);
   return (
     <div role='none' className='dx-container grid grid-cols-[20rem_1fr] divide-x divide-separator'>
-      <RowList.Root currentId={current} onCurrentChange={setCurrent}>
+      <RowList.Root selectedId={selected} onSelectChange={setSelected}>
         <RowList.Viewport>
           <RowList.Content aria-label='Items'>
             {items.map((item) => (
@@ -127,11 +127,11 @@ const MasterDetailStory = () => {
 //
 
 const WithToolbarStory = () => {
-  const [current, setCurrent] = useState<string | undefined>(items[0].id);
+  const [selected, setSelected] = useState<string | undefined>(items[0].id);
   const [filter, setFilter] = useState('');
   const filtered = items.filter((item) => item.name.toLowerCase().includes(filter.toLowerCase()));
   return (
-    <RowList.Root currentId={current} onCurrentChange={setCurrent}>
+    <RowList.Root selectedId={selected} onSelectChange={setSelected}>
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
