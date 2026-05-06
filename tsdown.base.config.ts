@@ -6,11 +6,9 @@
 // (adjust relative path based on package depth)
 //
 
-import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 import { type UserConfig } from 'tsdown';
-import ts from 'typescript';
 
 // NOTE: Imported by relative path on purpose. Going through `@dxos/vite-plugin-log`
 // would force every ts-build package to compile the plugin first, which introduces
@@ -213,125 +211,6 @@ export const urlImportPlugin = () =>
     },
   }) as any;
 
-/**
- * Writes a standalone temp tsconfig for the DTS-generation pass.
- *
- * Using `extends` is intentionally avoided: the base tsconfig carries
- * `declarationDir` / `outDir` that conflict with the outDir we pass to tsc.
- * Instead we inline the minimum settings needed and resolve include/exclude
- * paths to absolute paths so the file works from an arbitrary temp directory.
- *
- * Note: tsdown's built-in DTS options were evaluated but both have limitations
- * in this codebase — rolldown-plugin-dts (without tsgo) triggers a
- * `ts.createLanguageService` crash ("Lexical environment is suspended") on
- * several packages, and the tsgo path does not yet resolve `#`-prefixed
- * package.json `imports` fields used by crypto, log, and many plugins.
- * The tsc `createProgram` API below avoids both issues.
- */
-const writeDtsTsconfig = async (cwd: string): Promise<string> => {
-  const tmp = await mkdtemp(join(tmpdir(), 'dx-tsdown-'));
-  const tmpTsconfig = join(tmp, 'tsconfig.json');
-
-  // Always compile only the src/ directory for declaration generation.
-  const srcDir = resolve(cwd, 'src');
-
-  const config = {
-    compilerOptions: {
-      target: 'esnext',
-      module: 'preserve',
-      moduleResolution: 'bundler',
-      jsx: 'react-jsx',
-      declaration: true,
-      emitDeclarationOnly: true,
-      noEmitOnError: false,
-      strict: true,
-      skipLibCheck: true,
-      resolvePackageJsonImports: true,
-      resolvePackageJsonExports: true,
-      allowImportingTsExtensions: true,
-      composite: false,
-      incremental: false,
-      lib: ['DOM', 'ESNext'],
-      types: ['node'],
-      // Explicit rootDir so output is dist/types/index.d.ts (not dist/types/src/index.d.ts).
-      rootDir: srcDir,
-    },
-    include: [srcDir],
-    references: [],
-  };
-
-  await writeFile(tmpTsconfig, JSON.stringify(config, null, 2));
-  return tmpTsconfig;
-};
-
-const TSC_FORMAT_HOST: ts.FormatDiagnosticsHost = {
-  getCurrentDirectory: () => process.cwd(),
-  getCanonicalFileName: (f) => f,
-  getNewLine: () => '\n',
-};
-
-/**
- * Runs `tsc --emitDeclarationOnly` using the TypeScript compiler API.
- */
-const runTscDts = async (tmpTsconfig: string, outDir: string): Promise<void> => {
-  const configFile = ts.readConfigFile(tmpTsconfig, ts.sys.readFile);
-  if (configFile.error) {
-    console.error(ts.formatDiagnostic(configFile.error, TSC_FORMAT_HOST));
-    return;
-  }
-
-  const parsed = ts.parseJsonConfigFileContent(configFile.config, ts.sys, dirname(tmpTsconfig));
-  const options: ts.CompilerOptions = {
-    ...parsed.options,
-    outDir,
-    declarationDir: outDir,
-    noEmit: false,
-    emitDeclarationOnly: true,
-    noEmitOnError: false,
-  };
-
-  await mkdir(outDir, { recursive: true });
-
-  const host = ts.createCompilerHost(options, true);
-  const program = ts.createProgram(parsed.fileNames, options, host);
-  program.emit();
-
-  const diag = ts.getPreEmitDiagnostics(program);
-  const errors = [...diag].filter((d) => d.category === ts.DiagnosticCategory.Error);
-  if (errors.length > 0) {
-    console.warn(`[dx-tsdown] tsc: ${errors.length} type error(s) (declarations still emitted)`);
-  }
-
-  // tsc emits .d.ts files next to source files when those files are outside
-  // rootDir (e.g. data/ files dynamically imported from src/). Delete them.
-  const srcDir = options.rootDir ?? '';
-  await Promise.all(
-    program
-      .getSourceFiles()
-      .filter((f) => !f.fileName.includes('/node_modules/') && !f.fileName.startsWith(srcDir))
-      .map(async (f) => {
-        const dtsPath = f.fileName.replace(/\.tsx?$/, '.d.ts');
-        try {
-          await access(dtsPath);
-          await rm(dtsPath);
-        } catch {
-          // File doesn't exist — nothing to clean up.
-        }
-      }),
-  );
-};
-
-const generateDts = async (cwd: string): Promise<void> => {
-  const dtsTsconfig = await writeDtsTsconfig(cwd);
-  const dtsTmpDir = join(dtsTsconfig, '..');
-  const dtsOutDir = resolve(cwd, 'dist/types');
-  try {
-    await runTscDts(dtsTsconfig, dtsOutDir);
-  } finally {
-    await rm(dtsTmpDir, { recursive: true, force: true });
-  }
-};
-
 const sharedConfig = (bundlePackages: string[]): Partial<UserConfig> => ({
   skipNodeModulesBundle: true,
   // Include trailing-slash variants (e.g. 'util/') so rolldown bundles them alongside 'util'.
@@ -352,7 +231,8 @@ const sharedConfig = (bundlePackages: string[]): Partial<UserConfig> => ({
  * Creates tsdown UserConfig array for a DXOS package.
  *
  * Includes all standard DXOS plugins (workspace-external, raw-import, url-import,
- * log-meta) and triggers tsc declaration generation on success.
+ * log-meta) and a dedicated DTS config entry that uses tsgo via rolldown-plugin-dts
+ * to generate bundled type declarations in dist/types/.
  */
 export const defineConfig = (options: DxTsdownOptions = {}): UserConfig[] => {
   const {
@@ -364,7 +244,6 @@ export const defineConfig = (options: DxTsdownOptions = {}): UserConfig[] => {
     outputPath = 'dist/lib',
   } = options;
 
-  const cwd = process.cwd();
   const logPlugin = rolldownLogMetaPlugin({ to_transform: DEFAULT_LOG_META_TRANSFORM_SPEC }) as any;
   const wsExternalPlugin = workspaceExternalPlugin(bundlePackages);
   const rawPlugin = rawImportPlugin();
@@ -424,19 +303,25 @@ export const defineConfig = (options: DxTsdownOptions = {}): UserConfig[] => {
     });
   }
 
-  // Run tsc DTS generation on success of the first config.
-  if (configs.length > 0) {
-    const prev = configs[0].onSuccess;
-    configs[0] = {
-      ...configs[0],
-      onSuccess: async (resolvedConfig, signal) => {
-        if (typeof prev === 'function') {
-          await prev(resolvedConfig, signal);
-        }
-        await generateDts(cwd);
-      },
-    };
-  }
+  // Dedicated DTS build: tsgo generates per-file declarations, rolldown-plugin-dts
+  // bundles them into a single dist/types/index.d.ts. emitDtsOnly suppresses JS output.
+  // fixedExtension: false ensures the output is .d.ts (not .d.mts).
+  // rawPlugin handles ?raw imports in handwritten .d.ts files (e.g. src/templates/index.d.ts).
+  // wsExternalPlugin is intentionally omitted: rolldown-plugin-dts uses its own resolver (oxc)
+  // for DTS bundling and needs to read @dxos/* type files. The wsExternalPlugin's pre-order
+  // resolveId hook would intercept @dxos/* imports before rolldown-plugin-dts can read them,
+  // causing complex external types (e.g. Type.Obj<{...}>) to collapse to `any` in shared chunks.
+  configs.push({
+    ...base,
+    entry,
+    platform: 'neutral',
+    format: 'esm',
+    outDir: join(dirname(outputPath), 'types'),
+    dts: { tsgo: true, emitDtsOnly: true } as any,
+    plugins: [rawPlugin],
+    sourcemap: false,
+    fixedExtension: false,
+  });
 
   return configs;
 };

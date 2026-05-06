@@ -18,7 +18,7 @@
         "browser": "./src/platform/browser/index.ts",
         "default": "./src/platform/node/index.ts"
       },
-      "types": "./dist/types/platform/node/index.d.ts",
+      "types": "./src/platform/node/index.ts",
       "browser": "./dist/lib/browser/platform/browser/index.mjs",
       "default": "./dist/lib/node-esm/platform/node/index.mjs"
     },
@@ -27,7 +27,7 @@
         "browser": "./src/processors/console-stub.ts",
         "default": "./src/processors/console-processor.ts"
       },
-      "types": "./dist/types/processors/console-processor.d.ts",
+      "types": "./src/processors/console-processor.ts",
       "browser": "./dist/lib/browser/processors/console-stub.mjs",
       "default": "./dist/lib/node-esm/processors/console-processor.mjs"
     }

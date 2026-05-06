@@ -6,7 +6,7 @@ import anthropic from './anthropic.ts?raw';
 import chat from './chat.ts?raw';
 import chessBot from './chess-bot.ts?raw';
 import commentary from './commentary.ts?raw';
-import dataGenerator from './data-generator.ts?raw';
+import _dataGenerator from './data-generator.ts?raw';
 import discord from './discord.ts?raw';
 import email from './email.ts?raw';
 import forexEffect from './forex-effect.ts?raw';
@@ -16,7 +16,7 @@ import ping from './ping.ts?raw';
 
 const removeHeader = (str: string) => str.split('\n').slice(4).join('\n');
 
-export { dataGenerator };
+export const dataGenerator: string = _dataGenerator;
 
 export type Template = {
   id: string;
@@ -74,7 +74,7 @@ export const templates = [
   {
     id: 'org.dxos.script.data-generator',
     name: 'Data Generator',
-    source: removeHeader(dataGenerator),
+    source: removeHeader(_dataGenerator),
     presetId: 'org.dxos.function.data-generator',
   },
   {

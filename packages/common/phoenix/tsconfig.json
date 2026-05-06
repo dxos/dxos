@@ -1,7 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "declarationDir": "dist/types",
     "types": [
       "@dxos/typings",
       "node"

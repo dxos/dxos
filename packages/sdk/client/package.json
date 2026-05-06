@@ -15,12 +15,12 @@
   "imports": {
     "#opfs-worker": {
       "source": "./src/worker/opfs-worker.ts",
-      "types": "./dist/types/worker/opfs-worker.d.ts",
+      "types": "./src/worker/opfs-worker.ts",
       "browser": "./dist/lib/browser/worker/opfs-worker.mjs"
     },
     "#coordinator-worker": {
       "source": "./src/services/dedicated/coordinator-worker-entrypoint.ts",
-      "types": "./dist/types/services/dedicated/coordinator-worker-entrypoint.d.ts",
+      "types": "./src/services/dedicated/coordinator-worker-entrypoint.ts",
       "browser": "./dist/lib/browser/services/dedicated/coordinator-worker-entrypoint.mjs",
       "node": "./dist/lib/node-esm/services/dedicated/coordinator-worker-entrypoint.mjs"
     }

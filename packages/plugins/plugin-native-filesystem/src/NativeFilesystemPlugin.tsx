@@ -38,3 +38,5 @@ export const NativeFilesystemPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default NativeFilesystemPlugin;

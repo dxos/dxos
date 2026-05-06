@@ -35,6 +35,7 @@
     "test": "vitest run --passWithNoTests --project=node"
   },
   "devDependencies": {
+    "@dxos/log": "workspace:*",
     "@oxc-project/types": "catalog:",
     "rolldown": "catalog:",
     "vite": "catalog:",

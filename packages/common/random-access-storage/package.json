@@ -18,7 +18,7 @@
         "browser": "./src/browser/index.ts",
         "default": "./src/node/index.ts"
       },
-      "types": "./dist/types/node/index.d.ts",
+      "types": "./src/node/index.ts",
       "browser": "./dist/lib/browser/browser/index.mjs",
       "default": "./dist/lib/node-esm/node/index.mjs"
     }

@@ -38,6 +38,7 @@
   "dependencies": {
     "@dxos/effect-zod": "workspace:*",
     "@dxos/introspect": "workspace:*",
+    "@dxos/introspect-tools": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
     "@modelcontextprotocol/sdk": "catalog:",

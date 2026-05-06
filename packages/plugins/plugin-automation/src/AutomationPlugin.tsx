@@ -25,3 +25,5 @@ export const AutomationPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default AutomationPlugin;

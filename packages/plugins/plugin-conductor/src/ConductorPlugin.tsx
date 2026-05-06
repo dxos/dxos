@@ -43,3 +43,5 @@ export const ConductorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );
+
+export default ConductorPlugin;

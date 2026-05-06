@@ -20,3 +20,5 @@ export const TrelloPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default TrelloPlugin;

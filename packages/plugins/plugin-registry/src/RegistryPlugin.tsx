@@ -21,3 +21,5 @@ export const RegistryPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default RegistryPlugin;

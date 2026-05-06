@@ -44,7 +44,6 @@ export const getOwner = (value: object | null | undefined): object | undefined =
 /**
  * Set the owner of a meta object to its parent.
  * This allows meta mutations to respect the parent's change context.
- * @internal
  */
 export const setMetaOwner = (metaTarget: object, parent: object): void => {
   defineHiddenProperty(metaTarget, EchoOwner, parent);
@@ -214,7 +213,6 @@ const MAX_OWNER_DEPTH = 100;
  * Follows the owner chain to find the ultimate root.
  * An object may have EventId (from being created standalone) but if it now
  * has an owner, it's nested and we should use its owner's root instead.
- * @internal
  */
 export const getEchoRoot = (target: object, depth = 0): object => {
   invariant(depth < MAX_OWNER_DEPTH, 'Owner chain too deep - possible circular ownership');

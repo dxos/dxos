@@ -18,7 +18,7 @@
         "browser": "./src/loaders/browser.ts",
         "default": "./src/loaders/index.ts"
       },
-      "types": "./dist/types/loaders/index.d.ts",
+      "types": "./src/loaders/index.ts",
       "browser": "./dist/lib/browser/loaders/browser.mjs",
       "default": "./dist/lib/node-esm/loaders/index.mjs"
     },
@@ -27,7 +27,7 @@
         "browser": "./src/savers/browser.ts",
         "default": "./src/savers/index.ts"
       },
-      "types": "./dist/types/savers/index.d.ts",
+      "types": "./src/savers/index.ts",
       "browser": "./dist/lib/browser/savers/browser.mjs",
       "default": "./dist/lib/node-esm/savers/index.mjs"
     },
@@ -36,7 +36,7 @@
         "browser": "./src/plugin/browser.ts",
         "default": "./src/plugin/index.ts"
       },
-      "types": "./dist/types/plugin/index.d.ts",
+      "types": "./src/plugin/index.ts",
       "browser": "./dist/lib/browser/plugin/browser.mjs",
       "default": "./dist/lib/node-esm/plugin/index.mjs"
     }

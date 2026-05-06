@@ -52,6 +52,24 @@ export const SpacePropertiesSchema = Schema.Struct(
 
 export type SpacePropertiesSchema = Schema.Schema.Type<typeof SpacePropertiesSchema>;
 
+/**
+ * Explicit instance shape for space properties, mirroring SpacePropertiesSchema fields.
+ * Used by SpaceProperties and LegacySpaceProperties interfaces instead of the inferred
+ * `Schema.Schema.Type<typeof SpaceProperties>` pattern, which collapses to `any` in
+ * rolldown-plugin-dts bundled chunk output when the value type uses external workspace types.
+ */
+export type SpacePropertiesInstance = {
+  readonly [key: string]: any;
+  readonly archived?: boolean;
+  readonly edgeReplication?: boolean;
+  /** @deprecated */
+  readonly invocationTraceFeed?: any;
+  readonly computeEnvironment?: 'disabled' | 'local' | 'edge';
+  readonly name?: string;
+  readonly icon?: string;
+  readonly hue?: string;
+};
+
 /** @deprecated Use SpaceProperties instead. */
 export const LegacySpaceProperties = SpacePropertiesSchema.pipe(
   Type.object({
@@ -61,7 +79,7 @@ export const LegacySpaceProperties = SpacePropertiesSchema.pipe(
   Annotation.SystemTypeAnnotation.set(true),
 );
 
-export interface LegacySpaceProperties extends Schema.Schema.Type<typeof LegacySpaceProperties> {}
+export interface LegacySpaceProperties extends SpacePropertiesInstance {}
 
 // TODO(burdon): Pipe Schem.optional, or partial to entire struct to make everything optional?
 // TODO(burdon): Is separate schema def required for forms? Can it be extracted from SpaceProperties?
@@ -73,4 +91,4 @@ export const SpaceProperties = SpacePropertiesSchema.pipe(
   Annotation.SystemTypeAnnotation.set(true),
 );
 
-export interface SpaceProperties extends Schema.Schema.Type<typeof SpaceProperties> {}
+export interface SpaceProperties extends SpacePropertiesInstance {}

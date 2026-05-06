@@ -2,5 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-export { AttentionPlugin } from './AttentionPlugin';
-export { meta } from './meta';
+import { Plugin } from '@dxos/app-framework';
+
+import { meta } from './meta';
+
+export const AttentionPlugin = Plugin.lazy(meta, () => import('./AttentionPlugin'));
+
+export * from './meta';

@@ -21,13 +21,19 @@ export function rolldownLogMetaPlugin(options: LogMetaTransformOptions): Rolldow
     name: ROLLDOWN_LOG_META_PLUGIN_NAME,
     transform: {
       order: 'pre' as const,
+      filter: {
+        // Only process JS/TS source files; exclude JSON, CSS, etc.
+        moduleType: { include: ['js', 'jsx', 'ts', 'tsx'] as string[] },
+      },
       handler(code: string, id: string, meta: Pick<RolldownLogMetaHookContext, 'moduleType' | 'ast' | 'magicString'>) {
+        // Do NOT pass meta.magicString: rolldown's native MagicString has an off-by-N bug
+        // in appendLeft when used directly from the transform hook context. Using a fresh
+        // RolldownMagicString(code) produces correct insertions.
         return rolldownLogMetaTransform(options, {
           code,
           id,
           moduleType: meta.moduleType,
           ast: meta.ast,
-          magicString: meta.magicString,
         });
       },
     },
