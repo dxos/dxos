@@ -8,10 +8,9 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import { Operation } from '@dxos/compute';
 import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
-
-import * as Operation from './Operation';
 
 describe('Operation', () => {
   describe('make', () => {

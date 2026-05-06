@@ -5,15 +5,10 @@
 import type * as Context from 'effect/Context';
 
 import type { Space } from '@dxos/client/echo';
+import { type Credential, type Trace } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { type QueueFactory } from '@dxos/echo-db';
-import {
-  ConfiguredCredentialsService,
-  type CredentialsService,
-  QueueService,
-  type ServiceCredential,
-  type Trace,
-} from '@dxos/functions';
+import { ConfiguredCredentialsService, QueueService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 
 import { ServiceContainer } from '../services';
@@ -39,12 +34,12 @@ export type TestServiceOptions = {
     /**
      * Predefined credentials list.
      */
-    services?: ServiceCredential[];
+    services?: Credential.ServiceCredential[];
 
     /**
      * Custom credentials service.
      */
-    service?: Context.Tag.Service<CredentialsService>;
+    service?: Context.Tag.Service<Credential.CredentialsService>;
   }>;
 
   /**
@@ -96,7 +91,7 @@ export const createTestServices = ({
 
 const createCredentialsService = (
   credentials: TestServiceOptions['credentials'] | undefined,
-): Context.Tag.Service<CredentialsService> | undefined => {
+): Context.Tag.Service<Credential.CredentialsService> | undefined => {
   if (credentials?.services) {
     return new ConfiguredCredentialsService(credentials.services);
   }

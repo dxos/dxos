@@ -372,6 +372,9 @@ catalogs:
     '@opentui/solid':
       specifier: 0.1.61
       version: 0.1.61
+    '@oxc-project/runtime':
+      specifier: ^0.129.0
+      version: 0.129.0
     '@oxc-project/types':
       specifier: 0.128.0
       version: 0.128.0
@@ -2078,6 +2081,9 @@ importers:
       '@typescript/native-preview':
         specifier: 'catalog:'
         version: 7.0.0-dev.20260421.2
+      '@vitejs/plugin-react':
+        specifier: 'catalog:'
+        version: 6.0.1(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       '@vitejs/plugin-react-swc':
         specifier: 'catalog:'
         version: 4.3.0(@swc/helpers@0.5.17)(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
@@ -2376,9 +2382,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprints':
-        specifier: workspace:*
-        version: link:../../core/blueprints
       '@dxos/brand':
         specifier: workspace:*
         version: link:../../ui/brand
@@ -2658,6 +2661,9 @@ importers:
       '@fontsource/poiret-one':
         specifier: 'catalog:'
         version: 5.2.8
+      '@oxc-project/runtime':
+        specifier: 'catalog:'
+        version: 0.129.0
       '@tauri-apps/api':
         specifier: 'catalog:'
         version: 2.10.1
@@ -4180,6 +4186,9 @@ importers:
 
   packages/common/sql-sqlite:
     dependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../log
       '@dxos/wa-sqlite':
         specifier: 'catalog:'
         version: 0.2.1
@@ -4539,6 +4548,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../functions
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -4663,6 +4675,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../functions
       '@dxos/functions-runtime':
         specifier: workspace:*
         version: link:../functions-runtime
@@ -4722,7 +4737,7 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(react@19.2.3)
 
-  packages/core/blueprints:
+  packages/core/compute:
     dependencies:
       '@dxos/ai':
         specifier: workspace:*
@@ -4733,9 +4748,6 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
-      '@dxos/functions':
-        specifier: workspace:*
-        version: link:../functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -4745,37 +4757,25 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/operation':
+      '@dxos/protocols':
         specifier: workspace:*
-        version: link:../operation
+        version: link:../protocols
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      effect:
-        specifier: 3.20.0
-        version: 3.20.0
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.5.1(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
       handlebars:
         specifier: 'catalog:'
         version: 4.7.8
-
-  packages/core/compute:
-    dependencies:
-      '@dxos/blueprints':
-        specifier: workspace:*
-        version: link:../blueprints
-      '@dxos/functions':
-        specifier: workspace:*
-        version: link:../functions
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../operation
     devDependencies:
       effect:
         specifier: 3.20.0
         version: 3.20.0
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.5(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(esbuild@0.28.0)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.12))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/core/compute-hyperformula:
     dependencies:
@@ -4785,6 +4785,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../compute
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -4803,9 +4806,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../operation
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -4843,9 +4843,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprints':
+      '@dxos/compute':
         specifier: workspace:*
-        version: link:../blueprints
+        version: link:../compute
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -5512,6 +5512,9 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../compute
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -5539,9 +5542,6 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../operation
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../protocols
@@ -5572,15 +5572,15 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprints':
-        specifier: workspace:*
-        version: link:../blueprints
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../sdk/client-protocol
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../compute
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -5775,6 +5775,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../compute
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -5929,6 +5932,9 @@ importers:
       '@dxos/introspect':
         specifier: workspace:*
         version: link:../introspect
+      '@dxos/introspect-tools':
+        specifier: workspace:*
+        version: link:../introspect-tools
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -5951,6 +5957,31 @@ importers:
       tsx:
         specifier: 'catalog:'
         version: 4.21.0
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.5(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(esbuild@0.28.0)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.12))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/core/introspect-tools:
+    dependencies:
+      '@dxos/effect-zod':
+        specifier: workspace:*
+        version: link:../../common/effect-zod
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+      zod:
+        specifier: 'catalog:'
+        version: 4.3.6
+    devDependencies:
+      '@types/node':
+        specifier: 22.10.2
+        version: 22.10.2
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -6456,31 +6487,22 @@ importers:
 
   packages/core/operation:
     dependencies:
-      '@dxos/debug':
+      '@dxos/compute':
         specifier: workspace:*
-        version: link:../../common/debug
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../echo/echo
+        version: link:../compute
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
-      '@dxos/errors':
+      '@dxos/keys':
         specifier: workspace:*
-        version: link:../../common/errors
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
     devDependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
@@ -6596,6 +6618,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/functions-runtime':
         specifier: workspace:*
         version: link:../../core/functions-runtime
@@ -6807,6 +6832,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -6895,6 +6923,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/functions-runtime':
         specifier: workspace:*
         version: link:../../core/functions-runtime
@@ -7555,9 +7586,9 @@ importers:
       '@dxos/assistant-toolkit':
         specifier: workspace:*
         version: link:../../core/assistant-toolkit
-      '@dxos/blueprints':
+      '@dxos/compute':
         specifier: workspace:*
-        version: link:../../core/blueprints
+        version: link:../../core/compute
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
@@ -7684,6 +7715,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/functions-runtime':
         specifier: workspace:*
         version: link:../../core/functions-runtime
@@ -7971,9 +8005,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprints':
-        specifier: workspace:*
-        version: link:../../core/blueprints
       '@dxos/cli-util':
         specifier: workspace:*
         version: link:../../devtools/cli-util
@@ -7983,6 +8014,9 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../sdk/client-protocol
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
@@ -8712,9 +8746,6 @@ importers:
       '@dxos/assistant-toolkit':
         specifier: workspace:*
         version: link:../../core/assistant-toolkit
-      '@dxos/blueprints':
-        specifier: workspace:*
-        version: link:../../core/blueprints
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute
@@ -9016,6 +9047,9 @@ importers:
       '@dxos/log-store-idb':
         specifier: workspace:*
         version: link:../../common/log-store-idb
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -9585,9 +9619,6 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
-      '@dxos/blueprints':
-        specifier: workspace:*
-        version: link:../../core/blueprints
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -9973,6 +10004,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -10167,6 +10201,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/functions-runtime':
         specifier: workspace:*
         version: link:../../core/functions-runtime
@@ -10399,6 +10436,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -12624,6 +12664,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/functions-runtime':
         specifier: workspace:*
         version: link:../../core/functions-runtime
@@ -14455,6 +14498,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -15336,6 +15382,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -17783,6 +17832,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/functions-runtime':
         specifier: workspace:*
         version: link:../../core/functions-runtime
@@ -19034,6 +19086,52 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.7
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.7)
+      react:
+        specifier: ~19.2.3
+        version: 19.2.3
+      react-dom:
+        specifier: ~19.2.3
+        version: 19.2.3(react@19.2.3)
+      vite:
+        specifier: '>=8.0.0'
+        version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/ui/react-ui-introspect:
+    dependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../react-ui-form
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../react-ui-syntax-highlighter
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../ui-theme
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+    devDependencies:
+      '@dxos/introspect-tools':
+        specifier: workspace:*
+        version: link:../../core/introspect-tools
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@modelcontextprotocol/sdk':
+        specifier: '>=1.26.0'
+        version: 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.3.6(esbuild@0.28.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(rollup@3.30.0)(storybook@10.3.6(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@6.0.3)(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(webpack@5.105.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.28.0))
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.7
@@ -24835,6 +24933,10 @@ packages:
 
   '@oslojs/encoding@1.1.0':
     resolution: {integrity: sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ==}
+
+  '@oxc-project/runtime@0.129.0':
+    resolution: {integrity: sha512-0+S67blQakgeNqoKGozOUp5rQBrz2ynXZ2QIINXZPiafsD0YL0UogB9hAWc1S7k6VSNwKYC/N7MqT0V6IzpHkQ==}
+    engines: {node: ^20.19.0 || >=22.12.0}
 
   '@oxc-project/types@0.101.0':
     resolution: {integrity: sha512-nuFhqlUzJX+gVIPPfuE6xurd4lST3mdcWOhyK/rZO0B9XWMKm79SuszIQEnSMmmDhq1DC8WWVYGVd+6F93o1gQ==}
@@ -44625,6 +44727,8 @@ snapshots:
       - web-tree-sitter
 
   '@oslojs/encoding@1.1.0': {}
+
+  '@oxc-project/runtime@0.129.0': {}
 
   '@oxc-project/types@0.101.0': {}
 

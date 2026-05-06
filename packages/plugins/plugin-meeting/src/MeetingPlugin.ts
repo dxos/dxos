@@ -58,3 +58,5 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default MeetingPlugin;

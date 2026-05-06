@@ -21,3 +21,5 @@ export const PreviewPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default PreviewPlugin;

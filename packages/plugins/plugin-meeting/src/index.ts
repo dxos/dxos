@@ -2,6 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './meta';
+import { Plugin } from '@dxos/app-framework';
 
-export * from './MeetingPlugin';
+import { meta } from './meta';
+
+export const MeetingPlugin = Plugin.lazy(meta, () => import('./MeetingPlugin'));
+
+export * from './meta';

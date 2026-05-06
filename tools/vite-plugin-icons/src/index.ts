@@ -79,28 +79,34 @@ export const IconsPlugin = ({
 
         // Process chunks.
         server.middlewares.use((req, res, next) => {
-          if (req.url?.indexOf('/virtual:') === -1) {
-            const match = req.url?.match(/^(\/@fs)?(.+)\.(\w+)$/);
-            if (match) {
-              const [, prefix, path, ext] = match;
-              const filename = join((prefix ? '' : rootDir) + `${path}.${ext}`);
-              if (!visitedFiles.has(filename)) {
-                visitedFiles.add(filename);
-                // TODO(burdon): Check if matches contentPaths (incl. mjs).
-                const extensions = ['js', 'ts', 'jsx', 'tsx', 'mjs'];
-                if (extensions.some((e) => e === ext) && path.indexOf('node_modules') === -1) {
-                  try {
-                    const src = fs.readFileSync(filename, 'utf8');
-                    const match = scan(src);
-                    status.updated ||= match;
-                  } catch {
-                    console.error('Missing file', req.url);
-                  }
+          const url = req.url ?? '';
+          // Skip plugin-resolved virtual modules — these aren't files on disk.
+          // Conventions:
+          //   `/virtual:` — legacy Vite convention.
+          //   `/@id/`     — Vite's URL form for `resolveId`-returned IDs, including
+          //                 Rolldown's null-byte (`\0`) prefix encoded as `__x00__`.
+          if (url.includes('/virtual:') || url.includes('/@id/')) {
+            return next();
+          }
+          const match = url.match(/^(\/@fs)?(.+)\.(\w+)$/);
+          if (match) {
+            const [, prefix, path, ext] = match;
+            const filename = join((prefix ? '' : rootDir) + `${path}.${ext}`);
+            if (!visitedFiles.has(filename)) {
+              visitedFiles.add(filename);
+              // TODO(burdon): Check if matches contentPaths (incl. mjs).
+              const extensions = ['js', 'ts', 'jsx', 'tsx', 'mjs'];
+              if (extensions.some((e) => e === ext) && path.indexOf('node_modules') === -1) {
+                try {
+                  const src = fs.readFileSync(filename, 'utf8');
+                  const match = scan(src);
+                  status.updated ||= match;
+                } catch {
+                  console.error('Missing file', url);
                 }
               }
             }
           }
-
           next();
         });
       },

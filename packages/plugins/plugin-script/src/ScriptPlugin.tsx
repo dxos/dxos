@@ -86,3 +86,5 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default ScriptPlugin;

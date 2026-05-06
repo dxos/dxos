@@ -7,5 +7,6 @@ export * from './data-service';
 export * from './documents-synchronizer';
 export * from './echo-host';
 export * from './database-root';
+export * from './invalidation-hint';
 export * from './query-service';
 export * from './space-state-manager';

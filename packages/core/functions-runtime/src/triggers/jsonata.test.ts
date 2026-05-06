@@ -5,9 +5,9 @@
 import jsonata from 'jsonata';
 import { assert, describe, test } from 'vitest';
 
+import { Trigger, TriggerEvent } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { Trigger, type TriggerEvent } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
 describe('jsonata', () => {

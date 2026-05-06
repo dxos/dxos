@@ -5,10 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
+import { Operation, Script, Trigger } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
-import { Script, Trigger } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Filter } from '@dxos/react-client/echo';
 

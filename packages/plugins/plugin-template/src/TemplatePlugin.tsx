@@ -42,3 +42,5 @@ export const TemplatePlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );
+
+export default TemplatePlugin;

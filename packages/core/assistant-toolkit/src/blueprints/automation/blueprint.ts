@@ -2,9 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Blueprint } from '@dxos/compute';
-import { Trigger } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { Blueprint, Trigger, Operation } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';

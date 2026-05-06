@@ -16,3 +16,5 @@ export const DailySummaryPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );
+
+export default DailySummaryPlugin;
