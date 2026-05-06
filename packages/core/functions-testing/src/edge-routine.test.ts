@@ -81,6 +81,7 @@ describe('Edge routine', { tags: ['functions-e2e'] }, () => {
               You have access to the Database blueprint tools.
               Use the Query tool exactly once with typename "${TestSchema.Organization.typename}" and no other arguments.
               Then call completeJob with the output object { "count": <number of rows returned by Query> }.
+              If you are unable to query -- fail.
               Do not list schemas first.
             `,
         input: Schema.Struct({}),
@@ -117,5 +118,6 @@ describe('Edge routine', { tags: ['functions-e2e'] }, () => {
       throw ErrorCodec.decode(runResult.error);
     }
     log.info('trigger ran', { runResult });
+    expect(runResult.result.count).toBe(3);
   });
 });
