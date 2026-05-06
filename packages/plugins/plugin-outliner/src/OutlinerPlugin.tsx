@@ -70,3 +70,5 @@ export const OutlinerPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default OutlinerPlugin;

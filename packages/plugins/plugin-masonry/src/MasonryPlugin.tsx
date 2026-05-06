@@ -47,3 +47,5 @@ export const MasonryPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );
+
+export default MasonryPlugin;

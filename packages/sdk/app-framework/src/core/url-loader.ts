@@ -43,6 +43,18 @@ export type Options = {
 };
 
 /**
+ * Options for the preload entry point. Adds an optional progress hook so hosts
+ * can drive a boot-loader counter (`Loading plugins (3/12)…`) as remote plugin
+ * manifests resolve. Resolution order is *not* deterministic — each entry races
+ * its own network fetch — so callers should treat `loaded` as a count, not an
+ * index. Failures are still swallowed; `loaded` advances on both success and
+ * recoverable failure so the counter always reaches `total`.
+ */
+export type PreloadOptions = Options & {
+  onPluginLoaded?: (loaded: number, total: number) => void;
+};
+
+/**
  * Persisted record of a remote plugin that has been loaded previously.
  *
  * `url` is the URL of the plugin manifest (`plugin.json`), not the entry module.
@@ -222,22 +234,39 @@ const loadFromManifest = (
  * are logged and swallowed — the returned effect always succeeds with whichever
  * plugins loaded cleanly, so a single bad entry can't block the host's startup.
  */
-export const preload = (options: Options = {}): Effect.Effect<Plugin.Plugin[], never> =>
+export const preload = (options: PreloadOptions = {}): Effect.Effect<Plugin.Plugin[], never> =>
   Effect.gen(function* () {
     const storage = options.storage ?? defaultStorage();
     const key = options.key ?? DEFAULT_KEY;
     const cache = options.cache ?? PluginAssetCache.noop();
+    const onPluginLoaded = options.onPluginLoaded;
 
     const entries = getPersistedRemotePlugins(storage, key);
     if (entries.length === 0) {
       return [];
     }
     log.info('preloading remote plugins', { count: entries.length });
+    const total = entries.length;
+    let loaded = 0;
     const results = yield* Effect.all(
       entries.map((entry) =>
         loadFromManifest(entry.url, cache).pipe(
           Effect.tapError((error) => Effect.sync(() => log.warn('failed to preload remote plugin', { entry, error }))),
           Effect.option,
+          // Tick the progress hook on both success and recoverable failure so
+          // the counter monotonically reaches `total`. The host-supplied
+          // callback is best-effort: any synchronous throw flows through
+          // `Effect.try` and gets logged + ignored so a buggy hook can't
+          // derail the preload.
+          Effect.tap(() =>
+            Effect.sync(() => {
+              loaded += 1;
+            }).pipe(
+              Effect.andThen(Effect.try(() => onPluginLoaded?.(loaded, total))),
+              Effect.tapError((error) => Effect.sync(() => log.warn('onPluginLoaded threw', { loaded, total, error }))),
+              Effect.ignore,
+            ),
+          ),
         ),
       ),
       { concurrency: 'unbounded' },

@@ -113,3 +113,5 @@ export const FeedPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );
+
+export default FeedPlugin;

@@ -378,29 +378,35 @@ const main = async () => {
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
 
-  // `getPlugins` dynamic-imports every plugin chunk in parallel.
-  // Run it concurrently with `UrlLoader.preload` (network-bound) so the two waits overlap.
+  // `getPlugins` is synchronous: each plugin's main entry exposes only
+  // `meta` + a `Plugin.lazy(...)` stub, so building the plugin array doesn't
+  // pull any plugin's body. The plugin manager loads the real plugin
+  // (separate Rollup chunk) on first `enable`. Remote plugin preload is
+  // network-bound — the boot loader's counter follows that until the
+  // plugin manager (post-React mount) takes over with module-activation
+  // progress.
   bootStatus('Loading plugins…');
+  const builtinPlugins = getPlugins(conf);
   const assetCache = await createAssetCache(isTauri);
-  const [builtinPlugins, remotePluginsResult] = await Promise.all([
-    getPlugins(conf, {
+  const remotePluginsResult = await runAndForwardErrors(
+    UrlLoader.preload({
+      cache: assetCache,
       onPluginLoaded: (loaded, total) => {
         // Pass `range` so the loader updates the existing line in place
-        // ("Loading plugins (12/80)") instead of appending a fresh entry per
-        // plugin tick — keeps the visible log compact and the boot trace
-        // collapses the (i/n) sequence into one transition.
+        // ("Loading plugins (3/12)") instead of appending a fresh entry per
+        // tick — keeps the visible log compact.
         window.__bootLoader?.status({ humanized: 'Loading plugins', range: { index: loaded, total } });
-        // The ring spans two phases — plugin chunks (0 → 50%) and module
-        // activation (50 → 100%, driven from `Placeholder` once React mounts).
-        // Splitting the range keeps it monotonic across the boundary.
+        // The ring spans two phases — remote-plugin preload (0 → 50%) and
+        // module activation (50 → 100%, driven from `Placeholder` once
+        // React mounts). Splitting the range keeps it monotonic across
+        // the boundary.
         window.__bootLoader?.progress((loaded / total) * 0.5);
       },
     }),
-    runAndForwardErrors(UrlLoader.preload({ cache: assetCache })),
-  ]);
+  );
 
   bootStatus('Starting Composer…');
-  // Park the ring at 50% — chunks done, activation about to take over.
+  // Park the ring at 50% — preload done, activation about to take over.
   window.__bootLoader?.progress(0.5);
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];

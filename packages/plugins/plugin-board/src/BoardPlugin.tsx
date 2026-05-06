@@ -43,3 +43,5 @@ export const BoardPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations: [...translations, ...boardTranslations] }),
   Plugin.make,
 );
+
+export default BoardPlugin;
