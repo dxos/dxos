@@ -70,8 +70,8 @@ export type SymbolDetail = {
 //
 // Plugins are DXOS app-framework Composer plugins. They expose a meta object
 // (id, name, description, …) and contribute capabilities through one or more
-// `AppPlugin.add*Module({ activate })` calls. Surfaces, intents, and schemas
-// are specific kinds of capability contributions.
+// `AppPlugin.add*Module({ activate })` calls. Surfaces, operations, and
+// schemas are specific kinds of capability contributions.
 //
 
 export type PluginId = string;
@@ -97,7 +97,7 @@ export type Plugin = {
 export type PluginDetail = Plugin & {
   surfaces: Surface[];
   capabilities: Capability[];
-  intents: Intent[];
+  operations: Operation[];
   schemas: Schema[];
 };
 
@@ -117,9 +117,9 @@ export type Capability = {
   location: SourceLocation;
 };
 
-export type Intent = {
+export type Operation = {
   pluginId: PluginId;
-  /** Intent identifier expression, e.g. `Capabilities.IntentResolver` or a specific intent type literal. */
+  /** Operation identifier expression, e.g. `Capabilities.OperationHandler` or a specific operation type literal. */
   type: string;
   location: SourceLocation;
 };
