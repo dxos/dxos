@@ -14,13 +14,10 @@ import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { Database, type Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { Integration } from '@dxos/plugin-integration/types';
 
 import { GITHUB_API_BASE } from '../constants';
-
-// #region DEBUG
-import { log } from '@dxos/log';
-// #endregion DEBUG
 
 /** Stored as `AccessToken.token`; sent as `Authorization: Bearer <token>`. */
 type GitHubCredentialsValue = {
