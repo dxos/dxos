@@ -23,20 +23,22 @@ Symptoms:
 
 ## Decision
 
-Introduce a single feed-backed conversation primitive — **`Channel`** — covering everything reasonably rendered as a multi-party conversation: doc comments, Slack channels, Discord channels, native DXOS DMs. Two adjacent types (`Mailbox`, `AiChat`) stay separate because their schemas genuinely differ.
+Introduce a single feed-backed conversation primitive — **`Channel`** — for native multi-party conversations (Slack channels, Discord channels, native DXOS DMs, and any future plugin matching the same UI shape). Two adjacent types (`Mailbox`, `AiChat`) stay separate because their interaction patterns genuinely differ.
 
-### Type landscape
+**Scope-limited initial change.** Comment threads (`plugin-thread`) intentionally stay on the existing AutoMerge `Thread` schema in this round. They conceptually belong on `Channel` and may migrate later, but excluding them keeps the blast radius small: no comment-data migration, no `AnchoredTo` retargeting, no editor / UI churn in `plugin-thread`. The doc preserves the design intent for that future migration in a dedicated section below.
+
+### Type landscape (initial)
 
 | Plugin | Type | How it's distinguished | Storage |
 |---|---|---|---|
-| `plugin-thread` (comments) | `Channel` | one per document; `AnchoredTo(rootMessage, range)` per thread | feed |
 | `plugin-slack` | `Channel` | meta key `{ source: 'slack', id: ... }` | feed |
 | `plugin-discord` | `Channel` | meta key `{ source: 'discord', id: ... }` | feed |
 | Native DXOS DM | `Channel` | no extras — just a `Channel` | feed |
+| `plugin-thread` (comments) | `Thread` *(unchanged)* | AutoMerge `messages: Ref<Message>[]`, `AnchoredTo(Thread, range)` | AutoMerge graph |
 | `plugin-inbox` (Mailbox) | `Mailbox` | filters, draft handling, label-as-folder | feed |
 | `assistant-toolkit` (AI Chat) | `AiChat` | `view`, `CompanionTo` artifacts, always-respond loop | feed |
 
-`Thread` and the existing `plugin-thread/Channel` wrapper are removed.
+The existing `Channel` wrapper in `plugin-thread` (the `defaultThread + threads[]` AutoMerge object) gets renamed or replaced to free the `Channel` typename for `@dxos/types`. This is a small, contained change — that wrapper has limited consumers.
 
 ### `Channel` schema (proposed)
 
@@ -49,16 +51,25 @@ export const Channel = Schema.Struct({
   Type.object({ typename: 'org.dxos.type.channel', version: '0.1.0' }),
   FeedAnnotation.set(true),
 );
+
+export const make = (props: Omit<Obj.MakeProps<typeof Channel>, 'feed'> = {}) => {
+  const feed = Feed.make();
+  const channel = Obj.make(Channel, { feed: Ref.make(feed), ...props });
+  Obj.setParent(feed, channel); // The feed's parent is the channel.
+  return channel;
+};
 ```
 
+The factory mirrors the existing `Mailbox` pattern: create the backing `Feed`, then call `Obj.setParent(feed, channel)` so the feed object's parent is the channel. This is required so the feed is properly scoped to the channel for app-graph traversal, lifecycle, and cleanup. (TODO upstream: declare parent relationship in the schema instead of imperatively in `make()` — same TODO `Mailbox.make` carries.)
+
 The schema deliberately stays thin. Variation lives in:
-- **Relations**: `AnchoredTo` (comments anchor a thread root to a doc range), `CompanionTo` (assistant config / artifacts).
+- **Relations**: `CompanionTo` (assistant config / artifacts). `AnchoredTo` is reserved for the future comment-thread migration.
 - **Meta keys** on the `Channel` for external sync identity (`{ source: 'slack', id: 'T123/C456' }`). Plugin-slack queries by meta to find its channels.
-- **Per-message state**: threading via `Message.threadId` and `Message.parentMessage` (already on `Message`). Status changes via system events appended to the feed.
+- **Per-message state**: threading via `Message.threadId` and `Message.parentMessage` (already on `Message`). Status changes via system events appended to the feed (when statuses are wanted).
 
 ### Why not unify with `Mailbox` / `AiChat`
 
-The defining criterion for `Channel` is **interaction pattern and UI shape**: anything that reasonably renders as a Slack-like multi-party chat interface. Comments, Slack/Discord channels, native DMs all pass this test — they're list-of-messages-from-multiple-senders with optional threaded replies, where the natural rendering is a chat surface.
+The defining criterion for `Channel` is **interaction pattern and UI shape**: anything that reasonably renders as a Slack-like multi-party chat interface. Slack/Discord channels, native DMs all pass this test, and comments would pass it too (and may migrate in a later round). They're list-of-messages-from-multiple-senders with optional threaded replies, where the natural rendering is a chat surface.
 
 `Mailbox` and `AiChat` fail it:
 
@@ -71,17 +82,24 @@ The shared layer for cross-cutting infrastructure (search, AI summarization, uni
 
 **Test for future plugins:** "Would this render naturally in a Slack-like multi-party chat surface?" If yes, use `Channel`. If no, define your own type that still uses `feed: Ref<Feed>` of `Message`s so it participates in the shared protocol.
 
-## Comment threads in detail
+## Comment threads (deferred to a later round)
 
-Comments today: each `Thread` is its own ECHO object holding `messages: Ref<Message>[]`. `AnchoredTo` points at the `Thread`. Status (`staged | active | resolved`) is a field on `Thread`.
+Comments stay on the existing `Thread` schema for this initial change. The shape and semantics that comments would adopt under `Channel` are captured here so the design intent isn't lost when the migration is revisited.
 
-Comments after this design: **one `Channel` per document** holding all of that document's comment threads in a single feed.
+Today: each `Thread` is its own ECHO object holding `messages: Ref<Message>[]`. `AnchoredTo` points at the `Thread`. Status (`staged | active | resolved`) is a field on `Thread`.
 
-- Each comment thread is a group of messages in the channel sharing `threadId === rootMessage.id` (mirrors Slack's `thread_ts === root.ts`).
+Future shape (for a follow-up migration): **one `Channel` per document** holding all of that document's comment threads in a single feed.
+
+- Each comment thread becomes a group of messages in the channel sharing `threadId === rootMessage.id` (mirrors Slack's `thread_ts === root.ts`).
 - `AnchoredTo` retargets to the **thread root `Message`**, not to the channel itself. The anchor binds a thread-as-conversation to a position in the doc.
-- Thread status is derived from feed events: a "resolution" system message gets appended; reading status = scan latest resolution event for that thread root. Append-only, no in-place mutation.
+- Thread status becomes feed events: a "resolution" system message gets appended; reading status = scan latest resolution event for that thread root. Append-only, no in-place mutation.
 
-Trade-off: a comment-heavy doc gets one larger feed instead of N small feeds. This is the right scale unit — "all comments on this doc" is the natural query — and avoids per-thread feed overhead for what are typically short conversations.
+Trade-off (when the migration happens): a comment-heavy doc gets one larger feed instead of N small feeds. This is the right scale unit — "all comments on this doc" is the natural query — and avoids per-thread feed overhead for typically short conversations.
+
+Reasons to defer:
+- Comment data is live in user spaces; a migration script needs care.
+- `AnchoredTo` retargeting touches the editor / decoration plumbing in `plugin-thread`.
+- The native-channel work doesn't require it; comments can ride along later.
 
 ## AI participation in `Channel`
 
@@ -107,7 +125,7 @@ This is why `AiChat` stays a separate type: the always-respond loop has differen
 
 ## Refs into feeds
 
-A foundational assumption: `Ref<Message>` to a message stored in a feed resolves correctly. Confirmed in [`Feed.ts`](packages/core/echo/echo/src/Feed.ts) — `append(feed, items: Entity.Unknown[])` stores full ECHO entities, and `Feed.getQueueDxn` derives a queue DXN that Refs can target. This is what makes the migration of comment threads to feed-backed storage viable: external Refs to specific comments (anchors, AI quotations, mentions) keep resolving without any new infrastructure.
+A foundational assumption: `Ref<Message>` to a message stored in a feed resolves correctly. Confirmed in [`Feed.ts`](packages/core/echo/echo/src/Feed.ts) — `append(feed, items: Entity.Unknown[])` stores full ECHO entities, and `Feed.getQueueDxn` derives a queue DXN that Refs can target. This is what would make the future comment-thread migration viable: external Refs to specific comments (anchors, AI quotations, mentions) would keep resolving without any new infrastructure.
 
 ## `CompanionTo` vs `AnchoredTo`
 
@@ -116,29 +134,30 @@ These stay distinct — they encode different semantics:
 - **`AnchoredTo(target, anchor)`** — spatial/positional binding. A comment-thread root anchors to a doc range. Used for things that have a *location* in another object.
 - **`CompanionTo(channel, artifact)`** — artifact/configuration binding. An AI Chat has companion blueprints, attached objects, configured personas. Used for things conceptually *attached* to a chat without occupying a position.
 
-Both can be used by `Channel` (e.g., a Slack channel has no `AnchoredTo` but might have `CompanionTo` for its assistant config; a comment-thread root has `AnchoredTo` but typically no `CompanionTo`).
+`Channel` uses `CompanionTo` for things like per-channel assistant config. `AnchoredTo` is reserved for the future comment-thread migration; native channels (Slack/Discord/DMs) don't need it.
 
 ## Migration strategy
 
-1. **Land `Channel`** in `@dxos/types` (replacing draft PR #11242's `Chat`).
-2. **Migrate `AiChat` consumers**: no schema change to `AiChat` itself; it stays in `assistant-toolkit`.
-3. **Migrate `Mailbox` consumers**: no schema change; stays in `plugin-inbox`.
-4. **Migrate `plugin-thread`**:
-   - Per-document migration: create one `Channel` + one `Feed` for each document that has comments. Append all of the document's existing `Message` objects into the feed.
-   - Set `Message.threadId === rootMessage.id` based on the existing `Thread.messages` grouping.
-   - For each existing `Thread.status !== undefined`: append a corresponding resolution-status event to the feed targeting the root message.
-   - Retarget existing `AnchoredTo(Thread, …)` relations to `AnchoredTo(rootMessage, …)`.
-   - Remove `Thread` and `plugin-thread/Channel` types after migration completes.
+Initial round (this design):
+
+1. **Land `Channel`** in `@dxos/types` (replacing draft PR #11242's `Chat`). `Channel.make` creates the backing `Feed` and sets the channel as the feed's parent.
+2. **Free the `Channel` typename**: rename or replace the existing `plugin-thread/Channel` wrapper (the AutoMerge `defaultThread + threads[]` object). Limited consumers; small contained change.
+3. **`AiChat` and `Mailbox`** unchanged — stay in their existing packages with their existing schemas.
+4. **`Thread` (in `plugin-thread`) unchanged** — comments continue using AutoMerge `Thread` with `messages: Ref<Message>[]`. No data migration in this round.
 5. **Add `plugin-slack`** on top of the new `Channel` from day one (no separate `SlackChannel` type).
-6. **Future plugins** (Discord, Matrix, IRC bridges) follow the same pattern. Source-specific quirks (e.g., Discord modeling threads as child channels upstream) are flattened into our model — Discord threads land as `threadId`-grouped messages in the parent channel's feed, the same as Slack thread replies. We don't need to mirror upstream topology faithfully.
+
+Future rounds (out of scope here):
+
+- Comment-thread migration to `Channel` (see "Comment threads (deferred to a later round)" above). Includes a per-document data migration script, `AnchoredTo` retargeting, and `plugin-thread` editor-side updates.
+- Future plugins (Discord, Matrix, IRC bridges) follow the same `Channel` pattern. Source-specific quirks (e.g., Discord modeling threads as child channels upstream) flatten into our model — Discord threads land as `threadId`-grouped messages in the parent channel's feed, the same as Slack thread replies. We don't need to mirror upstream topology faithfully.
 
 ## Open questions / out of scope
 
-- **Edit semantics on feeds.** Does in-place mutation work for feed-stored objects, or does editing a `Message`'s content require remove + re-append? Affects how typo-fix-on-comment is implemented. Doesn't block the design but needs an answer before migration. (Status changes don't depend on this — they're feed events.)
 - **Mention block kind.** AI-on-mention requires a stable `MentionBlock` content kind referencing the assistant `Actor`. May already exist in `ContentBlock`; verify before implementing the trigger.
 - **Assistant config per channel.** `CompanionTo(Channel → AssistantConfig)` is the proposed pattern for opting an assistant into a channel with persona/blueprint/toolkit settings. Want concrete design of `AssistantConfig` shape.
 - **Per-thread permissions / mute.** With one feed per channel, per-thread permissions/mute aren't naturally separable. Not a current requirement; if it becomes one, the escape hatch is per-thread `Channel` objects with `parent: Ref<Channel>`. Default is to keep threads as `threadId` groupings.
 - **Generic `Channel` vs source-specific types.** `plugin-slack` and `plugin-discord` use `Channel` directly with meta-key identification. If a plugin grows source-specific schema-level fields that don't fit on `Channel`, fork at that point. Today no source needs this.
+- **Edit semantics on feeds** (relevant to the future comment migration, not this round). Does in-place mutation work for feed-stored objects, or does editing a `Message`'s content require remove + re-append? Affects how typo-fix-on-comment would be implemented post-migration. (Status changes don't depend on this — they're feed events.)
 
 ## Loose ends acknowledged but deferred
 
