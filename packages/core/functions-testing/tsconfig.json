@@ -19,10 +19,19 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../assistant-toolkit"
     },
     {
       "path": "../compute"
