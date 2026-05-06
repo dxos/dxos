@@ -9,7 +9,7 @@
 
 import React, { type HTMLAttributes } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { Message, type ThemedClassName } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { composable, composableProps } from '@dxos/ui-theme';
 
@@ -29,10 +29,18 @@ export type ToolResultsProps = {
 type State = 'loading' | 'error' | 'empty' | 'result';
 
 const VARIANTS: Record<State, ThemedClassName<Pick<HTMLAttributes<HTMLDivElement>, 'role' | 'aria-live'>>> = {
-  loading: { classNames: 'p-3 text-sm text-description', role: 'status', 'aria-live': 'polite' },
-  error: { classNames: 'p-3 text-sm text-errorText whitespace-pre-wrap', role: 'alert' },
-  empty: { classNames: 'p-3 text-sm text-description italic' },
-  result: { classNames: 'p-3 overflow-auto' },
+  loading: {
+    classNames: 'p-3 text-sm text-description',
+    role: 'status',
+    'aria-live': 'polite',
+  },
+  error: { classNames: 'p-3' },
+  empty: {
+    classNames: 'p-3 text-sm text-description italic',
+  },
+  result: {
+    classNames: 'p-3 overflow-auto',
+  },
 };
 
 export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
@@ -41,7 +49,12 @@ export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
     return (
       <div {...composableProps(props, VARIANTS[state])} ref={forwardedRef}>
         {state === 'loading' && 'Calling tool…'}
-        {state === 'error' && (error instanceof Error ? `${error.name}: ${error.message}` : String(error))}
+        {state === 'error' && (
+          <Message.Root valence='error'>
+            {error instanceof Error && <Message.Title>{error.name}</Message.Title>}
+            <Message.Content>{error instanceof Error ? error.message : String(error)}</Message.Content>
+          </Message.Root>
+        )}
         {state === 'empty' && (
           <>
             No result yet — fill the form and click <strong>Run tool</strong>.
