@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, Feed, Key, Obj, Ref } from '@dxos/echo';
+import { Database, Key, Obj, Ref } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { SpaceSchema } from '@dxos/react-client/echo';
@@ -52,7 +52,9 @@ export const CreateChannelThread = Operation.make({
 
 export const AppendChannelMessage = Operation.make({
   meta: { key: `${THREAD_OPERATION}.append-channel-message`, name: 'Append Channel Message' },
-  services: [Capability.Service, Feed.FeedService],
+  // Note: Feed.FeedService is provided inside the handler from space.queues, not at the
+  // operation level — the runtime can't fulfill it without a space context.
+  services: [Capability.Service],
   input: Schema.Struct({
     channel: Channel.Channel,
     sender: Actor.Actor,

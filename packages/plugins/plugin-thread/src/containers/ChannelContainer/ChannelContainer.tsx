@@ -192,7 +192,7 @@ export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
 
     return (
       <Chat
-        {...composableProps(props)}
+        {...composableProps(props, { classNames: 'bs-full' })}
         id={id}
         identity={identity}
         members={members}
