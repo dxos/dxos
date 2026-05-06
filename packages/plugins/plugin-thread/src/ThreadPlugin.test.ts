@@ -18,6 +18,7 @@ const moduleId = (name: string) => `${meta.id}.module.${name}`;
 describe('ThreadPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     // Skip autoStart: ReactSurface and ReactRoot import native 3D deps (GLSL shaders) that fail in Node.
+    // Also skip Startup: call-manager module activates on Startup and requires runtime.services.edge.url config.
     // Fire only the safe events needed to verify AppGraphBuilder, metadata, schema, blueprint, and operation handler.
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin({}), ThreadPlugin()],

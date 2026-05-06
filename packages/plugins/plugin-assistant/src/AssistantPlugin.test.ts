@@ -17,18 +17,17 @@ const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
 describe('AssistantPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    // Skip autoStart: ReactSurface imports atlaskit CSS which is CJS-only and fails in Node.
-    // Fire only node-safe events; skip SetupReactSurface.
+    // Skip autoStart: SetupReactSurface imports atlaskit CSS which is CJS-only and fails in Node.
+    // Fire Startup directly — GraphPlugin (in headlessCorePlugins) cascades SetupAppGraph +
+    // SetupMetadata from it, and ClientPlugin cascades SetupSchema via ClientReady.
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin({}), AssistantPlugin()],
       autoStart: false,
     });
 
-    await harness.fire(AppActivationEvents.SetupAppGraph);
-    await harness.fire(AppActivationEvents.SetupMetadata);
-    await harness.fire(AppActivationEvents.SetupSchema);
+    await harness.fire(ActivationEvents.Startup);
 
-    // Modules expected to be active after the node-safe startup events.
+    // Modules expected to be active after Startup (cascaded via GraphPlugin + ClientPlugin).
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([
         moduleId('AppGraphBuilder'),
