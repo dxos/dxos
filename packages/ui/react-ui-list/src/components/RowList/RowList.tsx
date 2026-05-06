@@ -77,8 +77,8 @@ import { composableProps, slottable } from '@dxos/ui-theme';
 
 const ROW_LIST_VIEWPORT_NAME = 'RowList.Viewport';
 const CARD_LIST_VIEWPORT_NAME = 'CardList.Viewport';
-const ROW_NAME = 'Row';
-const CARD_NAME = 'Card';
+const ROW_NAME = 'List.Row';
+const CARD_NAME = 'List.Card';
 
 //
 // Context.
@@ -263,7 +263,9 @@ const renderViewport = (
       return;
     }
     const ul = event.currentTarget;
-    const selected = ul.querySelector<HTMLLIElement>('[role="option"][aria-selected="true"]:not([aria-disabled="true"])');
+    const selected = ul.querySelector<HTMLLIElement>(
+      '[role="option"][aria-selected="true"]:not([aria-disabled="true"])',
+    );
     const target = selected ?? enabledOptions(ul)[0] ?? null;
     target?.focus();
   }, []);
@@ -325,8 +327,7 @@ type ItemOwnProps = {
 
 // Row paddings are tighter than Card's; rows touch with a divider, cards
 // sit on their own surface with rounded corners.
-const ROW_BASE =
-  'dx-hover dx-selected px-3 py-2 cursor-pointer outline-none border-b border-separator last:border-b-0';
+const ROW_BASE = 'dx-hover dx-selected px-3 py-2 cursor-pointer outline-none border-b border-separator last:border-b-0';
 const CARD_BASE = 'dx-hover dx-selected px-3 py-2 cursor-pointer outline-none rounded-md bg-baseSurface';
 
 const renderItem = (
@@ -428,4 +429,5 @@ const CardList = {
 };
 
 export { RowList, CardList, Row, Card };
+
 export type { RootProps as RowListRootProps, ViewportOwnProps as RowListViewportProps, ItemOwnProps as RowProps };
