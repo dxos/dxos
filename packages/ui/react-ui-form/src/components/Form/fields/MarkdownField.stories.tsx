@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useMemo } from 'react';
+import { expect, userEvent } from 'storybook/test';
 
 import { Filter, Format, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
@@ -124,6 +125,59 @@ type Story = StoryObj<typeof meta>;
 
 export const StringBacked: Story = {
   render: () => <StringStory />,
+};
+
+// Regression test: keystrokes into a string-backed markdown field must not
+// blur the editor. Previously the EditorView was destroyed and recreated on
+// every change because `onChange` was a useTextEditor dep and form callbacks
+// are unstable across renders.
+export const StringBackedKeepsFocus: Story = {
+  render: () => (
+    <TestLayout>
+      <Form.Root schema={StringSchema} defaultValues={{ notes: '' }}>
+        <Form.Viewport>
+          <Form.Content>
+            <Form.FieldSet />
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
+    </TestLayout>
+  ),
+  play: async ({ canvasElement }) => {
+    const waitFor = async <T,>(predicate: () => T | null | undefined, message: string): Promise<T> => {
+      for (let attempt = 0; attempt < 50; attempt++) {
+        const value = predicate();
+        if (value) {
+          return value;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      throw new Error(message);
+    };
+
+    const editorRoot = await waitFor(
+      () => canvasElement.querySelector<HTMLElement>('.cm-editor'),
+      'CodeMirror editor root (.cm-editor) not found',
+    );
+    const editorContent = editorRoot.querySelector<HTMLElement>('.cm-content')!;
+    await expect(editorContent).toBeVisible();
+
+    // Focus editor and wait for focus to settle inside the editor root.
+    editorContent.focus();
+    await waitFor(() => (editorRoot.contains(document.activeElement) ? true : null), 'Editor did not receive focus');
+
+    // Type several characters; focus must be preserved inside the editor root
+    // after every keystroke. Regression: previously the EditorView was
+    // destroyed and recreated on every change, which detached the focused
+    // contentDOM and blurred the input.
+    const phrase = 'hello world';
+    for (const ch of phrase) {
+      await userEvent.keyboard(ch);
+      await expect(editorRoot.contains(document.activeElement)).toBe(true);
+    }
+
+    await expect(editorContent).toHaveTextContent(phrase);
+  },
 };
 
 export const RefPopulated: Story = {
