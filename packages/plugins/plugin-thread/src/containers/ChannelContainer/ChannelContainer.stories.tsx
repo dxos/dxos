@@ -10,6 +10,7 @@ import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Feed } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-db';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -67,7 +68,18 @@ const meta = {
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
-              personalSpace.db.add(Channel.make());
+              const channel = personalSpace.db.add(Channel.make({ name: 'general' }));
+              const feed = yield* Effect.tryPromise(() => channel.feed!.tryLoad());
+              if (feed) {
+                const seed = [
+                  Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'Hello, channel.' }] }),
+                  Message.make({
+                    sender: { role: 'user' },
+                    blocks: [{ _tag: 'text', text: 'Messages are stored in the feed.' }],
+                  }),
+                ];
+                yield* Feed.append(feed, seed).pipe(Effect.provide(createFeedServiceLayer(personalSpace.queues)));
+              }
             }),
         }),
         SpacePlugin({}),

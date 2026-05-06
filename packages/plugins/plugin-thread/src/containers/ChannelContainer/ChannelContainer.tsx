@@ -5,26 +5,28 @@
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
+import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { getSpace } from '@dxos/react-client/echo';
+import { type Space, getSpace, useMembers, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, ElevationProvider, Input, Panel, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { Menu, MenuRootProps, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
-import { type Channel } from '@dxos/types';
+import { type Channel, Message } from '@dxos/types';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { Call } from '#components';
+import { Call, Chat } from '#components';
+import { useStatus } from '#hooks';
 import { meta } from '#meta';
 import { ThreadCapabilities } from '#types';
 
-import { ChannelChat } from './ChannelChat';
+import { ThreadOperation } from '../../operations';
 
 export type ChannelContainerProps = AppSurface.ObjectArticleProps<
   Channel.Channel | undefined,
@@ -154,6 +156,37 @@ export const ChannelContainer = ({
   }
 
   return null;
+};
+
+/**
+ * Renders the messages in a feed-backed {@link Channel}. Threading via
+ * `Message.threadId` is intentionally not reconstructed in this round.
+ */
+export const ChannelChat = ({ space, channel }: { space: Space; channel: Channel.Channel }) => {
+  const id = Obj.getDXN(channel).toString();
+  const identity = useIdentity()!;
+  const members = useMembers(space.id);
+  const activity = useStatus(space, id);
+  const { invokePromise } = useOperationInvoker();
+
+  const feed = channel.feed?.target;
+  const messages = useQuery(
+    space.db,
+    feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
+  ) as Message.Message[];
+
+  const handleSend = (text: string) => {
+    void invokePromise(ThreadOperation.AppendChannelMessage, {
+      channel,
+      sender: { identityDid: identity.did },
+      text,
+    });
+    return true;
+  };
+
+  return (
+    <Chat id={id} identity={identity} members={members} messages={messages} activity={activity} onSend={handleSend} />
+  );
 };
 
 const DisplayNameMissing = () => {
