@@ -10,6 +10,7 @@ import { type DID } from 'iso-did/types';
 import { type Client } from '@dxos/client';
 import { type SpaceId } from '@dxos/client/echo';
 import { createEdgeIdentity } from '@dxos/client/edge';
+import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
@@ -17,7 +18,6 @@ import { FUNCTIONS_META_KEY, setUserFunctionIdInMetadata } from '@dxos/functions
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { safeParseJson } from '@dxos/util';
 

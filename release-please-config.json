@@ -270,11 +270,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/blueprints/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/compute/package.json",
           "jsonpath": "$.version"
         },
@@ -386,6 +381,11 @@
         {
           "type": "json",
           "path": "packages/core/introspect-mcp/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/introspect-tools/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1061,6 +1061,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-grid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-introspect/package.json",
           "jsonpath": "$.version"
         },
         {

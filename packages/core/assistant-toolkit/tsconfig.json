@@ -72,6 +72,9 @@
       "path": "../echo/echo-protocol"
     },
     {
+      "path": "../functions"
+    },
+    {
       "path": "../functions-runtime"
     }
   ]

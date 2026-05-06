@@ -7,9 +7,8 @@ import * as Fiber from 'effect/Fiber';
 import * as HashSet from 'effect/HashSet';
 import * as Ref from 'effect/Ref';
 
+import type { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
-
-import type * as Operation from './Operation';
 
 /**
  * Invocation function type for scheduling operations.

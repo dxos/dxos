@@ -13,6 +13,8 @@ import * as Predicate from 'effect/Predicate';
 import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
 
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query, Ref as EchoRef } from '@dxos/echo';
 import { log } from '@dxos/log';
