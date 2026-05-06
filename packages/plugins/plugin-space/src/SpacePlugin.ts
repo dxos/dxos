@@ -270,3 +270,5 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default SpacePlugin;
