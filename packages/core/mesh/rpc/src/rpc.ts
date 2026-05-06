@@ -86,7 +86,7 @@ class PendingRpcRequest {
     public readonly resolve: (response: Response) => void,
     public readonly reject: (error?: Error) => void,
     public readonly stream: boolean,
-  ) {}
+  ) { }
 }
 
 enum RpcState {
@@ -346,7 +346,7 @@ export class RpcPeer {
 
         DEBUG_CALLS &&
           log.trace('response', {
-            type_url: response.content.case === 'payload' ? response.content.value.typeUrl : undefined,
+            typeUrl: response.content.case === 'payload' ? response.content.value.typeUrl : undefined,
           });
         item.resolve(response);
         break;

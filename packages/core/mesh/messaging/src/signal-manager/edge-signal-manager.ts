@@ -142,7 +142,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
         serviceId: EdgeService.SIGNAL,
         source: message.author,
         target: [message.recipient],
-        payload: { typeUrl: message.payload.type_url, value: message.payload.value },
+        payload: { typeUrl: message.payload.typeUrl, value: message.payload.value },
       }),
     );
   }
@@ -216,7 +216,8 @@ export class EdgeSignalManager extends Resource implements SignalManager {
       author: message.source,
       recipient: message.target[0],
       payload: {
-        type_url: payload.typeUrl,
+        $typeName: 'google.protobuf.Any',
+        typeUrl: payload.typeUrl,
         value: payload.value,
       },
     });

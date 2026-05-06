@@ -40,7 +40,8 @@ describe('SignalRPCClient', () => {
 
     const stream1 = await client1.receiveMessages(peerId1);
     const payload: Any = {
-      type_url: 'example.testing.data.TestPayload',
+      $typeName: 'google.protobuf.Any',
+      typeUrl: 'example.testing.data.TestPayload',
       value: schema.getCodecForType('example.testing.data.TestPayload').encode({ data: 'Some payload' }),
     };
 

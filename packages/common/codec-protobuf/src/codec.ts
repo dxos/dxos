@@ -82,8 +82,12 @@ export class ProtoCodec<T = any> implements Codec<T> {
 
   encodeAsAny(value: T, options: EncodingOptions = {}): WithTypeUrl<Any> {
     return {
+      // `$typeName` is the bufbuild Message brand; required because `Any` is
+      // re-exported from `@bufbuild/protobuf/wkt` now.
+      $typeName: 'google.protobuf.Any',
+      // `'@type'` is codec-protobuf's tagged-union discriminator (orthogonal to bufbuild's `$typeName`).
       '@type': 'google.protobuf.Any',
-      type_url: this._type.fullName.slice(1),
+      typeUrl: this._type.fullName.slice(1),
       value: this.encode(value, options),
     };
   }

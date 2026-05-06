@@ -20,10 +20,14 @@ export interface SubstitutionDescriptor<T> {
 
 export type Substitutions = Record<string, SubstitutionDescriptor<any>>;
 
-export interface Any {
-  type_url: string;
-  value: Uint8Array;
-}
+// NOTE: `Any` is now the same TypeScript type as `@bufbuild/protobuf/wkt.Any`.
+// Wire format still uses the proto-defined snake_case `type_url` (field 1 of
+// `google.protobuf.Any`); the snake_case <-> camelCase translation lives inside
+// `anySubstitutions` so callers never see snake_case.
+//
+// Using bufbuild's `Any` directly removes the need for adapter functions when
+// crossing the codec-protobuf <-> bufbuild boundary (e.g. inside `@dxos/rpc`).
+export type { Any } from '@bufbuild/protobuf/wkt';
 
 // eslint-disable-next-line camelcase
 export type WithTypeUrl<T extends {}> = T & { '@type': string };

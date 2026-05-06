@@ -210,7 +210,7 @@ export class MemorySignalManager implements SignalManager {
   }
 }
 const dec = (payload: Any) => {
-  if (!payload.type_url.endsWith('ReliablePayload')) {
+  if (!payload.typeUrl.endsWith('ReliablePayload')) {
     return {};
   }
 

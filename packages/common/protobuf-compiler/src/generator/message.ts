@@ -13,9 +13,31 @@ import { getFieldType } from './field';
 const f = ts.factory;
 
 /**
+ * Types whose generated interface should be replaced by a re-export from
+ * `@bufbuild/protobuf/wkt`. Lets `@dxos/codec-protobuf` and `@dxos/rpc` share
+ * the same `Any` shape and skip wire-format adapters at the RPC layer.
+ */
+const BUFBUILD_WKT_REEXPORTS: Record<string, string> = {
+  '.google.protobuf.Any': 'Any',
+};
+
+/**
  * {@link file://./../configure.ts#l5}
  */
 export const createMessageDeclaration = (type: protobufjs.Type, ctx: GeneratorContext) => {
+  // Special case: emit `export type { Any } from '@bufbuild/protobuf/wkt';`
+  // instead of a fresh interface so codec-protobuf-substituted Any matches the
+  // bufbuild static type used elsewhere.
+  const reexportName = BUFBUILD_WKT_REEXPORTS[type.fullName];
+  if (reexportName) {
+    return f.createExportDeclaration(
+      undefined,
+      true, // type-only
+      f.createNamedExports([f.createExportSpecifier(false, undefined, f.createIdentifier(reexportName))]),
+      f.createStringLiteral('@bufbuild/protobuf/wkt'),
+    );
+  }
+
   const declaration = f.createInterfaceDeclaration(
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
     type.name,
@@ -61,9 +83,9 @@ const getFieldDocComment = (field: protobufjs.Field) => {
   if (field.options) {
     sections.push(
       'Options:\n' +
-        Object.entries(field.options)
-          .map(([key, value]) => `  - ${key} = ${JSON.stringify(value)}`)
-          .join('\n'),
+      Object.entries(field.options)
+        .map(([key, value]) => `  - ${key} = ${JSON.stringify(value)}`)
+        .join('\n'),
     );
   }
 

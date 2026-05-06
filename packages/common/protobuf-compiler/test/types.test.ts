@@ -98,8 +98,9 @@ describe('Schema', () => {
         type: TaskType.IN_PROGRESS,
       },
       undecodedAny: {
+        $typeName: 'google.protobuf.Any',
         '@type': 'google.protobuf.Any',
-        type_url: 'bar',
+        typeUrl: 'bar',
         value: Buffer.from('foo'),
       },
       importedAny: {
@@ -135,8 +136,9 @@ describe('Schema', () => {
         type: TaskType.IN_PROGRESS,
       },
       undecodedAny: {
+        $typeName: 'google.protobuf.Any',
         '@type': 'google.protobuf.Any',
-        type_url: 'bar',
+        typeUrl: 'bar',
         value: Buffer.from('foo'),
       },
       importedAny: {

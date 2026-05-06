@@ -36,6 +36,7 @@
     "ts-morph": "catalog:"
   },
   "devDependencies": {
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/protobuf-test": "workspace:*",
     "@types/argparse": "catalog:",

@@ -27,13 +27,16 @@ const expectBufAnyBytesEqual = (a: Any | undefined, b: Any) => {
   expect(Array.from(a!.value)).toEqual(Array.from(b.value));
 };
 
-/** Legacy codec returns snake_case `Any` helper objects (`type_url`). */
+/**
+ * Legacy codec now returns the same camelCase `typeUrl` shape (the wire still
+ * uses snake_case but the substitution layer translates it on encode/decode).
+ */
 const expectLegacyPayloadMatchesBufAny = (
-  decoded: { type_url?: string; value?: Uint8Array } | undefined,
+  decoded: { typeUrl?: string; value?: Uint8Array } | undefined,
   expected: Any,
 ) => {
   expect(decoded).toBeDefined();
-  expect(decoded!.type_url).toEqual(expected.typeUrl);
+  expect(decoded!.typeUrl).toEqual(expected.typeUrl);
   expect(Array.from(decoded!.value ?? [])).toEqual(Array.from(expected.value));
 };
 
@@ -200,7 +203,7 @@ describe('RpcMessageCodec', () => {
             method: 'TestService.Echo',
             payload: {
               '@type': 'google.protobuf.Any',
-              type_url: samplePayload.typeUrl,
+              typeUrl: samplePayload.typeUrl,
               value: samplePayload.value,
             } as any,
             stream: false,
@@ -251,7 +254,7 @@ describe('RpcMessageCodec', () => {
             id: 21,
             payload: {
               '@type': 'google.protobuf.Any',
-              type_url: samplePayload.typeUrl,
+              typeUrl: samplePayload.typeUrl,
               value: samplePayload.value,
             } as any,
           },

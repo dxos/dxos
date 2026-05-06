@@ -219,14 +219,15 @@ export class Messenger {
       author,
       recipient,
       payload: {
-        type_url: 'dxos.mesh.messaging.ReliablePayload',
+        $typeName: 'google.protobuf.Any',
+        typeUrl: 'dxos.mesh.messaging.ReliablePayload',
         value: ReliablePayload.encode(reliablePayload, { preserveAny: true }),
       },
     });
   }
 
   private async _handleMessage(message: Message): Promise<void> {
-    switch (message.payload.type_url) {
+    switch (message.payload.typeUrl) {
       case 'dxos.mesh.messaging.ReliablePayload': {
         await this._handleReliablePayload(message);
         break;
@@ -239,7 +240,7 @@ export class Messenger {
   }
 
   private async _handleReliablePayload({ author, recipient, payload }: Message): Promise<void> {
-    invariant(payload.type_url === 'dxos.mesh.messaging.ReliablePayload');
+    invariant(payload.typeUrl === 'dxos.mesh.messaging.ReliablePayload');
     const reliablePayload: ReliablePayload = ReliablePayload.decode(payload.value, { preserveAny: true });
 
     log('handling message', { messageId: reliablePayload.messageId });
@@ -270,7 +271,7 @@ export class Messenger {
   }
 
   private async _handleAcknowledgement({ payload }: { payload: Any }): Promise<void> {
-    invariant(payload.type_url === 'dxos.mesh.messaging.Acknowledgement');
+    invariant(payload.typeUrl === 'dxos.mesh.messaging.Acknowledgement');
     this._onAckCallbacks.get(Acknowledgement.decode(payload.value).messageId)?.();
   }
 
@@ -292,7 +293,8 @@ export class Messenger {
       author: recipient,
       recipient: author,
       payload: {
-        type_url: 'dxos.mesh.messaging.Acknowledgement',
+        $typeName: 'google.protobuf.Any',
+        typeUrl: 'dxos.mesh.messaging.Acknowledgement',
         value: Acknowledgement.encode({ messageId }),
       },
     });
@@ -312,7 +314,7 @@ export class Messenger {
     {
       const listenerMap = this._listeners.get({
         peerId: message.recipient.peerKey,
-        payloadType: message.payload.type_url,
+        payloadType: message.payload.typeUrl,
       });
       if (listenerMap) {
         for (const listener of listenerMap) {

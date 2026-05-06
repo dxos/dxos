@@ -47,9 +47,9 @@ const replacer =
 
       if (value?.['@type'] === 'google.protobuf.Any') {
         try {
-          const codec = schema.getCodecForType(value.type_url);
+          const codec = schema.getCodecForType(value.typeUrl);
           return {
-            '@type': value.type_url,
+            '@type': value.typeUrl,
             ...codec.decode(value.value),
           };
         } catch {}

@@ -89,7 +89,8 @@ export const subscribeToRedisQueue = ({
 
 export const rpcCodec = {
   encode: (value: any): Any => ({
-    type_url: 'google.protobuf.Any',
+    $typeName: 'google.protobuf.Any',
+    typeUrl: 'google.protobuf.Any',
     value: Buffer.from(JSON.stringify(value ?? [undefined])),
   }),
   decode: (value: Any): any => JSON.parse(Buffer.from(value.value).toString()),

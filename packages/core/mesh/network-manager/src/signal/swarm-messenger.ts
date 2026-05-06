@@ -58,7 +58,7 @@ export class SwarmMessenger implements SignalMessenger {
       payload: Any;
     },
   ): Promise<void> {
-    if (payload.type_url !== 'dxos.mesh.swarm.SwarmMessage') {
+    if (payload.typeUrl !== 'dxos.mesh.swarm.SwarmMessage') {
       // Ignore not swarm messages.
       return;
     }
@@ -131,7 +131,8 @@ export class SwarmMessenger implements SignalMessenger {
       author,
       recipient,
       payload: {
-        type_url: 'dxos.mesh.swarm.SwarmMessage',
+        $typeName: 'google.protobuf.Any',
+        typeUrl: 'dxos.mesh.swarm.SwarmMessage',
         value: SwarmMessage.encode(networkMessage),
       },
     });

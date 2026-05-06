@@ -30,7 +30,7 @@ export class ServiceDescriptor<S> {
   constructor(
     private readonly _service: pb.Service,
     private readonly _schema: Schema<any>,
-  ) {}
+  ) { }
 
   get serviceProto(): pb.Service {
     return this._service;
@@ -71,8 +71,9 @@ export class Service {
           const stream = backend.callStream(
             method.name,
             {
+              $typeName: 'google.protobuf.Any',
               value: encoded,
-              type_url: method.resolvedRequestType!.fullName,
+              typeUrl: method.resolvedRequestType!.fullName,
             },
             requestOptions,
           );
@@ -84,8 +85,9 @@ export class Service {
           const response = await backend.call(
             method.name,
             {
+              $typeName: 'google.protobuf.Any',
               value: encoded,
-              type_url: method.resolvedRequestType!.fullName,
+              typeUrl: method.resolvedRequestType!.fullName,
             },
             requestOptions,
           );
@@ -110,7 +112,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     private readonly _schema: Schema<any>,
     private readonly _serviceProvider: ServiceProvider<S>,
     private readonly _encodingOptions?: EncodingOptions,
-  ) {}
+  ) { }
 
   /**
    * Request/response method call.
@@ -128,8 +130,9 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     const responseEncoded = responseCodec.encode(response, this._encodingOptions);
 
     return {
+      $typeName: 'google.protobuf.Any',
       value: responseEncoded,
-      type_url: method.resolvedResponseType!.fullName,
+      typeUrl: method.resolvedResponseType!.fullName,
     };
   }
 
@@ -151,8 +154,9 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     return Stream.map(
       responseStream,
       (data): Any => ({
+        $typeName: 'google.protobuf.Any',
         value: responseCodec.encode(data, this._encodingOptions),
-        type_url: method.resolvedResponseType!.fullName,
+        typeUrl: method.resolvedResponseType!.fullName,
       }),
     );
   }

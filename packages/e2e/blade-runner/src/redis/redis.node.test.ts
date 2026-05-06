@@ -109,8 +109,8 @@ describe.skip('Redis', () => {
     const dataAssertion = createDataAssertion();
 
     const aliceReplicator: TestReplicator = new TestReplicator({
-      onConnect: async () => {},
-      onDisconnect: async () => {},
+      onConnect: async () => { },
+      onDisconnect: async () => { },
     });
 
     let aliceConnection: TestReplicatorConnection | undefined;
@@ -192,7 +192,8 @@ const setupRedisClient = async () => {
 };
 
 const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => ({
+  $typeName: 'google.protobuf.Any',
   '@type': 'google.protobuf.Any',
-  type_url: 'dxos.test',
+  typeUrl: 'dxos.test',
   value: Buffer.from(value),
 });

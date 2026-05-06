@@ -33,7 +33,7 @@ describe('Protobuf service', () => {
             expect(req.data).toEqual('requestData');
             return { data: 'responseData' };
           },
-          voidCall: async () => {},
+          voidCall: async () => { },
         },
       },
       port: alicePort,
@@ -72,7 +72,7 @@ describe('Protobuf service', () => {
 
             return await handlerFn();
           },
-          voidCall: async () => {},
+          voidCall: async () => { },
         },
       },
       port: alicePort,
@@ -113,7 +113,7 @@ describe('Protobuf service', () => {
             expect(req.data).toEqual('requestData');
             return { data: 'responseData' };
           },
-          voidCall: async () => {},
+          voidCall: async () => { },
         },
       },
       port: alicePort,
@@ -223,7 +223,7 @@ describe('Protobuf service', () => {
               expect(req.data).toEqual('requestData');
               return { data: 'responseData' };
             },
-            voidCall: async () => {},
+            voidCall: async () => { },
           },
           PingService: {
             ping: async (req) => ({ nonce: req.nonce }),
@@ -279,7 +279,7 @@ describe('Protobuf service', () => {
               expect(req.data).toEqual('requestData');
               return { data: 'responseData' };
             },
-            voidCall: async () => {},
+            voidCall: async () => { },
           },
         },
         port: bobPort,
@@ -315,7 +315,7 @@ describe('Protobuf service', () => {
               expect(req.data).toEqual('requestData');
               return { data: 'responseData' };
             },
-            voidCall: async () => {},
+            voidCall: async () => { },
           }),
         },
         port: alicePort,
@@ -353,7 +353,7 @@ describe('Protobuf service', () => {
                 expect(req.data).toEqual('requestData');
                 return { data: 'responseData' };
               },
-              voidCall: async () => {},
+              voidCall: async () => { },
             };
           },
         },
@@ -507,11 +507,12 @@ describe('Protobuf service', () => {
           TestAnyService: {
             testCall: async (req) => {
               expect(req.payload['@type']).toEqual('google.protobuf.Any');
-              expect(req.payload.type_url).toEqual('example.testing.Example');
+              expect(req.payload.typeUrl).toEqual('example.testing.Example');
               expect(req.payload.value).toEqual(encodeMessage('hello'));
               return {
                 payload: {
-                  type_url: 'example.testing.Example',
+                  $typeName: 'google.protobuf.Any',
+                  typeUrl: 'example.testing.Example',
                   value: encodeMessage('world'),
                 },
               };
@@ -538,12 +539,13 @@ describe('Protobuf service', () => {
 
       const response = await client.rpc.TestAnyService.testCall({
         payload: {
-          type_url: 'example.testing.Example',
+          $typeName: 'google.protobuf.Any',
+          typeUrl: 'example.testing.Example',
           value: encodeMessage('hello'),
         },
       });
 
-      expect(response.payload.type_url).toEqual('example.testing.Example');
+      expect(response.payload.typeUrl).toEqual('example.testing.Example');
       expect(response.payload.value).toEqual(encodeMessage('world'));
     });
   });
@@ -561,7 +563,7 @@ describe('Protobuf service', () => {
             await sleep(10);
             return { data: 'responseData' };
           },
-          voidCall: async () => {},
+          voidCall: async () => { },
         },
       },
       port: alicePort,
@@ -605,7 +607,7 @@ describe('Protobuf service', () => {
             receivedCtx = options?.ctx;
             return { data: 'responseData' };
           },
-          voidCall: async () => {},
+          voidCall: async () => { },
         },
       },
       port: alicePort,
@@ -644,7 +646,7 @@ describe('Protobuf service', () => {
             receivedOptions = options;
             return { data: 'responseData' };
           },
-          voidCall: async () => {},
+          voidCall: async () => { },
         },
       },
       port: alicePort,

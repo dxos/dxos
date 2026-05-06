@@ -17,8 +17,9 @@ import { type Message, type PeerInfo } from '../signal-methods';
 import { SignalClient } from './signal-client';
 
 const PAYLOAD: TaggedType<TYPES, 'google.protobuf.Any'> = {
+  $typeName: 'google.protobuf.Any',
   '@type': 'google.protobuf.Any',
-  type_url: 'google.protobuf.Any',
+  typeUrl: 'google.protobuf.Any',
   value: Buffer.from('1'),
 };
 
