@@ -287,12 +287,19 @@ const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
       [selectedValue, onSelectedValueChange, getItemValues, triggerSelect, onValueChange, onKeyDown],
     );
 
+    // Spread `value` only when defined: a caller that wants a
+    // controlled input passes `value` + `onValueChange`; a caller that
+    // just wants the keyboard pattern (Default story) passes neither
+    // and gets an uncontrolled input that accepts keystrokes normally.
+    // Without this guard `value={value ?? ''}` would force-control the
+    // input, swallowing every keystroke when no `onValueChange` is
+    // wired (input visually accepts characters then re-renders empty).
     return (
       <Input.Root>
         <Input.TextInput
           {...props}
           autoFocus={autoFocus && !hasIosKeyboard}
-          value={value ?? ''}
+          {...(value !== undefined && { value })}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           ref={forwardedRef}
