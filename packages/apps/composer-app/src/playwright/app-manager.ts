@@ -122,22 +122,10 @@ export class AppManager {
   }
 
   async shareSpace(): Promise<void> {
-    const membersHeading = this.currentWorkspace
-      .getByTestId('spacePlugin.members')
-      .first()
-      .getByTestId('treeItem.heading')
-      .first();
-    // The members panel is nested under the `spacePlugin.settings` section. If the
-    // section is collapsed, click its toggle to expand it before clicking members.
-    if (!(await membersHeading.isVisible())) {
-      await this.currentWorkspace
-        .getByTestId('spacePlugin.settings')
-        .first()
-        .getByTestId('treeItem.toggle')
-        .first()
-        .click();
-    }
-    await membersHeading.click();
+    // Members is nested under the Settings section in the navtree.
+    // Expand Settings then select Members to open the share page.
+    await this.currentWorkspace.getByTestId('spacePlugin.settings.toggle').first().click();
+    await this.currentWorkspace.getByTestId('spacePlugin.members.heading').first().click();
   }
 
   async createSpaceInvitation(): Promise<string> {

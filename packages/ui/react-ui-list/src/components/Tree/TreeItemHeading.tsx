@@ -17,12 +17,13 @@ export type TreeItemHeadingProps = {
   iconHue?: string;
   disabled?: boolean;
   current?: boolean;
+  testId?: string;
   onSelect?: (option: boolean) => void;
 };
 
 export const TreeItemHeading = memo(
   forwardRef<HTMLButtonElement, TreeItemHeadingProps>(
-    ({ label, className, icon, iconHue, disabled, current, onSelect }, forwardedRef) => {
+    ({ label, className, icon, iconHue, disabled, current, testId = 'treeItem.heading', onSelect }, forwardedRef) => {
       const { t } = useTranslation();
       const styles = iconHue ? getStyles(iconHue) : undefined;
 
@@ -54,7 +55,7 @@ export const TreeItemHeading = memo(
           ref={forwardedRef}
         >
           <Button
-            data-testid='treeItem.heading'
+            data-testid={testId}
             variant='ghost'
             classNames={[
               'grow gap-2 ps-0.5 hover:bg-transparent dark:hover:bg-transparent',
