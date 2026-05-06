@@ -11,6 +11,7 @@ import React, {
   type FocusEvent,
   type PropsWithChildren,
   forwardRef,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -22,8 +23,7 @@ import { useDefaultValue } from '@dxos/react-hooks';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { AttentionManager, getAttendables } from '../attention';
-import { type Attention } from '../types';
+import { type Attention, AttentionManager, getAttendables } from '../../attention';
 
 const ATTENTION_NAME = 'Attention';
 const ATTENDABLE_ATTRIBUTE = 'data-attendable-id';
@@ -42,10 +42,10 @@ const UNKNOWN_ATTENDABLE = { hasAttention: false, isAncestor: false, isRelated: 
 /**
  * Subscribe to the attention state for a qualified graph ID.
  */
+// TODO(burdon): Unify with seleciton and change to contextId?
 const useAttention = (attendableId?: string): Attention => {
   const { attention } = useAttentionContext(ATTENTION_NAME);
   const [state, setState] = useState<Attention>(UNKNOWN_ATTENDABLE);
-
   useEffect(() => {
     if (!attendableId || !attention) {
       setState(UNKNOWN_ATTENDABLE);
@@ -66,7 +66,6 @@ const useAttention = (attendableId?: string): Attention => {
 const useAttended = () => {
   const { attention } = useAttentionContext(ATTENTION_NAME);
   const [current, setCurrent] = useState<readonly string[]>([]);
-
   useEffect(() => {
     if (!attention) {
       return;
@@ -97,39 +96,38 @@ const useAttentionAttributes = (attendableId?: string) => {
   }, [attendableId, hasAttention]);
 };
 
-const RootAttentionProvider = ({
-  children,
-  attention: propsAttention,
-  onChange,
-}: PropsWithChildren<
-  Partial<{
-    attention: AttentionManager;
-    onChange: (nextAttended: string[]) => void;
-  }>
->) => {
+type RootAttentionProviderProps = PropsWithChildren<{
+  attention?: AttentionManager;
+  onChange?: (nextAttended: string[]) => void;
+}>;
+
+const RootAttentionProvider = ({ children, attention: propsAttention, onChange }: RootAttentionProviderProps) => {
   const registry = useContext(RegistryContext);
   const attention = useDefaultValue(propsAttention, () => new AttentionManager(registry));
 
-  const handleFocus = (event: FocusEvent) => {
-    // NOTE(thure): Use the following to debug focus movement across the app:
-    log('focus', { related: event.relatedTarget, target: event.target });
+  const handleFocus = useCallback(
+    (event: FocusEvent) => {
+      // NOTE(thure): Use the following to debug focus movement across the app:
+      log('focus', { related: event.relatedTarget, target: event.target });
 
-    const selector = [
-      '[data-attendable-id]',
-      ...Array.from(document.querySelectorAll('[aria-controls]')).map(
-        (el) => `[id="${el.getAttribute('aria-controls')}"]`,
-      ),
-    ].join(',');
-    const prev = attention.getCurrent();
-    const next = getAttendables(selector, event.target);
-    // TODO(wittjosiah): Not allowing empty state means that the attended item is not strictly guaranteed to be in the DOM.
-    //   Currently this depends on the deck in order to ensure that when the attended item is removed something else is attended.
-    // Only update state if the result is different and not empty.
-    if (next.length > 0 && (prev.length !== next.length || !!prev.find((id, index) => next[index] !== id))) {
-      attention.update(next);
-      onChange?.(next);
-    }
-  };
+      const selector = [
+        '[data-attendable-id]',
+        ...Array.from(document.querySelectorAll('[aria-controls]')).map(
+          (el) => `[id="${el.getAttribute('aria-controls')}"]`,
+        ),
+      ].join(',');
+      const prev = attention.getCurrent();
+      const next = getAttendables(selector, event.target);
+      // TODO(wittjosiah): Not allowing empty state means that the attended item is not strictly guaranteed to be in the DOM.
+      //   Currently this depends on the deck in order to ensure that when the attended item is removed something else is attended.
+      // Only update state if the result is different and not empty.
+      if (next.length > 0 && (prev.length !== next.length || !!prev.find((id, index) => next[index] !== id))) {
+        attention.update(next);
+        onChange?.(next);
+      }
+    },
+    [attention, onChange],
+  );
 
   return (
     <AttentionContextProvider attention={attention}>
@@ -175,7 +173,4 @@ export {
   useAttention,
   useAttended,
   useAttentionAttributes,
-  ATTENTION_NAME,
-  ATTENDABLE_ATTRIBUTE,
-  ATTENTION_SOURCE_ATTRIBUTE,
 };

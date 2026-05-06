@@ -15,7 +15,7 @@ import {
   type SelectionMode,
   type SelectionResult,
   defaultSelection,
-} from '../selection';
+} from '../../selection';
 
 const SELECTION_NAME = 'Selection';
 
@@ -23,27 +23,25 @@ type SelectionContextValue = {
   selection: SelectionManager;
 };
 
-const [SelectionContextProvider, useSelectionContext] = createContext<SelectionContextValue>(SELECTION_NAME, {
-  selection: undefined as unknown as SelectionManager,
-});
+const [SelectionContextProvider, useSelectionContext] = createContext<SelectionContextValue>(SELECTION_NAME);
 
 /**
  * Manages selection state across the app for multiple contexts.
  */
-// TODO(burdon): When is the selection removed?
 export const SelectionProvider = ({
   children,
-  selection: propsSelection,
+  selection: selectionProp,
 }: PropsWithChildren<{ selection?: SelectionManager }>) => {
   const registry = useContext(RegistryContext);
-  const selection = useDefaultValue(propsSelection, () => new SelectionManager(registry));
+  const selection = useDefaultValue(selectionProp, () => new SelectionManager(registry));
+
   return <SelectionContextProvider selection={selection}>{children}</SelectionContextProvider>;
 };
 
 /**
  * Get the selection contexts.
  */
-export const useSelectionManager = () => {
+export const useSelectionManager = (): SelectionManager => {
   const { selection } = useSelectionContext(SELECTION_NAME);
   return selection;
 };
@@ -101,16 +99,12 @@ export type UseSelectionActions = {
 /**
  * Provides functions to manage the selection state for multiple contexts.
  */
-// TODO(burdon): Mode not used.
-export const useSelectionActions = (contextIds: string[], mode: SelectionMode = 'multi'): UseSelectionActions => {
-  const stableContextIds = useMemo(() => contextIds, [JSON.stringify(contextIds)]); // TODO(burdon): Avoid stringify.
+export const useSelectionActions = (contextIds: string[]): UseSelectionActions => {
+  const stableContextIds = useMemo(() => contextIds, [JSON.stringify(contextIds)]);
   const { selection } = useSelectionContext(SELECTION_NAME);
 
   const singleSelect = useCallback(
     (id: string) => {
-      if (!selection) {
-        return;
-      }
       for (const contextId of stableContextIds) {
         selection.updateSingle(contextId, id);
       }
@@ -120,9 +114,6 @@ export const useSelectionActions = (contextIds: string[], mode: SelectionMode = 
 
   const multiSelect = useCallback(
     (ids: string[]) => {
-      if (!selection) {
-        return;
-      }
       for (const contextId of stableContextIds) {
         selection.updateMulti(contextId, ids);
       }
@@ -132,9 +123,6 @@ export const useSelectionActions = (contextIds: string[], mode: SelectionMode = 
 
   const rangeSelect = useCallback(
     (from: string, to: string) => {
-      if (!selection) {
-        return;
-      }
       for (const contextId of stableContextIds) {
         selection.updateRange(contextId, from, to);
       }
@@ -144,9 +132,6 @@ export const useSelectionActions = (contextIds: string[], mode: SelectionMode = 
 
   const toggle = useCallback(
     (id: string) => {
-      if (!selection) {
-        return;
-      }
       for (const contextId of stableContextIds) {
         selection.toggleSelection(contextId, id);
       }
@@ -155,9 +140,6 @@ export const useSelectionActions = (contextIds: string[], mode: SelectionMode = 
   );
 
   const clear = useCallback(() => {
-    if (!selection) {
-      return;
-    }
     for (const contextId of stableContextIds) {
       selection.clearSelection(contextId);
     }

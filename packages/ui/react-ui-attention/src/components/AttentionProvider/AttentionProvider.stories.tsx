@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { withAttention } from '../testing';
+import { withAttention } from '../../testing';
 import { useAttentionAttributes } from './AttentionProvider';
 
 const Attendable = ({ id }: { id: string }) => {
