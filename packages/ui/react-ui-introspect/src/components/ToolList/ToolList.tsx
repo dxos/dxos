@@ -13,8 +13,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Row, RowList } from '@dxos/react-ui-list';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { Row, RowList } from '@dxos/react-ui-list';
 
 import type { ToolEntry } from '../types';
 

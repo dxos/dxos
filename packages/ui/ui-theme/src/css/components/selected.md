@@ -6,12 +6,12 @@ class only fires when the matching ARIA attribute is set on the same
 element.** Mismatches (e.g. `dx-current` paired with `aria-selected`)
 silently render as a plain row.
 
-| Class             | Bound selector              | Pair with                              | Use when                                                                                                       |
-| ----------------- | --------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `dx-hover`        | `hover:`                    | (no ARIA — pure visual affordance)     | Always, on any clickable row. Adds the cursor + hover bg/text.                                                 |
-| `dx-selected`     | `aria-selected:`            | `aria-selected={boolean}`              | A row is "the chosen one" driving a master/detail panel. Listbox / option pattern. Multi-select OK.            |
-| `dx-current`      | `aria-[current=true]:`      | `aria-current={'page' \| 'true' \| …}` | A row is "where you are" in a navigation set (current page, current step). At most one current per group.      |
-| `dx-highlighted`  | `data-[highlighted]:`       | Radix `data-highlighted` (managed)     | A Radix-managed transient highlight (menu / combobox active option). Don't set the attribute manually.         |
+| Class            | Bound selector         | Pair with                              | Use when                                                                                                  |
+| ---------------- | ---------------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `dx-hover`       | `hover:`               | (no ARIA — pure visual affordance)     | Always, on any clickable row. Adds the cursor + hover bg/text.                                            |
+| `dx-selected`    | `aria-selected:`       | `aria-selected={boolean}`              | A row is "the chosen one" driving a master/detail panel. Listbox / option pattern. Multi-select OK.       |
+| `dx-current`     | `aria-[current=true]:` | `aria-current={'page' \| 'true' \| …}` | A row is "where you are" in a navigation set (current page, current step). At most one current per group. |
+| `dx-highlighted` | `data-[highlighted]:`  | Radix `data-highlighted` (managed)     | A Radix-managed transient highlight (menu / combobox active option). Don't set the attribute manually.    |
 
 ## Rules
 

@@ -563,7 +563,7 @@ Files cited in this audit (paths relative to repo root):
 
 Idiomatic patterns the agent has been corrected on while building this
 PR. Future agents working in `react-ui-*` should treat this as a
-pre-flight checklist — these are the things to get right *before*
+pre-flight checklist — these are the things to get right _before_
 opening a draft PR.
 
 - **`PropsWithChildren`** — use `React.PropsWithChildren<…>` for prop

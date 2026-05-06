@@ -11,12 +11,7 @@ import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite'
 import React, { useState } from 'react';
 
 import { List } from './List';
-import {
-  ListItem,
-  ListItemCollapsibleContent,
-  ListItemHeading,
-  ListItemOpenTrigger,
-} from './ListItem';
+import { ListItem, ListItemCollapsibleContent, ListItemHeading, ListItemOpenTrigger } from './ListItem';
 
 type Item = { id: string; label: string };
 
