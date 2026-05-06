@@ -76,6 +76,7 @@ import { type SyncOptions, SyncGitHubRepositories } from './definitions';
 
 /** Per-target parallelism across selected repos. */
 const REPO_CONCURRENCY = 4;
+const ISSUE_CONCURRENCY = 4;
 
 // ── Foreign-key + lookup helpers ────────────────────────────────────────────
 
@@ -466,29 +467,34 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
                     const issues = yield* GitHubApi.fetchRepoIssues(remoteRepo.owner.login, remoteRepo.name, {
                       since,
                     });
-                    for (const issue of issues) {
-                      // Resolve assignee — first assignee only for v1.
-                      const assigneeLogin = issue.assignees?.[0]?.login;
-                      let assignedPerson: Person.Person | undefined = assigneeLogin
-                        ? personByLogin.get(assigneeLogin)
-                        : undefined;
-                      // External (non-org) assignees: upsert a standalone
-                      // Person without an org link.
-                      if (!assignedPerson && issue.assignees?.[0]) {
-                        assignedPerson = yield* upsertPerson(issue.assignees[0], undefined);
-                        personByLogin.set(issue.assignees[0].login, assignedPerson);
-                        pulledPeople++;
-                      }
+                    yield* Effect.forEach(
+                      issues,
+                      (issue) =>
+                        Effect.gen(function* () {
+                          // Resolve assignee — first assignee only for v1.
+                          const assigneeLogin = issue.assignees?.[0]?.login;
+                          let assignedPerson: Person.Person | undefined = assigneeLogin
+                            ? personByLogin.get(assigneeLogin)
+                            : undefined;
+                          // External (non-org) assignees: upsert a standalone
+                          // Person without an org link.
+                          if (!assignedPerson && issue.assignees?.[0]) {
+                            assignedPerson = yield* upsertPerson(issue.assignees[0], undefined);
+                            personByLogin.set(issue.assignees[0].login, assignedPerson);
+                            pulledPeople++;
+                          }
 
-                      const { created } = yield* upsertTask(issue, assignedPerson, project);
-                      if (created) {
-                        pulledTasks++;
-                      }
+                          const { created } = yield* upsertTask(issue, assignedPerson, project);
+                          if (created) {
+                            pulledTasks++;
+                          }
 
-                      // TODO(burdon): Comments sync disabled — re-enable
-                      // once chunked/yielded to avoid automerge_wasm crash
-                      // when upserting many comments in one tick.
-                    }
+                          // TODO(burdon): Comments sync disabled — re-enable
+                          // once chunked/yielded to avoid automerge_wasm crash
+                          // when upserting many comments in one tick.
+                        }),
+                      { concurrency: ISSUE_CONCURRENCY },
+                    );
                   }),
                 );
 
