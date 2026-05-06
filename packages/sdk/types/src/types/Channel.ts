@@ -25,7 +25,7 @@ export const Channel = Schema.Struct({
     version: '0.1.0',
   }),
   Annotation.IconAnnotation.set({
-    icon: 'ph--chat-circle--regular',
+    icon: 'ph--hash--regular',
     hue: 'rose',
   }),
   FeedAnnotation.set(true),
