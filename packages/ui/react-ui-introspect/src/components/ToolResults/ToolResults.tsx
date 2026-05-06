@@ -5,17 +5,18 @@
 // Renders an MCP tool's response. The MCP SDK returns
 // `{ content: [{ type: 'text', text: <stringified JSON> }] }` for our tools,
 // so we accept either the raw envelope or pre-parsed data and pretty-print
-// via the JsonHighlighter.
+// via the `Syntax` JSON compound (filter input + scrolling viewport +
+// highlighted code leaf).
 
-import React, { type HTMLAttributes } from 'react';
+import React from 'react';
 
 import { Message, type ThemedClassName } from '@dxos/react-ui';
-import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 export type ToolResultsProps = ThemedClassName<{
   /**
-   * Result data to render. Already-parsed values land in JsonHighlighter as-is.
+   * Result data to render. Already-parsed values land in `Syntax.Root` as-is.
    * For convenience, an MCP tool envelope shape (`{ content: [...] }`) is also
    * accepted and the embedded text payload is parsed on the fly.
    */
@@ -28,24 +29,11 @@ export type ToolResultsProps = ThemedClassName<{
 
 type State = 'loading' | 'error' | 'empty' | 'result';
 
-// Shared class fragments — every variant pads the wrapper, and the
-// loading / empty hints share the same description-text treatment.
-const ROOT = 'p-3';
-const HINT = 'text-sm text-description';
-
-const VARIANTS: Record<State, ThemedClassName<Pick<HTMLAttributes<HTMLDivElement>, 'role'>>> = {
-  // `role='status'` implies `aria-live='polite'` — no need to set both.
-  loading: { classNames: [ROOT, HINT], role: 'status' },
-  error: { classNames: ROOT },
-  empty: { classNames: [ROOT, HINT, 'italic'] },
-  result: { classNames: [ROOT, 'overflow-auto'] },
-};
-
 export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
   ({ result, error, loading, ...props }, forwardedRef) => {
     const state: State = loading ? 'loading' : error ? 'error' : result === undefined ? 'empty' : 'result';
     return (
-      <div {...composableProps(props, VARIANTS[state])} ref={forwardedRef}>
+      <div {...composableProps(props, { classNames: 'p-3 text-sm text-description' })} ref={forwardedRef}>
         {state === 'loading' && 'Calling tool…'}
         {state === 'error' && (
           <Message.Root valence='error'>
@@ -58,7 +46,16 @@ export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
             No result yet — fill the form and click <strong>Run tool</strong>.
           </>
         )}
-        {state === 'result' && <JsonHighlighter data={tryParseMcpEnvelope(result)} />}
+        {state === 'result' && (
+          <Syntax.Root data={tryParseMcpEnvelope(result)}>
+            <Syntax.Content>
+              <Syntax.Filter />
+              <Syntax.Viewport>
+                <Syntax.Code />
+              </Syntax.Viewport>
+            </Syntax.Content>
+          </Syntax.Root>
+        )}
       </div>
     );
   },
