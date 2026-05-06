@@ -23,105 +23,56 @@ random.seed(1234);
 
 type StoryItem = { value: string; label: string };
 
-const items: StoryItem[] = Array.from({ length: 24 }, (_, i) => ({
+const allItems: StoryItem[] = Array.from({ length: 24 }, (_, i) => ({
   value: `item-${i}`,
   label: random.commerce.productName(),
 })).sort((a, b) => a.label.localeCompare(b.label));
 
-//
-// Default — Picker with all items rendered. Caller supplies the
-// `<ul role='listbox'>` wrapper around items (Picker itself doesn't own
-// the listbox role).
-//
-
-// `Picker.Item` carries `dx-hover dx-selected` by default — same
-// grammar as `Row`. Stories add only padding / sizing.
+// Picker.Item carries `dx-hover dx-selected` by default — same grammar
+// as Row. Stories add only padding / sizing.
 const itemPadding = 'px-2 py-1 rounded-xs';
 
-const DefaultStory = () => {
-  const [picked, setPicked] = useState<string | undefined>();
-  return (
-    <div className='flex flex-col gap-2 w-[24rem] border border-separator p-2 rounded-md'>
-      <Picker.Root>
-        <Picker.Input placeholder='↑/↓ to navigate, Enter to pick' autoFocus />
-        <ul role='listbox' className='flex flex-col mt-2 max-h-[20rem] overflow-auto'>
-          {items.map((item) => (
-            <Picker.Item
-              key={item.value}
-              value={item.value}
-              onSelect={() => setPicked(item.value)}
-              classNames={itemPadding}
-            >
-              {item.label}
-            </Picker.Item>
-          ))}
-        </ul>
-      </Picker.Root>
-      <div className='text-sm text-description'>
-        Picked: <span className='font-mono'>{picked ?? '—'}</span>
-      </div>
-    </div>
-  );
+//
+// Single configurable story. Each variant exported below sets a
+// different combination of props — keeps the per-variant code to one
+// line at the bottom of the file. See `AUDIT.md` §11 corrections for
+// the convention.
+//
+
+type StoryArgs = {
+  /** Items to render. Defaults to the full 24-item catalog. */
+  items?: StoryItem[];
+  /** When true, the input is controlled and filters the rendered set. */
+  controlled?: boolean;
+  /** Indices into `items` that should render disabled. */
+  disabledIndices?: number[];
 };
 
-//
-// Filtering — caller filters items in-memory and renders only matches.
-// Picker re-runs its auto-select-first when the rendered set changes,
-// so the highlighted option is always valid.
-//
-
-const FilteringStory = () => {
+const DefaultStory = ({ items = allItems, controlled = false, disabledIndices = [] }: StoryArgs = {}) => {
+  const [picked, setPicked] = useState<string | undefined>();
   const [query, setQuery] = useState('');
-  const [picked, setPicked] = useState<string | undefined>();
-  const filtered = useMemo(
-    () => items.filter((item) => item.label.toLowerCase().includes(query.toLowerCase())),
-    [query],
+
+  const visible = useMemo(
+    () =>
+      controlled
+        ? items
+            .map((item, originalIndex) => ({ item, originalIndex }))
+            .filter(({ item }) => item.label.toLowerCase().includes(query.toLowerCase()))
+        : items.map((item, originalIndex) => ({ item, originalIndex })),
+    [controlled, items, query],
   );
 
   return (
     <div className='flex flex-col gap-2 w-[24rem] border border-separator p-2 rounded-md'>
       <Picker.Root>
-        <Picker.Input placeholder='Filter…' value={query} onValueChange={setQuery} autoFocus />
+        <Picker.Input
+          autoFocus
+          placeholder={controlled ? 'Filter…' : '↑/↓ to navigate, Enter to pick'}
+          {...(controlled && { value: query, onValueChange: setQuery })}
+        />
         <ul role='listbox' className='flex flex-col mt-2 max-h-[20rem] overflow-auto'>
-          {filtered.map((item) => (
-            <Picker.Item
-              key={item.value}
-              value={item.value}
-              onSelect={() => setPicked(item.value)}
-              classNames={itemPadding}
-            >
-              {item.label}
-            </Picker.Item>
-          ))}
-          {filtered.length === 0 && (
-            <li role='status' className='px-2 py-1 text-description italic'>
-              No matches
-            </li>
-          )}
-        </ul>
-      </Picker.Root>
-      <div className='text-sm text-description'>
-        Picked: <span className='font-mono'>{picked ?? '—'}</span>
-      </div>
-    </div>
-  );
-};
-
-//
-// WithDisabled — disabled items render but are skipped by the
-// keyboard navigation (registry filters them via `getItemValues`).
-// Click is also blocked.
-//
-
-const WithDisabledStory = () => {
-  const [picked, setPicked] = useState<string | undefined>();
-  return (
-    <div className='flex flex-col gap-2 w-[24rem] border border-separator p-2 rounded-md'>
-      <Picker.Root>
-        <Picker.Input placeholder='Use ↑↓ — disabled rows skip' autoFocus />
-        <ul role='listbox' className='flex flex-col mt-2 max-h-[20rem] overflow-auto'>
-          {items.slice(0, 8).map((item, i) => {
-            const disabled = i === 2 || i === 5;
+          {visible.map(({ item, originalIndex }) => {
+            const disabled = disabledIndices.includes(originalIndex);
             return (
               <Picker.Item
                 key={item.value}
@@ -135,6 +86,11 @@ const WithDisabledStory = () => {
               </Picker.Item>
             );
           })}
+          {controlled && visible.length === 0 && (
+            <li role='status' className='px-2 py-1 text-description italic'>
+              No matches
+            </li>
+          )}
         </ul>
       </Picker.Root>
       <div className='text-sm text-description'>
@@ -147,15 +103,15 @@ const WithDisabledStory = () => {
 const meta = {
   title: 'ui/react-ui-list/Picker',
   decorators: [withTheme()],
-  parameters: {
-    layout: 'centered',
-  },
+  parameters: { layout: 'centered' },
 } satisfies Meta;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { render: DefaultStory };
-export const Filtering: Story = { render: FilteringStory };
-export const WithDisabled: Story = { render: WithDisabledStory };
+export const Default: Story = { render: () => <DefaultStory /> };
+export const Filtering: Story = { render: () => <DefaultStory controlled /> };
+export const WithDisabled: Story = {
+  render: () => <DefaultStory items={allItems.slice(0, 8)} disabledIndices={[2, 5]} />,
+};
