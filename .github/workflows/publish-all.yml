@@ -86,7 +86,6 @@ jobs:
         run: .github/workflows/scripts/bundle-apps.sh
         env:
           NODE_ENV: production
-          NODE_OPTIONS: '--max_old_space_size=12288'
 
       - name: Upload Composer Source Maps to PostHog
         if: env.POSTHOG_CLI_API_KEY != '' && env.COMPOSER_APP_POSTHOG_PROJECT_ID != ''
@@ -100,11 +99,6 @@ jobs:
             --release-name composer \
             --release-version "$GITHUB_SHA"
 
-      - name: Delete Source Maps
-        run: |
-          find packages/apps/composer-app/out/composer -name '*.map' -delete
-          echo "Deleted source maps before deploy"
-
       - name: Deploy Apps
         run: .github/workflows/scripts/deploy-apps.sh
         env:
@@ -114,7 +108,6 @@ jobs:
         run: moon run devtools-extension:bundle
         env:
           NODE_ENV: production
-          NODE_OPTIONS: '--max_old_space_size=12288'
 
       - name: Gather Artifacts for Devtools extension
         run: |

@@ -18,7 +18,7 @@ import {
 } from '@dxos/react-ui-menu';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
 
 export type TableToolbarActionProperties = { type: TableToolbarActionType };
 

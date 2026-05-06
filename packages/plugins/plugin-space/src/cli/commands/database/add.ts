@@ -15,11 +15,11 @@ import { type Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
 import { CommandConfig, Common, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
 import { SpaceProperties } from '@dxos/client/echo';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Operation } from '@dxos/operation';
 
 import { type CreateObject } from '#types';
 

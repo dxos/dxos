@@ -1,7 +1,7 @@
 {
   "name": "@dxos/compute",
   "version": "0.8.3",
-  "description": "Low-level compute API",
+  "description": "Umbrella package for AI-aware DXOS compute primitives.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -10,13 +10,18 @@
   },
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
+    },
+    "./StorageService": {
+      "source": "./src/StorageService.ts",
+      "types": "./dist/types/src/StorageService.d.ts",
+      "default": "./dist/lib/neutral/StorageService.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
@@ -31,31 +36,19 @@
   ],
   "dependencies": {
     "@dxos/ai": "workspace:*",
-    "@dxos/async": "workspace:*",
-    "@dxos/client": "workspace:*",
-    "@dxos/context": "workspace:*",
-    "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/functions": "workspace:*",
-    "@dxos/functions-runtime": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/operation": "workspace:*",
-    "@dxos/plugin-automation": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@dxos/vendor-hyperformula": "workspace:*",
-    "effect": "catalog:",
-    "lodash.defaultsdeep": "catalog:"
+    "@effect-atom/atom": "catalog:",
+    "handlebars": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/random": "workspace:*",
-    "@tldraw/indices": "catalog:",
-    "@types/lodash.defaultsdeep": "catalog:"
+    "effect": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:"

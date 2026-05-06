@@ -9,9 +9,10 @@ import { PublicKey } from '@dxos/keys';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-theme';
 
+import { translations } from '#translations';
+
 import { type MessageEntity, MessageStoryText } from '../testing';
 import { Thread } from '../Thread';
-import { translations } from '../translations';
 import { MessageRoot } from './Message';
 
 const DefaultStory = () => {

@@ -4,9 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Credential, Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
-import { CredentialsService } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 
 export const SyncIssues = Operation.make({
   meta: {
@@ -20,5 +19,5 @@ export const SyncIssues = Operation.make({
     }),
   }),
   output: Schema.Any,
-  services: [CredentialsService, Database.Service],
+  services: [Credential.CredentialsService, Database.Service],
 });

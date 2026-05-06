@@ -3,17 +3,16 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Capability } from '@dxos/app-framework';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { useLayout } from '@dxos/app-toolkit/ui';
+import { Operation } from '@dxos/compute';
 import { Collection, Database, Obj, Type } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Dialog, useTranslation } from '@dxos/react-ui';
@@ -67,7 +66,7 @@ export const CreateObjectDialog = ({
   const viewTypenames = useMemo(() => {
     const set = new Set<string>();
     for (const schema of schemas ?? []) {
-      if (ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
+      if (ViewAnnotation.has(schema)) {
         set.add(Type.getTypename(schema));
       }
     }

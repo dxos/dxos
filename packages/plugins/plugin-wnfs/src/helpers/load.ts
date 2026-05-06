@@ -30,7 +30,7 @@ export const loadWnfs = async ({
   // TODO(wittjosiah): Remove.
   // Delete old properties if they exist.
   if (space.properties.wnfs_access_key !== undefined && space.properties.wnfs_private_forest_cid !== undefined) {
-    Obj.change(space.properties, (obj) => {
+    Obj.update(space.properties, (obj) => {
       delete obj['wnfs_access_key'];
       delete obj['wnfs_private_forest_cid'];
     });
@@ -68,7 +68,7 @@ const createWnfsDir = async (blockstore: Blockstore, space: Space) => {
 
   const cidBytes = await newForest.store(wnfsStore);
 
-  Obj.change(space.properties, (obj) => {
+  Obj.update(space.properties, (obj) => {
     obj.wnfs = {
       accessKey: Uint8Arrays.toString(accessKeyRaw.toBytes(), 'base64'),
       privateForestCid: CID.decode(cidBytes).toString(),

@@ -14,23 +14,30 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { AgentService, AiContextBinder, AiContextService, AiSession, AiSessionService } from '@dxos/assistant';
+import { AiContextBinder, AiContextService, AiSession, AiSessionService } from '@dxos/assistant';
 import { McpServer } from '@dxos/assistant-toolkit';
-import { Blueprint } from '@dxos/blueprints';
 import { ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client-protocol';
+import {
+  Blueprint,
+  Credential,
+  Operation,
+  OperationHandlerSet,
+  OperationRegistry,
+  ServiceNotAvailableError,
+} from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Database, DXN, Feed, Filter, Obj } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { acquireReleaseResource, asyncTaskTaggingLayer } from '@dxos/effect';
 import {
-  CredentialsService,
   FunctionInvocationService,
   feedServiceFromQueueServiceLayer,
   QueueService,
-  ServiceNotAvailableError,
+  credentialsLayerFromDatabase,
 } from '@dxos/functions';
+import { AgentService } from '@dxos/functions-runtime';
 import {
   FeedTraceSink,
   FunctionImplementationResolver,
@@ -43,7 +50,7 @@ import {
 } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
-import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
+import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { AutomationCapabilities } from '#types';
@@ -102,11 +109,14 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
 
   getRuntime(spaceId: SpaceId): AutomationCapabilities.ComputeRuntime {
     if (this.#runtimes.has(spaceId)) {
+      log('getRuntime cache hit', { spaceId });
       return this.#runtimes.get(spaceId)!;
     }
+    log('getRuntime building', { spaceId });
 
     const layer = Layer.unwrapScoped(
       Effect.gen(this, function* () {
+        log('compute runtime layer build: start', { spaceId });
         const client = this.#capabilities.get(ClientCapabilities.Client);
         const aiServiceLayer =
           this.#capabilities.get(AppCapabilities.AiServiceLayer) ?? Layer.die('AiService not found');
@@ -130,16 +140,22 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
 
         const space = client.spaces.get(spaceId);
         invariant(space, `Invalid space: ${spaceId}`);
+        log('compute runtime layer build: waiting for space ready', { spaceId });
+        const waitStarted = Date.now();
         yield* Effect.promise(() => space.waitUntilReady());
+        log('compute runtime layer build: space ready', { spaceId, waitMs: Date.now() - waitStarted });
 
         // Maintain a live query of space-level MCP server configs.
         const mcpQuery = space.db.query(Filter.type(McpServer.McpServer));
         this.#subscriptions.set(spaceId, mcpQuery.subscribe());
 
+        log('compute runtime layer build: composing inner layer', { spaceId });
         return Layer.scopedDiscard(
           Effect.gen(function* () {
+            log('compute runtime inner layer: acquiring services', { spaceId });
             const registry = yield* Registry.AtomRegistry;
             const triggerDispatcher = yield* TriggerDispatcher;
+            log('compute runtime inner layer: services acquired', { spaceId });
             // Track the in-flight start/stop so a new transition cancels the previous one
             // (preserving ordering on rapid toggles) and surfaces failures via the Effect logger.
             let inFlight: Fiber.RuntimeFiber<unknown, unknown> | undefined;
@@ -163,12 +179,14 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             );
             yield* Effect.addFinalizer(() =>
               Effect.sync(() => {
+                log('compute runtime inner layer: finalize', { spaceId });
                 unsubscribe();
                 if (inFlight) {
                   Effect.runFork(Fiber.interrupt(inFlight));
                 }
               }),
             );
+            log('compute runtime inner layer: acquire complete', { spaceId });
           }),
         )
           .pipe(
@@ -243,7 +261,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                       AiService.AiService,
                       OperationRegistry.Service,
                       Blueprint.RegistryService,
-                      CredentialsService,
+                      Credential.CredentialsService,
                     ),
                   );
                 }),
@@ -287,7 +305,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             ),
             Layer.provideMerge(opaqueToolkitProvider),
             Layer.provideMerge(aiServiceLayer),
-            Layer.provideMerge(CredentialsService.layerFromDatabase()),
+            Layer.provideMerge(credentialsLayerFromDatabase()),
             Layer.provideMerge(ClientService.fromClient(client)),
             Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
           )
@@ -300,6 +318,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
     );
 
     const runtime = ManagedRuntime.make(layer);
+    log('getRuntime ready (managed runtime created)', { spaceId });
     this.#runtimes.set(spaceId, runtime);
     return runtime;
   }

@@ -54,9 +54,6 @@
       "path": "../../core/assistant-toolkit"
     },
     {
-      "path": "../../core/blueprints"
-    },
-    {
       "path": "../../core/compute"
     },
     {
@@ -66,6 +63,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-db"
+    },
+    {
       "path": "../../core/functions"
     },
     {
@@ -73,9 +73,6 @@
     },
     {
       "path": "../../core/mesh/edge-client"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"

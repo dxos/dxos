@@ -7,17 +7,17 @@ import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Annotation, Type } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { ClientEvents } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { ViewModel } from '@dxos/schema';
 
-import { BlueprintDefinition, OperationHandler, UndoMappings, ReactSurface } from '#capabilities';
+import { BlueprintDefinition, Migrations, OperationHandler, UndoMappings, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { CreateKanbanSchema, Kanban } from '#types';
-
-import { translations } from './translations';
 
 export const KanbanPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
@@ -53,5 +53,9 @@ export const KanbanPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [Kanban.Kanban] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.SetupMigration,
+    activate: Migrations,
+  }),
   Plugin.make,
 );

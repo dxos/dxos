@@ -28,9 +28,9 @@ import {
   useTestTranscriptionQueue,
   useTestTranscriptionQueueWithEntityExtraction,
 } from '#testing';
+import { translations } from '#translations';
 
 import { SerializationModel } from '../../model';
-import { translations } from '../../translations';
 import { renderByline } from '../../util';
 import { Transcription, type TranscriptionProps } from './Transcription';
 

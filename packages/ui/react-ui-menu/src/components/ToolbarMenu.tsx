@@ -9,7 +9,8 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { composable, composableProps } from '@dxos/ui-theme';
 import { type MenuActionProperties } from '@dxos/ui-types';
 
-import { translationKey } from '../translations';
+import { translationKey } from '#translations';
+
 import {
   type MenuAction,
   type MenuItem,

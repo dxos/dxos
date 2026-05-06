@@ -7,15 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
+import { Credential, Operation, OperationRegistry, Trace } from '@dxos/compute';
 import { Database, Feed } from '@dxos/echo';
-import {
-  ComputeEventLogger,
-  ConfiguredCredentialsService,
-  CredentialsService,
-  FunctionInvocationService,
-  QueueService,
-} from '@dxos/functions';
-import { Operation, OperationRegistry } from '@dxos/operation';
+import { ConfiguredCredentialsService, FunctionInvocationService, QueueService } from '@dxos/functions';
 import { entries } from '@dxos/util';
 
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';
@@ -27,9 +21,9 @@ import { RemoteFunctionExecutionService } from './remote-function-execution-serv
  */
 const SERVICES = {
   ai: AiService.AiService,
-  credentials: CredentialsService,
+  credentials: Credential.CredentialsService,
   database: Database.Service,
-  eventLogger: ComputeEventLogger,
+  trace: Trace.TraceService,
   functionInvocationService: FunctionInvocationService,
   functionCallService: RemoteFunctionExecutionService,
   operationService: Operation.Service,
@@ -101,7 +95,7 @@ export class ServiceContainer {
     const ai =
       this._services.ai != null ? Layer.succeed(AiService.AiService, this._services.ai) : AiService.notAvailable;
     const credentials = Layer.succeed(
-      CredentialsService,
+      Credential.CredentialsService,
       this._services.credentials ?? new ConfiguredCredentialsService(),
     );
     const database =
@@ -112,7 +106,7 @@ export class ServiceContainer {
       this._services.queues != null ? Layer.succeed(QueueService, this._services.queues) : QueueService.notAvailable;
     const feeds =
       this._services.feeds != null ? Layer.succeed(Feed.FeedService, this._services.feeds) : Feed.notAvailable;
-    const eventLogger = Layer.succeed(ComputeEventLogger, this._services.eventLogger ?? ComputeEventLogger.noop);
+    const trace = Layer.succeed(Trace.TraceService, this._services.trace ?? Trace.noopWriter);
     const functionCallService = Layer.succeed(
       RemoteFunctionExecutionService,
       this._services.functionCallService ?? RemoteFunctionExecutionService.mock(),
@@ -134,7 +128,7 @@ export class ServiceContainer {
       database,
       queues,
       feeds,
-      eventLogger,
+      trace,
       functionCallService,
       operationService,
       operationRegistryService,

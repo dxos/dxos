@@ -4,15 +4,13 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { Trace, Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { Operation, Trace, Trigger } from '@dxos/compute';
 import { ClientEvents } from '@dxos/plugin-client/types';
 
 import { AppGraphBuilder, ComputeRuntime, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { AutomationEvents } from '#types';
-
-import { translations } from './translations';
 
 export const AutomationPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

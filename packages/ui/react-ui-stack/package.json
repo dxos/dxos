@@ -12,6 +12,9 @@
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
+  "imports": {
+    "#translations": "./src/translations.ts"
+  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -22,6 +25,12 @@
       "types": "./dist/types/src/playwright/index.d.ts",
       "browser": "./dist/lib/browser/playwright/index.mjs",
       "node": "./dist/lib/node-esm/playwright/index.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "browser": "./dist/lib/browser/translations.mjs",
+      "node": "./dist/lib/node-esm/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

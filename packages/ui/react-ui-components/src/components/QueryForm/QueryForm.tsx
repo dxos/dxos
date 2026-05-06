@@ -10,7 +10,8 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { Picker } from './Picker';
 import { extractTag, extractTypename } from './query';
 

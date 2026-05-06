@@ -7,7 +7,7 @@ import * as Array from 'effect/Array';
 import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
-import { Entity, type Hypergraph, Obj, type QueryResult } from '@dxos/echo';
+import { Entity, type Hypergraph, Obj, Query, type QueryResult } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -124,7 +124,7 @@ export class IndexQuerySource implements QuerySource {
   ): void {
     const queryId = nextQueryId++;
 
-    log('queryIndex', { queryId });
+    log('queryIndex', { queryId, query: Query.pretty(Query.fromAst(query)) });
     const start = Date.now();
     let currentCtx: Context;
 
@@ -168,6 +168,7 @@ export class IndexQuerySource implements QuerySource {
 
           log('queryIndex raw results', {
             queryId,
+            query: Query.pretty(Query.fromAst(query)),
             length: response.results?.length ?? 0,
           });
 
@@ -185,6 +186,7 @@ export class IndexQuerySource implements QuerySource {
 
           log('queryIndex processed results', {
             queryId,
+            query: Query.pretty(Query.fromAst(query)),
             fetchedFromIndex: response.results?.length ?? 0,
             loaded: results.length,
           });
@@ -252,7 +254,11 @@ export class IndexQuerySource implements QuerySource {
           database,
         });
       } catch (err) {
-        log.warn('object failed schema validation', { type: json[ATTR_TYPE], error: err });
+        const typeDxn = typeof json[ATTR_TYPE] === 'string' ? json[ATTR_TYPE] : '<unknown>';
+        if (!emittedSchemaValidationWarnings.has(typeDxn)) {
+          emittedSchemaValidationWarnings.add(typeDxn);
+          log.warn('object failed schema validation', { type: typeDxn, error: err });
+        }
         return null;
       }
       const queryResult: QueryResult.EntityEntry = {
@@ -296,3 +302,8 @@ export class IndexQuerySource implements QuerySource {
  * Used for logging.
  */
 let nextQueryId = 1;
+
+/**
+ * Keyed by the type DXN.
+ */
+const emittedSchemaValidationWarnings = new Set<string>();

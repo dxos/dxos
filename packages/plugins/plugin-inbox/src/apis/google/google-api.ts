@@ -7,6 +7,8 @@ import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';
 import * as Schedule from 'effect/Schedule';
 
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Credential } from '@dxos/compute';
 import { withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
 

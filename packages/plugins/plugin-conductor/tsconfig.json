@@ -37,22 +37,16 @@
       "path": "../../core/assistant"
     },
     {
+      "path": "../../core/compute"
+    },
+    {
       "path": "../../core/conductor"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/functions-runtime"
-    },
-    {
       "path": "../../core/mesh/edge-client"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"

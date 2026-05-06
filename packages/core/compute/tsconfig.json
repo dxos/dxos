@@ -9,8 +9,7 @@
     ]
   },
   "exclude": [
-    "*.t.ts",
-    "vite.config.ts"
+    "*.t.ts"
   ],
   "include": [
     "src/**/*.ts",
@@ -19,16 +18,7 @@
   ],
   "references": [
     {
-      "path": "../../../vendor/hyperformula"
-    },
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/context"
-    },
-    {
-      "path": "../../common/debug"
+      "path": "../../common/errors"
     },
     {
       "path": "../../common/invariant"
@@ -40,18 +30,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../plugins/plugin-automation"
-    },
-    {
-      "path": "../../sdk/client"
-    },
-    {
       "path": "../../sdk/schema"
     },
     {
@@ -59,18 +37,6 @@
     },
     {
       "path": "../echo/echo"
-    },
-    {
-      "path": "../echo/echo-db"
-    },
-    {
-      "path": "../functions"
-    },
-    {
-      "path": "../functions-runtime"
-    },
-    {
-      "path": "../operation"
     },
     {
       "path": "../protocols"

@@ -5,7 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
-import { type Script } from '@dxos/functions';
+import { type Script } from '@dxos/compute';
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, MenuRootProps, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
 import { composable, composableProps } from '@dxos/ui-theme';

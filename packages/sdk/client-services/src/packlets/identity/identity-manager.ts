@@ -13,7 +13,6 @@ import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace } from '@dxos/protocols';
 import { Device, DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -112,8 +111,7 @@ export class IdentityManager {
 
   @Trace.span({ showInBrowserTimeline: true })
   async open(ctx: Context): Promise<void> {
-    const traceId = PublicKey.random().toHex();
-    log.trace('dxos.halo.identity-manager.open', trace.begin({ id: traceId }));
+    log('opening identity manager');
 
     const identityRecord = this._metadataStore.getIdentityRecord();
     log('identity record', { identityRecord });
@@ -128,7 +126,7 @@ export class IdentityManager {
 
       this.stateUpdate.emit();
     }
-    log.trace('dxos.halo.identity-manager.open', trace.end({ id: traceId }));
+    log('opened identity manager');
   }
 
   async close(ctx: Context): Promise<void> {

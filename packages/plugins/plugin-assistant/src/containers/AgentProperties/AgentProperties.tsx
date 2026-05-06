@@ -10,10 +10,10 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Agent, SyncTriggers } from '@dxos/assistant-toolkit';
+import { Operation } from '@dxos/compute';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
@@ -86,7 +86,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
   // Create/remove agent subscription.
   const handleSubscriptionChange = useCallback(
     (object: Obj.Unknown, checked: boolean) => {
-      Obj.change(agent, (agent) => {
+      Obj.update(agent, (agent) => {
         if (checked) {
           agent.subscriptions.push(Ref.fromDXN(Obj.getDXN(object)));
         } else {

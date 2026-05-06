@@ -10,7 +10,6 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
-import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 
 import * as ChatCompletionsAdapter from './ChatCompletionsAdapter';
@@ -62,8 +61,8 @@ describe('ChatCompletionsLanguageModel', () => {
             log.info('response', { text: response.text, usage: response.usage });
           },
           Effect.provide(Layer.provide(createLayer(provider), Layer.empty)),
-          TestHelpers.taggedTest('llm'),
         ),
+        { tags: ['llm'] },
       );
 
       it.effect(
@@ -85,8 +84,8 @@ describe('ChatCompletionsLanguageModel', () => {
             log.info('fullText', { fullText });
           },
           Effect.provide(Layer.provide(createLayer(provider), Layer.empty)),
-          TestHelpers.taggedTest('llm'),
         ),
+        { tags: ['llm'] },
       );
     });
   }

@@ -6,8 +6,9 @@ import { type Meta } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { translations } from '#translations';
+
 import CONTENT from '../../../testing/deck.md?raw';
-import { translations } from '../../translations';
 import { RevealPlayer } from './RevealPlayer';
 
 // https://revealjs.com/markdown

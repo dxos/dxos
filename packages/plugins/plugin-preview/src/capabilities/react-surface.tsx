@@ -10,10 +10,10 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
-import { type ProjectionModel } from '@dxos/schema';
+import { Expando, type ProjectionModel } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
-import { FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
+import { ExpandoCard, FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -65,6 +65,13 @@ export default Capability.makeModule(() =>
           return <TaskCard role={role} subject={data.subject} />;
         },
       }),
+      Surface.create<AppSurface.ObjectCardData<Expando.Expando>>({
+        id: 'schema-popover--expando',
+        filter: AppSurface.object(AppSurface.Card, Expando.Expando),
+        component: ({ data, role }) => {
+          return <ExpandoCard role={role} subject={data.subject} ignorePaths={data.ignorePaths} />;
+        },
+      }),
 
       //
       // Fallback for any object.
@@ -97,7 +104,7 @@ export default Capability.makeModule(() =>
         component: ({ data }) => {
           return (
             <div role='none' className='flex w-full justify-center'>
-              <div role='none' className='pt-2 pb-2 dx-card-min-width dx-card-max-width'>
+              <div role='none' className='py-2 dx-card-min-width dx-card-max-width'>
                 <Card.Root>
                   <Surface.Surface type={AppSurface.Card} data={data} limit={1} />
                 </Card.Root>

@@ -4,8 +4,8 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities } from '@dxos/app-framework';
 import { SpaceState } from '@dxos/client/echo';
+import { Operation } from '@dxos/compute';
 import { Migrations } from '@dxos/migrations';
-import { Operation } from '@dxos/operation';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 
 import { SpaceCapabilities } from '../types';

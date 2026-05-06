@@ -7,12 +7,12 @@ import type * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 
 import type { AiService } from '@dxos/ai';
+import type { Credential, Operation, OperationRegistry, Trace } from '@dxos/compute';
 import type { Database, Feed } from '@dxos/echo';
-import { type ComputeEventLogger } from '@dxos/functions';
-import type { CredentialsService, QueueService, Trace } from '@dxos/functions';
-import type { Operation, OperationRegistry } from '@dxos/operation';
+import type { QueueService } from '@dxos/functions';
 import { mapValues } from '@dxos/util';
 
+import { type ComputeNodeContext } from './compute-events';
 import { type ComputeNode, type ComputeNodeMeta } from './graph';
 
 //
@@ -102,12 +102,12 @@ export const ValueBag = Object.freeze({
 
 export type ComputeRequirements =
   | AiService.AiService
-  | CredentialsService
+  | Credential.CredentialsService
   | Database.Service
   | QueueService
   | Feed.FeedService
   | Trace.TraceService
-  | ComputeEventLogger
+  | ComputeNodeContext
   | Scope.Scope
   | Operation.Service
   | OperationRegistry.Service;

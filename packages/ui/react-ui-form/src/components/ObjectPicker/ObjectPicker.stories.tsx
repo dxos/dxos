@@ -16,7 +16,8 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { Person } from '@dxos/types';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { ObjectPicker } from './ObjectPicker';
 
 random.seed(1);
@@ -64,7 +65,9 @@ const DefaultStory = () => {
   const handleCreateCallback = useCallback(
     (values: any) => {
       console.log('[on create]', values);
-      if (!space) return;
+      if (!space) {
+        return;
+      }
       const newPerson = space.db.add(Obj.make(Person.Person, values));
       mockHandleCreate(values);
       return newPerson;

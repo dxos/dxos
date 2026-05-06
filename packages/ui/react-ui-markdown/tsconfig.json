@@ -16,7 +16,13 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -50,6 +56,12 @@
     },
     {
       "path": "../react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../ui"
+    },
+    {
+      "path": "../ui-editor"
     },
     {
       "path": "../ui-theme"

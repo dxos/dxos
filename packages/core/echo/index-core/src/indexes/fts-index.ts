@@ -13,6 +13,10 @@ import type { ObjectId, SpaceId } from '@dxos/keys';
 import type { Index, IndexerObject } from './interface';
 import type { ObjectMeta } from './object-meta-index';
 
+// SQLite bound-variable limit (SQLITE_LIMIT_VARIABLE_NUMBER) is 999 in most builds.
+// Use 500 as a safe chunk size for IN (...) clauses.
+const SQL_CHUNK_SIZE = 500;
+
 /**
  * The space and queue constrains are combined together using a logical OR.
  */
@@ -181,6 +185,7 @@ export class FtsIndex implements Index {
   /**
    * Query snapshots by recordIds.
    * Returns the parsed JSON snapshots for queue objects.
+   * RecordIds not present in the FTS index are silently omitted from the result.
    */
   querySnapshotsJSON(
     recordIds: number[],
@@ -190,14 +195,26 @@ export class FtsIndex implements Index {
         return [];
       }
       const sql = yield* SqlClient.SqlClient;
-      const results = yield* sql<{
-        rowid: number;
-        snapshot: string;
-      }>`SELECT rowid, snapshot FROM ftsIndex WHERE rowid IN ${sql.in(recordIds)}`;
-      return results.map((r) => ({
-        recordId: r.rowid,
-        snapshot: JSON.parse(r.snapshot),
-      }));
+
+      // Chunk to avoid SQLite bound-variable limit (SQLITE_LIMIT_VARIABLE_NUMBER,
+      // typically 999 in wasm builds). 500 gives a safe margin.
+      const chunks: number[][] = [];
+      for (let i = 0; i < recordIds.length; i += SQL_CHUNK_SIZE) {
+        chunks.push(recordIds.slice(i, i + SQL_CHUNK_SIZE));
+      }
+
+      const allResults: { recordId: number; snapshot: Obj.JSON }[] = [];
+      for (const chunk of chunks) {
+        const rows = yield* sql<{
+          rowid: number;
+          snapshot: string;
+        }>`SELECT rowid, snapshot FROM ftsIndex WHERE rowid IN ${sql.in(chunk)}`;
+        for (const r of rows) {
+          allResults.push({ recordId: r.rowid, snapshot: JSON.parse(r.snapshot) });
+        }
+      }
+
+      return allResults;
     });
   }
 

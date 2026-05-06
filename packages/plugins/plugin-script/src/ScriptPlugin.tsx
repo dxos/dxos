@@ -7,9 +7,9 @@ import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Script } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Annotation, Ref } from '@dxos/echo';
-import { Script } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
@@ -23,10 +23,9 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { ScriptOperation } from '#operations';
+import { translations } from '#translations';
 import { ScriptEvents } from '#types';
 import { Notebook } from '#types';
-
-import { translations } from './translations';
 
 export const ScriptPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

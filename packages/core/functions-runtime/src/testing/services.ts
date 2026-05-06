@@ -5,19 +5,14 @@
 import type * as Context from 'effect/Context';
 
 import type { Space } from '@dxos/client/echo';
+import { type Credential, type Trace } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { type QueueFactory } from '@dxos/echo-db';
-import {
-  type ComputeEventLogger,
-  ConfiguredCredentialsService,
-  type CredentialsService,
-  QueueService,
-  type ServiceCredential,
-} from '@dxos/functions';
+import { ConfiguredCredentialsService, QueueService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 
 import { ServiceContainer } from '../services';
-import { consoleLogger, noopLogger } from './logger';
+import { consoleTraceWriter, noopTraceWriter } from './logger';
 
 // TODO(burdon): Factor out.
 export type OneOf<T> = {
@@ -39,12 +34,12 @@ export type TestServiceOptions = {
     /**
      * Predefined credentials list.
      */
-    services?: ServiceCredential[];
+    services?: Credential.ServiceCredential[];
 
     /**
      * Custom credentials service.
      */
-    service?: Context.Tag.Service<CredentialsService>;
+    service?: Context.Tag.Service<Credential.CredentialsService>;
   }>;
 
   /**
@@ -59,11 +54,11 @@ export type TestServiceOptions = {
   space?: Space;
 
   /**
-   * Logging configuration.
+   * Trace writer configuration.
    */
   logging?: {
     enabled?: boolean;
-    logger?: Context.Tag.Service<ComputeEventLogger>;
+    trace?: Context.Tag.Service<Trace.TraceService>;
   };
 
   /**
@@ -89,14 +84,14 @@ export const createTestServices = ({
     // ai: createAiService(ai),
     credentials: createCredentialsService(credentials),
     database: space || db ? Database.makeService(space?.db || db!) : undefined,
-    eventLogger: (logging?.logger ?? logging?.enabled) ? consoleLogger : noopLogger,
+    trace: logging?.trace ?? (logging?.enabled ? consoleTraceWriter : noopTraceWriter),
     queues: space || queues ? QueueService.make(space?.queues || queues!, undefined) : undefined,
   });
 };
 
 const createCredentialsService = (
   credentials: TestServiceOptions['credentials'] | undefined,
-): Context.Tag.Service<CredentialsService> | undefined => {
+): Context.Tag.Service<Credential.CredentialsService> | undefined => {
   if (credentials?.services) {
     return new ConfiguredCredentialsService(credentials.services);
   }

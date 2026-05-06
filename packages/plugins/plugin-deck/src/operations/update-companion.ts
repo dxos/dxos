@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
 
 import { DeckCapabilities } from '../types';

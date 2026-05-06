@@ -201,10 +201,10 @@ export const whenAll: {
  *
  * @example
  * ```ts
- * // Match nodes that are either Sequences or Prompts
+ * // Match nodes that are either Sequences or Routines
  * const whenInvocable = NodeMatcher.whenAny(
  *   NodeMatcher.whenEchoTypeMatches(Sequence),
- *   NodeMatcher.whenEchoTypeMatches(Prompt.Prompt),
+ *   NodeMatcher.whenEchoTypeMatches(Routine.Routine),
  * );
  * ```
  */

@@ -98,8 +98,8 @@ export const getSchemaFromPropertyDefinitions = (
   const typeSchema = Schema.Struct(fields).pipe(EchoObjectSchema({ typename, version: '0.1.0' }));
   const schema = createEchoSchema(typeSchema as unknown as Schema.Schema.AnyNoContext);
 
-  // Wrap schema modifications in Obj.change since the persistent schema is an ECHO object.
-  Obj.change(schema.persistentSchema as unknown as Obj.Unknown, () => {
+  // Wrap schema modifications in Obj.update since the persistent schema is an ECHO object.
+  Obj.update(schema.persistentSchema as unknown as Obj.Unknown, () => {
     for (const prop of properties) {
       const jsonProp = schema.jsonSchema.properties![prop.name] as Mutable<JsonSchemaType>;
       if (prop.config?.options) {

@@ -80,6 +80,9 @@ type ChunkChange<T extends Chunk> =
  * Instead this model tracks changes and syncs them with the ChunkDocument.
  */
 export class SerializationModel<T extends Chunk> {
+  /** Emits when the document is updated. */
+  public readonly update = new Event<void>();
+
   /** Ordered set of chunks. */
   private readonly _chunks: T[] = [];
 
@@ -91,9 +94,6 @@ export class SerializationModel<T extends Chunk> {
 
   /** Track chunk changes since last sync. */
   private readonly _changes: Array<ChunkChange<T>> = [];
-
-  /** Emits when the document is updated. */
-  public readonly update = new Event<void>();
 
   constructor(
     private readonly _renderer: ChunkRenderer<T>,

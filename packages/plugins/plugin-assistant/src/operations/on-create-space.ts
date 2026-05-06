@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { CreateChat, OnCreateSpace } from './definitions';
 

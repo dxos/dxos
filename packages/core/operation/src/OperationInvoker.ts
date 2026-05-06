@@ -9,13 +9,12 @@ import * as Exit from 'effect/Exit';
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as PubSub from 'effect/PubSub';
 
-import type { Key } from '@dxos/echo';
+import { InvokerNotInitializedError, NoHandlerError, Operation } from '@dxos/compute';
 import { DynamicRuntime, unwrapExit } from '@dxos/effect';
 import { Performance } from '@dxos/effect';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { InvokerNotInitializedError, NoHandlerError } from './errors';
-import * as Operation from './Operation';
 import * as Scheduler from './scheduler';
 
 // @import-as-namespace
@@ -34,7 +33,7 @@ export type InvocationEvent<I = any, O = any> = {
  * Resolves a spaceId to a context containing Database.Service.
  * Provided by the caller to avoid coupling to client/echo.
  */
-export type DatabaseResolver = (spaceId: Key.SpaceId) => Effect.Effect<Context.Context<any>>;
+export type DatabaseResolver = (spaceId: SpaceId) => Effect.Effect<Context.Context<any>>;
 
 //
 // Public Interface

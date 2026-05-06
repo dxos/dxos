@@ -4,8 +4,9 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Entity, Query } from '@dxos/echo';
-import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
+import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
@@ -14,16 +15,12 @@ import { isTauri, getHostPlatform } from '@dxos/util';
 import { SearchResultStack } from '#components';
 import { useGlobalSearch, useGlobalSearchResults, useWebSearch } from '#hooks';
 
-export type SearchArticleProps = {
-  space?: Space;
-};
-
-export const SearchArticle = ({ space }: SearchArticleProps) => {
+export const SearchArticle = ({ space }: AppSurface.SpaceArticleProps) => {
   // TODO(burdon): Option to query across spaces.
   const [query, setQuery] = useState<string>();
   // TODO(burdon): Re-enable full-text search when indexer is available in all environments.
   const objects = useQuery(
-    space?.db,
+    space.db,
     query === undefined ? Query.select(Filter.nothing()) : Query.select(Filter.not(Filter.type(Text.Text))),
   );
 

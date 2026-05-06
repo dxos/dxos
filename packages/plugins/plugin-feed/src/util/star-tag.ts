@@ -9,6 +9,8 @@ import { useQuery } from '@dxos/react-client/echo';
 
 import { Subscription } from '../types';
 
+// TODO(burdon): Factor out.
+
 /**
  * Returns the canonical "starred" {@link Tag.Tag} object for the given database, if one exists.
  * Reactively updates when a matching tag is added or removed from the space.
@@ -45,7 +47,7 @@ export const hasMetaTag = (object: Obj.Unknown, tag: Tag.Tag | undefined): boole
 /** Toggles the supplied tag in the object's meta tags. */
 export const toggleMetaTag = (object: Obj.Unknown, tag: Tag.Tag): void => {
   const dxn = Obj.getDXN(tag).toString();
-  Obj.change(object, (object) => {
+  Obj.update(object, (object) => {
     const meta = Obj.getMeta(object);
     const current = meta.tags ?? [];
     meta.tags = current.includes(dxn) ? current.filter((value) => value !== dxn) : [...current, dxn];

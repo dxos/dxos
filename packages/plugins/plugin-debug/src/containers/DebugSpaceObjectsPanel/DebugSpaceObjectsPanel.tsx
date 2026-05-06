@@ -4,28 +4,20 @@
 
 import React, { useState } from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { ObjectsTree } from '@dxos/devtools';
-import { type Database, Filter, Query } from '@dxos/echo';
-import type { ObjectId } from '@dxos/keys';
+import { Filter, Query } from '@dxos/echo';
+import { type ObjectId } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Clipboard, Grid, Input, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
-export const DebugSpaceObjectsPanel = () => {
-  const space = useActiveSpace();
-  if (!space) {
-    return null;
-  }
+export type DebugSpaceObjectsPanelProps = AppSurface.SpaceArticleProps;
 
-  return <DebugSpaceObjectsPanelMain database={space.db} />;
-};
-
-const DebugSpaceObjectsPanelMain = ({ database }: { database: Database.Database }) => {
+export const DebugSpaceObjectsPanel = ({ space }: DebugSpaceObjectsPanelProps) => {
   const [selectedId, setSelectedId] = useState<ObjectId | null>(null);
-
   const [selectedObject] = useQuery(
-    database,
+    space.db,
     selectedId ? Query.select(Filter.id(selectedId)) : Query.select(Filter.nothing()),
   );
 
@@ -43,7 +35,7 @@ const DebugSpaceObjectsPanelMain = ({ database }: { database: Database.Database 
           <Grid rows={2} classNames='divide-y divide-separator'>
             <ScrollArea.Root>
               <ScrollArea.Viewport>
-                <ObjectsTree db={database} onSelect={(entity) => setSelectedId(entity.id)} />
+                <ObjectsTree db={space.db} onSelect={(entity) => setSelectedId(entity.id)} />
               </ScrollArea.Viewport>
             </ScrollArea.Root>
             {selectedObject && <JsonHighlighter classNames='p-1' data={selectedObject} />}

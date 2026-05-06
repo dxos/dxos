@@ -117,7 +117,7 @@ describe('Obj', () => {
 
     test('returns keys from reactive object and snapshot', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         const meta = Obj.getMeta(obj);
         meta.keys.push({ source: SOURCE, id: 'key-1' });
         meta.keys.push({ source: SOURCE, id: 'key-2' });
@@ -166,7 +166,7 @@ describe('Obj', () => {
 
       const cloned = Obj.clone(original);
 
-      Obj.change(original, (original) => {
+      Obj.update(original, (original) => {
         original.name = 'Bob';
       });
 
@@ -206,7 +206,7 @@ describe('Obj', () => {
       expect(cloned.employer?.target).toBe(person.employer?.target);
 
       // Modifying the referenced object affects both
-      Obj.change(employer, (employer) => {
+      Obj.update(employer, (employer) => {
         employer.name = 'Updated DXOS';
       });
 
@@ -234,7 +234,7 @@ describe('Obj', () => {
       expect(cloned.employer?.target?.name).toBe(employer.name);
 
       // Modifying the original referenced object does not affect the clone
-      Obj.change(employer, (employer) => {
+      Obj.update(employer, (employer) => {
         employer.name = 'Updated DXOS';
       });
 
@@ -333,7 +333,7 @@ describe('Obj', () => {
       expect(cloned.address?.coordinates.lng).toBe(-122.4194);
 
       // Modifying nested properties should be independent
-      Obj.change(person, (person) => {
+      Obj.update(person, (person) => {
         person.address!.city = 'New York';
       });
 
@@ -366,7 +366,7 @@ describe('Obj', () => {
       expect(cloned.tasks?.[2]?.target).not.toBe(task3);
 
       // Modifying original tasks should not affect cloned ones
-      Obj.change(task1, (task1) => {
+      Obj.update(task1, (task1) => {
         task1.title = 'Updated Task 1';
       });
 
@@ -449,7 +449,7 @@ describe('Obj', () => {
     test('returns false when values already match', () => {
       const target = Obj.make(TestSchema.Organization, { name: 'Acme', properties: { region: 'EU' } });
       const source = Obj.make(TestSchema.Organization, { name: 'Acme', properties: { region: 'EU' } });
-      Obj.change(target, (target) => {
+      Obj.update(target, (target) => {
         expect(Obj.updateFrom(target, source)).toBe(false);
       });
     });
@@ -463,7 +463,7 @@ describe('Obj', () => {
         name: 'New',
         properties: { a: '2', b: '3' },
       });
-      Obj.change(target, (target) => {
+      Obj.update(target, (target) => {
         expect(Obj.updateFrom(target, source)).toBe(true);
       });
       expect(target.name).toBe('New');
@@ -487,7 +487,7 @@ describe('Obj', () => {
         employer: Ref.make(orgB),
         address: { city: 'Portland', state: 'OR', zip: '97201', coordinates: { lat: 45.5, lng: -122.6 } },
       });
-      Obj.change(target, (target) => {
+      Obj.update(target, (target) => {
         expect(Obj.updateFrom(target, source)).toBe(true);
       });
       expect(target.employer?.dxn.toString()).toBe(Ref.make(orgB).dxn.toString());
@@ -510,7 +510,7 @@ describe('Obj', () => {
         email: 'bob@x.test',
         tasks: [Ref.make(t1), Ref.make(t3)],
       });
-      Obj.change(target, (target) => {
+      Obj.update(target, (target) => {
         expect(Obj.updateFrom(target, source)).toBe(true);
       });
       expect(target.tasks?.map((r) => r.dxn.toString())).toEqual(source.tasks?.map((r) => r.dxn.toString()));
@@ -519,7 +519,7 @@ describe('Obj', () => {
     test('respects include option', () => {
       const target = Obj.make(TestSchema.Organization, { name: 'Keep', properties: { x: '1' } });
       const source = Obj.make(TestSchema.Organization, { name: 'Drop', properties: { x: '2' } });
-      Obj.change(target, (target) => {
+      Obj.update(target, (target) => {
         expect(Obj.updateFrom(target, source, { include: ['properties'] })).toBe(true);
       });
       expect(target.name).toBe('Keep');
@@ -529,7 +529,7 @@ describe('Obj', () => {
     test('respects exclude option', () => {
       const target = Obj.make(TestSchema.Organization, { name: 'Old', properties: { x: '1' } });
       const source = Obj.make(TestSchema.Organization, { name: 'New', properties: { x: '2' } });
-      Obj.change(target, (target) => {
+      Obj.update(target, (target) => {
         expect(Obj.updateFrom(target, source, { exclude: ['name'] })).toBe(true);
       });
       expect(target.name).toBe('Old');

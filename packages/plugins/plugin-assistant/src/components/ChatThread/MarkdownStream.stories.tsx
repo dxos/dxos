@@ -15,12 +15,13 @@ import {
   type MarkdownStreamController,
   type MarkdownStreamProps,
   textStream,
-} from '@dxos/react-ui-components';
+} from '@dxos/react-ui-markdown';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ContentBlock } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { componentRegistry } from './registry';
 import REASONING from './testing/reasoning.md?raw';
 import THINKING from './testing/thinking.md?raw';
@@ -207,7 +208,7 @@ export const Streaming: Story = {
     content: THREAD_1,
     options: {
       autoScroll: true,
-      wire: true,
+      typewriter: true,
       cursor: true,
     },
   },
@@ -273,7 +274,7 @@ export const Reasoning: Story = {
     content: REASONING_PARTS.body,
     options: {
       autoScroll: true,
-      wire: true,
+      typewriter: true,
       cursor: true,
     },
   },

@@ -93,7 +93,7 @@ export const getChildren = (
  * Determines whether a node should be visible based on its disposition.
  */
 export const filterItems = (node: Node.Node, disposition?: string) => {
-  if (!disposition && (node.properties.disposition === 'hidden' || node.properties.disposition === 'alternate-tree')) {
+  if (!disposition && node.properties.disposition === 'hidden') {
     return false;
   } else if (!disposition) {
     const action = Node.isAction(node);

@@ -251,7 +251,6 @@ const TabsIconTab = ({ value, classNames, onClick, ...props }: TabsIconTabProps)
 
 type TabsPanelProps = ThemedClassName<TabsPrimitive.TabsContentProps>;
 
-// TODO(burdon): Make slottable.
 const TabsPanel = ({ classNames, children, ...props }: TabsPanelProps) => {
   const { value: contextValue } = useTabsContext('TabsTab');
   return (

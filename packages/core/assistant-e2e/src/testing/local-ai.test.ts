@@ -5,7 +5,7 @@
 import { describe, it } from '@effect/vitest';
 
 import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
-import { Prompt } from '@dxos/blueprints';
+import { Routine } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
@@ -17,8 +17,8 @@ describe('Local AI', () => {
   it.effect(
     'create and query database objects',
     agentTest(
-      { model: 'gpt-oss:20b', inferenceProvider: 'ollama', disableLlmMemoization: true, testTag: 'llm' },
-      Prompt.make({
+      { model: 'gpt-oss:20b', inferenceProvider: 'ollama', disableLlmMemoization: true },
+      Routine.make({
         instructions: trim`
           Create a new organization called "Cyberdyne Systems".
           Query the database to confirm that the organization is created and the query tool is working.
@@ -26,6 +26,6 @@ describe('Local AI', () => {
         blueprints: [Ref.make(DatabaseBlueprint.make())],
       }),
     ),
-    { timeout: DEFAULT_TEST_TIMEOUT },
+    { timeout: DEFAULT_TEST_TIMEOUT, tags: ['llm'] },
   );
 });

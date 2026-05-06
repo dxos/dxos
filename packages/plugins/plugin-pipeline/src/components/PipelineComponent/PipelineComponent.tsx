@@ -97,7 +97,7 @@ const PipelineColumns = composable<HTMLDivElement, PipelineColumnsProps>(({ pipe
     get: (data) => data as unknown as Obj.Unknown,
     make: (object) => object as unknown as Pipeline.Column,
     canDrop: ({ source }) => model.isColumn(source.data),
-    onChange: (mutate) => Obj.change(pipeline, (pipeline) => mutate(pipeline.columns)),
+    onChange: (mutate) => Obj.update(pipeline, (pipeline) => mutate(pipeline.columns)),
   });
 
   return <Board.Content {...props} id='pipeline' eventHandler={eventHandler} Tile={PipelineColumn} />;

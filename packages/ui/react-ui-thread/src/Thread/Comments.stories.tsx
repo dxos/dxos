@@ -14,10 +14,8 @@ import { Icon, IconButton, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
-  type Comment,
   type CommentsOptions,
   type EditorView,
-  type Range,
   comments,
   createBasicExtensions,
   createThemeExtensions,
@@ -26,11 +24,13 @@ import {
   scrollThreadIntoView,
   setComments,
 } from '@dxos/ui-editor';
+import { type Comment, type Range } from '@dxos/ui-editor/types';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-theme';
+
+import { translations } from '#translations';
 
 import { MessageBody, MessageHeading, MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity } from '../testing';
-import { translations } from '../translations';
 import { Thread } from './Thread';
 
 random.seed(101);

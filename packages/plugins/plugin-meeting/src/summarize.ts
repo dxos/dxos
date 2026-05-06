@@ -15,11 +15,10 @@ import {
   ToolResolverService,
 } from '@dxos/ai';
 import { type AiAssistantError, AiRequest } from '@dxos/assistant';
+import { Trace, Operation, OperationRegistry } from '@dxos/compute';
 import { Database, Type } from '@dxos/echo';
-import { Trace } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation, OperationRegistry } from '@dxos/operation';
 import { Transcript } from '@dxos/types';
 import { trim } from '@dxos/util';
 

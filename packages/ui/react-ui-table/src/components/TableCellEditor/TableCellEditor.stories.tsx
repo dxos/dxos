@@ -14,8 +14,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
+import { translations } from '#translations';
+
 import { useTestTableModel } from '../../testing';
-import { translations } from '../../translations';
 import { Table } from '../../types';
 import { TableCellEditor } from './TableCellEditor';
 

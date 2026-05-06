@@ -8,8 +8,7 @@ import { ClientEvents } from '@dxos/plugin-client/types';
 
 import { AppGraphBuilder, OperationHandler, ReactSurface, RegistryState } from '#capabilities';
 import { meta } from '#meta';
-
-import { translations } from './translations';
+import { translations } from '#translations';
 
 export const RegistryPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

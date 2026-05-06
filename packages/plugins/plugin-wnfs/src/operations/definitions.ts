@@ -6,8 +6,8 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { FileInfoSchema } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 
 import { meta } from '#meta';
 

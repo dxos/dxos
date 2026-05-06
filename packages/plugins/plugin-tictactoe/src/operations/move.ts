@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 
 import { checkWin, currentTurn, placeMarker } from '#components';
 import { type TicTacToe } from '#types';
@@ -34,7 +34,7 @@ const handler: Operation.WithHandler<typeof MakeMove> = MakeMove.pipe(
       const moveEntry = `${marker}:${row},${col}`;
       const moves = obj.moves ? `${obj.moves};${moveEntry}` : moveEntry;
 
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         const mutable = obj as Obj.Mutable<typeof obj>;
         mutable.board = result.board;
         mutable.moves = moves;

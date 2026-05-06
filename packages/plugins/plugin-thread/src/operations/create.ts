@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { AnchoredTo, Thread } from '@dxos/types';
 

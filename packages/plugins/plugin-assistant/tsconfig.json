@@ -60,9 +60,6 @@
       "path": "../../core/assistant-toolkit"
     },
     {
-      "path": "../../core/blueprints"
-    },
-    {
       "path": "../../core/compute"
     },
     {
@@ -91,9 +88,6 @@
     },
     {
       "path": "../../core/mesh/edge-client"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"

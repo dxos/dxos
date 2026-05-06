@@ -13,6 +13,7 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/testing/index.ts'
       - '--entryPoint=src/playwright/index.ts'
+      - '--entryPoint=src/translations.ts'
       - '--platform=browser'
       - '--platform=node'
   e2e:

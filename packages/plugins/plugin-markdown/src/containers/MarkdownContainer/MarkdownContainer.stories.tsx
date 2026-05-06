@@ -25,10 +25,10 @@ import { Text } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
+import { translations } from '#translations';
 import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
 
 import { MarkdownPlugin } from '../../MarkdownPlugin';
-import { translations } from '../../translations';
 
 random.seed(1);
 

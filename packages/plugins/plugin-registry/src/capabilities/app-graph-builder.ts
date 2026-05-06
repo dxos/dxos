@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { type PluginEntry } from '@dxos/protocols';
 
@@ -61,6 +61,7 @@ export default Capability.makeModule(
                 label: ['plugin-registry.label', { ns: meta.id }],
                 icon: 'ph--squares-four--regular',
                 disposition: 'pin-end',
+                position: 'hoist',
                 testId: 'treeView.pluginRegistry',
               },
               nodes: [

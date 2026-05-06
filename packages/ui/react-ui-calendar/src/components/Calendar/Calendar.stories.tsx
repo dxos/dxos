@@ -8,7 +8,8 @@ import React from 'react';
 import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { Calendar } from './Calendar';
 
 const meta = {

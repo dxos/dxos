@@ -12,9 +12,8 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
+import { Operation, Trigger } from '@dxos/compute';
 import { DXN, Database, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 
 import { Cron, Enabled, Input, TriggerId } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction, selectTrigger } from '../util';
@@ -93,7 +92,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
     if (!foundFn || !Obj.instanceOf(Operation.PersistentOperation, foundFn)) {
       return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
     }
-    Obj.change(trigger, (trigger) => {
+    Obj.update(trigger, (trigger) => {
       trigger.function = Ref.make(foundFn);
     });
     currentFn = foundFn;
@@ -129,7 +128,7 @@ const updateCron = Effect.fn(function* (trigger: Trigger.Trigger, cronOption: Op
         }).pipe(Prompt.run),
       onSome: (value) => Effect.succeed(value),
     });
-    Obj.change(trigger, (trigger) => {
+    Obj.update(trigger, (trigger) => {
       if (trigger.spec?.kind === 'timer') {
         trigger.spec.cron = cron;
       }
@@ -165,7 +164,7 @@ const updateInput = Effect.fn(function* (
         promptForSchemaInput(fn.inputSchema ? JsonSchema.toEffectSchema(fn.inputSchema) : undefined, currentInput),
       onSome: (value) => Effect.succeed(value as Record<string, any>),
     });
-    Obj.change(trigger, (trigger) => {
+    Obj.update(trigger, (trigger) => {
       trigger.input = inputObj;
     });
   }
@@ -188,7 +187,7 @@ const updateEnabled = Effect.fn(function* (
       }).pipe(Prompt.run),
     onSome: () => Effect.succeed(enabled),
   });
-  Obj.change(trigger, (trigger) => {
+  Obj.update(trigger, (trigger) => {
     trigger.enabled = enabledValue;
   });
 });

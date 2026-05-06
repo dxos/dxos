@@ -6,8 +6,8 @@ import { format } from 'prettier';
 import prettierPluginEstree from 'prettier/plugins/estree';
 import prettierPluginTypescript from 'prettier/plugins/typescript';
 
+import { type Script } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { type Script } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { createMenuAction } from '@dxos/react-ui-menu';
 
@@ -30,7 +30,7 @@ export const createFormat = (script: Script.Script) => {
           semi: true,
           singleQuote: true,
         });
-        Obj.change(script.source.target!, (obj) => {
+        Obj.update(script.source.target!, (obj) => {
           obj.content = formatted;
         });
       } catch (err: any) {

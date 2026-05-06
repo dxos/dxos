@@ -16,7 +16,8 @@ import {
 } from '@dxos/react-ui-editor';
 import { createBasicExtensions, createThemeExtensions, keymap } from '@dxos/ui-editor';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { type CompletionOptions, completions } from './autocomplete';
 import { query } from './query-extension';
 

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Plugin } from '@dxos/app-framework';
-import { MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
+import { MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown/types';
 
 import { meta } from '#meta';
 

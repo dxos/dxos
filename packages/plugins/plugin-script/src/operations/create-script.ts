@@ -5,8 +5,7 @@
 import { Octokit } from '@octokit/core';
 import * as Effect from 'effect/Effect';
 
-import { Script } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
+import { Script, Operation } from '@dxos/compute';
 
 import { templates } from '../templates';
 import { CreateScript } from './definitions';

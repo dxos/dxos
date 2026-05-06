@@ -9,9 +9,9 @@ import { AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
 
 import { meta } from '#meta';
+import { translations } from '#translations';
 
 import { installClipListener } from './listener';
-import { translations } from './translations';
 
 export const CrxBridgePlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),

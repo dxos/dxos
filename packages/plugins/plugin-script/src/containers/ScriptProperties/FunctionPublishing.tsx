@@ -7,8 +7,8 @@ import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { SettingsOperation } from '@dxos/app-toolkit';
+import { type Script } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
-import { type Script } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, Clipboard, Message, useAsyncEffect, useTranslation } from '@dxos/react-ui';
@@ -83,7 +83,7 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
         });
         const gistId = response.data.id;
         if (gistId) {
-          Obj.change(object, (object) => {
+          Obj.update(object, (object) => {
             Obj.getMeta(object).keys.push({ source: 'github.com', id: gistId });
           });
         }

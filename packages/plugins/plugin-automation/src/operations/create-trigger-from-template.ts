@@ -5,10 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
+import { Operation, Script, Trigger } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
-import { Script, Trigger } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Filter } from '@dxos/react-client/echo';
 
@@ -31,7 +30,7 @@ const handler: Operation.WithHandler<typeof CreateTriggerFromTemplate> = CreateT
           );
           const [fn] = functions;
           if (fn) {
-            Obj.change(trigger, (trigger) => {
+            Obj.update(trigger, (trigger) => {
               trigger.function = Ref.make(fn);
             });
           }
@@ -40,13 +39,13 @@ const handler: Operation.WithHandler<typeof CreateTriggerFromTemplate> = CreateT
 
       switch (template.type) {
         case 'timer': {
-          Obj.change(trigger, (trigger) => {
+          Obj.update(trigger, (trigger) => {
             trigger.spec = Trigger.specTimer(template.cron);
           });
           break;
         }
         case 'queue': {
-          Obj.change(trigger, (trigger) => {
+          Obj.update(trigger, (trigger) => {
             trigger.spec = Trigger.specQueue((template.queueDXN as DXN).toString());
           });
           break;

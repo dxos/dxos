@@ -14,13 +14,12 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
+import { Operation, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
 import { Database } from '@dxos/echo';
-import { Process, ServiceResolver, Trace } from '@dxos/functions';
+import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Organization } from '@dxos/types';
 
-import { TestDatabaseLayer } from '../testing';
 import * as ProcessManager from './ProcessManager';
 import * as StorageService from './StorageService';
 
@@ -110,7 +109,7 @@ const makeWaitingExecutable = () =>
   );
 
 const TestLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
-  Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
+  Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
   Layer.provide(ServiceResolver.layerRequirements(Database.Service)),
   Layer.provide(
     TestDatabaseLayer({
@@ -123,11 +122,11 @@ const TestLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
   Layer.provide(Trace.layerNoop),
 );
 
-describe('ProcessManagerImpl', () => {
+describe('ManagerImpl', () => {
   it.effect(
     'spawns a process and produces output',
     Effect.fn(function* ({ expect }) {
-      const manager = yield* ProcessManager.ProcessManagerService;
+      const manager = yield* ProcessManager.Service;
 
       const executable = Process.fromOperation(Double, handlers);
 
@@ -146,7 +145,7 @@ describe('ProcessManagerImpl', () => {
   it.effect(
     'runAndExit submits inputs and completes the stream at IDLE or SUCCEEDED',
     Effect.fn(function* ({ expect }) {
-      const manager = yield* ProcessManager.ProcessManagerService;
+      const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(Process.fromOperation(Double, handlers));
       const outputs = yield* handle.runAndExit({ inputs: [{ value: 7 }] }).pipe(Stream.runCollect);
       expect(Chunk.toReadonlyArray(outputs)).toEqual([14]);
@@ -157,7 +156,7 @@ describe('ProcessManagerImpl', () => {
   it.effect(
     'runAndExit completes at IDLE for processes that stay alive after output',
     Effect.fn(function* ({ expect }) {
-      const manager = yield* ProcessManager.ProcessManagerService;
+      const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(makeSumAggregator());
       const outputs = yield* handle.runAndExit({ inputs: [4] }).pipe(Stream.runCollect);
       expect(Chunk.toReadonlyArray(outputs)).toEqual([4]);
@@ -168,7 +167,7 @@ describe('ProcessManagerImpl', () => {
   it.effect(
     'runAndExit fails when the process is TERMINATED',
     Effect.fn(function* ({ expect }) {
-      const manager = yield* ProcessManager.ProcessManagerService;
+      const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(makeSumAggregator());
       yield* handle.terminate();
       const exit = yield* handle.runAndExit({ inputs: [1] }).pipe(Stream.runCollect, Effect.exit);
@@ -187,7 +186,7 @@ describe('ProcessManagerImpl', () => {
   it.effect(
     'alarms',
     Effect.fn(function* ({ expect }) {
-      const manager = yield* ProcessManager.ProcessManagerService;
+      const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(makeWaitingExecutable());
       {
         expect(handle.status.state).toEqual(Process.State.HYBERNATING);
@@ -204,7 +203,7 @@ describe('ProcessManagerImpl', () => {
   it.effect(
     'termination',
     Effect.fn(function* ({ expect }) {
-      const manager = yield* ProcessManager.ProcessManagerService;
+      const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(makeWaitingExecutable());
       {
         yield* handle.terminate();
@@ -216,7 +215,7 @@ describe('ProcessManagerImpl', () => {
   it.effect(
     'stateful',
     Effect.fn(function* ({ expect }) {
-      const manager = yield* ProcessManager.ProcessManagerService;
+      const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(makeSumAggregator());
       let lastOutput = 0,
         outputCount = 0;
@@ -248,7 +247,7 @@ describe('ProcessManagerImpl', () => {
   it.effect(
     'lists spawned processes',
     Effect.fn(function* ({ expect }) {
-      const manager = yield* ProcessManager.ProcessManagerService;
+      const manager = yield* ProcessManager.Service;
       const executable = makeWaitingExecutable();
 
       const handle1 = yield* manager.spawn(executable);
@@ -267,7 +266,7 @@ describe('ProcessManagerImpl', () => {
     it.effect(
       'processTree lists spawned process with expected pid and state',
       Effect.fn(function* ({ expect }) {
-        const manager = yield* ProcessManager.ProcessManagerService;
+        const manager = yield* ProcessManager.Service;
         const monitor = yield* Process.ProcessMonitorService;
 
         const handle = yield* manager.spawn(makeWaitingExecutable());
@@ -285,7 +284,7 @@ describe('ProcessManagerImpl', () => {
     it.effect(
       'processTree records parentPid for child processes',
       Effect.fn(function* ({ expect }) {
-        const manager = yield* ProcessManager.ProcessManagerService;
+        const manager = yield* ProcessManager.Service;
         const monitor = yield* Process.ProcessMonitorService;
 
         const parent = yield* manager.spawn(makeWaitingExecutable());
@@ -307,7 +306,7 @@ describe('ProcessManagerImpl', () => {
     it.effect(
       'processTree exposes input, output, and wall-time metrics',
       Effect.fn(function* ({ expect }) {
-        const manager = yield* ProcessManager.ProcessManagerService;
+        const manager = yield* ProcessManager.Service;
         const monitor = yield* Process.ProcessMonitorService;
 
         const handle = yield* manager.spawn(makeSumAggregator());
@@ -332,7 +331,7 @@ describe('ProcessManagerImpl', () => {
   it.effect(
     'runAndExit on successful operation',
     Effect.fn(function* ({ expect }) {
-      const manager = yield* ProcessManager.ProcessManagerService;
+      const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(Process.fromOperation(Double, handlers));
       const outputs = yield* handle.runAndExit({ inputs: [{ value: 11 }] }).pipe(Stream.runCollect);
       expect(Chunk.toReadonlyArray(outputs)).toEqual([22]);
@@ -343,7 +342,7 @@ describe('ProcessManagerImpl', () => {
   it.effect(
     'runAndExit on failing operation',
     Effect.fn(function* ({ expect }) {
-      const manager = yield* ProcessManager.ProcessManagerService;
+      const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(Process.fromOperation(Failing, handlers));
       const exit = yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
       expect(Exit.isFailure(exit)).toEqual(true);
@@ -355,7 +354,7 @@ describe('ProcessManagerImpl', () => {
   it.effect(
     'runAndExit on interrupted operation',
     Effect.fn(function* ({ expect }) {
-      const manager = yield* ProcessManager.ProcessManagerService;
+      const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(makeWaitingExecutable());
       const collectFiber = yield* handle.runAndExit({ inputs: [] }).pipe(Stream.runCollect, Effect.fork);
       yield* Fiber.interrupt(collectFiber);

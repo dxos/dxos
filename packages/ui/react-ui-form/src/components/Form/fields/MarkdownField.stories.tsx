@@ -13,7 +13,8 @@ import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
-import { translations } from '../../../translations';
+import { translations } from '#translations';
+
 import { TestLayout } from '../../testing';
 import { Form } from '../Form';
 

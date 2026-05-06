@@ -7,7 +7,7 @@ import React, { type FC } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
-import { Chess } from '@dxos/plugin-chess';
+import { Chess } from '@dxos/plugin-chess/types';
 import { useQuery } from '@dxos/react-client/echo';
 
 import { type ComponentProps } from './types';

@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Select, useTranslation } from '@dxos/react-ui';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
 
 const NULL = '__NULL__';
 

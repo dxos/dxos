@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { ErrorFallback } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../translations';
+import { translations } from '#translations';
 
 const meta = {
   title: 'plugins/plugin-simple-layout/components/ErrorFallback',

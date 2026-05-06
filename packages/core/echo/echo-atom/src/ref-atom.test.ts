@@ -62,7 +62,7 @@ describe('AtomRef - Basic Functionality', () => {
     expect(updateCount).toBe(1);
 
     // Mutate target - ref atom does NOT react to this.
-    Obj.change(targetObj, (targetObj) => {
+    Obj.update(targetObj, (targetObj) => {
       targetObj.name = 'Updated';
     });
 
@@ -88,7 +88,7 @@ describe('AtomRef - Basic Functionality', () => {
     const newPerson = db2.add(
       Obj.make(TestSchema.Person, { name: 'Alice', username: 'alice', email: 'alice@example.com' }),
     );
-    Obj.change(parent2, (parent2) => {
+    Obj.update(parent2, (parent2) => {
       parent2.objects = [...(parent2.objects ?? []), Ref.make(newPerson)];
     });
     await db2.flush();

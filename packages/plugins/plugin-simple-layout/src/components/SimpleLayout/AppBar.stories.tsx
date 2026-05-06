@@ -11,7 +11,8 @@ import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { MobileLayout } from '../MobileLayout';
 import { AppBar, type AppBarProps } from './AppBar';
 

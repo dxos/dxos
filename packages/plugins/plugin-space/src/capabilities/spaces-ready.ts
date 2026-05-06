@@ -6,7 +6,13 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, getPersonalSpace, getSpacePath } from '@dxos/app-toolkit';
+import {
+  AppCapabilities,
+  LayoutOperation,
+  getSpacePath,
+  resolvePersonalSpace,
+  setPersonalSpace,
+} from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -49,13 +55,18 @@ export default Capability.makeModule(
     //
 
     let personalSpaceInitialized = false;
-    const initializePersonalSpace = async (personalSpace: Space) => {
+    const initializePersonalSpace = async (personalSpace: Space, { fromCredential }: { fromCredential: boolean }) => {
       if (personalSpaceInitialized) {
         return;
       }
+      // Set before any await so concurrent subscribe callbacks don't start a second initialization.
+      personalSpaceInitialized = true;
 
       await personalSpace.waitUntilReady();
-      personalSpaceInitialized = true;
+
+      if (fromCredential) {
+        setPersonalSpace(personalSpace);
+      }
 
       // Check if deck state indicates we should switch to default space.
       const layout = registry.get(layoutAtom);
@@ -76,15 +87,15 @@ export default Capability.makeModule(
 
     // Try to find the personal space now, or subscribe to find it later.
     // Initialization is async (non-blocking) so subscriptions wire immediately.
-    const personalSpace = getPersonalSpace(client);
-    if (personalSpace) {
-      void initializePersonalSpace(personalSpace);
+    const resolved = resolvePersonalSpace(client);
+    if (resolved) {
+      void initializePersonalSpace(resolved.space, resolved);
     } else {
       subscriptions.add(
         client.spaces.subscribe(() => {
-          const personalSpace = getPersonalSpace(client);
-          if (personalSpace) {
-            void initializePersonalSpace(personalSpace);
+          const resolved = resolvePersonalSpace(client);
+          if (resolved) {
+            void initializePersonalSpace(resolved.space, resolved);
           }
         }).unsubscribe,
       );
@@ -134,12 +145,12 @@ export default Capability.makeModule(
     subscriptions.add(
       client.spaces.subscribe(async (spaces) => {
         // TODO(wittjosiah): Remove. This is a hack to be able to migrate the personal space properties.
-        const personalSpaceForMigration = getPersonalSpace(client);
+        const personalSpaceForMigration = resolvePersonalSpace(client);
         if (
-          personalSpaceForMigration &&
-          personalSpaceForMigration.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION
+          personalSpaceForMigration?.space &&
+          personalSpaceForMigration.space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION
         ) {
-          await personalSpaceForMigration.internal.migrate();
+          await personalSpaceForMigration.space.internal.migrate();
         }
 
         spaces

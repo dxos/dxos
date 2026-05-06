@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { Operation } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 
 import { meta } from '#meta';
 
@@ -99,7 +99,10 @@ export const LoadPostContent = Operation.make({
     }),
   }),
   output: Schema.Void,
-  services: [Database.Service],
+  // Database.Service is provided by the handler (resolved from the post ref's
+  // target db), so it's not declared here — otherwise the React-side invoker,
+  // which doesn't compose Database.Service into its runtime, would reject the
+  // call before the handler ever runs. Same pattern as plugin-inbox/AddMailbox.
 });
 
 /**

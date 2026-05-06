@@ -22,9 +22,9 @@ import { createObjectFactory, TypeSpec } from '@dxos/schema/testing';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { createMessage } from '#testing';
+import { translations } from '#translations';
 
 import { AssistantPlugin } from '../../AssistantPlugin';
-import { translations } from '../../translations';
 import { AgentArticle } from './AgentArticle';
 
 random.seed(1);

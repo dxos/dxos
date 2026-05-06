@@ -13,7 +13,8 @@ import { Editor, useBasicMarkdownExtensions } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 import { createDataExtensions } from '@dxos/ui-editor';
 
-import { translationKey } from '../../../translations';
+import { translationKey } from '#translations';
+
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 const editorClassNames =

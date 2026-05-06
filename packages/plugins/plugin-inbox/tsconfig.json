@@ -63,7 +63,7 @@
       "path": "../../core/assistant-toolkit"
     },
     {
-      "path": "../../core/blueprints"
+      "path": "../../core/compute"
     },
     {
       "path": "../../core/conductor"
@@ -85,9 +85,6 @@
     },
     {
       "path": "../../core/functions-runtime"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"
@@ -115,6 +112,9 @@
     },
     {
       "path": "../../ui/lit-ui"
+    },
+    {
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
@@ -169,6 +169,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-integration"
     },
     {
       "path": "../plugin-markdown"

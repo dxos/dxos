@@ -14,6 +14,8 @@ yarn-error.log*
 debug-storybook.log
 .log*
 debug-storybook.log
+# vite-plugin-log dev file sink (default filename is `app.log`).
+app.log
 
 # Vitest
 vitest-results.json
@@ -191,3 +193,6 @@ vitest.config.*.timestamp*
 .moon/cache
 .moon/docker
 node_modules
+
+# @dxos/introspect symbol cache (regenerated as needed).
+.dxos-introspect/

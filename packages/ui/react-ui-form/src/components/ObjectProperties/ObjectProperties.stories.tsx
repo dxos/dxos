@@ -16,7 +16,8 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { FactoryAnnotation, type FactoryFn } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../testing';
 import { ObjectProperties } from './ObjectProperties';
 

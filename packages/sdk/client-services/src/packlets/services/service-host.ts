@@ -12,7 +12,6 @@ import { Context } from '@dxos/context';
 import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { EdgeSignalManager, type SignalManager, WebsocketSignalManager } from '@dxos/messaging';
@@ -22,7 +21,6 @@ import {
   createIceProvider,
   createRtcTransportFactory,
 } from '@dxos/network-manager';
-import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
@@ -296,8 +294,7 @@ export class ClientServicesHost {
       return;
     }
 
-    const traceId = PublicKey.random().toHex();
-    log.trace('dxos.client-services.host.open', trace.begin({ id: traceId }));
+    log('opening service host');
 
     invariant(this._config, 'config not set');
     invariant(this._storage, 'storage not set');
@@ -413,7 +410,6 @@ export class ClientServicesHost {
     this._statusUpdate.emit();
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
     log('opened', { deviceKey });
-    log.trace('dxos.client-services.host.open', trace.end({ id: traceId }));
   }
 
   @synchronized
@@ -437,9 +433,6 @@ export class ClientServicesHost {
   }
 
   async reset(): Promise<void> {
-    const traceId = PublicKey.random().toHex();
-    log.trace('dxos.sdk.client-services-host.reset', trace.begin({ id: traceId }));
-
     log.info('resetting...');
     // Emit this status update immediately so app returns to fallback.
     // This state is never cleared because the app reloads.
@@ -454,7 +447,6 @@ export class ClientServicesHost {
     }
     await this._storage!.reset();
     log.info('reset');
-    log.trace('dxos.sdk.client-services-host.reset', trace.end({ id: traceId }));
     await this._callbacks?.onReset?.();
   }
 

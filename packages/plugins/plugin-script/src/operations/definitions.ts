@@ -4,9 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Script, Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
-import { Script } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 
 import { meta } from '#meta';
 

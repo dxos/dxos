@@ -11,10 +11,11 @@ import { IconButton } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
+import { translations } from '#translations';
+
 import { Menu } from '../components';
 import { type ActionGraphProps, useMenuActions } from '../hooks';
 import { createActions, createNestedActions, createNestedActionsResolver, useMutateActions } from '../testing';
-import { translations } from '../translations';
 
 random.seed(1234);
 

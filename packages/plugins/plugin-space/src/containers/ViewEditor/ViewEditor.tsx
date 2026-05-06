@@ -54,7 +54,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
 
       const queue = target && DXN.tryParse(target) ? target : undefined;
       const query = queue ? Query.fromAst(newQuery).from({ queues: [queue] }) : Query.fromAst(newQuery);
-      Obj.change(view, (view) => {
+      Obj.update(view, (view) => {
         view.query.ast = query.ast as Mutable<typeof query.ast>;
       });
       const newSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, query.ast);
@@ -66,7 +66,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
         query,
         jsonSchema: JsonSchema.toJsonSchema(newSchema),
       });
-      Obj.change(view, (view) => {
+      Obj.update(view, (view) => {
         view.projection = Obj.getSnapshot(newView).projection as Mutable<typeof view.projection>;
       });
 

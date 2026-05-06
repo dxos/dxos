@@ -6,6 +6,8 @@ import { resolve } from 'path';
 import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
 
+import { TEST_TAGS } from '../../../vitest.tags';
+
 export default defineConfig({
   plugins: [solidPlugin()],
   resolve: {
@@ -19,5 +21,6 @@ export default defineConfig({
   test: {
     name: 'node',
     environment: 'happy-dom',
+    tags: TEST_TAGS,
   },
 });

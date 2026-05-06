@@ -19,6 +19,9 @@
     },
     {
       "path": "../vite-plugin-icons"
+    },
+    {
+      "path": "../vite-plugin-log"
     }
   ]
 }

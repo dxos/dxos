@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { createDefectLogger } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 
 import { type GraphExecutor, compileOrThrow } from '../compiler';
@@ -18,7 +17,7 @@ import {
   NotExecuted,
   ValueBag,
 } from '../types';
-import { pickProperty } from '../util';
+import { createDefectLogger, pickProperty } from '../util';
 
 /**
  * Compute graph executor.

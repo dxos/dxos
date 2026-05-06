@@ -5,7 +5,7 @@
 import { type Registry, RegistryContext } from '@effect-atom/atom-react';
 import { useContext, useEffect } from 'react';
 
-import { type CompleteCellRange, inRange } from '@dxos/compute';
+import { type CompleteCellRange, inRange } from '@dxos/compute-hyperformula';
 import { Obj } from '@dxos/echo';
 import {
   type ActionGraphProps,
@@ -84,17 +84,17 @@ const createAlignActions = ({ model, state, stateAtom, registry, cursorFallbackR
         };
         const currentState = registry.get(stateAtom);
         if (index < 0) {
-          Obj.change(model.sheet, (obj) => {
+          Obj.update(model.sheet, (obj) => {
             obj.ranges?.push(nextRangeEntity);
           });
           registry.set(stateAtom, { ...currentState, [alignKey]: nextRangeEntity.value });
         } else if (model.sheet.ranges![index].value === nextRangeEntity.value) {
-          Obj.change(model.sheet, (obj) => {
+          Obj.update(model.sheet, (obj) => {
             obj.ranges?.splice(index, 1);
           });
           registry.set(stateAtom, { ...currentState, [alignKey]: undefined });
         } else {
-          Obj.change(model.sheet, (obj) => {
+          Obj.update(model.sheet, (obj) => {
             obj.ranges?.splice(index, 1, nextRangeEntity);
           });
           registry.set(stateAtom, { ...currentState, [alignKey]: nextRangeEntity.value });

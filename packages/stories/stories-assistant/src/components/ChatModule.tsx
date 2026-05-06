@@ -5,7 +5,8 @@
 import React from 'react';
 
 import { Feed, Filter } from '@dxos/echo';
-import { Assistant, Chat, useBlueprintRegistry, useChatProcessor, useOnline, usePresets } from '@dxos/plugin-assistant';
+import { Chat, useBlueprintRegistry, useChatProcessor, useOnline, usePresets } from '@dxos/plugin-assistant';
+import { Assistant } from '@dxos/plugin-assistant/types';
 import { useComputeRuntime } from '@dxos/plugin-automation/hooks';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, Popover, Toolbar } from '@dxos/react-ui';
@@ -25,14 +26,15 @@ export const ChatModule = ({ space }: ComponentProps) => {
   const processor = useChatProcessor({ runtime, space, chat, preset, blueprintRegistry });
 
   const feedTarget = chat?.feed?.target;
-  const queue = feedTarget ? space.queues.get(Feed.getQueueDxn(feedTarget)!) : undefined;
+  const feedDxn = feedTarget ? Feed.getQueueDxn(feedTarget) : undefined;
+  const feed = feedDxn ? space.queues.get(feedDxn) : undefined;
 
   if (!chat || !processor) {
     return null;
   }
 
   return (
-    <Chat.Root chat={chat} queue={queue} processor={processor}>
+    <Chat.Root chat={chat} feed={feed} processor={processor}>
       <Panel.Root className='dx-document'>
         {/* TODO(burdon): Chat.Toolbar => Menu.Root which doesn't handle slot. Need to audit Root components. */}
         <Panel.Toolbar>
@@ -40,7 +42,7 @@ export const ChatModule = ({ space }: ComponentProps) => {
         </Panel.Toolbar>
         <Panel.Content asChild>
           {/* TODO(burdon): Remove relative. */}
-          <Chat.Viewport classNames='relative'>
+          <Chat.Content classNames='relative'>
             <Toolbar.Root>
               <Toolbar.Text classNames='text-subdued'>{chat?.name}</Toolbar.Text>
               <Popover.Root>
@@ -64,7 +66,7 @@ export const ChatModule = ({ space }: ComponentProps) => {
               online={online}
               onOnlineChange={setOnline}
             />
-          </Chat.Viewport>
+          </Chat.Content>
         </Panel.Content>
       </Panel.Root>
     </Chat.Root>

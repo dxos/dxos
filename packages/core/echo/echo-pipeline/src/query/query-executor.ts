@@ -274,6 +274,10 @@ export class QueryExecutor extends Resource {
     this._plan = queryPlanner.createPlan(this._query);
   }
 
+  get queryId(): string {
+    return this._id;
+  }
+
   get query(): QueryAST.Query {
     return this._query;
   }
@@ -304,6 +308,11 @@ export class QueryExecutor extends Resource {
 
   async execQuery(): Promise<QueryExecutionResult> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
+
+    log('exec query', {
+      queryId: this._id,
+      query: Query.pretty(Query.fromAst(this._query)),
+    });
 
     const prevResultSet = this._lastResultSet;
     const { workingSet, trace } = await this._execPlan(this._plan, []);

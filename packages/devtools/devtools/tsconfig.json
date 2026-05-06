@@ -64,6 +64,9 @@
       "path": "../../core/assistant"
     },
     {
+      "path": "../../core/compute"
+    },
+    {
       "path": "../../core/conductor"
     },
     {
@@ -98,9 +101,6 @@
     },
     {
       "path": "../../core/mesh/rpc"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"

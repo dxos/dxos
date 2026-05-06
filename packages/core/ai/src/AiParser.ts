@@ -201,9 +201,11 @@ export const parseResponse =
                           const top = tagStack.pop();
                           invariant(top && top.type === 'tag');
                           log('pop', { top });
+                          current.closed = true;
                           top.content.push(current);
                           current = top;
                         } else {
+                          current.closed = true;
                           yield* emitStreamBlock(current, out);
                           current = undefined;
                         }
@@ -539,7 +541,40 @@ const makeContentBlock = (
         }
       }
 
-      return undefined;
+      // Unknown tag — preserve the original literal text so it survives downstream as part
+      // of the assistant's response (e.g. the model writes `<name>Claude</name>` because the
+      // user asked for an XML-wrapped answer; the tag is not in `ModelTags`, so it must be
+      // kept as plain text rather than silently dropped).
+      return {
+        _tag: 'text',
+        text: serializeStreamBlock(block),
+      } satisfies ContentBlock.Text;
+    }
+  }
+};
+
+/**
+ * Reconstruct the original literal text of a `StreamBlock`. Used as a fallback when a tag
+ * is not in `ModelTags` so the assistant's response text is preserved verbatim. Only emits
+ * a closing tag when the source had one — synthesizing a `</tag>` for an unclosed `<tag>`
+ * (e.g. mid-stream or when the model never closes it) corrupts the response text.
+ */
+const serializeStreamBlock = (block: StreamBlock): string => {
+  switch (block.type) {
+    case 'text':
+    case 'json':
+      return block.content;
+    case 'tag': {
+      const attrs = block.attributes
+        ? Object.entries(block.attributes)
+            .map(([key, value]) => ` ${key}="${value}"`)
+            .join('')
+        : '';
+      if (block.selfClosing) {
+        return `<${block.tag}${attrs}/>`;
+      }
+      const inner = block.content.map(serializeStreamBlock).join('');
+      return block.closed ? `<${block.tag}${attrs}>${inner}</${block.tag}>` : `<${block.tag}${attrs}>${inner}`;
     }
   }
 };
