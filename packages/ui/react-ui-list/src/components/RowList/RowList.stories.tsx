@@ -15,74 +15,56 @@ random.seed(1);
 
 type TestItem = { id: string; name: string; description: string };
 
-const items: TestItem[] = Array.from({ length: 24 }, (_, i) => ({
+const allItems: TestItem[] = Array.from({ length: 24 }, (_, i) => ({
   id: `item-${i}`,
   name: random.commerce.productName(),
   description: random.lorem.sentences(2),
 }));
 
 //
-// Default — Viewport always scrolls; Content is the listbox `<ul>`.
+// Single configurable story for the basic-listbox variants
+// (Default / Thin / WithDisabled). MasterDetail and WithToolbar
+// diverge structurally and keep their own render functions per
+// AUDIT.md §11.
 //
 
-const DefaultStory = () => {
-  const [selected, setSelected] = useState<string | undefined>(items[0].id);
-  return (
-    <RowList.Root selectedId={selected} onSelectChange={setSelected}>
-      <RowList.Viewport>
-        <RowList.Content aria-label='Items'>
-          {items.map((item) => (
-            <Row key={item.id} id={item.id}>
-              <div className='font-medium'>{item.name}</div>
-              <div className='text-sm text-description line-clamp-1'>{item.description}</div>
-            </Row>
-          ))}
-        </RowList.Content>
-      </RowList.Viewport>
-    </RowList.Root>
-  );
+type StoryArgs = {
+  /** Items to render. Defaults to the full 24-item catalog. */
+  items?: TestItem[];
+  /** Forwards to `RowList.Viewport thin`. */
+  thin?: boolean;
+  /** Forwards to `RowList.Viewport padding`. */
+  padding?: boolean;
+  /** Index into `items` that should render disabled. */
+  disabledIndex?: number;
+  /** Render the description line under each row's name. */
+  showDescription?: boolean;
 };
 
-//
-// Thin scrollbar — exercises the forwarded ScrollArea knob.
-//
-
-const ThinStory = () => {
-  const [selected, setSelected] = useState<string | undefined>(items[0].id);
+const DefaultStory = ({
+  items = allItems,
+  thin = false,
+  padding = false,
+  disabledIndex,
+  showDescription = true,
+}: StoryArgs = {}) => {
+  const [selected, setSelected] = useState<string | undefined>(items[0]?.id);
   return (
     <RowList.Root selectedId={selected} onSelectChange={setSelected}>
-      <RowList.Viewport thin padding>
+      <RowList.Viewport thin={thin} padding={padding}>
         <RowList.Content aria-label='Items'>
-          {items.map((item) => (
-            <Row key={item.id} id={item.id}>
-              <div className='font-medium'>{item.name}</div>
-            </Row>
-          ))}
-        </RowList.Content>
-      </RowList.Viewport>
-    </RowList.Root>
-  );
-};
-
-//
-// Disabled rows.
-//
-
-const DisabledStory = () => {
-  const [selected, setSelected] = useState<string | undefined>(items[0].id);
-  return (
-    <RowList.Root selectedId={selected} onSelectChange={setSelected}>
-      <RowList.Viewport>
-        <RowList.Content aria-label='Items'>
-          {items.slice(0, 6).map((item, i) => (
-            <Row key={item.id} id={item.id} disabled={i === 2}>
-              <div className='font-medium'>
-                {item.name}
-                {i === 2 && ' (disabled)'}
-              </div>
-              <div className='text-sm text-description line-clamp-1'>{item.description}</div>
-            </Row>
-          ))}
+          {items.map((item, i) => {
+            const disabled = i === disabledIndex;
+            return (
+              <Row key={item.id} id={item.id} disabled={disabled}>
+                <div className='font-medium'>
+                  {item.name}
+                  {disabled && ' (disabled)'}
+                </div>
+                {showDescription && <div className='text-sm text-description line-clamp-1'>{item.description}</div>}
+              </Row>
+            );
+          })}
         </RowList.Content>
       </RowList.Viewport>
     </RowList.Root>
@@ -94,14 +76,14 @@ const DisabledStory = () => {
 //
 
 const MasterDetailStory = () => {
-  const [selected, setSelected] = useState<string | undefined>(items[0].id);
-  const detail = items.find(({ id }) => id === selected);
+  const [selected, setSelected] = useState<string | undefined>(allItems[0].id);
+  const detail = allItems.find(({ id }) => id === selected);
   return (
     <div role='none' className='dx-container grid grid-cols-[20rem_1fr] divide-x divide-separator'>
       <RowList.Root selectedId={selected} onSelectChange={setSelected}>
         <RowList.Viewport>
           <RowList.Content aria-label='Items'>
-            {items.map((item) => (
+            {allItems.map((item) => (
               <Row key={item.id} id={item.id}>
                 <div className='font-medium'>{item.name}</div>
               </Row>
@@ -127,9 +109,9 @@ const MasterDetailStory = () => {
 //
 
 const WithToolbarStory = () => {
-  const [selected, setSelected] = useState<string | undefined>(items[0].id);
+  const [selected, setSelected] = useState<string | undefined>(allItems[0].id);
   const [filter, setFilter] = useState('');
-  const filtered = items.filter((item) => item.name.toLowerCase().includes(filter.toLowerCase()));
+  const filtered = allItems.filter((item) => item.name.toLowerCase().includes(filter.toLowerCase()));
   return (
     <RowList.Root selectedId={selected} onSelectChange={setSelected}>
       <Panel.Root>
@@ -163,18 +145,19 @@ const WithToolbarStory = () => {
 
 const meta = {
   title: 'ui/react-ui-list/RowList',
+  render: (args) => <DefaultStory {...args} />,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta;
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<StoryArgs>;
 
-export const Default: Story = { render: DefaultStory };
-export const Thin: Story = { render: ThinStory };
-export const WithDisabled: Story = { render: DisabledStory };
-export const MasterDetail: Story = { render: MasterDetailStory };
-export const WithToolbar: Story = { render: WithToolbarStory };
+export const Default: Story = {};
+export const Thin: Story = { args: { thin: true, padding: true, showDescription: false } };
+export const WithDisabled: Story = { args: { items: allItems.slice(0, 6), disabledIndex: 2 } };
+export const MasterDetail: Story = { render: () => <MasterDetailStory /> };
+export const WithToolbar: Story = { render: () => <WithToolbarStory /> };

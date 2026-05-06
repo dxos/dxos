@@ -102,16 +102,15 @@ const DefaultStory = ({ items = allItems, controlled = false, disabledIndices = 
 
 const meta = {
   title: 'ui/react-ui-list/Picker',
+  render: (args) => <DefaultStory {...args} />,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },
-} satisfies Meta;
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<StoryArgs>;
 
-export const Default: Story = { render: () => <DefaultStory /> };
-export const Filtering: Story = { render: () => <DefaultStory controlled /> };
-export const WithDisabled: Story = {
-  render: () => <DefaultStory items={allItems.slice(0, 8)} disabledIndices={[2, 5]} />,
-};
+export const Default: Story = {};
+export const Filtering: Story = { args: { controlled: true } };
+export const WithDisabled: Story = { args: { items: allItems.slice(0, 8), disabledIndices: [2, 5] } };

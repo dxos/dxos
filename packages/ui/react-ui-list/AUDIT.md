@@ -682,20 +682,34 @@ opening a draft PR.
   ratio across tasks is what calibrates the agent over time. (Caveat:
   AI execution time and human implementation time are different
   distributions — say which you mean.)
-- **Stories: factor variants into one configurable `DefaultStory`.**
-  When a stories file has multiple variants of the same component
-  (Default / Filtering / WithDisabled / Loading / etc.), define a
-  single `DefaultStory({ ... }: StoryArgs = {})` that accepts the
-  variant flags as props, then export each named story as a one-line
-  call:
+- **Stories: factor variants into one configurable `DefaultStory`,
+  with `render` defined once on `meta`.** When a stories file has
+  multiple variants of the same component (Default / Filtering /
+  WithDisabled / Loading / etc.), define a single
+  `DefaultStory({ ... }: StoryArgs = {})` that accepts the variant
+  flags as props, hoist the `render` callback up to `meta` so it is
+  declared once, and have each named story export only its `args`:
+
   ```tsx
-  export const Default: Story = { render: () => <DefaultStory /> };
-  export const Filtering: Story = { render: () => <DefaultStory controlled /> };
-  export const WithDisabled: Story = { render: () => <DefaultStory disabledIndices={[2, 5]} /> };
+  const meta = {
+    title: 'ui/<package>/<Component>',
+    render: (args) => <DefaultStory {...args} />,
+    decorators: [withTheme()],
+    parameters: { layout: 'centered' },
+  } satisfies Meta<StoryArgs>;
+
+  export default meta;
+
+  type Story = StoryObj<StoryArgs>;
+
+  export const Default: Story = {};
+  export const Filtering: Story = { args: { controlled: true } };
+  export const WithDisabled: Story = { args: { disabledIndices: [2, 5] } };
   ```
+
   Keeps the structural code in one place; per-variant divergence is
   obvious at the bottom; reading the diff after a UI change shows
   exactly one render path. Skip the pattern only when stories diverge
   _structurally_ (different layout wrapper, master/detail split, etc.)
-  — at that point the conditional plumbing costs more than separate
-  story functions.
+  — those stories keep their own `render` override on the named
+  export and live alongside the meta-level default.
