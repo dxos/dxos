@@ -15,7 +15,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { Picker } from './Picker';
 
@@ -34,18 +34,28 @@ const items: StoryItem[] = Array.from({ length: 24 }, (_, i) => ({
 // the listbox role).
 //
 
+// `data-[selected=true]:` variants must live on the same element that
+// has the `data-selected` attribute — which `Picker.Item` sets on its
+// rendered `<div>`. Putting the highlight classes on `Picker.Item`'s
+// `classNames` (not on inner children) is the canonical pattern.
+const itemClasses =
+  'px-2 py-1 cursor-pointer rounded-xs hover:bg-hover-overlay data-[selected=true]:bg-accent-surface data-[selected=true]:text-accent-surface-text';
+
 const DefaultStory = () => {
   const [picked, setPicked] = useState<string | undefined>();
   return (
     <div className='flex flex-col gap-2 w-[24rem] border border-separator p-2 rounded-md'>
       <Picker.Root>
-        <Picker.Input placeholder='Type to search…' />
+        <Picker.Input placeholder='Click here, then ↑/↓ to navigate, Enter to pick' autoFocus />
         <ul role='listbox' className='flex flex-col mt-2 max-h-[20rem] overflow-auto'>
           {items.map((item) => (
-            <Picker.Item key={item.value} value={item.value} onSelect={() => setPicked(item.value)}>
-              <span className='px-2 py-1 cursor-pointer hover:bg-hover-overlay data-[selected=true]:bg-hover-overlay rounded-xs'>
-                {item.label}
-              </span>
+            <Picker.Item
+              key={item.value}
+              value={item.value}
+              onSelect={() => setPicked(item.value)}
+              classNames={itemClasses}
+            >
+              {item.label}
             </Picker.Item>
           ))}
         </ul>
@@ -74,13 +84,16 @@ const FilteringStory = () => {
   return (
     <div className='flex flex-col gap-2 w-[24rem] border border-separator p-2 rounded-md'>
       <Picker.Root>
-        <Picker.Input placeholder='Filter…' value={query} onValueChange={setQuery} />
+        <Picker.Input placeholder='Filter…' value={query} onValueChange={setQuery} autoFocus />
         <ul role='listbox' className='flex flex-col mt-2 max-h-[20rem] overflow-auto'>
           {filtered.map((item) => (
-            <Picker.Item key={item.value} value={item.value} onSelect={() => setPicked(item.value)}>
-              <span className='px-2 py-1 cursor-pointer hover:bg-hover-overlay data-[selected=true]:bg-hover-overlay rounded-xs'>
-                {item.label}
-              </span>
+            <Picker.Item
+              key={item.value}
+              value={item.value}
+              onSelect={() => setPicked(item.value)}
+              classNames={itemClasses}
+            >
+              {item.label}
             </Picker.Item>
           ))}
           {filtered.length === 0 && (
@@ -108,7 +121,7 @@ const WithDisabledStory = () => {
   return (
     <div className='flex flex-col gap-2 w-[24rem] border border-separator p-2 rounded-md'>
       <Picker.Root>
-        <Picker.Input placeholder='Use ↑↓ — disabled rows skip' />
+        <Picker.Input placeholder='Use ↑↓ — disabled rows skip' autoFocus />
         <ul role='listbox' className='flex flex-col mt-2 max-h-[20rem] overflow-auto'>
           {items.slice(0, 8).map((item, i) => {
             const disabled = i === 2 || i === 5;
@@ -118,18 +131,10 @@ const WithDisabledStory = () => {
                 value={item.value}
                 disabled={disabled}
                 onSelect={() => setPicked(item.value)}
+                classNames={[itemClasses, disabled && 'opacity-50 cursor-not-allowed']}
               >
-                <span
-                  className={[
-                    'px-2 py-1 cursor-pointer hover:bg-hover-overlay data-[selected=true]:bg-hover-overlay rounded-xs',
-                    disabled && 'opacity-50 cursor-not-allowed',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                >
-                  {item.label}
-                  {disabled && ' (disabled)'}
-                </span>
+                {item.label}
+                {disabled && ' (disabled)'}
               </Picker.Item>
             );
           })}
@@ -144,7 +149,10 @@ const WithDisabledStory = () => {
 
 const meta = {
   title: 'ui/react-ui-list/Picker',
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'p-2' })],
+  decorators: [withTheme()],
+  parameters: {
+    layout: 'centered',
+  },
 } satisfies Meta;
 
 export default meta;
