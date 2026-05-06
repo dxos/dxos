@@ -84,6 +84,7 @@ import { ScrollArea, type ScrollAreaRootProps } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 const ROW_LIST_NAME = 'RowList';
+const ROW_LIST_ROOT_NAME = 'RowList.Root';
 const ROW_LIST_VIEWPORT_NAME = 'RowList.Viewport';
 const ROW_LIST_CONTENT_NAME = 'RowList.Content';
 const ROW_NAME = 'List.Row';
@@ -144,7 +145,7 @@ const Root = ({ currentId, defaultCurrentId, onCurrentChange, children }: RootPr
   );
 };
 
-Root.displayName = 'RowList.Root';
+Root.displayName = ROW_LIST_ROOT_NAME;
 
 //
 // Viewport — ScrollArea wrapper. Always scrolls; forwards ScrollArea knobs.

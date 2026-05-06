@@ -29,6 +29,7 @@
   "dependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "effect": "catalog:"
