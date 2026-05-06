@@ -359,7 +359,15 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
           // Fetch all repos visible to the token once so each target row can
           // resolve its remote `GitHubRepo`. Targets store the numeric repo id
           // as `remoteId` (a stringified integer).
+          // #region DEBUG
+          const handlerStart = Date.now();
+          log('[DEBUG H4] handler start, fetching /user/repos', { targetsConfigured: integrationObj.targets.length });
+          const userReposStart = Date.now();
+          // #endregion DEBUG
           const allRepos = yield* GitHubApi.fetchUserRepos();
+          // #region DEBUG
+          log('[DEBUG H4] /user/repos done', { count: allRepos.length, ms: Date.now() - userReposStart });
+          // #endregion DEBUG
           const reposById = new Map(allRepos.map((r) => [String(r.id), r]));
 
           // Optional narrow filter to a single Project echo id.
@@ -463,9 +471,35 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
                   Effect.gen(function* () {
                     pulledProjects++;
                     const since = sinceFromOptions(options);
+                    // #region DEBUG
+                    const targetStart = Date.now();
+                    log('[DEBUG H2] target start', {
+                      owner: remoteRepo.owner.login,
+                      name: remoteRepo.name,
+                      since,
+                      maxDaysBack: options?.maxDaysBack,
+                    });
+                    const issuesFetchStart = Date.now();
+                    // #endregion DEBUG
                     const issues = yield* GitHubApi.fetchRepoIssues(remoteRepo.owner.login, remoteRepo.name, {
                       since,
                     });
+                    // #region DEBUG
+                    const totalCommentCount = issues.reduce((sum, i) => sum + (i.comments ?? 0), 0);
+                    const issuesWithComments = issues.filter((i) => (i.comments ?? 0) > 0).length;
+                    log('[DEBUG H1/H2] target issues fetched', {
+                      owner: remoteRepo.owner.login,
+                      name: remoteRepo.name,
+                      issueCount: issues.length,
+                      issuesWithComments,
+                      totalCommentCount,
+                      ms: Date.now() - issuesFetchStart,
+                    });
+                    let issuesProcessed = 0;
+                    let commentFetches = 0;
+                    let commentsFetchedTotal = 0;
+                    let commentsFetchMsTotal = 0;
+                    // #endregion DEBUG
                     for (const issue of issues) {
                       // Resolve assignee — first assignee only for v1.
                       const assigneeLogin = issue.assignees?.[0]?.login;
@@ -480,7 +514,13 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
                         pulledPeople++;
                       }
 
+                      // #region DEBUG
+                      const upsertStart = Date.now();
+                      // #endregion DEBUG
                       const { task, created } = yield* upsertTask(issue, assignedPerson, project);
+                      // #region DEBUG
+                      const upsertMs = Date.now() - upsertStart;
+                      // #endregion DEBUG
                       if (created) {
                         pulledTasks++;
                       }
@@ -488,15 +528,65 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
                       // Pull comments. `issue.comments` is the count; skip the
                       // round-trip when zero.
                       if ((issue.comments ?? 0) > 0) {
+                        // #region DEBUG
+                        const commentFetchStart = Date.now();
+                        log('[DEBUG H1] fetching comments for issue', {
+                          owner: remoteRepo.owner.login,
+                          name: remoteRepo.name,
+                          issueNumber: issue.number,
+                          declaredCommentCount: issue.comments,
+                        });
+                        // #endregion DEBUG
                         const comments = yield* GitHubApi.fetchIssueComments(
                           remoteRepo.owner.login,
                           remoteRepo.name,
                           issue.number,
                         );
+                        // #region DEBUG
+                        const commentFetchMs = Date.now() - commentFetchStart;
+                        commentFetches++;
+                        commentsFetchedTotal += comments.length;
+                        commentsFetchMsTotal += commentFetchMs;
+                        log('[DEBUG H1] fetched comments for issue', {
+                          owner: remoteRepo.owner.login,
+                          name: remoteRepo.name,
+                          issueNumber: issue.number,
+                          declaredCommentCount: issue.comments,
+                          fetchedCommentCount: comments.length,
+                          ms: commentFetchMs,
+                        });
+                        // #endregion DEBUG
                         const added = yield* syncCommentsForTask(task, comments, personByLogin);
                         pulledComments += added;
                       }
+
+                      // #region DEBUG
+                      issuesProcessed++;
+                      if (issuesProcessed % 25 === 0) {
+                        log('[DEBUG H2/H5] target progress', {
+                          owner: remoteRepo.owner.login,
+                          name: remoteRepo.name,
+                          issuesProcessed,
+                          totalIssues: issues.length,
+                          commentFetches,
+                          commentsFetchedTotal,
+                          avgUpsertMsLastIssue: upsertMs,
+                          targetElapsedMs: Date.now() - targetStart,
+                        });
+                      }
+                      // #endregion DEBUG
                     }
+                    // #region DEBUG
+                    log('[DEBUG H1/H2] target done', {
+                      owner: remoteRepo.owner.login,
+                      name: remoteRepo.name,
+                      issueCount: issues.length,
+                      commentFetches,
+                      commentsFetchedTotal,
+                      commentsFetchMsTotal,
+                      targetMs: Date.now() - targetStart,
+                    });
+                    // #endregion DEBUG
                   }),
                 );
 
@@ -533,6 +623,17 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
               log.warn('github sync: target failed', { error: r.left });
             }
           }
+
+          // #region DEBUG
+          log('[DEBUG H2] handler done', {
+            organizations: pulledOrganizations,
+            people: pulledPeople,
+            projects: pulledProjects,
+            tasks: pulledTasks,
+            comments: pulledComments,
+            totalMs: Date.now() - handlerStart,
+          });
+          // #endregion DEBUG
 
           return {
             pulled: {

@@ -18,6 +18,10 @@ import { Integration } from '@dxos/plugin-integration/types';
 
 import { GITHUB_API_BASE } from '../constants';
 
+// #region DEBUG
+import { log } from '@dxos/log';
+// #endregion DEBUG
+
 /** Stored as `AccessToken.token`; sent as `Authorization: Bearer <token>`. */
 type GitHubCredentialsValue = {
   token: string;
@@ -182,9 +186,30 @@ const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Sch
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
     const clientNoTracer = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    // #region DEBUG
+    const startTs = Date.now();
+    const url = request.url;
+    log('[DEBUG H3/H4] runRequest start', { url });
+    // #endregion DEBUG
     return yield* clientNoTracer.execute(request).pipe(
-      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(schema))),
+      Effect.flatMap((res) => {
+        // #region DEBUG
+        log('[DEBUG H3/H4] runRequest response', { url, status: res.status, ms: Date.now() - startTs });
+        // #endregion DEBUG
+        return Effect.flatMap(res.json, Schema.decodeUnknown(schema));
+      }),
       Effect.timeout('15 seconds'),
+      // #region DEBUG
+      Effect.tapError((error) =>
+        Effect.sync(() => {
+          const tag = (error as { _tag?: string })._tag ?? 'Unknown';
+          const status =
+            (error as { response?: { status?: number } }).response?.status ??
+            (tag === 'TimeoutException' ? 'timeout' : 'n/a');
+          log('[DEBUG H3] runRequest error pre-retry', { url, tag, status, willRetry: shouldRetry(error as never) });
+        }),
+      ),
+      // #endregion DEBUG
       Effect.retry({
         schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
         while: shouldRetry,
@@ -243,16 +268,44 @@ const githubPaginated = <T>(
     let request = withAuth(buildInitial(creds), creds).pipe(HttpClientRequest.appendUrlParam('per_page', '100'));
     const out: T[] = [];
 
+    // #region DEBUG
+    const seriesStart = Date.now();
+    const initialUrl = request.url;
+    let lastPageReached = 0;
+    // #endregion DEBUG
+
     for (let page = 0; page < MAX_PAGES; page++) {
+      // #region DEBUG
+      const pageStart = Date.now();
+      const pageUrl = request.url;
+      log('[DEBUG H3/H4/H6] paginated page start', { initialUrl, page, pageUrl });
+      // #endregion DEBUG
       const result = yield* clientNoTracer.execute(request).pipe(
         Effect.flatMap((res) =>
           Effect.gen(function* () {
             const body = yield* res.json;
             const decoded = yield* Schema.decodeUnknown(arraySchema)(body);
-            return { decoded, link: res.headers['link'] };
+            return { decoded, link: res.headers['link'], status: res.status };
           }),
         ),
         Effect.timeout('15 seconds'),
+        // #region DEBUG
+        Effect.tapError((error) =>
+          Effect.sync(() => {
+            const tag = (error as { _tag?: string })._tag ?? 'Unknown';
+            const status =
+              (error as { response?: { status?: number } }).response?.status ??
+              (tag === 'TimeoutException' ? 'timeout' : 'n/a');
+            log('[DEBUG H3] paginated error pre-retry', {
+              initialUrl,
+              page,
+              tag,
+              status,
+              willRetry: shouldRetry(error as never),
+            });
+          }),
+        ),
+        // #endregion DEBUG
         Effect.retry({
           schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
           while: shouldRetry,
@@ -262,11 +315,33 @@ const githubPaginated = <T>(
 
       out.push(...result.decoded);
       nextUrl = getNextLink(result.link);
+      // #region DEBUG
+      lastPageReached = page;
+      log('[DEBUG H3/H4/H6] paginated page end', {
+        initialUrl,
+        page,
+        status: result.status,
+        items: result.decoded.length,
+        cumulative: out.length,
+        hasNext: !!nextUrl,
+        ms: Date.now() - pageStart,
+      });
+      // #endregion DEBUG
       if (!nextUrl) {
         break;
       }
       request = withAuth(HttpClientRequest.get(nextUrl), creds);
     }
+
+    // #region DEBUG
+    log('[DEBUG H6] paginated series end', {
+      initialUrl,
+      pages: lastPageReached + 1,
+      total: out.length,
+      truncatedAtCap: lastPageReached + 1 >= MAX_PAGES && !!nextUrl,
+      ms: Date.now() - seriesStart,
+    });
+    // #endregion DEBUG
 
     // Validate to keep Schema.Schema<readonly T[]> type discipline (effectively a no-op).
     void PageDir;
