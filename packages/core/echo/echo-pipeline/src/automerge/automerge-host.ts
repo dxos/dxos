@@ -609,25 +609,28 @@ export class AutomergeHost extends Resource {
   }
 
   private async _getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null> {
+    // This runs inside share-policy resolution (see `MeshEchoReplicator.shouldAdvertise` ->
+    // `_shareConfig.announce` -> `DocSynchronizer.#resolveSharePolicy`). It must NOT block
+    // on the document becoming ready: under classical sync the network source's availability
+    // is itself gated on share policy returning, so awaiting `progress.whenReady()` here
+    // deadlocks the load (the document never transitions out of `'loading'`).
+    //
+    // Read the spaceKey iff the document is already loaded; otherwise let the share policy
+    // fall through to the `_getSpaceKeyByRootDocumentId` lookup or the
+    // `isDocumentInRemoteCollection` check on the caller.
     const handle = this._repo.handles[documentId as any];
-    if (handle) {
-      const progress = this._repo.findWithProgress(documentId as DocumentId);
-      if (progress.peek().state === 'loading') {
-        try {
-          await progress.whenReady();
-        } catch {
-          log.warn('failded to load document', { documentId });
+    if (handle && getHandleState(this._repo, documentId as DocumentId) === 'ready') {
+      const doc = handle.doc();
+      if (doc) {
+        const spaceKeyHex = DatabaseDirectory.getSpaceKey(doc);
+        if (spaceKeyHex) {
+          return PublicKey.from(spaceKeyHex);
         }
       }
-      const spaceKeyHex = DatabaseDirectory.getSpaceKey(handle.doc());
-      if (spaceKeyHex) {
-        return PublicKey.from(spaceKeyHex);
-      }
     }
-    /**
-     * Edge case on the initial space setup.
-     * A peer is maybe trying to share space root document with us after a successful invitation.
-     */
+
+    // Edge case on initial space setup: a peer may be sharing the space root document
+    // with us after a successful invitation, before our local handle has any data.
     const rootDocSpaceKey = this._getSpaceKeyByRootDocumentId?.(documentId);
     if (rootDocSpaceKey) {
       return rootDocSpaceKey;
