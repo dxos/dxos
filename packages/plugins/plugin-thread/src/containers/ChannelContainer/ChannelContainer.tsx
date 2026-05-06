@@ -192,7 +192,7 @@ export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
 
     return (
       <Chat
-        {...composableProps(props, { classNames: 'bs-full' })}
+        {...composableProps(props, { classNames: 'place-self-stretch bs-full' })}
         id={id}
         identity={identity}
         members={members}
