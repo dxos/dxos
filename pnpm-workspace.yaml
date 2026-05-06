@@ -745,6 +745,7 @@ overrides:
   ws: '>=8.17.1'
 
 patchedDependencies:
+  '@automerge/automerge-repo@2.6.0-subduction.14': patches/@automerge__automerge-repo@2.6.0-subduction.14.patch
   '@automerge/automerge-subduction@0.8.1': patches/@automerge__automerge-subduction@0.8.1.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
