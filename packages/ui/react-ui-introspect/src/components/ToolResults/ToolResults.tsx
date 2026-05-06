@@ -13,7 +13,7 @@ import { Message, type ThemedClassName } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-export type ToolResultsProps = {
+export type ToolResultsProps = ThemedClassName<{
   /**
    * Result data to render. Already-parsed values land in JsonHighlighter as-is.
    * For convenience, an MCP tool envelope shape (`{ content: [...] }`) is also
@@ -24,7 +24,7 @@ export type ToolResultsProps = {
   error?: Error | string | null;
   /** Set while a request is in flight. */
   loading?: boolean;
-};
+}>;
 
 type State = 'loading' | 'error' | 'empty' | 'result';
 
