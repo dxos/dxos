@@ -2,14 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { type RefObject, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import { ScrollArea, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { MessageTextbox, Thread as ThreadComponent, type ThreadRootProps, threadLayout } from '@dxos/react-ui-thread';
+import {
+  type MessageMetadata,
+  MessageTextbox,
+  Thread as ThreadComponent,
+  type ThreadRootProps,
+  threadLayout,
+} from '@dxos/react-ui-thread';
 import { type Message } from '@dxos/types';
-import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
+import { createBasicExtensions, createThemeExtensions, listener, type Extension } from '@dxos/ui-editor';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -37,6 +43,13 @@ export type ChatProps = ThemedClassName<
      */
     onSend: (text: string) => boolean;
     autoFocusTextbox?: boolean;
+    /**
+     * When true, render in Slack-style layout: composer pinned to the bottom of the
+     * panel, messages scrolling above it (newest at the bottom), auto-scrolling on
+     * mount and whenever messages arrive. When false (default), render in thread
+     * layout: composer follows the messages at intrinsic height.
+     */
+    bottomComposer?: boolean;
   } & Pick<ThreadRootProps, 'current'>
 >;
 
@@ -48,15 +61,19 @@ export type ChatProps = ThemedClassName<
  * `ChannelContainer`'s feed-backed channel chat.
  */
 export const Chat = composable<HTMLDivElement, ChatProps>(
-  ({ id, identity, members, messages, activity, onSend, autoFocusTextbox, current, ...props }, forwardedRef) => {
+  (
+    { id, identity, members, messages, activity, onSend, autoFocusTextbox, current, bottomComposer, ...props },
+    forwardedRef,
+  ) => {
     const { t } = useTranslation(meta.id);
     const { themeMode } = useThemeContext();
-    const [autoFocus, setAutoFocus] = useState(autoFocusTextbox);
+
     const scrollRef = useRef<HTMLDivElement | null>(null);
+    const sentinelRef = useRef<HTMLDivElement | null>(null);
+    const [autoFocus, setAutoFocus] = useState(autoFocusTextbox);
 
     // Force the editor to remount after a successful send so its content resets.
     const [_count, _setCount] = useState(0);
-    const rerenderEditor = () => _setCount((count) => count + 1);
 
     const textboxMetadata = getMessageMetadata(id, identity);
     const messageRef = useRef('');
@@ -71,11 +88,18 @@ export const Chat = composable<HTMLDivElement, ChatProps>(
     );
 
     const scrollToEnd = (behavior: ScrollBehavior) =>
-      setTimeout(() => scrollRef.current?.scrollIntoView({ behavior, block: 'end' }), 10);
+      setTimeout(() => sentinelRef.current?.scrollIntoView({ behavior, block: 'end' }), 10);
 
     useLayoutEffect(() => {
       scrollToEnd('instant');
     }, []);
+
+    // For bottom-composer (channel) mode, also scroll-to-end when new messages arrive.
+    useLayoutEffect(() => {
+      if (bottomComposer) {
+        scrollToEnd('smooth');
+      }
+    }, [messages.length, bottomComposer]);
 
     const handleSend = () => {
       const text = messageRef.current;
@@ -91,32 +115,107 @@ export const Chat = composable<HTMLDivElement, ChatProps>(
       messageRef.current = '';
       setAutoFocus(true);
       scrollToEnd('smooth');
-      rerenderEditor();
+      _setCount((count) => count + 1);
       return true;
     };
 
-    return (
-      <ThreadComponent.Root
-        {...composableProps(props, {
-          classNames: 'dx-container grid-rows-[1fr_min-content_min-content]',
-        })}
+    const filteredMessages = messages.filter(isNonNullable);
+    const renderState: ChatRenderState = {
+      messages: filteredMessages,
+      members,
+      activity,
+      extensions,
+      autoFocus,
+      handleSend,
+      textboxMetadata,
+      scrollRef,
+      sentinelRef,
+    };
+
+    return bottomComposer ? (
+      <SlackLayout
+        {...composableProps(props, { classNames: 'flex flex-col bs-full min-h-0' })}
+        id={id}
+        ref={forwardedRef}
+        state={renderState}
+      />
+    ) : (
+      <ThreadLayout
+        {...composableProps(props, { classNames: 'dx-container grid-rows-[1fr_min-content_min-content]' })}
         id={id}
         current={current}
         ref={forwardedRef}
-      >
+        state={renderState}
+      />
+    );
+  },
+);
+
+//
+// Internal layout helpers — share state via the ChatRenderState bag.
+//
+
+type ChatRenderState = {
+  messages: Message.Message[];
+  members: SpaceMember[];
+  activity?: boolean;
+  extensions: Extension[];
+  autoFocus?: boolean;
+  handleSend: () => boolean;
+  textboxMetadata: MessageMetadata;
+  scrollRef: RefObject<HTMLDivElement | null>;
+  sentinelRef: RefObject<HTMLDivElement | null>;
+};
+
+type LayoutProps = React.HTMLAttributes<HTMLDivElement> & {
+  id: string;
+  state: ChatRenderState;
+};
+
+/** Thread layout — composer follows messages at intrinsic height. */
+const ThreadLayout = React.forwardRef<HTMLDivElement, LayoutProps & Pick<ThreadRootProps, 'current'>>(
+  ({ id, current, state, ...props }, ref) => {
+    const { t } = useTranslation(meta.id);
+    const { messages, members, activity, extensions, autoFocus, handleSend, textboxMetadata, sentinelRef } = state;
+    return (
+      <ThreadComponent.Root {...props} id={id} current={current} ref={ref}>
         <ScrollArea.Root classNames='col-span-2' orientation='vertical'>
-          <ScrollArea.Viewport ref={scrollRef}>
+          <ScrollArea.Viewport ref={sentinelRef}>
             <div role='none' className={mx(threadLayout, 'place-self-end')}>
-              {messages.filter(isNonNullable).map((message) => (
+              {messages.map((message) => (
                 <MessagePanel key={message.id} message={message} members={members} />
               ))}
             </div>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-
         <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleSend} {...textboxMetadata} />
         <ThreadComponent.Status activity={activity}>{t('activity.message')}</ThreadComponent.Status>
       </ThreadComponent.Root>
     );
   },
 );
+
+/** Slack layout — composer pinned to the bottom, messages scroll above it. */
+const SlackLayout = React.forwardRef<HTMLDivElement, LayoutProps>(({ id, state, ...props }, ref) => {
+  const { t } = useTranslation(meta.id);
+  const { messages, members, activity, extensions, autoFocus, handleSend, textboxMetadata, scrollRef, sentinelRef } =
+    state;
+  return (
+    <div {...props} id={id} ref={ref}>
+      <div ref={scrollRef} className='flex-1 min-h-0 overflow-y-auto'>
+        <div className='flex flex-col justify-end min-h-full'>
+          {messages.map((message) => (
+            <div key={message.id} className='grid grid-cols-[var(--dx-rail-size)_1fr] w-full'>
+              <MessagePanel message={message} members={members} />
+            </div>
+          ))}
+          <div ref={sentinelRef} />
+        </div>
+      </div>
+      <div className='shrink-0 grid grid-cols-[var(--dx-rail-size)_1fr]'>
+        <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleSend} {...textboxMetadata} />
+      </div>
+      <div className='shrink-0 px-2 pb-1 text-xs text-description'>{activity ? t('activity.message') : null}</div>
+    </div>
+  );
+});
