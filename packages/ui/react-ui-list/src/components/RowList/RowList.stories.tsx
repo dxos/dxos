@@ -134,6 +134,7 @@ const WithToolbarStory = () => {
           <Toolbar.Root>
             <input
               type='text'
+              aria-label='Filter items'
               placeholder='Filter…'
               value={filter}
               onChange={(event) => setFilter(event.target.value)}

@@ -237,7 +237,7 @@ Findings:
 A layered model with clear responsibilities. Each layer has one job and
 defers everything else upward:
 
-```
+```text
                     ┌──────────────────────────────────────────┐
    Heavy /          │  react-ui-mosaic                         │
    feature-rich     │    Stack, VirtualStack, Tile, Board      │
@@ -379,12 +379,17 @@ Estimated: 1 PR, small (mostly docs + minor API tightening).
 
 ### Phase 4 — Rebuild `react-ui-list` around it
 
-- Delete the `@deprecated` `List` (3 plugin call sites — migrate them
-  in this PR).
 - Add `Row`, `Card`, `RowList`, `CardList` built on
   `react-primitives/react-list`. `RowList` handles keyboard nav
-  (tabster arrow group) and the `dx-*` pairing automatically.
-- Keep `Tree` and `Accordion` unchanged for now.
+  (tabster arrow group + WAI-ARIA listbox semantics) and the `dx-*`
+  pairing automatically.
+- Update the `@deprecated` `List` note to point at the right
+  replacement per use case (`RowList` for selectable pickers,
+  `Mosaic.Stack` for reorderable card stacks). **Do not delete it**
+  here — actual consumer count is ~10 plugins (not 3 as initially
+  estimated) and they use a different primitive (drag handles +
+  delete buttons), so consumer migration moves to Phase 6.
+- Keep `Tree` and `Accordion` unchanged.
 - New name discussion *optional* — `@dxos/react-ui-list` still fits
   the new contents. (If we ever rename, propose `@dxos/react-ui-rows`
   or merge `Tree`/`Accordion` into `react-ui-disclosure` — out of
@@ -405,9 +410,11 @@ Estimated: 1–2 PRs, medium.
 
 Estimated: 1 PR, medium.
 
-### Phase 6 — Migrate ad-hoc plugin lists
+### Phase 6 — Migrate ad-hoc plugin lists & retire deprecated `List`
 
-In rough order of value:
+Two strands of work converge here:
+
+**A. Ad-hoc plugin lists → `RowList`** (in rough order of value):
 
 1. `react-ui-introspect` `ToolList` → `RowList`. (Sketch in §8.)
 2. `plugin-code` `FileTree` → re-use `react-ui-list` `Tree`. The
@@ -420,7 +427,20 @@ In rough order of value:
 5. The remaining four (ChatReferences, DeploymentDialog, ChatMcpErrors,
    WelcomeTour) on a "while I'm there" basis.
 
-Estimated: 1 PR per plugin, small each. Can be parallelized.
+**B. Migrate consumers off the deprecated `List` (drag-handle +
+delete-button reorderable list) and delete it.** Phase 4 retained this
+component because consumer count was higher than the audit estimated
+(~10 plugins: plugin-meeting, plugin-zen, plugin-pipeline, plugin-sheet,
+plugin-automation × 3, react-ui-form × 2, react-ui-mcp). Each call site
+needs a per-case migration to either `RowList` (for the simple
+selection cases that don't actually need drag/delete) or
+`Mosaic.Stack` / `Mosaic.VirtualStack` (for the cases that do). Once
+consumer count hits zero, delete the deprecated `List` component +
+its tests + the `@atlaskit/pragmatic-drag-and-drop` deps that only
+support it.
+
+Estimated: 1 PR per plugin, small each (10 + 9 = ~19 PRs). Can be
+parallelized; final delete PR after last consumer migrates.
 
 ### Phase 7 — Retire `react-ui-stack`
 

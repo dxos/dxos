@@ -187,15 +187,23 @@ type ViewportOwnProps = {
   'aria-label'?: string;
 };
 
-// Find all enabled `role='option'` descendants of `ul` in DOM order.
-// Disabled options stay in the tab order for screen-reader announcement
-// but are skipped by arrow / Home / End.
-const enabledOptions = (ul: HTMLElement | null): HTMLLIElement[] => {
+// Find all `role='option'` descendants of `ul` in DOM order. Per the
+// WAI-ARIA APG listbox pattern, disabled options stay in the focus
+// traversal so screen readers can announce them; the per-option click /
+// Enter handlers (and selection-follows-focus) early-return when the
+// option is disabled, so focus moves over them but selection doesn't.
+const allOptions = (ul: HTMLElement | null): HTMLLIElement[] => {
   if (!ul) {
     return [];
   }
-  return Array.from(ul.querySelectorAll<HTMLLIElement>('[role="option"]:not([aria-disabled="true"])'));
+  return Array.from(ul.querySelectorAll<HTMLLIElement>('[role="option"]'));
 };
+
+// Variant of `allOptions` that excludes disabled — used only as a default
+// focus target (we don't want to land focus on a disabled row when the
+// listbox itself first receives focus).
+const enabledOptions = (ul: HTMLElement | null): HTMLLIElement[] =>
+  allOptions(ul).filter((option) => option.getAttribute('aria-disabled') !== 'true');
 
 const renderViewport = (
   componentName: string,
@@ -215,16 +223,17 @@ const renderViewport = (
   const listClassNames = variant === 'row' ? ROW_VIEWPORT_LIST_BASE : CARD_VIEWPORT_LIST_BASE;
 
   // Explicit listbox keyboard navigation. Per WAI-ARIA listbox pattern:
-  //   ArrowDown — focus next enabled option
-  //   ArrowUp   — focus previous enabled option
-  //   Home      — focus first enabled option
-  //   End       — focus last enabled option
-  // No wraparound (matches the ARIA spec; tabster does wrap by default,
-  // but explicit handling here takes precedence and is more conventional
-  // for listboxes).
+  //   ArrowDown — focus next option (disabled included, for SR announcement)
+  //   ArrowUp   — focus previous option
+  //   Home      — focus first option
+  //   End       — focus last option
+  // No wraparound (matches the ARIA spec; tabster wraps by default, but
+  // explicit handling here takes precedence and is more conventional for
+  // listboxes). Selection on disabled options is suppressed by per-option
+  // handlers, not by skipping them in traversal.
   const handleListKeyDown = useCallback((event: KeyboardEvent<HTMLUListElement>) => {
     const ul = event.currentTarget;
-    const options = enabledOptions(ul);
+    const options = allOptions(ul);
     if (options.length === 0) {
       return;
     }
@@ -384,9 +393,12 @@ const renderItem = (
   });
 
   // Tabster focuses each option as you arrow through; without tabIndex
-  // the option isn't reachable. Disabled items stay in the tab order so
-  // users can read them but can't pick.
-  const tabIndex = disabled ? -1 : 0;
+  // the option isn't reachable. Per WAI-ARIA APG listbox guidance,
+  // disabled options remain keyboard-navigable for screen-reader
+  // announcement — selection is prevented by `handleClick` /
+  // `handleKeyDown` / `handleFocus` guards above, not by removing
+  // disabled items from the tab order.
+  const tabIndex = 0;
 
   return (
     <ListItem
