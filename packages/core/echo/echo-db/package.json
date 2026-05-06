@@ -38,6 +38,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -60,7 +61,6 @@
     "fast-deep-equal": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-pipeline": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/test-utils": "workspace:*"
   },
