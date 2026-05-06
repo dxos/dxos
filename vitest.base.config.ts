@@ -164,22 +164,9 @@ type NodeOptions = {
   timeout?: number;
   setupFiles?: string[];
   plugins?: Plugin[];
-  /**
-   * If true, each test file gets its own worker (fresh module graph).
-   * Default is the workspace default (`isolate: false`, single shared worker).
-   * Use this for packages that load WASM modules whose state corrupts across files.
-   */
-  isolate?: boolean;
 };
 
-const createNodeProject = ({
-  environment = 'node',
-  retry,
-  timeout,
-  setupFiles = [],
-  plugins = [],
-  isolate,
-}: NodeOptions = {}) =>
+const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = [], plugins = [] }: NodeOptions = {}) =>
   defineProject({
     esbuild: {
       target: 'esnext',
@@ -194,7 +181,6 @@ const createNodeProject = ({
       environment,
       retry,
       testTimeout: timeout,
-      ...(isolate !== undefined ? { isolate } : {}),
       include: [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',
