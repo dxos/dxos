@@ -151,7 +151,6 @@ jobs:
       DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
       DX_TELEMETRY_TAG: e2e
       DX_PWA: false
-      NODE_OPTIONS: --max-old-space-size=12288
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3

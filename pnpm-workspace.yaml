@@ -143,6 +143,7 @@ catalog:
   '@opentui/core-linux-x64': 0.1.61
   '@opentui/core-win32-x64': 0.1.61
   '@opentui/solid': 0.1.61
+  '@oxc-project/runtime': ^0.129.0
   '@oxc-project/types': 0.128.0
   '@peermetrics/webrtc-stats': 5.7.1
   '@phosphor-icons/core': ^2.1.1

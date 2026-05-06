@@ -372,6 +372,9 @@ catalogs:
     '@opentui/solid':
       specifier: 0.1.61
       version: 0.1.61
+    '@oxc-project/runtime':
+      specifier: ^0.129.0
+      version: 0.129.0
     '@oxc-project/types':
       specifier: 0.128.0
       version: 0.128.0
@@ -2078,6 +2081,9 @@ importers:
       '@typescript/native-preview':
         specifier: 'catalog:'
         version: 7.0.0-dev.20260421.2
+      '@vitejs/plugin-react':
+        specifier: 'catalog:'
+        version: 6.0.1(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       '@vitejs/plugin-react-swc':
         specifier: 'catalog:'
         version: 4.3.0(@swc/helpers@0.5.17)(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
@@ -2652,6 +2658,9 @@ importers:
       '@fontsource/poiret-one':
         specifier: 'catalog:'
         version: 5.2.8
+      '@oxc-project/runtime':
+        specifier: 'catalog:'
+        version: 0.129.0
       '@tauri-apps/api':
         specifier: 'catalog:'
         version: 2.10.1
@@ -5920,6 +5929,9 @@ importers:
       '@dxos/introspect':
         specifier: workspace:*
         version: link:../introspect
+      '@dxos/introspect-tools':
+        specifier: workspace:*
+        version: link:../introspect-tools
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -5942,6 +5954,31 @@ importers:
       tsx:
         specifier: 'catalog:'
         version: 4.21.0
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.5(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(esbuild@0.28.0)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.12))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/core/introspect-tools:
+    dependencies:
+      '@dxos/effect-zod':
+        specifier: workspace:*
+        version: link:../../common/effect-zod
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+      zod:
+        specifier: 'catalog:'
+        version: 4.3.6
+    devDependencies:
+      '@types/node':
+        specifier: 22.10.2
+        version: 22.10.2
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -17177,9 +17214,6 @@ importers:
       '@radix-ui/react-checkbox':
         specifier: 'catalog:'
         version: 1.1.4(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@storybook/react-vite':
-        specifier: 'catalog:'
-        version: 10.3.6(esbuild@0.28.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(rollup@3.30.0)(storybook@10.3.6(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@6.0.3)(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(webpack@5.105.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.28.0))
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.7
@@ -19016,6 +19050,52 @@ importers:
         specifier: '>=8.0.0'
         version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
+  packages/ui/react-ui-introspect:
+    dependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../react-ui-form
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../react-ui-syntax-highlighter
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../ui-theme
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+    devDependencies:
+      '@dxos/introspect-tools':
+        specifier: workspace:*
+        version: link:../../core/introspect-tools
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@modelcontextprotocol/sdk':
+        specifier: '>=1.26.0'
+        version: 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.3.6(esbuild@0.28.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(rollup@3.30.0)(storybook@10.3.6(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@6.0.3)(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(webpack@5.105.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.28.0))
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.7
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.7)
+      react:
+        specifier: ~19.2.3
+        version: 19.2.3
+      react-dom:
+        specifier: ~19.2.3
+        version: 19.2.3(react@19.2.3)
+      vite:
+        specifier: '>=8.0.0'
+        version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
   packages/ui/react-ui-list:
     dependencies:
       '@atlaskit/pragmatic-drag-and-drop':
@@ -19036,9 +19116,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/react-list':
-        specifier: workspace:*
-        version: link:../react-primitives/react-list
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
@@ -19057,9 +19134,6 @@ importers:
       '@effect-atom/atom-react':
         specifier: 'catalog:'
         version: 0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)(react@19.2.3)(scheduler@0.27.0)
-      '@fluentui/react-tabster':
-        specifier: 'catalog:'
-        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@radix-ui/react-accordion':
         specifier: 'catalog:'
         version: 1.2.3(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -19069,9 +19143,6 @@ importers:
       '@radix-ui/react-slot':
         specifier: 'catalog:'
         version: 1.1.2(@types/react@19.2.7)(react@19.2.3)
-      '@radix-ui/react-use-controllable-state':
-        specifier: 'catalog:'
-        version: 1.1.0(@types/react@19.2.7)(react@19.2.3)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -24810,6 +24881,10 @@ packages:
 
   '@oslojs/encoding@1.1.0':
     resolution: {integrity: sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ==}
+
+  '@oxc-project/runtime@0.129.0':
+    resolution: {integrity: sha512-0+S67blQakgeNqoKGozOUp5rQBrz2ynXZ2QIINXZPiafsD0YL0UogB9hAWc1S7k6VSNwKYC/N7MqT0V6IzpHkQ==}
+    engines: {node: ^20.19.0 || >=22.12.0}
 
   '@oxc-project/types@0.101.0':
     resolution: {integrity: sha512-nuFhqlUzJX+gVIPPfuE6xurd4lST3mdcWOhyK/rZO0B9XWMKm79SuszIQEnSMmmDhq1DC8WWVYGVd+6F93o1gQ==}
@@ -44600,6 +44675,8 @@ snapshots:
       - web-tree-sitter
 
   '@oslojs/encoding@1.1.0': {}
+
+  '@oxc-project/runtime@0.129.0': {}
 
   '@oxc-project/types@0.101.0': {}
 

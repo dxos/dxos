@@ -1,4 +1,4 @@
-layer: application
+layer: library
 language: typescript
 tags:
   - ts-build
