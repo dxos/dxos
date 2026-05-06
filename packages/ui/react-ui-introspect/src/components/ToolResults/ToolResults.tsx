@@ -7,7 +7,7 @@
 // so we accept either the raw envelope or pre-parsed data and pretty-print
 // via the JsonHighlighter.
 
-import React, { type HTMLAttributes, type ReactNode } from 'react';
+import React, { type HTMLAttributes } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -26,48 +26,28 @@ export type ToolResultsProps = {
   loading?: boolean;
 };
 
-type Variant = ThemedClassName<Pick<HTMLAttributes<HTMLDivElement>, 'role' | 'aria-live'>> & {
-  children: ReactNode;
-};
+type State = 'loading' | 'error' | 'empty' | 'result';
 
-const pickVariant = ({ result, error, loading }: ToolResultsProps): Variant => {
-  if (loading) {
-    return {
-      classNames: 'p-3 text-sm text-description',
-      role: 'status',
-      'aria-live': 'polite',
-      children: 'Calling tool…',
-    };
-  }
-  if (error) {
-    return {
-      classNames: 'p-3 text-sm text-errorText whitespace-pre-wrap',
-      role: 'alert',
-      children: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
-    };
-  }
-  if (result === undefined) {
-    return {
-      classNames: 'p-3 text-sm text-description italic',
-      children: (
-        <>
-          No result yet — fill the form and click <strong>Run tool</strong>.
-        </>
-      ),
-    };
-  }
-  return {
-    classNames: 'p-3 overflow-auto',
-    children: <JsonHighlighter data={tryParseMcpEnvelope(result)} />,
-  };
+const VARIANTS: Record<State, ThemedClassName<Pick<HTMLAttributes<HTMLDivElement>, 'role' | 'aria-live'>>> = {
+  loading: { classNames: 'p-3 text-sm text-description', role: 'status', 'aria-live': 'polite' },
+  error: { classNames: 'p-3 text-sm text-errorText whitespace-pre-wrap', role: 'alert' },
+  empty: { classNames: 'p-3 text-sm text-description italic' },
+  result: { classNames: 'p-3 overflow-auto' },
 };
 
 export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
   ({ result, error, loading, ...props }, forwardedRef) => {
-    const { children, ...variant } = pickVariant({ result, error, loading });
+    const state: State = loading ? 'loading' : error ? 'error' : result === undefined ? 'empty' : 'result';
     return (
-      <div {...composableProps(props, variant)} ref={forwardedRef}>
-        {children}
+      <div {...composableProps(props, VARIANTS[state])} ref={forwardedRef}>
+        {state === 'loading' && 'Calling tool…'}
+        {state === 'error' && (error instanceof Error ? `${error.name}: ${error.message}` : String(error))}
+        {state === 'empty' && (
+          <>
+            No result yet — fill the form and click <strong>Run tool</strong>.
+          </>
+        )}
+        {state === 'result' && <JsonHighlighter data={tryParseMcpEnvelope(result)} />}
       </div>
     );
   },
