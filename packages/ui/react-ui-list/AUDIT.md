@@ -318,30 +318,32 @@ Specifically:
   card-style rendering is a `classNames` styling concern, not a
   separate component):
   - `RowList.Root` — **headless** context provider (no DOM). Owns the
-    `currentId` model. Layout is the caller's responsibility, matching
-    Radix `Select.Root` / `Dialog.Root`.
+    single-selection `selectedId` model (renamed from the draft's
+    `currentId` — see §11 for the rationale). Layout is the caller's
+    responsibility, matching Radix `Select.Root` / `Dialog.Root`.
   - `RowList.Viewport` — `ScrollArea.Root` + `ScrollArea.Viewport`.
     Always scrolls. Forwards ScrollArea knobs (`thin`, `padding`,
     `centered`) so callers don't have to wrap manually. Carries
     `dx-container` for filling its parent.
   - `RowList.Content` — the `<ul role='listbox'>` holding the items.
     Carries the tabster arrow-nav group and the `aria-label`.
-  - `Row` — `role='option'` item with `aria-current="true"` on the
-    current row, paired with `dx-current` styling.
+  - `Row` — `role='option'` item with `aria-selected` on the
+    selected row, paired with `dx-selected` styling.
   - Keep `Tree` and `Accordion` (still unique).
   - Update the `@deprecated` `List` note; consumer migration +
     deletion move to Phase 6 (count is ~10, not 3 as initially
     estimated).
 
-  **Current vs selection.** This layer tracks "current" — the item the
-  user has navigated to. One item, follows click / arrow / focus,
-  `aria-current` + `dx-current`. **Selection** is a separately-tracked
-  model not yet implemented here: an explicit action (e.g. clicking a
-  checkbox) on top of navigation, capable of multi-select, paired with
-  `aria-selected` + `dx-selected`. When it lands it'll likely be a
-  reactive atom owning `Set<string>` so subscribers can re-render
-  per-row without re-rendering the whole list. Current and selection
-  can coexist on the same row.
+  **Selection model.** `RowList` ships single-selection: one
+  `selectedId` per group, follows click / arrow / focus, `aria-selected`
+  - `dx-selected`. **Multi-select** (an explicit per-item toggle on top
+    of navigation, e.g. a checkbox setting `completed: boolean`) is a
+    separately-tracked model not yet implemented here. When it lands
+    it'll likely be a reactive atom owning `Set<string>` so subscribers
+    can re-render per-row without re-rendering the whole list. Single-
+    and multi-select can coexist on the same row. `aria-current` /
+    `dx-current` is reserved for unrelated "you-are-here" navigation
+    patterns (navtree, breadcrumbs).
 
 - **`react-ui-search`** is refactored to compose `react-ui-list`'s
   `RowList` instead of holding its own. The search-specific bits
@@ -517,7 +519,7 @@ import { RowList, Row } from '@dxos/react-ui-list';
 export const ToolList = ({ tools, selected, onSelect, className }: ToolListProps) => {
   const entries = useMemo(() => Object.entries(tools).sort(([a], [b]) => a.localeCompare(b)), [tools]);
   return (
-    <RowList.Root currentId={selected} onCurrentChange={(id) => onSelect?.(id, tools[id])}>
+    <RowList.Root selectedId={selected} onSelectChange={(id) => onSelect?.(id, tools[id])}>
       <RowList.Viewport classNames={className}>
         <RowList.Content aria-label='MCP tools'>
           {entries.map(([name, tool]) => (
@@ -539,8 +541,8 @@ export const ToolList = ({ tools, selected, onSelect, className }: ToolListProps
 `RowList.Root` + `RowList.Viewport` + `RowList.Content` provide:
 
 - `role="listbox"` on `Content`, `role="option"` on each `Row`.
-- `aria-current="true"` on the `Row` whose id matches `currentId`.
-- `dx-current dx-hover` pairing automatic (and correct).
+- `aria-selected` on the `Row` whose id matches `selectedId`.
+- `dx-selected dx-hover` pairing automatic (and correct).
 - `ScrollArea.Root` + `ScrollArea.Viewport` baked into `Viewport`,
   with `thin` / `padding` / `centered` knobs forwarded.
 - Keyboard nav (arrow keys) via `@fluentui/react-tabster`'s

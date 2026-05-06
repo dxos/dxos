@@ -16,7 +16,7 @@
 // scroll surface, they wrap the listbox in `RowList.Viewport` themselves.
 
 import { type Scope, createContextScope } from '@radix-ui/react-context';
-import React, { type ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, type ReactNode, forwardRef } from 'react';
 
 import { Icon, type IconProps, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -106,16 +106,10 @@ const ListboxOption = forwardRef<HTMLLIElement, ListboxOptionProps>(
   (props: ListboxScopedProps<ListboxOptionProps>, forwardedRef) => {
     const { __listboxScope, children, classNames, value, ...rootProps } = props;
 
-    // We can't read RowList's selection state from here without a context
-    // hook export — so we mirror it by listening to aria-selected via the
-    // option provider that we set after Row renders. As a workaround, we
-    // pass `isSelected` based on what Row will compute (selectedId === id).
-    // That requires reading selection — but we don't have a public hook
-    // yet. For now, the indicator subscribes via a ref-callback below.
-    //
-    // Pragmatic path: read aria-selected from the rendered DOM after
-    // mount via `useState` + a ref. Keeps `OptionIndicator` working with
-    // zero new exports.
+    // Selection state is read inside `ListboxOptionProviderHost` via
+    // the public `useRowListSelection` hook and republished on the
+    // listbox-option scope so `OptionIndicator` can render its
+    // checkmark synchronously.
     return (
       <Row
         id={value}
@@ -138,7 +132,7 @@ ListboxOption.displayName = LISTBOX_OPTION_NAME;
 const ListboxOptionProviderHost = ({
   value,
   children,
-}: ListboxScopedProps<{ value: string; children?: React.ReactNode }>) => {
+}: ListboxScopedProps<{ value: string; children?: ReactNode }>) => {
   const isSelected = useRowListSelection(value);
   return (
     <ListboxOptionProvider scope={undefined} value={value} isSelected={isSelected}>
@@ -166,11 +160,9 @@ ListboxOptionLabel.displayName = LISTBOX_OPTION_LABEL_NAME;
 //
 // OptionIndicator — checkmark for the selected option.
 //
-// Reads `isSelected` from the option context. If the option provider
-// hasn't propagated state yet (see `ListboxOptionProviderHost` note),
-// the indicator stays invisible until selection changes. The visual
-// indicator is also covered by `dx-selected` on the row, so the
-// checkmark is purely confirmatory.
+// Reads `isSelected` from the option context. The visual indicator is
+// also covered by `dx-selected` on the row, so the checkmark is purely
+// confirmatory.
 //
 
 type ListboxOptionIndicatorProps = Omit<IconProps, 'icon'> & Partial<Pick<IconProps, 'icon'>>;

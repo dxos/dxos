@@ -8,8 +8,9 @@
 // currently-selected tool name and renders the form / results panel for it.
 //
 // Built on `RowList` from `@dxos/react-ui-list`, which provides the
-// `aria-current` / `dx-current` pairing, tabster arrow-key navigation,
-// and the `ScrollArea`-backed Viewport for free.
+// `aria-selected` / `dx-selected` pairing (via `selectedId` /
+// `onSelectChange`), tabster arrow-key navigation, and the
+// `ScrollArea`-backed Viewport for free.
 
 import React, { useCallback, useMemo } from 'react';
 

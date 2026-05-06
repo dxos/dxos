@@ -47,6 +47,7 @@ import React, {
   type ComponentPropsWithRef,
   type KeyboardEvent,
   type PropsWithChildren,
+  type ReactNode,
   forwardRef,
   useCallback,
   useEffect,
@@ -323,7 +324,7 @@ type PickerItemProps = ThemedClassName<{
   /** Disable the item — registry-visible but not focusable, not navigable, not clickable. */
   disabled?: boolean;
   asChild?: boolean;
-  children?: React.ReactNode;
+  children?: ReactNode;
 }>;
 
 const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
