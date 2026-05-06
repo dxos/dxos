@@ -15,6 +15,7 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants';
 import { GitHubOperation } from '../operations';
+import { SyncOptions } from '../operations/definitions';
 import { GitHubApi } from '../services';
 
 /**
@@ -44,9 +45,12 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
  * operations and the token-created hook to the `'github.com'` source.
  * plugin-integration looks up providers by source string.
  *
- * Scopes: `repo` for repository data + issue/PR write access; `read:org` to
- * enumerate the user's orgs and members; `read:user` to populate
- * `AccessToken.account` from the authenticated user's profile.
+ * Sync targets are repositories, not organizations — orgs and their members
+ * are auto-pulled as a side effect of syncing any repo they own.
+ *
+ * `scopes` is intentionally empty: this is a GitHub *App* (not a classic
+ * OAuth App), so permissions are declared in the App's settings on github.com
+ * and OAuth scope strings are ignored on the user-authorization flow.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -57,10 +61,11 @@ export default Capability.makeModule(
         label: 'GitHub',
         oauth: {
           provider: OAuthProvider.GITHUB,
-          scopes: ['repo', 'read:org', 'read:user'],
+          scopes: [],
         },
-        getSyncTargets: GitHubOperation.GetGitHubOrganizations,
-        sync: GitHubOperation.SyncGitHubOrganization,
+        getSyncTargets: GitHubOperation.GetGitHubRepositories,
+        sync: GitHubOperation.SyncGitHubRepositories,
+        optionsSchema: SyncOptions,
         onTokenCreated,
       },
     ]);

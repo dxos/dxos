@@ -10,14 +10,17 @@ import { Database, Obj } from '@dxos/echo';
 
 import { IntegrationDatabaseMissingError } from '../errors';
 import { GitHubApi } from '../services';
-import { GetGitHubOrganizations } from './definitions';
+import { GetGitHubRepositories } from './definitions';
 
 /**
- * Discovery only — list GitHub organizations reachable from the integration's
- * token. Read-only: NO local Organization objects are created here. Materialization
- * happens lazily in `SyncGitHubOrganization` on first sync of a target.
+ * Discovery only — list GitHub repositories reachable from the integration's
+ * token. Read-only: NO local Projects are created here. Materialization
+ * happens lazily in `SyncGitHubRepositories` on first sync of a target.
+ *
+ * Output is sorted by `full_name` (case-insensitive) so the picker is stable
+ * regardless of GitHub's response order.
  */
-const handler: Operation.WithHandler<typeof GetGitHubOrganizations> = GetGitHubOrganizations.pipe(
+const handler: Operation.WithHandler<typeof GetGitHubRepositories> = GetGitHubRepositories.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ integration }) {
       // TODO(burdon): Mirror the Trello pattern — derive the db from the input ref's
@@ -30,11 +33,14 @@ const handler: Operation.WithHandler<typeof GetGitHubOrganizations> = GetGitHubO
       }
 
       return yield* Effect.gen(function* () {
-        const remoteOrgs = yield* GitHubApi.fetchUserOrgs();
-        const targets = remoteOrgs.map((org) => ({
-          id: String(org.id),
-          name: org.name ?? org.login,
-          description: org.description ?? undefined,
+        const remoteRepos = yield* GitHubApi.fetchUserRepos();
+        const sorted = [...remoteRepos].sort((a, b) =>
+          a.full_name.toLowerCase().localeCompare(b.full_name.toLowerCase()),
+        );
+        const targets = sorted.map((repo) => ({
+          id: String(repo.id),
+          name: repo.full_name,
+          description: repo.description ?? undefined,
         }));
         return { targets };
       }).pipe(

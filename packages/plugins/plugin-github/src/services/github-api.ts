@@ -283,6 +283,17 @@ export const fetchUser = (): GitHubEffect<GitHubUser> =>
 export const fetchUserOrgs = (): GitHubEffect<readonly GitHubOrg[]> =>
   githubPaginated((_creds) => HttpClientRequest.get(`${GITHUB_API_BASE}/user/orgs`), GitHubOrgSchema);
 
+/**
+ * GET /user/repos — every repo the authenticated user can see.
+ *
+ * Includes owner, collaborator, and org-member affiliations. For a GitHub App
+ * user-to-server token this is intersected with the App's installation scope —
+ * admins control which repos are visible by choosing All / Selected at install
+ * time.
+ */
+export const fetchUserRepos = (): GitHubEffect<readonly GitHubRepo[]> =>
+  githubPaginated((_creds) => HttpClientRequest.get(`${GITHUB_API_BASE}/user/repos`), GitHubRepoSchema);
+
 /** GET /orgs/{org} — full org metadata. */
 export const fetchOrg = (org: string): GitHubEffect<GitHubOrg> =>
   githubRequest(

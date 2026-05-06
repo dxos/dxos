@@ -17,7 +17,7 @@ import { meta } from '#meta';
 import { GITHUB_SOURCE } from '../constants';
 import { IntegrationDatabaseMissingError, formatGitHubSyncFailure } from '../errors';
 import { GitHubApi } from '../services';
-import { SyncGitHubOrganization } from './definitions';
+import { type SyncOptions, SyncGitHubRepositories } from './definitions';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Direction: pull-only.
@@ -34,6 +34,11 @@ import { SyncGitHubOrganization } from './definitions';
 // Task.description, Task.status, Org.name, etc.) are overwritten by the remote
 // value on every sync. Local edits to NON-mapped fields (Task.priority,
 // Task.estimate, Task.project, Person.notes, etc.) are preserved.
+//
+// Sync target shape: the user picks REPOSITORIES. The repos' owning orgs (and
+// org members) are auto-pulled — a single Organization per unique owner across
+// the selected repos, deduped within one sync pass. The user does not pick
+// orgs directly.
 // ────────────────────────────────────────────────────────────────────────────
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -69,10 +74,7 @@ import { SyncGitHubOrganization } from './definitions';
 
 // ── Tunables ────────────────────────────────────────────────────────────────
 
-/** Per-org parallelism across selected targets. */
-const TARGET_CONCURRENCY = 2;
-
-/** Per-repo parallelism within an org's issue+PR fetches. */
+/** Per-target parallelism across selected repos. */
 const REPO_CONCURRENCY = 4;
 
 // ── Foreign-key + lookup helpers ────────────────────────────────────────────
@@ -99,6 +101,14 @@ const findByForeignId = <T>(schema: Schema.Schema<any, any>, id: string | number
  * by GitHub plus a non-null `pull_request.merged_at`.
  */
 const issueStateToTaskStatus = (state: string): 'todo' | 'done' => (state === 'closed' ? 'done' : 'todo');
+
+const sinceFromOptions = (options: SyncOptions | undefined): string | undefined => {
+  const days = options?.maxDaysBack;
+  if (typeof days !== 'number' || days <= 0) {
+    return undefined;
+  }
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+};
 
 // ── Upsert helpers (all pull-only) ──────────────────────────────────────────
 
@@ -328,9 +338,9 @@ const syncCommentsForTask = Effect.fn('syncCommentsForTask')(function* (
 
 // ── Main handler ───────────────────────────────────────────────────────────
 
-const handler: Operation.WithHandler<typeof SyncGitHubOrganization> = SyncGitHubOrganization.pipe(
+const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHubRepositories.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ integration, organization: orgRef }) {
+    Effect.fn(function* ({ integration, repository: repoRef }) {
       const integrationTarget = integration.target;
       const db = integrationTarget ? Obj.getDatabase(integrationTarget) : undefined;
       if (!db) {
@@ -338,30 +348,34 @@ const handler: Operation.WithHandler<typeof SyncGitHubOrganization> = SyncGitHub
       }
 
       const integrationId = integration.dxn.asEchoDXN()?.echoId ?? 'unknown';
-      const toastIdSuffix = orgRef ? `${integrationId}.${orgRef.dxn.asEchoDXN()?.echoId ?? 'unknown'}` : integrationId;
+      const toastIdSuffix = repoRef
+        ? `${integrationId}.${repoRef.dxn.asEchoDXN()?.echoId ?? 'unknown'}`
+        : integrationId;
 
       const outcome = yield* Effect.either(
         Effect.gen(function* () {
           const integrationObj = yield* Database.load(integration);
 
-          // Fetch all the user's orgs once so each target row can find its
-          // remote org metadata. Targets store the numeric org id as
-          // `remoteId` (a stringified integer); compare loosely.
-          const allOrgs = yield* GitHubApi.fetchUserOrgs();
-          const orgsById = new Map(allOrgs.map((o) => [String(o.id), o]));
+          // Fetch all repos visible to the token once so each target row can
+          // resolve its remote `GitHubRepo`. Targets store the numeric repo id
+          // as `remoteId` (a stringified integer).
+          const allRepos = yield* GitHubApi.fetchUserRepos();
+          const reposById = new Map(allRepos.map((r) => [String(r.id), r]));
 
-          // Optional narrow filter to a single Organization echo id.
-          const orgFilterId = orgRef?.dxn.asEchoDXN()?.echoId;
+          // Optional narrow filter to a single Project echo id.
+          const repoFilterId = repoRef?.dxn.asEchoDXN()?.echoId;
 
-          // Materialize per-target work: ensure local Organization exists,
-          // wire `target.object` ref, then pull members, repos, issues+PRs,
-          // and comments. Per-target failures don't abort the whole sync.
-          const targetEntries: Array<{
+          // Materialize per-target work: ensure local Project exists, wire
+          // `target.object` ref, then later batch-pull each repo's owning org
+          // (deduped) and the repo's issues+PRs+comments.
+          type TargetEntry = {
             entry: (typeof integrationObj.targets)[number];
-            organization: Organization.Organization;
-            remoteOrg: GitHubApi.GitHubOrg;
+            project: Project.Project;
+            remoteRepo: GitHubApi.GitHubRepo;
             remoteId: string;
-          }> = [];
+            options: SyncOptions | undefined;
+          };
+          const targetEntries: TargetEntry[] = [];
           for (const target of integrationObj.targets) {
             let foreignId = target.remoteId;
             let localObj = target.object?.target;
@@ -371,20 +385,19 @@ const handler: Operation.WithHandler<typeof SyncGitHubOrganization> = SyncGitHub
             if (foreignId === undefined) {
               continue;
             }
-            const remoteOrg = orgsById.get(foreignId);
-            if (!remoteOrg) {
+            const remoteRepo = reposById.get(foreignId);
+            if (!remoteRepo) {
               continue;
             }
 
-            // Materialize the local Organization on demand.
-            let organization: Organization.Organization;
-            if (localObj && Obj.instanceOf(Organization.Organization, localObj)) {
-              organization = localObj as Organization.Organization;
-              // Refresh fields.
-              yield* upsertOrganization(remoteOrg);
+            // Materialize the local Project on demand.
+            let project: Project.Project;
+            if (localObj && Obj.instanceOf(Project.Project, localObj)) {
+              project = localObj as Project.Project;
+              yield* upsertProject(remoteRepo);
             } else {
-              organization = yield* upsertOrganization(remoteOrg);
-              const materializedRef = Ref.make(organization as unknown as Obj.Any);
+              project = yield* upsertProject(remoteRepo);
+              const materializedRef = Ref.make(project as unknown as Obj.Any);
               Obj.update(integrationObj, (integrationObj) => {
                 const mutable = integrationObj as Obj.Mutable<typeof integrationObj>;
                 const idx = mutable.targets.findIndex((t) => t.remoteId === foreignId);
@@ -394,96 +407,96 @@ const handler: Operation.WithHandler<typeof SyncGitHubOrganization> = SyncGitHub
               });
             }
 
-            const targetEchoId = Ref.make(organization as unknown as Obj.Any).dxn.asEchoDXN()?.echoId;
-            if (orgFilterId && targetEchoId !== orgFilterId) {
+            const targetEchoId = Ref.make(project as unknown as Obj.Any).dxn.asEchoDXN()?.echoId;
+            if (repoFilterId && targetEchoId !== repoFilterId) {
               continue;
             }
 
-            targetEntries.push({ entry: target, organization, remoteOrg, remoteId: foreignId });
+            targetEntries.push({
+              entry: target,
+              project,
+              remoteRepo,
+              remoteId: foreignId,
+              options: (target.options ?? undefined) as SyncOptions | undefined,
+            });
           }
 
+          // Auto-pull the owning org + members for every unique owner in the
+          // selected repo set. Done once per sync, not per repo, so picking 50
+          // repos in a single org makes one `/orgs/{org}/members` call.
+          const ownerLogins = new Set(targetEntries.map((t) => t.remoteRepo.owner.login));
+          const orgByOwnerLogin = new Map<string, Organization.Organization>();
+          const personByLogin = new Map<string, Person.Person>();
           let pulledOrganizations = 0;
           let pulledPeople = 0;
+          for (const owner of ownerLogins) {
+            // `/orgs/{owner}` returns 404 for user-owned repos (personal
+            // accounts are not orgs). Treat that as "no org to sync" and
+            // continue — the Project just won't have a parent organization.
+            const orgResult = yield* Effect.either(GitHubApi.fetchOrg(owner));
+            if (orgResult._tag === 'Left') {
+              log.info('github sync: owner is not an org, skipping org/member pull', { owner });
+              continue;
+            }
+            const remoteOrg = orgResult.right;
+            const organization = yield* upsertOrganization(remoteOrg);
+            orgByOwnerLogin.set(owner, organization);
+            pulledOrganizations++;
+
+            const members = yield* GitHubApi.fetchOrgMembers(owner);
+            for (const member of members) {
+              const person = yield* upsertPerson(member, organization);
+              personByLogin.set(member.login, person);
+              pulledPeople++;
+            }
+          }
+
           let pulledProjects = 0;
           let pulledTasks = 0;
           let pulledComments = 0;
 
           const perTarget = yield* Effect.forEach(
             targetEntries,
-            ({ organization, remoteOrg, remoteId }) =>
+            ({ project, remoteRepo, remoteId, options }) =>
               Effect.gen(function* () {
                 const result = yield* Effect.either(
                   Effect.gen(function* () {
-                    pulledOrganizations++;
+                    pulledProjects++;
+                    const since = sinceFromOptions(options);
+                    const issues = yield* GitHubApi.fetchRepoIssues(remoteRepo.owner.login, remoteRepo.name, {
+                      since,
+                    });
+                    for (const issue of issues) {
+                      // Resolve assignee — first assignee only for v1.
+                      const assigneeLogin = issue.assignees?.[0]?.login;
+                      let assignedPerson: Person.Person | undefined = assigneeLogin
+                        ? personByLogin.get(assigneeLogin)
+                        : undefined;
+                      // External (non-org) assignees: upsert a standalone
+                      // Person without an org link.
+                      if (!assignedPerson && issue.assignees?.[0]) {
+                        assignedPerson = yield* upsertPerson(issue.assignees[0], undefined);
+                        personByLogin.set(issue.assignees[0].login, assignedPerson);
+                        pulledPeople++;
+                      }
 
-                    // Members → Persons.
-                    const members = yield* GitHubApi.fetchOrgMembers(remoteOrg.login);
-                    const personByLogin = new Map<string, Person.Person>();
-                    for (const member of members) {
-                      const person = yield* upsertPerson(member, organization);
-                      personByLogin.set(member.login, person);
-                      pulledPeople++;
+                      const { task, created } = yield* upsertTask(issue, assignedPerson, project);
+                      if (created) {
+                        pulledTasks++;
+                      }
+
+                      // Pull comments. `issue.comments` is the count; skip the
+                      // round-trip when zero.
+                      if ((issue.comments ?? 0) > 0) {
+                        const comments = yield* GitHubApi.fetchIssueComments(
+                          remoteRepo.owner.login,
+                          remoteRepo.name,
+                          issue.number,
+                        );
+                        const added = yield* syncCommentsForTask(task, comments, personByLogin);
+                        pulledComments += added;
+                      }
                     }
-
-                    // Repos → Projects.
-                    const repos = yield* GitHubApi.fetchOrgRepos(remoteOrg.login);
-                    const projectByRepoId = new Map<number, Project.Project>();
-                    for (const repo of repos) {
-                      const project = yield* upsertProject(repo);
-                      projectByRepoId.set(repo.id, project);
-                      pulledProjects++;
-                    }
-
-                    // For each repo: fetch issues+PRs, upsert Tasks, fetch
-                    // comments per task, upsert Thread/Messages. Bound
-                    // concurrency to keep us under GitHub's 5 000-req/hr
-                    // primary rate limit and the per-endpoint secondary
-                    // limits.
-                    yield* Effect.forEach(
-                      repos,
-                      (repo) =>
-                        Effect.gen(function* () {
-                          const project = projectByRepoId.get(repo.id);
-                          if (!project) {
-                            // upsertProject ran for every repo above; this is
-                            // unreachable but keeps the types honest.
-                            return;
-                          }
-                          const issues = yield* GitHubApi.fetchRepoIssues(repo.owner.login, repo.name);
-                          for (const issue of issues) {
-                            // Resolve assignee — first assignee only for v1.
-                            const assigneeLogin = issue.assignees?.[0]?.login;
-                            let assignedPerson: Person.Person | undefined = assigneeLogin
-                              ? personByLogin.get(assigneeLogin)
-                              : undefined;
-                            // External (non-org) assignees: upsert a
-                            // standalone Person without an org link.
-                            if (!assignedPerson && issue.assignees?.[0]) {
-                              assignedPerson = yield* upsertPerson(issue.assignees[0], undefined);
-                              personByLogin.set(issue.assignees[0].login, assignedPerson);
-                              pulledPeople++;
-                            }
-
-                            const { task, created } = yield* upsertTask(issue, assignedPerson, project);
-                            if (created) {
-                              pulledTasks++;
-                            }
-
-                            // Pull comments. `issue.comments` is the count;
-                            // skip the round-trip when zero.
-                            if ((issue.comments ?? 0) > 0) {
-                              const comments = yield* GitHubApi.fetchIssueComments(
-                                repo.owner.login,
-                                repo.name,
-                                issue.number,
-                              );
-                              const added = yield* syncCommentsForTask(task, comments, personByLogin);
-                              pulledComments += added;
-                            }
-                          }
-                        }),
-                      { concurrency: REPO_CONCURRENCY },
-                    );
                   }),
                 );
 
@@ -509,7 +522,7 @@ const handler: Operation.WithHandler<typeof SyncGitHubOrganization> = SyncGitHub
 
                 return result;
               }),
-            { concurrency: TARGET_CONCURRENCY },
+            { concurrency: REPO_CONCURRENCY },
           );
 
           // Surface the first per-target error (if any) so the toast carries
