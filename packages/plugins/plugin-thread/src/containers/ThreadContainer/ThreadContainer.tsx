@@ -10,6 +10,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { type ThreadRootProps } from '@dxos/react-ui-thread';
 import { Message, type Thread } from '@dxos/types';
+import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { Chat } from '#components';
@@ -28,51 +29,47 @@ export type ThreadContainerProps = ThemedClassName<
  * Renders an AutoMerge {@link Thread} as a chat: appends new messages by pushing
  * onto `thread.messages`. Used for comment threads and the meeting in-call chat.
  */
-export const ThreadContainer = ({
-  space,
-  thread,
-  context,
-  autoFocusTextbox,
-  current,
-  classNames,
-}: ThreadContainerProps) => {
-  const id = Obj.getDXN(thread).toString();
-  const identity = useIdentity()!;
-  const members = useMembers(space?.id);
-  const activity = useStatus(space, id);
+export const ThreadContainer = composable<HTMLDivElement, ThreadContainerProps>(
+  ({ space, thread, context, autoFocusTextbox, current, ...props }, forwardedRef) => {
+    const id = Obj.getDXN(thread).toString();
+    const identity = useIdentity()!;
+    const members = useMembers(space?.id);
+    const activity = useStatus(space, id);
 
-  const messages = useMemo(
-    () => thread.messages.map((message) => message.target).filter(isNonNullable),
-    [thread.messages],
-  );
+    const messages = useMemo(
+      () => thread.messages.map((message) => message.target).filter(isNonNullable),
+      [thread.messages],
+    );
 
-  const handleSend = (text: string) => {
-    Obj.update(thread, (thread) => {
-      thread.messages.push(
-        Ref.make(
-          Obj.make(Message.Message, {
-            created: new Date().toISOString(),
-            sender: { identityDid: identity.did },
-            blocks: [{ _tag: 'text', text }],
-            properties: context ? { context: Ref.make(context) } : undefined,
-          }),
-        ),
-      );
-    });
-    return true;
-  };
+    const handleSend = (text: string) => {
+      Obj.update(thread, (thread) => {
+        thread.messages.push(
+          Ref.make(
+            Obj.make(Message.Message, {
+              created: new Date().toISOString(),
+              sender: { identityDid: identity.did },
+              blocks: [{ _tag: 'text', text }],
+              properties: context ? { context: Ref.make(context) } : undefined,
+            }),
+          ),
+        );
+      });
+      return true;
+    };
 
-  return (
-    <Chat
-      classNames={classNames}
-      id={id}
-      identity={identity}
-      members={members}
-      messages={messages}
-      activity={activity}
-      onSend={handleSend}
-      autoFocusTextbox={autoFocusTextbox}
-      current={current}
-    />
-  );
-};
+    return (
+      <Chat
+        {...composableProps(props)}
+        id={id}
+        identity={identity}
+        members={members}
+        messages={messages}
+        activity={activity}
+        onSend={handleSend}
+        autoFocusTextbox={autoFocusTextbox}
+        current={current}
+        ref={forwardedRef}
+      />
+    );
+  },
+);

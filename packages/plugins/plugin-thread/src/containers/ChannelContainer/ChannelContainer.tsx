@@ -158,36 +158,52 @@ export const ChannelContainer = ({
   return null;
 };
 
+export type ChannelChatProps = {
+  space: Space;
+  channel: Channel.Channel;
+};
+
 /**
  * Renders the messages in a feed-backed {@link Channel}. Threading via
  * `Message.threadId` is intentionally not reconstructed in this round.
  */
-export const ChannelChat = ({ space, channel }: { space: Space; channel: Channel.Channel }) => {
-  const id = Obj.getDXN(channel).toString();
-  const identity = useIdentity()!;
-  const members = useMembers(space.id);
-  const activity = useStatus(space, id);
-  const { invokePromise } = useOperationInvoker();
+export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
+  ({ space, channel, ...props }, forwardedRef) => {
+    const id = Obj.getDXN(channel).toString();
+    const identity = useIdentity()!;
+    const members = useMembers(space.id);
+    const activity = useStatus(space, id);
+    const { invokePromise } = useOperationInvoker();
 
-  const feed = channel.feed?.target;
-  const messages = useQuery(
-    space.db,
-    feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
-  ) as Message.Message[];
+    const feed = channel.feed?.target;
+    const messages = useQuery(
+      space.db,
+      feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
+    ) as Message.Message[];
 
-  const handleSend = (text: string) => {
-    void invokePromise(ThreadOperation.AppendChannelMessage, {
-      channel,
-      sender: { identityDid: identity.did },
-      text,
-    });
-    return true;
-  };
+    const handleSend = (text: string) => {
+      void invokePromise(ThreadOperation.AppendChannelMessage, {
+        channel,
+        sender: { identityDid: identity.did },
+        text,
+      });
+      return true;
+    };
 
-  return (
-    <Chat id={id} identity={identity} members={members} messages={messages} activity={activity} onSend={handleSend} />
-  );
-};
+    return (
+      <Chat
+        {...composableProps(props)}
+        id={id}
+        identity={identity}
+        members={members}
+        messages={messages}
+        activity={activity}
+        onSend={handleSend}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
 const DisplayNameMissing = () => {
   const { t } = useTranslation(meta.id);
