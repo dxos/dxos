@@ -7,7 +7,11 @@ workspace:
     exclude:
       - lint
 tasks:
-  compile:
+  # Override the inherited tsdown build with dx-compile (esbuild): node-std bundles npm CJS polyfills
+  # that contain relative requires (e.g. util → ./support/types) which rolldown cannot inline inside
+  # __commonJSMin factories. esbuild properly handles all transitive CJS requires.
+  build:
+    command: pnpm exec dx-compile
     args:
       - '--entryPoint=src/_/config.js'
       - '--entryPoint=src/assert.js'
@@ -22,6 +26,7 @@ tasks:
       - '--entryPoint=src/process.js'
       - '--entryPoint=src/stream.js'
       - '--entryPoint=src/util.js'
+      - '--outputPath=dist/lib'
       - '--platform=browser'
       - '--bundlePackage=assert'
       - '--bundlePackage=available-typed-arrays'
@@ -68,3 +73,14 @@ tasks:
       - '--bundlePackage=util'
       - '--bundlePackage=util-deprecate'
       - '--bundlePackage=which-typed-array'
+    deps:
+      - dx-compile:compile
+      - ^:build
+    inputs:
+      - 'src/**/*'
+    outputs:
+      - dist/lib/
+    options:
+      mergeArgs: replace
+      mergeOutputs: replace
+      timeout: 30

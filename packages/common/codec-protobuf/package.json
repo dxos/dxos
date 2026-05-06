@@ -13,7 +13,7 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
         "require": "./dist/lib/node/index.cjs",
@@ -21,7 +21,7 @@
       }
     },
     "./stream": {
-      "types": "./dist/types/src/stream.d.ts",
+      "types": "./dist/types/stream.d.ts",
       "browser": "./dist/lib/browser/stream.mjs",
       "node": {
         "require": "./dist/lib/node/stream.cjs",
@@ -29,7 +29,7 @@
       }
     }
   },
-  "types": "dist/types/src/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "files": [
     "dist",
     "src"

@@ -7,9 +7,7 @@ tags:
   - pack
   - storybook
 tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
+  build:
     deps:
       - gen-pieces
   gen-pieces:

@@ -8,7 +8,8 @@
 import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { type GenerationStreamEvent } from '../types';
+// TODO(dmaretskyi): Replace with proper type from @dxos/ai once defined.
+type GenerationStreamEvent = { type: string; [key: string]: unknown };
 
 /**
  * Replay server-side events (SSE) stream.

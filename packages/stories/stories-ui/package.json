@@ -13,7 +13,7 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
-  "types": "dist/types/src/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "files": [
     "dist",
     "src"

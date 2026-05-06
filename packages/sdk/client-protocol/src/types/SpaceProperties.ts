@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Feed, Ref, Type } from '@dxos/echo';
+import { Annotation, Ref, Type } from '@dxos/echo';
 
 /**
  * Where do triggers get executed.
@@ -26,7 +26,7 @@ export const SpacePropertiesSchema = Schema.Struct(
     /**
      * @deprecated
      */
-    invocationTraceFeed: Schema.optional(Ref.Ref(Feed.Feed)),
+    invocationTraceFeed: Schema.optional(Schema.Any),
 
     /**
      * Preference for trigger execution.
@@ -52,8 +52,26 @@ export const SpacePropertiesSchema = Schema.Struct(
 
 export type SpacePropertiesSchema = Schema.Schema.Type<typeof SpacePropertiesSchema>;
 
+/**
+ * Explicit instance shape for space properties, mirroring SpacePropertiesSchema fields.
+ * Used by SpaceProperties and LegacySpaceProperties interfaces instead of the inferred
+ * `Schema.Schema.Type<typeof SpaceProperties>` pattern, which collapses to `any` in
+ * rolldown-plugin-dts bundled chunk output when the value type uses external workspace types.
+ */
+export type SpacePropertiesInstance = {
+  readonly [key: string]: any;
+  readonly archived?: boolean;
+  readonly edgeReplication?: boolean;
+  /** @deprecated */
+  readonly invocationTraceFeed?: any;
+  readonly computeEnvironment?: 'disabled' | 'local' | 'edge';
+  readonly name?: string;
+  readonly icon?: string;
+  readonly hue?: string;
+};
+
 /** @deprecated Use SpaceProperties instead. */
-export const LegacySpaceProperties = SpacePropertiesSchema.pipe(
+export const LegacySpaceProperties: Type.Obj<SpacePropertiesInstance> = SpacePropertiesSchema.pipe(
   Type.object({
     typename: 'org.dxos.type.space-properties',
     version: '0.1.0',
@@ -61,11 +79,11 @@ export const LegacySpaceProperties = SpacePropertiesSchema.pipe(
   Annotation.SystemTypeAnnotation.set(true),
 );
 
-export interface LegacySpaceProperties extends Schema.Schema.Type<typeof LegacySpaceProperties> {}
+export interface LegacySpaceProperties extends SpacePropertiesInstance {}
 
 // TODO(burdon): Pipe Schem.optional, or partial to entire struct to make everything optional?
 // TODO(burdon): Is separate schema def required for forms? Can it be extracted from SpaceProperties?
-export const SpaceProperties = SpacePropertiesSchema.pipe(
+export const SpaceProperties: Type.Obj<SpacePropertiesInstance> = SpacePropertiesSchema.pipe(
   Type.object({
     typename: 'org.dxos.type.spaceProperties',
     version: '0.1.0',
@@ -73,4 +91,4 @@ export const SpaceProperties = SpacePropertiesSchema.pipe(
   Annotation.SystemTypeAnnotation.set(true),
 );
 
-export interface SpaceProperties extends Schema.Schema.Type<typeof SpaceProperties> {}
+export interface SpaceProperties extends SpacePropertiesInstance {}

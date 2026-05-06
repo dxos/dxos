@@ -15,16 +15,16 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
+      "types": "./dist/types/testing/index.d.ts",
       "default": "./dist/lib/neutral/testing/index.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "files": [
     "dist",
     "src",

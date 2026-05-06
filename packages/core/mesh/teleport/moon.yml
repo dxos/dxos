@@ -5,10 +5,26 @@ tags:
   - ts-test
   - pack
 tasks:
-  compile:
+  # Override the inherited tsdown build with dx-compile (esbuild): rolldown cannot follow relative
+  # CJS requires inside __commonJSMin factories (e.g. varint → ./encode.js, ./decode.js).
+  # esbuild properly inlines all transitive CJS requires including relative paths.
+  build:
+    command: pnpm exec dx-compile
     args:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/testing/index.ts'
+      - '--outputPath=dist/lib'
       - '--injectGlobals'
       - '--bundlePackage=varint'
       - '--platform=neutral'
+    deps:
+      - dx-compile:compile
+      - ^:build
+    inputs:
+      - 'src/**/*'
+    outputs:
+      - dist/lib/
+    options:
+      mergeArgs: replace
+      mergeOutputs: replace
+      timeout: 30

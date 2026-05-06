@@ -90,7 +90,6 @@ import { createArrayMethodError, createPropertyDeleteError, createPropertySetErr
 
 /**
  * Shared for all targets within one ECHO object.
- * @internal
  */
 export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   public static readonly instance = new EchoReactiveHandler();
@@ -1074,7 +1073,6 @@ type CreateObjectReturn<T> = T extends Obj.Unknown ? T : Entity.Entity<T>;
 
 /**
  * Creates a reactive ECHO object backed by a CRDT.
- * @internal
  */
 // TODO(burdon): Document lifecycle.
 export const createObject = <T extends AnyProperties>(obj: T): CreateObjectReturn<T> => {
@@ -1194,9 +1192,6 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
   }
 };
 
-/**
- * @internal
- */
 export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: EchoDatabase): Entity.Unknown => {
   const target: ProxyTarget = {
     [symbolInternals]: new ObjectInternals(core, database),

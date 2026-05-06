@@ -26,9 +26,6 @@ export const DEFAULT_PROCESSORS = [browser ? BROWSER_PROCESSOR : CONSOLE_PROCESS
 
 const parseLogLevel = (level: string, defValue = LogLevel.WARN) => levels[level.toLowerCase()] ?? defValue;
 
-/**
- * @internal
- */
 export const parseFilter = (filter: string | string[] | LogLevel): LogFilter[] => {
   if (typeof filter === 'number') {
     return [{ level: filter }];

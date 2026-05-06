@@ -16,17 +16,17 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "default": "./dist/bundle/shell.js"
     },
     "./style.css": "./dist/bundle/shell.css",
     "./react": {
-      "types": "./dist/types/src/react.d.ts",
+      "types": "./dist/types/react.d.ts",
       "browser": "./dist/lib/browser/react.mjs",
       "node": "./dist/lib/node-esm/react.mjs"
     },
     "./testing": {
-      "types": "./dist/types/src/testing/index.d.ts",
+      "types": "./dist/types/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": {
         "require": "./dist/lib/node/testing/index.cjs",
@@ -34,7 +34,7 @@
       }
     }
   },
-  "types": "dist/types/src/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "files": [
     "dist",
     "src"

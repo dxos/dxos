@@ -70,6 +70,8 @@ await build({
   conditions: ['workerd', 'worker', 'browser'],
   metafile: true,
   logLevel: 'error',
+  // node:* imports are provided by the Cloudflare Workers nodejs_compat flag at runtime.
+  external: ['node:*'],
   plugins: [rawImportPlugin()],
   loader: {
     '.css': 'empty',

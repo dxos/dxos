@@ -5,9 +5,7 @@ tags:
   - ts-test
   - pack
 tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
+  build:
     deps:
       - prebuild
   prebuild:

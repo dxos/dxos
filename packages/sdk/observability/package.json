@@ -14,7 +14,7 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     }
@@ -23,7 +23,7 @@
     "./src/storage/node.ts": "./src/storage/browser.ts",
     "./src/extensions/otel/traces.ts": "./src/extensions/otel/traces-browser.ts"
   },
-  "types": "dist/types/src/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "files": [
     "dist",
     "src"

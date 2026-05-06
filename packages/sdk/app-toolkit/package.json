@@ -15,24 +15,24 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./query": {
       "source": "./src/query.ts",
-      "types": "./dist/types/src/query.d.ts",
+      "types": "./dist/types/query.d.ts",
       "browser": "./dist/lib/browser/query.mjs",
       "node": "./dist/lib/node-esm/query.mjs"
     },
     "./ui": {
       "source": "./src/ui/index.ts",
-      "types": "./dist/types/src/ui/index.d.ts",
+      "types": "./dist/types/ui/index.d.ts",
       "browser": "./dist/lib/browser/ui/index.mjs",
       "node": "./dist/lib/node-esm/ui/index.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "files": [
     "dist",
     "src"

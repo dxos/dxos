@@ -6,6 +6,7 @@ tasks:
       - --port=9009
       - --no-open
     deps:
+      - ^:build
       - ^:compile
     inputs:
       - .storybook/*

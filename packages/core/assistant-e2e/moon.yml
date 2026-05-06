@@ -5,8 +5,3 @@ tags:
   - ts-test
   - pack
   - memoized-llm
-tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--platform=neutral'

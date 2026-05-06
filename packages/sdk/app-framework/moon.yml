@@ -8,20 +8,7 @@ tags:
   - typedoc
   - storybook
 tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/cli/index.ts'
-      - '--entryPoint=src/core/activation-event.ts'
-      - '--entryPoint=src/core/capability.ts'
-      - '--entryPoint=src/core/plugin.ts'
-      - '--entryPoint=src/core/plugin-manager.ts'
-      - '--entryPoint=src/common/capabilities.ts'
-      - '--entryPoint=src/common/activation-events.ts'
-      - '--entryPoint=src/ui/index.ts'
-      - '--entryPoint=src/testing/index.ts'
-      - '--entryPoint=src/testing/react.tsx'
-      - '--entryPoint=src/core/url-loader.ts'
+  build:
     deps:
       - compile-plugin
   compile-plugin:
@@ -31,6 +18,7 @@ tasks:
       - '--outputPath=dist/plugin'
       - '--platform=node'
     deps:
+      - ^:build
       - ^:compile
       - dx-compile:compile
     outputs:

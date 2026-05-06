@@ -15,21 +15,21 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
     "./muxer": {
       "source": "./src/edge-ws-muxer.ts",
-      "types": "./dist/types/src/edge-ws-muxer.d.ts",
+      "types": "./dist/types/edge-ws-muxer.d.ts",
       "default": "./dist/lib/neutral/edge-ws-muxer.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
+      "types": "./dist/types/testing/index.d.ts",
       "default": "./dist/lib/neutral/testing/index.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "files": [
     "dist",
     "src",

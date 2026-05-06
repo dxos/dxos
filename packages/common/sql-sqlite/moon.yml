@@ -6,7 +6,11 @@ tags:
   - ts-test-browser
   - pack
 tasks:
-  compile:
+  # Override the inherited tsdown build with dx-compile (esbuild): rolldown does not bundle
+  # @effect/sql-sqlite-wasm correctly (re-export optimization bypasses noExternal) and we need
+  # the @effect/wa-sqlite → @dxos/wa-sqlite alias so FTS5 support is available in browser tests.
+  build:
+    command: pnpm exec dx-compile
     args:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/SqliteClient.ts'
@@ -17,6 +21,18 @@ tasks:
       - '--entryPoint=src/platform/node.ts'
       - '--entryPoint=src/platform/browser.ts'
       - '--entryPoint=src/platform/bun.ts'
+      - '--outputPath=dist/lib'
       - '--bundlePackage=@effect/sql-sqlite-wasm'
       - >-
         '--alias={"@effect/wa-sqlite":"@dxos/wa-sqlite"}'
+    deps:
+      - dx-compile:compile
+      - ^:build
+    inputs:
+      - 'src/**/*'
+    outputs:
+      - dist/lib/
+    options:
+      mergeArgs: replace
+      mergeOutputs: replace
+      timeout: 30
