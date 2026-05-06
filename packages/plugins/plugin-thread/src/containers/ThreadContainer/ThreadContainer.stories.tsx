@@ -21,7 +21,7 @@ import { Message, Thread } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { ChatContainer } from './ChatContainer';
+import { ThreadContainer } from './ThreadContainer';
 
 random.seed(1);
 
@@ -44,11 +44,11 @@ const DefaultStory = () => {
     return <Loading data={{ identity: !!identity, space: !!space, thread: !!thread }} />;
   }
 
-  return <ChatContainer space={space} thread={thread} />;
+  return <ThreadContainer space={space} thread={thread} />;
 };
 
 const meta = {
-  title: 'plugins/plugin-thread/containers/ChatContainer',
+  title: 'plugins/plugin-thread/containers/ThreadContainer',
   component: ThreadComponent.Root as any,
   render: DefaultStory,
   decorators: [

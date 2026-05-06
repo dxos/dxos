@@ -13,7 +13,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Channel, Thread } from '@dxos/types';
 
 import { ThreadSettings } from '#components';
-import { CallDebugPanel, CallSidebar, ChannelContainer, ChatContainer, ThreadCompanion } from '#containers';
+import { CallDebugPanel, CallSidebar, ChannelContainer, ThreadCompanion, ThreadContainer } from '#containers';
 import { meta } from '#meta';
 import { ThreadCapabilities, type Settings } from '#types';
 
@@ -53,7 +53,7 @@ export default Capability.makeModule(() =>
             return null;
           }
 
-          return <ChatContainer thread={subject} space={space} />;
+          return <ThreadContainer thread={subject} space={space} />;
         },
       }),
       Surface.create({
