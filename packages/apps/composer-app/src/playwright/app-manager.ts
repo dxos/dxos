@@ -122,9 +122,22 @@ export class AppManager {
   }
 
   async shareSpace(): Promise<void> {
-    await this.currentWorkspace.getByTestId('navtree.spaceSettings').click();
-    await this.currentWorkspace.getByTestId('spacePlugin.members').getByTestId('treeItem.heading').click();
-    await this.currentWorkspace.getByTestId('navtree.backToSpace').click();
+    const membersHeading = this.currentWorkspace
+      .getByTestId('spacePlugin.members')
+      .first()
+      .getByTestId('treeItem.heading')
+      .first();
+    // The members panel is nested under the `spacePlugin.settings` section. If the
+    // section is collapsed, click its toggle to expand it before clicking members.
+    if (!(await membersHeading.isVisible())) {
+      await this.currentWorkspace
+        .getByTestId('spacePlugin.settings')
+        .first()
+        .getByTestId('treeItem.toggle')
+        .first()
+        .click();
+    }
+    await membersHeading.click();
   }
 
   async createSpaceInvitation(): Promise<string> {
