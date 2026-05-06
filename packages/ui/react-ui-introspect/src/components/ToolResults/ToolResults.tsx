@@ -10,7 +10,7 @@
 import React from 'react';
 
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 export type ToolResultsProps = {
   /**
@@ -23,38 +23,54 @@ export type ToolResultsProps = {
   error?: Error | string | null;
   /** Set while a request is in flight. */
   loading?: boolean;
-  className?: string;
 };
 
-export const ToolResults = ({ result, error, loading, className }: ToolResultsProps) => {
-  if (loading) {
+export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
+  ({ result, error, loading, ...props }, forwardedRef) => {
+    if (loading) {
+      return (
+        <div
+          {...composableProps(props, {
+            classNames: 'p-3 text-sm text-description',
+            role: 'status',
+            'aria-live': 'polite',
+          })}
+          ref={forwardedRef}
+        >
+          Calling tool…
+        </div>
+      );
+    }
+    if (error) {
+      const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+      return (
+        <div
+          {...composableProps(props, {
+            classNames: 'p-3 text-sm text-errorText whitespace-pre-wrap',
+            role: 'alert',
+          })}
+          ref={forwardedRef}
+        >
+          {message}
+        </div>
+      );
+    }
+    if (result === undefined) {
+      return (
+        <div {...composableProps(props, { classNames: 'p-3 text-sm text-description italic' })} ref={forwardedRef}>
+          No result yet — fill the form and click <strong>Run tool</strong>.
+        </div>
+      );
+    }
     return (
-      <div className={mx('p-3 text-sm text-description', className)} role='status' aria-live='polite'>
-        Calling tool…
+      <div {...composableProps(props, { classNames: 'p-3 overflow-auto' })} ref={forwardedRef}>
+        <JsonHighlighter data={tryParseMcpEnvelope(result)} />
       </div>
     );
-  }
-  if (error) {
-    const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
-    return (
-      <div className={mx('p-3 text-sm text-errorText whitespace-pre-wrap', className)} role='alert'>
-        {message}
-      </div>
-    );
-  }
-  if (result === undefined) {
-    return (
-      <div className={mx('p-3 text-sm text-description italic', className)}>
-        No result yet — fill the form and click <strong>Run tool</strong>.
-      </div>
-    );
-  }
-  return (
-    <div className={mx('p-3 overflow-auto', className)}>
-      <JsonHighlighter data={tryParseMcpEnvelope(result)} />
-    </div>
-  );
-};
+  },
+);
+
+ToolResults.displayName = 'ToolResults';
 
 const tryParseMcpEnvelope = (value: unknown): unknown => {
   // The MCP SDK returns `{ content: [{ type: 'text', text: '<json>' }, ...] }`
