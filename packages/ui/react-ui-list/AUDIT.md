@@ -517,7 +517,12 @@ ARIA mismatches possible by construction.
 - When the **selection model** lands (separate from `current`,
   multi-select capable, reactive atom), how does it compose with
   `currentId`? Most likely two parallel models on `Root` and a
-  per-row checkbox-style affordance.
+  per-row checkbox-style affordance. Concrete blocked consumer:
+  `plugin-sidekick/ActionItems` — toggles `completed: boolean` per
+  item via a row-wide label click. Migrating it now would either
+  break the label-wide click target (Row's click sets current, not
+  toggle) or duplicate state (current AND completed). Deferred until
+  the selection model arrives.
 - Should `react-ui-mosaic`'s `Tile` adopt the `Row` styling?
   Yes if the visual shape is compatible — to be settled when Phase 4
   lands.

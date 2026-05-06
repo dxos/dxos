@@ -2,6 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(burdon): Migrate to `RowList` once the selection model lands.
+// This is a multi-select / "completed" pattern — `completed: boolean`
+// per item, toggled by checkbox — which is the explicit-action
+// `aria-selected` half that `RowList` deliberately doesn't track yet
+// (see `react-ui-list/AUDIT.md` §6 "Current vs selection"). The
+// current `RowList` only models a single navigated `currentId`.
+
 import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
