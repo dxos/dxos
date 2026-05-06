@@ -28,12 +28,17 @@ export type ToolResultsProps = ThemedClassName<{
 
 type State = 'loading' | 'error' | 'empty' | 'result';
 
+// Shared class fragments — every variant pads the wrapper, and the
+// loading / empty hints share the same description-text treatment.
+const ROOT = 'p-3';
+const HINT = 'text-sm text-description';
+
 const VARIANTS: Record<State, ThemedClassName<Pick<HTMLAttributes<HTMLDivElement>, 'role'>>> = {
   // `role='status'` implies `aria-live='polite'` — no need to set both.
-  loading: { classNames: 'p-3 text-sm text-description', role: 'status' },
-  error: { classNames: 'p-3' },
-  empty: { classNames: 'p-3 text-sm text-description italic' },
-  result: { classNames: 'p-3 overflow-auto' },
+  loading: { classNames: [ROOT, HINT], role: 'status' },
+  error: { classNames: ROOT },
+  empty: { classNames: [ROOT, HINT, 'italic'] },
+  result: { classNames: [ROOT, 'overflow-auto'] },
 };
 
 export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
