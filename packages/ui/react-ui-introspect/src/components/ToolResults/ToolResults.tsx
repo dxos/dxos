@@ -13,7 +13,7 @@
 
 import React, { Fragment } from 'react';
 
-import { Message, type ThemedClassName } from '@dxos/react-ui';
+import { Message, ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { Row, RowList } from '@dxos/react-ui-list';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { composable, composableProps } from '@dxos/ui-theme';
@@ -36,14 +36,12 @@ export type ToolResultsProps = ThemedClassName<{
 
 type State = 'loading' | 'error' | 'empty' | 'result';
 
-const HINT = 'text-sm text-description';
-
 export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
   ({ result, error, loading, debug, ...props }, forwardedRef) => {
     const state: State = loading ? 'loading' : error ? 'error' : result === undefined ? 'empty' : 'result';
     return (
-      <div {...composableProps(props, { classNames: 'p-3' })} ref={forwardedRef}>
-        {state === 'loading' && <p className={HINT}>Calling tool…</p>}
+      <div {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
+        {state === 'loading' && <p className='p-3 text-sm text-description'>Calling tool…</p>}
         {state === 'error' && (
           <Message.Root valence='error'>
             {error instanceof Error && <Message.Title>{error.name}</Message.Title>}
@@ -51,7 +49,7 @@ export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
           </Message.Root>
         )}
         {state === 'empty' && (
-          <p className={HINT}>
+          <p className='p-3 text-sm text-description'>
             No result yet — fill the form and click <strong>Run tool</strong>.
           </p>
         )}
@@ -66,7 +64,11 @@ export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
               </Syntax.Content>
             </Syntax.Root>
           ) : (
-            <ResultTable data={tryParseMcpEnvelope(result)} />
+            <ScrollArea.Root thin>
+              <ScrollArea.Viewport>
+                <ResultTable data={tryParseMcpEnvelope(result)} />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
           ))}
       </div>
     );
@@ -85,15 +87,16 @@ const SKIP_KEYS = new Set(['location', 'metaLocation']);
 
 const ResultTable = ({ data }: { data: unknown }) => {
   const items = toItems(data);
-  if (items.length === 0) {
-    return <p className={HINT}>(empty result)</p>;
-  }
+  // The two-column grid lives on `RowList.Content` so every entry across
+  // every row lands in the same `key | value` tracks. Each `Row` spans
+  // both columns and uses `grid-cols-subgrid` to inherit them, so a
+  // `KeyValueTable` can emit plain `<div>` cells as direct grid items.
   return (
     <RowList.Root>
       <RowList.Viewport>
-        <RowList.Content aria-label='Tool result'>
+        <RowList.Content aria-label='Tool result' classNames='grid grid-cols-[max-content_1fr] gap-x-3'>
           {items.map((item, index) => (
-            <Row key={index} id={String(index)}>
+            <Row key={index} id={String(index)} classNames='col-span-2 grid grid-cols-subgrid gap-y-0.5'>
               <KeyValueTable record={item} />
             </Row>
           ))}
@@ -103,23 +106,29 @@ const ResultTable = ({ data }: { data: unknown }) => {
   );
 };
 
+// Emits plain `<div>` cells (key + value) as direct grid children so they
+// participate in `ResultTable`'s shared subgrid. `<dl>/<dt>/<dd>` would
+// imply term-and-definition semantics these arbitrary record fields don't
+// have, so divs are the honest tag here.
 const KeyValueTable = ({ record }: { record: unknown }) => {
   if (record === null || typeof record !== 'object') {
-    return <span className='font-mono text-xs'>{formatValue(record)}</span>;
+    return <div className='col-span-2 font-mono text-xs'>{formatValue(record)}</div>;
   }
+
   const entries = Object.entries(record as Record<string, unknown>).filter(([key]) => !SKIP_KEYS.has(key));
   if (entries.length === 0) {
-    return <span className={`${HINT} italic`}>(no displayable fields)</span>;
+    return <div className='col-span-2 text-sm italic text-description'>(no displayable fields)</div>;
   }
+
   return (
-    <dl className='grid grid-cols-[max-content_1fr] gap-x-3 gap-y-0.5'>
+    <>
       {entries.map(([key, value]) => (
         <Fragment key={key}>
-          <dt className='font-mono text-xs text-description'>{key}</dt>
-          <dd className='text-sm truncate'>{formatValue(value)}</dd>
+          <div className='font-mono text-xs text-description text-right'>{key}</div>
+          <div className='text-sm truncate'>{formatValue(value)}</div>
         </Fragment>
       ))}
-    </dl>
+    </>
   );
 };
 
