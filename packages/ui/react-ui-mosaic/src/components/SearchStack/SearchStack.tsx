@@ -5,7 +5,7 @@
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Card, ScrollArea } from '@dxos/react-ui';
-import { type SearchResult } from '@dxos/react-ui-list';
+import { type SearchResult } from '@dxos/react-ui-search';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '../..';

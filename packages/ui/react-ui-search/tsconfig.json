@@ -21,22 +21,13 @@
       "path": "../../common/util"
     },
     {
-      "path": "../lit-grid"
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../react-ui"
     },
     {
-      "path": "../react-ui-editor"
-    },
-    {
       "path": "../react-ui-list"
-    },
-    {
-      "path": "../react-ui-search"
-    },
-    {
-      "path": "../ui-editor"
     },
     {
       "path": "../ui-theme"

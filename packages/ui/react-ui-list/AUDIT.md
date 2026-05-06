@@ -1,24 +1,51 @@
 # List & Selection Components — Audit and Rationalization Plan
 
-Status: living. Phases 1-4 + parts of 5 + parts of 6 have shipped; sections
-below describe the proposed end-state with deferred items called out
-explicitly. Updates as of the consolidation PR:
+Status: living. Phases 1-5 mostly shipped; sections below describe the
+end state with deferred items called out explicitly. As of the
+consolidation work:
 
-- **`@dxos/react-ui-search` is gone.** `Listbox` / `Combobox` /
-  `SearchList` / `SearchPanel` moved to `@dxos/react-ui-list`;
-  `SearchStack` moved to `@dxos/react-ui-mosaic`.
-- **`RowList` uses `aria-selected` + `dx-selected`** (renamed from the
-  draft's `aria-current` + `dx-current`). The codebase's existing
-  `useSelected(_, 'single')` convention from `@dxos/react-ui-attention`
-  treats single-mode selection as the same concept; the original
-  "current ≠ selection" distinction was an over-design. `aria-current`
-  remains reserved for "you-are-here" navigation patterns (navtree,
-  breadcrumbs).
-- **`Listbox` composes `RowList`** internally (Phase 5a). Same public
-  API, less duplicate code.
-- **`SearchList` does NOT yet compose `RowList`** — 545 lines with
-  debounce / auto-select / scroll-into-view semantics that need careful
-  migration. Deferred to a follow-up PR.
+- **Three packages, clean dep direction:**
+
+  ```
+  @dxos/react-ui-mosaic         (depends on react-ui-list for SearchResult)
+        │
+        │  SearchStack (cards-of-results)
+        ▼
+  @dxos/react-ui-search         (depends on react-ui-list for Picker)
+        │
+        │  SearchList, SearchPanel, useSearchListResults, SearchResult
+        ▼
+  @dxos/react-ui-list           (no upward deps)
+
+        Picker (listbox-with-input primitive — registry, virtual highlight,
+                input keyboard, two performance-split contexts)
+        Combobox (Popover + Picker; generic, no search dep)
+        Listbox (composes RowList for plain listbox role)
+        RowList (controllable single-select + ScrollArea + tabster arrow nav)
+        Tree, Accordion, deprecated List
+  ```
+
+- **`Picker` is the new generic primitive.** Owns the WAI-ARIA
+  combobox keyboard pattern (registry, `aria-activedescendant`-style
+  virtual highlight, ↑↓/Home/End/Enter/Escape) without any
+  search-domain assumptions. Both `Combobox` (in `react-ui-list`) and
+  `SearchList` (in `react-ui-search`) compose it.
+- **`@dxos/react-ui-search` is search-domain only.** Owns
+  `SearchList`/`SearchPanel` (Picker + query state + debounced
+  `onSearch` + auto-select-first + translated empty state),
+  `SearchResult` type, `useSearchListResults` (fuzzy filter via
+  `command-score`).
+- **`Combobox` no longer depends on search.** Filtering is the
+  caller's responsibility — render only matching `<Combobox.Item>`
+  children. For fuzzy / search-domain filtering, pair with
+  `useSearchListResults` from `@dxos/react-ui-search`.
+- **`RowList` uses `aria-selected` + `dx-selected`** (renamed from
+  the draft's `aria-current` + `dx-current`). Matches WAI-ARIA listbox
+  semantics and the codebase's `useSelected(_, 'single')` convention
+  from `@dxos/react-ui-attention`. `aria-current` remains reserved for
+  "you-are-here" navigation patterns (navtree, breadcrumbs).
+- **`Listbox` composes `RowList`** internally. Same public API, less
+  duplicate code.
 
 Scope: every "list-shaped" component layer in `packages/ui/*` plus consumer
 patterns in `packages/plugins/*` and `packages/apps/composer-app`. Tables

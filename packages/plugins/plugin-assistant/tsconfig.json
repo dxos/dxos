@@ -168,6 +168,9 @@
       "path": "../../ui/react-ui-mosaic"
     },
     {
+      "path": "../../ui/react-ui-search"
+    },
+    {
       "path": "../../ui/react-ui-sfx"
     },
     {

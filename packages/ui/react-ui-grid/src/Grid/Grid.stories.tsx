@@ -10,7 +10,8 @@ import { type DxGridPlaneCells } from '@dxos/lit-grid';
 import { random } from '@dxos/random';
 import { DropdownMenu } from '@dxos/react-ui';
 import { toPlaneCellIndex } from '@dxos/react-ui-grid';
-import { Combobox, type ComboboxRootProps, useSearchListResults } from '@dxos/react-ui-list';
+import { Combobox, type ComboboxRootProps } from '@dxos/react-ui-list';
+import { useSearchListResults } from '@dxos/react-ui-search';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid';
@@ -94,13 +95,13 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
 };
 
 const ComboboxContentWithFiltering = () => {
-  const { results, handleSearch } = useSearchListResults({
+  const { results, query, handleSearch } = useSearchListResults({
     items: storybookItems,
   });
 
   return (
-    <Combobox.Content onSearch={handleSearch}>
-      <Combobox.Input placeholder='Search...' />
+    <Combobox.Content>
+      <Combobox.Input placeholder='Search...' value={query} onValueChange={handleSearch} />
       <Combobox.List>
         {results.map((value) => (
           <Combobox.Item key={value} value={value} label={value} />

@@ -8,8 +8,6 @@ import React, { useState } from 'react';
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '#translations';
-
 import { Listbox } from './Listbox';
 
 random.seed(1234);
@@ -37,13 +35,10 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-search/Listbox',
+  title: 'ui/react-ui-list/Listbox',
   component: Listbox.Root,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'p-2' })],
-  parameters: {
-    translations,
-  },
 } satisfies Meta<typeof Listbox.Root>;
 
 export default meta;

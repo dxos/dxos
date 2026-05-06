@@ -11,21 +11,12 @@
   "license": "MIT",
   "author": "DXOS.org",
   "type": "module",
-  "imports": {
-    "#translations": "./src/translations.ts"
-  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "browser": "./dist/lib/browser/translations.mjs",
-      "node": "./dist/lib/node-esm/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -49,11 +40,9 @@
     "@effect-atom/atom-react": "catalog:",
     "@fluentui/react-tabster": "catalog:",
     "@radix-ui/react-accordion": "catalog:",
-    "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-slot": "catalog:",
-    "@radix-ui/react-use-controllable-state": "catalog:",
-    "command-score": "catalog:"
+    "@radix-ui/react-use-controllable-state": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

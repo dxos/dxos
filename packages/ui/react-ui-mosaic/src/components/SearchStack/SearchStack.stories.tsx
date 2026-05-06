@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { type SearchResult } from '@dxos/react-ui-list';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
+import { type SearchResult } from '@dxos/react-ui-search';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { SearchStack, type SearchStackProps } from './SearchStack';

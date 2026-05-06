@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/react-ui-grid",
+  "name": "@dxos/react-ui-search",
   "version": "0.8.3",
-  "description": "React component which manages a `dx-grid` Lit web component.",
+  "description": "Search-domain components: SearchList, SearchPanel, SearchResult, fuzzy filter hook. Composes the Picker primitive from @dxos/react-ui-list.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -12,11 +12,21 @@
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
+  "imports": {
+    "#translations": "./src/translations.ts"
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs"
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "browser": "./dist/lib/browser/translations.mjs",
+      "node": "./dist/lib/node-esm/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -25,25 +35,18 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/autocomplete": "catalog:",
-    "@codemirror/state": "catalog:",
-    "@codemirror/view": "catalog:",
-    "@dxos/lit-grid": "workspace:*",
-    "@dxos/react-ui-editor": "workspace:*",
-    "@dxos/ui-editor": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@lit/react": "catalog:",
     "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-popper": "catalog:",
-    "@radix-ui/react-use-controllable-state": "catalog:"
+    "@radix-ui/react-use-controllable-state": "catalog:",
+    "command-score": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-list": "workspace:*",
-    "@dxos/react-ui-search": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",

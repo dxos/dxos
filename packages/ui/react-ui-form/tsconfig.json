@@ -75,6 +75,9 @@
       "path": "../react-ui-pickers"
     },
     {
+      "path": "../react-ui-search"
+    },
+    {
       "path": "../react-ui-syntax-highlighter"
     },
     {

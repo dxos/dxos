@@ -2,29 +2,44 @@
 // Copyright 2023 DXOS.org
 //
 
+// `Combobox` — popover-list with text input. Generic; no search-domain
+// dependencies. Built on `Picker` (this same package) for the
+// listbox-with-input pattern (registry, virtual highlight, keyboard
+// nav, the two performance-split contexts) and `Popover` from
+// `@dxos/react-ui` for the trigger/content/arrow.
+//
+// Filtering is the caller's responsibility — render only the matching
+// `<Combobox.Item>` children. For fuzzy / search-domain filtering,
+// pair with `useSearchListResults` from `@dxos/react-ui-search`.
+//
+// https://www.w3.org/WAI/ARIA/apg/patterns/combobox
+
 import { createContext } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentPropsWithoutRef, type PropsWithChildren, forwardRef, useCallback } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
+  type PropsWithChildren,
+  forwardRef,
+  useCallback,
+} from 'react';
 
 import {
   Button,
   type ButtonProps,
   Icon,
+  type IconProps,
   Popover,
   type PopoverArrowProps,
   type PopoverContentProps,
   type PopoverVirtualTriggerProps,
+  ScrollArea,
+  type ThemedClassName,
+  useId,
 } from '@dxos/react-ui';
-import { useId } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
-import {
-  SearchList,
-  type SearchListEmptyProps,
-  type SearchListInputProps,
-  type SearchListItemProps,
-  type SearchListRootProps,
-} from '../SearchList';
+import { Picker, type PickerInputProps, type PickerItemProps } from '../Picker';
 
 const COMBOBOX_NAME = 'Combobox';
 const COMBOBOX_CONTENT_NAME = 'ComboboxContent';
@@ -32,7 +47,7 @@ const COMBOBOX_ITEM_NAME = 'ComboboxItem';
 const COMBOBOX_TRIGGER_NAME = 'ComboboxTrigger';
 
 //
-// Context
+// Context — open/value state shared with Trigger and Item.
 //
 
 type ComboboxContextValue = {
@@ -52,31 +67,38 @@ const [ComboboxProvider, useComboboxContext] = createContext<Partial<ComboboxCon
 //
 
 type ComboboxRootProps = PropsWithChildren<
-  Partial<ComboboxContextValue & { modal: boolean; defaultOpen: boolean; defaultValue: string; placeholder: string }>
+  Partial<
+    ComboboxContextValue & {
+      modal: boolean;
+      defaultOpen: boolean;
+      defaultValue: string;
+      placeholder: string;
+    }
+  >
 >;
 
 const ComboboxRoot = ({
+  children,
   modal,
-  modalId: propsModalId,
-  open: propsOpen,
+  modalId: modalIdProp,
+  open: openProp,
   defaultOpen,
   onOpenChange: propsOnOpenChange,
-  value: propsValue,
+  value: valueProp,
   defaultValue,
   onValueChange: propsOnValueChange,
   placeholder,
-  children,
 }: ComboboxRootProps) => {
-  const modalId = useId(COMBOBOX_NAME, propsModalId);
+  const modalId = useId(COMBOBOX_NAME, modalIdProp);
   const [open = false, onOpenChange] = useControllableState({
-    prop: propsOpen,
-    onChange: propsOnOpenChange,
+    prop: openProp,
     defaultProp: defaultOpen,
+    onChange: propsOnOpenChange,
   });
   const [value = '', onValueChange] = useControllableState({
-    prop: propsValue,
-    onChange: propsOnValueChange,
+    prop: valueProp,
     defaultProp: defaultValue,
+    onChange: propsOnValueChange,
   });
 
   return (
@@ -97,31 +119,29 @@ const ComboboxRoot = ({
 };
 
 //
-// ContentProps
+// Content — Popover.Content + Picker.Root.
+//
+// Filtering is caller-driven: pass already-matching <Combobox.Item> children.
 //
 
-type ComboboxContentProps = SearchListRootProps & PopoverContentProps;
+type ComboboxContentProps = PopoverContentProps;
 
-const ComboboxContent = composable<HTMLDivElement, ComboboxContentProps>(
-  ({ children, value, defaultValue, debounceMs, onSearch, ...props }, forwardedRef) => {
-    const { modalId } = useComboboxContext(COMBOBOX_CONTENT_NAME);
+const ComboboxContent = composable<HTMLDivElement, ComboboxContentProps>(({ children, ...props }, forwardedRef) => {
+  const { modalId } = useComboboxContext(COMBOBOX_CONTENT_NAME);
 
-    return (
-      <Popover.Content {...composableProps(props, { id: modalId })} ref={forwardedRef}>
-        <Popover.Viewport classNames='w-(--radix-popover-trigger-width)'>
-          <SearchList.Root value={value} defaultValue={defaultValue} debounceMs={debounceMs} onSearch={onSearch}>
-            <SearchList.Content>{children}</SearchList.Content>
-          </SearchList.Root>
-        </Popover.Viewport>
-      </Popover.Content>
-    );
-  },
-);
+  return (
+    <Popover.Content {...composableProps(props, { id: modalId })} ref={forwardedRef}>
+      <Popover.Viewport classNames='w-(--radix-popover-trigger-width)'>
+        <Picker.Root>{children}</Picker.Root>
+      </Popover.Viewport>
+    </Popover.Content>
+  );
+});
 
 ComboboxContent.displayName = COMBOBOX_CONTENT_NAME;
 
 //
-// Trigger
+// Trigger — the button that opens the popover.
 //
 
 type ComboboxTriggerProps = ButtonProps;
@@ -173,14 +193,16 @@ type ComboboxVirtualTriggerProps = PopoverVirtualTriggerProps;
 const ComboboxVirtualTrigger = Popover.VirtualTrigger;
 
 //
-// Input
+// Input — text input wired to Picker.Input. Caller controls value.
 //
 
-type ComboboxInputProps = SearchListInputProps;
+type ComboboxInputProps = ThemedClassName<
+  Omit<ComponentPropsWithRef<'input'>, 'value'> & Pick<PickerInputProps, 'value' | 'onValueChange'>
+>;
 
 const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classNames, ...props }, forwardedRef) => {
   return (
-    <SearchList.Input
+    <Picker.Input
       {...props}
       classNames={['m-form-chrome mb-0 w-[calc(100%-2*var(--spacing-form-chrome))]', classNames]}
       ref={forwardedRef}
@@ -188,29 +210,79 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
   );
 });
 
+ComboboxInput.displayName = 'Combobox.Input';
+
 //
-// List
+// List — scroll wrapper around items.
 //
 
 type ComboboxListProps = PropsWithChildren<{ classNames?: string | string[] }>;
 
-const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(({ classNames, ...props }, forwardedRef) => {
-  return <SearchList.Viewport {...props} classNames={['py-form-chrome', classNames]} ref={forwardedRef} />;
-});
+const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(
+  ({ classNames, children, ...props }, forwardedRef) => {
+    return (
+      <ScrollArea.Root
+        {...composableProps(props, { classNames: ['py-form-chrome', classNames] })}
+        role='listbox'
+        centered
+        padding
+        thin
+        ref={forwardedRef}
+      >
+        <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+      </ScrollArea.Root>
+    );
+  },
+);
+
+ComboboxList.displayName = 'Combobox.List';
 
 //
-// Item
+// Item — wraps Picker.Item; commits value + closes popover on select.
 //
 
-type ComboboxItemProps = SearchListItemProps & {
-  /** Whether to close the popover when this item is selected. Defaults to true. */
-  closeOnSelect?: boolean;
-};
+type ComboboxItemProps = ThemedClassName<
+  PropsWithChildren<{
+    /** Unique identifier. */
+    value: string;
+    /** Display label (used when `children` are not provided). */
+    label?: string;
+    /** Optional icon id (Phosphor) shown before the label. */
+    icon?: string;
+    /** Additional class names for the icon. */
+    iconClassNames?: IconProps['classNames'];
+    /** Show a check icon on the right (commonly used for confirming the picked item). */
+    checked?: boolean;
+    /** Suffix text after the label. */
+    suffix?: string;
+    /** Disabled. */
+    disabled?: boolean;
+    /** Caller-supplied select handler in addition to value-commit. */
+    onSelect?: () => void;
+    /** Whether to close the popover when this item is selected. Defaults to true. */
+    closeOnSelect?: boolean;
+  }>
+>;
 
 const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
-  ({ classNames, onSelect, value, closeOnSelect = true, ...props }, forwardedRef) => {
+  (
+    {
+      classNames,
+      onSelect,
+      value,
+      label,
+      icon,
+      iconClassNames,
+      checked,
+      suffix,
+      disabled,
+      closeOnSelect = true,
+      children,
+    },
+    forwardedRef,
+  ) => {
     const { onValueChange, onOpenChange } = useComboboxContext(COMBOBOX_ITEM_NAME);
-    const handleSelect = useCallback<NonNullable<SearchListItemProps['onSelect']>>(() => {
+    const handleSelect = useCallback<NonNullable<PickerItemProps['onSelect']>>(() => {
       onSelect?.();
       if (value !== undefined) {
         onValueChange?.(value);
@@ -221,13 +293,29 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
     }, [onSelect, onValueChange, onOpenChange, value, closeOnSelect]);
 
     return (
-      <SearchList.Item
-        {...props}
+      <Picker.Item
         value={value}
-        classNames={['mx-form-chrome px-form-chrome', classNames]}
+        disabled={disabled}
         onSelect={handleSelect}
         ref={forwardedRef}
-      />
+        classNames={[
+          'mx-form-chrome px-form-chrome',
+          'flex gap-2 items-center py-1 rounded-xs select-none',
+          // TODO(burdon): Use dx-hover?
+          'cursor-pointer data-[selected=true]:bg-hover-overlay hover:bg-hover-overlay',
+          disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent data-[selected=true]:bg-transparent',
+          classNames,
+        ]}
+      >
+        {children ?? (
+          <>
+            {icon && <Icon icon={icon} classNames={iconClassNames} />}
+            <span className='w-0 grow truncate'>{label}</span>
+            {suffix && <span className='shrink-0 text-description'>{suffix}</span>}
+            {checked && <Icon icon='ph--check--regular' />}
+          </>
+        )}
+      </Picker.Item>
     );
   },
 );
@@ -243,17 +331,20 @@ type ComboboxArrowProps = PopoverArrowProps;
 const ComboboxArrow = Popover.Arrow;
 
 //
-// Empty
+// Empty — passthrough placeholder. No translation; caller supplies copy.
 //
 
-type ComboboxEmptyProps = SearchListEmptyProps;
+type ComboboxEmptyProps = ThemedClassName<PropsWithChildren>;
 
-const ComboboxEmpty = SearchList.Empty;
+const ComboboxEmpty = forwardRef<HTMLDivElement, ComboboxEmptyProps>(({ classNames, children }, forwardedRef) => {
+  return (
+    <div ref={forwardedRef} role='status' className={mx(classNames)}>
+      {children}
+    </div>
+  );
+});
 
-//
-// Combobox
-// https://www.w3.org/WAI/ARIA/apg/patterns/combobox
-//
+ComboboxEmpty.displayName = 'Combobox.Empty';
 
 //
 // Portal
@@ -262,6 +353,10 @@ const ComboboxEmpty = SearchList.Empty;
 type ComboboxPortalProps = ComponentPropsWithoutRef<typeof Popover.Portal>;
 
 const ComboboxPortal = Popover.Portal;
+
+//
+// Combobox
+//
 
 export const Combobox = {
   Root: ComboboxRoot,
