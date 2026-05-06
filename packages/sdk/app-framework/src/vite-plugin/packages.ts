@@ -101,7 +101,6 @@ export const DEFAULT_PACKAGES = [
   '@dxos/ai',
   '@dxos/assistant',
   '@dxos/assistant-toolkit',
-  '@dxos/blueprints',
   '@dxos/compute',
   '@dxos/conductor',
   '@dxos/functions',
