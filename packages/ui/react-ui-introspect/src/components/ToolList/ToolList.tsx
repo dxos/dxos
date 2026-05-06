@@ -14,10 +14,17 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Row, RowList } from '@dxos/react-ui-list';
+import { type ThemedClassName } from '@dxos/react-ui';
 
 import type { ToolEntry } from '../types';
 
-export type ToolListProps = {
+// Not `composable()` — ToolList's outermost rendered element is
+// `<RowList.Root>`, which is headless. Slot-merging className/ref onto
+// a headless component is a no-op, so an `asChild` surface here would
+// be misleading. Consumers needing slot semantics should reach for
+// `RowList` directly. `classNames` flows through to the visible
+// scroll surface (`RowList.Viewport`).
+export type ToolListProps = ThemedClassName<{
   /**
    * Tool definitions keyed by their MCP tool name (`list_packages`,
    * `get_plugin`, etc.). Pass `Object.entries(createToolDefinitions(...))`
@@ -28,10 +35,9 @@ export type ToolListProps = {
   selected?: string | null;
   /** Fired when the user picks a row. */
   onSelect?: (name: string, tool: ToolEntry) => void;
-  className?: string;
-};
+}>;
 
-export const ToolList = ({ tools, selected, onSelect, className }: ToolListProps) => {
+export const ToolList = ({ tools, selected, onSelect, classNames }: ToolListProps) => {
   const entries = useMemo(() => Object.entries(tools).sort(([a], [b]) => a.localeCompare(b)), [tools]);
 
   const handleCurrentChange = useCallback(
@@ -46,7 +52,7 @@ export const ToolList = ({ tools, selected, onSelect, className }: ToolListProps
 
   return (
     <RowList.Root currentId={selected ?? undefined} onCurrentChange={handleCurrentChange}>
-      <RowList.Viewport classNames={className} thin>
+      <RowList.Viewport classNames={classNames} thin>
         <RowList.Content aria-label='MCP tools'>
           {entries.map(([name, tool]) => (
             <Row key={name} id={name}>
