@@ -556,8 +556,67 @@ Files cited in this audit (paths relative to repo root):
 
 ## 11. Corrections
 
-- PropsWithChildren
-- slottable vs. composable
-- use react-ui components rather than raw DOM elements
-- use minimal custom classnames
-- use radix composite components; typically Root should be headless; Viewport will contain ScrollArea.Root; use radix useContext
+Idiomatic patterns the agent has been corrected on while building this
+PR. Future agents working in `react-ui-*` should treat this as a
+pre-flight checklist — these are the things to get right *before*
+opening a draft PR.
+
+- **`PropsWithChildren`** — use `React.PropsWithChildren<…>` for prop
+  types that accept children, not a manual `children?: ReactNode`.
+- **`slottable` vs. `composable`** — pick `composable()` for leaf
+  components that always render their own element. Reach for
+  `slottable()` only when the render function actually dispatches on
+  `asChild` (`Comp = asChild ? Slot : Element`). The factory does not
+  auto-implement `asChild`; it just declares the prop and dev-warns
+  on misuse. Wrapping with `slottable()` without the dispatch creates
+  a misleading public API (the type advertises `asChild` but the
+  runtime ignores it).
+- **Use react-ui components, not raw DOM.** Reach for `Input.TextInput`,
+  `Toolbar.Root`, `Panel.Root`, etc. over `<input>` /
+  `<div className='…'>` / hand-rolled chrome. The components carry the
+  DXOS theme, density, and accessibility wiring; raw DOM re-derives
+  all of that ad-hoc.
+- **Minimal custom classNames.** Don't redecorate components that
+  already style themselves. `classNames` is for overrides, not for
+  adding `font-medium` / `text-sm` / etc. that the component supplies.
+- **Radix composite components.** Compound APIs follow the Radix shape
+  (`Root` + named subcomponents). Specifically:
+  - `Root` is **headless** by default (renders no DOM, just a
+    `Provider`), matching `Select.Root` / `Dialog.Root` / `Tabs.Root`.
+    Unless there's a specific structural reason, layout is the
+    caller's responsibility.
+  - `Viewport` is the scroll surface; wraps `ScrollArea.Root` +
+    `ScrollArea.Viewport` and forwards the routine knobs (`thin`,
+    `padding`, `centered`) so callers don't need `asChild` for them.
+  - Use `createContextScope` from `@radix-ui/react-context` (not
+    plain `createContext`) so future composers can scope cleanly.
+- **`@fluentui/react-tabster` is the only arrow-nav layer.** Use
+  `useArrowNavigationGroup({ axis, memorizeCurrent })` for arrow keys
+  and `useFocusableGroup` for groupings. Don't roll bespoke
+  `onKeyDown` arrow handlers. If tabster appears not to fire, fix
+  initialization (it auto-inits via `useTabster` on first hook call)
+  rather than duplicating the logic.
+- **`current` ≠ `selection`.** "Current" tracks where focus/nav is
+  (single item, follows arrows / clicks / focus; `aria-current` +
+  `dx-current`). "Selection" is an explicit action (e.g. clicking a
+  checkbox) and can be multi-select; pairs with `aria-selected` +
+  `dx-selected`. Don't conflate them in API names — a focus-follows-
+  nav model wants `currentId`, not `selectedId`.
+- **No `Own` suffix on prop types.** Internal `*OwnProps` is noise;
+  codebase convention is plain `*Props` (`ScrollAreaRootProps`,
+  `PanelRootProps`, `ListboxRootProps`).
+- **Single visual variant; style via `classNames` / theme.** Don't
+  ship parallel components for visual variants (e.g. Row vs Card).
+  Variants are a styling concern, not an API split.
+- **Stories: `withLayout({ layout: 'column' })`.** Provides full
+  height + sane default width. If the list is the only component it
+  should fill the space (lean on `dx-container` rather than baking
+  widths/borders into the story).
+- **`@dxos/react-list` is the elemental layer** — flat,
+  scroll-agnostic, not compound. Compound APIs and ScrollArea
+  integration belong in `react-ui-list`, never in the primitive.
+- **`dx-*` ↔ ARIA pairing** — `aria-selected` ↔ `dx-selected`,
+  `aria-current` ↔ `dx-current`. `dx-active` is not a defined
+  utility. Toggle-button semantics (`aria-pressed`) don't pair with
+  the row-selection utilities. See
+  `packages/ui/ui-theme/src/css/components/selected.md`.

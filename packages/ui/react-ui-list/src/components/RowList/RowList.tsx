@@ -77,13 +77,7 @@
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { createContextScope } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, {
-  type FocusEvent,
-  type ForwardedRef,
-  type MouseEvent,
-  type PropsWithChildren,
-  useCallback,
-} from 'react';
+import React, { type FocusEvent, type ForwardedRef, type MouseEvent, type PropsWithChildren, useCallback } from 'react';
 
 import { List, ListItem } from '@dxos/react-list';
 import { ScrollArea, type ScrollAreaRootProps } from '@dxos/react-ui';
@@ -228,9 +222,7 @@ const Content = composable<HTMLUListElement, ContentProps>((props, forwardedRef)
       return;
     }
     const ul = event.currentTarget;
-    const current = ul.querySelector<HTMLLIElement>(
-      '[role="option"][aria-current="true"]:not([aria-disabled="true"])',
-    );
+    const current = ul.querySelector<HTMLLIElement>('[role="option"][aria-current="true"]:not([aria-disabled="true"])');
     const target = current ?? firstEnabledOption(ul);
     target?.focus();
   }, []);
@@ -335,6 +327,7 @@ Row.displayName = ROW_NAME;
 // Public namespace.
 //
 
+// TODO(burdon): Rename List and replace existing List component.
 const RowList = {
   Root,
   Viewport,
@@ -342,4 +335,9 @@ const RowList = {
 };
 
 export { RowList, Row, createRowListScope };
-export type { RootProps as RowListRootProps, ViewportProps as RowListViewportProps, ContentProps as RowListContentProps, RowProps };
+export type {
+  RootProps as RowListRootProps,
+  ViewportProps as RowListViewportProps,
+  ContentProps as RowListContentProps,
+  RowProps,
+};
