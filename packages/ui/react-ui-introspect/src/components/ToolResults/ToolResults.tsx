@@ -7,8 +7,9 @@
 // so we accept either the raw envelope or pre-parsed data and pretty-print
 // via the JsonHighlighter.
 
-import React from 'react';
+import React, { type HTMLAttributes, type ReactNode } from 'react';
 
+import { type ThemedClassName } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { composable, composableProps } from '@dxos/ui-theme';
 
@@ -25,46 +26,48 @@ export type ToolResultsProps = {
   loading?: boolean;
 };
 
+type Variant = ThemedClassName<Pick<HTMLAttributes<HTMLDivElement>, 'role' | 'aria-live'>> & {
+  children: ReactNode;
+};
+
+const pickVariant = ({ result, error, loading }: ToolResultsProps): Variant => {
+  if (loading) {
+    return {
+      classNames: 'p-3 text-sm text-description',
+      role: 'status',
+      'aria-live': 'polite',
+      children: 'Calling tool…',
+    };
+  }
+  if (error) {
+    return {
+      classNames: 'p-3 text-sm text-errorText whitespace-pre-wrap',
+      role: 'alert',
+      children: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
+    };
+  }
+  if (result === undefined) {
+    return {
+      classNames: 'p-3 text-sm text-description italic',
+      children: (
+        <>
+          No result yet — fill the form and click <strong>Run tool</strong>.
+        </>
+      ),
+    };
+  }
+  return {
+    classNames: 'p-3 overflow-auto',
+    children: <JsonHighlighter data={tryParseMcpEnvelope(result)} />,
+  };
+};
+
 export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
   ({ result, error, loading, ...props }, forwardedRef) => {
-    if (loading) {
-      return (
-        <div
-          {...composableProps(props, {
-            classNames: 'p-3 text-sm text-description',
-            role: 'status',
-            'aria-live': 'polite',
-          })}
-          ref={forwardedRef}
-        >
-          Calling tool…
-        </div>
-      );
-    }
-    if (error) {
-      const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
-      return (
-        <div
-          {...composableProps(props, {
-            classNames: 'p-3 text-sm text-errorText whitespace-pre-wrap',
-            role: 'alert',
-          })}
-          ref={forwardedRef}
-        >
-          {message}
-        </div>
-      );
-    }
-    if (result === undefined) {
-      return (
-        <div {...composableProps(props, { classNames: 'p-3 text-sm text-description italic' })} ref={forwardedRef}>
-          No result yet — fill the form and click <strong>Run tool</strong>.
-        </div>
-      );
-    }
+    const { children, ...variant } = pickVariant({ result, error, loading });
     return (
-      <div {...composableProps(props, { classNames: 'p-3 overflow-auto' })} ref={forwardedRef}>
-        <JsonHighlighter data={tryParseMcpEnvelope(result)} />
+      <div {...composableProps(props, variant)} ref={forwardedRef}>
+        {children}
       </div>
     );
   },
