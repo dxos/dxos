@@ -9,6 +9,7 @@ tasks:
     inputs:
       - /tsconfig.base.json
       - /tsdown.base.config.ts
+      - /tools/vite-plugin-log/src/**/*
       - tsconfig.json
       - tsdown.config.ts
       - '@group(sources)'

@@ -12,9 +12,16 @@ import { dirname, join, resolve } from 'node:path';
 import { type UserConfig } from 'tsdown';
 import ts from 'typescript';
 
-import { DEFAULT_LOG_META_TRANSFORM_SPEC, rolldownLogMetaPlugin } from './tools/log-meta-plugin.ts';
+// NOTE: Imported by relative path on purpose. Going through `@dxos/vite-plugin-log`
+// would force every ts-build package to compile the plugin first, which introduces
+// a moon project-graph cycle through @dxos/log (log is ts-build → depends on vite-plugin-log
+// → log is a peer dep of vite-plugin-log → cycle). Importing from source lets unrun
+// (tsdown's config loader) bundle and execute it directly with no moon dep.
+import { DEFAULT_LOG_META_TRANSFORM_SPEC } from './tools/vite-plugin-log/src/definitions.ts';
+import { rolldownLogMetaPlugin } from './tools/vite-plugin-log/src/rolldown-log-meta-plugin.ts';
 
-export { DEFAULT_LOG_META_TRANSFORM_SPEC, rolldownLogMetaPlugin } from './tools/log-meta-plugin.ts';
+export { DEFAULT_LOG_META_TRANSFORM_SPEC } from './tools/vite-plugin-log/src/definitions.ts';
+export { rolldownLogMetaPlugin } from './tools/vite-plugin-log/src/rolldown-log-meta-plugin.ts';
 
 export interface DxTsdownOptions {
   /**
@@ -213,6 +220,13 @@ export const urlImportPlugin = () =>
  * `declarationDir` / `outDir` that conflict with the outDir we pass to tsc.
  * Instead we inline the minimum settings needed and resolve include/exclude
  * paths to absolute paths so the file works from an arbitrary temp directory.
+ *
+ * Note: tsdown's built-in DTS options were evaluated but both have limitations
+ * in this codebase — rolldown-plugin-dts (without tsgo) triggers a
+ * `ts.createLanguageService` crash ("Lexical environment is suspended") on
+ * several packages, and the tsgo path does not yet resolve `#`-prefixed
+ * package.json `imports` fields used by crypto, log, and many plugins.
+ * The tsc `createProgram` API below avoids both issues.
  */
 const writeDtsTsconfig = async (cwd: string): Promise<string> => {
   const tmp = await mkdtemp(join(tmpdir(), 'dx-tsdown-'));

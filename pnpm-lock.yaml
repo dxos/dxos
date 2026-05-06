@@ -20966,12 +20966,6 @@ importers:
 
   tools/vite-plugin-log:
     devDependencies:
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../packages/common/log
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../packages/common/util
       '@oxc-project/types':
         specifier: 'catalog:'
         version: 0.128.0
