@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Panel, Toolbar } from '@dxos/react-ui';
+import { Input, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Row, RowList } from './RowList';
@@ -17,8 +17,8 @@ type TestItem = { id: string; name: string; description: string };
 
 const items: TestItem[] = Array.from({ length: 24 }, (_, i) => ({
   id: `item-${i}`,
-  name: `Item ${i + 1}`,
-  description: random.lorem.sentence(),
+  name: random.commerce.productName(),
+  description: random.lorem.sentences(2),
 }));
 
 //
@@ -135,14 +135,14 @@ const WithToolbarStory = () => {
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <input
-              type='text'
-              aria-label='Filter items'
-              placeholder='Filter…'
-              value={filter}
-              onChange={(event) => setFilter(event.target.value)}
-              className='w-full bg-transparent outline-none'
-            />
+            <Input.Root>
+              <Input.Label srOnly>Filter items</Input.Label>
+              <Input.TextInput
+                placeholder='Filter…'
+                value={filter}
+                onChange={(event) => setFilter(event.target.value)}
+              />
+            </Input.Root>
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>
@@ -150,7 +150,7 @@ const WithToolbarStory = () => {
             <RowList.Content aria-label='Items'>
               {filtered.map((item) => (
                 <Row key={item.id} id={item.id}>
-                  <div className='font-medium'>{item.name}</div>
+                  {item.name}
                 </Row>
               ))}
             </RowList.Content>
