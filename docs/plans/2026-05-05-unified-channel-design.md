@@ -136,20 +136,38 @@ These stay distinct — they encode different semantics:
 
 `Channel` uses `CompanionTo` for things like per-channel assistant config. `AnchoredTo` is reserved for the future comment-thread migration; native channels (Slack/Discord/DMs) don't need it.
 
-## Migration strategy
+## Implementation plan
 
-Initial round (this design):
+Concrete change set for this PR:
 
-1. **Land `Channel`** in `@dxos/types` (replacing draft PR #11242's `Chat`). `Channel.make` creates the backing `Feed` and sets the channel as the feed's parent.
-2. **Free the `Channel` typename**: rename or replace the existing `plugin-thread/Channel` wrapper (the AutoMerge `defaultThread + threads[]` object). Limited consumers; small contained change.
-3. **`AiChat` and `Mailbox`** unchanged — stay in their existing packages with their existing schemas.
-4. **`Thread` (in `plugin-thread`) unchanged** — comments continue using AutoMerge `Thread` with `messages: Ref<Message>[]`. No data migration in this round.
-5. **Add `plugin-slack`** on top of the new `Channel` from day one (no separate `SlackChannel` type).
+1. **Add `Channel` to `@dxos/types`.**
+   - New file `packages/sdk/types/src/types/Channel.ts` exporting the schema and a `make` factory that creates the backing `Feed` and calls `Obj.setParent(feed, channel)`.
+   - Re-export from `packages/sdk/types/src/types/index.ts`.
+   - Typename: `org.dxos.type.channel`.
+2. **Update `plugin-thread`.**
+   - Delete the existing `packages/plugins/plugin-thread/src/types/Channel.ts` (the AutoMerge `defaultThread + threads[]` wrapper).
+   - Update `ChannelContainer` (and its storybook) to construct the new feed-backed `Channel` and render messages as a **flat feed** — no `threadId`-based thread grouping in this round.
+   - `Thread` (used by comments) is unchanged.
+3. **Migrate `plugin-meeting`.** This is the bulk of the cross-plugin work — Meetings reference `Channel` for in-meeting chat. Files to update:
+   - `src/capabilities/app-graph-builder.ts`
+   - `src/capabilities/react-surface.tsx`
+   - `src/capabilities/call-extension.ts`
+   - `src/operations/definitions.ts`
+   - `src/operations/set-active.ts`
+   - `src/containers/MeetingsList/MeetingsList.tsx`
+   - `src/containers/MeetingContainer/MeetingContainer.stories.tsx`
+   Wherever meeting code reads `channel.defaultThread` or `channel.threads`, switch to "the channel's feed of messages" or drop the indirection if it was only being used to find the single chat for the meeting.
+4. **Update `plugin-transcription`** — `src/stories/useIsSpeaking.tsx` (one story).
+5. **Update tests and stories** broken by the shape change. No live-data migration (fresh enough feature).
 
-Future rounds (out of scope here):
+Out of scope (future rounds):
 
-- Comment-thread migration to `Channel` (see "Comment threads (deferred to a later round)" above). Includes a per-document data migration script, `AnchoredTo` retargeting, and `plugin-thread` editor-side updates.
-- Future plugins (Discord, Matrix, IRC bridges) follow the same `Channel` pattern. Source-specific quirks (e.g., Discord modeling threads as child channels upstream) flatten into our model — Discord threads land as `threadId`-grouped messages in the parent channel's feed, the same as Slack thread replies. We don't need to mirror upstream topology faithfully.
+- **Threading UI in `Channel`.** Reconstructing thread groupings from `Message.threadId` in the rendering layer. Deferred.
+- **`plugin-slack`.** Updates PR #11242 to use the new `Channel` after this lands. PR stays open in the meantime.
+- **AI participation in `Channel`** — mention block recognition, `plugin-assistant` trigger, `CompanionTo(Channel → AssistantConfig)`.
+- **Comment-thread migration** to `Channel` (see "Comment threads (deferred to a later round)" above).
+- **`AiChat` and `Mailbox`** stay as-is in their existing packages.
+- **Future sync plugins** (Discord, Matrix, IRC bridges) follow the same `Channel` pattern. Source-specific quirks (e.g., Discord modeling threads as child channels upstream) flatten into our model — Discord threads land as `threadId`-grouped messages in the parent channel's feed, the same as Slack thread replies. We don't need to mirror upstream topology faithfully.
 
 ## Open questions / out of scope
 
