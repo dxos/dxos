@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { ObservabilityPlugin } from '#plugin';
+import { ObservabilityPlugin } from './ObservabilityPlugin.node';
 
 import { meta } from './meta';
 
