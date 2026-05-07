@@ -9,7 +9,7 @@ import { Organization, Person } from '@dxos/types';
 import { meta } from '#meta';
 
 export const PreviewPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Person.Person, Organization.Organization], id: 'schema' }),
+  AppPlugin.addSchemaModule({ schema: [Person.Person, Organization.Organization] }),
   Plugin.make,
 );
 

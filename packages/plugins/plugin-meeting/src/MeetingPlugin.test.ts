@@ -24,7 +24,7 @@ describe('MeetingPlugin', () => {
       expect.arrayContaining([
         moduleId('AppGraphBuilder'),
         moduleId('metadata'),
-        moduleId('schemas'),
+        moduleId('schema'),
         moduleId('ReactSurface'),
       ]),
     );
