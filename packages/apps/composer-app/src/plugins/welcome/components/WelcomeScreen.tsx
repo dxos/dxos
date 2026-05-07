@@ -96,16 +96,40 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   );
 
   const handlePasskey = useCallback(async () => {
-    await invokePromise(ClientOperation.RedeemPasskey);
-  }, [invokePromise]);
+    if (pendingRef.current || identity) {
+      return;
+    }
+    try {
+      pendingRef.current = true;
+      await invokePromise(ClientOperation.RedeemPasskey);
+    } finally {
+      pendingRef.current = false;
+    }
+  }, [invokePromise, identity]);
 
   const handleJoinIdentity = useCallback(async () => {
-    await invokePromise(ClientOperation.JoinIdentity, {});
-  }, [invokePromise]);
+    if (pendingRef.current || identity) {
+      return;
+    }
+    try {
+      pendingRef.current = true;
+      await invokePromise(ClientOperation.JoinIdentity, {});
+    } finally {
+      pendingRef.current = false;
+    }
+  }, [invokePromise, identity]);
 
   const handleRecoverIdentity = useCallback(async () => {
-    await invokePromise(ClientOperation.RecoverIdentity);
-  }, [invokePromise]);
+    if (pendingRef.current || identity) {
+      return;
+    }
+    try {
+      pendingRef.current = true;
+      await invokePromise(ClientOperation.RecoverIdentity);
+    } finally {
+      pendingRef.current = false;
+    }
+  }, [invokePromise, identity]);
 
   const handleSpaceInvitation = async () => {
     let identityCreated = true;

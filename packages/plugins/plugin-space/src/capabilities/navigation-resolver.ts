@@ -9,11 +9,12 @@ import { Capability } from '@dxos/app-framework';
 import {
   AppCapabilities,
   getObjectPath,
+  getObjectPathFromObject,
   getSpaceIdFromPath,
   getSpacePath,
   type AppCapabilities as AppCaps,
 } from '@dxos/app-toolkit';
-import { Database, Entity, Key } from '@dxos/echo';
+import { Database, Entity, Key, Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings/types';
@@ -54,7 +55,7 @@ export default Capability.makeModule(
 
         return [
           {
-            path: getObjectPath(db.spaceId, typename, object.id),
+            path: Obj.isObject(object) ? getObjectPathFromObject(object) : getObjectPath(db.spaceId, typename, object.id),
             label: Entity.getLabel(object) ?? '',
             type: typename,
           },
