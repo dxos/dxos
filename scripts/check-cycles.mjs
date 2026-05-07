@@ -14,6 +14,7 @@ const CONFIG = {
     'packages/sdk/app-framework/src/**/*.{ts,tsx}',
     'packages/sdk/app-toolkit/src/**/*.{ts,tsx}',
     'packages/plugins/plugin-kanban/src/**/*.{ts,tsx}',
+    'packages/plugins/plugin-attention/src/**/*.{ts,tsx}',
   ],
   ignoreGlobs: [
     '**/node_modules/**',
