@@ -117,11 +117,14 @@ export class AsyncTask {
 
   /**
    * Schedule the task to run asynchronously.
+   *
+   * No-op once the task has been closed: callbacks routinely reschedule themselves and
+   * legitimately race with `close()` (e.g. an Effect that finishes after dispose has run).
    */
   // TODO(dmaretskyi): Add scheduleAt. Where the earlier time will override the later one.
   schedule(): void {
     if (!this.#ctx || this.#ctx.disposed) {
-      throw new Error('AsyncTask not open');
+      return;
     }
 
     if (this.#scheduled) {
