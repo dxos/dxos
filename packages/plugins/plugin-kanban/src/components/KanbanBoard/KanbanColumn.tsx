@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { FC, forwardRef, RefObject, useRef } from 'react';
+import React, { FC, forwardRef, useState } from 'react';
 
 import type { Obj } from '@dxos/echo';
 import { Board, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
@@ -26,7 +26,7 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
 
     const { title } = getPivotAttributes(column.columnValue);
     const uncategorized = column.columnValue === UNCATEGORIZED_VALUE;
-    const dragHandleRef = useRef<HTMLButtonElement | null>(null);
+    const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
 
     const eventHandler = useKanbanItemEventHandler({
       column,
@@ -41,7 +41,7 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
         location={location}
         classNames='grid grid-rows-[var(--dx-rail-action)_1fr_var(--dx-rail-action)]'
         debug={debug}
-        dragHandleRef={dragHandleRef}
+        dragHandle={dragHandle}
         ref={forwardedRef}
       >
         {uncategorized ? (
@@ -49,7 +49,7 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
             <span className='font-medium'>{title}</span>
           </div>
         ) : (
-          <Board.Column.Header label={title} dragHandleRef={dragHandleRef as RefObject<HTMLButtonElement>} />
+          <Board.Column.Header label={title} dragHandleRef={setDragHandle} />
         )}
         <Board.Column.Body
           data={column}
