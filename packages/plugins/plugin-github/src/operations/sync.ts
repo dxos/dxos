@@ -395,13 +395,15 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
               continue;
             }
 
-            // Materialize the local Project on demand.
-            let project: Project.Project;
-            if (localObj && Obj.instanceOf(Project.Project, localObj)) {
-              project = localObj as Project.Project;
-              yield* upsertProject(remoteRepo);
-            } else {
-              project = yield* upsertProject(remoteRepo);
+            // Always upsert by foreign-key. If `target.object` is already pointing
+            // at the same Project (the normal round-trip), the upsert finds it,
+            // refreshes its fields, and returns the same instance — and we leave
+            // `target.object` alone. If `target.object` was missing or pointed at
+            // a different object, the upsert may have created a new Project (or
+            // resolved an unrelated one); rewire `target.object` to whatever the
+            // upsert returned so the user-visible target tracks the actual record.
+            const project = yield* upsertProject(remoteRepo);
+            if (!localObj || localObj.id !== project.id) {
               const materializedRef = Ref.make(project as unknown as Obj.Any);
               Obj.update(integrationObj, (integrationObj) => {
                 const idx = integrationObj.targets.findIndex((target) => target.remoteId === foreignId);

@@ -28,6 +28,7 @@ export const Project = Schema.Struct({
 
 export interface Project extends Schema.Schema.Type<typeof Project> {}
 
+/** Factory wrapper around `Obj.make` for {@link Project}. */
 export const make = (props: Partial<Obj.MakeProps<typeof Project>> = {}): Project =>
   Obj.make(Project, {
     ...props,
