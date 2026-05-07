@@ -80,7 +80,7 @@ const isGraphDebug = (data: any): data is GraphDebug => {
 };
 
 type ReactSurfaceOptions = {
-  logStore: IdbLogStore;
+  logStore?: IdbLogStore;
 };
 
 export default Capability.makeModule(

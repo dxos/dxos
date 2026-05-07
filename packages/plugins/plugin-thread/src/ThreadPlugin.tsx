@@ -85,7 +85,7 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
     ],
   }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addOperationHandlerModule({ id: 'undo-mappings', activate: UndoMappings }),
+  AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
   AppPlugin.addReactRootModule({ activate: ReactRoot }),
   AppPlugin.addSchemaModule({
     schema: [AnchoredTo.AnchoredTo, Channel.Channel, Message.Message, Thread.Thread],

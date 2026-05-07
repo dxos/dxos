@@ -17,6 +17,11 @@
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
+    "#plugin": {
+      "browser": "./src/DebugPlugin.tsx",
+      "node": "./src/DebugPlugin.node.ts",
+      "default": "./src/DebugPlugin.tsx"
+    },
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
   },
@@ -101,6 +106,7 @@
     "workerize-loader": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

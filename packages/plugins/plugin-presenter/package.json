@@ -13,6 +13,11 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": {
+      "browser": "./src/PresenterPlugin.tsx",
+      "node": "./src/PresenterPlugin.node.ts",
+      "default": "./src/PresenterPlugin.tsx"
+    },
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
@@ -80,6 +85,7 @@
     "reveal.js": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

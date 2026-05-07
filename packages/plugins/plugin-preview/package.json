@@ -15,6 +15,11 @@
   "imports": {
     "#capabilities": "./src/capabilities/index.ts",
     "#meta": "./src/meta.ts",
+    "#plugin": {
+      "browser": "./src/PreviewPlugin.tsx",
+      "node": "./src/PreviewPlugin.node.ts",
+      "default": "./src/PreviewPlugin.tsx"
+    },
     "#translations": "./src/translations.ts"
   },
   "exports": {

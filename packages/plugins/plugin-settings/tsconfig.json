@@ -22,6 +22,9 @@
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../plugin-graph"
     }
   ]
 }
