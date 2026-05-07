@@ -21,7 +21,7 @@
     "#translations": "./src/translations.ts",
     "#plugin": {
       "source": "./src/ObservabilityPlugin.node.ts",
-      "types": "./src/ObservabilityPlugin.ts",
+      "types": "./src/ObservabilityPlugin.node.ts",
       "browser": "./src/ObservabilityPlugin.ts",
       "node": "./src/ObservabilityPlugin.node.ts",
       "default": "./src/ObservabilityPlugin.node.ts"
