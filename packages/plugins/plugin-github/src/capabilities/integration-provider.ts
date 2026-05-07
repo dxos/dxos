@@ -22,7 +22,7 @@ import { GitHubApi } from '../services';
  * Service-specific token-created hook for GitHub.
  *
  * Calls GitHub's `/user` to populate `accessToken.account` with the
- * authenticated user's email (falling back to login). Failures are elevated
+ * authenticated user's login (falling back to email). Failures are elevated
  * with {@link Effect.orDie}; plugin-integration logs defects from the runner
  * and continues so a failed `/user` cannot block the Integration already
  * created.
@@ -36,7 +36,7 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
       Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token: accessToken.token })),
     );
     Obj.update(accessToken, (accessToken) => {
-      accessToken.account = user.email ?? user.login;
+      accessToken.account = user.login ?? user.email;
     });
   }).pipe(Effect.orDie);
 
