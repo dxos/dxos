@@ -11,7 +11,7 @@ import { meta } from '#meta';
 
 export type DebugPluginOptions = {
   /** Shared persistent log store for capturing and downloading logs. */
-  logStore: IdbLogStore;
+  logStore?: IdbLogStore;
 };
 
 export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(

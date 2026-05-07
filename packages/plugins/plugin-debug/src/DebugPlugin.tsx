@@ -15,7 +15,7 @@ import { translations } from '#translations';
 
 export type DebugPluginOptions = {
   /** Shared persistent log store for capturing and downloading logs. */
-  logStore: IdbLogStore;
+  logStore?: IdbLogStore;
 };
 
 // TODO(wittjosiah): Factor out DevtoolsPlugin?
