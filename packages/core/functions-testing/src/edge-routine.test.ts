@@ -31,8 +31,6 @@ import { trim } from '@dxos/util';
 
 import { sync } from './testing';
 
-const ORGANIZATION_TYPENAME = 'com.example.type.organization';
-
 /**
  * Cron trigger on EDGE runs {@link AgentPrompt} for a {@link Routine} that uses the Database
  * blueprint Query tool against replicated ECHO documents.
