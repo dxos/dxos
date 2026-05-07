@@ -4,28 +4,30 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { type TraceEvent } from '@dxos/functions-runtime';
+import { Trace } from '@dxos/compute';
 
 type LogPanelProps = {
-  objects?: TraceEvent[];
+  messages?: readonly Trace.Message[];
 };
 
-export const LogPanel: FC<LogPanelProps> = ({ objects }) => {
+export const LogPanel: FC<LogPanelProps> = ({ messages }) => {
   const rows = useMemo(() => {
-    if (!objects?.length) {
+    if (!messages?.length) {
       return [];
     }
 
-    return objects.flatMap((event) =>
-      event.logs.map((log, idx) => ({
-        id: `${event.id}-${idx}`,
-        time: new Date(log.timestamp),
-        level: log.level,
-        message: log.message,
-        context: safeStringify(log.context),
-      })),
+    return messages.flatMap((message, mIdx) =>
+      message.events
+        .filter((event) => Trace.isOfType(Trace.Log, event))
+        .map((event, eIdx) => ({
+          id: `${message.id}-${mIdx}-${eIdx}`,
+          time: new Date(event.timestamp),
+          level: event.data.level,
+          message: event.data.message,
+          context: safeStringify(event.data.context),
+        })),
     );
-  }, [objects]);
+  }, [messages]);
 
   return (
     <div className='dx-container flex overflow-auto'>

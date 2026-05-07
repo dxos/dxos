@@ -11,6 +11,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { FunctionRuntimeKind } from '@dxos/protocols';
 
 /**
  * Writes ephemeral or persistent events to the trace.
@@ -185,6 +186,11 @@ export type OperationOutcome = 'success' | 'failure';
 
 /**
  * Operation invocation started.
+ *
+ * `input` and `runtime` are populated by executor integrations that know the input is
+ * safely serializable (e.g. EDGE function executors). `Process.fromOperation` does
+ * NOT auto-populate `input` because operation arguments may contain ECHO objects
+ * that fail strict schema encoding when wrapped in `Trace.Message`.
  */
 export const OperationStart = EventType('operation.start', {
   schema: Schema.Struct({
@@ -192,6 +198,10 @@ export const OperationStart = EventType('operation.start', {
     key: Schema.String,
     /** Human-readable operation name. */
     name: Schema.optional(Schema.String),
+    /** Data passed to the operation/function/workflow as an argument. */
+    input: Schema.optional(Schema.Unknown),
+    /** Runtime executing the function (set by the executor, not the operation itself). */
+    runtime: Schema.optional(FunctionRuntimeKind),
   }),
   isEphemeral: false,
 });
@@ -222,6 +232,42 @@ export const StatusUpdate = EventType('status.update', {
     message: Schema.String,
   }),
   isEphemeral: true,
+});
+
+/**
+ * Structured log entry emitted by an operation or agent step.
+ *
+ * Replaces the per-step `TraceEvent.logs[]` array from the legacy invocation-trace model:
+ * each old log entry becomes a separate `Log` event on the trace stream.
+ */
+export const Log = EventType('log', {
+  schema: Schema.Struct({
+    /** Log level (e.g. 'info', 'warn', 'error', 'debug'). */
+    level: Schema.String,
+    /** Log message. */
+    message: Schema.String,
+    /** Optional structured context attached to the log entry. */
+    context: Schema.optional(Schema.Object),
+  }),
+  isEphemeral: false,
+});
+
+/**
+ * Exception captured during operation/agent execution.
+ *
+ * Replaces the per-step `TraceEvent.exceptions[]` array from the legacy invocation-trace model:
+ * each old exception entry becomes a separate `Exception` event on the trace stream.
+ */
+export const Exception = EventType('exception', {
+  schema: Schema.Struct({
+    /** Error class name. */
+    name: Schema.String,
+    /** Error message. */
+    message: Schema.String,
+    /** Optional stack trace. */
+    stack: Schema.optional(Schema.String),
+  }),
+  isEphemeral: false,
 });
 
 /**

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { ClientService } from '@dxos/client';
 import { Operation } from '@dxos/compute';
-import { Database, Feed, Ref } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 const FunctionRef = Ref.Ref(Operation.PersistentOperation).annotations({
@@ -223,7 +223,7 @@ export const Invoke = Operation.make({
 
 const InvocationSpanSchema = Schema.Struct({
   id: Schema.String.annotations({
-    description: 'The invocation ID.',
+    description: 'The invocation ID (process id from the trace stream).',
   }),
   timestamp: Schema.Number.annotations({
     description: 'Start time of the invocation (epoch ms).',
@@ -232,13 +232,13 @@ const InvocationSpanSchema = Schema.Struct({
     description: 'Duration in milliseconds.',
   }),
   outcome: Schema.String.annotations({
-    description: 'Invocation outcome: success, failure, or pending.',
+    description: 'Invocation outcome: "success", "failure", or "pending" (no end event observed yet).',
   }),
   input: Schema.Object.annotations({
     description: 'The input payload passed to the function.',
   }),
-  error: Schema.optional(Schema.Object).annotations({
-    description: 'Error details if the invocation failed.',
+  error: Schema.optional(Schema.String).annotations({
+    description: 'Error message if the invocation failed.',
   }),
 });
 
@@ -262,7 +262,7 @@ export const InspectInvocations = Operation.make({
       description: 'Total number of invocations found.',
     }),
   }),
-  services: [Database.Service, Feed.FeedService],
+  services: [Database.Service],
 });
 
 const DeployedFunctionSchema = Schema.Struct({
