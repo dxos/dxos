@@ -77,11 +77,12 @@ export const operationsServicesDiagnostic: DiagnosticProvider = {
         const services = operation.services ?? [];
         const unknown = services.filter((service: string) => !KNOWN_SERVICES.has(service));
         if (unknown.length > 0) {
+          const label = operation.name || operation.key || operation.id;
           issues.push({
             id: `${space.id}:${operation.id}:unknown-services`,
             severity: 'error',
-            message: `Operation "${operation.name || operation.key}" requests unknown service(s): ${unknown.join(', ')}.`,
-            subjectLabel: operation.key,
+            message: `Operation "${label}" requests unknown service(s): ${unknown.join(', ')}.`,
+            subjectLabel: operation.key ?? operation.id,
             spaceId: space.id,
           });
         }

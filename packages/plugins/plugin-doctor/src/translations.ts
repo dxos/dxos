@@ -21,6 +21,8 @@ export const translations = [
         'summary.label_zero': 'No issues found.',
         'summary.label_one': '{{total}} issue found.',
         'summary.label_other': '{{total}} issues found.',
+        'summary.failed.label_one': '{{count}} provider failed.',
+        'summary.failed.label_other': '{{count}} providers failed.',
         'result.ok.label': 'OK',
         'result.issues.label_one': '{{count}} issue',
         'result.issues.label_other': '{{count}} issues',

@@ -38,11 +38,12 @@ export const blueprintToolsDiagnostic: DiagnosticProvider = {
       for (const blueprint of blueprints) {
         const unknown = (blueprint.tools ?? []).filter((tool: string) => !knownTools.has(tool));
         if (unknown.length > 0) {
+          const label = blueprint.name || blueprint.key || blueprint.id;
           issues.push({
             id: `${space.id}:${blueprint.id}:unknown-tools`,
             severity: 'warning',
-            message: `Blueprint "${blueprint.name || blueprint.key}" references unknown tool(s): ${unknown.join(', ')}.`,
-            subjectLabel: blueprint.key,
+            message: `Blueprint "${label}" references unknown tool(s): ${unknown.join(', ')}.`,
+            subjectLabel: blueprint.key ?? blueprint.id,
             spaceId: space.id,
           });
         }

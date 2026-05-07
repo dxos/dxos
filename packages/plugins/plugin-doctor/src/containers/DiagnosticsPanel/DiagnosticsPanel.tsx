@@ -50,20 +50,33 @@ export const DiagnosticsPanel = () => {
     const controller = new AbortController();
     abortRef.current = controller;
     setRunState({ status: 'running', current: 0, total: sortedProviders.length });
-    const results = await runDiagnostics({
-      client,
-      capabilities: manager.capabilities,
-      providers: sortedProviders,
-      signal: controller.signal,
-      onProviderStart: (provider, index, total) => {
-        setRunState({ status: 'running', current: index, total, providerLabel: t(provider.label) });
-      },
-      onProviderComplete: (_, index, total) => {
-        setRunState({ status: 'running', current: index + 1, total });
-      },
-    });
-    abortRef.current = undefined;
-    setRunState({ status: 'done', results });
+    try {
+      const results = await runDiagnostics({
+        client,
+        capabilities: manager.capabilities,
+        providers: sortedProviders,
+        signal: controller.signal,
+        onProviderStart: (provider, index, total) => {
+          if (controller.signal.aborted) {
+            return;
+          }
+          setRunState({ status: 'running', current: index, total, providerLabel: t(provider.label) });
+        },
+        onProviderComplete: (_, index, total) => {
+          if (controller.signal.aborted) {
+            return;
+          }
+          setRunState({ status: 'running', current: index + 1, total });
+        },
+      });
+      if (!controller.signal.aborted) {
+        setRunState({ status: 'done', results });
+      }
+    } finally {
+      if (abortRef.current === controller) {
+        abortRef.current = undefined;
+      }
+    }
   }, [client, manager, sortedProviders, t]);
 
   const handleCancel = useCallback(() => {
@@ -137,10 +150,14 @@ const RunProgress = ({
 
 const RunSummary = ({ results, t }: { results: readonly DiagnosticRunResult[]; t: Translator }) => {
   const totalIssues = results.reduce((sum, result) => sum + result.issues.length, 0);
+  const failedProviders = results.filter((result) => result.error != null).length;
   return (
     <div className='flex flex-col gap-3'>
       <div className='flex items-center gap-2 text-sm'>
         <span className='font-medium'>{t('summary.label', { total: totalIssues })}</span>
+        {failedProviders > 0 && (
+          <span className='text-rose-600'>{t('summary.failed.label', { count: failedProviders })}</span>
+        )}
       </div>
       {results.map((result) => (
         <ProviderResult key={result.providerId} result={result} t={t} />

@@ -30,6 +30,9 @@ export const schemaDiagnostic: DiagnosticProvider = {
       reportProgress(space.id);
       const objects = await queryAllObjects(space);
       for (const obj of objects) {
+        if (signal.aborted) {
+          break;
+        }
         const schema = Obj.getSchema(obj);
         if (!schema) {
           issues.push({

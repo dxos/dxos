@@ -30,8 +30,11 @@ export const danglingRefsDiagnostic: DiagnosticProvider = {
         if (signal.aborted) {
           break;
         }
-        const refs = collectRefs(obj as unknown as Record<string, unknown>);
+        const refs = collectRefs(obj);
         for (const { path, ref } of refs) {
+          if (signal.aborted) {
+            break;
+          }
           try {
             const target = await ref.tryLoad();
             if (!target) {
@@ -65,6 +68,7 @@ type CollectedRef = { readonly path: readonly string[]; readonly ref: Ref.Unknow
 
 const collectRefs = (root: unknown): CollectedRef[] => {
   const collected: CollectedRef[] = [];
+  const visited = new WeakSet<object>();
   const visit = (value: unknown, path: readonly string[]) => {
     if (value == null) {
       return;
@@ -73,19 +77,24 @@ const collectRefs = (root: unknown): CollectedRef[] => {
       collected.push({ path, ref: value });
       return;
     }
+    if (typeof value !== 'object') {
+      return;
+    }
+    if (visited.has(value)) {
+      return;
+    }
+    visited.add(value);
     if (Array.isArray(value)) {
       for (let index = 0; index < value.length; index++) {
         visit(value[index], [...path, String(index)]);
       }
       return;
     }
-    if (typeof value === 'object') {
-      for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
-        if (key === 'id') {
-          continue;
-        }
-        visit(nested, [...path, key]);
+    for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+      if (key === 'id') {
+        continue;
       }
+      visit(nested, [...path, key]);
     }
   };
   visit(root, []);
