@@ -15,8 +15,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/SpotlightPlugin.ts",
-      "types": "./src/SpotlightPlugin.ts",
       "browser": "./src/SpotlightPlugin.ts",
       "default": "./src/SpotlightPlugin.ts"
     },

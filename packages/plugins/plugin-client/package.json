@@ -24,8 +24,6 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#plugin": {
-      "source": "./src/ClientPlugin.ts",
-      "types": "./src/ClientPlugin.ts",
       "browser": "./src/ClientPlugin.ts",
       "node": "./src/ClientPlugin.node.ts",
       "default": "./src/ClientPlugin.ts"

@@ -19,8 +19,6 @@
     "#hooks": "./src/hooks/index.ts",
     "#meta": "./src/meta.ts",
     "#plugin": {
-      "source": "./src/PipelinePlugin.tsx",
-      "types": "./src/PipelinePlugin.tsx",
       "browser": "./src/PipelinePlugin.tsx",
       "node": "./src/PipelinePlugin.node.ts",
       "default": "./src/PipelinePlugin.tsx"

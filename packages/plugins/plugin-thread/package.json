@@ -21,8 +21,6 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#plugin": {
-      "source": "./src/ThreadPlugin.tsx",
-      "types": "./src/ThreadPlugin.tsx",
       "browser": "./src/ThreadPlugin.tsx",
       "node": "./src/ThreadPlugin.node.ts",
       "default": "./src/ThreadPlugin.tsx"

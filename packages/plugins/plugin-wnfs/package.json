@@ -18,8 +18,6 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#plugin": {
-      "source": "./src/WnfsPlugin.tsx",
-      "types": "./src/WnfsPlugin.tsx",
       "browser": "./src/WnfsPlugin.tsx",
       "node": "./src/WnfsPlugin.node.ts",
       "default": "./src/WnfsPlugin.tsx"

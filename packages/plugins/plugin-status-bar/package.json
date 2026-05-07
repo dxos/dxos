@@ -14,8 +14,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/StatusBarPlugin.ts",
-      "types": "./src/StatusBarPlugin.ts",
       "browser": "./src/StatusBarPlugin.ts",
       "default": "./src/StatusBarPlugin.ts"
     },

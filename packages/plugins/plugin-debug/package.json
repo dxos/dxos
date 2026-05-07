@@ -18,8 +18,6 @@
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
     "#plugin": {
-      "source": "./src/DebugPlugin.tsx",
-      "types": "./src/DebugPlugin.tsx",
       "browser": "./src/DebugPlugin.tsx",
       "node": "./src/DebugPlugin.node.ts",
       "default": "./src/DebugPlugin.tsx"

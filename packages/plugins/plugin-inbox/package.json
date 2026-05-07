@@ -26,8 +26,6 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#plugin": {
-      "source": "./src/InboxPlugin.tsx",
-      "types": "./src/InboxPlugin.tsx",
       "browser": "./src/InboxPlugin.tsx",
       "node": "./src/InboxPlugin.node.ts",
       "default": "./src/InboxPlugin.tsx"

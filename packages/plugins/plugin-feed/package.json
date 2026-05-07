@@ -15,8 +15,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/FeedPlugin.tsx",
-      "types": "./src/FeedPlugin.tsx",
       "browser": "./src/FeedPlugin.tsx",
       "default": "./src/FeedPlugin.tsx"
     },

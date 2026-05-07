@@ -14,8 +14,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/TransformerPlugin.tsx",
-      "types": "./src/TransformerPlugin.tsx",
       "browser": "./src/TransformerPlugin.tsx",
       "default": "./src/TransformerPlugin.tsx"
     },

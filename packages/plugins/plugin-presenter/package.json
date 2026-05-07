@@ -14,8 +14,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/PresenterPlugin.tsx",
-      "types": "./src/PresenterPlugin.tsx",
       "browser": "./src/PresenterPlugin.tsx",
       "node": "./src/PresenterPlugin.node.ts",
       "default": "./src/PresenterPlugin.tsx"

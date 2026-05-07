@@ -21,8 +21,6 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#plugin": {
-      "source": "./src/ScriptPlugin.tsx",
-      "types": "./src/ScriptPlugin.tsx",
       "browser": "./src/ScriptPlugin.tsx",
       "node": "./src/ScriptPlugin.node.ts",
       "default": "./src/ScriptPlugin.tsx"

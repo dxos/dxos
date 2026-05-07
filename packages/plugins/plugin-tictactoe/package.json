@@ -15,8 +15,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/TicTacToePlugin.tsx",
-      "types": "./src/TicTacToePlugin.tsx",
       "browser": "./src/TicTacToePlugin.tsx",
       "default": "./src/TicTacToePlugin.tsx"
     },

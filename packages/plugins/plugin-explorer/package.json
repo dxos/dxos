@@ -14,8 +14,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/ExplorerPlugin.tsx",
-      "types": "./src/ExplorerPlugin.tsx",
       "browser": "./src/ExplorerPlugin.tsx",
       "default": "./src/ExplorerPlugin.tsx"
     },

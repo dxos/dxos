@@ -14,8 +14,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/DeckPlugin.ts",
-      "types": "./src/DeckPlugin.ts",
       "browser": "./src/DeckPlugin.ts",
       "node": "./src/DeckPlugin.node.ts",
       "default": "./src/DeckPlugin.ts"

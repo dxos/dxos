@@ -14,8 +14,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/NavTreePlugin.tsx",
-      "types": "./src/NavTreePlugin.tsx",
       "browser": "./src/NavTreePlugin.tsx",
       "node": "./src/NavTreePlugin.node.ts",
       "default": "./src/NavTreePlugin.tsx"

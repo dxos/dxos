@@ -14,8 +14,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/MapPlugin.tsx",
-      "types": "./src/MapPlugin.tsx",
       "browser": "./src/MapPlugin.tsx",
       "node": "./src/MapPlugin.node.ts",
       "default": "./src/MapPlugin.tsx"

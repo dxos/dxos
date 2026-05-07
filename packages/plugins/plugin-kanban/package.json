@@ -21,8 +21,6 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#plugin": {
-      "source": "./src/KanbanPlugin.tsx",
-      "types": "./src/KanbanPlugin.tsx",
       "browser": "./src/KanbanPlugin.tsx",
       "node": "./src/KanbanPlugin.node.ts",
       "default": "./src/KanbanPlugin.tsx"

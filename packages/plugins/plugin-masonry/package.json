@@ -14,8 +14,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/MasonryPlugin.tsx",
-      "types": "./src/MasonryPlugin.tsx",
       "browser": "./src/MasonryPlugin.tsx",
       "default": "./src/MasonryPlugin.tsx"
     },

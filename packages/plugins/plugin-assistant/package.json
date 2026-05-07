@@ -21,8 +21,6 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#plugin": {
-      "source": "./src/AssistantPlugin.tsx",
-      "types": "./src/AssistantPlugin.tsx",
       "browser": "./src/AssistantPlugin.tsx",
       "node": "./src/AssistantPlugin.node.ts",
       "default": "./src/AssistantPlugin.tsx"

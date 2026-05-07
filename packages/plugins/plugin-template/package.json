@@ -14,8 +14,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/TemplatePlugin.tsx",
-      "types": "./src/TemplatePlugin.tsx",
       "browser": "./src/TemplatePlugin.tsx",
       "default": "./src/TemplatePlugin.tsx"
     },

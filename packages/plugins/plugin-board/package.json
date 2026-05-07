@@ -14,8 +14,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/BoardPlugin.tsx",
-      "types": "./src/BoardPlugin.tsx",
       "browser": "./src/BoardPlugin.tsx",
       "default": "./src/BoardPlugin.tsx"
     },

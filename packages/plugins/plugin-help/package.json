@@ -14,8 +14,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/HelpPlugin.tsx",
-      "types": "./src/HelpPlugin.tsx",
       "browser": "./src/HelpPlugin.tsx",
       "default": "./src/HelpPlugin.tsx"
     },

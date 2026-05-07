@@ -16,8 +16,6 @@
     "#capabilities": "./src/capabilities/index.ts",
     "#meta": "./src/meta.ts",
     "#plugin": {
-      "source": "./src/PreviewPlugin.tsx",
-      "types": "./src/PreviewPlugin.tsx",
       "browser": "./src/PreviewPlugin.tsx",
       "node": "./src/PreviewPlugin.node.ts",
       "default": "./src/PreviewPlugin.tsx"

@@ -20,8 +20,6 @@
     "#operations": "./src/operations/index.ts",
     "#translations": "./src/translations.ts",
     "#plugin": {
-      "source": "./src/ObservabilityPlugin.ts",
-      "types": "./src/ObservabilityPlugin.ts",
       "browser": "./src/ObservabilityPlugin.ts",
       "node": "./src/ObservabilityPlugin.node.ts",
       "default": "./src/ObservabilityPlugin.ts"

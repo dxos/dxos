@@ -15,8 +15,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/SidekickPlugin.tsx",
-      "types": "./src/SidekickPlugin.tsx",
       "browser": "./src/SidekickPlugin.tsx",
       "default": "./src/SidekickPlugin.tsx"
     },

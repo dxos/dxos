@@ -14,8 +14,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/AttentionPlugin.ts",
-      "types": "./src/AttentionPlugin.ts",
       "browser": "./src/AttentionPlugin.ts",
       "default": "./src/AttentionPlugin.ts"
     },

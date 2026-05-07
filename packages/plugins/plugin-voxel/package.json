@@ -14,8 +14,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/VoxelPlugin.tsx",
-      "types": "./src/VoxelPlugin.tsx",
       "browser": "./src/VoxelPlugin.tsx",
       "default": "./src/VoxelPlugin.tsx"
     },

@@ -15,8 +15,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/NativeFilesystemPlugin.tsx",
-      "types": "./src/NativeFilesystemPlugin.tsx",
       "browser": "./src/NativeFilesystemPlugin.tsx",
       "default": "./src/NativeFilesystemPlugin.tsx"
     },

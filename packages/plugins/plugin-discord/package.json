@@ -15,8 +15,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/DiscordPlugin.tsx",
-      "types": "./src/DiscordPlugin.tsx",
       "browser": "./src/DiscordPlugin.tsx",
       "default": "./src/DiscordPlugin.tsx"
     },

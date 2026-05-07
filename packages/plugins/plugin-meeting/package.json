@@ -13,8 +13,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/MeetingPlugin.ts",
-      "types": "./src/MeetingPlugin.ts",
       "browser": "./src/MeetingPlugin.ts",
       "default": "./src/MeetingPlugin.ts"
     },

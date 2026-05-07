@@ -14,8 +14,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/GraphPlugin.ts",
-      "types": "./src/GraphPlugin.ts",
       "browser": "./src/GraphPlugin.ts",
       "default": "./src/GraphPlugin.ts"
     },

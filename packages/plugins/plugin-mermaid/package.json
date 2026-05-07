@@ -14,8 +14,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/MermaidPlugin.tsx",
-      "types": "./src/MermaidPlugin.tsx",
       "browser": "./src/MermaidPlugin.tsx",
       "default": "./src/MermaidPlugin.tsx"
     },

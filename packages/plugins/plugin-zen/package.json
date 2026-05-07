@@ -15,8 +15,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/ZenPlugin.tsx",
-      "types": "./src/ZenPlugin.tsx",
       "browser": "./src/ZenPlugin.tsx",
       "default": "./src/ZenPlugin.tsx"
     },

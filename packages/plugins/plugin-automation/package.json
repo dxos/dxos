@@ -25,8 +25,6 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#plugin": {
-      "source": "./src/AutomationPlugin.tsx",
-      "types": "./src/AutomationPlugin.tsx",
       "browser": "./src/AutomationPlugin.tsx",
       "node": "./src/AutomationPlugin.node.ts",
       "default": "./src/AutomationPlugin.tsx"

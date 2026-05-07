@@ -14,8 +14,6 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/DailySummaryPlugin.tsx",
-      "types": "./src/DailySummaryPlugin.tsx",
       "browser": "./src/DailySummaryPlugin.tsx",
       "default": "./src/DailySummaryPlugin.tsx"
     },
