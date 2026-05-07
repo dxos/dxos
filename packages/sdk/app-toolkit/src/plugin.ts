@@ -178,6 +178,17 @@ export namespace AppPlugin {
     });
   }
 
+  export type UndoMappingsModuleOptions = Omit<PluginModuleOptions, 'id'>;
+
+  /**
+   * Creates a module that contributes undo operation mappings.
+   */
+  export function addUndoMappingsModule<T = void>(
+    options: UndoMappingsModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return addOperationHandlerModule(options);
+  }
+
   export type ReactContextModuleOptions = PluginModuleOptions;
 
   /**

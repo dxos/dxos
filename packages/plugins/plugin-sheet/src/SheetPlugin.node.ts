@@ -28,7 +28,7 @@ export const SheetPlugin = Plugin.define(meta).pipe(
     },
   }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addOperationHandlerModule({ activate: UndoMappings }),
+  AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
   AppPlugin.addSchemaModule({ schema: [Sheet.Sheet] }),
   Plugin.make,
 );

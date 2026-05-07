@@ -49,7 +49,7 @@ export const KanbanPlugin = Plugin.define(meta).pipe(
     },
   }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addOperationHandlerModule({ activate: UndoMappings }),
+  AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
   AppPlugin.addSchemaModule({ schema: [Kanban.Kanban] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
