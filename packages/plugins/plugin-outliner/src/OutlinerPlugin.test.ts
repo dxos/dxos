@@ -8,8 +8,9 @@ import { ActivationEvents } from '@dxos/app-framework';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { meta } from './meta';
 import { OutlinerPlugin } from '#plugin';
+
+import { meta } from './meta';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 

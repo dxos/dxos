@@ -12,9 +12,10 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 import { AccessToken } from '@dxos/types';
 
 import { AppGraphBuilder, OperationHandler } from '#capabilities';
-import { integration } from './cli/commands';
 import { meta } from '#meta';
 import { CreateIntegrationForm, Integration, IntegrationCoordinator } from '#types';
+
+import { integration } from './cli/commands';
 
 export const IntegrationPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({

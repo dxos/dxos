@@ -8,12 +8,12 @@ import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox';
+import { IntegrationPlugin } from '@dxos/plugin-integration';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { ObservabilityPlugin } from '@dxos/plugin-observability';
 import { RegistryPlugin } from '@dxos/plugin-registry';
 import { SamplePlugin } from '@dxos/plugin-sample';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { IntegrationPlugin } from '@dxos/plugin-integration';
 
 export type PluginConfig = {
   config?: Config;

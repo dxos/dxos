@@ -7,6 +7,7 @@ import { describe, test } from 'vitest';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { RegistryPlugin } from '#plugin';
+
 import { meta } from './meta';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;

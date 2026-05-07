@@ -8,8 +8,9 @@ import { ActivationEvents } from '@dxos/app-framework';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { meta } from './meta';
 import { SheetPlugin } from '#plugin';
+
+import { meta } from './meta';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
@@ -19,9 +20,7 @@ describe('SheetPlugin', () => {
       plugins: [ClientPlugin({}), SheetPlugin()],
     });
 
-    expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('metadata'), moduleId('schema')]),
-    );
+    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('metadata'), moduleId('schema')]));
 
     await harness.fire(ActivationEvents.SetupOperationHandler);
     expect(harness.manager.getActive()).toEqual(

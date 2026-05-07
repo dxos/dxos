@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type TreeData } from '@dxos/react-ui-list';
-
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { type TreeData } from '@dxos/react-ui-list';
 
 import { AppGraphBuilder, OperationHandler } from '#capabilities';
 import { meta } from '#meta';

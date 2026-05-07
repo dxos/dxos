@@ -9,8 +9,9 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { meta } from './meta';
 import { TicTacToePlugin } from '#plugin';
+
+import { meta } from './meta';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 

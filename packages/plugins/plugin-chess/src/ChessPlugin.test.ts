@@ -10,6 +10,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { ChessPlugin } from '#plugin';
+
 import { meta } from './meta';
 import { Print } from './operations';
 
@@ -22,9 +23,7 @@ describe('ChessPlugin', () => {
     });
 
     // Modules expected to be active after a normal startup.
-    expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('metadata'), moduleId('schema')]),
-    );
+    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('metadata'), moduleId('schema')]));
 
     // SetupArtifactDefinition is fired by AssistantPlugin, which can't be included here due to a workspace cycle.
     await harness.fire(AppActivationEvents.SetupArtifactDefinition);

@@ -8,6 +8,7 @@ import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { createTestApp } from '@dxos/app-framework/testing';
 
 import { MapPlugin } from '#plugin';
+
 import { meta } from './meta';
 
 describe('MapPlugin', () => {

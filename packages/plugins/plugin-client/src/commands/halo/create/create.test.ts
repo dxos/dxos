@@ -15,6 +15,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { ObservabilityPlugin } from '@dxos/plugin-observability';
 
 import { ClientPlugin } from '#plugin';
+
 import { handler } from './create';
 
 const layer = Layer.merge(TestLayer, fromPlugins([ClientPlugin({}), OperationPlugin(), ObservabilityPlugin()]));

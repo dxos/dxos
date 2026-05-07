@@ -8,6 +8,7 @@ import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { createTestApp } from '@dxos/app-framework/testing';
 
 import { ThemePlugin } from '#plugin';
+
 import { meta } from './meta';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
