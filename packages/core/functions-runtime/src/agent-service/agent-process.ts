@@ -312,7 +312,7 @@ const ToolExecutionService = ({
                 conversationId: feed.id,
               },
             });
-            toolCallManager.beginCall(fiber.pid);
+            yield* toolCallManager.beginCall(fiber.pid);
             log('invoked operation', { operationDef, input, fiber });
 
             const awaitWithReport = fiber.await.pipe(Effect.tap(() => toolCallManager.markAsReported(fiber.pid)));
