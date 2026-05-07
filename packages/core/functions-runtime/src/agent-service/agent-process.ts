@@ -41,6 +41,16 @@ interface AgentProcessOptions {
    * Provider for space-level MCP server configs, called on each turn.
    */
   getMcpServers?: () => McpServerConfig[];
+
+  /**
+   * If true, long-running tool calls are moved to the background after `backgroundThreshold`
+   * and the agent is notified asynchronously when they complete.
+   *
+   * Currently unstable — disabled by default.
+   *
+   * @default false
+   */
+  enableToolBackgrounding?: boolean;
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
@@ -142,6 +152,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 ToolExecutionService({
                   toolCallManager,
                   feed,
+                  enableBackgrounding: options.enableToolBackgrounding ?? false,
                 }),
                 AsynchronousExectionToolkitLayer,
                 AiService.model(options.model ?? '@anthropic/claude-opus-4-6'),
@@ -189,7 +200,14 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
 interface ToolExecutionServiceOptions {
   /**
+   * If true, tool calls that exceed `backgroundThreshold` are detached and the agent is told
+   * the call is running in the background. If false, the executor always blocks on the call.
+   */
+  enableBackgrounding: boolean;
+
+  /**
    * Threshold after which the tool execution is placed in the background.
+   * Ignored when `enableBackgrounding` is false.
    */
   // TODO(dmaretskyi): Tool annotation to never run in background.
   backgroundThreshold?: Duration.Duration;
@@ -273,6 +291,7 @@ class ToolCallManager {
 }
 
 const ToolExecutionService = ({
+  enableBackgrounding,
   backgroundThreshold = Duration.seconds(1),
   toolCallManager,
   feed,
@@ -296,11 +315,15 @@ const ToolExecutionService = ({
             toolCallManager.beginCall(fiber.pid);
             log('invoked operation', { operationDef, input, fiber });
 
-            const result = yield* fiber.await.pipe(
-              Effect.tap(() => toolCallManager.markAsReported(fiber.pid)),
-              Effect.timeout(backgroundThreshold),
-              Effect.catchTag('TimeoutException', () => Effect.succeed(toolIsRunningInBackgroundResponse(fiber.pid))),
-            );
+            const awaitWithReport = fiber.await.pipe(Effect.tap(() => toolCallManager.markAsReported(fiber.pid)));
+            const result = enableBackgrounding
+              ? yield* awaitWithReport.pipe(
+                  Effect.timeout(backgroundThreshold),
+                  Effect.catchTag('TimeoutException', () =>
+                    Effect.succeed(toolIsRunningInBackgroundResponse(fiber.pid)),
+                  ),
+                )
+              : yield* awaitWithReport;
             log('result', { result });
             return result;
           }),
