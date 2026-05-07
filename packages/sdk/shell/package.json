@@ -65,7 +65,9 @@
     "date-fns": "catalog:",
     "emoji-mart": "catalog:",
     "react-qr-rounded": "catalog:",
+    "scheduler": "catalog:",
     "url-join": "catalog:",
+    "use-sync-external-store": "catalog:",
     "xstate": "catalog:"
   },
   "devDependencies": {

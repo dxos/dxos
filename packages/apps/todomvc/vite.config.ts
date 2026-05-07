@@ -22,6 +22,13 @@ export default defineConfig({
     // Keeping it as a normal node_modules module preserves import.meta.url-based wasm resolution.
     exclude: ['@effect/sql-sqlite-wasm', '@dxos/wa-sqlite'],
   },
+  resolve: {
+    // Ensure a single React instance across the main page and the shell.html
+    // iframe (the latter loads the prebuilt @dxos/shell bundle which inlines
+    // its own React for rolldown CJS-interop reasons). Without dedupe, hooks
+    // throw "Cannot read properties of null (reading 'useState')".
+    dedupe: ['react', 'react-dom'],
+  },
   oxc: {
     target: [...browserTargets],
   },

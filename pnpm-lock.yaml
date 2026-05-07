@@ -1614,6 +1614,9 @@ catalogs:
     safe-compare:
       specifier: ~1.1.4
       version: 1.1.4
+    scheduler:
+      specifier: ^0.27.0
+      version: 0.27.0
     seedrandom:
       specifier: ^3.0.5
       version: 3.0.5
@@ -1758,6 +1761,9 @@ catalogs:
     use-resize-observer:
       specifier: ^9.1.0
       version: 9.1.0
+    use-sync-external-store:
+      specifier: ^1.6.0
+      version: 1.6.0
     util:
       specifier: ^0.12.4
       version: 0.12.5
@@ -16497,9 +16503,15 @@ importers:
       react-qr-rounded:
         specifier: 'catalog:'
         version: 1.0.0(react@19.2.3)
+      scheduler:
+        specifier: 'catalog:'
+        version: 0.27.0
       url-join:
         specifier: 'catalog:'
         version: 5.0.0
+      use-sync-external-store:
+        specifier: 'catalog:'
+        version: 1.6.0(react@19.2.3)
       xstate:
         specifier: 'catalog:'
         version: 4.37.1
