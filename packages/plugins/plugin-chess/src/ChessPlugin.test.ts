@@ -4,6 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { ActivationEvents } from '@dxos/app-framework';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
@@ -15,19 +17,21 @@ const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
 describe('ChessPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    // Startup cascades: GraphPlugin fires SetupAppGraph + SetupMetadata; ClientPlugin fires SetupSchema.
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin({}), ChessPlugin()],
     });
 
-    // metadata activates on SetupMetadata (fired by GraphPlugin during Startup).
-    expect(harness.manager.getActive()).toContain(moduleId('metadata'));
+    // Modules expected to be active after a normal startup.
+    expect(harness.manager.getActive()).toEqual(
+      expect.arrayContaining([moduleId('metadata'), moduleId('schema'), moduleId('ReactSurface')]),
+    );
 
-    // schema activates on SetupSchema — cascades automatically from Startup via ClientPlugin.
-    expect(harness.manager.getActive()).toContain(moduleId('schema'));
+    // SetupArtifactDefinition is fired by AssistantPlugin, which can't be included here due to a workspace cycle.
+    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
+    expect(harness.manager.getActive()).toContain(moduleId('BlueprintDefinition'));
 
-    // OperationHandler activates on SetupOperationHandler — fired automatically by OperationPlugin
-    // during Startup, so it is already active.
+    // Operation handlers are not loaded on startup — SetupOperationHandler fires lazily when an operation is invoked.
+    await harness.fire(ActivationEvents.SetupOperationHandler);
     expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
   });
 
