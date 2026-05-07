@@ -75,11 +75,9 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
     fullyParallel: true,
     // Fail the build on CI if you accidentally left test.only in the source code.
     forbidOnly: !!process.env.CI,
-    // Retry on CI only.
-    // TODO(wittjosiah): Trunk suggests not retrying for better flaky test detection.
-    //   This is forgone for now as its unclear why some tests are flaky primarily on CI.
-    //   For the time being, a test is considered flaky if it can't pass within 2 retries.
-    retries: process.env.CI ? 2 : 0,
+    // No retries — Trunk recommends running each test exactly once so flakes surface
+    // (and are quarantined) rather than being masked by retries.
+    retries: 0,
     // Opt out of parallel tests on CI.
     workers: process.env.CI ? 1 : 4,
     // Reporter to use. See https://playwright.dev/docs/test-reporters.
