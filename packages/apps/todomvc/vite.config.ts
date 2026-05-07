@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import ReactPlugin from '@vitejs/plugin-react-swc';
+import ReactPlugin from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
@@ -53,22 +53,11 @@ export default defineConfig({
         main: resolve(__dirname, './index.html'),
         shell: resolve(__dirname, './shell.html'),
       },
-      output: {
-        // Rolldown (used by Vite 8) requires `manualChunks` to be a function — the
-        // record form that worked in Rollup is rejected at runtime.
-        manualChunks: (id: string) => {
-          if (
-            id.includes('/node_modules/react/') ||
-            id.includes('/node_modules/react-dom/') ||
-            id.includes('/node_modules/react-router-dom/')
-          ) {
-            return 'react';
-          }
-          if (id.includes('/node_modules/@dxos/react-client/')) {
-            return 'dxos';
-          }
-        },
-      },
+      // Note: the previous `manualChunks` split that pulled react/react-dom/
+      // react-router-dom into a `react` chunk caused rolldown to emit
+      // `require("react")` calls in the shell entry (cross-chunk CJS interop),
+      // which fail at runtime in the browser. Letting rolldown chunk
+      // automatically keeps everything ESM.
     },
   },
   worker: {
@@ -81,7 +70,7 @@ export default defineConfig({
       env: ['DX_VAULT'],
     }),
     WasmPlugin(),
-    ReactPlugin({ tsDecorators: true }),
+    ReactPlugin(),
     // https://www.bundle-buddy.com/rollup
     {
       name: 'bundle-buddy',

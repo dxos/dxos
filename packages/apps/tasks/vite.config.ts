@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import ReactPlugin from '@vitejs/plugin-react-swc';
+import ReactPlugin from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import WasmPlugin from 'vite-plugin-wasm';
@@ -46,6 +46,6 @@ export default defineConfig({
       root: __dirname,
     }),
     WasmPlugin(),
-    ReactPlugin({ tsDecorators: true }),
+    ReactPlugin(),
   ],
 });
