@@ -92,6 +92,13 @@
 @source inline("border-{info,success,warning,error}-border");
 
 /**
+ * Force-emit tokens consumed by web components / .pcss files outside the
+ * Tailwind source-scan graph (e.g. lit-grid's dx-grid.pcss uses
+ * var(--color-grid-line)).
+ */
+@source inline("bg-grid-{surface,highlight,comment,comment-active,hover-overlay,selection-overlay,line,focus-indicator}");
+
+/**
  * Plugins must come after all imports.
  */
 @plugin '@tailwindcss/forms';
