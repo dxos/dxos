@@ -28,10 +28,19 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/assistant"
+    },
+    {
       "path": "../../core/compute"
     },
     {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/functions"
     },
     {
       "path": "../../sdk/app-framework"

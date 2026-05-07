@@ -73,12 +73,15 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/functions": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/react-client": "workspace:*",

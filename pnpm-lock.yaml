@@ -9437,6 +9437,9 @@ importers:
 
   packages/plugins/plugin-doctor:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -9446,6 +9449,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/assistant
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -9455,6 +9461,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log

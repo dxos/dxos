@@ -2,8 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Operation } from '@dxos/compute';
+import { AiService } from '@dxos/ai';
+import { AiContextService, AiSessionService } from '@dxos/assistant';
+import { Blueprint, Credential, Operation, StorageService, Trace } from '@dxos/compute';
+import { Database, Feed } from '@dxos/echo';
 import { Filter } from '@dxos/echo';
+import { FunctionInvocationService, QueueService } from '@dxos/functions';
 
 import { meta } from '#meta';
 
@@ -11,51 +15,27 @@ import { getReadySpaces } from '../helpers';
 import { type DiagnosticIssue, type DiagnosticProvider } from '../types';
 
 /**
- * Whitelist of services known to the runtime. Keys are `Context.Tag` identifiers.
- * Operations that declare other services are flagged.
+ * Services known to be available to operations at invocation time.
+ * Mirrors the `FunctionServices` union plus a few extras commonly declared in
+ * operations across the repo. Keys are derived from the canonical `Context.Tag`
+ * definitions so refactors of those tags propagate here automatically.
  */
-export const KNOWN_SERVICES: ReadonlySet<string> = new Set([
-  '@dxos/ai/AiContextService',
-  '@dxos/ai/AiModelResolver',
-  '@dxos/ai/AiService',
-  '@dxos/ai/ChatCompletionsClient',
-  '@dxos/ai/OpaqueToolkit.OpaqueToolkitProvider',
-  '@dxos/ai/ToolExecutionService',
-  '@dxos/ai/ToolFormatter',
-  '@dxos/ai/ToolResolverService',
-  '@dxos/app-framework/CapabilityManager',
-  '@dxos/assistant/AiContextService',
-  '@dxos/assistant/AiSessionService',
-  '@dxos/assistant/ArtifactDiffResolver',
-  '@dxos/assistant/FunctionToolAnnotation',
-  '@dxos/assistant/GraphWriterSchema',
-  '@dxos/blueprints/RegistryService',
-  '@dxos/conductor/ComputeNodeContext',
-  '@dxos/echo/Database/Service',
-  '@dxos/echo/Feed/FeedService',
-  '@dxos/functions-runtime/AgentService',
-  '@dxos/functions-runtime/FeedTraceSink',
-  '@dxos/functions-runtime/ProcessManagerService',
-  '@dxos/functions/ContextQueueService',
-  '@dxos/functions/CredentialsService',
-  '@dxos/functions/FunctionImplementationResolver',
-  '@dxos/functions/FunctionInvocationService',
-  '@dxos/functions/LocalFunctionExecutionService',
-  '@dxos/functions/ProcessMonitorService',
-  '@dxos/functions/ProcessOperationInvoker',
-  '@dxos/functions/QueueService',
-  '@dxos/functions/RemoteFunctionExecutionService',
-  '@dxos/functions/ServiceRegistry',
-  '@dxos/functions/ServiceResolver',
-  '@dxos/functions/StorageService',
-  '@dxos/functions/TraceService',
-  '@dxos/functions/TraceSink',
-  '@dxos/functions/TriggerDispatcher',
-  '@dxos/functions/TriggerStateStore',
-  '@dxos/operation/OperationHandlerProvider',
-  '@dxos/operation/OperationRegistry',
-  '@dxos/operation/Service',
-]);
+export const KNOWN_SERVICES: ReadonlySet<string> = new Set(
+  [
+    AiContextService,
+    AiService.AiService,
+    AiSessionService,
+    Blueprint.RegistryService,
+    Credential.CredentialsService,
+    Database.Service,
+    Feed.FeedService,
+    FunctionInvocationService,
+    Operation.Service,
+    QueueService,
+    StorageService.StorageService,
+    Trace.TraceService,
+  ].map((tag) => tag.key),
+);
 
 /**
  * Scan saved operations and flag any that request a service not present in the whitelist.
