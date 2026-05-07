@@ -19,3 +19,5 @@ export const GitHubPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default GitHubPlugin;
