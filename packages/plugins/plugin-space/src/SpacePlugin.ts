@@ -177,7 +177,6 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     translations: [...translations, ...componentsTranslations, ...formTranslations, ...shellTranslations],
   }),
   Plugin.addModule({
-    id: 'SpaceState',
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
@@ -198,7 +197,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       };
 
       return {
-        id: Capability.getModuleTag(ReactSurface) ?? 'surfaces',
+        id: Capability.getModuleTag(ReactSurface),
         activatesOn: ActivationEvents.SetupReactSurface,
         // TODO(wittjosiah): Should occur before the settings dialog is loaded when surfaces activation is more granular.
         firesBeforeActivation: [SpaceEvents.SetupSettingsPanel],
@@ -208,7 +207,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   ),
   Plugin.addModule(
     ({ shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost' }) => ({
-      id: Capability.getModuleTag(AppGraphBuilder) ?? 'app-graph-builder',
+      id: Capability.getModuleTag(AppGraphBuilder),
       activatesOn: AppActivationEvents.SetupAppGraph,
       activate: () => AppGraphBuilder({ shareableLinkOrigin }),
     }),
@@ -235,18 +234,15 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   ),
   // TODO(wittjosiah): This could probably be deferred.
   Plugin.addModule({
-    id: 'AppGraphSerializer',
     activatesOn: AppActivationEvents.AppGraphReady,
     activate: AppGraphSerializer,
   }),
   Plugin.addModule({
-    id: 'IdentityCreated',
     activatesOn: ClientEvents.IdentityCreated,
     firesAfterActivation: [SpaceEvents.PersonalSpaceReady],
     activate: IdentityCreated,
   }),
   Plugin.addModule({
-    id: 'SpacesReady',
     activatesOn: ActivationEvent.allOf(
       ActivationEvents.OperationInvokerReady,
       AppActivationEvents.LayoutReady,
@@ -258,12 +254,10 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     activate: SpacesReady,
   }),
   Plugin.addModule({
-    id: 'Migrations',
     activatesOn: ClientEvents.SetupMigration,
     activate: Migrations,
   }),
   Plugin.addModule({
-    id: 'Repair',
     activatesOn: ClientEvents.SpacesReady,
     activate: Repair,
   }),
