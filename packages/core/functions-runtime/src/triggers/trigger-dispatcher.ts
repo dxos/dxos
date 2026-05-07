@@ -190,11 +190,15 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   private _timerFiber: Fiber.Fiber<void, void> | undefined;
   private _triggers: Trigger.Trigger[] = [];
   private _scheduledTriggers = new Map<string, ScheduledTrigger>();
+  // `keepAlive` prevents the registry from disposing the atom node when no subscribers
+  // are mounted (e.g. when start/stop runs before the UI subscribes). Without it,
+  // updates written before the first subscription are dropped and the next read
+  // re-initializes to the default {enabled: false, ...}.
   private _state: Atom.Writable<TriggerDispatcherState> = Atom.make<TriggerDispatcherState>({
     enabled: false,
     invocations: [],
     errors: [],
-  });
+  }).pipe(Atom.keepAlive);
   private _maxConcurrency: number;
 
   constructor(options: TriggerDispatcherOptions) {
