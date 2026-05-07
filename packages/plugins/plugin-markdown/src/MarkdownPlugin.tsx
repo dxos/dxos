@@ -80,7 +80,6 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addTranslationsModule({ translations: [...translations, ...editorTranslations] }),
   Plugin.addModule({
-    id: 'MarkdownSettings',
     activatesOn: AppActivationEvents.SetupSettings,
     activate: MarkdownSettings,
   }),
@@ -93,13 +92,11 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
     activate: MarkdownState,
   }),
   Plugin.addModule({
-    id: 'AppGraphSerializer',
     activatesOn: AppActivationEvents.AppGraphReady,
     activate: AppGraphSerializer,
   }),
   Plugin.addModule({
     // TODO(wittjosiah): More relevant event?
-    id: 'AnchorSort',
     activatesOn: AppActivationEvents.AppGraphReady,
     activate: AnchorSort,
   }),
