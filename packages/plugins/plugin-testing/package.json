@@ -13,6 +13,12 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": {
+      "source": "./src/StorybookPlugin.ts",
+      "types": "./src/StorybookPlugin.ts",
+      "browser": "./src/StorybookPlugin.ts",
+      "default": "./src/StorybookPlugin.ts"
+    },
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#meta": "./src/meta.ts",
