@@ -36,13 +36,16 @@ export const blueprintToolsDiagnostic: DiagnosticProvider = {
       reportProgress(space.id);
       const blueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
       for (const blueprint of blueprints) {
-        const unknown = (blueprint.tools ?? []).filter((tool: string) => !knownTools.has(tool));
-        if (unknown.length > 0) {
+        if (signal.aborted) {
+          break;
+        }
+        const unknownTools = (blueprint.tools ?? []).filter((tool: string) => !knownTools.has(tool));
+        if (unknownTools.length > 0) {
           const label = blueprint.name || blueprint.key || blueprint.id;
           issues.push({
             id: `${space.id}:${blueprint.id}:unknown-tools`,
             severity: 'warning',
-            message: `Blueprint "${label}" references unknown tool(s): ${unknown.join(', ')}.`,
+            message: `Blueprint "${label}" references unknown tool(s): ${unknownTools.join(', ')}.`,
             subjectLabel: blueprint.key ?? blueprint.id,
             spaceId: space.id,
           });
