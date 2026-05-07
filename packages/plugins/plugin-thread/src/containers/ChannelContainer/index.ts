@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { ChannelChat, ChannelContainer as default } from './ChannelContainer';
+export { ChannelContainer as default } from './ChannelContainer';
