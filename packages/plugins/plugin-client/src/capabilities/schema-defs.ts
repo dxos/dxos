@@ -18,13 +18,13 @@ export default Capability.makeModule(
     const schemasAtom = yield* Capability.atom(AppCapabilities.Schema);
 
     // TODO(wittjosiah): Unregister schemas when they are disabled.
-    let previous: Type.AnyEntity[] = [];
+    let previousDxns = new Set<string>();
     const cancel = registry.subscribe(
       schemasAtom,
-      async (_schemas) => {
+      async (schemas) => {
         const seenSchemaDxns = new Set<string>();
-        const schemas: Type.AnyEntity[] = [];
-        for (const schema of _schemas.flat()) {
+        const batch: { schema: Type.AnyEntity; dxnKey: string }[] = [];
+        for (const schema of schemas.flat()) {
           const dxn = Type.getDXN(schema);
           if (!dxn) {
             log.warn('skipping schema without dxn');
@@ -38,13 +38,15 @@ export default Capability.makeModule(
           }
 
           seenSchemaDxns.add(key);
-          schemas.push(schema);
+          batch.push({ schema, dxnKey: key });
         }
 
-        // TODO(wittjosiah): Filter out schemas which the client has already registered.
-        const newSchemas = schemas.filter((schema) => !previous.includes(schema));
-        previous = schemas;
-        await client.addTypes(newSchemas);
+        const toRegister = batch.filter(({ dxnKey }) => !previousDxns.has(dxnKey));
+
+        await client.addTypes(toRegister.map(({ schema }) => schema));
+        for (const { dxnKey } of toRegister) {
+          previousDxns.add(dxnKey);
+        }
       },
       { immediate: true },
     );
