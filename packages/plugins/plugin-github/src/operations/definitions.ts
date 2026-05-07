@@ -6,18 +6,11 @@ import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
-import { Integration } from '@dxos/plugin-integration/types';
+import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/plugin-integration/types';
 
 import { meta } from '#meta';
 
 const GITHUB_OPERATION = `${meta.id}.operation`;
-
-/** Wire-shape of a `RemoteTarget` for `GetGitHubRepositories.output`. */
-const RemoteTarget = Schema.Struct({
-  id: Schema.String,
-  name: Schema.String,
-  description: Schema.String.pipe(Schema.optional),
-});
 
 /**
  * Discovery only — list GitHub repositories the integration's token can see.
@@ -34,12 +27,8 @@ export const GetGitHubRepositories = Operation.make({
     name: 'Get GitHub Repositories',
     description: 'List GitHub repositories reachable from an integration without materializing local objects.',
   },
-  input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration),
-  }),
-  output: Schema.Struct({
-    targets: Schema.Array(RemoteTarget),
-  }),
+  input: GetSyncTargetsInput,
+  output: GetSyncTargetsOutput,
 });
 
 /**
