@@ -360,12 +360,15 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
 
     // Default styling: pair `aria-selected` with `dx-selected` and add
     // `dx-hover` for the standard hover affordance. Same grammar `Row`
-    // uses (see `ui-theme/src/css/components/selected.md`). Padding
-    // (`px-3 py-1`) and the pointer cursor are baked in so callsites
-    // don't have to repeat them; callers can still append / override
-    // via `classNames`. `dx-selected` only fires when
-    // `aria-selected="true"`, which we set below from the virtual
-    // highlight — so unfocused items render plain.
+    // uses (see `ui-theme/src/css/components/selected.md`). Horizontal
+    // padding follows `--gutter` so item text aligns with sibling
+    // `Column.Center` content (input, status row); falls back to
+    // `0.75rem` (≈ `px-3`) when not nested under `Column.Root`. Vertical
+    // padding and the pointer cursor are baked in so callsites don't
+    // have to repeat them; callers can still append / override via
+    // `classNames`. `dx-selected` only fires when `aria-selected="true"`,
+    // which we set below from the virtual highlight — so unfocused
+    // items render plain.
     return (
       <Comp
         {...props}
@@ -389,7 +392,7 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
         // tabIndex={0}). See header comment.
         tabIndex={-1}
         className={mx(
-          'dx-hover dx-selected px-3 py-1 cursor-pointer select-none',
+          'dx-hover dx-selected px-[var(--gutter,0.75rem)] py-1 cursor-pointer select-none',
           disabled && 'opacity-50 cursor-not-allowed',
           classNames,
         )}
