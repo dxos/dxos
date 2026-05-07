@@ -6,8 +6,9 @@ import { describe, test } from 'vitest';
 
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
+import { ObservabilityPlugin } from '#plugin';
+
 import { meta } from './meta';
-import { ObservabilityPlugin } from './ObservabilityPlugin.node';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
