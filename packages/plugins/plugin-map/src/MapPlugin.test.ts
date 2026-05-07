@@ -21,12 +21,7 @@ describe('MapPlugin', () => {
     });
 
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([
-        moduleId('AppGraphBuilder'),
-        moduleId('metadata'),
-        moduleId('schema'),
-        moduleId('ReactSurface'),
-      ]),
+      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('metadata'), moduleId('schema')]),
     );
 
     await harness.fire(AppActivationEvents.SetupArtifactDefinition);

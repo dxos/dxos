@@ -14,10 +14,11 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/SheetPlugin.tsx",
+      "source": "./src/SheetPlugin.node.ts",
       "types": "./src/SheetPlugin.tsx",
       "browser": "./src/SheetPlugin.tsx",
-      "default": "./src/SheetPlugin.tsx"
+      "node": "./src/SheetPlugin.node.ts",
+      "default": "./src/SheetPlugin.node.ts"
     },
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",

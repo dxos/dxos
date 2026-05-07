@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { meta } from './meta';
@@ -18,9 +17,6 @@ describe('PresenterPlugin', () => {
       plugins: [PresenterPlugin()],
     });
 
-    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('ReactSurface')]));
-
-    await harness.fire(AppActivationEvents.SetupSettings);
-    expect(harness.manager.getActive()).toContain(moduleId('PresenterSettings'));
-  }, 20_000);
+    expect(harness.manager.getActive()).toContain(moduleId('AppGraphBuilder'));
+  });
 });

@@ -20,12 +20,12 @@ describe('SheetPlugin', () => {
     });
 
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('metadata'), moduleId('schema'), moduleId('ReactSurface')]),
+      expect.arrayContaining([moduleId('metadata'), moduleId('schema')]),
     );
 
     await harness.fire(ActivationEvents.SetupOperationHandler);
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('OperationHandler'), moduleId('undo-mappings')]),
+      expect.arrayContaining([moduleId('OperationHandler'), moduleId('UndoMappings')]),
     );
   });
 });

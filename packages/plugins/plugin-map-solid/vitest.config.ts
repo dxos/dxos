@@ -9,6 +9,5 @@ import { createConfig } from '../../../vitest.base.config';
 
 export default createConfig({
   dirname: typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url)),
-  // jsdom environment required: surface.tsx imports MapSurface which registers a custom element.
-  node: { environment: 'jsdom' },
+  node: true,
 });

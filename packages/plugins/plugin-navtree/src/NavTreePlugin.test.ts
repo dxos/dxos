@@ -19,7 +19,7 @@ describe('NavTreePlugin', () => {
     });
 
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('metadata'), moduleId('ReactSurface')]),
+      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('metadata')]),
     );
 
     await harness.fire(ActivationEvents.SetupOperationHandler);
