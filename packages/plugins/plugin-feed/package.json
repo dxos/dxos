@@ -16,6 +16,7 @@
   "imports": {
     "#plugin": {
       "browser": "./src/FeedPlugin.tsx",
+      "node": "./src/FeedPlugin.tsx",
       "default": "./src/FeedPlugin.tsx"
     },
     "#blueprints": "./src/blueprints/index.ts",

@@ -16,6 +16,7 @@
   "imports": {
     "#plugin": {
       "browser": "./src/TicTacToePlugin.tsx",
+      "node": "./src/TicTacToePlugin.tsx",
       "default": "./src/TicTacToePlugin.tsx"
     },
     "#blueprints": "./src/blueprints/index.ts",

@@ -16,6 +16,7 @@
   "imports": {
     "#plugin": {
       "browser": "./src/SpotlightPlugin.ts",
+      "node": "./src/SpotlightPlugin.ts",
       "default": "./src/SpotlightPlugin.ts"
     },
     "#capabilities": "./src/capabilities/index.ts",

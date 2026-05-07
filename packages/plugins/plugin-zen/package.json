@@ -16,6 +16,7 @@
   "imports": {
     "#plugin": {
       "browser": "./src/ZenPlugin.tsx",
+      "node": "./src/ZenPlugin.tsx",
       "default": "./src/ZenPlugin.tsx"
     },
     "#capabilities": "./src/capabilities/index.ts",

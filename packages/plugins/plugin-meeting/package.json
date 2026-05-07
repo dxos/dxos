@@ -14,6 +14,7 @@
   "imports": {
     "#plugin": {
       "browser": "./src/MeetingPlugin.ts",
+      "node": "./src/MeetingPlugin.ts",
       "default": "./src/MeetingPlugin.ts"
     },
     "#capabilities": "./src/capabilities/index.ts",
