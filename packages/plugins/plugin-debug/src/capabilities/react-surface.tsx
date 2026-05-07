@@ -58,6 +58,9 @@ import {
 import { meta } from '#meta';
 import { DebugCapabilities, type Settings, Devtools } from '#types';
 
+// TODO(burdon): Move to config.
+const MCP_SERVER_URL = 'https://introspect-service-labs.dxos.workers.dev/mcp';
+
 type SpaceDebug = {
   type: string;
   space: Space;
@@ -145,8 +148,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'tools-explorer',
         filter: AppSurface.literal(AppSurface.Article, Devtools.ToolsExplorer),
-        // TODO(burdon): Move to config.
-        component: () => <ToolsExplorer serverUrl='https://introspect-service-labs.dxos.workers.dev/mcp' />,
+        component: () => <ToolsExplorer serverUrl={MCP_SERVER_URL} />,
       }),
       Surface.create({
         id: 'wireframe',
