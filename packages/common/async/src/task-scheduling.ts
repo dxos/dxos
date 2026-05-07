@@ -157,7 +157,7 @@ export class AsyncTask {
    * Schedule the task to run and wait for it to finish.
    */
   async runBlocking(): Promise<void> {
-    if (this.#ctx?.disposed) {
+    if (!this.#ctx || this.#ctx.disposed) {
       throw new ContextDisposedError();
     }
 
