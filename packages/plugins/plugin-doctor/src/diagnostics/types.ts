@@ -4,6 +4,7 @@
 
 import type { CapabilityManager } from '@dxos/app-framework';
 import type { Client } from '@dxos/client';
+import type { Label } from '@dxos/react-ui';
 
 export type DiagnosticSeverity = 'info' | 'warning' | 'error';
 
@@ -36,9 +37,9 @@ export type DiagnosticContext = {
  */
 export type DiagnosticProvider = {
   readonly id: string;
-  /** i18n key to display in the UI. Resolved against the doctor plugin's translations namespace. */
-  readonly label: string;
-  readonly description?: string;
+  /** i18n label, either a key in the doctor namespace or a `[key, { ns }]` tuple from another plugin. */
+  readonly label: Label;
+  readonly description?: Label;
   readonly run: (ctx: DiagnosticContext) => Promise<DiagnosticIssue[]>;
 };
 
@@ -47,7 +48,7 @@ export type DiagnosticProvider = {
  */
 export type DiagnosticRunResult = {
   readonly providerId: string;
-  readonly label: string;
+  readonly label: Label;
   readonly issues: DiagnosticIssue[];
   readonly durationMs: number;
   /** Set when the provider itself threw. */

@@ -6,7 +6,21 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useCapabilities, usePluginManager } from '@dxos/app-framework/ui';
 import { useClient } from '@dxos/react-client';
-import { Button, Icon, Panel, ScrollArea, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  Icon,
+  List,
+  ListItem,
+  Message,
+  Panel,
+  ScrollArea,
+  Status,
+  type TFunction,
+  Tag,
+  Toolbar,
+  toLocalizedString,
+  useTranslation,
+} from '@dxos/react-ui';
 
 import {
   type DiagnosticIssue,
@@ -22,6 +36,12 @@ type RunState =
   | { readonly status: 'idle' }
   | { readonly status: 'running'; readonly current: number; readonly total: number; readonly providerLabel?: string }
   | { readonly status: 'done'; readonly results: readonly DiagnosticRunResult[] };
+
+const SEVERITY_ICON: Record<DiagnosticSeverity, string> = {
+  info: 'ph--info--regular',
+  warning: 'ph--warning--regular',
+  error: 'ph--x-circle--regular',
+};
 
 const SEVERITY_PALETTE: Record<DiagnosticSeverity, 'neutral' | 'amber' | 'rose'> = {
   info: 'neutral',
@@ -60,7 +80,12 @@ export const DiagnosticsPanel = () => {
           if (controller.signal.aborted) {
             return;
           }
-          setRunState({ status: 'running', current: index, total, providerLabel: t(provider.label) });
+          setRunState({
+            status: 'running',
+            current: index,
+            total,
+            providerLabel: toLocalizedString(provider.label, t),
+          });
         },
         onProviderComplete: (_, index, total) => {
           if (controller.signal.aborted) {
@@ -91,7 +116,7 @@ export const DiagnosticsPanel = () => {
         <Toolbar.Root>
           <Button variant='primary' onClick={handleRun} disabled={isRunning || sortedProviders.length === 0}>
             <Icon icon='ph--play--regular' size={4} />
-            <span>{t('run-diagnostics.label')}</span>
+            <span className='pis-1'>{t('run-diagnostics.label')}</span>
           </Button>
           {isRunning && (
             <Button variant='ghost' onClick={handleCancel}>
@@ -107,11 +132,9 @@ export const DiagnosticsPanel = () => {
       <Panel.Content asChild>
         <ScrollArea.Root>
           <ScrollArea.Viewport>
-            <div className='flex flex-col gap-3 p-3'>
-              {runState.status === 'idle' && <p className='text-sm text-description'>{t('idle.description')}</p>}
-              {runState.status === 'running' && <RunProgress state={runState} t={t} />}
-              {runState.status === 'done' && <RunSummary results={runState.results} t={t} />}
-            </div>
+            {runState.status === 'idle' && <p className='p-2 text-sm text-description'>{t('idle.description')}</p>}
+            {runState.status === 'running' && <RunProgress state={runState} t={t} />}
+            {runState.status === 'done' && <RunSummary results={runState.results} t={t} />}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Content>
@@ -119,46 +142,37 @@ export const DiagnosticsPanel = () => {
   );
 };
 
-type Translator = (key: string, options?: Record<string, unknown>) => string;
-
 const RunProgress = ({
   state,
   t,
 }: {
   state: { readonly current: number; readonly total: number; readonly providerLabel?: string };
-  t: Translator;
+  t: TFunction;
 }) => {
-  const percent = state.total === 0 ? 0 : Math.min(100, Math.round((state.current / state.total) * 100));
+  const progress = state.total === 0 ? 0 : state.current / state.total;
   return (
-    <div className='flex flex-col gap-2'>
-      <div className='flex items-center justify-between text-sm'>
-        <span>
-          {t('progress.label', {
-            current: state.current,
-            total: state.total,
-            label: state.providerLabel ?? '',
-          })}
-        </span>
-        <span className='text-description'>{percent}%</span>
-      </div>
-      <div className='h-1 rounded bg-neutralContainer'>
-        <div className='h-1 rounded bg-primary-500' style={{ width: `${percent}%` }} />
-      </div>
+    <div className='flex flex-col gap-2 p-2'>
+      <Status progress={progress} classNames='block' />
+      <span className='text-xs text-description'>
+        {t('progress.label', {
+          current: state.current,
+          total: state.total,
+          label: state.providerLabel ?? '',
+        })}
+      </span>
     </div>
   );
 };
 
-const RunSummary = ({ results, t }: { results: readonly DiagnosticRunResult[]; t: Translator }) => {
+const RunSummary = ({ results, t }: { results: readonly DiagnosticRunResult[]; t: TFunction }) => {
   const totalIssues = results.reduce((sum, result) => sum + result.issues.length, 0);
   const failedProviders = results.filter((result) => result.error != null).length;
   return (
-    <div className='flex flex-col gap-3'>
-      <div className='flex items-center gap-2 text-sm'>
-        <span className='font-medium'>{t('summary.label', { total: totalIssues })}</span>
-        {failedProviders > 0 && (
-          <span className='text-rose-600'>{t('summary.failed.label', { count: failedProviders })}</span>
-        )}
-      </div>
+    <div className='flex flex-col gap-2 p-2'>
+      <p className='text-sm font-medium'>{t('summary.label', { count: totalIssues })}</p>
+      {failedProviders > 0 && (
+        <p className='text-xs text-rose-600'>{t('summary.failed.label', { count: failedProviders })}</p>
+      )}
       {results.map((result) => (
         <ProviderResult key={result.providerId} result={result} t={t} />
       ))}
@@ -166,50 +180,62 @@ const RunSummary = ({ results, t }: { results: readonly DiagnosticRunResult[]; t
   );
 };
 
-const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: Translator }) => {
+const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFunction }) => {
   const status = result.error ? 'error' : result.issues.length === 0 ? 'pass' : 'issues';
+  const label = toLocalizedString(result.label, t);
   return (
-    <section className='rounded border border-separator p-2'>
-      <header className='flex items-center justify-between gap-2'>
-        <span className='text-sm font-medium'>{t(result.label)}</span>
-        <div className='flex items-center gap-2'>
-          {status === 'pass' && (
-            <Tag palette='emerald'>
-              <Icon icon='ph--check--regular' size={3} />
-              <span>{t('result.ok.label')}</span>
-            </Tag>
-          )}
-          {status === 'issues' && (
-            <Tag palette='amber'>{t('result.issues.label', { count: result.issues.length })}</Tag>
-          )}
-          {status === 'error' && <Tag palette='rose'>{t('result.error.label')}</Tag>}
-          <span className='text-xs text-description'>{result.durationMs}ms</span>
-        </div>
+    <section className='rounded border border-separator bg-baseSurface'>
+      <header className='flex items-center justify-between gap-2 p-2'>
+        <span className='text-sm font-medium truncate'>{label}</span>
+        {status === 'pass' && (
+          <Tag palette='emerald'>
+            <Icon icon='ph--check--regular' size={3} />
+          </Tag>
+        )}
+        {status === 'issues' && <Tag palette='amber'>{t('result.issues.label', { count: result.issues.length })}</Tag>}
+        {status === 'error' && <Tag palette='rose'>{t('result.error.label')}</Tag>}
       </header>
-      {result.error && <p className='mt-2 text-xs text-rose-600'>{result.error}</p>}
+      {result.error && (
+        <Message.Root valence='error' classNames='m-2'>
+          <Message.Content>{result.error}</Message.Content>
+        </Message.Root>
+      )}
       {result.issues.length > 0 && (
-        <ul className='mt-2 flex flex-col gap-1'>
+        <List classNames='border-t border-separator divide-y divide-separator'>
           {result.issues.map((issue) => (
             <IssueRow key={issue.id} issue={issue} />
           ))}
-        </ul>
+        </List>
       )}
     </section>
   );
 };
 
 const IssueRow = ({ issue }: { issue: DiagnosticIssue }) => (
-  <li className='flex items-start gap-2 text-xs'>
-    <Tag palette={SEVERITY_PALETTE[issue.severity]}>{issue.severity}</Tag>
-    <div className='flex flex-col'>
-      <span>{issue.message}</span>
+  <ListItem.Root labelId={issue.id} classNames='gap-2 p-2'>
+    <ListItem.Endcap>
+      <Icon icon={SEVERITY_ICON[issue.severity]} size={4} classNames={paletteToText(issue.severity)} />
+    </ListItem.Endcap>
+    <ListItem.Heading classNames='flex flex-col gap-0.5 text-xs'>
+      <span className='break-words'>{issue.message}</span>
       {(issue.subjectLabel || issue.spaceId) && (
-        <span className='text-description'>
+        <span className='text-description font-mono truncate'>
           {issue.subjectLabel ?? ''}
           {issue.subjectLabel && issue.spaceId ? ' · ' : ''}
           {issue.spaceId ?? ''}
         </span>
       )}
-    </div>
-  </li>
+    </ListItem.Heading>
+  </ListItem.Root>
 );
+
+const paletteToText = (severity: DiagnosticSeverity): string => {
+  switch (SEVERITY_PALETTE[severity]) {
+    case 'rose':
+      return 'text-rose-600';
+    case 'amber':
+      return 'text-amber-600';
+    default:
+      return 'text-description';
+  }
+};

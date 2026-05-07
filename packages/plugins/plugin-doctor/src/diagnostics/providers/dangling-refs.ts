@@ -15,8 +15,8 @@ import { type DiagnosticIssue, type DiagnosticProvider } from '../types';
  */
 export const danglingRefsDiagnostic: DiagnosticProvider = {
   id: 'dangling-refs',
-  label: `${meta.id}.diagnostic.dangling-refs.label`,
-  description: `${meta.id}.diagnostic.dangling-refs.description`,
+  label: ['diagnostic.dangling-refs.label', { ns: meta.id }],
+  description: ['diagnostic.dangling-refs.description', { ns: meta.id }],
   run: async ({ client, reportProgress, signal }) => {
     const issues: DiagnosticIssue[] = [];
     const spaces = getReadySpaces(client);

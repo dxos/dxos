@@ -18,8 +18,8 @@ import { type DiagnosticIssue, type DiagnosticProvider } from '../types';
  */
 export const schemaDiagnostic: DiagnosticProvider = {
   id: 'schema',
-  label: `${meta.id}.diagnostic.schema.label`,
-  description: `${meta.id}.diagnostic.schema.description`,
+  label: ['diagnostic.schema.label', { ns: meta.id }],
+  description: ['diagnostic.schema.description', { ns: meta.id }],
   run: async ({ client, reportProgress, signal }) => {
     const issues: DiagnosticIssue[] = [];
     const spaces = getReadySpaces(client);
