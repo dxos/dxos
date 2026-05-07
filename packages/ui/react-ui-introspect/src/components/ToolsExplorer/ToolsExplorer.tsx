@@ -7,9 +7,8 @@
 //
 //   moon run introspect-mcp:serve-http
 //
-// then load this story. The default URL points at the configured server
-// (`http://localhost:39476/mcp`); override with the `serverUrl` arg in the
-// Storybook controls panel.
+// then point this component at the URL it logs (the configured default is
+// `http://localhost:39476/mcp`).
 //
 // Layout:
 //
@@ -21,23 +20,23 @@
 
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { TOOL_METADATA } from '@dxos/introspect-tools';
 import { Message } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { ToolForm } from './ToolForm';
-import { ToolList } from './ToolList';
-import { ToolResults } from './ToolResults';
+import { ToolForm } from '../ToolForm';
+import { ToolList } from '../ToolList';
+import { ToolResults } from '../ToolResults';
 
-type ToolsExplorerProps = {
-  /** URL of the introspect-mcp HTTP server. Default matches `moon run introspect-mcp:serve-http`. */
-  serverUrl: string;
+export const DEFAULT_INTROSPECT_MCP_URL = 'http://localhost:39476/mcp';
+
+export type ToolsExplorerProps = {
+  /** URL of the introspect-mcp HTTP server. Defaults to the configured server (`{@link DEFAULT_INTROSPECT_MCP_URL}`). */
+  serverUrl?: string;
 };
 
-const ToolsExplorer = ({ serverUrl }: ToolsExplorerProps) => {
+export const ToolsExplorer = ({ serverUrl = DEFAULT_INTROSPECT_MCP_URL }: ToolsExplorerProps) => {
   const [selected, setSelected] = useState<string | null>(null);
   const [client, setClient] = useState<Client | null>(null);
   const [connectError, setConnectError] = useState<Error | null>(null);
@@ -49,7 +48,7 @@ const ToolsExplorer = ({ serverUrl }: ToolsExplorerProps) => {
   // (Storybook control flick) but the cleanup keeps it from leaking.
   useEffect(() => {
     let cancelled = false;
-    const next = new Client({ name: 'react-ui-introspect-storybook', version: '0.0.0' }, { capabilities: {} });
+    const next = new Client({ name: 'react-ui-introspect-tools-explorer', version: '0.0.0' }, { capabilities: {} });
     const transport = new StreamableHTTPClientTransport(new URL(serverUrl));
     next.connect(transport).then(
       () => {
@@ -124,23 +123,4 @@ const ToolsExplorer = ({ serverUrl }: ToolsExplorerProps) => {
       </div>
     </div>
   );
-};
-
-const meta: Meta<typeof ToolsExplorer> = {
-  title: 'ui/react-ui-introspect/ToolsExplorer',
-  component: ToolsExplorer,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
-  parameters: {
-    layout: 'fullscreen',
-  },
-};
-
-export default meta;
-
-type Story = StoryObj<typeof ToolsExplorer>;
-
-export const Default: Story = {
-  args: {
-    serverUrl: 'http://localhost:39476/mcp',
-  },
 };

@@ -27,17 +27,17 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/introspect-tools": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@modelcontextprotocol/sdk": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/introspect-tools": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@modelcontextprotocol/sdk": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
