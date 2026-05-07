@@ -9,9 +9,9 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { type ThemedClassName, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
