@@ -8,5 +8,6 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/meta.ts'
+      - '--entryPoint=src/plugin.ts'
       - '--entryPoint=src/translations.ts'
       - '--platform=browser'

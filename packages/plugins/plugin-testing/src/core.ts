@@ -3,10 +3,19 @@
 //
 
 import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework';
-import { AttentionPlugin } from '@dxos/plugin-attention';
-import { GraphPlugin } from '@dxos/plugin-graph';
-import { SettingsPlugin } from '@dxos/plugin-settings';
-import { ThemePlugin } from '@dxos/plugin-theme';
+// Each `/plugin` entrypoint re-exports the plugin eagerly (without
+// `Plugin.lazy`). The default `.` export wraps the plugin in a lazy stub
+// (`() => import('./XPlugin')`), which webkit cannot reliably resolve under
+// vite-dev: the dynamic-import promise can settle with a partially-evaluated
+// namespace, throwing `ReferenceError: Cannot access 'default' before
+// initialization` from the loader's `mod.default` access. Stories run inside
+// `storybook dev` (vite-dev) and are the only host that hits this. Production
+// hosts (composer-app via `vite preview`) still get the lazy `.` export and
+// their associated code splitting.
+import { AttentionPlugin } from '@dxos/plugin-attention/plugin';
+import { GraphPlugin } from '@dxos/plugin-graph/plugin';
+import { SettingsPlugin } from '@dxos/plugin-settings/plugin';
+import { ThemePlugin } from '@dxos/plugin-theme/plugin';
 import { defaultTx } from '@dxos/ui-theme';
 
 /**

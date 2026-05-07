@@ -26,6 +26,12 @@
       "node": "./dist/lib/node-esm/index.mjs",
       "types": "./dist/types/src/index.d.ts"
     },
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "browser": "./dist/lib/browser/plugin.mjs",
+      "node": "./dist/lib/node-esm/plugin.mjs"
+    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
