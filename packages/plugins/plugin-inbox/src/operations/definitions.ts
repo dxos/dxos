@@ -221,6 +221,54 @@ export const SyncCalendar = Operation.make({
   output: Schema.Void,
 });
 
+export const GetGoogleContactGroups = Operation.make({
+  meta: {
+    key: `${INBOX_OPERATION}.get-google-contact-groups`,
+    name: 'Get Google Contact Groups',
+    description: 'Discover Google Contact Groups reachable from an integration.',
+  },
+  input: Schema.Struct({
+    integration: Ref.Ref(Integration.Integration),
+  }),
+  output: Schema.Struct({
+    targets: Schema.Array(RemoteTarget),
+  }),
+});
+
+export const GoogleContactsSync = Operation.make({
+  meta: {
+    key: `${INBOX_OPERATION}.google-contacts-sync`,
+    name: 'Sync Google Contacts',
+    description: 'Sync contacts from a Google Contact group into Person objects in the space.',
+  },
+  input: Schema.Struct({
+    integration: Ref.Ref(Integration.Integration).annotations({
+      description: 'Integration that owns credentials and per-target sync metadata.',
+    }),
+    contactGroupResourceName: Schema.optional(Schema.String).annotations({
+      description: 'Google contact group resource name (e.g. contactGroups/myContacts). Syncs all targets when omitted.',
+    }),
+    pageSize: Schema.optional(Schema.Number),
+  }),
+  output: Schema.Struct({
+    upserted: Schema.Number,
+  }),
+  services: [Database.Service, Credential.CredentialsService],
+});
+
+export const SyncContacts = Operation.make({
+  meta: {
+    key: `${INBOX_OPERATION}.sync-contacts`,
+    name: 'Sync Contacts',
+    description: 'Runs Google Contacts sync and notifies of progress.',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    integration: Ref.Ref(Integration.Integration),
+  }),
+  output: Schema.Void,
+});
+
 export const ReadEmail = Operation.make({
   meta: {
     key: `${INBOX_OPERATION}.read-email`,

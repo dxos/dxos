@@ -13,10 +13,13 @@ export const InboxOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./draft-email'),
   () => import('./extract-contact'),
   () => import('./get-google-calendars'),
+  () => import('./get-google-contact-groups'),
   () => import('./google/calendar/sync'),
+  () => import('./google/contacts/sync'),
   () => import('./google/gmail/send'),
   () => import('./google/gmail/sync'),
   () => import('./read-email'),
   () => import('./sync-calendar'),
+  () => import('./sync-contacts'),
   () => import('./sync-mailbox'),
 );

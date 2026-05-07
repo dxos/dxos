@@ -30,6 +30,12 @@ export class CalendarForeignKeyWrongTypeError extends BaseError.extend(
   'Foreign key query returned a non-calendar object.',
 ) {}
 
+/** Foreign-key lookup returned an object that is not a Person (unexpected corruption / schema drift). */
+export class ContactForeignKeyWrongTypeError extends BaseError.extend(
+  'ContactForeignKeyWrongTypeError',
+  'Foreign key query returned a non-person object.',
+) {}
+
 /** Classification requires at least one Tag in the space database. */
 export class EmailClassificationNoTagsError extends BaseError.extend(
   'EmailClassificationNoTagsError',
