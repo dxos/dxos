@@ -13,6 +13,12 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": {
+      "source": "./src/NavTreePlugin.tsx",
+      "types": "./src/NavTreePlugin.tsx",
+      "browser": "./src/NavTreePlugin.tsx",
+      "default": "./src/NavTreePlugin.tsx"
+    },
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",

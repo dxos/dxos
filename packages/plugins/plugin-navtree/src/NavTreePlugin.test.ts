@@ -8,7 +8,7 @@ import { ActivationEvents } from '@dxos/app-framework';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { meta } from './meta';
-import { NavTreePlugin } from './NavTreePlugin';
+import { NavTreePlugin } from '#plugin';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 

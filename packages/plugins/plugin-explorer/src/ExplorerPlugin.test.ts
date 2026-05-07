@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { ExplorerPlugin } from './ExplorerPlugin';
+import { ExplorerPlugin } from '#plugin';
 import { meta } from './meta';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;

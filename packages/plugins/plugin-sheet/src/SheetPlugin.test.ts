@@ -9,7 +9,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { meta } from './meta';
-import { SheetPlugin } from './SheetPlugin';
+import { SheetPlugin } from '#plugin';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 

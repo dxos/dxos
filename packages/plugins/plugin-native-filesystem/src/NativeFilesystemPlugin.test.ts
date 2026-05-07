@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { meta } from './meta';
-import { NativeFilesystemPlugin } from './NativeFilesystemPlugin';
+import { NativeFilesystemPlugin } from '#plugin';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 

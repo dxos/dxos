@@ -13,6 +13,12 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": {
+      "source": "./src/ConductorPlugin.tsx",
+      "types": "./src/ConductorPlugin.tsx",
+      "browser": "./src/ConductorPlugin.tsx",
+      "default": "./src/ConductorPlugin.tsx"
+    },
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",

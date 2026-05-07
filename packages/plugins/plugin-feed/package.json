@@ -14,6 +14,12 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": {
+      "source": "./src/FeedPlugin.tsx",
+      "types": "./src/FeedPlugin.tsx",
+      "browser": "./src/FeedPlugin.tsx",
+      "default": "./src/FeedPlugin.tsx"
+    },
     "#blueprints": "./src/blueprints/index.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",

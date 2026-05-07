@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { DailySummaryPlugin } from './DailySummaryPlugin';
+import { DailySummaryPlugin } from '#plugin';
 import { meta } from './meta';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;

@@ -14,6 +14,12 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": {
+      "source": "./src/IrohBeaconPlugin.ts",
+      "types": "./src/IrohBeaconPlugin.ts",
+      "browser": "./src/IrohBeaconPlugin.ts",
+      "default": "./src/IrohBeaconPlugin.ts"
+    },
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#meta": "./src/meta.ts",

@@ -4,11 +4,10 @@
 
 import { describe, test } from 'vitest';
 
-import { ActivationEvents } from '@dxos/app-framework';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
+import { RegistryPlugin } from '#plugin';
 import { meta } from './meta';
-import { RegistryPlugin } from './RegistryPlugin';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
@@ -18,11 +17,7 @@ describe('RegistryPlugin', () => {
       plugins: [RegistryPlugin()],
     });
 
-    expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('ReactSurface')]),
-    );
-
-    await harness.fire(ActivationEvents.SetupOperationHandler);
-    expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
+    // CLI commands activate on startup.
+    expect(harness.manager.getActive()).toContain(moduleId('cli-commands'));
   });
 });

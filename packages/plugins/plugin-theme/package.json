@@ -13,6 +13,12 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": {
+      "source": "./src/ThemePlugin.ts",
+      "types": "./src/ThemePlugin.ts",
+      "browser": "./src/ThemePlugin.ts",
+      "default": "./src/ThemePlugin.ts"
+    },
     "#meta": "./src/meta.ts",
     "#translations": "./src/translations.ts"
   },

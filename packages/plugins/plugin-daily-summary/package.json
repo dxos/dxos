@@ -13,6 +13,12 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": {
+      "source": "./src/DailySummaryPlugin.tsx",
+      "types": "./src/DailySummaryPlugin.tsx",
+      "browser": "./src/DailySummaryPlugin.tsx",
+      "default": "./src/DailySummaryPlugin.tsx"
+    },
     "#blueprints": "./src/blueprints/index.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#containers": "./src/containers/index.ts",

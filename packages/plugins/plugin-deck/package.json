@@ -13,6 +13,12 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": {
+      "source": "./src/DeckPlugin.ts",
+      "types": "./src/DeckPlugin.ts",
+      "browser": "./src/DeckPlugin.ts",
+      "default": "./src/DeckPlugin.ts"
+    },
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",

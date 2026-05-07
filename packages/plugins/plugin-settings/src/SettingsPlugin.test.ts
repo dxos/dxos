@@ -9,7 +9,7 @@ import { createTestApp } from '@dxos/app-framework/testing';
 import { GraphPlugin } from '@dxos/plugin-graph';
 
 import { meta } from './meta';
-import { SettingsPlugin } from './SettingsPlugin';
+import { SettingsPlugin } from '#plugin';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 

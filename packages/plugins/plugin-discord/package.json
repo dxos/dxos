@@ -14,6 +14,12 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": {
+      "source": "./src/DiscordPlugin.tsx",
+      "types": "./src/DiscordPlugin.tsx",
+      "browser": "./src/DiscordPlugin.tsx",
+      "default": "./src/DiscordPlugin.tsx"
+    },
     "#blueprints": "./src/blueprints/index.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#containers": "./src/containers/index.ts",

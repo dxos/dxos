@@ -13,6 +13,12 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": {
+      "source": "./src/MapPlugin.tsx",
+      "types": "./src/MapPlugin.tsx",
+      "browser": "./src/MapPlugin.tsx",
+      "default": "./src/MapPlugin.tsx"
+    },
     "#blueprints": "./src/blueprints/index.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",

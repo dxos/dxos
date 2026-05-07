@@ -14,6 +14,12 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": {
+      "source": "./src/SidekickPlugin.tsx",
+      "types": "./src/SidekickPlugin.tsx",
+      "browser": "./src/SidekickPlugin.tsx",
+      "default": "./src/SidekickPlugin.tsx"
+    },
     "#blueprints": "./src/blueprints/index.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",

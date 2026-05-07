@@ -13,6 +13,12 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": {
+      "source": "./src/ExplorerPlugin.tsx",
+      "types": "./src/ExplorerPlugin.tsx",
+      "browser": "./src/ExplorerPlugin.tsx",
+      "default": "./src/ExplorerPlugin.tsx"
+    },
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",

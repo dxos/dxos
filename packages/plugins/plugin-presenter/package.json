@@ -13,6 +13,12 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": {
+      "source": "./src/PresenterPlugin.tsx",
+      "types": "./src/PresenterPlugin.tsx",
+      "browser": "./src/PresenterPlugin.tsx",
+      "default": "./src/PresenterPlugin.tsx"
+    },
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
