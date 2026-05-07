@@ -486,7 +486,9 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
                           // External (non-org) assignees are upserted lazily; the
                           // semaphored `ensurePerson` dedups across fibers.
                           const assigneeUser = issue.assignees?.[0];
-                          const assignedPerson = assigneeUser ? yield* ensurePerson(assigneeUser, undefined) : undefined;
+                          const assignedPerson = assigneeUser
+                            ? yield* ensurePerson(assigneeUser, undefined)
+                            : undefined;
 
                           const { created } = yield* upsertTask(issue, assignedPerson, project);
                           if (created) {
