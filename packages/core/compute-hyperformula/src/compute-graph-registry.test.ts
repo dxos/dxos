@@ -7,8 +7,8 @@ import * as Schema from 'effect/Schema';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import { ComputeGraphRegistry, defaultPlugins } from './compute-graph-registry';
 import { TestBuilder, createMockedComputeRuntimeProvider } from './testing';
@@ -65,7 +65,7 @@ describe('ComputeGraphRegistry', () => {
     });
 
     const functionObj = Operation.serialize(add);
-    Obj.change(functionObj, (functionObj) => {
+    Obj.update(functionObj, (functionObj) => {
       functionObj.binding = 'ADD';
     });
     space.db.add(functionObj);
@@ -135,7 +135,7 @@ describe('ComputeGraphRegistry', () => {
     onTestFinished(unsubscribe);
 
     const functionObj = Operation.serialize(add);
-    Obj.change(functionObj, (functionObj) => {
+    Obj.update(functionObj, (functionObj) => {
       functionObj.binding = 'ADD';
     });
     space.db.add(functionObj);

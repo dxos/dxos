@@ -97,7 +97,7 @@ export const MessagePanel = ({
               variant='ghost'
               icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
               iconOnly
-              label={t(editing ? 'save message label' : 'edit message label')}
+              label={t(editing ? 'save-message.label' : 'edit-message.label')}
               classNames={[buttonClassNames, hoverableControlItem]}
               onClick={handleEdit}
             />

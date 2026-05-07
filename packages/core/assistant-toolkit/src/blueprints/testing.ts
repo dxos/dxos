@@ -17,15 +17,6 @@ export type TestStep = Pick<AiSessionRunProps, 'prompt' | 'system'> & {
 };
 
 /**
- * Blueprint definition type for testing.
- * Mirrors AppCapabilities.BlueprintDefinition to avoid circular dependency with app-toolkit.
- */
-export interface BlueprintDefinition {
-  key: string;
-  make: () => Blueprint.Blueprint;
-}
-
-/**
  * Runs the prompt steps, calling the test function after each step.
  */
 export const runSteps = Effect.fn(function* (session: AiSession, steps: TestStep[]) {
@@ -46,7 +37,7 @@ export const runSteps = Effect.fn(function* (session: AiSession, steps: TestStep
  * Binds blueprints from the blueprint definitions.
  */
 // TODO(dmaretskyi): Potentially the agent will auto-bind the blueprints.
-export const addBlueprints = Effect.fnUntraced(function* (blueprints: BlueprintDefinition[]) {
+export const addBlueprints = Effect.fnUntraced(function* (blueprints: Blueprint.Definition[]) {
   yield* AiContextService.bindContext({
     blueprints: yield* pipe(
       blueprints,

@@ -17,13 +17,23 @@ export const Settings = Schema.mutable(
      * Master toggle. When false, the bridge plugin ignores incoming clips.
      * Defaults to `true`.
      */
-    enabled: Schema.optional(Schema.Boolean),
+    enabled: Schema.optional(
+      Schema.Boolean.annotations({
+        title: 'Accept clips',
+        description: 'When off, clips sent from the composer-crx browser extension are ignored.',
+      }),
+    ),
 
     /**
      * Navigate to the created object after a successful clip. Defaults to
      * `false` to avoid yanking focus during active work.
      */
-    autoOpenAfterClip: Schema.optional(Schema.Boolean),
+    autoOpenAfterClip: Schema.optional(
+      Schema.Boolean.annotations({
+        title: 'Open after clip',
+        description: 'Navigate to the created object when a clip is received.',
+      }),
+    ),
   }),
 );
 

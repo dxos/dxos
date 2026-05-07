@@ -18,6 +18,11 @@
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#plugin": {
+      "browser": "./src/TablePlugin.tsx",
+      "node": "./src/TablePlugin.node.ts",
+      "default": "./src/TablePlugin.tsx"
+    },
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
   },
@@ -86,6 +91,7 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

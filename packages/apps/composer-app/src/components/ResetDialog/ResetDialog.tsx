@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
-import { FeedbackForm } from '@dxos/plugin-observability';
+import { FeedbackForm } from '@dxos/plugin-observability/components';
 import { type UserFeedback } from '@dxos/plugin-observability/operations';
 import {
   AlertDialog,

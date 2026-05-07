@@ -1,6 +1,7 @@
 {
   "name": "@dxos/compute-hyperformula",
   "version": "0.8.3",
+  "private": true,
   "description": "HyperFormula-based compute graph (spreadsheet) engine.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -39,13 +40,13 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/vendor-hyperformula": "workspace:*",
     "effect": "catalog:",

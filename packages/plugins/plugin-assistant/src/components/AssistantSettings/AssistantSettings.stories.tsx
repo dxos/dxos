@@ -29,7 +29,7 @@ export const Default: Story = {
   args: {
     settings: {
       customPrompts: false,
-      llmProvider: 'edge',
+      modelProvider: 'edge',
     },
   },
 };

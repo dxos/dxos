@@ -39,9 +39,6 @@
       "path": "../../core/assistant-toolkit"
     },
     {
-      "path": "../../core/blueprints"
-    },
-    {
       "path": "../../core/compute"
     },
     {
@@ -49,6 +46,9 @@
     },
     {
       "path": "../../core/functions"
+    },
+    {
+      "path": "../../core/functions-runtime"
     },
     {
       "path": "../../core/operation"

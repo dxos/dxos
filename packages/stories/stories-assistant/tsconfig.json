@@ -121,6 +121,9 @@
       "path": "../../plugins/plugin-inbox"
     },
     {
+      "path": "../../plugins/plugin-integration"
+    },
+    {
       "path": "../../plugins/plugin-map"
     },
     {
@@ -155,9 +158,6 @@
     },
     {
       "path": "../../plugins/plugin-thread"
-    },
-    {
-      "path": "../../plugins/plugin-token-manager"
     },
     {
       "path": "../../plugins/plugin-transcription"
@@ -227,9 +227,6 @@
     },
     {
       "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-search"
     },
     {
       "path": "../../ui/react-ui-sfx"

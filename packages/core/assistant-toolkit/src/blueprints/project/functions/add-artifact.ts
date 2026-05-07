@@ -19,7 +19,7 @@ export default AddArtifact.pipe(
 
       const agent = yield* Agent.getFromChatContext;
 
-      Obj.change(agent, (agent) => {
+      Obj.update(agent, (agent) => {
         agent.artifacts.push({
           name,
           data: artifact,

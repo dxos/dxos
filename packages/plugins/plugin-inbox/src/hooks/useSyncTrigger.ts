@@ -5,8 +5,7 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { type Client } from '@dxos/client';
-import { Trigger } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { Trigger, Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { DXN, type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
@@ -58,7 +57,7 @@ export const useSyncTrigger = ({
 }) => {
   const client = useClient();
   const [pending, setPending] = useState(false);
-  const triggers = useQuery(db, Filter.type(Trigger.Trigger));
+  const triggers = useQuery(db, Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-inbox.useSyncTrigger'));
 
   const subjectDxn = Obj.getDXN(subject);
   const syncTrigger = useMemo(

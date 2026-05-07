@@ -152,7 +152,7 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
   const handleSave = useCallback<NonNullable<FormRootProps<PropertyType>['onSave']>>(
     (props) => {
       if (view) {
-        Obj.change(view, () => {
+        Obj.update(view, () => {
           projection.setFieldProjection({ field, props });
         });
       } else {

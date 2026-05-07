@@ -199,7 +199,7 @@ describe('Query', () => {
 
     test('filter by foreign keys', async () => {
       const obj = Obj.make(TestSchema.Expando, { value: 100 });
-      Obj.change(obj, (obj) => Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' }));
+      Obj.update(obj, (obj) => Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' }));
       db.add(obj);
 
       await db.flush();
@@ -211,7 +211,7 @@ describe('Query', () => {
 
     test('filter by foreign keys without flushing index', async () => {
       const obj = Obj.make(TestSchema.Expando, { value: 100 });
-      Obj.change(obj, (obj) => Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' }));
+      Obj.update(obj, (obj) => Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' }));
       db.add(obj);
 
       const objects = await db
@@ -408,7 +408,7 @@ describe('Query', () => {
       }
       const cutoff = secondAfterFlush * 1000;
 
-      Obj.change(obj, (obj: any) => {
+      Obj.update(obj, (obj: any) => {
         obj.value = 999;
       });
       await db.flush();
@@ -1716,7 +1716,7 @@ describe('Query', () => {
       }
 
       // Update the object.
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         obj.title = 'Updated Title';
       });
       await db.flush();
@@ -2077,7 +2077,7 @@ describe('Query', () => {
       query.subscribe(() => {
         updateCount++;
       });
-      Obj.change(objects[0], (o: any) => {
+      Obj.update(objects[0], (o: any) => {
         o.title = 'Task 0a';
       });
       await sleep(10);
@@ -2276,7 +2276,7 @@ describe('Query', () => {
       });
       onTestFinished(() => unsub());
 
-      Obj.change(contact, (contact) => {
+      Obj.update(contact, (contact) => {
         contact.name = name;
       });
       db.add(Obj.make(TestSchema.Person, {}));

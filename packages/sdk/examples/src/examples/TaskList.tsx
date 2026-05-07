@@ -48,7 +48,7 @@ const TaskList = ({ id, spaceId }: { id: number; spaceId?: SpaceId }) => {
               <Input.Checkbox
                 checked={!!task.completed}
                 onCheckedChange={() =>
-                  Obj.change(task, (task) => {
+                  Obj.update(task, (task) => {
                     task.completed = !task.completed;
                   })
                 }

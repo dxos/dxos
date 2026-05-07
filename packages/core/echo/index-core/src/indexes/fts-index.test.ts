@@ -579,4 +579,114 @@ describe('FtsIndex', () => {
       expect(objectIds).not.toContain(space2Obj.data.id);
     }, Effect.provide(TestLayer)),
   );
+
+  describe('querySnapshotsJSON', () => {
+    it.effect(
+      'returns snapshots for all present recordIds',
+      Effect.fnUntraced(function* () {
+        const index = new FtsIndex();
+        const metaIndex = new ObjectMetaIndex();
+        yield* index.migrate();
+        yield* metaIndex.migrate();
+
+        const spaceId = SpaceId.random();
+        const objects: IndexerObject[] = [
+          {
+            spaceId,
+            queueId: ObjectId.random(),
+            documentId: null,
+            recordId: null,
+            updatedAt: Date.now(),
+            data: { id: ObjectId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'alpha' },
+          },
+          {
+            spaceId,
+            queueId: ObjectId.random(),
+            documentId: null,
+            recordId: null,
+            updatedAt: Date.now(),
+            data: { id: ObjectId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'beta' },
+          },
+        ];
+
+        yield* metaIndex.update(objects);
+        yield* metaIndex.lookupRecordIds(objects);
+        yield* index.update(objects);
+
+        const recordIds = objects.map((o) => o.recordId!);
+        const snapshots = yield* index.querySnapshotsJSON(recordIds);
+
+        expect(snapshots).toHaveLength(2);
+        const snapshotMap = new Map(snapshots.map((s) => [s.recordId, s.snapshot]));
+        expect((snapshotMap.get(objects[0].recordId!) as any).value).toBe('alpha');
+        expect((snapshotMap.get(objects[1].recordId!) as any).value).toBe('beta');
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'omits stale recordIds not present in FTS index',
+      Effect.fnUntraced(function* () {
+        const index = new FtsIndex();
+        const metaIndex = new ObjectMetaIndex();
+        yield* index.migrate();
+        yield* metaIndex.migrate();
+
+        const spaceId = SpaceId.random();
+        const object: IndexerObject = {
+          spaceId,
+          queueId: ObjectId.random(),
+          documentId: null,
+          recordId: null,
+          updatedAt: Date.now(),
+          data: { id: ObjectId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'present' },
+        };
+
+        yield* metaIndex.update([object]);
+        yield* metaIndex.lookupRecordIds([object]);
+        yield* index.update([object]);
+
+        // Query with the real id plus a stale/non-existent id.
+        const staleId = 99999;
+        const snapshots = yield* index.querySnapshotsJSON([object.recordId!, staleId]);
+
+        expect(snapshots).toHaveLength(1);
+        expect(snapshots[0].recordId).toBe(object.recordId!);
+        expect((snapshots[0].snapshot as any).value).toBe('present');
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'handles more than 999 recordIds without exceeding SQLite variable limit',
+      Effect.fnUntraced(function* () {
+        const index = new FtsIndex();
+        const metaIndex = new ObjectMetaIndex();
+        yield* index.migrate();
+        yield* metaIndex.migrate();
+
+        const spaceId = SpaceId.random();
+        const count = 1100;
+        const objects: IndexerObject[] = Array.from({ length: count }, (_, i) => ({
+          spaceId,
+          queueId: ObjectId.random(),
+          documentId: null,
+          recordId: null,
+          updatedAt: Date.now(),
+          data: { id: ObjectId.random(), [ATTR_TYPE]: TYPE_PERSON, index: i },
+        }));
+
+        yield* metaIndex.update(objects);
+        yield* metaIndex.lookupRecordIds(objects);
+        yield* index.update(objects);
+
+        const recordIds = objects.map((o) => o.recordId!);
+        const snapshots = yield* index.querySnapshotsJSON(recordIds);
+
+        expect(snapshots).toHaveLength(count);
+        const returnedIds = new Set(snapshots.map((s) => s.recordId));
+        for (const id of recordIds) {
+          expect(returnedIds.has(id)).toBe(true);
+        }
+      }, Effect.provide(TestLayer)),
+    );
+  });
 });

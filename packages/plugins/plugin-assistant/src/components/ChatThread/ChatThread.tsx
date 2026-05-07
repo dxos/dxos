@@ -9,17 +9,18 @@ import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName, setRef } from '@dxos/react-ui';
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-markdown';
 import { type Message } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
 
+import { type Assistant } from '../../types';
 import { type ChatEvent } from '../Chat';
-import { blockToMarkdown, componentRegistry } from './registry';
+import { componentRegistry, createBlockRenderer } from './registry';
 import { MessageSyncer } from './sync';
 
 const defaultOptions: MarkdownStreamProps['options'] = {
   autoScroll: true,
-  typewriter: true,
   cursor: false,
+  fader: false,
+  typewriter: true,
 };
 
 export type ChatThreadProps = ThemedClassName<
@@ -27,6 +28,7 @@ export type ChatThreadProps = ThemedClassName<
     identity?: Identity;
     messages?: Message.Message[];
     error?: Error;
+    viewType?: Assistant.ChatView;
     onEvent?: (event: ChatEvent) => void;
   } & Pick<MarkdownStreamProps, 'options' | 'debug' | 'extensions' | 'footer'>
 >;
@@ -42,6 +44,7 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
       footer,
       debug = false,
       extensions,
+      viewType,
       onEvent,
     },
     forwardedRef,
@@ -66,7 +69,8 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
     }, [controller, error]);
 
     // Update document.
-    const syncer = useMemo(() => controller && new MessageSyncer(controller, blockToMarkdown), [controller]);
+    const renderer = useMemo(() => createBlockRenderer(viewType), [viewType]);
+    const syncer = useMemo(() => controller && new MessageSyncer(controller, renderer), [controller, renderer]);
     useEffect(() => {
       if (!syncer) {
         return;
@@ -91,12 +95,10 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
     );
 
     return (
-      <div
-        role='none'
-        data-hue={userHue}
-        className={mx('flex h-full w-full justify-center overflow-hidden', classNames)}
-      >
+      <div role='none' data-hue={userHue} className='contents'>
         <MarkdownStream
+          key={viewType}
+          classNames={classNames}
           registry={componentRegistry}
           options={options}
           debug={debug}

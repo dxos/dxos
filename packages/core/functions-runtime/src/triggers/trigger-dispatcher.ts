@@ -21,14 +21,14 @@ import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
+import { Process, Trigger, TriggerEvent, Operation } from '@dxos/compute';
 import { DXN, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
-import { Process, QueueService, Trigger, type TriggerEvent } from '@dxos/functions';
+import { QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 
 import * as ProcessManager from '../process/ProcessManager';
 import { createInvocationPayload } from './input-builder';
@@ -92,7 +92,7 @@ interface ScheduledTrigger {
 
 type TriggerDispatcherServices =
   | Registry.AtomRegistry
-  | ProcessManager.ProcessManagerService
+  | ProcessManager.Service
   | TriggerStateStore
   | QueueService
   | Database.Service;
@@ -188,12 +188,17 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   private _running = false;
   private _internalTime: Date;
   private _timerFiber: Fiber.Fiber<void, void> | undefined;
+  private _triggers: Trigger.Trigger[] = [];
   private _scheduledTriggers = new Map<string, ScheduledTrigger>();
+  // `keepAlive` prevents the registry from disposing the atom node when no subscribers
+  // are mounted (e.g. when start/stop runs before the UI subscribes). Without it,
+  // updates written before the first subscription are dropped and the next read
+  // re-initializes to the default {enabled: false, ...}.
   private _state: Atom.Writable<TriggerDispatcherState> = Atom.make<TriggerDispatcherState>({
     enabled: false,
     invocations: [],
     errors: [],
-  });
+  }).pipe(Atom.keepAlive);
   private _maxConcurrency: number;
 
   constructor(options: TriggerDispatcherOptions) {
@@ -330,7 +335,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         // Prepare input data
         const inputData = this._prepareInputData(trigger, event);
 
-        const manager = yield* ProcessManager.ProcessManagerService;
+        const manager = yield* ProcessManager.Service;
         const executable = Process.fromOperation(functionDef, manager.operationHandlerSet);
         const handle = yield* manager.spawn(executable, {
           name: functionDef.meta.name ? `${functionDef.meta.name} (${functionDef.meta.key})` : functionDef.meta.key,
@@ -375,12 +380,12 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     untilExhausted = false,
   } = {}): Effect.Effect<TriggerExecutionResult[]> =>
     Effect.gen(this, function* () {
+      yield* this.refreshTriggers();
       const invocations: TriggerExecutionResult[] = [];
       for (const kind of kinds) {
         switch (kind) {
           case 'timer':
             {
-              yield* this.refreshTriggers();
               const now = this.getCurrentTime();
               const triggersToInvoke: Trigger.Trigger[] = [];
 
@@ -408,8 +413,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             }
             break;
           case 'queue': {
-            const triggers = yield* this._fetchTriggers();
-            for (const trigger of triggers) {
+            for (const trigger of this._triggers) {
               const spec = trigger.spec;
               if (spec?.kind !== 'queue') {
                 continue;
@@ -448,7 +452,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                   Array.last,
                 );
                 if (Option.isSome(lastSuccessfulInvocation)) {
-                  Obj.change(trigger, (trigger) => {
+                  Obj.update(trigger, (trigger) => {
                     Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
                     Obj.getMeta(trigger).keys.push({
                       source: KEY_QUEUE_CURSOR,
@@ -469,8 +473,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             break;
           }
           case 'subscription': {
-            const triggers = yield* this._fetchTriggers();
-            for (const trigger of triggers) {
+            for (const trigger of this._triggers) {
               const spec = trigger.spec;
               if (spec?.kind !== 'subscription') {
                 continue;
@@ -564,6 +567,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   refreshTriggers = (): Effect.Effect<void> =>
     Effect.gen(this, function* () {
       const triggers = yield* this._fetchTriggers();
+      this._triggers = triggers;
       const currentTriggerIds = new Set(triggers.map((t) => t.id));
 
       // Remove triggers that are no longer present
@@ -615,7 +619,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
   private _fetchTriggers = () =>
     Effect.gen(this, function* () {
-      const objects = yield* Database.runQuery(Filter.type(Trigger.Trigger));
+      const objects = yield* Database.runQuery(
+        Query.select(Filter.type(Trigger.Trigger)).debugLabel('TriggerDispatcher.fetchTriggers'),
+      );
       return objects;
     }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
 

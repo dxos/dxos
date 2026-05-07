@@ -3,63 +3,84 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { Composer } from '@dxos/brand';
 import { Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { Placeholder } from '../../ui';
-import css from './boot-loader.css?raw';
+import bootLoaderCss from './boot-loader.css?raw';
+import bootLoaderScript from './boot-loader.js?raw';
 
 /**
- * React rendering of the native-DOM boot loader so the visual can be poked at
- * in storybook without having to rebuild a host app. The DOM structure and
- * style classes are identical to what {@link bootLoaderPlugin} injects via
- * `transformIndexHtml`; the CSS itself is imported as a raw string from the
- * same source the plugin uses, so a styling change in `boot-loader.css`
- * shows up here automatically.
+ * Storybook host that runs the **real** inline driver script (`boot-loader.js`)
+ * against the same DOM structure {@link bootLoaderPlugin} injects in production
+ * via `transformIndexHtml`. The component injects `<style>` + the loader DOM,
+ * evaluates the driver, and exposes `window.__bootLoader` for the stories to
+ * call — no React reimplementation of the state machine.
  *
- * Coupled-but-not-shared: the actual production loader runs as inline HTML
- * before any module loads, so it can't be a React component there. This
- * mirror lets us iterate on the look + animations + status-text behaviour
- * with hot-reload.
+ * On unmount, the host calls `__bootLoader.dismiss()` (which clears the creep
+ * timer and removes the `#boot-loader` node) and clears the global so a fresh
+ * mount re-runs the driver from scratch.
  */
-type BootLoaderProps = {
-  status?: string;
-  /**
-   * Inline SVG markup. May carry its own brand-palette fills; SVGs using
-   * `fill="currentColor"` still inherit the loader's text colour.
-   */
+type BootLoaderHostProps = {
+  initialStatus?: string;
   markSvg?: string;
-  /**
-   * Determinate progress fraction in [0, 1]. The ring is always determinate —
-   * defaults to 0 (empty ring) until the host calls `__bootLoader.progress(...)`.
-   */
-  progress?: number;
 };
 
-const BootLoader = ({ status = 'Loading…', markSvg, progress = 0 }: BootLoaderProps) => {
-  const clamped = Math.max(0, Math.min(1, progress));
+// `__bootLoader` is declared globally by `../../ui/components/Placeholder/Placeholder.tsx`
+// so consumers don't have to redeclare it. The story imports `Placeholder` for the
+// handoff scenarios, which pulls the declaration into scope.
+
+const BootLoaderHost = ({ initialStatus = 'Loading…', markSvg }: BootLoaderHostProps) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) {
+      return;
+    }
+    // Mirror the HTML structure produced by `bootLoaderPlugin.transformIndexHtml`.
+    const initialLine = initialStatus ? `<div class="boot-loader-status-line">${escapeHtml(initialStatus)}</div>` : '';
+    const markHtml = markSvg ? `<div id="boot-loader-mark">${markSvg}</div>` : '';
+    container.innerHTML = `
+      <div id="boot-loader" role="status" aria-live="polite" aria-label="Initializing">
+        <div id="boot-loader-disc">
+          <div id="boot-loader-bar"></div>
+          <div id="boot-loader-dot"></div>
+          ${markHtml}
+        </div>
+        <div id="boot-loader-status">${initialLine}</div>
+      </div>
+    `;
+    // Evaluate the driver IIFE — it auto-promotes idle → state 1 (slow creep)
+    // and exposes `window.__bootLoader.{status, progress, dismiss}` globally.
+    const driverEl = document.createElement('script');
+    driverEl.textContent = bootLoaderScript;
+    container.appendChild(driverEl);
+
+    return () => {
+      try {
+        window.__bootLoader?.dismiss();
+      } catch {
+        // Driver removes its own DOM — swallow errors from idempotent retries.
+      }
+      delete window.__bootLoader;
+      container.innerHTML = '';
+    };
+  }, [initialStatus, markSvg]);
+
   return (
     <>
-      <style>{css}</style>
-      <div id='boot-loader' role='status' aria-live='polite' aria-label='Initializing'>
-        <div
-          id='boot-loader-disc'
-          style={{ ['--boot-loader-bar-progress' as string]: String(clamped * 100) }}
-          {...(clamped > 0 && clamped < 1 ? { 'data-progress-active': '' } : {})}
-          {...(clamped > 0 ? { 'data-host-driven': '' } : {})}
-        >
-          <div id='boot-loader-bar' />
-          <div id='boot-loader-dot' />
-          {markSvg ? <div id='boot-loader-mark' dangerouslySetInnerHTML={{ __html: markSvg }} /> : null}
-        </div>
-        <div id='boot-loader-status'>{status}</div>
-      </div>
+      <style>{bootLoaderCss}</style>
+      <div ref={containerRef} />
     </>
   );
 };
+
+const escapeHtml = (text: string): string =>
+  text.replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]!);
 
 // Inlined snapshot of `packages/ui/brand/assets/icons/composer-icon.svg` —
 // keeps storybook self-contained (production pipes the same file in from
@@ -81,233 +102,142 @@ const PLACEHOLDER_MARK = `
   </svg>
 `;
 
-const PHASES = ['Loading…', 'Loading framework…', 'Reading configuration…', 'Starting services…', 'Loading plugins…'];
-
 /**
- * Approximate plugin count used by the `Determinate` story. Hardcoded here
- * to keep the storybook self-contained — the production count comes from
- * `composer-app/src/plugin-defs.tsx`'s dynamic-import list. Adjust if the
- * story should mirror an updated count.
+ * Approximate plugin count used by the simulation. Hardcoded here to keep the
+ * storybook self-contained — the production count comes from
+ * `composer-app/src/plugin-defs.tsx`'s dynamic-import list.
  */
 const STORY_PLUGIN_COUNT = 80;
 
 /** Tick interval for the determinate-progress simulation, in ms. */
 const STORY_TICK_MS = 50;
 
-// Mirrors the inline driver's auto-creep constants in `boot-loader.js` so the
-// pre-host-progress phase animates identically in storybook and production.
-const CREEP_ASYMPTOTE = 12;
-const CREEP_RATE = 0.04;
-const CREEP_TICK_MS = 100;
-
-/** Boot loader runtime state — mirrors the driver's `state` machine. */
-type BootLoaderRuntimeState = 0 | 1 | 2;
-
-type BootLoaderSimOptions = {
-  /** Initial state on mount. Default `0` (idle, no motion). */
-  initialState?: BootLoaderRuntimeState;
-  /**
-   * If set, auto-advance through states with this delay between transitions
-   * (`0 → 1 → 2`). Once the random-walk begins (state 2) the timer stops.
-   * Without this, the user advances manually via the toolbar.
-   */
-  autoAdvanceMs?: number;
-  /**
-   * Walk the placeholder through `stage 0 → 1 → 2` after progress hits 1
-   * (the production handoff sequence). Without this, the sim stops at 100%.
-   */
-  withHandoff?: boolean;
-  /**
-   * Reset progress and stage back to 0 after the handoff fade-out and start
-   * a new cycle. Only meaningful with `withHandoff`. Useful for stories
-   * that want the transition to repeat for visual review.
-   */
-  loop?: boolean;
-};
-
-type BootLoaderSimState = {
-  state: BootLoaderRuntimeState;
-  progress: number;
-  stage: number;
-  status: string;
-  /** Step the state machine: `0 → 1 → 2 → reset → 0`. */
-  advance: () => void;
-};
-
 /**
- * Shared simulation guts driving the `BootLoader` stories. Models the same
- * three runtime states as the inline driver (`boot-loader.js`):
- *  - `0` idle: disc empty, no motion.
- *  - `1` slow tick: asymptotic creep toward `CREEP_ASYMPTOTE`%.
- *  - `2` progress: random-walk (stand-in for host-driven `progress(x)`).
- * Plus the placeholder stage walk (Phase 2) when `withHandoff` is set.
+ * Story controls — emits real `__bootLoader.status(...)` and `progress(...)`
+ * calls into the running driver script, which then drives the visible DOM.
+ * No React state shadow of the loader's progress; the driver is the source
+ * of truth.
  */
-const useBootLoaderSim = ({
-  initialState = 0,
-  autoAdvanceMs,
-  withHandoff = false,
-  loop = false,
-}: BootLoaderSimOptions = {}): BootLoaderSimState => {
-  const [state, setState] = useState<BootLoaderRuntimeState>(initialState);
-  const [progress, setProgress] = useState(0);
+type SimRunningState = 'idle' | 'creep' | 'progress' | 'done';
+
+const useBootLoaderDriver = ({ withHandoff = false }: { withHandoff?: boolean } = {}) => {
+  const [running, setRunning] = useState<SimRunningState>('creep');
   const [stage, setStage] = useState(0);
-  const [tick, setTick] = useState(0);
 
-  // Auto-advance timer: schedules `state + 1` after `autoAdvanceMs`. Resets
-  // on each `tick` so the handoff loop sees a fresh schedule per cycle.
+  // `creep` state — driver auto-creeps; the story emits a sequence of
+  // status messages so the appended-log behaviour is observable.
   useEffect(() => {
-    if (autoAdvanceMs == null || state === 2) {
+    if (running !== 'creep') {
       return;
     }
-    const handle = setTimeout(
-      () => setState((current) => (current === 0 ? 1 : current === 1 ? 2 : current)),
-      autoAdvanceMs,
-    );
-    return () => clearTimeout(handle);
-  }, [autoAdvanceMs, state, tick]);
-
-  // State 1 — slow tick. Asymptotic ease toward `CREEP_ASYMPTOTE` so the
-  // disc reads as alive while the host has nothing concrete to report.
-  // Once the asymptote is approached the timer ticks become no-ops.
-  useEffect(() => {
-    if (state !== 1) {
-      return;
-    }
+    const phases = ['Loading framework…', 'Reading configuration…', 'Starting services…'];
+    let index = 0;
     const handle = setInterval(() => {
-      setProgress((current) => {
-        const fraction = current * 100;
-        if (fraction >= CREEP_ASYMPTOTE - 0.1) {
-          return current;
-        }
-        return (fraction + (CREEP_ASYMPTOTE - fraction) * CREEP_RATE) / 100;
-      });
-    }, CREEP_TICK_MS);
+      window.__bootLoader?.status({ humanized: phases[index] });
+      index += 1;
+      if (index >= phases.length) {
+        clearInterval(handle);
+      }
+    }, 600);
     return () => clearInterval(handle);
-  }, [state]);
+  }, [running]);
 
-  // State 2 — random-walk progress. Resumes from the current progress (e.g.
-  // the creep value) so the bar doesn't jump when entering from state 1.
-  // `Math.max(current, …)` mirrors the driver's no-regress clamp so the
-  // ring's motion stays monotonic across the boundary.
+  // `progress` state — random-walk through the plugin count, calling the
+  // real `__bootLoader.progress(...)` so the driver's no-regress + creep
+  // logic runs as it does in production.
   useEffect(() => {
-    if (state !== 2 || progress >= 1) {
+    if (running !== 'progress') {
       return;
     }
-    let loaded = progress * STORY_PLUGIN_COUNT;
+    let loaded = 0;
     const handle = setInterval(() => {
-      loaded += Math.abs(Math.random());
-      setProgress((current) => Math.max(current, Math.min(1, loaded / STORY_PLUGIN_COUNT)));
+      loaded += Math.abs(Math.random()) * 1.5;
+      const fraction = Math.min(1, loaded / STORY_PLUGIN_COUNT);
+      window.__bootLoader?.progress(fraction);
+      // Range-bearing payload — replaces the current line in place
+      // instead of appending one entry per plugin tick.
+      window.__bootLoader?.status({
+        humanized: 'Loading plugins',
+        range: { index: Math.round(loaded), total: STORY_PLUGIN_COUNT },
+      });
       if (loaded >= STORY_PLUGIN_COUNT) {
         clearInterval(handle);
+        window.__bootLoader?.status({ humanized: 'Starting Composer…' });
+        setRunning('done');
       }
     }, STORY_TICK_MS);
     return () => clearInterval(handle);
-  }, [state, tick]);
+  }, [running]);
 
-  // Handoff phase — at 100%, walk the placeholder stage and (optionally) loop.
+  // Handoff phase — fade the placeholder in/out once the driver hits 100%.
   useEffect(() => {
-    if (!withHandoff || progress < 1) {
+    if (!withHandoff || running !== 'done') {
       return;
     }
     const handles: ReturnType<typeof setTimeout>[] = [];
-    handles.push(setTimeout(() => setStage(1), 200)); // FadeIn — placeholder mark visible.
-    handles.push(setTimeout(() => setStage(2), 2_000)); // FadeOut — mark shrinks.
-    if (loop) {
-      handles.push(
-        setTimeout(() => {
-          setStage(0);
-          setProgress(0);
-          setState(0);
-          setTick((current) => current + 1);
-        }, 3_500),
-      );
-    }
+    handles.push(setTimeout(() => setStage(1), 200));
+    handles.push(setTimeout(() => setStage(2), 2_000));
     return () => handles.forEach(clearTimeout);
-  }, [progress, withHandoff, loop]);
+  }, [running, withHandoff]);
 
   const advance = () => {
-    if (progress >= 1 || state === 2) {
-      // Reset back to the idle state. From there the user (or autoAdvance)
-      // can step through the states again.
-      setProgress(0);
+    if (running === 'creep') {
+      setRunning('progress');
+    } else {
+      setRunning('creep');
       setStage(0);
-      setState(0);
-      setTick((current) => current + 1);
-    } else if (state === 0) {
-      setState(1);
-    } else if (state === 1) {
-      setState(2);
     }
   };
 
-  // Status text — states 0 / 1 use the generic "Loading…" placeholder; state 2
-  // shows the per-plugin counter the production host wires through.
-  const loaded = Math.round(progress * STORY_PLUGIN_COUNT);
-  const status =
-    state < 2 ? 'Loading…' : progress >= 1 ? 'Starting Composer…' : `Loading plugins (${loaded}/${STORY_PLUGIN_COUNT})`;
-
-  return { state, progress, stage, status, advance };
+  return { running, stage, advance };
 };
 
-/**
- * Story-only toolbar exposing the `useBootLoaderSim` state machine. The
- * single button steps `0 → 1 → 2 → reset → 0`. `relative` opens a positioned
- * context so `z-20` actually applies — the boot loader is `position: fixed;
- * z-index: 10`, so anything above must be both positioned and outrank 10.
- */
-const SimToolbar = ({ state, progress, advance }: Pick<BootLoaderSimState, 'state' | 'progress' | 'advance'>) => {
-  const isDone = progress >= 1;
+const SimToolbar = ({ running, advance }: { running: SimRunningState; advance: () => void }) => {
   const button =
-    isDone || state === 2
-      ? { icon: 'ph--arrow-counter-clockwise--regular', label: 'Reset' }
-      : state === 1
-        ? { icon: 'ph--play--regular', label: 'Start' }
-        : { icon: 'ph--dots-three--regular', label: 'Tick' };
+    running === 'creep'
+      ? { icon: 'ph--play--regular', label: 'Start progress' }
+      : { icon: 'ph--arrow-counter-clockwise--regular', label: 'Reset' };
   return (
     <Toolbar.Root classNames='relative z-20'>
       <Toolbar.IconButton icon={button.icon} label={button.label} iconOnly onClick={advance} />
-      <Toolbar.Text>{`State ${state}`}</Toolbar.Text>
+      <Toolbar.Text>{running}</Toolbar.Text>
     </Toolbar.Root>
   );
 };
 
 const DefaultStory = () => {
-  // Start in state 0 (idle) so the user can step `Tick → Start → Reset`
-  // through the three runtime states themselves.
-  const { state, progress, status, advance } = useBootLoaderSim();
-
+  const { running, advance } = useBootLoaderDriver();
   return (
     <>
-      <SimToolbar state={state} progress={progress} advance={advance} />
-      <BootLoader status={status} markSvg={PLACEHOLDER_MARK} progress={progress} />
+      <SimToolbar running={running} advance={advance} />
+      <BootLoaderHost markSvg={PLACEHOLDER_MARK} />
     </>
   );
 };
 
-const meta: Meta<typeof BootLoader> = {
+const meta: Meta<typeof BootLoaderHost> = {
   title: 'sdk/app-framework/vite-plugin/BootLoader',
-  component: BootLoader,
+  component: BootLoaderHost,
   render: DefaultStory,
   decorators: [withTheme({})],
   parameters: {
     layout: 'fullscreen',
   },
   argTypes: {
-    status: { control: 'text' },
+    initialStatus: { control: 'text' },
     markSvg: { control: 'text' },
   },
 };
 
 export default meta;
 
-type Story = StoryObj<typeof BootLoader>;
+type Story = StoryObj<typeof BootLoaderHost>;
 
 export const Default: Story = {};
 
 /**
  * Renders the React `Placeholder` from `@dxos/app-framework/ui` on its own —
- * useful for eyeballing the handoff target the boot loader dismisses to,
- * with the same `<Composer />` brand mark the loader paints during cold load.
+ * useful for eyeballing the handoff target the boot loader dismisses to.
  */
 export const PlaceholderHandoff: Story = {
   name: 'Placeholder',
@@ -315,25 +245,18 @@ export const PlaceholderHandoff: Story = {
 };
 
 /**
- * End-to-end handoff sim: the `BootLoader` ticks 0 → 100% then unmounts and
- * the `Placeholder` underneath fades its mark in (`stage 0 → 1`) and back
- * out (`stage 1 → 2`), mirroring the production sequence where the native
- * loader paints first, the React placeholder mounts beneath, and the
- * placeholder's `useLayoutEffect` dismisses the loader the moment the mark
- * becomes visible. The runtime state machine is fully manual: the story
- * starts in state 0 and the toolbar steps it through `Tick → Start → Reset`,
- * so the handoff can be eyeballed at the user's pace.
+ * End-to-end handoff sim: the driver ticks 0 → 100% then the host calls
+ * `dismiss()` and the underlying `Placeholder` fades the mark in / out,
+ * mirroring the production sequence.
  */
 export const Handoff: Story = {
   render: () => {
-    const { state, progress, stage, status, advance } = useBootLoaderSim({ withHandoff: true });
+    const { running, stage, advance } = useBootLoaderDriver({ withHandoff: true });
     return (
       <>
-        <SimToolbar state={state} progress={progress} advance={advance} />
-        {/* Placeholder underneath — `stage = 0` keeps the logo at opacity 0 */}
-        {/* until the BootLoader unmounts, then it fades in. */}
+        <SimToolbar running={running} advance={advance} />
         <Placeholder stage={stage} logo={(logoProps) => <Composer {...logoProps} />} />
-        {stage < 1 && <BootLoader status={status} markSvg={PLACEHOLDER_MARK} progress={progress} />}
+        {stage < 1 && <BootLoaderHost markSvg={PLACEHOLDER_MARK} />}
       </>
     );
   },

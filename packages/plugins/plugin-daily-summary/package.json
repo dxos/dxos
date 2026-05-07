@@ -13,6 +13,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": "./src/DailySummaryPlugin.tsx",
     "#blueprints": "./src/blueprints/index.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#containers": "./src/containers/index.ts",
@@ -61,6 +62,8 @@
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",
+    "@dxos/functions-runtime": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@storybook/react-vite": "catalog:",

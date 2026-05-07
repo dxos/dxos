@@ -5,5 +5,9 @@
     "src",
     "src/**/*.json"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../log"
+    }
+  ]
 }

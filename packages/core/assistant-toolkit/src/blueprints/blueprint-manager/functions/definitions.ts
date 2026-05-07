@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AiContextService } from '@dxos/assistant';
-import { Blueprint } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { Blueprint, Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 
 export const QueryBlueprints = Operation.make({
@@ -30,7 +29,7 @@ export const EnableBlueprints = Operation.make({
   input: Schema.Struct({
     keys: Schema.Array(Schema.String).annotations({
       description: 'The keys of the blueprints to enable.',
-      examples: [['org.dxos.blueprint.markdown', 'org.dxos.blueprint.database']],
+      examples: [['org.dxos.blueprint.memory', 'org.dxos.blueprint.database']],
     }),
   }),
   output: Schema.Struct({

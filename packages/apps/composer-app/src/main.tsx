@@ -15,7 +15,7 @@ import React, { StrictMode, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { type Plugin, UrlLoader } from '@dxos/app-framework';
+import { type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
 import { Placeholder, type PlaceholderComponentProps, useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Composer } from '@dxos/brand';
@@ -33,6 +33,7 @@ import { ResetDialog } from './components';
 import { initializeObservability, PARAM_PROFILER, setupConfig } from './config';
 import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
 import { APP_KEY, LOG_STORE_DB_NAME } from './constants';
+import { showDevRssBanner } from './dev-rss-banner';
 import { downloadLogs } from './log-download';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
 import { startupProfiler } from './profiler';
@@ -66,9 +67,65 @@ declare global {
  * The CSS animation in `index.html` keeps painting on the compositor thread
  * regardless of main-thread work, so this is purely textual feedback.
  */
-const bootStatus = (text: string) => window.__bootLoader?.status(text);
+const bootStatus = (text: string) => window.__bootLoader?.status({ humanized: text });
+
+// Stamp every (re-)evaluation of this module so we can tell Vite HMR reloads
+// from a true page boot. Dev-only — production has no HMR and the diagnostic
+// would just be noise. `import.meta.env.DEV` is statically replaced at build
+// time, so the whole block tree-shakes out of prod bundles.
+const BOOT_ID = import.meta.env?.DEV ? Math.random().toString(36).slice(2, 10) : '';
+const MODULE_EVAL_TIME = Date.now();
+if (import.meta.env?.DEV) {
+  log('composer main: module evaluated', { bootId: BOOT_ID, t: MODULE_EVAL_TIME });
+  const importMeta = import.meta as any;
+  if (importMeta.hot) {
+    importMeta.hot.dispose(() => {
+      log('composer main: hmr dispose', { bootId: BOOT_ID, ageMs: Date.now() - MODULE_EVAL_TIME });
+    });
+  }
+}
+
+/**
+ * Picks the platform-appropriate offline asset cache for third-party plugins.
+ *  - Tauri (desktop + iOS): Rust-backed filesystem cache, served via the `dxos-plugin://` URI scheme.
+ *  - Web with PWA enabled: cache managed by the SW in `./sw.ts`.
+ *  - Otherwise (PWA disabled, tests, unsupported environments): a no-op cache;
+ *    plugins still load but lose their offline guarantee.
+ *
+ * `isPwa` (not `'serviceWorker' in navigator`) is the SW gate because that
+ * property is `true` in every modern browser whether or not a worker is
+ * actually registered. On non-PWA builds (`DX_PWA=false` → `selfDestroying`
+ * VitePWA, e.g. `labs.composer.space`) there is no active registration, and
+ * the SW-backed cache's first call is `await navigator.serviceWorker.ready`
+ * which resolves only when one exists — hangs forever otherwise, freezing
+ * `Install` indefinitely with no timeout.
+ *
+ * Each branch dynamic-imports its impl so vite emits per-platform chunks instead
+ * of dragging both into the initial bundle.
+ */
+const createAssetCache = async (isPwa: boolean, isTauri: boolean): Promise<PluginAssetCache.Cache> => {
+  if (isTauri) {
+    const { createTauriAssetCache } = await import('./asset-cache/tauri');
+    return createTauriAssetCache();
+  }
+  if (isPwa && typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+    const { createServiceWorkerAssetCache } = await import('./asset-cache/service-worker');
+    return createServiceWorkerAssetCache();
+  }
+  return PluginAssetCache.noop();
+};
 
 const main = async () => {
+  if (import.meta.env?.DEV) {
+    log('composer main: main() running', { bootId: BOOT_ID });
+    // Fire-and-forget: surfaces the latest entry from a dev RSS feed under
+    // the boot loader as a small distraction during cold boots. Routed
+    // through the Vite dev server's `/api/rss` proxy (see vite.config.ts)
+    // to dodge CORS. Tree-shakes out of prod via the `import.meta.env.DEV`
+    // gate above.
+    void showDevRssBanner();
+  }
+
   const url = new URL(window.location.href);
   const safeMode = isTrue(url.searchParams.get(PARAM_SAFE_MODE), false);
   if (safeMode) {
@@ -313,6 +370,7 @@ const main = async () => {
 
   profiler?.mark('plugins:start');
 
+  const isPwa = !isFalse(config.values.runtime?.app?.env?.DX_PWA);
   const conf: PluginConfig = {
     appKey: APP_KEY,
     config,
@@ -321,7 +379,7 @@ const main = async () => {
     logStore,
 
     isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
-    isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA),
+    isPwa,
     isTauri,
     isPopover,
     isMobile,
@@ -329,31 +387,40 @@ const main = async () => {
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
 
-  // `getPlugins` dynamic-imports every plugin chunk in parallel.
-  // Run it concurrently with `UrlLoader.preload` (network-bound) so the two waits overlap.
+  // `getPlugins` is synchronous: each plugin's main entry exposes only
+  // `meta` + a `Plugin.lazy(...)` stub, so building the plugin array doesn't
+  // pull any plugin's body. The plugin manager loads the real plugin
+  // (separate Rollup chunk) on first `enable`. Remote plugin preload is
+  // network-bound — the boot loader's counter follows that until the
+  // plugin manager (post-React mount) takes over with module-activation
+  // progress.
   bootStatus('Loading plugins…');
-  const [builtinPlugins, remotePluginsResult] = await Promise.all([
-    getPlugins(conf, {
+  const builtinPlugins = getPlugins(conf);
+  const assetCache = await createAssetCache(isPwa, isTauri);
+  const remotePluginsResult = await runAndForwardErrors(
+    UrlLoader.preload({
+      cache: assetCache,
       onPluginLoaded: (loaded, total) => {
-        bootStatus(`Loading plugins (${loaded}/${total})`);
-        // The ring spans two phases — plugin chunks (0 → 50%) and module
-        // activation (50 → 100%, driven from `Placeholder` once React mounts).
-        // Splitting the range keeps it monotonic across the boundary.
+        // Pass `range` so the loader updates the existing line in place
+        // ("Loading plugins (3/12)") instead of appending a fresh entry per
+        // tick — keeps the visible log compact.
+        window.__bootLoader?.status({ humanized: 'Loading plugins', range: { index: loaded, total } });
+        // The ring spans two phases — remote-plugin preload (0 → 50%) and
+        // module activation (50 → 100%, driven from `Placeholder` once
+        // React mounts). Splitting the range keeps it monotonic across
+        // the boundary.
         window.__bootLoader?.progress((loaded / total) * 0.5);
       },
     }),
-    UrlLoader.preload().catch((error) => {
-      log.warn('failed to preload remote plugins', { error });
-      return [] as Plugin.Plugin[];
-    }),
-  ]);
+  );
 
   bootStatus('Starting Composer…');
-  // Park the ring at 50% — chunks done, activation about to take over.
+  // Park the ring at 50% — preload done, activation about to take over.
   window.__bootLoader?.progress(0.5);
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
-  const pluginLoader = UrlLoader.make(builtinPlugins);
+  const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
+  const onPluginRemove = (id: string) => UrlLoader.uninstall(id, { cache: assetCache });
   const core = getCore(conf);
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
@@ -398,6 +465,7 @@ const main = async () => {
       fallback: Fallback,
       placeholder: ComposerPlaceholder,
       pluginLoader,
+      onPluginRemove,
       plugins,
       core,
       defaults,
@@ -414,6 +482,7 @@ const main = async () => {
   };
 
   const root = document.getElementById('root')!;
+  log('composer main: rendering App', { bootId: BOOT_ID, strict: conf.isStrict });
   if (conf.isStrict) {
     createRoot(root).render(
       <StrictMode>

@@ -44,7 +44,7 @@ const handler: Operation.WithHandler<typeof ExtractContact> = ExtractContact.pip
         emails: [{ value: email }],
       });
       if (name) {
-        Obj.change(newContact, (newContact) => {
+        Obj.update(newContact, (newContact) => {
           newContact.fullName = name;
         });
       }
@@ -91,7 +91,7 @@ const handler: Operation.WithHandler<typeof ExtractContact> = ExtractContact.pip
         log.info('found matching organization', {
           organization: matchingOrg,
         });
-        Obj.change(newContact, (newContact) => {
+        Obj.update(newContact, (newContact) => {
           newContact.organization = Ref.make(matchingOrg);
         });
       }

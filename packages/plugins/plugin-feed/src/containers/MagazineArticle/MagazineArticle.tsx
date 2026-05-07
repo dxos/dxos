@@ -18,7 +18,7 @@ import { meta } from '#meta';
 import { FeedOperation } from '#operations';
 import { type Magazine, Subscription } from '#types';
 
-import { findStarTag, hasMetaTag, useStarTag } from '../../util';
+import { dxnToObjectId, findStarTag, hasMetaTag, useStarTag } from '../../util';
 import { MagazineTile, formatPublished } from './MagazineTile';
 import { MagazineSort, type CurateState } from './MagazineToolbar';
 import { MagazineToolbar, type MagazineView } from './MagazineToolbar';
@@ -28,14 +28,14 @@ export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazi
 export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
-  useObject(subject);
+  const [magazine] = useObject(subject);
 
   const showItem = useShowItem();
-  const id = attendableId ?? Obj.getDXN(subject).toString();
+  const id = attendableId ?? Obj.getDXN(magazine).toString();
   const currentId = useSelected(id, 'single');
   const [sort, setSort] = useState<MagazineSort>('date');
   const [view, setView] = useState<MagazineView>('default');
-  const db = Obj.getDatabase(subject);
+  const db = Obj.getDatabase(magazine);
   const starTag = useStarTag(db);
 
   // Sync feeds → curate magazine → apply per-feed keep.
@@ -88,7 +88,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   // becomes populated reactively on the next render cycle. Also pre-load each
   // resolved Post's `feed` ref so `MagazineTile` can show the feed name.
   useEffect(() => {
-    for (const ref of subject.posts) {
+    for (const ref of magazine.posts) {
       if (!ref.target) {
         void ref.load().catch((err) => log.catch(err));
         continue;
@@ -99,43 +99,48 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         void feedRef.load().catch((err) => log.catch(err));
       }
     }
-  }, [subject.posts]);
+  }, [magazine.posts]);
 
   // When the user removes a feed from the magazine via ObjectProperties, prune any
   // curated posts whose source feed is no longer present.
+  // Compare by bare object id rather than full DXN — `magazine.feeds[i].dxn` and
+  // `post.feed.dxn` may carry different prefixes (`dxn:echo:@:<id>` vs
+  // `dxn:echo:<spaceId>:<id>`) depending on how each ref was constructed, so
+  // string-comparing the full DXN flags every post as an orphan and wipes the
+  // magazine on mount.
   useEffect(() => {
-    const feedDxns = new Set(subject.feeds.map((ref) => ref.dxn.toString()));
+    const feedIds = new Set(magazine.feeds.map((ref) => dxnToObjectId(ref.dxn)));
     const orphanIds = new Set<string>();
-    for (const postRef of subject.posts) {
+    for (const postRef of magazine.posts) {
       const post = postRef.target;
       const feedRef = post?.feed;
       if (!feedRef) {
         continue;
       }
-      if (!feedDxns.has(feedRef.dxn.toString())) {
-        orphanIds.add(postRef.dxn.toString());
+      if (!feedIds.has(dxnToObjectId(feedRef.dxn))) {
+        orphanIds.add(dxnToObjectId(postRef.dxn));
       }
     }
     if (orphanIds.size === 0) {
       return;
     }
 
-    Obj.change(subject, (subject) => {
-      subject.posts = subject.posts.filter((ref) => !orphanIds.has(ref.dxn.toString()));
+    Obj.update(subject, (subject) => {
+      subject.posts = subject.posts.filter((ref) => !orphanIds.has(dxnToObjectId(ref.dxn)));
     });
-  }, [subject, subject.feeds, subject.posts]);
+  }, [subject, magazine.feeds, magazine.posts]);
 
   // Reset the magazine's curated post list. Starred posts are preserved so
   // the user doesn't lose manually-saved items; a follow-up Curate will
   // repopulate from the source feeds.
   const handleClear = useCallback(() => {
-    if (!db || subject.posts.length === 0) {
+    if (!db || magazine.posts.length === 0) {
       return;
     }
 
     const tag = findStarTag(db);
     const tagDxn = tag ? Obj.getDXN(tag).toString() : undefined;
-    const next = subject.posts.filter((ref) => {
+    const next = magazine.posts.filter((ref) => {
       const post = ref.target;
       if (!post || !tagDxn) {
         return false;
@@ -144,19 +149,19 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       return Obj.getMeta(post).tags?.includes(tagDxn) ?? false;
     });
 
-    if (next.length === subject.posts.length) {
+    if (next.length === magazine.posts.length) {
       return;
     }
 
-    Obj.change(subject, (subject) => {
+    Obj.update(subject, (subject) => {
       subject.posts = next;
     });
-  }, [subject, db]);
+  }, [subject, magazine.posts, db]);
 
   const handleOpen = useCallback(
     (post: Subscription.Post) => {
       if (!post.readAt) {
-        Obj.change(post, (post) => {
+        Obj.update(post, (post) => {
           const mutable = post as Obj.Mutable<typeof post>;
           mutable.readAt = new Date().toISOString();
         });
@@ -186,17 +191,28 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   // DXN so swaps that preserve `feeds.length` still trigger.
   const feedFingerprint = useMemo(
     () =>
-      subject.feeds
+      magazine.feeds
         .map((ref) => ref.dxn.toString())
         .sort()
         .join(),
-    [subject.feeds],
+    [magazine.feeds],
   );
 
   // Key on both magazine identity and feed fingerprint so switching to a different
-  // magazine with the same feeds still triggers curation for the new magazine.
-  const previousCurateKey = useRef({ subject, feedFingerprint });
+  // magazine with the same feeds still triggers curation for the new magazine. The
+  // ref starts with sentinel undefineds so the initial mount also triggers curation
+  // — that covers first render of a magazine that already has feeds (e.g. just
+  // created with a seeded default feed, or restored from a deep link).
+  const previousCurateKey = useRef<{ subject?: Magazine.Magazine; feedFingerprint?: string }>({});
   useEffect(() => {
+    if (magazine.feeds.length === 0) {
+      // Track the empty state so a later restore (re-adding the same feed set
+      // that was previously cleared) still registers as a fingerprint change and
+      // re-fires curation. Without this the cached key would stay pinned to the
+      // pre-clear feed list and the comparison below would erroneously skip.
+      previousCurateKey.current = { subject, feedFingerprint };
+      return;
+    }
     if (
       previousCurateKey.current.subject !== subject ||
       previousCurateKey.current.feedFingerprint !== feedFingerprint
@@ -204,19 +220,19 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       previousCurateKey.current = { subject, feedFingerprint };
       void invokePromise(FeedOperation.CurateMagazine, { magazine: Ref.make(subject) }).catch((err) => log.catch(err));
     }
-  }, [feedFingerprint, subject, invokePromise]);
+  }, [feedFingerprint, subject, magazine.feeds.length, invokePromise]);
 
   // Open the ObjectProperties companion when the magazine has no posts so the user
   // can configure subscription feeds without an empty pane staring back at them.
-  // Use `subject.posts.length` (the unfiltered set) so view filters like 'archived'
+  // Use `magazine.posts.length` (the unfiltered set) so view filters like 'archived'
   // or 'starred' don't trigger this when the magazine actually still has posts.
   useEffect(() => {
-    if (subject.posts.length === 0) {
+    if (magazine.posts.length === 0) {
       void invokePromise(LayoutOperation.UpdateCompanion, {
         subject: linkedSegment('settings'),
       }).catch((err) => log.catch(err));
     }
-  }, [subject, subject.posts.length, invokePromise]);
+  }, [magazine.posts.length, invokePromise]);
 
   const tileItems = useMemo<TileData[]>(
     () =>
@@ -240,7 +256,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <MagazineToolbar
-          hasFeeds={subject.feeds.length > 0}
+          hasFeeds={magazine.feeds.length > 0}
           state={state}
           sort={sort}
           onSortChange={setSort}

@@ -170,6 +170,12 @@
       "path": "../../core/echo/index-core"
     },
     {
+      "path": "../../core/functions"
+    },
+    {
+      "path": "../../core/functions-runtime"
+    },
+    {
       "path": "../../core/halo/credentials"
     },
     {
@@ -212,6 +218,9 @@
       "path": "../../core/mesh/websocket-rpc"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
@@ -236,6 +245,9 @@
       "path": "../../plugins/plugin-client"
     },
     {
+      "path": "../../plugins/plugin-code"
+    },
+    {
       "path": "../../plugins/plugin-conductor"
     },
     {
@@ -257,6 +269,9 @@
       "path": "../../plugins/plugin-discord"
     },
     {
+      "path": "../../plugins/plugin-doctor"
+    },
+    {
       "path": "../../plugins/plugin-explorer"
     },
     {
@@ -266,6 +281,9 @@
       "path": "../../plugins/plugin-files"
     },
     {
+      "path": "../../plugins/plugin-gallery"
+    },
+    {
       "path": "../../plugins/plugin-graph"
     },
     {
@@ -273,6 +291,9 @@
     },
     {
       "path": "../../plugins/plugin-inbox"
+    },
+    {
+      "path": "../../plugins/plugin-integration"
     },
     {
       "path": "../../plugins/plugin-iroh-beacon"
@@ -359,9 +380,6 @@
       "path": "../../plugins/plugin-spacetime"
     },
     {
-      "path": "../../plugins/plugin-spec"
-    },
-    {
       "path": "../../plugins/plugin-spotlight"
     },
     {
@@ -386,10 +404,10 @@
       "path": "../../plugins/plugin-tictactoe"
     },
     {
-      "path": "../../plugins/plugin-token-manager"
+      "path": "../../plugins/plugin-transcription"
     },
     {
-      "path": "../../plugins/plugin-transcription"
+      "path": "../../plugins/plugin-trello"
     },
     {
       "path": "../../plugins/plugin-voxel"
@@ -522,9 +540,6 @@
     },
     {
       "path": "../../ui/react-ui-pickers"
-    },
-    {
-      "path": "../../ui/react-ui-search"
     },
     {
       "path": "../../ui/react-ui-sfx"

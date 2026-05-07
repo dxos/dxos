@@ -10,12 +10,12 @@ import * as Schema from 'effect/Schema';
 
 import { AiContextBinder, AiContextService } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/compute';
-import { QueueService } from '@dxos/compute';
 import { Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { acquireReleaseResource } from '@dxos/effect';
+import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { QueueAnnotation, Text } from '@dxos/schema';
 
@@ -165,7 +165,7 @@ export const makeInitialized = (
 
     const inputQueue = yield* QueueService.createQueue();
 
-    Obj.change(agent, (agent) => {
+    Obj.update(agent, (agent) => {
       agent.chat = Ref.make(chat);
       agent.queue = Ref.fromDXN(inputQueue.dxn);
     });
@@ -216,7 +216,7 @@ export const resetChatHistory = (
       }),
     );
     Obj.setParent(feed, chat);
-    Obj.change(agent, (agent) => {
+    Obj.update(agent, (agent) => {
       agent.chat = Ref.make(chat);
     });
 

@@ -66,3 +66,5 @@ export const MapPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default MapPlugin;

@@ -195,7 +195,9 @@ async function deleteObjectsBulk(s3, keys) {
 
   let index = 0;
   async function runNext() {
-    if (index >= batches.length) return;
+    if (index >= batches.length) {
+      return;
+    }
     const batch = batches[index++];
     await runBatch(batch);
     completedBatches++;
@@ -291,7 +293,9 @@ async function uploadWithConcurrency(files, vendorDir, env, concurrency) {
   const total = files.length;
 
   async function runNext() {
-    if (index >= files.length) return;
+    if (index >= files.length) {
+      return;
+    }
 
     const currentIndex = index++;
     const file = files[currentIndex];

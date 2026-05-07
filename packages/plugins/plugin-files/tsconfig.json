@@ -78,6 +78,9 @@
       "path": "../plugin-status-bar"
     },
     {
+      "path": "../plugin-testing"
+    },
+    {
       "path": "../plugin-theme"
     }
   ]

@@ -94,7 +94,11 @@ export const bootLoaderPlugin = ({ status, markSvg }: BootLoaderOptions = {}): P
                 ...markChildren,
               ],
             },
-            { tag: 'div', attrs: { id: 'boot-loader-status' }, children: status },
+            {
+              tag: 'div',
+              attrs: { id: 'boot-loader-status' },
+              children: status ? [{ tag: 'div', attrs: { class: 'boot-loader-status-line' }, children: status }] : [],
+            },
           ],
         },
         {

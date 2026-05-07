@@ -26,7 +26,9 @@ try {
       {
         name: 'probe',
         transform(_code, id, meta) {
-          if (!id.endsWith('.ts')) return null;
+          if (!id.endsWith('.ts')) {
+            return null;
+          }
           const astDesc = Object.getOwnPropertyDescriptor(meta, 'ast');
           const msDesc = Object.getOwnPropertyDescriptor(meta, 'magicString');
           console.log(`id=${id}`);

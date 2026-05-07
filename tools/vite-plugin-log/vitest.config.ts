@@ -6,6 +6,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineProject, defineConfig } from 'vitest/config';
 
+import { TEST_TAGS } from '../../vitest.tags';
+
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -15,6 +17,7 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 export default defineConfig({
   root: dirname,
   test: {
+    tags: TEST_TAGS,
     projects: [
       defineProject({
         root: dirname,

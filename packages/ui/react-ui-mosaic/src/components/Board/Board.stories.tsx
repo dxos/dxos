@@ -80,7 +80,9 @@ const useTestBoardModel = (): TestBoardModelResult => {
     const orderedColumnsAtom = Atom.make((get) => {
       const cols = get(columnsAtom);
       const order = get(orderAtom);
-      if (order.length === 0) return cols;
+      if (order.length === 0) {
+        return cols;
+      }
       const byId = new Map(cols.map((column) => [getColumnId(column), column]));
       const ordered = order.map((id) => byId.get(id)).filter((column): column is TestColumn => column != null);
       const appended = cols.filter((column) => !order.includes(getColumnId(column)));
@@ -119,14 +121,14 @@ const useTestBoardModel = (): TestBoardModelResult => {
           }),
         );
 
-        Obj.change(column, (column) => {
+        Obj.update(column, (column) => {
           column.items.push(Ref.make(item));
         });
 
         return item;
       },
       onItemDelete: (column: TestColumn, current: TestItem) => {
-        Obj.change(column, (column) => {
+        Obj.update(column, (column) => {
           if (!column.items) {
             return;
           }

@@ -15,8 +15,7 @@ import {
   ToolResolverService,
 } from '@dxos/ai';
 import { type AiAssistantError, AiRequest } from '@dxos/assistant';
-import { Trace } from '@dxos/compute';
-import { Operation, OperationRegistry } from '@dxos/compute';
+import { Trace, Operation, OperationRegistry } from '@dxos/compute';
 import { Database, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

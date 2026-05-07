@@ -10,7 +10,10 @@ import { EditorInputMode } from '@dxos/ui-editor/types';
 
 export const Settings = Schema.mutable(
   Schema.Struct({
-    editorInputMode: EditorInputMode,
+    editorInputMode: EditorInputMode.annotations({
+      title: 'Editor input mode',
+      description: 'Choose the keybinding style for the script editor.',
+    }),
   }),
 );
 

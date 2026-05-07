@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "dxos-introspect": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["tsx", "--conditions=source", "packages/core/introspect-mcp/src/cli.ts"]
+    }
+  }
+}

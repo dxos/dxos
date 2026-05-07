@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
@@ -10,7 +9,7 @@ import { trim } from '@dxos/util';
 
 import { QueryMemories, SaveMemory, DeleteMemory } from './functions';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/memory';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.memory';
 
 const instructions = trim`
   You have the ability to save and recall memories.
@@ -34,7 +33,7 @@ const make = () =>
     tools: Blueprint.toolDefinitions({ operations: [SaveMemory, QueryMemories, DeleteMemory] }),
   });
 
-const blueprint: AppCapabilities.BlueprintDefinition = {
+const blueprint: Blueprint.Definition = {
   key: BLUEPRINT_KEY,
   make,
 };

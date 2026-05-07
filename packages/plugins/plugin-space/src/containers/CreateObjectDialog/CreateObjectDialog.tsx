@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Capability } from '@dxos/app-framework';
@@ -67,7 +66,7 @@ export const CreateObjectDialog = ({
   const viewTypenames = useMemo(() => {
     const set = new Set<string>();
     for (const schema of schemas ?? []) {
-      if (ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
+      if (ViewAnnotation.has(schema)) {
         set.add(Type.getTypename(schema));
       }
     }

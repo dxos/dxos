@@ -72,7 +72,7 @@ export const generateTaskId = (plan: Plan): TaskId => {
 
 /**
  * Add new tasks to a plan, generating IDs for new tasks.
- * Use inside an `Obj.change` callback.
+ * Use inside an `Obj.update` callback.
  */
 export const addTasks = (
   plan: Obj.Mutable<Plan>,
@@ -94,7 +94,7 @@ interface MakePlanProps {
 
 export const makePlan = (props: MakePlanProps): Plan => {
   const plan = Obj.make(Plan, { tasks: [] });
-  Obj.change(plan, (plan) => {
+  Obj.update(plan, (plan) => {
     addTasks(plan, props.tasks);
   });
   return plan;

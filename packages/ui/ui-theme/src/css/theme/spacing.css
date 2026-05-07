@@ -94,7 +94,7 @@
     --dx-input-fine: var(--dx-lacuna-3);
     --dx-input-coarse: var(--dx-lacuna-4);
 
-    --dx-default-icons-size: 1.25rem; /* size=5 */
+    --dx-default-icons-size: 1rem; /* size=4 */
   }
 
   [data-grid-focus-indicator-variant='stack'] {

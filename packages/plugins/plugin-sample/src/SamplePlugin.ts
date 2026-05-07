@@ -70,3 +70,5 @@ export const SamplePlugin = Plugin.define(meta).pipe(
   // Finalizes the plugin. Must be the last call in the chain.
   Plugin.make,
 );
+
+export default SamplePlugin;

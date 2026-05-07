@@ -20,3 +20,5 @@ export const ThemePlugin = Plugin.define<ThemePluginOptions>(meta).pipe(
   })),
   Plugin.make,
 );
+
+export default ThemePlugin;

@@ -10,6 +10,13 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiModelResolver, AiService } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
+import {
+  FunctionError,
+  InvalidOperationInputError,
+  InvalidOperationOutputError,
+  Operation,
+  Trace,
+} from '@dxos/compute';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, JsonSchema, Ref, type Type } from '@dxos/echo';
 import { EchoClient, type EchoDatabaseImpl, type QueueFactory, createFeedServiceLayer } from '@dxos/echo-db';
@@ -17,13 +24,15 @@ import { refFromEncodedReference } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
 import { type FunctionProtocol } from '@dxos/protocols';
 
-import { FunctionError } from '../errors';
 import { type FunctionServices } from '../sdk';
-import { CredentialsService, FunctionInvocationService, QueueService } from '../services';
-import * as Trace from '../Trace';
+import {
+  configuredCredentialsLayer,
+  credentialsLayerFromDatabase,
+  FunctionInvocationService,
+  QueueService,
+} from '../services';
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
 /**
@@ -61,9 +70,12 @@ export const wrapFunctionHandler = (func: Operation.WithHandler<Operation.Defini
       try {
         if (!SchemaAST.isAnyKeyword(func.input.ast)) {
           try {
-            Schema.validateSync(func.input)(data);
-          } catch (error) {
-            throw new FunctionError({ message: 'Invalid input schema', cause: error });
+            Schema.validateSync(func.input, { onExcessProperty: 'error' })(data);
+          } catch (error: any) {
+            throw new InvalidOperationInputError({
+              message: `Operation input did not match schema (${func.meta.key}): ${error.message}`,
+              cause: error,
+            });
           }
         }
 
@@ -91,7 +103,14 @@ export const wrapFunctionHandler = (func: Operation.WithHandler<Operation.Defini
         }
 
         if (func.output && !SchemaAST.isAnyKeyword(func.output.ast)) {
-          Schema.validateSync(func.output)(result);
+          try {
+            Schema.validateSync(func.output, { onExcessProperty: 'error' })(result);
+          } catch (error: any) {
+            throw new InvalidOperationOutputError({
+              message: `Operation output did not match schema (${func.meta.key}): ${error.message}`,
+              cause: error,
+            });
+          }
         }
 
         return result;
@@ -154,8 +173,8 @@ class FunctionContext extends Resource {
     const queuesLayer = this.queues ? QueueService.layer(this.queues) : QueueService.notAvailable;
     const feedLayer = this.queues ? createFeedServiceLayer(this.queues) : Feed.notAvailable;
     const credentials = dbLayer
-      ? CredentialsService.layerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
-      : CredentialsService.configuredLayer([]);
+      ? credentialsLayerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
+      : configuredCredentialsLayer([]);
     const functionInvocationService = MockedFunctionInvocationService;
     const operationServiceLayer = MockedOperationServiceLayer;
 

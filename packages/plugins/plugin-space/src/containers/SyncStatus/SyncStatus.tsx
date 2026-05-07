@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { StatusBar } from '@dxos/plugin-status-bar';
+import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';

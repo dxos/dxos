@@ -207,6 +207,11 @@ export interface Query<T> {
    * Add options to a query.
    */
   'options'(options: QueryAST.QueryOptions): Query<T>;
+
+  /**
+   * Attach a diagnostic label for logs and tooling (execution semantics unchanged).
+   */
+  'debugLabel'(label: string): Query<T>;
 }
 
 export type Any = Query<any>;
@@ -427,6 +432,21 @@ class QueryClass implements Any {
       type: 'options',
       query: this.ast,
       options,
+    });
+  }
+
+  debugLabel(label: string): Any {
+    if (this.ast.type === 'options') {
+      return new QueryClass({
+        type: 'options',
+        query: this.ast.query,
+        options: { ...this.ast.options, debugLabel: label },
+      });
+    }
+    return new QueryClass({
+      type: 'options',
+      query: this.ast,
+      options: { debugLabel: label },
     });
   }
 }

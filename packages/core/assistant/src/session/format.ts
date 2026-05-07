@@ -6,9 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Template } from '@dxos/compute';
-import { type FunctionNotFoundError } from '@dxos/compute';
-import { type Operation, type OperationRegistry } from '@dxos/compute';
+import { type FunctionNotFoundError, type Operation, type OperationRegistry, Template } from '@dxos/compute';
 import { type Database, Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
 import type { ObjectNotFoundError } from '@dxos/echo/Err';

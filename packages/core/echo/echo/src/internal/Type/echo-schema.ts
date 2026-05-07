@@ -372,7 +372,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   }
 
   /**
-   * Wrapper for Obj.change that handles the change context for the persistent schema.
+   * Wrapper for Obj.update that handles the change context for the persistent schema.
    */
   private _change(callback: (schema: PersistentSchema) => void): void {
     const changeFn = (this._persistentSchema as any)[ChangeId];

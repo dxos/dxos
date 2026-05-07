@@ -5,8 +5,7 @@
 import { next as A, type Doc } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 
-import { type Script } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { type Script, Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
 
@@ -22,7 +21,7 @@ export default Update.pipe(
       const script = (yield* Database.load(loaded.source)) as Script.Script;
 
       if (name !== undefined || description !== undefined) {
-        Obj.change(script, (script) => {
+        Obj.update(script, (script) => {
           if (name !== undefined) {
             script.name = name;
           }
@@ -56,7 +55,7 @@ export default Update.pipe(
           });
         }
 
-        Obj.change(script, (script) => {
+        Obj.update(script, (script) => {
           script.changed = true;
         });
       }

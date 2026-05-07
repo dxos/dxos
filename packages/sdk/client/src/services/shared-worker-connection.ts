@@ -41,9 +41,12 @@ export class SharedWorkerConnection {
   }
 
   async open(params: { origin: string }): Promise<void> {
+    log('shared-worker-connection: opening', { id: this._id, origin: params.origin });
     const { RtcTransportService } = await import('@dxos/network-manager');
+    log('shared-worker-connection: RtcTransportService imported, resolving config');
 
     this._config = await getAsyncProviderValue(this._configProvider);
+    log('shared-worker-connection: config resolved');
 
     this._transportService = new RtcTransportService(
       { iceServers: [...(this._config.get('runtime.services.ice') ?? [])] },
@@ -69,16 +72,21 @@ export class SharedWorkerConnection {
       lockKey = this._lockKey(params.origin);
       this._release = new Trigger();
       const ready = new Trigger();
+      log('shared-worker-connection: requesting tab-liveness lock', { lockKey });
       void navigator.locks.request(lockKey, async () => {
         ready.wake();
         await this._release.wait();
       });
       await ready.wait();
+      log('shared-worker-connection: tab-liveness lock acquired');
     }
 
     try {
+      log('shared-worker-connection: opening system RPC peer');
       await this._systemRpc.open();
+      log('shared-worker-connection: system RPC peer opened, calling WorkerService.start');
       await this._systemRpc.rpc.WorkerService.start({ lockKey, ...params });
+      log('shared-worker-connection: WorkerService.start returned');
     } catch (err) {
       log.catch(err);
       throw new RemoteServiceConnectionError({ message: 'Failed to connect to worker' });
@@ -86,6 +94,7 @@ export class SharedWorkerConnection {
   }
 
   async close(): Promise<void> {
+    log('shared-worker-connection: closing', { id: this._id });
     this._release.wake();
     try {
       await this._systemRpc.rpc.WorkerService.stop();
@@ -93,6 +102,7 @@ export class SharedWorkerConnection {
       // If this fails, the worker is probably already gone.
     }
     await this._systemRpc.close();
+    log('shared-worker-connection: closed');
   }
 
   private _lockKey(origin: string): string {

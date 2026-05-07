@@ -16,7 +16,7 @@ import { type NavTreeCapabilities as NC, NavTreeCapabilities } from '#types';
 const KEY = `${meta.id}.state.v1`;
 
 /** Default item state for new entries. */
-const defaultItemState: NC.NavTreeItemState = { open: false, current: false, alternateTree: false };
+const defaultItemState: NC.NavTreeItemState = { open: false, current: false };
 
 /** L0 (top-level workspace) paths are direct children of root — not part of the expandable tree model. */
 const isTopLevelPath = (path: string[]): boolean => path.length === 2 && path[0] === Node.RootId;
@@ -66,7 +66,7 @@ export default Capability.makeModule(
       return registry.get(getItemAtom(path));
     };
 
-    const setItem = (path: string[], key: 'open' | 'current' | 'alternateTree', next: boolean) => {
+    const setItem = (path: string[], key: 'open' | 'current', next: boolean) => {
       const pathString = Path.create(...path);
       const atom = itemAtomFamily(pathString);
       const currentValue = registry.get(atom);

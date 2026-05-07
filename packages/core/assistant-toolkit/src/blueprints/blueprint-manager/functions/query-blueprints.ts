@@ -4,8 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Blueprint } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { Blueprint, Operation } from '@dxos/compute';
 
 import { QueryBlueprints } from './definitions';
 

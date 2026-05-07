@@ -10,8 +10,7 @@ import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 
-import { FunctionsPanel } from '../../components/FunctionsPanel';
-import { FunctionsRegistry } from '../../components/FunctionsRegistry';
+import { FunctionsPanel, FunctionsRegistry } from '../../components';
 
 export const FunctionsContainer = ({ space }: AppSurface.SpaceArticleProps) => {
   const { t } = useTranslation(meta.id);

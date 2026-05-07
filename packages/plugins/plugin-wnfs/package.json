@@ -17,6 +17,11 @@
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#plugin": {
+      "browser": "./src/WnfsPlugin.tsx",
+      "node": "./src/WnfsPlugin.node.ts",
+      "default": "./src/WnfsPlugin.tsx"
+    },
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
   },
@@ -25,6 +30,11 @@
       "source": "./src/index.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "types": "./dist/types/src/index.d.ts"
+    },
+    "./helpers": {
+      "source": "./src/helpers/index.ts",
+      "browser": "./dist/lib/browser/helpers/index.mjs",
+      "types": "./dist/types/src/helpers/index.d.ts"
     },
     "./operations": {
       "source": "./src/operations/index.ts",
@@ -86,6 +96,7 @@
     "wnfs": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

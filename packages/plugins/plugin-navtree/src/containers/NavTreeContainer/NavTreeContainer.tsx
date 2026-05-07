@@ -230,13 +230,6 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       });
     }, [graph]);
 
-    const setAlternateTree = useCallback(
-      (path: string[], open: boolean) => {
-        setItem(path, 'alternateTree', open);
-      },
-      [setItem],
-    );
-
     const onItemHover = useCallback(({ item }: { item: Node.Node }) => Graph.expand(graph, item.id, 'child'), [graph]);
 
     const navTreeContextValue = useMemo(
@@ -247,7 +240,6 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         blockInstruction,
         canDrop,
         canSelect,
-        setAlternateTree,
         onBack: handleBack,
         onOpenChange: handleOpenChange,
         onSelect: handleSelect,
@@ -260,7 +252,6 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         blockInstruction,
         canDrop,
         canSelect,
-        setAlternateTree,
         handleBack,
         handleOpenChange,
         handleSelect,

@@ -83,8 +83,8 @@ export type SheetProps = {
 export const make = ({ name, cells = {}, ...size }: SheetProps = {}) => {
   const sheet = Obj.make(Sheet, { name, cells: {}, rows: [], columns: [], rowMeta: {}, columnMeta: {}, ranges: [] });
 
-  // Initialize and set cells within Obj.change to satisfy change context requirements.
-  Obj.change(sheet, (sheet) => {
+  // Initialize and set cells within Obj.update to satisfy change context requirements.
+  Obj.update(sheet, (sheet) => {
     initialize(sheet, size);
 
     if (cells) {

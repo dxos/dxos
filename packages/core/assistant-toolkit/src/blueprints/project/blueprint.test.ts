@@ -8,18 +8,19 @@ import * as Exit from 'effect/Exit';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiSession } from '@dxos/assistant';
-import { AssistantTestLayerWithTriggers } from '@dxos/assistant/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Blueprint } from '@dxos/compute';
-import { QueueService, Trigger } from '@dxos/compute';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Blueprint, Trigger, Operation, OperationHandlerSet } from '@dxos/compute';
+import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
+import { QueueService } from '@dxos/functions';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
+import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
+import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
+import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
 import { WithProperties } from '@dxos/plugin-markdown/testing';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
@@ -27,7 +28,6 @@ import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { Chat, Plan, Agent } from '../../types';
-import { MarkdownBlueprint, MarkdownHandlers } from '../markdown';
 import { PlanningBlueprint, PlanningHandlers } from '../planning';
 import { AgentWizardHandlers, SyncTriggers } from '../project-wizard';
 import AgentBlueprintDef from './blueprint';
@@ -40,7 +40,7 @@ const TestLayer = AssistantTestLayerWithTriggers({
   operationHandlers: OperationHandlerSet.merge(
     AgentBlueprintHandlers,
     AgentWizardHandlers,
-    MarkdownHandlers,
+    MarkdownOperationHandlerSet,
     PlanningHandlers,
   ),
   types: [
@@ -223,8 +223,12 @@ describe('Agent', () => {
 
         yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
 
-        const triggers = yield* Database.runQuery(Filter.type(Trigger.Trigger));
-        const timerTriggers = triggers.filter((trigger) => trigger.spec?.kind === 'timer');
+        const triggers = yield* Database.runQuery(
+          Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.blueprint.test.timer'),
+        );
+        const timerTriggers = triggers.filter(
+          (trigger) => trigger.spec?.kind === 'timer' && trigger.spec.cron === cron,
+        );
         expect(timerTriggers).toHaveLength(1);
 
         const timerTrigger = timerTriggers[0];
@@ -319,17 +323,20 @@ describe('Agent', () => {
 
         yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
 
-        const triggers = yield* Database.runQuery(Filter.type(Trigger.Trigger));
-        expect(triggers.length).toBeGreaterThan(0);
+        const triggers = yield* Database.runQuery(
+          Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.blueprint.test.toggle-enabled'),
+        );
         expect(triggers.every((trigger) => trigger.enabled === false)).toBe(true);
 
-        Obj.change(agent, (agent) => {
+        Obj.update(agent, (agent) => {
           agent.enabled = true;
         });
         yield* Database.flush();
         yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
 
-        const triggersAfter = yield* Database.runQuery(Filter.type(Trigger.Trigger));
+        const triggersAfter = yield* Database.runQuery(
+          Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.blueprint.test.after'),
+        );
         expect(triggersAfter).toHaveLength(triggers.length);
         expect(triggersAfter.every((trigger) => trigger.enabled === true)).toBe(true);
       },

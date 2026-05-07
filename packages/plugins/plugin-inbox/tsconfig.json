@@ -81,6 +81,9 @@
       "path": "../../core/echo/echo-query"
     },
     {
+      "path": "../../core/functions"
+    },
+    {
       "path": "../../core/functions-runtime"
     },
     {
@@ -166,6 +169,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-integration"
     },
     {
       "path": "../plugin-markdown"

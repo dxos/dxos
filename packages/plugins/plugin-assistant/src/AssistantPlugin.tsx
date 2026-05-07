@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { ContextBinding } from '@dxos/assistant';
-import { Agent, AgentBlueprint, Chat, McpServer, Memory, Plan, ResearchGraph } from '@dxos/assistant-toolkit';
+import { Agent, AgentBlueprint, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
 import { Blueprint, Routine } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
@@ -152,7 +152,6 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       HasSubject.HasSubject,
       Message.Message,
       Routine.Routine,
-      ResearchGraph.ResearchGraph,
       Agent.Agent,
       McpServer.McpServer,
       Plan.Plan,
@@ -235,3 +234,5 @@ const withComputeRuntime =
       const runtime = yield* provider.getRuntime(spaceId).runtimeEffect;
       return yield* effect.pipe(Effect.provide(runtime));
     });
+
+export default AssistantPlugin;

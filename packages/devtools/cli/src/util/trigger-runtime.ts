@@ -19,8 +19,7 @@ import { ToolExecutionServices } from '@dxos/assistant';
 import { type ClientService, type ConfigService } from '@dxos/client';
 import { getProfilePath } from '@dxos/client-protocol';
 import { DX_DATA } from '@dxos/client-protocol';
-import { ServiceResolver, Trace } from '@dxos/compute';
-import { OperationHandlerSet } from '@dxos/compute';
+import { ServiceResolver, Trace, OperationHandlerSet } from '@dxos/compute';
 import { Database, type Key } from '@dxos/echo';
 import {
   FunctionImplementationResolver,

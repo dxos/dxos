@@ -10,7 +10,8 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as TestClock from 'effect/TestClock';
 import { describe, expect } from 'vitest';
 
-import { Operation, OperationInvoker } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
+import { OperationInvoker } from '@dxos/operation';
 
 const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>;
 

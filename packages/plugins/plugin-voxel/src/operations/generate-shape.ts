@@ -17,7 +17,7 @@ const handler: Operation.WithHandler<typeof GenerateShape> = GenerateShape.pipe(
       const loaded = (yield* Database.load(world)) as Voxel.World;
       const voxels = generateModel(shape, origin, hue);
       let added = 0;
-      Obj.change(loaded, (loaded) => {
+      Obj.update(loaded, (loaded) => {
         if (!loaded.voxels) {
           loaded.voxels = {};
         }
