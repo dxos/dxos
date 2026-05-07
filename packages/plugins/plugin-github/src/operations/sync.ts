@@ -42,37 +42,6 @@ import { type SyncOptions, SyncGitHubRepositories } from './definitions';
 //
 
 //
-// Cross-source duplicates — design intent.
-//
-// Today every upsert path in this file CREATES a fresh local object the first
-// time it sees a remote id, even when an equivalent object already exists in
-// the workspace (e.g. a Person you already have in contacts who is also a
-// GitHub member). That's the simplest implementation and matches Trello's v1
-// behaviour, but it's wrong long-term: the same real-world entity ends up as
-// multiple ECHO objects, and bulk actions / status drift become user-visible.
-//
-// The chosen direction is NOT to merge foreign keys onto a single object.
-// Instead, we'll introduce a `SameAs` relation between distinct objects so
-// each plugin (github, linear, trello, …) keeps writing its own typed object
-// and stays cleanly in sync with its remote, while Composer renders linked
-// objects as a group and fans bulk actions across them. Tradeoffs vs. true
-// merge: reversible, respects per-system fields (Linear cycles, GitHub
-// labels) without coercing into a lossy common shape, and per-action conflict
-// handling instead of per-field three-way merges across heterogeneous sources.
-//
-// Follow-up work tracked separately:
-//   1. Land a `SameAs` relation type (likely in @dxos/types).
-//   2. Manual "link this object to that one" affordance (right-click /
-//      command palette).
-//   3. Automation pass — suggest candidate links from sync output (LLM or
-//      deterministic field match for Person/Organization/Project where it's
-//      reliable). Surfaced as suggestions, not auto-applied.
-//
-// Until (1)–(3) land, this plugin produces duplicates on first sight when an
-// equivalent local object already exists. That is intentional v1 behaviour.
-//
-
-//
 // Tunables
 //
 
@@ -162,11 +131,10 @@ const upsertPerson = Effect.fn('upsertPerson')(function* (
       if (organization && !existing.organization) {
         existing.organization = Ref.make(organization);
       }
-      // Add the github.com/<login> identity if not already present.
-      const handle = `github.com/${user.login}`;
+      // Add the GitHub login identity if not already present.
       const ids = existing.identities ?? [];
-      if (!ids.some((entry: { value: string }) => entry.value === handle)) {
-        existing.identities = [...ids, { label: 'github', value: handle }];
+      if (!ids.some((entry: { value: string }) => entry.value === user.login)) {
+        existing.identities = [...ids, { label: 'github', value: user.login }];
       }
     });
     return existing;
@@ -176,7 +144,7 @@ const upsertPerson = Effect.fn('upsertPerson')(function* (
     fullName: user.name ?? user.login,
     image: user.avatar_url ?? undefined,
     organization: organization ? Ref.make(organization) : undefined,
-    identities: [{ label: 'github', value: `github.com/${user.login}` }],
+    identities: [{ label: 'github', value: user.login }],
   });
   return yield* Database.add(created);
 });
