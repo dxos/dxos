@@ -202,14 +202,12 @@ const ChannelLayout = React.forwardRef<HTMLDivElement, LayoutProps>(({ id, state
   return (
     <div {...props} id={id} ref={ref}>
       <div ref={scrollRef} className='flex-1 min-h-0 overflow-y-auto'>
-        <div className='flex flex-col justify-end min-h-full'>
-          {messages.map((message) => (
-            <div key={message.id} className='grid grid-cols-[var(--dx-rail-size)_1fr] w-full'>
-              <MessagePanel message={message} members={members} />
-            </div>
-          ))}
-          <div ref={sentinelRef} />
-        </div>
+        {messages.map((message) => (
+          <div key={message.id} className='grid grid-cols-[var(--dx-rail-size)_1fr] w-full'>
+            <MessagePanel message={message} members={members} />
+          </div>
+        ))}
+        <div ref={sentinelRef} />
       </div>
       <div className='shrink-0 grid grid-cols-[var(--dx-rail-size)_1fr]'>
         <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleSend} {...textboxMetadata} />
