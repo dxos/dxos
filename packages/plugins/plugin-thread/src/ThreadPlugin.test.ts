@@ -5,12 +5,11 @@
 import { describe, test } from 'vitest';
 
 import { AppActivationEvents } from '@dxos/app-toolkit';
-// Use the CLI variant — the main ClientPlugin references capabilities that resolve to undefined under Node.
 import { ClientPlugin } from '@dxos/plugin-client';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { meta } from './meta';
-import { ThreadPlugin } from './index';
+import { ThreadPlugin } from '#plugin';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 

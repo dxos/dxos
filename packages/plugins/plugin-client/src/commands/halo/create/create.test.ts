@@ -12,7 +12,7 @@ import { fromPlugins } from '@dxos/app-framework/testing';
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { runAndForwardErrors } from '@dxos/effect';
-import { ObservabilityPlugin } from '@dxos/plugin-observability/cli';
+import { ObservabilityPlugin } from '@dxos/plugin-observability';
 
 import { ClientPlugin } from '../../../ClientPlugin.node';
 import { handler } from './create';

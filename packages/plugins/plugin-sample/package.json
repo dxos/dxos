@@ -41,11 +41,6 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
-    "./cli": {
-      "source": "./src/SamplePlugin.node.ts",
-      "types": "./dist/types/src/SamplePlugin.node.d.ts",
-      "node": "./dist/lib/node-esm/SamplePlugin.node.mjs"
-    },
     "./operations": {
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",

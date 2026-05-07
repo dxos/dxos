@@ -42,11 +42,6 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
-    "./cli": {
-      "source": "./src/AutomationPlugin.node.ts",
-      "types": "./dist/types/src/AutomationPlugin.node.d.ts",
-      "node": "./dist/lib/node-esm/AutomationPlugin.node.mjs"
-    },
     "./hooks": {
       "source": "./src/hooks/index.ts",
       "types": "./dist/types/src/hooks/index.d.ts",

@@ -9,7 +9,7 @@ import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
-import { ObservabilityPlugin } from '@dxos/plugin-observability/cli';
+import { ObservabilityPlugin } from '@dxos/plugin-observability';
 import { RegistryPlugin } from '@dxos/plugin-registry';
 import { SamplePlugin } from '@dxos/plugin-sample';
 import { SpacePlugin } from '@dxos/plugin-space';

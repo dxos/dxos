@@ -4,11 +4,10 @@
 
 import { describe, test } from 'vitest';
 
-// Use the CLI variant — the main ClientPlugin references capabilities that resolve to undefined under Node.
 import { ClientPlugin } from '@dxos/plugin-client';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { MarkdownPlugin } from './index';
+import { MarkdownPlugin } from '#plugin';
 import { meta } from './meta';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;

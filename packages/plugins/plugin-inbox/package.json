@@ -43,11 +43,6 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
-    "./cli": {
-      "source": "./src/InboxPlugin.node.ts",
-      "types": "./dist/types/src/InboxPlugin.node.d.ts",
-      "node": "./dist/lib/node-esm/InboxPlugin.node.mjs"
-    },
     "./blueprints": {
       "source": "./src/blueprints/index.ts",
       "types": "./dist/types/src/blueprints/index.d.ts",

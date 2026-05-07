@@ -5,5 +5,5 @@
 export { ObservabilityCapabilities, ObservabilityEvents } from './types';
 // TODO(wittjosiah): FeedbackForm should be factored out of plugin-observability into a shared UI package.
 export * from './meta';
-export * from './ObservabilityPlugin';
+export { ObservabilityPlugin } from '#plugin';
 export { translations as observabilityTranslations } from './translations';

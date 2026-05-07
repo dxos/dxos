@@ -41,11 +41,6 @@
       "browser": "./dist/lib/browser/components/index.mjs",
       "node": "./dist/lib/node-esm/components/index.mjs"
     },
-    "./cli": {
-      "source": "./src/ObservabilityPlugin.node.ts",
-      "types": "./dist/types/src/ObservabilityPlugin.node.d.ts",
-      "node": "./dist/lib/node-esm/ObservabilityPlugin.node.mjs"
-    },
     "./operations": {
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",

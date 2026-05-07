@@ -8,7 +8,7 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { DebugPlugin } from './index';
+import { DebugPlugin } from '#plugin';
 import { meta } from './meta';
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
