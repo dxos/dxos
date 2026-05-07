@@ -124,7 +124,7 @@ const KeyValueTable = ({ record }: { record: unknown }) => {
     <>
       {entries.map(([key, value]) => (
         <Fragment key={key}>
-          <div className='font-mono text-xs text-description text-right'>{key}</div>
+          <div className='flex items-center justify-end font-mono text-xs text-description'>{key}</div>
           <div className='text-sm truncate'>{formatValue(value)}</div>
         </Fragment>
       ))}

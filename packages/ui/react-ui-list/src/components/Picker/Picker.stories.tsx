@@ -60,7 +60,7 @@ const DefaultStory = ({ items = allItems, controlled = false, disabledIndices = 
   );
 
   return (
-    <Column.Root gutter='sm' classNames='w-[24rem] border border-separator rounded-md py-form-gap gap-form-gap'>
+    <Column.Root gutter='sm' classNames='w-[24rem] border border-separator rounded-md py-form-gap'>
       <Picker.Root>
         <Column.Center>
           <Picker.Input
@@ -69,7 +69,7 @@ const DefaultStory = ({ items = allItems, controlled = false, disabledIndices = 
             {...(controlled && { value: query, onValueChange: setQuery })}
           />
         </Column.Center>
-        <ScrollArea.Root classNames='max-h-[20rem]' thin>
+        <ScrollArea.Root classNames='max-h-[20rem] py-form-gap' thin>
           <ScrollArea.Viewport>
             <ul role='listbox' className='flex flex-col'>
               {visible.map(({ item, originalIndex }) => {
