@@ -125,6 +125,8 @@ class GraphBuilderImpl implements GraphBuilder {
   >();
   /** Last-flushed node IDs per connector key, used for edge removal on update. */
   readonly _connectorPrevious = new Map<string, string[]>();
+  /** All inline-descendant IDs per connector key, used to remove stale inline nodes on update. */
+  readonly _connectorPreviousInlineIds = new Map<string, string[]>();
   /** Last-flushed node args per connector key, used for change detection. */
   readonly _connectorPreviousArgs = new Map<string, Node.NodeArg<any>[]>();
   /** Whether a dirty-flush task is already scheduled. */
@@ -178,6 +180,12 @@ class GraphBuilderImpl implements GraphBuilder {
     this._connectorPrevious.set(key, ids);
     this._connectorPreviousArgs.set(key, nodes);
 
+    const currentInlineIds = collectAllInlineIds(nodes);
+    const previousInlineIds = this._connectorPreviousInlineIds.get(key) ?? [];
+    const staleInlineIds = previousInlineIds.filter((pid) => !currentInlineIds.includes(pid));
+    this._connectorPreviousInlineIds.set(key, currentInlineIds);
+
+    Graph.removeNodes(this._graph, staleInlineIds, true);
     Graph.removeEdges(
       this._graph,
       removed.map((target) => ({ source: id, target, relation })),
@@ -840,6 +848,21 @@ const qualifyNodeArgs =
         nodes: node.nodes ? qualifyNodeArgs(qualified)(node.nodes) : undefined,
       };
     });
+
+/**
+ * Recursively collect all inline-descendant IDs (the `nodes` arrays at every level)
+ * from a list of top-level NodeArgs. Top-level IDs are excluded because they are
+ * already tracked via `_connectorPrevious`.
+ */
+const collectAllInlineIds = (nodes: Node.NodeArg<any>[]): string[] =>
+  nodes.flatMap((node) =>
+    node.nodes
+      ? [
+          ...node.nodes.map((child) => child.id),
+          ...collectAllInlineIds(node.nodes),
+        ]
+      : [],
+  );
 
 const connectorKey = (id: string, relation: Node.RelationInput): string => primaryKey(id, Graph.relationKey(relation));
 

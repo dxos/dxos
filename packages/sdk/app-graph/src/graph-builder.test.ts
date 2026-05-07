@@ -485,6 +485,76 @@ describe('GraphBuilder', () => {
       expect(exists).to.be.true;
     });
 
+    test('inline nodes are removed when connector re-runs with data change', async () => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+
+      const nodesAtom = Atom.make<Node.NodeArg<any>[]>([
+        {
+          id: 'parent-node',
+          type: EXAMPLE_TYPE,
+          data: 'v1',
+          nodes: [{ id: 'inline-child', type: EXAMPLE_TYPE, data: null }],
+        },
+      ]);
+
+      GraphBuilder.addExtension(
+        builder,
+        GraphBuilder.createExtensionRaw({
+          id: 'inline-connector',
+          connector: () => Atom.make((get) => get(nodesAtom)),
+        }),
+      );
+
+      const graph = builder.graph;
+      Graph.expand(graph, Node.RootId, 'child');
+      await GraphBuilder.flush(builder);
+
+      expect(Graph.getNode(graph, 'root/parent-node/inline-child').pipe(Option.getOrNull)).to.not.be.null;
+
+      // Remove inline child while changing data so the update is triggered.
+      registry.set(nodesAtom, [{ id: 'parent-node', type: EXAMPLE_TYPE, data: 'v2' }]);
+      await GraphBuilder.flush(builder);
+
+      // Inline child should no longer exist in the graph.
+      expect(Graph.getNode(graph, 'root/parent-node/inline-child').pipe(Option.getOrNull)).to.be.null;
+    });
+
+    test('inline nodes are removed when only inline children change', async () => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+
+      const nodesAtom = Atom.make<Node.NodeArg<any>[]>([
+        {
+          id: 'parent-node',
+          type: EXAMPLE_TYPE,
+          data: null,
+          nodes: [{ id: 'inline-child', type: EXAMPLE_TYPE, data: null }],
+        },
+      ]);
+
+      GraphBuilder.addExtension(
+        builder,
+        GraphBuilder.createExtensionRaw({
+          id: 'inline-connector',
+          connector: () => Atom.make((get) => get(nodesAtom)),
+        }),
+      );
+
+      const graph = builder.graph;
+      Graph.expand(graph, Node.RootId, 'child');
+      await GraphBuilder.flush(builder);
+
+      expect(Graph.getNode(graph, 'root/parent-node/inline-child').pipe(Option.getOrNull)).to.not.be.null;
+
+      // Remove inline child without changing data — tests that change detection also covers inline children.
+      registry.set(nodesAtom, [{ id: 'parent-node', type: EXAMPLE_TYPE, data: null }]);
+      await GraphBuilder.flush(builder);
+
+      // Inline child should no longer exist in the graph.
+      expect(Graph.getNode(graph, 'root/parent-node/inline-child').pipe(Option.getOrNull)).to.be.null;
+    });
+
     test('sort edges', async () => {
       const registry = Registry.make();
       const builder = GraphBuilder.make({ registry });
