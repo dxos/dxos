@@ -15,7 +15,7 @@ import { Actor, Message, Organization, Person, Project, Task, Thread } from '@dx
 import { meta } from '#meta';
 
 import { GITHUB_SOURCE } from '../constants';
-import { IntegrationDatabaseMissingError, formatGitHubSyncFailure } from '../errors';
+import { formatGitHubSyncFailure } from '../errors';
 import { GitHubApi } from '../services';
 import { type SyncOptions, SyncGitHubRepositories } from './definitions';
 
@@ -349,7 +349,7 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
       const integrationTarget = integration.target;
       const db = integrationTarget ? Obj.getDatabase(integrationTarget) : undefined;
       if (!db) {
-        return yield* Effect.fail(new IntegrationDatabaseMissingError());
+        return yield* Effect.dieMessage('No database for integration ref.');
       }
 
       const integrationId = integration.dxn.asEchoDXN()?.echoId ?? 'unknown';

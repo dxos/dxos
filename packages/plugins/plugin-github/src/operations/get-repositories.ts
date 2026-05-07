@@ -8,7 +8,6 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 
-import { IntegrationDatabaseMissingError } from '../errors';
 import { GitHubApi } from '../services';
 import { GetGitHubRepositories } from './definitions';
 
@@ -29,7 +28,7 @@ const handler: Operation.WithHandler<typeof GetGitHubRepositories> = GetGitHubRe
       const target = integration.target;
       const db = target ? Obj.getDatabase(target) : undefined;
       if (!db) {
-        return yield* Effect.fail(new IntegrationDatabaseMissingError());
+        return yield* Effect.dieMessage('No database for integration ref.');
       }
 
       return yield* Effect.gen(function* () {
