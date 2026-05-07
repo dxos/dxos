@@ -23,7 +23,7 @@ export const blueprintToolsDiagnostic: DiagnosticProvider = {
     const issues: DiagnosticIssue[] = [];
     const knownTools = new Set<string>();
     for (const toolkit of capabilities.getAll(AppCapabilities.Toolkit)) {
-      for (const name of Object.keys(toolkit.toolkit.tools)) {
+      for (const name of Object.keys(toolkit.toolkit.tools ?? {})) {
         knownTools.add(name);
       }
     }

@@ -35,9 +35,11 @@ export const schemaDiagnostic: DiagnosticProvider = {
         }
         const schema = Obj.getSchema(obj);
         if (!schema) {
+          // Untyped documents and some system objects legitimately have no schema —
+          // surface as 'info' rather than 'warning' to keep the signal/noise ratio reasonable.
           issues.push({
             id: `${space.id}:${(obj as { id?: string }).id ?? 'unknown'}:no-schema`,
-            severity: 'warning',
+            severity: 'info',
             message: `Object has no resolvable schema (${Obj.getTypename(obj) ?? 'unknown type'}).`,
             subjectLabel: labelObject(obj),
             spaceId: space.id,
