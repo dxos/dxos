@@ -140,6 +140,8 @@ export const translations = [
         'welcome.message': 'Welcome',
         'selecting-identity.heading': 'Selecting identity',
         'toggle-expand.label': 'Toggle expand',
+        'expand.label': 'Expand',
+        'collapse.label': 'Collapse',
         'create-new-person.label': 'Create new person',
         'invitations.label': 'Invitations',
         'close-dialog.label': 'Close',

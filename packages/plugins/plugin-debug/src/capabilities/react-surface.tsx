@@ -43,6 +43,7 @@ import { type Graph } from '@dxos/plugin-graph';
 import { ScriptOperation } from '@dxos/plugin-script/operations';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
+import { ToolsExplorer } from '@dxos/react-ui-introspect';
 
 import { DebugSettings } from '#components';
 import {
@@ -140,6 +141,12 @@ export default Capability.makeModule(
         role: 'article',
         filter: (data): data is { subject: GraphDebug } => isGraphDebug(data.subject),
         component: ({ data }) => <DebugGraph graph={data.subject.graph} root={data.subject.root} />,
+      }),
+      Surface.create({
+        id: 'tools-explorer',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.ToolsExplorer),
+        // TODO(burdon): Move to config.
+        component: () => <ToolsExplorer serverUrl='https://introspect-service-labs.dxos.workers.dev/mcp' />,
       }),
       Surface.create({
         id: 'wireframe',

@@ -33,6 +33,8 @@ export namespace DebugCapabilities {
 export namespace Devtools {
   export const id = `${meta.id}.devtools`;
 
+  export const ToolsExplorer = `${Devtools.id}.tools-explorer`;
+
   export namespace Client {
     export const id = `${Devtools.id}.client`;
     export const Config = `${Devtools.Client.id}.config`;

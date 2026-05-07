@@ -85,7 +85,7 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
           }}
           data-testid='update-profile-form-copy-key'
         >
-          {t(copied ? 'copy success label' : 'copy self public key label')}
+          {t(copied ? 'copy-success.label' : 'copy-self-did.label')}
         </Action>
         <Action
           variant='ghost'

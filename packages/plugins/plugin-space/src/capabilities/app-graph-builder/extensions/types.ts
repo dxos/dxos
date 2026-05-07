@@ -382,7 +382,7 @@ const createSchemaActions = ({
             })
           : Effect.fail(new Error('Cannot rename immutable schema')),
       properties: {
-        label: getDynamicLabel('rename object label', Type.getTypename(Type.PersistentType)),
+        label: getDynamicLabel('rename-object.label', Type.getTypename(Type.PersistentType)),
         icon: 'ph--pencil-simple-line--regular',
         disabled: !Type.isMutable(schema),
         disposition: 'list-item',
