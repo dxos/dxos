@@ -6,8 +6,6 @@ import { Plugin } from '@dxos/app-framework';
 
 import { meta } from './meta';
 
-export const PresenterPlugin = Plugin.lazy(meta, () => import('./PresenterPlugin'));
-
 export * from './meta';
 
-export * from './components';
+export const PresenterPlugin = Plugin.lazy(meta, () => import('#plugin'));

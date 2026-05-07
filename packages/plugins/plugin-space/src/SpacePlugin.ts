@@ -274,12 +274,12 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     activate: SpacesReady,
   }),
   Plugin.addModule({
-    activatesOn: ClientEvents.SpacesReady,
-    activate: Repair,
-  }),
-  Plugin.addModule({
     activatesOn: ClientEvents.SetupMigration,
     activate: Migrations,
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.SpacesReady,
+    activate: Repair,
   }),
   Plugin.make,
 );

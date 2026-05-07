@@ -12,7 +12,7 @@
 
 import type {
   Capability,
-  Intent,
+  Operation,
   Package,
   PackageDetail,
   Plugin,
@@ -126,7 +126,7 @@ const truncate = (s: string, limit: number): string => {
 };
 
 //
-// Plugin / surface / capability / intent / schema (main's flatter types)
+// Plugin / surface / capability / operation / schema (main's flatter types)
 //
 
 export const shapeListPlugins = (all: Plugin[], opts: ListOptions = {}): ToolResult =>
@@ -147,7 +147,7 @@ export const shapeListPlugins = (all: Plugin[], opts: ListOptions = {}): ToolRes
  * `PluginDetail` is the same shape as `Plugin` plus arrays of contributions.
  * Returned by what would be `get_plugin` if the introspector exposed it; we
  * synthesize this on the MCP side by combining `listPlugins` + the per-id
- * `listSurfaces` / `listCapabilities` / `listIntents` / `listSchemas` calls.
+ * `listSurfaces` / `listCapabilities` / `listOperations` / `listSchemas` calls.
  */
 export const shapePluginDetail = (detail: PluginDetail): ToolResult => ({
   data: {
@@ -160,7 +160,7 @@ export const shapePluginDetail = (detail: PluginDetail): ToolResult => ({
     metaLocation: detail.metaLocation,
     surfaces: detail.surfaces.map((s) => ({ id: s.id, role: s.role })),
     capabilities: detail.capabilities.map((c) => ({ type: c.type })),
-    intents: detail.intents.map((i) => ({ type: i.type })),
+    operations: detail.operations.map((o) => ({ type: o.type })),
     schemas: detail.schemas.map((s) => ({ name: s.name, typename: s.typename })),
   },
 });
@@ -179,10 +179,10 @@ export const shapeListCapabilities = (all: Capability[], opts: ListOptions = {})
     truncationHint: 'raise `limit` (max 200) or filter by plugin `id`.',
   });
 
-export const shapeListIntents = (all: Intent[], opts: ListOptions = {}): ToolResult =>
+export const shapeListOperations = (all: Operation[], opts: ListOptions = {}): ToolResult =>
   shapeList(all, opts, {
-    full: (i) => ({ pluginId: i.pluginId, type: i.type, location: i.location }),
-    compact: (i) => ({ pluginId: i.pluginId, type: i.type }),
+    full: (o) => ({ pluginId: o.pluginId, type: o.type, location: o.location }),
+    compact: (o) => ({ pluginId: o.pluginId, type: o.type }),
     truncationHint: 'raise `limit` (max 200) or filter by plugin `id`.',
   });
 

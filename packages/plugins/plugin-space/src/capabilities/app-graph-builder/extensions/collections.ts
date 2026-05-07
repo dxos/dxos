@@ -266,7 +266,7 @@ const constructObjectActions = ({
       data: (params?: Node.InvokeProps) =>
         Operation.invoke(SpaceOperation.RenameObject, { object, caller: `${params?.caller}:${params?.parent?.id}` }),
       properties: {
-        label: getDynamicLabel('rename object label', typename, { defaultValue: 'Rename' }),
+        label: getDynamicLabel('rename-object.label', typename, { defaultValue: 'Rename' }),
         icon: 'ph--pencil-simple-line--regular',
         disposition: 'list-item',
         testId: 'spacePlugin.renameObject',

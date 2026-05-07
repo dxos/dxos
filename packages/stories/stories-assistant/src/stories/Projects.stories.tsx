@@ -16,7 +16,7 @@ import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { useContextBinder } from '@dxos/plugin-assistant';
+import { useContextBinder } from '@dxos/plugin-assistant/hooks';
 import { translations } from '@dxos/plugin-assistant/translations';
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';

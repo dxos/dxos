@@ -79,6 +79,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

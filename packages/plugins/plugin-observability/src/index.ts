@@ -6,9 +6,8 @@ import { Plugin } from '@dxos/app-framework';
 
 import { meta } from './meta';
 
-export const ObservabilityPlugin = Plugin.lazy(meta, () => import('./ObservabilityPlugin'));
-
-export * from './meta';
-
 export { ObservabilityCapabilities, ObservabilityEvents } from './types';
-export * from './components';
+// TODO(wittjosiah): FeedbackForm should be factored out of plugin-observability into a shared UI package.
+export * from './meta';
+export const ObservabilityPlugin = Plugin.lazy(meta, () => import('#plugin'));
+export { translations as observabilityTranslations } from './translations';

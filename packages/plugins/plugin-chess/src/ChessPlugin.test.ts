@@ -6,11 +6,11 @@ import { describe, test } from 'vitest';
 
 import { ActivationEvents } from '@dxos/app-framework';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-// Use the CLI variant — the main ClientPlugin references capabilities that resolve to undefined under Node.
-import { ClientPlugin } from '@dxos/plugin-client/cli';
+import { ClientPlugin } from '@dxos/plugin-client';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { ChessPlugin } from './ChessPlugin';
+import { ChessPlugin } from '#plugin';
+
 import { meta } from './meta';
 import { Print } from './operations';
 
@@ -23,9 +23,7 @@ describe('ChessPlugin', () => {
     });
 
     // Modules expected to be active after a normal startup.
-    expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('metadata'), moduleId('schema'), moduleId('ReactSurface')]),
-    );
+    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('metadata'), moduleId('schema')]));
 
     // SetupArtifactDefinition is fired by AssistantPlugin, which can't be included here due to a workspace cycle.
     await harness.fire(AppActivationEvents.SetupArtifactDefinition);

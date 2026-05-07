@@ -16,7 +16,7 @@ import {
 import { findSymbol as queryFindSymbol, getSymbol as queryGetSymbol } from '../query';
 import {
   type Capability,
-  type Intent,
+  type Operation,
   type Package,
   type PackageDetail,
   type PackageFilter,
@@ -113,9 +113,9 @@ export type Introspector = {
    */
   listCapabilities: (id?: string) => Capability[];
   /**
-   * List intents contributed by a single plugin (when `id` is given), or by every plugin.
+   * List operations contributed by a single plugin (when `id` is given), or by every plugin.
    */
-  listIntents: (id?: string) => Intent[];
+  listOperations: (id?: string) => Operation[];
   /**
    * List ECHO schemas registered by a single plugin (when `id` is given), or by every plugin.
    */
@@ -317,9 +317,9 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     return matchPlugins(id).flatMap((record) => record.capabilities);
   };
 
-  const listIntents = (id?: string): Intent[] => {
+  const listOperations = (id?: string): Operation[] => {
     assertReady();
-    return matchPlugins(id).flatMap((record) => record.intents);
+    return matchPlugins(id).flatMap((record) => record.operations);
   };
 
   const listSchemas = (id?: string): Schema[] => {
@@ -347,7 +347,7 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     listPlugins,
     listSurfaces,
     listCapabilities,
-    listIntents,
+    listOperations,
     listSchemas,
   };
 };

@@ -13,6 +13,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": "./src/StatusBarPlugin.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
@@ -25,6 +26,12 @@
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "browser": "./dist/lib/browser/components/index.mjs",
+      "node": "./dist/lib/node-esm/components/index.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
@@ -56,6 +63,7 @@
     "react-resize-detector": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

@@ -46,7 +46,7 @@ describe('stdio integration', () => {
       'get_package',
       'get_symbol',
       'list_capabilities',
-      'list_intents',
+      'list_operations',
       'list_packages',
       'list_plugins',
       'list_schemas',

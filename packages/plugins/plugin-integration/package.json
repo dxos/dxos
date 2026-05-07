@@ -13,12 +13,21 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#capabilities": "./src/capabilities/index.ts",
+    "#capabilities": {
+      "browser": "./src/capabilities/index.ts",
+      "node": "./src/capabilities/node.ts",
+      "default": "./src/capabilities/index.ts"
+    },
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
     "#hooks": "./src/hooks/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#plugin": {
+      "browser": "./src/IntegrationPlugin.ts",
+      "node": "./src/IntegrationPlugin.node.ts",
+      "default": "./src/IntegrationPlugin.ts"
+    },
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
   },
@@ -28,12 +37,6 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs",
       "types": "./dist/types/src/index.d.ts"
-    },
-    "./cli": {
-      "source": "./src/cli/index.ts",
-      "browser": "./dist/lib/browser/cli/index.mjs",
-      "node": "./dist/lib/node-esm/cli/index.mjs",
-      "types": "./dist/types/src/cli/index.d.ts"
     },
     "./operations": {
       "source": "./src/operations/index.ts",
@@ -104,6 +107,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
