@@ -13,11 +13,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": {
-      "browser": "./src/AttentionPlugin.ts",
-      "node": "./src/AttentionPlugin.ts",
-      "default": "./src/AttentionPlugin.ts"
-    },
+    "#plugin": "./src/AttentionPlugin.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",

@@ -13,11 +13,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": {
-      "browser": "./src/VoxelPlugin.tsx",
-      "node": "./src/VoxelPlugin.tsx",
-      "default": "./src/VoxelPlugin.tsx"
-    },
+    "#plugin": "./src/VoxelPlugin.tsx",
     "#blueprints": "./src/blueprints/index.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",

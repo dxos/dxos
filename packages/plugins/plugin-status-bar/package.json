@@ -13,11 +13,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": {
-      "browser": "./src/StatusBarPlugin.ts",
-      "node": "./src/StatusBarPlugin.ts",
-      "default": "./src/StatusBarPlugin.ts"
-    },
+    "#plugin": "./src/StatusBarPlugin.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",

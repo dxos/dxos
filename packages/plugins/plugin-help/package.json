@@ -13,11 +13,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": {
-      "browser": "./src/HelpPlugin.tsx",
-      "node": "./src/HelpPlugin.tsx",
-      "default": "./src/HelpPlugin.tsx"
-    },
+    "#plugin": "./src/HelpPlugin.tsx",
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",

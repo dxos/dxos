@@ -13,11 +13,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": {
-      "browser": "./src/SettingsPlugin.ts",
-      "node": "./src/SettingsPlugin.ts",
-      "default": "./src/SettingsPlugin.ts"
-    },
+    "#plugin": "./src/SettingsPlugin.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",

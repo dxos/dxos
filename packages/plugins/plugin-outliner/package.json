@@ -13,11 +13,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": {
-      "browser": "./src/OutlinerPlugin.tsx",
-      "node": "./src/OutlinerPlugin.tsx",
-      "default": "./src/OutlinerPlugin.tsx"
-    },
+    "#plugin": "./src/OutlinerPlugin.tsx",
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",

@@ -13,11 +13,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": {
-      "browser": "./src/TransformerPlugin.tsx",
-      "node": "./src/TransformerPlugin.tsx",
-      "default": "./src/TransformerPlugin.tsx"
-    },
+    "#plugin": "./src/TransformerPlugin.tsx",
     "#components": "./src/components/index.ts",
     "#hooks": "./src/hooks/index.ts",
     "#meta": "./src/meta.ts",

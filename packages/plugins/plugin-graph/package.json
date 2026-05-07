@@ -13,11 +13,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": {
-      "browser": "./src/GraphPlugin.ts",
-      "node": "./src/GraphPlugin.ts",
-      "default": "./src/GraphPlugin.ts"
-    },
+    "#plugin": "./src/GraphPlugin.ts",
     "#hooks": "./src/hooks/index.ts",
     "#meta": "./src/meta.ts"
   },

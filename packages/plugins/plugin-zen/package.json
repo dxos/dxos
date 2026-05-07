@@ -14,11 +14,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": {
-      "browser": "./src/ZenPlugin.tsx",
-      "node": "./src/ZenPlugin.tsx",
-      "default": "./src/ZenPlugin.tsx"
-    },
+    "#plugin": "./src/ZenPlugin.tsx",
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",

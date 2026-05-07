@@ -14,11 +14,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": {
-      "browser": "./src/TicTacToePlugin.tsx",
-      "node": "./src/TicTacToePlugin.tsx",
-      "default": "./src/TicTacToePlugin.tsx"
-    },
+    "#plugin": "./src/TicTacToePlugin.tsx",
     "#blueprints": "./src/blueprints/index.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",

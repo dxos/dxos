@@ -13,11 +13,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": {
-      "browser": "./src/MermaidPlugin.tsx",
-      "node": "./src/MermaidPlugin.tsx",
-      "default": "./src/MermaidPlugin.tsx"
-    },
+    "#plugin": "./src/MermaidPlugin.tsx",
     "#meta": "./src/meta.ts"
   },
   "exports": {

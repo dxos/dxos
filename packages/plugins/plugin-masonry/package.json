@@ -13,11 +13,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": {
-      "browser": "./src/MasonryPlugin.tsx",
-      "node": "./src/MasonryPlugin.tsx",
-      "default": "./src/MasonryPlugin.tsx"
-    },
+    "#plugin": "./src/MasonryPlugin.tsx",
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",

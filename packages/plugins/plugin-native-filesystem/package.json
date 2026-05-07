@@ -14,11 +14,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": {
-      "browser": "./src/NativeFilesystemPlugin.tsx",
-      "node": "./src/NativeFilesystemPlugin.tsx",
-      "default": "./src/NativeFilesystemPlugin.tsx"
-    },
+    "#plugin": "./src/NativeFilesystemPlugin.tsx",
     "#capabilities": "./src/capabilities/index.ts",
     "#containers": "./src/containers/index.ts",
     "#hooks": "./src/hooks/index.ts",

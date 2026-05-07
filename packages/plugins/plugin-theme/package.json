@@ -13,11 +13,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": {
-      "browser": "./src/ThemePlugin.ts",
-      "node": "./src/ThemePlugin.ts",
-      "default": "./src/ThemePlugin.ts"
-    },
+    "#plugin": "./src/ThemePlugin.ts",
     "#meta": "./src/meta.ts",
     "#translations": "./src/translations.ts"
   },
