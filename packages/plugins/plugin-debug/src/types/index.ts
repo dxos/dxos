@@ -7,12 +7,18 @@ import { type Context, createContext } from 'react';
 
 import { Capability } from '@dxos/app-framework';
 import type { TimerCallback, TimerOptions } from '@dxos/async';
+import { type IdbLogStore } from '@dxos/log-store-idb';
 
 import { meta } from '#meta';
 
 import * as Settings from './Settings';
 
 export * as Settings from './Settings';
+
+export type DebugPluginOptions = {
+  /** Shared persistent log store for capturing and downloading logs. */
+  logStore?: IdbLogStore;
+};
 
 export type DebugContextType = {
   running: boolean;
