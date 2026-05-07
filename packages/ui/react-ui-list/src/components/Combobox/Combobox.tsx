@@ -299,8 +299,10 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
         onSelect={handleSelect}
         ref={forwardedRef}
         classNames={[
-          'mx-form-chrome px-form-chrome',
-          'flex gap-2 items-center py-1 rounded-xs select-none',
+          // Full width inside the viewport (no horizontal margin), with
+          // generous inner padding so content doesn't hug the row edge.
+          // Vertical padding stays light to preserve the dense option list.
+          'flex w-full gap-2 items-center px-3 py-1 select-none',
           // TODO(burdon): Use dx-hover?
           'cursor-pointer data-[selected=true]:bg-hover-overlay hover:bg-hover-overlay',
           disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent data-[selected=true]:bg-transparent',
