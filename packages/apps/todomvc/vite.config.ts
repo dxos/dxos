@@ -6,13 +6,10 @@ import ReactPlugin from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
+import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-
-// Aligned with composer-app. These targets support top-level await natively,
-// so no `vite-plugin-top-level-await` polyfill is needed.
-const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'] as const;
 
 // https://vitejs.dev/config
 export default defineConfig({
@@ -21,9 +18,6 @@ export default defineConfig({
     // Avoid prebundling wa-sqlite into .vite/deps where the adjacent wasm file is not emitted.
     // Keeping it as a normal node_modules module preserves import.meta.url-based wasm resolution.
     exclude: ['@effect/sql-sqlite-wasm', '@dxos/wa-sqlite'],
-  },
-  oxc: {
-    target: [...browserTargets],
   },
   server: {
     host: true,
@@ -45,7 +39,6 @@ export default defineConfig({
   },
   build: {
     outDir: 'out/todomvc',
-    target: [...browserTargets],
     // TODO(wittjosiah): Minification is causing issues with the app.
     minify: false,
     rollupOptions: {
@@ -73,13 +66,14 @@ export default defineConfig({
   },
   worker: {
     format: 'es',
-    plugins: () => [WasmPlugin()],
+    plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
   },
   plugins: [
     ConfigPlugin({
       root: __dirname,
       env: ['DX_VAULT'],
     }),
+    TopLevelAwaitPlugin(),
     WasmPlugin(),
     ReactPlugin({ tsDecorators: true }),
     // https://www.bundle-buddy.com/rollup
