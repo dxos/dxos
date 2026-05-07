@@ -330,7 +330,7 @@ type PickerItemProps = ThemedClassName<{
 
 const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
   ({ classNames, value, onSelect, disabled, asChild, children, ...props }, forwardedRef) => {
-    const { selectedValue, registerItem, unregisterItem } = usePickerItemContext('Picker.Item');
+    const { selectedValue, onSelectedValueChange, registerItem, unregisterItem } = usePickerItemContext('Picker.Item');
     const internalRef = useRef<HTMLDivElement>(null);
 
     const isSelected = selectedValue === value && !disabled;
@@ -352,10 +352,14 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
     }, [isSelected]);
 
     const handleClick = useCallback(() => {
-      if (!disabled) {
-        onSelect?.();
+      if (disabled) {
+        return;
       }
-    }, [onSelect, disabled]);
+      // Move the virtual highlight to the clicked item so subsequent
+      // arrow keys continue from here, then fire the caller's select.
+      onSelectedValueChange(value);
+      onSelect?.();
+    }, [disabled, value, onSelectedValueChange, onSelect]);
 
     // Prevent the mousedown from moving focus off `Picker.Input` —
     // browsers focus an element with any `tabIndex` (including `-1`) on
