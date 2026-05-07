@@ -164,17 +164,9 @@ type NodeOptions = {
   timeout?: number;
   setupFiles?: string[];
   plugins?: Plugin[];
-  exclude?: string[];
 };
 
-const createNodeProject = ({
-  environment = 'node',
-  retry,
-  timeout,
-  setupFiles = [],
-  plugins = [],
-  exclude = [],
-}: NodeOptions = {}) =>
+const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = [], plugins = [] }: NodeOptions = {}) =>
   defineProject({
     esbuild: {
       target: 'esnext',
@@ -195,7 +187,6 @@ const createNodeProject = ({
         '!**/src/**/__snapshots__/**',
         '!**/src/**/*.browser.test.{ts,tsx}',
         '!**/test/**/*.browser.test.{ts,tsx}',
-        ...exclude.map((p) => `!${p}`),
       ],
       setupFiles: [...setupFiles, new URL('./tools/vitest/setup.ts', import.meta.url).pathname],
     },
