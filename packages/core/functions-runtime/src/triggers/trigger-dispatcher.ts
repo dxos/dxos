@@ -301,6 +301,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
       // Clear scheduled triggers
       this._scheduledTriggers.clear();
+      this._cooldownUntil.clear();
 
       log.info('TriggerDispatcher stopped');
     }).pipe(Effect.provide(this._services));
