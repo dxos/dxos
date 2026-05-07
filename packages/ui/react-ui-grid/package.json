@@ -10,7 +10,6 @@
   },
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
