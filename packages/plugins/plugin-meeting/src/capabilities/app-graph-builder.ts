@@ -74,36 +74,6 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createTypeExtension({
-        id: 'call-thread',
-        type: Channel.Channel,
-        connector: Effect.fnUntraced(function* (channel, get) {
-          const store = yield* Capability.get(MeetingCapabilities.State);
-          const meeting = get(activeMeetingFamily(store));
-          if (!meeting) {
-            return [];
-          }
-
-          const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
-          const channelDxn = Obj.getDXN(channel).toString();
-          const joined = get(callManager.joinedAtom);
-          const roomId = get(callManager.roomIdAtom);
-          if (!joined || roomId !== channelDxn) {
-            return [];
-          }
-
-          return [
-            AppNode.makeCompanion({
-              id: 'meeting-thread',
-              label: ['meeting-thread.label', { ns: meta.id }],
-              icon: 'ph--chat-text--regular',
-              data: get(AtomObj.make(meeting.thread)),
-              position: 'hoist',
-            }),
-          ];
-        }),
-      }),
-
-      GraphBuilder.createTypeExtension({
         id: 'call-companion',
         type: Channel.Channel,
         connector: Effect.fnUntraced(function* (channel, get) {

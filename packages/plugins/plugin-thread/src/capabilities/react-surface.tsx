@@ -13,11 +13,16 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Channel, Thread } from '@dxos/types';
 
 import { ThreadSettings } from '#components';
-import { CallDebugPanel, CallSidebar, ChannelContainer, ThreadCompanion, ThreadContainer } from '#containers';
+import {
+  CallDebugPanel,
+  CallSidebar,
+  ChannelChat,
+  ChannelContainer,
+  ThreadCompanion,
+  ThreadContainer,
+} from '#containers';
 import { meta } from '#meta';
 import { ThreadCapabilities, type Settings } from '#types';
-
-import { ChannelChat } from '../containers/ChannelContainer';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

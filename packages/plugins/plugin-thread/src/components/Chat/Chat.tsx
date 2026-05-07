@@ -44,14 +44,17 @@ export type ChatProps = ThemedClassName<
     onSend: (text: string) => boolean;
     autoFocusTextbox?: boolean;
     /**
-     * When true, render in Slack-style layout: composer pinned to the bottom of the
-     * panel, messages scrolling above it (newest at the bottom), auto-scrolling on
-     * mount and whenever messages arrive. When false (default), render in thread
-     * layout: composer follows the messages at intrinsic height.
+     * Where the composer sits relative to the messages.
+     * - `'top'` (default) — composer follows the messages at intrinsic height,
+     *   suitable for inline comment threads.
+     * - `'bottom'` — composer pinned to the bottom of the panel, messages
+     *   scrolling above it. Suitable for full-panel multi-party chat.
      */
-    bottomComposer?: boolean;
+    orientation?: ChatOrientation;
   } & Pick<ThreadRootProps, 'current'>
 >;
+
+export type ChatOrientation = 'top' | 'bottom';
 
 /**
  * Pure chat UI: scrollable message list + composer textbox + activity indicator.
@@ -62,7 +65,7 @@ export type ChatProps = ThemedClassName<
  */
 export const Chat = composable<HTMLDivElement, ChatProps>(
   (
-    { id, identity, members, messages, activity, onSend, autoFocusTextbox, current, bottomComposer, ...props },
+    { id, identity, members, messages, activity, onSend, autoFocusTextbox, current, orientation = 'top', ...props },
     forwardedRef,
   ) => {
     const { t } = useTranslation(meta.id);
@@ -128,8 +131,8 @@ export const Chat = composable<HTMLDivElement, ChatProps>(
       sentinelRef,
     };
 
-    return bottomComposer ? (
-      <SlackLayout
+    return orientation === 'bottom' ? (
+      <ChannelLayout
         {...composableProps(props, { classNames: 'flex flex-col bs-full min-h-0' })}
         id={id}
         ref={forwardedRef}
@@ -191,8 +194,8 @@ const ThreadLayout = React.forwardRef<HTMLDivElement, LayoutProps & Pick<ThreadR
   },
 );
 
-/** Slack layout — composer pinned to the bottom, messages scroll above it. */
-const SlackLayout = React.forwardRef<HTMLDivElement, LayoutProps>(({ id, state, ...props }, ref) => {
+/** Channel layout — composer pinned to the bottom, messages scroll above it. */
+const ChannelLayout = React.forwardRef<HTMLDivElement, LayoutProps>(({ id, state, ...props }, ref) => {
   const { t } = useTranslation(meta.id);
   const { messages, members, activity, extensions, autoFocus, handleSend, textboxMetadata, scrollRef, sentinelRef } =
     state;

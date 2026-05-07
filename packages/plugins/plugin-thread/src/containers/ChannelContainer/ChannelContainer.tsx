@@ -24,9 +24,8 @@ import { composable, composableProps } from '@dxos/ui-theme';
 import { Call, Chat } from '#components';
 import { useStatus } from '#hooks';
 import { meta } from '#meta';
+import { ThreadOperation } from '#operations';
 import { ThreadCapabilities } from '#types';
-
-import { ThreadOperation } from '../../operations';
 
 export type ChannelContainerProps = AppSurface.ObjectArticleProps<
   Channel.Channel | undefined,
@@ -164,8 +163,8 @@ export type ChannelChatProps = {
 };
 
 /**
- * Slack-style channel chat: composer pinned to the bottom of the panel, messages
- * scrolling above it (newest at the bottom). Threading via `Message.threadId` is
+ * Channel chat: composer pinned to the bottom of the panel, messages scrolling
+ * above it (newest at the bottom). Threading via `Message.threadId` is
  * intentionally not reconstructed in this round.
  */
 export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
@@ -200,7 +199,7 @@ export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
         messages={messages}
         activity={activity}
         onSend={handleSend}
-        bottomComposer
+        orientation='bottom'
         ref={forwardedRef}
       />
     );

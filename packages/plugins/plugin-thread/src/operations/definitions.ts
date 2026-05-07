@@ -39,17 +39,6 @@ export const CreateChannel = Operation.make({
   }),
 });
 
-export const CreateChannelThread = Operation.make({
-  meta: { key: `${THREAD_OPERATION}.create-channel-thread`, name: 'Create Channel Thread' },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    channel: Channel.Channel,
-  }),
-  output: Schema.Struct({
-    object: Thread.Thread,
-  }),
-});
-
 export const AppendChannelMessage = Operation.make({
   meta: { key: `${THREAD_OPERATION}.append-channel-message`, name: 'Append Channel Message' },
   // Note: Feed.FeedService is provided inside the handler from space.queues, not at the
