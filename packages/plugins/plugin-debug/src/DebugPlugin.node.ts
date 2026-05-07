@@ -14,8 +14,6 @@ export type DebugPluginOptions = {
   logStore: IdbLogStore;
 };
 
-// TODO(wittjosiah): Factor out DevtoolsPlugin?
-
 export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addSettingsModule({ activate: DebugSettings }),
