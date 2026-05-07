@@ -29,7 +29,9 @@ const USER_AGENT = '@dxos/plugin-github';
 
 const PageDir = Schema.Literal('next', 'last', 'prev', 'first');
 
-// ── Subset schemas for the responses we care about ─────────────────────────
+//
+// Subset schemas for the responses we care about
+//
 
 const GitHubUserSchema = Schema.Struct({
   id: Schema.Number,
@@ -110,7 +112,9 @@ const GitHubCommentSchema = Schema.Struct({
 });
 export type GitHubComment = Schema.Schema.Type<typeof GitHubCommentSchema>;
 
-// ── Credentials service ────────────────────────────────────────────────────
+//
+// Credentials service
+//
 
 /**
  * Layer-based credentials service. Mirrors `TrelloCredentials`: every API call
@@ -134,7 +138,9 @@ export class GitHubCredentials extends Context.Tag('@dxos/plugin-github/GitHubCr
     );
 }
 
-// ── Request pipeline ───────────────────────────────────────────────────────
+//
+// Request pipeline
+//
 
 type GitHubEffect<T> = Effect.Effect<
   T,
@@ -202,7 +208,9 @@ const githubRequest = <T>(
     return yield* runRequest(build(creds), schema);
   });
 
-// ── Pagination ─────────────────────────────────────────────────────────────
+//
+// Pagination
+//
 
 /**
  * Walk paginated GitHub list endpoints by following `Link: <…>; rel="next"`.
@@ -273,7 +281,9 @@ const githubPaginated = <T>(
     return out;
   });
 
-// ── API surface ────────────────────────────────────────────────────────────
+//
+// API surface
+//
 
 /** GET /user — authenticated user profile. */
 export const fetchUser = (): GitHubEffect<GitHubUser> =>

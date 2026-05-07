@@ -23,7 +23,7 @@ import { GetGitHubRepositories } from './definitions';
 const handler: Operation.WithHandler<typeof GetGitHubRepositories> = GetGitHubRepositories.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ integration }) {
-      // TODO(burdon): Mirror the Trello pattern — derive the db from the input ref's
+      // TODO(wittjosiah): Mirror the Trello pattern — derive the db from the input ref's
       //   target until the OperationInvoker has a `databaseResolver` and the operation
       //   can declare `services: [Database.Service]` directly.
       const target = integration.target;
@@ -34,8 +34,8 @@ const handler: Operation.WithHandler<typeof GetGitHubRepositories> = GetGitHubRe
 
       return yield* Effect.gen(function* () {
         const remoteRepos = yield* GitHubApi.fetchUserRepos();
-        const sorted = [...remoteRepos].sort((a, b) =>
-          a.full_name.toLowerCase().localeCompare(b.full_name.toLowerCase()),
+        const sorted = [...remoteRepos].sort((left, right) =>
+          left.full_name.toLowerCase().localeCompare(right.full_name.toLowerCase()),
         );
         const targets = sorted.map((repo) => ({
           id: String(repo.id),
