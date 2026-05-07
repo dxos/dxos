@@ -2,6 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './meta';
+import { Plugin } from '@dxos/app-framework';
 
-export * from './CrmPlugin';
+import { meta } from './meta';
+
+export const CrmPlugin = Plugin.lazy(meta, () => import('./CrmPlugin'));
+
+export * from './meta';

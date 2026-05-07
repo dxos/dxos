@@ -121,7 +121,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
           {!hoistStatusbar && (
             <div
               role='none'
-              className='grid grid-cols-1 auto-rows-(--dx-rail-item) gap-0.5 overflow-y-auto'
+              className='grid grid-cols-1 auto-rows-(--dx-rail-item) py-0.5 gap-0.5 overflow-y-auto scrollbar-none'
               style={iconSize(4)}
             >
               <Surface.Surface role='status-indicator' />

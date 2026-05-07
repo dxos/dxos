@@ -47,3 +47,5 @@ export const PwaPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default PwaPlugin;

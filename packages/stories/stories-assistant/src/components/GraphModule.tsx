@@ -7,8 +7,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Feed, Filter } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { useFlush } from '@dxos/plugin-assistant';
-import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
+import { useFlush } from '@dxos/plugin-assistant/hooks';
+import { D3ForceGraph } from '@dxos/plugin-explorer/components';
+import { useGraphModel } from '@dxos/plugin-explorer/hooks';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';

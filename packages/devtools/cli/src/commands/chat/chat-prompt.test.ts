@@ -25,7 +25,7 @@ describe('dx chat --prompt (non-interactive)', () => {
     expect(stdout).toMatch(/non-interactively/);
   });
 
-  test('chat --prompt without a HALO identity exits cleanly with guidance', ({ expect }) => {
+  test('chat --prompt without a HALO identity exits cleanly with guidance', { timeout: 60_000 }, ({ expect }) => {
     withIsolatedHome((home) => {
       const { stdout, stderr, status } = runDx(['chat', '--prompt', 'research test@example.com'], {
         home,

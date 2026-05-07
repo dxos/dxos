@@ -22,7 +22,7 @@ export {
 } from './refs';
 export type {
   Capability,
-  Intent,
+  Operation,
   Package,
   PackageDetail,
   PackageFilter,

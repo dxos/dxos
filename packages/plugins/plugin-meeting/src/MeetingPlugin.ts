@@ -36,7 +36,7 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
     },
   }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Meeting.Meeting], id: 'schemas' }),
+  AppPlugin.addSchemaModule({ schema: [Meeting.Meeting] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
@@ -58,3 +58,5 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default MeetingPlugin;

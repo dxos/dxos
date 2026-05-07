@@ -10,7 +10,7 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const TransformerPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [], id: 'schema' }),
+  AppPlugin.addSchemaModule({ schema: [] }),
   AppPlugin.addTranslationsModule({ translations }),
   // Plugin.addModule({
   //   id: 'intent-resolver',
@@ -19,3 +19,5 @@ export const TransformerPlugin = Plugin.define(meta).pipe(
   // }),
   Plugin.make,
 );
+
+export default TransformerPlugin;

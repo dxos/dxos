@@ -131,3 +131,5 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default InboxPlugin;

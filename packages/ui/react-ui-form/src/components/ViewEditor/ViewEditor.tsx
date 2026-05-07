@@ -342,7 +342,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                       {field.path}
                     </List.ItemTitle>
                     <List.ItemIconButton
-                      label={t(hidden ? 'show field label' : 'hide field label')}
+                      label={t(hidden ? 'show-field.label' : 'hide-field.label')}
                       data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
                       icon={hidden ? 'ph--eye-closed--regular' : 'ph--eye--regular'}
                       autoHide={false}

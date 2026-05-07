@@ -34,3 +34,5 @@ export const SearchPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );
+
+export default SearchPlugin;

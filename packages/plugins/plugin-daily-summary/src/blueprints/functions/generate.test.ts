@@ -43,7 +43,8 @@ const TestLayer = AssistantTestLayer({
   tracing: 'pretty',
 });
 
-describe('GenerateSummary', () => {
+// TODO: Requires a live ECHO database — not available in CI.
+describe.skip('GenerateSummary', () => {
   it.effect(
     'creates a Markdown document with summary content',
     Effect.fnUntraced(
