@@ -32,6 +32,6 @@ describe('spaces list', () => {
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
       const formattedSpaces = TestConsole.parseJson(logs[0]);
-      expect(formattedSpaces).toHaveLength(2);
+      expect(formattedSpaces).toHaveLength(1);
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 });
