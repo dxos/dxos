@@ -2,7 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-export { DebugPlugin } from '#plugin';
+import { Plugin } from '@dxos/app-framework';
+
+import { meta } from './meta';
+
+export const DebugPlugin = Plugin.lazy(meta, () => import('#plugin'));
 export type { DebugPluginOptions } from '#plugin';
 
 export * from './meta';
