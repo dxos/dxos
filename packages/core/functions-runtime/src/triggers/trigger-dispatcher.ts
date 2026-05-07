@@ -65,6 +65,14 @@ export interface TriggerDispatcherOptions {
    * @default 5
    */
   maxConcurrency?: number;
+
+  /**
+   * Cooldown applied to a trigger after it fails.
+   * While in cooldown, scheduled invocations of that trigger are skipped.
+   * Manual {@link TriggerDispatcher.invokeTrigger} calls bypass the cooldown.
+   * @default 30 seconds
+   */
+  failureCooldown?: Duration.Duration;
 }
 
 export interface InvokeTriggerOptions {
@@ -179,6 +187,7 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
 }
 
 const DEFAULT_MAX_CONCURRENCY = 5;
+const DEFAULT_FAILURE_COOLDOWN = Duration.seconds(30);
 
 class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   readonly livePollInterval: Duration.Duration;
@@ -196,6 +205,8 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     errors: [],
   });
   private _maxConcurrency: number;
+  private _failureCooldown: Duration.Duration;
+  private _cooldownUntil = new Map<string, Date>();
 
   constructor(options: TriggerDispatcherOptions) {
     this._services = options.services;
@@ -203,7 +214,20 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     this.livePollInterval = options.livePollInterval ?? Duration.seconds(1);
     this._internalTime = options.startingTime ?? new Date();
     this._maxConcurrency = options.maxConcurrency ?? DEFAULT_MAX_CONCURRENCY;
+    this._failureCooldown = options.failureCooldown ?? DEFAULT_FAILURE_COOLDOWN;
   }
+
+  private _isInCooldown = (triggerId: string): boolean => {
+    const until = this._cooldownUntil.get(triggerId);
+    if (!until) {
+      return false;
+    }
+    if (until.getTime() <= this.getCurrentTime().getTime()) {
+      this._cooldownUntil.delete(triggerId);
+      return false;
+    }
+    return true;
+  };
 
   get running(): boolean {
     return this._running;
@@ -354,8 +378,14 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         log('trigger execution success', {
           triggerId: trigger.id,
         });
+        this._cooldownUntil.delete(trigger.id);
       } else {
+        const cooldownMs = Duration.toMillis(this._failureCooldown);
+        const until = new Date(this.getCurrentTime().getTime() + cooldownMs);
+        this._cooldownUntil.set(trigger.id, until);
         log.error('trigger execution failure', {
+          triggerId: trigger.id,
+          cooldownUntil: until,
           error: causeToError(result.cause),
         });
       }
@@ -387,10 +417,14 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
               for (const [triggerId, scheduledTrigger] of this._scheduledTriggers.entries()) {
                 if (scheduledTrigger.nextExecution <= now) {
-                  triggersToInvoke.push(scheduledTrigger.trigger);
-
                   // Update next execution time using Effect's Cron
                   scheduledTrigger.nextExecution = Cron.next(scheduledTrigger.cron, now);
+
+                  if (this._isInCooldown(triggerId)) {
+                    log('skipping trigger in cooldown', { triggerId });
+                    continue;
+                  }
+                  triggersToInvoke.push(scheduledTrigger.trigger);
                 }
               }
 
@@ -412,6 +446,10 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             for (const trigger of this._triggers) {
               const spec = trigger.spec;
               if (spec?.kind !== 'queue') {
+                continue;
+              }
+              if (this._isInCooldown(trigger.id)) {
+                log('skipping trigger in cooldown', { triggerId: trigger.id });
                 continue;
               }
               const cursor = Obj.getKeys(trigger, KEY_QUEUE_CURSOR).at(0)?.id;
@@ -472,6 +510,10 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             for (const trigger of this._triggers) {
               const spec = trigger.spec;
               if (spec?.kind !== 'subscription') {
+                continue;
+              }
+              if (this._isInCooldown(trigger.id)) {
+                log('skipping trigger in cooldown', { triggerId: trigger.id });
                 continue;
               }
 
