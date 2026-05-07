@@ -6,7 +6,7 @@ import ReactPlugin from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { defineConfig } from 'vite';
+import { defineConfig, esmExternalRequirePlugin } from 'vite';
 
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 
@@ -45,6 +45,15 @@ export default defineConfig({
     },
   },
   plugins: [
+    // Convert literal `require("react")` calls inside transitive CJS shims
+    // (e.g. use-sync-external-store, react-jsx-runtime/cjs) to ESM imports
+    // against the externalized `react` / `react-dom`. Without this, those
+    // requires survive in the bundle and fail at runtime when a downstream
+    // app (e.g. todomvc/tasks shell.html iframe) loads shell.js.
+    esmExternalRequirePlugin({
+      external: ['react', 'react-dom'],
+      skipDuplicateCheck: true,
+    }),
     ThemePlugin({}),
     ReactPlugin(),
     // https://www.bundle-buddy.com/rollup
