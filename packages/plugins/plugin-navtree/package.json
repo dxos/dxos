@@ -14,11 +14,11 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/NavTreePlugin.node.ts",
+      "source": "./src/NavTreePlugin.tsx",
       "types": "./src/NavTreePlugin.tsx",
       "browser": "./src/NavTreePlugin.tsx",
       "node": "./src/NavTreePlugin.node.ts",
-      "default": "./src/NavTreePlugin.node.ts"
+      "default": "./src/NavTreePlugin.tsx"
     },
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",

@@ -19,11 +19,11 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#plugin": {
-      "source": "./src/FilesPlugin.node.ts",
+      "source": "./src/FilesPlugin.tsx",
       "types": "./src/FilesPlugin.tsx",
       "browser": "./src/FilesPlugin.tsx",
       "node": "./src/FilesPlugin.node.ts",
-      "default": "./src/FilesPlugin.node.ts"
+      "default": "./src/FilesPlugin.tsx"
     },
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"

@@ -26,11 +26,11 @@
     "#operations": "./src/operations/index.ts",
     "#translations": "./src/translations.ts",
     "#plugin": {
-      "source": "./src/SamplePlugin.node.ts",
+      "source": "./src/SamplePlugin.ts",
       "types": "./src/SamplePlugin.ts",
       "browser": "./src/SamplePlugin.ts",
       "node": "./src/SamplePlugin.node.ts",
-      "default": "./src/SamplePlugin.node.ts"
+      "default": "./src/SamplePlugin.ts"
     },
     "#types": "./src/types/index.ts"
   },

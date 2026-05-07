@@ -14,11 +14,11 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/DeckPlugin.node.ts",
+      "source": "./src/DeckPlugin.ts",
       "types": "./src/DeckPlugin.ts",
       "browser": "./src/DeckPlugin.ts",
       "node": "./src/DeckPlugin.node.ts",
-      "default": "./src/DeckPlugin.node.ts"
+      "default": "./src/DeckPlugin.ts"
     },
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",

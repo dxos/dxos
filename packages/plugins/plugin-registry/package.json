@@ -20,11 +20,11 @@
     "#operations": "./src/operations/index.ts",
     "#translations": "./src/translations.ts",
     "#plugin": {
-      "source": "./src/RegistryPlugin.node.ts",
+      "source": "./src/RegistryPlugin.tsx",
       "types": "./src/RegistryPlugin.tsx",
       "browser": "./src/RegistryPlugin.tsx",
       "node": "./src/RegistryPlugin.node.ts",
-      "default": "./src/RegistryPlugin.node.ts"
+      "default": "./src/RegistryPlugin.tsx"
     },
     "#types": "./src/types.ts"
   },

@@ -26,11 +26,11 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#plugin": {
-      "source": "./src/InboxPlugin.node.ts",
+      "source": "./src/InboxPlugin.tsx",
       "types": "./src/InboxPlugin.tsx",
       "browser": "./src/InboxPlugin.tsx",
       "node": "./src/InboxPlugin.node.ts",
-      "default": "./src/InboxPlugin.node.ts"
+      "default": "./src/InboxPlugin.tsx"
     },
     "#testing": "./src/testing/index.ts",
     "#translations": "./src/translations.ts",

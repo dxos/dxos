@@ -21,11 +21,11 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#plugin": {
-      "source": "./src/ThreadPlugin.node.ts",
+      "source": "./src/ThreadPlugin.tsx",
       "types": "./src/ThreadPlugin.tsx",
       "browser": "./src/ThreadPlugin.tsx",
       "node": "./src/ThreadPlugin.node.ts",
-      "default": "./src/ThreadPlugin.node.ts"
+      "default": "./src/ThreadPlugin.tsx"
     },
     "#testing": "./src/testing/index.ts",
     "#translations": "./src/translations.ts",

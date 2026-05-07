@@ -20,11 +20,11 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#plugin": {
-      "source": "./src/TranscriptionPlugin.node.ts",
+      "source": "./src/TranscriptionPlugin.tsx",
       "types": "./src/TranscriptionPlugin.tsx",
       "browser": "./src/TranscriptionPlugin.tsx",
       "node": "./src/TranscriptionPlugin.node.ts",
-      "default": "./src/TranscriptionPlugin.node.ts"
+      "default": "./src/TranscriptionPlugin.tsx"
     },
     "#testing": "./src/testing/index.ts",
     "#translations": "./src/translations.ts",

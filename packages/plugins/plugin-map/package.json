@@ -14,11 +14,11 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/MapPlugin.node.ts",
+      "source": "./src/MapPlugin.tsx",
       "types": "./src/MapPlugin.tsx",
       "browser": "./src/MapPlugin.tsx",
       "node": "./src/MapPlugin.node.ts",
-      "default": "./src/MapPlugin.node.ts"
+      "default": "./src/MapPlugin.tsx"
     },
     "#blueprints": "./src/blueprints/index.ts",
     "#capabilities": "./src/capabilities/index.ts",

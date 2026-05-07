@@ -26,11 +26,11 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#plugin": {
-      "source": "./src/MarkdownPlugin.node.ts",
+      "source": "./src/MarkdownPlugin.tsx",
       "types": "./src/MarkdownPlugin.tsx",
       "browser": "./src/MarkdownPlugin.tsx",
       "node": "./src/MarkdownPlugin.node.ts",
-      "default": "./src/MarkdownPlugin.node.ts"
+      "default": "./src/MarkdownPlugin.tsx"
     },
     "#testing": "./src/testing.ts",
     "#translations": "./src/translations.ts",

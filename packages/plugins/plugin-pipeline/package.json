@@ -19,11 +19,11 @@
     "#hooks": "./src/hooks/index.ts",
     "#meta": "./src/meta.ts",
     "#plugin": {
-      "source": "./src/PipelinePlugin.node.ts",
+      "source": "./src/PipelinePlugin.tsx",
       "types": "./src/PipelinePlugin.tsx",
       "browser": "./src/PipelinePlugin.tsx",
       "node": "./src/PipelinePlugin.node.ts",
-      "default": "./src/PipelinePlugin.node.ts"
+      "default": "./src/PipelinePlugin.tsx"
     },
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"

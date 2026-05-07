@@ -14,11 +14,11 @@
   "type": "module",
   "imports": {
     "#plugin": {
-      "source": "./src/PresenterPlugin.node.ts",
+      "source": "./src/PresenterPlugin.tsx",
       "types": "./src/PresenterPlugin.tsx",
       "browser": "./src/PresenterPlugin.tsx",
       "node": "./src/PresenterPlugin.node.ts",
-      "default": "./src/PresenterPlugin.node.ts"
+      "default": "./src/PresenterPlugin.tsx"
     },
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
