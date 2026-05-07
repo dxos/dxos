@@ -14,11 +14,9 @@
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/node.ts",
-      "types": "./src/capabilities/index.ts",
       "browser": "./src/capabilities/index.ts",
       "node": "./src/capabilities/node.ts",
-      "default": "./src/capabilities/node.ts"
+      "default": "./src/capabilities/index.ts"
     },
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
