@@ -172,14 +172,11 @@ const upsertPerson = Effect.fn('upsertPerson')(function* (
     return existing;
   }
   const created = Person.make({
+    [Obj.Meta]: { keys: [fkFor(user.id)] },
     fullName: user.name ?? user.login,
     image: user.avatar_url ?? undefined,
     organization: organization ? Ref.make(organization) : undefined,
     identities: [{ label: 'github', value: `github.com/${user.login}` }],
-  });
-  // Stamp the foreign key after Person.make so we don't fight the helper.
-  Obj.update(created, (created) => {
-    Obj.getMeta(created).keys.push(fkFor(user.id));
   });
   return yield* Database.add(created);
 });
@@ -234,14 +231,12 @@ const upsertTask = Effect.fn('upsertTask')(function* (
     return { task: existing, created: false };
   }
   const created = Task.make({
+    [Obj.Meta]: { keys: [fkFor(issue.id)] },
     title: issue.title,
     description: issue.body ?? '',
     status: issueStateToTaskStatus(issue.state),
     assigned: assignedPerson ? Ref.make(assignedPerson) : undefined,
     project: Ref.make(project),
-  });
-  Obj.update(created, (created) => {
-    Obj.getMeta(created).keys.push(fkFor(issue.id));
   });
   const persisted = yield* Database.add(created);
   return { task: persisted, created: true };
@@ -264,23 +259,19 @@ const syncCommentsForTask = Effect.fn('syncCommentsForTask')(function* (
   }
 
   // Find or create the thread anchored to this task.
-  let thread = yield* findByForeignId<Thread.Thread>(
-    Thread.Thread,
-    `task:${Obj.getMeta(task).keys.find((key) => key.source === GITHUB_SOURCE)?.id ?? ''}`,
-  );
+  const taskFid = Obj.getMeta(task).keys.find((key) => key.source === GITHUB_SOURCE)?.id;
+  if (!taskFid) {
+    return yield* Effect.dieMessage('Task missing GitHub foreign key — upsertTask must run first.');
+  }
+  let thread = yield* findByForeignId<Thread.Thread>(Thread.Thread, `task:${taskFid}`);
   if (!thread) {
-    const taskFid = Obj.getMeta(task).keys.find((key) => key.source === GITHUB_SOURCE)?.id;
-    thread = Thread.make({
+    const created = Thread.make({
+      [Obj.Meta]: { keys: [{ source: GITHUB_SOURCE, id: `task:${taskFid}` }] },
       name: 'Comments',
       status: 'active',
       messages: [],
     });
-    if (taskFid) {
-      Obj.update(thread, (thread) => {
-        Obj.getMeta(thread).keys.push({ source: GITHUB_SOURCE, id: `task:${taskFid}` });
-      });
-    }
-    thread = yield* Database.add(thread);
+    thread = yield* Database.add(created);
     // TODO(wittjosiah): Anchor thread → task via AnchoredTo relation. Skipped in
     //   v1 because the relation API requires a Database service round-trip
     //   that didn't fit the current handler shape; comments still discoverable
@@ -306,6 +297,9 @@ const syncCommentsForTask = Effect.fn('syncCommentsForTask')(function* (
   for (const comment of comments) {
     const existing = existingByFid.get(String(comment.id));
     const senderLogin = comment.user?.login ?? 'unknown';
+    // TODO(wittjosiah): Upsert a Person for unknown comment authors via
+    //   `ensurePerson` (in the main handler scope) once comments are re-enabled,
+    //   so external commenters get a `contact` ref like assignees do.
     const sender = authorByLogin.get(senderLogin);
     const senderActor: Actor.Actor = sender ? { name: senderLogin, contact: Ref.make(sender) } : { name: senderLogin };
     if (existing) {
@@ -318,12 +312,10 @@ const syncCommentsForTask = Effect.fn('syncCommentsForTask')(function* (
       continue;
     }
     const message = Message.make({
+      [Obj.Meta]: { keys: [fkFor(comment.id)] },
       created: comment.created_at ?? new Date().toISOString(),
       sender: senderActor,
       blocks: [{ _tag: 'text', text: comment.body ?? '' }],
-    });
-    Obj.update(message, (message) => {
-      Obj.getMeta(message).keys.push(fkFor(comment.id));
     });
     const persisted = yield* Database.add(message);
     newRefs.push(Ref.make(persisted));
@@ -346,10 +338,13 @@ const syncCommentsForTask = Effect.fn('syncCommentsForTask')(function* (
 const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHubRepositories.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ integration, repository: repoRef }) {
+      // TODO(wittjosiah): The operation should depend on `Database.Service` once
+      //   the OperationInvoker has a `databaseResolver`. Until then we require
+      //   the caller to preload `integration.target` so we can derive the db.
       const integrationTarget = integration.target;
       const db = integrationTarget ? Obj.getDatabase(integrationTarget) : undefined;
       if (!db) {
-        return yield* Effect.dieMessage('No database for integration ref.');
+        return yield* Effect.dieMessage('Integration ref must be preloaded by caller (no database derivable).');
       }
 
       const integrationId = integration.dxn.asEchoDXN()?.echoId ?? 'unknown';
@@ -364,6 +359,9 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
           // Fetch all repos visible to the token once so each target row can
           // resolve its remote `GitHubRepo`. Targets store the numeric repo id
           // as `remoteId` (a stringified integer).
+          // TODO(wittjosiah): Switch to per-target `fetchRepo(owner, name)` once
+          //   targets carry `owner`/`name` in metadata. `fetchUserRepos()` walks
+          //   every repo the token can see and dominates large-account syncs.
           const allRepos = yield* GitHubApi.fetchUserRepos();
           const reposById = new Map(allRepos.map((repo) => [String(repo.id), repo]));
 
@@ -379,11 +377,15 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
             remoteRepo: GitHubApi.GitHubRepo;
             remoteId: string;
             options: SyncOptions | undefined;
+            /** Set when `target.object` needs to be (re)pointed at `project`. */
+            rewireRef: Ref.Ref<Project.Project> | undefined;
           };
           const targetEntries: TargetEntry[] = [];
+          /** Targets with a foreignId the integration token can't resolve — surfaced via lastError. */
+          const inaccessibleRemoteIds: string[] = [];
           for (const target of integrationObj.targets) {
             let foreignId = target.remoteId;
-            let localObj = target.object?.target;
+            const localObj = target.object?.target;
             if (foreignId === undefined && localObj) {
               foreignId = Obj.getMeta(localObj).keys.find((k) => k.source === GITHUB_SOURCE)?.id;
             }
@@ -392,6 +394,7 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
             }
             const remoteRepo = reposById.get(foreignId);
             if (!remoteRepo) {
+              inaccessibleRemoteIds.push(foreignId);
               continue;
             }
 
@@ -403,18 +406,9 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
             // resolved an unrelated one); rewire `target.object` to whatever the
             // upsert returned so the user-visible target tracks the actual record.
             const project = yield* upsertProject(remoteRepo);
-            if (!localObj || localObj.id !== project.id) {
-              const materializedRef = Ref.make(project as unknown as Obj.Any);
-              Obj.update(integrationObj, (integrationObj) => {
-                const idx = integrationObj.targets.findIndex((target) => target.remoteId === foreignId);
-                if (idx >= 0) {
-                  integrationObj.targets[idx] = { ...integrationObj.targets[idx], object: materializedRef };
-                }
-              });
-            }
+            const rewireRef = !localObj || localObj.id !== project.id ? Ref.make(project) : undefined;
 
-            const targetEchoId = Ref.make(project as unknown as Obj.Any).dxn.asEchoDXN()?.echoId;
-            if (repoFilterId && targetEchoId !== repoFilterId) {
+            if (repoFilterId && project.id !== repoFilterId) {
               continue;
             }
 
@@ -424,17 +418,36 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
               remoteRepo,
               remoteId: foreignId,
               options: (target.options ?? undefined) as SyncOptions | undefined,
+              rewireRef,
             });
           }
+
+          // Cross-fiber dedup for Person upserts: parallel per-target/issue work
+          // can race two upserts for the same login (within a target — same
+          // assignee on multiple issues — or across targets). Without serialization
+          // both fibers find no foreign-key match, both insert, leaving duplicate
+          // Person rows. The semaphore + cache pair gives us a single in-flight
+          // upsert per login; subsequent callers read from `personByLogin`.
+          const personByLogin = new Map<string, Person.Person>();
+          const personSemaphore = yield* Effect.makeSemaphore(1);
+          const ensurePerson = (user: GitHubApi.GitHubUser, organization: Organization.Organization | undefined) =>
+            personSemaphore.withPermits(1)(
+              Effect.gen(function* () {
+                const cached = personByLogin.get(user.login);
+                if (cached) {
+                  return cached;
+                }
+                const person = yield* upsertPerson(user, organization);
+                personByLogin.set(user.login, person);
+                return person;
+              }),
+            );
 
           // Auto-pull the owning org + members for every unique owner in the
           // selected repo set. Done once per sync, not per repo, so picking 50
           // repos in a single org makes one `/orgs/{org}/members` call.
           const ownerLogins = new Set(targetEntries.map((target) => target.remoteRepo.owner.login));
-          const orgByOwnerLogin = new Map<string, Organization.Organization>();
-          const personByLogin = new Map<string, Person.Person>();
           let pulledOrganizations = 0;
-          let pulledPeople = 0;
           for (const owner of ownerLogins) {
             // `/orgs/{owner}` returns 404 for user-owned repos (personal
             // accounts are not orgs). Treat that as "no org to sync" and
@@ -444,22 +457,16 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
               log.info('github sync: owner is not an org, skipping org/member pull', { owner });
               continue;
             }
-            const remoteOrg = orgResult.right;
-            const organization = yield* upsertOrganization(remoteOrg);
-            orgByOwnerLogin.set(owner, organization);
+            const organization = yield* upsertOrganization(orgResult.right);
             pulledOrganizations++;
 
             const members = yield* GitHubApi.fetchOrgMembers(owner);
             for (const member of members) {
-              const person = yield* upsertPerson(member, organization);
-              personByLogin.set(member.login, person);
-              pulledPeople++;
+              yield* ensurePerson(member, organization);
             }
           }
 
-          let pulledProjects = 0;
           let pulledTasks = 0;
-          let pulledComments = 0;
 
           const perTarget = yield* Effect.forEach(
             targetEntries,
@@ -467,7 +474,6 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
               Effect.gen(function* () {
                 const result = yield* Effect.either(
                   Effect.gen(function* () {
-                    pulledProjects++;
                     const since = sinceFromOptions(options);
                     const issues = yield* GitHubApi.fetchRepoIssues(remoteRepo.owner.login, remoteRepo.name, {
                       since,
@@ -477,17 +483,10 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
                       (issue) =>
                         Effect.gen(function* () {
                           // Resolve assignee — first assignee only for v1.
-                          const assigneeLogin = issue.assignees?.[0]?.login;
-                          let assignedPerson: Person.Person | undefined = assigneeLogin
-                            ? personByLogin.get(assigneeLogin)
-                            : undefined;
-                          // External (non-org) assignees: upsert a standalone
-                          // Person without an org link.
-                          if (!assignedPerson && issue.assignees?.[0]) {
-                            assignedPerson = yield* upsertPerson(issue.assignees[0], undefined);
-                            personByLogin.set(issue.assignees[0].login, assignedPerson);
-                            pulledPeople++;
-                          }
+                          // External (non-org) assignees are upserted lazily; the
+                          // semaphored `ensurePerson` dedups across fibers.
+                          const assigneeUser = issue.assignees?.[0];
+                          const assignedPerson = assigneeUser ? yield* ensurePerson(assigneeUser, undefined) : undefined;
 
                           const { created } = yield* upsertTask(issue, assignedPerson, project);
                           if (created) {
@@ -502,47 +501,61 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
                     );
                   }),
                 );
-
-                Obj.update(integrationObj, (integrationObj) => {
-                  const idx = integrationObj.targets.findIndex((target) => target.remoteId === remoteId);
-                  if (idx < 0) {
-                    return;
-                  }
-                  if (result._tag === 'Right') {
-                    integrationObj.targets[idx] = {
-                      ...integrationObj.targets[idx],
-                      lastSyncAt: new Date().toISOString(),
-                      lastError: undefined,
-                    };
-                  } else {
-                    integrationObj.targets[idx] = {
-                      ...integrationObj.targets[idx],
-                      lastError: formatGitHubSyncFailure(result.left),
-                    };
-                  }
-                });
-
-                return result;
+                return { remoteId, result };
               }),
             { concurrency: REPO_CONCURRENCY },
           );
 
-          // Surface the first per-target error (if any) so the toast carries
-          // a meaningful message; counts above already reflect partial
+          // Apply all `integrationObj.targets` mutations serially after the
+          // parallel forEach so concurrent fibers don't race on the same array.
+          // Three writes per target row at most: `object` (rewireRef), then
+          // `lastSyncAt`/`lastError` from the per-target outcome, plus
+          // `lastError` for repos the token can't see.
+          Obj.update(integrationObj, (integrationObj) => {
+            for (const { remoteId, rewireRef } of targetEntries) {
+              if (!rewireRef) {
+                continue;
+              }
+              const idx = integrationObj.targets.findIndex((target) => target.remoteId === remoteId);
+              if (idx >= 0) {
+                integrationObj.targets[idx].object = rewireRef;
+              }
+            }
+            for (const { remoteId, result } of perTarget) {
+              const idx = integrationObj.targets.findIndex((target) => target.remoteId === remoteId);
+              if (idx < 0) {
+                continue;
+              }
+              if (result._tag === 'Right') {
+                integrationObj.targets[idx].lastSyncAt = new Date().toISOString();
+                integrationObj.targets[idx].lastError = undefined;
+              } else {
+                integrationObj.targets[idx].lastError = formatGitHubSyncFailure(result.left);
+              }
+            }
+            for (const remoteId of inaccessibleRemoteIds) {
+              const idx = integrationObj.targets.findIndex((target) => target.remoteId === remoteId);
+              if (idx >= 0) {
+                integrationObj.targets[idx].lastError = 'Repository not accessible to integration token';
+              }
+            }
+          });
+
+          // Log every per-target failure; counts above already reflect partial
           // progress on healthy targets.
-          for (const targetResult of perTarget) {
-            if (targetResult._tag === 'Left') {
-              log.warn('github sync: target failed', { error: targetResult.left });
+          for (const { result } of perTarget) {
+            if (result._tag === 'Left') {
+              log.warn('github sync: target failed', { error: result.left });
             }
           }
 
           return {
             pulled: {
               organizations: pulledOrganizations,
-              people: pulledPeople,
-              projects: pulledProjects,
+              people: personByLogin.size,
+              projects: targetEntries.length,
               tasks: pulledTasks,
-              comments: pulledComments,
+              comments: 0,
             },
           };
         }).pipe(
