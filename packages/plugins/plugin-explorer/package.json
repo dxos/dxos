@@ -40,6 +40,12 @@
       "node": "./dist/lib/node-esm/meta.mjs",
       "types": "./dist/types/src/meta.d.ts"
     },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "browser": "./dist/lib/browser/translations.mjs",
+      "node": "./dist/lib/node-esm/translations.mjs"
+    },
     "./components": {
       "source": "./src/components/index.ts",
       "browser": "./dist/lib/browser/components/index.mjs",

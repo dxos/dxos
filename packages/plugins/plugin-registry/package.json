@@ -40,6 +40,12 @@
       "browser": "./dist/lib/browser/cli/index.mjs",
       "node": "./dist/lib/node-esm/cli/index.mjs",
       "types": "./dist/types/src/cli/index.d.ts"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "browser": "./dist/lib/browser/translations.mjs",
+      "node": "./dist/lib/node-esm/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
