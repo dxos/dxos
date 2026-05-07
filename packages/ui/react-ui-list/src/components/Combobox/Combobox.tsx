@@ -299,13 +299,13 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
         onSelect={handleSelect}
         ref={forwardedRef}
         classNames={[
-          // Full width inside the viewport (no horizontal margin), with
-          // generous inner padding so content doesn't hug the row edge.
-          // Vertical padding stays light to preserve the dense option list.
-          'flex w-full gap-2 items-center px-3 py-1 select-none',
-          // TODO(burdon): Use dx-hover?
-          'cursor-pointer data-[selected=true]:bg-hover-overlay hover:bg-hover-overlay',
-          disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent data-[selected=true]:bg-transparent',
+          // Full width inside the viewport (no horizontal margin).
+          // `px-3 py-1`, `cursor-pointer`, `select-none` and the
+          // `dx-hover` / `dx-selected` pairing come from `Picker.Item`'s
+          // defaults; we only add the row-shape (flex / icons + label)
+          // and the disabled overrides on top.
+          'flex w-full gap-2 items-center',
+          disabled && 'hover:bg-transparent data-[selected=true]:bg-transparent',
           classNames,
         ]}
       >
