@@ -46,6 +46,7 @@ import React, {
   type ChangeEvent,
   type ComponentPropsWithRef,
   type KeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
   type PropsWithChildren,
   type ReactNode,
   forwardRef,
@@ -356,6 +357,15 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
       }
     }, [onSelect, disabled]);
 
+    // Prevent the mousedown from moving focus off `Picker.Input` —
+    // browsers focus an element with any `tabIndex` (including `-1`) on
+    // click, which would steal focus from the input and break the
+    // input's arrow-key handler. Cancelling on `mousedown` keeps focus
+    // on the input while still letting the subsequent `click` fire.
+    const handleMouseDown = useCallback((event: ReactMouseEvent<HTMLElement>) => {
+      event.preventDefault();
+    }, []);
+
     const Comp: any = asChild ? Slot : 'div';
 
     // Default styling: pair `aria-selected` with `dx-selected` and add
@@ -396,6 +406,7 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
           disabled && 'opacity-50 cursor-not-allowed',
           classNames,
         )}
+        onMouseDown={handleMouseDown}
         onClick={handleClick}
       >
         {children}
