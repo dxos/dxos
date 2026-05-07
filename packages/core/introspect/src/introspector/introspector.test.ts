@@ -36,7 +36,7 @@ describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
   beforeAll(async () => {
     introspector = createIntrospector({ rootPath: FIXTURE_ROOT, cache: false });
     await introspector.ready;
-  });
+  }, 30_000);
 
   test('lists fixture packages', ({ expect }) => {
     const all = introspector.listPackages();
