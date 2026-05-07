@@ -105,7 +105,7 @@
   );
   --color-grid-hover-overlay: oklch(from var(--color-neutral-500) l c h / 0.1);
   --color-grid-selection-overlay: var(--color-blue-500);
-  --color-grid-line: var(--color-separator);
+  --color-grid-line: var(--color-subdued-separator);
   --color-grid-focus-indicator: light-dark(var(--color-primary-600), var(--color-primary-600));
 
   /* Text */
