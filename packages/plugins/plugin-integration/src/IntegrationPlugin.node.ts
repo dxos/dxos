@@ -12,6 +12,7 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 import { AccessToken } from '@dxos/types';
 
 import { AppGraphBuilder, OperationHandler } from '#capabilities';
+import { integration } from './cli/commands';
 import { meta } from '#meta';
 import { CreateIntegrationForm, Integration, IntegrationCoordinator } from '#types';
 
@@ -60,6 +61,7 @@ export const IntegrationPlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
+  AppPlugin.addCommandModule({ commands: [integration] }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [AccessToken.AccessToken, Integration.Integration] }),
   Plugin.make,

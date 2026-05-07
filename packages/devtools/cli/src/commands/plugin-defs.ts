@@ -13,7 +13,7 @@ import { ObservabilityPlugin } from '@dxos/plugin-observability';
 import { RegistryPlugin } from '@dxos/plugin-registry';
 import { SamplePlugin } from '@dxos/plugin-sample';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { IntegrationPlugin } from '@dxos/plugin-integration/cli';
+import { IntegrationPlugin } from '@dxos/plugin-integration';
 
 export type PluginConfig = {
   config?: Config;
