@@ -9,8 +9,5 @@ import { createConfig } from '../../../vitest.base.config';
 
 export default createConfig({
   dirname: typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url)),
-  node: {
-    // generate.test.ts requires a live ECHO database — exclude from unit test run.
-    exclude: ['**/blueprints/functions/generate.test.ts'],
-  },
+  node: true,
 });
