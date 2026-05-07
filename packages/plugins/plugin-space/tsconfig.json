@@ -67,12 +67,6 @@
       "path": "../../core/echo/echo-protocol"
     },
     {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/operation"
-    },
-    {
       "path": "../../core/protocols"
     },
     {

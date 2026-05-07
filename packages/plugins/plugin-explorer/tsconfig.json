@@ -53,9 +53,6 @@
       "path": "../../core/echo/echo-query"
     },
     {
-      "path": "../../core/operation"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {

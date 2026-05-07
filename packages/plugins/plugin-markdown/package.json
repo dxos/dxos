@@ -99,7 +99,6 @@
     "@dxos/keys": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
