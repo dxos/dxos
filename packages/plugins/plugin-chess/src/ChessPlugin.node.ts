@@ -12,7 +12,7 @@ import { Annotation } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { OperationHandler } from '#capabilities';
+import { BlueprintDefinition, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 import { Chess } from '#types';
 
@@ -37,6 +37,7 @@ export const ChessPlugin = Plugin.define(meta).pipe(
     },
   }),
   AppPlugin.addSchemaModule({ schema: [Chess.Game] }),
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   Plugin.make,
 );
