@@ -19,70 +19,20 @@ import { ContextProtocolProvider } from '@dxos/web-context-react';
 import { ActivationEvents, Capabilities } from '../../common';
 import { PluginManagerContext } from '../../context';
 import { type ActivationEvent, type Plugin, PluginManager } from '../../core';
-import { App, PluginManagerProvider } from '../components';
+// Import from concrete files (not the `../components` barrel) to avoid a
+// circular import: `components/index.ts` re-exports `App.tsx`, which imports
+// `../../hooks` (this barrel), which re-exports this file. WebKit's strict
+// TDZ raises a `ReferenceError: Cannot access 'default' before initialization`
+// from this cycle when downstream code — like a `Plugin.lazy` loader's
+// `import('./Plugin')` — re-enters the chain mid-evaluation. V8/SpiderMonkey
+// tolerate it; webkit does not.
+import { App } from '../components/App/App';
+import { PluginManagerProvider } from '../components/PluginManager/PluginManagerProvider';
+import { type StartupProgress, type UseAppOptions } from './useApp.types';
+
+export type { PlaceholderProps, StartupProgress, UseAppOptions } from './useApp.types';
 
 const ENABLED_KEY = 'org.dxos.app-framework.enabled';
-
-export type StartupProgress = {
-  /** Number of modules that have been activated. */
-  activated: number;
-  /** Total number of modules registered. */
-  total: number;
-  /** Fractional progress (0-1). */
-  progress: number;
-  /**
-   * Raw activation event key (e.g. `org.dxos.app-framework.event.startup`).
-   * Set on event-level transitions, *and* on module-level transitions where
-   * it carries the parent activation event that first triggered the
-   * module's load (plumbed through `_loadCapabilitiesForModules` →
-   * `_loadModule`). Consumers can use this either as the primary id (when
-   * {@link module} is absent) or as an extra "context" field alongside
-   * {@link module}.
-   */
-  event?: string;
-  /**
-   * Raw module id (e.g. `org.dxos.plugin.observability.module.ReactSurface`)
-   * when the in-flight activation is module-level. When present,
-   * {@link event} may also be set, identifying the parent activation that
-   * triggered this module's load.
-   */
-  module?: string;
-  /**
-   * Pre-humanized label for the currently surfaced transition (module
-   * label if {@link module} is set, otherwise the event label), supplied
-   * for consumers that want a sensible default. Hosts that prefer to
-   * render their own label can read the raw {@link event}/{@link module}
-   * fields and ignore this — the framework leaves the policy choice
-   * (which transitions to surface, how to format them, whether to drop
-   * sub-modules entirely) to the host's `Placeholder`.
-   */
-  humanizedName?: string;
-};
-
-export type PlaceholderProps = {
-  stage?: number;
-  progress?: StartupProgress;
-};
-
-export type UseAppOptions = {
-  pluginManager?: PluginManager.PluginManager;
-  pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];
-  onPluginRemove?: PluginManager.ManagerOptions['onRemove'];
-  plugins?: Plugin.Plugin[];
-  core?: string[];
-  defaults?: string[];
-  /**
-   * Additional activation events to fire before startup.
-   * These are fired alongside SetupReactSurface before the Startup event.
-   */
-  setupEvents?: ActivationEvent.ActivationEvent[];
-  cacheEnabled?: boolean;
-  safeMode?: boolean;
-  debounce?: number;
-  timeout?: number;
-  fallback?: FC<FallbackProps>;
-  placeholder?: FC<PlaceholderProps>;
-};
 
 /**
  * Expected usage is for this to be the entrypoint of the application.

@@ -9,15 +9,15 @@ import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Card, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
-import { Focus, Mosaic, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
+import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
 import { meta } from '#meta';
 
-import { useKanbanBoard } from './KanbanBoard';
+import { type KanbanCardProps, useKanbanBoard } from './context';
+
+export { type KanbanCardProps };
 
 const KANBAN_CARD_TILE_NAME = 'KanbanBoard.Card';
-
-export type KanbanCardProps = Pick<MosaicTileProps<Obj.Unknown>, 'location' | 'data' | 'debug' | 'draggable'>;
 
 /**
  * Mosaic Tile for Kanban card.

@@ -16,7 +16,9 @@ import { createPortal } from 'react-dom';
 import { addEventListener, combine } from '@dxos/async';
 import { useMergeRefs } from '@dxos/react-hooks';
 
-import { useSurface } from '../../hooks';
+// Import from the concrete hook file (not the `../../hooks` barrel) to avoid
+// the `components` ↔ `hooks` barrel cycle. See `../../hooks/useApp.tsx`.
+import { useSurface } from '../../hooks/useSurface';
 
 export type SurfaceInfoProps = {
   children: ReactElement<{ ref?: Ref<HTMLElement> }>;

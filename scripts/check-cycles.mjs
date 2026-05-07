@@ -4,9 +4,26 @@ import { globby } from 'globby';
 import madge from 'madge';
 
 const CONFIG = {
-  // TODO(dmaretskyi): Add more packages.
-  include: ['packages/{common,core}/**/*.{ts,tsx}'],
-  ignoreGlobs: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '**/scripts/**'],
+  // Coverage scope. SDK and plugins layers are intentionally narrowed to
+  // specific subtrees we want to keep cycle-free; widen as additional areas
+  // are stabilised. App-framework's UI layer in particular paid for past
+  // hooks↔components barrel cycles with webkit-only TDZ during lazy plugin
+  // loads — see commits adding `useApp.types.ts` and `KanbanBoard/context.ts`.
+  include: [
+    'packages/{common,core}/**/*.{ts,tsx}',
+    'packages/sdk/app-framework/src/**/*.{ts,tsx}',
+    'packages/sdk/app-toolkit/src/**/*.{ts,tsx}',
+    'packages/plugins/plugin-kanban/src/**/*.{ts,tsx}',
+  ],
+  ignoreGlobs: [
+    '**/node_modules/**',
+    '**/dist/**',
+    '**/build/**',
+    '**/coverage/**',
+    '**/scripts/**',
+    '**/*.stories.tsx',
+    '**/playwright/**',
+  ],
   ignorePathSegments: ['gen/', 'dist/'],
   gitignore: true,
 };

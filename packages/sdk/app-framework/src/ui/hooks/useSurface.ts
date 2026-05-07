@@ -6,8 +6,12 @@ import { useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { Surface } from '../components';
+// Import the context primitive directly. Going through `../components/Surface`
+// (the namespace barrel) creates a cycle with `SurfaceComponent` →
+// `SurfaceInfo` → this hook, which webkit's strict TDZ refuses to honour.
+// See `./useApp.tsx` for the full explanation.
+import { SurfaceContext } from '../components/Surface/context';
 
-export const useSurface = (): Surface.Context => {
-  return useContext(Surface.Context) ?? raise(new Error('Missing SurfaceContext'));
+export const useSurface = (): SurfaceContext => {
+  return useContext(SurfaceContext) ?? raise(new Error('Missing SurfaceContext'));
 };

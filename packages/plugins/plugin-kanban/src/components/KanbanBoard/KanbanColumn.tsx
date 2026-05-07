@@ -10,11 +10,11 @@ import { Board, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
 import { useKanbanItemEventHandler } from '#hooks';
 import { type ColumnStructure, UNCATEGORIZED_VALUE } from '#types';
 
-import { useKanbanBoard } from './KanbanBoard';
+import { type KanbanColumnProps, useKanbanBoard } from './context';
+
+export { type KanbanColumnProps };
 
 const KANBAN_COLUMN_NAME = 'KanbanBoard.Column';
-
-export type KanbanColumnProps = Pick<MosaicTileProps<ColumnStructure>, 'location' | 'data' | 'debug' | 'draggable'>;
 
 /**
  * Mosaic Tile for Kanban column.

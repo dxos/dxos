@@ -6,7 +6,12 @@ import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { Capabilities } from '../../../common';
 import { topologicalSort } from '../../../helpers';
-import { LoadingState, type StartupProgress, type UseAppOptions, useCapabilities, useLoading } from '../../hooks';
+// Import from specific hook files (not the `../../hooks` barrel) to avoid a
+// `components` ↔ `hooks` barrel cycle that breaks webkit lazy plugin loads.
+// See `../../hooks/useApp.tsx` for the full explanation.
+import type { StartupProgress, UseAppOptions } from '../../hooks/useApp.types';
+import { useCapabilities } from '../../hooks/useCapabilities';
+import { LoadingState, useLoading } from '../../hooks/useLoading';
 
 export type AppProps = Pick<UseAppOptions, 'placeholder' | 'debounce'> & {
   ready: boolean;
