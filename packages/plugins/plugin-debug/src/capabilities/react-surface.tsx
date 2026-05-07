@@ -145,7 +145,8 @@ export default Capability.makeModule(
       Surface.create({
         id: 'tools-explorer',
         filter: AppSurface.literal(AppSurface.Article, Devtools.ToolsExplorer),
-        component: () => <ToolsExplorer />,
+        // TODO(burdon): From config.
+        component: () => <ToolsExplorer serverUrl='http://localhost:39476/mcp' />,
       }),
       Surface.create({
         id: 'wireframe',

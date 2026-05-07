@@ -9,8 +9,11 @@
 
 import React from 'react';
 
+import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { mx } from '@dxos/ui-theme';
+
+import { translationKey } from '#translations';
 
 import type { ToolEntry } from '../types';
 
@@ -33,6 +36,7 @@ export type ToolFormProps = {
 };
 
 export const ToolForm = ({ tool, defaultValues, onSubmit, onCancel, className }: ToolFormProps) => {
+  const { t } = useTranslation(translationKey);
   // Re-create the form when the tool changes so the Form internal state
   // resets. Without this, switching from list_packages to get_plugin would
   // try to re-validate the previous tool's values against the new schema.
@@ -62,7 +66,7 @@ export const ToolForm = ({ tool, defaultValues, onSubmit, onCancel, className }:
         <Form.Content>
           <Form.FieldSet />
           <Form.Actions>
-            <Form.Submit label='Run tool' />
+            <Form.Submit label={t('run-tool.label')} />
           </Form.Actions>
         </Form.Content>
       </Form.Root>

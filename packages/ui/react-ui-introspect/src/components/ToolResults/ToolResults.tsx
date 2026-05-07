@@ -13,10 +13,12 @@
 
 import React, { Fragment } from 'react';
 
-import { Message, ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { Message, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Row, RowList } from '@dxos/react-ui-list';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { composable, composableProps } from '@dxos/ui-theme';
+
+import { translationKey } from '#translations';
 
 export type ToolResultsProps = ThemedClassName<{
   /**
@@ -38,21 +40,18 @@ type State = 'loading' | 'error' | 'empty' | 'result';
 
 export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
   ({ result, error, loading, debug, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
     const state: State = loading ? 'loading' : error ? 'error' : result === undefined ? 'empty' : 'result';
     return (
       <div {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
-        {state === 'loading' && <p className='p-3 text-sm text-description'>Calling tool…</p>}
+        {state === 'loading' && <p className='p-3 text-sm text-description'>{t('calling-tool.message')}</p>}
         {state === 'error' && (
           <Message.Root valence='error'>
             {error instanceof Error && <Message.Title>{error.name}</Message.Title>}
             <Message.Content>{error instanceof Error ? error.message : String(error)}</Message.Content>
           </Message.Root>
         )}
-        {state === 'empty' && (
-          <p className='p-3 text-sm text-description'>
-            No result yet — fill the form and click <strong>Run tool</strong>.
-          </p>
-        )}
+        {state === 'empty' && <p className='p-3 text-sm text-description'>{t('no-result.message')}</p>}
         {state === 'result' &&
           (debug ? (
             <Syntax.Root data={tryParseMcpEnvelope(result)}>
@@ -86,6 +85,7 @@ ToolResults.displayName = 'ToolResults';
 const SKIP_KEYS = new Set(['location', 'metaLocation']);
 
 const ResultTable = ({ data }: { data: unknown }) => {
+  const { t } = useTranslation(translationKey);
   const items = toItems(data);
   // The two-column grid lives on `RowList.Content` so every entry across
   // every row lands in the same `key | value` tracks. Each `Row` spans
@@ -94,7 +94,7 @@ const ResultTable = ({ data }: { data: unknown }) => {
   return (
     <RowList.Root>
       <RowList.Viewport>
-        <RowList.Content aria-label='Tool result' classNames='grid grid-cols-[max-content_1fr] gap-x-3'>
+        <RowList.Content aria-label={t('tool-result.label')} classNames='grid grid-cols-[max-content_1fr] gap-x-3'>
           {items.map((item, index) => (
             <Row key={index} id={String(index)} classNames='col-span-2 grid grid-cols-subgrid gap-y-0.5'>
               <KeyValueTable record={item} />
@@ -111,13 +111,14 @@ const ResultTable = ({ data }: { data: unknown }) => {
 // imply term-and-definition semantics these arbitrary record fields don't
 // have, so divs are the honest tag here.
 const KeyValueTable = ({ record }: { record: unknown }) => {
+  const { t } = useTranslation(translationKey);
   if (record === null || typeof record !== 'object') {
     return <div className='col-span-2 font-mono text-xs'>{formatValue(record)}</div>;
   }
 
   const entries = Object.entries(record as Record<string, unknown>).filter(([key]) => !SKIP_KEYS.has(key));
   if (entries.length === 0) {
-    return <div className='col-span-2 text-sm italic text-description'>(no displayable fields)</div>;
+    return <div className='col-span-2 text-sm italic text-description'>{t('no-displayable-fields.message')}</div>;
   }
 
   return (

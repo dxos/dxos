@@ -14,8 +14,10 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Row, RowList } from '@dxos/react-ui-list';
+
+import { translationKey } from '#translations';
 
 import type { ToolEntry } from '../types';
 
@@ -39,6 +41,7 @@ export type ToolListProps = ThemedClassName<{
 }>;
 
 export const ToolList = ({ tools, selected, onSelect, classNames }: ToolListProps) => {
+  const { t } = useTranslation(translationKey);
   const entries = useMemo(() => Object.entries(tools).sort(([a], [b]) => a.localeCompare(b)), [tools]);
 
   const handleCurrentChange = useCallback(
@@ -54,7 +57,7 @@ export const ToolList = ({ tools, selected, onSelect, classNames }: ToolListProp
   return (
     <RowList.Root selectedId={selected ?? undefined} onSelectChange={handleCurrentChange}>
       <RowList.Viewport classNames={classNames} thin>
-        <RowList.Content aria-label='MCP tools'>
+        <RowList.Content aria-label={t('tools.label')}>
           {entries.map(([name, tool]) => (
             <Row key={name} id={name}>
               <div className='font-mono text-xs text-info-text'>{name}</div>

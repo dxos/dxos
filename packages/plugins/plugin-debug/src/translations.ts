@@ -3,10 +3,12 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
+import { translations as introspectTranslations } from '@dxos/react-ui-introspect/translations';
 
 import { meta } from '#meta';
 
 export const translations = [
+  ...introspectTranslations,
   {
     'en-US': {
       [meta.id]: {
