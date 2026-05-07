@@ -10010,6 +10010,12 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
 
   packages/plugins/plugin-graph:
     dependencies:

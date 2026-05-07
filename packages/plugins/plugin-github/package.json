@@ -14,6 +14,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": "./src/GitHubPlugin.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts"
@@ -47,7 +48,9 @@
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",
-    "@dxos/effect": "workspace:*"
+    "@dxos/effect": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*"
   },
   "peerDependencies": {
     "effect": "catalog:"
