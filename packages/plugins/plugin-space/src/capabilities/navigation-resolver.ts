@@ -55,7 +55,9 @@ export default Capability.makeModule(
 
         return [
           {
-            path: Obj.isObject(object) ? getObjectPathFromObject(object) : getObjectPath(db.spaceId, typename, object.id),
+            path: Obj.isObject(object)
+              ? getObjectPathFromObject(object)
+              : getObjectPath(db.spaceId, typename, object.id),
             label: Entity.getLabel(object) ?? '',
             type: typename,
           },

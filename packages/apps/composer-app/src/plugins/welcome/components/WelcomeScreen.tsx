@@ -99,37 +99,55 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
     if (pendingRef.current || identity) {
       return;
     }
+    if (error) {
+      setError(false);
+    }
     try {
       pendingRef.current = true;
       await invokePromise(ClientOperation.RedeemPasskey);
+    } catch (err) {
+      log.catch(err);
+      setError(true);
     } finally {
       pendingRef.current = false;
     }
-  }, [invokePromise, identity]);
+  }, [invokePromise, identity, error]);
 
   const handleJoinIdentity = useCallback(async () => {
     if (pendingRef.current || identity) {
       return;
     }
+    if (error) {
+      setError(false);
+    }
     try {
       pendingRef.current = true;
       await invokePromise(ClientOperation.JoinIdentity, {});
+    } catch (err) {
+      log.catch(err);
+      setError(true);
     } finally {
       pendingRef.current = false;
     }
-  }, [invokePromise, identity]);
+  }, [invokePromise, identity, error]);
 
   const handleRecoverIdentity = useCallback(async () => {
     if (pendingRef.current || identity) {
       return;
     }
+    if (error) {
+      setError(false);
+    }
     try {
       pendingRef.current = true;
       await invokePromise(ClientOperation.RecoverIdentity);
+    } catch (err) {
+      log.catch(err);
+      setError(true);
     } finally {
       pendingRef.current = false;
     }
-  }, [invokePromise, identity]);
+  }, [invokePromise, identity, error]);
 
   const handleSpaceInvitation = async () => {
     let identityCreated = true;
