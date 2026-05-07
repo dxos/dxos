@@ -16,9 +16,12 @@
   "imports": {
     "#blueprints": "./src/blueprints/index.ts",
     "#capabilities": "./src/capabilities/index.ts",
+    "#containers": "./src/containers/index.ts",
+    "#diagnostics": "./src/diagnostics/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
-    "#translations": "./src/translations.ts"
+    "#translations": "./src/translations.ts",
+    "#types": "./src/types/index.ts"
   },
   "exports": {
     ".": {
@@ -32,6 +35,12 @@
       "types": "./dist/types/src/blueprints/index.d.ts",
       "browser": "./dist/lib/browser/blueprints/index.mjs",
       "node": "./dist/lib/node-esm/blueprints/index.mjs"
+    },
+    "./diagnostics": {
+      "source": "./src/diagnostics/index.ts",
+      "types": "./dist/types/src/diagnostics/index.d.ts",
+      "browser": "./dist/lib/browser/diagnostics/index.mjs",
+      "node": "./dist/lib/node-esm/diagnostics/index.mjs"
     },
     "./meta": {
       "source": "./src/meta.ts",
@@ -50,6 +59,12 @@
       "types": "./dist/types/src/translations.d.ts",
       "browser": "./dist/lib/browser/translations.mjs",
       "node": "./dist/lib/node-esm/translations.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "node": "./dist/lib/node-esm/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -59,14 +74,28 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"
