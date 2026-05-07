@@ -394,7 +394,11 @@ export const TableContent = composable<HTMLDivElement, TableContentProps>(
             onCreate={onCreate}
           />
           <Grid.Content
-            className={mx('[--dx-grid-base:var(--base-surface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
+            className={mx(
+              '[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0',
+              gridSeparatorInlineEnd,
+              gridSeparatorBlockEnd,
+            )}
             frozen={frozen}
             columns={columnMeta}
             columnDefault={columnDefault}
