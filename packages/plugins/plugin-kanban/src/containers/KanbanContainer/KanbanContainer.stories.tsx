@@ -15,12 +15,8 @@ import { Obj, type QueryAST, Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-// Use the eager `/plugin` entrypoints (rather than the default `Plugin.lazy`
-// `.` exports). Storybook serves stories under vite-dev, where webkit can
-// settle a dynamic-import promise with a partially-evaluated namespace and
-// throw `ReferenceError: Cannot access 'default' before initialization` from
-// the lazy loader's `mod.default` access. Composer's production bundle
-// (`vite preview`) doesn't share this race, so it keeps the lazy `.` exports.
+// `/plugin` entrypoints used here for the same reason as `corePlugins()` —
+// see `@dxos/plugin-testing/src/core.ts` for the rationale.
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
