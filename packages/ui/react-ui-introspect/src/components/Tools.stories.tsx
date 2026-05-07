@@ -101,13 +101,15 @@ const ToolsExplorer = ({ serverUrl }: ToolsExplorerProps) => {
 
   if (connectError) {
     return (
-      <Message.Root classNames='m-4' valence='error'>
-        <Message.Title>Connection failed</Message.Title>
-        <Message.Content>{connectError.message}</Message.Content>
-        <Message.Content>
-          Run <code>moon run introspect-mcp:serve-http</code> in another terminal, then reload.
-        </Message.Content>
-      </Message.Root>
+      <div role='none'>
+        <Message.Root classNames='m-4' valence='error'>
+          <Message.Title>Connection failed</Message.Title>
+          <Message.Content>{connectError.message}</Message.Content>
+          <Message.Content>
+            Run <code>moon run introspect-mcp:serve-http</code>, then reload.
+          </Message.Content>
+        </Message.Root>
+      </div>
     );
   }
 

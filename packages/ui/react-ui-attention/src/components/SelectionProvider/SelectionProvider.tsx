@@ -15,7 +15,7 @@ import {
   type SelectionMode,
   type SelectionResult,
   defaultSelection,
-} from '../selection';
+} from '../../selection';
 
 const SELECTION_NAME = 'Selection';
 
@@ -23,6 +23,11 @@ type SelectionContextValue = {
   selection: SelectionManager;
 };
 
+// Default value lets consumers like `useSelected` render outside a
+// `SelectionProvider` (e.g. isolated stories) without throwing —
+// `selection` reads as `undefined` and the hook falls back to the
+// per-mode default result. Without this default, Radix `createContext`
+// throws "Selection must be used within Selection" on every consumer.
 const [SelectionContextProvider, useSelectionContext] = createContext<SelectionContextValue>(SELECTION_NAME, {
   selection: undefined as unknown as SelectionManager,
 });
@@ -30,20 +35,20 @@ const [SelectionContextProvider, useSelectionContext] = createContext<SelectionC
 /**
  * Manages selection state across the app for multiple contexts.
  */
-// TODO(burdon): When is the selection removed?
 export const SelectionProvider = ({
   children,
-  selection: propsSelection,
+  selection: selectionProp,
 }: PropsWithChildren<{ selection?: SelectionManager }>) => {
   const registry = useContext(RegistryContext);
-  const selection = useDefaultValue(propsSelection, () => new SelectionManager(registry));
+  const selection = useDefaultValue(selectionProp, () => new SelectionManager(registry));
+
   return <SelectionContextProvider selection={selection}>{children}</SelectionContextProvider>;
 };
 
 /**
  * Get the selection contexts.
  */
-export const useSelectionManager = () => {
+export const useSelectionManager = (): SelectionManager => {
   const { selection } = useSelectionContext(SELECTION_NAME);
   return selection;
 };
@@ -101,11 +106,13 @@ export type UseSelectionActions = {
 /**
  * Provides functions to manage the selection state for multiple contexts.
  */
-// TODO(burdon): Mode not used.
-export const useSelectionActions = (contextIds: string[], mode: SelectionMode = 'multi'): UseSelectionActions => {
-  const stableContextIds = useMemo(() => contextIds, [JSON.stringify(contextIds)]); // TODO(burdon): Avoid stringify.
+export const useSelectionActions = (contextIds: string[]): UseSelectionActions => {
+  const stableContextIds = useMemo(() => contextIds, [JSON.stringify(contextIds)]);
   const { selection } = useSelectionContext(SELECTION_NAME);
 
+  // No-op when rendered outside a `SelectionProvider` (e.g. an isolated
+  // story or a test harness) — `selection` is `undefined` from the
+  // context default value. Matches the pre-co-locate behaviour.
   const singleSelect = useCallback(
     (id: string) => {
       if (!selection) {

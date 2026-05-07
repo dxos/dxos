@@ -26,6 +26,12 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
 
   return (
     <Menu.Root>
+      {/*
+       * `Mosaic.Tile` sets `aria-current` from `props.current`, which the
+       * Slot composition propagates down to `Card.Root`'s div. That's what
+       * makes `dx-current` (an `aria-[current=true]:` utility) actually
+       * fire here. See `ui-theme/src/css/components/selected.md`.
+       */}
       <Mosaic.Tile {...props} asChild>
         <Focus.Item asChild>
           <Card.Root className='dx-current dx-hover'>

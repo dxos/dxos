@@ -115,7 +115,7 @@ export const GetSymbolInput = Schema.Struct({
 });
 
 //
-// Plugins / surfaces / capabilities / intents / schemas
+// Plugins / surfaces / capabilities / operations / schemas
 //
 // Main's API exposes a single optional `id` filter on each of these — the
 // plugin id (e.g. "org.dxos.plugin.markdown"). `listPlugins` accepts a
@@ -140,7 +140,7 @@ const PluginIdFilter = Schema.Struct({
 
 export const ListSurfacesInput = PluginIdFilter;
 export const ListCapabilitiesInput = PluginIdFilter;
-export const ListIntentsInput = PluginIdFilter;
+export const ListOperationsInput = PluginIdFilter;
 export const ListSchemasInput = PluginIdFilter;
 
 //
@@ -155,5 +155,5 @@ export type GetSymbolArgs = typeof GetSymbolInput.Type;
 export type ListPluginsArgs = typeof ListPluginsInput.Type;
 export type ListSurfacesArgs = typeof ListSurfacesInput.Type;
 export type ListCapabilitiesArgs = typeof ListCapabilitiesInput.Type;
-export type ListIntentsArgs = typeof ListIntentsInput.Type;
+export type ListOperationsArgs = typeof ListOperationsInput.Type;
 export type ListSchemasArgs = typeof ListSchemasInput.Type;
