@@ -65,16 +65,36 @@ const upsertPerson = (remote: GooglePeople.Person) =>
       const person = existing[0] as Person.Person;
       Obj.update(person, (person) => {
         const mutable = person as Obj.Mutable<typeof person>;
-        if (props.fullName !== undefined) { mutable.fullName = props.fullName; }
-        if (props.jobTitle !== undefined) { mutable.jobTitle = props.jobTitle; }
-        if (props.department !== undefined) { mutable.department = props.department; }
-        if (props.notes !== undefined) { mutable.notes = props.notes; }
-        if (props.image !== undefined) { mutable.image = props.image; }
-        if (props.birthday !== undefined) { mutable.birthday = props.birthday; }
-        if (props.emails) { mutable.emails = [...props.emails]; }
-        if (props.phoneNumbers) { mutable.phoneNumbers = [...props.phoneNumbers]; }
-        if (props.addresses) { mutable.addresses = [...props.addresses]; }
-        if (props.urls) { mutable.urls = [...props.urls]; }
+        if (props.fullName !== undefined) {
+          mutable.fullName = props.fullName;
+        }
+        if (props.jobTitle !== undefined) {
+          mutable.jobTitle = props.jobTitle;
+        }
+        if (props.department !== undefined) {
+          mutable.department = props.department;
+        }
+        if (props.notes !== undefined) {
+          mutable.notes = props.notes;
+        }
+        if (props.image !== undefined) {
+          mutable.image = props.image;
+        }
+        if (props.birthday !== undefined) {
+          mutable.birthday = props.birthday;
+        }
+        if (props.emails) {
+          mutable.emails = [...props.emails];
+        }
+        if (props.phoneNumbers) {
+          mutable.phoneNumbers = [...props.phoneNumbers];
+        }
+        if (props.addresses) {
+          mutable.addresses = [...props.addresses];
+        }
+        if (props.urls) {
+          mutable.urls = [...props.urls];
+        }
       });
       return false;
     }
@@ -102,7 +122,9 @@ const syncOneGroup = (integration: Integration.Integration, groupResourceName: s
         Effect.gen(function* () {
           for (const person of Chunk.toArray(batch)) {
             const created = yield* upsertPerson(person);
-            if (created) { upserted++; }
+            if (created) {
+              upserted++;
+            }
           }
         }),
       ),
@@ -123,32 +145,31 @@ const syncOneGroup = (integration: Integration.Integration, groupResourceName: s
   });
 
 export default GoogleContactsSync.pipe(
-  Operation.withHandler(
-    ({ integration: integrationRef, contactGroupResourceName }) =>
-      Effect.gen(function* () {
-        const integrationObj = yield* Database.load(integrationRef);
+  Operation.withHandler(({ integration: integrationRef, contactGroupResourceName }) =>
+    Effect.gen(function* () {
+      const integrationObj = yield* Database.load(integrationRef);
 
-        const targetGroups: string[] = [];
-        if (contactGroupResourceName) {
-          targetGroups.push(contactGroupResourceName);
-        } else {
-          for (const target of integrationObj.targets ?? []) {
-            if (target.remoteId) {
-              targetGroups.push(target.remoteId);
-            }
+      const targetGroups: string[] = [];
+      if (contactGroupResourceName) {
+        targetGroups.push(contactGroupResourceName);
+      } else {
+        for (const target of integrationObj.targets ?? []) {
+          if (target.remoteId) {
+            targetGroups.push(target.remoteId);
           }
         }
+      }
 
-        let total = 0;
-        for (const groupId of targetGroups) {
-          total += yield* syncOneGroup(integrationObj, groupId);
-        }
+      let total = 0;
+      for (const groupId of targetGroups) {
+        total += yield* syncOneGroup(integrationObj, groupId);
+      }
 
-        return { upserted: total };
-      }).pipe(
-        Effect.provide(
-          Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromIntegration(integrationRef)),
-        ),
+      return { upserted: total };
+    }).pipe(
+      Effect.provide(
+        Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromIntegration(integrationRef)),
       ),
+    ),
   ),
 );

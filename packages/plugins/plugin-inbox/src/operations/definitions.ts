@@ -246,7 +246,8 @@ export const GoogleContactsSync = Operation.make({
       description: 'Integration that owns credentials and per-target sync metadata.',
     }),
     contactGroupResourceName: Schema.optional(Schema.String).annotations({
-      description: 'Google contact group resource name (e.g. contactGroups/myContacts). Syncs all targets when omitted.',
+      description:
+        'Google contact group resource name (e.g. contactGroups/myContacts). Syncs all targets when omitted.',
     }),
     pageSize: Schema.optional(Schema.Number),
   }),

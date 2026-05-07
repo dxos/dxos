@@ -58,15 +58,12 @@ const handler: Operation.WithHandler<typeof GetGoogleContactGroups> = GetGoogleC
           return yield* Effect.fail(new AccessTokenNotPopulatedError());
         }
 
-        const groups = yield* listContactGroups(accessToken.token).pipe(
-          Effect.provide(FetchHttpClient.layer),
-        );
+        const groups = yield* listContactGroups(accessToken.token).pipe(Effect.provide(FetchHttpClient.layer));
 
         // Include user-created groups and the well-known "myContacts" system group.
         const targets = groups
           .filter(
-            (group) =>
-              group.groupType === 'USER_CONTACT_GROUP' || group.resourceName === 'contactGroups/myContacts',
+            (group) => group.groupType === 'USER_CONTACT_GROUP' || group.resourceName === 'contactGroups/myContacts',
           )
           .map((group) => ({
             id: group.resourceName,

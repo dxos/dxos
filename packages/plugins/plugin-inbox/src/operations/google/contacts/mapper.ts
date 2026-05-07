@@ -3,9 +3,10 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { GooglePeople } from '../../../apis';
 import { Person } from '@dxos/types';
+
+import { GooglePeople } from '../../../apis';
+import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
 
 /**
  * Maps a Google People API `Person` response to a DXOS `Person` object shape,
