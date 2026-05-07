@@ -16,6 +16,7 @@ import * as Message from './Message';
 import * as Organization from './Organization';
 import * as Person from './Person';
 import * as Pipeline from './Pipeline';
+import * as Project from './Project';
 import * as Task from './Task';
 import * as Thread from './Thread';
 import * as Transcript from './Transcript';
@@ -45,6 +46,7 @@ export {
   Organization,
   Person,
   Pipeline,
+  Project,
   Task,
   Thread,
   Transcript,

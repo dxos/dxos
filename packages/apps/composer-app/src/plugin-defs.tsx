@@ -27,6 +27,7 @@ import { DoctorPlugin } from '@dxos/plugin-doctor';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { FeedPlugin } from '@dxos/plugin-feed';
 import { GalleryPlugin } from '@dxos/plugin-gallery';
+import { GitHubPlugin } from '@dxos/plugin-github';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { HelpPlugin } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -220,6 +221,7 @@ export const getPlugins = ({
     ExplorerPlugin(),
     FeedPlugin(),
     GalleryPlugin(),
+    GitHubPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),

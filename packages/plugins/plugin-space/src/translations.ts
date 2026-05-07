@@ -5,7 +5,7 @@
 import { Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
-import { Event, Message, Organization, Person, Pipeline, Task } from '@dxos/types';
+import { Event, Message, Organization, Person, Pipeline, Project, Task } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -80,6 +80,17 @@ export const translations = [
         'object-deleted.label': 'Person deleted',
       },
       [Pipeline.Pipeline.typename]: {
+        'typename.label': 'Pipeline',
+        'typename.label_zero': 'Pipelines',
+        'typename.label_one': 'Pipeline',
+        'typename.label_other': 'Pipelines',
+        'object-name.placeholder': 'New pipeline',
+        'add-object.label': 'Add pipeline',
+        'rename-object.label': 'Rename pipeline',
+        'delete-object.label': 'Delete pipeline',
+        'object-deleted.label': 'Pipeline deleted',
+      },
+      [Project.Project.typename]: {
         'typename.label': 'Project',
         'typename.label_zero': 'Projects',
         'typename.label_one': 'Project',
