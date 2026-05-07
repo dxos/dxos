@@ -299,7 +299,9 @@ export const selectFunction = Effect.fn(function* () {
  * Queries the database for triggers and prompts the user to select one.
  */
 export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
-  const triggers = yield* Database.runQuery(Filter.type(Trigger.Trigger));
+  const triggers = yield* Database.runQuery(
+    Query.select(Filter.type(Trigger.Trigger)).debugLabel('cli.trigger.selectTrigger'),
+  );
   const filteredTriggers = kind ? triggers.filter((trigger) => trigger.spec?.kind === kind) : triggers;
 
   if (filteredTriggers.length === 0) {
