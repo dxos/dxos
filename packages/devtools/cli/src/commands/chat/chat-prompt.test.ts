@@ -25,18 +25,22 @@ describe('dx chat --prompt (non-interactive)', () => {
     expect(stdout).toMatch(/non-interactively/);
   });
 
-  test('chat --prompt without a HALO identity exits cleanly with guidance', ({ expect }) => {
-    withIsolatedHome((home) => {
-      const { stdout, stderr, status } = runDx(['chat', '--prompt', 'research test@example.com'], {
-        home,
-        timeout: 60_000,
+  test(
+    'chat --prompt without a HALO identity exits cleanly with guidance',
+    { timeout: 60_000 },
+    ({ expect }) => {
+      withIsolatedHome((home) => {
+        const { stdout, stderr, status } = runDx(['chat', '--prompt', 'research test@example.com'], {
+          home,
+          timeout: 60_000,
+        });
+        // Exit 0: the chat command emits a friendly Console.error then returns
+        // (it doesn't fail the effect). The friendly hint should mention
+        // `dx halo create` so the user knows what to do next.
+        expect(status).toBe(0);
+        const combined = stdout + stderr;
+        expect(combined).toMatch(/halo create|space create/);
       });
-      // Exit 0: the chat command emits a friendly Console.error then returns
-      // (it doesn't fail the effect). The friendly hint should mention
-      // `dx halo create` so the user knows what to do next.
-      expect(status).toBe(0);
-      const combined = stdout + stderr;
-      expect(combined).toMatch(/halo create|space create/);
-    });
-  });
+    },
+  );
 });
