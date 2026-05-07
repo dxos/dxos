@@ -18,7 +18,11 @@ import { ClientPlugin } from '#plugin';
 
 import { handler } from './create';
 
-const layer = Layer.merge(TestLayer, fromPlugins([ClientPlugin({}), OperationPlugin(), ObservabilityPlugin()]));
+// TODO(wittjosiah): Align browser and node variant option types for ObservabilityPlugin.
+const layer = Layer.merge(
+  TestLayer,
+  fromPlugins([ClientPlugin({}), OperationPlugin(), ObservabilityPlugin({} as any)]),
+);
 
 // TODO(wittjosiah): Fix these tests.
 describe.skip('halo create', () => {

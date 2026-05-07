@@ -48,7 +48,8 @@ export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {
     ClientPlugin({ config }),
     InboxPlugin(),
     MarkdownPlugin(),
-    ObservabilityPlugin(),
+    // TODO(wittjosiah): Align browser and node variant option types for ObservabilityPlugin.
+    ObservabilityPlugin({} as any),
     OperationPlugin(),
     RegistryPlugin(),
     RuntimePlugin(),
