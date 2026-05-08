@@ -10,8 +10,6 @@ export default defineConfig({
   ...e2ePreset(import.meta.dirname),
   // TODO(wittjosiah): Stories are slow to start up.
   timeout: 60_000,
-  // TODO(wittjosiah): Drop once pragmatic-dnd flake is fully sorted.
-  retries: process.env.CI ? 2 : 0,
   // TODO(wittjosiah): Avoid hard-coding ports.
   webServer: {
     command: 'pnpm storybook dev --ci --quiet --port=9011 --config-dir=.storybook',
