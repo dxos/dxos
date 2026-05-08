@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { Obj } from '@dxos/echo';
@@ -20,6 +20,10 @@ export type RangeListProps = {
 
 export const RangeList = ({ sheet }: RangeListProps) => {
   const { t } = useTranslation(meta.id);
+  // ECHO objects don't trigger React re-renders on mutation; subscribe so the
+  // list reflects toolbar-driven additions/removals to `sheet.ranges`.
+  const [, forceRender] = useState(0);
+  useEffect(() => Obj.subscribe(sheet, () => forceRender((v) => v + 1)), [sheet]);
   // TODO(thure): Implement similar to comments, #8121
   const handleSelectRange = (range: Sheet.Range) => {};
   const handleDeleteRange = useCallback(
