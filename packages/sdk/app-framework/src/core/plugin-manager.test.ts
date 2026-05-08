@@ -108,6 +108,106 @@ describe('PluginManager', () => {
     }),
   );
 
+  it.effect('dev plugin shadows an existing plugin with the same id', () =>
+    Effect.gen(function* () {
+      const productionPlugin = Plugin.make(
+        Plugin.define(testMeta).pipe(
+          Plugin.addModule({
+            id: 'Prod',
+            activatesOn: ActivationEvents.Startup,
+            activate: () => Effect.succeed(Capability.contributes(String, { string: 'prod' })),
+          }),
+        ),
+      )();
+      const devPlugin = Plugin.make(
+        Plugin.define(testMeta).pipe(
+          Plugin.addModule({
+            id: 'Dev',
+            activatesOn: ActivationEvents.Startup,
+            activate: () => Effect.succeed(Capability.contributes(String, { string: 'dev' })),
+          }),
+        ),
+      )();
+
+      const loader = Effect.fn(function* (locator: string) {
+        if (locator === 'prod') {
+          return productionPlugin;
+        }
+        if (locator === 'dev') {
+          return { plugin: devPlugin, dev: true };
+        }
+        return yield* Effect.fail(new Error(`Unknown locator: ${locator}`));
+      });
+
+      const manager = PluginManager.make({ pluginLoader: loader });
+      yield* manager.add('prod');
+      yield* manager.enable(testMeta.id);
+      yield* manager.activate(ActivationEvents.Startup);
+      assert.deepStrictEqual(
+        manager.capabilities.getAll(String).map((value) => value.string),
+        ['prod'],
+      );
+
+      // Loading the dev plugin with the same id swaps it into the id slot.
+      yield* manager.add('dev');
+      yield* manager.enable(testMeta.id);
+      assert.strictEqual(
+        manager.getPlugins().find((plugin) => plugin.meta.id === testMeta.id),
+        devPlugin,
+      );
+      yield* manager.reset(ActivationEvents.Startup);
+      assert.deepStrictEqual(
+        manager.capabilities.getAll(String).map((value) => value.string),
+        ['dev'],
+      );
+
+      // Removing the dev plugin restores the original and re-enables it
+      // because it was enabled at shadow time.
+      yield* manager.remove(testMeta.id);
+      assert.strictEqual(
+        manager.getPlugins().find((plugin) => plugin.meta.id === testMeta.id),
+        productionPlugin,
+      );
+      assert.isTrue(manager.getEnabled().includes(testMeta.id));
+      yield* manager.reset(ActivationEvents.Startup);
+      assert.deepStrictEqual(
+        manager.capabilities.getAll(String).map((value) => value.string),
+        ['prod'],
+      );
+    }),
+  );
+
+  it.effect('dev plugin add does not auto-enable a previously-disabled shadow target', () =>
+    Effect.gen(function* () {
+      const productionPlugin = Plugin.make(Plugin.define(testMeta))();
+      const devPlugin = Plugin.make(Plugin.define(testMeta))();
+      const loader = Effect.fn(function* (locator: string) {
+        if (locator === 'prod') {
+          return productionPlugin;
+        }
+        if (locator === 'dev') {
+          return { plugin: devPlugin, dev: true };
+        }
+        return yield* Effect.fail(new Error(`Unknown locator: ${locator}`));
+      });
+
+      const manager = PluginManager.make({ pluginLoader: loader });
+      yield* manager.add('prod');
+      // Production plugin is registered but explicitly NOT enabled.
+      assert.deepStrictEqual(manager.getEnabled(), []);
+
+      yield* manager.add('dev');
+      yield* manager.remove(testMeta.id);
+
+      // Original is restored but stays disabled, matching its pre-shadow state.
+      assert.strictEqual(
+        manager.getPlugins().find((plugin) => plugin.meta.id === testMeta.id),
+        productionPlugin,
+      );
+      assert.deepStrictEqual(manager.getEnabled(), []);
+    }),
+  );
+
   it.effect('should support factory pattern with options', () =>
     Effect.gen(function* () {
       type TestPluginOptions = { count: number };

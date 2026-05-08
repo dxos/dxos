@@ -335,24 +335,31 @@ export const make = (builtinPlugins: Plugin.Plugin[], options: Options = {}) => 
   const key = options.key ?? DEFAULT_KEY;
   const cache = options.cache ?? PluginAssetCache.noop();
 
-  return (locator: string): Effect.Effect<Plugin.Plugin, RemotePluginLoadError> =>
+  return (locator: string): Effect.Effect<{ plugin: Plugin.Plugin; dev?: boolean }, RemotePluginLoadError> =>
     Effect.gen(function* () {
       const builtin = builtinPlugins.find((plugin) => plugin.meta.id === locator);
       if (builtin) {
-        return builtin;
+        return { plugin: builtin };
       }
       if (!isUrl(locator)) {
         return yield* Effect.fail(new RemotePluginLoadError({ context: { locator, reason: 'invalid-locator' } }));
       }
-      const { plugin } = yield* loadFromManifest(locator, cache);
-      const duplicate = builtinPlugins.find((existing) => existing.meta.id === plugin.meta.id);
-      if (duplicate) {
-        return yield* Effect.fail(
-          new RemotePluginLoadError({ context: { locator, reason: 'duplicate-id', id: plugin.meta.id } }),
-        );
+      const { plugin, manifest } = yield* loadFromManifest(locator, cache);
+      // Production manifests can't collide with a builtin id — that would make
+      // the registered plugin permanently inaccessible. Dev manifests are
+      // allowed to collide because the manager shadow primitive handles the
+      // overlap (dev plugin takes the id slot for the session, original is
+      // restored on uninstall or page reload).
+      if (!manifest.dev) {
+        const duplicate = builtinPlugins.find((existing) => existing.meta.id === plugin.meta.id);
+        if (duplicate) {
+          return yield* Effect.fail(
+            new RemotePluginLoadError({ context: { locator, reason: 'duplicate-id', id: plugin.meta.id } }),
+          );
+        }
+        persistRemotePlugin(storage, key, { id: plugin.meta.id, url: locator });
       }
-      persistRemotePlugin(storage, key, { id: plugin.meta.id, url: locator });
-      return plugin;
+      return { plugin, dev: manifest.dev };
     });
 };
 

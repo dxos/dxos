@@ -46,8 +46,26 @@ export class PluginInitializationError extends BaseError.extend(
 export const ManagerTypeId: unique symbol = Symbol.for('@dxos/app-framework/Manager');
 export type ManagerTypeId = typeof ManagerTypeId;
 
+/**
+ * Loader result that carries optional metadata about how the plugin was sourced.
+ *
+ * `dev: true` marks a plugin as session-only and triggers shadow-on-id-collision
+ * inside the manager: if a plugin with the same id is already registered (a
+ * builtin, or a previously-installed plugin from the registry), the dev plugin
+ * temporarily takes over that id slot. The original is restored when the dev
+ * plugin is removed (or on page reload, since dev plugins aren't persisted).
+ *
+ * Loaders may return either a bare {@link Plugin.Plugin} (legacy form, treated
+ * as `dev: false`) or this struct.
+ */
+export type LoadedPlugin = {
+  plugin: Plugin.Plugin;
+  /** True when the plugin came from a dev source. See type doc for semantics. */
+  dev?: boolean;
+};
+
 export type ManagerOptions = {
-  pluginLoader: (id: string) => Effect.Effect<Plugin.Plugin, Error>;
+  pluginLoader: (id: string) => Effect.Effect<Plugin.Plugin | LoadedPlugin, Error>;
   plugins?: Plugin.Plugin[];
   core?: string[];
   enabled?: string[];
@@ -167,6 +185,14 @@ class ManagerImpl implements PluginManager {
   // defeating `_addModule`'s reference-equality dedupe and racing the
   // `_pluginsAtom` swap.
   private readonly _resolvingPlugins = new Map<string, Deferred.Deferred<Plugin.Plugin, Plugin.LazyPluginError>>();
+  // Tracks plugins currently shadowed by a dev-source plugin (loaded via a Vite
+  // dev server). When the dev plugin is removed, the original is reinstated and
+  // re-enabled if it was enabled before the shadow took effect.
+  private readonly _shadowed = new Map<string, { plugin: Plugin.Plugin; wasEnabled: boolean }>();
+  // Ids whose currently-registered plugin came from a dev source. Used by
+  // `remove` to know it should restore from `_shadowed` afterwards, and (in the
+  // future) by UI to badge dev-overridden plugins.
+  private readonly _devPluginIds = new Set<string>();
   private readonly _activatingEvents = Effect.runSync(Ref.make<string[]>([]));
   private readonly _activatingModules = Effect.runSync(Ref.make<string[]>([]));
   private readonly _inFlightFibers = Effect.runSync(Ref.make<Array<Fiber.Fiber<unknown, unknown>>>([]));
@@ -300,8 +326,36 @@ class ManagerImpl implements PluginManager {
   add(id: string): Effect.Effect<Plugin.Plugin, Error> {
     return Effect.gen(this, function* () {
       log('add plugin', { id });
-      const plugin = yield* this._pluginLoader(id);
-      this._addPlugin(plugin);
+      const result = yield* this._pluginLoader(id);
+      const { plugin, dev = false } = Plugin.isPlugin(result) ? { plugin: result } : result;
+      const pluginId = plugin.meta.id;
+      const existing = this._getPlugin(pluginId);
+
+      if (dev && existing && existing !== plugin) {
+        // Shadow path: a plugin with this id is already registered (a builtin,
+        // a registry install, or a previous dev load). Disable it, stash it,
+        // and swap the dev plugin into the same id slot. The dialog will call
+        // `enable(pluginId)` next, which activates the dev plugin's modules.
+        const wasEnabled = this._get(this._enabledAtom).includes(pluginId);
+        if (wasEnabled) {
+          yield* this.disable(pluginId);
+        }
+        // Only stash on the first shadow for this id. If the user is reloading
+        // an already-active dev plugin (e.g. after editing source), we want to
+        // keep the *original* shadow target so removal still restores the real
+        // underlying plugin instead of an intermediate dev build.
+        if (!this._devPluginIds.has(pluginId)) {
+          this._shadowed.set(pluginId, { plugin: existing, wasEnabled });
+        }
+        this._devPluginIds.add(pluginId);
+        this._update(this._pluginsAtom, (plugins) => plugins.map((p) => (p.meta.id === pluginId ? plugin : p)));
+      } else {
+        this._addPlugin(plugin);
+        if (dev) {
+          this._devPluginIds.add(pluginId);
+        }
+      }
+
       return plugin;
     });
   }
@@ -390,6 +444,7 @@ class ManagerImpl implements PluginManager {
   remove(id: string): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       log('remove plugin', { id });
+      const wasDev = this._devPluginIds.has(id);
       const disabled = yield* this.disable(id);
       if (!disabled) {
         return false;
@@ -403,6 +458,23 @@ class ManagerImpl implements PluginManager {
             Effect.ignore,
           ),
         );
+      }
+
+      // If a dev plugin was shadowing an existing plugin, reinstate the
+      // original now that the dev plugin is gone. Re-enable only if the
+      // original was enabled at shadow time — preserving the user's intent
+      // for plugins they had explicitly disabled before iterating on a dev
+      // build.
+      if (wasDev) {
+        this._devPluginIds.delete(id);
+        const shadow = this._shadowed.get(id);
+        if (shadow) {
+          this._shadowed.delete(id);
+          this._addPlugin(shadow.plugin);
+          if (shadow.wasEnabled) {
+            yield* this.enable(id);
+          }
+        }
       }
       return true;
     });
