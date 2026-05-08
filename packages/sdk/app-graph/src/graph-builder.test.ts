@@ -547,6 +547,20 @@ describe('GraphBuilder', () => {
         expect(getInlineChild(graph)).to.be.null;
       });
 
+      test('are removed when parent node is entirely removed from connector output', async () => {
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+        registry.set(nodesAtom, [parent(inlineChild())]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)).to.not.be.null;
+
+        // Remove the parent node entirely — inline children should also be cleaned up.
+        registry.set(nodesAtom, []);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)).to.be.null;
+      });
+
       test('are added when connector re-runs', async () => {
         const { registry, builder, graph, nodesAtom } = makeGraph();
         registry.set(nodesAtom, [parent()]);
