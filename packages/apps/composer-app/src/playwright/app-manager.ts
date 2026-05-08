@@ -342,6 +342,12 @@ export class AppManager {
 
   async enablePlugin(plugin: string): Promise<void> {
     const toggle = this.getPluginToggle(plugin);
+    // Wait for the toggle to be present and stable before clicking — the
+    // plugin list re-renders after the workspace switch and the React
+    // onClick handler may not be bound on the first render that produces
+    // the checkbox element.
+    await expect(toggle).toBeVisible();
+    await expect(toggle).not.toBeChecked();
     await toggle.click();
     // Wait for the click to actually flip the toggle's checked state before
     // reloading — the click handler persists the enable into storage and
