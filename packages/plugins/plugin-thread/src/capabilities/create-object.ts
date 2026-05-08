@@ -8,8 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { SpaceCapabilities } from '@dxos/plugin-space/types';
-
-import { Channel } from '#types';
+import { Channel } from '@dxos/types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
