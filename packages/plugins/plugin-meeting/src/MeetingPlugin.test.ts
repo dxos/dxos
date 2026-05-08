@@ -23,7 +23,6 @@ describe('MeetingPlugin', () => {
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([
         moduleId('AppGraphBuilder'),
-        moduleId('metadata'),
         moduleId('schema'),
         moduleId('ReactSurface'),
       ]),

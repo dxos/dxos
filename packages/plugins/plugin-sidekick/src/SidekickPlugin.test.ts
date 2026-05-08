@@ -21,7 +21,7 @@ describe('SidekickPlugin', () => {
     });
 
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('metadata'), moduleId('schema'), moduleId('ReactSurface')]),
+      expect.arrayContaining([moduleId('schema'), moduleId('ReactSurface')]),
     );
 
     await harness.fire(AppActivationEvents.SetupArtifactDefinition);

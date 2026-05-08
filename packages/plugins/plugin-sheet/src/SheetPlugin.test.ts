@@ -20,7 +20,7 @@ describe('SheetPlugin', () => {
       plugins: [ClientPlugin({}), SheetPlugin()],
     });
 
-    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('metadata'), moduleId('schema')]));
+    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('CreateObject'), moduleId('schema')]));
 
     await harness.fire(ActivationEvents.SetupOperationHandler);
     expect(harness.manager.getActive()).toEqual(

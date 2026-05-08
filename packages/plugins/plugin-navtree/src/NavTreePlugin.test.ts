@@ -20,7 +20,7 @@ describe('NavTreePlugin', () => {
     });
 
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('metadata')]),
+      expect.arrayContaining([moduleId('AppGraphBuilder')]),
     );
 
     await harness.fire(ActivationEvents.SetupOperationHandler);
