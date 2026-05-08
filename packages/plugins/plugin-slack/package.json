@@ -14,6 +14,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": "./src/SlackPlugin.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts"
@@ -49,6 +50,7 @@
   },
   "devDependencies": {
     "@dxos/effect": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "vite": "catalog:"
   },
   "peerDependencies": {

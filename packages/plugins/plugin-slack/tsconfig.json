@@ -58,6 +58,9 @@
     },
     {
       "path": "../plugin-integration"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

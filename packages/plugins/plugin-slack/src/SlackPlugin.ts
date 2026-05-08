@@ -19,3 +19,5 @@ export const SlackPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default SlackPlugin;
