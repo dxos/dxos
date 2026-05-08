@@ -283,7 +283,7 @@ export namespace AppPlugin {
   ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'create-object',
-      activatesOn: options.activatesOn ?? AppActivationEvents.SetupMetadata,
+      activatesOn: options.activatesOn ?? AppActivationEvents.SetupSchema,
       firesBeforeActivation: options.firesBeforeActivation,
       firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,
@@ -300,7 +300,7 @@ export namespace AppPlugin {
   ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'comment-config',
-      activatesOn: options.activatesOn ?? AppActivationEvents.SetupMetadata,
+      activatesOn: options.activatesOn ?? AppActivationEvents.SetupSchema,
       firesBeforeActivation: options.firesBeforeActivation,
       firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,
@@ -317,7 +317,7 @@ export namespace AppPlugin {
   ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'text-content',
-      activatesOn: options.activatesOn ?? AppActivationEvents.SetupMetadata,
+      activatesOn: options.activatesOn ?? AppActivationEvents.SetupSchema,
       firesBeforeActivation: options.firesBeforeActivation,
       firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,

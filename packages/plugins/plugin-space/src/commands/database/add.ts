@@ -36,7 +36,7 @@ export const add = Command.make(
       const manager = yield* Plugin.Service;
       const { db } = yield* Database.Service;
 
-      yield* manager.activate(AppActivationEvents.SetupMetadata);
+      yield* manager.activate(AppActivationEvents.SetupSchema);
 
       const resolve = (typename: string) => {
         const entry = manager.capabilities
