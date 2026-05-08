@@ -48,15 +48,14 @@ const handler: Operation.WithHandler<typeof GetGoogleContactGroups> = GetGoogleC
 
         const groups = yield* listContactGroups(accessToken.token).pipe(Effect.provide(FetchHttpClient.layer));
 
-        const targets = groups
-          .map((group) => ({
-            id: group.resourceName,
-            name: group.formattedName ?? group.name,
-            description:
-              group.memberCount !== undefined
-                ? `${group.memberCount} contact${group.memberCount === 1 ? '' : 's'}`
-                : undefined,
-          }));
+        const targets = groups.map((group) => ({
+          id: group.resourceName,
+          name: group.formattedName ?? group.name,
+          description:
+            group.memberCount !== undefined
+              ? `${group.memberCount} contact${group.memberCount === 1 ? '' : 's'}`
+              : undefined,
+        }));
 
         return { targets };
       }).pipe(Effect.provide(Database.layer(db)));
