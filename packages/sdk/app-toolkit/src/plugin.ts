@@ -62,28 +62,7 @@ export namespace AppPlugin {
     });
   }
 
-  export type MetadataModuleOptions = Omit<PluginModuleOptions, 'activate'> & {
-    metadata: AppCapabilities.Metadata | AppCapabilities.Metadata[];
-  };
 
-  /**
-   * Creates a module that contributes metadata.
-   */
-  export function addMetadataModule<T = void>(
-    options: MetadataModuleOptions,
-  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
-    return Plugin$.addModule({
-      id: options.id ?? 'metadata',
-      activatesOn: options.activatesOn ?? AppActivationEvents.SetupMetadata,
-      firesBeforeActivation: options.firesBeforeActivation,
-      firesAfterActivation: options.firesAfterActivation,
-      activate: Effect.fnUntraced(function* () {
-        return (Array.isArray(options.metadata) ? options.metadata : [options.metadata]).map((m) =>
-          Capability$.contributes(AppCapabilities.Metadata, m),
-        );
-      }),
-    });
-  }
 
   export type SettingsModuleOptions = PluginModuleOptions;
 

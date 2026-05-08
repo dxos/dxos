@@ -11,14 +11,6 @@ import { translations } from '#translations';
 import { Dream } from '#types';
 
 export const ZenPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addMetadataModule({
-    metadata: {
-      id: Dream.Dream.typename,
-      metadata: {
-        addToCollectionOnCreate: true,
-      },
-    },
-  }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addSchemaModule({ schema: [Dream.Dream] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
