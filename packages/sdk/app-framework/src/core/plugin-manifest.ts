@@ -13,6 +13,18 @@ import { BaseError } from '@dxos/errors';
 import { PLUGIN_ENTRY_FILENAME } from '@dxos/protocols';
 
 /**
+ * Default port the Vite plugin (`composerPlugin`) binds the dev server to.
+ *
+ * Shared single source of truth — `composerPlugin` reads it as the default
+ * port, and the host's "Load Dev Plugin" affordance pre-fills the manifest URL
+ * with `http://localhost:${PLUGIN_DEV_SERVER_PORT}/manifest.json`. Lives in
+ * app-framework rather than `@dxos/protocols` because the constant is a
+ * client-side convention (host loader + Vite plugin) rather than a wire-level
+ * protocol.
+ */
+export const PLUGIN_DEV_SERVER_PORT = 3967;
+
+/**
  * Tagged error for manifest fetch / parse failures. Construction sites set
  * `context.manifestUrl` and `context.reason` (one of `'fetch-failed' |
  * 'http-error' | 'parse-failed' | 'invalid'`) so handlers can route on the

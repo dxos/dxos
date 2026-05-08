@@ -45,9 +45,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/protocols"
-    },
-    {
       "path": "../../devtools/cli-util"
     },
     {

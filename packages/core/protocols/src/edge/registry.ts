@@ -41,14 +41,6 @@ export type PluginHealth = Schema.Schema.Type<typeof PluginHealthSchema>;
 export const PLUGIN_ENTRY_FILENAME = 'index.mjs';
 
 /**
- * Default port for the Vite dev server hosted by `composerPlugin`. Shared between
- * the Vite plugin (which binds to it) and the host dialog (which pre-fills it as
- * the suggested URL when an author asks to load a local dev plugin) so the
- * convention only lives in one place.
- */
-export const PLUGIN_DEV_SERVER_PORT = 3967;
-
-/**
  * Shape of the manifest-asset JSON the registry service fetches from each plugin's latest release.
  *
  * Emitted by `@dxos/app-framework/vite-plugin`'s `composerPlugin` (see
