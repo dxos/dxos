@@ -11,7 +11,7 @@ import { Event, Message } from '@dxos/types';
 import {
   AppGraphBuilder,
   BlueprintDefinition,
-  CreateObjects,
+  CreateObject,
   InboxSettings,
   IntegrationProvider,
   NavigationResolver,
@@ -28,7 +28,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
     activate: AppGraphBuilder,
   }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObjects }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({

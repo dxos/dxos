@@ -8,8 +8,8 @@ import type { Blueprint, OperationHandlerSet } from '@dxos/compute';
 
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
 export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
-export const CreateObjects = Capability.lazy('CreateObjects', () => import('./create-objects'));
-export const CreateObjectsNode = Capability.lazy('CreateObjectsNode', () => import('./create-objects-node'));
+export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
+export const CreateObjectNode = Capability.lazy('CreateObjectNode', () => import('./create-object-node'));
 export const IntegrationProvider = Capability.lazy('IntegrationProvider', () => import('./integration-provider'));
 export const NavigationResolver = Capability.lazy('NavigationResolver', () => import('./navigation-resolver'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(

@@ -12,13 +12,13 @@ import { Feed } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message } from '@dxos/types';
 
-import { AppGraphBuilder, BlueprintDefinition, CreateObjects, OperationHandler } from '#capabilities';
+import { AppGraphBuilder, BlueprintDefinition, CreateObject, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObjects }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
     schema: [

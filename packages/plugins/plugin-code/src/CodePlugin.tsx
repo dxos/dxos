@@ -8,7 +8,7 @@ import { AppPlugin } from '@dxos/app-toolkit';
 import {
   AppGraphBuilder,
   BlueprintDefinition,
-  CreateObjects,
+  CreateObject,
   OperationHandler,
   ReactSurface,
   Settings as SettingsCapability,
@@ -20,7 +20,7 @@ import { CodeProject, SourceFile, Spec } from '#types';
 export const CodePlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObjects }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Spec.Spec, CodeProject.CodeProject, SourceFile.SourceFile] }),
   AppPlugin.addSettingsModule({ activate: SettingsCapability }),

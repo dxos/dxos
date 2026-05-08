@@ -24,7 +24,7 @@ import {
   AssistantState,
   BlueprintDefinition,
   CompanionChatProvisioner,
-  CreateObjects,
+  CreateObject,
   EdgeModelResolver,
   LocalModelResolver,
   MarkdownExtension,
@@ -42,7 +42,7 @@ import { AssistantEvents } from '#types';
 export const AssistantPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObjects }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
     schema: [

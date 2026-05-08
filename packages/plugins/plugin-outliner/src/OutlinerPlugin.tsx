@@ -6,14 +6,14 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { ClientEvents } from '@dxos/plugin-client/types';
 
-import { AppGraphBuilder, CreateObjects, Migrations, OperationHandler, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, CreateObject, Migrations, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Journal, Outline } from '#types';
 
 export const OutlinerPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObjects }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
     schema: [Journal.JournalEntry, Journal.Journal, Outline.Outline],

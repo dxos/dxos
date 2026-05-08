@@ -27,7 +27,7 @@ import {
 
 import {
   AppGraphSerializer,
-  CreateObjects,
+  CreateObject,
   IdentityCreated,
   Migrations,
   NavigationHandler,
@@ -48,7 +48,7 @@ import { SpaceEvents } from '#types';
 import { type SpacePluginOptions } from '#types';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
-  AppPlugin.addCreateObjectModule({ activate: CreateObjects }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
     activate: () => NavigationHandler({ invitationProp }),
   })),

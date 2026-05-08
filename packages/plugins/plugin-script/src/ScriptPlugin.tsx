@@ -10,7 +10,7 @@ import {
   AppGraphBuilder,
   BlueprintDefinition,
   Compiler,
-  CreateObjects,
+  CreateObject,
   OperationHandler,
   ReactSurface,
   ScriptSettings,
@@ -22,7 +22,7 @@ import { ScriptEvents } from '#types';
 export const ScriptPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObjects }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Script.Script] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
