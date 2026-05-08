@@ -255,7 +255,38 @@ const readStringProperty = (obj: ObjectLiteralExpression, name: string): string 
   if (initializer.getKind() === SyntaxKind.NoSubstitutionTemplateLiteral) {
     return initializer.asKindOrThrow(SyntaxKind.NoSubstitutionTemplateLiteral).getLiteralValue();
   }
+  // Tagged template — recognise `trim\`…\`` from `@dxos/util`, used by many
+  // plugins for multi-line `description` fields. We replicate the runtime
+  // behaviour for the no-substitution case: strip leading/trailing blank
+  // lines and remove the smallest common indent.
+  if (initializer.getKind() === SyntaxKind.TaggedTemplateExpression) {
+    const tagged = initializer.asKindOrThrow(SyntaxKind.TaggedTemplateExpression);
+    const tag = tagged.getTag();
+    if (tag.getKind() === SyntaxKind.Identifier && tag.getText() === 'trim') {
+      const template = tagged.getTemplate();
+      if (template.getKind() === SyntaxKind.NoSubstitutionTemplateLiteral) {
+        return applyTrim(template.asKindOrThrow(SyntaxKind.NoSubstitutionTemplateLiteral).getLiteralValue());
+      }
+    }
+  }
   return undefined;
+};
+
+// Mirrors `@dxos/util`'s `trim` for the no-substitution case: drop leading
+// and trailing blank lines, then strip the smallest common indent.
+const applyTrim = (raw: string): string => {
+  const lines = raw.split('\n');
+  while (lines.length && !lines[0].trim()) {
+    lines.shift();
+  }
+  while (lines.length && !lines[lines.length - 1].trim()) {
+    lines.pop();
+  }
+  if (lines.length === 0) {
+    return '';
+  }
+  const minIndent = Math.min(...lines.filter((line) => line.trim()).map((line) => line.match(/^[ \t]*/)?.[0].length ?? 0));
+  return lines.map((line) => line.slice(minIndent)).join('\n');
 };
 
 const readRoleProperty = (obj: ObjectLiteralExpression): string[] => {
