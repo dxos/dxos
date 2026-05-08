@@ -4,39 +4,15 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Feed, Obj } from '@dxos/echo';
-import { getSpace } from '@dxos/react-client/echo';
-import { Message, Transcript } from '@dxos/types';
+import { Transcript } from '@dxos/types';
 
-import { BlueprintDefinition, OperationHandler, ReactSurface, Transcriber } from '#capabilities';
+import { BlueprintDefinition, OperationHandler, ReactSurface, TextContent, Transcriber } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
-import { renderByline } from './util';
-
 export const TranscriptionPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
-  AppPlugin.addMetadataModule({
-    metadata: {
-      id: Transcript.Transcript.typename,
-      metadata: {
-        // TODO(wittjosiah): Factor out. Artifact? Separate capability?
-        getTextContent: async (transcript: Transcript.Transcript) => {
-          const space = getSpace(transcript);
-          const members = space?.members.get().map((member) => member.identity) ?? [];
-          const feed = await transcript.feed.load();
-          const queueDxn = Feed.getQueueDxn(feed);
-          const queue = queueDxn ? space?.queues.get<Message.Message>(queueDxn) : undefined;
-          await queue?.refresh();
-          const content = queue?.objects
-            .filter((message) => Obj.instanceOf(Message.Message, message))
-            .flatMap((message, index) => renderByline(members)(message, index))
-            .join('\n\n');
-          return content;
-        },
-      },
-    },
-  }),
+  AppPlugin.addTextContentModule({ activate: TextContent }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Transcript.Transcript] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),

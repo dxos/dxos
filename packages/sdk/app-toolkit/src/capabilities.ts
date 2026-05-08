@@ -162,6 +162,17 @@ export namespace AppCapabilities {
    */
   export const AnchorSort = Capability$.make<AnchorSort>('org.dxos.app-framework.capability.anchor-sort');
 
+  /** Text content extractor contributed per typename by plugins that support text extraction. */
+  export type TextContent = Readonly<{
+    id: string;
+    getTextContent: (object: any) => Promise<string | undefined>;
+  }>;
+
+  /**
+   * @category Capability
+   */
+  export const TextContent = Capability$.make<TextContent>('org.dxos.app-framework.capability.text-content');
+
   /** Comment configuration contributed per typename by plugins that support commenting. */
   export type CommentConfig = Readonly<{
     id: string;

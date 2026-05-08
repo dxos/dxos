@@ -327,4 +327,21 @@ export namespace AppPlugin {
       activate: options.activate,
     });
   }
+
+  export type TextContentModuleOptions = PluginModuleOptions;
+
+  /**
+   * Creates a module that contributes a text content extractor.
+   */
+  export function addTextContentModule<T = void>(
+    options: TextContentModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'text-content',
+      activatesOn: options.activatesOn ?? AppActivationEvents.SetupMetadata,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
+      activate: options.activate,
+    });
+  }
 }
