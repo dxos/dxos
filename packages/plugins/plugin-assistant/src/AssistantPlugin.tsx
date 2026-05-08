@@ -7,17 +7,14 @@ import * as Effect from 'effect/Effect';
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { ContextBinding } from '@dxos/assistant';
-import { Agent, AgentBlueprint, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
+import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
-import { Feed, Obj } from '@dxos/echo';
-import { type SpaceId } from '@dxos/keys';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { Feed } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { DeckEvents } from '@dxos/plugin-deck/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown/types';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SpaceCapabilities, SpaceEvents, type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message } from '@dxos/types';
 
@@ -27,6 +24,7 @@ import {
   AssistantState,
   BlueprintDefinition,
   CompanionChatProvisioner,
+  CreateObjects,
   EdgeModelResolver,
   LocalModelResolver,
   MarkdownExtension,
@@ -44,85 +42,7 @@ import { AssistantEvents } from '#types';
 export const AssistantPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
-  Plugin.addModule({
-    id: 'create-objects',
-    activatesOn: AppActivationEvents.SetupMetadata,
-    activate: Effect.fnUntraced(function* () {
-      return [
-        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-          id: Chat.Chat.typename,
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const { object } = yield* Operation.invoke(AssistantOperation.CreateChat, {
-                db: options.db,
-                name: props?.name,
-              });
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-            })) satisfies CreateObject,
-        }),
-        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-          id: Blueprint.Blueprint.typename,
-          inputSchema: AssistantOperation.BlueprintForm,
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const object = Blueprint.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-            })) satisfies CreateObject,
-        }),
-        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-          id: Routine.Routine.typename,
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const object = Routine.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-            })) satisfies CreateObject,
-        }),
-        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-          id: Sequence.typename,
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const object = Obj.make(Sequence, props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-            })) satisfies CreateObject,
-        }),
-        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-          id: Agent.Agent.typename,
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const object = yield* Agent.makeInitialized({ name: '', instructions: '' }, AgentBlueprint.make()).pipe(
-                withComputeRuntime(options.db.spaceId),
-              );
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-            })) satisfies CreateObject,
-        }),
-      ];
-    }),
-  }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObjects }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
     schema: [
@@ -203,18 +123,5 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
-
-// TODO(dmaretskyi): Extract to a helper module.
-const withComputeRuntime =
-  (spaceId: SpaceId) =>
-  <A, E, R>(
-    effect: Effect.Effect<A, E, R>,
-  ): Effect.Effect<A, E, Exclude<R, AutomationCapabilities.ComputeServices> | Capability.Service> =>
-    Effect.gen(function* () {
-      // TODO(dmaretskyi): Capability.get has `Error` in the error channel. We should throw those as defects instead.
-      const provider = yield* Capability.get(AutomationCapabilities.ComputeRuntime).pipe(Effect.orDie);
-      const runtime = yield* provider.getRuntime(spaceId).runtimeEffect;
-      return yield* effect.pipe(Effect.provide(runtime));
-    });
 
 export default AssistantPlugin;
