@@ -13,10 +13,28 @@
 //   - Required fields: `.annotations({ description })` on the primitive itself.
 
 import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { trim } from '@dxos/util';
 
 import { DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT } from './limits';
+
+/**
+ * Annotation key for fields whose value should be picked from a known
+ * enumeration that the MCP server can produce on demand. Consumers
+ * (e.g. `@dxos/react-ui-introspect`'s ToolForm) read this annotation off
+ * the field's AST and render a Combobox over the matching list.
+ *
+ * The kind names a domain rather than a specific tool — e.g. `plugin-id`
+ * means "any tool that emits plugin ids works" — so adding a new tool
+ * doesn't require new picker plumbing.
+ */
+export const PickerAnnotationId = '@dxos/introspect-tools/picker';
+
+export type PickerKind = 'plugin-id' | 'package-name';
+
+export const getPicker = (ast: SchemaAST.AST): PickerKind | undefined =>
+  (ast.annotations as Record<string, unknown>)[PickerAnnotationId] as PickerKind | undefined;
 
 /**
  * Pagination + projection options shared by every list-style tool. Spread its
@@ -32,7 +50,7 @@ export const ListOptionsInput = Schema.Struct({
   ).annotations({
     title: 'Limit',
     description: trim`
-      Maximum number of items to return. Default ${DEFAULT_LIST_LIMIT}; max ${MAX_LIST_LIMIT}.
+      Maximum number of items. Default ${DEFAULT_LIST_LIMIT}; max ${MAX_LIST_LIMIT}.
     `,
   }),
   compact: Schema.optional(Schema.Boolean).annotations({
@@ -56,10 +74,10 @@ export const ListPackagesInput = Schema.Struct({
   name: Schema.optional(Schema.String).annotations({
     title: 'Name filter',
     description: 'Substring of the package name (case-insensitive).',
+    [PickerAnnotationId]: 'package-name' satisfies PickerKind,
   }),
   pathPrefix: Schema.optional(Schema.String).annotations({
     title: 'Path prefix',
-    description: 'Restrict to packages whose path starts with this segment, e.g. "packages/plugins".',
   }),
   privateOnly: Schema.optional(Schema.Boolean).annotations({
     title: 'Private only',
@@ -72,6 +90,7 @@ export const GetPackageInput = Schema.Struct({
   name: Schema.String.annotations({
     title: 'Package name',
     description: 'Exact package name, e.g. "@dxos/echo".',
+    [PickerAnnotationId]: 'package-name' satisfies PickerKind,
   }),
 });
 
@@ -83,6 +102,7 @@ export const ListSymbolsInput = Schema.Struct({
   package: Schema.String.annotations({
     title: 'Package',
     description: 'Exact package name, e.g. "@dxos/ai".',
+    [PickerAnnotationId]: 'package-name' satisfies PickerKind,
   }),
   kind: Schema.optional(SymbolKindEnum).annotations({
     title: 'Kind',
@@ -123,6 +143,9 @@ export const GetSymbolInput = Schema.Struct({
 //
 
 export const ListPluginsInput = Schema.Struct({
+  // No picker annotation — this is a free-form substring filter, not an
+  // exact-match selector. Picking from the list of known plugin ids would
+  // defeat the purpose of `list_plugins`.
   id: Schema.optional(Schema.String).annotations({
     title: 'Plugin id',
     description: 'Substring of the plugin id (case-insensitive). Omit to list every plugin.',
@@ -133,7 +156,7 @@ export const ListPluginsInput = Schema.Struct({
 const PluginIdFilter = Schema.Struct({
   id: Schema.optional(Schema.String).annotations({
     title: 'Plugin id',
-    description: 'Restrict to contributions from this plugin id (e.g. "org.dxos.plugin.markdown").',
+    [PickerAnnotationId]: 'plugin-id' satisfies PickerKind,
   }),
   ...ListOptionsInput.fields,
 });

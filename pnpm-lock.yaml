@@ -5920,6 +5920,9 @@ importers:
 
   packages/core/introspect:
     dependencies:
+      '@dxos/introspect-tools':
+        specifier: workspace:*
+        version: link:../introspect-tools
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
