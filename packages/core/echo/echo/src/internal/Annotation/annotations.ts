@@ -493,7 +493,6 @@ export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation
   };
 };
 
-
 const IconAnnotationSchema = Schema.Struct({
   /**
    * Phosphor icon name (e.g., 'ph--user--regular', 'ph--cube--regular', 'ph--link--regular ', etc.)

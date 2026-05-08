@@ -2,13 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { Tag } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { DataTypes } from '@dxos/schema';
 import {
@@ -24,10 +20,9 @@ import {
   Task,
 } from '@dxos/types';
 
-import { IdentityCreated, OperationHandler, UndoMappings } from '#capabilities';
+import { CreateObject, IdentityCreated, OperationHandler, UndoMappings } from '#capabilities';
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
-import { SpaceCapabilities, SpaceEvents, type CreateObject, type SpacePluginOptions } from '#types';
+import { SpaceEvents, type SpacePluginOptions } from '#types';
 
 import { database, queue, space } from './commands';
 
@@ -36,25 +31,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addCommandModule({
     commands: [database, queue, space],
   }),
-  Plugin.addModule({
-    id: 'create-object',
-    activatesOn: AppActivationEvents.SetupMetadata,
-    activate: Effect.fnUntraced(function* () {
-      return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Collection.Collection.typename,
-        createObject: ((props, options) =>
-          Effect.gen(function* () {
-            const object = Collection.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              hidden: true,
-              targetNodeId: options.targetNodeId,
-            });
-          })) satisfies CreateObject,
-      });
-    }),
-  }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
     schema: [

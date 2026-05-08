@@ -2,21 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
-import { Capability, ActivationEvent, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
 import { AttentionEvents } from '@dxos/plugin-attention/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
-import { CalendarBlueprint, InboxBlueprint } from '#blueprints';
 import {
   AppGraphBuilder,
   BlueprintDefinition,
+  CreateObjects,
   InboxSettings,
   IntegrationProvider,
   NavigationResolver,
@@ -24,12 +19,8 @@ import {
   ReactSurface,
 } from '#capabilities';
 import { meta } from '#meta';
-import { InboxOperation } from '#operations';
 import { translations } from '#translations';
 import { Calendar, InboxEvents, Mailbox } from '#types';
-
-import { CreateCalendarSchema } from './types/Calendar';
-import { CreateMailboxSchema } from './types/Mailbox';
 
 export const InboxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({
@@ -37,67 +28,8 @@ export const InboxPlugin = Plugin.define(meta).pipe(
     activate: AppGraphBuilder,
   }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObjects }),
   AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
-  Plugin.addModule({
-    id: 'create-objects',
-    activatesOn: AppActivationEvents.SetupMetadata,
-    activate: Effect.fnUntraced(function* () {
-      return [
-        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-          id: Mailbox.Mailbox.typename,
-          inputSchema: CreateMailboxSchema,
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const object = Mailbox.make(props);
-              return yield* Operation.invoke(InboxOperation.AddMailbox, {
-                object,
-                target: options.target,
-              });
-            })) satisfies CreateObject,
-        }),
-        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-          id: Message.Message.typename,
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const object = Message.make({ sender: 'user' });
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-            })) satisfies CreateObject,
-        }),
-        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-          id: Calendar.Calendar.typename,
-          inputSchema: CreateCalendarSchema,
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const object = Calendar.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-            })) satisfies CreateObject,
-        }),
-        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-          id: Event.Event.typename,
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const object = Event.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-            })) satisfies CreateObject,
-        }),
-      ];
-    }),
-  }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
     schema: [Event.Event, Mailbox.Mailbox, Calendar.Calendar, Message.Message],

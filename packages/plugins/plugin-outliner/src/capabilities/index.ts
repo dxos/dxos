@@ -6,6 +6,7 @@ import { Capability } from '@dxos/app-framework';
 import { OperationHandlerSet } from '@dxos/compute';
 
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
+export const CreateObjects = Capability.lazy('CreateObjects', () => import('./create-objects'));
 export const Migrations = Capability.lazy('OutlinerMigrations', () => import('./migrations'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',

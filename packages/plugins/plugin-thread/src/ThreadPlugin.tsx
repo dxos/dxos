@@ -9,8 +9,7 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown/types';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SpaceCapabilities, SpaceEvents, type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
 import { AnchoredTo, Channel, Message, Thread } from '@dxos/types';
 
@@ -18,6 +17,7 @@ import {
   AppGraphBuilder,
   BlueprintDefinition,
   CallManager,
+  CreateObject,
   Markdown,
   OperationHandler,
   UndoMappings,
@@ -38,25 +38,7 @@ import { translations } from '#translations';
 export const ThreadPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
-  Plugin.addModule({
-    id: 'create-object',
-    activatesOn: AppActivationEvents.SetupMetadata,
-    activate: Effect.fnUntraced(function* () {
-      return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Channel.Channel.typename,
-        createObject: ((props, options) =>
-          Effect.gen(function* () {
-            const object = Channel.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              hidden: true,
-              targetNodeId: options.targetNodeId,
-            });
-          })) satisfies CreateObject,
-      });
-    }),
-  }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addMetadataModule({
     metadata: {
       id: THREAD_ITEM,

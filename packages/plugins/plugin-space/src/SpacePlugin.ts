@@ -2,19 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
-
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { Tag, Type } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Tag } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import { DataTypes, createDefaultSchema } from '@dxos/schema';
+import { DataTypes } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 import {
   AnchoredTo,
@@ -32,6 +27,7 @@ import {
 
 import {
   AppGraphSerializer,
+  CreateObjects,
   IdentityCreated,
   Migrations,
   NavigationHandler,
@@ -47,105 +43,12 @@ import {
   AppGraphBuilder,
 } from '#capabilities';
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
 import { translations } from '#translations';
-import { SpaceCapabilities, SpaceEvents } from '#types';
-import { type CreateObject, type SpacePluginOptions } from '#types';
+import { SpaceEvents } from '#types';
+import { type SpacePluginOptions } from '#types';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
-  Plugin.addModule({
-    id: 'create-objects',
-    activatesOn: AppActivationEvents.SetupMetadata,
-    activate: Effect.fnUntraced(function* () {
-      return [
-        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-          id: Collection.Collection.typename,
-          inputSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const object = Collection.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: false,
-                targetNodeId: options.targetNodeId,
-              });
-            })) satisfies CreateObject,
-        }),
-        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-          id: Type.getTypename(Type.PersistentType),
-          inputSchema: SpaceOperation.StoredSchemaForm,
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const result = yield* Operation.invoke(SpaceOperation.AddSchema, {
-                db: options.db,
-                name: props.name,
-                schema: createDefaultSchema(),
-              });
-              return {
-                id: result.id,
-                subject: [],
-                object: result.object,
-              };
-            })) satisfies CreateObject,
-        }),
-        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-          id: Organization.Organization.typename,
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const object = Organization.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-            })) satisfies CreateObject,
-        }),
-        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-          id: Person.Person.typename,
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const object = Person.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-            })),
-        }),
-        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-          id: Project.Project.typename,
-          inputSchema: Project.Project,
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const object = Project.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-            })),
-        }),
-        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-          id: Task.Task.typename,
-          inputSchema: Task.Task,
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const object = Task.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-            })) satisfies CreateObject,
-        }),
-      ];
-    }),
-  }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObjects }),
   AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
     activate: () => NavigationHandler({ invitationProp }),
   })),

@@ -2,20 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
-import { ActivationEvent, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import { ActivationEvent, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AutomationEvents } from '@dxos/plugin-automation/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown/types';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
 
 import {
   AnchorSort,
+  CommentConfig,
   ComputeGraphRegistry,
+  CreateObject,
   Markdown,
   OperationHandler,
   UndoMappings,
@@ -23,41 +20,12 @@ import {
   SheetState,
 } from '#capabilities';
 import { meta } from '#meta';
-import { SheetOperation } from '#operations';
 import { translations } from '#translations';
 import { Sheet } from '#types';
 
 export const SheetPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'create-object',
-    activatesOn: AppActivationEvents.SetupMetadata,
-    activate: Effect.fnUntraced(function* () {
-      return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Sheet.Sheet.typename,
-        createObject: ((props, options) =>
-          Effect.gen(function* () {
-            const object = Sheet.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              hidden: true,
-              targetNodeId: options.targetNodeId,
-            });
-          })) satisfies CreateObject,
-      });
-    }),
-  }),
-  Plugin.addModule({
-    id: 'comment-config',
-    activatesOn: AppActivationEvents.SetupMetadata,
-    activate: Effect.fnUntraced(function* () {
-      return Capability.contributes(AppCapabilities.CommentConfig, {
-        id: Sheet.Sheet.typename,
-        comments: 'anchored',
-        scrollToAnchor: SheetOperation.ScrollToAnchor,
-      } satisfies AppCapabilities.CommentConfig);
-    }),
-  }),
+  AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
   AppPlugin.addSchemaModule({ schema: [Sheet.Sheet] }),

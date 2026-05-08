@@ -39,7 +39,9 @@ export const add = Command.make(
       yield* manager.activate(AppActivationEvents.SetupMetadata);
 
       const resolve = (typename: string) => {
-        const entry = manager.capabilities.getAll(SpaceCapabilities.CreateObjectEntry).find(({ id }) => id === typename);
+        const entry = manager.capabilities
+          .getAll(SpaceCapabilities.CreateObjectEntry)
+          .find(({ id }) => id === typename);
         return entry ?? undefined;
       };
 

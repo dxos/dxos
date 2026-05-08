@@ -109,9 +109,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           return objects.length > 0 || viewIndex.typenamesWithViews.has(typename);
         });
 
-        return Effect.succeed(
-          visibleSchemas.map((schema) => createSchemaNode({ schema, space, get })),
-        );
+        return Effect.succeed(visibleSchemas.map((schema) => createSchemaNode({ schema, space, get })));
       },
     }),
 

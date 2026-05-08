@@ -168,7 +168,8 @@ export default Capability.makeModule(
               data: Effect.fnUntraced(function* () {
                 const config = getCommentConfig(Obj.getTypename(object)!)!;
                 const selection = selectionManager.getSelection(objectDxn);
-                const anchor = (config.comments === 'anchored' ? getAnchor(selection) : undefined) ?? Date.now().toString();
+                const anchor =
+                  (config.comments === 'anchored' ? getAnchor(selection) : undefined) ?? Date.now().toString();
                 const name = config.getAnchorLabel?.(object, anchor);
                 yield* Operation.invoke(ThreadOperation.Create, {
                   anchor,

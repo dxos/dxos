@@ -6,7 +6,7 @@ import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-
 import * as Option from 'effect/Option';
 
 import { Node } from '@dxos/app-graph';
-import { Collection, type Database, Obj, Ref, Type } from '@dxos/echo';
+import { Collection, type Database, Obj, Ref } from '@dxos/echo';
 import { Annotation } from '@dxos/echo';
 import { type TreeData } from '@dxos/react-ui-list';
 
@@ -69,10 +69,7 @@ export const rearrangeCache = new Map<string, (nextOrder: unknown[]) => void>();
 //
 
 /** Build collection partials for drag/drop behavior. */
-export const buildCollectionPartials = (
-  collection: Collection.Collection,
-  db: Database.Database,
-) => ({
+export const buildCollectionPartials = (collection: Collection.Collection, db: Database.Database) => ({
   acceptPersistenceClass: ACCEPT_ECHO_CLASS,
   acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
   role: 'branch' as const,
@@ -146,9 +143,7 @@ export const createObjectNode = ({
     ? getCollectionGraphNodePartials({ collection: object, db })
     : graphProps;
 
-  const label =
-    Obj.getLabel(object) ||
-    getDynamicLabel('object-name.placeholder', type, { defaultValue: 'New item' });
+  const label = Obj.getLabel(object) || getDynamicLabel('object-name.placeholder', type, { defaultValue: 'New item' });
 
   const selectable =
     !Obj.instanceOf(Collection.Collection, object) || (navigable && Obj.instanceOf(Collection.Collection, object));

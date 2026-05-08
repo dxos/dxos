@@ -34,4 +34,3 @@ export const getSpaceDisplayName = (
         ? PERSONAL_SPACE_LABEL
         : UNNAMED_SPACE_LABEL;
 };
-
