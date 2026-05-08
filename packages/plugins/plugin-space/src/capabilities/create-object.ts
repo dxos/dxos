@@ -10,7 +10,7 @@ import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { createDefaultSchema } from '@dxos/schema';
-import { Organization, Person, Task } from '@dxos/types';
+import { Organization, Person, Project, Task } from '@dxos/types';
 
 import { SpaceOperation } from '#operations';
 import { SpaceCapabilities } from '#types';
@@ -67,6 +67,20 @@ export default Capability.makeModule(
         createObject: ((props, options) =>
           Effect.gen(function* () {
             const object = Person.make(props);
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              hidden: true,
+              targetNodeId: options.targetNodeId,
+            });
+          })),
+      }),
+      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+        id: Project.Project.typename,
+        inputSchema: Project.Project,
+        createObject: ((props, options) =>
+          Effect.gen(function* () {
+            const object = Project.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
