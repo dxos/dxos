@@ -46,14 +46,7 @@ export type ToolFormProps = ThemedClassName<{
   pickerOptions?: Partial<Record<PickerKind, ReadonlyArray<string>>>;
 }>;
 
-export const ToolForm = ({
-  tool,
-  defaultValues,
-  onSubmit,
-  onCancel,
-  classNames,
-  pickerOptions,
-}: ToolFormProps) => {
+export const ToolForm = ({ tool, defaultValues, onSubmit, onCancel, classNames, pickerOptions }: ToolFormProps) => {
   const { t } = useTranslation(translationKey);
 
   const fieldProvider = useMemo(() => {
