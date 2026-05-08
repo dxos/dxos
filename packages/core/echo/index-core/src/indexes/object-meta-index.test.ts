@@ -41,6 +41,7 @@ describe('ObjectMetaIndex', () => {
       const item: IndexerObject = {
         spaceId,
         queueId: ObjectId.random(),
+        queueNamespace: 'data',
         documentId: null,
         recordId: null,
         updatedAt: Date.now(),
@@ -76,6 +77,7 @@ describe('ObjectMetaIndex', () => {
       const match: IndexerObject = {
         spaceId,
         queueId: ObjectId.random(),
+        queueNamespace: 'data',
         documentId: null,
         recordId: null,
         updatedAt: Date.now(),
@@ -90,6 +92,7 @@ describe('ObjectMetaIndex', () => {
       const falsePositive: IndexerObject = {
         spaceId,
         queueId: ObjectId.random(),
+        queueNamespace: 'data',
         documentId: null,
         recordId: null,
         updatedAt: Date.now(),
@@ -126,6 +129,7 @@ describe('ObjectMetaIndex', () => {
       const item1: IndexerObject = {
         spaceId,
         queueId: ObjectId.random(),
+        queueNamespace: 'data',
         documentId: null,
         recordId: null,
         updatedAt: Date.now(),
@@ -139,6 +143,7 @@ describe('ObjectMetaIndex', () => {
       const item2: IndexerObject = {
         spaceId,
         queueId: null,
+        queueNamespace: null,
         documentId: 'doc-123',
         recordId: null,
         updatedAt: Date.now(),
@@ -220,6 +225,7 @@ describe('ObjectMetaIndex', () => {
       const item1: IndexerObject = {
         spaceId,
         queueId: ObjectId.random(),
+        queueNamespace: 'data',
         documentId: null,
         recordId: null,
         updatedAt: Date.now(),
@@ -233,6 +239,7 @@ describe('ObjectMetaIndex', () => {
       const item2: IndexerObject = {
         spaceId,
         queueId: ObjectId.random(),
+        queueNamespace: 'data',
         documentId: null,
         recordId: null,
         updatedAt: Date.now(),
@@ -246,6 +253,7 @@ describe('ObjectMetaIndex', () => {
       const relation: IndexerObject = {
         spaceId,
         queueId: ObjectId.random(),
+        queueNamespace: 'data',
         documentId: null,
         recordId: null,
         updatedAt: Date.now(),
@@ -341,6 +349,7 @@ describe('ObjectMetaIndex', () => {
       const item: IndexerObject = {
         spaceId,
         queueId,
+        queueNamespace: 'data',
         documentId: null,
         recordId: null,
         updatedAt: insertTimestamp,
@@ -386,6 +395,7 @@ describe('ObjectMetaIndex', () => {
         {
           spaceId,
           queueId: queueId1,
+          queueNamespace: 'data',
           documentId: null,
           recordId: null,
           updatedAt: earlyTimestamp,
@@ -397,6 +407,7 @@ describe('ObjectMetaIndex', () => {
         {
           spaceId,
           queueId: queueId2,
+          queueNamespace: 'data',
           documentId: null,
           recordId: null,
           updatedAt: lateTimestamp,
