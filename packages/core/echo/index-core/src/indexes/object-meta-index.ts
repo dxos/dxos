@@ -296,6 +296,7 @@ export class ObjectMetaIndex implements Index {
                 yield* sql`
                   UPDATE objectMeta SET
                     version = ${version},
+                    queueNamespace = ${queueNamespace ?? ''},
                     entityKind = ${entityKind},
                     typeDxn = ${typeDxn},
                     deleted = ${deleted},

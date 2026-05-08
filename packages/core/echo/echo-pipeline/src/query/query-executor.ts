@@ -492,7 +492,9 @@ export class QueryExecutor extends Resource {
         (item, index) =>
           workingSet[index].objectId !== item.objectId ||
           workingSet[index].spaceId !== item.spaceId ||
-          workingSet[index].documentId !== item.documentId,
+          workingSet[index].documentId !== item.documentId ||
+          workingSet[index].queueId !== item.queueId ||
+          workingSet[index].queueNamespace !== item.queueNamespace,
       );
 
     // Disabled because concurrent queries don't print hierarchies correctly.

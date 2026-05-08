@@ -436,4 +436,42 @@ describe('ObjectMetaIndex', () => {
       expect(beforeMid.map((_) => _.objectId)).toEqual([objectId1]);
     }).pipe(Effect.provide(TestLayer)),
   );
+
+  it.effect('should round-trip queueNamespace and persist it through updates', () =>
+    Effect.gen(function* () {
+      const index = new ObjectMetaIndex();
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const traceQueueId = ObjectId.random();
+      const traceObjectId = ObjectId.random();
+
+      // Initial insert with 'trace' namespace.
+      const traceItem: IndexerObject = {
+        spaceId,
+        queueId: traceQueueId,
+        queueNamespace: 'trace',
+        documentId: null,
+        recordId: null,
+        updatedAt: Date.now(),
+        data: {
+          id: traceObjectId,
+          [ATTR_TYPE]: TYPE_PERSON,
+          [ATTR_DELETED]: false,
+        },
+      };
+      yield* index.update([traceItem]);
+
+      const initial = yield* index.queryAll({ spaceIds: [spaceId], includeAllQueues: true });
+      expect(initial).toHaveLength(1);
+      expect(initial[0].queueNamespace).toBe('trace');
+
+      // Re-index the same object: the UPDATE branch must preserve the namespace.
+      yield* index.update([{ ...traceItem, updatedAt: Date.now() + 1 }]);
+
+      const afterUpdate = yield* index.queryAll({ spaceIds: [spaceId], includeAllQueues: true });
+      expect(afterUpdate).toHaveLength(1);
+      expect(afterUpdate[0].queueNamespace).toBe('trace');
+    }).pipe(Effect.provide(TestLayer)),
+  );
 });
