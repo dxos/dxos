@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Registry } from '@dxos/app-framework';
 import { Context } from '@dxos/context';
+import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type PluginEntry } from '@dxos/protocols';
 
-import { type EdgeHttpClient } from './edge-http-client';
+import * as Registry from './registry';
 
 /**
  * Maps a wire-format `PluginEntry` (from `@dxos/protocols`) to a
@@ -34,6 +34,12 @@ const toRegistryPlugin = (entry: PluginEntry): Registry.Plugin => ({
 
 /**
  * Implements `Registry.PluginProvider` against the Edge `/registry` HTTP endpoints.
+ *
+ * Lives in app-framework (rather than the more obvious home of `@dxos/edge-client`)
+ * because edge-client doesn't depend on app-framework; siting the implementation
+ * here keeps the dependency arrow `app-framework → edge-client` and avoids a
+ * cycle. The class needs only the public `EdgeHttpClient` type, so a one-way
+ * type-import is enough.
  *
  * `listVersions` is currently a stub: it returns the single latest version derived
  * from the cached plugin list, so the host's version picker has something to render.

@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
  * Populated from the registry catalog; represents the latest available version of a plugin.
  *
  * Independently defined from @dxos/protocols PluginEntry — similar shape but not the same type.
- * Implementations of {@link PluginProvider} (e.g. EdgeRegistryPluginProvider in @dxos/edge-client)
+ * Implementations of {@link PluginProvider} (e.g. {@link EdgeRegistryPluginProvider})
  * are responsible for mapping their wire-format entries to this shape.
  */
 export type Plugin = {
@@ -54,9 +54,10 @@ export type PluginVersion = {
  * Abstraction over the plugin registry catalog backend.
  * Implementations may call Edge, a local cache, or a stub.
  *
- * Defined in app-framework so neither the interface nor its consumers depend on
- * `@dxos/edge-client` or `@dxos/protocols`. Implementations live alongside their
- * transports (e.g. EdgeRegistryPluginProvider in `@dxos/edge-client`).
+ * The interface itself is transport-agnostic; concrete implementations live
+ * alongside it in this package (see {@link EdgeRegistryPluginProvider}) so we
+ * avoid `app-framework ↔ edge-client` cycles, but they only need to satisfy
+ * this shape — callers can substitute their own.
  */
 export interface PluginProvider {
   /**

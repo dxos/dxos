@@ -55,8 +55,8 @@ export type ManagerOptions = {
   /**
    * Backend for the plugin registry catalog. When omitted the manager exposes a
    * no-op `pluginRegistry` (empty list, no versions endpoint). Implementations
-   * live alongside their transports (e.g. `EdgeRegistryPluginProvider` in
-   * `@dxos/edge-client`); the host app instantiates one and passes it in.
+   * live in app-framework alongside the interface (e.g.
+   * `EdgeRegistryPluginProvider`); the host app instantiates one and passes it in.
    */
   pluginRegistryProvider?: PluginRegistry.PluginProvider;
   /**

@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type Registry as RegistryNs, Plugin, UrlLoader } from '@dxos/app-framework';
+import { type Registry as PluginRegistry, Plugin, UrlLoader } from '@dxos/app-framework';
 import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -19,7 +19,7 @@ import { getPluginPath, meta } from '#meta';
 
 import { useAutoTags, useRegistryPlugins, useUpdateAvailableIds } from '../../hooks';
 
-const sortEntries = (a: RegistryNs.Plugin, b: RegistryNs.Plugin) => (a.name ?? a.id).localeCompare(b.name ?? b.id);
+const sortEntries = (a: PluginRegistry.Plugin, b: PluginRegistry.Plugin) => (a.name ?? a.id).localeCompare(b.name ?? b.id);
 
 const sortPlugins = (a: Plugin.Plugin, b: Plugin.Plugin) =>
   (a.meta.name ?? a.meta.id).localeCompare(b.meta.name ?? b.meta.id);
@@ -29,7 +29,7 @@ const sortPlugins = (a: Plugin.Plugin, b: Plugin.Plugin) =>
  * {@link PluginList} for rendering. The synthesized plugin has no modules — it
  * exists only for display until the user installs it.
  */
-const toDisplayPlugin = (plugin: RegistryNs.Plugin): Plugin.Plugin =>
+const toDisplayPlugin = (plugin: PluginRegistry.Plugin): Plugin.Plugin =>
   ({
     [Plugin.PluginTypeId]: Plugin.PluginTypeId,
     meta: {

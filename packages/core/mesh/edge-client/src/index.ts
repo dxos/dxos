@@ -10,7 +10,6 @@ export * from './edge-client';
 export * from './errors';
 export * from './protocol';
 export * from './edge-http-client';
-export * from './edge-registry-plugin-provider';
 export * from './edge-identity';
 export * from './edge-ws-muxer';
 export * from './http-client';
