@@ -64,7 +64,7 @@ test.describe.serial('Startup timing harness', () => {
     await context.close();
   });
 
-  // TODO(burdon): Flaky — under load the 30s `waitForReady` in harness-helpers.ts is too tight,
+  // TODO(wittjosiah): Flaky — under load the 30s `waitForReady` in harness-helpers.ts is too tight,
   //   and the spec already retries 2x via `test.describe.configure({ retries: 2 })` and still fails.
   //   Either bump that timeout (or pass a longer one through) and re-enable, or move warm-start
   //   benchmarking off the e2e path.

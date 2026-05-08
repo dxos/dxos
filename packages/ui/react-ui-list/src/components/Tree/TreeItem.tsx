@@ -332,12 +332,7 @@ const RawTreeItem = <T extends { id: string } = any>({
           style={paddingIndentation(level)}
         >
           <Treegrid.Cell classNames='flex items-center'>
-            <TreeItemToggle
-              isBranch={isBranch}
-              open={open}
-              onClick={handleOpenToggle}
-              testId={testId ? `${testId}.toggle` : undefined}
-            />
+            <TreeItemToggle isBranch={isBranch} open={open} onClick={handleOpenToggle} />
             <TreeItemHeading
               disabled={disabled}
               current={current}
@@ -347,7 +342,6 @@ const RawTreeItem = <T extends { id: string } = any>({
               iconHue={iconHue}
               onSelect={handleSelect}
               ref={buttonRef}
-              testId={testId ? `${testId}.heading` : undefined}
             />
           </Treegrid.Cell>
           {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}

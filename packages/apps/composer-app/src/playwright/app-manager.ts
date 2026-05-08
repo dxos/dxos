@@ -122,10 +122,24 @@ export class AppManager {
   }
 
   async shareSpace(): Promise<void> {
-    // Members is nested under the Settings section in the navtree.
-    // Expand Settings then select Members to open the share page.
-    await this.currentWorkspace.getByTestId('spacePlugin.settings.toggle').first().click();
-    await this.currentWorkspace.getByTestId('spacePlugin.members.heading').first().click();
+    // Members is nested under the Settings section in the navtree. Scope
+    // the generic treeItem.toggle / treeItem.heading testids to the
+    // settings/members rows by their row testids, and expand settings
+    // first if its members heading isn't visible yet.
+    const membersHeading = this.currentWorkspace
+      .getByTestId('spacePlugin.members')
+      .first()
+      .getByTestId('treeItem.heading')
+      .first();
+    if (!(await membersHeading.isVisible())) {
+      await this.currentWorkspace
+        .getByTestId('spacePlugin.settings')
+        .first()
+        .getByTestId('treeItem.toggle')
+        .first()
+        .click();
+    }
+    await membersHeading.click();
   }
 
   async createSpaceInvitation(): Promise<string> {

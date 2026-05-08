@@ -10,16 +10,15 @@ export type TreeItemToggleProps = Omit<IconButtonProps, 'icon' | 'size' | 'label
   open?: boolean;
   isBranch?: boolean;
   hidden?: boolean;
-  testId?: string;
 };
 
 export const TreeItemToggle = memo(
   forwardRef<HTMLButtonElement, TreeItemToggleProps>(
-    ({ classNames, open, isBranch, hidden, testId = 'treeItem.toggle', ...props }, forwardedRef) => {
+    ({ classNames, open, isBranch, hidden, ...props }, forwardedRef) => {
       return (
         <IconButton
           ref={forwardedRef}
-          data-testid={testId}
+          data-testid='treeItem.toggle'
           aria-expanded={open}
           variant='ghost'
           density='fine'

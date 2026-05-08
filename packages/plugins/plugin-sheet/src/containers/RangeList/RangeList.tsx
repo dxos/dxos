@@ -3,10 +3,10 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 
 import { rangeToA1Notation } from '@dxos/compute-hyperformula';
-import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 
@@ -18,22 +18,21 @@ export type RangeListProps = {
   sheet: Sheet.Sheet;
 };
 
-export const RangeList = ({ sheet }: RangeListProps) => {
+export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
   const { t } = useTranslation(meta.id);
-  // ECHO objects don't trigger React re-renders on mutation; subscribe so the
-  // list reflects toolbar-driven additions/removals to `sheet.ranges`.
-  const [, forceRender] = useState(0);
-  useEffect(() => Obj.subscribe(sheet, () => forceRender((v) => v + 1)), [sheet]);
+  // useObject subscribes the component to ECHO mutations so the list reflects
+  // toolbar-driven additions/removals to `sheet.ranges`.
+  const [sheet, updateSheet] = useObject(sheetProp);
   // TODO(thure): Implement similar to comments, #8121
   const handleSelectRange = (range: Sheet.Range) => {};
   const handleDeleteRange = useCallback(
     (range: Sheet.Range) => {
       const index = sheet.ranges.findIndex((sheetRange) => sheetRange === range);
-      Obj.update(sheet, (sheet) => {
+      updateSheet((sheet) => {
         sheet.ranges.splice(index, 1);
       });
     },
-    [sheet],
+    [sheet, updateSheet],
   );
   return (
     <>
