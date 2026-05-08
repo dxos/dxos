@@ -12,8 +12,8 @@
 //   - Optional fields: `.annotations({ description })` on `Schema.optional(...)`.
 //   - Required fields: `.annotations({ description })` on the primitive itself.
 
-import * as SchemaAST from 'effect/SchemaAST';
 import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { trim } from '@dxos/util';
 
@@ -78,7 +78,6 @@ export const ListPackagesInput = Schema.Struct({
   }),
   pathPrefix: Schema.optional(Schema.String).annotations({
     title: 'Path prefix',
-    description: 'Restrict to packages whose path starts with this segment, e.g. "packages/plugins".',
   }),
   privateOnly: Schema.optional(Schema.Boolean).annotations({
     title: 'Private only',
@@ -144,10 +143,12 @@ export const GetSymbolInput = Schema.Struct({
 //
 
 export const ListPluginsInput = Schema.Struct({
+  // No picker annotation — this is a free-form substring filter, not an
+  // exact-match selector. Picking from the list of known plugin ids would
+  // defeat the purpose of `list_plugins`.
   id: Schema.optional(Schema.String).annotations({
     title: 'Plugin id',
     description: 'Substring of the plugin id (case-insensitive). Omit to list every plugin.',
-    [PickerAnnotationId]: 'plugin-id' satisfies PickerKind,
   }),
   ...ListOptionsInput.fields,
 });
@@ -155,7 +156,6 @@ export const ListPluginsInput = Schema.Struct({
 const PluginIdFilter = Schema.Struct({
   id: Schema.optional(Schema.String).annotations({
     title: 'Plugin id',
-    description: 'Restrict to contributions from this plugin id (e.g. "org.dxos.plugin.markdown").',
     [PickerAnnotationId]: 'plugin-id' satisfies PickerKind,
   }),
   ...ListOptionsInput.fields,

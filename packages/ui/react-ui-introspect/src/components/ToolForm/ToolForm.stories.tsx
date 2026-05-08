@@ -56,3 +56,13 @@ export const NoPickerOptions: Story = {
     tool: TOOL_METADATA.get_package,
   },
 };
+
+// `list_plugins.id` is a substring search filter, not a known-id selector
+// — it intentionally has no picker annotation, so even with options
+// available the field renders as a text input.
+export const ListPluginsHasNoPicker: Story = {
+  args: {
+    tool: TOOL_METADATA.list_plugins,
+    pickerOptions: { 'plugin-id': PLUGIN_IDS },
+  },
+};
