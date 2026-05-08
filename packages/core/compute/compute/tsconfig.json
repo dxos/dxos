@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.base.json",
+  "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
     "lib": [
       "ESNext"
@@ -18,28 +18,28 @@
   ],
   "references": [
     {
-      "path": "../../common/errors"
+      "path": "../../../common/errors"
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../../common/invariant"
     },
     {
-      "path": "../../common/keys"
+      "path": "../../../common/keys"
     },
     {
-      "path": "../../common/log"
+      "path": "../../../common/log"
     },
     {
-      "path": "../../sdk/schema"
+      "path": "../../../sdk/schema"
+    },
+    {
+      "path": "../../echo/echo"
+    },
+    {
+      "path": "../../protocols"
     },
     {
       "path": "../ai"
-    },
-    {
-      "path": "../echo/echo"
-    },
-    {
-      "path": "../protocols"
     }
   ]
 }

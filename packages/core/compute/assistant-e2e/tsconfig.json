@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.base.json",
+  "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {},
   "include": [
     "src",
@@ -7,19 +7,22 @@
   ],
   "references": [
     {
-      "path": "../../common/effect"
+      "path": "../../../common/effect"
     },
     {
-      "path": "../../common/util"
+      "path": "../../../common/util"
     },
     {
-      "path": "../../plugins/plugin-assistant"
+      "path": "../../../plugins/plugin-assistant"
     },
     {
-      "path": "../../plugins/plugin-inbox"
+      "path": "../../../plugins/plugin-inbox"
     },
     {
-      "path": "../../sdk/types"
+      "path": "../../../sdk/types"
+    },
+    {
+      "path": "../../echo/echo"
     },
     {
       "path": "../ai"
@@ -32,9 +35,6 @@
     },
     {
       "path": "../compute"
-    },
-    {
-      "path": "../echo/echo"
     },
     {
       "path": "../functions-runtime"

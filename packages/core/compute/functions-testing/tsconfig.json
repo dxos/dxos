@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.base.json",
+  "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {},
   "include": [
     "src",
@@ -7,28 +7,31 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../../common/async"
     },
     {
-      "path": "../../common/context"
+      "path": "../../../common/context"
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../../common/invariant"
     },
     {
-      "path": "../../common/log"
+      "path": "../../../common/log"
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../../sdk/client"
     },
     {
-      "path": "../../sdk/config"
+      "path": "../../../sdk/config"
+    },
+    {
+      "path": "../../echo/echo"
+    },
+    {
+      "path": "../../protocols"
     },
     {
       "path": "../compute"
-    },
-    {
-      "path": "../echo/echo"
     },
     {
       "path": "../functions"
@@ -41,9 +44,6 @@
     },
     {
       "path": "../operation"
-    },
-    {
-      "path": "../protocols"
     }
   ]
 }
