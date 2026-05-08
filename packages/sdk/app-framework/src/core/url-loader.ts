@@ -62,6 +62,8 @@ export type PreloadOptions = Options & {
 export type RemotePluginEntry = {
   id: string;
   url: string;
+  /** Installed version string, e.g. `v1.0.0`. Populated after install from a community catalog entry. */
+  version?: string;
 };
 
 const defaultStorage = (): Storage => ({
@@ -134,6 +136,36 @@ export const getRemoteEntries = (options: Options = {}): readonly RemotePluginEn
   const storage = options.storage ?? defaultStorage();
   const key = options.key ?? DEFAULT_KEY;
   return getPersistedRemotePlugins(storage, key);
+};
+
+/**
+ * Updates the persisted installed version for an already-stored remote plugin entry.
+ * Does nothing if the plugin has not been persisted yet.
+ */
+export const setInstalledVersion = (id: string, version: string, options: Options = {}): void => {
+  const storage = options.storage ?? defaultStorage();
+  const key = options.key ?? DEFAULT_KEY;
+  const entries = getPersistedRemotePlugins(storage, key);
+  const index = entries.findIndex((entry) => entry.id === id);
+  if (index === -1) {
+    return;
+  }
+  entries[index] = { ...entries[index], version };
+  try {
+    storage.set(key, JSON.stringify(entries));
+  } catch (error) {
+    log.warn('failed to update installed version for remote plugin', { id, version, error });
+  }
+};
+
+/**
+ * Returns the installed version string for the given plugin id, or `undefined` if
+ * the plugin was installed without version tracking (legacy install) or is not found.
+ */
+export const getInstalledVersion = (id: string, options: Options = {}): string | undefined => {
+  const storage = options.storage ?? defaultStorage();
+  const key = options.key ?? DEFAULT_KEY;
+  return getPersistedRemotePlugins(storage, key).find((entry) => entry.id === id)?.version;
 };
 
 const normalizePluginExport = (mod: Record<string, unknown>): Plugin.Plugin => {
