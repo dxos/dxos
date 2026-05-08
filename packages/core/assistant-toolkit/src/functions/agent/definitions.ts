@@ -11,10 +11,11 @@ import { Text } from '@dxos/schema';
 
 import * as Chat from '../../types/Chat';
 
+// TODO(dmaretskyi): Rename to RunRoutine.
 export const AgentPrompt = Operation.make({
   meta: {
     key: 'org.dxos.function.prompt',
-    name: 'Agent',
+    name: 'Run Routine',
     description: 'Agentic worker that executes a provided prompt using blueprints and tools.',
   },
   input: Schema.Struct({
