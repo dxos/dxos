@@ -11,7 +11,7 @@ import { Annotation } from '@dxos/echo';
 import { BlueprintDefinition, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Profile, Sidekick } from '#types';
+import { Sidekick } from '#types';
 
 export const SidekickPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
@@ -24,7 +24,13 @@ export const SidekickPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  AppPlugin.addSchemaModule({ schema: [Sidekick.Profile, Profile.Profile] }),
+  // Note: `types/Profile.ts` declares a second schema with the same typename
+  // (`org.dxos.type.sidekick.profile@0.1.0`) and a different shape. Registering
+  // it alongside Sidekick.Profile triggers `Schema version already registered`,
+  // which leaves the page in a broken state and times out subsequent clicks.
+  // The Profile.Profile schema is otherwise unreferenced — Sidekick.Profile is
+  // the canonical type — so we leave it out of the registry here.
+  AppPlugin.addSchemaModule({ schema: [Sidekick.Profile] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,

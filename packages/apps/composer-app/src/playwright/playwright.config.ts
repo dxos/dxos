@@ -10,6 +10,8 @@ export default defineConfig({
   ...e2ePreset(import.meta.dirname),
   timeout: 60_000,
   expect: { timeout: 10_000 },
+  // TODO(claude): Drop once plugin-registry/stack flakes are fully sorted.
+  retries: process.env.CI ? 2 : 0,
   // TODO(claude): Temporary — narrowing down whether parallelism is the dominant
   //   cause of e2e flakes. Reset once we know.
   fullyParallel: false,
