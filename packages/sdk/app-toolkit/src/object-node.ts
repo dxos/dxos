@@ -92,14 +92,26 @@ export const buildCollectionPartials = (collection: Collection.Collection, db: D
       }
     });
   },
+  // TODO(wittjosiah): Reimplement once ECHO supports native object cloning.
+  // onCopy: async (child: Node.Node<Obj.Unknown>, index?: number) => {
+  //   const newObject = await cloneObject(child.data, resolve, db);
+  //   db.add(newObject);
+  //   Obj.update(collection, (collection) => {
+  //     if (typeof index !== 'undefined') {
+  //       collection.objects.splice(index, 0, Ref.make(newObject));
+  //     } else {
+  //       collection.objects.push(Ref.make(newObject));
+  //     }
+  //   });
+  // },
 });
 
 export const getCollectionGraphNodePartials = ({
-  collection,
   db,
+  collection,
 }: {
-  collection: Collection.Collection;
   db: Database.Database;
+  collection: Collection.Collection;
 }) => {
   const id = Obj.getDXN(collection).toString();
   let cached = collectionPartialsCache.get(id);
@@ -140,7 +152,7 @@ export const createObjectNode = ({
   const graphProps = schema ? Option.getOrUndefined(GraphPropsAnnotation.get(schema)) : undefined;
 
   const partials = Obj.instanceOf(Collection.Collection, object)
-    ? getCollectionGraphNodePartials({ collection: object, db })
+    ? getCollectionGraphNodePartials({ db, collection: object })
     : graphProps;
 
   const label = Obj.getLabel(object) || getDynamicLabel('object-name.placeholder', type, { defaultValue: 'New item' });
