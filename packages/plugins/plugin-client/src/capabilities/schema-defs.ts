@@ -7,8 +7,11 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type Type } from '@dxos/echo';
+import { log } from '@dxos/log';
 
 import { ClientCapabilities } from '#types';
+
+const schemaKey = (schema: Type.AnyEntity) => `${Type.getTypename(schema)}@${Type.getVersion(schema)}`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -17,15 +20,16 @@ export default Capability.makeModule(
     const schemasAtom = yield* Capability.atom(AppCapabilities.Schema);
 
     // TODO(wittjosiah): Unregister schemas when they are disabled.
-    let previous: Type.AnyEntity[] = [];
+    let previousKeys = new Set<string>();
     const cancel = registry.subscribe(
       schemasAtom,
       async (_schemas: any[]) => {
-        // TODO(wittjosiah): This doesn't seem to de-dupe schemas as expected.
         const schemas = Array.from(new Set(_schemas.flat())) as Type.AnyEntity[];
-        // TODO(wittjosiah): Filter out schemas which the client has already registered.
-        const newSchemas = schemas.filter((schema) => !previous.includes(schema));
-        previous = schemas;
+        const newSchemas = schemas.filter((schema) => !previousKeys.has(schemaKey(schema)));
+        if (schemas.length !== newSchemas.length) {
+          log('skipping duplicate schema registrations', { count: schemas.length - newSchemas.length });
+        }
+        previousKeys = new Set(schemas.map(schemaKey));
         await client.addTypes(newSchemas);
       },
       { immediate: true },

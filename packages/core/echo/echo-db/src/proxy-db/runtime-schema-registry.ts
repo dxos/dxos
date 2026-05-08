@@ -46,8 +46,7 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
         const version = Type.getVersion(schema) ?? raise(new TypeError('Schema has no version'));
         const versions = defaultMap(this._registry, typename, () => []);
         if (versions.some((schema) => Type.getVersion(schema) === version)) {
-          log('schema version already registered, skipping', { typename, version });
-          return;
+          throw new Error(`Schema version already registered: ${typename}:${version}`);
         }
 
         versions.push(schema);
