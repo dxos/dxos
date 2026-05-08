@@ -72,6 +72,35 @@ const primitiveArrayEnvelope = {
   structuredContent: { tags: ['alpha', 'beta', 'gamma'] },
 };
 
+// `get_package` returns a single record under a singular key — the wrapper
+// should be peeled so the package's fields render directly.
+const getPackageEnvelope = {
+  content: [
+    {
+      type: 'text',
+      text: JSON.stringify({
+        package: {
+          name: '@dxos/echo',
+          version: '0.8.3',
+          private: false,
+          path: 'packages/core/echo/echo',
+          description: 'DXOS object graph / local-first DB.',
+        },
+      }),
+    },
+  ],
+  structuredContent: {
+    package: {
+      name: '@dxos/echo',
+      version: '0.8.3',
+      private: false,
+      path: 'packages/core/echo/echo',
+      description: 'DXOS object graph / local-first DB.',
+    },
+  },
+};
+
+export const GetPackage: Story = { args: { result: getPackageEnvelope } };
 export const ListPlugins: Story = { args: { result: listPluginsEnvelope } };
 export const FindSymbol: Story = { args: { result: findSymbolEnvelope } };
 export const PrimitiveArray: Story = { args: { result: primitiveArrayEnvelope } };

@@ -11,7 +11,7 @@
 // the raw JSON view via the `Syntax` compound (filter input + scrolling
 // viewport + highlighted code leaf) for inspecting the wire format.
 
-import React, { Fragment, useMemo, useState } from 'react';
+import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Input, Message, Panel, ScrollArea, Toolbar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Row, RowList } from '@dxos/react-ui-list';
@@ -86,6 +86,14 @@ const ResultTable = ({ data }: { data: unknown }) => {
   const { t } = useTranslation(translationKey);
   const items = useMemo(() => toItems(data), [data]);
   const [filter, setFilter] = useState('');
+  const filterInputRef = useRef<HTMLInputElement>(null);
+  // Reset and refocus when the underlying result changes — typical flow is
+  // run a tool, scan the rows, optionally narrow with the filter; the next
+  // tool run starts fresh and you usually want to keep typing.
+  useEffect(() => {
+    setFilter('');
+    filterInputRef.current?.focus();
+  }, [data]);
   const filtered = useMemo(() => {
     const needle = filter.trim().toLowerCase();
     if (!needle) {
@@ -106,6 +114,8 @@ const ResultTable = ({ data }: { data: unknown }) => {
             <Input.Root>
               <Input.Label srOnly>{t('filter-results.placeholder')}</Input.Label>
               <Input.TextInput
+                ref={filterInputRef}
+                autoFocus
                 placeholder={t('filter-results.placeholder')}
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
@@ -184,14 +194,15 @@ const KeyValueTable = ({ record }: { record: unknown }) => {
   );
 };
 
-// Pull the inner array / object out of an envelope. Two unwraps run before
-// row construction:
-//   1. The legacy `{ data, note?, truncated? }` shape our shapers used to wrap
-//      responses in.
-//   2. A single-key object whose value is an array — the natural MCP-tool
-//      output shape for list endpoints, e.g. `{ packages: [...] }`,
-//      `{ plugins: [...] }`, `{ matches: [...] }`. Unwrapping yields one row
-//      per item instead of a single row labelled with the key.
+// Pull the inner payload out of an envelope. Two unwraps run before row
+// construction:
+//   1. The legacy `{ data, note?, truncated? }` shape our shapers used to
+//      wrap responses in.
+//   2. A single-key object — the natural MCP-tool output shape. Plural keys
+//      typically wrap arrays (`{ packages: [...] }`, `{ plugins: [...] }`,
+//      `{ matches: [...] }`); singular keys wrap a single record
+//      (`{ package: { name, … } }`). Either way, peeling the wrapper key
+//      yields what the user actually asked for.
 // Single objects render as one row; primitives are wrapped in a one-element
 // list. Arrays pass through.
 const toItems = (data: unknown): unknown[] => {
@@ -202,10 +213,7 @@ const toItems = (data: unknown): unknown[] => {
   if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
     const keys = Object.keys(inner as object);
     if (keys.length === 1) {
-      const sole = (inner as Record<string, unknown>)[keys[0]];
-      if (Array.isArray(sole)) {
-        inner = sole;
-      }
+      inner = (inner as Record<string, unknown>)[keys[0]];
     }
   }
   if (Array.isArray(inner)) {
