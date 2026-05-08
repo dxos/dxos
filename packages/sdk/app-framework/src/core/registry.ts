@@ -116,7 +116,7 @@ const NULL_PROVIDER: PluginProvider = {
  * during the fetch and `loading: false` once it settles.
  */
 export class Manager {
-  readonly plugins: Atom.Atom<PluginsState>;
+  readonly plugins: Atom.Writable<PluginsState>;
   readonly #provider: PluginProvider;
 
   constructor(provider: PluginProvider | undefined, atomRegistry: AtomRegistry.Registry) {
