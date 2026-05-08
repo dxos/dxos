@@ -334,9 +334,7 @@ export class AppManager {
   }
 
   async openRegistryCategory(category: string): Promise<void> {
-    await this.page.goto(
-      `${INITIAL_URL.replace(/\/$/, '')}/!dxos:plugin-registry/plugin-registry%3E${category}`,
-    );
+    await this.page.goto(`${INITIAL_URL.replace(/\/$/, '')}/!dxos:plugin-registry/plugin-registry%3E${category}`);
     await this.page.getByTestId(`pluginRegistry.${category}`).waitFor({ state: 'visible' });
   }
 
