@@ -54,3 +54,14 @@ export class MessageNotInFeedError extends BaseError.extend('MessageNotInFeedErr
 
 /** Assistant response did not contain summary text. */
 export class MailboxSummaryNotFoundError extends BaseError.extend('MailboxSummaryNotFoundError', 'No summary found.') {}
+
+/** Google API returned an error response (non-200 or error payload in body). */
+export class GoogleApiError extends BaseError.extend('GoogleApiError', 'Google API request failed.') {
+  constructor(
+    public readonly code: number | undefined,
+    public readonly apiMessage: string,
+    options?: BaseErrorOptions,
+  ) {
+    super({ context: { code, apiMessage }, ...options });
+  }
+}

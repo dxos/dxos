@@ -16,18 +16,30 @@ import { GooglePeople } from '../../../apis';
 import { AccessTokenNotPopulatedError, IntegrationDatabaseMissingError } from '../../../errors';
 import { GetGoogleContactGroups } from '../../definitions';
 
-const CONTACT_GROUPS_URL = 'https://people.googleapis.com/v1/contactGroups?pageSize=200';
+const CONTACT_GROUPS_BASE_URL = 'https://people.googleapis.com/v1/contactGroups';
 
-const listContactGroups = (token: string) =>
+const listAllContactGroups = (token: string) =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
     const client = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
-    const body = yield* HttpClientRequest.get(CONTACT_GROUPS_URL).pipe(
-      client.execute,
-      Effect.flatMap(HttpClientResponse.schemaBodyJson(GooglePeople.ListContactGroupsResponse)),
-      Effect.scoped,
-    );
-    return body.contactGroups ?? [];
+
+    const groups: GooglePeople.ContactGroup[] = [];
+    let pageToken: string | undefined;
+    do {
+      const url = new URL(CONTACT_GROUPS_BASE_URL);
+      url.searchParams.set('pageSize', '200');
+      if (pageToken) {
+        url.searchParams.set('pageToken', pageToken);
+      }
+      const body = yield* HttpClientRequest.get(url.toString()).pipe(
+        client.execute,
+        Effect.flatMap(HttpClientResponse.schemaBodyJson(GooglePeople.ListContactGroupsResponse)),
+        Effect.scoped,
+      );
+      groups.push(...(body.contactGroups ?? []));
+      pageToken = body.nextPageToken;
+    } while (pageToken);
+    return groups;
   });
 
 const handler: Operation.WithHandler<typeof GetGoogleContactGroups> = GetGoogleContactGroups.pipe(
@@ -46,7 +58,7 @@ const handler: Operation.WithHandler<typeof GetGoogleContactGroups> = GetGoogleC
           return yield* Effect.fail(new AccessTokenNotPopulatedError());
         }
 
-        const groups = yield* listContactGroups(accessToken.token).pipe(Effect.provide(FetchHttpClient.layer));
+        const groups = yield* listAllContactGroups(accessToken.token).pipe(Effect.provide(FetchHttpClient.layer));
 
         const targets = groups.map((group) => ({
           id: group.resourceName,

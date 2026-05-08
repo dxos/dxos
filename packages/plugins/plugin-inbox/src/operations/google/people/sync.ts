@@ -22,12 +22,9 @@ import { InboxResolver, GoogleCredentials } from '../../../services';
 import { GoogleContactsSync } from '../../definitions';
 import { mapGooglePerson } from './mapper';
 
-const BATCH_SIZE = 200;
-
 /**
  * Fetch all members of a contact group by resource name.
- * Groups can have up to 1000 members in a single GET; for larger groups
- * subsequent requests would be needed but 1000 is the API maximum per call.
+ * Returns resource names like `people/c1234567890`.
  */
 const fetchGroupMembers = Effect.fn(function* (groupResourceName: string) {
   const group = yield* GooglePeople.getContactGroup(groupResourceName, 1000);
@@ -35,19 +32,16 @@ const fetchGroupMembers = Effect.fn(function* (groupResourceName: string) {
 });
 
 /**
- * Fetch people for a list of resource names in batches of `BATCH_SIZE`.
+ * Fetch all contacts via paginated `people.connections.list`.
  */
-const fetchPeopleInBatches = Effect.fn(function* (resourceNames: readonly string[]) {
+const fetchAllConnections = Effect.fn(function* () {
   const people: GooglePeople.Person[] = [];
-  for (let i = 0; i < resourceNames.length; i += BATCH_SIZE) {
-    const batch = resourceNames.slice(i, i + BATCH_SIZE);
-    const response = yield* GooglePeople.batchGetPeople(batch);
-    for (const item of response.responses ?? []) {
-      if (item.person) {
-        people.push(item.person);
-      }
-    }
-  }
+  let pageToken: string | undefined;
+  do {
+    const response = yield* GooglePeople.listConnections({ pageToken });
+    people.push(...(response.connections ?? []));
+    pageToken = response.nextPageToken;
+  } while (pageToken);
   return people;
 });
 
@@ -97,14 +91,22 @@ const upsertPerson = (remote: GooglePeople.Person) =>
 const syncOneGroup = (integration: Integration.Integration, groupResourceName: string) =>
   Effect.gen(function* () {
     log('syncing google contact group', { groupResourceName });
-    const memberNames = yield* fetchGroupMembers(groupResourceName);
+
+    // Fetch group membership and all connections in parallel.
+    const [memberNames, allConnections] = yield* Effect.all([
+      fetchGroupMembers(groupResourceName),
+      fetchAllConnections(),
+    ]);
+
     if (memberNames.length === 0) {
       log('contact group is empty', { groupResourceName });
       return 0;
     }
 
-    const people = yield* fetchPeopleInBatches(memberNames);
-    log('fetched group members', { groupResourceName, count: people.length });
+    // Filter to only contacts that are members of this group.
+    const memberSet = new Set(memberNames);
+    const people = allConnections.filter((p) => memberSet.has(p.resourceName));
+    log('fetched group members', { groupResourceName, members: memberNames.length, matched: people.length });
 
     let upserted = 0;
     yield* Stream.fromIterable(people).pipe(
