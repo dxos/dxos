@@ -706,6 +706,9 @@
       "path": "tools/dx-tools/tsconfig.json"
     },
     {
+      "path": "tools/dx-trace-imports/tsconfig.json"
+    },
+    {
       "path": "tools/lockfile-explorer/tsconfig.json"
     },
     {

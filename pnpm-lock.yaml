@@ -1979,6 +1979,9 @@ importers:
       '@dxos/dx-tools':
         specifier: workspace:*
         version: link:tools/dx-tools
+      '@dxos/dx-trace-imports':
+        specifier: workspace:*
+        version: link:tools/dx-trace-imports
       '@dxos/esbuild-plugins':
         specifier: workspace:*
         version: link:packages/common/esbuild-plugins
@@ -6033,7 +6036,7 @@ importers:
         version: link:../../common/util
       '@modelcontextprotocol/sdk':
         specifier: '>=1.26.0'
-        version: 1.27.1(@cfworker/json-schema@4.1.1)
+        version: 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
       effect:
         specifier: 3.20.0
         version: 3.20.0
@@ -6098,7 +6101,7 @@ importers:
         version: 0.33.2(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
       '@modelcontextprotocol/sdk':
         specifier: '>=1.26.0'
-        version: 1.27.1(@cfworker/json-schema@4.1.1)
+        version: 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
       effect:
         specifier: 3.20.0
         version: 3.20.0
@@ -19169,7 +19172,7 @@ importers:
         version: link:../../common/storybook-utils
       '@modelcontextprotocol/sdk':
         specifier: '>=1.26.0'
-        version: 1.27.1(@cfworker/json-schema@4.1.1)
+        version: 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.3.6(esbuild@0.28.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(rollup@3.30.0)(storybook@10.3.6(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@6.0.3)(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(webpack@5.105.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.28.0))
@@ -20879,6 +20882,25 @@ importers:
         version: 16.0.4
 
   tools/dx-tools: {}
+
+  tools/dx-trace-imports:
+    dependencies:
+      esbuild:
+        specifier: '>=0.28.0'
+        version: 0.28.0
+      picomatch:
+        specifier: 'catalog:'
+        version: 2.3.1
+      yargs:
+        specifier: 'catalog:'
+        version: 16.2.0
+    devDependencies:
+      '@types/picomatch':
+        specifier: 'catalog:'
+        version: 3.0.1
+      '@types/yargs':
+        specifier: 'catalog:'
+        version: 16.0.4
 
   tools/lockfile-explorer:
     dependencies:
@@ -24049,6 +24071,7 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       '@cfworker/json-schema': ^4.1.1
+      zod: ^3.25 || ^4.0
     peerDependenciesMeta:
       '@cfworker/json-schema':
         optional: true
@@ -43698,7 +43721,7 @@ snapshots:
 
   '@mixmark-io/domino@2.2.0': {}
 
-  '@modelcontextprotocol/sdk@1.27.1(@cfworker/json-schema@4.1.1)':
+  '@modelcontextprotocol/sdk@1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)':
     dependencies:
       '@hono/node-server': 1.19.9(hono@4.12.2)
       ajv: 8.18.0
@@ -50198,7 +50221,7 @@ snapshots:
     dependencies:
       '@cfworker/json-schema': 4.1.1
       '@cloudflare/ai-chat': 0.0.6(agents@0.3.10)(ai@6.0.97(zod@4.3.6))(react@19.2.3)(zod@4.3.6)
-      '@modelcontextprotocol/sdk': 1.27.1(@cfworker/json-schema@4.1.1)
+      '@modelcontextprotocol/sdk': 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
       ai: 6.0.97(zod@4.3.6)
       cron-schedule: 6.0.0
       escape-html: 1.0.3
@@ -55508,7 +55531,7 @@ snapshots:
       minimist: 1.2.8
       oxc-resolver: 11.9.0
       picocolors: 1.1.1
-      picomatch: 4.0.3
+      picomatch: 4.0.4
       smol-toml: 1.4.2
       strip-json-comments: 5.0.2
       typescript: 6.0.3
@@ -61341,7 +61364,7 @@ snapshots:
   unplugin@2.3.5:
     dependencies:
       acorn: 8.15.0
-      picomatch: 4.0.3
+      picomatch: 4.0.4
       webpack-virtual-modules: 0.6.2
 
   unrs-resolver@1.11.1:
