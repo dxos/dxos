@@ -4,13 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, type RegistryPlugin, Plugin } from '@dxos/app-framework';
+import { Capabilities, Capability, type Registry, Plugin } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { REGISTRY_ID, REGISTRY_KEY, registryCategoryId, meta } from '#meta';
-import { RegistryCapabilities } from '#types';
 
 import { LOAD_PLUGIN_DIALOG } from '../containers';
 
@@ -20,7 +19,7 @@ import { LOAD_PLUGIN_DIALOG } from '../containers';
  * modules and only exists so the article surface can render details for
  * registry plugins that haven't been installed yet.
  */
-const toDisplayPlugin = (entry: RegistryPlugin): Plugin.Plugin =>
+const toDisplayPlugin = (entry: Registry.Plugin): Plugin.Plugin =>
   ({
     [Plugin.PluginTypeId]: Plugin.PluginTypeId,
     meta: {
@@ -160,7 +159,6 @@ export default Capability.makeModule(
         connector: (_node, get) => {
           const manager = capabilities.get(Capabilities.PluginManager);
           const installedIds = new Set(manager.getPlugins().map((plugin) => plugin.meta.id));
-          const stateAtom = capabilities.getAll(RegistryCapabilities.State).at(0);
 
           const installedNodes = manager.getPlugins().map((plugin) =>
             Node.make({
@@ -175,7 +173,7 @@ export default Capability.makeModule(
             }),
           );
 
-          const registryEntries = stateAtom ? get(stateAtom).entries : [];
+          const registryEntries = get(manager.pluginRegistry.plugins).entries;
           const registryNodes = registryEntries
             .filter((entry) => !installedIds.has(entry.id))
             .map((entry) => {

@@ -36,6 +36,7 @@
     "README.md"
   ],
   "dependencies": {
+    "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",

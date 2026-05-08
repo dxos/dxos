@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { type RegistryPlugin, UrlLoader } from '@dxos/app-framework';
+import { type Registry, UrlLoader } from '@dxos/app-framework';
 
 /**
  * Auto-tags that are derived at display time rather than persisted to `Plugin.Meta`.
@@ -19,7 +19,7 @@ export type AutoTagsMap = Record<string, readonly string[]>;
  * Reads the persisted remote-plugin entries synchronously to derive `local`, and
  * adds `registry` for any plugin id found in the supplied registry manifest entries.
  */
-export const useAutoTags = (registryEntries: readonly RegistryPlugin[]): AutoTagsMap =>
+export const useAutoTags = (registryEntries: readonly Registry.Plugin[]): AutoTagsMap =>
   useMemo(() => {
     const byId: Record<string, string[]> = {};
     const addTag = (id: string, tag: string) => {

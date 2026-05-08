@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type RegistryPlugin, UrlLoader } from '@dxos/app-framework';
+import { type Registry, UrlLoader } from '@dxos/app-framework';
 
 /**
  * Returns a set of plugin ids for which the registry has a newer version
@@ -19,7 +19,7 @@ import { type RegistryPlugin, UrlLoader } from '@dxos/app-framework';
  * reappears after Updating…"). The loop is O(catalog size) sync reads — cheap
  * enough to do every render.
  */
-export const useUpdateAvailableIds = (entries: readonly RegistryPlugin[]): ReadonlySet<string> => {
+export const useUpdateAvailableIds = (entries: readonly Registry.Plugin[]): ReadonlySet<string> => {
   const ids = new Set<string>();
   for (const entry of entries) {
     const installedVersion = UrlLoader.getInstalledVersion(entry.id);

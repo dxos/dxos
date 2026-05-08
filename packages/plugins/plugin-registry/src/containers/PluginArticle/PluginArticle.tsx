@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type RegistryPluginVersion, type Plugin, UrlLoader } from '@dxos/app-framework';
+import { type Registry, type Plugin, UrlLoader } from '@dxos/app-framework';
 import { usePluginManager } from '@dxos/app-framework/ui';
 import { runAndForwardErrors } from '@dxos/effect';
 
@@ -25,7 +25,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   const remotePluginIds = useRemotePluginIds();
   const [installing, setInstalling] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [versions, setVersions] = useState<readonly RegistryPluginVersion[]>([]);
+  const [versions, setVersions] = useState<readonly Registry.PluginVersion[]>([]);
   const [selectedVersionTag, setSelectedVersionTag] = useState<string | undefined>();
   // `installedVersionTag` lives in component state (rather than being read inline from
   // localStorage on each render) so post-update re-renders are deterministic — we
@@ -51,9 +51,9 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   const moduleUrl = catalogEntry?.moduleUrl;
   const repo = catalogEntry?.repo;
 
-  // Load version list once provider and repo are available.
+  // Load version list once the catalog entry's repo is known.
   useEffect(() => {
-    if (!provider || !repo) {
+    if (!repo) {
       return;
     }
     void provider.listVersions(repo).pipe(
@@ -143,14 +143,14 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
 
   // Make sure the picker always lists the installed version, even if the catalog
   // hasn't surfaced it (the current `listVersions` stub only returns latest).
-  const pickerVersions = useMemo<readonly RegistryPluginVersion[]>(() => {
+  const pickerVersions = useMemo<readonly Registry.PluginVersion[]>(() => {
     if (!installedVersionTag) {
       return versions;
     }
     if (versions.some((entry) => entry.tag === installedVersionTag)) {
       return versions;
     }
-    const installedEntry: RegistryPluginVersion = {
+    const installedEntry: Registry.PluginVersion = {
       tag: installedVersionTag,
       // Picker won't be re-installing this entry unless the user selects + clicks Install,
       // and the catalog moduleUrl is the closest stand-in we have.

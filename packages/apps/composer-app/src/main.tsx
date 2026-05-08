@@ -19,6 +19,7 @@ import { type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
 import { Placeholder, type PlaceholderComponentProps, useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Composer } from '@dxos/brand';
+import { EdgeHttpClient, EdgeRegistryPluginProvider } from '@dxos/edge-client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
@@ -425,6 +426,15 @@ const main = async () => {
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
 
+  // Wire the registry plugin provider here so the plugin manager can fetch the
+  // catalog as soon as it's constructed — independent of the Client lifecycle
+  // (the catalog endpoints are unauthenticated, so a bare EdgeHttpClient is
+  // enough; no clientTag is needed).
+  const edgeUrl = config.values.runtime?.services?.edge?.url;
+  const pluginRegistryProvider = edgeUrl
+    ? new EdgeRegistryPluginProvider(new EdgeHttpClient(edgeUrl))
+    : undefined;
+
   profiler?.mark('plugins:end');
   profiler?.measure('plugins-init', 'plugins:start', 'plugins:end');
 
@@ -466,6 +476,7 @@ const main = async () => {
       placeholder: ComposerPlaceholder,
       pluginLoader,
       onPluginRemove,
+      pluginRegistryProvider,
       plugins,
       core,
       defaults,

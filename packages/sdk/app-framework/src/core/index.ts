@@ -9,5 +9,5 @@ export * as Plugin from './plugin';
 export * as PluginAssetCache from './plugin-asset-cache';
 export * as PluginManager from './plugin-manager';
 export * as PluginManifest from './plugin-manifest';
+export * as Registry from './registry';
 export * as UrlLoader from './url-loader';
-export type { RegistryPlugin, RegistryPluginVersion, RegistryPluginProvider } from './registry-plugin-provider';
