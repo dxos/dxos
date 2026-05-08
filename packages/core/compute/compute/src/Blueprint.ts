@@ -191,6 +191,15 @@ export class Registry {
 export class RegistryService extends Context.Tag('@dxos/blueprints/RegistryService')<RegistryService, Registry>() {}
 
 /**
+ * Blueprint keys associated with a schema type.
+ * When the AI companion opens for an object of this type, these blueprints are auto-loaded.
+ */
+export const TypeBlueprintsAnnotation = Annotation.make<string[]>({
+  id: 'org.dxos.annotation.blueprints',
+  schema: Schema.mutable(Schema.Array(Schema.String)),
+});
+
+/**
  * Resolves a blueprint from the registry.
  * Does not check the local database for the blueprint.
  */

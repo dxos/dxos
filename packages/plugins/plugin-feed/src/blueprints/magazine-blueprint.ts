@@ -38,7 +38,7 @@ const make = () =>
   });
 
 const blueprint: Blueprint.Definition = {
-  key: BLUEPRINT_KEY,
+  key: Magazine.BLUEPRINT_KEY,
   make,
 };
 

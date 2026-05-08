@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { BlueprintsAnnotation } from '@dxos/app-toolkit';
+import { Blueprint } from '@dxos/compute';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
@@ -49,7 +49,7 @@ export const Bot = Schema.Struct({
     icon: 'ph--discord-logo--regular',
     hue: 'indigo',
   }),
-  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  Blueprint.TypeBlueprintsAnnotation.set([BLUEPRINT_KEY]),
 );
 
 export interface Bot extends Schema.Schema.Type<typeof Bot> {}

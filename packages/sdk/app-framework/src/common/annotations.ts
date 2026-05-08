@@ -1,17 +1,10 @@
+//
 // Copyright 2025 DXOS.org
+//
 
 import * as Schema from 'effect/Schema';
 
 import { Annotation } from '@dxos/echo';
-
-/**
- * Blueprint keys associated with a schema type.
- * When the AI companion opens for an object of this type, these blueprints are auto-loaded.
- */
-export const BlueprintsAnnotation = Annotation.make<string[]>({
-  id: 'org.dxos.annotation.blueprints',
-  schema: Schema.mutable(Schema.Array(Schema.String)),
-});
 
 /**
  * Graph node properties derived from schema (e.g. autofocus behavior).

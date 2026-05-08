@@ -4,7 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { BlueprintsAnnotation, GraphPropsAnnotation } from '@dxos/app-toolkit';
+import { GraphPropsAnnotation } from '@dxos/app-framework';
+import { Blueprint } from '@dxos/compute';
 import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
@@ -35,7 +36,7 @@ export const Document = Schema.Struct({
     icon: 'ph--text-aa--regular',
     hue: 'indigo',
   }),
-  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  Blueprint.TypeBlueprintsAnnotation.set([BLUEPRINT_KEY]),
   GraphPropsAnnotation.set({ managesAutofocus: true }),
 );
 
