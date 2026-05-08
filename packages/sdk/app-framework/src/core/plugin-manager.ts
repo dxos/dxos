@@ -41,6 +41,41 @@ export class PluginInitializationError extends BaseError.extend(
 ) {}
 
 /**
+ * Tagged error raised when a plugin exceeds its configured load or activation
+ * timeout. The plugin manager records the failure on the `failed` atom and
+ * auto-disables the plugin so that one stuck remote does not stall app boot.
+ * `context.id` is the plugin id, `context.phase` is `'load'` or `'activation'`.
+ */
+export class PluginTimeoutError extends BaseError.extend('PluginTimeoutError', 'Plugin operation timed out') {}
+
+/** Phase of the plugin lifecycle in which the failure was observed. */
+export type PluginFailurePhase = 'load' | 'activation';
+
+/** Why the plugin entered a failed state. */
+export type PluginFailureReason = 'timeout' | 'error';
+
+/**
+ * Record of a plugin that failed to load or activate. Surfaced via the
+ * {@link PluginManager.failed} atom so registry / UI consumers can flag
+ * unhealthy plugins (e.g. a remote host that has gone offline) rather than
+ * leaving the app in a half-broken state.
+ */
+export type PluginFailure = {
+  readonly id: string;
+  readonly phase: PluginFailurePhase;
+  readonly reason: PluginFailureReason;
+  readonly error: Error;
+  /** `Date.now()` when the failure was recorded. */
+  readonly timestamp: number;
+};
+
+/** Default deadline for resolving a lazy plugin's dynamic import. */
+const DEFAULT_LOAD_TIMEOUT = Duration.seconds(30);
+
+/** Default deadline for a single module's `activate()` body. */
+const DEFAULT_ACTIVATION_TIMEOUT = Duration.seconds(30);
+
+/**
  * Identifier denoting a Manager.
  */
 export const ManagerTypeId: unique symbol = Symbol.for('@dxos/app-framework/Manager');
@@ -83,6 +118,20 @@ export type ManagerOptions = {
    * Failures are logged and swallowed; removal still succeeds even if the hook fails.
    */
   onRemove?: (id: string) => Effect.Effect<void, unknown>;
+  /**
+   * Maximum time allowed for a lazy plugin's dynamic `import()` to resolve.
+   * Plugins that exceed this are flagged on the {@link PluginManager.failed}
+   * atom and auto-disabled so a stuck remote host can't stall app boot.
+   * Defaults to 30 seconds; pass `Duration.infinity` to disable.
+   */
+  loadTimeout?: Duration.DurationInput;
+  /**
+   * Maximum time allowed for a single module's `activate()` Effect to settle.
+   * Modules that exceed this fail with {@link PluginTimeoutError}; the owning
+   * plugin is recorded on `failed` and auto-disabled. Defaults to 30 seconds;
+   * pass `Duration.infinity` to disable.
+   */
+  activationTimeout?: Duration.DurationInput;
 };
 
 export type ActivationMessage = {
@@ -116,6 +165,12 @@ export interface PluginManager {
   readonly active: Atom.Atom<readonly string[]>;
   readonly eventsFired: Atom.Atom<readonly string[]>;
   readonly pendingReset: Atom.Atom<readonly string[]>;
+  /**
+   * Plugins that failed to load or activate. Subscribers (e.g. the registry
+   * UI) can use this to flag unhealthy entries; a plugin id appears here at
+   * most once with its most recent failure.
+   */
+  readonly failed: Atom.Atom<readonly PluginFailure[]>;
 
   getPlugins(): readonly Plugin.Plugin[];
   getCore(): readonly string[];
@@ -124,6 +179,13 @@ export interface PluginManager {
   getActive(): readonly string[];
   getEventsFired(): readonly string[];
   getPendingReset(): readonly string[];
+  getFailed(): readonly PluginFailure[];
+
+  /**
+   * Clears the failure record for a plugin so it can be retried. Returns
+   * whether a failure record existed and was removed.
+   */
+  clearFailure(id: string): boolean;
 
   /**
    * Loads a plugin via the plugin loader and registers it without enabling it.
@@ -174,8 +236,11 @@ class ManagerImpl implements PluginManager {
   private readonly _activeAtom: Atom.Writable<string[]>;
   private readonly _eventsFiredAtom: Atom.Writable<string[]>;
   private readonly _pendingResetAtom: Atom.Writable<string[]>;
+  private readonly _failedAtom: Atom.Writable<PluginFailure[]>;
   private readonly _pluginLoader: ManagerOptions['pluginLoader'];
   private readonly _onRemove: ManagerOptions['onRemove'];
+  private readonly _loadTimeout: Duration.DurationInput;
+  private readonly _activationTimeout: Duration.DurationInput;
   private readonly _capabilities = new Map<string, Capability.Any[]>();
   private readonly _moduleMemoMap = new Map<Plugin.PluginModule['id'], Deferred.Deferred<Capability.Any[], Error>>();
   private readonly _moduleSemaphores = new Map<Plugin.PluginModule['id'], Effect.Semaphore>();
@@ -215,6 +280,8 @@ class ManagerImpl implements PluginManager {
     registry,
     pluginRegistryProvider,
     onRemove,
+    loadTimeout = DEFAULT_LOAD_TIMEOUT,
+    activationTimeout = DEFAULT_ACTIVATION_TIMEOUT,
   }: ManagerOptions) {
     this.registry = registry ?? Registry.make();
     this.capabilities = CapabilityManager.make({
@@ -224,6 +291,8 @@ class ManagerImpl implements PluginManager {
 
     this._pluginLoader = pluginLoader;
     this._onRemove = onRemove;
+    this._loadTimeout = loadTimeout;
+    this._activationTimeout = activationTimeout;
     this._pluginsAtom = Atom.make(plugins).pipe(Atom.keepAlive);
     this._coreAtom = Atom.make(core).pipe(Atom.keepAlive);
     this._enabledAtom = Atom.make(enabled).pipe(Atom.keepAlive);
@@ -231,6 +300,7 @@ class ManagerImpl implements PluginManager {
     this._activeAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
     this._eventsFiredAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
     this._pendingResetAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
+    this._failedAtom = Atom.make<PluginFailure[]>([]).pipe(Atom.keepAlive);
     plugins.forEach((plugin) => this._addPlugin(plugin));
     // Dedupe before mapping to `enable` — `core` and `enabled` may overlap (an
     // app-supplied plugin can be in both), and concurrent `enable(id)` calls
@@ -290,6 +360,13 @@ class ManagerImpl implements PluginManager {
     return this._pendingResetAtom;
   }
 
+  /**
+   * Plugins that failed to load or activate.
+   */
+  get failed(): Atom.Atom<readonly PluginFailure[]> {
+    return this._failedAtom;
+  }
+
   getPlugins(): readonly Plugin.Plugin[] {
     return this._get(this._pluginsAtom);
   }
@@ -316,6 +393,22 @@ class ManagerImpl implements PluginManager {
 
   getPendingReset(): readonly string[] {
     return this._get(this._pendingResetAtom);
+  }
+
+  getFailed(): readonly PluginFailure[] {
+    return this._get(this._failedAtom);
+  }
+
+  clearFailure(id: string): boolean {
+    const current = this._get(this._failedAtom);
+    if (!current.some((failure) => failure.id === id)) {
+      return false;
+    }
+    this._set(
+      this._failedAtom,
+      current.filter((failure) => failure.id !== id),
+    );
+    return true;
   }
 
   /**
@@ -372,6 +465,10 @@ class ManagerImpl implements PluginManager {
         return false;
       }
 
+      // Clear any prior failure record so a retry starts from a clean slate.
+      // The failure stays on the atom only if this attempt also fails.
+      this.clearFailure(id);
+
       const plugin = yield* this._resolveLazyPlugin(stub);
 
       this._update(this._enabledAtom, (enabled) => (enabled.includes(id) ? enabled : [...enabled, id]));
@@ -422,13 +519,30 @@ class ManagerImpl implements PluginManager {
       return yield* Effect.gen(this, function* () {
         log('resolving lazy plugin', { id });
         yield* PubSub.publish(this.activation, { event: '', state: 'activating', module: `lazy:${id}` });
-        const resolvedPlugin = yield* Plugin.resolveLazy(plugin);
+        const resolvedPlugin = yield* Plugin.resolveLazy(plugin).pipe(
+          // Cap how long a remote import can hang. Without this the host can
+          // sit on a pending dynamic `import()` indefinitely if the plugin's
+          // server is unreachable, which stalls every caller awaiting
+          // `enable(id)` and (transitively) the manager's initialization.
+          Effect.timeoutFail({
+            duration: this._loadTimeout,
+            onTimeout: () =>
+              new Plugin.LazyPluginError({
+                context: { id, reason: 'load-failed' },
+                cause: new PluginTimeoutError({ context: { id, phase: 'load' as PluginFailurePhase } }),
+              }),
+          }),
+        );
         this._update(this._pluginsAtom, (plugins) => plugins.map((p) => (p.meta.id === id ? resolvedPlugin : p)));
         yield* PubSub.publish(this.activation, { event: '', state: 'activated', module: `lazy:${id}` });
         return resolvedPlugin;
       }).pipe(
         Effect.tapError((error) =>
-          PubSub.publish(this.activation, { event: '', state: 'error', module: `lazy:${id}`, error }),
+          Effect.gen(this, function* () {
+            yield* PubSub.publish(this.activation, { event: '', state: 'error', module: `lazy:${id}`, error });
+            this._recordFailure(id, 'load', error);
+            this._scheduleAutoDisable(id);
+          }),
         ),
         Effect.tap((value) => Deferred.succeed(deferred, value)),
         Effect.tapErrorCause((cause) => Deferred.failCause(deferred, cause)),
@@ -649,6 +763,47 @@ class ManagerImpl implements PluginManager {
 
   private _getPlugin(id: string): Plugin.Plugin | undefined {
     return this._get(this._pluginsAtom).find((plugin) => plugin.meta.id === id);
+  }
+
+  private _getPluginIdForModule(moduleId: string): string | undefined {
+    return this._get(this._pluginsAtom).find((plugin) =>
+      plugin.modules.some((module) => module.id === moduleId),
+    )?.meta.id;
+  }
+
+  /**
+   * Records a failure for a plugin. Latest failure wins so the registry UI
+   * always sees the most recent reason. Walks the `cause` chain when checking
+   * for timeouts: lazy-load timeouts arrive wrapped in `LazyPluginError` (the
+   * timeout is the cause), but the operator-visible reason should still be
+   * `'timeout'`.
+   */
+  private _recordFailure(id: string, phase: PluginFailurePhase, error: Error): void {
+    const reason: PluginFailureReason = isTimeoutCause(error) ? 'timeout' : 'error';
+    const failure: PluginFailure = { id, phase, reason, error, timestamp: Date.now() };
+    log.warn('plugin failed', { id, phase, reason, error: error.message });
+    this._update(this._failedAtom, (current) => [...current.filter((entry) => entry.id !== id), failure]);
+  }
+
+  /**
+   * Fire-and-forget disable of a failed plugin. Forked because a failure can
+   * happen mid-activation chain — yielding a `disable` inline would deadlock
+   * on the shared semaphores. Core plugins are skipped (the host opted into
+   * them being non-removable; the failure record is enough signal).
+   */
+  private _scheduleAutoDisable(id: string): void {
+    if (this._get(this._coreAtom).includes(id)) {
+      return;
+    }
+    if (!this._get(this._enabledAtom).includes(id)) {
+      return;
+    }
+    this._runForkedFiber(
+      this.disable(id).pipe(
+        Effect.tapError((error) => Effect.sync(() => log.warn('auto-disable failed', { id, error }))),
+        Effect.ignore,
+      ),
+    );
   }
 
   private _getActiveModules(): Plugin.PluginModule[] {
@@ -990,11 +1145,22 @@ class ManagerImpl implements PluginManager {
           log('loading module', { module: module.id, parentEvent });
           performance.mark(`module:${module.id}:start`);
           yield* PubSub.publish(this.activation, { event: parentEvent, state: 'activating', module: module.id });
+          const pluginId = this._getPluginIdForModule(module.id);
           const [duration, capabilities] = yield* module
             .activate()
             .pipe(
               Effect.provideService(Capability.Service, this.capabilities),
               Effect.provideService(Plugin.Service, this),
+              // Cap activation so a single misbehaving module can't hold the
+              // event chain open. On timeout the failure is recorded against
+              // the plugin and surfaced as `PluginTimeoutError`.
+              Effect.timeoutFail({
+                duration: this._activationTimeout,
+                onTimeout: () =>
+                  new PluginTimeoutError({
+                    context: { id: pluginId ?? module.id, module: module.id, phase: 'activation' as PluginFailurePhase },
+                  }),
+              }),
               Effect.timed,
             );
           const normalized = capabilities == null ? [] : Array.isArray(capabilities) ? capabilities : [capabilities];
@@ -1041,7 +1207,13 @@ class ManagerImpl implements PluginManager {
                 stack: error instanceof Error ? error.stack : undefined,
                 isDefect: !Cause.isFailure(cause),
               });
-              return Deferred.fail(deferred, error instanceof Error ? error : new Error(String(error)));
+              const normalizedError = error instanceof Error ? error : new Error(String(error));
+              const pluginId = this._getPluginIdForModule(module.id);
+              if (pluginId !== undefined) {
+                this._recordFailure(pluginId, 'activation', normalizedError);
+                this._scheduleAutoDisable(pluginId);
+              }
+              return Deferred.fail(deferred, normalizedError);
             }),
           ),
         );
@@ -1101,6 +1273,22 @@ class ManagerImpl implements PluginManager {
  * Creates a new Plugin Manager instance.
  */
 export const make = (options: ManagerOptions): PluginManager => new ManagerImpl(options);
+
+/**
+ * True when `error` (or anything along its `cause` chain) is a
+ * {@link PluginTimeoutError}. Lazy-load timeouts wrap the timeout inside
+ * `LazyPluginError`, so a shallow check on the outer error misses them.
+ * Bounded depth so a circular chain can't loop forever.
+ */
+const isTimeoutCause = (error: unknown, depth = 0): boolean => {
+  if (depth > 5 || !(error instanceof Error)) {
+    return false;
+  }
+  if (PluginTimeoutError.is(error)) {
+    return true;
+  }
+  return isTimeoutCause((error as Error & { cause?: unknown }).cause, depth + 1);
+};
 
 /**
  * Runs an effect concurrently with another effect.
