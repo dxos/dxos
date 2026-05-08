@@ -54,7 +54,11 @@ export const FunctionInvocationServiceLayer = Layer.effect(
 /**
  * Initializes FunctionInvocationServiceLayer with a loopback executor to run functions locally.
  */
-export const FunctionInvocationServiceLayerWithLocalLoopbackExecutor = Layer.effect(
+export const FunctionInvocationServiceLayerWithLocalLoopbackExecutor: Layer.Layer<
+  FunctionInvocationService,
+  never,
+  any
+> = Layer.effect(
   FunctionInvocationService,
   Effect.gen(function* () {
     const functionInvocationService: Context.Tag.Service<FunctionInvocationService> =

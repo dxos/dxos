@@ -10,7 +10,7 @@ import { EncodedReference } from '@dxos/echo-protocol';
 
 import { ObjectUpdate } from './definitions';
 
-export default ObjectUpdate.pipe(
+const handler: Operation.WithHandler<Operation.Definition.Any> = ObjectUpdate.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ obj, properties }) {
       const { db } = yield* Database.Service;
@@ -28,3 +28,5 @@ export default ObjectUpdate.pipe(
     }),
   ),
 );
+
+export default handler;

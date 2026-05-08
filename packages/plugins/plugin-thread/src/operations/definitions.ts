@@ -63,14 +63,14 @@ export const Create = Operation.make({
   output: Schema.Void,
 });
 
-export const DeleteOutput = Schema.Struct({
+export type DeleteOutput = { thread?: Thread.Thread; anchor?: AnchoredTo.AnchoredTo };
+
+export const DeleteOutput: Schema.Schema.AnyNoContext = Schema.Struct({
   thread: Thread.Thread.annotations({ description: 'The deleted thread.' }),
   anchor: AnchoredTo.AnchoredTo.annotations({ description: 'The deleted anchor.' }),
 }).pipe(Schema.partial);
 
-export type DeleteOutput = Schema.Schema.Type<typeof DeleteOutput>;
-
-export const Delete = Operation.make({
+export const Delete: Operation.Definition.Any = Operation.make({
   meta: { key: `${THREAD_OPERATION}.delete`, name: 'Delete Thread' },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -99,7 +99,7 @@ export const ToggleResolved = Operation.make({
   output: Schema.Void,
 });
 
-export const AddMessage = Operation.make({
+export const AddMessage: Operation.Definition.Any = Operation.make({
   meta: { key: `${THREAD_OPERATION}.add-message`, name: 'Add Message' },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -120,7 +120,7 @@ export const DeleteMessageOutput = Schema.partial(
 
 export type DeleteMessageOutput = Schema.Schema.Type<typeof DeleteMessageOutput>;
 
-export const DeleteMessage = Operation.make({
+export const DeleteMessage: Operation.Definition.Any = Operation.make({
   meta: { key: `${THREAD_OPERATION}.delete-message`, name: 'Delete Message' },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -134,7 +134,7 @@ export const DeleteMessage = Operation.make({
 /**
  * Restore a deleted thread (inverse of Delete).
  */
-export const Restore = Operation.make({
+export const Restore: Operation.Definition.Any = Operation.make({
   meta: { key: `${THREAD_OPERATION}.restore`, name: 'Restore Thread' },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -147,7 +147,7 @@ export const Restore = Operation.make({
 /**
  * Restore a deleted message (inverse of DeleteMessage).
  */
-export const RestoreMessage = Operation.make({
+export const RestoreMessage: Operation.Definition.Any = Operation.make({
   meta: { key: `${THREAD_OPERATION}.restore-message`, name: 'Restore Message' },
   services: [Capability.Service],
   input: Schema.Struct({

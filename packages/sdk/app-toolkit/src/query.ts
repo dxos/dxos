@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { DXN, Filter, Key, Query, type QueryAST, type SchemaRegistry } from '@dxos/echo';
+import { Database, DXN, Filter, Key, Query, type QueryAST, type SchemaRegistry } from '@dxos/echo';
 import {
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
@@ -140,7 +140,7 @@ const typenameFromFilter = (filter: QueryAST.Filter): Option.Option<string> =>
   );
 
 // TODO(wittjosiah): Currently assumes from scope is at the top-level of the ast.
-export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
+export const getQueryTarget = (query: QueryAST.Query, space?: Space): Database.Queryable | undefined => {
   return Match.value(query).pipe(
     Match.when({ type: 'from' }, ({ from }) => {
       if (from._tag !== 'scope') {

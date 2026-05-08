@@ -20,7 +20,7 @@ import { DefaultStory, createExpando, createOrganization, createPerson, createPr
 
 random.seed(999);
 
-const meta = {
+const meta: Meta<any> = {
   title: 'plugins/plugin-preview/cards/Card',
   render: DefaultStory,
   decorators: [
@@ -38,7 +38,7 @@ const meta = {
     translations,
   },
   tags: ['cards'],
-} satisfies Meta<typeof DefaultStory>;
+};
 
 export default meta;
 

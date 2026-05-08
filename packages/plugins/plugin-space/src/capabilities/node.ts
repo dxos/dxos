@@ -10,4 +10,4 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
   'OperationHandler',
   () => import('./operation-handler'),
 );
-export const UndoMappings = Capability.lazy('UndoMappings', () => import('./undo-mappings'));
+export const UndoMappings: Capability.LazyCapability = Capability.lazy('UndoMappings', () => import('./undo-mappings'));

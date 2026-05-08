@@ -52,7 +52,7 @@ const migrations = [
   }),
 ];
 
-export default Capability.makeModule(
+export default Capability.makeModule<void, Capability.ModuleReturn>(
   Effect.fnUntraced(function* () {
     return Capability.contributes(ClientCapabilities.Migration, migrations);
   }),

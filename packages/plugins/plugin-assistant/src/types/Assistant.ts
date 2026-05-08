@@ -3,9 +3,10 @@
 //
 
 import { Chat as ChatModule } from '@dxos/assistant-toolkit';
+import { Type } from '@dxos/echo';
 
 // Re-export Chat schema for backward compatibility.
-export const Chat = ChatModule.Chat;
+export const Chat: Type.AnyObj = ChatModule.Chat;
 export type Chat = ChatModule.Chat;
 
 // Re-export Settings as merged const/type (not as namespace).

@@ -72,7 +72,7 @@ export const ConstantOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Scalar });
 //
 
 export const QueueInput = Schema.Struct({ [DEFAULT_INPUT]: ObjectId });
-export const QueueOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Array(Message.Message) });
+export const QueueOutput: Schema.Schema.AnyNoContext = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Array(Message.Message) });
 
 //
 // Function

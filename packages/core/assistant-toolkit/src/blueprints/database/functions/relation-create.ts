@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 
 import { RelationCreate } from './definitions';
 
-export default RelationCreate.pipe(
+const handler: Operation.WithHandler<Operation.Definition.Any> = RelationCreate.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ typename, source, target, properties }) {
       const { db } = yield* Database.Service;
@@ -32,3 +32,5 @@ export default RelationCreate.pipe(
     }),
   ),
 );
+
+export default handler;

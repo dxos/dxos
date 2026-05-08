@@ -13,7 +13,7 @@ import { meta } from '#meta';
 const PRESENTER_OPERATION = `${meta.id}.operation`;
 
 // TODO(wittjosiah): This appears to be unused.
-export const TogglePresentation = Operation.make({
+export const TogglePresentation: Operation.Definition.Any = Operation.make({
   meta: { key: `${PRESENTER_OPERATION}.toggle-presentation`, name: 'Toggle Presentation' },
   input: Schema.Struct({
     object: Schema.Union(Markdown.Document, Collection.Collection),

@@ -9,7 +9,7 @@ import { Database } from '@dxos/echo';
 
 import { RelationDelete } from './definitions';
 
-export default RelationDelete.pipe(
+const handler: Operation.WithHandler<Operation.Definition.Any> = RelationDelete.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ rel }) {
       const { db } = yield* Database.Service;
@@ -19,3 +19,5 @@ export default RelationDelete.pipe(
     }),
   ),
 );
+
+export default handler;

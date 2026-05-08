@@ -17,14 +17,14 @@ import { type Comment } from '@dxos/ui-editor/types';
 import { createRenderer, str } from '../util';
 import { EditorStory, content, longText } from './components';
 
-const meta = {
+const meta: Meta<any> = {
   title: 'ui/react-ui-editor/Comments',
   component: EditorStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof EditorStory>;
+};
 
 export default meta;
 

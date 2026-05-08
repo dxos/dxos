@@ -11,14 +11,14 @@ import { decorateMarkdown, image, join, linkTooltip, table } from '@dxos/ui-edit
 
 import { EditorStory, content, defaultExtensions, headings, renderLinkTooltip, text } from './components';
 
-const meta = {
+const meta: Meta<any> = {
   title: 'ui/react-ui-editor/Markdown',
   component: EditorStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof EditorStory>;
+};
 
 export default meta;
 

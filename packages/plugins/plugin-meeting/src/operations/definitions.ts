@@ -12,7 +12,7 @@ import { Meeting } from '../types';
 
 const MEETING_OPERATION = `${meta.id}.operation`;
 
-export const Create = Operation.make({
+export const Create: Operation.Definition.Any = Operation.make({
   meta: { key: `${MEETING_OPERATION}.create`, name: 'Create Meeting' },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -24,7 +24,7 @@ export const Create = Operation.make({
   }),
 });
 
-export const SetActive = Operation.make({
+export const SetActive: Operation.Definition.Any = Operation.make({
   meta: { key: `${MEETING_OPERATION}.set-active`, name: 'Set Active Meeting' },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -46,7 +46,7 @@ export const HandlePayload = Operation.make({
   output: Schema.Void,
 });
 
-export const Summarize = Operation.make({
+export const Summarize: Operation.Definition.Any = Operation.make({
   meta: { key: `${MEETING_OPERATION}.summarize`, name: 'Summarize Meeting' },
   services: [Capability.Service],
   input: Schema.Struct({

@@ -8,7 +8,7 @@ import { Blueprint, Operation } from '@dxos/compute';
 
 import { UpdateBlueprints } from './definitions';
 
-export default UpdateBlueprints.pipe(
+const handler: Operation.WithHandler<Operation.Definition.Any> = UpdateBlueprints.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const registry = yield* Blueprint.RegistryService;
@@ -16,3 +16,5 @@ export default UpdateBlueprints.pipe(
     }),
   ),
 );
+
+export default handler;

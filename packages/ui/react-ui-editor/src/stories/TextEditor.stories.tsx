@@ -34,7 +34,7 @@ import {
   text,
 } from './components';
 
-const meta = {
+const meta: Meta<any> = {
   title: 'ui/react-ui-editor/TextEditor',
   component: EditorStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
@@ -42,7 +42,7 @@ const meta = {
     layout: 'fullscreen',
     controls: { disable: true },
   },
-} satisfies Meta<typeof EditorStory>;
+};
 
 export default meta;
 

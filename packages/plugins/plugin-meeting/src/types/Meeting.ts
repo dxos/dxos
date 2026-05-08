@@ -12,7 +12,7 @@ import { Thread, Transcript } from '@dxos/types';
 // TODO(wittjosiah): Factor out. Brand.
 const IdentityDidSchema = Schema.String;
 
-export const Meeting = Schema.Struct({
+export const Meeting: Type.AnyObj = Schema.Struct({
   /**
    * User-defined name of the meeting.
    */

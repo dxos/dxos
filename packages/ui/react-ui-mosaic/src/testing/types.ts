@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Ref, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 
 //
@@ -24,7 +24,7 @@ export const TestItem = Schema.Struct({
 
 export interface TestItem extends Schema.Schema.Type<typeof TestItem> {}
 
-export const TestColumn = Schema.Struct({
+export const TestColumn: Type.AnyObj = Schema.Struct({
   id: ObjectId,
   name: Schema.String,
   items: Schema.mutable(Schema.Array(Ref.Ref(TestItem))),
@@ -35,4 +35,4 @@ export const TestColumn = Schema.Struct({
   }),
 );
 
-export interface TestColumn extends Schema.Schema.Type<typeof TestColumn> {}
+export type TestColumn = Obj.Unknown & { readonly id: string; readonly name: string; readonly items: Ref.Ref<TestItem>[] };

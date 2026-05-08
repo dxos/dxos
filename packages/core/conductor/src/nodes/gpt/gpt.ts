@@ -21,7 +21,7 @@ import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { ComputeCustomEvent, ComputeNodeContext, ValueBag, defineComputeNode } from '../../types';
+import { type Executable, ComputeCustomEvent, ComputeNodeContext, ValueBag, defineComputeNode } from '../../types';
 import { StreamSchema } from '../../util';
 
 export const GptMessage = Schema.Struct({
@@ -31,7 +31,7 @@ export const GptMessage = Schema.Struct({
 
 export type GptMessage = Schema.Schema.Type<typeof GptMessage>;
 
-export const GptInput = Schema.Struct({
+export const GptInput: Schema.Schema.AnyNoContext = Schema.Struct({
   /**
    * System instruction.
    */
@@ -72,7 +72,7 @@ export const GptInput = Schema.Struct({
 
 export type GptInput = Schema.Schema.Type<typeof GptInput>;
 
-export const GptOutput = Schema.Struct({
+export const GptOutput: Schema.Schema.AnyNoContext = Schema.Struct({
   /**
    * Messages emitted by the model.
    */
@@ -112,7 +112,7 @@ export const GptOutput = Schema.Struct({
 
 export type GptOutput = Schema.Schema.Type<typeof GptOutput>;
 
-export const gptNode = defineComputeNode({
+export const gptNode: Executable = defineComputeNode({
   input: GptInput,
   output: GptOutput,
   exec: Effect.fnUntraced(function* (input) {

@@ -10,10 +10,12 @@ import { Database, Entity } from '@dxos/echo';
 
 import { Load } from './definitions';
 
-export default Load.pipe(
+const handler: Operation.WithHandler<Operation.Definition.Any> = Load.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ refs }) {
       return yield* Effect.forEach(refs, Database.load).pipe(Effect.map(Array.map(Entity.toJSON)));
     }),
   ),
 );
+
+export default handler;
