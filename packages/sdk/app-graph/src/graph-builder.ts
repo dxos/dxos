@@ -856,12 +856,7 @@ const qualifyNodeArgs =
  */
 const collectAllInlineIds = (nodes: Node.NodeArg<any>[]): string[] =>
   nodes.flatMap((node) =>
-    node.nodes
-      ? [
-          ...node.nodes.map((child) => child.id),
-          ...collectAllInlineIds(node.nodes),
-        ]
-      : [],
+    node.nodes ? [...node.nodes.map((child) => child.id), ...collectAllInlineIds(node.nodes)] : [],
   );
 
 const connectorKey = (id: string, relation: Node.RelationInput): string => primaryKey(id, Graph.relationKey(relation));
