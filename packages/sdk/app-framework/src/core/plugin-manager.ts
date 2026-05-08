@@ -89,9 +89,6 @@ export type ManagerTypeId = typeof ManagerTypeId;
  * builtin, or a previously-installed plugin from the registry), the dev plugin
  * temporarily takes over that id slot. The original is restored when the dev
  * plugin is removed (or on page reload, since dev plugins aren't persisted).
- *
- * Loaders may return either a bare {@link Plugin.Plugin} (legacy form, treated
- * as `dev: false`) or this struct.
  */
 export type LoadedPlugin = {
   plugin: Plugin.Plugin;
@@ -100,7 +97,7 @@ export type LoadedPlugin = {
 };
 
 export type ManagerOptions = {
-  pluginLoader: (id: string) => Effect.Effect<Plugin.Plugin | LoadedPlugin, Error>;
+  pluginLoader: (id: string) => Effect.Effect<LoadedPlugin, Error>;
   plugins?: Plugin.Plugin[];
   core?: string[];
   enabled?: string[];
@@ -448,8 +445,7 @@ class ManagerImpl implements PluginManager {
   add(id: string): Effect.Effect<Plugin.Plugin, Error> {
     return Effect.gen(this, function* () {
       log('add plugin', { id });
-      const result = yield* this._pluginLoader(id);
-      const { plugin, dev = false } = Plugin.isPlugin(result) ? { plugin: result } : result;
+      const { plugin, dev = false } = yield* this._pluginLoader(id);
       const pluginId = plugin.meta.id;
       const existing = this._getPlugin(pluginId);
 

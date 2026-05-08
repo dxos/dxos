@@ -61,7 +61,7 @@ describe('PluginManager', () => {
   const pluginLoader = Effect.fn(function* (id: string) {
     const plugin = plugins.find((plugin) => plugin.meta.id === id);
     invariant(plugin, `Plugin not found: ${id}`);
-    return plugin;
+    return { plugin };
   });
 
   afterEach(() => {
@@ -93,7 +93,7 @@ describe('PluginManager', () => {
       const urlLocator = 'https://example.com/plugin.mjs';
       const urlLoader = Effect.fn(function* (locator: string) {
         if (locator === urlLocator) {
-          return testPlugin;
+          return { plugin: testPlugin };
         }
         return yield* Effect.fail(new Error(`Unknown locator: ${locator}`));
       });
@@ -131,7 +131,7 @@ describe('PluginManager', () => {
 
       const loader = Effect.fn(function* (locator: string) {
         if (locator === 'prod') {
-          return productionPlugin;
+          return { plugin: productionPlugin };
         }
         if (locator === 'dev') {
           return { plugin: devPlugin, dev: true };
@@ -183,7 +183,7 @@ describe('PluginManager', () => {
       const devPlugin = Plugin.make(Plugin.define(testMeta))();
       const loader = Effect.fn(function* (locator: string) {
         if (locator === 'prod') {
-          return productionPlugin;
+          return { plugin: productionPlugin };
         }
         if (locator === 'dev') {
           return { plugin: devPlugin, dev: true };
