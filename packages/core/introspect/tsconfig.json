@@ -17,6 +17,9 @@
     },
     {
       "path": "../echo/echo-react"
+    },
+    {
+      "path": "../introspect-tools"
     }
   ]
 }

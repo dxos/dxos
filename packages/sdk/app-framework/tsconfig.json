@@ -48,7 +48,10 @@
       "path": "../../common/web-context-react"
     },
     {
-      "path": "../../core/compute"
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
@@ -58,9 +61,6 @@
     },
     {
       "path": "../../core/mesh/edge-client"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"
