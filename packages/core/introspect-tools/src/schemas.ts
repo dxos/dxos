@@ -50,7 +50,7 @@ export const ListOptionsInput = Schema.Struct({
   ).annotations({
     title: 'Limit',
     description: trim`
-      Maximum number of items to return. Default ${DEFAULT_LIST_LIMIT}; max ${MAX_LIST_LIMIT}.
+      Maximum number of items. Default ${DEFAULT_LIST_LIMIT}; max ${MAX_LIST_LIMIT}.
     `,
   }),
   compact: Schema.optional(Schema.Boolean).annotations({
