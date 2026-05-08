@@ -218,10 +218,27 @@ const slackRequest = <T extends { ok: boolean; error?: string }>(
     return yield* runRequest(build(creds), schema);
   });
 
+/**
+ * Builds an authenticated GET against `slack.com/api/<path>`.
+ *
+ * Auth goes in the `token` URL parameter rather than `Authorization: Bearer …`
+ * because Slack's CORS response on `slack.com/api/*` does NOT include
+ * `Authorization` in `Access-Control-Allow-Headers`. Sending the header
+ * triggers a preflight that the browser then rejects, blocking every
+ * request from the composer dev origin. Slack's Web API treats the query
+ * param and the bearer header as equivalent. The query param keeps the
+ * request "simple" (no preflight) and works from any browser origin.
+ *
+ * The token is logged-as-empty in DevTools network panels because Slack
+ * scrubs `token` URL params in their server-side logs; treat the URL
+ * itself as sensitive on the client only.
+ */
 const authedGet = (creds: SlackCredentialsValue, path: string, params: Record<string, string | number> = {}) =>
   HttpClientRequest.get(`${SLACK_API_BASE}/${path}`).pipe(
-    HttpClientRequest.setHeader('Authorization', `Bearer ${creds.token}`),
-    HttpClientRequest.setUrlParams(Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)]))),
+    HttpClientRequest.setUrlParams({
+      token: creds.token,
+      ...Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)])),
+    }),
   );
 
 /**
