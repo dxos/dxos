@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { SelectionSchema } from '@dxos/react-ui-attention';
+import { SelectionSchema } from '@dxos/react-ui-attention/types';
 
 import { Label } from './translations';
 

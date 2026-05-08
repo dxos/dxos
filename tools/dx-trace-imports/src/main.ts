@@ -54,13 +54,21 @@ const DEFAULT_CONDITIONS = ['workerd', 'worker', 'node'] as const;
  * We mark them as external so the metafile still records the edge for tracing.
  */
 const ASSET_EXTENSIONS_FILTER =
-  /\.(wasm|node|css|pcss|scss|sass|less|svg|png|jpe?g|gif|webp|avif|ico|woff2?|ttf|eot|otf|mp3|mp4|webm|wav|ogg|glsl|frag|vert|md|html?|txt)$/i;
+  /\.(wasm|node|css|pcss|scss|sass|less|svg|png|jpe?g|gif|webp|avif|ico|woff2?|ttf|eot|otf|mp3|mp4|webm|wav|ogg|glsl|frag|vert|md|html?|txt|tpl)(\?[^?]*)?$/i;
+
+/**
+ * Vite-style resource queries (e.g. `./foo.ts?raw`, `./worker.ts?worker`) that
+ * change how the asset is loaded but aren't understood by esbuild's resolver.
+ * We mark them as external so the trace can still see the edge.
+ */
+const VITE_RESOURCE_QUERY_FILTER = /\?(raw|url|inline|worker|sharedworker)\b/i;
 
 const traceExternalsPlugin: esbuild.Plugin = {
   name: 'trace-imports-externals',
   setup(build) {
     build.onResolve({ filter: /^cloudflare:/ }, (args) => ({ path: args.path, external: true }));
     build.onResolve({ filter: ASSET_EXTENSIONS_FILTER }, (args) => ({ path: args.path, external: true }));
+    build.onResolve({ filter: VITE_RESOURCE_QUERY_FILTER }, (args) => ({ path: args.path, external: true }));
   },
 };
 
