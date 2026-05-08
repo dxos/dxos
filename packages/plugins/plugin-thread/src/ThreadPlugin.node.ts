@@ -11,30 +11,13 @@ import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { AnchoredTo, Channel, Message, Thread } from '@dxos/types';
 
 import { AppGraphBuilder, BlueprintDefinition, CreateObject, OperationHandler, UndoMappings } from '#capabilities';
-import { THREAD_ITEM, meta } from '#meta';
+import { meta } from '#meta';
 import { ThreadOperation } from '#operations';
 
 export const ThreadPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addMetadataModule({
-    metadata: {
-      id: THREAD_ITEM,
-      metadata: {
-        parse: (item: Thread.Thread, type: string) => {
-          switch (type) {
-            case 'node':
-              return { id: item.id, label: item.name, data: item };
-            case 'object':
-              return item;
-            case 'view-object':
-              return { id: `${item.id}-view`, object: item };
-          }
-        },
-      },
-    },
-  }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
   AppPlugin.addSchemaModule({
