@@ -124,6 +124,55 @@ export const GmailSend = Operation.make({
   services: [Credential.CredentialsService],
 });
 
+export const ImapSync = Operation.make({
+  meta: {
+    key: `${INBOX_OPERATION}.imap-sync`,
+    name: 'Sync IMAP Mailbox',
+    description: 'Sync messages from an IMAP server into the mailbox feed.',
+  },
+  input: Schema.Struct({
+    integration: Ref.Ref(Integration.Integration).annotations({
+      description: 'Integration that owns IMAP credentials and per-target sync metadata.',
+    }),
+    mailbox: Ref.Ref(Mailbox.Mailbox)
+      .annotations({ description: 'When omitted, syncs every mailbox listed on the Integration.' })
+      .pipe(Schema.optional),
+  }),
+  output: Schema.Struct({
+    newMessages: Schema.Number,
+  }),
+  services: [Database.Service, Feed.FeedService, Credential.CredentialsService, Trace.TraceService],
+});
+
+export const ImapTestConnection = Operation.make({
+  meta: {
+    key: `${INBOX_OPERATION}.imap-test-connection`,
+    name: 'Test IMAP Connection',
+    description: 'Connect to an IMAP server and select a folder; surfaces auth/TLS errors.',
+  },
+  input: Schema.Struct({
+    integration: Ref.Ref(Integration.Integration),
+    folder: Schema.optional(Schema.String),
+  }),
+  output: Schema.Union(
+    Schema.Struct({
+      ok: Schema.Literal(true),
+      folder: Schema.String,
+      uidValidity: Schema.Number,
+      exists: Schema.Number,
+    }),
+    Schema.Struct({
+      ok: Schema.Literal(false),
+      reason: Schema.String,
+      message: Schema.String,
+      folder: Schema.optional(Schema.Undefined),
+      uidValidity: Schema.optional(Schema.Undefined),
+      exists: Schema.optional(Schema.Undefined),
+    }),
+  ),
+  services: [Database.Service, Credential.CredentialsService],
+});
+
 export const GoogleMailSync = Operation.make({
   meta: {
     key: `${INBOX_OPERATION}.google-mail-sync`,

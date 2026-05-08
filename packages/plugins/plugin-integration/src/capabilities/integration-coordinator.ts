@@ -353,7 +353,37 @@ export default Capability.makeModule(
         return { kind: 'integration-created', integrationId: integration.id } as const;
       }).pipe(Effect.mapError(mapCoordinatorError));
 
-    return Capability.contributes(IntegrationCoordinator, { createIntegration, createCustomIntegration }, () =>
+    const createCustomIntegrationFromForm: IntegrationCoordinator['createCustomIntegrationFromForm'] = ({
+      db,
+      providerId,
+      values,
+    }) =>
+      Effect.gen(function* () {
+        const provider = yield* resolveProvider(getProviderEntries, providerId);
+        if (!provider.credentialForm) {
+          return yield* Effect.fail(new Error(`Provider ${providerId} has no credentialForm.`));
+        }
+
+        const { accessToken, integration } = yield* provider.credentialForm.onSubmit({
+          values,
+          provider,
+          db,
+        });
+
+        yield* finalizePendingEntry(invoker, {
+          token: accessToken,
+          integration,
+          db,
+          provider,
+        });
+
+        return { kind: 'integration-created', integrationId: integration.id } as const;
+      }).pipe(Effect.mapError(mapCoordinatorError));
+
+    return Capability.contributes(
+      IntegrationCoordinator,
+      { createIntegration, createCustomIntegration, createCustomIntegrationFromForm },
+      () =>
       Effect.sync(() => {
         window.removeEventListener('message', handleMessage);
         pending.clear();

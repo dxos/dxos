@@ -36,8 +36,12 @@ tauri-plugin-fs = { version = "2", features = ["watch"] }
 sha2 = "0.10"
 http = "1"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
-tokio = { version = "1", features = ["rt", "fs", "net", "sync", "macros"] }
+tokio = { version = "1", features = ["rt", "fs", "net", "sync", "macros", "io-util"] }
 url = "2"
+# IMAP webview shim (desktop only — see net.rs).
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12"] }
+webpki-roots = "0.26"
+thiserror = "1"
 
 [target.'cfg(unix)'.dependencies]
 xattr = "1"

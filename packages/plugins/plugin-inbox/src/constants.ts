@@ -13,6 +13,12 @@ export const GMAIL_PROVIDER_ID = 'gmail';
 /** `IntegrationProvider.id` for Google Calendar OAuth / sync; use as `providerId` on `integration--auth` surfaces. */
 export const GOOGLE_CALENDAR_PROVIDER_ID = 'google-calendar';
 
+/** `AccessToken.source` prefix for IMAP credentials (full value: `imap:<host>`). */
+export const IMAP_INTEGRATION_SOURCE_PREFIX = 'imap';
+
+/** `IntegrationProvider.id` for IMAP mailbox sync. */
+export const IMAP_PROVIDER_ID = 'imap';
+
 export const POPOVER_SAVE_FILTER = `${meta.id}.SaveFilterPopover`;
 
 export const MAILBOXES_SECTION_TYPE = `${meta.id}.mailboxes-section`;

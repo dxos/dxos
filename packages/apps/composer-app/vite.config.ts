@@ -165,6 +165,14 @@ export default defineConfig((env) => ({
       ['path']: '@dxos/node-std/path',
       ['node:crypto']: '@dxos/node-std/crypto',
       ['crypto']: '@dxos/node-std/crypto',
+      // IMAP webview integration: alias node:net/node:tls to the Tauri shim
+      // so `imapflow` (used by plugin-inbox) reaches our Tauri commands. In
+      // a non-Tauri browser the shim throws on connect, which the IMAP
+      // credential form surfaces as an "unavailable" message.
+      ['node:net']: path.resolve(dirname, 'src/native/node-net-shim.ts'),
+      ['node:tls']: path.resolve(dirname, 'src/native/node-net-shim.ts'),
+      ['net']: path.resolve(dirname, 'src/native/node-net-shim.ts'),
+      ['tls']: path.resolve(dirname, 'src/native/node-net-shim.ts'),
       ['tiktoken/lite']: path.resolve(dirname, 'stub.mjs'),
       // NOTE: react-ui must be aliased because vite-plugin-import-source only intercepts imports from
       //   source files — imports embedded inside compiled dist/ files bypass it entirely.

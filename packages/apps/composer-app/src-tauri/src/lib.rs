@@ -2,6 +2,8 @@
 
 mod asset_cache;
 #[cfg(desktop)]
+mod net;
+#[cfg(desktop)]
 mod oauth;
 #[cfg(desktop)]
 mod window_state;
@@ -111,6 +113,10 @@ pub fn run() {
         oauth::stop_oauth_server,
         oauth::get_oauth_result,
         oauth::initiate_oauth_flow,
+        net::net_tcp_connect,
+        net::net_tcp_write,
+        net::net_tcp_start_tls,
+        net::net_tcp_close,
         #[cfg(unix)]
         xattr_cmd::get_xattr,
         #[cfg(unix)]
@@ -130,7 +136,7 @@ pub fn run() {
     ]);
 
     #[cfg(desktop)]
-    let builder = builder.manage(OAuthServerState::new());
+    let builder = builder.manage(OAuthServerState::new()).manage(net::NetState::new());
 
     builder
         .setup(move |app| {

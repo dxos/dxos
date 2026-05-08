@@ -130,8 +130,10 @@
     "@effect/experimental": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "date-fns": "catalog:",
+    "imapflow": "catalog:",
     "js-yaml": "catalog:",
     "linkedom": "catalog:",
+    "postal-mime": "catalog:",
     "react-resize-detector": "catalog:",
     "turndown": "catalog:"
   },

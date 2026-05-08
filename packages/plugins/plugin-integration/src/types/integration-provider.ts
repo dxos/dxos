@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import type { Operation } from '@dxos/compute';
-import { type Obj, Ref } from '@dxos/echo';
+import { type Database, type Obj, Ref } from '@dxos/echo';
 import type { OAuthProvider } from '@dxos/protocols';
 import type { AccessToken } from '@dxos/types';
 
@@ -70,6 +70,28 @@ export type IntegrationOAuthSpec = {
 };
 
 /**
+ * Per-provider credential form for non-OAuth integrations. Replaces the
+ * one-shape-fits-all CustomTokenDialog — the dialog renders `schema` and
+ * delegates persistence to `onSubmit`. Mutually exclusive with `oauth`.
+ */
+export type CredentialForm<Values = any> = {
+  /** Schema rendered by the generic provider-form dialog. */
+  schema: Schema.Schema<Values, any>;
+  /** Optional defaults pre-filled into the form. */
+  defaultValues?: Partial<Values>;
+  /**
+   * Build the AccessToken + Integration from form values. The coordinator
+   * runs `finalizePendingEntry` on the result (db.add, dispatchAccessTokenCreated,
+   * onTokenCreated, navigate, optional sync-targets dialog).
+   */
+  onSubmit: (input: {
+    values: Values;
+    provider: IntegrationProviderEntry;
+    db: Database.Database;
+  }) => Effect.Effect<{ accessToken: AccessToken.AccessToken; integration: Integration.Integration }, Error>;
+};
+
+/**
  * One IntegrationProvider capability row — shape of entries contributed via
  * {@link IntegrationProvider}.
  */
@@ -84,6 +106,12 @@ export type IntegrationProviderEntry = {
   sync?: Operation.Definition<IntegrationSyncInput, IntegrationSyncOutput>;
   /** Schema describing per-target rows in `Integration.targets` `.options`. */
   optionsSchema?: Schema.Schema<any, any>;
+  /**
+   * Custom credential form for providers without OAuth. Mutually exclusive
+   * with `oauth`. When omitted on a non-OAuth provider, the coordinator
+   * renders a default `{ source, account?, token }` form.
+   */
+  credentialForm?: CredentialForm<any>;
   onTokenCreated?: OnTokenCreated;
 };
 

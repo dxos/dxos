@@ -41,6 +41,16 @@ export type IntegrationCoordinator = {
     token: string;
     name?: string;
   }) => Effect.Effect<CreateCustomIntegrationResult, Error>;
+  /**
+   * Form-driven variant of {@link createCustomIntegration}: delegates the
+   * AccessToken/Integration construction to the provider's
+   * `credentialForm.onSubmit`, then runs the same finalize path.
+   */
+  createCustomIntegrationFromForm: (input: {
+    db: Database.Database;
+    providerId: string;
+    values: unknown;
+  }) => Effect.Effect<CreateCustomIntegrationResult, Error>;
 };
 
 export const IntegrationCoordinator = Capability.make<IntegrationCoordinator>(
