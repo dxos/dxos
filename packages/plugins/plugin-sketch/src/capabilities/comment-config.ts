@@ -16,6 +16,6 @@ export default Capability.makeModule(
     return Capability.contributes(AppCapabilities.CommentConfig, {
       id: Sketch.Sketch.typename,
       comments: 'unanchored',
-    } satisfies AppCapabilities.CommentConfig);
+    });
   }),
 );

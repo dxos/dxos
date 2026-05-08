@@ -15,6 +15,6 @@ export default Capability.makeModule(
     return Capability.contributes(AppCapabilities.CommentConfig, {
       id: Table.Table.typename,
       comments: 'unanchored',
-    } satisfies AppCapabilities.CommentConfig);
+    });
   }),
 );
