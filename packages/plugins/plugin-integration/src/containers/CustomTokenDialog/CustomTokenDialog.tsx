@@ -3,73 +3,59 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { type Database } from '@dxos/echo';
-import { Format } from '@dxos/echo/internal';
+import { type Database, type Key } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { IntegrationCoordinator } from '#types';
-
-/**
- * Form schema for the custom-token entry dialog. Annotations drive the
- * Form's auto-rendered field labels and descriptions.
- */
-const CustomTokenForm = Schema.Struct({
-  source: Format.Hostname.annotations({
-    title: 'Source',
-    description: 'The domain name of the service that issued the token.',
-    examples: ['example.com'],
-  }),
-  account: Schema.String.annotations({
-    title: 'Account',
-    description: 'Optional account label associated with the token.',
-  }).pipe(Schema.optional),
-  token: Schema.String.annotations({
-    title: 'Token',
-    description: 'The access token value.',
-  }),
-});
-
-type CustomTokenValues = Schema.Schema.Type<typeof CustomTokenForm>;
+import { IntegrationCoordinator, IntegrationProvider } from '#types';
 
 export type CustomTokenDialogProps = {
   db: Database.Database;
+  spaceId: Key.SpaceId;
   providerId: string;
   /** Optional pre-filled label used as the new Integration's `name`. */
   providerLabel?: string;
 };
 
 /**
- * Dialog for integrations created with a manually entered access token (no OAuth flow).
+ * Per-provider credential / pre-flight form. Renders the provider's
+ * declared `credentialForm.schema` and dispatches submission through the
+ * coordinator, which decides whether the result completes the integration
+ * (custom token, IMAP) or initiates an OAuth flow with a `loginHint`
+ * (atproto handle).
+ *
+ * The component name is retained from the legacy custom-token dialog for
+ * compatibility; the surface id is `PROVIDER_FORM_DIALOG`.
  */
-export const CustomTokenDialog = ({ db, providerId, providerLabel }: CustomTokenDialogProps) => {
+export const CustomTokenDialog = ({ db, spaceId, providerId, providerLabel }: CustomTokenDialogProps) => {
   const { t } = useTranslation(meta.id);
   const { invoke } = useOperationInvoker();
   const coordinator = useCapability(IntegrationCoordinator);
+  const providers = useCapabilities(IntegrationProvider).flat();
+  const provider = useMemo(() => providers.find((entry) => entry.id === providerId), [providers, providerId]);
+  const credentialForm = provider?.credentialForm;
   const [error, setError] = useState<string>();
 
   const handleSave = useCallback(
-    (values: CustomTokenValues) => {
+    (values: unknown) => {
+      if (!provider) {
+        setError(`Unknown provider: ${providerId}`);
+        return;
+      }
       setError(undefined);
       void runAndForwardErrors(
         Effect.gen(function* () {
-          yield* coordinator.createCustomIntegration({
-            db,
-            providerId,
-            source: values.source,
-            account: values.account,
-            token: values.token,
-            name: providerLabel,
-          });
+          // Close the dialog before re-entering the coordinator so OAuth
+          // popups / new tabs aren't blocked by a stacked layout op.
           yield* invoke(LayoutOperation.UpdateDialog, { state: false });
+          yield* coordinator.submitCredentialForm({ db, spaceId, providerId, values });
         }).pipe(
           Effect.catchAll((failure) =>
             Effect.sync(() => {
@@ -80,19 +66,48 @@ export const CustomTokenDialog = ({ db, providerId, providerLabel }: CustomToken
         ),
       );
     },
-    [coordinator, db, providerId, providerLabel, invoke],
+    [coordinator, db, spaceId, providerId, provider, invoke],
   );
+
+  if (!credentialForm) {
+    return (
+      <Dialog.Content>
+        <Dialog.Header>
+          <Dialog.Title>{providerLabel ?? providerId}</Dialog.Title>
+          <Dialog.Close asChild>
+            <Dialog.CloseIconButton />
+          </Dialog.Close>
+        </Dialog.Header>
+        <Dialog.Body>
+          <p className='text-error'>
+            {t('provider-form-dialog.no-form', {
+              defaultValue: 'Provider has no credential form configured.',
+            })}
+          </p>
+        </Dialog.Body>
+      </Dialog.Content>
+    );
+  }
+
+  const title = provider?.label
+    ? t('provider-form-dialog.title', { defaultValue: `Connect ${provider.label}`, label: provider.label })
+    : t('custom-token-dialog.title', { defaultValue: 'Add custom token' });
 
   return (
     <Dialog.Content>
       <Dialog.Header>
-        <Dialog.Title>{t('custom-token-dialog.title', { defaultValue: 'Add custom token' })}</Dialog.Title>
+        <Dialog.Title>{title}</Dialog.Title>
         <Dialog.Close asChild>
           <Dialog.CloseIconButton />
         </Dialog.Close>
       </Dialog.Header>
       <Dialog.Body>
-        <Form.Root autoFocus schema={CustomTokenForm} defaultValues={{ source: '', token: '' }} onSave={handleSave}>
+        <Form.Root
+          autoFocus
+          schema={credentialForm.schema}
+          defaultValues={credentialForm.defaultValues ?? {}}
+          onSave={handleSave}
+        >
           <Form.Viewport>
             <Form.Content>
               <Form.FieldSet />

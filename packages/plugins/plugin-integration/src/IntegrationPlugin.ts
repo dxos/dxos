@@ -12,7 +12,14 @@ import { ClientEvents } from '@dxos/plugin-client/types';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { AccessToken } from '@dxos/types';
 
-import { AppGraphBuilder, BuiltinProviders, Coordinator, OperationHandler, ReactSurface } from '#capabilities';
+import {
+  AppGraphBuilder,
+  BuiltinProviders,
+  Coordinator,
+  NavigationHandler,
+  OperationHandler,
+  ReactSurface,
+} from '#capabilities';
 import { meta } from '#meta';
 import { CreateIntegrationForm, Integration, IntegrationCoordinator } from '#types';
 
@@ -63,6 +70,7 @@ export const IntegrationPlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
+  AppPlugin.addNavigationHandlerModule({ activate: NavigationHandler }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [AccessToken.AccessToken, Integration.Integration] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),

@@ -46,6 +46,8 @@ export const translations = [
         'no-available-targets.message': 'No remote targets available.',
         'custom-token-dialog.title': 'Add custom token',
         'custom-token-dialog.description': 'Enter a static access token. No OAuth or sync runs for custom tokens.',
+        'provider-form-dialog.title': 'Connect {{label}}',
+        'provider-form-dialog.no-form': 'Provider has no credential form configured.',
       },
       [Integration.Integration.typename]: {
         'typename.label': 'Integration',
