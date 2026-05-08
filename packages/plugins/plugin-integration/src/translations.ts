@@ -47,7 +47,7 @@ export const translations = [
         'custom-token-dialog.title': 'Add custom token',
         'custom-token-dialog.description': 'Enter a static access token. No OAuth or sync runs for custom tokens.',
         'provider-form-dialog.title': 'Connect {{label}}',
-        'provider-form-dialog.no-form': 'Provider has no credential form configured.',
+        'provider-form-dialog.no-form.message': 'Provider has no credential form configured.',
       },
       [Integration.Integration.typename]: {
         'typename.label': 'Integration',

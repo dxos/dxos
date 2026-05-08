@@ -80,7 +80,7 @@ export const CustomTokenDialog = ({ db, spaceId, providerId, providerLabel }: Cu
         </Dialog.Header>
         <Dialog.Body>
           <p className='text-error'>
-            {t('provider-form-dialog.no-form', {
+            {t('provider-form-dialog.no-form.message', {
               defaultValue: 'Provider has no credential form configured.',
             })}
           </p>
