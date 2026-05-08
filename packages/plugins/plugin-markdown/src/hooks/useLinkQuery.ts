@@ -34,7 +34,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
       const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : (query?.toLowerCase() ?? '');
       const results = await db?.query(Query.select(filter)).run();
 
-      const getLabel = (object: any): Label => {
+      const getLabel = (object: Obj.Unknown): Label => {
         const type = Obj.getTypename(object)!;
         return Obj.getLabel(object) ?? ['object-name.placeholder', { ns: type, defaultValue: 'New object' }];
       };
@@ -42,7 +42,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
       const items =
         results
           ?.filter((object) => toLocalizedString(getLabel(object), t).toLowerCase().includes(name))
-          .map((object: any): EditorMenuItem => {
+          .map((object: Obj.Unknown): EditorMenuItem => {
             const schema = Obj.getSchema(object);
             const icon = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema))?.icon : undefined;
             const label = toLocalizedString(getLabel(object), t);
