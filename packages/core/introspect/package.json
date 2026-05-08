@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/introspect-tools": "workspace:*",
     "@dxos/log": "workspace:*",
     "glob": "catalog:",
     "ts-morph": "catalog:"

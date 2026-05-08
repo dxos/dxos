@@ -150,6 +150,9 @@ const toItems = (data: unknown): unknown[] => {
   return [inner];
 };
 
+const isPrimitive = (value: unknown): value is string | number | boolean | null | undefined =>
+  value === null || (typeof value !== 'object' && typeof value !== 'function');
+
 const formatValue = (value: unknown): string => {
   if (value === null) {
     return 'null';
@@ -158,7 +161,15 @@ const formatValue = (value: unknown): string => {
     return '—';
   }
   if (Array.isArray(value)) {
-    return value.length === 0 ? '[]' : `[${value.join(', ')}]`;
+    if (value.length === 0) {
+      return '[]';
+    }
+    // Only string-join arrays of primitives — joining objects yields
+    // "[object Object], [object Object], …" via Array.prototype.toString.
+    if (value.every(isPrimitive)) {
+      return `[${value.map((item) => (typeof item === 'string' ? item : String(item))).join(', ')}]`;
+    }
+    return JSON.stringify(value);
   }
   if (typeof value === 'object') {
     return JSON.stringify(value);
@@ -167,26 +178,29 @@ const formatValue = (value: unknown): string => {
 };
 
 const tryParseMcpEnvelope = (value: unknown): unknown => {
-  // The MCP SDK returns `{ content: [{ type: 'text', text: '<json>' }, ...] }`
-  // for our tools. Unwrap that one common shape so callers don't have to
-  // remember to pre-parse. Anything else is rendered verbatim.
-  if (
-    value &&
-    typeof value === 'object' &&
-    'content' in value &&
-    Array.isArray((value as { content: unknown }).content)
-  ) {
-    const text = (value as { content: Array<{ type?: string; text?: string }> }).content.find(
-      (c) => c?.type === 'text' && typeof c.text === 'string',
-    )?.text;
-    // Explicit undefined check — an empty string is a legitimate payload
-    // (e.g. a tool returning `""` should render as an empty result, not
-    // fall through to dumping the raw envelope).
-    if (text !== undefined) {
-      try {
-        return JSON.parse(text);
-      } catch {
-        return text;
+  // The MCP SDK returns
+  // `{ structuredContent?: object, content: [{ type: 'text', text: '<json>' }, ...] }`
+  // for our tools. Prefer the already-parsed `structuredContent` when
+  // present; otherwise unwrap the JSON-stringified `content[0].text`.
+  // Anything else is rendered verbatim.
+  if (value && typeof value === 'object') {
+    const envelope = value as { structuredContent?: unknown; content?: unknown };
+    if (envelope.structuredContent !== undefined) {
+      return envelope.structuredContent;
+    }
+    if (Array.isArray(envelope.content)) {
+      const text = (envelope.content as Array<{ type?: string; text?: string }>).find(
+        (c) => c?.type === 'text' && typeof c.text === 'string',
+      )?.text;
+      // Explicit undefined check — an empty string is a legitimate payload
+      // (e.g. a tool returning `""` should render as an empty result, not
+      // fall through to dumping the raw envelope).
+      if (text !== undefined) {
+        try {
+          return JSON.parse(text);
+        } catch {
+          return text;
+        }
       }
     }
   }
