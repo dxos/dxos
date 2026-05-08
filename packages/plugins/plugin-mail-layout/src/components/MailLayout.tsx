@@ -159,7 +159,7 @@ const useEnsureMailbox = (space: Space | undefined): { mailbox: Mailbox.Mailbox 
       return;
     }
     let cancelled = false;
-    (async () => {
+    void (async () => {
       const existing = await space.db.query(Query.select(Filter.type(Mailbox.Mailbox))).run();
       if (cancelled) {
         return;
