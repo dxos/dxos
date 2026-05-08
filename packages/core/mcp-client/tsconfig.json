@@ -16,7 +16,7 @@
       "path": "../../common/log"
     },
     {
-      "path": "../ai"
+      "path": "../compute/ai"
     }
   ]
 }
