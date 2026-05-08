@@ -11,12 +11,11 @@ import { Operation } from '@dxos/compute';
 import { Annotation, Ref, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { SpaceCapabilities, SpaceEvents, type CreateObject } from '@dxos/plugin-space/types';
-import { AnchoredTo, Message, Thread } from '@dxos/types';
+import { AnchoredTo, Channel, Message, Thread } from '@dxos/types';
 
 import { AppGraphBuilder, BlueprintDefinition, OperationHandler, UndoMappings } from '#capabilities';
 import { THREAD_ITEM, meta } from '#meta';
 import { ThreadOperation } from '#operations';
-import { Channel } from '#types';
 
 export const ThreadPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

@@ -20,9 +20,8 @@ import { withLayout, Loading } from '@dxos/react-ui/testing';
 import { Message, Thread } from '@dxos/types';
 
 import { translations } from '#translations';
-import { Channel } from '#types';
 
-import { ChatContainer } from './ChatContainer';
+import { ThreadContainer } from './ThreadContainer';
 
 random.seed(1);
 
@@ -30,26 +29,26 @@ const DefaultStory = () => {
   const client = useClient();
   const identity = useIdentity();
   const [space, setSpace] = useState<Space>();
-  const [channel, setChannel] = useState<Channel.Channel | null>();
+  const [thread, setThread] = useState<Thread.Thread | null>();
 
   useAsyncEffect(async () => {
     if (identity) {
       const space = await client.spaces.create();
-      const channel = space.db.add(Channel.make());
+      const thread = space.db.add(Thread.make({ status: 'active' }));
       setSpace(space);
-      setChannel(channel);
+      setThread(thread);
     }
   }, [identity]);
 
-  if (!identity || !channel || !space || !channel.defaultThread.target) {
-    return <Loading data={{ identity: !!identity, space: !!space, channel: !!channel }} />;
+  if (!identity || !thread || !space) {
+    return <Loading data={{ identity: !!identity, space: !!space, thread: !!thread }} />;
   }
 
-  return <ChatContainer space={space} thread={channel.defaultThread.target} />;
+  return <ThreadContainer space={space} thread={thread} />;
 };
 
 const meta = {
-  title: 'plugins/plugin-thread/containers/ChatContainer',
+  title: 'plugins/plugin-thread/containers/ThreadContainer',
   component: ThreadComponent.Root as any,
   render: DefaultStory,
   decorators: [
@@ -71,7 +70,7 @@ const meta = {
     }),
     withClientProvider({
       createSpace: true,
-      types: [Thread.Thread, Channel.Channel, Message.Message],
+      types: [Thread.Thread, Message.Message],
     }),
   ],
   parameters: {

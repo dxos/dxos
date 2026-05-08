@@ -4,7 +4,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Channel } from '@dxos/plugin-thread/types';
+import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 
