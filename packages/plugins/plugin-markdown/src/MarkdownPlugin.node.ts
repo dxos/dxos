@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
 import { Text } from '@dxos/schema';
 
 import { OperationHandler } from '#capabilities';
@@ -16,10 +16,12 @@ import { meta } from '#meta';
 import { Markdown } from '#types';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addMetadataModule({
-    metadata: {
-      id: Markdown.Document.typename,
-      metadata: {
+  Plugin.addModule({
+    id: 'create-object',
+    activatesOn: AppActivationEvents.SetupMetadata,
+    activate: Effect.fnUntraced(function* () {
+      return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+        id: Markdown.Document.typename,
         createObject: ((props, options) =>
           Effect.gen(function* () {
             const object = Markdown.make(props);
@@ -30,8 +32,8 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
               targetNodeId: options.targetNodeId,
             });
           })) satisfies CreateObject,
-      },
-    },
+      });
+    }),
   }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),

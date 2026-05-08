@@ -3,14 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Annotation } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
 import { translations as boardTranslations } from '@dxos/react-ui-board/translations';
 
 import { ReactSurface } from '#capabilities';
@@ -19,12 +17,12 @@ import { translations } from '#translations';
 import { Board } from '#types';
 
 export const BoardPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addMetadataModule({
-    metadata: {
-      id: Board.Board.typename,
-      metadata: {
-        icon: Annotation.IconAnnotation.get(Board.Board).pipe(Option.getOrThrow).icon,
-        iconHue: Annotation.IconAnnotation.get(Board.Board).pipe(Option.getOrThrow).hue ?? 'white',
+  Plugin.addModule({
+    id: 'create-object',
+    activatesOn: AppActivationEvents.SetupMetadata,
+    activate: Effect.fnUntraced(function* () {
+      return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+        id: Board.Board.typename,
         createObject: ((props, options) =>
           Effect.gen(function* () {
             const object = Board.makeBoard(props);
@@ -35,8 +33,8 @@ export const BoardPlugin = Plugin.define(meta).pipe(
               targetNodeId: options.targetNodeId,
             });
           })) satisfies CreateObject,
-      },
-    },
+      });
+    }),
   }),
   AppPlugin.addSchemaModule({ schema: [Board.Board] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),

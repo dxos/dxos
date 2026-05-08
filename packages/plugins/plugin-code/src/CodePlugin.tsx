@@ -3,14 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Annotation } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
 
 import {
   AppGraphBuilder,
@@ -23,17 +21,14 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { CodeProject, SourceFile, Spec } from '#types';
 
-const specIcon = Annotation.IconAnnotation.get(Spec.Spec).pipe(Option.getOrThrow);
-const codeProjectIcon = Annotation.IconAnnotation.get(CodeProject.CodeProject).pipe(Option.getOrThrow);
-
 export const CodePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addMetadataModule({
-    metadata: [
-      {
-        id: Spec.Spec.typename,
-        metadata: {
-          icon: specIcon.icon,
-          iconHue: specIcon.hue ?? 'white',
+  Plugin.addModule({
+    id: 'create-objects',
+    activatesOn: AppActivationEvents.SetupMetadata,
+    activate: Effect.fnUntraced(function* () {
+      return [
+        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+          id: Spec.Spec.typename,
           createObject: ((props, options) =>
             Effect.gen(function* () {
               const object = Spec.make(props);
@@ -44,13 +39,9 @@ export const CodePlugin = Plugin.define(meta).pipe(
                 targetNodeId: options.targetNodeId,
               });
             })) satisfies CreateObject,
-        },
-      },
-      {
-        id: CodeProject.CodeProject.typename,
-        metadata: {
-          icon: codeProjectIcon.icon,
-          iconHue: codeProjectIcon.hue ?? 'white',
+        }),
+        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+          id: CodeProject.CodeProject.typename,
           createObject: ((props, options) =>
             Effect.gen(function* () {
               const spec = Spec.make();
@@ -69,9 +60,9 @@ export const CodePlugin = Plugin.define(meta).pipe(
                 targetNodeId: options.targetNodeId,
               });
             })) satisfies CreateObject,
-        },
-      },
-    ],
+        }),
+      ];
+    }),
   }),
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),

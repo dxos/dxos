@@ -10,17 +10,11 @@ import { Collection, Obj, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
-import { getNestedObjects } from '../util';
 import { SpaceOperation } from './definitions';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = SpaceOperation.RemoveObjects.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      const capabilityManager = yield* Capability.Service;
-      const resolve = (typename: string) =>
-        capabilityManager.getAll(AppCapabilities.Metadata).find(({ id }: { id: string }) => id === typename)
-          ?.metadata ?? {};
-
       const layout = yield* Capabilities.getAtomValue(AppCapabilities.Layout);
       const objects = input.objects as Obj.Unknown[];
 
@@ -30,10 +24,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
       const parentCollection: Collection.Collection =
         input.target ?? space.properties[Collection.Collection.typename]?.target;
 
-      const nestedObjectsList = yield* Effect.promise(() =>
-        Promise.all(objects.map((obj) => getNestedObjects(obj, resolve))),
-      );
-
       const indices = objects.map((obj) =>
         Obj.instanceOf(Collection.Collection, parentCollection)
           ? parentCollection.objects.findIndex((ref) => ref.target === obj)
@@ -41,29 +31,16 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
       );
 
       const wasActive = objects
-        .flatMap((obj, i) => [obj, ...nestedObjectsList[i]])
         .filter(Obj.isObject)
         .map((object) => layout.active.find((graphId) => graphId.endsWith(object.id)))
         .filter(isNonNullable);
 
-      for (let i = 0; i < objects.length; i++) {
-        const obj = objects[i];
-        const nestedObjects = nestedObjectsList[i];
-
+      for (const obj of objects) {
         const index = parentCollection.objects.findIndex((ref) => ref.target === obj);
         if (index !== -1) {
           Obj.update(parentCollection, (parentCollection) => {
             parentCollection.objects.splice(index, 1);
           });
-        }
-
-        for (const nestedObject of nestedObjects) {
-          if (Obj.isObject(nestedObject)) {
-            Obj.getDatabase(nestedObject)?.remove(nestedObject);
-          } else if (Relation.isRelation(nestedObject)) {
-            const db = Obj.getDatabase(Relation.getSource(nestedObject));
-            db?.remove(nestedObject);
-          }
         }
 
         const db = Obj.getDatabase(obj);
@@ -78,7 +55,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
         objects,
         parentCollection,
         indices,
-        nestedObjectsList,
+        nestedObjectsList: objects.map(() => []),
         wasActive,
       };
     }),

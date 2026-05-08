@@ -7,6 +7,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Format, Obj, Ref, Type } from '@dxos/echo';
+
+const BLUEPRINT_KEY = 'org.dxos.blueprint.magazine';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 
@@ -52,6 +54,7 @@ export const Magazine = Schema.Struct({
     icon: 'ph--newspaper-clipping--regular',
     hue: 'indigo',
   }),
+  Annotation.BlueprintsAnnotation.set([BLUEPRINT_KEY]),
 );
 
 export interface Magazine extends Schema.Schema.Type<typeof Magazine> {}

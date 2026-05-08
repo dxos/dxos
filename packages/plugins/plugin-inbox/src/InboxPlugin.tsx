@@ -3,16 +3,14 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
-import { ActivationEvent, Plugin } from '@dxos/app-framework';
+import { Capability, ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Annotation } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
 import { CalendarBlueprint, InboxBlueprint } from '#blueprints';
@@ -40,14 +38,13 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
-  AppPlugin.addMetadataModule({
-    metadata: [
-      {
-        id: Mailbox.Mailbox.typename,
-        metadata: {
-          icon: Annotation.IconAnnotation.get(Mailbox.Mailbox).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Mailbox.Mailbox).pipe(Option.getOrThrow).hue ?? 'white',
-          blueprints: [InboxBlueprint.key],
+  Plugin.addModule({
+    id: 'create-objects',
+    activatesOn: AppActivationEvents.SetupMetadata,
+    activate: Effect.fnUntraced(function* () {
+      return [
+        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+          id: Mailbox.Mailbox.typename,
           inputSchema: CreateMailboxSchema,
           createObject: ((props, options) =>
             Effect.gen(function* () {
@@ -57,13 +54,9 @@ export const InboxPlugin = Plugin.define(meta).pipe(
                 target: options.target,
               });
             })) satisfies CreateObject,
-        },
-      },
-      {
-        id: Message.Message.typename,
-        metadata: {
-          icon: Annotation.IconAnnotation.get(Message.Message).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Message.Message).pipe(Option.getOrThrow).hue ?? 'white',
+        }),
+        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+          id: Message.Message.typename,
           createObject: ((props, options) =>
             Effect.gen(function* () {
               const object = Message.make({ sender: 'user' });
@@ -74,14 +67,9 @@ export const InboxPlugin = Plugin.define(meta).pipe(
                 targetNodeId: options.targetNodeId,
               });
             })) satisfies CreateObject,
-        },
-      },
-      {
-        id: Calendar.Calendar.typename,
-        metadata: {
-          icon: Annotation.IconAnnotation.get(Calendar.Calendar).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Calendar.Calendar).pipe(Option.getOrThrow).hue ?? 'white',
-          blueprints: [CalendarBlueprint.key],
+        }),
+        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+          id: Calendar.Calendar.typename,
           inputSchema: CreateCalendarSchema,
           createObject: ((props, options) =>
             Effect.gen(function* () {
@@ -93,13 +81,9 @@ export const InboxPlugin = Plugin.define(meta).pipe(
                 targetNodeId: options.targetNodeId,
               });
             })) satisfies CreateObject,
-        },
-      },
-      {
-        id: Event.Event.typename,
-        metadata: {
-          icon: Annotation.IconAnnotation.get(Event.Event).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Event.Event).pipe(Option.getOrThrow).hue ?? 'white',
+        }),
+        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+          id: Event.Event.typename,
           createObject: ((props, options) =>
             Effect.gen(function* () {
               const object = Event.make(props);
@@ -110,9 +94,9 @@ export const InboxPlugin = Plugin.define(meta).pipe(
                 targetNodeId: options.targetNodeId,
               });
             })) satisfies CreateObject,
-        },
-      },
-    ],
+        }),
+      ];
+    }),
   }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({

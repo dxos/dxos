@@ -3,17 +3,15 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
-import { ActivationEvent, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { ActivationEvent, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Annotation } from '@dxos/echo';
 import { AutomationEvents } from '@dxos/plugin-automation/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
 
 import {
   AnchorSort,
@@ -29,18 +27,13 @@ import { SheetOperation } from '#operations';
 import { translations } from '#translations';
 import { Sheet } from '#types';
 
-import { serializer } from './serializer';
-
 export const SheetPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addMetadataModule({
-    metadata: {
-      id: Sheet.Sheet.typename,
-      metadata: {
-        label: (object: Sheet.Sheet) => object.name,
-        icon: Annotation.IconAnnotation.get(Sheet.Sheet).pipe(Option.getOrThrow).icon,
-        iconHue: Annotation.IconAnnotation.get(Sheet.Sheet).pipe(Option.getOrThrow).hue ?? 'white',
-        serializer,
-        comments: 'anchored',
+  Plugin.addModule({
+    id: 'create-object',
+    activatesOn: AppActivationEvents.SetupMetadata,
+    activate: Effect.fnUntraced(function* () {
+      return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+        id: Sheet.Sheet.typename,
         createObject: ((props, options) =>
           Effect.gen(function* () {
             const object = Sheet.make(props);
@@ -51,9 +44,19 @@ export const SheetPlugin = Plugin.define(meta).pipe(
               targetNodeId: options.targetNodeId,
             });
           })) satisfies CreateObject,
+      });
+    }),
+  }),
+  Plugin.addModule({
+    id: 'comment-config',
+    activatesOn: AppActivationEvents.SetupMetadata,
+    activate: Effect.fnUntraced(function* () {
+      return Capability.contributes(AppCapabilities.CommentConfig, {
+        id: Sheet.Sheet.typename,
+        comments: 'anchored',
         scrollToAnchor: SheetOperation.ScrollToAnchor,
-      },
-    },
+      } satisfies AppCapabilities.CommentConfig);
+    }),
   }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),

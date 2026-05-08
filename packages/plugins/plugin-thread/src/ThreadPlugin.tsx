@@ -3,12 +3,10 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Annotation, Ref, Type } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
@@ -40,48 +38,41 @@ import { translations } from '#translations';
 export const ThreadPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  Plugin.addModule({
+    id: 'create-object',
+    activatesOn: AppActivationEvents.SetupMetadata,
+    activate: Effect.fnUntraced(function* () {
+      return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+        id: Channel.Channel.typename,
+        createObject: ((props, options) =>
+          Effect.gen(function* () {
+            const object = Channel.make(props);
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              hidden: true,
+              targetNodeId: options.targetNodeId,
+            });
+          })) satisfies CreateObject,
+      });
+    }),
+  }),
   AppPlugin.addMetadataModule({
-    metadata: [
-      {
-        id: Type.getTypename(Channel.Channel),
-        metadata: {
-          icon: Annotation.IconAnnotation.get(Channel.Channel).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Channel.Channel).pipe(Option.getOrThrow).hue ?? 'white',
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const object = Channel.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-            })) satisfies CreateObject,
+    metadata: {
+      id: THREAD_ITEM,
+      metadata: {
+        parse: (item: Thread.Thread, type: string) => {
+          switch (type) {
+            case 'node':
+              return { id: item.id, label: item.name, data: item };
+            case 'object':
+              return item;
+            case 'view-object':
+              return { id: `${item.id}-view`, object: item };
+          }
         },
       },
-      {
-        id: Type.getTypename(Thread.Thread),
-        metadata: {
-          // TODO(wittjosiah): Move out of metadata.
-          loadReferences: async (thread: Thread.Thread) => await Ref.Array.loadAll(thread.messages ?? []),
-        },
-      },
-      {
-        id: THREAD_ITEM,
-        metadata: {
-          parse: (item: Thread.Thread, type: string) => {
-            switch (type) {
-              case 'node':
-                return { id: item.id, label: item.name, data: item };
-              case 'object':
-                return item;
-              case 'view-object':
-                return { id: `${item.id}-view`, object: item };
-            }
-          },
-        },
-      },
-    ],
+    },
   }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),

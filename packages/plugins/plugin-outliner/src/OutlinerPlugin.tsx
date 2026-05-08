@@ -3,15 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Annotation } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
 
 import { AppGraphBuilder, Migrations, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
@@ -20,13 +18,13 @@ import { Journal, Outline } from '#types';
 
 export const OutlinerPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addMetadataModule({
-    metadata: [
-      {
-        id: Journal.Journal.typename,
-        metadata: {
-          icon: Annotation.IconAnnotation.get(Journal.Journal).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Journal.Journal).pipe(Option.getOrThrow).hue ?? 'white',
+  Plugin.addModule({
+    id: 'create-objects',
+    activatesOn: AppActivationEvents.SetupMetadata,
+    activate: Effect.fnUntraced(function* () {
+      return [
+        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+          id: Journal.Journal.typename,
           createObject: ((props, options) =>
             Effect.gen(function* () {
               const object = Journal.make(props);
@@ -37,13 +35,9 @@ export const OutlinerPlugin = Plugin.define(meta).pipe(
                 targetNodeId: options.targetNodeId,
               });
             })) satisfies CreateObject,
-        },
-      },
-      {
-        id: Outline.Outline.typename,
-        metadata: {
-          icon: Annotation.IconAnnotation.get(Outline.Outline).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Outline.Outline).pipe(Option.getOrThrow).hue ?? 'white',
+        }),
+        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+          id: Outline.Outline.typename,
           createObject: ((props, options) =>
             Effect.gen(function* () {
               const object = Outline.make(props);
@@ -54,9 +48,9 @@ export const OutlinerPlugin = Plugin.define(meta).pipe(
                 targetNodeId: options.targetNodeId,
               });
             })) satisfies CreateObject,
-        },
-      },
-    ],
+        }),
+      ];
+    }),
   }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({

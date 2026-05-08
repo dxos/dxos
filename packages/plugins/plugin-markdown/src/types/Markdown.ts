@@ -8,6 +8,8 @@ import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 
+const BLUEPRINT_KEY = 'org.dxos.blueprint.markdown';
+
 // Re-export Settings as merged const/type (not as namespace).
 import * as SettingsModule from './Settings';
 export const Settings = SettingsModule.Settings;
@@ -32,6 +34,8 @@ export const Document = Schema.Struct({
     icon: 'ph--text-aa--regular',
     hue: 'indigo',
   }),
+  Annotation.BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  Annotation.GraphPropsAnnotation.set({ managesAutofocus: true }),
 );
 
 export type Document = Schema.Schema.Type<typeof Document>;

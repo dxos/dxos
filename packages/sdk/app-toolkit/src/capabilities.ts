@@ -12,7 +12,7 @@ import type { AiModelResolver as AiModelResolver$, AiService as AiService$ } fro
 import type { OpaqueToolkit } from '@dxos/ai';
 import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
-import type { Blueprint } from '@dxos/compute';
+import type { Blueprint, Operation } from '@dxos/compute';
 import type { Database, DXN, Type } from '@dxos/echo';
 import type { AnchoredTo } from '@dxos/types';
 
@@ -161,6 +161,20 @@ export namespace AppCapabilities {
    * @category Capability
    */
   export const AnchorSort = Capability$.make<AnchorSort>('org.dxos.app-framework.capability.anchor-sort');
+
+  /** Comment configuration contributed per typename by plugins that support commenting. */
+  export type CommentConfig = Readonly<{
+    id: string;
+    comments: 'anchored' | 'unanchored';
+    selectionMode?: string;
+    getAnchorLabel?: (obj: any, anchor: string) => string | undefined;
+    scrollToAnchor?: Operation.Definition.Any;
+  }>;
+
+  /**
+   * @category Capability
+   */
+  export const CommentConfig = Capability$.make<CommentConfig>('org.dxos.app-framework.capability.comment-config');
 
   export type NavigationTarget = {
     /** Navigation path usable with the Open operation. */

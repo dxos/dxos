@@ -3,14 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Annotation } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
 
 import { ReactSurface } from '#capabilities';
 import { meta } from '#meta';
@@ -22,8 +20,16 @@ export const ZenPlugin = Plugin.define(meta).pipe(
     metadata: {
       id: Dream.Dream.typename,
       metadata: {
-        icon: Annotation.IconAnnotation.get(Dream.Dream).pipe(Option.getOrThrow).icon,
-        iconHue: Annotation.IconAnnotation.get(Dream.Dream).pipe(Option.getOrThrow).hue ?? 'white',
+        addToCollectionOnCreate: true,
+      },
+    },
+  }),
+  Plugin.addModule({
+    id: 'create-object',
+    activatesOn: AppActivationEvents.SetupMetadata,
+    activate: Effect.fnUntraced(function* () {
+      return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+        id: Dream.Dream.typename,
         createObject: ((props, options) =>
           Effect.gen(function* () {
             const object = Dream.make(props);
@@ -34,9 +40,8 @@ export const ZenPlugin = Plugin.define(meta).pipe(
               targetNodeId: options.targetNodeId,
             });
           })) satisfies CreateObject,
-        addToCollectionOnCreate: true,
-      },
-    },
+      });
+    }),
   }),
   AppPlugin.addSchemaModule({ schema: [Dream.Dream] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),

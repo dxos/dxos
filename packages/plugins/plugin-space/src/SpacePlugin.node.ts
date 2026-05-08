@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Tag } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
@@ -27,8 +27,7 @@ import {
 import { IdentityCreated, OperationHandler, UndoMappings } from '#capabilities';
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import { SpaceEvents } from '#types';
-import { type CreateObject, type SpacePluginOptions } from '#types';
+import { SpaceCapabilities, SpaceEvents, type CreateObject, type SpacePluginOptions } from '#types';
 
 import { database, queue, space } from './commands';
 
@@ -37,10 +36,12 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addCommandModule({
     commands: [database, queue, space],
   }),
-  AppPlugin.addMetadataModule({
-    metadata: {
-      id: Collection.Collection.typename,
-      metadata: {
+  Plugin.addModule({
+    id: 'create-object',
+    activatesOn: AppActivationEvents.SetupMetadata,
+    activate: Effect.fnUntraced(function* () {
+      return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+        id: Collection.Collection.typename,
         createObject: ((props, options) =>
           Effect.gen(function* () {
             const object = Collection.make(props);
@@ -51,8 +52,8 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
               targetNodeId: options.targetNodeId,
             });
           })) satisfies CreateObject,
-      },
-    },
+      });
+    }),
   }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({

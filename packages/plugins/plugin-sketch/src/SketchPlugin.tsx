@@ -4,31 +4,24 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { type CreateObject } from '@dxos/plugin-space/types';
-import { RefArray } from '@dxos/react-client/echo';
+import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
 
 import { AppGraphSerializer, OperationHandler, ReactSurface, SketchSettings } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Sketch } from '#types';
 
-import { serializer } from './util';
-
 export const SketchPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addMetadataModule({
-    metadata: {
-      id: Sketch.Sketch.typename,
-      metadata: {
-        icon: 'ph--compass-tool--regular',
-        iconHue: 'indigo',
-        // TODO(wittjosiah): Move out of metadata.
-        loadReferences: async (sketch: Sketch.Sketch) => await RefArray.loadAll([sketch.canvas]),
-        serializer,
-        comments: 'unanchored',
+  Plugin.addModule({
+    id: 'create-object',
+    activatesOn: AppActivationEvents.SetupMetadata,
+    activate: Effect.fnUntraced(function* () {
+      return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+        id: Sketch.Sketch.typename,
         createObject: ((props, options) =>
           Effect.gen(function* () {
             const object = Sketch.make(props);
@@ -39,8 +32,18 @@ export const SketchPlugin = Plugin.define(meta).pipe(
               targetNodeId: options.targetNodeId,
             });
           })) satisfies CreateObject,
-      },
-    },
+      });
+    }),
+  }),
+  Plugin.addModule({
+    id: 'comment-config',
+    activatesOn: AppActivationEvents.SetupMetadata,
+    activate: Effect.fnUntraced(function* () {
+      return Capability.contributes(AppCapabilities.CommentConfig, {
+        id: Sketch.Sketch.typename,
+        comments: 'unanchored',
+      } satisfies AppCapabilities.CommentConfig);
+    }),
   }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Sketch.Canvas, Sketch.Sketch] }),

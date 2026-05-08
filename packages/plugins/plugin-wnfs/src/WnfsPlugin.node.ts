@@ -3,14 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Annotation } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
 
 import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
@@ -18,14 +16,14 @@ import { WnfsOperation } from '#operations';
 import { WnfsAction, WnfsFile } from '#types';
 
 export const WnfsPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addMetadataModule({
-    metadata: {
-      id: WnfsFile.File.typename,
-      metadata: {
-        // TODO(wittjosiah): Would be nice if icon could change based on the type of the file.
-        icon: Annotation.IconAnnotation.get(WnfsFile.File).pipe(Option.getOrThrow).icon,
-        iconHue: Annotation.IconAnnotation.get(WnfsFile.File).pipe(Option.getOrThrow).hue ?? 'white',
+  Plugin.addModule({
+    id: 'create-object',
+    activatesOn: AppActivationEvents.SetupMetadata,
+    activate: Effect.fnUntraced(function* () {
+      return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+        id: WnfsFile.File.typename,
         inputSchema: WnfsAction.UploadFileSchema,
+        // TODO(wittjosiah): Would be nice if icon could change based on the type of the file.
         createObject: ((props, options) =>
           Effect.gen(function* () {
             const { object } = yield* Operation.invoke(WnfsOperation.CreateFile, { ...props, db: options.db });
@@ -36,8 +34,8 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
               targetNodeId: options.targetNodeId,
             });
           })) satisfies CreateObject,
-      },
-    },
+      });
+    }),
   }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [WnfsFile.File] }),

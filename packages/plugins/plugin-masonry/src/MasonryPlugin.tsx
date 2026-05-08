@@ -3,14 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Annotation, Type } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
 import { ViewModel } from '@dxos/schema';
 
 import { ReactSurface } from '#capabilities';
@@ -19,12 +18,12 @@ import { translations } from '#translations';
 import { Masonry, MasonryAction } from '#types';
 
 export const MasonryPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addMetadataModule({
-    metadata: {
-      id: Type.getTypename(Masonry.Masonry),
-      metadata: {
-        icon: Annotation.IconAnnotation.get(Masonry.Masonry).pipe(Option.getOrThrow).icon,
-        iconHue: Annotation.IconAnnotation.get(Masonry.Masonry).pipe(Option.getOrThrow).hue ?? 'white',
+  Plugin.addModule({
+    id: 'create-object',
+    activatesOn: AppActivationEvents.SetupMetadata,
+    activate: Effect.fnUntraced(function* () {
+      return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+        id: Type.getTypename(Masonry.Masonry),
         inputSchema: MasonryAction.MasonryProps,
         createObject: ((props, options) =>
           Effect.gen(function* () {
@@ -39,8 +38,8 @@ export const MasonryPlugin = Plugin.define(meta).pipe(
               targetNodeId: options.targetNodeId,
             });
           })) satisfies CreateObject,
-      },
-    },
+      });
+    }),
   }),
   AppPlugin.addSchemaModule({ schema: [Masonry.Masonry] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),

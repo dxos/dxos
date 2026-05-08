@@ -3,9 +3,6 @@
 //
 
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { type Database, Obj, Type } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
-import { Expando } from '@dxos/schema';
 import { type Label } from '@dxos/ui-types/translations';
 
 import { meta } from '#meta';
@@ -38,42 +35,3 @@ export const getSpaceDisplayName = (
         : UNNAMED_SPACE_LABEL;
 };
 
-//
-// Deprecated
-//
-
-/** @deprecated This is a temporary solution. */
-export const getNestedObjects = async (
-  object: Obj.Unknown,
-  resolve: (typename: string) => Record<string, any>,
-): Promise<Obj.Unknown[]> => {
-  const type = Obj.getTypename(object);
-  if (!type) {
-    return [];
-  }
-
-  const metadata = resolve(type);
-  const loadReferences = metadata?.loadReferences;
-  if (typeof loadReferences !== 'function') {
-    return [];
-  }
-
-  const objects: Obj.Unknown[] = await loadReferences(object);
-  const nested = await Promise.all(objects.map((object) => getNestedObjects(object, resolve)));
-  return [...objects, ...nested.flat()];
-};
-
-/** @deprecated Workaround for ECHO not supporting clone. */
-export const cloneObject = async (
-  object: Obj.Unknown,
-  resolve: (typename: string) => Record<string, any>,
-  newDb: Database.Database,
-): Promise<Obj.Unknown> => {
-  const schema = Obj.getSchema(object);
-  const typename = schema ? (Type.getTypename(schema) ?? Expando.Expando.typename) : Expando.Expando.typename;
-  const metadata = resolve(typename);
-  const serializer = metadata.serializer;
-  invariant(serializer, `No serializer for type: ${typename}`);
-  const content = await serializer.serialize({ object });
-  return serializer.deserialize({ content, db: newDb, newId: true });
-};

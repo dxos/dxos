@@ -9,14 +9,12 @@
 // `Plugin.make` finalizes the plugin (must be the last call in the chain).
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Annotation, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
 
 import { AppGraphBuilder, SampleSettings, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
@@ -30,13 +28,12 @@ export const SamplePlugin = Plugin.define(meta).pipe(
 
   // Registers type metadata for the framework's object system.
   // `createObject` is the factory called when users create this type via the UI.
-  // The `icon` and `iconHue` are read from the schema's IconAnnotation.
-  AppPlugin.addMetadataModule({
-    metadata: {
-      id: Type.getTypename(SampleItem.SampleItem),
-      metadata: {
-        icon: Annotation.IconAnnotation.get(SampleItem.SampleItem).pipe(Option.getOrThrow).icon,
-        iconHue: Annotation.IconAnnotation.get(SampleItem.SampleItem).pipe(Option.getOrThrow).hue,
+  Plugin.addModule({
+    id: 'create-object',
+    activatesOn: AppActivationEvents.SetupMetadata,
+    activate: Effect.fnUntraced(function* () {
+      return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+        id: SampleItem.SampleItem.typename,
         createObject: ((props, options) =>
           Effect.gen(function* () {
             const object = SampleItem.make({ name: props.name });
@@ -47,8 +44,8 @@ export const SamplePlugin = Plugin.define(meta).pipe(
               targetNodeId: options.targetNodeId,
             });
           })) satisfies CreateObject,
-      },
-    },
+      });
+    }),
   }),
 
   // Registers operation handlers. Activates during `SetupOperationHandler` event.

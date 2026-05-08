@@ -3,12 +3,10 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import { Capability, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Annotation, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { SpaceCapabilities, SpaceEvents, type CreateObject } from '@dxos/plugin-space/types';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
@@ -23,13 +21,12 @@ import { translations } from '#translations';
 
 export const TablePlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
-  AppPlugin.addMetadataModule({
-    metadata: {
-      id: Type.getTypename(Table.Table),
-      metadata: {
-        icon: Annotation.IconAnnotation.get(Table.Table).pipe(Option.getOrThrow).icon,
-        iconHue: Annotation.IconAnnotation.get(Table.Table).pipe(Option.getOrThrow).hue ?? 'white',
-        comments: 'unanchored',
+  Plugin.addModule({
+    id: 'create-object',
+    activatesOn: AppActivationEvents.SetupMetadata,
+    activate: Effect.fnUntraced(function* () {
+      return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+        id: Table.Table.typename,
         inputSchema: CreateTableSchema,
         createObject: ((props, options) =>
           Effect.gen(function* () {
@@ -47,8 +44,18 @@ export const TablePlugin = Plugin.define(meta).pipe(
               targetNodeId: options.targetNodeId,
             });
           })) satisfies CreateObject,
-      },
-    },
+      });
+    }),
+  }),
+  Plugin.addModule({
+    id: 'comment-config',
+    activatesOn: AppActivationEvents.SetupMetadata,
+    activate: Effect.fnUntraced(function* () {
+      return Capability.contributes(AppCapabilities.CommentConfig, {
+        id: Table.Table.typename,
+        comments: 'unanchored',
+      } satisfies AppCapabilities.CommentConfig);
+    }),
   }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Table.Table] }),

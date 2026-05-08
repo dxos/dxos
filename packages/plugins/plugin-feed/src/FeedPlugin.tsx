@@ -5,15 +5,14 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { ActivationEvent, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Annotation, Ref } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
 
-import { MagazineBlueprint } from '#blueprints';
 import { AppGraphBuilder, BlueprintDefinition, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { FeedOperation } from '#operations';
@@ -33,13 +32,13 @@ export const FeedPlugin = Plugin.define(meta).pipe(
     activate: AppGraphBuilder,
   }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
-  AppPlugin.addMetadataModule({
-    metadata: [
-      {
-        id: Subscription.Feed.typename,
-        metadata: {
-          icon: Annotation.IconAnnotation.get(Subscription.Feed).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Subscription.Feed).pipe(Option.getOrThrow).hue ?? 'white',
+  Plugin.addModule({
+    id: 'create-objects',
+    activatesOn: AppActivationEvents.SetupMetadata,
+    activate: Effect.fnUntraced(function* () {
+      return [
+        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+          id: Subscription.Feed.typename,
           inputSchema: Subscription.CreateFeedSchema,
           createObject: ((props, options) =>
             Effect.gen(function* () {
@@ -56,22 +55,10 @@ export const FeedPlugin = Plugin.define(meta).pipe(
               }
               return result;
             })) satisfies CreateObject,
-        },
-      },
-      {
-        id: Subscription.Post.typename,
-        metadata: {
-          icon: Annotation.IconAnnotation.get(Subscription.Post).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Subscription.Post).pipe(Option.getOrThrow).hue ?? 'white',
-        },
-      },
-      {
-        id: Magazine.Magazine.typename,
-        metadata: {
-          icon: Annotation.IconAnnotation.get(Magazine.Magazine).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Magazine.Magazine).pipe(Option.getOrThrow).hue ?? 'white',
+        }),
+        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+          id: Magazine.Magazine.typename,
           inputSchema: Magazine.CreateMagazineSchema,
-          blueprints: [MagazineBlueprint.key],
           createObject: ((props, options) =>
             Effect.gen(function* () {
               // Seed every new Magazine with one starter Feed so the article view has
@@ -101,9 +88,9 @@ export const FeedPlugin = Plugin.define(meta).pipe(
                 targetNodeId: options.targetNodeId,
               });
             })) satisfies CreateObject,
-        },
-      },
-    ],
+        }),
+      ];
+    }),
   }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({

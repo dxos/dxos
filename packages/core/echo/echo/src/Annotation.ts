@@ -5,9 +5,11 @@
 // @import-as-namespace
 
 export {
+  BlueprintsAnnotation,
   DescriptionAnnotation,
   FormInputAnnotation,
   GeneratorAnnotation,
+  GraphPropsAnnotation,
   LabelAnnotation,
   ReferenceAnnotation,
   SystemTypeAnnotation,

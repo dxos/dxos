@@ -2,30 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Option from 'effect/Option';
+import * as Effect from 'effect/Effect';
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
-import { Annotation } from '@dxos/echo';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
 
 import { OperationHandler, UndoMappings } from '#capabilities';
 import { meta } from '#meta';
 import { Sheet } from '#types';
 
-import { serializer } from './serializer';
-
 export const SheetPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addMetadataModule({
-    metadata: {
-      id: Sheet.Sheet.typename,
-      metadata: {
-        label: (object: Sheet.Sheet) => object.name,
-        icon: Annotation.IconAnnotation.get(Sheet.Sheet).pipe(Option.getOrThrow).icon,
-        iconHue: Annotation.IconAnnotation.get(Sheet.Sheet).pipe(Option.getOrThrow).hue ?? 'white',
-        serializer,
+  Plugin.addModule({
+    id: 'comment-config',
+    activatesOn: AppActivationEvents.SetupMetadata,
+    activate: Effect.fnUntraced(function* () {
+      return Capability.contributes(AppCapabilities.CommentConfig, {
+        id: Sheet.Sheet.typename,
         comments: 'anchored',
-      },
-    },
+      } satisfies AppCapabilities.CommentConfig);
+    }),
   }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),

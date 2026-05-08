@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
 import { OperationHandler } from '#capabilities';
@@ -18,11 +18,13 @@ import { Calendar, Mailbox } from '#types';
 // TODO(wittjosiah): Factor out shared modules.
 
 export const InboxPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addMetadataModule({
-    metadata: [
-      {
-        id: Mailbox.Mailbox.typename,
-        metadata: {
+  Plugin.addModule({
+    id: 'create-objects',
+    activatesOn: AppActivationEvents.SetupMetadata,
+    activate: Effect.fnUntraced(function* () {
+      return [
+        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+          id: Mailbox.Mailbox.typename,
           createObject: ((props, options) =>
             Effect.gen(function* () {
               const object = Mailbox.make(props);
@@ -33,11 +35,9 @@ export const InboxPlugin = Plugin.define(meta).pipe(
                 targetNodeId: options.targetNodeId,
               });
             })) satisfies CreateObject,
-        },
-      },
-      {
-        id: Calendar.Calendar.typename,
-        metadata: {
+        }),
+        Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+          id: Calendar.Calendar.typename,
           createObject: ((props, options) =>
             Effect.gen(function* () {
               const object = Calendar.make(props);
@@ -48,9 +48,9 @@ export const InboxPlugin = Plugin.define(meta).pipe(
                 targetNodeId: options.targetNodeId,
               });
             })) satisfies CreateObject,
-        },
-      },
-    ],
+        }),
+      ];
+    }),
   }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({

@@ -7,6 +7,8 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+
+const BLUEPRINT_KEY = 'org.dxos.blueprint.chess';
 import { log } from '@dxos/log';
 
 export const Game = Schema.Struct({
@@ -39,6 +41,7 @@ export const Game = Schema.Struct({
     icon: 'ph--shield-chevron--regular',
     hue: 'amber',
   }),
+  Annotation.BlueprintsAnnotation.set([BLUEPRINT_KEY]),
 );
 
 export interface Game extends Schema.Schema.Type<typeof Game> {}
