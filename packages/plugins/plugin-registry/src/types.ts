@@ -5,19 +5,19 @@
 import { type Atom } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { type PluginEntry } from '@dxos/protocols';
+import { Capability, type CommunityPlugin, type CommunityPluginProvider } from '@dxos/app-framework';
 
 import { meta } from '#meta';
 
 export type CommunityPluginsState = {
-  entries: readonly PluginEntry[];
+  entries: readonly CommunityPlugin[];
   loading: boolean;
   error: Error | null;
 };
 
 export namespace RegistryCapabilities {
   export const State = Capability.make<Atom.Atom<CommunityPluginsState>>(`${meta.id}.capability.state`);
+  export const Provider = Capability.make<CommunityPluginProvider>(`${meta.id}.capability.provider`);
 }
 
 export const RegistrySettingsSchema = Schema.mutable(

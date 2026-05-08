@@ -6,22 +6,20 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Plugin, UrlLoader } from '@dxos/app-framework';
+import { type CommunityPlugin, Plugin, UrlLoader } from '@dxos/app-framework';
 import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
-import { type PluginEntry } from '@dxos/protocols';
 import { ScrollArea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { PluginList } from '#components';
 import { getPluginPath, meta } from '#meta';
 
-import { useAutoTags, useCommunityPlugins } from '../../hooks';
+import { useAutoTags, useCommunityPlugins, useUpdateAvailableIds } from '../../hooks';
 
-const sortEntries = (a: PluginEntry, b: PluginEntry) =>
-  (a.meta.name ?? a.meta.id).localeCompare(b.meta.name ?? b.meta.id);
+const sortEntries = (a: CommunityPlugin, b: CommunityPlugin) => (a.name ?? a.id).localeCompare(b.name ?? b.id);
 
 const sortPlugins = (a: Plugin.Plugin, b: Plugin.Plugin) =>
   (a.meta.name ?? a.meta.id).localeCompare(b.meta.name ?? b.meta.id);
@@ -31,10 +29,20 @@ const sortPlugins = (a: Plugin.Plugin, b: Plugin.Plugin) =>
  * {@link PluginList} for rendering. The synthesized plugin has no modules — it
  * exists only for display until the user installs it.
  */
-const toDisplayPlugin = (entry: PluginEntry): Plugin.Plugin =>
+const toDisplayPlugin = (plugin: CommunityPlugin): Plugin.Plugin =>
   ({
     [Plugin.PluginTypeId]: Plugin.PluginTypeId,
-    meta: entry.meta,
+    meta: {
+      id: plugin.id,
+      name: plugin.name,
+      description: plugin.description,
+      homePage: plugin.homePage,
+      source: plugin.source,
+      screenshots: plugin.screenshots,
+      tags: plugin.tags,
+      icon: plugin.icon,
+      iconHue: plugin.iconHue,
+    },
     modules: [],
   }) as Plugin.Plugin;
 
@@ -61,12 +69,23 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
     );
 
     const [installingIds, setInstallingIds] = useState<readonly string[]>([]);
+    const [updatingIds, setUpdatingIds] = useState<readonly string[]>([]);
+    const updateAvailableIds = useUpdateAvailableIds(entries);
 
     const sortedEntries = useMemo(() => [...entries].sort(sortEntries), [entries]);
     const moduleUrlById = useMemo(() => {
       const map: Record<string, string> = {};
       for (const entry of sortedEntries) {
-        map[entry.meta.id] = entry.moduleUrl;
+        map[entry.id] = entry.moduleUrl;
+      }
+      return map;
+    }, [sortedEntries]);
+
+    // Maps plugin id → current registry version (i.e. plugin.version from the catalog).
+    const versionById = useMemo(() => {
+      const map: Record<string, string> = {};
+      for (const entry of sortedEntries) {
+        map[entry.id] = entry.version;
       }
       return map;
     }, [sortedEntries]);
@@ -75,7 +94,7 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
     // is based on the mount-time snapshot so rows don't jump as the user
     // installs plugins during the session.
     const items = useMemo(() => {
-      const catalogIds = new Set(sortedEntries.map((entry) => entry.meta.id));
+      const catalogIds = new Set(sortedEntries.map((entry) => entry.id));
       const remoteIds = new Set(UrlLoader.getRemoteEntries().map((entry) => entry.id));
       const fromCatalog = sortedEntries.map(toDisplayPlugin);
       const fromUrlOnly = plugins.filter((plugin) => remoteIds.has(plugin.meta.id) && !catalogIds.has(plugin.meta.id));
@@ -110,13 +129,18 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
     const handleInstall = useCallback(
       (pluginId: string) => {
         const moduleUrl = moduleUrlById[pluginId];
+        const version = versionById[pluginId];
         if (!moduleUrl) {
           return;
         }
         setInstallingIds((prev) => (prev.includes(pluginId) ? prev : [...prev, pluginId]));
-        void void Effect.gen(function* () {
+        void Effect.gen(function* () {
           const plugin = yield* manager.add(moduleUrl);
           yield* manager.enable(plugin.meta.id);
+          // Persist the installed version for future update detection.
+          if (version) {
+            UrlLoader.setInstalledVersion(plugin.meta.id, version);
+          }
           yield* invoke(ObservabilityOperation.SendEvent, {
             name: 'plugins.install',
             properties: { plugin: plugin.meta.id, source: 'community' },
@@ -126,7 +150,35 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
           runAndForwardErrors,
         );
       },
-      [invoke, manager, moduleUrlById],
+      [invoke, manager, moduleUrlById, versionById],
+    );
+
+    const handleUpdate = useCallback(
+      (pluginId: string) => {
+        const moduleUrl = moduleUrlById[pluginId];
+        const version = versionById[pluginId];
+        if (!moduleUrl) {
+          return;
+        }
+        setUpdatingIds((prev) => (prev.includes(pluginId) ? prev : [...prev, pluginId]));
+        void Effect.gen(function* () {
+          // Unload the old version then re-install from the new URL.
+          yield* manager.remove(pluginId);
+          const plugin = yield* manager.add(moduleUrl);
+          yield* manager.enable(plugin.meta.id);
+          if (version) {
+            UrlLoader.setInstalledVersion(plugin.meta.id, version);
+          }
+          yield* invoke(ObservabilityOperation.SendEvent, {
+            name: 'plugins.update',
+            properties: { plugin: plugin.meta.id, source: 'community' },
+          });
+        }).pipe(
+          Effect.ensuring(Effect.sync(() => setUpdatingIds((prev) => prev.filter((pid) => pid !== pluginId)))),
+          runAndForwardErrors,
+        );
+      },
+      [invoke, manager, moduleUrlById, versionById],
     );
 
     const handleClick = useCallback(
@@ -157,11 +209,14 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
               plugins={items}
               installed={installedIds}
               installing={installingIds}
+              updating={updatingIds}
+              updateAvailableIds={updateAvailableIds}
               enabled={enabled}
               extraTagsById={extraTagsById}
               onClick={handleClick}
               onChange={handleChange}
               onInstall={handleInstall}
+              onUpdate={handleUpdate}
               hasSettings={hasSettings}
               onSettings={handleSettings}
             />

@@ -9,9 +9,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
+import { EdgeCommunityPluginProvider } from './community-plugin-provider';
 import { RegistryCapabilities, type CommunityPluginsState } from '#types';
-
-import { loadCommunityPlugins } from '../hooks';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -22,7 +21,9 @@ export default Capability.makeModule(
       Atom.keepAlive,
     );
 
-    yield* loadCommunityPlugins(client.edge.http).pipe(
+    const provider = new EdgeCommunityPluginProvider(client.edge.http);
+
+    yield* provider.listPlugins().pipe(
       Effect.match({
         onSuccess: (entries) => registry.set(communityPluginsAtom, { entries, loading: false, error: null }),
         onFailure: (error) => {
@@ -33,6 +34,9 @@ export default Capability.makeModule(
       Effect.forkDaemon,
     );
 
-    return Capability.contributes(RegistryCapabilities.State, communityPluginsAtom);
+    return [
+      Capability.contributes(RegistryCapabilities.State, communityPluginsAtom),
+      Capability.contributes(RegistryCapabilities.Provider, provider),
+    ];
   }),
 );

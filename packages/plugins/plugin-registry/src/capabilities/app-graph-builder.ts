@@ -4,11 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { Capabilities, Capability, type CommunityPlugin, Plugin } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { type PluginEntry } from '@dxos/protocols';
 
 import { REGISTRY_ID, REGISTRY_KEY, registryCategoryId, meta } from '#meta';
 import { RegistryCapabilities } from '#types';
@@ -21,10 +20,20 @@ import { LOAD_PLUGIN_DIALOG } from '../containers';
  * modules and only exists so the article surface can render details for
  * community plugins that haven't been installed yet.
  */
-const toDisplayPlugin = (entry: PluginEntry): Plugin.Plugin =>
+const toDisplayPlugin = (entry: CommunityPlugin): Plugin.Plugin =>
   ({
     [Plugin.PluginTypeId]: Plugin.PluginTypeId,
-    meta: entry.meta,
+    meta: {
+      id: entry.id,
+      name: entry.name,
+      description: entry.description,
+      homePage: entry.homePage,
+      source: entry.source,
+      screenshots: entry.screenshots,
+      tags: entry.tags,
+      icon: entry.icon,
+      iconHue: entry.iconHue,
+    },
     modules: [],
   }) as Plugin.Plugin;
 
@@ -168,7 +177,7 @@ export default Capability.makeModule(
 
           const communityEntries = stateAtom ? get(stateAtom).entries : [];
           const communityNodes = communityEntries
-            .filter((entry) => !installedIds.has(entry.meta.id))
+            .filter((entry) => !installedIds.has(entry.id))
             .map((entry) => {
               const plugin = toDisplayPlugin(entry);
               return Node.make({

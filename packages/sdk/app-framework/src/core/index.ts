@@ -10,3 +10,4 @@ export * as PluginAssetCache from './plugin-asset-cache';
 export * as PluginManager from './plugin-manager';
 export * as PluginManifest from './plugin-manifest';
 export * as UrlLoader from './url-loader';
+export type { CommunityPlugin, CommunityPluginVersion, CommunityPluginProvider } from './community-plugin-provider';
