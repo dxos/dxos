@@ -5,4 +5,3 @@
 export * from './annotations';
 export * from './sorting';
 export * from './util';
-export type { AnnotationHelper } from './util';
