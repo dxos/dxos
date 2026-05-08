@@ -53,6 +53,7 @@ export const shallowEqual = (a: unknown, b: unknown): boolean => {
 
 /**
  * Returns true if two NodeArg arrays are semantically identical (same id, type, data, properties per index).
+ * Inline child nodes (the `nodes` field) are compared recursively.
  */
 export const nodeArgsUnchanged = (prev: Node.NodeArg<any>[], next: Node.NodeArg<any>[]): boolean => {
   if (prev.length !== next.length) {
@@ -65,7 +66,8 @@ export const nodeArgsUnchanged = (prev: Node.NodeArg<any>[], next: Node.NodeArg<
       prevNode.id === nextNode.id &&
       prevNode.type === nextNode.type &&
       shallowEqual(prevNode.data, nextNode.data) &&
-      shallowEqual(prevNode.properties, nextNode.properties)
+      shallowEqual(prevNode.properties, nextNode.properties) &&
+      nodeArgsUnchanged(prevNode.nodes ?? [], nextNode.nodes ?? [])
     );
   });
 };

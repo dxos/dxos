@@ -48,7 +48,9 @@ const TestLayer = Layer.mergeAll(
 
 /** Full environment for trigger tests; cast so `it.effect` accepts the provided service union. */
 const makeTestTriggerDispatcherLayer = (
-  options: { timeControl: 'natural' } | { timeControl: 'manual'; startingTime: Date },
+  options: ({ timeControl: 'natural' } | { timeControl: 'manual'; startingTime: Date }) & {
+    failureCooldown?: Duration.Duration;
+  },
 ) => Layer.provideMerge(TriggerDispatcher.layer(options), TestLayer);
 
 const TestTriggerDispatcherLayer = makeTestTriggerDispatcherLayer({
@@ -199,6 +201,54 @@ describe('TriggerDispatcher', () => {
         results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
         expect(results.length).toBe(1);
       }, Effect.provide(TestTriggerDispatcherLayer)),
+    );
+  });
+
+  describe('Failure Cooldown', () => {
+    it.effect(
+      'failed trigger is skipped during cooldown and resumes after',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          // Use a Person object as the function ref so trigger invocation fails the
+          // `Obj.instanceOf(Operation.PersistentOperation, ...)` invariant.
+          const badFn = Obj.make(Person.Person, { fullName: 'not-an-operation' });
+          yield* Database.add(badFn);
+
+          const trigger = Trigger.make({
+            function: Ref.make(badFn) as any,
+            enabled: true,
+            spec: Trigger.specTimer('* * * * *'),
+          });
+          yield* Database.add(trigger);
+
+          const dispatcher = yield* TriggerDispatcher;
+          yield* dispatcher.refreshTriggers();
+
+          // First scheduled run -- fails and arms the cooldown.
+          yield* dispatcher.advanceTime(Duration.minutes(1));
+          let results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
+          expect(results.length).toBe(1);
+          expect(Exit.isFailure(results[0].result)).toBe(true);
+
+          // Within cooldown window (cron would otherwise fire) -- skipped.
+          yield* dispatcher.advanceTime(Duration.minutes(2));
+          results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
+          expect(results.length).toBe(0);
+
+          // Past cooldown -- runs again (and fails again).
+          yield* dispatcher.advanceTime(Duration.minutes(4));
+          results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
+          expect(results.length).toBe(1);
+          expect(Exit.isFailure(results[0].result)).toBe(true);
+        },
+        Effect.provide(
+          makeTestTriggerDispatcherLayer({
+            timeControl: 'manual',
+            startingTime: new Date('2025-09-05T15:01:00.000Z'),
+            failureCooldown: Duration.minutes(5),
+          }),
+        ),
+      ),
     );
   });
 

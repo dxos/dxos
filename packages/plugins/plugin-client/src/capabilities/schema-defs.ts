@@ -6,12 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { type Type } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { ClientCapabilities } from '#types';
-
-const schemaKey = (schema: Type.AnyEntity) => `${Type.getTypename(schema)}@${Type.getVersion(schema)}`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -20,17 +18,35 @@ export default Capability.makeModule(
     const schemasAtom = yield* Capability.atom(AppCapabilities.Schema);
 
     // TODO(wittjosiah): Unregister schemas when they are disabled.
-    let previousKeys = new Set<string>();
+    let previousDxns = new Set<string>();
     const cancel = registry.subscribe(
       schemasAtom,
-      async (_schemas: any[]) => {
-        const schemas = Array.from(new Set(_schemas.flat())) as Type.AnyEntity[];
-        const newSchemas = schemas.filter((schema) => !previousKeys.has(schemaKey(schema)));
-        if (schemas.length !== newSchemas.length) {
-          log('skipping duplicate schema registrations', { count: schemas.length - newSchemas.length });
+      async (schemas) => {
+        const seenSchemaDxns = new Set<string>();
+        const batch: { schema: Type.AnyEntity; dxnKey: string }[] = [];
+        for (const schema of schemas.flat()) {
+          const dxn = Type.getDXN(schema);
+          if (!dxn) {
+            log.warn('skipping schema without dxn');
+            continue;
+          }
+
+          const key = dxn.toString();
+          if (seenSchemaDxns.has(key)) {
+            log('skipping duplicate schema for echo registration', { dxn: key });
+            continue;
+          }
+
+          seenSchemaDxns.add(key);
+          batch.push({ schema, dxnKey: key });
         }
-        previousKeys = new Set(schemas.map(schemaKey));
-        await client.addTypes(newSchemas);
+
+        const toRegister = batch.filter(({ dxnKey }) => !previousDxns.has(dxnKey));
+
+        await client.addTypes(toRegister.map(({ schema }) => schema));
+        for (const { dxnKey } of toRegister) {
+          previousDxns.add(dxnKey);
+        }
       },
       { immediate: true },
     );
