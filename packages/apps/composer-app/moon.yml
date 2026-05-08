@@ -12,6 +12,8 @@ tasks:
     # Emit `_worker.js` after `vite build` so it survives Vite's `emptyOutDir`.
     script: pnpm exec vite build && pnpm run --silent build:functions
     deps:
+      - ^:build
+      - ^:compile
       - prebuild
     inputs:
       - script-frame/index.html
