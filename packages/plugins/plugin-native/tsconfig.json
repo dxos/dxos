@@ -24,10 +24,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/operation"
+      "path": "../../core/compute/operation"
     },
     {
       "path": "../../sdk/app-framework"
