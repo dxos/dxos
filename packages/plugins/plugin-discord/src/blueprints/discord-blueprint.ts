@@ -6,15 +6,14 @@ import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 import { CreateBot } from '#operations';
+import { Discord } from '#types';
 
 // TODO(burdon): Reconcile with assistant-toolkit/blueprints/discord/blueprint.ts.
-const BLUEPRINT_KEY = 'org.dxos.blueprint.discord2';
-
 const operations = [CreateBot];
 
 const make = () =>
   Blueprint.make({
-    key: BLUEPRINT_KEY,
+    key: Discord.BLUEPRINT_KEY,
     name: 'Discord Bot',
     tools: Blueprint.toolDefinitions({ operations }),
     instructions: Template.make({
@@ -27,7 +26,7 @@ const make = () =>
   });
 
 const blueprint: Blueprint.Definition = {
-  key: BLUEPRINT_KEY,
+  key: Discord.BLUEPRINT_KEY,
   make,
 };
 
