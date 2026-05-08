@@ -591,7 +591,12 @@ describe('GraphBuilder', () => {
         const { registry, builder, graph, nodesAtom } = makeGraph();
 
         const withGrandchild = (data: string) =>
-          parent({ id: 'child', type: EXAMPLE_TYPE, data: null, nodes: [{ id: 'grandchild', type: EXAMPLE_TYPE, data }] });
+          parent({
+            id: 'child',
+            type: EXAMPLE_TYPE,
+            data: null,
+            nodes: [{ id: 'grandchild', type: EXAMPLE_TYPE, data }],
+          });
 
         registry.set(nodesAtom, [withGrandchild('v1')]);
         await GraphBuilder.flush(builder);
