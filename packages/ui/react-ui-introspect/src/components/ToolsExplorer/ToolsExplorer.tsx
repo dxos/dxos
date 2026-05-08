@@ -136,13 +136,11 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(
         {...composableProps(props, { classNames: 'dx-container grid grid-cols-[30rem_1fr] divide-x divide-separator' })}
         ref={forwardedRef}
       >
-        <div className='dx-container grid grid-rows-[1fr_2fr] divide-y divide-separator'>
+        <div role='none' className='dx-container grid grid-rows-[2fr_3fr] divide-y divide-separator'>
           <ToolList tools={TOOL_METADATA} selected={selected} onSelect={handleSelect} />
-          {selectedTool && (
-            <ToolForm tool={selectedTool} onSubmit={handleSubmit} pickerOptions={pickerOptions} />
-          )}
+          {selectedTool && <ToolForm tool={selectedTool} onSubmit={handleSubmit} pickerOptions={pickerOptions} />}
         </div>
-        <div className='dx-container grid'>
+        <div role='none' className='dx-container grid'>
           <ToolResults result={result} error={callError} loading={running} />
         </div>
       </div>
