@@ -62,6 +62,6 @@ export class GoogleApiError extends BaseError.extend('GoogleApiError', 'Google A
     public readonly apiMessage: string,
     options?: BaseErrorOptions,
   ) {
-    super({ context: { code, apiMessage }, ...options });
+    super({ ...options, context: { ...(options?.context ?? {}), code, apiMessage } });
   }
 }

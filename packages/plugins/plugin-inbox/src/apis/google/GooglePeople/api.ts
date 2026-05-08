@@ -22,9 +22,11 @@ import {
  */
 const API_URL = 'https://people.googleapis.com/v1';
 
-/** Fields to request for each person. */
-const PERSON_FIELDS =
-  'resourceName,etag,names,emailAddresses,phoneNumbers,addresses,birthdays,biographies,photos,organizations,urls';
+/**
+ * Fields to request for each person.
+ * `resourceName` and `etag` are metadata returned automatically and must NOT appear here.
+ */
+const PERSON_FIELDS = 'names,emailAddresses,phoneNumbers,addresses,birthdays,biographies,photos,organizations,urls';
 
 /**
  * Lists all contact groups for the authenticated user.

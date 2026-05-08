@@ -33,6 +33,7 @@ const fetchGroupMembers = Effect.fn(function* (groupResourceName: string) {
 
 /**
  * Fetch all contacts via paginated `people.connections.list`.
+ * Returns a Map keyed by resourceName for O(1) group-membership lookups.
  */
 const fetchAllConnections = Effect.fn(function* () {
   const people: GooglePeople.Person[] = [];
@@ -42,11 +43,12 @@ const fetchAllConnections = Effect.fn(function* () {
     people.push(...(response.connections ?? []));
     pageToken = response.nextPageToken;
   } while (pageToken);
-  return people;
+  return new Map(people.map((p) => [p.resourceName, p]));
 });
 
 /**
  * Find an existing Person keyed by Google resource name, or create a new one.
+ * Returns `true` when a new Person was created.
  */
 const upsertPerson = (remote: GooglePeople.Person) =>
   Effect.gen(function* () {
@@ -56,6 +58,12 @@ const upsertPerson = (remote: GooglePeople.Person) =>
     );
 
     if (existing.length > 0) {
+      if (existing.length > 1) {
+        log.warn('multiple Person records share the same Google resource name', {
+          resourceName: remote.resourceName,
+          count: existing.length,
+        });
+      }
       const person = existing[0] as Person.Person;
       Obj.update(person, (person) => {
         if (props.fullName !== undefined) {
@@ -88,40 +96,40 @@ const upsertPerson = (remote: GooglePeople.Person) =>
     return true;
   });
 
-const syncOneGroup = (integration: Integration.Integration, groupResourceName: string) =>
+const syncOneGroup = (
+  integration: Integration.Integration,
+  groupResourceName: string,
+  connectionsByResourceName: ReadonlyMap<string, GooglePeople.Person>,
+) =>
   Effect.gen(function* () {
     log('syncing google contact group', { groupResourceName });
 
-    // Fetch group membership and all connections in parallel.
-    const [memberNames, allConnections] = yield* Effect.all([
-      fetchGroupMembers(groupResourceName),
-      fetchAllConnections(),
-    ]);
-
+    const memberNames = yield* fetchGroupMembers(groupResourceName);
     if (memberNames.length === 0) {
       log('contact group is empty', { groupResourceName });
       return 0;
     }
 
-    // Filter to only contacts that are members of this group.
-    const memberSet = new Set(memberNames);
-    const people = allConnections.filter((p) => memberSet.has(p.resourceName));
+    // Resolve members from the pre-fetched connections map.
+    const people = memberNames
+      .map((name) => connectionsByResourceName.get(name))
+      .filter((person): person is GooglePeople.Person => person !== undefined);
     log('fetched group members', { groupResourceName, members: memberNames.length, matched: people.length });
 
-    let upserted = 0;
-    yield* Stream.fromIterable(people).pipe(
+    const upserted = yield* Stream.fromIterable(people).pipe(
       Stream.grouped(10),
       Stream.mapEffect((batch) =>
         Effect.gen(function* () {
+          let count = 0;
           for (const person of Chunk.toArray(batch)) {
-            const created = yield* upsertPerson(person);
-            if (created) {
-              upserted++;
+            if (yield* upsertPerson(person)) {
+              count++;
             }
           }
+          return count;
         }),
       ),
-      Stream.runDrain,
+      Stream.runFold(0, (acc, batchCount) => acc + batchCount),
     );
 
     // Persist last sync timestamp on the integration target.
@@ -153,9 +161,12 @@ export default GoogleContactsSync.pipe(
         }
       }
 
+      // Fetch all connections once and share across groups to avoid redundant API calls.
+      const connectionsByResourceName = yield* fetchAllConnections();
+
       let total = 0;
       for (const groupId of targetGroups) {
-        total += yield* syncOneGroup(integrationObj, groupId);
+        total += yield* syncOneGroup(integrationObj, groupId, connectionsByResourceName);
       }
 
       return { upserted: total };
