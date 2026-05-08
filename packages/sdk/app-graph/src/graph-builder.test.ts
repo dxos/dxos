@@ -555,6 +555,160 @@ describe('GraphBuilder', () => {
       expect(Graph.getNode(graph, 'root/parent-node/inline-child').pipe(Option.getOrNull)).to.be.null;
     });
 
+    test('inline nodes reactively update data', async ({ expect }) => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+
+      const nodesAtom = Atom.make<Node.NodeArg<any>[]>([
+        {
+          id: 'parent-node',
+          type: EXAMPLE_TYPE,
+          data: null,
+          nodes: [{ id: 'inline-child', type: EXAMPLE_TYPE, data: 'v1' }],
+        },
+      ]);
+
+      GraphBuilder.addExtension(
+        builder,
+        GraphBuilder.createExtensionRaw({
+          id: 'inline-connector',
+          connector: () => Atom.make((get) => get(nodesAtom)),
+        }),
+      );
+
+      const graph = builder.graph;
+      Graph.expand(graph, Node.RootId, 'child');
+      await GraphBuilder.flush(builder);
+
+      {
+        const node = Graph.getNode(graph, 'root/parent-node/inline-child').pipe(Option.getOrNull);
+        expect(node?.data).to.equal('v1');
+      }
+
+      // Change only the inline child's data — parent is unchanged.
+      registry.set(nodesAtom, [
+        {
+          id: 'parent-node',
+          type: EXAMPLE_TYPE,
+          data: null,
+          nodes: [{ id: 'inline-child', type: EXAMPLE_TYPE, data: 'v2' }],
+        },
+      ]);
+      await GraphBuilder.flush(builder);
+
+      {
+        const node = Graph.getNode(graph, 'root/parent-node/inline-child').pipe(Option.getOrNull);
+        expect(node?.data).to.equal('v2');
+      }
+    });
+
+    test('inline nodes reactively update properties', async ({ expect }) => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+
+      const nodesAtom = Atom.make<Node.NodeArg<any>[]>([
+        {
+          id: 'parent-node',
+          type: EXAMPLE_TYPE,
+          data: null,
+          nodes: [{ id: 'inline-child', type: EXAMPLE_TYPE, data: null, properties: { label: 'before' } }],
+        },
+      ]);
+
+      GraphBuilder.addExtension(
+        builder,
+        GraphBuilder.createExtensionRaw({
+          id: 'inline-connector',
+          connector: () => Atom.make((get) => get(nodesAtom)),
+        }),
+      );
+
+      const graph = builder.graph;
+      Graph.expand(graph, Node.RootId, 'child');
+      await GraphBuilder.flush(builder);
+
+      {
+        const node = Graph.getNode(graph, 'root/parent-node/inline-child').pipe(Option.getOrNull);
+        expect(node?.properties.label).to.equal('before');
+      }
+
+      registry.set(nodesAtom, [
+        {
+          id: 'parent-node',
+          type: EXAMPLE_TYPE,
+          data: null,
+          nodes: [{ id: 'inline-child', type: EXAMPLE_TYPE, data: null, properties: { label: 'after' } }],
+        },
+      ]);
+      await GraphBuilder.flush(builder);
+
+      {
+        const node = Graph.getNode(graph, 'root/parent-node/inline-child').pipe(Option.getOrNull);
+        expect(node?.properties.label).to.equal('after');
+      }
+    });
+
+    test('deeply nested inline nodes reactively update', async ({ expect }) => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+
+      const nodesAtom = Atom.make<Node.NodeArg<any>[]>([
+        {
+          id: 'parent-node',
+          type: EXAMPLE_TYPE,
+          data: null,
+          nodes: [
+            {
+              id: 'child',
+              type: EXAMPLE_TYPE,
+              data: null,
+              nodes: [{ id: 'grandchild', type: EXAMPLE_TYPE, data: 'v1' }],
+            },
+          ],
+        },
+      ]);
+
+      GraphBuilder.addExtension(
+        builder,
+        GraphBuilder.createExtensionRaw({
+          id: 'inline-connector',
+          connector: () => Atom.make((get) => get(nodesAtom)),
+        }),
+      );
+
+      const graph = builder.graph;
+      Graph.expand(graph, Node.RootId, 'child');
+      await GraphBuilder.flush(builder);
+
+      {
+        const node = Graph.getNode(graph, 'root/parent-node/child/grandchild').pipe(Option.getOrNull);
+        expect(node?.data).to.equal('v1');
+      }
+
+      // Change only the grandchild's data — all ancestors unchanged.
+      registry.set(nodesAtom, [
+        {
+          id: 'parent-node',
+          type: EXAMPLE_TYPE,
+          data: null,
+          nodes: [
+            {
+              id: 'child',
+              type: EXAMPLE_TYPE,
+              data: null,
+              nodes: [{ id: 'grandchild', type: EXAMPLE_TYPE, data: 'v2' }],
+            },
+          ],
+        },
+      ]);
+      await GraphBuilder.flush(builder);
+
+      {
+        const node = Graph.getNode(graph, 'root/parent-node/child/grandchild').pipe(Option.getOrNull);
+        expect(node?.data).to.equal('v2');
+      }
+    });
+
     test('sort edges', async () => {
       const registry = Registry.make();
       const builder = GraphBuilder.make({ registry });
