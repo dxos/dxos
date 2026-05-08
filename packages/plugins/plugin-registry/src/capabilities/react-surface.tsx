@@ -2,28 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { Surface, useSettingsState, usePluginManager } from '@dxos/app-framework/ui';
+import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { runAndForwardErrors } from '@dxos/effect';
 
-import { RegistrySettings } from '#components';
 import {
   LOAD_PLUGIN_DIALOG,
   LoadPluginDialog,
   PluginArticle,
   PluginRegistryArticle,
   PluginsArticle,
+  RegistrySettingsContainer,
 } from '#containers';
 import { meta, registryCategoryId } from '#meta';
 
 import { useAutoTags, useRegistryPlugins, useRemotePluginIds } from '../hooks';
-import { type RegistrySettings as RegistrySettingsType } from '../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -131,40 +128,7 @@ export default Capability.makeModule(() =>
         role: 'article',
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
-        component: ({ data: { subject } }) => {
-          const manager = usePluginManager();
-          const { settings, updateSettings } = useSettingsState<RegistrySettingsType>(subject.atom);
-          const activeDevPluginIds = useAtomValue(manager.devPluginIds);
-
-          const onEnableDev = useCallback(
-            async (url: string) => {
-              await runAndForwardErrors(
-                Effect.gen(function* () {
-                  const plugin = yield* manager.add(url);
-                  yield* manager.enable(plugin.meta.id);
-                }),
-              );
-            },
-            [manager],
-          );
-
-          const onDisableDev = useCallback(
-            async (id: string) => {
-              await runAndForwardErrors(manager.remove(id));
-            },
-            [manager],
-          );
-
-          return (
-            <RegistrySettings
-              settings={settings}
-              onSettingsChange={updateSettings}
-              activeDevPluginIds={activeDevPluginIds}
-              onEnableDev={onEnableDev}
-              onDisableDev={onDisableDev}
-            />
-          );
-        },
+        component: ({ data: { subject } }) => <RegistrySettingsContainer subject={subject} />,
       }),
     ]),
   ),
