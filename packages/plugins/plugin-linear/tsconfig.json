@@ -54,7 +54,13 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-integration"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

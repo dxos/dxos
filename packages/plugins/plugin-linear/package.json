@@ -48,7 +48,9 @@
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",
-    "@dxos/effect": "workspace:*"
+    "@dxos/effect": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*"
   },
   "peerDependencies": {
     "effect": "catalog:"
