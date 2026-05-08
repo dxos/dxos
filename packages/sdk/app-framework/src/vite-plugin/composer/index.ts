@@ -271,6 +271,34 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
         });
       },
     });
+
+    // Dev-server manifest. `vite dev` can't enumerate transitive chunks/CSS up front
+    // (they resolve on demand), so we serve a `devEntry`-flavored manifest at the dev
+    // root and let the host loader skip eager caching + static stylesheet injection.
+    // The host imports `entry` directly from the dev server, where Vite handles
+    // JSX transforms, externalization, and runtime CSS injection.
+    plugins.push({
+      name: 'composer-plugin:serve-manifest',
+      apply: 'serve',
+      configureServer(server) {
+        const body = serializeManifest(meta, { assets: [], devEntry: entry.replace(/^\.?\//, '') });
+        server.middlewares.use(`/${MANIFEST_ASSET_NAME}`, (req, res, next) => {
+          // Only intercept the bare manifest URL — let any sub-paths fall through.
+          if (req.url && req.url !== '/' && req.url !== '') {
+            return next();
+          }
+          // CORS mirrors `server.cors: true` (see plugin config above) so the host
+          // app at a different origin can read the manifest. Vite's built-in CORS
+          // covers most paths but middlewares mounted before its `cors` middleware
+          // need to set the header themselves.
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Cache-Control', 'no-store');
+          res.statusCode = 200;
+          res.end(body);
+        });
+      },
+    });
   }
 
   return plugins;

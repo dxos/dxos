@@ -23,21 +23,34 @@ export class PluginManifestError extends BaseError.extend('PluginManifestError',
 /**
  * Schema for a third-party plugin manifest.
  *
- * The manifest is published as a sibling of the plugin's entry module
- * ({@link PLUGIN_ENTRY_FILENAME}) and advertises every file the plugin needs at
+ * Production manifests are published as a sibling of the plugin's entry module
+ * ({@link PLUGIN_ENTRY_FILENAME}) and advertise every file the plugin needs at
  * runtime so the host can eagerly cache them for offline use.
+ *
+ * Dev manifests (served by `vite dev` via {@link composerPlugin}) set `devEntry`
+ * to point at the unbundled source entry. The host's loader treats the presence
+ * of `devEntry` as the dev-mode signal: it imports the entry directly from the
+ * dev server, skips eager asset caching, and skips static stylesheet injection
+ * (Vite handles CSS via runtime `<style>` injection during HMR). `assets` is not
+ * required to enumerate every file in dev mode — chunks and styles flow through
+ * the dev server on demand.
  */
 export const Manifest = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
   version: Schema.String,
   assets: Schema.Array(Schema.String),
+  devEntry: Schema.String.pipe(Schema.optional),
 });
 
 export type Manifest = Schema.Schema.Type<typeof Manifest>;
 
 /**
  * Resolved manifest with all asset paths converted to absolute URLs.
+ *
+ * `dev` reflects whether the source manifest declared a `devEntry`. Loaders branch
+ * on this to skip offline caching and stylesheet injection — both are no-ops (or
+ * actively wrong) when the plugin is being served by a Vite dev server.
  */
 export type ResolvedManifest = {
   id: string;
@@ -45,18 +58,25 @@ export type ResolvedManifest = {
   version: string;
   entryUrl: string;
   assetUrls: readonly string[];
+  dev: boolean;
 };
 
 /**
  * Resolves a parsed manifest's relative asset paths against the manifest's URL.
+ * In dev mode the entry comes from `devEntry`; otherwise it's the canonical
+ * {@link PLUGIN_ENTRY_FILENAME} sitting next to the manifest.
  */
-const resolve = (manifestUrl: string, manifest: Manifest): ResolvedManifest => ({
-  id: manifest.id,
-  name: manifest.name,
-  version: manifest.version,
-  entryUrl: new URL(PLUGIN_ENTRY_FILENAME, manifestUrl).toString(),
-  assetUrls: manifest.assets.map((asset) => new URL(asset, manifestUrl).toString()),
-});
+const resolve = (manifestUrl: string, manifest: Manifest): ResolvedManifest => {
+  const dev = manifest.devEntry !== undefined;
+  return {
+    id: manifest.id,
+    name: manifest.name,
+    version: manifest.version,
+    entryUrl: new URL(dev ? manifest.devEntry! : PLUGIN_ENTRY_FILENAME, manifestUrl).toString(),
+    assetUrls: manifest.assets.map((asset) => new URL(asset, manifestUrl).toString()),
+    dev,
+  };
+};
 
 /**
  * Synchronous decode + validate + resolve for an in-memory manifest payload. Used
@@ -65,7 +85,7 @@ const resolve = (manifestUrl: string, manifest: Manifest): ResolvedManifest => (
  */
 export const parse = (manifestUrl: string, payload: unknown): ResolvedManifest => {
   const manifest = Schema.decodeUnknownSync(Manifest)(payload);
-  if (!manifest.assets.includes(PLUGIN_ENTRY_FILENAME)) {
+  if (manifest.devEntry === undefined && !manifest.assets.includes(PLUGIN_ENTRY_FILENAME)) {
     throw new Error(`Manifest at ${manifestUrl} does not list ${PLUGIN_ENTRY_FILENAME} in assets.`);
   }
   return resolve(manifestUrl, manifest);
@@ -90,7 +110,7 @@ export const fetchManifest = (manifestUrl: string): Effect.Effect<ResolvedManife
     const manifest = yield* HttpClientResponse.schemaBodyJson(Manifest)(response).pipe(
       Effect.mapError((cause) => new PluginManifestError({ context: { manifestUrl, reason: 'parse-failed' }, cause })),
     );
-    if (!manifest.assets.includes(PLUGIN_ENTRY_FILENAME)) {
+    if (manifest.devEntry === undefined && !manifest.assets.includes(PLUGIN_ENTRY_FILENAME)) {
       return yield* Effect.fail(
         new PluginManifestError({
           context: { manifestUrl, reason: 'invalid' },
