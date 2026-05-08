@@ -9,7 +9,13 @@ import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { LOAD_PLUGIN_DIALOG, LoadPluginDialog, PluginArticle, PluginRegistry, Registry } from '#containers';
+import {
+  LOAD_PLUGIN_DIALOG,
+  LoadPluginDialog,
+  PluginArticle,
+  PluginRegistryArticle,
+  PluginsArticle,
+} from '#containers';
 import { registryCategoryId } from '#meta';
 
 import { useAutoTags, useRegistryPlugins, useRemotePluginIds } from '../hooks';
@@ -35,7 +41,7 @@ export default Capability.makeModule(() =>
           );
 
           return (
-            <PluginRegistry id={registryCategoryId('official')} plugins={filtered} extraTagsById={extraTagsById} />
+            <PluginsArticle id={registryCategoryId('official')} plugins={filtered} extraTagsById={extraTagsById} />
           );
         },
       }),
@@ -56,7 +62,7 @@ export default Capability.makeModule(() =>
           );
 
           return (
-            <PluginRegistry id={registryCategoryId('installed')} plugins={filtered} extraTagsById={extraTagsById} />
+            <PluginsArticle id={registryCategoryId('installed')} plugins={filtered} extraTagsById={extraTagsById} />
           );
         },
       }),
@@ -79,7 +85,7 @@ export default Capability.makeModule(() =>
           );
 
           return (
-            <PluginRegistry id={registryCategoryId('recommended')} plugins={filtered} extraTagsById={extraTagsById} />
+            <PluginsArticle id={registryCategoryId('recommended')} plugins={filtered} extraTagsById={extraTagsById} />
           );
         },
       }),
@@ -95,13 +101,13 @@ export default Capability.makeModule(() =>
             [manager],
           );
 
-          return <PluginRegistry id={registryCategoryId('labs')} plugins={filtered} extraTagsById={extraTagsById} />;
+          return <PluginsArticle id={registryCategoryId('labs')} plugins={filtered} extraTagsById={extraTagsById} />;
         },
       }),
       Surface.create({
         id: 'registry',
         filter: AppSurface.literal(AppSurface.Article, registryCategoryId('registry')),
-        component: () => <Registry id={registryCategoryId('registry')} />,
+        component: () => <PluginRegistryArticle id={registryCategoryId('registry')} />,
       }),
       Surface.create({
         id: 'plugin-details',

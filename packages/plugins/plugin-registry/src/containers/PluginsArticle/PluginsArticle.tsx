@@ -20,7 +20,7 @@ import { getPluginPath } from '#meta';
 const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin.Plugin, { meta: { name: b = '' } }: Plugin.Plugin) =>
   a.localeCompare(b);
 
-export type PluginRegistryProps = {
+export type PluginsArticleProps = {
   id: string;
   plugins: Plugin.Plugin[];
   /**
@@ -29,7 +29,7 @@ export type PluginRegistryProps = {
   extraTagsById?: Record<string, readonly string[]>;
 };
 
-export const PluginRegistry = composable<HTMLDivElement, PluginRegistryProps>(
+export const PluginsArticle = composable<HTMLDivElement, PluginsArticleProps>(
   ({ id, plugins: pluginsProp, extraTagsById, ...props }, forwardedRef) => {
     const manager = usePluginManager();
     const { invoke, invokePromise } = useOperationInvoker();
@@ -95,4 +95,4 @@ export const PluginRegistry = composable<HTMLDivElement, PluginRegistryProps>(
   },
 );
 
-PluginRegistry.displayName = 'PluginRegistry';
+PluginsArticle.displayName = 'PluginsArticle';

@@ -426,10 +426,6 @@ const main = async () => {
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
 
-  // Wire the registry plugin provider here so the plugin manager can fetch the
-  // catalog as soon as it's constructed — independent of the Client lifecycle
-  // (the catalog endpoints are unauthenticated, so a bare EdgeHttpClient is
-  // enough; no clientTag is needed).
   const edgeUrl = config.values.runtime?.services?.edge?.url;
   const pluginRegistryProvider = edgeUrl
     ? new EdgeRegistryPluginProvider(new EdgeHttpClient(edgeUrl))
