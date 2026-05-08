@@ -101,15 +101,16 @@ export class ItemManager {
       return;
     }
 
-    // Capture the target as an `ElementHandle` so it remains addressable
-    // mid-drag. The source tile is filtered out of `useVisibleItems` once
-    // the drag starts, which would shift any sibling-index `Locator`
-    // (e.g. `column.item(1)` → `nth(1)`) onto a different DOM node.
+    // Capture stable ElementHandles to source and target before the drag
+    // begins. Both `nth(N)` locators shift when `useVisibleItems` filters the
+    // source out of its column, so we need raw DOM references that survive
+    // the reconciliation.
     const targetHandle = await target.elementHandle();
     const box = targetHandle ? await targetHandle.boundingBox() : null;
     if (!targetHandle || !box) {
       return;
     }
+    const sourceHandle = await this.locator.elementHandle();
 
     await handle.hover();
     await this._page.mouse.down();
@@ -120,27 +121,34 @@ export class ItemManager {
       // Stage 1: trigger the dragstart. A 1-pixel nudge near the press
       // point primes pragmatic-dnd's HTML5 dragstart, then a long move
       // over the target tile commits the drag past every browser's
-      // "click vs drag" threshold. pragmatic-dnd publishes `dragging`,
-      // useVisibleItems filters the source out, and the column reflows.
-      // Pinning the reflow before measuring placeholder positions matters:
-      // a pre-drag bbox would land the cursor on a stale element.
+      // "click vs drag" threshold.
       await this._page.mouse.move(handleBox.x + handleBox.width / 2 + 1, handleBox.y + handleBox.height / 2, {
         steps: 1,
       });
       await this._page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 4 });
-      // Wait for the drag to register in the DOM. Container-level
-      // `active` state is set synchronously inside pragmatic-dnd's
-      // `onDragStart` (Container.tsx) — by the time it appears the source
-      // has been filtered out of `useVisibleItems` and the column has
-      // reflowed, so subsequent placeholder bbox reads are stable.
+
+      // Wait for `data-mosaic-container-state="active"` so we know the
+      // dragstart has been processed. This alone is *not* enough: pragmatic-
+      // dnd's `monitorForElements.onDragStart` (Root.tsx) and the
+      // `dropTargetForElements.onDragStart` (Container.tsx) write into
+      // independent React state, and only the latter drives the attribute.
+      // The former drives `useVisibleItems` filtering, which is what
+      // physically reflows the column. So we ALSO wait for the source tile
+      // to detach from the DOM — that's the unambiguous signal that the
+      // reflow has happened and any cached bbox is stale.
       await expect
         .poll(() => this._page.locator('[data-mosaic-container-state="active"]').count(), { timeout: 2000 })
         .toBeGreaterThan(0);
+      if (sourceHandle) {
+        await this._page.waitForFunction((el) => !el || !el.isConnected, sourceHandle, { timeout: 2000 });
+      }
 
-      // Stage 2: walk siblings on the (now stable) drag-time DOM and aim at
-      // the placeholder representing the requested edge. An active
-      // placeholder expands to roughly card-size and absorbs the cursor for
-      // the rest of the drag, so once we confirm activation we can release.
+      // Stage 2: walk siblings on the (now reflowed) drag-time DOM and aim
+      // at the placeholder representing the requested edge. The Fragment
+      // keying on item id keeps the target tile's adjacent placeholder DOM
+      // node stable across reconciliation, but its `location` prop and bbox
+      // both change once the source is filtered out — measure after the
+      // reflow, never before.
       const placeholderHandle = await this._adjacentPlaceholder(targetHandle, edge);
       if (placeholderHandle) {
         const phBox = await placeholderHandle.boundingBox();
