@@ -55,7 +55,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
         objects,
         parentCollection,
         indices,
-        nestedObjectsList: objects.map(() => []),
         wasActive,
       };
     }),
