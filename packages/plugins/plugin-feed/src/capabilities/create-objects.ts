@@ -9,7 +9,7 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities } from '@dxos/plugin-space/types';
 
 import { FeedOperation } from '#operations';
 import { Magazine, Subscription } from '#types';
@@ -41,7 +41,7 @@ export default Capability.makeModule(
               yield* Operation.schedule(FeedOperation.SyncFeed, { feed: object });
             }
             return result;
-          })) satisfies CreateObject,
+          })),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Magazine.Magazine.typename,
@@ -74,7 +74,7 @@ export default Capability.makeModule(
               target: options.target,
               targetNodeId: options.targetNodeId,
             });
-          })) satisfies CreateObject,
+          })),
       }),
     ];
   }),

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Database, Obj } from '@dxos/echo';
-import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities } from '@dxos/plugin-space/types';
 
 import { CreateIntegrationForm, Integration, IntegrationCoordinator } from '#types';
 
@@ -41,7 +41,7 @@ export default Capability.makeModule(
             subject: [],
             object: undefined as unknown as Obj.Unknown,
           };
-        })) satisfies CreateObject,
+        })),
     });
   }),
 );

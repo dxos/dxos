@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities } from '@dxos/plugin-space/types';
 
 import { Calendar, Mailbox } from '#types';
 
@@ -25,7 +25,7 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })) satisfies CreateObject,
+          })),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Calendar.Calendar.typename,
@@ -38,7 +38,7 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })) satisfies CreateObject,
+          })),
       }),
     ];
   }),

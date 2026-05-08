@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 import { Collection } from '@dxos/echo';
 
 import { SpaceOperation } from '#operations';
-import { SpaceCapabilities, type CreateObject } from '#types';
+import { SpaceCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -24,7 +24,7 @@ export default Capability.makeModule(
             hidden: true,
             targetNodeId: options.targetNodeId,
           });
-        })) satisfies CreateObject,
+        })),
     });
   }),
 );

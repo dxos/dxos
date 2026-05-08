@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
 import { InboxOperation } from '#operations';
@@ -26,7 +26,7 @@ export default Capability.makeModule(
               object,
               target: options.target,
             });
-          })) satisfies CreateObject,
+          })),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Message.Message.typename,
@@ -39,7 +39,7 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })) satisfies CreateObject,
+          })),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Calendar.Calendar.typename,
@@ -53,7 +53,7 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })) satisfies CreateObject,
+          })),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Event.Event.typename,
@@ -66,7 +66,7 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })) satisfies CreateObject,
+          })),
       }),
     ];
   }),

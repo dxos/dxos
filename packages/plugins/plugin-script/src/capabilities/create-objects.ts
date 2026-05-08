@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { Operation, Script } from '@dxos/compute';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities } from '@dxos/plugin-space/types';
 
 import { ScriptOperation } from '#operations';
 import { Notebook } from '#types';
@@ -27,7 +27,7 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })) satisfies CreateObject,
+          })),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Notebook.Notebook.typename,
@@ -41,7 +41,7 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })) satisfies CreateObject,
+          })),
       }),
     ];
   }),

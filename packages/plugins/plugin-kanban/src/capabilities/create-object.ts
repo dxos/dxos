@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities } from '@dxos/plugin-space/types';
 import { ViewModel } from '@dxos/schema';
 
 import { CreateKanbanSchema, Kanban } from '#types';
@@ -34,7 +34,7 @@ export default Capability.makeModule(
             hidden: true,
             targetNodeId: options.targetNodeId,
           });
-        })) satisfies CreateObject,
+        })),
     });
   }),
 );

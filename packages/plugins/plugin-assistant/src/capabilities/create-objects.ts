@@ -12,7 +12,7 @@ import { Obj } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SpaceCapabilities, type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceCapabilities } from '@dxos/plugin-space/types';
 
 import { AssistantOperation } from '#operations';
 
@@ -33,7 +33,7 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })) satisfies CreateObject,
+          })),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Blueprint.Blueprint.typename,
@@ -47,7 +47,7 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })) satisfies CreateObject,
+          })),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Routine.Routine.typename,
@@ -60,7 +60,7 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })) satisfies CreateObject,
+          })),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Sequence.typename,
@@ -73,7 +73,7 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })) satisfies CreateObject,
+          })),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Agent.Agent.typename,
@@ -88,7 +88,7 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })) satisfies CreateObject,
+          })),
       }),
     ];
   }),

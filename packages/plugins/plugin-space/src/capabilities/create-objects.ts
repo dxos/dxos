@@ -13,7 +13,7 @@ import { createDefaultSchema } from '@dxos/schema';
 import { Organization, Person, Task } from '@dxos/types';
 
 import { SpaceOperation } from '#operations';
-import { SpaceCapabilities, type CreateObject } from '#types';
+import { SpaceCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -30,7 +30,7 @@ export default Capability.makeModule(
               hidden: false,
               targetNodeId: options.targetNodeId,
             });
-          })) satisfies CreateObject,
+          })),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Type.PersistentType),
@@ -47,7 +47,7 @@ export default Capability.makeModule(
               subject: [],
               object: result.object,
             };
-          })) satisfies CreateObject,
+          })),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Organization.Organization.typename,
@@ -60,7 +60,7 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })) satisfies CreateObject,
+          })),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Person.Person.typename,
@@ -73,7 +73,7 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })) satisfies CreateObject,
+          })),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Task.Task.typename,
@@ -87,7 +87,7 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })) satisfies CreateObject,
+          })),
       }),
     ];
   }),
