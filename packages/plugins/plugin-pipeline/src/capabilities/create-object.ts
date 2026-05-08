@@ -14,7 +14,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
       id: Pipeline.Pipeline.typename,
-      createObject: ((props, options) =>
+      createObject: (props, options) =>
         Effect.gen(function* () {
           const object = Pipeline.make(props);
           return yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -23,7 +23,7 @@ export default Capability.makeModule(
             hidden: true,
             targetNodeId: options.targetNodeId,
           });
-        })),
+        }),
     });
   }),
 );

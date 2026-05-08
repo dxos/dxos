@@ -15,7 +15,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
       id: Discord.Bot.typename,
-      createObject: ((props, options) =>
+      createObject: (props, options) =>
         Effect.gen(function* () {
           const object = Discord.make(props);
           return yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -23,7 +23,7 @@ export default Capability.makeModule(
             target: options.target,
             targetNodeId: options.targetNodeId,
           });
-        })),
+        }),
     });
   }),
 );

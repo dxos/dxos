@@ -16,7 +16,7 @@ export default Capability.makeModule(
     return [
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Spec.Spec.typename,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Spec.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -25,11 +25,11 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })),
+          }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: CodeProject.CodeProject.typename,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const spec = Spec.make();
             const project = CodeProject.make({ name: props?.name, spec });
@@ -46,7 +46,7 @@ export default Capability.makeModule(
               hidden: false,
               targetNodeId: options.targetNodeId,
             });
-          })),
+          }),
       }),
     ];
   }),

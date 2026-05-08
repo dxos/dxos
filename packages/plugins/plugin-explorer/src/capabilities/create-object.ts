@@ -18,7 +18,7 @@ export default Capability.makeModule(
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Graph.Graph),
       inputSchema: ExplorerAction.GraphProps,
-      createObject: ((props, options) =>
+      createObject: (props, options) =>
         Effect.gen(function* () {
           const object = yield* Effect.promise(async () => {
             const { view } = await ViewModel.makeFromDatabase({ db: options.db, typename: props.typename });
@@ -30,7 +30,7 @@ export default Capability.makeModule(
             hidden: true,
             targetNodeId: options.targetNodeId,
           });
-        })),
+        }),
     });
   }),
 );

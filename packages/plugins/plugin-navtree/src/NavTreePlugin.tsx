@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { ActivationEvent, ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppCapabilities, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Graph } from '@dxos/plugin-graph';
+
 import { AppGraphBuilder, Keyboard, OperationHandler, ReactSurface, State } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';

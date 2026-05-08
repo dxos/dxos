@@ -27,7 +27,7 @@ export default Capability.makeModule(
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Subscription.Feed.typename,
         inputSchema: Subscription.CreateFeedSchema,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Subscription.makeFeed(props);
             const result = yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -41,12 +41,12 @@ export default Capability.makeModule(
               yield* Operation.schedule(FeedOperation.SyncFeed, { feed: object });
             }
             return result;
-          })),
+          }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Magazine.Magazine.typename,
         inputSchema: Magazine.CreateMagazineSchema,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             // Seed every new Magazine with one starter Feed so the article view has
             // something to curate immediately rather than booting into an empty state.
@@ -74,7 +74,7 @@ export default Capability.makeModule(
               target: options.target,
               targetNodeId: options.targetNodeId,
             });
-          })),
+          }),
       }),
     ];
   }),

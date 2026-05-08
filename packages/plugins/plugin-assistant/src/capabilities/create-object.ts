@@ -21,7 +21,7 @@ export default Capability.makeModule(
     return [
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Chat.Chat.typename,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const { object } = yield* Operation.invoke(AssistantOperation.CreateChat, {
               db: options.db,
@@ -33,12 +33,12 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })),
+          }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Blueprint.Blueprint.typename,
         inputSchema: AssistantOperation.BlueprintForm,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Blueprint.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -47,11 +47,11 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })),
+          }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Routine.Routine.typename,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Routine.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -60,11 +60,11 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })),
+          }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Sequence.typename,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Obj.make(Sequence, props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -73,11 +73,11 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })),
+          }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Agent.Agent.typename,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const object = yield* Agent.makeInitialized({ name: '', instructions: '' }, AgentBlueprint.make()).pipe(
               withComputeRuntime(options.db.spaceId),
@@ -88,7 +88,7 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })),
+          }),
       }),
     ];
   }),

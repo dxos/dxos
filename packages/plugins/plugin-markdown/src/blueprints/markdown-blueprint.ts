@@ -5,8 +5,9 @@
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { Create, Open, Update } from '../operations/definitions';
 import { Markdown } from '#types';
+
+import { Create, Open, Update } from '../operations/definitions';
 
 const make = () =>
   Blueprint.make({

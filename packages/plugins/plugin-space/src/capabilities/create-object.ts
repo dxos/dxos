@@ -21,7 +21,7 @@ export default Capability.makeModule(
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Collection.Collection.typename,
         inputSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Collection.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -30,12 +30,12 @@ export default Capability.makeModule(
               hidden: false,
               targetNodeId: options.targetNodeId,
             });
-          })),
+          }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Type.getTypename(Type.PersistentType),
         inputSchema: SpaceOperation.StoredSchemaForm,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const result = yield* Operation.invoke(SpaceOperation.AddSchema, {
               db: options.db,
@@ -47,11 +47,11 @@ export default Capability.makeModule(
               subject: [],
               object: result.object,
             };
-          })),
+          }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Organization.Organization.typename,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Organization.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -60,11 +60,11 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })),
+          }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Person.Person.typename,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Person.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -73,12 +73,12 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })),
+          }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Project.Project.typename,
         inputSchema: Project.Project,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Project.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -87,12 +87,12 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })),
+          }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Task.Task.typename,
         inputSchema: Task.Task,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Task.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -101,7 +101,7 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })),
+          }),
       }),
     ];
   }),

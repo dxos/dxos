@@ -16,7 +16,7 @@ export default Capability.makeModule(
     return [
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Journal.Journal.typename,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Journal.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -25,11 +25,11 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })),
+          }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Outline.Outline.typename,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Outline.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -38,7 +38,7 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })),
+          }),
       }),
     ];
   }),

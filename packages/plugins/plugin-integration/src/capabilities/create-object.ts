@@ -15,7 +15,7 @@ export default Capability.makeModule(
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
       id: Integration.Integration.typename,
       inputSchema: CreateIntegrationForm,
-      createObject: ((props: { providerId: string }, options) =>
+      createObject: (props: { providerId: string }, options) =>
         Effect.gen(function* () {
           const db = Database.isDatabase(options.target) ? options.target : Obj.getDatabase(options.target);
           if (!db) {
@@ -41,7 +41,7 @@ export default Capability.makeModule(
             subject: [],
             object: undefined as unknown as Obj.Unknown,
           };
-        })),
+        }),
     });
   }),
 );

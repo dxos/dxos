@@ -18,7 +18,7 @@ export default Capability.makeModule(
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Kanban.Kanban),
       inputSchema: CreateKanbanSchema,
-      createObject: ((props, options) =>
+      createObject: (props, options) =>
         Effect.gen(function* () {
           const object = yield* Effect.promise(async () => {
             const { view } = await ViewModel.makeFromDatabase({
@@ -34,7 +34,7 @@ export default Capability.makeModule(
             hidden: true,
             targetNodeId: options.targetNodeId,
           });
-        })),
+        }),
     });
   }),
 );

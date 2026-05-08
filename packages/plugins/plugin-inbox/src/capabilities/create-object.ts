@@ -19,18 +19,18 @@ export default Capability.makeModule(
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Mailbox.Mailbox.typename,
         inputSchema: Mailbox.CreateMailboxSchema,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Mailbox.make(props);
             return yield* Operation.invoke(InboxOperation.AddMailbox, {
               object,
               target: options.target,
             });
-          })),
+          }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Message.Message.typename,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Message.make({ sender: 'user' });
             return yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -39,12 +39,12 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })),
+          }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Calendar.Calendar.typename,
         inputSchema: Calendar.CreateCalendarSchema,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Calendar.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -53,11 +53,11 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })),
+          }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Event.Event.typename,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Event.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -66,7 +66,7 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })),
+          }),
       }),
     ];
   }),

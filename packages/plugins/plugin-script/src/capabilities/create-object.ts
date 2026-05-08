@@ -18,7 +18,7 @@ export default Capability.makeModule(
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Script.Script.typename,
         inputSchema: ScriptOperation.ScriptProps,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const { object } = yield* Operation.invoke(ScriptOperation.CreateScript, props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -27,12 +27,12 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })),
+          }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Notebook.Notebook.typename,
         inputSchema: ScriptOperation.NotebookProps,
-        createObject: ((props, options) =>
+        createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Notebook.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -41,7 +41,7 @@ export default Capability.makeModule(
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          })),
+          }),
       }),
     ];
   }),

@@ -18,7 +18,7 @@ export default Capability.makeModule(
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Map.Map),
       inputSchema: MapAction.CreateMap,
-      createObject: ((props, options) =>
+      createObject: (props, options) =>
         Effect.gen(function* () {
           const object = yield* Effect.promise(async () => {
             const view = props.typename
@@ -38,7 +38,7 @@ export default Capability.makeModule(
             hidden: true,
             targetNodeId: options.targetNodeId,
           });
-        })),
+        }),
     });
   }),
 );

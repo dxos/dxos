@@ -14,8 +14,8 @@ import {
   ToolExecutionService,
   ToolResolverService,
 } from '@dxos/ai';
-import { type AiAssistantError, AiRequest } from '@dxos/assistant';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { type AiAssistantError, AiRequest } from '@dxos/assistant';
 import { Trace, Operation, OperationRegistry } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

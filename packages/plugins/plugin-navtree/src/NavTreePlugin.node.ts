@@ -4,6 +4,7 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+
 import { AppGraphBuilder, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 

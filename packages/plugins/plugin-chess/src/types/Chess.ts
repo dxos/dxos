@@ -5,11 +5,10 @@
 import { Chess as ChessJS } from 'chess.js';
 import * as Schema from 'effect/Schema';
 
-import { log } from '@dxos/log';
-
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { log } from '@dxos/log';
 
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.chess';
 

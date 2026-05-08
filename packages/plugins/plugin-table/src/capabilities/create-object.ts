@@ -18,7 +18,7 @@ export default Capability.makeModule(
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
       id: Table.Table.typename,
       inputSchema: CreateTableSchema,
-      createObject: ((props, options) =>
+      createObject: (props, options) =>
         Effect.gen(function* () {
           const object = yield* Effect.promise(async () => {
             const { view, jsonSchema } = await ViewModel.makeFromDatabase({
@@ -33,7 +33,7 @@ export default Capability.makeModule(
             hidden: true,
             targetNodeId: options.targetNodeId,
           });
-        })),
+        }),
     });
   }),
 );

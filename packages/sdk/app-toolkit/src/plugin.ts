@@ -62,8 +62,6 @@ export namespace AppPlugin {
     });
   }
 
-
-
   export type SettingsModuleOptions = PluginModuleOptions;
 
   /**

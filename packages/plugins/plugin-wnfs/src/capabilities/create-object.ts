@@ -18,7 +18,7 @@ export default Capability.makeModule(
       id: WnfsFile.File.typename,
       inputSchema: WnfsAction.UploadFileSchema,
       // TODO(wittjosiah): Would be nice if icon could change based on the type of the file.
-      createObject: ((props, options) =>
+      createObject: (props, options) =>
         Effect.gen(function* () {
           const { object } = yield* Operation.invoke(WnfsOperation.CreateFile, { ...props, db: options.db });
           return yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -27,7 +27,7 @@ export default Capability.makeModule(
             hidden: true,
             targetNodeId: options.targetNodeId,
           });
-        })),
+        }),
     });
   }),
 );
