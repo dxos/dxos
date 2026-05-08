@@ -126,7 +126,8 @@ const syncOneGroup = (integration: Integration.Integration, groupResourceName: s
     const targetIdx = integration.targets?.findIndex((t) => t.remoteId === groupResourceName) ?? -1;
     if (targetIdx >= 0) {
       Obj.update(integration, (integration) => {
-        integration.targets[targetIdx] = { ...integration.targets[targetIdx], cursor: new Date().toISOString() };
+        const now = new Date().toISOString();
+        integration.targets[targetIdx] = { ...integration.targets[targetIdx], cursor: now, lastSyncAt: now };
       });
     }
 

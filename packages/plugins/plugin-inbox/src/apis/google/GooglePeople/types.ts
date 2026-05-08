@@ -101,6 +101,7 @@ export type ListConnectionsResponse = Schema.Schema.Type<typeof ListConnectionsR
 export const ContactGroup = Schema.Struct({
   resourceName: Schema.String,
   name: Schema.String,
+  formattedName: Schema.optional(Schema.String),
   groupType: Schema.optional(Schema.String),
   memberCount: Schema.optional(Schema.Number),
 });

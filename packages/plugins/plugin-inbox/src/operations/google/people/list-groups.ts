@@ -55,7 +55,7 @@ const handler: Operation.WithHandler<typeof GetGoogleContactGroups> = GetGoogleC
           )
           .map((group) => ({
             id: group.resourceName,
-            name: group.name,
+            name: group.formattedName ?? group.name,
             description:
               group.memberCount !== undefined
                 ? `${group.memberCount} contact${group.memberCount === 1 ? '' : 's'}`
