@@ -293,4 +293,38 @@ export namespace AppPlugin {
       activate: options.activate,
     });
   }
+
+  export type CreateObjectModuleOptions = PluginModuleOptions;
+
+  /**
+   * Creates a module that contributes a create-object capability entry.
+   */
+  export function addCreateObjectModule<T = void>(
+    options: CreateObjectModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'create-object',
+      activatesOn: options.activatesOn ?? AppActivationEvents.SetupMetadata,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
+      activate: options.activate,
+    });
+  }
+
+  export type CommentConfigModuleOptions = PluginModuleOptions;
+
+  /**
+   * Creates a module that contributes a comment configuration.
+   */
+  export function addCommentConfigModule<T = void>(
+    options: CommentConfigModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'comment-config',
+      activatesOn: options.activatesOn ?? AppActivationEvents.SetupMetadata,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
+      activate: options.activate,
+    });
+  }
 }
