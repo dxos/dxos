@@ -11,9 +11,9 @@
 // the raw JSON view via the `Syntax` compound (filter input + scrolling
 // viewport + highlighted code leaf) for inspecting the wire format.
 
-import React, { Fragment } from 'react';
+import React, { Fragment, useMemo, useState } from 'react';
 
-import { Message, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Input, Message, Panel, ScrollArea, Toolbar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Row, RowList } from '@dxos/react-ui-list';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { composable, composableProps } from '@dxos/ui-theme';
@@ -65,11 +65,7 @@ export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
               </Syntax.Content>
             </Syntax.Root>
           ) : (
-            <ScrollArea.Root thin>
-              <ScrollArea.Viewport>
-                <ResultTable data={tryParseMcpEnvelope(result)} />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
+            <ResultTable data={tryParseMcpEnvelope(result)} />
           ))}
       </div>
     );
@@ -88,24 +84,77 @@ const SKIP_KEYS = new Set(['location', 'metaLocation']);
 
 const ResultTable = ({ data }: { data: unknown }) => {
   const { t } = useTranslation(translationKey);
-  const items = toItems(data);
+  const items = useMemo(() => toItems(data), [data]);
+  const [filter, setFilter] = useState('');
+  const filtered = useMemo(() => {
+    const needle = filter.trim().toLowerCase();
+    if (!needle) {
+      return items;
+    }
+    return items.filter((item) => itemMatchesFilter(item, needle));
+  }, [items, filter]);
+
   // The two-column grid lives on `RowList.Content` so every entry across
   // every row lands in the same `key | value` tracks. Each `Row` spans
   // both columns and uses `grid-cols-subgrid` to inherit them, so a
   // `KeyValueTable` can emit plain `<div>` cells as direct grid items.
   return (
     <RowList.Root>
-      <RowList.Viewport>
-        <RowList.Content aria-label={t('tool-result.label')} classNames='grid grid-cols-[max-content_1fr] gap-x-3'>
-          {items.map((item, index) => (
-            <Row key={index} id={String(index)} classNames='col-span-2 grid grid-cols-subgrid gap-y-0.5'>
-              <KeyValueTable record={item} />
-            </Row>
-          ))}
-        </RowList.Content>
-      </RowList.Viewport>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <Input.Root>
+              <Input.Label srOnly>{t('filter-results.placeholder')}</Input.Label>
+              <Input.TextInput
+                placeholder={t('filter-results.placeholder')}
+                value={filter}
+                onChange={(event) => setFilter(event.target.value)}
+              />
+            </Input.Root>
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <ScrollArea.Root thin>
+            <ScrollArea.Viewport>
+              {filtered.length === 0 ? (
+                <p className='p-3 text-sm text-description'>{t('no-matching-rows.message')}</p>
+              ) : (
+                <RowList.Viewport>
+                  <RowList.Content
+                    aria-label={t('tool-result.label')}
+                    classNames='grid grid-cols-[max-content_1fr] gap-x-3'
+                  >
+                    {filtered.map((item, index) => (
+                      <Row key={index} id={String(index)} classNames='col-span-2 grid grid-cols-subgrid gap-y-0.5'>
+                        <KeyValueTable record={item} />
+                      </Row>
+                    ))}
+                  </RowList.Content>
+                </RowList.Viewport>
+              )}
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Content>
+      </Panel.Root>
     </RowList.Root>
   );
+};
+
+// Substring match against the JSON-stringified item: covers primitives,
+// nested objects, and arrays without us having to walk fields. `needle`
+// must already be lower-cased.
+const itemMatchesFilter = (item: unknown, needle: string): boolean => {
+  if (item === null || item === undefined) {
+    return false;
+  }
+  if (typeof item === 'object') {
+    try {
+      return JSON.stringify(item).toLowerCase().includes(needle);
+    } catch {
+      return String(item).toLowerCase().includes(needle);
+    }
+  }
+  return String(item).toLowerCase().includes(needle);
 };
 
 // Emits plain `<div>` cells (key + value) as direct grid children so they

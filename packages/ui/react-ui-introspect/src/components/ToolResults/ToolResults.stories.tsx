@@ -6,12 +6,16 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { translations } from '../../translations';
 import { ToolResults } from './ToolResults';
 
 const meta: Meta<typeof ToolResults> = {
   title: 'ui/react-ui-introspect/ToolResults',
   component: ToolResults,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
+  parameters: {
+    translations,
+  },
 };
 
 export default meta;
