@@ -9,10 +9,10 @@ import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { CommunityRegistry, LOAD_PLUGIN_DIALOG, LoadPluginDialog, PluginArticle, PluginRegistry } from '#containers';
+import { LOAD_PLUGIN_DIALOG, LoadPluginDialog, PluginArticle, PluginRegistry, Registry } from '#containers';
 import { registryCategoryId } from '#meta';
 
-import { useAutoTags, useCommunityPlugins, useRemotePluginIds } from '../hooks';
+import { useAutoTags, useRegistryPlugins, useRemotePluginIds } from '../hooks';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -23,7 +23,7 @@ export default Capability.makeModule(() =>
         component: () => {
           const manager = usePluginManager();
           const remoteIds = useRemotePluginIds();
-          const { entries } = useCommunityPlugins();
+          const { entries } = useRegistryPlugins();
           const extraTagsById = useAutoTags(entries);
           const filtered = useMemo(
             () =>
@@ -44,7 +44,7 @@ export default Capability.makeModule(() =>
         filter: AppSurface.literal(AppSurface.Article, registryCategoryId('installed')),
         component: () => {
           const manager = usePluginManager();
-          const { entries } = useCommunityPlugins();
+          const { entries } = useRegistryPlugins();
           const extraTagsById = useAutoTags(entries);
           const filtered = useMemo(
             () =>
@@ -66,7 +66,7 @@ export default Capability.makeModule(() =>
         component: () => {
           const manager = usePluginManager();
           const remoteIds = useRemotePluginIds();
-          const { entries } = useCommunityPlugins();
+          const { entries } = useRegistryPlugins();
           const extraTagsById = useAutoTags(entries);
           const filtered = useMemo(
             () =>
@@ -88,7 +88,7 @@ export default Capability.makeModule(() =>
         filter: AppSurface.literal(AppSurface.Article, registryCategoryId('labs')),
         component: () => {
           const manager = usePluginManager();
-          const { entries } = useCommunityPlugins();
+          const { entries } = useRegistryPlugins();
           const extraTagsById = useAutoTags(entries);
           const filtered = useMemo(
             () => manager.getPlugins().filter(({ meta }) => meta.tags?.includes('labs')),
@@ -99,9 +99,9 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'community',
-        filter: AppSurface.literal(AppSurface.Article, registryCategoryId('community')),
-        component: () => <CommunityRegistry id={registryCategoryId('community')} />,
+        id: 'registry',
+        filter: AppSurface.literal(AppSurface.Article, registryCategoryId('registry')),
+        component: () => <Registry id={registryCategoryId('registry')} />,
       }),
       Surface.create({
         id: 'plugin-details',

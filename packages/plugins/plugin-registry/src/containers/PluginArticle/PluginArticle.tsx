@@ -6,13 +6,13 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type CommunityPluginVersion, type Plugin, UrlLoader } from '@dxos/app-framework';
+import { type RegistryPluginVersion, type Plugin, UrlLoader } from '@dxos/app-framework';
 import { usePluginManager } from '@dxos/app-framework/ui';
 import { runAndForwardErrors } from '@dxos/effect';
 
 import { PluginDetail } from '#components';
 
-import { useCommunityPluginProvider, useCommunityPlugins, useRemotePluginIds } from '../../hooks';
+import { useRegistryPluginProvider, useRegistryPlugins, useRemotePluginIds } from '../../hooks';
 
 // TODO(burdon): Convert to ECHO type.
 export type PluginArticleProps = { subject: Plugin.Plugin };
@@ -20,12 +20,12 @@ export type PluginArticleProps = { subject: Plugin.Plugin };
 export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   const manager = usePluginManager();
   const plugins = useAtomValue(manager.plugins);
-  const { entries } = useCommunityPlugins();
-  const provider = useCommunityPluginProvider();
+  const { entries } = useRegistryPlugins();
+  const provider = useRegistryPluginProvider();
   const remotePluginIds = useRemotePluginIds();
   const [installing, setInstalling] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [versions, setVersions] = useState<readonly CommunityPluginVersion[]>([]);
+  const [versions, setVersions] = useState<readonly RegistryPluginVersion[]>([]);
   const [selectedVersionTag, setSelectedVersionTag] = useState<string | undefined>();
   // `installedVersionTag` lives in component state (rather than being read inline from
   // localStorage on each render) so post-update re-renders are deterministic — we
@@ -143,14 +143,14 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
 
   // Make sure the picker always lists the installed version, even if the catalog
   // hasn't surfaced it (the current `listVersions` stub only returns latest).
-  const pickerVersions = useMemo<readonly CommunityPluginVersion[]>(() => {
+  const pickerVersions = useMemo<readonly RegistryPluginVersion[]>(() => {
     if (!installedVersionTag) {
       return versions;
     }
     if (versions.some((entry) => entry.tag === installedVersionTag)) {
       return versions;
     }
-    const installedEntry: CommunityPluginVersion = {
+    const installedEntry: RegistryPluginVersion = {
       tag: installedVersionTag,
       // Picker won't be re-installing this entry unless the user selects + clicks Install,
       // and the catalog moduleUrl is the closest stand-in we have.

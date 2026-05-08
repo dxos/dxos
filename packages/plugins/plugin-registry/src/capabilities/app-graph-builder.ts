@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, type CommunityPlugin, Plugin } from '@dxos/app-framework';
+import { Capabilities, Capability, type RegistryPlugin, Plugin } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -15,12 +15,12 @@ import { RegistryCapabilities } from '#types';
 import { LOAD_PLUGIN_DIALOG } from '../containers';
 
 /**
- * Turns a community manifest entry into a minimal {@link Plugin.Plugin} so it
+ * Turns a registry catalog entry into a minimal {@link Plugin.Plugin} so it
  * can be attached as the graph node's `data`. The synthesized plugin has no
  * modules and only exists so the article surface can render details for
- * community plugins that haven't been installed yet.
+ * registry plugins that haven't been installed yet.
  */
-const toDisplayPlugin = (entry: CommunityPlugin): Plugin.Plugin =>
+const toDisplayPlugin = (entry: RegistryPlugin): Plugin.Plugin =>
   ({
     [Plugin.PluginTypeId]: Plugin.PluginTypeId,
     meta: {
@@ -119,14 +119,14 @@ export default Capability.makeModule(
                   },
                 }),
                 Node.make({
-                  id: registryCategoryId('community'),
+                  id: registryCategoryId('registry'),
                   type: 'category',
-                  data: registryCategoryId('community'),
+                  data: registryCategoryId('registry'),
                   properties: {
-                    label: ['community-plugins.label', { ns: meta.id }],
+                    label: ['registry-plugins.label', { ns: meta.id }],
                     icon: 'ph--users-three--regular',
                     key: REGISTRY_KEY,
-                    testId: 'pluginRegistry.community',
+                    testId: 'pluginRegistry.registry',
                   },
                 }),
               ],
@@ -175,8 +175,8 @@ export default Capability.makeModule(
             }),
           );
 
-          const communityEntries = stateAtom ? get(stateAtom).entries : [];
-          const communityNodes = communityEntries
+          const registryEntries = stateAtom ? get(stateAtom).entries : [];
+          const registryNodes = registryEntries
             .filter((entry) => !installedIds.has(entry.id))
             .map((entry) => {
               const plugin = toDisplayPlugin(entry);
@@ -192,7 +192,7 @@ export default Capability.makeModule(
               });
             });
 
-          return Effect.succeed([...installedNodes, ...communityNodes]);
+          return Effect.succeed([...installedNodes, ...registryNodes]);
         },
       }),
     ]);

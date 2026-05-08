@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type CommunityPlugin, Plugin, UrlLoader } from '@dxos/app-framework';
+import { type RegistryPlugin, Plugin, UrlLoader } from '@dxos/app-framework';
 import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -17,19 +17,19 @@ import { composable, composableProps } from '@dxos/ui-theme';
 import { PluginList } from '#components';
 import { getPluginPath, meta } from '#meta';
 
-import { useAutoTags, useCommunityPlugins, useUpdateAvailableIds } from '../../hooks';
+import { useAutoTags, useRegistryPlugins, useUpdateAvailableIds } from '../../hooks';
 
-const sortEntries = (a: CommunityPlugin, b: CommunityPlugin) => (a.name ?? a.id).localeCompare(b.name ?? b.id);
+const sortEntries = (a: RegistryPlugin, b: RegistryPlugin) => (a.name ?? a.id).localeCompare(b.name ?? b.id);
 
 const sortPlugins = (a: Plugin.Plugin, b: Plugin.Plugin) =>
   (a.meta.name ?? a.meta.id).localeCompare(b.meta.name ?? b.meta.id);
 
 /**
- * Turns a community manifest entry into a minimal Plugin object so we can reuse
+ * Turns a registry catalog entry into a minimal Plugin object so we can reuse
  * {@link PluginList} for rendering. The synthesized plugin has no modules — it
  * exists only for display until the user installs it.
  */
-const toDisplayPlugin = (plugin: CommunityPlugin): Plugin.Plugin =>
+const toDisplayPlugin = (plugin: RegistryPlugin): Plugin.Plugin =>
   ({
     [Plugin.PluginTypeId]: Plugin.PluginTypeId,
     meta: {
@@ -46,16 +46,16 @@ const toDisplayPlugin = (plugin: CommunityPlugin): Plugin.Plugin =>
     modules: [],
   }) as Plugin.Plugin;
 
-export type CommunityRegistryProps = {
+export type RegistryProps = {
   id: string;
 };
 
-export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryProps>(
+export const Registry = composable<HTMLDivElement, RegistryProps>(
   ({ id, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const manager = usePluginManager();
     const { invoke, invokePromise } = useOperationInvoker();
-    const { entries, loading, error } = useCommunityPlugins();
+    const { entries, loading, error } = useRegistryPlugins();
     const enabled = useAtomValue(manager.enabled);
     const plugins = useAtomValue(manager.plugins);
     const installedIds = useMemo(() => plugins.map((plugin) => plugin.meta.id), [plugins]);
@@ -120,7 +120,7 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
 
           yield* invoke(ObservabilityOperation.SendEvent, {
             name: 'plugins.toggle',
-            properties: { plugin: pluginId, enabled: nextEnabled, source: 'community' },
+            properties: { plugin: pluginId, enabled: nextEnabled, source: 'registry' },
           });
         }).pipe(runAndForwardErrors),
       [invoke, manager],
@@ -143,7 +143,7 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
           }
           yield* invoke(ObservabilityOperation.SendEvent, {
             name: 'plugins.install',
-            properties: { plugin: plugin.meta.id, source: 'community' },
+            properties: { plugin: plugin.meta.id, source: 'registry' },
           });
         }).pipe(
           Effect.ensuring(Effect.sync(() => setInstallingIds((prev) => prev.filter((pid) => pid !== pluginId)))),
@@ -171,7 +171,7 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
           }
           yield* invoke(ObservabilityOperation.SendEvent, {
             name: 'plugins.update',
-            properties: { plugin: plugin.meta.id, source: 'community' },
+            properties: { plugin: plugin.meta.id, source: 'registry' },
           });
         }).pipe(
           Effect.ensuring(Effect.sync(() => setUpdatingIds((prev) => prev.filter((pid) => pid !== pluginId)))),
@@ -221,11 +221,11 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
               onSettings={handleSettings}
             />
           ) : error ? (
-            <div className='p-4 text-description'>Failed to load community plugins: {error.message}</div>
+            <div className='p-4 text-description'>Failed to load registry plugins: {error.message}</div>
           ) : loading ? (
             <div className='p-4 text-description'>{t('loading.label')}</div>
           ) : (
-            <div className='p-4 text-description'>No community plugins available.</div>
+            <div className='p-4 text-description'>No registry plugins available.</div>
           )}
         </ScrollArea.Viewport>
       </ScrollArea.Root>
@@ -233,4 +233,4 @@ export const CommunityRegistry = composable<HTMLDivElement, CommunityRegistryPro
   },
 );
 
-CommunityRegistry.displayName = 'CommunityRegistry';
+Registry.displayName = 'Registry';

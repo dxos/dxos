@@ -31,7 +31,7 @@ export type PluginItemProps = {
   installing?: readonly string[];
   enabled?: readonly string[];
   /**
-   * Derived tags (e.g. `community`, `local`) to display alongside the plugin's own meta.tags.
+   * Derived tags (e.g. `registry`, `local`) to display alongside the plugin's own meta.tags.
    * Not persisted to plugin meta; computed per-render by the container.
    */
   extraTags?: readonly string[];
@@ -216,6 +216,6 @@ const tagColors: Record<RegistryTagType, ChromaticPalette | NeutralPalette> = {
   popular: 'green',
   featured: 'pink',
   experimental: 'amber',
-  community: 'indigo',
+  registry: 'indigo',
   local: 'neutral',
 };

@@ -4,11 +4,11 @@
 
 import { useMemo } from 'react';
 
-import { type CommunityPlugin, UrlLoader } from '@dxos/app-framework';
+import { type RegistryPlugin, UrlLoader } from '@dxos/app-framework';
 
 /**
  * Auto-tags that are derived at display time rather than persisted to `Plugin.Meta`.
- * - `community`: plugin id appears in the community registry manifest.
+ * - `registry`: plugin id appears in the registry catalog manifest.
  * - `local`: plugin was loaded from a `localhost` / `127.0.0.1` / `::1` URL.
  */
 export type AutoTagsMap = Record<string, readonly string[]>;
@@ -17,9 +17,9 @@ export type AutoTagsMap = Record<string, readonly string[]>;
  * Computes the per-plugin-id extra tags the UI should display.
  *
  * Reads the persisted remote-plugin entries synchronously to derive `local`, and
- * adds `community` for any plugin id found in the supplied community manifest entries.
+ * adds `registry` for any plugin id found in the supplied registry manifest entries.
  */
-export const useAutoTags = (communityEntries: readonly CommunityPlugin[]): AutoTagsMap =>
+export const useAutoTags = (registryEntries: readonly RegistryPlugin[]): AutoTagsMap =>
   useMemo(() => {
     const byId: Record<string, string[]> = {};
     const addTag = (id: string, tag: string) => {
@@ -36,12 +36,12 @@ export const useAutoTags = (communityEntries: readonly CommunityPlugin[]): AutoT
         addTag(entry.id, 'local');
       }
     }
-    for (const entry of communityEntries) {
-      addTag(entry.id, 'community');
+    for (const entry of registryEntries) {
+      addTag(entry.id, 'registry');
     }
 
     return byId;
-  }, [communityEntries]);
+  }, [registryEntries]);
 
 /**
  * Returns the set of plugin ids known to originate from a remote URL (not bundled).

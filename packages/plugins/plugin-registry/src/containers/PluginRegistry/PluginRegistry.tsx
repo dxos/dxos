@@ -24,7 +24,7 @@ export type PluginRegistryProps = {
   id: string;
   plugins: Plugin.Plugin[];
   /**
-   * Map from plugin id → display-only tags (e.g. `community`, `local`) computed by the caller.
+   * Map from plugin id → display-only tags (e.g. `registry`, `local`) computed by the caller.
    */
   extraTagsById?: Record<string, readonly string[]>;
 };

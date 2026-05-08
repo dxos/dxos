@@ -5,13 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 /**
- * A community plugin entry as seen by the plugin manager layer.
+ * A registry plugin entry as seen by the plugin manager layer.
  * Populated from the registry catalog; represents the latest available version of a plugin.
  *
  * Independently defined from @dxos/protocols PluginEntry — similar shape but not the same type.
- * EdgeCommunityPluginProvider maps PluginEntry → CommunityPlugin.
+ * EdgeRegistryPluginProvider maps PluginEntry → RegistryPlugin.
  */
-export type CommunityPlugin = {
+export type RegistryPlugin = {
   id: string;
   name: string;
   description?: string;
@@ -34,9 +34,9 @@ export type CommunityPlugin = {
 };
 
 /**
- * A single installable version of a community plugin.
+ * A single installable version of a registry plugin.
  */
-export type CommunityPluginVersion = {
+export type RegistryPluginVersion = {
   /** Version string, e.g. `v1.2.0`. */
   tag: string;
   /** URL to dynamic-import this specific version of the plugin module. */
@@ -46,30 +46,30 @@ export type CommunityPluginVersion = {
 };
 
 /**
- * Abstraction over the community plugin catalog backend.
+ * Abstraction over the plugin registry catalog backend.
  * Implementations may call Edge, a local cache, or a stub.
  *
  * Defined in app-framework so neither the interface nor its consumers depend on
- * @dxos/edge-client or @dxos/protocols. EdgeCommunityPluginProvider (in plugin-registry)
+ * @dxos/edge-client or @dxos/protocols. EdgeRegistryPluginProvider (in plugin-registry)
  * is responsible for translating wire-format types to these domain types.
  */
-export interface CommunityPluginProvider {
+export interface RegistryPluginProvider {
   /**
-   * Returns all healthy community plugins (latest version of each).
+   * Returns all healthy registry plugins (latest version of each).
    */
-  listPlugins(): Effect.Effect<readonly CommunityPlugin[], Error>;
+  listPlugins(): Effect.Effect<readonly RegistryPlugin[], Error>;
 
   /**
    * Returns all known versions of a plugin identified by its GitHub repo slug.
    * Until the Edge backend implements a versions endpoint, implementations MUST
    * return at least one entry representing the current/latest release.
    */
-  listVersions(repo: string): Effect.Effect<readonly CommunityPluginVersion[], Error>;
+  listVersions(repo: string): Effect.Effect<readonly RegistryPluginVersion[], Error>;
 
   /**
    * Returns a single plugin entry for the given repo.
    * If `version` is omitted, returns the latest.
    * Fails if the specified version is not found.
    */
-  getPlugin(repo: string, version?: string): Effect.Effect<CommunityPlugin, Error>;
+  getPlugin(repo: string, version?: string): Effect.Effect<RegistryPlugin, Error>;
 }

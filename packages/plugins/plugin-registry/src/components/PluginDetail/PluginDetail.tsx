@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type CommunityPluginVersion, type Plugin } from '@dxos/app-framework';
+import { type RegistryPluginVersion, type Plugin } from '@dxos/app-framework';
 import { Button, Icon, Input, Link, ScrollArea, Select, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps, getStyles, mx } from '@dxos/ui-theme';
 
@@ -35,7 +35,7 @@ export type PluginDetailProps = {
   /** True while an in-flight update is running. Forces the Update button disabled state. */
   updating?: boolean;
   /** Available versions of this plugin from the catalog. When non-empty, a version picker is shown. */
-  versions?: readonly CommunityPluginVersion[];
+  versions?: readonly RegistryPluginVersion[];
   /** Currently selected version tag in the picker. */
   selectedVersionTag?: string;
   /** Called when the user selects a different version in the picker. */

@@ -12,7 +12,7 @@ import { PluginItem, type PluginItemProps } from './PluginItem';
 export type PluginListProps = Omit<PluginItemProps, 'plugin' | 'extraTags' | 'hasUpdate'> & {
   plugins?: readonly Plugin.Plugin[];
   /**
-   * Map from plugin id → extra tags to display (e.g. `community`, `local`).
+   * Map from plugin id → extra tags to display (e.g. `registry`, `local`).
    * Computed by the container; not persisted to plugin meta.
    */
   extraTagsById?: Record<string, readonly string[]>;
