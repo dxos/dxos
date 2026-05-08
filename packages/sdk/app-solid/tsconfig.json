@@ -21,7 +21,7 @@
       "path": "../../common/web-context-solid"
     },
     {
-      "path": "../../core/operation"
+      "path": "../../core/compute/operation"
     },
     {
       "path": "../app-framework"
