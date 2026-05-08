@@ -576,6 +576,7 @@ catalog:
   rollup-plugin-sourcemaps: ^0.6.3
   rollup-plugin-visualizer: ^5.12.0
   safe-compare: ~1.1.4
+  scheduler: ^0.27.0
   seedrandom: ^3.0.5
   semver: ^7.5.4
   serve: ^14.2.5
@@ -625,6 +626,7 @@ catalog:
   url-join: ^5.0.0
   use-deep-compare-effect: ^1.8.1
   use-resize-observer: ^9.1.0
+  use-sync-external-store: ^1.6.0
   util: ^0.12.4
   uuid: ^9.0.0
   varint: 6.0.0

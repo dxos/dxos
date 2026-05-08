@@ -8,9 +8,9 @@ export * as ThreadOperation from './definitions';
 
 export const ThreadOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./add-message'),
+  () => import('./append-channel-message'),
   () => import('./create'),
   () => import('./create-channel'),
-  () => import('./create-channel-thread'),
   () => import('./create-proposals'),
   () => import('./delete'),
   () => import('./delete-message'),

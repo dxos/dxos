@@ -15,11 +15,10 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown/types';
 import { corePlugins } from '@dxos/plugin-testing';
-import { Channel } from '@dxos/plugin-thread/types';
 import { Query, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { Message, Thread, Transcript } from '@dxos/types';
+import { Channel, Message, Transcript } from '@dxos/types';
 
 import { Meeting } from '#types';
 
@@ -67,14 +66,13 @@ const meta = {
                   transcript: Ref.make(Transcript.make(Ref.make(transcriptFeed))),
                   notes: Ref.make(Text.make('Notes')),
                   summary: Ref.make(Text.make()),
-                  thread: Ref.make(Thread.make()),
                 }),
               );
             }),
         }),
         MarkdownPlugin(),
       ],
-      capabilities: [Capability.contributes(AppCapabilities.Schema, [Channel.Channel, Thread.Thread, Message.Message])],
+      capabilities: [Capability.contributes(AppCapabilities.Schema, [Channel.Channel, Message.Message])],
     }),
   ],
 } satisfies Meta<typeof DefaultStory>;

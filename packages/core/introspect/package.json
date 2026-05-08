@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/introspect-tools": "workspace:*",
     "@dxos/log": "workspace:*",
     "glob": "catalog:",
     "ts-morph": "catalog:"
@@ -36,5 +37,8 @@
     "react": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

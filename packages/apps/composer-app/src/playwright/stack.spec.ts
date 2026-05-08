@@ -26,7 +26,9 @@ test.describe('Stack tests', () => {
   });
 
   test.afterEach(async () => {
-    await host.closePage();
+    // beforeEach calls `test.skip` early on webkit, leaving `host` unassigned;
+    // playwright still runs afterEach for skipped tests so guard against that.
+    await (host as AppManager | undefined)?.closePage();
   });
 
   test('create', async () => {

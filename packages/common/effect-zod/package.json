@@ -1,7 +1,6 @@
 {
   "name": "@dxos/effect-zod",
   "version": "0.8.3",
-  "private": true,
   "description": "Convert Effect Schema definitions to Zod schemas. Useful when integrating with libraries that require Zod (e.g. the MCP SDK) while keeping Effect Schema as the source of truth.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -33,5 +32,8 @@
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

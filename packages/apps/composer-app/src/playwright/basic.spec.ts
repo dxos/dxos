@@ -88,7 +88,10 @@ test.describe('Basic tests', () => {
   });
 
   test('reset device', async ({ browserName }) => {
-    test.setTimeout(60_000);
+    // Reset triggers a full page reload; post-reset boot (HTML + bundle parse +
+    // plugin manager + identity creation) consistently runs ~8-11s, which
+    // doesn't fit the default 60s test timeout comfortably alongside setup.
+    test.slow();
 
     // TODO(wittjosiah): This test seems to be flaky in firefox & webkit.
     if (browserName !== 'chromium') {
@@ -102,6 +105,8 @@ test.describe('Basic tests', () => {
     await host.resetDevice();
     // Wait for reset to complete and attempt to reload.
     await host.page.waitForRequest(INITIAL_URL, { timeout: 45_000 });
-    await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 10_000 });
+    // Post-reset boot (page reload + bundle parse + identity creation) is ~8-11s;
+    // 30s gives ~3x headroom over the observed worst case.
+    await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 30_000 });
   });
 });

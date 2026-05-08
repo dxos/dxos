@@ -3,5 +3,4 @@
 //
 
 export * from './capabilities';
-export * as Channel from './Channel';
 export * from './types';

@@ -14,10 +14,11 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { Channel, ThreadCapabilities } from '@dxos/plugin-thread/types';
+import { ThreadCapabilities } from '@dxos/plugin-thread/types';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
 import { linkedSegment } from '@dxos/react-ui-attention';
+import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 import { MeetingOperation } from '#operations';
@@ -70,36 +71,6 @@ export default Capability.makeModule(
             },
           ]);
         },
-      }),
-
-      GraphBuilder.createTypeExtension({
-        id: 'call-thread',
-        type: Channel.Channel,
-        connector: Effect.fnUntraced(function* (channel, get) {
-          const store = yield* Capability.get(MeetingCapabilities.State);
-          const meeting = get(activeMeetingFamily(store));
-          if (!meeting) {
-            return [];
-          }
-
-          const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
-          const channelDxn = Obj.getDXN(channel).toString();
-          const joined = get(callManager.joinedAtom);
-          const roomId = get(callManager.roomIdAtom);
-          if (!joined || roomId !== channelDxn) {
-            return [];
-          }
-
-          return [
-            AppNode.makeCompanion({
-              id: 'meeting-thread',
-              label: ['meeting-thread.label', { ns: meta.id }],
-              icon: 'ph--chat-text--regular',
-              data: get(AtomObj.make(meeting.thread)),
-              position: 'hoist',
-            }),
-          ];
-        }),
       }),
 
       GraphBuilder.createTypeExtension({

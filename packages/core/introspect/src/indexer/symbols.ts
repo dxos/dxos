@@ -34,7 +34,7 @@ export type PackageSymbols = {
 type PackageLike = {
   name: string;
   path: string;
-  entryPoints: string[];
+  entryPoints: readonly string[];
 };
 
 /**
