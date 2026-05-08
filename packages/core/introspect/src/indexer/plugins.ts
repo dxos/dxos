@@ -285,7 +285,9 @@ const applyTrim = (raw: string): string => {
   if (lines.length === 0) {
     return '';
   }
-  const minIndent = Math.min(...lines.filter((line) => line.trim()).map((line) => line.match(/^[ \t]*/)?.[0].length ?? 0));
+  const minIndent = Math.min(
+    ...lines.filter((line) => line.trim()).map((line) => line.match(/^[ \t]*/)?.[0].length ?? 0),
+  );
   return lines.map((line) => line.slice(minIndent)).join('\n');
 };
 
