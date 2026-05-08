@@ -66,10 +66,7 @@ export type IntegrationCoordinator = {
    * `AccessToken` + `Integration`, and runs the standard finalize path.
    * Called by the plugin-integration NavigationHandler.
    */
-  finalizeRedirectFlow: (input: {
-    accessTokenId: string;
-    accessToken: string;
-  }) => Effect.Effect<void, Error>;
+  finalizeRedirectFlow: (input: { accessTokenId: string; accessToken: string }) => Effect.Effect<void, Error>;
 };
 
 export const IntegrationCoordinator = Capability.make<IntegrationCoordinator>(
