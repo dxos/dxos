@@ -1351,4 +1351,219 @@ describe('PluginManager', () => {
       }),
     );
   });
+
+  describe('timeouts and failure tracking', () => {
+    // Atom subscriptions fire synchronously when the registry's `_set` runs,
+    // even from a forked fiber on the default runtime. Wrapping in
+    // `Effect.async` lets a TestClock-driven test wait for state produced by
+    // a background `_runForkedFiber` (e.g. the auto-disable triggered when a
+    // module activation times out) without relying on real-time `sleep`.
+    const waitFor = <T,>(registry: Registry.Registry, atom: Atom.Atom<T>, predicate: (value: T) => boolean) =>
+      Effect.async<void>((resume) => {
+        if (predicate(registry.get(atom))) {
+          resume(Effect.void);
+          return;
+        }
+        let resolved = false;
+        const dispose = registry.subscribe(atom, () => {
+          if (!resolved && predicate(registry.get(atom))) {
+            resolved = true;
+            dispose();
+            resume(Effect.void);
+          }
+        });
+        return Effect.sync(() => {
+          if (!resolved) {
+            dispose();
+          }
+        });
+      });
+
+    it.effect('records and auto-disables a plugin whose module exceeds the activation timeout', () =>
+      Effect.gen(function* () {
+        const SlowEvent = ActivationEvent.make('org.dxos.test.activation-timeout');
+        const SlowPlugin = Plugin.define({ id: 'org.dxos.test.slow-activation', name: 'Slow Activation' }).pipe(
+          Plugin.addModule({
+            id: 'Slow',
+            activatesOn: SlowEvent,
+            activate: Effect.fnUntraced(function* () {
+              yield* Effect.sleep(Duration.seconds(60));
+              return Capability.contributes(String, { string: 'never' });
+            }),
+          }),
+          Plugin.make,
+        );
+        plugins = [SlowPlugin()];
+
+        const registry = Registry.make();
+        const manager = PluginManager.make({
+          pluginLoader,
+          registry,
+          activationTimeout: Duration.seconds(2),
+        });
+        yield* manager.add(SlowPlugin.meta.id);
+        yield* manager.enable(SlowPlugin.meta.id);
+
+        const fiber = yield* Effect.fork(manager.activate(SlowEvent));
+        // Push past the 2s activation timeout. The forked module fiber is on
+        // TestClock too, so the timeout fires deterministically.
+        yield* TestClock.adjust(Duration.seconds(3));
+        const exit = yield* Fiber.await(fiber);
+        assert.isTrue(Exit.isFailure(exit));
+
+        const failed = manager.getFailed();
+        assert.strictEqual(failed.length, 1);
+        assert.strictEqual(failed[0].id, SlowPlugin.meta.id);
+        assert.strictEqual(failed[0].phase, 'activation');
+        assert.strictEqual(failed[0].reason, 'timeout');
+
+        // Auto-disable runs in a forked fiber on the default runtime; wait for
+        // the `enabled` atom to settle to the disabled state.
+        yield* waitFor(registry, manager.enabled, (ids) => !ids.includes(SlowPlugin.meta.id));
+        assert.deepStrictEqual(manager.getEnabled(), []);
+      }),
+    );
+
+    it.effect('records and auto-disables a lazy plugin whose loader exceeds the load timeout', () =>
+      Effect.gen(function* () {
+        const lazyMeta = { id: 'org.dxos.test.slow-load', name: 'Slow Load' };
+        // The dynamic import never resolves; the manager's load timeout should
+        // surface this as a `LazyPluginError` whose `cause` is `PluginTimeoutError`.
+        const LazyTest = Plugin.lazy(lazyMeta, () => new Promise<{ default: Plugin.PluginFactory }>(() => {}));
+        plugins = [LazyTest()];
+
+        const registry = Registry.make();
+        const manager = PluginManager.make({
+          pluginLoader,
+          registry,
+          loadTimeout: Duration.seconds(1),
+        });
+        yield* manager.add(lazyMeta.id);
+
+        const enableFiber = yield* Effect.fork(manager.enable(lazyMeta.id));
+        yield* TestClock.adjust(Duration.seconds(2));
+        const exit = yield* Fiber.await(enableFiber);
+        assert.isTrue(Exit.isFailure(exit));
+
+        // The wrapped `LazyPluginError` carries the timeout error as its cause.
+        if (Exit.isFailure(exit)) {
+          const failure = Cause.failureOption(exit.cause);
+          if (failure._tag === 'Some') {
+            assert.isTrue(Plugin.LazyPluginError.is(failure.value));
+            const lazyError = failure.value as Plugin.LazyPluginError;
+            assert.isTrue(PluginManager.PluginTimeoutError.is(lazyError.cause as Error));
+          }
+        }
+
+        const failed = manager.getFailed();
+        assert.strictEqual(failed.length, 1);
+        assert.strictEqual(failed[0].id, lazyMeta.id);
+        assert.strictEqual(failed[0].phase, 'load');
+        assert.strictEqual(failed[0].reason, 'timeout');
+
+        // The plugin was added to `enabled` before the lazy resolution failed,
+        // so the auto-disable fork should clear it.
+        yield* waitFor(registry, manager.enabled, (ids) => !ids.includes(lazyMeta.id));
+      }),
+    );
+
+    it.effect('records non-timeout activation errors as reason: error', () =>
+      Effect.gen(function* () {
+        const FailingEvent = ActivationEvent.make('org.dxos.test.activation-error');
+        const FailingPlugin = Plugin.define({ id: 'org.dxos.test.failing', name: 'Failing' }).pipe(
+          Plugin.addModule({
+            id: 'Boom',
+            activatesOn: FailingEvent,
+            activate: () => Effect.fail(new Error('boom')),
+          }),
+          Plugin.make,
+        );
+        plugins = [FailingPlugin()];
+
+        const registry = Registry.make();
+        const manager = PluginManager.make({ pluginLoader, registry });
+        yield* manager.add(FailingPlugin.meta.id);
+        yield* manager.enable(FailingPlugin.meta.id);
+
+        const exit = yield* Effect.exit(manager.activate(FailingEvent));
+        assert.isTrue(Exit.isFailure(exit));
+
+        const failed = manager.getFailed();
+        assert.strictEqual(failed.length, 1);
+        assert.strictEqual(failed[0].reason, 'error');
+        assert.strictEqual(failed[0].error.message, 'boom');
+
+        yield* waitFor(registry, manager.enabled, (ids) => !ids.includes(FailingPlugin.meta.id));
+      }),
+    );
+
+    it.effect('does not auto-disable a core plugin even though the failure is recorded', () =>
+      Effect.gen(function* () {
+        const FailingEvent = ActivationEvent.make('org.dxos.test.core-fail');
+        const CorePlugin = Plugin.define({ id: 'org.dxos.test.core', name: 'Core' }).pipe(
+          Plugin.addModule({
+            id: 'Boom',
+            activatesOn: FailingEvent,
+            activate: () => Effect.fail(new Error('boom')),
+          }),
+          Plugin.make,
+        );
+        const corePlugin = CorePlugin();
+        plugins = [corePlugin];
+
+        const manager = PluginManager.make({
+          pluginLoader,
+          plugins: [corePlugin],
+          core: [corePlugin.meta.id],
+        });
+        // Core is auto-enabled via the constructor's enable chain.
+        const exit = yield* Effect.exit(manager.activate(FailingEvent));
+        assert.isTrue(Exit.isFailure(exit));
+
+        assert.strictEqual(manager.getFailed().length, 1);
+        // Core stays enabled; host opted into it being non-removable.
+        assert.deepStrictEqual(manager.getEnabled(), [corePlugin.meta.id]);
+      }),
+    );
+
+    it.effect('clearFailure removes the failure record and re-enable starts fresh', () =>
+      Effect.gen(function* () {
+        let shouldFail = true;
+        const Event = ActivationEvent.make('org.dxos.test.flaky');
+        const FlakyPlugin = Plugin.define({ id: 'org.dxos.test.flaky', name: 'Flaky' }).pipe(
+          Plugin.addModule({
+            id: 'Maybe',
+            activatesOn: Event,
+            activate: () =>
+              shouldFail ? Effect.fail(new Error('first try')) : Effect.succeed(Capability.contributes(String, { string: 'ok' })),
+          }),
+          Plugin.make,
+        );
+        const flakyPlugin = FlakyPlugin();
+        plugins = [flakyPlugin];
+
+        const registry = Registry.make();
+        const manager = PluginManager.make({ pluginLoader, registry });
+        yield* manager.add(flakyPlugin.meta.id);
+        yield* manager.enable(flakyPlugin.meta.id);
+
+        yield* Effect.exit(manager.activate(Event));
+        assert.strictEqual(manager.getFailed().length, 1);
+        yield* waitFor(registry, manager.enabled, (ids) => !ids.includes(flakyPlugin.meta.id));
+
+        // Calling `enable` again clears the prior failure record before
+        // attempting resolution; verify the explicit API does too.
+        assert.isTrue(manager.clearFailure(flakyPlugin.meta.id));
+        assert.strictEqual(manager.getFailed().length, 0);
+        assert.isFalse(manager.clearFailure(flakyPlugin.meta.id));
+
+        // Retry: enable + reset the activation event so the module re-runs.
+        shouldFail = false;
+        yield* manager.enable(flakyPlugin.meta.id);
+        yield* manager.reset(Event);
+        assert.strictEqual(manager.getFailed().length, 0);
+        assert.strictEqual(manager.capabilities.getAll(String).length, 1);
+      }),
+    );
+  });
 });
