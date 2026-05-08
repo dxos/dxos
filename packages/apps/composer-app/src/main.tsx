@@ -371,6 +371,11 @@ const main = async () => {
   profiler?.mark('plugins:start');
 
   const isPwa = !isFalse(config.values.runtime?.app?.env?.DX_PWA);
+  // Branch the app shell on URL pathname so `/mail` (served by `mail.html`,
+  // which loads this same `main.tsx`) boots into the minimal mailbox layout
+  // instead of the deck. Matches both the production clean-URL form (`/mail`)
+  // and the dev-server form (`/mail.html`).
+  const isMail = url.pathname === '/mail' || url.pathname.startsWith('/mail/') || url.pathname.endsWith('/mail.html');
   const conf: PluginConfig = {
     appKey: APP_KEY,
     config,
@@ -383,6 +388,7 @@ const main = async () => {
     isTauri,
     isPopover,
     isMobile,
+    isMail,
     isLabs: isTrue(config.values.runtime?.app?.env?.DX_LABS),
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };

@@ -116,6 +116,7 @@ export default defineConfig((env) => ({
       input: {
         internal: path.resolve(dirname, './internal.html'),
         main: path.resolve(dirname, './index.html'),
+        mail: path.resolve(dirname, './mail.html'),
         devtools: path.resolve(dirname, './devtools.html'),
         reset: path.resolve(dirname, './reset.html'),
         'script-frame': path.resolve(dirname, './script-frame/index.html'),
@@ -150,6 +151,7 @@ export default defineConfig((env) => ({
     entries: [
       './index.html',
       './internal.html',
+      './mail.html',
       './devtools.html',
       './reset.html',
       './script-frame/index.html',

@@ -34,6 +34,7 @@ import { InboxPlugin } from '@dxos/plugin-inbox';
 import { IntegrationPlugin } from '@dxos/plugin-integration';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon';
 import { KanbanPlugin } from '@dxos/plugin-kanban';
+import { MailLayoutPlugin } from '@dxos/plugin-mail-layout';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
@@ -97,14 +98,17 @@ export type PluginConfig = State & {
   isStrict?: boolean;
   isPopover?: boolean;
   isMobile?: boolean;
+  isMail?: boolean;
 };
 
-export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): string[] => {
+export const getCore = ({ isPwa, isTauri, isPopover, isMobile, isMail }: PluginConfig): string[] => {
   const layoutPluginId = isPopover
     ? SpotlightPlugin.meta.id
     : isMobile
       ? SimpleLayoutPlugin.meta.id
-      : DeckPlugin.meta.id;
+      : isMail
+        ? MailLayoutPlugin.meta.id
+        : DeckPlugin.meta.id;
   return [
     AttentionPlugin.meta.id,
     AutomationPlugin.meta.id,
@@ -186,8 +190,15 @@ export const getPlugins = ({
   isTauri,
   isPopover,
   isMobile,
+  isMail,
 }: PluginConfig): Plugin.Plugin[] => {
-  const layoutPlugin = isPopover ? SpotlightPlugin() : isMobile ? SimpleLayoutPlugin({}) : DeckPlugin();
+  const layoutPlugin = isPopover
+    ? SpotlightPlugin()
+    : isMobile
+      ? SimpleLayoutPlugin({})
+      : isMail
+        ? MailLayoutPlugin()
+        : DeckPlugin();
   const origin = isTauri ? APP_LINK_ORIGIN : window.location.origin;
   return [
     AssistantPlugin(),
