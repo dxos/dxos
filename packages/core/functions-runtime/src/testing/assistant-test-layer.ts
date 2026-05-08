@@ -60,6 +60,14 @@ interface TestLayerOptions {
    * Core system prompt for the agent.
    */
   systemPrompt?: string;
+
+  /**
+   * If true, long-running tool calls are moved to the background and the agent is notified
+   * asynchronously when they complete. Currently unstable — disabled by default.
+   *
+   * @default false
+   */
+  enableToolBackgrounding?: boolean;
 }
 
 export type AssistantTestServices =
@@ -95,6 +103,7 @@ export const AssistantTestLayer = ({
   disableLlmMemoization = false,
   blueprints = [],
   systemPrompt,
+  enableToolBackgrounding = false,
 }: TestLayerOptions = {}): Layer.Layer<AssistantTestServices, never, TestContextService> => {
   const resolvedModel: ModelName =
     model ?? (aiServicePreset === 'ollama' ? 'gpt-oss:20b' : '@anthropic/claude-opus-4-6');
@@ -108,7 +117,7 @@ export const AssistantTestLayer = ({
   return Layer.empty.pipe(
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
-    Layer.provideMerge(AgentService.layer({ systemPrompt, model: resolvedModel })),
+    Layer.provideMerge(AgentService.layer({ systemPrompt, model: resolvedModel, enableToolBackgrounding })),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
     Layer.provideMerge(
       Layer.effect(

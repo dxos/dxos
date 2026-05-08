@@ -114,6 +114,14 @@ export const layer = (opts?: {
    * Provider for space-level MCP server configs.
    */
   getMcpServers?: () => McpServerConfig[];
+
+  /**
+   * If true, long-running tool calls are moved to the background and the agent is notified
+   * asynchronously when they complete. Currently unstable — disabled by default.
+   *
+   * @default false
+   */
+  enableToolBackgrounding?: boolean;
 }): Layer.Layer<AgentService, never, ProcessManager.Service> =>
   Layer.effect(
     AgentService,
@@ -134,6 +142,7 @@ export const layer = (opts?: {
               systemPrompt: opts?.systemPrompt,
               model: options?.model ?? opts?.model,
               getMcpServers: opts?.getMcpServers,
+              enableToolBackgrounding: opts?.enableToolBackgrounding,
             });
             const processes = yield* processManager.list({ target, key: executable.key });
 
