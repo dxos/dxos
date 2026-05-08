@@ -232,7 +232,7 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  * export default Capability.makeModule(
  *   Effect.fnUntraced(function* (props: { observability: boolean }) {
  *     const invoker = yield* Capability.get(Capabilities.OperationInvoker);
- *     return contributes(Capabilities.IntentResolver, ...);
+ *     return contributes(Capabilities.OperationHandler, ...);
  *   })
  * );
  * ```

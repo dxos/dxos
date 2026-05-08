@@ -24,6 +24,9 @@
       "path": "../react-ui-form"
     },
     {
+      "path": "../react-ui-list"
+    },
+    {
       "path": "../react-ui-syntax-highlighter"
     },
     {

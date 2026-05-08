@@ -11,8 +11,7 @@ import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { type Feed, Obj, Query } from '@dxos/echo';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { linkedSegment } from '@dxos/react-ui-attention';
-import { useSelected } from '@dxos/react-ui-attention';
+import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Event } from '@dxos/types';
 
@@ -20,7 +19,7 @@ import { EventStack, type EventStackActionHandler } from '#components';
 import { meta } from '#meta';
 import { type Calendar } from '#types';
 
-import { NewCalendar } from './NewCalendar';
+import { InitializeCalendar } from './InitializeCalendar';
 
 const byDate =
   (direction = -1) =>
@@ -102,7 +101,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
           </Panel.Toolbar>
           <Panel.Content asChild>
             {isEmpty ? (
-              <NewCalendar calendar={subject} />
+              <InitializeCalendar calendar={subject} />
             ) : (
               <EventStack id={id} events={events} currentId={currentId} onAction={handleAction} />
             )}

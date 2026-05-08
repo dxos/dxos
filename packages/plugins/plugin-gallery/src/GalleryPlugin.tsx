@@ -44,3 +44,5 @@ export const GalleryPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );
+
+export default GalleryPlugin;

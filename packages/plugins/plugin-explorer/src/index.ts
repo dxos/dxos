@@ -2,7 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './components';
-export * from './hooks';
+import { Plugin } from '@dxos/app-framework';
 
-export * from './ExplorerPlugin';
+import { meta } from './meta';
+
+export * from './meta';
+
+export const ExplorerPlugin = Plugin.lazy(meta, () => import('#plugin'));

@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { type Type } from '@dxos/echo';
+import { Type } from '@dxos/echo';
+import { log } from '@dxos/log';
 
 import { ClientCapabilities } from '#types';
 
@@ -17,16 +18,35 @@ export default Capability.makeModule(
     const schemasAtom = yield* Capability.atom(AppCapabilities.Schema);
 
     // TODO(wittjosiah): Unregister schemas when they are disabled.
-    let previous: Type.AnyEntity[] = [];
+    let previousDxns = new Set<string>();
     const cancel = registry.subscribe(
       schemasAtom,
-      async (_schemas: any[]) => {
-        // TODO(wittjosiah): This doesn't seem to de-dupe schemas as expected.
-        const schemas = Array.from(new Set(_schemas.flat())) as Type.AnyEntity[];
-        // TODO(wittjosiah): Filter out schemas which the client has already registered.
-        const newSchemas = schemas.filter((schema) => !previous.includes(schema));
-        previous = schemas;
-        await client.addTypes(newSchemas);
+      async (schemas) => {
+        const seenSchemaDxns = new Set<string>();
+        const batch: { schema: Type.AnyEntity; dxnKey: string }[] = [];
+        for (const schema of schemas.flat()) {
+          const dxn = Type.getDXN(schema);
+          if (!dxn) {
+            log.warn('skipping schema without dxn');
+            continue;
+          }
+
+          const key = dxn.toString();
+          if (seenSchemaDxns.has(key)) {
+            log.warn('skipping duplicate schema for echo registration', { dxn: key });
+            continue;
+          }
+
+          seenSchemaDxns.add(key);
+          batch.push({ schema, dxnKey: key });
+        }
+
+        const toRegister = batch.filter(({ dxnKey }) => !previousDxns.has(dxnKey));
+
+        await client.addTypes(toRegister.map(({ schema }) => schema));
+        for (const { dxnKey } of toRegister) {
+          previousDxns.add(dxnKey);
+        }
       },
       { immediate: true },
     );

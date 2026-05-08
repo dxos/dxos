@@ -2,6 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './meta';
+import { Plugin } from '@dxos/app-framework';
 
-export * from './MasonryPlugin';
+import { meta } from './meta';
+
+export const MasonryPlugin = Plugin.lazy(meta, () => import('./MasonryPlugin'));
+
+export * from './meta';

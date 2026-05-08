@@ -1,5 +1,10 @@
 # DXOS Plugin Introspection — Build Spec
 
+> Note: this document predates the framework's `Intent → Operation` rename.
+> Wherever the spec says "intent" / `listIntents` / `traceIntent` /
+> `intent-handler`, the shipped names are `operation` / `listOperations` /
+> `traceOperation` / `OperationHandler`. See `DESIGN-NOTES.md` §"Intents → operations".
+
 ## Goal
 
 Build a system that exposes structured knowledge of the DXOS monorepo (packages, symbols, plugins, surfaces, capabilities, intents, schemas, idioms) to two consumers:

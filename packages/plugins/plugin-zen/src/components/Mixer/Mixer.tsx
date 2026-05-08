@@ -225,7 +225,7 @@ const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDe
         variant='ghost'
         icon={item.muted ? 'ph--speaker-slash--regular' : 'ph--speaker-high--regular'}
         iconOnly
-        label={t(item.muted ? 'unmute button label' : 'mute button label')}
+        label={t(item.muted ? 'unmute-button.label' : 'mute-button.label')}
         onClick={(event) => {
           event.stopPropagation();
           onLayerUpdate({ ...item, muted: !item.muted });

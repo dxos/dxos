@@ -15,14 +15,12 @@ import { loadCommunityPlugins } from '../hooks';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const client = yield* Capability.get(ClientCapabilities.Client);
 
     const communityPluginsAtom = Atom.make<CommunityPluginsState>({ entries: [], loading: true, error: null }).pipe(
       Atom.keepAlive,
     );
-
-    const client = capabilities.get(ClientCapabilities.Client);
 
     yield* loadCommunityPlugins(client.edge.http).pipe(
       Effect.match({

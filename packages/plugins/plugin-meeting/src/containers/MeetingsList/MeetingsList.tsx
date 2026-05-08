@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -11,11 +10,10 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { Channel } from '@dxos/plugin-thread/types';
 import { Query, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
-import { List } from '@dxos/react-ui-list';
-import { ghostHover, mx } from '@dxos/ui-theme';
+import { Row, RowList } from '@dxos/react-ui-list';
+import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 import { MeetingOperation } from '#operations';
@@ -23,15 +21,12 @@ import { Meeting } from '#types';
 
 // TODO(wittjosiah): Add a story which renders meetings alongside call?
 
-const grid = 'grid grid-cols-[1fr_auto] min-h-[2.5rem]';
-
-const MeetingItem = ({
-  meeting,
-  getLabel,
-}: {
+type MeetingItemProps = {
   meeting: Meeting.Meeting;
   getLabel: (meeting: Meeting.Meeting) => string;
-}) => {
+};
+
+const MeetingItem = ({ meeting, getLabel }: MeetingItemProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
 
@@ -41,16 +36,10 @@ const MeetingItem = ({
   );
 
   return (
-    <List.Item<Meeting.Meeting>
-      key={meeting.id}
-      item={meeting}
-      classNames={mx(grid, ghostHover, 'items-center', 'px-2', 'min-h-[3rem]')}
-    >
-      <div className='flex flex-col truncate'>
-        <List.ItemTitle classNames='truncate'>{getLabel(meeting)}</List.ItemTitle>
-      </div>
+    <Row id={meeting.id} classNames='grid grid-cols-[1fr_auto] items-center'>
+      <span className='truncate'>{getLabel(meeting)}</span>
       <Button onClick={handleSelectMeeting}>{t('select-meeting.label')}</Button>
-    </List.Item>
+    </Row>
   );
 };
 
@@ -82,7 +71,6 @@ export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
     [metadata],
   );
 
-  const getId = useCallback((meeting: Meeting.Meeting) => meeting.id, []);
   const handleCreateMeeting = useCallback(async () => {
     invariant(db);
     const createResult = await invokePromise(MeetingOperation.Create, { channel: channel as Channel.Channel });
@@ -101,15 +89,15 @@ export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
       <div className='px-2 min-h-[3rem] flex justify-end items-center'>
         <Button onClick={handleCreateMeeting}>{t('create-meeting.label')}</Button>
       </div>
-      <List.Root<Meeting.Meeting> items={sortedMeetings} isItem={Schema.is(Meeting.Meeting)} getId={getId}>
-        {({ items }) => (
-          <div role='list' className='flex flex-col w-full'>
-            {items?.map((meeting) => (
+      <RowList.Root>
+        <RowList.Viewport>
+          <RowList.Content aria-label={t('meeting-list.label')}>
+            {sortedMeetings.map((meeting) => (
               <MeetingItem key={meeting.id} meeting={meeting} getLabel={meetingMetadata.label} />
             ))}
-          </div>
-        )}
-      </List.Root>
+          </RowList.Content>
+        </RowList.Viewport>
+      </RowList.Root>
     </div>
   );
 };

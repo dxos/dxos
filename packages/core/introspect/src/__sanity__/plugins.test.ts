@@ -3,7 +3,7 @@
 //
 
 // Sanity test: run plugin extraction against the real monorepo to verify
-// surfaces/capabilities/intents/schemas are discovered for a known plugin.
+// surfaces/capabilities/operations/schemas are discovered for a known plugin.
 // Skipped by default; set INTROSPECT_REAL=1 to enable.
 
 import { dirname, join } from 'node:path';

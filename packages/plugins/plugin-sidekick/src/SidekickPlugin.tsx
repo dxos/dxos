@@ -29,3 +29,5 @@ export const SidekickPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );
+
+export default SidekickPlugin;

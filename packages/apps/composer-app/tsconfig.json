@@ -284,6 +284,9 @@
       "path": "../../plugins/plugin-gallery"
     },
     {
+      "path": "../../plugins/plugin-github"
+    },
+    {
       "path": "../../plugins/plugin-graph"
     },
     {
@@ -540,9 +543,6 @@
     },
     {
       "path": "../../ui/react-ui-pickers"
-    },
-    {
-      "path": "../../ui/react-ui-search"
     },
     {
       "path": "../../ui/react-ui-sfx"

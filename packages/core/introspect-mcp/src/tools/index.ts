@@ -17,7 +17,7 @@ export {
   shapeGetPackage,
   shapeGetSymbol,
   shapeListCapabilities,
-  shapeListIntents,
+  shapeListOperations,
   shapeListPackages,
   shapeListPlugins,
   shapeListSchemas,

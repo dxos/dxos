@@ -50,3 +50,5 @@ export const CrxBridgePlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default CrxBridgePlugin;

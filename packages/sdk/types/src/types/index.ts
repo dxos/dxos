@@ -5,6 +5,7 @@
 import * as AccessToken from './AccessToken';
 import * as Actor from './Actor';
 import * as AnchoredTo from './AnchoredTo';
+import * as Channel from './Channel';
 import * as ContentBlock from './ContentBlock';
 import * as Employer from './Employer';
 import * as Event from './Event';
@@ -16,6 +17,7 @@ import * as Message from './Message';
 import * as Organization from './Organization';
 import * as Person from './Person';
 import * as Pipeline from './Pipeline';
+import * as Project from './Project';
 import * as Task from './Task';
 import * as Thread from './Thread';
 import * as Transcript from './Transcript';
@@ -40,11 +42,13 @@ export {
   // Common object types
   //
   AccessToken,
+  Channel,
   Event,
   Message,
   Organization,
   Person,
   Pipeline,
+  Project,
   Task,
   Thread,
   Transcript,

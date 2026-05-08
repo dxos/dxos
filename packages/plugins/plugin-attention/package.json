@@ -13,6 +13,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": "./src/AttentionPlugin.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
@@ -55,6 +56,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-graph": "workspace:*",
     "@types/react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

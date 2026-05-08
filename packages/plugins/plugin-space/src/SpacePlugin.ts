@@ -27,6 +27,7 @@ import {
   Organization,
   Person,
   Pipeline,
+  Project,
   Task,
 } from '@dxos/types';
 
@@ -131,6 +132,24 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
         },
       },
       {
+        id: Project.Project.typename,
+        metadata: {
+          icon: Annotation.IconAnnotation.get(Project.Project).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Project.Project).pipe(Option.getOrThrow).hue ?? 'white',
+          inputSchema: Project.Project,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Project.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
+        },
+      },
+      {
         id: Task.Task.typename,
         metadata: {
           icon: Annotation.IconAnnotation.get(Task.Task).pipe(Option.getOrThrow).icon,
@@ -168,6 +187,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       Organization.Organization,
       Person.Person,
       Pipeline.Pipeline,
+      Project.Project,
       Tag.Tag,
       Task.Task,
     ],
@@ -254,12 +274,14 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     activate: SpacesReady,
   }),
   Plugin.addModule({
-    activatesOn: ClientEvents.SpacesReady,
-    activate: Repair,
-  }),
-  Plugin.addModule({
     activatesOn: ClientEvents.SetupMigration,
     activate: Migrations,
   }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.SpacesReady,
+    activate: Repair,
+  }),
   Plugin.make,
 );
+
+export default SpacePlugin;
