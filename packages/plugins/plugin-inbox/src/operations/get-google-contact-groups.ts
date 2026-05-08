@@ -7,28 +7,16 @@ import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
 
+import { GooglePeople } from '../apis';
 import { AccessTokenNotPopulatedError, IntegrationDatabaseMissingError } from '../errors';
 import { GetGoogleContactGroups } from './definitions';
 
 const CONTACT_GROUPS_URL = 'https://people.googleapis.com/v1/contactGroups?pageSize=200';
-
-const ContactGroupsItem = Schema.Struct({
-  resourceName: Schema.String,
-  name: Schema.String,
-  groupType: Schema.optional(Schema.String),
-  memberCount: Schema.optional(Schema.Number),
-});
-
-const ContactGroupsResponse = Schema.Struct({
-  contactGroups: Schema.optional(Schema.Array(ContactGroupsItem)),
-  nextPageToken: Schema.optional(Schema.String),
-});
 
 const listContactGroups = (token: string) =>
   Effect.gen(function* () {
@@ -36,7 +24,7 @@ const listContactGroups = (token: string) =>
     const client = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
     const body = yield* HttpClientRequest.get(CONTACT_GROUPS_URL).pipe(
       client.execute,
-      Effect.flatMap(HttpClientResponse.schemaBodyJson(ContactGroupsResponse)),
+      Effect.flatMap(HttpClientResponse.schemaBodyJson(GooglePeople.ListContactGroupsResponse)),
       Effect.scoped,
     );
     return body.contactGroups ?? [];

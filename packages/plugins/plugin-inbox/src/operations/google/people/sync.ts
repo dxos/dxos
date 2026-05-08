@@ -64,36 +64,35 @@ const upsertPerson = (remote: GooglePeople.Person) =>
     if (existing.length > 0) {
       const person = existing[0] as Person.Person;
       Obj.update(person, (person) => {
-        const mutable = person as Obj.Mutable<typeof person>;
         if (props.fullName !== undefined) {
-          mutable.fullName = props.fullName;
+          person.fullName = props.fullName;
         }
         if (props.jobTitle !== undefined) {
-          mutable.jobTitle = props.jobTitle;
+          person.jobTitle = props.jobTitle;
         }
         if (props.department !== undefined) {
-          mutable.department = props.department;
+          person.department = props.department;
         }
         if (props.notes !== undefined) {
-          mutable.notes = props.notes;
+          person.notes = props.notes;
         }
         if (props.image !== undefined) {
-          mutable.image = props.image;
+          person.image = props.image;
         }
         if (props.birthday !== undefined) {
-          mutable.birthday = props.birthday;
+          person.birthday = props.birthday;
         }
         if (props.emails) {
-          mutable.emails = [...props.emails];
+          person.emails = [...props.emails];
         }
         if (props.phoneNumbers) {
-          mutable.phoneNumbers = [...props.phoneNumbers];
+          person.phoneNumbers = [...props.phoneNumbers];
         }
         if (props.addresses) {
-          mutable.addresses = [...props.addresses];
+          person.addresses = [...props.addresses];
         }
         if (props.urls) {
-          mutable.urls = [...props.urls];
+          person.urls = [...props.urls];
         }
       });
       return false;
@@ -135,8 +134,7 @@ const syncOneGroup = (integration: Integration.Integration, groupResourceName: s
     const targetIdx = integration.targets?.findIndex((t) => t.remoteId === groupResourceName) ?? -1;
     if (targetIdx >= 0) {
       Obj.update(integration, (integration) => {
-        const mutable = integration as Obj.Mutable<typeof integration>;
-        mutable.targets[targetIdx] = { ...mutable.targets[targetIdx], cursor: new Date().toISOString() };
+        integration.targets[targetIdx] = { ...integration.targets[targetIdx], cursor: new Date().toISOString() };
       });
     }
 

@@ -23,7 +23,7 @@ const dispatch = (integration: Integration.Integration) =>
     const db = Obj.getDatabase(integration);
     invariant(db);
     const runtime = computeRuntime.getRuntime(db.spaceId);
-    const { ContactsFunctions } = yield* Effect.promise(() => import('./google/contacts'));
+    const { ContactsFunctions } = yield* Effect.promise(() => import('./google/people'));
     yield* Effect.tryPromise(() =>
       runtime.runPromise(
         Operation.invoke(ContactsFunctions.Sync, {
