@@ -82,18 +82,10 @@ const upsertPerson = (remote: GooglePeople.Person) =>
         if (props.birthday !== undefined) {
           person.birthday = props.birthday;
         }
-        if (props.emails) {
-          person.emails = [...props.emails];
-        }
-        if (props.phoneNumbers) {
-          person.phoneNumbers = [...props.phoneNumbers];
-        }
-        if (props.addresses) {
-          person.addresses = [...props.addresses];
-        }
-        if (props.urls) {
-          person.urls = [...props.urls];
-        }
+        person.emails = props.emails ? [...props.emails] : [];
+        person.phoneNumbers = props.phoneNumbers ? [...props.phoneNumbers] : [];
+        person.addresses = props.addresses ? [...props.addresses] : [];
+        person.urls = props.urls ? [...props.urls] : [];
       });
       return false;
     }

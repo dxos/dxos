@@ -15,6 +15,7 @@ import { Integration } from '@dxos/plugin-integration/types';
 
 import { meta } from '#meta';
 
+import { IntegrationDatabaseMissingError } from '../errors';
 import { SyncContacts } from './definitions';
 
 const dispatch = (integration: Integration.Integration) =>
@@ -30,36 +31,41 @@ const dispatch = (integration: Integration.Integration) =>
           integration: Ref.make(integration),
         }),
       ),
-    ).pipe(
-      Effect.catchAll((error) => {
-        log.catch(error);
-        return Operation.invoke(LayoutOperation.AddToast, {
-          id: `${meta.id}/sync-contacts-error`,
-          icon: 'ph--warning--regular',
-          duration: 5_000,
-          title: ['sync-contacts-error.title', { ns: meta.id }],
-          closeLabel: ['close.label', { ns: meta.id }],
-        });
-      }),
     );
   });
 
 const handler: Operation.WithHandler<typeof SyncContacts> = SyncContacts.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      const integrationObj = yield* Database.load(input.integration).pipe(
-        Effect.provide(Database.layer(Obj.getDatabase(input.integration.target!)!)),
+      const target = input.integration.target;
+      const db = target ? Obj.getDatabase(target) : undefined;
+      if (!db) {
+        return yield* Effect.fail(new IntegrationDatabaseMissingError());
+      }
+
+      const integrationObj = yield* Database.load(input.integration).pipe(Effect.provide(Database.layer(db)));
+
+      yield* dispatch(integrationObj).pipe(
+        Effect.tap(() =>
+          Operation.invoke(LayoutOperation.AddToast, {
+            id: `${meta.id}/sync-contacts-success`,
+            icon: 'ph--check--regular',
+            duration: 3_000,
+            title: ['sync-contacts-success.title', { ns: meta.id }],
+            closeLabel: ['close.label', { ns: meta.id }],
+          }),
+        ),
+        Effect.catchAll((error) => {
+          log.catch(error);
+          return Operation.invoke(LayoutOperation.AddToast, {
+            id: `${meta.id}/sync-contacts-error`,
+            icon: 'ph--warning--regular',
+            duration: 5_000,
+            title: ['sync-contacts-error.title', { ns: meta.id }],
+            closeLabel: ['close.label', { ns: meta.id }],
+          });
+        }),
       );
-
-      yield* dispatch(integrationObj);
-
-      yield* Operation.invoke(LayoutOperation.AddToast, {
-        id: `${meta.id}/sync-contacts-success`,
-        icon: 'ph--check--regular',
-        duration: 3_000,
-        title: ['sync-contacts-success.title', { ns: meta.id }],
-        closeLabel: ['close.label', { ns: meta.id }],
-      });
     }),
   ),
 );

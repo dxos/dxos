@@ -44,8 +44,7 @@ export const listContactGroups = Effect.fn(function* (pageToken?: string) {
  * https://developers.google.com/people/api/rest/v1/contactGroups/get
  */
 export const getContactGroup = Effect.fn(function* (resourceName: string, maxMembers = 1000) {
-  const encodedName = encodeURIComponent(resourceName);
-  const url = createUrl([API_URL, encodedName], { maxMembers }).toString();
+  const url = createUrl([API_URL, resourceName], { maxMembers }).toString();
   const response = yield* makeGoogleApiRequest(url);
   return yield* Schema.decodeUnknown(ContactGroupResponse)(response);
 });
