@@ -122,9 +122,7 @@ export class Manager {
   constructor(provider: PluginProvider | undefined, atomRegistry: AtomRegistry.Registry) {
     this.#provider = provider ?? NULL_PROVIDER;
     const initialLoading = provider !== undefined;
-    this.plugins = Atom.make<PluginsState>({ entries: [], loading: initialLoading, error: null }).pipe(
-      Atom.keepAlive,
-    );
+    this.plugins = Atom.make<PluginsState>({ entries: [], loading: initialLoading, error: null }).pipe(Atom.keepAlive);
 
     if (provider !== undefined) {
       // Fire-and-forget initial load. Errors are surfaced via the atom's `error` field.

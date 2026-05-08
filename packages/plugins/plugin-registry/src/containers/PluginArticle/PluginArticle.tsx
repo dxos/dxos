@@ -35,10 +35,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   });
 
   const enabled = manager.getEnabled().includes(pluginId);
-  const isInstalled = useMemo(
-    () => plugins.some((candidate) => candidate.meta.id === pluginId),
-    [plugins, pluginId],
-  );
+  const isInstalled = useMemo(() => plugins.some((candidate) => candidate.meta.id === pluginId), [plugins, pluginId]);
   const isCore = manager.getCore().includes(pluginId);
   const canUninstall = isInstalled && !isCore && remotePluginIds.has(pluginId);
   const hasUpdate =
@@ -248,9 +245,7 @@ const usePluginActions = ({
 
   const handleEnableChange = useCallback(
     (enabled: boolean) =>
-      enabled
-        ? runAndForwardErrors(manager.enable(pluginId))
-        : runAndForwardErrors(manager.disable(pluginId)),
+      enabled ? runAndForwardErrors(manager.enable(pluginId)) : runAndForwardErrors(manager.disable(pluginId)),
     [manager, pluginId],
   );
 

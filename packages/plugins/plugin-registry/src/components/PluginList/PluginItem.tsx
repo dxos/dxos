@@ -179,12 +179,7 @@ export const PluginItem = ({
                 {t('updating.label')}
               </Button>
             ) : showUpdateButton ? (
-              <Button
-                aria-describedby={descriptionId}
-                density='fine'
-                variant='primary'
-                onClick={handleUpdate}
-              >
+              <Button aria-describedby={descriptionId} density='fine' variant='primary' onClick={handleUpdate}>
                 {t('update.label')}
               </Button>
             ) : showInstallButton ? (

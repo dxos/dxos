@@ -427,9 +427,7 @@ const main = async () => {
   const setupEvents = [AppActivationEvents.SetupSettings];
 
   const edgeUrl = config.values.runtime?.services?.edge?.url;
-  const pluginRegistryProvider = edgeUrl
-    ? new EdgeRegistryPluginProvider(new EdgeHttpClient(edgeUrl))
-    : undefined;
+  const pluginRegistryProvider = edgeUrl ? new EdgeRegistryPluginProvider(new EdgeHttpClient(edgeUrl)) : undefined;
 
   profiler?.mark('plugins:end');
   profiler?.measure('plugins-init', 'plugins:start', 'plugins:end');
