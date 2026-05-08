@@ -322,18 +322,22 @@ export class AppManager {
   }
 
   async openPluginRegistry(): Promise<void> {
-    // Clicking the pinned registry tree node dispatches a workspace switch
-    // (via SettingsOperation.OpenPluginRegistry → LayoutOperation.SwitchWorkspace).
-    // The category rows are present in the DOM in either workspace but only
-    // become visible once the registry workspace is current — wait for that
-    // to land so the next click doesn't race against the switch on slow
-    // browsers (firefox locally, sometimes CI).
-    await this.page.getByTestId('treeView.pluginRegistry').click();
+    // Direct-navigate to the registry workspace rather than clicking the
+    // pinned tree node. The click path requires the layout/settings
+    // operation handlers to be fully registered before the click fires; in
+    // firefox that initialisation occasionally lags behind first paint, so
+    // the click is silently swallowed and the test then times out waiting
+    // for the registry tree to render. URL-driven navigation has no such
+    // dependency on operation-handler registration.
+    await this.page.goto(`${INITIAL_URL.replace(/\/$/, '')}/!dxos:plugin-registry`);
     await this.page.getByTestId('pluginRegistry.recommended').waitFor({ state: 'visible' });
   }
 
   async openRegistryCategory(category: string): Promise<void> {
-    await this.page.getByTestId(`pluginRegistry.${category}`).click();
+    await this.page.goto(
+      `${INITIAL_URL.replace(/\/$/, '')}/!dxos:plugin-registry/plugin-registry%3E${category}`,
+    );
+    await this.page.getByTestId(`pluginRegistry.${category}`).waitFor({ state: 'visible' });
   }
 
   getPluginToggle(plugin: string): Locator {
