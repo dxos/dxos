@@ -20,8 +20,6 @@ export type RangeListProps = {
 
 export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
   const { t } = useTranslation(meta.id);
-  // useObject subscribes the component to ECHO mutations so the list reflects
-  // toolbar-driven additions/removals to `sheet.ranges`.
   const [sheet, updateSheet] = useObject(sheetProp);
   // TODO(thure): Implement similar to comments, #8121
   const handleSelectRange = (range: Sheet.Range) => {};
@@ -51,7 +49,7 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
                 <List.ItemDragHandle />
                 <List.ItemTitle onClick={() => handleSelectRange(range)}>
                   {t('range.title', {
-                    position: rangeToA1Notation(rangeFromIndex(sheet, range.range)),
+                    position: rangeToA1Notation(rangeFromIndex(sheetProp, range.range)),
                     key: t(`range-key.${range.key}.label`),
                     value: t(`range-value.${range.value}.label`),
                   })}

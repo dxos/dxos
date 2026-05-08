@@ -132,12 +132,7 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThreads(host.page)).toHaveCount(0);
   });
 
-  // TODO(burdon): Undo of thread deletion currently fails — re-adding the deleted
-  //   AnchoredTo relation does not re-establish its source binding, so
-  //   `Relation.getSource(anchor)` throws when the comments panel re-renders. The
-  //   side panel renders "Error: Relation source could not be resolved." instead of
-  //   restoring the thread. Tracked as a product bug, not a test issue.
-  test.skip('undo delete thread', async () => {
+  test('undo delete thread', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
