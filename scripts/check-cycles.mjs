@@ -5,22 +5,8 @@ import madge from 'madge';
 
 const CONFIG = {
   // TODO(dmaretskyi): Add more packages.
-  include: [
-    'packages/{common,core}/**/*.{ts,tsx}',
-    'packages/sdk/app-framework/src/**/*.{ts,tsx}',
-    'packages/sdk/app-toolkit/src/**/*.{ts,tsx}',
-    'packages/plugins/plugin-kanban/src/**/*.{ts,tsx}',
-    'packages/plugins/plugin-attention/src/**/*.{ts,tsx}',
-  ],
-  ignoreGlobs: [
-    '**/node_modules/**',
-    '**/dist/**',
-    '**/build/**',
-    '**/coverage/**',
-    '**/scripts/**',
-    '**/*.stories.tsx',
-    '**/playwright/**',
-  ],
+  include: ['packages/{common,core}/**/*.{ts,tsx}'],
+  ignoreGlobs: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '**/scripts/**'],
   ignorePathSegments: ['gen/', 'dist/'],
   gitignore: true,
 };

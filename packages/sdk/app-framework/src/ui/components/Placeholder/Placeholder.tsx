@@ -7,9 +7,7 @@ import React, { type ReactNode, useEffect, useLayoutEffect, useRef } from 'react
 import { ThemeProvider } from '@dxos/react-ui';
 import { defaultTx, mx } from '@dxos/ui-theme';
 
-// Import from the concrete hook file (not the `../../hooks` barrel) to avoid
-// the `components` ↔ `hooks` barrel cycle. See `../../hooks/useApp.tsx`.
-import { type PlaceholderProps as PlaceholderSlotProps } from '../../hooks/useApp';
+import { type PlaceholderProps as PlaceholderSlotProps } from '../../hooks';
 
 declare global {
   interface Window {

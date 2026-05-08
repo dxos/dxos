@@ -9,9 +9,7 @@ import { invariant } from '@dxos/invariant';
 
 import { Capabilities } from '../../common';
 import { type Capability } from '../../core';
-// See note in `./useApp.tsx`: import from the concrete file to avoid a
-// `components` barrel ↔ hooks barrel cycle that breaks webkit lazy loads.
-import { usePluginManager } from '../components/PluginManager/PluginManagerProvider';
+import { usePluginManager } from '../components';
 
 /**
  * Hook to request capabilities from the plugin context.
