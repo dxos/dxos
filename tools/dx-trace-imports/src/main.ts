@@ -408,6 +408,13 @@ export const traceImports = async (options: TraceImportsOptions): Promise<TraceI
     platform: 'node',
     conditions: [...conditions],
     logLevel: 'warning',
+    // Suppress warnings that are noise for graph-only analysis: bare imports
+    // dropped because the target marks `sideEffects: false`, and "package.json"
+    // hints we don't act on. The metafile still records every edge.
+    logOverride: {
+      'ignored-bare-import': 'silent',
+      'package.json': 'silent',
+    },
     plugins: [traceExternalsPlugin],
   });
 

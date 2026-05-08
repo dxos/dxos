@@ -21,7 +21,6 @@ tasks:
       pnpm exec dx-trace-imports
       --from src/operations/index.ts
       --to "@dxos/react-ui"
-      --packages-only
       --conditions source,workerd,worker,node
       --fail-on present
     deps:

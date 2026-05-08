@@ -98,6 +98,8 @@ const main = async () => {
   if (result.labelChains.length === 0) {
     console.log(`No import paths from "${args.from}" to "${args.to}".`);
     if (args.failOn === 'missing') {
+      console.error('');
+      console.error(`Failed because "${args.from}" does not transitively import "${args.to}".`);
       process.exit(1);
     }
     process.exit(0);
@@ -108,6 +110,8 @@ const main = async () => {
   console.error(`(${result.labelChains.length} chains${stoppedSuffix}; ${result.totalEmitted} terminal chains seen)`);
 
   if (args.failOn === 'present') {
+    console.error('');
+    console.error(`Failed because "${args.from}" transitively imports "${args.to}".`);
     process.exit(1);
   }
   process.exit(0);
