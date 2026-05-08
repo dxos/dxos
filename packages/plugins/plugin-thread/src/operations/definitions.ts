@@ -10,11 +10,9 @@ import { Database, Key, Obj, Ref } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { Actor, AnchoredTo, Message, Thread } from '@dxos/types';
+import { Actor, AnchoredTo, Channel, Message, Thread } from '@dxos/types';
 
 import { meta } from '#meta';
-
-import { Channel } from '../types';
 
 const THREAD_OPERATION = `${meta.id}.operation`;
 
@@ -41,15 +39,17 @@ export const CreateChannel = Operation.make({
   }),
 });
 
-export const CreateChannelThread = Operation.make({
-  meta: { key: `${THREAD_OPERATION}.create-channel-thread`, name: 'Create Channel Thread' },
+export const AppendChannelMessage = Operation.make({
+  meta: { key: `${THREAD_OPERATION}.append-channel-message`, name: 'Append Channel Message' },
+  // Note: Feed.FeedService is provided inside the handler from space.queues, not at the
+  // operation level — the runtime can't fulfill it without a space context.
   services: [Capability.Service],
   input: Schema.Struct({
     channel: Channel.Channel,
+    sender: Actor.Actor,
+    text: Schema.String,
   }),
-  output: Schema.Struct({
-    object: Thread.Thread,
-  }),
+  output: Schema.Void,
 });
 
 export const Create = Operation.make({
