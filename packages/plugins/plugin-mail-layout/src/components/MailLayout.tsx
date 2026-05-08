@@ -2,23 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useMemo, useRef } from 'react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { resolvePersonalSpace } from '@dxos/app-toolkit';
+import { Surface, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { getSpacePath, resolvePersonalSpace } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type Feed, Query } from '@dxos/echo';
+import { type Feed, Filter, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Node } from '@dxos/plugin-graph';
 import { InboxOperation } from '@dxos/plugin-inbox/operations';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { useClient } from '@dxos/react-client';
-import { Filter, useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { ErrorFallback, Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { Message } from '@dxos/types';
 
+import { MailLayoutState } from '#capabilities';
 import { meta } from '#meta';
 
 // Mirrors the (unexported) path helpers in plugin-inbox/src/paths.ts. The
@@ -48,36 +50,24 @@ export const MailLayout = () => {
   const client = useClient();
   const personal = resolvePersonalSpace(client);
   const space = personal?.space;
-  const db = space?.db;
 
-  const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
-  const mailbox = mailboxes[0];
+  // Publish the personal-space path as the active workspace so plugins that
+  // resolve via `useActiveSpace()` (e.g. plugin-integration's auth surface,
+  // which renders the Gmail connect button in the mailbox's empty state) work.
+  useWriteWorkspace(space);
 
-  const { invokePromise } = useOperationInvoker();
-  const creatingRef = useRef(false);
-  useEffect(() => {
-    if (!db || mailbox || creatingRef.current) {
-      return;
-    }
-    creatingRef.current = true;
-    void invokePromise(InboxOperation.AddMailbox, {
-      object: Mailbox.make({ name: 'Inbox' }),
-      target: db,
-    }).catch((error) => {
-      log.catch(error);
-      creatingRef.current = false;
-    });
-  }, [db, mailbox, invokePromise]);
+  const { mailbox, ready } = useEnsureMailbox(space);
+  const spaceId = space?.id;
 
   const mailboxAttendableId = useMemo(
-    () => (db && mailbox ? mailboxPath(db.spaceId, mailbox.id) : undefined),
-    [db, mailbox],
+    () => (spaceId && mailbox ? mailboxPath(spaceId, mailbox.id) : undefined),
+    [spaceId, mailbox],
   );
   const selectedMessageId = useSelected(mailboxAttendableId, 'single');
 
   const feed = mailbox?.feed?.target as Feed.Feed | undefined;
   const messages = useQuery(
-    db,
+    space?.db,
     feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
   ) as Message.Message[];
 
@@ -86,12 +76,12 @@ export const MailLayout = () => {
     [selectedMessageId, messages],
   );
   const messageAttendableId = useMemo(
-    () => (db && mailbox && selectedMessage ? messagePath(db.spaceId, mailbox.id, selectedMessage.id) : undefined),
-    [db, mailbox, selectedMessage],
+    () => (spaceId && mailbox && selectedMessage ? messagePath(spaceId, mailbox.id, selectedMessage.id) : undefined),
+    [spaceId, mailbox, selectedMessage],
   );
 
-  if (!space) {
-    return <Empty message={t('detail.placeholder')} />;
+  if (!space || !ready) {
+    return <Loading />;
   }
 
   if (!mailbox || !mailboxAttendableId) {
@@ -135,4 +125,66 @@ export const MailLayout = () => {
       </div>
     </Mosaic.Root>
   );
+};
+
+/** Set the layout's `workspace` to the personal space's path once it resolves. */
+const useWriteWorkspace = (space: Space | undefined) => {
+  const registry = useContext(RegistryContext);
+  const stateAtom = useCapability(MailLayoutState);
+  useEffect(() => {
+    if (!space) {
+      return;
+    }
+    const next = getSpacePath(space.id);
+    if (registry.get(stateAtom).workspace !== next) {
+      registry.set(stateAtom, { workspace: next });
+    }
+  }, [space, registry, stateAtom]);
+};
+
+/**
+ * Find or create a Mailbox in the personal space. Avoids the `useQuery`
+ * load-race that would create a duplicate by awaiting an explicit
+ * `Query.run()` before deciding to create.
+ */
+const useEnsureMailbox = (space: Space | undefined): { mailbox: Mailbox.Mailbox | undefined; ready: boolean } => {
+  const { invokePromise } = useOperationInvoker();
+  const [ready, setReady] = useState(false);
+  const mailboxes = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
+  const mailbox = mailboxes[0];
+
+  useEffect(() => {
+    if (!space) {
+      setReady(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const existing = await space.db.query(Query.select(Filter.type(Mailbox.Mailbox))).run();
+      if (cancelled) {
+        return;
+      }
+      if (existing.length > 0) {
+        setReady(true);
+        return;
+      }
+      try {
+        await invokePromise(InboxOperation.AddMailbox, {
+          object: Mailbox.make({ name: 'Inbox' }),
+          target: space.db,
+        });
+      } catch (error) {
+        log.catch(error);
+      } finally {
+        if (!cancelled) {
+          setReady(true);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [space, invokePromise]);
+
+  return { mailbox, ready };
 };
