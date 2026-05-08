@@ -179,6 +179,9 @@ export default defineConfig((env) => ({
       '@dxos/web-context-solid': path.resolve(rootDir, 'packages/common/web-context-solid/src'),
       '@dxos/effect-atom-solid': path.resolve(rootDir, 'packages/common/effect-atom-solid/src'),
       '@dxos/echo-solid': path.resolve(rootDir, 'packages/core/echo/echo-solid/src'),
+      // CI's preview-build resolver fails to find `@dxos/plugin-mail-layout`'s dist
+      // even though moon's task graph builds it; alias to source as a workaround.
+      '@dxos/plugin-mail-layout': path.resolve(rootDir, 'packages/plugins/plugin-mail-layout/src'),
       // Worker entry point for OPFS SQLite.
       '@dxos/client/opfs-worker': path.resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
     },
