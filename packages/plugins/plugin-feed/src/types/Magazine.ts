@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Format, Obj, Ref, Type } from '@dxos/echo';
 
-const BLUEPRINT_KEY = 'org.dxos.blueprint.magazine';
+export const BLUEPRINT_KEY = 'org.dxos.blueprint.magazine';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 

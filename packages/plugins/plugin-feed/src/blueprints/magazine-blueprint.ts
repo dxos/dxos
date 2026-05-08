@@ -6,8 +6,9 @@ import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 import { FeedOperation } from '#operations';
+import { Magazine } from '#types';
 
-const BLUEPRINT_KEY = 'org.dxos.blueprint.magazine';
+const { BLUEPRINT_KEY } = Magazine;
 
 const operations = [
   FeedOperation.ListCandidatePosts,

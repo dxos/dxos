@@ -6,8 +6,9 @@ import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 import { Create, Move, Play, Print } from '#operations';
+import { Chess } from '#types';
 
-const BLUEPRINT_KEY = 'org.dxos.blueprint.chess';
+const { BLUEPRINT_KEY } = Chess;
 
 const operations = [Create, Move, Play, Print];
 

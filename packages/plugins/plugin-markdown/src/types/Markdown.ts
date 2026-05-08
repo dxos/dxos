@@ -9,7 +9,7 @@ import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 
-const BLUEPRINT_KEY = 'org.dxos.blueprint.markdown';
+export const BLUEPRINT_KEY = 'org.dxos.blueprint.markdown';
 
 // Re-export Settings as merged const/type (not as namespace).
 import * as SettingsModule from './Settings';

@@ -8,7 +8,7 @@ import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
-const BLUEPRINT_KEY = 'org.dxos.blueprint.tictactoe';
+export const BLUEPRINT_KEY = 'org.dxos.blueprint.tictactoe';
 
 export const Level = Schema.Literal('easy', 'medium', 'hard');
 export type Level = Schema.Schema.Type<typeof Level>;

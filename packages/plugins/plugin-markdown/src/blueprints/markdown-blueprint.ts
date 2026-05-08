@@ -6,8 +6,9 @@ import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 import { Create, Open, Update } from '../operations/definitions';
+import { Markdown } from '#types';
 
-const BLUEPRINT_KEY = 'org.dxos.blueprint.markdown';
+const { BLUEPRINT_KEY } = Markdown;
 
 const make = () =>
   Blueprint.make({

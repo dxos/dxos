@@ -9,7 +9,7 @@ import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
-const BLUEPRINT_KEY = 'org.dxos.blueprint.chess';
+export const BLUEPRINT_KEY = 'org.dxos.blueprint.chess';
 import { log } from '@dxos/log';
 
 export const Game = Schema.Struct({

@@ -6,8 +6,9 @@ import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 import { Create, MakeMove, AiMove, Print } from '#operations';
+import { TicTacToe } from '#types';
 
-const BLUEPRINT_KEY = 'org.dxos.blueprint.tictactoe';
+const { BLUEPRINT_KEY } = TicTacToe;
 
 const operations = [Create, MakeMove, AiMove, Print];
 
