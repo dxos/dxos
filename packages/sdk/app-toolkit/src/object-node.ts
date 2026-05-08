@@ -10,6 +10,8 @@ import { Collection, type Database, Obj, Ref, Type } from '@dxos/echo';
 import { Annotation } from '@dxos/echo';
 import { type TreeData } from '@dxos/react-ui-list';
 
+import { GraphPropsAnnotation } from './annotations';
+
 //
 // Caching infrastructure.
 //
@@ -138,7 +140,7 @@ export const createObjectNode = ({
 
   const schema = Obj.getSchema(object);
   const iconAnnotation = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
-  const graphProps = schema ? Option.getOrUndefined(Annotation.GraphPropsAnnotation.get(schema)) : undefined;
+  const graphProps = schema ? Option.getOrUndefined(GraphPropsAnnotation.get(schema)) : undefined;
 
   const partials = Obj.instanceOf(Collection.Collection, object)
     ? getCollectionGraphNodePartials({ collection: object, db })

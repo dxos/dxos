@@ -493,22 +493,6 @@ export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation
   };
 };
 
-/**
- * Blueprint keys associated with a schema type.
- * Used to auto-load AI blueprints when the companion is opened for an object of this type.
- */
-export const BlueprintsAnnotation = makeUserAnnotation<string[]>({
-  id: 'org.dxos.annotation.blueprints',
-  schema: Schema.mutable(Schema.Array(Schema.String)),
-});
-
-/**
- * Graph node properties derived from schema, e.g. autofocus behaviour.
- */
-export const GraphPropsAnnotation = makeUserAnnotation<{ managesAutofocus?: boolean }>({
-  id: 'org.dxos.annotation.graph-props',
-  schema: Schema.Struct({ managesAutofocus: Schema.optional(Schema.Boolean) }),
-});
 
 const IconAnnotationSchema = Schema.Struct({
   /**
