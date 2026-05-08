@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Browser, ConsoleMessage, Locator, Page } from '@playwright/test';
+import { type Browser, type ConsoleMessage, type Locator, type Page, expect } from '@playwright/test';
 import os from 'node:os';
 
 import { Trigger } from '@dxos/async';
@@ -322,7 +322,14 @@ export class AppManager {
   }
 
   async openPluginRegistry(): Promise<void> {
+    // Clicking the pinned registry tree node dispatches a workspace switch
+    // (via SettingsOperation.OpenPluginRegistry → LayoutOperation.SwitchWorkspace).
+    // The category rows are present in the DOM in either workspace but only
+    // become visible once the registry workspace is current — wait for that
+    // to land so the next click doesn't race against the switch on slow
+    // browsers (firefox locally, sometimes CI).
     await this.page.getByTestId('treeView.pluginRegistry').click();
+    await this.page.getByTestId('pluginRegistry.recommended').waitFor({ state: 'visible' });
   }
 
   async openRegistryCategory(category: string): Promise<void> {
@@ -334,7 +341,13 @@ export class AppManager {
   }
 
   async enablePlugin(plugin: string): Promise<void> {
-    await this.getPluginToggle(plugin).click();
+    const toggle = this.getPluginToggle(plugin);
+    await toggle.click();
+    // Wait for the click to actually flip the toggle's checked state before
+    // reloading — the click handler persists the enable into storage and
+    // navigating mid-write leaves the new page's plugin manager in an
+    // inconsistent state where the lazy plugin chunk fetch can be cancelled.
+    await expect(toggle).toBeChecked();
     await this.page.goto(INITIAL_URL);
     await this.page.getByTestId('treeView.userAccount').waitFor();
   }
