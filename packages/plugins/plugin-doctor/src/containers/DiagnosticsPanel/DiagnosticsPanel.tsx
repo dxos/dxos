@@ -9,8 +9,6 @@ import { useClient } from '@dxos/react-client';
 import {
   Button,
   Icon,
-  List,
-  ListItem,
   Message,
   Panel,
   ScrollArea,
@@ -201,32 +199,34 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFuncti
         </Message.Root>
       )}
       {result.issues.length > 0 && (
-        <List classNames='border-t border-separator divide-y divide-separator'>
+        <ul className='border-t border-separator divide-y divide-separator'>
           {result.issues.map((issue) => (
             <IssueRow key={issue.id} issue={issue} />
           ))}
-        </List>
+        </ul>
       )}
     </section>
   );
 };
 
 const IssueRow = ({ issue }: { issue: DiagnosticIssue }) => (
-  <ListItem.Root labelId={issue.id} classNames='gap-2 p-2'>
-    <ListItem.Endcap>
-      <Icon icon={SEVERITY_ICON[issue.severity]} size={4} classNames={paletteToText(issue.severity)} />
-    </ListItem.Endcap>
-    <ListItem.Heading classNames='flex flex-col gap-0.5 text-xs'>
-      <span className='break-words'>{issue.message}</span>
+  <li className='flex items-start gap-2 p-2'>
+    <Icon
+      icon={SEVERITY_ICON[issue.severity]}
+      size={4}
+      classNames={`${paletteToText(issue.severity)} shrink-0 mt-0.5`}
+    />
+    <div className='flex flex-col gap-0.5 text-xs min-w-0 flex-1'>
+      <span className='break-words break-all'>{issue.message}</span>
       {(issue.subjectLabel || issue.spaceId) && (
-        <span className='text-description font-mono truncate'>
+        <span className='text-description font-mono break-all'>
           {issue.subjectLabel ?? ''}
           {issue.subjectLabel && issue.spaceId ? ' · ' : ''}
           {issue.spaceId ?? ''}
         </span>
       )}
-    </ListItem.Heading>
-  </ListItem.Root>
+    </div>
+  </li>
 );
 
 const paletteToText = (severity: DiagnosticSeverity): string => {
