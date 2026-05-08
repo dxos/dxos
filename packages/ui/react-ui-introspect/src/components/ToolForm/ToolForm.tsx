@@ -7,14 +7,16 @@
 // server converts to zod for the MCP SDK at registration time. Authoring once
 // in Effect and reusing here is the whole point of the converter.
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
+import { getPicker, type PickerKind } from '@dxos/introspect-tools';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Form, type FormFieldComponentProps } from '@dxos/react-ui-form';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
+import { Picker } from '../Picker';
 import type { ToolEntry } from '../types';
 
 export type ToolFormProps = ThemedClassName<{
@@ -36,10 +38,49 @@ export type ToolFormProps = ThemedClassName<{
    * Optional cancel handler — wires to Form's keyboard cancel.
    */
   onCancel?: () => void;
+  /**
+   * Option lists for picker-annotated fields (see `PickerAnnotationId` in
+   * `@dxos/introspect-tools`). When omitted or empty, picker fields fall
+   * back to a plain text input — typing a value still works.
+   */
+  pickerOptions?: Partial<Record<PickerKind, ReadonlyArray<string>>>;
 }>;
 
-export const ToolForm = ({ tool, defaultValues, onSubmit, onCancel, classNames }: ToolFormProps) => {
+export const ToolForm = ({
+  tool,
+  defaultValues,
+  onSubmit,
+  onCancel,
+  classNames,
+  pickerOptions,
+}: ToolFormProps) => {
   const { t } = useTranslation(translationKey);
+
+  const fieldProvider = useMemo(() => {
+    if (!pickerOptions) {
+      return undefined;
+    }
+    return ({ schema, fieldProps }: { schema: { ast: any }; prop: string; fieldProps: FormFieldComponentProps }) => {
+      const kind = getPicker(schema.ast);
+      if (!kind) {
+        return undefined;
+      }
+      const options = pickerOptions[kind];
+      if (!options || options.length === 0) {
+        return undefined;
+      }
+      const { type, getValue, onValueChange, placeholder } = fieldProps;
+      return (
+        <Picker
+          options={options}
+          value={(getValue() as string | undefined) ?? ''}
+          onValueChange={(next) => onValueChange(type, next)}
+          placeholder={placeholder}
+        />
+      );
+    };
+  }, [pickerOptions]);
+
   // Re-create the form when the tool changes so the Form internal state
   // resets. Without this, switching from list_packages to get_plugin would
   // try to re-validate the previous tool's values against the new schema.
@@ -66,7 +107,7 @@ export const ToolForm = ({ tool, defaultValues, onSubmit, onCancel, classNames }
         onCancel={onCancel}
       >
         <Form.Content>
-          <Form.FieldSet />
+          <Form.FieldSet fieldProvider={fieldProvider as any} />
           <Form.Submit label={t('run-tool.label')} />
         </Form.Content>
       </Form.Root>

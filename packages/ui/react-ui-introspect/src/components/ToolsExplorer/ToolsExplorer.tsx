@@ -6,7 +6,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { TOOL_METADATA } from '@dxos/introspect-tools';
+import { MAX_LIST_LIMIT, TOOL_METADATA, type PickerKind } from '@dxos/introspect-tools';
 import { Message, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
 
@@ -33,6 +33,7 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(
     const [running, setRunning] = useState(false);
     const [result, setResult] = useState<unknown>(undefined);
     const [callError, setCallError] = useState<Error | null>(null);
+    const [pickerOptions, setPickerOptions] = useState<Partial<Record<PickerKind, ReadonlyArray<string>>>>({});
 
     // One client per server URL. Re-running on URL change is rare in dev
     // (Storybook control flick) but the cleanup keeps it from leaking.
@@ -41,10 +42,42 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(
       const next = new Client({ name: 'react-ui-introspect', version: '0.0.0' }, { capabilities: {} });
       const transport = new StreamableHTTPClientTransport(new URL(serverUrl));
       next.connect(transport).then(
-        () => {
+        async () => {
+          if (cancelled) {
+            return;
+          }
+          setClient(next);
+          setConnectError(null);
+          // Best-effort warm-up of picker options. `compact: true` is
+          // enough since we only need ids/names, and `MAX_LIST_LIMIT`
+          // guarantees we capture every entry the server has indexed.
+          const options: Partial<Record<PickerKind, ReadonlyArray<string>>> = {};
+          try {
+            const plugins = await next.callTool({
+              name: 'list_plugins',
+              arguments: { compact: true, limit: MAX_LIST_LIMIT },
+            });
+            const pluginIds = extractStringField(plugins, 'id');
+            if (pluginIds.length) {
+              options['plugin-id'] = pluginIds;
+            }
+          } catch {
+            // Ignore — server might not implement list_plugins.
+          }
+          try {
+            const packages = await next.callTool({
+              name: 'list_packages',
+              arguments: { compact: true, limit: MAX_LIST_LIMIT },
+            });
+            const packageNames = extractStringField(packages, 'name');
+            if (packageNames.length) {
+              options['package-name'] = packageNames;
+            }
+          } catch {
+            // Ignore — server might not implement list_packages.
+          }
           if (!cancelled) {
-            setClient(next);
-            setConnectError(null);
+            setPickerOptions(options);
           }
         },
         (err) => {
@@ -105,7 +138,9 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(
       >
         <div className='dx-container grid grid-rows-[1fr_2fr] divide-y divide-separator'>
           <ToolList tools={TOOL_METADATA} selected={selected} onSelect={handleSelect} />
-          {selectedTool && <ToolForm tool={selectedTool} onSubmit={handleSubmit} />}
+          {selectedTool && (
+            <ToolForm tool={selectedTool} onSubmit={handleSubmit} pickerOptions={pickerOptions} />
+          )}
         </div>
         <div className='dx-container grid'>
           <ToolResults result={result} error={callError} loading={running} />
@@ -116,3 +151,49 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(
 );
 
 ToolsExplorer.displayName = 'ToolsExplorer';
+
+// Pick `field` off every record in an MCP tool response. Mirrors the
+// envelope unwrap done by `ToolResults`: prefer `structuredContent`, then
+// JSON-parse `content[0].text`, then peel a single-key wrapper (e.g.
+// `{ plugins: [...] }`) before reading the field.
+const extractStringField = (response: unknown, field: string): string[] => {
+  if (!response || typeof response !== 'object') {
+    return [];
+  }
+  const envelope = response as { structuredContent?: unknown; content?: unknown };
+  let inner: unknown = envelope.structuredContent;
+  if (inner === undefined && Array.isArray(envelope.content)) {
+    const text = (envelope.content as Array<{ type?: string; text?: string }>).find(
+      (chunk) => chunk?.type === 'text' && typeof chunk.text === 'string',
+    )?.text;
+    if (text !== undefined) {
+      try {
+        inner = JSON.parse(text);
+      } catch {
+        return [];
+      }
+    }
+  }
+  if (inner && typeof inner === 'object' && !Array.isArray(inner) && 'data' in (inner as object)) {
+    inner = (inner as { data: unknown }).data;
+  }
+  if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
+    const keys = Object.keys(inner as object);
+    if (keys.length === 1) {
+      inner = (inner as Record<string, unknown>)[keys[0]];
+    }
+  }
+  if (!Array.isArray(inner)) {
+    return [];
+  }
+  const values: string[] = [];
+  for (const item of inner) {
+    if (item && typeof item === 'object') {
+      const value = (item as Record<string, unknown>)[field];
+      if (typeof value === 'string') {
+        values.push(value);
+      }
+    }
+  }
+  return values;
+};

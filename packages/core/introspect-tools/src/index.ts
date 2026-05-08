@@ -50,6 +50,8 @@ export {
   ListSchemasInput,
   ListSurfacesInput,
   ListSymbolsInput,
+  PickerAnnotationId,
+  getPicker,
   type FindSymbolArgs,
   type GetPackageArgs,
   type GetSymbolArgs,
@@ -60,4 +62,5 @@ export {
   type ListSchemasArgs,
   type ListSurfacesArgs,
   type ListSymbolsArgs,
+  type PickerKind,
 } from './schemas';
