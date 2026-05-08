@@ -8,9 +8,9 @@ import { type Registry, type Plugin, type PluginManager } from '@dxos/app-framew
 import { Button, Icon, Input, Link, ScrollArea, Select, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps, getStyles, mx } from '@dxos/ui-theme';
 
-import { PluginFailureBadge } from '../PluginFailureBadge';
-
 import { meta } from '#meta';
+
+import { PluginFailureBadge } from '../PluginFailureBadge';
 
 export type PluginDetailProps = {
   plugin: Plugin.Plugin;

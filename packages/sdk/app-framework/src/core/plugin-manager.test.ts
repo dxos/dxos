@@ -1358,7 +1358,7 @@ describe('PluginManager', () => {
     // `Effect.async` lets a TestClock-driven test wait for state produced by
     // a background `_runForkedFiber` (e.g. the auto-disable triggered when a
     // module activation times out) without relying on real-time `sleep`.
-    const waitFor = <T,>(registry: Registry.Registry, atom: Atom.Atom<T>, predicate: (value: T) => boolean) =>
+    const waitFor = <T>(registry: Registry.Registry, atom: Atom.Atom<T>, predicate: (value: T) => boolean) =>
       Effect.async<void>((resume) => {
         if (predicate(registry.get(atom))) {
           resume(Effect.void);
@@ -1535,7 +1535,9 @@ describe('PluginManager', () => {
             id: 'Maybe',
             activatesOn: Event,
             activate: () =>
-              shouldFail ? Effect.fail(new Error('first try')) : Effect.succeed(Capability.contributes(String, { string: 'ok' })),
+              shouldFail
+                ? Effect.fail(new Error('first try'))
+                : Effect.succeed(Capability.contributes(String, { string: 'ok' })),
           }),
           Plugin.make,
         );

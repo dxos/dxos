@@ -694,9 +694,8 @@ class ManagerImpl implements PluginManager {
   }
 
   private _getPluginIdForModule(moduleId: string): string | undefined {
-    return this._get(this._pluginsAtom).find((plugin) =>
-      plugin.modules.some((module) => module.id === moduleId),
-    )?.meta.id;
+    return this._get(this._pluginsAtom).find((plugin) => plugin.modules.some((module) => module.id === moduleId))?.meta
+      .id;
   }
 
   /**
@@ -1074,23 +1073,21 @@ class ManagerImpl implements PluginManager {
           performance.mark(`module:${module.id}:start`);
           yield* PubSub.publish(this.activation, { event: parentEvent, state: 'activating', module: module.id });
           const pluginId = this._getPluginIdForModule(module.id);
-          const [duration, capabilities] = yield* module
-            .activate()
-            .pipe(
-              Effect.provideService(Capability.Service, this.capabilities),
-              Effect.provideService(Plugin.Service, this),
-              // Cap activation so a single misbehaving module can't hold the
-              // event chain open. On timeout the failure is recorded against
-              // the plugin and surfaced as `PluginTimeoutError`.
-              Effect.timeoutFail({
-                duration: this._activationTimeout,
-                onTimeout: () =>
-                  new PluginTimeoutError({
-                    context: { id: pluginId ?? module.id, module: module.id, phase: 'activation' as PluginFailurePhase },
-                  }),
-              }),
-              Effect.timed,
-            );
+          const [duration, capabilities] = yield* module.activate().pipe(
+            Effect.provideService(Capability.Service, this.capabilities),
+            Effect.provideService(Plugin.Service, this),
+            // Cap activation so a single misbehaving module can't hold the
+            // event chain open. On timeout the failure is recorded against
+            // the plugin and surfaced as `PluginTimeoutError`.
+            Effect.timeoutFail({
+              duration: this._activationTimeout,
+              onTimeout: () =>
+                new PluginTimeoutError({
+                  context: { id: pluginId ?? module.id, module: module.id, phase: 'activation' as PluginFailurePhase },
+                }),
+            }),
+            Effect.timed,
+          );
           const normalized = capabilities == null ? [] : Array.isArray(capabilities) ? capabilities : [capabilities];
           const elapsed = Duration.toMillis(duration);
           performance.mark(`module:${module.id}:end`);
