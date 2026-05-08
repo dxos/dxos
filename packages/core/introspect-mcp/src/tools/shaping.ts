@@ -12,7 +12,7 @@
 
 import type {
   Capability,
-  Intent,
+  Operation,
   Package,
   PackageDetail,
   Plugin,
@@ -22,15 +22,8 @@ import type {
   SymbolDetail,
   SymbolMatch,
 } from '@dxos/introspect';
+import { DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT, type ListOptions } from '@dxos/introspect-tools';
 
-/** Default number of items returned by list-style tools when no `limit` is passed. */
-export const DEFAULT_LIST_LIMIT = 30;
-/**
- * Hard ceiling on `limit`. A runaway tool call shouldn't be able to dump every
- * symbol in the monorepo (~thousands) into the model's context. Callers who
- * truly need everything should iterate via filters (id, package, etc.).
- */
-export const MAX_LIST_LIMIT = 200;
 const SOURCE_PREVIEW = 1200;
 const JSDOC_PREVIEW = 600;
 
@@ -38,21 +31,6 @@ export type ToolResult = {
   data: unknown;
   note?: string;
   truncated?: string;
-};
-
-/**
- * Per-call options every list-style shaper accepts. Both fields are optional
- * — the defaults match the pre-existing behavior (limit=30, full projection).
- */
-export type ListOptions = {
-  /** Override the default `DEFAULT_LIST_LIMIT`. Capped at `MAX_LIST_LIMIT`. */
-  limit?: number;
-  /**
-   * Return only the most-essential identifying fields (id / typename / name)
-   * instead of the full record. Use when discovering what exists before
-   * drilling in. Roughly 1/4 the token cost.
-   */
-  compact?: boolean;
 };
 
 type ShapeListConfig<T> = {
@@ -148,7 +126,7 @@ const truncate = (s: string, limit: number): string => {
 };
 
 //
-// Plugin / surface / capability / intent / schema (main's flatter types)
+// Plugin / surface / capability / operation / schema (main's flatter types)
 //
 
 export const shapeListPlugins = (all: Plugin[], opts: ListOptions = {}): ToolResult =>
@@ -169,7 +147,7 @@ export const shapeListPlugins = (all: Plugin[], opts: ListOptions = {}): ToolRes
  * `PluginDetail` is the same shape as `Plugin` plus arrays of contributions.
  * Returned by what would be `get_plugin` if the introspector exposed it; we
  * synthesize this on the MCP side by combining `listPlugins` + the per-id
- * `listSurfaces` / `listCapabilities` / `listIntents` / `listSchemas` calls.
+ * `listSurfaces` / `listCapabilities` / `listOperations` / `listSchemas` calls.
  */
 export const shapePluginDetail = (detail: PluginDetail): ToolResult => ({
   data: {
@@ -182,7 +160,7 @@ export const shapePluginDetail = (detail: PluginDetail): ToolResult => ({
     metaLocation: detail.metaLocation,
     surfaces: detail.surfaces.map((s) => ({ id: s.id, role: s.role })),
     capabilities: detail.capabilities.map((c) => ({ type: c.type })),
-    intents: detail.intents.map((i) => ({ type: i.type })),
+    operations: detail.operations.map((o) => ({ type: o.type })),
     schemas: detail.schemas.map((s) => ({ name: s.name, typename: s.typename })),
   },
 });
@@ -201,10 +179,10 @@ export const shapeListCapabilities = (all: Capability[], opts: ListOptions = {})
     truncationHint: 'raise `limit` (max 200) or filter by plugin `id`.',
   });
 
-export const shapeListIntents = (all: Intent[], opts: ListOptions = {}): ToolResult =>
+export const shapeListOperations = (all: Operation[], opts: ListOptions = {}): ToolResult =>
   shapeList(all, opts, {
-    full: (i) => ({ pluginId: i.pluginId, type: i.type, location: i.location }),
-    compact: (i) => ({ pluginId: i.pluginId, type: i.type }),
+    full: (o) => ({ pluginId: o.pluginId, type: o.type, location: o.location }),
+    compact: (o) => ({ pluginId: o.pluginId, type: o.type }),
     truncationHint: 'raise `limit` (max 200) or filter by plugin `id`.',
   });
 

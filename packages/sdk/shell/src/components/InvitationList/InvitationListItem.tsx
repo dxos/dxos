@@ -153,13 +153,13 @@ export const InvitationListItemImpl = ({
       classNames={['flex gap-2 ps-3 pe-1 items-center relative', props.classNames]}
     >
       <ListItem.Heading classNames='sr-only'>
-        {t(multiUse ? 'invite many list item label' : 'invite one list item label')}
+        {t(multiUse ? 'invite-many-list-item.label' : 'invite-one-list-item.label')}
       </ListItem.Heading>
       {multiUse && (
         <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} reverseEffects={reverseEffects} />
       )}
       <Avatar.Root>
-        <Tooltip.Trigger asChild content={t(multiUse ? 'invite many qr label' : 'invite one qr label')} side='left'>
+        <Tooltip.Trigger asChild content={t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')} side='left'>
           <Avatar.Content
             {...avatarProps}
             animation={avatarAnimation}

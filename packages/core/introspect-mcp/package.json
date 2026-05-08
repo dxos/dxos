@@ -1,7 +1,6 @@
 {
   "name": "@dxos/introspect-mcp",
   "version": "0.8.3",
-  "private": true,
   "description": "MCP server exposing DXOS monorepo introspection.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -38,6 +37,7 @@
   "dependencies": {
     "@dxos/effect-zod": "workspace:*",
     "@dxos/introspect": "workspace:*",
+    "@dxos/introspect-tools": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
     "@modelcontextprotocol/sdk": "catalog:",

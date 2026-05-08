@@ -25,6 +25,9 @@
       "path": "../../sdk/config"
     },
     {
+      "path": "../compute"
+    },
+    {
       "path": "../echo/echo"
     },
     {

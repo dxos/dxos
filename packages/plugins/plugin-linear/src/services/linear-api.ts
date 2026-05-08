@@ -26,7 +26,9 @@ type LinearCredentialsValue = {
 
 const USER_AGENT = '@dxos/plugin-linear';
 
-// ── Subset schemas for the responses we care about ─────────────────────────
+//
+// Subset schemas for the responses we care about
+//
 
 const ViewerSchema = Schema.Struct({
   id: Schema.String,
@@ -88,27 +90,14 @@ const IssueSchema = Schema.Struct({
 });
 export type Issue = Schema.Schema.Type<typeof IssueSchema>;
 
-const CommentUserSchema = Schema.Struct({
-  id: Schema.String,
-  name: Schema.String,
-});
-
-const CommentSchema = Schema.Struct({
-  id: Schema.String,
-  body: Schema.String,
-  user: Schema.NullOr(CommentUserSchema).pipe(Schema.optional),
-  createdAt: Schema.NullOr(Schema.String).pipe(Schema.optional),
-  updatedAt: Schema.NullOr(Schema.String).pipe(Schema.optional),
-  issue: Schema.NullOr(Schema.Struct({ id: Schema.String })).pipe(Schema.optional),
-});
-export type Comment = Schema.Schema.Type<typeof CommentSchema>;
-
 const PageInfoSchema = Schema.Struct({
   hasNextPage: Schema.Boolean,
   endCursor: Schema.NullOr(Schema.String).pipe(Schema.optional),
 });
 
-// ── Credentials service ────────────────────────────────────────────────────
+//
+// Credentials service
+//
 
 /**
  * Layer-based credentials service. Mirrors plugin-github's pattern: every API
@@ -130,7 +119,9 @@ export class LinearCredentials extends Context.Tag('@dxos/plugin-linear/LinearCr
     );
 }
 
-// ── Request pipeline ───────────────────────────────────────────────────────
+//
+// Request pipeline
+//
 
 type LinearEffect<T> = Effect.Effect<
   T,
@@ -209,7 +200,9 @@ const linearGraphQL = <T>(
     );
   });
 
-// ── Pagination ─────────────────────────────────────────────────────────────
+//
+// Pagination
+//
 
 /**
  * Linear list connections expose `nodes` + `pageInfo { hasNextPage endCursor }`.
@@ -247,7 +240,9 @@ const paginate = <T>(
     return out;
   });
 
-// ── API surface ────────────────────────────────────────────────────────────
+//
+// API surface
+//
 
 const VIEWER_QUERY = /* GraphQL */ `
   query Viewer {
@@ -322,10 +317,15 @@ const TeamProjectsSchema = Schema.Struct({
 export const fetchTeamProjects = (teamId: string): LinearEffect<readonly Project[]> =>
   paginate(TEAM_PROJECTS_QUERY, { teamId }, (d) => d.team.projects, TeamProjectsSchema);
 
+/**
+ * List issues for a team. `since` is an optional ISO timestamp; when set,
+ * filters the GraphQL connection to issues with `updatedAt >= since`. When
+ * unset (default), pulls every issue Linear returns for the team.
+ */
 const TEAM_ISSUES_QUERY = /* GraphQL */ `
-  query TeamIssues($teamId: String!, $first: Int!, $after: String) {
+  query TeamIssues($teamId: String!, $first: Int!, $after: String, $filter: IssueFilter) {
     team(id: $teamId) {
-      issues(first: $first, after: $after) {
+      issues(first: $first, after: $after, filter: $filter) {
         nodes {
           id
           identifier
@@ -366,47 +366,14 @@ const TeamIssuesSchema = Schema.Struct({
   }),
 });
 
-/** List issues for a team (includes both open and completed/canceled). */
-export const fetchTeamIssues = (teamId: string): LinearEffect<readonly Issue[]> =>
-  paginate(TEAM_ISSUES_QUERY, { teamId }, (d) => d.team.issues, TeamIssuesSchema);
+export const fetchTeamIssues = (teamId: string, options: { since?: string } = {}): LinearEffect<readonly Issue[]> => {
+  const filter = options.since ? { updatedAt: { gte: options.since } } : undefined;
+  return paginate(TEAM_ISSUES_QUERY, { teamId, filter }, (d) => d.team.issues, TeamIssuesSchema);
+};
 
-const ISSUE_COMMENTS_QUERY = /* GraphQL */ `
-  query IssueComments($issueId: String!, $first: Int!, $after: String) {
-    issue(id: $issueId) {
-      comments(first: $first, after: $after) {
-        nodes {
-          id
-          body
-          createdAt
-          updatedAt
-          user {
-            id
-            name
-          }
-        }
-        pageInfo {
-          hasNextPage
-          endCursor
-        }
-      }
-    }
-  }
-`;
-
-const IssueCommentsSchema = Schema.Struct({
-  issue: Schema.Struct({
-    comments: Schema.Struct({
-      nodes: Schema.Array(CommentSchema),
-      pageInfo: PageInfoSchema,
-    }),
-  }),
-});
-
-/** List comments for one issue. */
-export const fetchIssueComments = (issueId: string): LinearEffect<readonly Comment[]> =>
-  paginate(ISSUE_COMMENTS_QUERY, { issueId }, (d) => d.issue.comments, IssueCommentsSchema);
-
-// ── Mappers ────────────────────────────────────────────────────────────────
+//
+// Mappers
+//
 
 /**
  * Map a Linear workflow-state category to a {@link Task} status. Linear has

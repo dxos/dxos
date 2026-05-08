@@ -19,3 +19,5 @@ export const LinearPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default LinearPlugin;

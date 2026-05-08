@@ -93,7 +93,7 @@ export const AgentConfig = ({
               )}
             </div>
             <span className='grow font-medium text-start'>
-              {t(agentStatus === 'creatable' ? 'create agent label' : '')}
+              {t(agentStatus === 'creatable' ? 'create-agent.label' : '')}
             </span>
           </Button>
           {agentStatus === 'creatable' && (

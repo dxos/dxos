@@ -17,6 +17,11 @@
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
+    "#plugin": {
+      "browser": "./src/DebugPlugin.tsx",
+      "node": "./src/DebugPlugin.node.ts",
+      "default": "./src/DebugPlugin.tsx"
+    },
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
   },
@@ -61,6 +66,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/log-store-idb": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
@@ -82,6 +88,7 @@
     "@dxos/react-ui-canvas-compute": "workspace:*",
     "@dxos/react-ui-canvas-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-introspect": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
@@ -99,6 +106,7 @@
     "workerize-loader": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

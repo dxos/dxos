@@ -48,7 +48,7 @@
       "path": "../../core/assistant-toolkit"
     },
     {
-      "path": "../../core/blueprints"
+      "path": "../../core/compute"
     },
     {
       "path": "../../core/conductor"
@@ -133,6 +133,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

@@ -52,3 +52,5 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default TranscriptionPlugin;

@@ -6,58 +6,63 @@ import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
-import { Integration } from '@dxos/plugin-integration/types';
+import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/plugin-integration/types';
 
 import { meta } from '#meta';
 
 const GITHUB_OPERATION = `${meta.id}.operation`;
 
-/** Wire-shape of a `RemoteTarget` for `GetGitHubOrganizations.output`. */
-const RemoteTarget = Schema.Struct({
-  id: Schema.String,
-  name: Schema.String,
-  description: Schema.String.pipe(Schema.optional),
-});
-
 /**
- * Discovery only — list GitHub organizations reachable from the integration's
- * token. Read-only: returns one descriptor per remote org, NEVER creates a
- * local Organization. Materialization happens lazily in
- * `SyncGitHubOrganization` on first sync of a target.
- */
-export const GetGitHubOrganizations = Operation.make({
-  meta: {
-    key: `${GITHUB_OPERATION}.get-github-organizations`,
-    name: 'Get GitHub Organizations',
-    description: 'List GitHub organizations reachable from an integration without materializing local objects.',
-  },
-  input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration),
-  }),
-  output: Schema.Struct({
-    targets: Schema.Array(RemoteTarget),
-  }),
-});
-
-/**
- * Reconcile GitHub data for currently-selected org targets in an Integration.
+ * Discovery only — list GitHub repositories the integration's token can see.
+ * Returns one descriptor per repo across all the user's orgs (and personal
+ * account). Read-only: NEVER materializes local objects. Materialization
+ * happens lazily in `SyncGitHubRepositories` on first sync of a target.
  *
- * Pull-only for orgs, members, repos, and issue/PR comments. Bidirectional for
- * issues and PRs (both materialize as `Task` objects): pulls remote changes,
- * pushes locally-edited title/body/state back to GitHub. Updates per-target
- * `lastSyncAt`/`lastError`. Does **not** discover orgs or modify
- * `integration.targets` membership.
+ * Orgs and their members are NOT presented as sync targets — they are
+ * auto-synced as part of the sync of any repo they own.
  */
-export const SyncGitHubOrganization = Operation.make({
+export const GetGitHubRepositories = Operation.make({
   meta: {
-    key: `${GITHUB_OPERATION}.sync-github-organization`,
-    name: 'Sync GitHub Organization',
-    description: 'Reconcile members, repos, issues, PRs, and comments for selected GitHub org targets.',
+    key: `${GITHUB_OPERATION}.get-github-repositories`,
+    name: 'Get GitHub Repositories',
+    description: 'List GitHub repositories reachable from an integration without materializing local objects.',
+  },
+  input: GetSyncTargetsInput,
+  output: GetSyncTargetsOutput,
+});
+
+/**
+ * Per-target options. `maxDaysBack` caps how far back issues/PRs are pulled
+ * (mirrors the Gmail mailbox `daysBack`). Default — when unset — is "sync
+ * everything ever opened or edited."
+ */
+export const SyncOptions = Schema.Struct({
+  maxDaysBack: Schema.Number.annotations({
+    title: 'Sync history (days)',
+    description: 'Pull issues and PRs updated within this many days. Leave empty to sync everything.',
+  }).pipe(Schema.optional),
+});
+
+export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
+
+/**
+ * Reconcile GitHub data for currently-selected repo targets in an Integration.
+ *
+ * Pull-only. For each selected repo: auto-upsert its owning org + members,
+ * upsert the repo as a Project, upsert issues/PRs as Tasks (respecting
+ * `maxDaysBack` if set), upsert comments as Thread/Messages. Updates per-target
+ * `lastSyncAt`/`lastError`. Does not modify `integration.targets` membership.
+ */
+export const SyncGitHubRepositories = Operation.make({
+  meta: {
+    key: `${GITHUB_OPERATION}.sync-github-repositories`,
+    name: 'Sync GitHub Repositories',
+    description: 'Reconcile selected GitHub repos plus their owning orgs, members, issues, PRs, and comments.',
   },
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration),
-    /** Optional: narrow to a single target Organization. */
-    organization: Ref.Ref(Obj.Unknown).pipe(Schema.optional),
+    /** Optional: narrow to a single target Project. */
+    repository: Ref.Ref(Obj.Unknown).pipe(Schema.optional),
   }),
   output: Schema.Struct({
     pulled: Schema.Struct({
@@ -66,9 +71,6 @@ export const SyncGitHubOrganization = Operation.make({
       projects: Schema.Number,
       tasks: Schema.Number,
       comments: Schema.Number,
-    }),
-    pushed: Schema.Struct({
-      tasks: Schema.Number,
     }),
   }),
 });

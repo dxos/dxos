@@ -2,6 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-export { WnfsCapabilities } from './types';
+import { Plugin } from '@dxos/app-framework';
+
+import { meta } from './meta';
+
+export const WnfsPlugin = Plugin.lazy(meta, () => import('#plugin'));
+
 export * from './meta';
-export * from './WnfsPlugin';
+
+export { WnfsCapabilities } from './types';

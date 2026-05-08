@@ -18,13 +18,28 @@
   ],
   "references": [
     {
-      "path": "../blueprints"
+      "path": "../../common/errors"
     },
     {
-      "path": "../functions"
+      "path": "../../common/invariant"
     },
     {
-      "path": "../operation"
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../ai"
+    },
+    {
+      "path": "../echo/echo"
+    },
+    {
+      "path": "../protocols"
     }
   ]
 }

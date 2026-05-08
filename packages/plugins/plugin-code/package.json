@@ -85,6 +85,8 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@lezer/generator": "catalog:",
     "@types/react": "catalog:",

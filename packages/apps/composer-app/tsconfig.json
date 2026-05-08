@@ -134,9 +134,6 @@
       "path": "../../core/assistant-toolkit"
     },
     {
-      "path": "../../core/blueprints"
-    },
-    {
       "path": "../../core/compute"
     },
     {
@@ -549,9 +546,6 @@
     },
     {
       "path": "../../ui/react-ui-pickers"
-    },
-    {
-      "path": "../../ui/react-ui-search"
     },
     {
       "path": "../../ui/react-ui-sfx"

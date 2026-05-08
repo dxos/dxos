@@ -6,23 +6,17 @@ import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
-import { Integration } from '@dxos/plugin-integration/types';
+import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/plugin-integration/types';
 
 import { meta } from '#meta';
 
 const LINEAR_OPERATION = `${meta.id}.operation`;
 
-/** Wire-shape of a `RemoteTarget` for `GetLinearTeams.output`. */
-const RemoteTarget = Schema.Struct({
-  id: Schema.String,
-  name: Schema.String,
-  description: Schema.String.pipe(Schema.optional),
-});
-
 /**
  * Discovery only — list Linear teams reachable from the integration's token.
- * Read-only: returns one descriptor per remote team, NEVER creates a local
- * object. Materialization happens lazily in `SyncLinearTeam` on first sync.
+ * Returns one descriptor per team across the user's workspace. Read-only:
+ * NEVER materializes local objects. Materialization happens lazily in
+ * `SyncLinearTeams` on first sync of a target.
  */
 export const GetLinearTeams = Operation.make({
   meta: {
@@ -30,29 +24,40 @@ export const GetLinearTeams = Operation.make({
     name: 'Get Linear Teams',
     description: 'List Linear teams reachable from an integration without materializing local objects.',
   },
-  input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration),
-  }),
-  output: Schema.Struct({
-    targets: Schema.Array(RemoteTarget),
-  }),
+  input: GetSyncTargetsInput,
+  output: GetSyncTargetsOutput,
 });
 
 /**
- * Reconcile Linear data for currently-selected team targets in an Integration.
- * Pull-only: pulls Projects, Issues (as Tasks), and per-issue Comment threads.
- * Local edits to mapped Task fields are overwritten on next sync (Linear is
- * source of truth in v1).
+ * Per-target options. `maxDaysBack` caps how far back issues are pulled by
+ * `Issue.updatedAt`. Default — when unset — is "sync everything in the team."
  */
-export const SyncLinearTeam = Operation.make({
+export const SyncOptions = Schema.Struct({
+  maxDaysBack: Schema.Number.annotations({
+    title: 'Sync history (days)',
+    description: 'Pull issues updated within this many days. Leave empty to sync everything.',
+  }).pipe(Schema.optional),
+});
+
+export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
+
+/**
+ * Reconcile Linear data for currently-selected team targets in an Integration.
+ *
+ * Pull-only. For each selected team: upsert the team's projects as Project
+ * objects, upsert issues as Tasks (respecting `maxDaysBack` if set), update
+ * per-target `lastSyncAt`/`lastError`. Does not modify `integration.targets`
+ * membership. Comments are intentionally skipped in v1 (see sync.ts).
+ */
+export const SyncLinearTeams = Operation.make({
   meta: {
-    key: `${LINEAR_OPERATION}.sync-linear-team`,
-    name: 'Sync Linear Team',
-    description: 'Reconcile projects, issues, and comments for selected Linear team targets.',
+    key: `${LINEAR_OPERATION}.sync-linear-teams`,
+    name: 'Sync Linear Teams',
+    description: 'Reconcile selected Linear teams — projects and issues.',
   },
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration),
-    /** Optional: narrow to a single team target. */
+    /** Optional: narrow to a single target Project (the local root for a Linear team). */
     team: Ref.Ref(Obj.Unknown).pipe(Schema.optional),
   }),
   output: Schema.Struct({
@@ -60,7 +65,6 @@ export const SyncLinearTeam = Operation.make({
       teams: Schema.Number,
       projects: Schema.Number,
       tasks: Schema.Number,
-      comments: Schema.Number,
     }),
   }),
 });

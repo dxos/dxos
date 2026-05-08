@@ -21,14 +21,14 @@ import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
+import { Process, Trigger, TriggerEvent, Operation } from '@dxos/compute';
 import { DXN, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
-import { Process, QueueService, Trigger, type TriggerEvent } from '@dxos/functions';
+import { QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 
 import * as ProcessManager from '../process/ProcessManager';
 import { createInvocationPayload } from './input-builder';
@@ -190,11 +190,15 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   private _timerFiber: Fiber.Fiber<void, void> | undefined;
   private _triggers: Trigger.Trigger[] = [];
   private _scheduledTriggers = new Map<string, ScheduledTrigger>();
+  // `keepAlive` prevents the registry from disposing the atom node when no subscribers
+  // are mounted (e.g. when start/stop runs before the UI subscribes). Without it,
+  // updates written before the first subscription are dropped and the next read
+  // re-initializes to the default {enabled: false, ...}.
   private _state: Atom.Writable<TriggerDispatcherState> = Atom.make<TriggerDispatcherState>({
     enabled: false,
     invocations: [],
     errors: [],
-  });
+  }).pipe(Atom.keepAlive);
   private _maxConcurrency: number;
 
   constructor(options: TriggerDispatcherOptions) {

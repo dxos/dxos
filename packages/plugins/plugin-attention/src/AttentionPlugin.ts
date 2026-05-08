@@ -62,3 +62,5 @@ const setupDevtools = (attention: AttentionManager) => {
     },
   };
 };
+
+export default AttentionPlugin;

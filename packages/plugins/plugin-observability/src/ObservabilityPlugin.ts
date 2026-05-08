@@ -83,3 +83,5 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
   })),
   Plugin.make,
 );
+
+export default ObservabilityPlugin;

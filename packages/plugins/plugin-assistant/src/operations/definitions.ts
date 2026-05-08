@@ -8,8 +8,7 @@ import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
 import { SpaceSchema } from '@dxos/client/echo';
-import { Routine } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { Routine, Operation } from '@dxos/compute';
 import { Collection, Database, DXN, Feed, Obj, Ref } from '@dxos/echo';
 
 import { meta } from '#meta';

@@ -16,11 +16,20 @@ import {
 import { ListRoot, type ListRootProps } from './ListRoot';
 
 /**
- * Draggable list.
+ * Draggable list with per-row drag handles and delete buttons.
  * Ref: https://github.com/atlassian/pragmatic-drag-and-drop
  * Ref: https://github.com/alexreardon/pdnd-react-tailwind/blob/main/src/task.tsx
  *
- * @deprecated Use react-ui-mosaic.
+ * @deprecated New code should use one of:
+ *
+ *   - `RowList` / `CardList` from this same package — for selectable
+ *     pickers (master/detail). Correct ARIA + dx-* by construction.
+ *   - `Mosaic.Stack` / `Mosaic.VirtualStack` from `@dxos/react-ui-mosaic`
+ *     — for virtualized or drag-reorderable card stacks.
+ *
+ * This component is retained for the existing reorder-with-delete-button
+ * use cases (plugin-meeting, plugin-automation, plugin-zen, etc.) until
+ * each is migrated; see `AUDIT.md` Phase 6 for the migration plan.
  */
 export const List = {
   Root: ListRoot,

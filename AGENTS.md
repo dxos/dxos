@@ -135,3 +135,7 @@ This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.4. All are manage
 - The `pnpm.onlyBuiltDependencies` allowlist in `pnpm-workspace.yaml` controls which native addons are built; warnings about "ignored build scripts" for packages not in the list are normal.
 - Builds must complete before running `serve` commands, because moon tasks have `deps` on `:prebuild`/`:build` targets.
 - No Docker or external services are required for unit tests or local dev. Signal servers for networking tests are pre-compiled binaries spawned automatically by tests.
+
+### DXOS APIs
+
+Read additional information about DXOS APIs in ./agents/instructions

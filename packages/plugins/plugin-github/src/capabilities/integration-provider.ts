@@ -15,13 +15,14 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants';
 import { GitHubOperation } from '../operations';
+import { SyncOptions } from '../operations/definitions';
 import { GitHubApi } from '../services';
 
 /**
  * Service-specific token-created hook for GitHub.
  *
  * Calls GitHub's `/user` to populate `accessToken.account` with the
- * authenticated user's email (falling back to login). Failures are elevated
+ * authenticated user's login (falling back to email). Failures are elevated
  * with {@link Effect.orDie}; plugin-integration logs defects from the runner
  * and continues so a failed `/user` cannot block the Integration already
  * created.
@@ -35,7 +36,7 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
       Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token: accessToken.token })),
     );
     Obj.update(accessToken, (accessToken) => {
-      accessToken.account = user.email ?? user.login;
+      accessToken.account = user.login ?? user.email;
     });
   }).pipe(Effect.orDie);
 
@@ -44,9 +45,12 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
  * operations and the token-created hook to the `'github.com'` source.
  * plugin-integration looks up providers by source string.
  *
- * Scopes: `repo` for repository data + issue/PR write access; `read:org` to
- * enumerate the user's orgs and members; `read:user` to populate
- * `AccessToken.account` from the authenticated user's profile.
+ * Sync targets are repositories, not organizations — orgs and their members
+ * are auto-pulled as a side effect of syncing any repo they own.
+ *
+ * `scopes` is intentionally empty: this is a GitHub *App* (not a classic
+ * OAuth App), so permissions are declared in the App's settings on github.com
+ * and OAuth scope strings are ignored on the user-authorization flow.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -57,10 +61,11 @@ export default Capability.makeModule(
         label: 'GitHub',
         oauth: {
           provider: OAuthProvider.GITHUB,
-          scopes: ['repo', 'read:org', 'read:user'],
+          scopes: [],
         },
-        getSyncTargets: GitHubOperation.GetGitHubOrganizations,
-        sync: GitHubOperation.SyncGitHubOrganization,
+        getSyncTargets: GitHubOperation.GetGitHubRepositories,
+        sync: GitHubOperation.SyncGitHubRepositories,
+        optionsSchema: SyncOptions,
         onTokenCreated,
       },
     ]);

@@ -20,6 +20,11 @@
     "#hooks": "./src/hooks/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#plugin": {
+      "browser": "./src/AssistantPlugin.tsx",
+      "node": "./src/AssistantPlugin.node.ts",
+      "default": "./src/AssistantPlugin.tsx"
+    },
     "#testing": "./src/testing/index.ts",
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
@@ -30,6 +35,18 @@
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "browser": "./dist/lib/browser/components/index.mjs",
+      "node": "./dist/lib/node-esm/components/index.mjs"
+    },
+    "./hooks": {
+      "source": "./src/hooks/index.ts",
+      "types": "./dist/types/src/hooks/index.d.ts",
+      "browser": "./dist/lib/browser/hooks/index.mjs",
+      "node": "./dist/lib/node-esm/hooks/index.mjs"
     },
     "./blueprints": {
       "source": "./src/blueprints/index.ts",
@@ -98,6 +115,7 @@
     "@dxos/echo-query": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/functions": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",

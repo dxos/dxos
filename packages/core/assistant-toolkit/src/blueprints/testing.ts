@@ -8,7 +8,7 @@ import { pipe } from 'effect/Function';
 
 import { ConsolePrinter } from '@dxos/ai';
 import { AiContextService, type AiSession, type AiSessionRunProps, GenerationObserver } from '@dxos/assistant';
-import type { Definition } from '@dxos/compute';
+import type { Blueprint } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
@@ -37,7 +37,7 @@ export const runSteps = Effect.fn(function* (session: AiSession, steps: TestStep
  * Binds blueprints from the blueprint definitions.
  */
 // TODO(dmaretskyi): Potentially the agent will auto-bind the blueprints.
-export const addBlueprints = Effect.fnUntraced(function* (blueprints: Definition[]) {
+export const addBlueprints = Effect.fnUntraced(function* (blueprints: Blueprint.Definition[]) {
   yield* AiContextService.bindContext({
     blueprints: yield* pipe(
       blueprints,

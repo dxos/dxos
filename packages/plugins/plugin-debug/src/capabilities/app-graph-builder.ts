@@ -52,6 +52,15 @@ export default Capability.makeModule(
                       icon: 'ph--graph--regular',
                     },
                   }),
+                  Node.make({
+                    id: 'tools-explorer',
+                    data: Devtools.ToolsExplorer,
+                    type: DEVTOOLS_TYPE,
+                    properties: {
+                      label: ['debug-tools-explorer.label', { ns: meta.id }],
+                      icon: 'ph--toolbox--regular',
+                    },
+                  }),
                   ...(space && node.type === SPACE_TYPE
                     ? [
                         Node.make({

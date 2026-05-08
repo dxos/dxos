@@ -102,3 +102,5 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default MarkdownPlugin;

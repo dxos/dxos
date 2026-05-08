@@ -1,0 +1,47 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
+import { Annotation } from '@dxos/echo';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { type CreateObject } from '@dxos/plugin-space/types';
+
+import { OperationHandler } from '#capabilities';
+import { meta } from '#meta';
+import { WnfsOperation } from '#operations';
+import { WnfsAction, WnfsFile } from '#types';
+
+export const WnfsPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addMetadataModule({
+    metadata: {
+      id: WnfsFile.File.typename,
+      metadata: {
+        // TODO(wittjosiah): Would be nice if icon could change based on the type of the file.
+        icon: Annotation.IconAnnotation.get(WnfsFile.File).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(WnfsFile.File).pipe(Option.getOrThrow).hue ?? 'white',
+        inputSchema: WnfsAction.UploadFileSchema,
+        createObject: ((props, options) =>
+          Effect.gen(function* () {
+            const { object } = yield* Operation.invoke(WnfsOperation.CreateFile, { ...props, db: options.db });
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              hidden: true,
+              targetNodeId: options.targetNodeId,
+            });
+          })) satisfies CreateObject,
+      },
+    },
+  }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSchemaModule({ schema: [WnfsFile.File] }),
+  Plugin.make,
+);
+
+export default WnfsPlugin;

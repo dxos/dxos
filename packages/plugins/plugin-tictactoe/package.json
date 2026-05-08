@@ -14,6 +14,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": "./src/TicTacToePlugin.tsx",
     "#blueprints": "./src/blueprints/index.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
@@ -74,6 +75,8 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",

@@ -2,6 +2,7 @@ layer: library
 language: typescript
 tags:
   - ts-build
+  - ts-test
   - pack
   - storybook
   - ts-test-storybook
@@ -9,8 +10,6 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/cli/index.ts'
-      - '--entryPoint=src/translations.ts'
       - '--entryPoint=src/types/index.ts'
       - '--entryPoint=src/operations/index.ts'
       - '--entryPoint=src/meta.ts'

@@ -27,9 +27,9 @@ const ACCEPT = 'application/vnd.github+json';
 const API_VERSION = '2022-11-28';
 const USER_AGENT = '@dxos/plugin-github';
 
-const PageDir = Schema.Literal('next', 'last', 'prev', 'first');
-
-// ── Subset schemas for the responses we care about ─────────────────────────
+//
+// Subset schemas for the responses we care about
+//
 
 const GitHubUserSchema = Schema.Struct({
   id: Schema.Number,
@@ -110,21 +110,9 @@ const GitHubCommentSchema = Schema.Struct({
 });
 export type GitHubComment = Schema.Schema.Type<typeof GitHubCommentSchema>;
 
-/** Fields accepted by `PATCH /repos/{owner}/{repo}/issues/{number}`. */
-export type UpdateIssueInput = {
-  title?: string;
-  body?: string;
-  state?: 'open' | 'closed';
-  state_reason?: 'completed' | 'not_planned' | 'reopened' | null;
-};
-
-/** Fields accepted by `POST /repos/{owner}/{repo}/issues`. */
-export type CreateIssueInput = {
-  title: string;
-  body?: string;
-};
-
-// ── Credentials service ────────────────────────────────────────────────────
+//
+// Credentials service
+//
 
 /**
  * Layer-based credentials service. Mirrors `TrelloCredentials`: every API call
@@ -148,7 +136,9 @@ export class GitHubCredentials extends Context.Tag('@dxos/plugin-github/GitHubCr
     );
 }
 
-// ── Request pipeline ───────────────────────────────────────────────────────
+//
+// Request pipeline
+//
 
 type GitHubEffect<T> = Effect.Effect<
   T,
@@ -192,11 +182,20 @@ const withAuth = (req: HttpClientRequest.HttpClientRequest, creds: GitHubCredent
     HttpClientRequest.setHeader('User-Agent', USER_AGENT),
   );
 
-const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema.Schema<T>): GitHubEffect<T> =>
+/**
+ * Build an unauthenticated GitHub API request, fetch + decode it as a single JSON
+ * response, and apply timeout + retry. `withAuth` is applied here so callers never
+ * have to remember to attach credentials (forgetting would silently 401).
+ */
+const githubRequest = <T>(
+  build: () => HttpClientRequest.HttpClientRequest,
+  schema: Schema.Schema<T>,
+): GitHubEffect<T> =>
   Effect.gen(function* () {
+    const creds = yield* GitHubCredentials;
     const httpClient = yield* HttpClient.HttpClient;
     const clientNoTracer = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
-    return yield* clientNoTracer.execute(request).pipe(
+    return yield* clientNoTracer.execute(withAuth(build(), creds)).pipe(
       Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(schema))),
       Effect.timeout('15 seconds'),
       Effect.retry({
@@ -207,16 +206,9 @@ const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Sch
     );
   });
 
-const githubRequest = <T>(
-  build: (creds: GitHubCredentialsValue) => HttpClientRequest.HttpClientRequest,
-  schema: Schema.Schema<T>,
-): GitHubEffect<T> =>
-  Effect.gen(function* () {
-    const creds = yield* GitHubCredentials;
-    return yield* runRequest(build(creds), schema);
-  });
-
-// ── Pagination ─────────────────────────────────────────────────────────────
+//
+// Pagination
+//
 
 /**
  * Walk paginated GitHub list endpoints by following `Link: <…>; rel="next"`.
@@ -244,7 +236,7 @@ const getNextLink = (header: string | undefined): string | undefined => {
 };
 
 const githubPaginated = <T>(
-  buildInitial: (creds: GitHubCredentialsValue) => HttpClientRequest.HttpClientRequest,
+  buildInitial: () => HttpClientRequest.HttpClientRequest,
   itemSchema: Schema.Schema<T>,
 ): GitHubEffect<readonly T[]> =>
   Effect.gen(function* () {
@@ -254,7 +246,7 @@ const githubPaginated = <T>(
     const arraySchema = Schema.Array(itemSchema);
 
     let nextUrl: string | undefined;
-    let request = withAuth(buildInitial(creds), creds).pipe(HttpClientRequest.appendUrlParam('per_page', '100'));
+    let request = withAuth(buildInitial(), creds).pipe(HttpClientRequest.appendUrlParam('per_page', '100'));
     const out: T[] = [];
 
     for (let page = 0; page < MAX_PAGES; page++) {
@@ -282,46 +274,51 @@ const githubPaginated = <T>(
       request = withAuth(HttpClientRequest.get(nextUrl), creds);
     }
 
-    // Validate to keep Schema.Schema<readonly T[]> type discipline (effectively a no-op).
-    void PageDir;
     return out;
   });
 
-// ── API surface ────────────────────────────────────────────────────────────
+//
+// API surface
+//
 
 /** GET /user — authenticated user profile. */
 export const fetchUser = (): GitHubEffect<GitHubUser> =>
-  githubRequest((creds) => withAuth(HttpClientRequest.get(`${GITHUB_API_BASE}/user`), creds), GitHubUserSchema);
+  githubRequest(() => HttpClientRequest.get(`${GITHUB_API_BASE}/user`), GitHubUserSchema);
 
 /** GET /user/orgs — orgs visible to the authenticated user. */
 export const fetchUserOrgs = (): GitHubEffect<readonly GitHubOrg[]> =>
-  githubPaginated((_creds) => HttpClientRequest.get(`${GITHUB_API_BASE}/user/orgs`), GitHubOrgSchema);
+  githubPaginated(() => HttpClientRequest.get(`${GITHUB_API_BASE}/user/orgs`), GitHubOrgSchema);
+
+/**
+ * GET /user/repos — every repo the authenticated user can see.
+ *
+ * Includes owner, collaborator, and org-member affiliations. For a GitHub App
+ * user-to-server token this is intersected with the App's installation scope —
+ * admins control which repos are visible by choosing All / Selected at install
+ * time.
+ */
+export const fetchUserRepos = (): GitHubEffect<readonly GitHubRepo[]> =>
+  githubPaginated(() => HttpClientRequest.get(`${GITHUB_API_BASE}/user/repos`), GitHubRepoSchema);
 
 /** GET /orgs/{org} — full org metadata. */
 export const fetchOrg = (org: string): GitHubEffect<GitHubOrg> =>
-  githubRequest(
-    (creds) => withAuth(HttpClientRequest.get(`${GITHUB_API_BASE}/orgs/${encodeURIComponent(org)}`), creds),
-    GitHubOrgSchema,
-  );
+  githubRequest(() => HttpClientRequest.get(`${GITHUB_API_BASE}/orgs/${encodeURIComponent(org)}`), GitHubOrgSchema);
 
 /** GET /orgs/{org}/members — public + private members (depends on token). */
 export const fetchOrgMembers = (org: string): GitHubEffect<readonly GitHubUser[]> =>
   githubPaginated(
-    (_creds) => HttpClientRequest.get(`${GITHUB_API_BASE}/orgs/${encodeURIComponent(org)}/members`),
+    () => HttpClientRequest.get(`${GITHUB_API_BASE}/orgs/${encodeURIComponent(org)}/members`),
     GitHubUserSchema,
   );
 
 /** GET /users/{login} — full user profile (org members lists return a partial form). */
 export const fetchUserByLogin = (login: string): GitHubEffect<GitHubUser> =>
-  githubRequest(
-    (creds) => withAuth(HttpClientRequest.get(`${GITHUB_API_BASE}/users/${encodeURIComponent(login)}`), creds),
-    GitHubUserSchema,
-  );
+  githubRequest(() => HttpClientRequest.get(`${GITHUB_API_BASE}/users/${encodeURIComponent(login)}`), GitHubUserSchema);
 
 /** GET /orgs/{org}/repos — repos owned by the org. */
 export const fetchOrgRepos = (org: string): GitHubEffect<readonly GitHubRepo[]> =>
   githubPaginated(
-    (_creds) => HttpClientRequest.get(`${GITHUB_API_BASE}/orgs/${encodeURIComponent(org)}/repos`),
+    () => HttpClientRequest.get(`${GITHUB_API_BASE}/orgs/${encodeURIComponent(org)}/repos`),
     GitHubRepoSchema,
   );
 
@@ -338,7 +335,7 @@ export const fetchRepoIssues = (
   repo: string,
   options: { since?: string } = {},
 ): GitHubEffect<readonly GitHubIssue[]> =>
-  githubPaginated((_creds) => {
+  githubPaginated(() => {
     let req = HttpClientRequest.get(
       `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues`,
     ).pipe(HttpClientRequest.appendUrlParam('state', 'all'));
@@ -355,40 +352,9 @@ export const fetchIssueComments = (
   issueNumber: number,
 ): GitHubEffect<readonly GitHubComment[]> =>
   githubPaginated(
-    (_creds) =>
+    () =>
       HttpClientRequest.get(
         `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}/comments`,
       ),
     GitHubCommentSchema,
-  );
-
-/** PATCH /repos/{owner}/{repo}/issues/{number} — supports both issues and PRs. */
-export const updateIssue = (
-  owner: string,
-  repo: string,
-  issueNumber: number,
-  input: UpdateIssueInput,
-): GitHubEffect<GitHubIssue> =>
-  githubRequest(
-    (creds) =>
-      withAuth(
-        HttpClientRequest.patch(
-          `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}`,
-        ),
-        creds,
-      ).pipe(HttpClientRequest.bodyUnsafeJson(input)),
-    GitHubIssueSchema,
-  );
-
-/** POST /repos/{owner}/{repo}/issues — creates a new issue (NOT a PR). */
-export const createIssue = (owner: string, repo: string, input: CreateIssueInput): GitHubEffect<GitHubIssue> =>
-  githubRequest(
-    (creds) =>
-      withAuth(
-        HttpClientRequest.post(
-          `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues`,
-        ),
-        creds,
-      ).pipe(HttpClientRequest.bodyUnsafeJson(input)),
-    GitHubIssueSchema,
   );

@@ -7,14 +7,13 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
-import { Routine } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { Routine, Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ObjectId } from '@dxos/keys';
-import { AutomationPlugin } from '@dxos/plugin-automation/cli';
+import { AutomationPlugin } from '@dxos/plugin-automation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
-import { ClientPlugin } from '@dxos/plugin-client/cli';
+import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
