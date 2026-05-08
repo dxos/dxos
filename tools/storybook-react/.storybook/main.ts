@@ -37,7 +37,7 @@ export const modules = [
   'sdk/*/src/**',
   'stories/*/src/**',
   'ui/*/src/**',
-  'ui/primitives/*/src/**',
+  'ui/react-primitives/*/src/**',
 ];
 
 // NOTE: Storybook test depends on relative paths.

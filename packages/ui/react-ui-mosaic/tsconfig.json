@@ -54,10 +54,19 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-attention"
+    },
+    {
       "path": "../react-ui-dnd"
     },
     {
+      "path": "../react-ui-list"
+    },
+    {
       "path": "../react-ui-menu"
+    },
+    {
+      "path": "../react-ui-search"
     },
     {
       "path": "../react-ui-syntax-highlighter"

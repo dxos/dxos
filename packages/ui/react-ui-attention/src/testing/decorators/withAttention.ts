@@ -20,6 +20,7 @@ export const withAttention = (initialAttendedId?: string): Decorator => {
       () => (initialAttendedId ? new AttentionManager(registry, [initialAttendedId]) : undefined),
       [registry],
     );
+
     return createElement(
       RegistryContext.Provider,
       { value: registry },

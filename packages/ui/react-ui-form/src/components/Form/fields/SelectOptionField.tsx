@@ -147,7 +147,7 @@ export const SelectOptionField = ({
                         <IconButton
                           iconOnly
                           variant='ghost'
-                          label={t(selected === item.id ? 'collapse label' : 'expand label', { ns: osTranslations })}
+                          label={t(selected === item.id ? 'collapse.label' : 'expand.label', { ns: osTranslations })}
                           icon={selected === item.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                           onClick={() => handleClick(item.id)}
                         />

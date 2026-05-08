@@ -12,6 +12,7 @@
   "author": "DXOS.org",
   "type": "module",
   "imports": {
+    "#plugin": "./src/MeetingPlugin.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",

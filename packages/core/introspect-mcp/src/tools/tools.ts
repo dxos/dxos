@@ -33,7 +33,7 @@ import {
   type GetPackageArgs,
   type GetSymbolArgs,
   type ListCapabilitiesArgs,
-  type ListIntentsArgs,
+  type ListOperationsArgs,
   type ListOptions,
   type ListPackagesArgs,
   type ListPluginsArgs,
@@ -48,7 +48,7 @@ import {
   shapeGetPackage,
   shapeGetSymbol,
   shapeListCapabilities,
-  shapeListIntents,
+  shapeListOperations,
   shapeListPackages,
   shapeListPlugins,
   shapeListSchemas,
@@ -190,15 +190,15 @@ export const createToolDefinitions = (
     },
   } satisfies ToolDefinition<ListCapabilitiesArgs>,
 
-  list_intents: {
-    ...TOOL_METADATA.list_intents,
-    handler: (args: ListIntentsArgs) => {
-      const result = introspector.listIntents(args.id);
-      const shaped = shapeListIntents(result, pickListOptions(args));
-      log({ tool: 'list_intents', args, count: result.length, truncated: shaped.truncated });
+  list_operations: {
+    ...TOOL_METADATA.list_operations,
+    handler: (args: ListOperationsArgs) => {
+      const result = introspector.listOperations(args.id);
+      const shaped = shapeListOperations(result, pickListOptions(args));
+      log({ tool: 'list_operations', args, count: result.length, truncated: shaped.truncated });
       return shaped;
     },
-  } satisfies ToolDefinition<ListIntentsArgs>,
+  } satisfies ToolDefinition<ListOperationsArgs>,
 
   list_schemas: {
     ...TOOL_METADATA.list_schemas,

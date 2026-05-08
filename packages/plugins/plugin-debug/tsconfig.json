@@ -120,6 +120,9 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-introspect"
+    },
+    {
       "path": "../../ui/react-ui-mosaic"
     },
     {
@@ -169,6 +172,9 @@
     },
     {
       "path": "../plugin-table"
+    },
+    {
+      "path": "../plugin-testing"
     },
     {
       "path": "../plugin-theme"

@@ -20,6 +20,11 @@
     "#hooks": "./src/hooks/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#plugin": {
+      "browser": "./src/ScriptPlugin.tsx",
+      "node": "./src/ScriptPlugin.node.ts",
+      "default": "./src/ScriptPlugin.tsx"
+    },
     "#testing": "./src/testing/index.ts",
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
@@ -36,6 +41,12 @@
       "browser": "./dist/lib/browser/blueprints/index.mjs",
       "node": "./dist/lib/node-esm/blueprints/index.mjs",
       "types": "./dist/types/src/blueprints/index.d.ts"
+    },
+    "./containers": {
+      "source": "./src/containers/index.ts",
+      "browser": "./dist/lib/browser/containers/index.mjs",
+      "node": "./dist/lib/node-esm/containers/index.mjs",
+      "types": "./dist/types/src/containers/index.d.ts"
     },
     "./operations": {
       "source": "./src/operations/index.ts",

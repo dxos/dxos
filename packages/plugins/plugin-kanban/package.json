@@ -20,6 +20,11 @@
     "#hooks": "./src/hooks/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#plugin": {
+      "browser": "./src/KanbanPlugin.tsx",
+      "node": "./src/KanbanPlugin.node.ts",
+      "default": "./src/KanbanPlugin.tsx"
+    },
     "#testing": "./src/testing/index.ts",
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"

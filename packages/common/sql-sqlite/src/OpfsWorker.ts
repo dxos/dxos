@@ -110,7 +110,9 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
             }
           }
         } catch (e: any) {
-          log.catch(e);
+          // Logged at debug level: SQL errors are returned to the caller via postMessage,
+          // and some are expected (e.g. ALTER TABLE ADD COLUMN against an already-migrated DB).
+          log('sqlite error', { error: e });
           const message = 'message' in e ? e.message : String(e);
           options.port.postMessage([messageId!, message, undefined]);
         }

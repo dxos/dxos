@@ -6,8 +6,8 @@ import { Plugin } from '@dxos/app-framework';
 
 import { meta } from './meta';
 
-export const ChessPlugin = Plugin.lazy(meta, () => import('./ChessPlugin'));
-
+export * from './blueprints';
 export * from './meta';
+export * from './types';
 
-export * from './components/Chessboard';
+export const ChessPlugin = Plugin.lazy(meta, () => import('#plugin'));
