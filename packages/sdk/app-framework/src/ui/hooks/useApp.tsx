@@ -7,18 +7,18 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
-import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ErrorBoundary, ErrorFallback, type FallbackProps } from '@dxos/react-error-boundary';
+import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
 import { useAsyncEffect, useDefaultValue } from '@dxos/react-hooks';
 import { ContextProtocolProvider } from '@dxos/web-context-react';
 
 import { ActivationEvents, Capabilities } from '../../common';
 import { PluginManagerContext } from '../../context';
-import { type ActivationEvent, type Plugin, PluginManager } from '../../core';
+import { PluginManager } from '../../core';
 // Import from concrete files (not the `../components` barrel) to avoid a
 // circular import: `components/index.ts` re-exports `App.tsx`, which imports
 // `../../hooks` (this barrel), which re-exports this file. WebKit's strict
