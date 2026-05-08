@@ -10,10 +10,10 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { Channel } from '@dxos/plugin-thread/types';
 import { Query, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { Row, RowList } from '@dxos/react-ui-list';
+import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 import { MeetingOperation } from '#operations';

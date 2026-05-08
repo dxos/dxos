@@ -14,10 +14,11 @@ import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { type SelectionManager, type SelectionMode, defaultSelection } from '@dxos/react-ui-attention';
+import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 import { ThreadOperation } from '#operations';
-import { Channel, ThreadCapabilities, type ThreadState } from '#types';
+import { ThreadCapabilities, type ThreadState } from '#types';
 
 import { getAnchor } from '../util';
 
