@@ -135,12 +135,30 @@ const KeyValueTable = ({ record }: { record: unknown }) => {
   );
 };
 
-// Pull the inner array / object out of the `{ data, note?, truncated? }`
-// envelope our shapers wrap responses in. Single objects render as one
-// row; primitives are wrapped in a one-element list. Arrays pass through.
+// Pull the inner array / object out of an envelope. Two unwraps run before
+// row construction:
+//   1. The legacy `{ data, note?, truncated? }` shape our shapers used to wrap
+//      responses in.
+//   2. A single-key object whose value is an array — the natural MCP-tool
+//      output shape for list endpoints, e.g. `{ packages: [...] }`,
+//      `{ plugins: [...] }`, `{ matches: [...] }`. Unwrapping yields one row
+//      per item instead of a single row labelled with the key.
+// Single objects render as one row; primitives are wrapped in a one-element
+// list. Arrays pass through.
 const toItems = (data: unknown): unknown[] => {
-  const inner =
-    data && typeof data === 'object' && 'data' in (data as object) ? (data as { data: unknown }).data : data;
+  let inner: unknown = data;
+  if (inner && typeof inner === 'object' && !Array.isArray(inner) && 'data' in (inner as object)) {
+    inner = (inner as { data: unknown }).data;
+  }
+  if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
+    const keys = Object.keys(inner as object);
+    if (keys.length === 1) {
+      const sole = (inner as Record<string, unknown>)[keys[0]];
+      if (Array.isArray(sole)) {
+        inner = sole;
+      }
+    }
+  }
   if (Array.isArray(inner)) {
     return inner;
   }
