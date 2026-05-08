@@ -20,10 +20,10 @@ import {
 import { mx } from '@dxos/ui-theme';
 import { getStyles } from '@dxos/ui-theme';
 
-import { PluginFailureBadge } from '../PluginFailureBadge';
-
 import { meta } from '#meta';
 import { type RegistryTagType } from '#types';
+
+import { PluginFailureBadge } from '../PluginFailureBadge';
 
 export type PluginItemProps = {
   plugin: Plugin.Plugin;

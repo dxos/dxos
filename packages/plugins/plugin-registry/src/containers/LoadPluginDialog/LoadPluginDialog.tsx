@@ -7,14 +7,11 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { usePluginManager } from '@dxos/app-framework/ui';
 import { runAndForwardErrors } from '@dxos/effect';
-import { PLUGIN_DEV_SERVER_PORT } from '@dxos/protocols';
 import { Button, Dialog, Input, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
 export const LOAD_PLUGIN_DIALOG = `${meta.id}.LoadPluginDialog`;
-
-const DEFAULT_DEV_MANIFEST_URL = `http://localhost:${PLUGIN_DEV_SERVER_PORT}/manifest.json`;
 
 export const LoadPluginDialog = () => {
   const manager = usePluginManager();
@@ -24,38 +21,29 @@ export const LoadPluginDialog = () => {
   const [error, setError] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
 
-  const load = useCallback(
-    (target: string) => {
-      const trimmed = target.trim();
-      if (!trimmed) {
-        return;
-      }
+  const handleLoad = useCallback(() => {
+    const trimmed = url.trim();
+    if (!trimmed) {
+      return;
+    }
 
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
-      void Effect.gen(function* () {
-        const plugin = yield* manager.add(trimmed);
-        yield* manager.enable(plugin.meta.id);
-        closeRef.current?.click();
-      }).pipe(
-        Effect.catchAll((err) =>
-          Effect.sync(() => {
-            setError(String(err));
-          }),
-        ),
-        Effect.tap(() => Effect.sync(() => setLoading(false))),
-        runAndForwardErrors,
-      );
-    },
-    [manager],
-  );
-
-  const handleLoad = useCallback(() => load(url), [load, url]);
-  const handleLoadDev = useCallback(() => {
-    setUrl(DEFAULT_DEV_MANIFEST_URL);
-    load(DEFAULT_DEV_MANIFEST_URL);
-  }, [load]);
+    void Effect.gen(function* () {
+      const plugin = yield* manager.add(trimmed);
+      yield* manager.enable(plugin.meta.id);
+      closeRef.current?.click();
+    }).pipe(
+      Effect.catchAll((err) =>
+        Effect.sync(() => {
+          setError(String(err));
+        }),
+      ),
+      Effect.tap(() => Effect.sync(() => setLoading(false))),
+      runAndForwardErrors,
+    );
+  }, [url, manager]);
 
   return (
     <Dialog.Content>
@@ -87,10 +75,7 @@ export const LoadPluginDialog = () => {
             />
             {error && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
           </Input.Root>
-          <div className='flex justify-between gap-2'>
-            <Button disabled={loading} onClick={handleLoadDev}>
-              {t('load-dev-plugin.label')}
-            </Button>
+          <div className='flex justify-end'>
             <Button variant='primary' disabled={!url.trim() || loading} onClick={handleLoad}>
               {loading ? t('loading.label') : t('load-plugin.label')}
             </Button>

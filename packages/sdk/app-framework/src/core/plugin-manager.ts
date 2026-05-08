@@ -171,6 +171,13 @@ export interface PluginManager {
    * most once with its most recent failure.
    */
   readonly failed: Atom.Atom<readonly PluginFailure[]>;
+  /**
+   * Ids of currently-registered plugins that came from a dev source (loaded
+   * via {@link LoadedPlugin} with `dev: true`). Subscribers can use this to
+   * badge dev-overridden plugins or to derive the id of the active dev plugin
+   * for an "uninstall dev plugin" affordance.
+   */
+  readonly devPluginIds: Atom.Atom<readonly string[]>;
 
   getPlugins(): readonly Plugin.Plugin[];
   getCore(): readonly string[];
@@ -180,6 +187,7 @@ export interface PluginManager {
   getEventsFired(): readonly string[];
   getPendingReset(): readonly string[];
   getFailed(): readonly PluginFailure[];
+  getDevPluginIds(): readonly string[];
 
   /**
    * Clears the failure record for a plugin so it can be retried. Returns
@@ -255,9 +263,10 @@ class ManagerImpl implements PluginManager {
   // re-enabled if it was enabled before the shadow took effect.
   private readonly _shadowed = new Map<string, { plugin: Plugin.Plugin; wasEnabled: boolean }>();
   // Ids whose currently-registered plugin came from a dev source. Used by
-  // `remove` to know it should restore from `_shadowed` afterwards, and (in the
-  // future) by UI to badge dev-overridden plugins.
-  private readonly _devPluginIds = new Set<string>();
+  // `remove` to know it should restore from `_shadowed` afterwards, and by
+  // UI to surface a "Disable Dev Plugin" affordance / badge dev-overridden
+  // entries. Backed by an Atom so subscribers can react to changes.
+  private readonly _devPluginIdsAtom: Atom.Writable<string[]>;
   private readonly _activatingEvents = Effect.runSync(Ref.make<string[]>([]));
   private readonly _activatingModules = Effect.runSync(Ref.make<string[]>([]));
   private readonly _inFlightFibers = Effect.runSync(Ref.make<Array<Fiber.Fiber<unknown, unknown>>>([]));
@@ -301,6 +310,7 @@ class ManagerImpl implements PluginManager {
     this._eventsFiredAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
     this._pendingResetAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
     this._failedAtom = Atom.make<PluginFailure[]>([]).pipe(Atom.keepAlive);
+    this._devPluginIdsAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
     plugins.forEach((plugin) => this._addPlugin(plugin));
     // Dedupe before mapping to `enable` — `core` and `enabled` may overlap (an
     // app-supplied plugin can be in both), and concurrent `enable(id)` calls
@@ -367,6 +377,13 @@ class ManagerImpl implements PluginManager {
     return this._failedAtom;
   }
 
+  /**
+   * Ids of currently-registered plugins that came from a dev source.
+   */
+  get devPluginIds(): Atom.Atom<readonly string[]> {
+    return this._devPluginIdsAtom;
+  }
+
   getPlugins(): readonly Plugin.Plugin[] {
     return this._get(this._pluginsAtom);
   }
@@ -397,6 +414,18 @@ class ManagerImpl implements PluginManager {
 
   getFailed(): readonly PluginFailure[] {
     return this._get(this._failedAtom);
+  }
+
+  getDevPluginIds(): readonly string[] {
+    return this._get(this._devPluginIdsAtom);
+  }
+
+  private _markDev(id: string): void {
+    this._update(this._devPluginIdsAtom, (ids) => (ids.includes(id) ? ids : [...ids, id]));
+  }
+
+  private _unmarkDev(id: string): void {
+    this._update(this._devPluginIdsAtom, (ids) => ids.filter((existing) => existing !== id));
   }
 
   clearFailure(id: string): boolean {
@@ -437,15 +466,15 @@ class ManagerImpl implements PluginManager {
         // an already-active dev plugin (e.g. after editing source), we want to
         // keep the *original* shadow target so removal still restores the real
         // underlying plugin instead of an intermediate dev build.
-        if (!this._devPluginIds.has(pluginId)) {
+        if (!this._get(this._devPluginIdsAtom).includes(pluginId)) {
           this._shadowed.set(pluginId, { plugin: existing, wasEnabled });
         }
-        this._devPluginIds.add(pluginId);
+        this._markDev(pluginId);
         this._update(this._pluginsAtom, (plugins) => plugins.map((p) => (p.meta.id === pluginId ? plugin : p)));
       } else {
         this._addPlugin(plugin);
         if (dev) {
-          this._devPluginIds.add(pluginId);
+          this._markDev(pluginId);
         }
       }
 
@@ -558,7 +587,7 @@ class ManagerImpl implements PluginManager {
   remove(id: string): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       log('remove plugin', { id });
-      const wasDev = this._devPluginIds.has(id);
+      const wasDev = this._get(this._devPluginIdsAtom).includes(id);
       const disabled = yield* this.disable(id);
       if (!disabled) {
         return false;
@@ -580,7 +609,7 @@ class ManagerImpl implements PluginManager {
       // for plugins they had explicitly disabled before iterating on a dev
       // build.
       if (wasDev) {
-        this._devPluginIds.delete(id);
+        this._unmarkDev(id);
         const shadow = this._shadowed.get(id);
         if (shadow) {
           this._shadowed.delete(id);
@@ -766,9 +795,8 @@ class ManagerImpl implements PluginManager {
   }
 
   private _getPluginIdForModule(moduleId: string): string | undefined {
-    return this._get(this._pluginsAtom).find((plugin) =>
-      plugin.modules.some((module) => module.id === moduleId),
-    )?.meta.id;
+    return this._get(this._pluginsAtom).find((plugin) => plugin.modules.some((module) => module.id === moduleId))?.meta
+      .id;
   }
 
   /**
@@ -1146,23 +1174,21 @@ class ManagerImpl implements PluginManager {
           performance.mark(`module:${module.id}:start`);
           yield* PubSub.publish(this.activation, { event: parentEvent, state: 'activating', module: module.id });
           const pluginId = this._getPluginIdForModule(module.id);
-          const [duration, capabilities] = yield* module
-            .activate()
-            .pipe(
-              Effect.provideService(Capability.Service, this.capabilities),
-              Effect.provideService(Plugin.Service, this),
-              // Cap activation so a single misbehaving module can't hold the
-              // event chain open. On timeout the failure is recorded against
-              // the plugin and surfaced as `PluginTimeoutError`.
-              Effect.timeoutFail({
-                duration: this._activationTimeout,
-                onTimeout: () =>
-                  new PluginTimeoutError({
-                    context: { id: pluginId ?? module.id, module: module.id, phase: 'activation' as PluginFailurePhase },
-                  }),
-              }),
-              Effect.timed,
-            );
+          const [duration, capabilities] = yield* module.activate().pipe(
+            Effect.provideService(Capability.Service, this.capabilities),
+            Effect.provideService(Plugin.Service, this),
+            // Cap activation so a single misbehaving module can't hold the
+            // event chain open. On timeout the failure is recorded against
+            // the plugin and surfaced as `PluginTimeoutError`.
+            Effect.timeoutFail({
+              duration: this._activationTimeout,
+              onTimeout: () =>
+                new PluginTimeoutError({
+                  context: { id: pluginId ?? module.id, module: module.id, phase: 'activation' as PluginFailurePhase },
+                }),
+            }),
+            Effect.timed,
+          );
           const normalized = capabilities == null ? [] : Array.isArray(capabilities) ? capabilities : [capabilities];
           const elapsed = Duration.toMillis(duration);
           performance.mark(`module:${module.id}:end`);

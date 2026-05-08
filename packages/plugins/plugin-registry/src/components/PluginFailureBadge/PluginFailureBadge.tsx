@@ -33,7 +33,8 @@ export const PluginFailureBadge = ({ failure, classNames, size = 4 }: PluginFail
   const { t } = useTranslation(meta.id);
 
   const phaseLabel = failure.phase === 'load' ? t('failure-phase-load.label') : t('failure-phase-activation.label');
-  const reasonLabel = failure.reason === 'timeout' ? t('failure-reason-timeout.label') : t('failure-reason-error.label');
+  const reasonLabel =
+    failure.reason === 'timeout' ? t('failure-reason-timeout.label') : t('failure-reason-error.label');
 
   return (
     <Popover.Root>
