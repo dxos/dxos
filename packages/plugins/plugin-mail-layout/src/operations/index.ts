@@ -4,6 +4,4 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const MailLayoutOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./update-companion'),
-);
+export const MailLayoutOperationHandlerSet = OperationHandlerSet.lazy(() => import('./update-companion'));

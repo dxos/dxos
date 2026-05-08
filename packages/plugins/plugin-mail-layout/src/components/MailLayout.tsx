@@ -85,8 +85,7 @@ export const MailLayout = () => {
     [selectedMessageId, messages],
   );
   const messageAttendableId = useMemo(
-    () =>
-      db && mailbox && selectedMessage ? messagePath(db.spaceId, mailbox.id, selectedMessage.id) : undefined,
+    () => (db && mailbox && selectedMessage ? messagePath(db.spaceId, mailbox.id, selectedMessage.id) : undefined),
     [db, mailbox, selectedMessage],
   );
 
