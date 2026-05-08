@@ -12,9 +12,9 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
 
-import { GooglePeople } from '../apis';
-import { AccessTokenNotPopulatedError, IntegrationDatabaseMissingError } from '../errors';
-import { GetGoogleContactGroups } from './definitions';
+import { GooglePeople } from '../../../apis';
+import { AccessTokenNotPopulatedError, IntegrationDatabaseMissingError } from '../../../errors';
+import { GetGoogleContactGroups } from '../../definitions';
 
 const CONTACT_GROUPS_URL = 'https://people.googleapis.com/v1/contactGroups?pageSize=200';
 

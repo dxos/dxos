@@ -12,9 +12,9 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
 
-import { GoogleCalendar } from '../apis';
-import { AccessTokenNotPopulatedError, IntegrationDatabaseMissingError } from '../errors';
-import { GetGoogleCalendars } from './definitions';
+import { GoogleCalendar } from '../../../apis';
+import { AccessTokenNotPopulatedError, IntegrationDatabaseMissingError } from '../../../errors';
+import { GetGoogleCalendars } from '../../definitions';
 
 const CALENDAR_LIST_URL =
   'https://www.googleapis.com/calendar/v3/users/me/calendarList?fields=items(id,summary,description,primary)';
