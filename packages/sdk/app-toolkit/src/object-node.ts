@@ -10,7 +10,7 @@ import { Collection, type Database, Obj, Ref } from '@dxos/echo';
 import { Annotation } from '@dxos/echo';
 import { type TreeData } from '@dxos/react-ui-list';
 
-import { GraphPropsAnnotation } from '@dxos/app-framework';
+import { GraphPropsAnnotation } from './annotations';
 
 //
 // Caching infrastructure.

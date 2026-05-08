@@ -6,6 +6,7 @@ import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Chat } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
@@ -64,7 +65,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
       if (!schema) {
         return [] as string[];
       }
-      return Option.getOrElse(() => [] as string[])(Blueprint.TypeBlueprintsAnnotation.get(schema));
+      return Option.getOrElse(() => [] as string[])(BlueprintsAnnotation.get(schema));
     }, [companionTo]);
     const existingBlueprints = useQuery(space?.db, Filter.type(Blueprint.Blueprint));
     const pluginBlueprints = useMemo(

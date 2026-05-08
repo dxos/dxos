@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Blueprint } from '@dxos/compute';
+import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { FeedAnnotation } from '@dxos/schema';
@@ -48,7 +48,7 @@ export const Mailbox = Schema.Struct({
     hue: 'rose',
   }),
   FeedAnnotation.set(true),
-  Blueprint.TypeBlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
 );
 
 export interface Mailbox extends Schema.Schema.Type<typeof Mailbox> {}

@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { log } from '@dxos/log';
 
-import { Blueprint } from '@dxos/compute';
+import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
@@ -43,7 +43,7 @@ export const Game = Schema.Struct({
     icon: 'ph--shield-chevron--regular',
     hue: 'amber',
   }),
-  Blueprint.TypeBlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
 );
 
 export interface Game extends Schema.Schema.Type<typeof Game> {}
