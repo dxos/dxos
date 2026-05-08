@@ -13,3 +13,4 @@ tasks:
       - '--entryPoint=src/types/index.ts'
       - '--entryPoint=src/operations/index.ts'
       - '--entryPoint=src/meta.ts'
+      - '--entryPoint=src/plugin.ts'

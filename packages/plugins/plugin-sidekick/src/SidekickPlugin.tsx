@@ -11,7 +11,7 @@ import { Annotation } from '@dxos/echo';
 import { BlueprintDefinition, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Profile, Sidekick } from '#types';
+import { Sidekick } from '#types';
 
 export const SidekickPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
@@ -24,7 +24,7 @@ export const SidekickPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  AppPlugin.addSchemaModule({ schema: [Sidekick.Profile, Profile.Profile] }),
+  AppPlugin.addSchemaModule({ schema: [Sidekick.Profile] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
