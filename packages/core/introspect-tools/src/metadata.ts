@@ -21,7 +21,7 @@ import {
   GetPackageInput,
   GetSymbolInput,
   ListCapabilitiesInput,
-  ListIntentsInput,
+  ListOperationsInput,
   ListPackagesInput,
   ListPluginsInput,
   ListSchemasInput,
@@ -112,7 +112,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
     title: 'List Composer plugins',
     description: trim`
       List plugins detected in the monorepo. A plugin is a package whose src/meta.ts exports a \`Plugin.Meta\`.
-      Use this to discover what plugins exist before drilling into surfaces / capabilities / intents / schemas.
+      Use this to discover what plugins exist before drilling into surfaces / capabilities / operations / schemas.
       Filter by \`id\` substring (e.g. "markdown") to narrow the list.
     `,
     inputSchema: ListPluginsInput,
@@ -134,13 +134,16 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
     `,
     inputSchema: ListCapabilitiesInput,
   },
-  list_intents: {
-    title: 'List intents',
+  list_operations: {
+    title: 'List operations',
     description: trim`
-      List intents contributed by plugins (the unit of work dispatched through the IntentResolver).
-      Filter by \`id\` (plugin id) to scope to a single plugin.
+      List operations contributed by plugins. An *operation* is a serializable
+      request (verb + payload) dispatched through the OperationInvoker —
+      Composer's equivalent of an action / command. Most plugins contribute
+      these via \`Capabilities.OperationHandler\`. Filter by \`id\` (plugin id)
+      to scope to a single plugin.
     `,
-    inputSchema: ListIntentsInput,
+    inputSchema: ListOperationsInput,
   },
   list_schemas: {
     title: 'List schemas',

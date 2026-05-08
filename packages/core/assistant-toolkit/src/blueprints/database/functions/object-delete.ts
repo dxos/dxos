@@ -9,7 +9,7 @@ import { Database } from '@dxos/echo';
 
 import { ObjectDelete } from './definitions';
 
-const handler: Operation.WithHandler<Operation.Definition.Any> = ObjectDelete.pipe(
+export default ObjectDelete.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ obj }) {
       const { db } = yield* Database.Service;
@@ -18,5 +18,3 @@ const handler: Operation.WithHandler<Operation.Definition.Any> = ObjectDelete.pi
     }),
   ),
 );
-
-export default handler;

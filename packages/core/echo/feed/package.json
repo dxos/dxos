@@ -14,12 +14,12 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/types/index.d.ts",
+      "types": "./dist/types/src/index.d.ts",
       "source": "./src/index.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
     "./testing": {
-      "types": "./dist/types/testing/index.d.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
       "source": "./src/testing/index.ts",
       "default": "./dist/lib/neutral/testing/index.mjs"
     }

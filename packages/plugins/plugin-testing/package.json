@@ -13,6 +13,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": "./src/StorybookPlugin.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#meta": "./src/meta.ts",
@@ -22,12 +23,12 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./dist/types/index.d.ts",
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
     },
     "./harness": {
       "source": "./src/harness.ts",
-      "types": "./dist/types/harness.d.ts",
+      "types": "./dist/types/src/harness.d.ts",
       "browser": "./dist/lib/browser/harness.mjs",
       "node": "./dist/lib/node-esm/harness.mjs"
     }

@@ -6,6 +6,6 @@ import { Plugin } from '@dxos/app-framework';
 
 import { meta } from './meta';
 
-export const KanbanPlugin = Plugin.lazy(meta, () => import('./KanbanPlugin'));
+export const KanbanPlugin = Plugin.lazy(meta, () => import('#plugin'));
 
 export * from './meta';

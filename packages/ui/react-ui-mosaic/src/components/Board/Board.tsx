@@ -176,7 +176,7 @@ BoardDebug.displayName = BOARD_DEBUG_NAME;
 // Board
 //
 
-export const Board: { [key: string]: any } = {
+export const Board = {
   Root: BoardRoot,
   Content: BoardContent,
   Column: BoardColumn,

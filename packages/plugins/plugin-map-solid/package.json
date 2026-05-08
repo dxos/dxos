@@ -15,11 +15,16 @@
   "imports": {
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
-    "#meta": "./src/meta.ts"
+    "#meta": "./src/meta.ts",
+    "#plugin": {
+      "browser": "./src/MapPlugin.tsx",
+      "node": "./src/MapPlugin.node.ts",
+      "default": "./src/MapPlugin.tsx"
+    }
   },
   "exports": {
     ".": {
-      "types": "./dist/types/index.d.ts",
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     }

@@ -43,7 +43,6 @@ export const translations = [
         'regenerate-summary.label': 'Regenerate Summary',
         'generate-summary.label': 'Generate Summary',
 
-        'meeting-thread.label': 'Meeting Chat',
         'transcript-companion.label': 'Meeting Transcript',
       },
     },

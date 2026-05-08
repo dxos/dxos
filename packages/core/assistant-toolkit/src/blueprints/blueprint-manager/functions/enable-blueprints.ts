@@ -10,7 +10,7 @@ import { Ref } from '@dxos/echo';
 
 import { EnableBlueprints } from './definitions';
 
-const handler: Operation.WithHandler<Operation.Definition.Any> = EnableBlueprints.pipe(
+export default EnableBlueprints.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ keys }) {
       const registry = yield* Blueprint.RegistryService;
@@ -41,5 +41,3 @@ const handler: Operation.WithHandler<Operation.Definition.Any> = EnableBlueprint
     }),
   ),
 );
-
-export default handler;

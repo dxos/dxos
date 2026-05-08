@@ -20,7 +20,6 @@ import React, { type ReactNode, useMemo, useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { ToolForm } from './ToolForm';
 import { type Tool, ToolList } from './ToolList';
 
 // Fixture: representative subset of the @dxos/introspect-mcp tools so the
@@ -206,7 +205,3 @@ export const TitlesOnly: Story = {
     </div>
   ),
 };
-
-// `ToolForm` import kept live for downstream consumers; the playground uses
-// MockToolForm to keep the storybook standalone.
-void ToolForm;

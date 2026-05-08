@@ -7,7 +7,7 @@ import { Migration } from '@dxos/echo';
 /**
  * @deprecated Import `Migration.define` from `@dxos/echo` instead.
  */
-export const defineObjectMigration: typeof Migration.define = Migration.define;
+export const defineObjectMigration = Migration.define;
 
 /**
  * @deprecated Import `Migration.ObjectMigration` from `@dxos/echo` instead.

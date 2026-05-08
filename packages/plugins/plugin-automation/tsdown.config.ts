@@ -5,10 +5,9 @@ import { defineConfig } from '../../../tsdown.base.config.ts';
 export default defineConfig({
   entry: [
     'src/index.ts',
-    'src/cli/index.ts',
     'src/hooks/index.ts',
     'src/translations.ts',
     'src/types/index.ts',
-    'src/operations/index.ts',
+    'src/operations/index.ts'
   ],
 });

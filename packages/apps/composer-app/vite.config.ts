@@ -35,6 +35,11 @@ const dxosIcons = path.join(rootDir, '/packages/ui/brand/assets/icons');
 
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
+/**
+ * Transpile targets for oxc (dev) and Rolldown (build).
+ */
+const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'] as const;
+
 // Shared plugins for worker that are using in prod build.
 // In dev vite uses root plugins for both worker and page.
 const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
@@ -96,12 +101,15 @@ export default defineConfig((env) => ({
       ],
     },
   },
+  oxc: {
+    target: [...browserTargets],
+  },
+
   build: {
     outDir: 'out/composer',
     sourcemap: true,
     minify: !isFalse(process.env.DX_MINIFY),
-    // Target modern browsers for better performance and smaller bundle sizes.
-    target: ['chrome108', 'edge107', 'firefox104', 'safari16'],
+    target: [...browserTargets],
     rollupOptions: {
       // NOTE: Set cache to `false` to help debug flaky builds.
       // cache: false,

@@ -12,5 +12,5 @@ import { meta } from '#meta';
 export namespace ClientCapabilities {
   export const Client = Capability.make<Client>(`${meta.id}.capability.client`);
   export const Schema = Capability.make<Type.AnyEntity[]>(`${meta.id}.capability.schema`);
-  export const Migration: Capability.InterfaceDef<ObjectMigration[]> = Capability.make<ObjectMigration[]>(`${meta.id}.capability.migration`);
+  export const Migration = Capability.make<ObjectMigration[]>(`${meta.id}.capability.migration`);
 }

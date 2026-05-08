@@ -76,7 +76,7 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
       id,
       data: dataProp,
       draggable: draggableProp,
-      current: _current,
+      current,
       debug: _,
       ...props
     },
@@ -211,6 +211,11 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
             [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
           }}
           role='listitem'
+          // Pair `current` prop with `aria-current="true"` so the
+          // `dx-current` utility (which keys off `aria-[current=true]:`)
+          // actually fires. Without this the prop is purely advisory and
+          // any `dx-current` styling on the tile would silently no-op.
+          aria-current={current ? 'true' : undefined}
           className={className}
           ref={composedRef}
         >

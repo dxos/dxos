@@ -28,7 +28,7 @@ export type NormalizationOutput = Schema.Schema.Type<typeof SentenceNormalizatio
  * Sentence normalization for transcription.
  * TODO(dmaretskyi): Reimplement using AiRequest.run or LanguageModel.generateObject - runStructured was removed.
  */
-export const sentenceNormalization: Operation.WithHandler<Operation.Definition.Any> = SentenceNormalization.pipe(
+export const sentenceNormalization = SentenceNormalization.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ messages }) {
       log.info('input', { messages });

@@ -8,15 +8,17 @@ import * as Schema from 'effect/Schema';
 
 import { invariant } from '@dxos/invariant';
 
-// TODO(burdon): Reconcile with @dxos/graph.
-
 export type SelectionMode = 'single' | 'multi' | 'range' | 'multi-range';
 
 export const SelectionSchema = Schema.Union(
-  Schema.Struct({ mode: Schema.Literal('single'), id: Schema.optional(Schema.String) }).pipe(Schema.mutable),
-  Schema.Struct({ mode: Schema.Literal('multi'), ids: Schema.Array(Schema.String).pipe(Schema.mutable) }).pipe(
-    Schema.mutable,
-  ),
+  Schema.Struct({
+    mode: Schema.Literal('single'),
+    id: Schema.optional(Schema.String),
+  }).pipe(Schema.mutable),
+  Schema.Struct({
+    mode: Schema.Literal('multi'),
+    ids: Schema.Array(Schema.String).pipe(Schema.mutable),
+  }).pipe(Schema.mutable),
   Schema.Struct({
     mode: Schema.Literal('range'),
     from: Schema.optional(Schema.String),
@@ -49,7 +51,6 @@ export type SelectionResult<T extends SelectionMode> = T extends 'single'
         ? { from: string; to: string }[]
         : never;
 
-// TODO(burdon): Refactor.
 export const getSelectionSet = (selectionManager: SelectionManager, contextId?: string) => {
   const ids = new Set<string>(contextId ? [contextId] : []);
   for (const context of selectionManager.getSelectionContexts()) {
@@ -125,13 +126,14 @@ export class SelectionManager {
     this._registry.update(this._state, (state) => ({
       selections: { ...state.selections, [contextId]: newSelection },
     }));
+
     return newSelection;
   }
 
-  // TODO(burdon): Disambiguate with getSelection?
   getSelected<T extends SelectionMode>(contextId: string, mode: T = 'multi' as T): SelectionResult<T> {
     const selection = this.getSelection(contextId, mode);
     invariant(selection?.mode === mode, 'Selection mode mismatch');
+
     // Cast required because TypeScript can't infer the relationship between T and the matched result.
     return Match.type<Selection>().pipe(
       Match.when({ mode: 'single' }, (s) => s.id),

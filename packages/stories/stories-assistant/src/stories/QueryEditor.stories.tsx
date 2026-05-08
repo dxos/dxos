@@ -7,7 +7,8 @@ import React, { useState } from 'react';
 
 import { Obj, Tag } from '@dxos/echo';
 import { translations } from '@dxos/plugin-assistant/translations';
-import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
+import { D3ForceGraph } from '@dxos/plugin-explorer/components';
+import { useGraphModel } from '@dxos/plugin-explorer/hooks';
 import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';

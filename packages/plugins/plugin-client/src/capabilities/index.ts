@@ -6,7 +6,7 @@ import { Capability } from '@dxos/app-framework';
 import { OperationHandlerSet } from '@dxos/compute';
 
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const Client: Capability.LazyCapability = Capability.lazy('Client', () => import('./client'));
+export const Client = Capability.lazy('Client', () => import('./client'));
 export const Migrations = Capability.lazy('Migrations', () => import('./migrations'));
 export { NavigationHandler } from './navigation-handler';
 export type { NavigationHandlerOptions } from './navigation-handler';

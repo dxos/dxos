@@ -13,12 +13,13 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": "./src/MermaidPlugin.tsx",
     "#meta": "./src/meta.ts"
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./dist/types/index.d.ts",
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
     }
   },

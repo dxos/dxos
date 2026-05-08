@@ -142,6 +142,7 @@ export const rawImportPlugin = () =>
   ({
     name: 'dx-raw-import',
     resolveId: {
+      order: 'pre' as const,
       async handler(this: any, id: string, importer?: string) {
         if (!id.endsWith('?raw')) {
           return;
@@ -154,12 +155,13 @@ export const rawImportPlugin = () =>
           if (!resolved || resolved.external) {
             return;
           }
-          return { id: `\0raw:${resolved.id}` };
+          // Append .mjs so the virtual ID doesn't end in a CSS extension and @tsdown/css skips it.
+          return { id: `\0raw:${resolved.id}.mjs` };
         }
         // Relative or absolute path — compute directly.
         const base = importer ? dirname(importer.replace(/\?.*/, '')) : process.cwd();
         const resolved = cleanId.startsWith('/') ? cleanId : join(base, cleanId);
-        return { id: `\0raw:${resolved}` };
+        return { id: `\0raw:${resolved}.mjs` };
       },
     },
     load: {
@@ -167,7 +169,8 @@ export const rawImportPlugin = () =>
         if (!id.startsWith('\0raw:')) {
           return;
         }
-        const filePath = id.slice(5);
+        // Strip the .mjs suffix added to prevent @tsdown/css from processing the virtual ID.
+        const filePath = id.slice(5, -4);
         const content = await readFile(filePath, 'utf8');
         return { code: `export default ${JSON.stringify(content)}` };
       },
@@ -212,10 +215,15 @@ export const urlImportPlugin = () =>
   }) as any;
 
 const sharedConfig = (bundlePackages: string[]): Partial<UserConfig> => ({
-  skipNodeModulesBundle: true,
-  // Include trailing-slash variants (e.g. 'util/') so rolldown bundles them alongside 'util'.
-  // Some packages use trailing-slash imports to bypass Vite aliases (e.g. node-std/src/util.js).
-  noExternal: bundlePackages.length > 0 ? [...bundlePackages, ...bundlePackages.map((p) => `${p}/`)] : undefined,
+  // tsdown 0.22: skipNodeModulesBundle and alwaysBundle are mutually exclusive.
+  // When bundling specific packages (e.g. node-std polyfills), use alwaysBundle only.
+  // When not bundling any packages, use skipNodeModulesBundle to keep node_modules external.
+  deps: bundlePackages.length > 0
+    ? {
+        // Include trailing-slash variants (e.g. 'util/') alongside 'util'.
+        alwaysBundle: [...bundlePackages, ...bundlePackages.map((p) => `${p}/`)],
+      }
+    : { skipNodeModulesBundle: true },
   dts: false,
   report: false,
   fixedExtension: true,
@@ -231,8 +239,10 @@ const sharedConfig = (bundlePackages: string[]): Partial<UserConfig> => ({
  * Creates tsdown UserConfig array for a DXOS package.
  *
  * Includes all standard DXOS plugins (workspace-external, raw-import, url-import,
- * log-meta) and a dedicated DTS config entry that uses tsgo via rolldown-plugin-dts
- * to generate bundled type declarations in dist/types/.
+ * log-meta). JS output goes to dist/lib/. Type declarations are generated separately
+ * by dx-build (tsgo CLI) via the moon `build` task, producing per-file .d.ts files in
+ * dist/types/src/ — this avoids rolldown-plugin-dts chunking and the TS2883 errors it
+ * causes when packages have multiple entry points.
  */
 export const defineConfig = (options: DxTsdownOptions = {}): UserConfig[] => {
   const {
@@ -302,26 +312,6 @@ export const defineConfig = (options: DxTsdownOptions = {}): UserConfig[] => {
       plugins: [nodeStdNeutral, rawPlugin, urlPlugin, wsExternalPlugin, logPlugin],
     });
   }
-
-  // Dedicated DTS build: tsgo generates per-file declarations, rolldown-plugin-dts
-  // bundles them into a single dist/types/index.d.ts. emitDtsOnly suppresses JS output.
-  // fixedExtension: false ensures the output is .d.ts (not .d.mts).
-  // rawPlugin handles ?raw imports in handwritten .d.ts files (e.g. src/templates/index.d.ts).
-  // wsExternalPlugin is intentionally omitted: rolldown-plugin-dts uses its own resolver (oxc)
-  // for DTS bundling and needs to read @dxos/* type files. The wsExternalPlugin's pre-order
-  // resolveId hook would intercept @dxos/* imports before rolldown-plugin-dts can read them,
-  // causing complex external types (e.g. Type.Obj<{...}>) to collapse to `any` in shared chunks.
-  configs.push({
-    ...base,
-    entry,
-    platform: 'neutral',
-    format: 'esm',
-    outDir: join(dirname(outputPath), 'types'),
-    dts: { tsgo: true, emitDtsOnly: true } as any,
-    plugins: [rawPlugin],
-    sourcemap: false,
-    fixedExtension: false,
-  });
 
   return configs;
 };

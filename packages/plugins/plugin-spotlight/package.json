@@ -14,6 +14,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": "./src/SpotlightPlugin.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#meta": "./src/meta.ts",
@@ -26,11 +27,11 @@
       "source": "./src/index.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs",
-      "types": "./dist/types/index.d.ts"
+      "types": "./dist/types/src/index.d.ts"
     },
     "./translations": {
       "source": "./src/translations.ts",
-      "types": "./dist/types/translations.d.ts",
+      "types": "./dist/types/src/translations.d.ts",
       "browser": "./dist/lib/browser/translations.mjs",
       "node": "./dist/lib/node-esm/translations.mjs"
     }
@@ -52,6 +53,7 @@
     "@tauri-apps/api": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",

@@ -13,7 +13,7 @@ Exemplar: `packages/plugins/plugin-chess`. Read its source files to understand e
 
 Each plugin MUST have a `PLUGIN.mdl` specification written in the MDL language defined by `plugin-spec` (see `packages/plugins/plugin-spec/docs/` and `src/extension/mdl.grammar` for syntax).
 
-**The `PLUGIN.mdl` IS the design document.** Do not write a separate design doc (e.g., in `docs/superpowers/specs/`). During brainstorming, once the design is approved, write the spec directly as `packages/plugins/plugin-<name>/PLUGIN.mdl`. Use `packages/plugins/plugin-spec/docs/PLUGIN-.template.mdl` as the template and `packages/plugins/plugin-chess/PLUGIN.mdl` as a reference.
+**The `PLUGIN.mdl` IS the design document.** Do not write a separate design doc (e.g., in `agents/superpowers/specs/`). During brainstorming, once the design is approved, write the spec directly as `packages/plugins/plugin-<name>/PLUGIN.mdl`. Use `packages/plugins/plugin-spec/docs/PLUGIN-.template.mdl` as the template and `packages/plugins/plugin-chess/PLUGIN.mdl` as a reference.
 
 The specification is the source of truth for what the plugin does. It must be:
 

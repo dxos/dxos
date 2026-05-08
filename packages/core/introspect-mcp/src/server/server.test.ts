@@ -70,7 +70,7 @@ describe('introspect-mcp server', () => {
       'get_package',
       'get_symbol',
       'list_capabilities',
-      'list_intents',
+      'list_operations',
       'list_packages',
       'list_plugins',
       'list_schemas',
@@ -161,11 +161,11 @@ describe('introspect-mcp server', () => {
     expect(payload.data?.source).toContain('Schema.Struct');
   });
 
-  // ----- Plugin / surface / capability / intent / schema list tools -----
+  // ----- Plugin / surface / capability / operation / schema list tools -----
   // Fixture monorepo has no plugins, so each call returns []. The shape
   // matters: data must be an array, no error.
 
-  test.each([['list_plugins'], ['list_surfaces'], ['list_capabilities'], ['list_intents'], ['list_schemas']])(
+  test.each([['list_plugins'], ['list_surfaces'], ['list_capabilities'], ['list_operations'], ['list_schemas']])(
     '%s returns an empty array against the fixture monorepo',
     async (name) => {
       const result = await env.client.callTool({ name, arguments: {} });

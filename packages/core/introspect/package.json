@@ -1,7 +1,6 @@
 {
   "name": "@dxos/introspect",
   "version": "0.8.3",
-  "private": true,
   "description": "DXOS monorepo introspection: indexes packages, symbols, plugins, and idioms.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,7 +14,7 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./dist/types/index.d.ts",
+      "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/node/index.mjs"
     }
   },
@@ -37,5 +36,8 @@
     "react": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -92,12 +92,14 @@ export const QuickEntryDialog = () => {
   const formSaveRef = useRef<(() => void) | null>(null);
 
   // Auto-focus the text input when the dialog opens or the form resets.
+  // The selector matches a plain text input, a textarea, or CodeMirror's
+  // contenteditable content node (used by the markdown form field).
   useEffect(() => {
     requestAnimationFrame(() => {
-      const input = contentRef.current?.querySelector('textarea, input[type="text"]');
-      if (input instanceof HTMLElement) {
-        input.focus();
-      }
+      const input = contentRef.current?.querySelector<HTMLElement>(
+        'textarea, input[type="text"], [contenteditable="true"]',
+      );
+      input?.focus();
     });
   }, [formKey]);
 

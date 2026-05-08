@@ -15,7 +15,7 @@ import {
   SyntaxKind,
 } from 'ts-morph';
 
-import type { Capability, Intent, Plugin, PluginId, Schema, SourceLocation, Surface } from '../types';
+import type { Capability, Operation, Plugin, PluginId, Schema, SourceLocation, Surface } from '../types';
 
 // stderr-only — stdout is reserved for the MCP JSON-RPC stream.
 const warn = (msg: string, err?: unknown): void => {
@@ -26,7 +26,7 @@ export type PluginRecord = {
   plugin: Plugin;
   surfaces: Surface[];
   capabilities: Capability[];
-  intents: Intent[];
+  operations: Operation[];
   schemas: Schema[];
 };
 
@@ -37,7 +37,7 @@ type PackageLike = {
 
 /**
  * Discover plugins among the monorepo's packages and statically extract their
- * surfaces, capabilities, intents, and schemas.
+ * surfaces, capabilities, operations, and schemas.
  *
  * A "plugin" is any package containing a top-level `meta` export whose value
  * is annotated as `Plugin.Meta` and whose object literal carries a `string`
@@ -101,18 +101,18 @@ const tryExtract = (rootPath: string, pkg: PackageLike): PluginRecord | null => 
 
   const surfaces: Surface[] = [];
   const capabilities: Capability[] = [];
-  const intents: Intent[] = [];
+  const operations: Operation[] = [];
   const schemas: Schema[] = [];
 
   for (const sourceFile of allFiles) {
-    extractFromFile(sourceFile, rootPath, meta.id, { surfaces, capabilities, intents, schemas });
+    extractFromFile(sourceFile, rootPath, meta.id, { surfaces, capabilities, operations, schemas });
   }
 
   return {
     plugin: meta,
     surfaces,
     capabilities,
-    intents,
+    operations,
     schemas,
   };
 };
@@ -147,7 +147,7 @@ const readPluginMeta = (file: SourceFile, pkg: PackageLike): Plugin | null => {
 type Buckets = {
   surfaces: Surface[];
   capabilities: Capability[];
-  intents: Intent[];
+  operations: Operation[];
   schemas: Schema[];
 };
 
@@ -176,11 +176,14 @@ const extractFromFile = (file: SourceFile, rootPath: string, pluginId: PluginId,
       const type = typeArg.getText();
       const location = locationOf(file, call.getStart());
       buckets.capabilities.push({ pluginId, type, location });
-      // Heuristic: contributions named *Intent* / *IntentResolver* count as
-      // intent contributions too. Plugins frequently route intents through a
-      // specifically-named capability slot rather than a dedicated module.
-      if (/intent/i.test(type)) {
-        buckets.intents.push({ pluginId, type, location });
+      // Heuristic: contributions whose capability slot includes "Operation"
+      // (e.g. `Capabilities.OperationHandler`, `Capabilities.OperationInvoker`)
+      // count as operation contributions too. Plugins frequently route
+      // operations through a specifically-named capability slot rather than a
+      // dedicated module. Legacy `*Intent*` slots are also matched so older
+      // branches still surface something while the rename is in flight.
+      if (/operation|intent/i.test(type)) {
+        buckets.operations.push({ pluginId, type, location });
       }
       continue;
     }

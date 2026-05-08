@@ -13,14 +13,14 @@ import { blast, defaultOptions, dropFile, join, snippets } from '@dxos/ui-editor
 
 import { EditorStory, content } from './components';
 
-const meta: Meta<any> = {
+const meta = {
   title: 'ui/react-ui-editor/Experimental',
   component: EditorStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },
-};
+} satisfies Meta<typeof EditorStory>;
 
 export default meta;
 

@@ -1,0 +1,59 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { useCallback, useState } from 'react';
+
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { type Operation } from '@dxos/compute';
+import { Obj, Ref } from '@dxos/echo';
+import { Integration } from '@dxos/plugin-integration/types';
+import { Filter, useQuery } from '@dxos/react-client/echo';
+
+/**
+ * Find the `Integration` whose `targets` include the given `target` object.
+ *
+ * Returns the matching integration (or `undefined` if none exists),
+ * a `sync` callback that invokes `operation` with
+ * `{ integration, [targetKey]: target }` payload and tracks an in-flight
+ * `syncing` flag, so the empty-state UI can render a spinner / disabled
+ * button without each callsite repeating the boilerplate.
+ *
+ * Used by `InitializeMailbox` (`targetKey='mailbox'`) and
+ * `InitializeCalendar` (`targetKey='calendar'`).
+ */
+export const useTargetIntegration = <T extends Obj.Any>(
+  target: T,
+  operation: Operation.Definition<any, any>,
+  targetKey: string,
+): {
+  integration: Integration.Integration | undefined;
+  sync: () => Promise<void>;
+  syncing: boolean;
+} => {
+  const db = Obj.getDatabase(target);
+  const { invokePromise } = useOperationInvoker();
+  const [syncing, setSyncing] = useState(false);
+
+  const integrations = useQuery(db, Filter.type(Integration.Integration));
+  const integration = integrations.find((candidate) =>
+    candidate.targets.some((entry) => entry.object?.dxn.asEchoDXN()?.echoId === target.id),
+  );
+
+  const sync = useCallback(async () => {
+    if (!integration) {
+      return;
+    }
+    setSyncing(true);
+    try {
+      await invokePromise(operation, {
+        integration: Ref.make(integration),
+        [targetKey]: Ref.make(target),
+      });
+    } finally {
+      setSyncing(false);
+    }
+  }, [invokePromise, integration, operation, target, targetKey]);
+
+  return { integration, sync, syncing };
+};

@@ -22,7 +22,7 @@ export namespace TestSchema {
 
   export interface TextV0Type extends Schema.Schema.Type<typeof TextV0Type> {}
 
-  export const DocumentType: Type.AnyObj = Schema.Struct({
+  export const DocumentType = Schema.Struct({
     title: Schema.optional(Schema.String), // TODO(burdon): Change to name.
     content: Ref.Ref(TextV0Type),
   }).pipe(
@@ -46,10 +46,7 @@ export namespace TestSchema {
     ),
   }).pipe(Type.object({ typename: 'com.braneframe.contact', version: '0.1.0' }));
 
-  const BlockSchema: Schema.Schema<
-    { readonly timestamp: string; readonly content?: any; readonly object?: any },
-    { readonly timestamp: string; readonly content?: any; readonly object?: any }
-  > = Schema.Struct({
+  const BlockSchema = Schema.Struct({
     timestamp: Schema.String,
     content: Schema.optional(Ref.Ref(TextV0Type)),
     object: Schema.optional(Ref.Ref(Obj.Unknown)),
@@ -58,7 +55,7 @@ export namespace TestSchema {
   export interface BlockType extends Schema.Schema.Type<typeof BlockSchema> {}
   export const BlockType: Schema.Schema<BlockType, Schema.Schema.Encoded<typeof BlockSchema>> = BlockSchema;
 
-  export const MessageType: Type.AnyObj = Schema.Struct({
+  export const MessageType = Schema.Struct({
     type: Schema.optional(Schema.String),
     date: Schema.optional(Schema.String),
     subject: Schema.optional(Schema.String),
@@ -80,7 +77,7 @@ export namespace TestSchema {
   );
   export type MessageType = Schema.Schema.Type<typeof MessageType>;
 
-  export const ThreadType: Type.AnyObj = Schema.Struct({
+  export const ThreadType = Schema.Struct({
     title: Schema.optional(Schema.String),
     messages: Schema.mutable(Schema.Array(Ref.Ref(MessageType))),
     context: Schema.optional(

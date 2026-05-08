@@ -18,25 +18,25 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./dist/types/index.d.ts",
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./playwright": {
       "source": "./src/playwright/index.ts",
-      "types": "./dist/types/playwright/index.d.ts",
+      "types": "./dist/types/src/playwright/index.d.ts",
       "browser": "./dist/lib/browser/playwright/index.mjs",
       "node": "./dist/lib/node-esm/playwright/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
-      "types": "./dist/types/testing/index.d.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
-      "types": "./dist/types/translations.d.ts",
+      "types": "./dist/types/src/translations.d.ts",
       "browser": "./dist/lib/browser/translations.mjs",
       "node": "./dist/lib/node-esm/translations.mjs"
     }
@@ -62,8 +62,11 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",

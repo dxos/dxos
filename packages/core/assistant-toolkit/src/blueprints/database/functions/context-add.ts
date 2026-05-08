@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 
 import { ContextAdd } from './definitions';
 
-const handler: Operation.WithHandler<Operation.Definition.Any> = ContextAdd.pipe(
+export default ContextAdd.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ obj }) {
       const { binder } = yield* AiContextService;
@@ -22,5 +22,3 @@ const handler: Operation.WithHandler<Operation.Definition.Any> = ContextAdd.pipe
     }),
   ),
 );
-
-export default handler;

@@ -27,6 +27,7 @@ import { DoctorPlugin } from '@dxos/plugin-doctor';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { FeedPlugin } from '@dxos/plugin-feed';
 import { GalleryPlugin } from '@dxos/plugin-gallery';
+import { GitHubPlugin } from '@dxos/plugin-github';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { HelpPlugin } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -136,7 +137,7 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
 export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] =>
   [
     // Default
-    GalleryPlugin.meta.id,
+    AssistantPlugin.meta.id,
     InboxPlugin.meta.id,
     KanbanPlugin.meta.id,
     MarkdownPlugin.meta.id,
@@ -147,8 +148,6 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     ThreadPlugin.meta.id,
     WnfsPlugin.meta.id,
 
-    CodePlugin.meta.id,
-
     // Dev
     isDev && DebugPlugin.meta.id,
 
@@ -157,9 +156,9 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
 
     // Labs
     (isDev || isLabs) && [
-      AssistantPlugin.meta.id,
-      DiscordPlugin.meta.id,
+      CodePlugin.meta.id,
       FeedPlugin.meta.id,
+      GalleryPlugin.meta.id,
       IrohBeaconPlugin.meta.id,
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
@@ -220,6 +219,7 @@ export const getPlugins = ({
     ExplorerPlugin(),
     FeedPlugin(),
     GalleryPlugin(),
+    GitHubPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),

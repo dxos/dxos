@@ -6,7 +6,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { type Entity, Feed } from '@dxos/echo';
+import { type Entity } from '@dxos/echo';
 import type { DXN, QueueSubspaceTag } from '@dxos/keys';
 
 import { createFeedServiceLayer } from './queue/feed-service';
@@ -86,7 +86,7 @@ export class ContextQueueService extends Context.Tag('@dxos/functions/ContextQue
   static layer = (queue: Queue) => Layer.succeed(ContextQueueService, { queue });
 }
 
-export const feedServiceFromQueueServiceLayer: Layer.Layer<Feed.FeedService, never, QueueService> = Layer.unwrapEffect(
+export const feedServiceFromQueueServiceLayer = Layer.unwrapEffect(
   Effect.gen(function* () {
     const { queues } = yield* QueueService;
     return createFeedServiceLayer(queues);

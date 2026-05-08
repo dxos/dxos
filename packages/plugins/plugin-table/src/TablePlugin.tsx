@@ -53,7 +53,9 @@ export const TablePlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Table.Table] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addTranslationsModule({ translations: [...translations, ...formTranslations, ...tableTranslations] }),
+  AppPlugin.addTranslationsModule({
+    translations: [...translations, ...formTranslations, ...tableTranslations],
+  }),
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,

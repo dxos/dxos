@@ -18,7 +18,7 @@ export const Todo = Schema.Struct({
 );
 export type Todo = Schema.Schema.Type<typeof Todo>;
 
-export const TodoList: Type.AnyObj = Schema.Struct({
+export const TodoList = Schema.Struct({
   todos: Schema.Array(Ref.Ref(Todo)),
 }).pipe(
   Type.object({
@@ -26,7 +26,7 @@ export const TodoList: Type.AnyObj = Schema.Struct({
     version: '0.1.0',
   }),
 );
-export type TodoList = Obj.Unknown & { readonly todos: ReadonlyArray<Ref.Ref<Todo>> };
+export type TodoList = Schema.Schema.Type<typeof TodoList>;
 
 export const createTodoList = (space: Space): TodoList => {
   const list = space.db.add(Obj.make(TodoList, { todos: [] }));

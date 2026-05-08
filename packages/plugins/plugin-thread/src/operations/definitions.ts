@@ -10,11 +10,9 @@ import { Database, Key, Obj, Ref } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { Actor, AnchoredTo, Message, Thread } from '@dxos/types';
+import { Actor, AnchoredTo, Channel, Message, Thread } from '@dxos/types';
 
 import { meta } from '#meta';
-
-import { Channel } from '../types';
 
 const THREAD_OPERATION = `${meta.id}.operation`;
 
@@ -41,15 +39,17 @@ export const CreateChannel = Operation.make({
   }),
 });
 
-export const CreateChannelThread = Operation.make({
-  meta: { key: `${THREAD_OPERATION}.create-channel-thread`, name: 'Create Channel Thread' },
+export const AppendChannelMessage = Operation.make({
+  meta: { key: `${THREAD_OPERATION}.append-channel-message`, name: 'Append Channel Message' },
+  // Note: Feed.FeedService is provided inside the handler from space.queues, not at the
+  // operation level — the runtime can't fulfill it without a space context.
   services: [Capability.Service],
   input: Schema.Struct({
     channel: Channel.Channel,
+    sender: Actor.Actor,
+    text: Schema.String,
   }),
-  output: Schema.Struct({
-    object: Thread.Thread,
-  }),
+  output: Schema.Void,
 });
 
 export const Create = Operation.make({
@@ -63,14 +63,14 @@ export const Create = Operation.make({
   output: Schema.Void,
 });
 
-export type DeleteOutput = { thread?: Thread.Thread; anchor?: AnchoredTo.AnchoredTo };
-
-export const DeleteOutput: Schema.Schema.AnyNoContext = Schema.Struct({
+export const DeleteOutput = Schema.Struct({
   thread: Thread.Thread.annotations({ description: 'The deleted thread.' }),
   anchor: AnchoredTo.AnchoredTo.annotations({ description: 'The deleted anchor.' }),
 }).pipe(Schema.partial);
 
-export const Delete: Operation.Definition.Any = Operation.make({
+export type DeleteOutput = Schema.Schema.Type<typeof DeleteOutput>;
+
+export const Delete = Operation.make({
   meta: { key: `${THREAD_OPERATION}.delete`, name: 'Delete Thread' },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -99,7 +99,7 @@ export const ToggleResolved = Operation.make({
   output: Schema.Void,
 });
 
-export const AddMessage: Operation.Definition.Any = Operation.make({
+export const AddMessage = Operation.make({
   meta: { key: `${THREAD_OPERATION}.add-message`, name: 'Add Message' },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -120,7 +120,7 @@ export const DeleteMessageOutput = Schema.partial(
 
 export type DeleteMessageOutput = Schema.Schema.Type<typeof DeleteMessageOutput>;
 
-export const DeleteMessage: Operation.Definition.Any = Operation.make({
+export const DeleteMessage = Operation.make({
   meta: { key: `${THREAD_OPERATION}.delete-message`, name: 'Delete Message' },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -134,7 +134,7 @@ export const DeleteMessage: Operation.Definition.Any = Operation.make({
 /**
  * Restore a deleted thread (inverse of Delete).
  */
-export const Restore: Operation.Definition.Any = Operation.make({
+export const Restore = Operation.make({
   meta: { key: `${THREAD_OPERATION}.restore`, name: 'Restore Thread' },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -147,7 +147,7 @@ export const Restore: Operation.Definition.Any = Operation.make({
 /**
  * Restore a deleted message (inverse of DeleteMessage).
  */
-export const RestoreMessage: Operation.Definition.Any = Operation.make({
+export const RestoreMessage = Operation.make({
   meta: { key: `${THREAD_OPERATION}.restore-message`, name: 'Restore Message' },
   services: [Capability.Service],
   input: Schema.Struct({

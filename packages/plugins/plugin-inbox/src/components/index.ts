@@ -9,6 +9,7 @@ export * from './EditMessage';
 export * from './Event';
 export * from './EventStack';
 export * from './InboxSettings';
+export * from './Initialize';
 export * from './MessageStack';
 export * from './Message';
 export * from './RelatedContacts';

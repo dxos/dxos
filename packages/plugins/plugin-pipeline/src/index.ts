@@ -6,6 +6,6 @@ import { Plugin } from '@dxos/app-framework';
 
 import { meta } from './meta';
 
-export const PipelinePlugin = Plugin.lazy(meta, () => import('./PipelinePlugin'));
+export const PipelinePlugin = Plugin.lazy(meta, () => import('#plugin'));
 
 export * from './meta';

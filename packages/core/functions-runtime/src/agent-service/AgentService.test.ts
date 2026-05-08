@@ -120,6 +120,7 @@ const TestLayer = AssistantTestLayer({
   operationHandlers: [handlers],
   blueprints: [ResearchBlueprint],
   systemPrompt: SYSTEM_PROMPT,
+  enableToolBackgrounding: true,
 });
 
 describe('Agent Executable', () => {

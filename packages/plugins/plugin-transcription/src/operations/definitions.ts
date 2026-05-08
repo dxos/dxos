@@ -25,9 +25,7 @@ export const Create = Operation.make({
   }),
 });
 
-export type MessageWithRangeIdType = Message.Message & { readonly rangeId?: readonly string[] };
-
-export const MessageWithRangeId: Schema.Schema.AnyNoContext = Schema.extend(
+export const MessageWithRangeId = Schema.extend(
   Message.Message,
   Schema.Struct({
     rangeId: Schema.optional(Schema.Array(Schema.String)).annotations({
@@ -35,6 +33,8 @@ export const MessageWithRangeId: Schema.Schema.AnyNoContext = Schema.extend(
     }),
   }),
 );
+
+export type MessageWithRangeIdType = Schema.Schema.Type<typeof MessageWithRangeId>;
 
 export const Open = Operation.make({
   meta: {
@@ -75,23 +75,21 @@ export const Summarize = Operation.make({
   services: [AiService.AiService],
 });
 
-export type SentenceNormalizationInputType = { readonly messages: readonly MessageWithRangeIdType[] };
-
-export const SentenceNormalizationInput: Schema.Schema.AnyNoContext = Schema.Struct({
-  messages: Schema.Array(MessageWithRangeId as Schema.Schema.AnyNoContext).annotations({
+export const SentenceNormalizationInput = Schema.Struct({
+  messages: Schema.Array(MessageWithRangeId).annotations({
     description: 'Messages to normalize into sentences.',
   }),
 });
 
-export const SentenceNormalizationOutput: Schema.Schema.AnyNoContext = Schema.Struct({
-  sentences: Schema.Array((MessageWithRangeId as Schema.Schema.AnyNoContext).pipe(Schema.mutable))
-    .pipe(Schema.mutable)
-    .annotations({
-      description: 'The sentences of the transcript.',
-    }),
+export type SentenceNormalizationInputType = Schema.Schema.Type<typeof SentenceNormalizationInput>;
+
+export const SentenceNormalizationOutput = Schema.Struct({
+  sentences: Schema.Array(MessageWithRangeId.pipe(Schema.mutable)).pipe(Schema.mutable).annotations({
+    description: 'The sentences of the transcript.',
+  }),
 });
 
-export const SentenceNormalization: Operation.Definition.Any = Operation.make({
+export const SentenceNormalization = Operation.make({
   meta: {
     key: 'org.dxos.function.transcription.sentence-normalization',
     name: 'Sentence Normalization',

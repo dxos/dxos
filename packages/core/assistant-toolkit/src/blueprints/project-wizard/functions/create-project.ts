@@ -11,7 +11,7 @@ import { Agent } from '../../../types';
 import { AgentBlueprint } from '../../project';
 import { CreateAgent, SyncTriggers } from './definitions';
 
-const handler: Operation.WithHandler<Operation.Definition.Any> = CreateAgent.pipe(
+export default CreateAgent.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ name, instructions, blueprints, subscriptions }) {
       const agent = yield* Agent.makeInitialized(
@@ -30,5 +30,3 @@ const handler: Operation.WithHandler<Operation.Definition.Any> = CreateAgent.pip
     }),
   ),
 );
-
-export default handler;

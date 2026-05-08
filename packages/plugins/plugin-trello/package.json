@@ -16,12 +16,13 @@
   "imports": {
     "#capabilities": "./src/capabilities/index.ts",
     "#meta": "./src/meta.ts",
-    "#operations": "./src/operations/index.ts"
+    "#operations": "./src/operations/index.ts",
+    "#translations": "./src/translations.ts"
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./dist/types/index.d.ts",
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
     }
   },

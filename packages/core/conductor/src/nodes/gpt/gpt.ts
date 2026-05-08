@@ -31,7 +31,7 @@ export const GptMessage = Schema.Struct({
 
 export type GptMessage = Schema.Schema.Type<typeof GptMessage>;
 
-export const GptInput: Schema.Schema.AnyNoContext = Schema.Struct({
+export const GptInput = Schema.Struct({
   /**
    * System instruction.
    */
@@ -72,7 +72,7 @@ export const GptInput: Schema.Schema.AnyNoContext = Schema.Struct({
 
 export type GptInput = Schema.Schema.Type<typeof GptInput>;
 
-export const GptOutput: Schema.Schema.AnyNoContext = Schema.Struct({
+export const GptOutput = Schema.Struct({
   /**
    * Messages emitted by the model.
    */

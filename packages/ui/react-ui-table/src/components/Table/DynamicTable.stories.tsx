@@ -56,7 +56,7 @@ const DynamicTableStory = () => {
 // Story definitions.
 //
 
-const meta: Meta<any> = {
+const meta = {
   title: 'ui/react-ui-table/DynamicTable',
   component: DynamicTable,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withRegistry],
@@ -64,7 +64,7 @@ const meta: Meta<any> = {
     layout: 'fullscreen',
     translations,
   },
-};
+} satisfies Meta<typeof DynamicTable>;
 
 export default meta;
 

@@ -34,6 +34,13 @@ export default defineConfig({
       },
     },
   },
+  resolve: {
+    alias: {
+      // `@anthropic-ai/tokenizer` transitively pulls in `tiktoken/lite`, whose wasm uses top-level await
+      // that rolldown can't put behind a CJS require. The tokenizer isn't needed in the extension bundle.
+      ['tiktoken/lite']: resolve(__dirname, 'stub.mjs'),
+    },
+  },
   worker: {
     format: 'es',
     plugins: () => [WasmPlugin(), SourceMapsPlugin()],

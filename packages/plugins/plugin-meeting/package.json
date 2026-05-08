@@ -12,6 +12,7 @@
   "author": "DXOS.org",
   "type": "module",
   "imports": {
+    "#plugin": "./src/MeetingPlugin.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
@@ -25,11 +26,11 @@
       "source": "./src/index.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs",
-      "types": "./dist/types/index.d.ts"
+      "types": "./dist/types/src/index.d.ts"
     },
     "./translations": {
       "source": "./src/translations.ts",
-      "types": "./dist/types/translations.d.ts",
+      "types": "./dist/types/src/translations.d.ts",
       "browser": "./dist/lib/browser/translations.mjs",
       "node": "./dist/lib/node-esm/translations.mjs"
     },
@@ -37,7 +38,7 @@
       "source": "./src/types/index.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
       "node": "./dist/lib/node-esm/types/index.mjs",
-      "types": "./dist/types/types/index.d.ts"
+      "types": "./dist/types/src/types/index.d.ts"
     }
   },
   "types": "dist/types/index.d.ts",

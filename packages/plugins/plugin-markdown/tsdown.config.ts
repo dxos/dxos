@@ -6,9 +6,8 @@ export default defineConfig({
   entry: [
     'src/index.ts',
     'src/blueprints/index.ts',
-    'src/cli/index.ts',
     'src/translations.ts',
     'src/types/index.ts',
-    'src/operations/index.ts',
+    'src/operations/index.ts'
   ],
 });

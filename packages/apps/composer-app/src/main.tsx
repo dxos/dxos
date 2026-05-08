@@ -88,19 +88,27 @@ if (import.meta.env?.DEV) {
 /**
  * Picks the platform-appropriate offline asset cache for third-party plugins.
  *  - Tauri (desktop + iOS): Rust-backed filesystem cache, served via the `dxos-plugin://` URI scheme.
- *  - Web with a service worker: cache managed by the SW in `./sw.ts`.
- *  - Otherwise (tests, unsupported environments): a no-op cache; plugins still
- *    load but lose their offline guarantee.
+ *  - Web with PWA enabled: cache managed by the SW in `./sw.ts`.
+ *  - Otherwise (PWA disabled, tests, unsupported environments): a no-op cache;
+ *    plugins still load but lose their offline guarantee.
+ *
+ * `isPwa` (not `'serviceWorker' in navigator`) is the SW gate because that
+ * property is `true` in every modern browser whether or not a worker is
+ * actually registered. On non-PWA builds (`DX_PWA=false` → `selfDestroying`
+ * VitePWA, e.g. `labs.composer.space`) there is no active registration, and
+ * the SW-backed cache's first call is `await navigator.serviceWorker.ready`
+ * which resolves only when one exists — hangs forever otherwise, freezing
+ * `Install` indefinitely with no timeout.
  *
  * Each branch dynamic-imports its impl so vite emits per-platform chunks instead
  * of dragging both into the initial bundle.
  */
-const createAssetCache = async (isTauri: boolean): Promise<PluginAssetCache.Cache> => {
+const createAssetCache = async (isPwa: boolean, isTauri: boolean): Promise<PluginAssetCache.Cache> => {
   if (isTauri) {
     const { createTauriAssetCache } = await import('./asset-cache/tauri');
     return createTauriAssetCache();
   }
-  if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+  if (isPwa && typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
     const { createServiceWorkerAssetCache } = await import('./asset-cache/service-worker');
     return createServiceWorkerAssetCache();
   }
@@ -362,6 +370,7 @@ const main = async () => {
 
   profiler?.mark('plugins:start');
 
+  const isPwa = !isFalse(config.values.runtime?.app?.env?.DX_PWA);
   const conf: PluginConfig = {
     appKey: APP_KEY,
     config,
@@ -370,7 +379,7 @@ const main = async () => {
     logStore,
 
     isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
-    isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA),
+    isPwa,
     isTauri,
     isPopover,
     isMobile,
@@ -387,7 +396,7 @@ const main = async () => {
   // progress.
   bootStatus('Loading plugins…');
   const builtinPlugins = getPlugins(conf);
-  const assetCache = await createAssetCache(isTauri);
+  const assetCache = await createAssetCache(isPwa, isTauri);
   const remotePluginsResult = await runAndForwardErrors(
     UrlLoader.preload({
       cache: assetCache,

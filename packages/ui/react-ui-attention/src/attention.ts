@@ -4,7 +4,11 @@
 
 import { Atom, type Registry } from '@effect-atom/atom-react';
 
-import { type Attention } from './types';
+export type Attention = {
+  hasAttention: boolean;
+  isAncestor: boolean;
+  isRelated: boolean;
+};
 
 /**
  * Manages attention state for an application.

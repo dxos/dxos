@@ -38,7 +38,7 @@ const truncate = (text: string | undefined, max: number): string | undefined => 
  * Best-effort mapping from an incoming Clip to a Person.
  * Every field is optional on the schema, so an empty name is acceptable.
  */
-export const toPerson = (clip: Clip.Clip): Person => {
+export const toPerson = (clip: Clip.Clip) => {
   const hints = clip.hints ?? {};
   const fullName = hints.h1 ?? hints.ogTitle ?? firstLine(clip.selection.text);
   return Person.make({
@@ -57,7 +57,7 @@ export const toPerson = (clip: Clip.Clip): Person => {
 /**
  * Best-effort mapping from an incoming Clip to an Organization.
  */
-export const toOrganization = (clip: Clip.Clip): Organization => {
+export const toOrganization = (clip: Clip.Clip) => {
   const hints = clip.hints ?? {};
   const name = hints.ogTitle ?? hints.h1 ?? firstLine(clip.selection.text);
   return Organization.make({
@@ -78,7 +78,7 @@ export const toOrganization = (clip: Clip.Clip): Organization => {
  * (where a future agent stage can take over) rather than baked into the
  * receiver.
  */
-export const toNote = (clip: Clip.Clip): Markdown.Document => {
+export const toNote = (clip: Clip.Clip) => {
   const hints = clip.hints ?? {};
   const title = hints.h1 ?? hints.ogTitle ?? firstLine(clip.selection.text) ?? clip.source.title;
   const body = truncate(clip.selection.text, MAX_NOTE_BODY_LENGTH) ?? '';
@@ -104,7 +104,7 @@ export const toNote = (clip: Clip.Clip): Markdown.Document => {
  * Dispatch based on the clip's declared kind. Returns `undefined` for unknown
  * kinds so the caller can respond with an `unsupportedKind` error.
  */
-export const mapClip = (clip: Clip.Clip): Person | Organization | Markdown.Document | undefined => {
+export const mapClip = (clip: Clip.Clip) => {
   switch (clip.kind) {
     case 'person':
       return toPerson(clip);

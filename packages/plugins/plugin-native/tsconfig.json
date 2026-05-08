@@ -46,6 +46,9 @@
     },
     {
       "path": "../plugin-navtree"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

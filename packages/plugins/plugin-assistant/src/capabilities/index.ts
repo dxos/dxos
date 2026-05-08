@@ -16,12 +16,12 @@ export const CompanionChatProvisioner = Capability.lazy(
 export const EdgeModelResolver = Capability.lazy('EdgeModelResolver', () => import('./edge-model-resolver'));
 export const LocalModelResolver = Capability.lazy('LocalModelResolver', () => import('./local-model-resolver'));
 export const MarkdownExtension = Capability.lazy('MarkdownExtension', () => import('./markdown'));
-export const Migrations: Capability.LazyCapability = Capability.lazy('AssistantMigrations', () => import('./migrations'));
+export const Migrations = Capability.lazy('AssistantMigrations', () => import('./migrations'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),
 );
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 export const Settings = Capability.lazy('Settings', () => import('./settings'));
-export const AssistantState: Capability.LazyCapability = Capability.lazy('AssistantState', () => import('./state'));
+export const AssistantState = Capability.lazy('AssistantState', () => import('./state'));
 export const Toolkit = Capability.lazy('Toolkit', () => import('./toolkit'));

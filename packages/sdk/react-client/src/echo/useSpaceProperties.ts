@@ -20,7 +20,7 @@ import { useSpace } from './useSpaces';
  */
 export const useSpaceProperties = (
   spaceId: Key.SpaceId | undefined,
-): [Obj.Snapshot<SpaceProperties> | undefined, ObjectUpdateCallback<SpaceProperties>] => {
+) => {
   const space = useSpace(spaceId);
   const spaceState = useMulticastObservable(space?.state ?? MulticastObservable.empty());
   const properties = spaceState === SpaceState.SPACE_READY ? space?.properties : undefined;

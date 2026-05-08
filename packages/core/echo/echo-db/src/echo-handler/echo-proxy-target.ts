@@ -92,6 +92,7 @@ export class ObjectInternals {
 /**
  * Generic proxy target type for ECHO proxy objects.
  * Targets can either be objects or arrays (instances of `EchoArrayTwoPointO`).
+ * @internal
  */
 export type ProxyTarget = {
   [symbolInternals]: ObjectInternals;

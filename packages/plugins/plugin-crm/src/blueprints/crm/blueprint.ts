@@ -16,7 +16,7 @@ const BLUEPRINT_KEY = 'org.dxos.blueprint.crm';
  * research sources whose tools are composed into the blueprint's tool list
  * and whose descriptions are rendered into the blueprint's instructions.
  */
-export const makeCrmBlueprint = (researchSources: ReadonlyArray<ResearchSource> = defaultResearchSources): Blueprint.Blueprint =>
+export const makeCrmBlueprint = (researchSources: ReadonlyArray<ResearchSource> = defaultResearchSources) =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'CRM',

@@ -7,10 +7,10 @@ import { Capability } from '@dxos/app-framework';
 import type { Blueprint, OperationHandlerSet } from '@dxos/compute';
 
 export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
-export const Migrations: Capability.LazyCapability = Capability.lazy('Migrations', () => import('./migrations'));
+export const Migrations = Capability.lazy('Migrations', () => import('./migrations'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),
 );
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const UndoMappings: Capability.LazyCapability = Capability.lazy('UndoMappings', () => import('./undo-mappings'));
+export const UndoMappings = Capability.lazy('UndoMappings', () => import('./undo-mappings'));

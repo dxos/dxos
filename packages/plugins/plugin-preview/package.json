@@ -15,17 +15,22 @@
   "imports": {
     "#capabilities": "./src/capabilities/index.ts",
     "#meta": "./src/meta.ts",
+    "#plugin": {
+      "browser": "./src/PreviewPlugin.tsx",
+      "node": "./src/PreviewPlugin.node.ts",
+      "default": "./src/PreviewPlugin.tsx"
+    },
     "#translations": "./src/translations.ts"
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./dist/types/index.d.ts",
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
-      "types": "./dist/types/translations.d.ts",
+      "types": "./dist/types/src/translations.d.ts",
       "browser": "./dist/lib/browser/translations.mjs",
       "node": "./dist/lib/node-esm/translations.mjs"
     }

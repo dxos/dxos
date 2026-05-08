@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 
 import { ContextRemove } from './definitions';
 
-const handler: Operation.WithHandler<Operation.Definition.Any> = ContextRemove.pipe(
+export default ContextRemove.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ obj }) {
       const { binder } = yield* AiContextService;
@@ -22,5 +22,3 @@ const handler: Operation.WithHandler<Operation.Definition.Any> = ContextRemove.p
     }) as any,
   ),
 );
-
-export default handler;

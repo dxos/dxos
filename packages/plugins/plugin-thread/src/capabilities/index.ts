@@ -18,4 +18,4 @@ export const ReactRoot = Capability.lazy('ReactRoot', () => import('./react-root
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 export const ThreadSettings = Capability.lazy('ThreadSettings', () => import('./settings'));
 export const ThreadState = Capability.lazy('ThreadState', () => import('./state'));
-export const UndoMappings: Capability.LazyCapability = Capability.lazy('UndoMappings', () => import('./undo-mappings'));
+export const UndoMappings = Capability.lazy('UndoMappings', () => import('./undo-mappings'));
