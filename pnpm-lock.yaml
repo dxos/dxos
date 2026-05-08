@@ -681,9 +681,6 @@ catalogs:
     '@types/geojson':
       specifier: ^7946.0.14
       version: 7946.0.14
-    '@types/glob':
-      specifier: ~7.1.3
-      version: 7.1.4
     '@types/globrex':
       specifier: ^0.1.4
       version: 0.1.4
@@ -2045,9 +2042,6 @@ importers:
       '@testing-library/user-event':
         specifier: 'catalog:'
         version: 14.6.1(@testing-library/dom@10.4.1)
-      '@types/glob':
-        specifier: 'catalog:'
-        version: 7.1.4
       '@types/globrex':
         specifier: 'catalog:'
         version: 0.1.4
@@ -4086,9 +4080,6 @@ importers:
       '@types/argparse':
         specifier: 'catalog:'
         version: 2.0.10
-      '@types/glob':
-        specifier: 'catalog:'
-        version: 7.1.4
       '@types/mocha':
         specifier: 'catalog:'
         version: 10.0.7
@@ -20857,9 +20848,6 @@ importers:
       esbuild-style-plugin:
         specifier: 'catalog:'
         version: 1.6.1
-      glob:
-        specifier: '>=10.5.0'
-        version: 13.0.3
       globby:
         specifier: 'catalog:'
         version: 14.1.0
@@ -21216,9 +21204,6 @@ importers:
       '@ch-ui/icons':
         specifier: 'catalog:'
         version: 1.0.1
-      glob:
-        specifier: '>=10.5.0'
-        version: 13.0.3
       picomatch:
         specifier: 'catalog:'
         version: 2.3.1
@@ -40071,7 +40056,7 @@ snapshots:
       '@csstools/css-color-parser': 3.1.0(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)
       '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
       '@csstools/css-tokenizer': 3.0.4
-      lru-cache: 11.2.2
+      lru-cache: 11.3.5
 
   '@asamuzakjp/dom-selector@6.6.2':
     dependencies:
@@ -57522,7 +57507,7 @@ snapshots:
 
   path-scurry@2.0.1:
     dependencies:
-      lru-cache: 11.2.2
+      lru-cache: 11.3.5
       minipass: 7.1.2
 
   path-to-regexp@8.3.0: {}
