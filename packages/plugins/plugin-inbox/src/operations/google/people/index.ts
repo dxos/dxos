@@ -4,18 +4,18 @@
 
 import { type Operation, OperationHandlerSet } from '@dxos/compute';
 
-import List from './list';
+import ListGroups from './list-groups';
 import Sync from './sync';
 
 export const ContactsFunctions: {
-  List: Operation.WithHandler<Operation.Definition.Any>;
+  ListGroups: Operation.WithHandler<Operation.Definition.Any>;
   Sync: Operation.WithHandler<Operation.Definition.Any>;
 } = {
-  List,
+  ListGroups,
   Sync,
 };
 
 export const ContactsHandlers = OperationHandlerSet.lazy(
-  () => import('./list'),
+  () => import('./list-groups'),
   () => import('./sync'),
 );
