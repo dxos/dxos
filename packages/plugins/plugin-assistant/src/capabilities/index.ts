@@ -14,7 +14,6 @@ export const CompanionChatProvisioner = Capability.lazy(
   () => import('./companion-chat-provisioner'),
 );
 export const CreateObjects = Capability.lazy('CreateObjects', () => import('./create-objects'));
-export const CreateObjectsNode = Capability.lazy('CreateObjectsNode', () => import('./create-objects-node'));
 export const EdgeModelResolver = Capability.lazy('EdgeModelResolver', () => import('./edge-model-resolver'));
 export const LocalModelResolver = Capability.lazy('LocalModelResolver', () => import('./local-model-resolver'));
 export const MarkdownExtension = Capability.lazy('MarkdownExtension', () => import('./markdown'));
