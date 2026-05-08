@@ -8,8 +8,6 @@ import { trim } from '@dxos/util';
 import { FeedOperation } from '#operations';
 import { Magazine } from '#types';
 
-const { BLUEPRINT_KEY } = Magazine;
-
 const operations = [
   FeedOperation.ListCandidatePosts,
   FeedOperation.FetchArticleContent,
@@ -18,7 +16,7 @@ const operations = [
 
 const make = () =>
   Blueprint.make({
-    key: BLUEPRINT_KEY,
+    key: Magazine.BLUEPRINT_KEY,
     name: 'Magazine Curator',
     tools: Blueprint.toolDefinitions({ operations }),
     instructions: Template.make({
