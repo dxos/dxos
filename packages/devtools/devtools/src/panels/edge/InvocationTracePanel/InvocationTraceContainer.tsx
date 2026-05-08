@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC, useCallback, useMemo, useState } from 'react';
+import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Trace } from '@dxos/compute';
 import { type Database, type Obj } from '@dxos/echo';
@@ -179,6 +179,24 @@ const Selected: FC<{ db?: Database.Database; span: InvocationSpan }> = ({ db, sp
     () => messages.some((m: Trace.Message) => m.events.some((e: Trace.Event) => Trace.isOfType(Trace.Exception, e))),
     [messages],
   );
+
+  // Reset to a valid tab when the current selection no longer exposes the active tab
+  // (e.g., switching to a span without logs while on the 'logs' tab).
+  useEffect(() => {
+    const allowed = new Set<string>(['input', 'raw']);
+    if (hasLogs) {
+      allowed.add('logs');
+    }
+    if (hasExceptions) {
+      allowed.add('exceptions');
+    }
+    if (span.error) {
+      allowed.add('failure');
+    }
+    if (!allowed.has(activeTab)) {
+      setActiveTab('input');
+    }
+  }, [span, hasLogs, hasExceptions, activeTab]);
 
   return (
     <div className='grid grid-cols-1 grid-rows-[min-content_1fr] min-h-0 overflow-hidden border-separator'>

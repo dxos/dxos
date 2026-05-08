@@ -221,8 +221,9 @@ export const observeInvocations = async (space: Space, maxCount: number | null) 
             if (seen.has(pid)) {
               continue;
             }
-            seen.set(pid, { count: count++, startTimestamp: event.timestamp, reportedEnd: false });
-            console.log(`${count.toString().padStart(3, ' ')}: BEGIN ${JSON.stringify(event.data.input)}`);
+            const seq = count++;
+            seen.set(pid, { count: seq, startTimestamp: event.timestamp, reportedEnd: false });
+            console.log(`${seq.toString().padStart(3, ' ')}: BEGIN ${JSON.stringify(event.data.input)}`);
           } else if (Trace.isOfType(Trace.OperationEnd, event)) {
             const entry = seen.get(pid);
             if (!entry || entry.reportedEnd) {

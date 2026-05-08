@@ -135,7 +135,10 @@ export const useInvocationSpans = ({ db, target }: { db?: Database.Database; tar
 
   const [feed] = useQuery(db, FeedTraceSink.query);
   const messages = useQuery(db, feed ? Query.type(Trace.Message).from(feed) : Query.select(Filter.nothing()));
-  const invocationSpans = useMemo(() => buildInvocationSpans(messages), [messages]);
+
+  // Ticks every second while any span is pending so durations refresh.
+  const [nowTick, setNowTick] = useState(0);
+  const invocationSpans = useMemo(() => buildInvocationSpans(messages), [messages, nowTick]);
 
   const scopedInvocationSpans = useMemo(() => {
     if (functionsForScript) {
@@ -146,11 +149,9 @@ export const useInvocationSpans = ({ db, target }: { db?: Database.Database; tar
     return invocationSpans;
   }, [functionsForScript, target, invocationSpans]);
 
-  // If there are any pending spans, refresh durations every second.
-  const [_, update] = useState({});
   useEffect(() => {
     if (scopedInvocationSpans.some((span) => span.outcome === undefined)) {
-      const interval = setInterval(() => update({}), 1_000);
+      const interval = setInterval(() => setNowTick((t) => t + 1), 1_000);
       return () => clearInterval(interval);
     }
   }, [scopedInvocationSpans]);

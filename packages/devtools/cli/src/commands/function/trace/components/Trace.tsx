@@ -73,12 +73,27 @@ export type TraceProps = {
 
 export const Trace = (props: TraceProps) => {
   const [invocations, setInvocations] = createSignal<Span[]>([]);
-  const [selectedInvocation, setSelectedInvocation] = createSignal<Span | undefined>();
+  const [selectedInvocationPid, setSelectedInvocationPid] = createSignal<string | undefined>();
   const [functions, setFunctions] = createSignal<Operation.PersistentOperation[]>([]);
 
   // Set up effects.
   useFunctionQuery(props.db, setFunctions);
-  useInvocationsSubscription(props.db, props.functionId, setInvocations, selectedInvocation, setSelectedInvocation);
+  useInvocationsSubscription(
+    props.db,
+    props.functionId,
+    setInvocations,
+    selectedInvocationPid,
+    setSelectedInvocationPid,
+  );
+
+  // Resolve selected invocation by pid against the current span list so updates are not stale.
+  const selectedInvocation = (): Span | undefined => {
+    const pid = selectedInvocationPid();
+    if (!pid) {
+      return undefined;
+    }
+    return invocations().find((span) => span.pid === pid);
+  };
 
   const getTargetDisplayName = (span: Span): string => {
     if (span.name) {
@@ -122,9 +137,9 @@ export const Trace = (props: TraceProps) => {
         columns={columns}
         data={invocations()}
         onRowClick={(row) => {
-          setSelectedInvocation(row);
+          setSelectedInvocationPid(row.pid);
         }}
-        selectedId={selectedInvocation()?.pid}
+        selectedId={selectedInvocationPid()}
         getId={(row) => row.pid}
         theme={theme}
       />
@@ -207,8 +222,8 @@ const useInvocationsSubscription = (
   db: Database.Database,
   functionId: Option.Option<string>,
   setInvocations: (invocations: Span[]) => void,
-  selectedInvocation: () => Span | undefined,
-  setSelectedInvocation: (invocation: Span | undefined) => void,
+  selectedInvocationPid: () => string | undefined,
+  setSelectedInvocationPid: (pid: string | undefined) => void,
 ) => {
   createEffect(() => {
     const feedQuery = db.query(FeedTraceSink.query);
@@ -236,8 +251,8 @@ const useInvocationsSubscription = (
         spans.sort((a, b) => b.timestamp - a.timestamp);
         setInvocations(spans);
 
-        if (spans.length > 0 && !selectedInvocation()) {
-          setSelectedInvocation(spans[0]);
+        if (spans.length > 0 && !selectedInvocationPid()) {
+          setSelectedInvocationPid(spans[0].pid);
         }
       };
       messageUnsubscribe = messageQuery.subscribe(

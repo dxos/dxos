@@ -94,9 +94,10 @@ export const observeInvocations = async (space: Space, maxCount: number | null) 
             if (seen.has(pid)) {
               continue;
             }
-            seen.set(pid, { count: count++, startTimestamp: event.timestamp, reportedEnd: false });
+            const seq = count++;
+            seen.set(pid, { count: seq, startTimestamp: event.timestamp, reportedEnd: false });
             console.log(
-              `${count.toString().padStart(3, ' ')}: BEGIN ${event.data.runtime ?? '(unknown runtime)'} ${JSON.stringify(event.data.input)}`,
+              `${seq.toString().padStart(3, ' ')}: BEGIN ${event.data.runtime ?? '(unknown runtime)'} ${JSON.stringify(event.data.input)}`,
             );
           } else if (Trace.isOfType(Trace.OperationEnd, event)) {
             const entry = seen.get(pid);
