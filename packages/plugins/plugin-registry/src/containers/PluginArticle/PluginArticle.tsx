@@ -4,9 +4,9 @@
 
 import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type Dispatch, type SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type Registry, type Plugin, UrlLoader } from '@dxos/app-framework';
+import { type Plugin, type PluginManager, type Registry, UrlLoader } from '@dxos/app-framework';
 import { usePluginManager } from '@dxos/app-framework/ui';
 import { runAndForwardErrors } from '@dxos/effect';
 
@@ -18,38 +18,148 @@ import { useRegistryPluginProvider, useRegistryPlugins, useRemotePluginIds } fro
 export type PluginArticleProps = { subject: Plugin.Plugin };
 
 export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
+  const pluginId = plugin.meta.id;
   const manager = usePluginManager();
   const plugins = useAtomValue(manager.plugins);
-  const { entries } = useRegistryPlugins();
-  const provider = useRegistryPluginProvider();
   const remotePluginIds = useRemotePluginIds();
-  const [installing, setInstalling] = useState(false);
-  const [updating, setUpdating] = useState(false);
+  const provider = useRegistryPluginProvider();
+
+  const { catalogEntry, moduleUrl, repo } = useCatalogEntry(pluginId);
+  const { installedVersionTag, syncInstalledVersion } = useInstalledVersionTag(pluginId, plugins);
+  const { pickerVersions, selectedVersionTag, setSelectedVersionTag } = useVersionPicker({
+    provider,
+    pluginId,
+    repo,
+    moduleUrl,
+    installedVersionTag,
+  });
+
+  const enabled = manager.getEnabled().includes(pluginId);
+  const isInstalled = useMemo(
+    () => plugins.some((candidate) => candidate.meta.id === pluginId),
+    [plugins, pluginId],
+  );
+  const isCore = manager.getCore().includes(pluginId);
+  const canUninstall = isInstalled && !isCore && remotePluginIds.has(pluginId);
+  const hasUpdate =
+    isInstalled && !!catalogEntry && !!installedVersionTag && installedVersionTag !== catalogEntry.version;
+
+  const actions = usePluginActions({
+    manager,
+    pluginId,
+    isInstalled,
+    moduleUrl,
+    catalogEntry,
+    pickerVersions,
+    selectedVersionTag,
+    syncInstalledVersion,
+  });
+
+  return (
+    <PluginDetail
+      plugin={plugin}
+      enabled={enabled}
+      onEnabledChange={actions.handleEnableChange}
+      onInstall={!isInstalled && moduleUrl ? actions.handleInstall : undefined}
+      installing={actions.installing}
+      onUpdate={hasUpdate ? actions.handleUpdate : undefined}
+      hasUpdate={hasUpdate}
+      updating={actions.updating}
+      onUninstall={canUninstall ? actions.handleUninstall : undefined}
+      versions={pickerVersions}
+      selectedVersionTag={selectedVersionTag}
+      onVersionChange={setSelectedVersionTag}
+      onInstallVersion={pickerVersions.length > 0 ? actions.handleInstallVersion : undefined}
+      installedVersionTag={installedVersionTag}
+    />
+  );
+};
+
+//
+// Hooks
+//
+// Each of the hooks below isolates a self-contained slice of the article's
+// state machine. They're declared at module scope (rather than inline in
+// `PluginArticle`) to keep the component readable as a thin wiring layer over
+// `PluginDetail`.
+//
+
+/**
+ * Resolves the registry catalog entry for a plugin by id, plus the two fields
+ * (`moduleUrl`, `repo`) the rest of the article cares about.
+ */
+const useCatalogEntry = (
+  pluginId: string,
+): {
+  catalogEntry: Registry.Plugin | undefined;
+  moduleUrl: string | undefined;
+  repo: string | undefined;
+} => {
+  const { entries } = useRegistryPlugins();
+  const catalogEntry = useMemo(() => entries.find((entry) => entry.id === pluginId), [entries, pluginId]);
+  return { catalogEntry, moduleUrl: catalogEntry?.moduleUrl, repo: catalogEntry?.repo };
+};
+
+/**
+ * Tracks the per-plugin installed version (sourced from `UrlLoader` localStorage)
+ * as React state so post-install/update re-renders are deterministic — the value
+ * lives in component state rather than being read inline on every render.
+ *
+ * - Initialised from localStorage at mount.
+ * - Auto-resyncs when the plugin manager's plugin list changes (catches external
+ *   installs / removes triggered by the list view).
+ * - `syncInstalledVersion()` is the explicit handle install/update operations
+ *   call inside their `Effect.ensuring` so the post-mutation render sees both
+ *   the new version and the cleared `installing`/`updating` flag together.
+ */
+const useInstalledVersionTag = (
+  pluginId: string,
+  plugins: readonly Plugin.Plugin[],
+): {
+  installedVersionTag: string | undefined;
+  syncInstalledVersion: () => void;
+} => {
+  const [installedVersionTag, setInstalledVersionTag] = useState<string | undefined>(() =>
+    UrlLoader.getInstalledVersion(pluginId),
+  );
+
+  const syncInstalledVersion = useCallback(() => {
+    setInstalledVersionTag(UrlLoader.getInstalledVersion(pluginId));
+  }, [pluginId]);
+
+  useEffect(() => {
+    syncInstalledVersion();
+  }, [plugins, syncInstalledVersion]);
+
+  return { installedVersionTag, syncInstalledVersion };
+};
+
+/**
+ * Owns the version picker's state machine: fetches the available versions list
+ * from the provider, prepends the installed version when the catalog stub omits
+ * it, and keeps the selection clamped to whatever's currently in the list (so
+ * an external update doesn't strand the trigger on a tag that's no longer
+ * available).
+ */
+const useVersionPicker = ({
+  provider,
+  pluginId,
+  repo,
+  moduleUrl,
+  installedVersionTag,
+}: {
+  provider: Registry.Manager;
+  pluginId: string;
+  repo: string | undefined;
+  moduleUrl: string | undefined;
+  installedVersionTag: string | undefined;
+}): {
+  pickerVersions: readonly Registry.PluginVersion[];
+  selectedVersionTag: string | undefined;
+  setSelectedVersionTag: Dispatch<SetStateAction<string | undefined>>;
+} => {
   const [versions, setVersions] = useState<readonly Registry.PluginVersion[]>([]);
   const [selectedVersionTag, setSelectedVersionTag] = useState<string | undefined>();
-  // `installedVersionTag` lives in component state (rather than being read inline from
-  // localStorage on each render) so post-update re-renders are deterministic — we
-  // explicitly resync it after each install/update operation, and keep it in step
-  // with the manager.plugins atom so external installs (e.g. from the list view)
-  // are picked up too.
-  const [installedVersionTag, setInstalledVersionTag] = useState<string | undefined>(() =>
-    UrlLoader.getInstalledVersion(plugin.meta.id),
-  );
-
-  const enabled = manager.getEnabled().includes(plugin.meta.id);
-  const isInstalled = useMemo(
-    () => plugins.some((candidate) => candidate.meta.id === plugin.meta.id),
-    [plugins, plugin.meta.id],
-  );
-  const isCore = manager.getCore().includes(plugin.meta.id);
-  const canUninstall = isInstalled && !isCore && remotePluginIds.has(plugin.meta.id);
-
-  const catalogEntry = useMemo(
-    () => entries.find((entry) => entry.id === plugin.meta.id),
-    [entries, plugin.meta.id],
-  );
-  const moduleUrl = catalogEntry?.moduleUrl;
-  const repo = catalogEntry?.repo;
 
   // Load version list once the catalog entry's repo is known.
   useEffect(() => {
@@ -61,7 +171,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
         onSuccess: (vs) => {
           setVersions(vs);
           // Default selection: the currently installed version, or the latest.
-          const installedVersion = UrlLoader.getInstalledVersion(plugin.meta.id);
+          const installedVersion = UrlLoader.getInstalledVersion(pluginId);
           setSelectedVersionTag(installedVersion ?? vs[0]?.tag);
         },
         onFailure: () => {
@@ -70,76 +180,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
       }),
       runAndForwardErrors,
     );
-  }, [provider, repo, plugin.meta.id]);
-
-  const handleEnableChange = useCallback(
-    (enabled: boolean) =>
-      enabled
-        ? runAndForwardErrors(manager.enable(plugin.meta.id))
-        : runAndForwardErrors(manager.disable(plugin.meta.id)),
-    [manager, plugin.meta.id],
-  );
-
-  const handleUninstall = useCallback(() => {
-    void runAndForwardErrors(manager.remove(plugin.meta.id));
-  }, [manager, plugin.meta.id]);
-
-  // Resync the cached installed version from localStorage. Called from each
-  // install/update operation's ensuring callback, plus an effect tied to
-  // `plugins` so external state changes (manager add/remove triggered by the
-  // list view) propagate.
-  const syncInstalledVersion = useCallback(() => {
-    setInstalledVersionTag(UrlLoader.getInstalledVersion(plugin.meta.id));
-  }, [plugin.meta.id]);
-
-  useEffect(() => {
-    syncInstalledVersion();
-  }, [plugins, syncInstalledVersion]);
-
-  const handleInstall = useCallback(() => {
-    if (!moduleUrl) {
-      return;
-    }
-    setInstalling(true);
-    void Effect.gen(function* () {
-      const added = yield* manager.add(moduleUrl);
-      yield* manager.enable(added.meta.id);
-      if (catalogEntry) {
-        UrlLoader.setInstalledVersion(added.meta.id, catalogEntry.version);
-      }
-    }).pipe(
-      Effect.ensuring(
-        Effect.sync(() => {
-          setInstalling(false);
-          syncInstalledVersion();
-        }),
-      ),
-      runAndForwardErrors,
-    );
-  }, [manager, moduleUrl, catalogEntry, syncInstalledVersion]);
-
-  const hasUpdate = isInstalled && !!catalogEntry && !!installedVersionTag && installedVersionTag !== catalogEntry.version;
-
-  const handleUpdate = useCallback(() => {
-    if (!moduleUrl || !catalogEntry) {
-      return;
-    }
-    setUpdating(true);
-    void Effect.gen(function* () {
-      yield* manager.remove(plugin.meta.id);
-      const added = yield* manager.add(moduleUrl);
-      yield* manager.enable(added.meta.id);
-      UrlLoader.setInstalledVersion(added.meta.id, catalogEntry.version);
-    }).pipe(
-      Effect.ensuring(
-        Effect.sync(() => {
-          setUpdating(false);
-          syncInstalledVersion();
-        }),
-      ),
-      runAndForwardErrors,
-    );
-  }, [manager, plugin.meta.id, moduleUrl, catalogEntry, syncInstalledVersion]);
+  }, [provider, repo, pluginId]);
 
   // Make sure the picker always lists the installed version, even if the catalog
   // hasn't surfaced it (the current `listVersions` stub only returns latest).
@@ -172,6 +213,94 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
     setSelectedVersionTag(installedVersionTag ?? pickerVersions[0]?.tag);
   }, [pickerVersions, selectedVersionTag, installedVersionTag]);
 
+  return { pickerVersions, selectedVersionTag, setSelectedVersionTag };
+};
+
+/**
+ * The five user-facing actions the article exposes — enable/disable, uninstall,
+ * install (latest), update (to latest catalog version), and install-from-picker —
+ * plus the `installing`/`updating` flags they drive. Each handler ends with a
+ * `syncInstalledVersion()` call inside its `Effect.ensuring` so the cached
+ * installed version snaps to the freshly-written localStorage value in the same
+ * render that clears the in-flight flag.
+ */
+const usePluginActions = ({
+  manager,
+  pluginId,
+  isInstalled,
+  moduleUrl,
+  catalogEntry,
+  pickerVersions,
+  selectedVersionTag,
+  syncInstalledVersion,
+}: {
+  manager: PluginManager.PluginManager;
+  pluginId: string;
+  isInstalled: boolean;
+  moduleUrl: string | undefined;
+  catalogEntry: Registry.Plugin | undefined;
+  pickerVersions: readonly Registry.PluginVersion[];
+  selectedVersionTag: string | undefined;
+  syncInstalledVersion: () => void;
+}) => {
+  const [installing, setInstalling] = useState(false);
+  const [updating, setUpdating] = useState(false);
+
+  const handleEnableChange = useCallback(
+    (enabled: boolean) =>
+      enabled
+        ? runAndForwardErrors(manager.enable(pluginId))
+        : runAndForwardErrors(manager.disable(pluginId)),
+    [manager, pluginId],
+  );
+
+  const handleUninstall = useCallback(() => {
+    void runAndForwardErrors(manager.remove(pluginId));
+  }, [manager, pluginId]);
+
+  const handleInstall = useCallback(() => {
+    if (!moduleUrl) {
+      return;
+    }
+    setInstalling(true);
+    void Effect.gen(function* () {
+      const added = yield* manager.add(moduleUrl);
+      yield* manager.enable(added.meta.id);
+      if (catalogEntry) {
+        UrlLoader.setInstalledVersion(added.meta.id, catalogEntry.version);
+      }
+    }).pipe(
+      Effect.ensuring(
+        Effect.sync(() => {
+          setInstalling(false);
+          syncInstalledVersion();
+        }),
+      ),
+      runAndForwardErrors,
+    );
+  }, [manager, moduleUrl, catalogEntry, syncInstalledVersion]);
+
+  const handleUpdate = useCallback(() => {
+    if (!moduleUrl || !catalogEntry) {
+      return;
+    }
+    setUpdating(true);
+    void Effect.gen(function* () {
+      yield* manager.remove(pluginId);
+      const added = yield* manager.add(moduleUrl);
+      yield* manager.enable(added.meta.id);
+      UrlLoader.setInstalledVersion(added.meta.id, catalogEntry.version);
+    }).pipe(
+      Effect.ensuring(
+        Effect.sync(() => {
+          setUpdating(false);
+          syncInstalledVersion();
+        }),
+      ),
+      runAndForwardErrors,
+    );
+  }, [manager, pluginId, moduleUrl, catalogEntry, syncInstalledVersion]);
+
   const handleInstallVersion = useCallback(() => {
     const version = pickerVersions.find((candidate) => candidate.tag === selectedVersionTag);
     if (!version || !version.moduleUrl) {
@@ -181,7 +310,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
     void Effect.gen(function* () {
       // Remove existing version before installing a different one.
       if (isInstalled) {
-        yield* manager.remove(plugin.meta.id);
+        yield* manager.remove(pluginId);
       }
       const added = yield* manager.add(version.moduleUrl);
       yield* manager.enable(added.meta.id);
@@ -195,24 +324,15 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
       ),
       runAndForwardErrors,
     );
-  }, [manager, plugin.meta.id, isInstalled, selectedVersionTag, pickerVersions, syncInstalledVersion]);
+  }, [manager, pluginId, isInstalled, selectedVersionTag, pickerVersions, syncInstalledVersion]);
 
-  return (
-    <PluginDetail
-      plugin={plugin}
-      enabled={enabled}
-      onEnabledChange={handleEnableChange}
-      onInstall={!isInstalled && moduleUrl ? handleInstall : undefined}
-      installing={installing}
-      onUpdate={hasUpdate ? handleUpdate : undefined}
-      hasUpdate={hasUpdate}
-      updating={updating}
-      onUninstall={canUninstall ? handleUninstall : undefined}
-      versions={pickerVersions}
-      selectedVersionTag={selectedVersionTag}
-      onVersionChange={setSelectedVersionTag}
-      onInstallVersion={pickerVersions.length > 0 ? handleInstallVersion : undefined}
-      installedVersionTag={installedVersionTag}
-    />
-  );
+  return {
+    installing,
+    updating,
+    handleEnableChange,
+    handleUninstall,
+    handleInstall,
+    handleUpdate,
+    handleInstallVersion,
+  };
 };
