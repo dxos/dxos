@@ -16,6 +16,7 @@ import { useClient } from '@dxos/react-client';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { ErrorFallback, Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
+import { Mosaic } from '@dxos/react-ui-mosaic';
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -98,38 +99,40 @@ export const MailLayout = () => {
   }
 
   return (
-    <div className='dx-container grid grid-cols-2 bs-dvh bg-base-surface'>
-      <Panel.Root className='border-ie border-separator'>
-        <Panel.Content role='article'>
-          <Surface.Surface
-            type={AppSurface.Article}
-            data={{ subject: mailbox, attendableId: mailboxAttendableId }}
-            limit={1}
-            fallback={ErrorFallback}
-            placeholder={<Loading />}
-          />
-        </Panel.Content>
-      </Panel.Root>
-      <Panel.Root>
-        <Panel.Content role='article'>
-          {selectedMessage && messageAttendableId ? (
+    <Mosaic.Root>
+      <div className='dx-container grid grid-cols-2 bs-dvh bg-base-surface'>
+        <Panel.Root className='border-ie border-separator'>
+          <Panel.Content role='article'>
             <Surface.Surface
-              key={messageAttendableId}
               type={AppSurface.Article}
-              data={{
-                subject: selectedMessage,
-                attendableId: messageAttendableId,
-                companionTo: mailbox,
-              }}
+              data={{ subject: mailbox, attendableId: mailboxAttendableId }}
               limit={1}
               fallback={ErrorFallback}
               placeholder={<Loading />}
             />
-          ) : (
-            <Empty message={t('detail.placeholder')} />
-          )}
-        </Panel.Content>
-      </Panel.Root>
-    </div>
+          </Panel.Content>
+        </Panel.Root>
+        <Panel.Root>
+          <Panel.Content role='article'>
+            {selectedMessage && messageAttendableId ? (
+              <Surface.Surface
+                key={messageAttendableId}
+                type={AppSurface.Article}
+                data={{
+                  subject: selectedMessage,
+                  attendableId: messageAttendableId,
+                  companionTo: mailbox,
+                }}
+                limit={1}
+                fallback={ErrorFallback}
+                placeholder={<Loading />}
+              />
+            ) : (
+              <Empty message={t('detail.placeholder')} />
+            )}
+          </Panel.Content>
+        </Panel.Root>
+      </div>
+    </Mosaic.Root>
   );
 };

@@ -35,6 +35,9 @@
       "path": "../../ui/react-ui-attention"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../plugin-graph"
     },
     {
