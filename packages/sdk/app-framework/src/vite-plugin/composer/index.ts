@@ -4,6 +4,8 @@
 
 import { type Plugin as VitePlugin } from 'vite';
 
+import { PLUGIN_DEV_SERVER_PORT } from '@dxos/protocols';
+
 import { type BuildMeta, ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest } from '../manifest';
 import { DEFAULT_PACKAGES, isSharedPackage } from '../packages';
 
@@ -67,7 +69,7 @@ const REQUIRE_SHIM_BANNER = [
 export type ComposerPluginOptions = {
   /** Entry point for the plugin bundle. Defaults to `src/plugin.tsx`. */
   entry?: string;
-  /** Dev server port. Defaults to `3967`. */
+  /** Dev server port. Defaults to {@link PLUGIN_DEV_SERVER_PORT}. */
   port?: number;
   /**
    * Plugin metadata. When provided, a `manifest.json` asset is emitted alongside the bundle
@@ -95,7 +97,7 @@ export type ComposerPluginOptions = {
  */
 export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] => {
   const entry = options?.entry ?? 'src/plugin.tsx';
-  const port = options?.port ?? 3967;
+  const port = options?.port ?? PLUGIN_DEV_SERVER_PORT;
   const meta = options?.meta;
   const resolved = new Set<string>();
   let base = '/';

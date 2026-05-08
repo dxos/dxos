@@ -25,6 +25,7 @@ export const translations = [
         'load-by-url-dialog.title': 'Load Plugin from URL',
         'plugin-url.label': 'Plugin URL',
         'load-plugin.label': 'Load Plugin',
+        'load-dev-plugin.label': 'Load Dev Plugin',
         'loading.label': 'Loading...',
         'coming-soon.label': 'Coming soon!',
         'open-plugin-registry.label': 'Open plugin registry',
