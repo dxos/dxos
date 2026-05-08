@@ -4,7 +4,7 @@
 
 import { type SpaceId } from '@dxos/keys';
 
-import type { SerializedError } from '..';
+import type { SerializedError } from '../index';
 import type * as FeedProtocol from '../FeedProtocol';
 import { type QueryRequest, type QueryResponse } from '../proto/gen/dxos/echo/query';
 import { type CreateDocumentResponse } from '../proto/gen/dxos/echo/service';
