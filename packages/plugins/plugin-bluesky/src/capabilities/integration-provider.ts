@@ -14,6 +14,7 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { BLUESKY_PROVIDER_ID, BLUESKY_SOURCE } from '../constants';
 import { BlueskyOperation } from '../operations';
+import { BlueskyTargetOptions } from '../types';
 
 /** Schema for the atproto pre-flight form (handle / DID). */
 const AtprotoPreflightForm = Schema.Struct({
@@ -50,6 +51,7 @@ export default Capability.makeModule(
           useRedirectFlow: true,
         },
         credentialForm,
+        optionsSchema: BlueskyTargetOptions,
         getSyncTargets: BlueskyOperation.GetBlueskyTargets,
         sync: BlueskyOperation.SyncBlueskyTargets,
       },

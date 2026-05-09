@@ -15,7 +15,7 @@ import { Subscription } from '@dxos/plugin-feed/types';
 import { type Integration } from '@dxos/plugin-integration/types';
 import { type AccessToken } from '@dxos/types';
 
-import { BLUESKY_TARGET, MAX_PAGES_PER_SYNC } from '../constants';
+import { BLUESKY_TARGET, DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from '../constants';
 import { IntegrationDatabaseMissingError, MissingBlueskyHandleError } from '../errors';
 import { BlueskyApi } from '../services';
 import { SyncBlueskyTargets } from './definitions';
@@ -107,16 +107,23 @@ const syncTarget = ({
     });
 
     // Walk pages from newest backwards, stopping at the URI we last saw
-    // (`target.cursor`) or after `MAX_PAGES_PER_SYNC`. atproto returns the
+    // (`target.cursor`) or after the per-target page budget. atproto returns
     // newest first, so anything we collect can be appended in the order it
     // came back without an explicit reverse.
+    //
+    // Per-target page budget: self-targets (chronological) get the larger
+    // default since cursor-stopping bounds them on incremental syncs;
+    // custom feeds are algorithmic so we cap conservatively. Both honour
+    // an explicit `target.options.maxPages` override, clamped to the
+    // hard safety cap.
     const lastSeen = target.cursor;
+    const maxPages = resolveMaxPages(remoteId, target.options as { maxPages?: number } | undefined);
     const collected: BlueskyApi.FeedViewPost[] = [];
     let pageCursor: string | undefined;
     let newestUri: string | undefined;
     let reachedKnown = false;
 
-    for (let page = 0; page < MAX_PAGES_PER_SYNC; page++) {
+    for (let page = 0; page < maxPages; page++) {
       const response = yield* fetchPostsForTarget({
         client,
         spaceId: db.spaceId,
@@ -240,6 +247,20 @@ const resolveOrCreateLocalFeed = ({
     });
     return persisted;
   });
+
+/**
+ * Resolve the per-sync page budget for a target. User-supplied
+ * `target.options.maxPages` takes precedence (clamped to {@link MAX_PAGES_HARD_CAP});
+ * otherwise self-targets get the chronological default and custom feeds
+ * get the algorithmic-feed default.
+ */
+const resolveMaxPages = (remoteId: string, options: { maxPages?: number } | undefined): number => {
+  const override = options?.maxPages;
+  if (typeof override === 'number' && override > 0) {
+    return Math.min(override, MAX_PAGES_HARD_CAP);
+  }
+  return remoteId.startsWith(BLUESKY_TARGET.FEED_PREFIX) ? DEFAULT_MAX_PAGES.FEED : DEFAULT_MAX_PAGES.SELF;
+};
 
 /** Best-effort URL representation of a target so the Subscription.Feed has something to display. */
 const remoteIdToFeedUrl = (remoteId: string): string => {

@@ -31,9 +31,22 @@ export const BLUESKY_TARGET = {
 export const DEFAULT_FEED_LIMIT = 50;
 
 /**
- * Upper bound on pages walked per target per sync.
- * On first sync (no `target.cursor`) we'd otherwise drain the user's
- * entire history, which is wasteful and fragile for large accounts —
- * cap at this many pages and let subsequent syncs catch up incrementally.
+ * Hard ceiling on pages walked per target per sync, regardless of
+ * `target.options.maxPages`. Self-targets generally hit `target.cursor`
+ * well before this on incremental syncs and stop early; this just bounds
+ * the cold-start case so we don't drain the user's entire history in one
+ * pass.
  */
-export const MAX_PAGES_PER_SYNC = 5;
+export const MAX_PAGES_HARD_CAP = 20;
+
+/**
+ * Default `maxPages` per target type when `target.options.maxPages` is unset.
+ * Self-targets (posts / likes / bookmarks) are chronological so cursor-stopping
+ * is reliable — let them walk a few pages on cold start. Custom feed
+ * generators are algorithmic and could page indefinitely; default to one
+ * page per sync and let users opt into more.
+ */
+export const DEFAULT_MAX_PAGES = {
+  SELF: 5,
+  FEED: 1,
+} as const;
