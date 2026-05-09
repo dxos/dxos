@@ -227,7 +227,7 @@ const openOAuthRedirectWindow = (authUrl: string): Effect.Effect<void, never> =>
 type PendingSnapshot = {
   spaceId: Key.SpaceId;
   providerId: string;
-  tokenSnapshot: { source: string; scopes: readonly string[] };
+  tokenSnapshot: { source: string; account?: string; scopes: readonly string[] };
   integrationSnapshot: { name: string; providerId: string };
   existingTargetDxn?: string;
 };
@@ -353,9 +353,15 @@ export default Capability.makeModule(
 
         const oauth = provider.oauth;
         const label = provider.label ?? provider.id;
+        // Pre-flight forms (atproto handle, …) supply a `loginHint` that
+        // is meaningful as the account label too — store it so the
+        // resulting Integration shows e.g. `user.bsky.social` rather than
+        // just `bsky.app`.
+        const account = loginHint;
 
         const token = Obj.make(AccessToken.AccessToken, {
           source: provider.source,
+          ...(account ? { account } : {}),
           scopes: [...oauth.scopes],
           token: '',
         });
@@ -373,7 +379,7 @@ export default Capability.makeModule(
           writePendingSnapshot(token.id, {
             spaceId,
             providerId: provider.id,
-            tokenSnapshot: { source: provider.source, scopes: oauth.scopes },
+            tokenSnapshot: { source: provider.source, account, scopes: oauth.scopes },
             integrationSnapshot: { name: label, providerId: provider.id },
           });
         }
@@ -438,6 +444,7 @@ export default Capability.makeModule(
 
         const token = Obj.make(AccessToken.AccessToken, {
           source: snapshot.tokenSnapshot.source,
+          ...(snapshot.tokenSnapshot.account ? { account: snapshot.tokenSnapshot.account } : {}),
           scopes: [...snapshot.tokenSnapshot.scopes],
           token: accessTokenValue,
         });
