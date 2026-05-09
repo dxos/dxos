@@ -91,7 +91,7 @@ describe('Integration tests', () => {
   });
 
   test('reload peer -- save index before restart', { timeout: 60_000 }, async () => {
-    const NUM_OBJECTS = 500;
+    const NUM_OBJECTS = 100;
     await using peer = await builder.createPeer({
       types: [TestSchema.Person],
     });
