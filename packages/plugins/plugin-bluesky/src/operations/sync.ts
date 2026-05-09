@@ -15,7 +15,7 @@ import { Subscription } from '@dxos/plugin-feed/types';
 import { type Integration } from '@dxos/plugin-integration/types';
 import { type AccessToken } from '@dxos/types';
 
-import { BLUESKY_TARGET } from '../constants';
+import { BLUESKY_TARGET, MAX_PAGES_PER_SYNC } from '../constants';
 import { IntegrationDatabaseMissingError, MissingBlueskyHandleError } from '../errors';
 import { BlueskyApi } from '../services';
 import { SyncBlueskyTargets } from './definitions';
@@ -36,6 +36,12 @@ const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTar
         return yield* Effect.fail(new MissingBlueskyHandleError());
       }
 
+      // Resolve the user's PDS once per sync. Authenticated XRPC must hit
+      // the PDS that minted the auth context — bsky.social-only is a wrong
+      // assumption now that self-hosted PDSes and bsky's per-user shards
+      // are common.
+      const pdsBaseUrl = yield* Effect.tryPromise(() => BlueskyApi.resolvePds(handle));
+
       let appended = 0;
       let failed = 0;
 
@@ -49,6 +55,7 @@ const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTar
             integration,
             accessToken,
             handle,
+            pdsBaseUrl,
             db,
             targetIndex: index,
           }),
@@ -73,6 +80,7 @@ const syncTarget = ({
   integration,
   accessToken,
   handle,
+  pdsBaseUrl,
   db,
   targetIndex,
 }: {
@@ -80,6 +88,7 @@ const syncTarget = ({
   integration: Integration.Integration;
   accessToken: AccessToken.AccessToken;
   handle: string;
+  pdsBaseUrl: string;
   db: Database.Database;
   targetIndex: number;
 }): Effect.Effect<number, Error> =>
@@ -97,16 +106,54 @@ const syncTarget = ({
       name: target.name ?? remoteId,
     });
 
-    const fetched = yield* fetchPostsForTarget({
-      client,
-      spaceId: db.spaceId,
-      accessTokenId: accessToken.id,
-      handle,
-      remoteId,
-      cursor: subscriptionFeed.cursor,
-    });
+    // Walk pages from newest backwards, stopping at the URI we last saw
+    // (`target.cursor`) or after `MAX_PAGES_PER_SYNC`. atproto returns the
+    // newest first, so anything we collect can be appended in the order it
+    // came back without an explicit reverse.
+    const lastSeen = target.cursor;
+    const collected: BlueskyApi.FeedViewPost[] = [];
+    let pageCursor: string | undefined;
+    let newestUri: string | undefined;
+    let reachedKnown = false;
 
-    if (fetched.feed.length === 0) {
+    for (let page = 0; page < MAX_PAGES_PER_SYNC; page++) {
+      const response = yield* fetchPostsForTarget({
+        client,
+        spaceId: db.spaceId,
+        accessTokenId: accessToken.id,
+        pdsBaseUrl,
+        handle,
+        remoteId,
+        cursor: pageCursor,
+      });
+      if (response.feed.length === 0) {
+        break;
+      }
+      if (newestUri === undefined) {
+        newestUri = response.feed[0]?.post.uri;
+      }
+      for (const item of response.feed) {
+        if (lastSeen && item.post.uri === lastSeen) {
+          reachedKnown = true;
+          break;
+        }
+        collected.push(item);
+      }
+      if (reachedKnown || !response.cursor) {
+        break;
+      }
+      pageCursor = response.cursor;
+    }
+
+    if (collected.length === 0) {
+      // Still record a successful run so the UI shows recent activity.
+      Obj.update(integration, (integration) => {
+        integration.targets[targetIndex] = {
+          ...integration.targets[targetIndex],
+          lastSyncAt: new Date().toISOString(),
+          lastError: undefined,
+        };
+      });
       return 0;
     }
 
@@ -117,29 +164,25 @@ const syncTarget = ({
     const space = client.spaces.get(db.spaceId);
     invariant(space, 'space not found');
 
-    const newest = fetched.feed[0]?.post.uri;
-    const cursor = subscriptionFeed.cursor;
-    const newItems = cursor ? fetched.feed.filter((item) => item.post.uri !== cursor) : fetched.feed;
-
     const feedRef = Ref.make(subscriptionFeed);
-    const postObjects = newItems.map((item) => {
+    const postObjects = collected.map((item) => {
       const input = BlueskyApi.toSubscriptionPostInput(item);
       return Subscription.makePost({ feed: feedRef, ...input });
     });
-    if (postObjects.length > 0) {
-      const queue = space.queues.get(feedDxn);
-      yield* Effect.tryPromise(() => queue.append(postObjects));
-    }
+    const queue = space.queues.get(feedDxn);
+    yield* Effect.tryPromise(() => queue.append(postObjects));
 
-    if (newest) {
+    if (newestUri) {
       Obj.update(subscriptionFeed, (subscriptionFeed) => {
-        subscriptionFeed.cursor = newest;
+        subscriptionFeed.cursor = newestUri;
       });
     }
 
     Obj.update(integration, (integration) => {
       integration.targets[targetIndex] = {
         ...integration.targets[targetIndex],
+        // Track the newest post URI so the next sync stops there.
+        cursor: newestUri,
         lastSyncAt: new Date().toISOString(),
         lastError: undefined,
       };
@@ -218,6 +261,7 @@ const fetchPostsForTarget = ({
   client,
   spaceId,
   accessTokenId,
+  pdsBaseUrl,
   handle,
   remoteId,
   cursor,
@@ -225,6 +269,7 @@ const fetchPostsForTarget = ({
   client: Client;
   spaceId: string;
   accessTokenId: string;
+  pdsBaseUrl: string;
   handle: string;
   remoteId: string;
   cursor: string | undefined;
@@ -235,15 +280,16 @@ const fetchPostsForTarget = ({
         case BLUESKY_TARGET.MY_POSTS:
           return BlueskyApi.getAuthorFeed({ actor: handle, cursor });
         case BLUESKY_TARGET.MY_LIKES:
-          return BlueskyApi.getActorLikes({ client, spaceId, accessTokenId, actor: handle, cursor });
+          return BlueskyApi.getActorLikes({ client, spaceId, accessTokenId, pdsBaseUrl, actor: handle, cursor });
         case BLUESKY_TARGET.MY_BOOKMARKS:
-          return BlueskyApi.getBookmarks({ client, spaceId, accessTokenId, cursor });
+          return BlueskyApi.getBookmarks({ client, spaceId, accessTokenId, pdsBaseUrl, cursor });
         default:
           if (remoteId.startsWith(BLUESKY_TARGET.FEED_PREFIX)) {
             return BlueskyApi.getFeed({
               client,
               spaceId,
               accessTokenId,
+              pdsBaseUrl,
               feed: remoteId.slice(BLUESKY_TARGET.FEED_PREFIX.length),
               cursor,
             });

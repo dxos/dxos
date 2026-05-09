@@ -11,9 +11,6 @@ export const BLUESKY_SOURCE = 'bsky.app';
 /** Public read-only XRPC base — works for any public actor / public feed. */
 export const BSKY_PUBLIC_API = 'https://public.api.bsky.app/xrpc';
 
-/** Authenticated XRPC base — used via the Edge `/atproto/proxy` endpoint, which signs the DPoP proof for us. */
-export const BSKY_AUTH_API = 'https://bsky.social/xrpc';
-
 /**
  * Stable target ids exposed by `GetBlueskyTargets`. The remote-id must be a
  * stable string the user could re-select; per-feed targets carry the at://
@@ -32,3 +29,11 @@ export const BLUESKY_TARGET = {
 
 /** Default page size for XRPC feed queries. */
 export const DEFAULT_FEED_LIMIT = 50;
+
+/**
+ * Upper bound on pages walked per target per sync.
+ * On first sync (no `target.cursor`) we'd otherwise drain the user's
+ * entire history, which is wasteful and fragile for large accounts —
+ * cap at this many pages and let subsequent syncs catch up incrementally.
+ */
+export const MAX_PAGES_PER_SYNC = 5;

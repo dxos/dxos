@@ -43,16 +43,18 @@ const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTarge
         return yield* Effect.fail(new MissingBlueskyHandleError());
       }
 
-      // Saved feeds: best-effort. If `getPreferences` fails (Edge proxy,
-      // schema drift, …) still return the self-targets so the user has
-      // something to pick from.
-      const savedFeeds = yield* Effect.tryPromise(() =>
-        BlueskyApi.getSavedFeeds({
+      // Saved feeds: best-effort. If PDS resolution or `getPreferences`
+      // fails (offline, unsupported DID method, schema drift, …) still
+      // return the self-targets so the user has something to pick from.
+      const savedFeeds = yield* Effect.tryPromise(async () => {
+        const pdsBaseUrl = await BlueskyApi.resolvePds(handle);
+        return BlueskyApi.getSavedFeeds({
           client,
           spaceId: db.spaceId,
           accessTokenId: accessToken.id,
-        }),
-      ).pipe(
+          pdsBaseUrl,
+        });
+      }).pipe(
         Effect.catchAll((error) =>
           Effect.sync(() => {
             log.warn('failed to load Bluesky saved feeds', { error });
