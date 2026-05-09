@@ -138,9 +138,8 @@ const syncTarget = ({
     }
 
     Obj.update(integration, (integration) => {
-      const next = integration as Obj.Mutable<typeof integration>;
-      next.targets[targetIndex] = {
-        ...next.targets[targetIndex],
+      integration.targets[targetIndex] = {
+        ...integration.targets[targetIndex],
         lastSyncAt: new Date().toISOString(),
         lastError: undefined,
       };
@@ -151,9 +150,8 @@ const syncTarget = ({
     Effect.tapError((error) =>
       Effect.sync(() =>
         Obj.update(integration, (integration) => {
-          const next = integration as Obj.Mutable<typeof integration>;
-          next.targets[targetIndex] = {
-            ...next.targets[targetIndex],
+          integration.targets[targetIndex] = {
+            ...integration.targets[targetIndex],
             lastError: error instanceof Error ? error.message : String(error),
           };
         }),
@@ -191,9 +189,8 @@ const resolveOrCreateLocalFeed = ({
     });
     const persisted = db.add(newFeed);
     Obj.update(integration, (integration) => {
-      const next = integration as Obj.Mutable<typeof integration>;
-      next.targets[targetIndex] = {
-        ...next.targets[targetIndex],
+      integration.targets[targetIndex] = {
+        ...integration.targets[targetIndex],
         object: Ref.make(persisted),
       };
     });
