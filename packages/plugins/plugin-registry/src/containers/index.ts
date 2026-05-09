@@ -9,3 +9,4 @@ export const LoadPluginDialog: ComponentType<any> = lazy(() => import('./LoadPlu
 export const PluginArticle: ComponentType<any> = lazy(() => import('./PluginArticle'));
 export const PluginRegistryArticle: ComponentType<any> = lazy(() => import('./PluginRegistryArticle'));
 export const PluginsArticle: ComponentType<any> = lazy(() => import('./PluginsArticle'));
+export const RegistrySettingsContainer: ComponentType<any> = lazy(() => import('./RegistrySettingsContainer'));

@@ -219,17 +219,25 @@ const loadFromManifest = (
         (cause) => new RemotePluginLoadError({ context: { locator: manifestUrl, reason: 'manifest-error' }, cause }),
       ),
     );
-    // Cache the manifest URL alongside its declared assets. Without it, `preload` on a
-    // subsequent reload would fetch the manifest from the network — and fail when the
-    // plugin's host is offline, dropping the plugin from the runtime.
-    const cachedUrls =
-      manifest.assetUrls.indexOf(manifestUrl) === -1 ? [manifestUrl, ...manifest.assetUrls] : manifest.assetUrls;
     const wrapCacheError = Effect.mapError(
       (cause: PluginAssetCache.PluginAssetCacheError) =>
         new RemotePluginLoadError({ context: { locator: manifestUrl, reason: 'cache-error' }, cause }),
     );
-    yield* cache.cache(manifest.id, cachedUrls).pipe(wrapCacheError);
-    const entryUrl = yield* cache.resolve(manifest.id, manifest.entryUrl).pipe(wrapCacheError);
+    // Dev-mode manifests (served by `vite dev` via composerPlugin) skip the offline
+    // cache: chunks resolve on demand through the dev server, the asset list isn't
+    // enumerable up-front, and CSS arrives via runtime <style> injection rather than
+    // static <link> tags.
+    if (!manifest.dev) {
+      // Cache the manifest URL alongside its declared assets. Without it, `preload` on a
+      // subsequent reload would fetch the manifest from the network — and fail when the
+      // plugin's host is offline, dropping the plugin from the runtime.
+      const cachedUrls =
+        manifest.assetUrls.indexOf(manifestUrl) === -1 ? [manifestUrl, ...manifest.assetUrls] : manifest.assetUrls;
+      yield* cache.cache(manifest.id, cachedUrls).pipe(wrapCacheError);
+    }
+    const entryUrl = manifest.dev
+      ? manifest.entryUrl
+      : yield* cache.resolve(manifest.id, manifest.entryUrl).pipe(wrapCacheError);
     const mod = yield* Effect.tryPromise({
       try: () => import(/* @vite-ignore */ entryUrl),
       catch: (cause) =>
@@ -257,7 +265,11 @@ const loadFromManifest = (
     // passes. If we did this earlier and the import or meta checks failed, the
     // `<link>` tags would leak into the host DOM with no plugin to own their
     // teardown — `uninstall` only runs for plugins the manager actually accepted.
-    yield* loadStylesheets(manifest, cache).pipe(wrapCacheError);
+    // In dev mode, Vite injects styles at runtime via the module graph, so static
+    // <link> tags would duplicate (or 404, since CSS chunks aren't pre-built).
+    if (!manifest.dev) {
+      yield* loadStylesheets(manifest, cache).pipe(wrapCacheError);
+    }
     return { plugin, manifest };
   });
 
@@ -323,24 +335,31 @@ export const make = (builtinPlugins: Plugin.Plugin[], options: Options = {}) => 
   const key = options.key ?? DEFAULT_KEY;
   const cache = options.cache ?? PluginAssetCache.noop();
 
-  return (locator: string): Effect.Effect<Plugin.Plugin, RemotePluginLoadError> =>
+  return (locator: string): Effect.Effect<{ plugin: Plugin.Plugin; dev?: boolean }, RemotePluginLoadError> =>
     Effect.gen(function* () {
       const builtin = builtinPlugins.find((plugin) => plugin.meta.id === locator);
       if (builtin) {
-        return builtin;
+        return { plugin: builtin };
       }
       if (!isUrl(locator)) {
         return yield* Effect.fail(new RemotePluginLoadError({ context: { locator, reason: 'invalid-locator' } }));
       }
-      const { plugin } = yield* loadFromManifest(locator, cache);
-      const duplicate = builtinPlugins.find((existing) => existing.meta.id === plugin.meta.id);
-      if (duplicate) {
-        return yield* Effect.fail(
-          new RemotePluginLoadError({ context: { locator, reason: 'duplicate-id', id: plugin.meta.id } }),
-        );
+      const { plugin, manifest } = yield* loadFromManifest(locator, cache);
+      // Production manifests can't collide with a builtin id — that would make
+      // the registered plugin permanently inaccessible. Dev manifests are
+      // allowed to collide because the manager shadow primitive handles the
+      // overlap (dev plugin takes the id slot for the session, original is
+      // restored on uninstall or page reload).
+      if (!manifest.dev) {
+        const duplicate = builtinPlugins.find((existing) => existing.meta.id === plugin.meta.id);
+        if (duplicate) {
+          return yield* Effect.fail(
+            new RemotePluginLoadError({ context: { locator, reason: 'duplicate-id', id: plugin.meta.id } }),
+          );
+        }
+        persistRemotePlugin(storage, key, { id: plugin.meta.id, url: locator });
       }
-      persistRemotePlugin(storage, key, { id: plugin.meta.id, url: locator });
-      return plugin;
+      return { plugin, dev: manifest.dev };
     });
 };
 

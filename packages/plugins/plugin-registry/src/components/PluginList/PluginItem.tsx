@@ -4,7 +4,7 @@
 
 import React, { type MouseEvent, useCallback, useMemo } from 'react';
 
-import { type Plugin } from '@dxos/app-framework';
+import { type Plugin, type PluginManager } from '@dxos/app-framework';
 import {
   Button,
   type ChromaticPalette,
@@ -22,6 +22,8 @@ import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { type RegistryTagType } from '#types';
+
+import { PluginFailureBadge } from '../PluginFailureBadge';
 
 export type PluginItemProps = {
   plugin: Plugin.Plugin;
@@ -52,6 +54,12 @@ export type PluginItemProps = {
   updating?: readonly string[];
   hasSettings?: (id: string) => boolean;
   onSettings?: (id: string) => void;
+  /**
+   * Failure record for this plugin, if any. When present a warning badge is
+   * rendered next to the plugin name; clicking it opens a popover with the
+   * phase, reason, and error message.
+   */
+  failure?: PluginManager.PluginFailure;
 };
 
 export const PluginItem = ({
@@ -68,6 +76,7 @@ export const PluginItem = ({
   updating,
   hasSettings: hasSettingsProp,
   onSettings,
+  failure,
 }: PluginItemProps) => {
   const { t } = useTranslation(meta.id);
   const { id, name, description, tags, icon = 'ph--circle--regular', iconHue = 'neutral' } = plugin.meta;
@@ -140,8 +149,9 @@ export const PluginItem = ({
       </div>
 
       <div className={mx(gridRows)}>
-        <div className='flex items-center overflow-hidden cursor-pointer' onClick={handleClick}>
+        <div className='flex items-center gap-2 overflow-hidden cursor-pointer' onClick={handleClick}>
           <span className='text-lg truncate'>{name ?? id}</span>
+          {failure && <PluginFailureBadge failure={failure} />}
         </div>
 
         <div>

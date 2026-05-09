@@ -7,6 +7,7 @@ import React, { useMemo } from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import {
@@ -15,8 +16,9 @@ import {
   PluginArticle,
   PluginRegistryArticle,
   PluginsArticle,
+  RegistrySettingsContainer,
 } from '#containers';
-import { registryCategoryId } from '#meta';
+import { meta, registryCategoryId } from '#meta';
 
 import { useAutoTags, useRegistryPlugins, useRemotePluginIds } from '../hooks';
 
@@ -120,6 +122,13 @@ export default Capability.makeModule(() =>
         id: LOAD_PLUGIN_DIALOG,
         filter: AppSurface.component(AppSurface.Dialog, LOAD_PLUGIN_DIALOG),
         component: () => <LoadPluginDialog />,
+      }),
+      Surface.create({
+        id: 'plugin-settings',
+        role: 'article',
+        filter: (data): data is { subject: AppCapabilities.Settings } =>
+          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
+        component: ({ data: { subject } }) => <RegistrySettingsContainer subject={subject} />,
       }),
     ]),
   ),

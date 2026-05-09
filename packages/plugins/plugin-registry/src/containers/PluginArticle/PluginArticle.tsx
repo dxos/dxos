@@ -35,6 +35,8 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   });
 
   const enabled = manager.getEnabled().includes(pluginId);
+  const failed = useAtomValue(manager.failed);
+  const failure = useMemo(() => failed.find((entry) => entry.id === pluginId), [failed, pluginId]);
   const isInstalled = useMemo(() => plugins.some((candidate) => candidate.meta.id === pluginId), [plugins, pluginId]);
   const isCore = manager.getCore().includes(pluginId);
   const canUninstall = isInstalled && !isCore && remotePluginIds.has(pluginId);
@@ -68,6 +70,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
       onVersionChange={setSelectedVersionTag}
       onInstallVersion={pickerVersions.length > 0 ? actions.handleInstallVersion : undefined}
       installedVersionTag={installedVersionTag}
+      failure={failure}
     />
   );
 };
