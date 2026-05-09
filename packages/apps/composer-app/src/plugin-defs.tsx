@@ -34,6 +34,7 @@ import { InboxPlugin } from '@dxos/plugin-inbox';
 import { IntegrationPlugin } from '@dxos/plugin-integration';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon';
 import { KanbanPlugin } from '@dxos/plugin-kanban';
+import { LinearPlugin } from '@dxos/plugin-linear';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
@@ -227,6 +228,7 @@ export const getPlugins = ({
     OperationPlugin(),
     KanbanPlugin(),
     layoutPlugin,
+    LinearPlugin(),
     MapPlugin(),
     isLabs && MapPluginSolid(),
     MarkdownPlugin(),
