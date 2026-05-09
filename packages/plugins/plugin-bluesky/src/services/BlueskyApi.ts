@@ -246,24 +246,25 @@ export const getActorLikes = (input: {
   });
 
 /**
- * Fetch the actor's bookmarked posts.
+ * Fetch the authenticated user's bookmarked posts.
  *
- * TODO(plugin-bluesky): bookmarks are not part of the standard atproto
- * lexicon — they are a private, app-specific feature on the Bluesky
- * appview, so this XRPC endpoint may not exist on a generic PDS and may
- * also require an appview-bound auth context rather than a PDS-bound
- * one. Likely needs a custom path (e.g. routed through the appview, not
- * the user's PDS) before it works in practice. Flagged for research.
+ * Bookmarks are part of the standard atproto lexicon
+ * (`app.bsky.bookmark.getBookmarks`); auth flows via the user's PDS the
+ * same way `getActorLikes` does — the PDS proxies `app.bsky.*` requests
+ * to the AppView for us. The response shape differs from the feed
+ * endpoints though: each entry is a `bookmarkView` whose `item` is a
+ * union of `postView | blockedPost | notFoundPost`. We surface only the
+ * post-views and skip the rest.
  */
-export const getBookmarks = (input: {
+export const getBookmarks = async (input: {
   client: Client;
   spaceId: string;
   accessTokenId: string;
   pdsBaseUrl: string;
   limit?: number;
   cursor?: string;
-}): Promise<GetFeedResponse> =>
-  authedGet<GetFeedResponse>({
+}): Promise<GetFeedResponse> => {
+  const response = await authedGet<GetBookmarksResponse>({
     client: input.client,
     spaceId: input.spaceId,
     accessTokenId: input.accessTokenId,
@@ -271,6 +272,42 @@ export const getBookmarks = (input: {
     path: 'app.bsky.bookmark.getBookmarks',
     query: { limit: input.limit ?? DEFAULT_FEED_LIMIT, cursor: input.cursor },
   });
+  const feed: FeedViewPost[] = [];
+  for (const entry of response.bookmarks) {
+    const item = entry.item;
+    if (item?.$type === 'app.bsky.feed.defs#postView' && item.uri && item.author && item.record) {
+      feed.push({
+        post: {
+          uri: item.uri,
+          cid: item.cid ?? '',
+          author: item.author,
+          record: item.record,
+          indexedAt: item.indexedAt ?? entry.createdAt,
+        },
+      });
+    }
+  }
+  return { feed, cursor: response.cursor };
+};
+
+/** Native shape returned by `app.bsky.bookmark.getBookmarks`. */
+type GetBookmarksResponse = {
+  cursor?: string;
+  bookmarks: BookmarkView[];
+};
+
+type BookmarkView = {
+  subject: { uri: string; cid: string };
+  createdAt: string;
+  item: {
+    $type?: string;
+    uri?: string;
+    cid?: string;
+    author?: FeedViewPost['post']['author'];
+    record?: FeedViewPost['post']['record'];
+    indexedAt?: string;
+  };
+};
 
 /** Fetch posts from a custom feed generator (`feed` is the at-uri). */
 export const getFeed = (input: {
