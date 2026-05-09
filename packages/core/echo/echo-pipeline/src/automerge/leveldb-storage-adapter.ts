@@ -46,7 +46,7 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
       this._params.monitor?.recordLoadDuration(Date.now() - startMs);
       return chunk;
     } catch (err: any) {
-      if (isLevelDbNotFoundError(err) || isLevelDbNotOpenError(err)) {
+      if (isLevelDbNotFoundError(err)) {
         return undefined;
       }
       throw err;
@@ -57,126 +57,88 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
     if (!this.isOpen) {
       return undefined;
     }
-    try {
-      const startMs = Date.now();
-      const batch = this._params.db.batch();
+    const startMs = Date.now();
+    const batch = this._params.db.batch();
 
-      await this._params.callbacks?.beforeSave?.({ path: keyArray, batch });
-      batch.put<StorageKey, Uint8Array>(keyArray, Buffer.from(binary), {
-        ...encodingOptions,
-      });
-      await batch.write();
-      this._params.monitor?.recordBytesStored(binary.byteLength);
+    await this._params.callbacks?.beforeSave?.({ path: keyArray, batch });
+    batch.put<StorageKey, Uint8Array>(keyArray, Buffer.from(binary), {
+      ...encodingOptions,
+    });
+    await batch.write();
+    this._params.monitor?.recordBytesStored(binary.byteLength);
 
-      await this._params.callbacks?.afterSave?.(keyArray);
-      this._params.monitor?.recordStoreDuration(Date.now() - startMs);
-    } catch (err: any) {
-      if (isLevelDbNotOpenError(err)) {
-        // The underlying db was closed (likely by an external caller / test
-        // teardown) while a WASM-scheduled write was in flight. Treat as a
-        // no-op rather than crash the consumer's microtask queue.
-        return undefined;
-      }
-      throw err;
-    }
+    await this._params.callbacks?.afterSave?.(keyArray);
+    this._params.monitor?.recordStoreDuration(Date.now() - startMs);
   }
 
   async saveBatch(entries: Array<[StorageKey, Uint8Array]>): Promise<void> {
     if (!this.isOpen || entries.length === 0) {
       return undefined;
     }
-    try {
-      const startMs = Date.now();
-      const batch = this._params.db.batch();
+    const startMs = Date.now();
+    const batch = this._params.db.batch();
 
-      for (const [keyArray] of entries) {
-        await this._params.callbacks?.beforeSave?.({ path: keyArray, batch });
-      }
-      for (const [keyArray, binary] of entries) {
-        batch.put<StorageKey, Uint8Array>(keyArray, Buffer.from(binary), {
-          ...encodingOptions,
-        });
-      }
-      await batch.write();
-
-      let bytesStored = 0;
-      for (const [keyArray, binary] of entries) {
-        bytesStored += binary.byteLength;
-        await this._params.callbacks?.afterSave?.(keyArray);
-      }
-      this._params.monitor?.recordBytesStored(bytesStored);
-      this._params.monitor?.recordStoreDuration(Date.now() - startMs);
-    } catch (err: any) {
-      if (isLevelDbNotOpenError(err)) {
-        return undefined;
-      }
-      throw err;
+    for (const [keyArray] of entries) {
+      await this._params.callbacks?.beforeSave?.({ path: keyArray, batch });
     }
+    for (const [keyArray, binary] of entries) {
+      batch.put<StorageKey, Uint8Array>(keyArray, Buffer.from(binary), {
+        ...encodingOptions,
+      });
+    }
+    await batch.write();
+
+    let bytesStored = 0;
+    for (const [keyArray, binary] of entries) {
+      bytesStored += binary.byteLength;
+      await this._params.callbacks?.afterSave?.(keyArray);
+    }
+    this._params.monitor?.recordBytesStored(bytesStored);
+    this._params.monitor?.recordStoreDuration(Date.now() - startMs);
   }
 
   async remove(keyArray: StorageKey): Promise<void> {
     if (!this.isOpen) {
       return undefined;
     }
-    try {
-      await this._params.db.del<StorageKey>(keyArray, { ...encodingOptions });
-    } catch (err: any) {
-      if (isLevelDbNotOpenError(err)) {
-        return undefined;
-      }
-      throw err;
-    }
+    await this._params.db.del<StorageKey>(keyArray, { ...encodingOptions });
   }
 
   async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
     if (!this.isOpen) {
       return [];
     }
-    try {
-      const startMs = Date.now();
-      const result: Chunk[] = [];
-      for await (const [key, value] of this._params.db.iterator<StorageKey, Uint8Array>({
-        gte: keyPrefix,
-        lte: [...keyPrefix, '\uffff'],
-        ...encodingOptions,
-      })) {
-        result.push({
-          key,
-          data: value,
-        });
-        this._params.monitor?.recordBytesLoaded(value.byteLength);
-      }
-      this._params.monitor?.recordLoadDuration(Date.now() - startMs);
-      return result;
-    } catch (err: any) {
-      if (isLevelDbNotOpenError(err)) {
-        return [];
-      }
-      throw err;
+    const startMs = Date.now();
+    const result: Chunk[] = [];
+    for await (const [key, value] of this._params.db.iterator<StorageKey, Uint8Array>({
+      gte: keyPrefix,
+      lte: [...keyPrefix, '\uffff'],
+      ...encodingOptions,
+    })) {
+      result.push({
+        key,
+        data: value,
+      });
+      this._params.monitor?.recordBytesLoaded(value.byteLength);
     }
+    this._params.monitor?.recordLoadDuration(Date.now() - startMs);
+    return result;
   }
 
   async removeRange(keyPrefix: StorageKey): Promise<void> {
     if (!this.isOpen) {
       return undefined;
     }
-    try {
-      const batch = this._params.db.batch();
+    const batch = this._params.db.batch();
 
-      for await (const [key] of this._params.db.iterator<StorageKey, Uint8Array>({
-        gte: keyPrefix,
-        lte: [...keyPrefix, '\uffff'],
-        ...encodingOptions,
-      })) {
-        batch.del<StorageKey>(key, { ...encodingOptions });
-      }
-      await batch.write();
-    } catch (err: any) {
-      if (isLevelDbNotOpenError(err)) {
-        return undefined;
-      }
-      throw err;
+    for await (const [key] of this._params.db.iterator<StorageKey, Uint8Array>({
+      gte: keyPrefix,
+      lte: [...keyPrefix, '\uffff'],
+      ...encodingOptions,
+    })) {
+      batch.del<StorageKey>(key, { ...encodingOptions });
     }
+    await batch.write();
   }
 }
 
@@ -197,13 +159,3 @@ export const encodingOptions = {
 };
 
 const isLevelDbNotFoundError = (err: any): boolean => err.code === 'LEVEL_NOT_FOUND';
-
-/**
- * `abstract-level` raises this when an operation lands on a closed database.
- * Subduction's WASM scheduler can fire `saveCommit` / `saveSedimentreeId`
- * after `repo.shutdown()` returns (the bridge's `pendingSaves` counter does
- * not cover all paths); without this guard those late writes blow up
- * stderr with a "Database is not open" stack from the wasm-bindgen shim.
- */
-const isLevelDbNotOpenError = (err: any): boolean =>
-  err?.code === 'LEVEL_DATABASE_NOT_OPEN' || err?.code === 'LEVEL_ITERATOR_NOT_OPEN';
