@@ -41,24 +41,11 @@ Both files become **GitHub release assets** — see [publishing.md](./publishing
 
 ## Local testing
 
-### Dev server (recommended for iteration)
-
 ```sh
 pnpm dev   # vite dev server, default port 3967
 ```
 
-In Composer: **Settings → Plugins → Load by URL** → paste `http://localhost:3967/manifest.json`. The dev server synthesizes a dev-flavored manifest pointing at the unbundled source entry; the host imports it directly through Vite's transform pipeline. Edits require a manual reload — cross-origin React Refresh isn't supported, so HMR is off by design.
-
-Dev manifests skip the offline asset cache and the static stylesheet injection step. CSS arrives via runtime `<style>` tags injected by Vite as the module graph evaluates, so no asset enumeration is needed up front.
-
-### Production build (verifies what the registry will serve)
-
-```sh
-pnpm build
-pnpm preview   # serves dist/ on localhost:4173 (or similar)
-```
-
-Paste `http://localhost:4173/manifest.json` into the same dialog. This is the path users hit in production: `assets` is fully enumerated, the host eagerly precaches every entry for offline use, and stylesheets are injected as `<link>` tags at install time.
+In Composer: **Settings → Plugins → Plugin Registry → Enable dev plugin**. The toggle persists across reloads, so HMR-driven page reloads keep the dev plugin attached. Edits require a manual reload.
 
 ## Inside the dxos monorepo
 
