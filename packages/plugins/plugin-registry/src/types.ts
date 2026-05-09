@@ -2,23 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
-
-import { Capability } from '@dxos/app-framework';
-import { type PluginEntry } from '@dxos/protocols';
-
-import { meta } from '#meta';
-
-export type CommunityPluginsState = {
-  entries: readonly PluginEntry[];
-  loading: boolean;
-  error: Error | null;
-};
-
-export namespace RegistryCapabilities {
-  export const State = Capability.make<Atom.Atom<CommunityPluginsState>>(`${meta.id}.capability.state`);
-}
 
 export const RegistrySettingsSchema = Schema.mutable(
   Schema.Struct({
@@ -35,7 +19,7 @@ export const RegistryTagType = Schema.Literal(
   'popular',
   'featured',
   'experimental',
-  'community',
+  'registry',
   'local',
 );
 

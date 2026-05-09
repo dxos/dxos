@@ -23,6 +23,10 @@ import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
 import * as CapabilityManager from './capability-manager';
 import * as Plugin from './plugin';
+// Imported with a `PluginRegistry` alias because the unrelated `@effect-atom/atom-react`
+// `Registry` is already imported above; from outside this file the namespace is
+// re-exported as `Registry` via `./index.ts`.
+import * as PluginRegistry from './registry';
 
 /**
  * Tagged error for failures during the constructor-launched core/enabled
@@ -49,6 +53,13 @@ export type ManagerOptions = {
   enabled?: string[];
   registry?: Registry.Registry;
   /**
+   * Backend for the plugin registry catalog. When omitted the manager exposes a
+   * no-op `pluginRegistry` (empty list, no versions endpoint). Implementations
+   * live in app-framework alongside the interface (e.g.
+   * `EdgeRegistryPluginProvider`); the host app instantiates one and passes it in.
+   */
+  pluginRegistryProvider?: PluginRegistry.PluginProvider;
+  /**
    * Hook called when a plugin is removed via {@link PluginManager.remove}. Used by the
    * host app to clean up persisted state (e.g. evict offline-cached plugin assets).
    * Failures are logged and swallowed; removal still succeeds even if the hook fails.
@@ -72,6 +83,13 @@ export interface PluginManager {
   readonly activation: PubSub.PubSub<ActivationMessage>;
   readonly capabilities: CapabilityManager.CapabilityManager;
   readonly registry: Registry.Registry;
+  /**
+   * Cached registry catalog state plus pass-throughs for `listVersions` /
+   * `getPlugin`. Always present — the host supplies a `pluginRegistryProvider`
+   * via {@link ManagerOptions} for real backends, or it falls back to a no-op
+   * implementation that yields an empty catalog.
+   */
+  readonly pluginRegistry: PluginRegistry.Manager;
 
   readonly plugins: Atom.Atom<readonly Plugin.Plugin[]>;
   readonly core: Atom.Atom<readonly string[]>;
@@ -129,6 +147,7 @@ class ManagerImpl implements PluginManager {
   readonly activation = Effect.runSync(PubSub.unbounded<ActivationMessage>());
   readonly capabilities: CapabilityManager.CapabilityManager;
   readonly registry: Registry.Registry;
+  readonly pluginRegistry: PluginRegistry.Manager;
 
   private readonly _pluginsAtom: Atom.Writable<Plugin.Plugin[]>;
   private readonly _coreAtom: Atom.Writable<string[]>;
@@ -168,12 +187,14 @@ class ManagerImpl implements PluginManager {
     core = plugins.map(({ meta }) => meta.id),
     enabled = [],
     registry,
+    pluginRegistryProvider,
     onRemove,
   }: ManagerOptions) {
     this.registry = registry ?? Registry.make();
     this.capabilities = CapabilityManager.make({
       registry: this.registry,
     });
+    this.pluginRegistry = new PluginRegistry.Manager(pluginRegistryProvider, this.registry);
 
     this._pluginLoader = pluginLoader;
     this._onRemove = onRemove;

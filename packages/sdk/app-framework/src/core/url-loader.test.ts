@@ -82,6 +82,47 @@ describe('UrlLoader', () => {
     });
   });
 
+  describe('setInstalledVersion / getInstalledVersion', () => {
+    it('stores and retrieves an installed version', ({ expect }) => {
+      const stored: Record<string, string> = {};
+      const storage: UrlLoader.Storage = {
+        get: (key) => stored[key] ?? null,
+        set: (key, value) => {
+          stored[key] = value;
+        },
+      };
+
+      // Seed a remote entry without a version.
+      storage.set('test-key', JSON.stringify([{ id: 'org.dxos.plugin.foo', url: 'http://example.com/p.mjs' }]));
+
+      UrlLoader.setInstalledVersion('org.dxos.plugin.foo', 'v1.0.0', { storage, key: 'test-key' });
+
+      expect(UrlLoader.getInstalledVersion('org.dxos.plugin.foo', { storage, key: 'test-key' })).toBe('v1.0.0');
+    });
+
+    it('returns undefined when plugin is not persisted', ({ expect }) => {
+      const storage: UrlLoader.Storage = { get: () => null, set: () => {} };
+      expect(UrlLoader.getInstalledVersion('org.dxos.plugin.missing', { storage })).toBeUndefined();
+    });
+
+    it('overwrites an existing version when called again', ({ expect }) => {
+      const stored: Record<string, string> = {};
+      const storage: UrlLoader.Storage = {
+        get: (key) => stored[key] ?? null,
+        set: (key, value) => {
+          stored[key] = value;
+        },
+      };
+      storage.set(
+        'test-key',
+        JSON.stringify([{ id: 'org.dxos.plugin.foo', url: 'http://example.com/p.mjs', version: 'v1.0.0' }]),
+      );
+
+      UrlLoader.setInstalledVersion('org.dxos.plugin.foo', 'v2.0.0', { storage, key: 'test-key' });
+      expect(UrlLoader.getInstalledVersion('org.dxos.plugin.foo', { storage, key: 'test-key' })).toBe('v2.0.0');
+    });
+  });
+
   describe('make', () => {
     it.effect('resolves built-in plugins by meta.id', () =>
       Effect.gen(function* () {

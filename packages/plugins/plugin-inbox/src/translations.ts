@@ -70,6 +70,10 @@ export const translations = [
         'sync-calendar-success.title': 'Calendar sync complete',
         'empty-calendar.message': 'Calendar empty',
 
+        'sync-contacts.label': 'Sync contacts',
+        'sync-contacts-error.title': 'Failed to sync contacts',
+        'sync-contacts-success.title': 'Contacts sync complete',
+
         'show-contact.label': 'Show contact',
         'create-contact.label': 'Create contact',
 

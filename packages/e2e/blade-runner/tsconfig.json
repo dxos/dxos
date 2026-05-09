@@ -62,6 +62,12 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/functions"
+    },
+    {
+      "path": "../../core/compute/functions-runtime"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -69,12 +75,6 @@
     },
     {
       "path": "../../core/echo/echo-pipeline"
-    },
-    {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/functions-runtime"
     },
     {
       "path": "../../core/halo/keyring"

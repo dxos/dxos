@@ -137,7 +137,7 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
 export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] =>
   [
     // Default
-    GalleryPlugin.meta.id,
+    AssistantPlugin.meta.id,
     InboxPlugin.meta.id,
     KanbanPlugin.meta.id,
     MarkdownPlugin.meta.id,
@@ -148,8 +148,6 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     ThreadPlugin.meta.id,
     WnfsPlugin.meta.id,
 
-    CodePlugin.meta.id,
-
     // Dev
     isDev && DebugPlugin.meta.id,
 
@@ -158,9 +156,9 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
 
     // Labs
     (isDev || isLabs) && [
-      AssistantPlugin.meta.id,
-      DiscordPlugin.meta.id,
+      CodePlugin.meta.id,
       FeedPlugin.meta.id,
+      GalleryPlugin.meta.id,
       IrohBeaconPlugin.meta.id,
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
