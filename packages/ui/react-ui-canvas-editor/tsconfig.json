@@ -36,7 +36,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/conductor"
+      "path": "../../core/compute/conductor"
     },
     {
       "path": "../../core/echo/echo"

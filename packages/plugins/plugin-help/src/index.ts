@@ -6,11 +6,10 @@ import { Plugin } from '@dxos/app-framework';
 
 import { meta } from './meta';
 
-export const HelpPlugin = Plugin.lazy(meta, () => import('./HelpPlugin'));
-
-export * from './meta';
-
 export { HelpCapabilities } from './types';
-export * from './components';
 export * from './constants';
-export * from './hooks';
+export * from './meta';
+export * from './types';
+
+export const HelpPlugin = Plugin.lazy(meta, () => import('#plugin'));
+export type { HelpPluginOptions } from '#plugin';

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import ReactPlugin from '@vitejs/plugin-react-swc';
+import ReactPlugin from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -146,9 +146,7 @@ export default defineConfig(
         }),
         ThemePlugin({}),
         WasmPlugin(),
-        ReactPlugin({
-          tsDecorators: true,
-        }),
+        ReactPlugin(),
         // https://www.bundle-buddy.com/rollup
         {
           name: 'bundle-buddy',

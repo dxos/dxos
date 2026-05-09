@@ -4,16 +4,15 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { Channel } from '@dxos/plugin-thread/types';
 import { Query, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { Row, RowList } from '@dxos/react-ui-list';
+import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 import { MeetingOperation } from '#operations';
@@ -55,20 +54,9 @@ export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
     return meetings.toSorted((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
   }, [meetings]);
 
-  const metadata = useCapabilities(AppCapabilities.Metadata);
-  const [meetingMetadata] = useMemo(
-    () =>
-      metadata
-        .filter(
-          (
-            capability,
-          ): capability is {
-            id: string;
-            metadata: { label: (object: any) => string; icon: string };
-          } => capability.id === Type.getTypename(Meeting.Meeting),
-        )
-        .map((c) => c.metadata),
-    [metadata],
+  const getLabel = useCallback(
+    (meeting: Meeting.Meeting) => Obj.getLabel(meeting) ?? new Date(meeting.created).toLocaleString(),
+    [],
   );
 
   const handleCreateMeeting = useCallback(async () => {
@@ -93,7 +81,7 @@ export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
         <RowList.Viewport>
           <RowList.Content aria-label={t('meeting-list.label')}>
             {sortedMeetings.map((meeting) => (
-              <MeetingItem key={meeting.id} meeting={meeting} getLabel={meetingMetadata.label} />
+              <MeetingItem key={meeting.id} meeting={meeting} getLabel={getLabel} />
             ))}
           </RowList.Content>
         </RowList.Viewport>

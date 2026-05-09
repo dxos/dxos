@@ -6,18 +6,11 @@ import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
-import { Integration } from '@dxos/plugin-integration/types';
+import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/plugin-integration/types';
 
 import { meta } from '#meta';
 
 const TRELLO_OPERATION = `${meta.id}.operation`;
-
-/** Wire-shape of a `RemoteTarget` for `GetTrelloBoards.output`. */
-const RemoteTarget = Schema.Struct({
-  id: Schema.String,
-  name: Schema.String,
-  description: Schema.String.pipe(Schema.optional),
-});
 
 /**
  * Discovery only — list Trello boards reachable from the integration's token.
@@ -32,12 +25,8 @@ export const GetTrelloBoards = Operation.make({
     name: 'Get Trello Boards',
     description: 'List Trello boards reachable from an integration without materializing local Kanbans.',
   },
-  input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration),
-  }),
-  output: Schema.Struct({
-    targets: Schema.Array(RemoteTarget),
-  }),
+  input: GetSyncTargetsInput,
+  output: GetSyncTargetsOutput,
   // TODO(wittjosiah): declare `services: [Database.Service]` once composer's
   //   OperationInvoker is wired with a `databaseResolver`. Today, declaring it
   //   forces DynamicRuntime validation to fail before the handler runs because

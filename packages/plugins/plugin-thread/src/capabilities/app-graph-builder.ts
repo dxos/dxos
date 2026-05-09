@@ -14,10 +14,11 @@ import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { type SelectionManager, type SelectionMode, defaultSelection } from '@dxos/react-ui-attention';
+import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 import { ThreadOperation } from '#operations';
-import { Channel, ThreadCapabilities, type ThreadState } from '#types';
+import { ThreadCapabilities, type ThreadState } from '#types';
 
 import { getAnchor } from '../util';
 
@@ -61,8 +62,8 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
 
-    const resolve = (typename: string) =>
-      capabilities.getAll(AppCapabilities.Metadata).find(({ id }: { id: string }) => id === typename)?.metadata ?? {};
+    const getCommentConfig = (typename: string) =>
+      capabilities.getAll(AppCapabilities.CommentConfig).find(({ id }) => id === typename);
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
@@ -121,8 +122,8 @@ export default Capability.makeModule(
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
             return Option.none();
           }
-          const metadata = resolve(Obj.getTypename(node.data)!);
-          return typeof metadata.comments === 'string' ? Option.some(node) : Option.none();
+          const commentConfig = getCommentConfig(Obj.getTypename(node.data)!);
+          return commentConfig ? Option.some(node) : Option.none();
         },
         connector: () =>
           Effect.succeed([
@@ -141,23 +142,23 @@ export default Capability.makeModule(
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
             return Option.none();
           }
-          const metadata = resolve(Obj.getTypename(node.data)!);
-          return typeof metadata.comments === 'string' ? Option.some(node) : Option.none();
+          const commentConfig = getCommentConfig(Obj.getTypename(node.data)!);
+          return commentConfig ? Option.some(node) : Option.none();
         },
         actions: (matched, get) => {
           const object = matched.data;
           const objectDxn = Obj.getDXN(object).toString();
           const stateAtom = capabilities.atom(ThreadCapabilities.State);
           const selectionManager = capabilities.get(AttentionCapabilities.Selection);
-          const metadata = resolve(Obj.getTypename(object)!);
+          const commentConfig = getCommentConfig(Obj.getTypename(object)!)!;
 
           const disabled = get(
             commentDisabledFamily({
               stateAtom,
               selectionManager,
               objectId: objectDxn,
-              commentsType: metadata.comments as string,
-              selectionMode: metadata.selectionMode,
+              commentsType: commentConfig.comments,
+              selectionMode: commentConfig.selectionMode as SelectionMode | undefined,
             }),
           );
 
@@ -165,10 +166,11 @@ export default Capability.makeModule(
             {
               id: 'comment',
               data: Effect.fnUntraced(function* () {
-                const metadata = resolve(Obj.getTypename(object)!);
+                const config = getCommentConfig(Obj.getTypename(object)!)!;
                 const selection = selectionManager.getSelection(objectDxn);
-                const anchor = metadata.comments === 'anchored' ? getAnchor(selection) : Date.now().toString();
-                const name = metadata.getAnchorLabel?.(object, anchor);
+                const anchor =
+                  (config.comments === 'anchored' ? getAnchor(selection) : undefined) ?? Date.now().toString();
+                const name = config.getAnchorLabel?.(object, anchor);
                 yield* Operation.invoke(ThreadOperation.Create, {
                   anchor,
                   name,

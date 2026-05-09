@@ -39,10 +39,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo"
+      "path": "../../core/compute/operation"
     },
     {
-      "path": "../../core/operation"
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../sdk/app-framework"
@@ -73,6 +73,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

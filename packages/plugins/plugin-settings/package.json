@@ -13,6 +13,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": "./src/SettingsPlugin.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
@@ -25,6 +26,12 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs",
       "types": "./dist/types/src/index.d.ts"
+    },
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "browser": "./dist/lib/browser/plugin.mjs",
+      "node": "./dist/lib/node-esm/plugin.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
@@ -52,6 +59,7 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
+    "@dxos/plugin-graph": "workspace:*",
     "@types/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:"

@@ -18,7 +18,7 @@ import { type ComplexMap, type Position } from '@dxos/util';
 import { meta } from '#meta';
 
 import * as Settings from './Settings';
-import { type ObjectViewerProps } from './types';
+import { type CreateObject, type ObjectViewerProps } from './types';
 
 export namespace SpaceCapabilities {
   export const Settings = Capability.make<Atom.Writable<Settings.Settings>>(`${meta.id}.capability.settings`);
@@ -71,4 +71,12 @@ export namespace SpaceCapabilities {
   // TODO(wittjosiah): Replace with migrations, this is not a sustainable solution.
   export type HandleRepair = (params: { space: Space; isDefault: boolean }) => Promise<void>;
   export const Repair = Capability.make<HandleRepair>(`${meta.id}.capability.repair`);
+
+  /** Typed creation entry contributed per typename by plugins that support creating objects. */
+  export type CreateObjectEntry = Readonly<{
+    id: string;
+    createObject: CreateObject;
+    inputSchema?: Schema.Schema.AnyNoContext;
+  }>;
+  export const CreateObjectEntry = Capability.make<CreateObjectEntry>(`${meta.id}.capability.create-object`);
 }

@@ -10,6 +10,5 @@ import { Plugin } from '@dxos/app-framework';
 
 import { meta } from './meta';
 
-export const SamplePlugin = Plugin.lazy(meta, () => import('./SamplePlugin'));
-
-export * from './meta';
+export { meta } from './meta';
+export const SamplePlugin = Plugin.lazy(meta, () => import('#plugin'));

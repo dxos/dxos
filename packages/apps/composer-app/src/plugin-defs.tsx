@@ -27,12 +27,14 @@ import { DoctorPlugin } from '@dxos/plugin-doctor';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { FeedPlugin } from '@dxos/plugin-feed';
 import { GalleryPlugin } from '@dxos/plugin-gallery';
+import { GitHubPlugin } from '@dxos/plugin-github';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { HelpPlugin } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { IntegrationPlugin } from '@dxos/plugin-integration';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon';
 import { KanbanPlugin } from '@dxos/plugin-kanban';
+import { LinearPlugin } from '@dxos/plugin-linear';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
@@ -57,6 +59,7 @@ import { SheetPlugin } from '@dxos/plugin-sheet';
 import { SidekickPlugin } from '@dxos/plugin-sidekick';
 import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
 import { SketchPlugin } from '@dxos/plugin-sketch';
+import { SlackPlugin } from '@dxos/plugin-slack';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { SpacetimePlugin } from '@dxos/plugin-spacetime';
 import { SpotlightPlugin } from '@dxos/plugin-spotlight';
@@ -136,7 +139,7 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
 export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] =>
   [
     // Default
-    GalleryPlugin.meta.id,
+    AssistantPlugin.meta.id,
     InboxPlugin.meta.id,
     KanbanPlugin.meta.id,
     MarkdownPlugin.meta.id,
@@ -147,8 +150,6 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     ThreadPlugin.meta.id,
     WnfsPlugin.meta.id,
 
-    CodePlugin.meta.id,
-
     // Dev
     isDev && DebugPlugin.meta.id,
 
@@ -157,9 +158,9 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
 
     // Labs
     (isDev || isLabs) && [
-      AssistantPlugin.meta.id,
-      DiscordPlugin.meta.id,
+      CodePlugin.meta.id,
       FeedPlugin.meta.id,
+      GalleryPlugin.meta.id,
       IrohBeaconPlugin.meta.id,
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
@@ -220,6 +221,7 @@ export const getPlugins = ({
     ExplorerPlugin(),
     FeedPlugin(),
     GalleryPlugin(),
+    GitHubPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),
@@ -227,6 +229,7 @@ export const getPlugins = ({
     OperationPlugin(),
     KanbanPlugin(),
     layoutPlugin,
+    LinearPlugin(),
     MapPlugin(),
     isLabs && MapPluginSolid(),
     MarkdownPlugin(),
@@ -255,6 +258,7 @@ export const getPlugins = ({
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
+    SlackPlugin(),
     SpacetimePlugin(),
     SpacePlugin({
       observability: true,

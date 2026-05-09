@@ -42,11 +42,10 @@ Both files become **GitHub release assets** — see [publishing.md](./publishing
 ## Local testing
 
 ```sh
-pnpm build
-pnpm preview   # serves dist/ on localhost:4173 (or similar)
+pnpm dev   # vite dev server, default port 3967
 ```
 
-In Composer: **Settings → Plugins → Load by URL** → paste the local `manifest.json` URL. The plugin loads dynamically; reloading rebuilds it.
+In Composer: **Settings → Plugins → Plugin Registry → Enable dev plugin**. The toggle persists across reloads, so HMR-driven page reloads keep the dev plugin attached. Edits require a manual reload.
 
 ## Inside the dxos monorepo
 

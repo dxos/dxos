@@ -4,13 +4,28 @@
 
 import { describe, test } from 'vitest';
 
+import { ClientPlugin } from '@dxos/plugin-client';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
-import { SamplePlugin } from './cli/plugin';
+import { SamplePlugin } from '#plugin';
+
+import { meta } from './meta';
 import { SampleOperation } from './operations';
 import { SampleItem } from './types';
 
+const moduleId = (name: string) => `${meta.id}.module.${name}`;
+
 describe('SamplePlugin', () => {
+  test('modules activate on the expected events', async ({ expect }) => {
+    await using harness = await createComposerTestApp({
+      plugins: [ClientPlugin({}), SamplePlugin()],
+    });
+
+    expect(harness.manager.getActive()).toEqual(
+      expect.arrayContaining([moduleId('CreateObject'), moduleId('schema'), moduleId('OperationHandler')]),
+    );
+  });
+
   test('CreateSampleItem returns a SampleItem object', async ({ expect }) => {
     await using harness = await createComposerTestApp({ plugins: [SamplePlugin()] });
     const { object } = await harness.invoke(SampleOperation.CreateSampleItem, { name: 'hello' });

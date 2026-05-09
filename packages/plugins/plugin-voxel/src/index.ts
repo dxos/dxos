@@ -6,9 +6,8 @@ import { Plugin } from '@dxos/app-framework';
 
 import { meta } from './meta';
 
-export const VoxelPlugin = Plugin.lazy(meta, () => import('./VoxelPlugin'));
-
 export * from './meta';
-
-export * from './components';
 export * from './models';
+export * from './types';
+
+export const VoxelPlugin = Plugin.lazy(meta, () => import('#plugin'));

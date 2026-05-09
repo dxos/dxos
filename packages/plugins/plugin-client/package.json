@@ -14,15 +14,19 @@
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
-      "types": "./src/capabilities/index.ts",
       "browser": "./src/capabilities/index.ts",
-      "node": "./src/capabilities/node.ts"
+      "node": "./src/capabilities/node.ts",
+      "default": "./src/capabilities/index.ts"
     },
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#plugin": {
+      "browser": "./src/ClientPlugin.ts",
+      "node": "./src/ClientPlugin.node.ts",
+      "default": "./src/ClientPlugin.ts"
+    },
     "#testing": "./src/testing/index.ts",
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
@@ -34,16 +38,17 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
-    "./cli": {
-      "source": "./src/cli/index.ts",
-      "types": "./dist/types/src/cli/index.d.ts",
-      "node": "./dist/lib/node-esm/cli/index.mjs"
-    },
     "./operations": {
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",
       "browser": "./dist/lib/browser/operations/index.mjs",
       "node": "./dist/lib/node-esm/operations/index.mjs"
+    },
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "browser": "./dist/lib/browser/plugin.mjs",
+      "node": "./dist/lib/node-esm/plugin.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",

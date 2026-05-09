@@ -39,7 +39,7 @@ export const JoinHeading = forwardRef(
       <Heading
         ref={forwardedRef}
         titleId={titleId}
-        title={t(mode === 'halo-only' ? 'selecting identity heading' : 'joining space heading')}
+        title={t(mode === 'halo-only' ? 'selecting-identity.heading' : 'joining-space.heading')}
         {...(mode === 'halo-only'
           ? { ssrOnly: true }
           : { corner: exitActionParent ? cloneElement(exitActionParent, {}, exitButton) : exitButton })}

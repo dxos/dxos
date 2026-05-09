@@ -125,19 +125,28 @@
       "path": "../../common/web-context-solid"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/compute/assistant"
     },
     {
-      "path": "../../core/assistant-toolkit"
+      "path": "../../core/compute/assistant-toolkit"
     },
     {
-      "path": "../../core/compute"
+      "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/conductor"
+      "path": "../../core/compute/conductor"
+    },
+    {
+      "path": "../../core/compute/functions"
+    },
+    {
+      "path": "../../core/compute/functions-runtime"
+    },
+    {
+      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
@@ -168,12 +177,6 @@
     },
     {
       "path": "../../core/echo/index-core"
-    },
-    {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/functions-runtime"
     },
     {
       "path": "../../core/halo/credentials"
@@ -216,9 +219,6 @@
     },
     {
       "path": "../../core/mesh/websocket-rpc"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"
@@ -284,6 +284,9 @@
       "path": "../../plugins/plugin-gallery"
     },
     {
+      "path": "../../plugins/plugin-github"
+    },
+    {
       "path": "../../plugins/plugin-graph"
     },
     {
@@ -300,6 +303,9 @@
     },
     {
       "path": "../../plugins/plugin-kanban"
+    },
+    {
+      "path": "../../plugins/plugin-linear"
     },
     {
       "path": "../../plugins/plugin-map"
@@ -372,6 +378,9 @@
     },
     {
       "path": "../../plugins/plugin-sketch"
+    },
+    {
+      "path": "../../plugins/plugin-slack"
     },
     {
       "path": "../../plugins/plugin-space"

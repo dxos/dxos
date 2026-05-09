@@ -2,22 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { ClientEvents } from '@dxos/plugin-client/types';
 
-import { AppGraphBuilder, OperationHandler, ReactSurface, RegistryState } from '#capabilities';
+import { AppGraphBuilder, DevPluginLoader, OperationHandler, ReactSurface, RegistrySettings } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const RegistryPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSettingsModule({ activate: RegistrySettings }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
-    activatesOn: ClientEvents.ClientReady,
-    activate: RegistryState,
+    id: 'dev-plugin-loader',
+    activatesOn: ActivationEvents.Startup,
+    activate: DevPluginLoader,
   }),
   Plugin.make,
 );

@@ -19,7 +19,7 @@ import { EventStack, type EventStackActionHandler } from '#components';
 import { meta } from '#meta';
 import { type Calendar } from '#types';
 
-import { NewCalendar } from './NewCalendar';
+import { InitializeCalendar } from './InitializeCalendar';
 
 const byDate =
   (direction = -1) =>
@@ -101,7 +101,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
           </Panel.Toolbar>
           <Panel.Content asChild>
             {isEmpty ? (
-              <NewCalendar calendar={subject} />
+              <InitializeCalendar calendar={subject} />
             ) : (
               <EventStack id={id} events={events} currentId={currentId} onAction={handleAction} />
             )}

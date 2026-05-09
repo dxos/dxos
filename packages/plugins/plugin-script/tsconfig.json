@@ -52,16 +52,25 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/compute/assistant"
     },
     {
-      "path": "../../core/assistant-toolkit"
+      "path": "../../core/compute/assistant-toolkit"
     },
     {
-      "path": "../../core/compute"
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/functions"
+    },
+    {
+      "path": "../../core/compute/functions-runtime"
+    },
+    {
+      "path": "../../core/compute/functions-simulator-cloudflare"
     },
     {
       "path": "../../core/echo/echo"
@@ -74,15 +83,6 @@
     },
     {
       "path": "../../core/echo/echo-query"
-    },
-    {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/functions-runtime"
-    },
-    {
-      "path": "../../core/functions-simulator-cloudflare"
     },
     {
       "path": "../../core/mesh/rpc"

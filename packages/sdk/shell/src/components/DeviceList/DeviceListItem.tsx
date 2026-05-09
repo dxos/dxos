@@ -100,13 +100,13 @@ export const DeviceListItem = forwardRef<
                   data-testid='agent.destroy'
                   onClick={onAgentDestroy}
                 >
-                  <span className='sr-only'>{t('destroy agent label')}</span>
+                  <span className='sr-only'>{t('destroy-agent.label')}</span>
                   <Power className={getSize(5)} />
                 </Button>
               </Tooltip.Trigger>
               <Tooltip.Portal>
                 <Tooltip.Content side='bottom'>
-                  {t('destroy agent label')}
+                  {t('destroy-agent.label')}
                 </Tooltip.Content>
               </Tooltip.Portal>
             </Tooltip.Root>
@@ -127,7 +127,7 @@ export const DeviceListItem = forwardRef<
                 <DropdownMenu.Viewport>
                   {/* <DropdownMenu.Item disabled onClick={onClickEdit}> */}
                   {/*  <PencilSimpleLine className={getSize(5)} /> */}
-                  {/*  {t('edit device label')} */}
+                  {/*  {t('edit-device.label')} */}
                   {/* </DropdownMenu.Item> */}
                   {onClickJoinExisting && (
                     <DropdownMenu.Item
