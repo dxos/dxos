@@ -273,7 +273,7 @@ export const fetchConversations = (
   } = {},
 ): SlackEffect<ReadonlyArray<SlackConversation>> =>
   Effect.gen(function* () {
-    const types = (options.types ?? ['public_channel', 'private_channel', 'im', 'mpim']).join(',');
+    const types = (options.types ?? ['public_channel', 'private_channel', 'mpim']).join(',');
     const excludeArchived = options.excludeArchived !== false;
     const all: SlackConversation[] = [];
     let cursor: string | undefined;
