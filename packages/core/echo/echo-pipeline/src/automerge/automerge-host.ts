@@ -331,6 +331,7 @@ export class AutomergeHost extends Resource {
 
   protected override async _close(ctx: Context): Promise<void> {
     await this._collectionSynchronizer.close(ctx);
+    await this._repo.flush().catch((err) => log.warn('failed to flush repo before shutdown', { err }));
     await this._repo.shutdown().catch((err) => log.warn('failed to shutdown repo', { err }));
     await this._storage.close?.();
     await this._echoNetworkAdapter.close();

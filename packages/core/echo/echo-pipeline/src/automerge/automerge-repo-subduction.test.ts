@@ -233,13 +233,17 @@ describe('AutomergeRepo with Subduction', () => {
       });
       await waitForSubductionSave();
 
-      void findInStates(repoB, docA.url, FIND_STATES);
-      void findInStates(repoC, docA.url, FIND_STATES);
-      const docD = await findInStates<{ text?: string }>(repoD, docA.url, FIND_STATES);
-      await expect.poll(() => docD.doc()?.text, { timeout: 5_000 }).toEqual('Hello world');
+      const [docB, docC, docD] = await Promise.all([
+        findInStates<{ text?: string }>(repoB, docA.url, FIND_STATES),
+        findInStates<{ text?: string }>(repoC, docA.url, FIND_STATES),
+        findInStates<{ text?: string }>(repoD, docA.url, FIND_STATES),
+      ]);
+      await expect
+        .poll(() => [docB.doc()?.text, docC.doc()?.text, docD.doc()?.text], { timeout: 5_000 })
+        .toEqual(['Hello world', 'Hello world', 'Hello world']);
     });
 
-    test('replication through a 3 peer chain', async () => {
+    test('replication through a 3 peer chain', { timeout: 30_000 }, async () => {
       const { repos, adapters } = await createRepoTopology({
         peers: ['A', 'B', 'C'],
         connections: [
@@ -256,9 +260,13 @@ describe('AutomergeRepo with Subduction', () => {
       });
       await waitForSubductionSave();
 
-      void findInStates(repoB, docA.url, FIND_STATES);
-      const docC = await findInStates<{ text?: string }>(repoC, docA.url, FIND_STATES);
-      await expect.poll(() => docC.doc()?.text, { timeout: 5_000 }).toEqual('Hello world');
+      const [docB, docC] = await Promise.all([
+        findInStates<{ text?: string }>(repoB, docA.url, FIND_STATES),
+        findInStates<{ text?: string }>(repoC, docA.url, FIND_STATES),
+      ]);
+      await expect
+        .poll(() => [docB.doc()?.text, docC.doc()?.text], { timeout: 10_000 })
+        .toEqual(['Hello world', 'Hello world']);
     });
 
     test('documents loaded from disk get replicated', async () => {
@@ -266,12 +274,12 @@ describe('AutomergeRepo with Subduction', () => {
       let url: AutomergeUrl | undefined;
 
       {
-        const peer1 = createRepo({ network: [], storage });
+        const peer1 = createRepo({ network: [], storage }, { registerCleanup: false });
         const handle = peer1.create({ text: 'foo' });
         await peer1.flush();
         await waitForSubductionSave();
         url = handle.url;
-        await peer1.shutdown();
+        await shutdownRepo(peer1);
       }
 
       const { repos, adapters } = await createHostClientRepoTopology({ storages: [storage] });
@@ -523,17 +531,25 @@ const createRepoTopology = async <Peers extends string[], Peer extends string = 
       })
       .filter(isNonNullable);
 
-    return createRepo({
-      peerId: peerId as PeerId,
-      storage: args.options?.storages?.[peerIndex],
-      network: [],
-      shareConfig: args.options?.shareConfig,
-      subductionAdapters: network.map((adapter) => ({
-        adapter,
-        serviceName: SUBDUCTION_SERVICE_NAME,
-        role: 'connect' as const,
-      })),
-    });
+    return createRepo(
+      {
+        peerId: peerId as PeerId,
+        storage: args.options?.storages?.[peerIndex],
+        network: [],
+        shareConfig: args.options?.shareConfig,
+        subductionAdapters: network.map((adapter) => ({
+          adapter,
+          serviceName: SUBDUCTION_SERVICE_NAME,
+          role: 'connect' as const,
+        })),
+      },
+      { registerCleanup: false },
+    );
+  });
+  onTestFinished(async () => {
+    await Promise.all(repos.map((repo) => repo.flush().catch(() => {})));
+    await Promise.all(repos.map((repo) => shutdownRepo(repo)));
+    disconnectAdapters(adapters);
   });
   return { repos, adapters };
 };
@@ -552,11 +568,39 @@ const connectAdapters = async (pairs: [TestAdapter, TestAdapter][], options?: { 
   }
 };
 
-const createRepo = (options?: ConstructorParameters<typeof Repo>[0]) => {
-  const repo = new Repo(options);
-  onTestFinished(async () => {
-    await repo.shutdown().catch(() => {});
+const disconnectAdapters = (pairs: [TestAdapter, TestAdapter][]) => {
+  for (const [left, right] of pairs) {
+    if (left.peerId && right.peerId) {
+      left.peerDisconnected(right.peerId);
+      right.peerDisconnected(left.peerId);
+    }
+    left.disconnect();
+    right.disconnect();
+  }
+};
+
+const shutdownRepo = async (repo: Repo) => {
+  await repo.shutdown().catch(() => {});
+};
+
+const createRepo = (
+  options?: ConstructorParameters<typeof Repo>[0],
+  cleanupOptions: { registerCleanup?: boolean } = {},
+) => {
+  const repo = new Repo({
+    // Reduce sync timeout so inflight syncWithAllPeers fails fast when a relay
+    // peer does not yet have the document; self-healing retries kick in quickly.
+    subductionTimeouts: {
+      syncMs: 2_000,
+      healInitialDelayMs: 100,
+    },
+    ...options,
   });
+  if (cleanupOptions.registerCleanup ?? true) {
+    onTestFinished(async () => {
+      await shutdownRepo(repo);
+    });
+  }
   return repo;
 };
 

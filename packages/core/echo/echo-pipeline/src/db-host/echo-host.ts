@@ -385,6 +385,10 @@ export class EchoHost extends Resource {
   }
 
   private _runUpdateIndexes = async (): Promise<void> => {
+    if (this._ctx.disposed || !this.isOpen) {
+      return;
+    }
+
     try {
       const combinedResult = _makeEmptyMergedResult();
 
@@ -406,6 +410,9 @@ export class EchoHost extends Resource {
             },
           },
         });
+      }
+      if (this._ctx.disposed || !this.isOpen) {
+        return;
       }
 
       {
@@ -451,6 +458,9 @@ export class EchoHost extends Resource {
         this._queryService.invalidateQueries(hint);
       }
     } catch (err) {
+      if (this._ctx.disposed || !this.isOpen) {
+        return;
+      }
       log.catch(err);
       // Failsafe: prevent queries from freezing if the indexer faults.
       this._queryService.invalidateQueries();

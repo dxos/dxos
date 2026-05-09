@@ -205,4 +205,5 @@ const isLevelDbNotFoundError = (err: any): boolean => err.code === 'LEVEL_NOT_FO
  * not cover all paths); without this guard those late writes blow up
  * stderr with a "Database is not open" stack from the wasm-bindgen shim.
  */
-const isLevelDbNotOpenError = (err: any): boolean => err?.code === 'LEVEL_DATABASE_NOT_OPEN';
+const isLevelDbNotOpenError = (err: any): boolean =>
+  err?.code === 'LEVEL_DATABASE_NOT_OPEN' || err?.code === 'LEVEL_ITERATOR_NOT_OPEN';

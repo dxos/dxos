@@ -1926,9 +1926,6 @@ overrides:
 pnpmfileChecksum: sha256-cQVl+jrEHH0V4IgNkydwSKNmLoShP2mLkufXFXEHIjU=
 
 patchedDependencies:
-  '@automerge/automerge-subduction@0.11.0':
-    hash: 74ff26be293a583be81feb1c6a30eeb8524f3781f940ff2831e7fd7d737a5b8c
-    path: patches/@automerge__automerge-subduction@0.11.0.patch
   js-clipper@1.0.1:
     hash: 6e8fe7b88ba3126ee7a494d4017254238f1096e1b213e331bb151f1bac54bf3f
     path: patches/js-clipper@1.0.1.patch
@@ -5473,7 +5470,7 @@ importers:
         version: 2.6.0-subduction.17
       '@automerge/automerge-subduction':
         specifier: 0.11.0
-        version: 0.11.0(patch_hash=74ff26be293a583be81feb1c6a30eeb8524f3781f940ff2831e7fd7d737a5b8c)
+        version: 0.11.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -40415,7 +40412,7 @@ snapshots:
   '@automerge/automerge-repo@2.6.0-subduction.17':
     dependencies:
       '@automerge/automerge': 3.2.6
-      '@automerge/automerge-subduction': 0.11.0(patch_hash=74ff26be293a583be81feb1c6a30eeb8524f3781f940ff2831e7fd7d737a5b8c)
+      '@automerge/automerge-subduction': 0.11.0
       bs58check: 3.0.1
       cbor-x: 1.5.4
       debug: 4.4.3(supports-color@5.5.0)
@@ -40430,7 +40427,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-subduction@0.11.0(patch_hash=74ff26be293a583be81feb1c6a30eeb8524f3781f940ff2831e7fd7d737a5b8c)': {}
+  '@automerge/automerge-subduction@0.11.0': {}
 
   '@automerge/automerge@3.2.6': {}
 
