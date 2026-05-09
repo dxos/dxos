@@ -181,7 +181,8 @@ const shouldRetry = (
 
 /**
  * Common pipeline for Slack requests:
- *  - Bearer token in the `Authorization` header.
+ *  - POST `application/x-www-form-urlencoded` body containing the bearer token
+ *    and any per-call params (see {@link authedPost} for why this shape).
  *  - Tracer disabled to avoid `traceparent` header tripping CORS preflight on
  *    `slack.com/api/*` (same workaround as Trello and Google userinfo).
  *  - Decode body with Effect Schema.
@@ -219,23 +220,29 @@ const slackRequest = <T extends { ok: boolean; error?: string }>(
   });
 
 /**
- * Builds an authenticated GET against `slack.com/api/<path>`.
+ * Builds an authenticated POST against `slack.com/api/<path>` with the bearer
+ * token plus any extra params encoded as `application/x-www-form-urlencoded`
+ * in the request body.
  *
- * Auth goes in the `token` URL parameter rather than `Authorization: Bearer …`
- * because Slack's CORS response on `slack.com/api/*` does NOT include
- * `Authorization` in `Access-Control-Allow-Headers`. Sending the header
- * triggers a preflight that the browser then rejects, blocking every
- * request from the composer dev origin. Slack's Web API treats the query
- * param and the bearer header as equivalent. The query param keeps the
- * request "simple" (no preflight) and works from any browser origin.
- *
- * The token is logged-as-empty in DevTools network panels because Slack
- * scrubs `token` URL params in their server-side logs; treat the URL
- * itself as sensitive on the client only.
+ * Why POST + body, not GET + query string and not Authorization header:
+ *  - Slack's CORS response on `slack.com/api/*` does NOT include
+ *    `Authorization` in `Access-Control-Allow-Headers`. Sending the bearer
+ *    header triggers a preflight that's rejected, blocking every request
+ *    from a browser origin.
+ *  - The legacy `?token=…` query-string form is rejected with `invalid_auth`
+ *    for OAuth v2 / granular-scope tokens (`xoxb-…`). Confirmed by direct
+ *    curl: `Authorization: Bearer …` returns `ok: true`, `?token=…` on the
+ *    same token returns `invalid_auth`. Slack's docs imply this still works,
+ *    but in practice they've tightened it for v2 tokens.
+ *  - POST with `application/x-www-form-urlencoded` is a "simple" CORS
+ *    request — no preflight — and Slack's Web API accepts the token in the
+ *    body under the same `token` key, equivalently to the bearer header.
+ *    Every method we use (`auth.test`, `conversations.list`,
+ *    `conversations.history`, `users.info`) accepts POST.
  */
-const authedGet = (creds: SlackCredentialsValue, path: string, params: Record<string, string | number> = {}) =>
-  HttpClientRequest.get(`${SLACK_API_BASE}/${path}`).pipe(
-    HttpClientRequest.setUrlParams({
+const authedPost = (creds: SlackCredentialsValue, path: string, params: Record<string, string | number> = {}) =>
+  HttpClientRequest.post(`${SLACK_API_BASE}/${path}`).pipe(
+    HttpClientRequest.bodyUrlParams({
       token: creds.token,
       ...Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)])),
     }),
@@ -248,7 +255,7 @@ const authedGet = (creds: SlackCredentialsValue, path: string, params: Record<st
  * Cheap, no scope requirement beyond the token being valid.
  */
 export const fetchAuthTest = (): SlackEffect<SlackAuthTest> =>
-  slackRequest((creds) => authedGet(creds, 'auth.test'), SlackAuthTestSchema);
+  slackRequest((creds) => authedPost(creds, 'auth.test'), SlackAuthTestSchema);
 
 /**
  * Lists all conversations the authenticated user can access, across types.
@@ -280,7 +287,7 @@ export const fetchConversations = (
         params.cursor = cursor;
       }
       const page = yield* slackRequest(
-        (creds) => authedGet(creds, 'conversations.list', params),
+        (creds) => authedPost(creds, 'conversations.list', params),
         SlackConversationListResponseSchema,
       );
       if (page.channels) {
@@ -304,7 +311,7 @@ export const fetchConversations = (
 export const fetchUser = (userId: string): SlackEffect<SlackUser | undefined> =>
   Effect.gen(function* () {
     const response = yield* slackRequest(
-      (creds) => authedGet(creds, 'users.info', { user: userId }),
+      (creds) => authedPost(creds, 'users.info', { user: userId }),
       SlackUsersInfoResponseSchema,
     );
     return response.user;
@@ -339,7 +346,7 @@ export const fetchHistory = (
         params.cursor = cursor;
       }
       const page = yield* slackRequest(
-        (creds) => authedGet(creds, 'conversations.history', params),
+        (creds) => authedPost(creds, 'conversations.history', params),
         SlackHistoryResponseSchema,
       );
       if (page.messages) {
