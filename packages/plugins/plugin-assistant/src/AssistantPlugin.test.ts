@@ -20,9 +20,9 @@ describe('AssistantPlugin', () => {
       plugins: [ClientPlugin({}), AssistantPlugin()],
     });
 
-    // After autoStart: AppGraphBuilder, metadata, schema, OperationHandler all auto-cascade.
+    // After autoStart: AppGraphBuilder, CreateObject, schema, OperationHandler all auto-cascade.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('metadata'), moduleId('schema')]),
+      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('CreateObject'), moduleId('schema')]),
     );
 
     // AssistantPlugin fires SetupArtifactDefinition itself, so it can test its own blueprint.
