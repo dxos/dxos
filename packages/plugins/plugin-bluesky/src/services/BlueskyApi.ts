@@ -172,14 +172,17 @@ const publicGet = async <T>(path: string, query: Record<string, string | number 
 
 /**
  * Authenticated XRPC GET — proxied through Edge `/atproto/proxy` so the
- * stored DPoP key signs the request. The proxy expects the absolute
- * endpoint URL; we resolve that against the user's actual PDS (via
- * {@link resolvePds}) rather than hard-coding bsky.social.
+ * stored DPoP key signs the request. Edge requires the caller to include
+ * the access token via `Authorization: DPoP <token>` in the proxied
+ * request's headers; Edge attaches the matching DPoP proof JWT (signed
+ * with the private key it stored at OAuth time) before forwarding to the
+ * user's PDS.
  */
 const authedGet = async <T>(input: {
   client: Client;
   spaceId: string;
   accessTokenId: string;
+  accessTokenValue: string;
   pdsBaseUrl: string;
   path: string;
   query: Record<string, string | number | undefined>;
@@ -201,7 +204,10 @@ const authedGet = async <T>(input: {
       request: {
         endpoint,
         method: 'GET',
-        headers: { Accept: 'application/json' },
+        headers: {
+          Accept: 'application/json',
+          Authorization: `DPoP ${input.accessTokenValue}`,
+        },
         body: null,
       },
     }),
@@ -231,6 +237,7 @@ export const getActorLikes = (input: {
   client: Client;
   spaceId: string;
   accessTokenId: string;
+  accessTokenValue: string;
   pdsBaseUrl: string;
   actor: string;
   limit?: number;
@@ -240,6 +247,7 @@ export const getActorLikes = (input: {
     client: input.client,
     spaceId: input.spaceId,
     accessTokenId: input.accessTokenId,
+    accessTokenValue: input.accessTokenValue,
     pdsBaseUrl: input.pdsBaseUrl,
     path: 'app.bsky.feed.getActorLikes',
     query: { actor: input.actor, limit: input.limit ?? DEFAULT_FEED_LIMIT, cursor: input.cursor },
@@ -260,6 +268,7 @@ export const getBookmarks = async (input: {
   client: Client;
   spaceId: string;
   accessTokenId: string;
+  accessTokenValue: string;
   pdsBaseUrl: string;
   limit?: number;
   cursor?: string;
@@ -268,6 +277,7 @@ export const getBookmarks = async (input: {
     client: input.client,
     spaceId: input.spaceId,
     accessTokenId: input.accessTokenId,
+    accessTokenValue: input.accessTokenValue,
     pdsBaseUrl: input.pdsBaseUrl,
     path: 'app.bsky.bookmark.getBookmarks',
     query: { limit: input.limit ?? DEFAULT_FEED_LIMIT, cursor: input.cursor },
@@ -314,6 +324,7 @@ export const getFeed = (input: {
   client: Client;
   spaceId: string;
   accessTokenId: string;
+  accessTokenValue: string;
   pdsBaseUrl: string;
   feed: string;
   limit?: number;
@@ -323,6 +334,7 @@ export const getFeed = (input: {
     client: input.client,
     spaceId: input.spaceId,
     accessTokenId: input.accessTokenId,
+    accessTokenValue: input.accessTokenValue,
     pdsBaseUrl: input.pdsBaseUrl,
     path: 'app.bsky.feed.getFeed',
     query: { feed: input.feed, limit: input.limit ?? DEFAULT_FEED_LIMIT, cursor: input.cursor },
@@ -337,12 +349,14 @@ export const getSavedFeeds = async (input: {
   client: Client;
   spaceId: string;
   accessTokenId: string;
+  accessTokenValue: string;
   pdsBaseUrl: string;
 }): Promise<SavedFeed[]> => {
   const response = await authedGet<{ preferences: Array<{ $type?: string; items?: SavedFeed[] }> }>({
     client: input.client,
     spaceId: input.spaceId,
     accessTokenId: input.accessTokenId,
+    accessTokenValue: input.accessTokenValue,
     pdsBaseUrl: input.pdsBaseUrl,
     path: 'app.bsky.actor.getPreferences',
     query: {},

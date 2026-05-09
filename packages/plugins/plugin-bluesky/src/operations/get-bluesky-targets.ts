@@ -52,6 +52,7 @@ const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTarge
           client,
           spaceId: db.spaceId,
           accessTokenId: accessToken.id,
+          accessTokenValue: accessToken.token,
           pdsBaseUrl,
         });
       }).pipe(

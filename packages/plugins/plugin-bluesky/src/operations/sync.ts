@@ -121,6 +121,7 @@ const syncTarget = ({
         client,
         spaceId: db.spaceId,
         accessTokenId: accessToken.id,
+        accessTokenValue: accessToken.token,
         pdsBaseUrl,
         handle,
         remoteId,
@@ -261,6 +262,7 @@ const fetchPostsForTarget = ({
   client,
   spaceId,
   accessTokenId,
+  accessTokenValue,
   pdsBaseUrl,
   handle,
   remoteId,
@@ -269,6 +271,7 @@ const fetchPostsForTarget = ({
   client: Client;
   spaceId: string;
   accessTokenId: string;
+  accessTokenValue: string;
   pdsBaseUrl: string;
   handle: string;
   remoteId: string;
@@ -280,15 +283,24 @@ const fetchPostsForTarget = ({
         case BLUESKY_TARGET.MY_POSTS:
           return BlueskyApi.getAuthorFeed({ actor: handle, cursor });
         case BLUESKY_TARGET.MY_LIKES:
-          return BlueskyApi.getActorLikes({ client, spaceId, accessTokenId, pdsBaseUrl, actor: handle, cursor });
+          return BlueskyApi.getActorLikes({
+            client,
+            spaceId,
+            accessTokenId,
+            accessTokenValue,
+            pdsBaseUrl,
+            actor: handle,
+            cursor,
+          });
         case BLUESKY_TARGET.MY_BOOKMARKS:
-          return BlueskyApi.getBookmarks({ client, spaceId, accessTokenId, pdsBaseUrl, cursor });
+          return BlueskyApi.getBookmarks({ client, spaceId, accessTokenId, accessTokenValue, pdsBaseUrl, cursor });
         default:
           if (remoteId.startsWith(BLUESKY_TARGET.FEED_PREFIX)) {
             return BlueskyApi.getFeed({
               client,
               spaceId,
               accessTokenId,
+              accessTokenValue,
               pdsBaseUrl,
               feed: remoteId.slice(BLUESKY_TARGET.FEED_PREFIX.length),
               cursor,
