@@ -442,7 +442,13 @@ export default Capability.makeModule(
 
         const provider = yield* resolveProvider(getProviderEntries, snapshot.providerId);
 
+        // Pin the AccessToken's echo id to the original `accessTokenId` so
+        // Edge's tokenInfo (keyed by the id passed to /oauth/initiate) can
+        // be looked up later by /atproto/proxy. Without this, the
+        // snapshot-recovery path mints a fresh id that the proxy doesn't
+        // know about and authenticated XRPC calls 500.
         const token = Obj.make(AccessToken.AccessToken, {
+          id: accessTokenId,
           source: snapshot.tokenSnapshot.source,
           ...(snapshot.tokenSnapshot.account ? { account: snapshot.tokenSnapshot.account } : {}),
           scopes: [...snapshot.tokenSnapshot.scopes],
