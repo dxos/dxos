@@ -382,6 +382,9 @@
       "path": "packages/plugins/plugin-kanban/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-linear/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-map/tsconfig.json"
     },
     {
@@ -452,6 +455,9 @@
     },
     {
       "path": "packages/plugins/plugin-sketch/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-slack/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-space/tsconfig.json"

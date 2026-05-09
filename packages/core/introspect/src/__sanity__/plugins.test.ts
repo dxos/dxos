@@ -47,6 +47,12 @@ describe.skipIf(!REAL)('plugins (real monorepo)', () => {
     // Without an id, returns aggregate across all plugins.
     expect(intro.listSurfaces().length).toBeGreaterThan(surfaces.length);
 
+    // Chess uses `trim` tagged-template literal for its description — the
+    // indexer should resolve it (no longer returning undefined).
+    const chess = plugins.find((plugin) => plugin.id === 'org.dxos.plugin.chess');
+    expect(chess).toBeDefined();
+    expect(chess!.description).toMatch(/Full-featured chess game/);
+
     intro.dispose();
   }, 30_000);
 });

@@ -34,6 +34,7 @@ import { InboxPlugin } from '@dxos/plugin-inbox';
 import { IntegrationPlugin } from '@dxos/plugin-integration';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon';
 import { KanbanPlugin } from '@dxos/plugin-kanban';
+import { LinearPlugin } from '@dxos/plugin-linear';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
@@ -58,6 +59,7 @@ import { SheetPlugin } from '@dxos/plugin-sheet';
 import { SidekickPlugin } from '@dxos/plugin-sidekick';
 import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
 import { SketchPlugin } from '@dxos/plugin-sketch';
+import { SlackPlugin } from '@dxos/plugin-slack';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { SpacetimePlugin } from '@dxos/plugin-spacetime';
 import { SpotlightPlugin } from '@dxos/plugin-spotlight';
@@ -227,6 +229,7 @@ export const getPlugins = ({
     OperationPlugin(),
     KanbanPlugin(),
     layoutPlugin,
+    LinearPlugin(),
     MapPlugin(),
     isLabs && MapPluginSolid(),
     MarkdownPlugin(),
@@ -255,6 +258,7 @@ export const getPlugins = ({
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
+    SlackPlugin(),
     SpacetimePlugin(),
     SpacePlugin({
       observability: true,

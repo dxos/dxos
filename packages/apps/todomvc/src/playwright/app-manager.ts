@@ -41,10 +41,6 @@ export class AppManager {
     return this.page.getByTestId('new-todo');
   }
 
-  hasText(text: string) {
-    return this.page.locator(`:has-text("${text}")`);
-  }
-
   todo(title: string) {
     return this.page.getByTestId('todo').locator(`:text("${title}")`);
   }

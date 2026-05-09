@@ -7,33 +7,14 @@ import * as Effect from 'effect/Effect';
 import { ActivationEvent, ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppCapabilities, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Graph } from '@dxos/plugin-graph';
-import { type TreeData } from '@dxos/react-ui-list';
 
 import { AppGraphBuilder, Keyboard, OperationHandler, ReactSurface, State } from '#capabilities';
-import { NODE_TYPE } from '#containers';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { NavTreeEvents } from '#types';
 
 export const NavTreePlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addMetadataModule({
-    metadata: {
-      id: NODE_TYPE,
-      metadata: {
-        parse: ({ item }: TreeData, type: string) => {
-          switch (type) {
-            case 'node':
-              return item;
-            case 'object':
-              return item.data;
-            case 'view-object':
-              return { id: `${item.id}-view`, object: item.data };
-          }
-        },
-      },
-    },
-  }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

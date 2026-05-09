@@ -98,6 +98,45 @@ export const GetPluginsResponseBodySchema = Schema.Struct({
 export type GetPluginsResponseBody = Schema.Schema.Type<typeof GetPluginsResponseBodySchema>;
 
 /**
+ * A single published version of a plugin, as returned by the registry service's
+ * versions endpoint. Sourced from the publishing project's GitHub releases.
+ *
+ * The host treats `tag` opaquely; ordering — newest first — is the service's
+ * responsibility (typically reverse-chronological by release date).
+ */
+export const PluginVersionSchema = Schema.Struct({
+  /** Release tag (e.g. `v0.1.21`). Stable identifier for this version. */
+  tag: Schema.String.pipe(Schema.nonEmptyString()),
+  /**
+   * URL of this version's `manifest.json`. Matches the shape of {@link PluginEntrySchema.fields.moduleUrl}
+   * but pinned to a specific release rather than the latest. Composer's URL loader fetches
+   * this when the user installs / rolls back to this version.
+   */
+  moduleUrl: Schema.String.pipe(Schema.nonEmptyString()),
+  /** Unix ms when the version was released. Optional — services that lack this signal can omit. */
+  releasedAt: Schema.optional(Schema.Number),
+});
+export type PluginVersion = Schema.Schema.Type<typeof PluginVersionSchema>;
+
+/**
+ * Response body of `GET /registry/plugins/:repo/versions`.
+ *
+ * `:repo` is the GitHub `owner/name` form, URL-encoded (so `/` is escaped).
+ * Returns all hydratable releases for the repo, newest first; clients display them
+ * in the version picker for install / roll-back. Unauthenticated; same surface area
+ * as `GET /registry/plugins`.
+ */
+export const GetPluginVersionsResponseBodySchema = Schema.Struct({
+  /** Wire-format schema version, pinned to 1. */
+  version: Schema.Literal(1),
+  /** Available versions for the requested repo, newest first. */
+  versions: Schema.Array(PluginVersionSchema),
+  /** Unix ms timestamp of the most recent successful refresh cycle for this repo. */
+  refreshedAt: Schema.Number,
+});
+export type GetPluginVersionsResponseBody = Schema.Schema.Type<typeof GetPluginVersionsResponseBodySchema>;
+
+/**
  * A catalog entry. Two flavours:
  *  - `{ repo }`: the registry service hydrates from the GitHub repo's latest release.
  *    Used by the production catalog.

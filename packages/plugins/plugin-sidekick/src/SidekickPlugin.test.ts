@@ -20,9 +20,7 @@ describe('SidekickPlugin', () => {
       plugins: [ClientPlugin({}), SidekickPlugin()],
     });
 
-    expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('metadata'), moduleId('schema'), moduleId('ReactSurface')]),
-    );
+    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema'), moduleId('ReactSurface')]));
 
     await harness.fire(AppActivationEvents.SetupArtifactDefinition);
     expect(harness.manager.getActive()).toContain(moduleId('BlueprintDefinition'));

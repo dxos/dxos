@@ -4,8 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
+import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+
+export const BLUEPRINT_KEY = 'org.dxos.blueprint.discord2';
 
 /**
  * A Discord channel mapped to the current space.
@@ -46,6 +49,7 @@ export const Bot = Schema.Struct({
     icon: 'ph--discord-logo--regular',
     hue: 'indigo',
   }),
+  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
 );
 
 export interface Bot extends Schema.Schema.Type<typeof Bot> {}

@@ -18,9 +18,11 @@ export const translations = [
 
         // ToolResults
         'calling-tool.message': 'Calling tool…',
-        'no-result.message': 'No result yet — fill the form and click Run tool.',
+        'no-result.message': 'No results.',
         'no-displayable-fields.message': '(no displayable fields)',
+        'no-matching-rows.message': 'No matching rows.',
         'tool-result.label': 'Tool result',
+        'filter-results.placeholder': 'Filter results…',
 
         // ToolsExplorer
         'connection-failed.title': 'MCP Server connection failed',

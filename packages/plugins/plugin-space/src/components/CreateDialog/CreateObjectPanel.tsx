@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
@@ -16,7 +15,7 @@ import { type MaybePromise } from '@dxos/util';
 
 import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
-import { type CreateObject } from '#types';
+import { type SpaceCapabilities } from '#types';
 
 import { getSpaceDisplayName } from '../../util';
 
@@ -27,11 +26,7 @@ export type CreateObjectOption = {
   icon?: string;
 };
 
-export type Metadata = {
-  createObject: CreateObject;
-  inputSchema?: Schema.Schema.AnyNoContext;
-  icon?: string;
-};
+export type Metadata = SpaceCapabilities.CreateObjectEntry;
 
 export type CreateObjectPanelProps = {
   options: CreateObjectOption[];

@@ -5,6 +5,7 @@
 import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { type Channel } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -16,6 +17,10 @@ import * as Settings from './Settings';
 export namespace ThreadCapabilities {
   export const Settings = Capability.make<Atom.Writable<Settings.Settings>>(`${meta.id}.capability.settings`);
   export const CallManager = Capability.make<CallManager>(`${meta.id}.capability.call-manager`);
+
+  /** Comment configuration contributed per typename by plugins that support commenting. */
+  export type CommentConfig = AppCapabilities.CommentConfig;
+  export const CommentConfig: Capability.InterfaceDef<AppCapabilities.CommentConfig> = AppCapabilities.CommentConfig;
 
   // TODO(burdon): Better way to define specific extensions for meeting companions.
   // TODO(burdon): This brings in deps from ../calls; how should we manage/minimize explicit type exposure to other plugins?

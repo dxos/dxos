@@ -660,6 +660,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-linear/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-map/package.json",
           "jsonpath": "$.version"
         },
@@ -776,6 +781,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-sketch/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-slack/package.json",
           "jsonpath": "$.version"
         },
         {

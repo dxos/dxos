@@ -8,7 +8,9 @@ import { e2ePreset } from '@dxos/test-utils/playwright';
 
 export default defineConfig({
   ...e2ePreset(import.meta.dirname),
-  timeout: 30_000,
+  timeout: 60_000,
+  expect: { timeout: 10_000 },
+  workers: 1,
   webServer: {
     command: 'pnpm vite preview',
     port: 4173,

@@ -5,9 +5,12 @@
 import { Chess as ChessJS } from 'chess.js';
 import * as Schema from 'effect/Schema';
 
+import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
+
+export const BLUEPRINT_KEY = 'org.dxos.blueprint.chess';
 
 export const Game = Schema.Struct({
   name: Schema.optional(Schema.String),
@@ -39,6 +42,7 @@ export const Game = Schema.Struct({
     icon: 'ph--shield-chevron--regular',
     hue: 'amber',
   }),
+  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
 );
 
 export interface Game extends Schema.Schema.Type<typeof Game> {}
