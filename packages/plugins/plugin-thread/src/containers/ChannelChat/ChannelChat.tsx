@@ -24,6 +24,10 @@ export type ChannelChatProps = {
  * Channel chat: composer pinned to the bottom of the panel, messages scrolling
  * above it (newest at the bottom). Threading via `Message.threadId` is
  * intentionally not reconstructed in this round.
+ *
+ * Externally-synced channels (any Channel carrying foreign-key `Obj.Meta`,
+ * e.g. Slack/Discord-sourced rooms) render read-only — the composer is
+ * suppressed because there's no local-write path back to the source.
  */
 export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
   ({ space, channel, ...props }, forwardedRef) => {
@@ -39,7 +43,12 @@ export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
       feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
     ) as Message.Message[];
 
+    const readOnly = Obj.getMeta(channel).keys.length > 0;
+
     const handleSend = (text: string) => {
+      if (readOnly) {
+        return false;
+      }
       void invokePromise(ThreadOperation.AppendChannelMessage, {
         channel,
         sender: { identityDid: identity.did },
@@ -58,6 +67,7 @@ export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
         activity={activity}
         onSend={handleSend}
         orientation='bottom'
+        readOnly={readOnly}
         ref={forwardedRef}
       />
     );

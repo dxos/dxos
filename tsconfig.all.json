@@ -457,6 +457,9 @@
       "path": "packages/plugins/plugin-sketch/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-slack/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-space/tsconfig.json"
     },
     {

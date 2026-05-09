@@ -380,6 +380,9 @@
       "path": "../../plugins/plugin-sketch"
     },
     {
+      "path": "../../plugins/plugin-slack"
+    },
+    {
       "path": "../../plugins/plugin-space"
     },
     {

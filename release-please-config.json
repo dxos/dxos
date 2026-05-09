@@ -785,6 +785,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-slack/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-space/package.json",
           "jsonpath": "$.version"
         },
