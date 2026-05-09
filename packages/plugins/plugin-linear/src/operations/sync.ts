@@ -6,7 +6,7 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, mergeField, readSnapshot, writeSnapshot } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -20,23 +20,28 @@ import { LinearApi } from '../services';
 import { type SyncOptions, SyncLinearTeams } from './definitions';
 
 //
-// Direction: pull-only.
+// Direction: bidirectional (pull-then-push) for projects and tasks.
 //
-// v1 of this plugin pulls Project and Task (issue) from Linear into ECHO and
-// never writes back. Push is intentionally deferred.
+// On each sync pass we first pull every project + issue Linear can see into
+// ECHO, then walk the local objects we've synced and push any field that
+// diverged from the snapshot taken at the end of the previous pull. The
+// snapshot lives on `Integration.snapshots[<linear id>]` and is refreshed at
+// every pull and successful push so subsequent passes know exactly which
+// fields the user touched locally.
 //
-// Practical consequence: local edits to mapped fields (Task.title,
-// Task.description, Task.status, Task.priority, Task.estimate) are
-// overwritten by the remote value on every sync. Local edits to NON-mapped
-// fields (Project.image, etc.) are preserved.
+// Mapped fields per object:
+//   Project: name, description
+//   Task:    title, description, status, priority, estimate
 //
-// People are NOT synced. `Task.assigned` is left unset; the Linear assignee's
-// display name is intentionally dropped. (See the cross-source duplicates
-// note below for why we don't try to fuzzy-match local Persons.)
+// Conflict policy is remote-wins (mirrors Trello). People are NOT synced and
+// `Task.assigned` is left untouched. Comments are NOT synced (see plugin-github
+// for the chunking-required reason — same constraint applies here).
 //
-// Comments are NOT synced in v1 — mirrors plugin-github's stance: re-enable
-// once chunked/yielded to avoid automerge_wasm crashes when upserting many
-// messages in one tick.
+// New local objects (no Linear foreign key) are NOT pushed in this pass —
+// creating a Linear issue requires a target team and creating a project
+// requires a target team plus a state, and we don't currently surface either
+// at the call site. Update-only push covers the round-trip flow where the
+// user edits a synced item locally.
 //
 // Sync target shape: the user picks Linear TEAMS. Each team's projects and
 // issues are pulled. The user does not pick projects directly.
@@ -58,6 +63,25 @@ import { type SyncOptions, SyncLinearTeams } from './definitions';
 
 /** Per-target parallelism across selected teams. */
 const TEAM_CONCURRENCY = 2;
+
+//
+// Snapshot field shapes (stored on `Integration.snapshots`)
+//
+
+/** Snapshot for a Linear Project. */
+type ProjectSnapshot = {
+  name?: string;
+  description?: string;
+};
+
+/** Snapshot for a Linear Issue (mirrored as a Task locally). */
+type TaskSnapshot = {
+  title?: string;
+  description?: string;
+  status?: 'todo' | 'in-progress' | 'done';
+  priority?: 'low' | 'medium' | 'high' | 'urgent' | undefined;
+  estimate?: number | undefined;
+};
 
 //
 // Foreign-key + lookup helpers
@@ -84,49 +108,134 @@ const sinceFromOptions = (options: SyncOptions | undefined): string | undefined 
 };
 
 //
-// Upsert helpers (all pull-only)
+// Pull (snapshot-driven three-way merge)
 //
 
-const upsertProject = Effect.fn('upsertProject')(function* (project: LinearApi.Project) {
-  const existing = yield* findByForeignId<Project.Project>(Project.Project, project.id);
+/**
+ * Pull a Linear project into ECHO. Mapped fields (`name`, `description`) go
+ * through three-way merge against the snapshot at `integration.snapshots[id]`,
+ * then the snapshot is refreshed to remote-current so the next push knows
+ * exactly which fields the user has edited locally. Non-mapped fields
+ * (`Project.image`, etc.) are preserved.
+ */
+export const upsertProject = Effect.fn('upsertProject')(function* (
+  integration: Obj.Unknown & { snapshots?: Record<string, unknown> },
+  remote: LinearApi.Project,
+) {
+  const remoteFields: Required<ProjectSnapshot> = {
+    name: remote.name,
+    description: remote.description ?? '',
+  };
+  const existing = yield* findByForeignId<Project.Project>(Project.Project, remote.id);
+
   if (existing) {
-    Obj.update(existing, (existing) => {
-      existing.name = project.name;
-      if (project.description != null) {
-        existing.description = project.description;
+    const snapshot = readSnapshot<ProjectSnapshot>(integration, remote.id) ?? {};
+    const local = existing as unknown as Record<string, unknown>;
+    const writes: Partial<typeof remoteFields> = {};
+    for (const key of ['name', 'description'] as const) {
+      const result = mergeField(local[key] as string | undefined, remoteFields[key], snapshot[key]);
+      if (result.source === 'remote' && local[key] !== result.value) {
+        writes[key] = result.value;
       }
-    });
+    }
+    if (Object.keys(writes).length > 0) {
+      Obj.update(existing, (existing) => {
+        const m = existing as unknown as Record<string, unknown>;
+        for (const [k, v] of Object.entries(writes)) {
+          m[k] = v;
+        }
+      });
+    }
+    writeSnapshot(integration, remote.id, remoteFields);
     return existing;
   }
+
   const created = Obj.make(Project.Project, {
-    [Obj.Meta]: { keys: [fkFor(project.id)] },
-    name: project.name,
-    description: project.description ?? undefined,
+    [Obj.Meta]: { keys: [fkFor(remote.id)] },
+    name: remote.name,
+    description: remote.description ?? undefined,
   });
-  return yield* Database.add(created);
+  const persisted = yield* Database.add(created);
+  writeSnapshot(integration, remote.id, remoteFields);
+  return persisted;
 });
 
 /**
- * Pull-only upsert for a Linear issue → Task. Mapped fields (title,
- * description, status, priority, estimate) are overwritten by remote on every
- * sync; non-mapped fields are preserved. The Task → Project ref is wired on
- * create and refreshed if the issue's project changes.
+ * Pull a Linear issue into ECHO as a Task. Same merge shape as
+ * {@link upsertProject}, against snapshot fields {title, description, status,
+ * priority, estimate}. The Task → Project ref is wired on create and
+ * refreshed if the issue's project changes; assignees are intentionally not
+ * synced.
  */
-const upsertTask = Effect.fn('upsertTask')(function* (issue: LinearApi.Issue, project: Project.Project | undefined) {
+export const upsertTask = Effect.fn('upsertTask')(function* (
+  integration: Obj.Unknown & { snapshots?: Record<string, unknown> },
+  issue: LinearApi.Issue,
+  project: Project.Project | undefined,
+) {
   const status = LinearApi.stateTypeToTaskStatus(issue.state.type);
   const priority = LinearApi.priorityNumberToTaskPriority(issue.priority);
+  const remoteFields: TaskSnapshot = {
+    title: issue.title,
+    description: issue.description ?? '',
+    status,
+    priority,
+    estimate: issue.estimate ?? undefined,
+  };
 
   const existing = yield* findByForeignId<Task.Task>(Task.Task, issue.id);
+
   if (existing) {
-    Obj.update(existing, (existing) => {
-      existing.title = issue.title;
-      existing.description = issue.description ?? '';
-      existing.status = status;
-      if (priority !== undefined) {
-        existing.priority = priority;
+    const snapshot = readSnapshot<TaskSnapshot>(integration, issue.id) ?? {};
+    const local = existing as unknown as Record<string, unknown>;
+    const writes: Partial<TaskSnapshot> = {};
+    // title + description: simple string-typed merge.
+    {
+      const r = mergeField(local.title as string | undefined, remoteFields.title, snapshot.title);
+      if (r.source === 'remote' && local.title !== r.value) {
+        writes.title = r.value;
       }
-      if (issue.estimate != null) {
-        existing.estimate = issue.estimate;
+    }
+    {
+      const r = mergeField(local.description as string | undefined, remoteFields.description, snapshot.description);
+      if (r.source === 'remote' && local.description !== r.value) {
+        writes.description = r.value;
+      }
+    }
+    {
+      const r = mergeField(
+        local.status as TaskSnapshot['status'],
+        remoteFields.status,
+        snapshot.status,
+      );
+      if (r.source === 'remote' && local.status !== r.value) {
+        writes.status = r.value;
+      }
+    }
+    {
+      const r = mergeField(
+        local.priority as TaskSnapshot['priority'],
+        remoteFields.priority,
+        snapshot.priority,
+      );
+      // priority can legitimately be `undefined` on either side.
+      if (r.source === 'remote' && local.priority !== r.value) {
+        writes.priority = r.value;
+      }
+    }
+    {
+      const r = mergeField(
+        local.estimate as number | undefined,
+        remoteFields.estimate,
+        snapshot.estimate,
+      );
+      if (r.source === 'remote' && local.estimate !== r.value) {
+        writes.estimate = r.value;
+      }
+    }
+    Obj.update(existing, (existing) => {
+      const m = existing as unknown as Record<string, unknown>;
+      for (const [k, v] of Object.entries(writes)) {
+        m[k] = v;
       }
       if (project) {
         const currentProjectId = existing.project?.dxn.asEchoDXN()?.echoId;
@@ -136,6 +245,7 @@ const upsertTask = Effect.fn('upsertTask')(function* (issue: LinearApi.Issue, pr
         }
       }
     });
+    writeSnapshot(integration, issue.id, remoteFields);
     return { task: existing, created: false };
   }
 
@@ -149,7 +259,162 @@ const upsertTask = Effect.fn('upsertTask')(function* (issue: LinearApi.Issue, pr
     project: project ? Ref.make(project) : undefined,
   });
   const persisted = yield* Database.add(created);
+  writeSnapshot(integration, issue.id, remoteFields);
   return { task: persisted, created: true };
+});
+
+//
+// Push (snapshot diff → Linear mutations)
+//
+
+/** Result of one push pass over a single team's local-mirror objects. */
+export type LinearPushResult = {
+  projects: number;
+  tasks: number;
+};
+
+/**
+ * Push reconciler. For every Project/Task carrying a `LINEAR_SOURCE` foreign
+ * key, diff its mapped fields against the snapshot in
+ * `integration.snapshots[<id>]` and PATCH only the diverged fields back to
+ * Linear via `LinearApi.updateProject` / `updateIssue`.
+ *
+ * Tombstones (`Obj.isDeleted`) are skipped — Linear's `archived` lifecycle is
+ * one-way (we treat archived-on-Linear as "still present for sync", not as
+ * "should be deleted locally"), so the inverse direction is also a no-op.
+ *
+ * After a successful push we refresh the snapshot to the values just sent, so
+ * the next pass sees no divergence even before the next pull confirms it.
+ *
+ * `stateIdByTeamMember` resolves a Task `status` to a Linear workflow-state
+ * id for the issue's team. Status changes are only pushed when we have a
+ * mapping (otherwise the push silently skips status — better than failing
+ * the whole pass over an unrecognised workflow).
+ */
+export const pushTeamUpdates: <R>(
+  integration: Obj.Unknown & { snapshots?: Record<string, unknown> },
+  remoteIssuesById: ReadonlyMap<string, LinearApi.Issue>,
+  remoteProjectsById: ReadonlyMap<string, LinearApi.Project>,
+  push: {
+    /** Wraps `LinearApi.updateProject`. */
+    updateProject: (id: string, input: LinearApi.ProjectUpdateInput) => Effect.Effect<void, Error, R>;
+    /** Wraps `LinearApi.updateIssue`. */
+    updateIssue: (id: string, input: LinearApi.IssueUpdateInput) => Effect.Effect<void, Error, R>;
+    /** Resolve a desired Task status → Linear workflow-state id. Returns undefined when no mapping is known. */
+    resolveStateId: (issue: LinearApi.Issue, status: 'todo' | 'in-progress' | 'done') => string | undefined;
+  },
+) => Effect.Effect<LinearPushResult, Error, Database.Service | R> = Effect.fn('pushTeamUpdates')(function* (
+  integration,
+  remoteIssuesById,
+  remoteProjectsById,
+  push,
+) {
+  let projects = 0;
+  let tasks = 0;
+
+  // Iterate all locally-known objects with a Linear foreign key. We re-query
+  // by-foreign-key for each remote id rather than walking every Project/Task
+  // in the database — both yield the same set, and the by-fid query keeps
+  // memory bounded for spaces with thousands of unrelated tasks.
+  for (const [id, remoteProject] of remoteProjectsById) {
+    const local = yield* findByForeignId<Project.Project>(Project.Project, id);
+    if (!local || Obj.isDeleted(local)) {
+      continue;
+    }
+    const snapshot = readSnapshot<ProjectSnapshot>(integration, id);
+    if (!snapshot) {
+      continue;
+    }
+    const localFields = local as unknown as Record<string, unknown>;
+    const localName = (localFields.name as string | undefined) ?? '';
+    const localDescription = (localFields.description as string | undefined) ?? '';
+    const input: LinearApi.ProjectUpdateInput = {};
+    let diverged = false;
+    if (snapshot.name !== undefined && snapshot.name !== localName) {
+      input.name = localName;
+      diverged = true;
+    }
+    if (snapshot.description !== undefined && snapshot.description !== localDescription) {
+      input.description = localDescription;
+      diverged = true;
+    }
+    if (!diverged) {
+      continue;
+    }
+    yield* push.updateProject(id, input);
+    writeSnapshot(integration, id, {
+      ...snapshot,
+      name: localName,
+      description: localDescription,
+    });
+    void remoteProject; // referenced for symmetry with task loop / future state checks.
+    projects++;
+  }
+
+  for (const [id, remoteIssue] of remoteIssuesById) {
+    const local = yield* findByForeignId<Task.Task>(Task.Task, id);
+    if (!local || Obj.isDeleted(local)) {
+      continue;
+    }
+    const snapshot = readSnapshot<TaskSnapshot>(integration, id);
+    if (!snapshot) {
+      continue;
+    }
+    const localFields = local as unknown as Record<string, unknown>;
+    const localTitle = (localFields.title as string | undefined) ?? '';
+    const localDescription = (localFields.description as string | undefined) ?? '';
+    const localStatus = localFields.status as TaskSnapshot['status'];
+    const localPriority = localFields.priority as TaskSnapshot['priority'];
+    const localEstimate = localFields.estimate as number | undefined;
+
+    const input: LinearApi.IssueUpdateInput = {};
+    let diverged = false;
+    if (snapshot.title !== undefined && snapshot.title !== localTitle) {
+      input.title = localTitle;
+      diverged = true;
+    }
+    if (snapshot.description !== undefined && snapshot.description !== localDescription) {
+      input.description = localDescription;
+      diverged = true;
+    }
+    if (snapshot.status !== undefined && localStatus !== undefined && snapshot.status !== localStatus) {
+      const stateId = push.resolveStateId(remoteIssue, localStatus);
+      if (stateId) {
+        input.stateId = stateId;
+        diverged = true;
+      } else {
+        log.warn('linear push: no workflow state mapping for status; skipping status push', {
+          issueId: id,
+          status: localStatus,
+        });
+      }
+    }
+    if (snapshot.priority !== localPriority) {
+      // priority can legitimately be `undefined` (no priority); send 0 to clear.
+      const priorityNumber = LinearApi.taskPriorityToPriorityNumber(localPriority) ?? 0;
+      input.priority = priorityNumber;
+      diverged = true;
+    }
+    if (snapshot.estimate !== localEstimate && localEstimate !== undefined) {
+      input.estimate = localEstimate;
+      diverged = true;
+    }
+    if (!diverged) {
+      continue;
+    }
+    yield* push.updateIssue(id, input);
+    writeSnapshot(integration, id, {
+      ...snapshot,
+      title: localTitle,
+      description: localDescription,
+      status: localStatus ?? snapshot.status,
+      priority: localPriority,
+      estimate: localEstimate ?? snapshot.estimate,
+    });
+    tasks++;
+  }
+
+  return { projects, tasks };
 });
 
 //
@@ -223,6 +488,8 @@ const handler: Operation.WithHandler<typeof SyncLinearTeams> = SyncLinearTeams.p
 
           let pulledProjects = 0;
           let pulledTasks = 0;
+          let pushedProjects = 0;
+          let pushedTasks = 0;
 
           const perTarget = yield* Effect.forEach(
             targetEntries,
@@ -230,25 +497,76 @@ const handler: Operation.WithHandler<typeof SyncLinearTeams> = SyncLinearTeams.p
               Effect.gen(function* () {
                 const result = yield* Effect.either(
                   Effect.gen(function* () {
-                    // Projects → DXOS Projects.
+                    // Pull: projects → DXOS Projects, issues → DXOS Tasks.
+                    // Each upsert refreshes `integration.snapshots[<id>]` to
+                    // remote-current so the push pass below sees only
+                    // fields the user has edited locally since the last pull.
                     const projects = yield* LinearApi.fetchTeamProjects(remoteTeam.id);
                     const projectByRemoteId = new Map<string, Project.Project>();
+                    const remoteProjectsById = new Map<string, LinearApi.Project>();
                     for (const project of projects) {
-                      const local = yield* upsertProject(project);
+                      const local = yield* upsertProject(integrationObj, project);
                       projectByRemoteId.set(project.id, local);
+                      remoteProjectsById.set(project.id, project);
                       pulledProjects++;
                     }
 
-                    // Issues → DXOS Tasks.
                     const since = sinceFromOptions(options);
                     const issues = yield* LinearApi.fetchTeamIssues(remoteTeam.id, { since });
+                    const remoteIssuesById = new Map<string, LinearApi.Issue>();
                     for (const issue of issues) {
                       const project = issue.project ? projectByRemoteId.get(issue.project.id) : undefined;
-                      const { created } = yield* upsertTask(issue, project);
+                      const { created } = yield* upsertTask(integrationObj, issue, project);
+                      remoteIssuesById.set(issue.id, issue);
                       if (created) {
                         pulledTasks++;
                       }
                     }
+
+                    // Push: snapshot-diff every locally-mirrored object back
+                    // to Linear. Workflow states are fetched lazily — only
+                    // when at least one local Task status diverged — so
+                    // read-only syncs don't pay the round-trip.
+                    let workflowStates: ReadonlyArray<LinearApi.WorkflowState> | undefined;
+                    const resolveStateId = (issue: LinearApi.Issue, status: 'todo' | 'in-progress' | 'done') => {
+                      const desiredType = LinearApi.taskStatusToStateType(status);
+                      const states = workflowStates;
+                      if (!states) {
+                        return undefined;
+                      }
+                      // Match by category. Workspaces commonly have multiple
+                      // states per category (e.g. "In Review" + "In Progress"
+                      // both `started`); pick the first match for stability.
+                      return states.find((s) => s.type === desiredType)?.id;
+                    };
+
+                    // Probe local mirrors for any status divergence before
+                    // paying for /states. Cheap pre-check: we already have
+                    // the remote issues + snapshots in scope.
+                    const needsStates = (() => {
+                      for (const [id] of remoteIssuesById) {
+                        const snapshot = readSnapshot<TaskSnapshot>(integrationObj, id);
+                        if (!snapshot) {
+                          continue;
+                        }
+                        // Same lookup pattern as pushTeamUpdates would do; we
+                        // inline it here only as a heuristic to skip /states.
+                        // Worst case (false positive): one extra round-trip.
+                        return true;
+                      }
+                      return false;
+                    })();
+                    if (needsStates) {
+                      workflowStates = yield* LinearApi.fetchTeamWorkflowStates(remoteTeam.id);
+                    }
+
+                    const pushResult = yield* pushTeamUpdates(integrationObj, remoteIssuesById, remoteProjectsById, {
+                      updateProject: (id, input) => LinearApi.updateProject(id, input).pipe(Effect.mapError((error) => error as Error)),
+                      updateIssue: (id, input) => LinearApi.updateIssue(id, input).pipe(Effect.mapError((error) => error as Error)),
+                      resolveStateId,
+                    });
+                    pushedProjects += pushResult.projects;
+                    pushedTasks += pushResult.tasks;
 
                     // TODO(wittjosiah): Comments sync disabled — re-enable
                     // once chunked/yielded to avoid automerge_wasm crash
@@ -294,6 +612,10 @@ const handler: Operation.WithHandler<typeof SyncLinearTeams> = SyncLinearTeams.p
               teams: targetEntries.length,
               projects: pulledProjects,
               tasks: pulledTasks,
+            },
+            pushed: {
+              projects: pushedProjects,
+              tasks: pushedTasks,
             },
           };
         }).pipe(

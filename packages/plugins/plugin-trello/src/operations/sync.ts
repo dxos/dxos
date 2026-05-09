@@ -5,7 +5,7 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, mergeDeep, mergeField, readSnapshot, writeSnapshot } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -55,77 +55,8 @@ type BoardSnapshot = {
   columns?: Record<string, { ids: string[] }>;
 };
 
-/**
- * Per-field three-way merge over `(local, remote, snapshot)`.
- *
- * - No snapshot (first sync of this id): take remote.
- * - Local unchanged, remote unchanged → no-op (return local).
- * - Local unchanged, remote changed → take remote (pull).
- * - Local changed, remote unchanged → keep local (push will write it).
- * - Both changed → **remote wins** (Trello is source of truth; local edit is lost).
- *
- * Equality is `===` for primitives (which is what Trello's mapped fields are).
- * For object/array values use `mergeDeep` instead.
- */
-const mergeField = <T>(
-  local: T,
-  remote: T,
-  snapshot: T | undefined,
-): { value: T; source: 'local' | 'remote' | 'unchanged' } => {
-  if (snapshot === undefined) {
-    return { value: remote, source: local === remote ? 'unchanged' : 'remote' };
-  }
-  const localChanged = local !== snapshot;
-  const remoteChanged = remote !== snapshot;
-  if (!localChanged && !remoteChanged) {
-    return { value: local, source: 'unchanged' };
-  }
-  if (!localChanged && remoteChanged) {
-    return { value: remote, source: 'remote' };
-  }
-  if (localChanged && !remoteChanged) {
-    return { value: local, source: 'local' };
-  }
-  return { value: remote, source: 'remote' };
-};
-
-/** Deep-equal merge for object values (e.g. arrangement). Same policy as `mergeField`. */
-const mergeDeep = <T>(
-  local: T,
-  remote: T,
-  snapshot: T | undefined,
-): { value: T; source: 'local' | 'remote' | 'unchanged' } => {
-  const eq = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
-  if (snapshot === undefined) {
-    return { value: remote, source: eq(local, remote) ? 'unchanged' : 'remote' };
-  }
-  const localChanged = !eq(local, snapshot);
-  const remoteChanged = !eq(remote, snapshot);
-  if (!localChanged && !remoteChanged) {
-    return { value: local, source: 'unchanged' };
-  }
-  if (!localChanged && remoteChanged) {
-    return { value: remote, source: 'remote' };
-  }
-  if (localChanged && !remoteChanged) {
-    return { value: local, source: 'local' };
-  }
-  return { value: remote, source: 'remote' };
-};
-
-/** Mutates `integration.snapshots[foreignId] = snapshot` inside an `Obj.update`. */
-const writeSnapshot = (integration: Integration.Integration, foreignId: string, snapshot: object): void => {
-  Obj.update(integration, (integration) => {
-    const m = integration as Obj.Mutable<typeof integration>;
-    const existing = (m.snapshots ?? {}) as Record<string, unknown>;
-    m.snapshots = { ...existing, [foreignId]: snapshot };
-  });
-};
-
-const readSnapshot = <T extends object>(integration: Integration.Integration, foreignId: string): T | undefined => {
-  const snapshots = (integration.snapshots ?? {}) as Record<string, unknown>;
-  return snapshots[foreignId] as T | undefined;
-};
+// Per-field three-way merge primitives are shared with other integration plugins
+// (Linear, GitHub) and live in `@dxos/app-toolkit`.
 
 /**
  * Pull reconciler with snapshot-driven three-way merge.
