@@ -33,7 +33,9 @@ class AsyncQueue<T> {
 
   async pull(): Promise<T> {
     const item = this._items.shift();
-    if (item !== undefined) return item;
+    if (item !== undefined) {
+      return item;
+    }
     return new Promise<T>((resolve) => this._waiters.push(resolve));
   }
 }
