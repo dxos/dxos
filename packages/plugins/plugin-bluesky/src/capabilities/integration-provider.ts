@@ -17,24 +17,30 @@ import { BlueskyOperation } from '../operations';
 import { BlueskyTargetOptions } from '../types';
 
 /**
- * Bluesky-published permission set covering full read + write access to
- * `app.bsky.*` (timeline, posts, likes, bookmarks, feed generators,
- * preferences, and creating/deleting posts/likes/reposts/bookmarks).
+ * OAuth scopes for Bluesky.
+ *
+ * `include:app.bsky.authFullApp` is the published Bluesky permission set
+ * for full read + write access to `app.bsky.*`: timeline, posts, likes,
+ * bookmarks, feed generators, preferences, plus creating/deleting
+ * posts/likes/reposts/bookmarks. The `?aud=` parameter pins the AppView
+ * the auth context targets — `bsky_appview` is Bluesky's official one.
  *
  * Replaces the legacy `transition:generic` / `transition:email` coarse
  * scopes. We request the full-app set rather than `authViewAll` so the
- * user only authorizes once and we can add post-creation flows later
+ * user only authorizes once and we can ship post-creation flows later
  * without forcing a re-OAuth.
  *
- * `?aud=` pins the AppView the auth context targets — `bsky_appview` is
- * Bluesky's official one. The `#` is part of the audience DID-URL
- * fragment and is sent through Edge's PAR body verbatim.
+ * Note: atproto auth servers don't enumerate concrete permission-set
+ * strings in their well-known `scopes_supported` (they resolve them
+ * dynamically at PAR time). Edge's `pushAuthRequest` pre-flight check
+ * was updated to allow granular-permission scope prefixes through.
  *
  * Refs:
  * - https://atproto.com/specs/permission
  * - https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/authFullApp.json
+ * - https://github.com/bluesky-social/atproto/discussions/4437
  */
-const BSKY_FULL_APP_SCOPE = 'include:app.bsky.authFullApp?aud=did:web:api.bsky.app#bsky_appview';
+const BSKY_OAUTH_SCOPES = ['include:app.bsky.authFullApp?aud=did:web:api.bsky.app#bsky_appview'] as const;
 
 /** Schema for the atproto pre-flight form (handle / DID). */
 const AtprotoPreflightForm = Schema.Struct({
@@ -65,7 +71,7 @@ export default Capability.makeModule(
         label: 'Bluesky',
         oauth: {
           provider: OAuthProvider.ATPROTO,
-          scopes: [BSKY_FULL_APP_SCOPE],
+          scopes: [...BSKY_OAUTH_SCOPES],
           // bsky.social nullifies window.opener, so popup + postMessage
           // can't be used; rely on Edge redirecting to `/redirect/oauth`.
           useRedirectFlow: true,
