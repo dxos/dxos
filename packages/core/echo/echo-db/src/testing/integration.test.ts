@@ -101,6 +101,7 @@ describe('Integration tests', () => {
       db.add(Obj.make(TestSchema.Person, { name: `Person ${i}` }));
     }
     await db.flush();
+    await peer.host.updateIndexes();
 
     await peer.reload();
     await using db2 = await peer.openLastDatabase();
