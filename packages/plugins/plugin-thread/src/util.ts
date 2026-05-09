@@ -17,13 +17,19 @@ export type MessagePropertiesProvider = (identityKey: PublicKey | undefined) => 
  * Stable hash for an arbitrary string — used as the avatar-fallback seed for
  * external senders who have no DXOS identity (e.g. Slack/Discord-synced
  * messages). djb2-ish, only stability matters.
+ *
+ * Coerced to unsigned 32-bit via `>>> 0` because `toFallback` does a plain
+ * modulo against `idEmoji.length * idHue.length` and JavaScript's `%`
+ * preserves the sign of the dividend — a negative hash would index
+ * `idEmoji[-x]` and `idHue[-x]` to `undefined`, causing the avatar to fall
+ * through to `Avatar.Content`'s default red/ghost.
  */
 const hashString = (s: string): number => {
   let h = 0;
   for (let i = 0; i < s.length; i++) {
     h = (h * 31 + s.charCodeAt(i)) | 0;
   }
-  return h;
+  return h >>> 0;
 };
 
 export const getMessageMetadata = (

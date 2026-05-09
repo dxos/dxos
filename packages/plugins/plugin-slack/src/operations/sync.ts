@@ -63,10 +63,18 @@ const friendlyChannelName = (conversation: SlackConversation): string => {
  *   on read without a separate object type. The parent message itself has
  *   `thread_ts === ts` when `reply_count > 0`; we preserve that, so a query
  *   for `threadId == ts` returns parent + replies together.
- * - `sender` carries the Slack user id in `name` and either the resolved
- *   email (when `users:read` returned one) or the bot id. We populate `email`
- *   if the user lookup resolved one — that lets cross-source matching land
- *   on email later without re-fetching.
+ * - `sender.name` is resolved through a layered fallback that always produces
+ *   a non-empty value:
+ *     1. resolved user `display_name` / `real_name` / `name` (most messages),
+ *     2. resolved bot name via `bots.info` (bot-posted messages where Slack
+ *        supplies only `bot_id`),
+ *     3. Slack's own `username` field on the message (legacy bot integrations
+ *        and webhook posts),
+ *     4. the raw `user` / `bot_id` (opaque but stable),
+ *     5. literal `'unknown'`.
+ *   `username` is preferred over the raw id because the latter is opaque
+ *   (`U0B0X8EKP1Q`) while `username` is human-readable (`composer`).
+ * - `sender.email` if the user-info lookup returned one.
  * - `blocks` is currently a single `Text` block from the Slack `text` field.
  *   Slack's rich-text `blocks` array is intentionally NOT mapped yet — it
  *   would require a Slack-block → ContentBlock translator that's a separate
@@ -75,18 +83,27 @@ const friendlyChannelName = (conversation: SlackConversation): string => {
 const mapSlackMessage = (
   message: SlackMessage,
   userById: Map<string, SlackApi.SlackUser>,
+  botById: Map<string, SlackApi.SlackBot>,
 ): Message.Message | undefined => {
   if (message.subtype === 'channel_join' || message.subtype === 'channel_leave') {
     return undefined;
   }
   const text = message.text ?? '';
   const blocks: ContentBlock.Any[] = text.length > 0 ? [{ _tag: 'text', text } as ContentBlock.Text] : [];
-  const userId = message.user ?? message.bot_id;
-  const slackUser = userId ? userById.get(userId) : undefined;
+
+  const slackUser = message.user ? userById.get(message.user) : undefined;
+  const slackBot = message.bot_id ? botById.get(message.bot_id) : undefined;
   const senderName =
-    slackUser?.profile?.display_name && slackUser.profile.display_name.length > 0
+    (slackUser?.profile?.display_name && slackUser.profile.display_name.length > 0
       ? slackUser.profile.display_name
-      : (slackUser?.real_name ?? slackUser?.name ?? userId ?? message.username ?? 'unknown');
+      : undefined) ??
+    slackUser?.real_name ??
+    slackUser?.name ??
+    slackBot?.name ??
+    message.username ??
+    message.user ??
+    message.bot_id ??
+    'unknown';
 
   return Message.make({
     [Obj.Meta]: { keys: [{ source: SLACK_SOURCE, id: message.ts }] },
@@ -138,12 +155,14 @@ export const findOrCreateChannelForConversation: (
 
 /**
  * Resolves Slack user ids referenced in `messages` to {@link SlackApi.SlackUser}
- * records, using a per-sync cache so each id is only fetched once.
+ * records, using a per-sync cache so each id is only fetched once. Skipped
+ * for messages that have only `bot_id` (those are resolved separately via
+ * {@link resolveBots}) since `users.info` does not accept bot ids.
  *
  * Failed lookups (deleted users, missing scopes) silently fall through —
- * `mapSlackMessage` substitutes the raw user id when the resolved record is
- * missing, so a missing scope degrades gracefully into uglier sender names
- * rather than blocking the sync.
+ * `mapSlackMessage` substitutes a layered name fallback when the resolved
+ * record is missing, so a missing scope degrades gracefully rather than
+ * blocking the sync.
  */
 const resolveUsers = (
   messages: ReadonlyArray<SlackMessage>,
@@ -165,6 +184,43 @@ const resolveUsers = (
       (id) =>
         SlackApi.fetchUser(id).pipe(
           Effect.tap((user) => Effect.sync(() => user && out.set(id, user))),
+          Effect.catchAll((error) => {
+            log.catch(error);
+            return Effect.void;
+          }),
+        ),
+      { concurrency: 4, discard: true },
+    );
+    return out;
+  });
+
+/**
+ * Resolves Slack bot ids referenced in `messages` to {@link SlackApi.SlackBot}
+ * records via `bots.info`, with the same per-sync cache + silent-failure
+ * behavior as {@link resolveUsers}. Bot-posted messages (incoming-webhook
+ * posts, legacy bot users) carry only `bot_id` (`B…`); their friendly name
+ * is not reachable through `users.info`.
+ */
+const resolveBots = (
+  messages: ReadonlyArray<SlackMessage>,
+): Effect.Effect<
+  Map<string, SlackApi.SlackBot>,
+  never,
+  import('@effect/platform/HttpClient').HttpClient | SlackApi.SlackCredentials
+> =>
+  Effect.gen(function* () {
+    const ids = new Set<string>();
+    for (const message of messages) {
+      if (message.bot_id) {
+        ids.add(message.bot_id);
+      }
+    }
+    const out = new Map<string, SlackApi.SlackBot>();
+    yield* Effect.forEach(
+      Array.from(ids),
+      (id) =>
+        SlackApi.fetchBot(id).pipe(
+          Effect.tap((bot) => Effect.sync(() => bot && out.set(id, bot))),
           Effect.catchAll((error) => {
             log.catch(error);
             return Effect.void;
@@ -281,12 +337,13 @@ const handler: Operation.WithHandler<typeof SyncSlackChannel> = SyncSlackChannel
                     }
 
                     const userById = yield* resolveUsers(messages);
+                    const botById = yield* resolveBots(messages);
 
                     // Slack returns history newest-first; reverse so feed
                     // append order matches chronological order.
                     const sorted = [...messages].sort((a, b) => Number(a.ts) - Number(b.ts));
                     const mapped = sorted
-                      .map((message) => mapSlackMessage(message, userById))
+                      .map((message) => mapSlackMessage(message, userById, botById))
                       .filter((message): message is Message.Message => message !== undefined);
 
                     if (mapped.length === 0) {

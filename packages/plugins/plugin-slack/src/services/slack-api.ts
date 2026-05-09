@@ -317,6 +317,43 @@ export const fetchUser = (userId: string): SlackEffect<SlackUser | undefined> =>
     return response.user;
   });
 
+const SlackBotInfoSchema = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String.pipe(Schema.optional),
+  app_id: Schema.String.pipe(Schema.optional),
+  user_id: Schema.String.pipe(Schema.optional),
+  icons: Schema.Struct({
+    image_36: Schema.String.pipe(Schema.optional),
+    image_48: Schema.String.pipe(Schema.optional),
+    image_72: Schema.String.pipe(Schema.optional),
+  }).pipe(Schema.optional),
+});
+
+export type SlackBot = Schema.Schema.Type<typeof SlackBotInfoSchema>;
+
+const SlackBotsInfoResponseSchema = Schema.Struct({
+  ok: Schema.Boolean,
+  error: Schema.String.pipe(Schema.optional),
+  bot: SlackBotInfoSchema.pipe(Schema.optional),
+});
+
+/**
+ * Returns bot info by bot id (`bots.info`).
+ *
+ * Used to resolve the friendly name of bot-posted messages where Slack
+ * supplies only `bot_id` (incoming-webhook posts, legacy bot users). The
+ * `bot_id` namespace (`B…`) is disjoint from user ids (`U…`) and `users.info`
+ * does NOT accept bot ids — the dedicated `bots.info` method is required.
+ */
+export const fetchBot = (botId: string): SlackEffect<SlackBot | undefined> =>
+  Effect.gen(function* () {
+    const response = yield* slackRequest(
+      (creds) => authedPost(creds, 'bots.info', { bot: botId }),
+      SlackBotsInfoResponseSchema,
+    );
+    return response.bot;
+  });
+
 /**
  * Fetches messages from a single conversation (`conversations.history`).
  *
