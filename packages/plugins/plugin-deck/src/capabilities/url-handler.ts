@@ -91,13 +91,6 @@ export default Capability.makeModule(
         return;
       }
 
-      // Redirect paths (e.g. `/redirect/oauth`) are handled by NavigationHandler
-      // contributions above; skip workspace/path routing so we don't try to
-      // resolve them as object paths.
-      if (isRedirectPath(pathname)) {
-        return;
-      }
-
       const qualifiedId = fromUrlPath(pathname);
       const workspace = getWorkspaceFromPath(qualifiedId);
       if (workspace !== Node.RootId && workspace !== state.activeDeck) {

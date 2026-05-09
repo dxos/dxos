@@ -16,7 +16,7 @@ import {
   AppGraphBuilder,
   BuiltinProviders,
   Coordinator,
-  NavigationHandler,
+  OAuthRedirect,
   OperationHandler,
   ReactSurface,
 } from '#capabilities';
@@ -70,7 +70,6 @@ export const IntegrationPlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
-  AppPlugin.addNavigationHandlerModule({ activate: NavigationHandler }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [AccessToken.AccessToken, Integration.Integration] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
@@ -82,6 +81,12 @@ export const IntegrationPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, ActivationEvents.OperationInvokerReady),
     activate: Coordinator,
+  }),
+  // Capture redirect-flow OAuth callbacks at startup before the deck URL handler
+  // tries to interpret `/redirect/oauth` as an object path.
+  Plugin.addModule({
+    activatesOn: ActivationEvents.Startup,
+    activate: OAuthRedirect,
   }),
   Plugin.make,
 );
