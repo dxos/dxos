@@ -1,0 +1,55 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+
+import { Operation } from '@dxos/compute';
+import { Ref } from '@dxos/echo';
+import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/plugin-integration/types';
+
+import { meta } from '#meta';
+
+const BLUESKY_OPERATION = `${meta.id}.operation`;
+
+/**
+ * Discovery — list the available Bluesky sync targets for the integration's
+ * authenticated user. Always returns the three "self" targets (posts,
+ * likes, bookmarks) plus one entry per saved feed in the user's preferences.
+ *
+ * Read-only: returns descriptors only. Local Subscription.Feed objects are
+ * materialized lazily on first sync (in {@link SyncBlueskyTargets}).
+ */
+export const GetBlueskyTargets = Operation.make({
+  meta: {
+    key: `${BLUESKY_OPERATION}.get-bluesky-targets`,
+    name: 'Get Bluesky Targets',
+    description: 'List the user’s Bluesky timeline / likes / bookmarks plus saved custom feeds.',
+  },
+  input: GetSyncTargetsInput,
+  output: GetSyncTargetsOutput,
+});
+
+/**
+ * Pull-only sync of currently-selected Bluesky targets. For each target
+ * fetches posts via XRPC (public for the user's own feed; via Edge atproto
+ * proxy for `getActorLikes` / `getBookmarks` / `getFeed`) and appends new
+ * Posts to the backing `Subscription.Feed` queue. On first sync a
+ * `Subscription.Feed` is materialized and stored in `target.object`.
+ */
+export const SyncBlueskyTargets = Operation.make({
+  meta: {
+    key: `${BLUESKY_OPERATION}.sync-bluesky-targets`,
+    name: 'Sync Bluesky',
+    description: 'Pull posts for currently-selected Bluesky targets in an Integration.',
+  },
+  input: Schema.Struct({
+    integration: Ref.Ref(Integration.Integration),
+  }),
+  output: Schema.Struct({
+    /** Total posts appended across all selected targets. */
+    appended: Schema.Number,
+    /** Targets that produced an error this run. */
+    failed: Schema.Number,
+  }),
+});

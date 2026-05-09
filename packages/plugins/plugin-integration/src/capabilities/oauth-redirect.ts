@@ -38,11 +38,7 @@ export default Capability.makeModule(
 
     // Edge stamps the literal "undefined" into the URL when the OAuth flow
     // failed before producing tokens; treat that as missing.
-    const valid =
-      !!accessTokenId &&
-      !!accessToken &&
-      accessTokenId !== 'undefined' &&
-      accessToken !== 'undefined';
+    const valid = !!accessTokenId && !!accessToken && accessTokenId !== 'undefined' && accessToken !== 'undefined';
 
     // Strip the OAuth params and rewrite to root regardless, so the deck
     // doesn't try to resolve `/redirect/oauth` as a workspace.

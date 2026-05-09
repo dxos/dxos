@@ -236,6 +236,9 @@
       "path": "../../plugins/plugin-automation"
     },
     {
+      "path": "../../plugins/plugin-bluesky"
+    },
+    {
       "path": "../../plugins/plugin-board"
     },
     {

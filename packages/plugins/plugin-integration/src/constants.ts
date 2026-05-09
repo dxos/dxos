@@ -19,9 +19,6 @@ export const CUSTOM_TOKEN_DIALOG = PROVIDER_FORM_DIALOG;
 /** Provider id for manually entered access tokens. */
 export const CUSTOM_PROVIDER_ID = 'custom';
 
-/** Provider id for atproto OAuth (e.g. Bluesky). */
-export const ATPROTO_PROVIDER_ID = 'atproto';
-
 /**
  * `localStorage` key prefix for redirect-flow OAuth pending state.
  * Persisted under `${INTEGRATION_PENDING_KEY_PREFIX}${accessTokenId}` so

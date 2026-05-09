@@ -12,6 +12,7 @@ import { type Observability } from '@dxos/observability';
 import { AssistantPlugin } from '@dxos/plugin-assistant';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { AutomationPlugin } from '@dxos/plugin-automation';
+import { BlueskyPlugin } from '@dxos/plugin-bluesky';
 import { BoardPlugin } from '@dxos/plugin-board';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -191,6 +192,7 @@ export const getPlugins = ({
     AssistantPlugin(),
     AttentionPlugin(),
     AutomationPlugin(),
+    BlueskyPlugin(),
     BoardPlugin(),
     ChessPlugin(),
     ClientPlugin({
