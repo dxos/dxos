@@ -49,15 +49,6 @@ const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
 
 /**
  * Block until the {@link DocumentProgress} reports a state in `awaitStates`.
- *
- * - Resolves immediately if the current state already matches.
- * - Rejects if the query enters `'failed'` and `'failed'` is not requested.
- * - Rejects with `TimeoutError` from `@dxos/async` if `timeout` elapses
- *   before any matching transition.
- *
- * Prefer `Repo.find(url)` / `progress.whenReady()` for the simple `'ready'`
- * case. This helper is only useful when you need to wait on a non-ready
- * variant (e.g. `'loading'`, `'unavailable'`) or a set of states.
  */
 const waitForQueryState = async (
   progress: DocumentProgress<unknown>,
@@ -84,15 +75,7 @@ const waitForQueryState = async (
 
 /**
  * Multi-state `Repo.find` replacement for the pre-subduction
- * `Repo.find(url, { allowableStates })` ergonomics. `Repo.find()` in the
- * fork only resolves on `'ready'` and rejects on `'unavailable'`, so use
- * this when you need to grab the handle while the query is still in
- * `'loading'` (or to await `'unavailable'`). Returns the handle regardless
- * of whether data has arrived — read sync state from the progress (or poll
- * `handle.doc()`) instead.
- *
- * For pure "wait until ready" use `repo.find(url)` directly.
- */
+ * `Repo.find(url, { allowableStates })` ergonomics. */
 const findInStates = async <T>(
   repo: Repo,
   url: AutomergeUrl,
@@ -394,9 +377,11 @@ describe('AutomergeRepo', () => {
       adapter2.peerCandidate(adapter1.peerId!);
 
       // Reconnecting cycles the peers and should re-trigger sync; the doc
-      // becomes available.
+      // becomes available. Can't use `progress.whenReady()` here because
+      // the query is already in `'unavailable'` and `whenReady` rejects
+      // immediately for that state.
       await reconnectAdapters(adapters);
-      await asyncTimeout(progress.whenReady(), 1_000);
+      await waitForQueryState(progress, ['ready'], { timeout: 1_000 });
     });
 
     test('documents loaded from disk get replicated', async () => {
@@ -591,7 +576,10 @@ describe('AutomergeRepo', () => {
       // transitions to `'ready'` once the doc syncs through.
       announce = true;
       repoB.shareConfigChanged();
-      await asyncTimeout(progress.whenReady(), 1_000);
+      // Use `waitForQueryState` instead of `progress.whenReady()` so that a
+      // transient `'unavailable'` from the dormant subduction source
+      // doesn't reject the wait before classical sync delivers.
+      await waitForQueryState(progress, ['ready'], { timeout: 1_000 });
       expect(progress.peek().state).to.equal('ready');
       expect(docB.doc()).to.deep.equal({ text: 'Hello world' });
     });
@@ -831,7 +819,12 @@ describe('AutomergeRepo', () => {
       await connectPeers(spaceKey, teleportBuilder, peerWithDocs.peer, peer2);
       await connectPeers(anotherSpaceKey, teleportBuilder, peer2, peerFromAnotherSpace);
 
-      await asyncTimeout(peer2.repo.find(document.url), 1000);
+      // Can't use `repo.find()` / `progress.whenReady()`: the dormant
+      // subduction source can transition to `'unavailable'` mid-flight
+      // (before classical sync delivers), which both APIs surface as a
+      // rejection. `findInStates` ignores transient `'unavailable'`.
+      const loaded = await findInStates<any>(peer2.repo, document.url, ['ready']);
+      expect(loaded.doc()).to.deep.equal(document.doc());
 
       // peerFromAnotherSpace is connected to peer2 over a different spaceKey,
       // so it must NOT receive the doc.
