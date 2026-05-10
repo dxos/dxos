@@ -22,23 +22,6 @@ import { meta, registryCategoryId } from '#meta';
 
 import { useAutoTags, useRegistryPlugins, useRemotePluginIds } from '../hooks';
 
-type PluginPredicate = (plugin: Plugin.Plugin) => boolean;
-
-/**
- * Renders the {@link RegistryArticle} surface filtered by an arbitrary
- * predicate computed against the live plugin list. Centralises the
- * `usePluginManager` + `useRegistryPlugins` + `useAutoTags` wiring shared
- * by every category surface.
- */
-const FilteredRegistryArticle = ({ id, filter }: { id: string; filter: PluginPredicate }) => {
-  const manager = usePluginManager();
-  const { entries } = useRegistryPlugins();
-  const extraTagsById = useAutoTags(entries);
-  const filtered = useMemo(() => manager.getPlugins().filter(filter), [manager, filter]);
-
-  return <RegistryArticle id={id} plugins={filtered} extraTagsById={extraTagsById} />;
-};
-
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
@@ -50,7 +33,9 @@ export default Capability.makeModule(() =>
           const remoteIds = useRemotePluginIds();
           const core = useMemo(() => manager.getCore(), [manager]);
           const predicate = useMemo<PluginPredicate>(
-            () => ({ meta }) => !core.includes(meta.id) && !remoteIds.has(meta.id),
+            () =>
+              ({ meta }) =>
+                !core.includes(meta.id) && !remoteIds.has(meta.id),
             [core, remoteIds],
           );
 
@@ -65,7 +50,9 @@ export default Capability.makeModule(() =>
           const core = useMemo(() => manager.getCore(), [manager]);
           const enabled = useMemo(() => manager.getEnabled(), [manager]);
           const predicate = useMemo<PluginPredicate>(
-            () => ({ meta }) => !core.includes(meta.id) && enabled.includes(meta.id),
+            () =>
+              ({ meta }) =>
+                !core.includes(meta.id) && enabled.includes(meta.id),
             [core, enabled],
           );
 
@@ -94,7 +81,9 @@ export default Capability.makeModule(() =>
         filter: AppSurface.literal(AppSurface.Article, registryCategoryId('labs')),
         component: () => {
           const predicate = useMemo<PluginPredicate>(
-            () => ({ meta }) => meta.tags?.includes('labs') ?? false,
+            () =>
+              ({ meta }) =>
+                meta.tags?.includes('labs') ?? false,
             [],
           );
 
@@ -128,3 +117,20 @@ export default Capability.makeModule(() =>
     ]),
   ),
 );
+
+type PluginPredicate = (plugin: Plugin.Plugin) => boolean;
+
+/**
+ * Renders the {@link RegistryArticle} surface filtered by an arbitrary
+ * predicate computed against the live plugin list. Centralises the
+ * `usePluginManager` + `useRegistryPlugins` + `useAutoTags` wiring shared
+ * by every category surface.
+ */
+const FilteredRegistryArticle = ({ id, filter }: { id: string; filter: PluginPredicate }) => {
+  const manager = usePluginManager();
+  const { entries } = useRegistryPlugins();
+  const extraTagsById = useAutoTags(entries);
+  const filtered = useMemo(() => manager.getPlugins().filter(filter), [manager, filter]);
+
+  return <RegistryArticle id={id} plugins={filtered} extraTagsById={extraTagsById} />;
+};
