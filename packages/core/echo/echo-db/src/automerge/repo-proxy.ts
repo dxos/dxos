@@ -225,6 +225,9 @@ export class RepoProxy extends Resource {
       log('onDelete', { documentId });
       handle.off('change', onChange);
       this._pendingRemoveIds.add(documentId);
+      // Drop any pending update for this id; the handle is gone and `_sendUpdates`
+      // would otherwise see a missing handle for an id it's still trying to send.
+      this._pendingUpdateIds.delete(documentId);
       this._sendUpdatesJob?.trigger();
       delete this._handles[documentId];
     };
@@ -269,6 +272,8 @@ export class RepoProxy extends Resource {
       }
 
       this._pendingRemoveIds.add(handle.documentId);
+      // Drop any pending update for this id; see `_loadHandle` for rationale.
+      this._pendingUpdateIds.delete(handle.documentId);
       this._sendUpdatesJob?.trigger();
       delete this._handles[handle.documentId];
     };
@@ -354,7 +359,13 @@ export class RepoProxy extends Resource {
       const addMutations = (documentIds: DocumentId[]) => {
         for (const documentId of documentIds) {
           const handle = this._handles[documentId];
-          invariant(handle, `No handle found for documentId ${documentId}`);
+          // The handle may be gone if it was removed concurrently (e.g. test teardown
+          // racing with an in-flight scheduler tick). Skip — the corresponding
+          // `_pendingRemoveIds` entry will tell the host to drop the subscription.
+          if (!handle) {
+            log('skipping update for removed handle', { documentId });
+            continue;
+          }
           const mutation = handle._getPendingChanges();
           if (mutation) {
             updates.push({ documentId, mutation });
@@ -369,7 +380,8 @@ export class RepoProxy extends Resource {
           return;
         }
         for (const { documentId } of updates) {
-          this._handles[documentId]._confirmSync();
+          // Handle may have been removed between RPC start and ack — skip silently.
+          this._handles[documentId]?._confirmSync();
         }
       }
 

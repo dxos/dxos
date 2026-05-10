@@ -3,12 +3,12 @@
 //
 
 import { type ChangeFn, type ChangeOptions, type Doc, type Heads } from '@automerge/automerge';
-import { type DocHandle, Repo, decodeHeads, encodeHeads } from '@automerge/automerge-repo';
+import { type DocHandle, Repo, decodeHeads, encodeHeads, initSubduction } from '@automerge/automerge-repo';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { render, screen } from '@testing-library/react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
-import { describe, test } from 'vitest';
+import { beforeAll, describe, test } from 'vitest';
 
 import { type IDocHandle } from '@dxos/echo-db';
 import { getDeep } from '@dxos/util';
@@ -81,6 +81,12 @@ const Test: FC<{ handle: DocHandle<TestObject>; generator: Generator }> = ({ han
 // TODO(burdon): https://testing-library.com/docs/react-testing-library/example-intro/
 
 describe('Automerge', () => {
+  // Subduction-fork `Repo` constructs a `MemorySigner` internally; WASM must be
+  // initialized first or the constructor throws `'set_subduction_logger' of undefined`.
+  beforeAll(async () => {
+    await initSubduction();
+  });
+
   test('basic sync', ({ expect }) => {
     const repo = new Repo({ network: [] });
     const handle = repo.create<TestObject>();

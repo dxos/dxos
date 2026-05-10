@@ -67,6 +67,12 @@ export type EchoHostProps = {
    * Callback to run blocking queue sync.
    */
   syncQueue?: (ctx: Context, request: SyncQueueRequest) => Promise<void>;
+
+  /**
+   * Enable Subduction sedimentree transport for Automerge document replication.
+   * @default false
+   */
+  useSubduction?: boolean;
 };
 
 /**
@@ -101,6 +107,7 @@ export class EchoHost extends Resource {
     runtime,
     assignQueuePositions = false,
     syncQueue,
+    useSubduction,
   }: EchoHostProps) {
     super();
 
@@ -110,6 +117,7 @@ export class EchoHost extends Resource {
       dataMonitor: this._echoDataMonitor,
       peerIdProvider,
       getSpaceKeyByRootDocumentId,
+      useSubduction,
     });
 
     this._runtime = runtime;
@@ -330,9 +338,9 @@ export class EchoHost extends Resource {
     const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, automergeUrl, {
       fetchFromNetwork: true,
     });
-    await handle.whenReady();
+    const query = this._automergeHost.findWithProgress<DatabaseDirectory>(handle.documentId);
 
-    return this._spaceStateManager.assignRootToSpace(spaceId, handle);
+    return this._spaceStateManager.assignRootToSpace(spaceId, query);
   }
 
   // TODO(dmaretskyi): Change to document id.
@@ -377,6 +385,10 @@ export class EchoHost extends Resource {
   }
 
   private _runUpdateIndexes = async (): Promise<void> => {
+    if (this._ctx.disposed || !this.isOpen) {
+      return;
+    }
+
     try {
       const combinedResult = _makeEmptyMergedResult();
 
@@ -398,6 +410,9 @@ export class EchoHost extends Resource {
             },
           },
         });
+      }
+      if (this._ctx.disposed || !this.isOpen) {
+        return;
       }
 
       {
@@ -443,6 +458,9 @@ export class EchoHost extends Resource {
         this._queryService.invalidateQueries(hint);
       }
     } catch (err) {
+      if (this._ctx.disposed || !this.isOpen) {
+        return;
+      }
       log.catch(err);
       // Failsafe: prevent queries from freezing if the indexer faults.
       this._queryService.invalidateQueries();
