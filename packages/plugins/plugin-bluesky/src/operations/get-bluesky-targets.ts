@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
@@ -11,7 +12,7 @@ import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { BLUESKY_TARGET } from '../constants';
-import { IntegrationDatabaseMissingError, MissingBlueskyHandleError } from '../errors';
+import { IntegrationDatabaseMissingError } from '../errors';
 import { BlueskyApi } from '../services';
 import { GetBlueskyTargets } from './definitions';
 
@@ -28,38 +29,24 @@ const SELF_TARGETS = [
 
 const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTargets.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ integration: integrationRef }) {
+    Effect.fnUntraced(function* ({ integration: integrationRef }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
-
       const integration = yield* Database.load(integrationRef);
-      const db = Obj.getDatabase(integration);
-      if (!db) {
+      if (!Obj.getDatabase(integration)) {
         return yield* Effect.fail(new IntegrationDatabaseMissingError());
       }
 
-      const accessToken = yield* Database.load(integration.accessToken);
-      const handle = accessToken.account;
-      if (!handle) {
-        return yield* Effect.fail(new MissingBlueskyHandleError());
-      }
-
-      // Saved feeds: best-effort. If PDS resolution or `getPreferences`
-      // fails (offline, unsupported DID method, schema drift, …) still
-      // return the self-targets so the user has something to pick from.
-      const savedFeeds = yield* Effect.tryPromise(async () => {
-        const pdsBaseUrl = await BlueskyApi.resolvePds(handle);
-        return BlueskyApi.getSavedFeeds({
-          client,
-          spaceId: db.spaceId,
-          accessTokenId: accessToken.id,
-          accessTokenValue: accessToken.token,
-          pdsBaseUrl,
-        });
-      }).pipe(
+      // Saved feeds are best-effort. Credentials construction (PDS resolve,
+      // missing handle, edge config) and `getPreferences` can all fail —
+      // fall back to self-targets so the user always has something to pick
+      // from.
+      const savedFeeds = yield* BlueskyApi.getSavedFeeds().pipe(
+        Effect.provide(BlueskyApi.BlueskyCredentials.fromIntegration(integrationRef, client)),
+        Effect.provide(FetchHttpClient.layer),
         Effect.catchAll((error) =>
           Effect.sync(() => {
             log.warn('failed to load Bluesky saved feeds', { error });
-            return [] as BlueskyApi.SavedFeed[];
+            return [] as ReadonlyArray<BlueskyApi.SavedFeed>;
           }),
         ),
       );

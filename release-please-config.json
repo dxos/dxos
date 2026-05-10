@@ -540,6 +540,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-bluesky/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-board/package.json",
           "jsonpath": "$.version"
         },

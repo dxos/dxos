@@ -4,50 +4,142 @@
 
 // @import-as-namespace
 
+import * as HttpBody from '@effect/platform/HttpBody';
+import * as HttpClient from '@effect/platform/HttpClient';
+import * as HttpClientError from '@effect/platform/HttpClientError';
+import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
+import * as Cause from 'effect/Cause';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as ParseResult from 'effect/ParseResult';
+import * as Schedule from 'effect/Schedule';
+import * as Schema from 'effect/Schema';
+
 import { type Client } from '@dxos/client';
+import { Database, Obj, type Ref } from '@dxos/echo';
+import { type Integration } from '@dxos/plugin-integration/types';
 
 import { BSKY_PUBLIC_API, DEFAULT_FEED_LIMIT } from '../constants';
+import { IntegrationDatabaseMissingError, MissingBlueskyHandleError } from '../errors';
+
+// ---------------------------------------------------------------------------
+// Schemas
+// ---------------------------------------------------------------------------
+//
+// Each schema is a strict subset of the upstream lexicon; extra fields on the
+// wire are decoded as `Schema.Unknown` or simply ignored. Decoding through
+// Effect Schema gives us `ParseError`s rather than runtime crashes when the
+// upstream shape drifts.
+
+const FeedAuthorSchema = Schema.Struct({
+  did: Schema.String,
+  handle: Schema.String,
+  displayName: Schema.optional(Schema.String),
+  avatar: Schema.optional(Schema.String),
+});
+
+const FeedRecordSchema = Schema.Struct({
+  text: Schema.optional(Schema.String),
+  createdAt: Schema.String,
+});
+
+const FeedPostSchema = Schema.Struct({
+  uri: Schema.String,
+  cid: Schema.String,
+  author: FeedAuthorSchema,
+  record: FeedRecordSchema,
+  indexedAt: Schema.String,
+});
+
+const FeedReasonSchema = Schema.Struct({
+  $type: Schema.optional(Schema.String),
+});
+
+const FeedViewPostSchema = Schema.Struct({
+  post: FeedPostSchema,
+  reason: Schema.optional(FeedReasonSchema),
+});
 
 /**
- * Subset of the `app.bsky.feed.defs#feedViewPost` shape we read.
- * The XRPC response carries much richer data — keep the surface here
- * narrow so the call sites are obvious about what they actually need.
+ * Subset of `app.bsky.feed.defs#feedViewPost` we read. The XRPC response
+ * carries much richer data — keep the surface here narrow so call sites are
+ * obvious about what they actually need.
  */
-export type FeedViewPost = {
-  post: {
-    uri: string;
-    cid: string;
-    author: {
-      did: string;
-      handle: string;
-      displayName?: string;
-      avatar?: string;
-    };
-    record: { text?: string; createdAt: string };
-    indexedAt: string;
-  };
-  reason?: { $type?: string };
-};
+export type FeedViewPost = Schema.Schema.Type<typeof FeedViewPostSchema>;
+
+const GetFeedResponseSchema = Schema.Struct({
+  feed: Schema.Array(FeedViewPostSchema),
+  cursor: Schema.optional(Schema.String),
+});
 
 /** Response shape of `app.bsky.feed.getAuthorFeed` / `getActorLikes` / `getFeed`. */
-export type GetFeedResponse = {
-  feed: FeedViewPost[];
-  cursor?: string;
-};
+export type GetFeedResponse = Schema.Schema.Type<typeof GetFeedResponseSchema>;
+
+// `app.bsky.bookmark.getBookmarks` returns entries whose `item` is a union of
+// `postView | blockedPost | notFoundPost`. Decode loosely and post-filter.
+const BookmarkItemSchema = Schema.Struct({
+  $type: Schema.optional(Schema.String),
+  uri: Schema.optional(Schema.String),
+  cid: Schema.optional(Schema.String),
+  author: Schema.optional(FeedAuthorSchema),
+  record: Schema.optional(FeedRecordSchema),
+  indexedAt: Schema.optional(Schema.String),
+});
+
+const BookmarkViewSchema = Schema.Struct({
+  subject: Schema.Struct({ uri: Schema.String, cid: Schema.String }),
+  createdAt: Schema.String,
+  item: BookmarkItemSchema,
+});
+
+const GetBookmarksResponseSchema = Schema.Struct({
+  cursor: Schema.optional(Schema.String),
+  bookmarks: Schema.Array(BookmarkViewSchema),
+});
+
+const SavedFeedSchema = Schema.Struct({
+  /** at-uri of the feed generator. */
+  value: Schema.String,
+  /** `feed` for custom feeds, `list` for list-backed feeds, `timeline` for the home timeline. */
+  type: Schema.Literal('feed', 'list', 'timeline'),
+  pinned: Schema.optional(Schema.Boolean),
+});
 
 /** Saved/pinned feed entry from `app.bsky.actor.getPreferences`. */
-export type SavedFeed = {
-  /** at-uri of the feed generator. */
-  value: string;
-  /** `feed` for custom feeds, `list` for list-backed feeds, `timeline` for the home timeline. */
-  type: 'feed' | 'list' | 'timeline';
-  pinned?: boolean;
-};
+export type SavedFeed = Schema.Schema.Type<typeof SavedFeedSchema>;
+
+// `getPreferences.preferences` is heterogeneous; only the
+// `app.bsky.actor.defs#savedFeedsPrefV2` entry carries `items`.
+const PreferencesEntrySchema = Schema.Struct({
+  $type: Schema.optional(Schema.String),
+  items: Schema.optional(Schema.Array(SavedFeedSchema)),
+});
+const GetPreferencesResponseSchema = Schema.Struct({
+  preferences: Schema.Array(PreferencesEntrySchema),
+});
+
+const ResolveHandleResponseSchema = Schema.Struct({ did: Schema.String });
+
+const DidServiceSchema = Schema.Struct({
+  id: Schema.String,
+  type: Schema.optional(Schema.String),
+  // Either the bare endpoint URL (the common case) or a structured object;
+  // we only consume the string form, so the object case decodes to unknown.
+  serviceEndpoint: Schema.Unknown,
+});
+const DidDocumentSchema = Schema.Struct({
+  service: Schema.optional(Schema.Array(DidServiceSchema)),
+});
+
+// ---------------------------------------------------------------------------
+// Pure helpers (post mapping)
+// ---------------------------------------------------------------------------
 
 /**
  * Map a feed-view post into the lightweight shape `Subscription.makePost`
- * accepts. Bluesky-specific fields (uri, did, handle) are folded into
- * fields the existing Post schema already has.
+ * accepts. Bluesky-specific fields (uri, did, handle) are folded into fields
+ * the existing Post schema already has.
  */
 export const toSubscriptionPostInput = (item: FeedViewPost) => {
   const text = item.post.record.text ?? '';
@@ -64,303 +156,374 @@ export const toSubscriptionPostInput = (item: FeedViewPost) => {
   };
 };
 
+// ---------------------------------------------------------------------------
+// Request pipeline
+// ---------------------------------------------------------------------------
+
+type RequestEffect<T> = Effect.Effect<
+  T,
+  HttpClientError.HttpClientError | HttpBody.HttpBodyError | ParseResult.ParseError | Cause.TimeoutException,
+  HttpClient.HttpClient
+>;
+
 /**
- * Resolve the Edge base URL from the Client's runtime config. Throws if
- * Edge isn't configured (the caller is in an integration flow that
- * requires Edge for OAuth, so this would be a misconfiguration, not a
- * user error).
+ * Decide whether a request failure is worth retrying.
+ *  - Transport / encode failures: yes (transient by nature).
+ *  - 429 (rate limited) and 5xx: yes — exactly the cases retry was designed for.
+ *  - 4xx other than 429 (auth, validation, not-found): no — retry just wastes
+ *    time and may exacerbate rate limiting on the same token.
+ *  - TimeoutException: yes.
+ *  - Body encode failures: no — payload is a code bug, not transient.
+ *  - Schema decode failures (`ParseError`): no — payload won't become valid on retry.
  */
-const resolveEdgeBaseUrl = (client: Client): string => {
-  const url = client.config.values.runtime?.services?.edge?.url;
-  if (!url) {
-    throw new Error('EDGE services not configured.');
+const shouldRetry = (
+  error: HttpClientError.HttpClientError | HttpBody.HttpBodyError | ParseResult.ParseError | Cause.TimeoutException,
+): boolean => {
+  if (error instanceof ParseResult.ParseError) {
+    return false;
   }
-  return url;
+  if (Cause.isTimeoutException(error)) {
+    return true;
+  }
+  if (error._tag === 'HttpBodyError') {
+    return false;
+  }
+  if (error._tag === 'RequestError') {
+    return true;
+  }
+  // ResponseError: only retry transient response failures.
+  if (error.reason !== 'StatusCode') {
+    return true;
+  }
+  const status = error.response.status;
+  return status === 429 || (status >= 500 && status <= 599);
 };
 
 /**
- * Resolve a handle (e.g. `user.bsky.social`) or DID to its PDS endpoint.
- *
- * Atproto identities are not all hosted on bsky.social — self-hosted
- * PDSes (and bsky's own per-user shards) are increasingly common, so
- * authenticated XRPC must target whatever PDS minted the auth context.
- * The DID document's `#atproto_pds` service entry is the source of truth;
- * for did:plc we fetch the PLC directory directly, for did:web we fetch
- * the `/.well-known/did.json` from the domain encoded in the DID.
- *
- * Falls back to bsky.social if resolution fails — that's the right answer
- * for the dominant case and degrades gracefully for the rest.
- *
- * Cached per-process by handle/DID so repeated calls in one sync run
- * don't re-fetch the DID doc.
+ * Common pipeline for outbound requests:
+ *  - execute via the injected HttpClient
+ *  - decode JSON body with Effect Schema (invalid shapes fail as {@link ParseResult.ParseError})
+ *  - 15s timeout
+ *  - exponential retry with jitter, up to 3 attempts, only on transient failures
+ *  - scope the response so its body stream is released even on failure
  */
+const runRequest = <T>(
+  request: HttpClientRequest.HttpClientRequest,
+  schema: Schema.Schema<T>,
+): RequestEffect<T> =>
+  Effect.gen(function* () {
+    const httpClient = yield* HttpClient.HttpClient;
+    return yield* httpClient.execute(request).pipe(
+      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(schema))),
+      Effect.timeout('15 seconds'),
+      Effect.retry({
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+        while: shouldRetry,
+      }),
+      Effect.scoped,
+    );
+  });
+
+/**
+ * Build a `setUrlParams`-friendly record from a loosely-typed query bag,
+ * dropping `undefined` and empty-string entries.
+ */
+const queryParams = (query: Record<string, string | number | undefined>): Record<string, string> => {
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(query)) {
+    if (value !== undefined && value !== '') {
+      out[key] = String(value);
+    }
+  }
+  return out;
+};
+
+// ---------------------------------------------------------------------------
+// PDS resolution
+// ---------------------------------------------------------------------------
+//
+// Atproto identities are not all hosted on bsky.social — self-hosted PDSes
+// (and bsky's own per-user shards) are increasingly common, so authenticated
+// XRPC must target whatever PDS minted the auth context. The DID document's
+// `#atproto_pds` service entry is the source of truth; for did:plc we fetch
+// the PLC directory directly, for did:web we fetch the
+// `/.well-known/did.json` from the domain encoded in the DID.
+//
+// Falls back to bsky.social if resolution fails — that's the right answer for
+// the dominant case and degrades gracefully for the rest.
+//
+// Cached per-process by handle/DID so repeated calls in one sync run don't
+// re-fetch the DID doc.
+
 const PDS_DEFAULT = 'https://bsky.social';
 const pdsCache = new Map<string, string>();
 
-export const resolvePds = async (handleOrDid: string): Promise<string> => {
-  const cached = pdsCache.get(handleOrDid);
-  if (cached) {
-    return cached;
-  }
-  try {
-    const did = handleOrDid.startsWith('did:') ? handleOrDid : await resolveHandleToDid(handleOrDid);
-    const doc = await fetchDidDocument(did);
-    const service = doc.service?.find(
-      (entry) => entry.id === '#atproto_pds' || entry.type === 'AtprotoPersonalDataServer',
-    );
-    const endpoint = service?.serviceEndpoint;
-    const resolved = typeof endpoint === 'string' && endpoint.length > 0 ? endpoint : PDS_DEFAULT;
-    pdsCache.set(handleOrDid, resolved);
-    return resolved;
-  } catch {
-    // Resolution can fail offline or for an unsupported DID method; the
-    // bsky.social default is correct for the majority of users and
-    // authenticated calls will surface their own auth errors if it is wrong.
-    pdsCache.set(handleOrDid, PDS_DEFAULT);
-    return PDS_DEFAULT;
-  }
-};
-
-const resolveHandleToDid = async (handle: string): Promise<string> => {
-  const url = `${BSKY_PUBLIC_API}/com.atproto.identity.resolveHandle?handle=${encodeURIComponent(handle)}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`resolveHandle failed (${response.status}): ${handle}`);
-  }
-  const body = (await response.json()) as { did: string };
-  return body.did;
-};
-
-type DidDocument = {
-  service?: Array<{ id: string; type?: string; serviceEndpoint: string | Record<string, unknown> }>;
-};
-
-const fetchDidDocument = async (did: string): Promise<DidDocument> => {
+const fetchDidDocument = (did: string): RequestEffect<Schema.Schema.Type<typeof DidDocumentSchema>> => {
   if (did.startsWith('did:plc:')) {
-    const response = await fetch(`https://plc.directory/${did}`);
-    if (!response.ok) {
-      throw new Error(`PLC directory lookup failed (${response.status}): ${did}`);
-    }
-    return (await response.json()) as DidDocument;
+    return runRequest(HttpClientRequest.get(`https://plc.directory/${did}`), DidDocumentSchema);
   }
   if (did.startsWith('did:web:')) {
     const domain = did.slice('did:web:'.length).split(':')[0];
-    const response = await fetch(`https://${domain}/.well-known/did.json`);
-    if (!response.ok) {
-      throw new Error(`did:web lookup failed (${response.status}): ${did}`);
-    }
-    return (await response.json()) as DidDocument;
+    return runRequest(HttpClientRequest.get(`https://${domain}/.well-known/did.json`), DidDocumentSchema);
   }
-  throw new Error(`unsupported DID method: ${did}`);
+  return Effect.fail(
+    new HttpClientError.RequestError({
+      request: HttpClientRequest.get(did),
+      reason: 'InvalidUrl',
+      description: `unsupported DID method: ${did}`,
+    }),
+  );
 };
 
-/** Public XRPC GET — used for any read-only endpoint that doesn't need auth. */
-const publicGet = async <T>(path: string, query: Record<string, string | number | undefined>): Promise<T> => {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(query)) {
-    if (value !== undefined && value !== '') {
-      params.set(key, String(value));
+/** Resolve a handle (e.g. `user.bsky.social`) or DID to its PDS endpoint. */
+const resolvePds = (handleOrDid: string): RequestEffect<string> =>
+  Effect.gen(function* () {
+    const cached = pdsCache.get(handleOrDid);
+    if (cached !== undefined) {
+      return cached;
     }
-  }
-  const url = `${BSKY_PUBLIC_API}/${path}?${params.toString()}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Bluesky public XRPC failed (${response.status}): ${path}`);
-  }
-  return (await response.json()) as T;
-};
+    const didEffect = handleOrDid.startsWith('did:')
+      ? Effect.succeed(handleOrDid)
+      : runRequest(
+          HttpClientRequest.get(`${BSKY_PUBLIC_API}/com.atproto.identity.resolveHandle`).pipe(
+            HttpClientRequest.setUrlParams({ handle: handleOrDid }),
+          ),
+          ResolveHandleResponseSchema,
+        ).pipe(Effect.map((response) => response.did));
 
-/**
- * Authenticated XRPC GET — proxied through Edge `/atproto/proxy` so the
- * stored DPoP key signs the request. Edge requires the caller to include
- * the access token via `Authorization: DPoP <token>` in the proxied
- * request's headers; Edge attaches the matching DPoP proof JWT (signed
- * with the private key it stored at OAuth time) before forwarding to the
- * user's PDS.
- */
-const authedGet = async <T>(input: {
-  client: Client;
+    const resolved = yield* didEffect.pipe(
+      Effect.flatMap(fetchDidDocument),
+      Effect.map((doc) => {
+        const service = doc.service?.find(
+          (entry) => entry.id === '#atproto_pds' || entry.type === 'AtprotoPersonalDataServer',
+        );
+        const endpoint = service?.serviceEndpoint;
+        return typeof endpoint === 'string' && endpoint.length > 0 ? endpoint : PDS_DEFAULT;
+      }),
+      // Resolution can fail offline, on unsupported DID methods, or on schema
+      // drift — bsky.social is the right answer for the dominant case and
+      // authenticated calls will surface their own errors if it is wrong.
+      Effect.catchAll(() => Effect.succeed(PDS_DEFAULT)),
+    );
+    pdsCache.set(handleOrDid, resolved);
+    return resolved;
+  });
+
+// ---------------------------------------------------------------------------
+// Credentials service
+// ---------------------------------------------------------------------------
+
+type BlueskyCredentialsValue = {
   spaceId: string;
   accessTokenId: string;
   accessTokenValue: string;
+  edgeBaseUrl: string;
   pdsBaseUrl: string;
-  path: string;
-  query: Record<string, string | number | undefined>;
-}): Promise<T> => {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(input.query)) {
-    if (value !== undefined && value !== '') {
-      params.set(key, String(value));
-    }
-  }
-  const endpoint = `${input.pdsBaseUrl.replace(/\/$/, '')}/xrpc/${input.path}?${params.toString()}`;
-  const proxyUrl = new URL('/atproto/proxy', resolveEdgeBaseUrl(input.client));
-  const response = await fetch(proxyUrl.toString(), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      spaceId: input.spaceId,
-      accessTokenId: input.accessTokenId,
-      request: {
-        endpoint,
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          Authorization: `DPoP ${input.accessTokenValue}`,
-        },
-        body: null,
-      },
-    }),
-  });
-  if (!response.ok) {
-    throw new Error(`Bluesky proxy XRPC failed (${response.status}): ${input.path}`);
-  }
-  return (await response.json()) as T;
+  /** atproto handle or DID — used as the `actor` parameter for self-feed reads. */
+  handle: string;
 };
 
 /**
- * Fetch an actor's author feed (their own posts + reposts) via the public XRPC.
- * Public reads work without auth, so this never goes through Edge.
+ * Layer-based credentials service. Mirrors the `TrelloCredentials` /
+ * `GoogleCredentials` patterns: every authenticated API call pulls creds from
+ * this service rather than threading them through as explicit parameters, so
+ * call sites compose a single
+ * `Effect.provide(BlueskyApi.BlueskyCredentials.fromIntegration(ref, client))`
+ * at the operation boundary.
+ *
+ * Construction resolves the integration's PDS once (via the public XRPC
+ * `resolveHandle` and a DID-document lookup) so subsequent calls reuse it.
  */
-export const getAuthorFeed = (input: { actor: string; limit?: number; cursor?: string }): Promise<GetFeedResponse> =>
-  publicGet<GetFeedResponse>('app.bsky.feed.getAuthorFeed', {
-    actor: input.actor,
-    limit: input.limit ?? DEFAULT_FEED_LIMIT,
-    cursor: input.cursor,
+export class BlueskyCredentials extends Context.Tag('@dxos/plugin-bluesky/BlueskyCredentials')<
+  BlueskyCredentials,
+  BlueskyCredentialsValue
+>() {
+  /** Loads the integration's access token, resolves its PDS, and packages credentials. */
+  static fromIntegration = (integrationRef: Ref.Ref<Integration.Integration>, client: Client) =>
+    Layer.effect(
+      BlueskyCredentials,
+      Effect.gen(function* () {
+        const integration = yield* Database.load(integrationRef);
+        const accessToken = yield* Database.load(integration.accessToken);
+        const handle = accessToken.account;
+        if (!handle) {
+          return yield* Effect.fail(new MissingBlueskyHandleError());
+        }
+        const db = Obj.getDatabase(integration);
+        if (!db) {
+          return yield* Effect.fail(new IntegrationDatabaseMissingError());
+        }
+        const edgeBaseUrl = client.config.values.runtime?.services?.edge?.url;
+        if (!edgeBaseUrl) {
+          return yield* Effect.fail(new Error('EDGE services not configured.'));
+        }
+        const pdsBaseUrl = yield* resolvePds(handle);
+        return {
+          spaceId: db.spaceId,
+          accessTokenId: accessToken.id,
+          accessTokenValue: accessToken.token,
+          edgeBaseUrl,
+          pdsBaseUrl,
+          handle,
+        };
+      }),
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Public API surface
+// ---------------------------------------------------------------------------
+
+type AuthedEffect<T> = Effect.Effect<
+  T,
+  HttpClientError.HttpClientError | HttpBody.HttpBodyError | ParseResult.ParseError | Cause.TimeoutException,
+  HttpClient.HttpClient | BlueskyCredentials
+>;
+
+type PublicEffect<T> = RequestEffect<T>;
+
+/** Public XRPC GET — used for any read-only endpoint that doesn't need auth. */
+const publicGet = <T>(
+  path: string,
+  query: Record<string, string | number | undefined>,
+  schema: Schema.Schema<T>,
+): PublicEffect<T> =>
+  runRequest(
+    HttpClientRequest.get(`${BSKY_PUBLIC_API}/${path}`).pipe(HttpClientRequest.setUrlParams(queryParams(query))),
+    schema,
+  );
+
+/**
+ * Authenticated XRPC GET — proxied through Edge `/atproto/proxy` so the
+ * stored DPoP key signs the request. Edge requires the caller to include the
+ * access token via `Authorization: DPoP <token>` in the proxied request's
+ * headers; Edge attaches the matching DPoP proof JWT (signed with the private
+ * key it stored at OAuth time) before forwarding to the user's PDS.
+ */
+const authedGet = <T>(input: {
+  path: string;
+  query: Record<string, string | number | undefined>;
+  schema: Schema.Schema<T>;
+}): AuthedEffect<T> =>
+  Effect.gen(function* () {
+    const creds = yield* BlueskyCredentials;
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(input.query)) {
+      if (value !== undefined && value !== '') {
+        params.set(key, String(value));
+      }
+    }
+    const endpoint = `${creds.pdsBaseUrl.replace(/\/$/, '')}/xrpc/${input.path}?${params.toString()}`;
+    const proxyUrl = new URL('/atproto/proxy', creds.edgeBaseUrl).toString();
+    const request = yield* HttpClientRequest.post(proxyUrl).pipe(
+      HttpClientRequest.bodyJson({
+        spaceId: creds.spaceId,
+        accessTokenId: creds.accessTokenId,
+        request: {
+          endpoint,
+          method: 'GET',
+          headers: {
+            Accept: 'application/json',
+            Authorization: `DPoP ${creds.accessTokenValue}`,
+          },
+          body: null,
+        },
+      }),
+    );
+    return yield* runRequest(request, input.schema);
   });
+
+/**
+ * Fetch an actor's author feed (their own posts + reposts) via the public
+ * XRPC. Public reads work without auth, so this never goes through Edge.
+ */
+export const getAuthorFeed = (input: {
+  actor: string;
+  limit?: number;
+  cursor?: string;
+}): PublicEffect<GetFeedResponse> =>
+  publicGet(
+    'app.bsky.feed.getAuthorFeed',
+    { actor: input.actor, limit: input.limit ?? DEFAULT_FEED_LIMIT, cursor: input.cursor },
+    GetFeedResponseSchema,
+  );
 
 /**
  * Fetch an actor's liked posts. Requires auth — proxied through Edge so the
  * stored DPoP key signs the request.
  */
 export const getActorLikes = (input: {
-  client: Client;
-  spaceId: string;
-  accessTokenId: string;
-  accessTokenValue: string;
-  pdsBaseUrl: string;
   actor: string;
   limit?: number;
   cursor?: string;
-}): Promise<GetFeedResponse> =>
-  authedGet<GetFeedResponse>({
-    client: input.client,
-    spaceId: input.spaceId,
-    accessTokenId: input.accessTokenId,
-    accessTokenValue: input.accessTokenValue,
-    pdsBaseUrl: input.pdsBaseUrl,
+}): AuthedEffect<GetFeedResponse> =>
+  authedGet({
     path: 'app.bsky.feed.getActorLikes',
     query: { actor: input.actor, limit: input.limit ?? DEFAULT_FEED_LIMIT, cursor: input.cursor },
+    schema: GetFeedResponseSchema,
   });
 
 /**
  * Fetch the authenticated user's bookmarked posts.
  *
  * Bookmarks are part of the standard atproto lexicon
- * (`app.bsky.bookmark.getBookmarks`); auth flows via the user's PDS the
- * same way `getActorLikes` does — the PDS proxies `app.bsky.*` requests
- * to the AppView for us. The response shape differs from the feed
- * endpoints though: each entry is a `bookmarkView` whose `item` is a
- * union of `postView | blockedPost | notFoundPost`. We surface only the
- * post-views and skip the rest.
+ * (`app.bsky.bookmark.getBookmarks`); auth flows via the user's PDS the same
+ * way `getActorLikes` does — the PDS proxies `app.bsky.*` requests to the
+ * AppView. The response shape differs: each entry is a `bookmarkView` whose
+ * `item` is a union of `postView | blockedPost | notFoundPost`. We surface
+ * only the post-views and skip the rest.
  */
-export const getBookmarks = async (input: {
-  client: Client;
-  spaceId: string;
-  accessTokenId: string;
-  accessTokenValue: string;
-  pdsBaseUrl: string;
-  limit?: number;
-  cursor?: string;
-}): Promise<GetFeedResponse> => {
-  const response = await authedGet<GetBookmarksResponse>({
-    client: input.client,
-    spaceId: input.spaceId,
-    accessTokenId: input.accessTokenId,
-    accessTokenValue: input.accessTokenValue,
-    pdsBaseUrl: input.pdsBaseUrl,
+export const getBookmarks = (input: { limit?: number; cursor?: string }): AuthedEffect<GetFeedResponse> =>
+  authedGet({
     path: 'app.bsky.bookmark.getBookmarks',
     query: { limit: input.limit ?? DEFAULT_FEED_LIMIT, cursor: input.cursor },
-  });
-  const feed: FeedViewPost[] = [];
-  for (const entry of response.bookmarks) {
-    const item = entry.item;
-    if (item?.$type === 'app.bsky.feed.defs#postView' && item.uri && item.author && item.record) {
-      feed.push({
-        post: {
-          uri: item.uri,
-          cid: item.cid ?? '',
-          author: item.author,
-          record: item.record,
-          indexedAt: item.indexedAt ?? entry.createdAt,
-        },
-      });
-    }
-  }
-  return { feed, cursor: response.cursor };
-};
-
-/** Native shape returned by `app.bsky.bookmark.getBookmarks`. */
-type GetBookmarksResponse = {
-  cursor?: string;
-  bookmarks: BookmarkView[];
-};
-
-type BookmarkView = {
-  subject: { uri: string; cid: string };
-  createdAt: string;
-  item: {
-    $type?: string;
-    uri?: string;
-    cid?: string;
-    author?: FeedViewPost['post']['author'];
-    record?: FeedViewPost['post']['record'];
-    indexedAt?: string;
-  };
-};
+    schema: GetBookmarksResponseSchema,
+  }).pipe(
+    Effect.map((response) => {
+      const feed: FeedViewPost[] = [];
+      for (const entry of response.bookmarks) {
+        const item = entry.item;
+        if (item.$type === 'app.bsky.feed.defs#postView' && item.uri && item.author && item.record) {
+          feed.push({
+            post: {
+              uri: item.uri,
+              cid: item.cid ?? '',
+              author: item.author,
+              record: item.record,
+              indexedAt: item.indexedAt ?? entry.createdAt,
+            },
+          });
+        }
+      }
+      return { feed, cursor: response.cursor };
+    }),
+  );
 
 /** Fetch posts from a custom feed generator (`feed` is the at-uri). */
 export const getFeed = (input: {
-  client: Client;
-  spaceId: string;
-  accessTokenId: string;
-  accessTokenValue: string;
-  pdsBaseUrl: string;
   feed: string;
   limit?: number;
   cursor?: string;
-}): Promise<GetFeedResponse> =>
-  authedGet<GetFeedResponse>({
-    client: input.client,
-    spaceId: input.spaceId,
-    accessTokenId: input.accessTokenId,
-    accessTokenValue: input.accessTokenValue,
-    pdsBaseUrl: input.pdsBaseUrl,
+}): AuthedEffect<GetFeedResponse> =>
+  authedGet({
     path: 'app.bsky.feed.getFeed',
     query: { feed: input.feed, limit: input.limit ?? DEFAULT_FEED_LIMIT, cursor: input.cursor },
+    schema: GetFeedResponseSchema,
   });
 
 /**
- * Fetch the actor's preferences, including the saved/pinned feed list.
- * The `preferences` array is heterogeneous; consumers pick out
+ * Fetch the actor's preferences and project the saved/pinned feed list. The
+ * `preferences` array is heterogeneous; we pick out
  * `app.bsky.actor.defs#savedFeedsPrefV2`.
  */
-export const getSavedFeeds = async (input: {
-  client: Client;
-  spaceId: string;
-  accessTokenId: string;
-  accessTokenValue: string;
-  pdsBaseUrl: string;
-}): Promise<SavedFeed[]> => {
-  const response = await authedGet<{ preferences: Array<{ $type?: string; items?: SavedFeed[] }> }>({
-    client: input.client,
-    spaceId: input.spaceId,
-    accessTokenId: input.accessTokenId,
-    accessTokenValue: input.accessTokenValue,
-    pdsBaseUrl: input.pdsBaseUrl,
+export const getSavedFeeds = (): AuthedEffect<ReadonlyArray<SavedFeed>> =>
+  authedGet({
     path: 'app.bsky.actor.getPreferences',
     query: {},
-  });
-  const savedPref = response.preferences.find((pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPrefV2');
-  return savedPref?.items ?? [];
-};
+    schema: GetPreferencesResponseSchema,
+  }).pipe(
+    Effect.map((response) => {
+      const savedPref = response.preferences.find((pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPrefV2');
+      return savedPref?.items ?? [];
+    }),
+  );

@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
@@ -13,10 +14,9 @@ import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Subscription } from '@dxos/plugin-feed/types';
 import { type Integration } from '@dxos/plugin-integration/types';
-import { type AccessToken } from '@dxos/types';
 
 import { BLUESKY_TARGET, DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from '../constants';
-import { IntegrationDatabaseMissingError, MissingBlueskyHandleError } from '../errors';
+import { IntegrationDatabaseMissingError } from '../errors';
 import { BlueskyApi } from '../services';
 import { SyncBlueskyTargets } from './definitions';
 
@@ -24,51 +24,38 @@ const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTar
   Operation.withHandler(
     Effect.fnUntraced(function* ({ integration: integrationRef }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
-
       const integration = yield* Database.load(integrationRef);
       const db = Obj.getDatabase(integration);
       if (!db) {
         return yield* Effect.fail(new IntegrationDatabaseMissingError());
       }
-      const accessToken = yield* Database.load(integration.accessToken);
-      const handle = accessToken.account;
-      if (!handle) {
-        return yield* Effect.fail(new MissingBlueskyHandleError());
-      }
-
-      // Resolve the user's PDS once per sync. Authenticated XRPC must hit
-      // the PDS that minted the auth context — bsky.social-only is a wrong
-      // assumption now that self-hosted PDSes and bsky's per-user shards
-      // are common.
-      const pdsBaseUrl = yield* Effect.tryPromise(() => BlueskyApi.resolvePds(handle));
 
       let appended = 0;
       let failed = 0;
 
-      for (const [index, target] of integration.targets.entries()) {
-        if (!target.remoteId) {
-          continue;
+      // The credentials layer loads the integration's access token, validates
+      // the handle, and resolves the user's PDS once. Public XRPC reads
+      // (e.g. `getAuthorFeed`) only need HttpClient and ignore the layer.
+      const inner = Effect.gen(function* () {
+        for (const [index, target] of integration.targets.entries()) {
+          if (!target.remoteId) {
+            continue;
+          }
+          const result = yield* Effect.either(syncTarget({ client, integration, db, targetIndex: index }));
+          if (result._tag === 'Right') {
+            appended += result.right;
+          } else {
+            failed++;
+            log.warn('Bluesky target sync failed', { remoteId: target.remoteId, error: result.left });
+          }
         }
-        const result = yield* Effect.either(
-          syncTarget({
-            client,
-            integration,
-            accessToken,
-            handle,
-            pdsBaseUrl,
-            db,
-            targetIndex: index,
-          }),
-        );
-        if (result._tag === 'Right') {
-          appended += result.right;
-        } else {
-          failed++;
-          log.warn('Bluesky target sync failed', { remoteId: target.remoteId, error: result.left });
-        }
-      }
+        return { appended, failed };
+      });
 
-      return { appended, failed };
+      return yield* inner.pipe(
+        Effect.provide(BlueskyApi.BlueskyCredentials.fromIntegration(integrationRef, client)),
+        Effect.provide(FetchHttpClient.layer),
+      );
     }),
   ),
 );
@@ -78,20 +65,14 @@ export default handler;
 const syncTarget = ({
   client,
   integration,
-  accessToken,
-  handle,
-  pdsBaseUrl,
   db,
   targetIndex,
 }: {
   client: Client;
   integration: Integration.Integration;
-  accessToken: AccessToken.AccessToken;
-  handle: string;
-  pdsBaseUrl: string;
   db: Database.Database;
   targetIndex: number;
-}): Effect.Effect<number, Error> =>
+}) =>
   Effect.gen(function* () {
     const target = integration.targets[targetIndex];
     invariant(target, 'target index out of range');
@@ -124,16 +105,7 @@ const syncTarget = ({
     let reachedKnown = false;
 
     for (let page = 0; page < maxPages; page++) {
-      const response = yield* fetchPostsForTarget({
-        client,
-        spaceId: db.spaceId,
-        accessTokenId: accessToken.id,
-        accessTokenValue: accessToken.token,
-        pdsBaseUrl,
-        handle,
-        remoteId,
-        cursor: pageCursor,
-      });
+      const response = yield* fetchPostsForTarget({ remoteId, cursor: pageCursor });
       if (response.feed.length === 0) {
         break;
       }
@@ -226,7 +198,7 @@ const resolveOrCreateLocalFeed = ({
   targetIndex: number;
   remoteId: string;
   name: string;
-}): Effect.Effect<Subscription.Feed, Error> =>
+}) =>
   Effect.gen(function* () {
     const target = integration.targets[targetIndex];
     const existing = target?.object?.target;
@@ -279,56 +251,30 @@ const remoteIdToFeedUrl = (remoteId: string): string => {
   return remoteId;
 };
 
-const fetchPostsForTarget = ({
-  client,
-  spaceId,
-  accessTokenId,
-  accessTokenValue,
-  pdsBaseUrl,
-  handle,
-  remoteId,
-  cursor,
-}: {
-  client: Client;
-  spaceId: string;
-  accessTokenId: string;
-  accessTokenValue: string;
-  pdsBaseUrl: string;
-  handle: string;
-  remoteId: string;
-  cursor: string | undefined;
-}): Effect.Effect<BlueskyApi.GetFeedResponse, Error> =>
-  Effect.tryPromise({
-    try: () => {
-      switch (remoteId) {
-        case BLUESKY_TARGET.MY_POSTS:
-          return BlueskyApi.getAuthorFeed({ actor: handle, cursor });
-        case BLUESKY_TARGET.MY_LIKES:
-          return BlueskyApi.getActorLikes({
-            client,
-            spaceId,
-            accessTokenId,
-            accessTokenValue,
-            pdsBaseUrl,
-            actor: handle,
-            cursor,
-          });
-        case BLUESKY_TARGET.MY_BOOKMARKS:
-          return BlueskyApi.getBookmarks({ client, spaceId, accessTokenId, accessTokenValue, pdsBaseUrl, cursor });
-        default:
-          if (remoteId.startsWith(BLUESKY_TARGET.FEED_PREFIX)) {
-            return BlueskyApi.getFeed({
-              client,
-              spaceId,
-              accessTokenId,
-              accessTokenValue,
-              pdsBaseUrl,
-              feed: remoteId.slice(BLUESKY_TARGET.FEED_PREFIX.length),
-              cursor,
-            });
-          }
-          return Promise.resolve<BlueskyApi.GetFeedResponse>({ feed: [] });
-      }
-    },
-    catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+/**
+ * Dispatch on the target's `remoteId` to the right Bluesky XRPC call.
+ * The authenticated branches pull credentials (handle, PDS, token, …) from
+ * the `BlueskyCredentials` service, so the only state needed here is the
+ * target's id and the page cursor.
+ */
+const fetchPostsForTarget = ({ remoteId, cursor }: { remoteId: string; cursor: string | undefined }) =>
+  Effect.gen(function* () {
+    if (remoteId === BLUESKY_TARGET.MY_POSTS) {
+      const creds = yield* BlueskyApi.BlueskyCredentials;
+      return yield* BlueskyApi.getAuthorFeed({ actor: creds.handle, cursor });
+    }
+    if (remoteId === BLUESKY_TARGET.MY_LIKES) {
+      const creds = yield* BlueskyApi.BlueskyCredentials;
+      return yield* BlueskyApi.getActorLikes({ actor: creds.handle, cursor });
+    }
+    if (remoteId === BLUESKY_TARGET.MY_BOOKMARKS) {
+      return yield* BlueskyApi.getBookmarks({ cursor });
+    }
+    if (remoteId.startsWith(BLUESKY_TARGET.FEED_PREFIX)) {
+      return yield* BlueskyApi.getFeed({
+        feed: remoteId.slice(BLUESKY_TARGET.FEED_PREFIX.length),
+        cursor,
+      });
+    }
+    return { feed: [] } as BlueskyApi.GetFeedResponse;
   });

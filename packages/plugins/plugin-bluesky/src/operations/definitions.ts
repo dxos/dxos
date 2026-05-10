@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
 import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/plugin-integration/types';
@@ -26,6 +27,8 @@ export const GetBlueskyTargets = Operation.make({
     name: 'Get Bluesky Targets',
     description: 'List the user’s Bluesky timeline / likes / bookmarks plus saved custom feeds.',
   },
+  // Handler resolves the Composer `Client` via `Capability.get`.
+  services: [Capability.Service],
   input: GetSyncTargetsInput,
   output: GetSyncTargetsOutput,
 });
@@ -43,6 +46,8 @@ export const SyncBlueskyTargets = Operation.make({
     name: 'Sync Bluesky',
     description: 'Pull posts for currently-selected Bluesky targets in an Integration.',
   },
+  // Handler resolves the Composer `Client` via `Capability.get`.
+  services: [Capability.Service],
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration),
   }),
