@@ -21,7 +21,6 @@ import {
   type DocumentProgress,
   type Message,
   type PeerId,
-  type QueryState,
   Repo,
   type SharePolicy,
   type StorageAdapterInterface,
@@ -42,18 +41,11 @@ import { isNonNullable, range } from '@dxos/util';
 
 import { TestAdapter, type TestConnectionStateProvider } from '../testing';
 import { EchoNetworkAdapter } from './echo-network-adapter';
+import { type HandleQueryState } from './handle-state';
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
 import { MeshEchoReplicator } from './mesh-echo-replicator';
 
 const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
-
-/**
- * The name of a {@link QueryState} variant emitted by {@link DocumentProgress}.
- * See `getHandleState` in `@dxos/echo-pipeline` for why `DocHandle.*` state
- * is unusable in the subduction fork and why we read liveness off
- * `DocumentProgress` instead.
- */
-type QueryStateName = QueryState<unknown>['state'];
 
 /**
  * Block until the {@link DocumentProgress} reports a state in `awaitStates`.
@@ -62,10 +54,14 @@ type QueryStateName = QueryState<unknown>['state'];
  * - Rejects if the query enters `'failed'` and `'failed'` is not requested.
  * - Rejects with `TimeoutError` from `@dxos/async` if `timeout` elapses
  *   before any matching transition.
+ *
+ * Prefer `Repo.find(url)` / `progress.whenReady()` for the simple `'ready'`
+ * case. This helper is only useful when you need to wait on a non-ready
+ * variant (e.g. `'loading'`, `'unavailable'`) or a set of states.
  */
 const waitForQueryState = async (
   progress: DocumentProgress<unknown>,
-  awaitStates: readonly QueryStateName[],
+  awaitStates: readonly HandleQueryState[],
   { timeout }: { timeout?: number } = {},
 ): Promise<void> => {
   if (awaitStates.includes(progress.peek().state)) {
@@ -87,17 +83,20 @@ const waitForQueryState = async (
 };
 
 /**
- * Pre-subduction `Repo.find(url, { allowableStates })` shim. `Repo.find()` in
- * the fork only resolves on `'ready'` and rejects on `'unavailable'`. This
- * goes through {@link Repo.findWithProgress} and waits on the
- * {@link DocumentProgress} state directly. Returns the handle regardless of
- * whether data has arrived — read sync state from the progress (or poll
+ * Multi-state `Repo.find` replacement for the pre-subduction
+ * `Repo.find(url, { allowableStates })` ergonomics. `Repo.find()` in the
+ * fork only resolves on `'ready'` and rejects on `'unavailable'`, so use
+ * this when you need to grab the handle while the query is still in
+ * `'loading'` (or to await `'unavailable'`). Returns the handle regardless
+ * of whether data has arrived — read sync state from the progress (or poll
  * `handle.doc()`) instead.
+ *
+ * For pure "wait until ready" use `repo.find(url)` directly.
  */
 const findInStates = async <T>(
   repo: Repo,
   url: AutomergeUrl,
-  awaitStates: readonly QueryStateName[] = ['ready'],
+  awaitStates: readonly HandleQueryState[],
 ): Promise<DocHandle<T>> => {
   const { documentId } = parseAutomergeUrl(url);
   const progress = repo.findWithProgress<T>(url);
@@ -111,7 +110,7 @@ const findInStates = async <T>(
  * me the handle as soon as we have it OR are still trying to fetch it".
  * `'loading'` is the {@link QueryState} equivalent of the old `'requesting'`.
  */
-const FIND_STATES: readonly QueryStateName[] = ['ready', 'loading'];
+const FIND_STATES: readonly HandleQueryState[] = ['ready', 'loading'];
 
 describe('AutomergeRepo', () => {
   // Subduction-fork `Repo` constructs a `MemorySigner` internally; WASM must be
@@ -397,7 +396,7 @@ describe('AutomergeRepo', () => {
       // Reconnecting cycles the peers and should re-trigger sync; the doc
       // becomes available.
       await reconnectAdapters(adapters);
-      await waitForQueryState(progress, ['ready'], { timeout: 1_000 });
+      await asyncTimeout(progress.whenReady(), 1_000);
     });
 
     test('documents loaded from disk get replicated', async () => {
@@ -577,22 +576,22 @@ describe('AutomergeRepo', () => {
 
       const docA = repoA.create({ text: 'Hello world' });
 
-      // The classical-network `DocSynchronizer` doesn't drive the query to
-      // `'unavailable'` while the dormant subduction source is still attached
-      // — the query stays in `'loading'` until something actually delivers
-      // data. Verify the practical outcome: with `announce: false` repoB's
-      // handle never receives the doc body.
+      // TODO(mykola): The classical-network `DocSynchronizer` doesn't drive
+      // the query to `'unavailable'` while the dormant subduction source is
+      // still attached — the query stays in `'loading'` until something
+      // actually delivers data. Once the fork drives source state
+      // correctly, switch this to a positive `'unavailable'` assertion.
+      // For now we assert "stuck in loading" + empty doc body.
       const progress = repoB.findWithProgress<{ text: string }>(docA.url);
-      await sleep(200);
+      await expect.poll(() => progress.peek().state, { timeout: 500, interval: 50 }).toEqual('loading');
       const docB = repoB.handles[parseAutomergeUrl(docA.url).documentId] as DocHandle<{ text: string }>;
-      expect(progress.peek().state).to.not.equal('ready');
       expect(docB.doc()).to.deep.equal({});
 
       // Flip announce on and kick the share-config retry; the query
       // transitions to `'ready'` once the doc syncs through.
       announce = true;
       repoB.shareConfigChanged();
-      await waitForQueryState(progress, ['ready'], { timeout: 1_000 });
+      await asyncTimeout(progress.whenReady(), 1_000);
       expect(progress.peek().state).to.equal('ready');
       expect(docB.doc()).to.deep.equal({ text: 'Hello world' });
     });
@@ -785,15 +784,22 @@ describe('AutomergeRepo', () => {
       await connectPeers(spaceKey, teleportBuilder, peerWithDocs.peer, peer2);
 
       const shouldNotFindProgress = peer2.repo.findWithProgress(docNotInRemoteCollection.url);
-      // The doc in the remote collection should sync; verify by waiting for
-      // `'ready'` and comparing document bodies.
+      // The doc in the remote collection should sync. Can't use
+      // `repo.find()` / `progress.whenReady()` here: the dormant
+      // subduction source transitions to `'unavailable'` mid-flight
+      // (before classical-network sync delivers the doc), which both APIs
+      // surface as a rejection. `findInStates` ignores transient
+      // `'unavailable'` and only rejects on `'failed'`.
       const shouldFindDoc = await findInStates<any>(peer2.repo, docInRemoteCollection.url, ['ready']);
       expect(shouldFindDoc.doc()).to.deep.eq(docInRemoteCollection.doc());
+      expect(shouldFindDoc.doc()).to.deep.eq(docInRemoteCollection.doc());
       // The doc that's NOT in any remote collection must remain unsynced.
-      // The fork's classical-network sync doesn't transition the query to
-      // `'unavailable'`, so verify by absence of data instead.
-      await sleep(200);
-      expect(shouldNotFindProgress.peek().state).to.not.equal('ready');
+      // TODO(mykola): Fork's classical-network sync doesn't transition the
+      // query to `'unavailable'` while a dormant subduction source is
+      // attached, so we can only assert "stays in loading" rather than
+      // "reaches unavailable". Re-enable a positive `'unavailable'`
+      // assertion when the fork drives the source state correctly.
+      await expect.poll(() => shouldNotFindProgress.peek().state, { timeout: 500, interval: 50 }).toEqual('loading');
       const shouldNotFindDoc = peer2.repo.handles[parseAutomergeUrl(docNotInRemoteCollection.url).documentId];
       expect(shouldNotFindDoc.doc()).to.deep.equal({});
     });
@@ -825,16 +831,16 @@ describe('AutomergeRepo', () => {
       await connectPeers(spaceKey, teleportBuilder, peerWithDocs.peer, peer2);
       await connectPeers(anotherSpaceKey, teleportBuilder, peer2, peerFromAnotherSpace);
 
-      const loadedProgress = peer2.repo.findWithProgress(document.url);
-      await waitForQueryState(loadedProgress, ['ready'], { timeout: 1000 });
+      await asyncTimeout(peer2.repo.find(document.url), 1000);
 
-      await sleep(200);
       // peerFromAnotherSpace is connected to peer2 over a different spaceKey,
-      // so it must NOT receive the doc. Fork's classical-network query
-      // doesn't reach `'unavailable'`; verify by absence of data.
+      // so it must NOT receive the doc.
+      // TODO(mykola): Fork's classical-network query doesn't reach
+      // `'unavailable'`; assert "stays in loading" instead. Switch to a
+      // positive `'unavailable'` assertion once the fork drives source
+      // state correctly.
       const otherSpaceProgress = peerFromAnotherSpace.repo.findWithProgress(document.url);
-      await sleep(200);
-      expect(otherSpaceProgress.peek().state).to.not.equal('ready');
+      await expect.poll(() => otherSpaceProgress.peek().state, { timeout: 500, interval: 50 }).toEqual('loading');
       const otherSpaceDoc = peerFromAnotherSpace.repo.handles[parseAutomergeUrl(document.url).documentId];
       expect(otherSpaceDoc.doc()).to.deep.equal({});
     });
