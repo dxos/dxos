@@ -14,7 +14,11 @@
   "type": "module",
   "imports": {
     "#blueprints": "./src/blueprints/index.ts",
-    "#capabilities": "./src/capabilities/index.ts",
+    "#capabilities": {
+      "browser": "./src/capabilities/index.ts",
+      "node": "./src/capabilities/node.ts",
+      "default": "./src/capabilities/index.ts"
+    },
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
