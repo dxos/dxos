@@ -36,7 +36,7 @@ const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTar
       // The credentials layer loads the integration's access token, validates
       // the handle, and resolves the user's PDS once. Public XRPC reads
       // (e.g. `getAuthorFeed`) only need HttpClient and ignore the layer.
-      const inner = Effect.gen(function* () {
+      return yield* Effect.gen(function* () {
         for (const [index, target] of integration.targets.entries()) {
           if (!target.remoteId) {
             continue;
@@ -50,9 +50,7 @@ const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTar
           }
         }
         return { appended, failed };
-      });
-
-      return yield* inner.pipe(
+      }).pipe(
         Effect.provide(BlueskyApi.BlueskyCredentials.fromIntegration(integrationRef, client)),
         Effect.provide(FetchHttpClient.layer),
       );
