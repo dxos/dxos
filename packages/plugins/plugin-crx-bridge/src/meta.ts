@@ -15,4 +15,5 @@ export const meta: Plugin.Meta = {
   icon: 'ph--paperclip--regular',
   iconHue: 'neutral',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-crx-bridge',
+  tags: ['system'],
 };

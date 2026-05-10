@@ -13,4 +13,5 @@ export const meta: Plugin.Meta = {
     Access connection state, notifications, and common commands without leaving your current context.
   `,
   icon: 'ph--info--regular',
+  tags: ['system'],
 };

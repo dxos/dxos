@@ -28,6 +28,22 @@ describe.skipIf(!REAL)('plugins (real monorepo)', () => {
     const code = plugins.find((plugin) => plugin.id === PLUGIN_ID);
     expect(code).toBeDefined();
     expect(code!.package).toBe('@dxos/plugin-code');
+    // tags + dependsOn are always present (possibly empty) per the schema.
+    expect(Array.isArray(code!.tags)).toBe(true);
+    expect(Array.isArray(code!.dependsOn)).toBe(true);
+    // plugin-code's package.json declares workspace deps on plugin-graph,
+    // plugin-space, plugin-client, plugin-testing — at least the first two
+    // are themselves plugins, so dependsOn should pick them up.
+    expect(code!.dependsOn).toEqual(expect.arrayContaining(['org.dxos.plugin.graph', 'org.dxos.plugin.space']));
+
+    // plugin-assistant's meta declares `tags: ['labs']` — verify tag extraction.
+    const assistant = plugins.find((plugin) => plugin.id === 'org.dxos.plugin.assistant');
+    expect(assistant).toBeDefined();
+    expect(assistant!.tags).toEqual(['labs']);
+
+    // Core plugins listed in composer-app's `getCore` are tagged `'system'`.
+    const space = plugins.find((plugin) => plugin.id === 'org.dxos.plugin.space');
+    expect(space?.tags).toContain('system');
 
     const surfaces = intro.listSurfaces(PLUGIN_ID);
     const ids = surfaces.map((surface) => surface.id);
