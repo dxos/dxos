@@ -21,7 +21,7 @@ import { Database, Obj, type Ref } from '@dxos/echo';
 import { type Integration } from '@dxos/plugin-integration/types';
 
 import { BSKY_PUBLIC_API, DEFAULT_FEED_LIMIT } from '../constants';
-import { IntegrationDatabaseMissingError, MissingBlueskyHandleError } from '../errors';
+import { IntegrationDatabaseMissingError, MissingBlueskyHandleError, PdsResolutionFailedError } from '../errors';
 
 // ---------------------------------------------------------------------------
 // Schemas
@@ -242,23 +242,23 @@ const queryParams = (query: Record<string, string | number | undefined>): Record
 // PDS resolution
 // ---------------------------------------------------------------------------
 //
-// Atproto identities are not all hosted on bsky.social — self-hosted PDSes
-// (and bsky's own per-user shards) are increasingly common, so authenticated
-// XRPC must target whatever PDS minted the auth context. The DID document's
+// Atproto identities are sharded across many PDSes (including bsky.social's
+// own per-user `*.host.bsky.network` shards), so authenticated XRPC must
+// target whatever PDS minted the auth context. The DID document's
 // `#atproto_pds` service entry is the source of truth; for did:plc we fetch
 // the PLC directory directly, for did:web we fetch the
 // `/.well-known/did.json` from the domain encoded in the DID.
 //
-// Falls back to bsky.social if resolution fails — that's the right answer for
-// the dominant case and degrades gracefully for the rest.
+// There is no safe default to fall back to (bsky.social is *not* a PDS), so
+// resolution failures surface as `PdsResolutionFailedError` rather than
+// getting silently routed at the wrong host.
 //
-// Cached per-process by handle/DID so repeated calls in one sync run don't
+// Cached per-process on success so repeated calls in one sync run don't
 // re-fetch the DID doc.
 
-const PDS_DEFAULT = 'https://bsky.social';
 const pdsCache = new Map<string, string>();
 
-const fetchDidDocument = (did: string): RequestEffect<Schema.Schema.Type<typeof DidDocumentSchema>> => {
+const fetchDidDocument = (did: string) => {
   if (did.startsWith('did:plc:')) {
     return runRequest(HttpClientRequest.get(`https://plc.directory/${did}`), DidDocumentSchema);
   }
@@ -266,47 +266,35 @@ const fetchDidDocument = (did: string): RequestEffect<Schema.Schema.Type<typeof 
     const domain = did.slice('did:web:'.length).split(':')[0];
     return runRequest(HttpClientRequest.get(`https://${domain}/.well-known/did.json`), DidDocumentSchema);
   }
-  return Effect.fail(
-    new HttpClientError.RequestError({
-      request: HttpClientRequest.get(did),
-      reason: 'InvalidUrl',
-      description: `unsupported DID method: ${did}`,
-    }),
-  );
+  return Effect.fail(new PdsResolutionFailedError());
 };
 
 /** Resolve a handle (e.g. `user.bsky.social`) or DID to its PDS endpoint. */
-const resolvePds = (handleOrDid: string): RequestEffect<string> =>
+const resolvePds = (handleOrDid: string) =>
   Effect.gen(function* () {
     const cached = pdsCache.get(handleOrDid);
     if (cached !== undefined) {
       return cached;
     }
-    const didEffect = handleOrDid.startsWith('did:')
-      ? Effect.succeed(handleOrDid)
-      : runRequest(
+    const did = handleOrDid.startsWith('did:')
+      ? handleOrDid
+      : yield* runRequest(
           HttpClientRequest.get(`${BSKY_PUBLIC_API}/com.atproto.identity.resolveHandle`).pipe(
             HttpClientRequest.setUrlParams({ handle: handleOrDid }),
           ),
           ResolveHandleResponseSchema,
         ).pipe(Effect.map((response) => response.did));
 
-    const resolved = yield* didEffect.pipe(
-      Effect.flatMap(fetchDidDocument),
-      Effect.map((doc) => {
-        const service = doc.service?.find(
-          (entry) => entry.id === '#atproto_pds' || entry.type === 'AtprotoPersonalDataServer',
-        );
-        const endpoint = service?.serviceEndpoint;
-        return typeof endpoint === 'string' && endpoint.length > 0 ? endpoint : PDS_DEFAULT;
-      }),
-      // Resolution can fail offline, on unsupported DID methods, or on schema
-      // drift — bsky.social is the right answer for the dominant case and
-      // authenticated calls will surface their own errors if it is wrong.
-      Effect.catchAll(() => Effect.succeed(PDS_DEFAULT)),
+    const doc = yield* fetchDidDocument(did);
+    const service = doc.service?.find(
+      (entry) => entry.id === '#atproto_pds' || entry.type === 'AtprotoPersonalDataServer',
     );
-    pdsCache.set(handleOrDid, resolved);
-    return resolved;
+    const endpoint = service?.serviceEndpoint;
+    if (typeof endpoint !== 'string' || endpoint.length === 0) {
+      return yield* Effect.fail(new PdsResolutionFailedError());
+    }
+    pdsCache.set(handleOrDid, endpoint);
+    return endpoint;
   });
 
 // ---------------------------------------------------------------------------
