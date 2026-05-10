@@ -18,7 +18,6 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { CodePlugin } from '@dxos/plugin-code';
 import { ConductorPlugin } from '@dxos/plugin-conductor';
 import { CrxPlugin } from '@dxos/plugin-crx';
-import { CrxBridgePlugin } from '@dxos/plugin-crx-bridge';
 import { DailySummaryPlugin } from '@dxos/plugin-daily-summary';
 import { DebugPlugin } from '@dxos/plugin-debug';
 import { DeckPlugin } from '@dxos/plugin-deck';
@@ -116,7 +115,6 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     AutomationPlugin.meta.id,
     ClientPlugin.meta.id,
     CrxPlugin.meta.id,
-    CrxBridgePlugin.meta.id,
     GraphPlugin.meta.id,
     HelpPlugin.meta.id,
     IntegrationPlugin.meta.id,
@@ -217,7 +215,6 @@ export const getPlugins = ({
     }),
     ConductorPlugin(),
     CrxPlugin(),
-    CrxBridgePlugin(),
     DailySummaryPlugin(),
     DebugPlugin({ logStore }),
     DiscordPlugin(),
