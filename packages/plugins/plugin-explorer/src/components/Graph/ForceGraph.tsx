@@ -35,12 +35,15 @@ export const ForceGraph = composable<HTMLDivElement, ForceGraphProps>(
 
     const graph = useRef<GraphController>(null);
     const selection = useMemo(() => selectionProp ?? new SelectionModel(), [selectionProp]);
-    useEffect(() => selection.subscribe(() => graph.current?.repaint()), [selection]);
+    useEffect(() => {
+      const unsubscribe = selection.subscribe(() => graph.current?.repaint());
+      return unsubscribe;
+    }, [selection]);
 
     const svgRef = useRef<SVGContext>(null);
     const [projector, setProjector] = useState<GraphForceProjector>();
     useEffect(() => {
-      if (svgRef.current && !projector) {
+      if (svgRef.current) {
         setProjector(
           new GraphForceProjector(svgRef.current, {
             attributes: {
@@ -56,7 +59,8 @@ export const ForceGraph = composable<HTMLDivElement, ForceGraphProps>(
           }),
         );
       }
-    }, [projector]);
+      // SVG.Graph owns projector start/stop; nothing to clean up here.
+    }, []);
 
     const handleSelect = useCallback<NonNullable<GraphProps['onSelect']>>(
       (node) => {
