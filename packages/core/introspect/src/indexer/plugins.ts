@@ -108,13 +108,39 @@ const tryExtract = (rootPath: string, pkg: PackageLike): PluginRecord | null => 
     extractFromFile(sourceFile, rootPath, meta.id, { surfaces, capabilities, operations, schemas });
   }
 
+  // Plugins commonly ship multiple entrypoint variants (e.g.
+  // `FooPlugin.node.ts` + `FooPlugin.tsx` + `cli/plugin.ts`) that each call
+  // `addSchemaModule({ schema: [...] })` with the same set of types. Each
+  // `addSchemaModule` call produces a separate Schema record, so the same
+  // (pluginId, name) ends up duplicated 2-3x. Dedupe — keep first occurrence
+  // so the surfaced location is deterministic (first source file walked).
+  // Capabilities and operations are intentionally NOT deduped: their `type`
+  // field is the slot name (e.g. `Capabilities.OperationHandler`), and
+  // multiple `Capability.contributes` calls to the same slot represent
+  // genuinely distinct contributions.
+  const dedupedSchemas = dedupeBy(schemas, (s) => `${s.pluginId}|${s.name}`);
+
   return {
     plugin: meta,
     surfaces,
     capabilities,
     operations,
-    schemas,
+    schemas: dedupedSchemas,
   };
+};
+
+const dedupeBy = <T>(items: T[], keyFn: (item: T) => string): T[] => {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const item of items) {
+    const key = keyFn(item);
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    out.push(item);
+  }
+  return out;
 };
 
 const readPluginMeta = (file: SourceFile, pkg: PackageLike): Plugin | null => {

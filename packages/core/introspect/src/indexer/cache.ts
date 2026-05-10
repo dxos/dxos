@@ -71,9 +71,19 @@ const CACHE_VERSION = 3;
 // (babel, swc, eslint, vite all live here). Pros: auto-gitignored, easy to
 // nuke via `pnpm clean`/`rm -rf node_modules`, lives next to the deps the
 // cache indexes. Cons: a fresh `pnpm install` wipes it (rebuild ~80s once).
-const DEFAULT_CACHE_PATH = 'node_modules/.cache/dxos-introspect/cache.json';
+const DEFAULT_CACHE_PATH = 'node_modules/.cache/dxos-introspect/core.json';
+const DEFAULT_PLUGINS_PATH = 'node_modules/.cache/dxos-introspect/plugins.json';
 
 export const cacheFilePath = (rootPath: string): string => join(rootPath, DEFAULT_CACHE_PATH);
+
+/**
+ * Path to the plugin metadata sidecar (`{plugins, surfaces, capabilities,
+ * operations, schemas}` — the runtime output of `extractPlugins`). Lives next
+ * to `core.json` but versioned and uploaded independently because plugin
+ * extraction is cheap (~seconds) and changes far more often than the
+ * full-monorepo symbol cache (~minutes).
+ */
+export const pluginsFilePath = (rootPath: string): string => join(rootPath, DEFAULT_PLUGINS_PATH);
 
 /**
  * Compute the current src/ mtime + git tree SHA for every package. Used both

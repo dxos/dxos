@@ -21,7 +21,7 @@ const FIXTURE_SRC = join(__dirname, '__fixtures__');
 
 // Each test gets its own temp copy of the fixture so the cache file lands at
 // a known path we control. The cache lives under <root>/node_modules/.cache/
-// dxos-introspect/cache.json — relative to whatever monorepo root we point
+// dxos-introspect/core.json — relative to whatever monorepo root we point
 // the introspector at.
 
 describe('symbol cache reuse', { timeout: 30_000 }, () => {
