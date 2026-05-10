@@ -20,8 +20,13 @@ import { AccessToken } from '@dxos/types';
 
 import { IntegrationCoordinator, IntegrationProvider, type IntegrationProviderEntry } from '#types';
 
-import { INTEGRATION_PENDING_KEY_PREFIX, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
-import { IntegrationProviderNotFoundError } from '../errors';
+import {
+  PROVIDER_FORM_DIALOG,
+  SYNC_TARGETS_DIALOG,
+  integrationDeckSubject,
+  pendingIntegrationStorageKey,
+} from '../constants';
+import { IntegrationProviderNotFoundError, SpaceUnavailableError } from '../errors';
 import { IntegrationOperation } from '../operations';
 import { Integration } from '../types';
 
@@ -127,7 +132,7 @@ const navigateToNewIntegration = (
 ): Effect.Effect<void, never> =>
   invoker
     .invoke(LayoutOperation.Open, {
-      subject: [`${getSpacePath(db.spaceId)}/integrations/${integrationId}`],
+      subject: [integrationDeckSubject(getSpacePath(db.spaceId), integrationId)],
       navigation: 'immediate',
     })
     .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('navigate to new integration failed', { error }))));
@@ -234,14 +239,14 @@ type PendingSnapshot = {
 
 const writePendingSnapshot = (accessTokenId: string, snapshot: PendingSnapshot): void => {
   try {
-    localStorage.setItem(`${INTEGRATION_PENDING_KEY_PREFIX}${accessTokenId}`, JSON.stringify(snapshot));
+    localStorage.setItem(pendingIntegrationStorageKey(accessTokenId), JSON.stringify(snapshot));
   } catch (error) {
     log.warn('failed to persist pending integration snapshot', { error });
   }
 };
 
 const readPendingSnapshot = (accessTokenId: string): PendingSnapshot | undefined => {
-  const raw = localStorage.getItem(`${INTEGRATION_PENDING_KEY_PREFIX}${accessTokenId}`);
+  const raw = localStorage.getItem(pendingIntegrationStorageKey(accessTokenId));
   if (!raw) {
     return undefined;
   }
@@ -254,7 +259,7 @@ const readPendingSnapshot = (accessTokenId: string): PendingSnapshot | undefined
 };
 
 const deletePendingSnapshot = (accessTokenId: string): void => {
-  localStorage.removeItem(`${INTEGRATION_PENDING_KEY_PREFIX}${accessTokenId}`);
+  localStorage.removeItem(pendingIntegrationStorageKey(accessTokenId));
 };
 
 export default Capability.makeModule(
@@ -433,11 +438,11 @@ export default Capability.makeModule(
 
         const space = client.spaces.get(snapshot.spaceId);
         if (!space) {
-          return yield* Effect.fail(new Error(`Space not found: ${snapshot.spaceId}`));
+          return yield* Effect.fail(new SpaceUnavailableError(snapshot.spaceId));
         }
         yield* Effect.tryPromise({
           try: () => space.waitUntilReady(),
-          catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+          catch: (error) => new SpaceUnavailableError(snapshot.spaceId, error),
         });
 
         const provider = yield* resolveProvider(getProviderEntries, snapshot.providerId);
