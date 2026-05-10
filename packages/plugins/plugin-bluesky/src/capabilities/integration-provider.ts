@@ -28,9 +28,14 @@ import { BlueskyTargetOptions } from '../types';
  * Granular permission-set scopes (`include:app.bsky.authFullApp?aud=…`)
  * are the long-term replacement, but bsky.social's auth server validates
  * requested scopes against `client_metadata.scope` with literal string
- * equality (no wildcard subsumption), so each granular scope would have
- * to be enumerated upfront in edge's metadata. Until that is wired up
- * we stay on the transition scope.
+ * equality (no wildcard subsumption, no permission-set expansion). To
+ * move off transition scopes, edge needs to be able to advertise
+ * arbitrary plugin-contributed scopes in its `client_metadata` — either
+ * by aggregating scopes from registered providers into a single
+ * `client_metadata.json`, or by serving a per-provider `client_metadata`
+ * URL so each plugin gets its own OAuth client identity. Until that
+ * lands, plugins can only request scopes already enumerated in edge's
+ * static metadata, which today is just the transition scopes.
  *
  * Refs:
  * - https://atproto.com/specs/oauth
