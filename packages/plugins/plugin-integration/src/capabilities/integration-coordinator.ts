@@ -234,7 +234,6 @@ type PendingSnapshot = {
   providerId: string;
   tokenSnapshot: { source: string; account?: string; scopes: readonly string[] };
   integrationSnapshot: { name: string; providerId: string };
-  existingTargetDxn?: string;
 };
 
 const writePendingSnapshot = (accessTokenId: string, snapshot: PendingSnapshot): void => {
@@ -527,7 +526,13 @@ export default Capability.makeModule(
         }
 
         // OAuth pre-flight: re-enter createIntegration with the captured loginHint.
-        return yield* createIntegration({ db, spaceId, providerId, loginHint: result.loginHint });
+        // Guard against an empty hint — otherwise createIntegration would re-open
+        // the credential-form dialog and we'd loop.
+        const loginHint = result.loginHint?.trim();
+        if (!loginHint) {
+          return yield* Effect.fail(new Error(`Provider ${providerId} credentialForm produced an empty loginHint.`));
+        }
+        return yield* createIntegration({ db, spaceId, providerId, loginHint });
       }).pipe(Effect.mapError(mapCoordinatorError));
 
     return Capability.contributes(

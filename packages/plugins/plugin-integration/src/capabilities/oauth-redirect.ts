@@ -45,7 +45,10 @@ export default Capability.makeModule(
     window.history.replaceState(null, '', '/');
 
     if (!valid) {
-      log.warn('oauth redirect: missing tokens', { accessTokenId, accessToken });
+      log.warn('oauth redirect: missing tokens', {
+        accessTokenId,
+        hasAccessToken: !!accessToken && accessToken !== 'undefined',
+      });
       return Capability.contributes(Capabilities.Null, null);
     }
 

@@ -207,10 +207,7 @@ const shouldRetry = (
  *  - exponential retry with jitter, up to 3 attempts, only on transient failures
  *  - scope the response so its body stream is released even on failure
  */
-const runRequest = <T>(
-  request: HttpClientRequest.HttpClientRequest,
-  schema: Schema.Schema<T>,
-): RequestEffect<T> =>
+const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema.Schema<T>): RequestEffect<T> =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
     return yield* httpClient.execute(request).pipe(
@@ -263,8 +260,16 @@ const fetchDidDocument = (did: string) => {
     return runRequest(HttpClientRequest.get(`https://plc.directory/${did}`), DidDocumentSchema);
   }
   if (did.startsWith('did:web:')) {
-    const domain = did.slice('did:web:'.length).split(':')[0];
-    return runRequest(HttpClientRequest.get(`https://${domain}/.well-known/did.json`), DidDocumentSchema);
+    // Per the did:web spec, `:` separates host from path segments and each
+    // segment is percent-encoded. A bare host resolves to
+    // `/.well-known/did.json`; any path segments resolve to `/<path>/did.json`.
+    const rest = did.slice('did:web:'.length);
+    if (!rest) {
+      return Effect.fail(new PdsResolutionFailedError());
+    }
+    const [host, ...pathSegments] = rest.split(':').map((segment) => decodeURIComponent(segment));
+    const path = pathSegments.length > 0 ? `/${pathSegments.join('/')}/did.json` : '/.well-known/did.json';
+    return runRequest(HttpClientRequest.get(`https://${host}${path}`), DidDocumentSchema);
   }
   return Effect.fail(new PdsResolutionFailedError());
 };
@@ -301,7 +306,7 @@ const resolvePds = (handleOrDid: string) =>
 // Credentials service
 // ---------------------------------------------------------------------------
 
-type BlueskyCredentialsValue = {
+type CredentialsValue = {
   spaceId: string;
   accessTokenId: string;
   accessTokenValue: string;
@@ -316,20 +321,17 @@ type BlueskyCredentialsValue = {
  * `GoogleCredentials` patterns: every authenticated API call pulls creds from
  * this service rather than threading them through as explicit parameters, so
  * call sites compose a single
- * `Effect.provide(BlueskyApi.BlueskyCredentials.fromIntegration(ref, client))`
+ * `Effect.provide(BlueskyApi.Credentials.fromIntegration(ref, client))`
  * at the operation boundary.
  *
  * Construction resolves the integration's PDS once (via the public XRPC
  * `resolveHandle` and a DID-document lookup) so subsequent calls reuse it.
  */
-export class BlueskyCredentials extends Context.Tag('@dxos/plugin-bluesky/BlueskyCredentials')<
-  BlueskyCredentials,
-  BlueskyCredentialsValue
->() {
+export class Credentials extends Context.Tag('@dxos/plugin-bluesky/Credentials')<Credentials, CredentialsValue>() {
   /** Loads the integration's access token, resolves its PDS, and packages credentials. */
   static fromIntegration = (integrationRef: Ref.Ref<Integration.Integration>, client: Client) =>
     Layer.effect(
-      BlueskyCredentials,
+      Credentials,
       Effect.gen(function* () {
         const integration = yield* Database.load(integrationRef);
         const accessToken = yield* Database.load(integration.accessToken);
@@ -365,7 +367,7 @@ export class BlueskyCredentials extends Context.Tag('@dxos/plugin-bluesky/Bluesk
 type AuthedEffect<T> = Effect.Effect<
   T,
   HttpClientError.HttpClientError | HttpBody.HttpBodyError | ParseResult.ParseError | Cause.TimeoutException,
-  HttpClient.HttpClient | BlueskyCredentials
+  HttpClient.HttpClient | Credentials
 >;
 
 type PublicEffect<T> = RequestEffect<T>;
@@ -394,7 +396,7 @@ const authedGet = <T>(input: {
   schema: Schema.Schema<T>;
 }): AuthedEffect<T> =>
   Effect.gen(function* () {
-    const creds = yield* BlueskyCredentials;
+    const creds = yield* Credentials;
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries(input.query)) {
       if (value !== undefined && value !== '') {
@@ -488,11 +490,7 @@ export const getBookmarks = (input: { limit?: number; cursor?: string }): Authed
   );
 
 /** Fetch posts from a custom feed generator (`feed` is the at-uri). */
-export const getFeed = (input: {
-  feed: string;
-  limit?: number;
-  cursor?: string;
-}): AuthedEffect<GetFeedResponse> =>
+export const getFeed = (input: { feed: string; limit?: number; cursor?: string }): AuthedEffect<GetFeedResponse> =>
   authedGet({
     path: 'app.bsky.feed.getFeed',
     query: { feed: input.feed, limit: input.limit ?? DEFAULT_FEED_LIMIT, cursor: input.cursor },

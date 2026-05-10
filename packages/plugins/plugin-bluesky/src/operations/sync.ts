@@ -51,7 +51,7 @@ const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTar
         }
         return { appended, failed };
       }).pipe(
-        Effect.provide(BlueskyApi.BlueskyCredentials.fromIntegration(integrationRef, client)),
+        Effect.provide(BlueskyApi.Credentials.fromIntegration(integrationRef, client)),
         Effect.provide(FetchHttpClient.layer),
       );
     }),
@@ -252,17 +252,17 @@ const remoteIdToFeedUrl = (remoteId: string): string => {
 /**
  * Dispatch on the target's `remoteId` to the right Bluesky XRPC call.
  * The authenticated branches pull credentials (handle, PDS, token, …) from
- * the `BlueskyCredentials` service, so the only state needed here is the
+ * the `Credentials` service, so the only state needed here is the
  * target's id and the page cursor.
  */
 const fetchPostsForTarget = ({ remoteId, cursor }: { remoteId: string; cursor: string | undefined }) =>
   Effect.gen(function* () {
     if (remoteId === BLUESKY_TARGET.MY_POSTS) {
-      const creds = yield* BlueskyApi.BlueskyCredentials;
+      const creds = yield* BlueskyApi.Credentials;
       return yield* BlueskyApi.getAuthorFeed({ actor: creds.handle, cursor });
     }
     if (remoteId === BLUESKY_TARGET.MY_LIKES) {
-      const creds = yield* BlueskyApi.BlueskyCredentials;
+      const creds = yield* BlueskyApi.Credentials;
       return yield* BlueskyApi.getActorLikes({ actor: creds.handle, cursor });
     }
     if (remoteId === BLUESKY_TARGET.MY_BOOKMARKS) {
