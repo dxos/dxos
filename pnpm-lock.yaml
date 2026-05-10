@@ -17140,6 +17140,9 @@ importers:
       '@dxos/plugin-explorer':
         specifier: workspace:*
         version: link:../../plugins/plugin-explorer
+      '@dxos/plugin-game':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-game
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../../plugins/plugin-graph
