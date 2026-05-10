@@ -51,7 +51,6 @@
     "@dxos/plugin-code": "workspace:*",
     "@dxos/plugin-conductor": "workspace:*",
     "@dxos/plugin-crx": "workspace:*",
-    "@dxos/plugin-crx-bridge": "workspace:*",
     "@dxos/plugin-daily-summary": "workspace:*",
     "@dxos/plugin-debug": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
