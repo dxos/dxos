@@ -1,5 +1,5 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import * as Effect from 'effect/Effect';
@@ -9,26 +9,24 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { ChessArticle, ChessCard } from '#containers';
-import { Chess } from '#types';
+import { GameArticle, GameCard } from '#containers';
+
+import { Game } from '../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'game',
-        filter: AppSurface.oneOf(
-          AppSurface.object(AppSurface.Article, Chess.Game),
-          AppSurface.object(AppSurface.Section, Chess.Game),
-        ),
+        filter: AppSurface.oneOf(AppSurface.object(AppSurface.Article, Game), AppSurface.object(AppSurface.Section, Game)),
         component: ({ data, role }) => (
-          <ChessArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+          <GameArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
         id: 'game-card',
-        filter: AppSurface.object(AppSurface.Card, Chess.Game),
-        component: ({ data, role }) => <ChessCard role={role} subject={data.subject} />,
+        filter: AppSurface.object(AppSurface.Card, Game),
+        component: ({ data, role }) => <GameCard role={role} subject={data.subject} />,
       }),
     ]),
   ),

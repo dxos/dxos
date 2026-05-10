@@ -14,11 +14,7 @@
   "type": "module",
   "imports": {
     "#blueprints": "./src/blueprints/index.ts",
-    "#capabilities": {
-      "browser": "./src/capabilities/index.ts",
-      "node": "./src/capabilities/node.ts",
-      "default": "./src/capabilities/index.ts"
-    },
+    "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
@@ -83,6 +79,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-game": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

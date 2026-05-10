@@ -4,11 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Obj, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
-
-export const BLUEPRINT_KEY = 'org.dxos.blueprint.tictactoe';
+import { FormInputAnnotation } from '@dxos/echo/internal';
 
 export const Level = Schema.Literal('easy', 'medium', 'hard');
 export type Level = Schema.Schema.Type<typeof Level>;
@@ -16,8 +13,10 @@ export type Level = Schema.Schema.Type<typeof Level>;
 export const GameStatus = Schema.Literal('playing', 'x-wins', 'o-wins', 'draw');
 export type GameStatus = Schema.Schema.Type<typeof GameStatus>;
 
-export const Game = Schema.Struct({
-  name: Schema.optional(Schema.String),
+/**
+ * Tic-Tac-Toe variant state. Referenced by the base `Game` object via `Game.variant`.
+ */
+export const State = Schema.Struct({
   board: Schema.String.annotations({
     description: 'Flat string of length size*size; - = empty, X or O = placed.',
   }),
@@ -32,59 +31,39 @@ export const Game = Schema.Struct({
   winCondition: Schema.Number.annotations({
     description: 'Consecutive marks needed to win.',
   }),
-  level: Schema.optional(
-    Level.annotations({
-      description: 'AI difficulty level.',
-    }),
-  ),
-  players: Schema.Struct({
-    x: Schema.optional(
-      Schema.String.annotations({
-        description: 'DID of X player.',
-      }),
-    ),
-    o: Schema.optional(
-      Schema.String.annotations({
-        description: 'DID of O player.',
-      }),
-    ),
+  level: Level.annotations({
+    description: 'AI difficulty level.',
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
-    typename: 'org.dxos.type.tictactoe',
+    typename: 'org.dxos.type.tictactoe.state',
     version: '0.1.0',
   }),
-  LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
-    icon: 'ph--grid-four--regular',
+    icon: 'ph--hash-straight--regular',
     hue: 'cyan',
   }),
-  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
 );
 
-export interface Game extends Schema.Schema.Type<typeof Game> {}
+export interface State extends Schema.Schema.Type<typeof State> {}
 
 export const make = ({
-  name,
   size = 3,
   winCondition,
   level,
 }: {
-  name?: string;
   size?: number;
   winCondition?: number;
   level?: Level;
-} = {}) => {
+} = {}): State => {
   const effectiveWinCondition = winCondition ?? size;
   const board = '-'.repeat(size * size);
 
-  return Obj.make(Game, {
-    name,
+  return Obj.make(State, {
     board,
     moves: '',
     size,
     winCondition: effectiveWinCondition,
     level,
-    players: {},
   });
 };
