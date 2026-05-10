@@ -19,6 +19,11 @@
     "#hooks": "./src/hooks/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#plugin": {
+      "browser": "./src/TranscriptionPlugin.tsx",
+      "node": "./src/TranscriptionPlugin.node.ts",
+      "default": "./src/TranscriptionPlugin.tsx"
+    },
     "#testing": "./src/testing/index.ts",
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
@@ -29,6 +34,18 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs",
       "types": "./dist/types/src/index.d.ts"
+    },
+    "./components": {
+      "source": "./src/components/index.ts",
+      "browser": "./dist/lib/browser/components/index.mjs",
+      "node": "./dist/lib/node-esm/components/index.mjs",
+      "types": "./dist/types/src/components/index.d.ts"
+    },
+    "./hooks": {
+      "source": "./src/hooks/index.ts",
+      "browser": "./dist/lib/browser/hooks/index.mjs",
+      "node": "./dist/lib/node-esm/hooks/index.mjs",
+      "types": "./dist/types/src/hooks/index.d.ts"
     },
     "./blueprints": {
       "source": "./src/blueprints/index.ts",

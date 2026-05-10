@@ -5,13 +5,14 @@
 import { AnimatePresence, motion } from 'motion/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { type Size, type ThemedClassName } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/ui-theme';
+import { ClassNameValue, type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 export type MatrixProps = ThemedClassName<{
+  dotClassNames?: ClassNameValue;
   dim?: number;
   count?: number;
-  size?: Size;
+  gap?: number;
   dotSize?: number;
   /** When true, the matrix runs an internal interval loop and re-randomizes dot positions on every tick. */
   active?: boolean;
@@ -19,28 +20,34 @@ export type MatrixProps = ThemedClassName<{
   interval?: number;
 }>;
 
+/**
+ * 4-1-4-1-4-1-4-1-4 = 24
+ */
 export const Matrix = ({
   classNames,
+  dotClassNames,
   dim = 5,
   count = 20,
-  size = 5,
+  gap = 1,
   dotSize = 4,
   active = false,
   interval = 500,
 }: MatrixProps) => {
+  const size = dim * dotSize + (dim - 1) * gap;
+
   const variants = useMemo(() => {
     const variants: Record<string, any> = {};
     for (let x = 0; x <= dim - 1; x++) {
       for (let y = 0; y <= dim - 1; y++) {
         variants[`${x}-${y}`] = {
-          left: `${(100 * x) / (dim - 1)}%`,
-          top: `${(100 * y) / (dim - 1)}%`,
+          left: x * (dotSize + gap),
+          top: y * (dotSize + gap),
         };
       }
     }
 
     return variants;
-  }, [dim]);
+  }, [dim, dotSize, gap]);
 
   // Internal tick — incremented every `interval` ms while `active`. Drives position randomization.
   const [tick, setTick] = useState(0);
@@ -64,13 +71,13 @@ export const Matrix = ({
   );
 
   return (
-    <div role='none' className={mx('flex shrink-0 items-center', getSize(size), classNames)}>
-      <div role='none' className='dx-expander relative flex'>
+    <div role='none' className={mx('grid place-items-center shrink-0', classNames)}>
+      <div role='none' style={{ width: size, height: size }} className='relative'>
         <AnimatePresence>
           {positions.map((variant, i) => (
             <Dot
               key={i}
-              classNames='bg-primary-500'
+              classNames={dotClassNames}
               variants={variants}
               variant={variant}
               size={dotSize}
@@ -83,16 +90,17 @@ export const Matrix = ({
   );
 };
 
-const Dot = ({
-  classNames,
-  variants,
-  variant,
-  size = 4,
-  duration = 0.2,
-}: ThemedClassName<{ variants: Record<string, any>; variant: string; size?: number; duration?: number }>) => (
+type DotProps = ThemedClassName<{
+  variants: Record<string, any>;
+  variant: string;
+  size?: number;
+  duration?: number;
+}>;
+
+const Dot = ({ classNames, variants, variant, size = 4, duration = 0.2 }: DotProps) => (
   <motion.div
     className={mx('absolute', classNames)}
-    style={{ width: size, height: size, marginLeft: -size / 2, marginTop: -size / 2 }}
+    style={{ width: size, height: size }}
     transition={{ ease: 'easeInOut', duration }}
     variants={variants}
     initial={variants[variant]}

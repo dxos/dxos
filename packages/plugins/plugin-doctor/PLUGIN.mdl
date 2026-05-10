@@ -1,0 +1,151 @@
+---
+id: org.dxos.plugin.doctor
+name: DoctorPlugin
+version: 0.1.0
+---
+
+Self-introspection blueprint for Composer. Contributes one AI tool,
+`queryComposerLogs`, that reads the browser tab's own NDJSON log store
+(populated by `@dxos/log-store-idb`) and lets the assistant filter, project,
+aggregate, and count entries.
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term   | URI                       |
+|--------|---------------------------|
+| `op`   | `org.dxos.mdl.op@1.0`     |
+| `feat` | `org.dxos.mdl.feat@1.0`   |
+| `test` | `org.dxos.mdl.test@1.0`   |
+
+## Operations
+
+```mdl
+op queryComposerLogs
+  desc: |
+    Query the local browser tab's own NDJSON log store. Read-only. Same
+    scenarios as scripts/query-logs.mjs, plus group-by + aggregate.
+  input:
+    filters?: string[]                    # LOG_FILTER tokens; OR across entries.
+    grep?: string[]                       # RegExp sources; AND-tested against raw JSON line.
+    messageRegex?: string                 # Regex applied to message field only.
+    since?: string | number               # Inclusive lower bound (ISO or epoch ms).
+    until?: string | number               # Inclusive upper bound.
+    levels?: ('T'|'D'|'V'|'I'|'W'|'E')[]  # Allow-list of short level letters.
+    tabId?: string                        # Filter by environment / tab id.
+    select?: ('t'|'l'|'m'|'f'|'n'|'o'|'c'|'i'|'e')[]  # Field projection.
+    groupBy?: 'level' | 'message' | 'file' | 'tabId' | `context.${string}`
+    aggregate?: 'count' | 'sample' | 'firstLast'
+    sampleSize?: number                   # Default 3; max 25.
+    topK?: number                         # Default 50; max 1000.
+    limit?: number                        # Default 100; max 1000.
+    order?: 'asc' | 'desc'                # Default 'asc'.
+    format?: 'json' | 'jsonl' | 'pretty'  # Default 'json'.
+    dbName?: string                       # Override IDB name (testing only).
+  output:
+    total: number                         # Records read from IDB before filtering.
+    matched: number                       # Records that passed all filters.
+    elapsedMs: number
+    truncated: boolean                    # True if entries or groups were capped.
+    entries?: unknown[]                   # Present iff no groupBy.
+    groups?: { key, count, samples?, first?, last? }[]
+  effects: [idb:read]
+  note: |
+    Hard caps clamp limit/topK to 1000 and sampleSize to 25. The handler
+    early-exits the IDB cursor as soon as `limit` un-filtered rows are
+    collected, so cheap "tail of N" queries do not load the full store.
+```
+
+## Features
+
+```mdl
+feat F-1: Self-introspection from blueprint
+
+  req F-1.1:
+    when: assistant has the Doctor blueprint loaded
+    then: queryComposerLogs is offered as a tool
+
+  req F-1.2:
+    when: filters are passed
+    then: tokens are normalized (`!foo` → `-foo:trace`) and grouped via
+          @dxos/log parseFilter / shouldLog; multiple groups OR
+
+  req F-1.3:
+    when: messageRegex is passed alongside grep
+    then: messageRegex matches against record.m; grep matches against the
+          raw JSON line; both must pass (AND)
+
+  req F-1.4:
+    when: since / until are passed
+    then: bounds are inclusive; both ISO strings and epoch ms are accepted
+
+  req F-1.5:
+    when: select is passed
+    then: emitted entries (and aggregate=sample buckets) include only the
+          listed fields
+
+  req F-1.6:
+    when: groupBy is set
+    then: output contains `groups`, sorted by count desc, capped at topK;
+          `entries` is omitted
+
+  req F-1.7:
+    when: aggregate=firstLast
+    then: each bucket carries `first` and `last` ISO timestamps drawn from
+          the matching records' `t` fields
+
+  req F-1.8:
+    when: format=pretty
+    then: entries are space-separated strings matching scripts/query-logs.mjs
+          formatLine output
+
+  req F-1.9:
+    when: limit, topK, or sampleSize exceed hard caps (1000/1000/25)
+    then: values are clamped and `truncated` is set if the source had more
+```
+
+## Acceptance
+
+```mdl
+test T-1: Count by level
+  given: log store with mixed-level entries
+  when: queryComposerLogs is called with { groupBy: 'level' }
+  then:
+    - groups[].key in { 'T','D','V','I','W','E' }
+    - groups sorted by count desc
+    - entries field is undefined
+```
+
+```mdl
+test T-2: Top messages by frequency
+  given: log store with many duplicated messages
+  when: queryComposerLogs is called with
+        { groupBy: 'message', topK: 10, aggregate: 'count' }
+  then:
+    - groups.length <= 10
+    - groups[0].count >= groups[1].count
+    - truncated is true if more than 10 distinct messages existed
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: A named operation with typed inputs, outputs, and declared errors.
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+```

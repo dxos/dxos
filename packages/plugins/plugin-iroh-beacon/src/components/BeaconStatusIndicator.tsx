@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useAtomCapability } from '@dxos/app-framework/ui';
-import { StatusBar } from '@dxos/plugin-status-bar';
+import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 

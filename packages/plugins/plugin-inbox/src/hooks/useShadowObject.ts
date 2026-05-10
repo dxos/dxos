@@ -37,7 +37,7 @@ export const useShadowObject = <T extends Obj.Unknown>(
     }
 
     const newObject = db.add(Obj.clone(subject));
-    Obj.change(newObject, (newObject) => {
+    Obj.update(newObject, (newObject) => {
       Obj.getMeta(newObject).keys.push({ source: 'echo', id }); // TODO(burdon): Factor out const?
     });
     setTarget(newObject);

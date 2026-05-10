@@ -4,169 +4,233 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { PropsWithChildren, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
+import { addEventListener } from '@dxos/async';
 import { Process, Trace } from '@dxos/compute';
-import { Feed } from '@dxos/echo';
-import { Filter, Query } from '@dxos/echo';
+import { Feed, Filter, Query } from '@dxos/echo';
 import { FeedTraceSink, ProcessManager } from '@dxos/functions-runtime';
-import { ObjectId } from '@dxos/keys';
-import { dbg } from '@dxos/log';
+import { log } from '@dxos/log';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { useComputeRuntime } from '@dxos/plugin-automation/hooks';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { useSpaces } from '@dxos/react-client/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { Timeline } from '@dxos/react-ui-components';
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
+import { AssistantPlugin } from '../../cli';
 import { buildExecutionGraph } from './execution-graph';
+import { PLAYBACK_INTERVAL_MS, STEP_STORAGE_KEY, SimulatedAgent, useLocalStorageNumber } from './testing';
 import { TracePanel } from './TracePanel';
 
-//
-// Helpers.
-//
+type BaseStoryProps = PropsWithChildren<{
+  toolbar: ReactNode;
+}>;
 
-const delay = (ms: number) => Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, ms)));
-
-//
-// Simulated agent scenarios.
-//
-
-const agentScenarios: { prompt: string; tools: string[] }[] = [
-  {
-    prompt: 'Create an organization called "Cyberdyne Systems"',
-    tools: ['list-schemas', 'create-object'],
-  },
-  {
-    prompt: 'Search for all organizations and persons',
-    tools: ['list-schemas', 'query', 'query'],
-  },
-  {
-    prompt: 'Create a person named "John Connor"',
-    tools: ['create-object'],
-  },
-];
-
-/**
- * Write a trace event and yield to the event loop so FeedTraceSink flushes it to ECHO before continuing.
- */
-const writeAndFlush = <T,>(eventType: Trace.EventType<T>, payload: T) =>
-  Effect.gen(function* () {
-    yield* Trace.write(eventType, payload);
-    yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve, 100)));
-  });
-
-const SimulatedAgent = Process.make(
-  {
-    key: 'org.dxos.testing.process.agent',
-    input: Schema.Number,
-    output: Schema.Void,
-    services: [Trace.TraceService],
-  },
-  (ctx) =>
-    Effect.succeed({
-      onInput: (scenarioIndex: number) =>
-        Effect.gen(function* () {
-          const scenario = agentScenarios[scenarioIndex % agentScenarios.length];
-          const messageId = ObjectId.random();
-
-          // Agent begins processing.
-          yield* writeAndFlush(AgentRequestBegin, {});
-
-          // User message.
-          yield* writeAndFlush(CompleteBlock, {
-            messageId,
-            role: 'user',
-            block: { _tag: 'text', text: scenario.prompt },
-          });
-
-          // Simulate tool calls sequentially with delays.
-          for (const toolName of scenario.tools) {
-            const toolCallId = ObjectId.random();
-
-            // Tool call event.
-            yield* writeAndFlush(CompleteBlock, {
-              messageId,
-              role: 'assistant',
-              block: { _tag: 'toolCall', toolCallId, name: toolName, input: '{}', providerExecuted: false },
-            });
-
-            // Simulate tool execution time.
-            yield* delay(1_000 + Math.random() * 3_000);
-
-            // Tool result event.
-            yield* writeAndFlush(CompleteBlock, {
-              messageId,
-              role: 'assistant',
-              block: { _tag: 'toolResult', toolCallId, name: toolName, providerExecuted: false },
-            });
-          }
-
-          // Agent completes.
-          yield* writeAndFlush(AgentRequestEnd, {});
-          ctx.succeed();
-        }).pipe(Effect.orDie),
-      onAlarm: () => Effect.void,
-      onChildEvent: () => Effect.void,
-    }),
+const BaseStory = ({ children, toolbar }: BaseStoryProps) => (
+  <Panel.Root>
+    <Panel.Toolbar asChild>{toolbar}</Panel.Toolbar>
+    <Panel.Content asChild>{children}</Panel.Content>
+  </Panel.Root>
 );
-
-//
-// Story component.
-//
 
 const DefaultStory = () => {
   const [space] = useSpaces();
   const runtime = useComputeRuntime(space?.id);
-  const invokeCounterRef = useRef(0);
 
-  const handleRunAgent = useCallback(() => {
+  const handleStart = useCallback(() => {
     if (!runtime) {
       return;
     }
-    const scenarioIndex = invokeCounterRef.current++;
+
     void runtime.runPromise(
       Effect.gen(function* () {
-        const manager = yield* ProcessManager.ProcessManagerService;
+        const manager = yield* ProcessManager.Service;
         const handle = yield* manager.spawn(SimulatedAgent);
-        yield* handle.submitInput(scenarioIndex);
+        yield* handle.submitInput(Math.floor(Math.random() * 1_000));
+        log.info('submitInput', { handle });
       }),
     );
   }, [runtime]);
 
-  if (!space || !runtime) {
-    return <Loading />;
-  }
+  // TODO(burdon): Implement.
+  const handleStop = useCallback(
+    (process: Process.Info) => {
+      log.info('stop', { process });
+    },
+    [runtime],
+  );
 
   return (
-    <Panel.Root>
-      <Panel.Toolbar asChild>
+    <BaseStory
+      toolbar={
         <Toolbar.Root>
-          <IconButton icon='ph--plus--regular' label='Start Agent' onClick={handleRunAgent} />
+          <IconButton icon='ph--plus--regular' label='Start Agent' onClick={handleStart} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
-        <TracePanel role='article' space={space} attendableId={space.id} />
-      </Panel.Content>
-    </Panel.Root>
+      }
+    >
+      <TracePanel space={space} attendableId={space.id} onProcessTerminate={handleStop} />
+    </BaseStory>
+  );
+};
+
+const SnapshotStory = () => {
+  const [space] = useSpaces();
+  const [feed] = useQuery(space?.db, FeedTraceSink.query);
+
+  // All messages.
+  const allMessages = useQuery(
+    space?.db,
+    feed ? Query.select(Filter.everything()).from(feed) : Query.select(Filter.nothing()),
+  );
+
+  // Sort by first event timestamp so playback order is chronological regardless of query ordering.
+  const sortedMessages = useMemo(
+    () => [...allMessages].sort((a, b) => (a.events[0]?.timestamp ?? 0) - (b.events[0]?.timestamp ?? 0)),
+    [allMessages],
+  );
+
+  const total = sortedMessages.length;
+  const [step, setStep, stepHydrated] = useLocalStorageNumber(STEP_STORAGE_KEY, 0);
+  const [playing, setPlaying] = useState(false);
+
+  useEffect(() => {
+    setStep((current) => Math.min(Math.max(current, 0), total));
+  }, [total, setStep]);
+
+  // Start with all messages loaded once the snapshot first arrives; afterwards the user controls `step`.
+  // Skip the auto-init if we restored a value from localStorage so we don't clobber the user's last position.
+  const hasInitializedRef = useRef(false);
+  useEffect(() => {
+    if (!hasInitializedRef.current && total > 0) {
+      hasInitializedRef.current = true;
+      if (!stepHydrated) {
+        setStep(total);
+      }
+    }
+  }, [total, stepHydrated, setStep]);
+
+  const visibleMessages = useMemo(() => sortedMessages.slice(0, step), [sortedMessages, step]);
+  const { commits, branches } = useMemo(
+    () => buildExecutionGraph({ traceMessages: visibleMessages }),
+    [visibleMessages],
+  );
+
+  // Auto-play steps forward until we reach the end.
+  useEffect(() => {
+    if (!playing) {
+      return;
+    }
+    const id = window.setInterval(() => {
+      setStep((current) => {
+        if (current >= total) {
+          setPlaying(false);
+          return current;
+        }
+        return current + 1;
+      });
+    }, PLAYBACK_INTERVAL_MS);
+    return () => window.clearInterval(id);
+  }, [playing, total]);
+
+  // Handlers.
+  const handleNext = useCallback(() => setStep((current) => Math.min(current + 1, total)), [total]);
+  const handlePrev = useCallback(() => setStep((current) => Math.max(current - 1, 0)), []);
+  const handleReset = useCallback(() => {
+    setStep(0);
+    setPlaying(false);
+  }, []);
+  const handleShowAll = useCallback(() => {
+    setStep(total);
+    setPlaying(false);
+  }, [total]);
+  const handleTogglePlay = useCallback(() => setPlaying((previous) => !previous), []);
+
+  // Keyboard shortcuts: ←/h step back, →/l step forward, space play/pause, r reset, e/End show all.
+  useEffect(() => {
+    return addEventListener(window, 'keydown', (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable) {
+        return;
+      }
+
+      switch (event.key) {
+        case 'ArrowRight':
+        case 'l':
+          event.preventDefault();
+          handleNext();
+          break;
+        case 'ArrowLeft':
+        case 'h':
+          event.preventDefault();
+          handlePrev();
+          break;
+        case ' ':
+          event.preventDefault();
+          handleTogglePlay();
+          break;
+        case 'r':
+          event.preventDefault();
+          handleReset();
+          break;
+        case 'e':
+        case 'End':
+          event.preventDefault();
+          handleShowAll();
+          break;
+      }
+    });
+  }, [handleNext, handlePrev, handleTogglePlay, handleReset, handleShowAll]);
+
+  return (
+    <BaseStory
+      toolbar={
+        <Toolbar.Root>
+          <IconButton iconOnly icon='ph--skip-back--regular' label='Reset (R)' onClick={handleReset} />
+          <IconButton iconOnly icon='ph--caret-left--regular' label='Step back (← / H)' onClick={handlePrev} />
+          <IconButton
+            iconOnly
+            icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
+            label={playing ? 'Pause (Space)' : 'Play (Space)'}
+            onClick={handleTogglePlay}
+          />
+          <IconButton iconOnly icon='ph--caret-right--regular' label='Step forward (→ / L)' onClick={handleNext} />
+          <IconButton iconOnly icon='ph--skip-forward--regular' label='Show all (E / End)' onClick={handleShowAll} />
+          <Toolbar.Separator />
+          <Toolbar.Text className='text-sm tabular-nums opacity-70'>
+            `${step} / ${total}`
+          </Toolbar.Text>
+        </Toolbar.Root>
+      }
+    >
+      <Timeline branches={branches} commits={commits} showTimestamp />
+    </BaseStory>
   );
 };
 
 const meta = {
   title: 'plugins/plugin-assistant/containers/TracePanel',
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
+} satisfies Meta;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   render: DefaultStory,
   decorators: [
     withTheme(),
-    withLayout({ layout: 'column' }),
+    withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size) overflow-hidden' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),
@@ -179,38 +243,18 @@ const meta = {
               yield* Effect.promise(() => space.waitUntilReady());
             }),
         }),
+        AssistantPlugin(),
         AutomationPlugin(),
       ],
     }),
   ],
-  parameters: {
-    layout: 'fullscreen',
-    translations,
-  },
-} satisfies Meta;
-
-export default meta;
-
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {};
+};
 
 export const WithSnapshot: Story = {
-  render: () => {
-    const [space] = useSpaces();
-    const [feed] = useQuery(space?.db, FeedTraceSink.query);
-    const traceMessages = useQuery(
-      space?.db,
-      feed ? Query.select(Filter.everything()).from(feed) : Query.select(Filter.nothing()),
-    );
-    dbg(traceMessages);
-    const { commits, branches } = useMemo(() => buildExecutionGraph({ traceMessages }), [traceMessages]);
-    dbg(commits);
-    return <Timeline branches={branches} commits={commits} showTimestamp />;
-  },
+  render: SnapshotStory,
   decorators: [
     withTheme(),
-    withLayout({ layout: 'column' }),
+    withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),
@@ -227,6 +271,7 @@ export const WithSnapshot: Story = {
               await space.db.flush();
             }),
         }),
+        AutomationPlugin(),
       ],
     }),
   ],

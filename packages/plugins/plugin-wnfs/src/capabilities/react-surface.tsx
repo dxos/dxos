@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
@@ -32,18 +33,23 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'create-form',
         role: 'form-input',
-        filter: (data): data is { prop: string; schema: Schema.Schema.Any } => {
+        filter: (data): data is { prop: string; schema: Schema.Schema.Any; fieldPropertyAst?: SchemaAST.AST } => {
           const annotation = findAnnotation<boolean>(
             (data.schema as Schema.Schema.All).ast,
             WnfsAction.UploadAnnotationId,
           );
           return !!annotation;
         },
-        component: ({ data: { schema }, ...props }) => {
-          const inputProps = props as unknown as FormFieldComponentProps;
+        component: ({ data: { schema, fieldPropertyAst }, ...props }) => {
+          const ast = fieldPropertyAst;
+          if (!ast) {
+            return null;
+          }
+
+          const inputProps = { ...props, type: ast } as unknown as FormFieldComponentProps;
           const handleChange = useCallback(
-            (file: File) => inputProps.onValueChange?.(inputProps.type, file),
-            [inputProps.type, inputProps.onValueChange],
+            (file: File) => inputProps.onValueChange?.(ast, file),
+            [ast, inputProps.onValueChange],
           );
 
           return <FileInput schema={schema} onChange={handleChange} />;

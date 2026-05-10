@@ -2,7 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './components/Chessboard';
-export * from './meta';
+import { Plugin } from '@dxos/app-framework';
 
-export * from './ChessPlugin';
+import { meta } from './meta';
+
+export * from './blueprints';
+export * from './meta';
+export * from './types';
+
+export const ChessPlugin = Plugin.lazy(meta, () => import('#plugin'));

@@ -1,0 +1,102 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import type * as Context from 'effect/Context';
+
+import type { Space } from '@dxos/client/echo';
+import { type Credential, type Trace } from '@dxos/compute';
+import { Database } from '@dxos/echo';
+import { type QueueFactory } from '@dxos/echo-db';
+import { ConfiguredCredentialsService, QueueService } from '@dxos/functions';
+import { assertArgument } from '@dxos/invariant';
+
+import { ServiceContainer } from '../services';
+import { consoleTraceWriter, noopTraceWriter } from './logger';
+
+// TODO(burdon): Factor out.
+export type OneOf<T> = {
+  [K in keyof T]: { [P in K]: T[P] } & { [P in Exclude<keyof T, K>]?: never };
+}[keyof T];
+
+export type AiServiceProvider = 'dev' | 'edge' | 'ollama' | 'lmstudio';
+
+export type TestServiceOptions = {
+  /**
+   * AI service configuration.
+   */
+  ai?: any;
+
+  /**
+   * Credentials service configuration.
+   */
+  credentials?: OneOf<{
+    /**
+     * Predefined credentials list.
+     */
+    services?: Credential.ServiceCredential[];
+
+    /**
+     * Custom credentials service.
+     */
+    service?: Context.Tag.Service<Credential.CredentialsService>;
+  }>;
+
+  /**
+   * Database configuration.
+   */
+  db?: Database.Database;
+
+  /**
+   * Gets database and queue services from the space.
+   * Exclusive with: `db`, `queues`
+   */
+  space?: Space;
+
+  /**
+   * Trace writer configuration.
+   */
+  logging?: {
+    enabled?: boolean;
+    trace?: Context.Tag.Service<Trace.TraceService>;
+  };
+
+  /**
+   * Queue service configuration.
+   */
+  queues?: QueueFactory;
+};
+
+/**
+ * @deprecated
+ */
+export const createTestServices = ({
+  ai,
+  credentials,
+  db,
+  logging,
+  queues,
+  space,
+}: TestServiceOptions = {}): ServiceContainer => {
+  assertArgument(!(!!space && (!!db || !!queues)), 'space', 'space can be provided only if db and queues are not');
+
+  return new ServiceContainer().setServices({
+    // ai: createAiService(ai),
+    credentials: createCredentialsService(credentials),
+    database: space || db ? Database.makeService(space?.db || db!) : undefined,
+    trace: logging?.trace ?? (logging?.enabled ? consoleTraceWriter : noopTraceWriter),
+    queues: space || queues ? QueueService.make(space?.queues || queues!, undefined) : undefined,
+  });
+};
+
+const createCredentialsService = (
+  credentials: TestServiceOptions['credentials'] | undefined,
+): Context.Tag.Service<Credential.CredentialsService> | undefined => {
+  if (credentials?.services) {
+    return new ConfiguredCredentialsService(credentials.services);
+  }
+
+  if (credentials?.service) {
+    return credentials.service;
+  }
+};

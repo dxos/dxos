@@ -9,8 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { Trace } from '@dxos/compute';
-import { Operation, OperationRegistry } from '@dxos/compute';
+import { Trace, Operation, OperationRegistry } from '@dxos/compute';
 import { Collection, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { CollectionModel } from '@dxos/schema';
@@ -164,13 +163,13 @@ const updateDocContent = Effect.fn(function* (doc: MarkdownDoc, newContent: stri
   if (Ref.isRef(textRef)) {
     const text: Text.Text | undefined = yield* Effect.promise(() => textRef.load());
     if (text) {
-      Obj.change(text, (text) => {
+      Obj.update(text, (text) => {
         text.content = newContent;
       });
       return;
     }
   }
-  Obj.change(doc, (doc) => {
+  Obj.update(doc, (doc) => {
     doc.content = Ref.make(Text.make(newContent));
   });
 });

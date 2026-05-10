@@ -31,7 +31,7 @@ const Placeholder = () => {
 
 const DefaultStory = () => {
   const App = useApp({
-    pluginLoader: (id: string) => Effect.sync(() => createNumberPlugin(id)),
+    pluginLoader: (id: string) => Effect.sync(() => ({ plugin: createNumberPlugin(id) })),
     plugins,
     core,
     placeholder: Placeholder,

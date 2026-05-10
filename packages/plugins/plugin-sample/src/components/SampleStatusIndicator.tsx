@@ -9,7 +9,7 @@
 
 import React from 'react';
 
-import { StatusBar } from '@dxos/plugin-status-bar';
+import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { IconButton } from '@dxos/react-ui';
 
 export const SampleStatusIndicator = () => {

@@ -43,7 +43,7 @@ export interface Extension<T> extends Record<
  *   email: 'john@example.com',
  * });
  *
- * Obj.change(obj, (obj) => {
+ * Obj.update(obj, (obj) => {
  *   Extension.set(obj.extensions, ColorExtension, 'red');
  * });
  *
@@ -103,10 +103,10 @@ export const get: {
 /**
  * Set the value of an extension in a set of values.
  *
- * Can also be used within Obj.change callback:
+ * Can also be used within Obj.update callback:
  *
  * ```ts
- * Obj.change(obj, (obj) => {
+ * Obj.update(obj, (obj) => {
  *   Extension.set(obj.extensions, ColorExtension, 'red');
  * });
  * ```

@@ -151,7 +151,9 @@ export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
         Option.flatMap((queueDxn) => Option.fromNullable(DXN.tryParse(String(queueDxn)))),
         Option.flatMap((parsed) => {
           const q = parsed.asQueueDXN();
-          if (!q || !Key.ObjectId.isValid(q.queueId)) return Option.none();
+          if (!q || !Key.ObjectId.isValid(q.queueId)) {
+            return Option.none();
+          }
           return Option.fromNullable(space?.queues.get(parsed));
         }),
       );

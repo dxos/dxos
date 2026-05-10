@@ -80,6 +80,11 @@ export type DxosLogPluginLogToFile = {
   enabled: true;
   /** @default 'app.log' */
   filename?: string;
+  /**
+   * Same filter string as root `DX_LOG` / `parseFilter` from `@dxos/log` (e.g. `debug`, `info`).
+   * Entries below the minimum level are not forwarded. @default `debug` (TRACE omitted).
+   */
+  logFilter?: string;
 };
 
 /** Rolldown call-site meta injection. `enabled` must be `true` to turn on. */

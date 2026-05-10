@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Script, getUserFunctionIdInMetadata } from '@dxos/compute';
-import { type Operation } from '@dxos/compute';
+import { type Operation, Script } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
+import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { getInvocationUrl } from '@dxos/functions-runtime';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -40,7 +40,7 @@ export const updateFunctionMetadata = (
   meta: any,
   functionId: string,
 ) => {
-  Obj.change(storedFunction, (storedFunction) => {
+  Obj.update(storedFunction, (storedFunction) => {
     if (script.description !== undefined && script.description.trim() !== '') {
       storedFunction.description = script.description;
     } else if (meta.description) {

@@ -13,6 +13,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#plugin": "./src/ExplorerPlugin.tsx",
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
@@ -39,6 +40,18 @@
       "types": "./dist/types/src/translations.d.ts",
       "browser": "./dist/lib/browser/translations.mjs",
       "node": "./dist/lib/node-esm/translations.mjs"
+    },
+    "./components": {
+      "source": "./src/components/index.ts",
+      "browser": "./dist/lib/browser/components/index.mjs",
+      "node": "./dist/lib/node-esm/components/index.mjs",
+      "types": "./dist/types/src/components/index.d.ts"
+    },
+    "./hooks": {
+      "source": "./src/hooks/index.ts",
+      "browser": "./dist/lib/browser/hooks/index.mjs",
+      "node": "./dist/lib/node-esm/hooks/index.mjs",
+      "types": "./dist/types/src/hooks/index.d.ts"
     },
     "./types": {
       "source": "./src/types/index.ts",
@@ -89,6 +102,7 @@
   },
   "devDependencies": {
     "@dxos/echo-generator": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Toolbar } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -86,32 +86,34 @@ const DefaultStory = ({ keywords }: DefaultStoryProps) => {
   }, [running, recognition]);
 
   return (
-    <div className={mx('flex flex-col gap-2 w-[30rem]')}>
-      <Toolbar.Root>
-        <Toolbar.IconButton
-          iconOnly
-          icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
-          label={running ? 'Pause' : 'Play'}
-          onClick={() => setRunning((running) => !running)}
-        />
-      </Toolbar.Root>
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Toolbar.IconButton
+            iconOnly
+            icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
+            label={running ? 'Pause' : 'Play'}
+            onClick={() => setRunning((running) => !running)}
+          />
+        </Toolbar.Root>
+      </Panel.Toolbar>
 
-      <div className='flex flex-wrap'>
-        {matchingWords.map((word, index) => (
-          <span
-            key={index}
-            className={mx(
-              'px-3 py-1 m-2 rounded-sm border',
-              word.matched ? 'bg-red-200 text-red-800 border-red-300' : 'bg-gray-200 text-gray-600 border-gray-300',
-            )}
-          >
-            {word.text}
-          </span>
-        ))}
-      </div>
-
-      <span>{transcript || (running ? 'Listening...' : 'Click play to start speech recognition')}</span>
-    </div>
+      <Panel.Content>
+        <div className='p-4 grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-2'>
+          {matchingWords.map((word, index) => (
+            <span
+              key={index}
+              className={mx(
+                'grid place-items-center p-2 aspect-square rounded-sm border border-separator',
+                word.matched && 'border-red-300',
+              )}
+            >
+              {word.text}
+            </span>
+          ))}
+        </div>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
@@ -127,6 +129,6 @@ type Story = StoryObj<typeof meta>;
 
 export const SpeechRecognitionAPI: Story = {
   args: {
-    keywords: ['kai', 'computer', 'hello'],
+    keywords: ['kai', 'computer', 'hello', 'dxos'],
   },
 };

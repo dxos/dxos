@@ -9,6 +9,7 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
@@ -22,6 +23,19 @@ export interface McpToolkitOptions {
 }
 
 /**
+ * Typed failure raised when the MCP client cannot connect or list tools.
+ * Carries the underlying cause and the server URL for diagnostics.
+ */
+export class McpConnectionError extends Schema.TaggedError<McpConnectionError>('McpConnectionError')(
+  'McpConnectionError',
+  {
+    url: Schema.String,
+    kind: Schema.Literal('sse', 'http'),
+    message: Schema.String,
+  },
+) {}
+
+/**
  * Creates an OpaqueToolkit that connects to an MCP server and exposes its tools to the assistant.
  *
  * @param options MCP server URL and transport kind ('sse' for SSE, 'http' for Streamable HTTP).
@@ -29,11 +43,19 @@ export interface McpToolkitOptions {
  */
 const CLIENT_INFO = { name: '@dxos/mcp-client', version: '0.8.3' };
 
-export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.OpaqueToolkit> =>
+export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.OpaqueToolkit, McpConnectionError> =>
   Effect.gen(function* () {
     const client = yield* connectWithFallback(options);
 
-    const { tools } = yield* Effect.promise(() => client.listTools());
+    const { tools } = yield* Effect.tryPromise({
+      try: () => client.listTools(),
+      catch: (cause) =>
+        new McpConnectionError({
+          url: options.url,
+          kind: options.kind,
+          message: `Failed to list MCP tools: ${formatCause(cause)}`,
+        }),
+    });
     if (tools.length === 0) {
       return OpaqueToolkit.empty;
     }
@@ -94,8 +116,11 @@ export const is405 = (error: unknown): boolean => {
  * Connects to an MCP server, falling back to the alternate transport on 405 errors.
  * Per the MCP spec, a 405 indicates the server uses the other transport protocol.
  * Returns the connected Client (a fresh instance is created for the fallback attempt).
+ *
+ * Failures are surfaced as typed `McpConnectionError` so callers can recover (e.g. drop
+ * the misconfigured server) without breaking the surrounding effect.
  */
-const connectWithFallback = (options: McpToolkitOptions): Effect.Effect<Client> =>
+const connectWithFallback = (options: McpToolkitOptions): Effect.Effect<Client, McpConnectionError> =>
   Effect.gen(function* () {
     const fallbackKind = options.kind === 'sse' ? 'http' : 'sse';
     const primary = yield* connectClient(options.url, options.kind, options.apiKey).pipe(Effect.either);
@@ -103,9 +128,25 @@ const connectWithFallback = (options: McpToolkitOptions): Effect.Effect<Client> 
       return primary.right;
     }
     if (is405(primary.left)) {
-      return yield* connectClient(options.url, fallbackKind, options.apiKey).pipe(Effect.orDie);
+      const fallback = yield* connectClient(options.url, fallbackKind, options.apiKey).pipe(Effect.either);
+      if (fallback._tag === 'Right') {
+        return fallback.right;
+      }
+      return yield* Effect.fail(
+        new McpConnectionError({
+          url: options.url,
+          kind: fallbackKind,
+          message: `Failed to connect via ${fallbackKind} after 405 fallback: ${formatCause(fallback.left)}`,
+        }),
+      );
     }
-    return yield* Effect.die(primary.left);
+    return yield* Effect.fail(
+      new McpConnectionError({
+        url: options.url,
+        kind: options.kind,
+        message: `Failed to connect via ${options.kind}: ${formatCause(primary.left)}`,
+      }),
+    );
   });
 
 const connectClient = (url: string, kind: McpToolkitOptions['kind'], apiKey?: string) =>
@@ -114,6 +155,21 @@ const connectClient = (url: string, kind: McpToolkitOptions['kind'], apiKey?: st
     const transport = createTransport(url, kind, apiKey);
     return client.connect(transport).then(() => client);
   });
+
+/**
+ * Renders a thrown value to a short string for inclusion in error messages.
+ * `Effect.tryPromise` wraps thrown errors in `UnknownException`; unwrap when present.
+ */
+const formatCause = (error: unknown): string => {
+  const inner = error != null && typeof error === 'object' && 'error' in error ? (error as any).error : error;
+  if (inner instanceof Error) {
+    return inner.message;
+  }
+  if (Cause.isCause(error)) {
+    return Cause.pretty(error);
+  }
+  return String(inner);
+};
 
 /**
  * Creates a transport for the given MCP server URL and kind.

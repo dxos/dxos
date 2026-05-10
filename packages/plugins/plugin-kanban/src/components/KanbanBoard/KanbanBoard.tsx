@@ -3,15 +3,7 @@
 //
 
 import { type Atom, RegistryContext } from '@effect-atom/atom-react';
-import { createContext } from '@radix-ui/react-context';
-import React, {
-  type ComponentPropsWithoutRef,
-  type ComponentType,
-  type PropsWithChildren,
-  useCallback,
-  useContext,
-  useMemo,
-} from 'react';
+import React, { type ComponentPropsWithoutRef, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
@@ -21,45 +13,19 @@ import { composable, composableProps } from '@dxos/ui-theme';
 
 import { useKanbanBoardModel, useKanbanColumnEventHandler } from '#hooks';
 import { meta } from '#meta';
-import { type Kanban, type KanbanChangeCallback, UNCATEGORIZED_ATTRIBUTES, UNCATEGORIZED_VALUE } from '#types';
+import { type Kanban, UNCATEGORIZED_ATTRIBUTES, UNCATEGORIZED_VALUE } from '#types';
 
-import { KanbanCard, type KanbanCardProps } from './KanbanCard';
-import { KanbanColumn, type KanbanColumnProps } from './KanbanColumn';
+import {
+  KanbanBoardContext,
+  type KanbanBoardContextValue,
+  type KanbanCardProps,
+  type KanbanColumnProps,
+  useKanbanBoard,
+} from './context';
+import { KanbanCard } from './KanbanCard';
+import { KanbanColumn } from './KanbanColumn';
 
 // TODO(burdon): Rename Kanban.
-
-//
-// Context
-//
-
-const KANBAN_BOARD_NAME = 'KanbanBoard.Context';
-
-/**
- * Context value for the Kanban board.
- * Items are Echo objects (Obj.Unknown).
- */
-type KanbanBoardContextValue = {
-  kanbanId: string;
-  projection: ProjectionModel | undefined;
-  columnFieldPath: string | undefined;
-  change: KanbanChangeCallback<Obj.Unknown>;
-  pivotFieldId: string | undefined;
-  getPivotAttributes: (columnValue: string) => { title: string; color: string };
-  itemTile?: ComponentType<KanbanCardProps>; // TODO(burdon): Prop.
-  onCardAdd?: (columnValue: string | undefined) => string | undefined;
-  onCardRemove?: (card: Obj.Unknown) => void;
-};
-
-const [KanbanBoardContext, useKanbanBoard] = createContext<KanbanBoardContextValue>(KANBAN_BOARD_NAME, {
-  kanbanId: 'never',
-  projection: undefined,
-  columnFieldPath: undefined,
-  change: { kanban: () => {}, setItemField: () => {} },
-  pivotFieldId: undefined,
-  getPivotAttributes: (id: string) =>
-    id === UNCATEGORIZED_VALUE ? UNCATEGORIZED_ATTRIBUTES : { title: id, color: 'neutral' },
-  itemTile: (() => null) as ComponentType<KanbanCardProps>,
-});
 
 //
 // Root
@@ -94,15 +60,20 @@ export const KanbanBoardRoot = ({
   const { t } = useTranslation(meta.id);
   const model = useKanbanBoardModel(kanban, projection, items, registry);
   const columns = model?.getColumns?.() ?? [];
-  const view = kanban?.view?.target;
+  const view = kanban?.spec.kind === 'view' ? kanban.spec.view.target : undefined;
   const pivotFieldId = view?.projection?.pivotFieldId;
   const columnFieldPath = useMemo(() => {
+    // Items-variant kanbans use the property name itself as the pivot field
+    // (no view/projection translation layer).
+    if (kanban?.spec.kind === 'items') {
+      return kanban.spec.pivotField;
+    }
     if (pivotFieldId === undefined || !projection) {
       return undefined;
     }
 
     return projection.tryGetFieldProjection(pivotFieldId)?.props.property;
-  }, [projection, pivotFieldId]);
+  }, [kanban?.spec, projection, pivotFieldId]);
 
   const getPivotAttributes = useCallback<KanbanBoardContextValue['getPivotAttributes']>(
     (columnValue) => {

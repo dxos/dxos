@@ -78,7 +78,7 @@ const publishedTimestamp = (post: Subscription.Post): number => {
  * older-dated feed; per-feed keep gives each feed a fair share. Starred
  * posts and unresolved refs are preserved unconditionally.
  *
- * Lands as a separate `Obj.change` write (not chained inside the
+ * Lands as a separate `Obj.update` write (not chained inside the
  * CurateMagazine operation) — chaining a second `mutable.posts = ...`
  * inside one change block trips ECHO's deep-mapper dedup invariant.
  */
@@ -132,7 +132,7 @@ const applyPerFeedKeep = (magazine: Magazine.Magazine, db: Database.Database | u
   nextRefs.push(...unresolvedRefs);
 
   if (nextRefs.length !== magazine.posts.length) {
-    Obj.change(magazine, (magazine) => {
+    Obj.update(magazine, (magazine) => {
       magazine.posts = nextRefs;
     });
   }

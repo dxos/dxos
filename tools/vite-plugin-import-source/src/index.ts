@@ -26,12 +26,13 @@ interface PluginImportSourceOptions {
 const PluginImportSource = ({
   include = ['@dxos/**'],
   exclude = [],
-  verbose = !!process.env.IMPORT_SOURCE_DEBUG,
+  verbose = process.env.IMPORT_SOURCE_DEBUG === '1' || process.env.IMPORT_SOURCE_DEBUG === 'true',
 }: PluginImportSourceOptions = {}): Plugin => {
   let resolver: ResolverFactory;
 
-  // nocomment: minimatch treats patterns starting with '#' as comments by
-  // default, which breaks subpath-import patterns like '#*'.
+  // `nocomment: true` keeps Minimatch from treating leading `#` (used for Node
+  // subpath imports like `#diagnostics-broadcast`) as a comment pattern that
+  // matches nothing.
   const globOptions = { dot: true, nocomment: true };
   const isMatch = (filePath: string) =>
     include.some((pattern) => Minimatch(filePath, pattern, globOptions)) &&
@@ -65,8 +66,8 @@ const PluginImportSource = ({
         // treats '#'-prefixed patterns as comments by default, which breaks
         // subpath-import patterns like '#*'.
         const match =
-          include.some((pattern) => Minimatch(source, pattern, { dot: true, nocomment: true })) &&
-          !exclude.some((pattern) => Minimatch(source, pattern, { dot: true, nocomment: true }));
+          include.some((pattern) => Minimatch(source, pattern, globOptions)) &&
+          !exclude.some((pattern) => Minimatch(source, pattern, globOptions));
 
         if (!match) {
           verbose && console.log(`[plugin-import-source] ${source} -> excluded`);
@@ -98,22 +99,14 @@ const PluginImportSource = ({
       },
     },
 
-    // Hook into load to add all matching files to watch list (including relative imports).
-    load(id) {
-      // Skip virtual modules and non-file paths.
-      if (id.startsWith('\0') || !id.startsWith('/')) {
-        return null;
-      }
-
-      // Strip query params (e.g., ?v=123).
-      const filePath = id.split('?')[0];
-
-      this.addWatchFile(filePath);
-      verbose && console.log(`[watch] ${filePath}`);
-
-      // Return null to let Vite load the file normally.
-      return null;
-    },
+    // NOTE: A previous version called `this.addWatchFile(filePath)` here for
+    // every loaded module. Vite already watches resolved files; the redundant
+    // calls flooded chokidar with thousands of registrations on cold start
+    // (one per file, including non-`@dxos/*` modules — the include filter
+    // only runs in resolveId), turning warm starts into multi-minute hangs
+    // when the watcher backend falls back to polling. Watches added in
+    // `resolveId` (above) for resolved package paths are sufficient to pick
+    // up source changes when condition resolution would shift.
   };
 };
 

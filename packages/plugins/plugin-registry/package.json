@@ -19,6 +19,11 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#translations": "./src/translations.ts",
+    "#plugin": {
+      "browser": "./src/RegistryPlugin.tsx",
+      "node": "./src/RegistryPlugin.node.ts",
+      "default": "./src/RegistryPlugin.tsx"
+    },
     "#types": "./src/types.ts"
   },
   "exports": {
@@ -54,15 +59,11 @@
     "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
-    "@dxos/protocols": "workspace:*",
-    "@dxos/react-edge-client": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
@@ -72,6 +73,7 @@
     "yaml": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

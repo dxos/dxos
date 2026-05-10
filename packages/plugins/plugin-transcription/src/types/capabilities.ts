@@ -20,6 +20,7 @@ export namespace TranscriptionCapabilities {
     recorderConfig?: Partial<MediaStreamRecorderProps['config']>;
     transcriberConfig?: Partial<TranscriberProps['config']>;
     onSegments: TranscriberProps['onSegments'];
+    transcribe?: TranscriberProps['transcribe'];
   };
 
   export type GetTranscriber = (props: GetTranscriberProps) => Transcriber;

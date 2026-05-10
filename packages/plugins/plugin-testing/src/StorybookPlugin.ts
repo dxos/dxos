@@ -37,3 +37,5 @@ export const StorybookPlugin = Plugin.define<StorybookPluginOptions>(meta).pipe(
   })),
   Plugin.make,
 );
+
+export default StorybookPlugin;

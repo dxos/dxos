@@ -2,76 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
-
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { Annotation, type Obj, Ref } from '@dxos/echo';
-import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 import { Text } from '@dxos/schema';
 
-import { MarkdownBlueprint } from '#blueprints';
 import {
   AnchorSort,
   AppGraphSerializer,
   BlueprintDefinition,
+  CommentConfig,
+  CreateObject,
   MarkdownSettings,
   MarkdownState,
   OperationHandler,
   ReactSurface,
 } from '#capabilities';
 import { meta } from '#meta';
-import { MarkdownOperation } from '#operations';
 import { translations } from '#translations';
 import { Markdown, MarkdownEvents } from '#types';
 
-import { serializer } from './util';
-
 export const MarkdownPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
-  AppPlugin.addMetadataModule({
-    metadata: {
-      id: Markdown.Document.typename,
-      metadata: {
-        // TODO(dmaretskyi): Remove label, icon and iconHue and query them of schema.
-        label: (object: Markdown.Document) => object.name || object.fallbackName,
-        icon: Annotation.IconAnnotation.get(Markdown.Document).pipe(Option.getOrThrow).icon,
-        iconHue: Annotation.IconAnnotation.get(Markdown.Document).pipe(Option.getOrThrow).hue ?? 'white',
-        blueprints: [MarkdownBlueprint.key],
-        graphProps: {
-          managesAutofocus: true,
-        },
-        // TODO(wittjosiah): Move out of metadata.
-        loadReferences: async (doc: Markdown.Document) => await Ref.Array.loadAll<Obj.Unknown>([doc.content]),
-        serializer,
-        // TODO(wittjosiah): Consider how to do generic comments without these.
-        comments: 'anchored',
-        selectionMode: 'multi-range',
-        getAnchorLabel: (doc: Markdown.Document, anchor: string): string | undefined => {
-          if (doc.content) {
-            const [start, end] = anchor.split(':');
-            return getTextInRange(createDocAccessor(doc.content.target!, ['content']), start, end);
-          }
-        },
-        createObject: ((props, options) =>
-          Effect.gen(function* () {
-            const object = Markdown.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              hidden: true,
-              targetNodeId: options.targetNodeId,
-            });
-          })) satisfies CreateObject,
-        scrollToAnchor: MarkdownOperation.ScrollToAnchor,
-      },
-    },
-  }),
+  AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),
   AppPlugin.addSurfaceModule({
@@ -102,3 +56,5 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default MarkdownPlugin;

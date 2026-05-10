@@ -15,3 +15,5 @@ export const CrmPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [ProfileOf.ProfileOf] }),
   Plugin.make,
 );
+
+export default CrmPlugin;

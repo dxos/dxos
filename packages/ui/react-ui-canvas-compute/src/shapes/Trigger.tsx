@@ -53,7 +53,7 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
 
   useEffect(() => {
     if (functionTrigger && !functionTrigger.spec) {
-      Obj.change(functionTrigger, (functionTrigger) => {
+      Obj.update(functionTrigger, (functionTrigger) => {
         functionTrigger.spec = createTriggerSpec({ triggerKind: 'email', spaceId: space?.id }) as Mutable<Trigger.Spec>;
       });
     }
@@ -65,7 +65,7 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
 
   const setKind = (kind: Trigger.Kind) => {
     if (functionTrigger?.spec?.kind !== kind) {
-      Obj.change(functionTrigger!, (obj) => {
+      Obj.update(functionTrigger!, (obj) => {
         obj.spec = createTriggerSpec({ triggerKind: kind, spaceId: space?.id }) as Mutable<Trigger.Spec>;
       });
     }

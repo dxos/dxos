@@ -3,10 +3,12 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
+import { translations as introspectTranslations } from '@dxos/react-ui-introspect/translations';
 
 import { meta } from '#meta';
 
 export const translations = [
+  ...introspectTranslations,
   {
     'en-US': {
       [meta.id]: {
@@ -19,6 +21,7 @@ export const translations = [
         'debug.label': 'Debug',
         'generate-objects.label': 'Generate Objects',
         'debug-app-graph.label': 'App Graph',
+        'debug-tools-explorer.label': 'Tools Explorer',
 
         'settings.wireframe.label': 'Show wireframes.',
         'settings.wireframe.description': 'Overlay wireframe outlines on UI components for debugging layout.',

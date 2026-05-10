@@ -7,6 +7,8 @@ import { defineConfig } from 'vitest/config';
 
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 
+import { TEST_TAGS } from './vitest.tags';
+
 /**
  * Config for the vitest vscode extension.
  */
@@ -16,6 +18,7 @@ export default defineConfig(async () => ({
   },
   test: {
     environment: 'node',
+    tags: TEST_TAGS,
     include: [
       '**/src/**/*.test.{ts,tsx}',
       '**/test/**/*.test.{ts,tsx}',

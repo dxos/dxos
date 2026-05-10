@@ -83,7 +83,7 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
         });
         const gistId = response.data.id;
         if (gistId) {
-          Obj.change(object, (object) => {
+          Obj.update(object, (object) => {
             Obj.getMeta(object).keys.push({ source: 'github.com', id: gistId });
           });
         }

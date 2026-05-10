@@ -14,10 +14,10 @@ import {
   ToolExecutionService,
   ToolResolverService,
 } from '@dxos/ai';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { type AiAssistantError, AiRequest } from '@dxos/assistant';
-import { Trace } from '@dxos/compute';
-import { Operation, OperationRegistry } from '@dxos/compute';
-import { Database, Type } from '@dxos/echo';
+import { Trace, Operation, OperationRegistry } from '@dxos/compute';
+import { Database } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Transcript } from '@dxos/types';
@@ -28,12 +28,12 @@ import { type Meeting } from '#types';
 // TODO(wittjosiah): Also include content of object which are linked to the meeting.
 export const getMeetingContent = async (
   meeting: Meeting.Meeting,
-  resolve: (typename: string) => Record<string, any>,
+  textContentCapabilities: AppCapabilities.TextContent[],
 ) => {
   const notes = await meeting.notes.load();
-  const { getTextContent } = resolve(Type.getTypename(Transcript.Transcript)!);
   const transcript = await meeting.transcript.load();
-  const content = `${await getTextContent(transcript)}\n\n${notes.content}`;
+  const textContent = textContentCapabilities.find(({ id }) => id === Transcript.Transcript.typename);
+  const content = `${await textContent?.getTextContent(transcript)}\n\n${notes.content}`;
   return content;
 };
 

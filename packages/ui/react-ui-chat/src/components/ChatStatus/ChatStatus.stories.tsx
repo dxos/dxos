@@ -60,7 +60,6 @@ const MatrixIcon = () => {
     <Matrix
       classNames='mr-2'
       dim={4}
-      size={3}
       dotSize={3}
       // TODO(burdon): Change with activity?
       count={10}

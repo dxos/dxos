@@ -29,7 +29,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
       yield* Effect.promise(() => space.waitUntilReady());
 
       const collection = Obj.make(Collection.Collection, { objects: [] });
-      Obj.change(space.properties, (obj) => {
+      Obj.update(space.properties, (obj) => {
         obj[Collection.Collection.typename] = Ref.make(collection);
         if (Migrations.versionProperty) {
           obj[Migrations.versionProperty] = Migrations.targetVersion;

@@ -39,7 +39,6 @@ export default Capability.makeModule(
             objects: output.objects,
             parentCollection: output.parentCollection,
             indices: output.indices,
-            nestedObjectsList: output.nestedObjectsList,
             wasActive: output.wasActive,
           }),
           message: (input, _output) => {

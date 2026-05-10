@@ -64,18 +64,13 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
 
   return (
     <Card.Root
-      ref={rootRef}
-      classNames={mx(
-        'absolute p-0 grid grid-rows-[min-content_1fr]',
-        dragState === 'dragging' && 'opacity-50',
-        classNames,
-      )}
+      classNames={mx('absolute', dragState === 'dragging' && 'opacity-50', classNames)}
       style={getBoardRect(board, layout)}
       onClick={() => onSelect?.(item.id)}
+      ref={rootRef}
     >
       <Card.Toolbar>
         <Card.DragHandle ref={dragHandleRef} />
-        {/* TODO(burdon): Title. */}
         <Card.ToolbarSeparator variant='gap' />
         {dragState !== 'dragging' && (
           <Card.ToolbarIconButton
@@ -87,9 +82,7 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
           />
         )}
       </Card.Toolbar>
-      <div role='none' {...{ inert: true }} className='pointer-events-none min-h-0 min-w-0'>
-        {children}
-      </div>
+      {children}
     </Card.Root>
   );
 };

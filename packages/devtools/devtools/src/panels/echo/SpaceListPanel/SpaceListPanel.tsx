@@ -117,7 +117,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
         const contents = new Uint8Array(await backup.arrayBuffer());
         const archive = { filename, contents } satisfies SpaceArchive;
         const imported = await client.spaces.import(archive);
-        Obj.change(imported.properties, (obj) => {
+        Obj.update(imported.properties, (obj) => {
           obj.name = (obj.name ?? '') + ' - IMPORTED';
         });
       } catch (err) {

@@ -68,3 +68,5 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   ),
   Plugin.make,
 );
+
+export default ClientPlugin;

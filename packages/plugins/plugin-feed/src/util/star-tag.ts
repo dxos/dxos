@@ -47,7 +47,7 @@ export const hasMetaTag = (object: Obj.Unknown, tag: Tag.Tag | undefined): boole
 /** Toggles the supplied tag in the object's meta tags. */
 export const toggleMetaTag = (object: Obj.Unknown, tag: Tag.Tag): void => {
   const dxn = Obj.getDXN(tag).toString();
-  Obj.change(object, (object) => {
+  Obj.update(object, (object) => {
     const meta = Obj.getMeta(object);
     const current = meta.tags ?? [];
     meta.tags = current.includes(dxn) ? current.filter((value) => value !== dxn) : [...current, dxn];

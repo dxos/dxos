@@ -53,105 +53,101 @@ const createClient = (signalContext: MemorySignalManagerContext): Client => {
   return new Client({ config, services });
 };
 
-// DX_TEST_TAGS=sync-e2e moon run client:test -- --run test/e2e/edge-invitation-replication.test.ts
-describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))(
-  'edge replication after identity recovery',
-  { timeout: 300_000, retry: 0 },
-  () => {
-    test('data replicates to recovered identity via edge after original peer is destroyed', async () => {
-      const signalContext = new MemorySignalManagerContext();
+// moon run client:test -- --run --tagsFilter=sync-e2e test/e2e/edge-recovery.test.ts
+describe('edge replication after identity recovery', { timeout: 300_000, retry: 0, tags: ['sync-e2e'] }, () => {
+  test('data replicates to recovered identity via edge after original peer is destroyed', async () => {
+    const signalContext = new MemorySignalManagerContext();
 
-      //
-      // Client A: create identity, agent, recovery credential, add data, sync to edge, then destroy.
-      //
-      const clientA = createClient(signalContext);
-      await clientA.initialize();
-      await clientA.addTypes([TestSchema.Expando]);
-      await clientA.halo.createIdentity();
-      log.info('clientA identity created');
+    //
+    // Client A: create identity, agent, recovery credential, add data, sync to edge, then destroy.
+    //
+    const clientA = createClient(signalContext);
+    await clientA.initialize();
+    await clientA.addTypes([TestSchema.Expando]);
+    await clientA.halo.createIdentity();
+    log.info('clientA identity created');
 
-      console.log('### ClientA: creating edge agent');
-      await clientA.services.services.EdgeAgentService!.createAgent(undefined, { timeout: 10_000 });
-      console.log('### ClientA: edge agent created, waiting for HALO feed sync');
-      await sleep(15_000);
+    console.log('### ClientA: creating edge agent');
+    await clientA.services.services.EdgeAgentService!.createAgent(undefined, { timeout: 10_000 });
+    console.log('### ClientA: edge agent created, waiting for HALO feed sync');
+    await sleep(15_000);
 
-      console.log('### ClientA: creating recovery credential');
-      const { recoveryCode } = await clientA.services.services.IdentityService!.createRecoveryCredential({});
-      console.log('### ClientA: recovery credential created');
+    console.log('### ClientA: creating recovery credential');
+    const { recoveryCode } = await clientA.services.services.IdentityService!.createRecoveryCredential({});
+    console.log('### ClientA: recovery credential created');
 
-      const spaceA = await clientA.spaces.create();
-      await spaceA.waitUntilReady();
-      await spaceA.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
+    const spaceA = await clientA.spaces.create();
+    await spaceA.waitUntilReady();
+    await spaceA.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
 
-      console.log('### ClientA: creating test objects');
-      spaceA.db.add(Obj.make(TestSchema.Expando, { name: 'test-object-1', counter: 42 }));
-      spaceA.db.add(Obj.make(TestSchema.Expando, { name: 'test-object-2', counter: 99 }));
-      await spaceA.db.flush();
+    console.log('### ClientA: creating test objects');
+    spaceA.db.add(Obj.make(TestSchema.Expando, { name: 'test-object-1', counter: 42 }));
+    spaceA.db.add(Obj.make(TestSchema.Expando, { name: 'test-object-2', counter: 99 }));
+    await spaceA.db.flush();
 
-      console.log('### ClientA: waiting for sync to edge');
-      await waitForSync(spaceA.db);
-      await sleep(1_000);
-      console.log('### ClientA: synced to edge');
+    console.log('### ClientA: waiting for sync to edge');
+    await waitForSync(spaceA.db);
+    await sleep(1_000);
+    console.log('### ClientA: synced to edge');
 
-      const hostSpaceId = spaceA.id;
+    const hostSpaceId = spaceA.id;
 
-      // Fully destroy Client A — no peer available.
-      console.log('### ClientA: destroying');
-      await clientA.destroy();
-      console.log('### ClientA: destroyed\n');
+    // Fully destroy Client A — no peer available.
+    console.log('### ClientA: destroying');
+    await clientA.destroy();
+    console.log('### ClientA: destroyed\n');
 
-      //
-      // Client B: fresh client, recover identity from edge.
-      //
-      const clientB = createClient(signalContext);
-      await clientB.initialize();
-      await clientB.addTypes([TestSchema.Expando]);
-      log.info('clientB initialized (no identity yet)');
+    //
+    // Client B: fresh client, recover identity from edge.
+    //
+    const clientB = createClient(signalContext);
+    await clientB.initialize();
+    await clientB.addTypes([TestSchema.Expando]);
+    log.info('clientB initialized (no identity yet)');
 
-      console.log('### ClientB: recovering identity');
-      await clientB.halo.recoverIdentity({ recoveryCode: recoveryCode! });
-      console.log('### ClientB: identity recovered');
+    console.log('### ClientB: recovering identity');
+    await clientB.halo.recoverIdentity({ recoveryCode: recoveryCode! });
+    console.log('### ClientB: identity recovered');
 
-      // Wait for spaces to appear after recovery.
-      console.log('### ClientB: waiting for spaces');
-      await sleep(5_000);
+    // Wait for spaces to appear after recovery.
+    console.log('### ClientB: waiting for spaces');
+    await sleep(5_000);
 
-      const spaces = clientB.spaces.get();
-      console.log(
-        '### ClientB: spaces',
-        spaces.map((space) => space.id),
-      );
+    const spaces = clientB.spaces.get();
+    console.log(
+      '### ClientB: spaces',
+      spaces.map((space) => space.id),
+    );
 
-      const recoveredSpace = spaces.find((space) => space.id === hostSpaceId);
-      expect(recoveredSpace, `Expected to find space ${hostSpaceId}`).to.exist;
+    const recoveredSpace = spaces.find((space) => space.id === hostSpaceId);
+    expect(recoveredSpace, `Expected to find space ${hostSpaceId}`).to.exist;
 
-      console.log('### ClientB: waiting for space ready');
-      await Promise.race([
-        recoveredSpace!.waitUntilReady(),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('recoveredSpace.waitUntilReady() timed out after 60s')), 60_000),
-        ),
-      ]);
-      log.info('clientB space ready', { spaceId: recoveredSpace!.id });
+    console.log('### ClientB: waiting for space ready');
+    await Promise.race([
+      recoveredSpace!.waitUntilReady(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('recoveredSpace.waitUntilReady() timed out after 60s')), 60_000),
+      ),
+    ]);
+    log.info('clientB space ready', { spaceId: recoveredSpace!.id });
 
-      console.log('### ClientB: waiting for sync from edge');
-      await waitForSync(recoveredSpace!.db);
-      console.log('### ClientB: synced from edge');
+    console.log('### ClientB: waiting for sync from edge');
+    await waitForSync(recoveredSpace!.db);
+    console.log('### ClientB: synced from edge');
 
-      const objects = await recoveredSpace!.db.query(Filter.type(TestSchema.Expando)).run();
-      console.log(
-        '### ClientB: objects found',
-        objects.map((obj: any) => ({ name: obj.name, counter: obj.counter })),
-      );
+    const objects = await recoveredSpace!.db.query(Filter.type(TestSchema.Expando)).run();
+    console.log(
+      '### ClientB: objects found',
+      objects.map((obj: any) => ({ name: obj.name, counter: obj.counter })),
+    );
 
-      expect(objects.length).toBeGreaterThanOrEqual(2);
-      expect(objects.some((obj: any) => obj.name === 'test-object-1' && obj.counter === 42)).toBe(true);
-      expect(objects.some((obj: any) => obj.name === 'test-object-2' && obj.counter === 99)).toBe(true);
+    expect(objects.length).toBeGreaterThanOrEqual(2);
+    expect(objects.some((obj: any) => obj.name === 'test-object-1' && obj.counter === 42)).toBe(true);
+    expect(objects.some((obj: any) => obj.name === 'test-object-2' && obj.counter === 99)).toBe(true);
 
-      await clientB.destroy();
-    });
-  },
-);
+    await clientB.destroy();
+  });
+});
 
 const waitForSync = async (db: Database.Database, timeout = 60_000) => {
   const start = performance.now();

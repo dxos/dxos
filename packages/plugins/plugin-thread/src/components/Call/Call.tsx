@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect-atom/atom-react';
-import React, { type FC, type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -21,7 +21,7 @@ import { Toolbar, type ToolbarProps } from './Toolbar';
 
 type CallRootProps = PropsWithChildren<ThemedClassName>;
 
-const CallRoot: FC<CallRootProps> = ({ children }) => {
+const CallRoot = ({ children }: CallRootProps) => {
   return <div className='relative dx-container flex flex-col'>{children}</div>;
 };
 
@@ -33,7 +33,7 @@ CallRoot.displayName = 'CallRoot';
 
 type CallAudioProps = {};
 
-const CallAudio: FC<CallAudioProps> = () => {
+const CallAudio = (_props: CallAudioProps) => {
   const call = useCapability(ThreadCapabilities.CallManager);
   const audioTracksToPlay = useAtomValue(call.audioTracksToPlayAtom);
 
@@ -50,7 +50,7 @@ type CallGridProps = {
   fullscreen?: boolean;
 };
 
-const CallGrid: FC<CallGridProps> = ({ fullscreen }) => {
+const CallGrid = ({ fullscreen }: CallGridProps) => {
   const debug = useDebugMode();
   const call = useCapability(ThreadCapabilities.CallManager);
   const self = useAtomValue(call.selfAtom);
@@ -71,7 +71,7 @@ CallGrid.displayName = 'CallGrid';
 
 type CallToolbarProps = Pick<ToolbarProps, 'channel' | 'onLeave'>;
 
-const CallToolbar: FC<CallToolbarProps> = (props) => {
+const CallToolbar = (props: CallToolbarProps) => {
   return (
     <div className='absolute bottom-0 left-0 right-0 flex justify-center'>
       <Toolbar isInRoom {...props} />

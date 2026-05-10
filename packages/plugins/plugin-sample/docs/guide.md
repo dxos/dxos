@@ -39,7 +39,7 @@ See [Operations API](../../../sdk/app-toolkit/docs/operations-api.md) for more d
 
 - [`src/operations/definitions.ts`](../src/operations/definitions.ts) — Operation contracts with `Operation.make()`.
 - [`src/operations/create-sample-item.ts`](../src/operations/create-sample-item.ts) — Handler using `Operation.withHandler()`.
-- [`src/operations/update-status.ts`](../src/operations/update-status.ts) — Handler that mutates an ECHO object via `Obj.change()`.
+- [`src/operations/update-status.ts`](../src/operations/update-status.ts) — Handler that mutates an ECHO object via `Obj.update()`.
 - [`src/operations/index.ts`](../src/operations/index.ts) — Lazy handler registration with `OperationHandlerSet.lazy()`.
 
 ## Surfaces

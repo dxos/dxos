@@ -78,10 +78,10 @@ describe('Browser Automation', () => {
       },
       Effect.provide(AiServiceLayer),
       TestHelpers.provideTestContext,
-      TestHelpers.taggedTest('llm'),
     ),
     {
       timeout: 120_000,
+      tags: ['llm'],
     },
   );
 
@@ -139,10 +139,10 @@ describe('Browser Automation', () => {
       },
       Effect.provide(AiServiceLayer),
       TestHelpers.provideTestContext,
-      TestHelpers.taggedTest('llm'),
     ),
     {
       timeout: 120_000,
+      tags: ['llm'],
     },
   );
 });

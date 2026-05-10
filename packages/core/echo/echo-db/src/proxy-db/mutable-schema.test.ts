@@ -60,7 +60,7 @@ describe('EchoSchema', () => {
     }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
 
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
-    Obj.change(instanceWithSchemaRef, (instanceWithSchemaRef) => {
+    Obj.update(instanceWithSchemaRef, (instanceWithSchemaRef) => {
       instanceWithSchemaRef.schema = Ref.make(schema);
     });
     const schemaWithId = GeneratedSchema.annotations({
@@ -95,7 +95,7 @@ describe('EchoSchema', () => {
       field: Schema.String,
     }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
-    Obj.change(instanceWithSchemaRef, (instanceWithSchemaRef) => {
+    Obj.update(instanceWithSchemaRef, (instanceWithSchemaRef) => {
       instanceWithSchemaRef.schemaArray!.push(Ref.make(schema));
     });
     expect(instanceWithSchemaRef.schemaArray![0].target!.typename).to.eq(GeneratedSchema.typename);
@@ -106,14 +106,14 @@ describe('EchoSchema', () => {
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
     const object = Obj.make(schema, {});
     schema.addFields({ field1: Schema.String });
-    Obj.change(object, (object) => {
+    Obj.update(object, (object) => {
       object.field1 = 'works';
     });
-    Obj.change(object, (object) => {
+    Obj.update(object, (object) => {
       object.field1 = undefined;
     });
     expect(() => {
-      Obj.change(object, (object) => {
+      Obj.update(object, (object) => {
         object.field1 = 42;
       });
     }).to.throw();

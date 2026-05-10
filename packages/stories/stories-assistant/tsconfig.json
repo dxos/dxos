@@ -49,19 +49,22 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/compute/assistant"
     },
     {
-      "path": "../../core/assistant-toolkit"
+      "path": "../../core/compute/assistant-toolkit"
     },
     {
-      "path": "../../core/compute"
+      "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/conductor"
+      "path": "../../core/compute/conductor"
+    },
+    {
+      "path": "../../core/compute/functions-runtime"
     },
     {
       "path": "../../core/echo/echo"
@@ -74,9 +77,6 @@
     },
     {
       "path": "../../core/echo/echo-query"
-    },
-    {
-      "path": "../../core/functions-runtime"
     },
     {
       "path": "../../core/mesh/edge-client"
@@ -118,6 +118,9 @@
       "path": "../../plugins/plugin-inbox"
     },
     {
+      "path": "../../plugins/plugin-integration"
+    },
+    {
       "path": "../../plugins/plugin-map"
     },
     {
@@ -152,9 +155,6 @@
     },
     {
       "path": "../../plugins/plugin-thread"
-    },
-    {
-      "path": "../../plugins/plugin-token-manager"
     },
     {
       "path": "../../plugins/plugin-transcription"
@@ -224,9 +224,6 @@
     },
     {
       "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-search"
     },
     {
       "path": "../../ui/react-ui-sfx"
