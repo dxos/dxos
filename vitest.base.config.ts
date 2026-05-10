@@ -180,7 +180,7 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       name: 'node',
       environment,
       retry,
-      testTimeout: timeout,
+      testTimeout: timeout ?? (isDebug ? 3600_000 : undefined),
       include: [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',
