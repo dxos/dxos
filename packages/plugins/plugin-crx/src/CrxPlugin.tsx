@@ -20,6 +20,14 @@ const SUCCESS_TOAST_BY_KIND: Record<string, string> = {
   note: 'toast.note.title',
 };
 
+const ERROR_TOAST_BY_CODE: Record<string, string> = {
+  invalidPayload: 'toast.error.invalidPayload.message',
+  unsupportedVersion: 'toast.error.unsupportedVersion.message',
+  unsupportedKind: 'toast.error.unsupportedKind.message',
+  noSpace: 'toast.error.noSpace.message',
+  internal: 'toast.error.internal.message',
+};
+
 export const CrxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSettingsModule({ activate: CrxSettings }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
@@ -40,10 +48,11 @@ export const CrxPlugin = Plugin.define(meta).pipe(
             title: [key, { ns: meta.id }],
           });
         } else {
+          const errorKey = ERROR_TOAST_BY_CODE[ack.error] ?? 'toast.error.internal.message';
           void invoker.invokePromise(LayoutOperation.AddToast, {
             id: `${meta.id}.error-${Date.now()}`,
             title: ['toast.error.title', { ns: meta.id }],
-            description: [`toast.error.${ack.error}.message`, { ns: meta.id }],
+            description: [errorKey, { ns: meta.id }],
           });
         }
       });
