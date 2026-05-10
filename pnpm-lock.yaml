@@ -6658,6 +6658,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client
+      '@dxos/plugin-game':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-game
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../../plugins/plugin-inbox
