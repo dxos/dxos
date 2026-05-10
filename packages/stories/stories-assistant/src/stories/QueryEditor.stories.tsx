@@ -31,7 +31,7 @@ const DefaultStory = ({ value: valueProp }: QueryEditorProps) => {
   const model = useGraphModel(space, filter);
 
   return (
-    <div role='none' className='grid grid-cols-2 grow divide-x divide-subdued-separator overflow-hidden'>
+    <div className='grid grid-cols-2 grow divide-x divide-subdued-separator overflow-hidden'>
       <div className='flex flex-col overflow-hidden'>
         <QueryEditor classNames='p-2 w-full border-b border-subdued-separator' db={space?.db} onChange={setQuery} />
         <ScrollArea.Root orientation='vertical'>

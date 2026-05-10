@@ -87,7 +87,6 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       <Tabs.Root orientation='vertical' value={internalValue} classNames='contents'>
         <div
           data-tauri-drag-region
-          role='none'
           style={iconSize(5)}
           className={mx(
             'absolute z-20 inset-y-0 end-0 w-(--dx-r0-size)!',
@@ -120,14 +119,13 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
           </Tabs.Tablist>
           {!hoistStatusbar && (
             <div
-              role='none'
               className='grid grid-cols-1 auto-rows-(--dx-rail-item) py-0.5 gap-0.5 overflow-y-auto scrollbar-none'
               style={iconSize(4)}
             >
               <Surface.Surface role='status-indicator' />
             </div>
           )}
-          <div role='none' className='hidden lg:grid grid-cols-1 auto-rows-(--dx-rail-action) p-1'>
+          <div className='hidden lg:grid grid-cols-1 auto-rows-(--dx-rail-action) p-1'>
             <ToggleComplementarySidebarButton />
           </div>
         </div>

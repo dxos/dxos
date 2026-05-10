@@ -160,7 +160,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
   }, [space, updateColumns]);
 
   return (
-    <div role='none' className={mx('py-form-padding overflow-y-auto', classNames)}>
+    <div className={mx('py-form-padding overflow-y-auto', classNames)}>
       <h2 className='text-sm text-description py-1'>{t('views.label')}</h2>
 
       <List.Root<Pipeline.Column>
@@ -179,7 +179,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
                   classNames={listItemGrid}
                   aria-expanded={expandedId === column.view.dxn.toString()}
                 >
-                  <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-xs cursor-pointer min-h-10')}>
+                  <div className={mx(subtleHover, listItemGrid, 'rounded-xs cursor-pointer min-h-10')}>
                     <List.ItemDragHandle />
                     <List.ItemTitle onClick={() => handleToggleField(column)}>
                       {column.name || t('untitled-view.title')}
@@ -203,7 +203,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
                     />
                   </div>
                   {expandedId === column.view.dxn.toString() && column?.view.target && (
-                    <div role='none' className='col-span-5 my-2 border border-separator rounded-md'>
+                    <div className='col-span-5 my-2 border border-separator rounded-md'>
                       <Form.Root
                         schema={ColumnFormSchema}
                         values={column}
@@ -234,7 +234,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
         )}
       </List.Root>
 
-      <div role='none' className='my-form-padding'>
+      <div className='my-form-padding'>
         <IconButton icon='ph--plus--regular' label={t('add-view.label')} onClick={handleAdd} classNames='w-full' />
       </div>
     </div>

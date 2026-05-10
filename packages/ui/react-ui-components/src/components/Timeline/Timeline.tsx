@@ -338,7 +338,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                       style={{ height: `${options.lineHeight}px` }}
                       onClick={handleClick}
                     >
-                      <div role='none' className='px-1'>
+                      <div className='px-1'>
                         <LineVector
                           branchLane={branchLane}
                           laneCount={laneCount}
@@ -365,7 +365,6 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                           <div />
                         ))}
                       <div
-                        role='none'
                         className={mx(
                           'text-sm truncate cursor-pointer text-subdued __group-hover:text-base-surface-text',
                           hasLink && 'underline decoration-dotted underline-offset-2',

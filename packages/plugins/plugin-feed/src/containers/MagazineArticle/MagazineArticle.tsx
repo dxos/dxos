@@ -268,7 +268,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       </Panel.Toolbar>
       <Panel.Content>
         {posts.length === 0 ? (
-          <div role='none' className='flex items-center justify-center h-full text-subdued text-sm'>
+          <div className='flex items-center justify-center h-full text-subdued text-sm'>
             {t('empty-magazine.message')}
           </div>
         ) : (

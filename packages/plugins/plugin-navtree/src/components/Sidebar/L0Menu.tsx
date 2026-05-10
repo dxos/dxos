@@ -142,7 +142,6 @@ const L0ItemRoot = memo(
 
 export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) => (
   <div
-    role='none'
     className={mx(
       'hidden group-aria-selected/l0item:block absolute start-0 h-6 w-1.5 bg-accent-surface rounded-sm',
       classNames,
@@ -218,7 +217,6 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
   return (
     <L0ItemRoot ref={itemElement} item={item} parent={parent} path={path} onMouseEnter={handleMouseEnter}>
       <div
-        role='none'
         data-frame={true}
         {...(hue && { style: { background: `var(--color-${hue}-surface)` } })}
         className={mx(
@@ -328,7 +326,7 @@ export const L0Menu = ({
       {/* TODO(wittjosiah): Use L0Item trigger. */}
       <Menu.Root onAction={handleAction}>
         <Menu.Trigger asChild data-testid='spacePlugin.addSpace'>
-          <div role='none' className='grid place-items-center'>
+          <div className='grid place-items-center'>
             <IconButton variant='ghost' icon='ph--list--regular' iconOnly label={t('app-menu.label')} />
           </div>
         </Menu.Trigger>
@@ -352,14 +350,14 @@ export const L0Menu = ({
       </ScrollArea.Root>
 
       {/* Actions. */}
-      <div role='none' className='grid grid-cols-1 auto-rows-(--dx-rail-action) pt-2'>
+      <div className='grid grid-cols-1 auto-rows-(--dx-rail-action) pt-2'>
         {pinnedItems.map((item) => (
           <L0Item key={item.id} item={item} parent={parent} path={path} pinned />
         ))}
       </div>
 
       {userAccountItem && (
-        <div role='none' className='grid dx-app-no-drag'>
+        <div className='grid dx-app-no-drag'>
           <L0ItemRoot key={userAccountItem.id} item={userAccountItem} parent={parent} path={path}>
             <UserAccountAvatar
               userId={userAccountItem.properties.userId}

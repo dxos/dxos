@@ -76,7 +76,7 @@ export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
         </NaturalChatStatus.Icon>
       )}
       {show && (
-        <div role='none' className='flex items-center'>
+        <div className='flex items-center'>
           {requestTiming && (
             <NaturalChatStatus.Text>
               <Elapsed timing={requestTiming} />

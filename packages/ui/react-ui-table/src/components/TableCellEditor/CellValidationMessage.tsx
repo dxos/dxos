@@ -27,7 +27,6 @@ export const CellValidationMessage = ({
 
   return (
     <div
-      role='none'
       className={`absolute ${bgClass} ${textClass} rounded-h-sm text-xs p-1`}
       style={{
         ...{ '--dx-grid-cell-width': `${box?.inlineSize ?? 200}px` },

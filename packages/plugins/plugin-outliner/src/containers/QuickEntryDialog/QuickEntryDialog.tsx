@@ -51,7 +51,7 @@ const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps)
   }, [onSave, continueRef]);
 
   return (
-    <div role='none' className='grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding'>
+    <div className='grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding'>
       {onCancel && (
         <IconButton
           icon='ph--x--regular'

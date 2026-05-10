@@ -104,7 +104,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
   }
 
   return (
-    <div role='none' className='dx-expander flex flex-col'>
+    <div className='dx-expander flex flex-col'>
       <Input.Root>
         <Input.Label classNames='mt-form-gap'>{t('subscriptions.label')}</Input.Label>
       </Input.Root>

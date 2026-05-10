@@ -156,7 +156,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
   };
 
   return (
-    <div role='none' className={mx('dx-container flex flex-col', props.classNames)}>
+    <div className={mx('dx-container flex flex-col', props.classNames)}>
       <MessageThread ref={scrollerRef} history={history} />
 
       <Toolbar.Root>

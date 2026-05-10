@@ -41,7 +41,7 @@ export const CommentsPanel = ({ anchors, currentId, showResolvedThreads, ...prop
 
   if (filteredAnchors.length === 0) {
     return (
-      <div role='none' className='p-form-padding'>
+      <div className='p-form-padding'>
         <Message.Root>
           <Message.Title>
             <Trans

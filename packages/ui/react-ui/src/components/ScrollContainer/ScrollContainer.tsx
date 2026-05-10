@@ -276,7 +276,6 @@ const Fade = () => {
 
   return (
     <div
-      role='none'
       data-visible={overflow}
       className={mx(
         // NOTE: Gradients may not be visible with dark reader extensions.
@@ -303,7 +302,6 @@ const ScrollDownButton = ({ classNames }: ScrollDownButtonProps) => {
 
   return (
     <div
-      role='none'
       className={mx(
         'absolute bottom-2 right-4 opacity-100 transition-opacity duration-300',
         pinned && 'opacity-0',

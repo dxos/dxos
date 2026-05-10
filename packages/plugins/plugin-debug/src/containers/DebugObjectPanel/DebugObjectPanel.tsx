@@ -35,7 +35,7 @@ export const DebugObjectPanel = ({ role, companionTo }: DebugObjectPanelProps) =
           <Toolbar.Root />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <div role='none' className={mx('grid divide-y divide-separator', db && 'grid-rows-[1fr_2fr]')}>
+          <div className={mx('grid divide-y divide-separator', db && 'grid-rows-[1fr_2fr]')}>
             {db && (
               <ScrollArea.Root>
                 <ScrollArea.Viewport>
