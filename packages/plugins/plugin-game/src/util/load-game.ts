@@ -11,10 +11,12 @@ import { Game } from '../types/Game';
 
 export class GameVariantMismatchError extends Error {
   readonly _tag = 'GameVariantMismatchError';
-  constructor(readonly gameId: string, readonly expectedTypename: string, readonly actualTypename: string) {
-    super(
-      `Game ${gameId} variant typename mismatch: expected ${expectedTypename}, got ${actualTypename}.`,
-    );
+  constructor(
+    readonly gameId: string,
+    readonly expectedTypename: string,
+    readonly actualTypename: string,
+  ) {
+    super(`Game ${gameId} variant typename mismatch: expected ${expectedTypename}, got ${actualTypename}.`);
   }
 }
 

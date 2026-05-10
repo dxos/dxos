@@ -41,9 +41,11 @@ export const Game = Schema.Struct({
   players: Schema.mutable(Schema.Array(Player))
     .annotations({ description: 'Players in the game.' })
     .pipe(FormInputAnnotation.set(false), Schema.optional),
-  variant: Ref.Ref(Obj.Unknown).annotations({
-    description: 'Reference to variant-specific state object (e.g. Chess.State, TicTacToe.State).',
-  }),
+  variant: Ref.Ref(Obj.Unknown)
+    .annotations({
+      description: 'Reference to variant-specific state object (e.g. Chess.State, TicTacToe.State).',
+    })
+    .pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.game',

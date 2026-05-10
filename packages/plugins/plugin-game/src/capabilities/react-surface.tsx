@@ -18,7 +18,10 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'game',
-        filter: AppSurface.oneOf(AppSurface.object(AppSurface.Article, Game), AppSurface.object(AppSurface.Section, Game)),
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Game),
+          AppSurface.object(AppSurface.Section, Game),
+        ),
         component: ({ data, role }) => (
           <GameArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),

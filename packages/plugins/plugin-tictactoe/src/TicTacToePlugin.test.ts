@@ -21,9 +21,7 @@ describe('TicTacToePlugin', () => {
     });
 
     // Modules expected to be active after a normal startup.
-    expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('game-variant'), moduleId('schema')]),
-    );
+    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('game-variant'), moduleId('schema')]));
 
     // Operation handlers are not loaded on startup — SetupOperationHandler fires lazily when an operation is invoked.
     await harness.fire(ActivationEvents.SetupOperationHandler);
