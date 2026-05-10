@@ -14,4 +14,5 @@ export const meta: Plugin.Meta = {
   `,
   icon: 'ph--atom--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-automation',
+  tags: ['system'],
 };

@@ -100,6 +100,10 @@ export type PluginConfig = State & {
   isMobile?: boolean;
 };
 
+/**
+ * System plugins.
+ */
+// TODO(burdon): Replace this hardcoded list by filtering plugins on `meta.tags.includes('system')`.
 export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): string[] => {
   const layoutPluginId = isPopover
     ? SpotlightPlugin.meta.id
@@ -119,11 +123,9 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     OperationPlugin.meta.id,
     NavTreePlugin.meta.id,
     ObservabilityPlugin.meta.id,
-    PreviewPlugin.meta.id,
     !isTauri && isPwa && PwaPlugin.meta.id,
     RegistryPlugin.meta.id,
     RuntimePlugin.meta.id,
-    SearchPlugin.meta.id,
     SettingsPlugin.meta.id,
     SpacePlugin.meta.id,
     StatusBarPlugin.meta.id,
@@ -142,6 +144,8 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     KanbanPlugin.meta.id,
     MarkdownPlugin.meta.id,
     MasonryPlugin.meta.id,
+    PreviewPlugin.meta.id,
+    SearchPlugin.meta.id,
     SheetPlugin.meta.id,
     SketchPlugin.meta.id,
     TablePlugin.meta.id,

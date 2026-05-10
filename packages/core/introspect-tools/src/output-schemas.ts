@@ -109,6 +109,14 @@ export const PluginSchema = Schema.Struct({
   description: Schema.optional(Schema.String),
   icon: Schema.optional(Schema.String),
   iconHue: Schema.optional(Schema.String),
+  /** Static tags read from `meta.tags` (e.g. `['labs']`). Empty array if absent. */
+  tags: Schema.Array(Schema.String),
+  /**
+   * Ids of other plugins this plugin depends on, derived from its package's
+   * `workspace:*` dependencies. Sorted for deterministic output. Empty array
+   * if the plugin's package has no dependencies on other plugin packages.
+   */
+  dependsOn: Schema.Array(PluginIdSchema),
   /** Source location of the `meta` declaration. */
   metaLocation: SourceLocationSchema,
 });

@@ -12,4 +12,5 @@ export const meta: Plugin.Meta = {
     Progressive Web App capabilities enabling offline functionality and app-like experience.
     Install to home screen and use the workspace without internet connection.
   `,
+  tags: ['system'],
 };
