@@ -72,14 +72,16 @@ export const extractPlugins = (rootPath: string, packages: readonly PackageLike[
   for (const record of records) {
     const pkg = packageByName.get(record.plugin.package);
     const deps = pkg?.workspaceDependencies ?? [];
-    const dependsOn: PluginId[] = [];
+    // Use a Set so duplicate dep entries (defensive — `discoverPackages`
+    // already dedupes via Object.entries) can't produce duplicate edges.
+    const dependsOnSet = new Set<PluginId>();
     for (const depName of deps) {
       const depPluginId = pluginIdByPackage.get(depName);
       if (depPluginId && depPluginId !== record.plugin.id) {
-        dependsOn.push(depPluginId);
+        dependsOnSet.add(depPluginId);
       }
     }
-    dependsOn.sort();
+    const dependsOn = [...dependsOnSet].sort();
     // `Plugin.dependsOn` is `readonly` in the schema-derived type — replace
     // the plugin object instead of mutating it in place.
     record.plugin = { ...record.plugin, dependsOn };
