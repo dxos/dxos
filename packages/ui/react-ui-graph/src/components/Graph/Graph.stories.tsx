@@ -53,8 +53,8 @@ type DefaultStoryProps = GraphProps & {
   debug?: boolean;
   grid?: boolean | SVGGridProps;
   inspect?: boolean;
-  singleSelect?: boolean;
   graph: () => Graph.Any;
+  selectionMode?: SelectionMode;
   projectorType?: ProjectorType;
   projectorOptions?:
     | GraphForceProjectorOptions
@@ -67,7 +67,7 @@ const DefaultStory = ({
   debug,
   grid,
   inspect,
-  singleSelect,
+  selectionMode,
   graph: _graph,
   projectorType: _projectorType = 'force',
   projectorOptions,
@@ -78,11 +78,11 @@ const DefaultStory = ({
   const registry = useContext(RegistryContext);
 
   // Models.
+  const selection = useMemo(() => new SelectionModel({ mode: selectionMode }), [selectionMode]);
   const [model, setModel] = useState<GraphModel.ReactiveGraphModel | undefined>(() => {
     const graph = _graph?.();
     return graph ? new TestGraphModel(registry, graph) : undefined;
   });
-  const selection = useMemo(() => new SelectionModel(singleSelect), [singleSelect]);
 
   // Projector.
   const [projectorType, setProjectorType] = useState<ProjectorType>(_projectorType);

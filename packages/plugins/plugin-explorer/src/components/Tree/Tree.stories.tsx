@@ -3,53 +3,58 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useState } from 'react';
+import * as Effect from 'effect/Effect';
+import React from 'react';
 
-import { invariant } from '@dxos/invariant';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { Filter } from '@dxos/echo';
+import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
-import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Tree, type TreeComponentProps } from './Tree';
-import { Tree as TreeModel, TreeType } from './types';
-
-// TODO(burdon): Storybook for Graph/Tree/Plot (generics); incl. GraphModel.
-// TODO(burdon): Type for all Explorer components (Space, Object, Query, etc.) incl.
+import { createTree } from './testing';
+import { TreeType } from './types';
 
 random.seed(1);
 
-type ComponentProps = ClientRepeatedComponentProps & { type?: TreeComponentProps<any>['variant'] };
+type StoryArgs = { variant?: TreeComponentProps<any>['variant'] };
 
-const Component = ({ type }: ComponentProps) => {
-  const client = useClient();
-  const space = client.spaces.get()[0];
-  invariant(space, 'Tree story requires at least one space');
-  const [object, setObject] = useState<TreeType>();
-  useEffect(() => {
-    setTimeout(() => {
-      const tree = space.db.add(TreeModel.create());
-      setObject(tree);
-    });
-  }, []);
-
-  if (!object) {
-    return null;
+const DefaultStory = ({ variant }: StoryArgs) => {
+  const [space] = useSpaces();
+  const [tree] = useQuery(space?.db, Filter.type(TreeType));
+  if (!space || !tree) {
+    return <Loading data={{ space: !!space, tree: !!tree }} />;
   }
 
-  return <Tree space={space} selected={object?.id} variant={type} />;
-};
-
-const DefaultStory = () => {
-  return <ClientRepeater component={Component} types={[TreeType]} createSpace />;
+  return <Tree space={space} selected={tree.id} variant={variant} />;
 };
 
 const meta = {
   title: 'plugins/plugin-explorer/components/Tree',
   component: Tree as any,
   render: DefaultStory,
-  decorators: [withRegistry, withTheme(), withLayout()],
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [TreeType],
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              const { personalSpace } = yield* initializeIdentity(client);
+              const tree = createTree([3, [2, 4], [1, 3]]).tree;
+              personalSpace.db.add(tree);
+            }),
+        }),
+      ],
+    }),
+  ],
   parameters: {
     layout: 'fullscreen',
   },
@@ -61,18 +66,18 @@ type Story = StoryObj<typeof meta>;
 
 export const Tidy: Story = {
   args: {
-    type: 'tidy',
+    variant: 'tidy',
   },
 };
 
 export const Radial: Story = {
   args: {
-    type: 'radial',
+    variant: 'radial',
   },
 };
 
 export const Edge: Story = {
   args: {
-    type: 'edge',
+    variant: 'edge',
   },
 };

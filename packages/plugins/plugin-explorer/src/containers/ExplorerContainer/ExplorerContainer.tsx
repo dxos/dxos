@@ -13,7 +13,7 @@ import { getSpace, useObject } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 
-import { D3ForceGraph } from '#components';
+import { ForceGraph } from '#components';
 import { useGraphModel } from '#hooks';
 
 export type ExplorerContainerProps = AppSurface.ObjectArticleProps<View.View>;
@@ -46,7 +46,7 @@ export const ExplorerContainer = ({ role, subject, attendableId: _attendableId }
         </Panel.Toolbar>
       )}
       <Panel.Content asChild>
-        <D3ForceGraph model={model} match={match} />
+        <ForceGraph model={model} match={match} />
       </Panel.Content>
     </Panel.Root>
   );

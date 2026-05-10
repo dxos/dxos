@@ -40,6 +40,21 @@
       "port": 9009
     },
     {
+      "name": "plugin-explorer-storybook",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@dxos/plugin-explorer",
+        "exec",
+        "storybook",
+        "dev",
+        "--port",
+        "9010",
+        "--no-open"
+      ],
+      "port": 9010
+    },
+    {
       "name": "docs",
       "runtimeExecutable": "moon",
       "runtimeArgs": ["run", "docs:serve"],
