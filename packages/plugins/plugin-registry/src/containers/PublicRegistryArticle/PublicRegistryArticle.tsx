@@ -7,17 +7,16 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type Registry, Plugin, UrlLoader } from '@dxos/app-framework';
-import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
+import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
-import { ScrollArea, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { useTranslation } from '@dxos/react-ui';
+import { composable } from '@dxos/ui-theme';
 
-import { PluginList } from '#components';
-import { getPluginPath, meta } from '#meta';
+import { meta } from '#meta';
 
 import { useAutoTags, useRegistryPlugins, useUpdateAvailableIds } from '../../hooks';
+import { BaseRegistryArticle } from '../BaseRegistryArticle';
 
 const sortEntries = (a: Registry.Plugin, b: Registry.Plugin) => (a.name ?? a.id).localeCompare(b.name ?? b.id);
 
@@ -26,8 +25,8 @@ const sortPlugins = (a: Plugin.Plugin, b: Plugin.Plugin) =>
 
 /**
  * Turns a registry catalog entry into a minimal Plugin object so we can reuse
- * {@link PluginList} for rendering. The synthesized plugin has no modules — it
- * exists only for display until the user installs it.
+ * {@link BaseRegistryArticle} for rendering. The synthesized plugin has no
+ * modules — it exists only for display until the user installs it.
  */
 const toDisplayPlugin = (plugin: Registry.Plugin): Plugin.Plugin =>
   ({
@@ -46,20 +45,18 @@ const toDisplayPlugin = (plugin: Registry.Plugin): Plugin.Plugin =>
     modules: [],
   }) as Plugin.Plugin;
 
-export type PluginRegistryArticleProps = {
+export type PublicRegistryArticleProps = {
   id: string;
 };
 
-export const PluginRegistryArticle = composable<HTMLDivElement, PluginRegistryArticleProps>(
+export const PublicRegistryArticle = composable<HTMLDivElement, PublicRegistryArticleProps>(
   ({ id, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const manager = usePluginManager();
-    const { invoke, invokePromise } = useOperationInvoker();
+    const { invoke } = useOperationInvoker();
     const { entries, loading, error } = useRegistryPlugins();
-    const enabled = useAtomValue(manager.enabled);
     const plugins = useAtomValue(manager.plugins);
     const installedIds = useMemo(() => plugins.map((plugin) => plugin.meta.id), [plugins]);
-    const allSettings = useCapabilities(AppCapabilities.Settings);
     const extraTagsById = useAutoTags(entries);
 
     // Snapshot of installed plugin ids at mount time. Used to sort installed
@@ -108,23 +105,6 @@ export const PluginRegistryArticle = composable<HTMLDivElement, PluginRegistryAr
       });
       return installedFirst;
     }, [sortedEntries, installedSnapshot, plugins]);
-
-    const handleChange = useCallback(
-      (pluginId: string, nextEnabled: boolean) =>
-        Effect.gen(function* () {
-          if (nextEnabled) {
-            yield* manager.enable(pluginId);
-          } else {
-            yield* manager.disable(pluginId);
-          }
-
-          yield* invoke(ObservabilityOperation.SendEvent, {
-            name: 'plugins.toggle',
-            properties: { plugin: pluginId, enabled: nextEnabled, source: 'registry' },
-          });
-        }).pipe(runAndForwardErrors),
-      [invoke, manager],
-    );
 
     const handleInstall = useCallback(
       (pluginId: string) => {
@@ -181,56 +161,32 @@ export const PluginRegistryArticle = composable<HTMLDivElement, PluginRegistryAr
       [invoke, manager, moduleUrlById, versionById],
     );
 
-    const handleClick = useCallback(
-      (pluginId: string) =>
-        invokePromise(LayoutOperation.Open, {
-          subject: [getPluginPath(pluginId)],
-          pivotId: id,
-          positioning: 'end',
-        }),
-      [invokePromise, id],
-    );
-
-    const hasSettings = useCallback(
-      (pluginId: string) => allSettings.some((setting) => setting.prefix === pluginId),
-      [allSettings],
-    );
-
-    const handleSettings = useCallback(
-      (pluginId: string) => invokePromise(SettingsOperation.Open, { plugin: pluginId }),
-      [invokePromise],
+    const empty = error ? (
+      <div className='p-4 text-description'>{t('registry.error.label', { message: error.message })}</div>
+    ) : loading ? (
+      <div className='p-4 text-description'>{t('registry.loading.label')}</div>
+    ) : (
+      <div className='p-4 text-description'>{t('registry.empty.label')}</div>
     );
 
     return (
-      <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
-        <ScrollArea.Viewport>
-          {items.length > 0 ? (
-            <PluginList
-              plugins={items}
-              installed={installedIds}
-              installing={installingIds}
-              updating={updatingIds}
-              updateAvailableIds={updateAvailableIds}
-              enabled={enabled}
-              extraTagsById={extraTagsById}
-              onClick={handleClick}
-              onChange={handleChange}
-              onInstall={handleInstall}
-              onUpdate={handleUpdate}
-              hasSettings={hasSettings}
-              onSettings={handleSettings}
-            />
-          ) : error ? (
-            <div className='p-4 text-description'>Failed to load registry plugins: {error.message}</div>
-          ) : loading ? (
-            <div className='p-4 text-description'>{t('loading.label')}</div>
-          ) : (
-            <div className='p-4 text-description'>No registry plugins available.</div>
-          )}
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+      <BaseRegistryArticle
+        {...props}
+        id={id}
+        source='registry'
+        plugins={items}
+        installed={installedIds}
+        installing={installingIds}
+        updating={updatingIds}
+        updateAvailableIds={updateAvailableIds}
+        extraTagsById={extraTagsById}
+        onInstall={handleInstall}
+        onUpdate={handleUpdate}
+        empty={empty}
+        ref={forwardedRef}
+      />
     );
   },
 );
 
-PluginRegistryArticle.displayName = 'PluginRegistryArticle';
+PublicRegistryArticle.displayName = 'PublicRegistryArticle';
