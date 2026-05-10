@@ -52,7 +52,7 @@ const DefaultStory = () => {
       target.dispatchEvent(
         new DxAnchorActivate({
           dxn,
-          label: Obj.getLabel(obj) ?? Obj.getDXN(obj).toString(),
+          label: Obj.getLabel(obj) ?? dxn,
           trigger: target,
           kind: 'card',
         }),

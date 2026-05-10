@@ -3,7 +3,7 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { SelectionModel } from '@dxos/graph';
@@ -23,7 +23,6 @@ const EMPTY_ATOM = Atom.make<{ nodes: SpaceGraphNode[]; edges: SpaceGraphEdge[] 
 
 export type ForceGraphProps = {
   model?: SpaceGraphModel;
-  match?: RegExp;
   grid?: boolean;
   selection?: SelectionModel;
   onInspect?: GraphProps<SpaceGraphNode, SpaceGraphEdge>['onInspect'];
@@ -39,24 +38,25 @@ export const ForceGraph = composable<HTMLDivElement, ForceGraphProps>(
     useEffect(() => selection.subscribe(() => graph.current?.repaint()), [selection]);
 
     const svgRef = useRef<SVGContext>(null);
-    const projector = useMemo<GraphForceProjector | undefined>(() => {
-      if (svgRef.current) {
-        return new GraphForceProjector(svgRef.current, {
-          attributes: {
-            linkForce: (edge) => {
+    const [projector, setProjector] = useState<GraphForceProjector>();
+    useEffect(() => {
+      if (svgRef.current && !projector) {
+        setProjector(
+          new GraphForceProjector(svgRef.current, {
+            attributes: {
               // TODO(burdon): Check type (currently assumes Employee property).
               // Edge shouldn't contribute to force if it's not active.
-              return edge.data?.object?.active !== false;
+              linkForce: (edge) => edge.data?.object?.active !== false,
             },
-          },
-          forces: {
-            point: {
-              strength: 0.01,
+            forces: {
+              point: {
+                strength: 0.01,
+              },
             },
-          },
-        });
+          }),
+        );
       }
-    }, []);
+    }, [projector]);
 
     const handleSelect = useCallback<NonNullable<GraphProps['onSelect']>>(
       (node) => {

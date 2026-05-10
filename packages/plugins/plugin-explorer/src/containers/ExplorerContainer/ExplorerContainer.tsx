@@ -8,7 +8,6 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Filter } from '@dxos/echo';
 import { type View } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { useGlobalSearch } from '@dxos/plugin-search';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
@@ -23,7 +22,6 @@ export const ExplorerContainer = ({ role, subject, attendableId: _attendableId }
   const space = view && getSpace(view);
   const [filter, setFilter] = useState<Filter.Any>();
   const model = useGraphModel(space, filter);
-  const { match } = useGlobalSearch();
 
   const builder = useMemo(() => new QueryBuilder(), []);
   const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>((value) => {
@@ -46,7 +44,7 @@ export const ExplorerContainer = ({ role, subject, attendableId: _attendableId }
         </Panel.Toolbar>
       )}
       <Panel.Content asChild>
-        <ForceGraph model={model} match={match} />
+        <ForceGraph model={model} />
       </Panel.Content>
     </Panel.Root>
   );

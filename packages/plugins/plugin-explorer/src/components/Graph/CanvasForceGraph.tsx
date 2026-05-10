@@ -44,7 +44,7 @@ export const CanvasForceGraph = composable<HTMLDivElement, CanvasForceGraphProps
 
     const [data, setData] = useState<GraphAdapter>();
     useEffect(() => {
-      model?.subscribe((model) => setData(new GraphAdapter(model.graph)));
+      return model?.subscribe((model) => setData(new GraphAdapter(model.graph)));
     }, [model]);
 
     useEffect(() => {
@@ -91,7 +91,7 @@ export const CanvasForceGraph = composable<HTMLDivElement, CanvasForceGraphProps
         .warmupTicks(100)
         .cooldownTime(1_000)
         .resumeAnimation();
-    }, [data, width, height, forceGraph.current]);
+    }, [data, width, height]);
 
     const handleZoomToFit = () => {
       forceGraph.current?.zoomToFit(400, 40);
