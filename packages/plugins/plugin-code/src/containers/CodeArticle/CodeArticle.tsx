@@ -87,6 +87,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(({ role,
 
   return (
     <Panel.Root role={role} ref={forwardedRef}>
+      {/* TODO(burdon): Add toolbar actions (cf. SpecArticle's Editor.Toolbar). */}
       <Panel.Toolbar asChild>
         <Toolbar.Root></Toolbar.Root>
       </Panel.Toolbar>
