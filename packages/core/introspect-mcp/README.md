@@ -179,7 +179,12 @@ The package.json `exports` field has a `source` condition pointing at `src/index
 
 ## Cache
 
-The indexer stores extracted symbols at `<repo-root>/node_modules/.cache/dxos-introspect/cache.json` (~13 MB for 250 packages). Following the babel/swc/eslint convention so it's auto-gitignored and gets nuked by `pnpm clean`. Saves are atomic (write-temp-then-rename), so concurrent introspector processes can't corrupt each other.
+The indexer writes two files under `<repo-root>/node_modules/.cache/dxos-introspect/`:
+
+- `core.json` — symbol cache (~13 MB for 250 packages), reused across runs and invalidated per-package by git tree SHA.
+- `plugins.json` — plugin metadata sidecar (~200 KB), regenerated every run since plugin extraction is cheap.
+
+Following the babel/swc/eslint convention so the directory is auto-gitignored and gets nuked by `pnpm clean`. Saves are atomic (write-temp-then-rename), so concurrent introspector processes can't corrupt each other.
 
 ### Invalidation
 

@@ -53,7 +53,7 @@ export type IntrospectorOptions = {
   /**
    * If true (default), persist the symbol cache to disk and reuse it across
    * runs when no source files have changed. The cache lives at
-   * `<rootPath>/.dxos-introspect/cache.json`. Pass `false` to disable
+   * `<rootPath>/.dxos-introspect/core.json`. Pass `false` to disable
    * (e.g. for tests).
    */
   cache?: boolean;

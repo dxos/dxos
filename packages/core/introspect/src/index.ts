@@ -3,6 +3,7 @@
 //
 
 export { createIntrospector, type Introspector, type IntrospectorOptions } from './introspector';
+export { cacheFilePath, pluginsFilePath } from './indexer';
 export {
   formatCapabilityRef,
   formatOperationRef,
