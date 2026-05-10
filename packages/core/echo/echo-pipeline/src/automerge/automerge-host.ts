@@ -438,7 +438,7 @@ export class AutomergeHost extends Resource {
       }
       const handle = await this._repo.create2<T>(initialValue);
       this._createdDocuments.add(handle.documentId);
-      if (this._useSubduction) {
+      if (!this._useSubduction) {
         this._sharePolicyChangedTask!.schedule();
       }
       return handle;

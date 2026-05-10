@@ -71,6 +71,9 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
     this._params.monitor?.recordStoreDuration(Date.now() - startMs);
   }
 
+  /**
+   * Atomically persist multiple key/value entries in a single LevelDB batch write.
+   */
   async saveBatch(entries: Array<[StorageKey, Uint8Array]>): Promise<void> {
     if (!this.isOpen || entries.length === 0) {
       return undefined;
