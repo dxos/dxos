@@ -9616,6 +9616,9 @@ importers:
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../core/echo/echo-generator
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../plugin-preview
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing

@@ -13,7 +13,7 @@ import { Text } from '@dxos/schema';
 import { MarkdownEditor, MarkdownEditorProvider } from '#components';
 import { Markdown } from '#types';
 
-export type MarkdownEditableCardProps = { subject: Markdown.Document | Text.Text };
+export type EditableMarkdownCardProps = { subject: Markdown.Document | Text.Text };
 
 /**
  * Full-bleed editable variant of {@link MarkdownCard}. Activated by the host
@@ -22,18 +22,18 @@ export type MarkdownEditableCardProps = { subject: Markdown.Document | Text.Text
  * so it stays self-contained inside the card; the regular MarkdownContainer
  * remains the canonical surface for full article views.
  */
-export const MarkdownEditableCard = ({ subject }: MarkdownEditableCardProps) => {
+export const EditableMarkdownCard = ({ subject }: EditableMarkdownCardProps) => {
   const id = Obj.getDXN(subject).toString();
   const [docContent] = useObject(Obj.instanceOf(Markdown.Document, subject) ? subject.content : undefined, 'content');
   const [textContent] = useObject(Obj.instanceOf(Text.Text, subject) ? subject : undefined, 'content');
   const initialValue = docContent ?? textContent;
 
   return (
-    <Card.Section classNames='col-span-3 min-h-0'>
+    <Card.Section classNames='overflow-hidden'>
       <MarkdownEditorProvider id={id} object={subject} viewMode='source'>
         {(editorRootProps) => (
           <Editor.Root {...editorRootProps}>
-            <MarkdownEditor.Content initialValue={initialValue} />
+            <MarkdownEditor.Content compact initialValue={initialValue} />
           </Editor.Root>
         )}
       </MarkdownEditorProvider>

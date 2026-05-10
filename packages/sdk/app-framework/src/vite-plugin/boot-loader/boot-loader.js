@@ -67,6 +67,7 @@
     if (creepHandle != null) {
       return;
     }
+
     creepHandle = setInterval(function () {
       var element = document.getElementById('boot-loader-disc');
       if (!element) {
@@ -184,18 +185,36 @@
         // updates over the same row.
         lastLine.textContent = displayText;
       } else {
-        // Fresh phase (or first line) — append and slide the track up so
-        // the new line aligns with the single-line viewport. The CSS
-        // `transition` on the track's `transform` eases the move; we
-        // measure in pixels (not `em`) because some engines (and headless
-        // Chromium) don't reliably interpolate `transform` between
-        // `em`-valued translateY's.
+        // Fresh phase (or first line) — append to the bottom-anchored track
+        // (see `#boot-loader-status`'s `justify-content: flex-end` in
+        // `boot-loader.css`) and run a FLIP-style slide so the new line
+        // rises from below the viewport's bottom edge instead of snapping
+        // into place. The flex layout handles which lines are visible at
+        // rest (newest on the last row, older lines stacked above, anything
+        // that overflows is clipped at the top by `overflow: hidden`), so
+        // this code only owns the animation.
         var line = document.createElement('div');
         line.className = 'boot-loader-status-line';
         line.textContent = displayText;
+        // Measure the line height from a sibling when one exists — the
+        // newly appended line may not have laid out yet at the moment of
+        // the bounding-rect read in some engines. Pixels (not `em`) because
+        // some engines (and headless Chromium) don't reliably interpolate
+        // `transform` between `em`-valued translateY's.
+        var probe = track.lastElementChild;
         track.appendChild(line);
-        var lineHeight = line.getBoundingClientRect().height || 0;
-        track.style.transform = 'translateY(' + (track.children.length - 1) * -lineHeight + 'px)';
+        var lineHeight = (probe || line).getBoundingClientRect().height || 0;
+        // Invert: snap the track down by one line-height with no transition
+        // so every existing line is back at its pre-append position and the
+        // new line sits just below the viewport. Then force a reflow and
+        // animate back to translateY(0) — the track rises by lineHeight,
+        // older lines slide up out of their old slots, and the new line
+        // surfaces at the bottom row.
+        track.style.transition = 'none';
+        track.style.transform = 'translateY(' + lineHeight + 'px)';
+        void track.offsetHeight;
+        track.style.transition = '';
+        track.style.transform = 'translateY(0)';
       }
     },
 

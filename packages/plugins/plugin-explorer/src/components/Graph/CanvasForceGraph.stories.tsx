@@ -4,28 +4,24 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useMemo } from 'react';
+import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj, Type, View } from '@dxos/echo';
-import { SelectionModel } from '@dxos/graph';
+import { Type, View } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
-import { DxAnchorActivate } from '@dxos/react-ui';
-import { type GraphProps, type GraphLayoutNode } from '@dxos/react-ui-graph';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { type SpaceGraphEdge, type SpaceGraphNode, ViewModel } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
 import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
 import { useGraphModel } from '#hooks';
 import { Graph } from '#types';
 
-import { ForceGraph } from './ForceGraph';
+import { CanvasForceGraph } from './CanvasForceGraph';
 import { generate } from './testing';
 
 const generator = random as any as ValueGenerator;
@@ -35,42 +31,16 @@ random.seed(1);
 const DefaultStory = () => {
   const [space] = useSpaces();
   const model = useGraphModel(space);
-
-  const selection = useMemo(() => new SelectionModel({ mode: 'single' }), []);
-
-  const handleInspect = useCallback<NonNullable<GraphProps<SpaceGraphNode, SpaceGraphEdge>['onInspect']>>(
-    (node: GraphLayoutNode<SpaceGraphNode>, event) => {
-      const obj = node.data?.data?.object;
-      if (!obj) {
-        return;
-      }
-      const dxn = Obj.getDXN(obj)?.toString();
-      if (!dxn) {
-        return;
-      }
-      const target = event.target as HTMLElement;
-      target.dispatchEvent(
-        new DxAnchorActivate({
-          dxn,
-          label: Obj.getLabel(obj) ?? dxn,
-          trigger: target,
-          kind: 'card',
-        }),
-      );
-    },
-    [],
-  );
-
   if (!space || !model) {
     return <Loading data={{ space: !!space, model: !!model }} />;
   }
 
-  return <ForceGraph model={model} selection={selection} onInspect={handleInspect} />;
+  return <CanvasForceGraph model={model} />;
 };
 
 const meta = {
-  title: 'plugins/plugin-explorer/components/ForceGraph',
-  component: ForceGraph,
+  title: 'plugins/plugin-explorer/components/CanvasForceGraph',
+  component: CanvasForceGraph,
   render: DefaultStory,
   decorators: [
     withTheme(),
@@ -78,7 +48,6 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
         ClientPlugin({
           types: [
             Graph.Graph,
@@ -99,14 +68,13 @@ const meta = {
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
         }),
-        PreviewPlugin(),
       ],
     }),
   ],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof ForceGraph>;
+} satisfies Meta<typeof CanvasForceGraph>;
 
 export default meta;
 
