@@ -47,7 +47,6 @@
     "@tailwindcss/postcss": "catalog:",
     "autoprefixer": "catalog:",
     "esbuild-style-plugin": "catalog:",
-    "glob": "catalog:",
     "globby": "catalog:",
     "lodash.merge": "catalog:",
     "postcss": "catalog:",

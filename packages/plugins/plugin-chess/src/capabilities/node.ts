@@ -10,6 +10,8 @@ export const BlueprintDefinition = Capability.lazy<[], Capability.Any[]>(
   () => import('./blueprint-definition'),
 );
 
+export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
+
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),

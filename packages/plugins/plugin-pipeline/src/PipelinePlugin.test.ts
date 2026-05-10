@@ -19,9 +19,9 @@ describe('PipelinePlugin', () => {
       plugins: [ClientPlugin({}), PipelinePlugin()],
     });
 
-    // After autoStart: AppGraphBuilder, metadata, schema all auto-cascade.
+    // After autoStart: AppGraphBuilder, CreateObject, schema all auto-cascade.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('metadata'), moduleId('schema')]),
+      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('CreateObject'), moduleId('schema')]),
     );
   });
 });

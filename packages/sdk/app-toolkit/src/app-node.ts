@@ -15,8 +15,6 @@ import { type Label } from './translations';
 // Re-export createObjectNode as makeObject.
 //
 
-export type { MetadataResolver } from './object-node';
-
 /** Build an app-graph node for an ECHO object. Alias for `createObjectNode`. */
 export const makeObject: typeof createObjectNode = createObjectNode;
 

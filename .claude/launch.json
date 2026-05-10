@@ -27,6 +27,13 @@
       "port": 5173
     },
     {
+      "name": "todomvc-preview",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@dxos/todomvc", "exec", "vite", "preview", "--port", "4173"],
+      "port": 4173,
+      "autoPort": true
+    },
+    {
       "name": "storybook-react",
       "runtimeExecutable": "moon",
       "runtimeArgs": ["run", "storybook-react:serve"],

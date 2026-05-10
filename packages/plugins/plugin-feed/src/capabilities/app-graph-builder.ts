@@ -25,9 +25,6 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
 
-    const resolve = (typename: string) =>
-      capabilities.getAll(AppCapabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
-
     const selectionManager = yield* Capability.get(AttentionCapabilities.Selection);
     const selectedId = Atom.family((nodeId: string) =>
       Atom.make((get) => {
@@ -60,7 +57,6 @@ export default Capability.makeModule(
                   createObjectNode({
                     db: space.db,
                     object: feed,
-                    resolve,
                   }),
                 )
                 .filter((node): node is NonNullable<typeof node> => node !== null),

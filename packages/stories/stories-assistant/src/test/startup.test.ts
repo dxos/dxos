@@ -93,7 +93,7 @@ describe('ClientPlugin startup', () => {
     const pluginLoader = Effect.fn(function* (id: string) {
       const plugin = plugins.find((plugin) => plugin.meta.id === id);
       invariant(plugin, `Plugin not found: ${id}`);
-      return plugin;
+      return { plugin };
     });
 
     const manager = PluginManager.make({

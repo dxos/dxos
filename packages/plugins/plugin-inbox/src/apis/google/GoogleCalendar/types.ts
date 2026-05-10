@@ -57,6 +57,23 @@ export const Event = Schema.Struct({
 
 export type Event = Schema.Schema.Type<typeof Event>;
 
+export const CalendarListItem = Schema.Struct({
+  id: Schema.String,
+  summary: Schema.String,
+  description: Schema.optional(Schema.String),
+  primary: Schema.optional(Schema.Boolean),
+});
+
+export type CalendarListItem = Schema.Schema.Type<typeof CalendarListItem>;
+
+export const CalendarListResponse = Schema.Struct({
+  items: Schema.optional(Schema.Array(CalendarListItem)),
+  nextPageToken: Schema.optional(Schema.String),
+  nextSyncToken: Schema.optional(Schema.String),
+});
+
+export type CalendarListResponse = Schema.Schema.Type<typeof CalendarListResponse>;
+
 export const ListEventsResponse = Schema.Struct({
   kind: Schema.optional(Schema.String),
   etag: Schema.optional(Schema.String),
