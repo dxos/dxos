@@ -93,6 +93,33 @@
     }
   }
 
+  // Read the element's *current animated* translateY in pixels — the
+  // interpolated value mid-transition, not the property as last written.
+  // `getComputedStyle(...).transform` returns a `matrix(...)` /
+  // `matrix3d(...)` string with the live, interpolated translation.
+  // Used by the status FLIP so successive appends chain off the in-flight
+  // position instead of yanking the track back to a fixed invert target.
+  function readTranslateY(element) {
+    var computed = window.getComputedStyle(element).transform;
+    if (!computed || computed === 'none') {
+      return 0;
+    }
+    var match = computed.match(/matrix.*\(([^)]+)\)/);
+    if (!match) {
+      return 0;
+    }
+    var values = match[1].split(',');
+    // 2D `matrix(a, b, c, d, tx, ty)` → ty at index 5.
+    // 3D `matrix3d(...)` (16 entries) → ty at index 13.
+    if (values.length === 6) {
+      return parseFloat(values[5]) || 0;
+    }
+    if (values.length === 16) {
+      return parseFloat(values[13]) || 0;
+    }
+    return 0;
+  }
+
   window.__bootLoader = {
     /**
      * Update the visible status line. The caller owns formatting — the
@@ -196,6 +223,13 @@
         var line = document.createElement('div');
         line.className = 'boot-loader-status-line';
         line.textContent = displayText;
+        // Read the track's current animated translateY before mutating
+        // anything. When a previous slide is still in flight this is
+        // somewhere in (0, lineHeight]; when the track is at rest it's 0.
+        // Reading via `getComputedStyle` (not `style.transform`) gives the
+        // interpolated mid-transition value, which is what the chain math
+        // below needs.
+        var currentY = readTranslateY(track);
         // Measure the line height from a sibling when one exists — the
         // newly appended line may not have laid out yet at the moment of
         // the bounding-rect read in some engines. Pixels (not `em`) because
@@ -204,14 +238,20 @@
         var probe = track.lastElementChild;
         track.appendChild(line);
         var lineHeight = (probe || line).getBoundingClientRect().height || 0;
-        // Invert: snap the track down by one line-height with no transition
-        // so every existing line is back at its pre-append position and the
-        // new line sits just below the viewport. Then force a reflow and
-        // animate back to translateY(0) — the track rises by lineHeight,
-        // older lines slide up out of their old slots, and the new line
-        // surfaces at the bottom row.
+        // Invert: snap the track down to `currentY + lineHeight` with no
+        // transition. The `+ lineHeight` is the usual FLIP offset (the
+        // track just grew by a row, so this keeps every existing line at
+        // the pixel position it had before the append). The `+ currentY`
+        // is the chain term — if a previous slide was still in flight we
+        // pin the track to its in-flight position instead of yanking it
+        // back to its pre-animation start, so the previous line keeps
+        // rising smoothly through the append rather than jumping down.
+        // Then force a reflow and animate to translateY(0); the track
+        // covers the full `currentY + lineHeight` distance in one ride
+        // and bursts of rapid updates read as a continuous scroll rather
+        // than overlapping snaps.
         track.style.transition = 'none';
-        track.style.transform = 'translateY(' + lineHeight + 'px)';
+        track.style.transform = `translateY(${currentY + lineHeight}px)`;
         void track.offsetHeight;
         track.style.transition = '';
         track.style.transform = 'translateY(0)';

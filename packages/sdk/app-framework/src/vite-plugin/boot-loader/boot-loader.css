@@ -230,7 +230,9 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  /* Sit just below the centered disc — half the disc plus the configured gap. */
+  /* 
+   * Sit just below the centered disc — half the disc plus the configured gap.
+   */
   transform: translate(-50%, calc(var(--boot-loader-disc-size) / 2 + var(--boot-loader-status-gap)));
   /*
    * Slightly de-emphasised vs body text so the brand mark + ring stay the
