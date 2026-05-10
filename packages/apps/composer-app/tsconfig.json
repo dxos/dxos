@@ -254,9 +254,6 @@
       "path": "../../plugins/plugin-crx"
     },
     {
-      "path": "../../plugins/plugin-crx-bridge"
-    },
-    {
       "path": "../../plugins/plugin-daily-summary"
     },
     {

@@ -331,9 +331,6 @@
       "path": "packages/plugins/plugin-crx/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-crx-bridge/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-daily-summary/tsconfig.json"
     },
     {
