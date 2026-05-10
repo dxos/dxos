@@ -15,8 +15,8 @@ import { random } from '@dxos/random';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Tree, type TreeComponentProps } from './Tree';
 import { createTree } from './testing';
+import { Tree, type TreeComponentProps } from './Tree';
 import { TreeType } from './types';
 
 random.seed(1);
