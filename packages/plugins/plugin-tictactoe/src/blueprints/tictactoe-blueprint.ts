@@ -6,14 +6,13 @@ import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 import { Create, MakeMove, AiMove, Print } from '#operations';
-
-const BLUEPRINT_KEY = 'org.dxos.blueprint.tictactoe';
+import { TicTacToe } from '#types';
 
 const operations = [Create, MakeMove, AiMove, Print];
 
 const make = () =>
   Blueprint.make({
-    key: BLUEPRINT_KEY,
+    key: TicTacToe.BLUEPRINT_KEY,
     name: 'Tic-Tac-Toe',
     tools: Blueprint.toolDefinitions({ operations }),
     instructions: Template.make({
@@ -28,7 +27,7 @@ const make = () =>
   });
 
 const blueprint: Blueprint.Definition = {
-  key: BLUEPRINT_KEY,
+  key: TicTacToe.BLUEPRINT_KEY,
   make,
 };
 

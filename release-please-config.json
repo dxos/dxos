@@ -580,11 +580,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-crx-bridge/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-daily-summary/package.json",
           "jsonpath": "$.version"
         },
@@ -661,6 +656,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-kanban/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-linear/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -781,6 +781,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-sketch/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-slack/package.json",
           "jsonpath": "$.version"
         },
         {

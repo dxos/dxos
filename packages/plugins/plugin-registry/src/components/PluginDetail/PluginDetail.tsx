@@ -4,11 +4,13 @@
 
 import React from 'react';
 
-import { type Registry, type Plugin } from '@dxos/app-framework';
+import { type Registry, type Plugin, type PluginManager } from '@dxos/app-framework';
 import { Button, Icon, Input, Link, ScrollArea, Select, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps, getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+
+import { PluginFailureBadge } from '../PluginFailureBadge';
 
 export type PluginDetailProps = {
   plugin: Plugin.Plugin;
@@ -44,6 +46,11 @@ export type PluginDetailProps = {
   onInstallVersion?: () => void;
   /** Currently installed version tag (used to mark the matching select option). */
   installedVersionTag?: string;
+  /**
+   * Failure record for this plugin, if any. When present a warning badge is
+   * rendered next to the plugin name in the header.
+   */
+  failure?: PluginManager.PluginFailure;
 };
 
 export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
@@ -63,6 +70,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
       onVersionChange,
       onInstallVersion,
       installedVersionTag,
+      failure,
       ...props
     },
     forwardedRef,
@@ -89,7 +97,10 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
             </div>
             <div role='none' className='flex flex-col gap-6'>
               <div role='none' className='grid grid-cols-[1fr_min-content] gap-x-3 w-full pt-1'>
-                <h2 className='text-xl'>{name}</h2>
+                <div className='flex items-center gap-2'>
+                  <h2 className='text-xl'>{name}</h2>
+                  {failure && <PluginFailureBadge failure={failure} size={5} />}
+                </div>
                 {onInstall ? (
                   <Button density='fine' variant='primary' disabled={installing} onClick={onInstall}>
                     {installing ? t('installing.label') : t('install.label')}

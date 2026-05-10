@@ -27,7 +27,6 @@
   ],
   "dependencies": {
     "@ch-ui/icons": "catalog:",
-    "glob": "catalog:",
     "picomatch": "catalog:",
     "vite": "catalog:"
   },

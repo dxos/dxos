@@ -21,4 +21,26 @@ describe('serializeManifest', () => {
       assets: ['index.mjs', 'style.css', 'chunks/lib-abc.js'],
     });
   });
+
+  test('includes devEntry when supplied (dev-server manifest)', ({ expect }) => {
+    const json = serializeManifest(
+      { id: 'org.example.plugin', name: 'Example', version: '0.0.0-dev' },
+      { assets: [], devEntry: 'src/plugin.tsx' },
+    );
+    expect(JSON.parse(json)).toEqual({
+      id: 'org.example.plugin',
+      name: 'Example',
+      version: '0.0.0-dev',
+      assets: [],
+      devEntry: 'src/plugin.tsx',
+    });
+  });
+
+  test('omits devEntry from the output when undefined', ({ expect }) => {
+    const json = serializeManifest(
+      { id: 'org.example.plugin', name: 'Example', version: '1.0.0' },
+      { assets: ['index.mjs'] },
+    );
+    expect(Object.keys(JSON.parse(json))).not.toContain('devEntry');
+  });
 });

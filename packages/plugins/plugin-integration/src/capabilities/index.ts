@@ -7,6 +7,7 @@ import { OperationHandlerSet } from '@dxos/compute';
 
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
 export const BuiltinProviders = Capability.lazy('BuiltinProviders', () => import('./builtin-providers'));
+export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 export const Coordinator = Capability.lazy('IntegrationCoordinator', () => import('./integration-coordinator'));
 export const OAuthRedirect = Capability.lazy('OAuthRedirect', () => import('./oauth-redirect'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(

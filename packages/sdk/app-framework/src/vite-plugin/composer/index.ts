@@ -4,6 +4,7 @@
 
 import { type Plugin as VitePlugin } from 'vite';
 
+import { PLUGIN_DEV_SERVER_PORT } from '../../core';
 import { type BuildMeta, ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest } from '../manifest';
 import { DEFAULT_PACKAGES, isSharedPackage } from '../packages';
 
@@ -67,7 +68,7 @@ const REQUIRE_SHIM_BANNER = [
 export type ComposerPluginOptions = {
   /** Entry point for the plugin bundle. Defaults to `src/plugin.tsx`. */
   entry?: string;
-  /** Dev server port. Defaults to `3967`. */
+  /** Dev server port. Defaults to {@link PLUGIN_DEV_SERVER_PORT}. */
   port?: number;
   /**
    * Plugin metadata. When provided, a `manifest.json` asset is emitted alongside the bundle
@@ -95,7 +96,7 @@ export type ComposerPluginOptions = {
  */
 export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] => {
   const entry = options?.entry ?? 'src/plugin.tsx';
-  const port = options?.port ?? 3967;
+  const port = options?.port ?? PLUGIN_DEV_SERVER_PORT;
   const meta = options?.meta;
   const resolved = new Set<string>();
   let base = '/';
@@ -268,6 +269,34 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
           type: 'asset',
           fileName: MANIFEST_ASSET_NAME,
           source: serializeManifest(meta, { assets }),
+        });
+      },
+    });
+
+    // Dev-server manifest. `vite dev` can't enumerate transitive chunks/CSS up front
+    // (they resolve on demand), so we serve a `devEntry`-flavored manifest at the dev
+    // root and let the host loader skip eager caching + static stylesheet injection.
+    // The host imports `entry` directly from the dev server, where Vite handles
+    // JSX transforms, externalization, and runtime CSS injection.
+    plugins.push({
+      name: 'composer-plugin:serve-manifest',
+      apply: 'serve',
+      configureServer(server) {
+        const body = serializeManifest(meta, { assets: [], devEntry: entry.replace(/^\.?\//, '') });
+        server.middlewares.use(`/${MANIFEST_ASSET_NAME}`, (req, res, next) => {
+          // Only intercept the bare manifest URL — let any sub-paths fall through.
+          if (req.url && req.url !== '/' && req.url !== '') {
+            return next();
+          }
+          // CORS mirrors `server.cors: true` (see plugin config above) so the host
+          // app at a different origin can read the manifest. Vite's built-in CORS
+          // covers most paths but middlewares mounted before its `cors` middleware
+          // need to set the header themselves.
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Cache-Control', 'no-store');
+          res.statusCode = 200;
+          res.end(body);
         });
       },
     });

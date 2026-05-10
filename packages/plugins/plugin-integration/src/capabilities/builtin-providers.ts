@@ -64,6 +64,8 @@ export default Capability.makeModule<IntegrationProviderEntry[]>(
             }),
         },
       },
+      // GitHub, Linear, and Slack are implemented as dedicated plugins
+      // (`@dxos/plugin-github`, `@dxos/plugin-linear`, `@dxos/plugin-slack`).
     ]);
   }),
 );

@@ -13,4 +13,5 @@ export const meta: Plugin.Meta = {
     Customize your workspace organization with drag-and-drop layout management.
   `,
   icon: 'ph--layout--regular',
+  tags: ['system'],
 };

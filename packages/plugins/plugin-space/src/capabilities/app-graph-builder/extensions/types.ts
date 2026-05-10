@@ -8,11 +8,11 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Segments } from '@dxos/app-toolkit';
+import { Capability, type CapabilityManager } from '@dxos/app-framework';
+import { AppNode, AppNodeMatcher, LayoutOperation, Segments } from '@dxos/app-toolkit';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Collection, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Annotation, Collection, Filter, Obj, Query, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
@@ -22,11 +22,11 @@ import { createFilename, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
+import { SpaceCapabilities } from '#types';
 
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,
   BLOCK_REORDER_ABOVE,
-  type MetadataResolver,
   SNAPSHOT_BY_SCHEMA_LABEL,
   STATIC_SCHEMA_TYPE,
   TYPES_SECTION_TYPE,
@@ -44,9 +44,6 @@ import {
 /** Creates type-related extensions: types section, schema nodes, schema children, and schema actions. */
 export const createTypeExtensions = Effect.fnUntraced(function* () {
   const capabilities = yield* Capability.Service;
-
-  const resolve = (_get: any) => (typename: string) =>
-    capabilities.getAll(AppCapabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
   return yield* Effect.all([
     // Types section virtual node under each space.
@@ -112,9 +109,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           return objects.length > 0 || viewIndex.typenamesWithViews.has(typename);
         });
 
-        return Effect.succeed(
-          visibleSchemas.map((schema) => createSchemaNode({ schema, space, resolve: resolve(get), get })),
-        );
+        return Effect.succeed(visibleSchemas.map((schema) => createSchemaNode({ schema, space, get })));
       },
     }),
 
@@ -162,7 +157,6 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
             createObjectNode({
               db: space.db,
               object,
-              resolve: resolve(get),
               droppable: false,
             }),
           )
@@ -198,7 +192,6 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
               return createObjectNode({
                 db: space.db,
                 object,
-                resolve: resolve(get),
                 droppable: false,
               });
             })
@@ -235,7 +228,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
             schema: schema as Type.AnyObj,
             space,
             deletable,
-            resolve: resolve(get),
+            capabilities,
           }),
         );
       },
@@ -261,16 +254,16 @@ const uniqueSchemasByTypename = <TSchema extends Type.AnyEntity>(schemas: TSchem
 const createSchemaNode = ({
   schema,
   space,
-  resolve,
   get,
 }: {
   schema: Type.AnyEntity;
   space: Space;
-  resolve: MetadataResolver;
   get: Atom.Context;
 }): Node.NodeArg<Type.AnyEntity> => {
   const typename = Type.getTypename(schema);
-  const metadata = resolve(typename);
+  const iconAnnotation = !Type.isMutable(schema)
+    ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema))
+    : undefined;
   const { label, nodeId } = Match.value(schema).pipe(
     Match.when(Type.isMutable, (mutableSchema) => {
       const persistentSchema = mutableSchema.persistentSchema;
@@ -285,8 +278,8 @@ const createSchemaNode = ({
       nodeId: typename,
     })),
   );
-  const icon = Type.isMutable(schema) ? 'ph--cube--regular' : (metadata.icon ?? 'ph--placeholder--regular');
-  const iconHue = Type.isMutable(schema) ? 'neutral' : metadata.iconHue;
+  const icon = Type.isMutable(schema) ? 'ph--cube--regular' : (iconAnnotation?.icon ?? 'ph--placeholder--regular');
+  const iconHue = Type.isMutable(schema) ? 'neutral' : iconAnnotation?.hue;
   return Node.make({
     id: nodeId,
     type: STATIC_SCHEMA_TYPE,
@@ -311,17 +304,19 @@ const createSchemaActions = ({
   schema,
   space,
   deletable,
-  resolve,
+  capabilities,
 }: {
   schema: Type.AnyObj;
   space: Space;
   deletable: boolean;
-  resolve: MetadataResolver;
+  capabilities: CapabilityManager.CapabilityManager;
 }) => {
   const typename = Type.getTypename(schema);
-  const metadata = resolve(typename);
-  const createObjectFn = metadata.createObject;
-  const inputSchema = metadata.inputSchema;
+  const createEntry = capabilities
+    .getAll(SpaceCapabilities.CreateObjectEntry)
+    .find((entry: SpaceCapabilities.CreateObjectEntry) => entry.id === typename);
+  const createObjectFn = createEntry?.createObject;
+  const inputSchema = createEntry?.inputSchema;
 
   const actions: Node.NodeArg<Node.ActionData<Operation.Service>>[] = [
     ...(createObjectFn
@@ -335,11 +330,9 @@ const createSchemaActions = ({
                   typename,
                 });
               } else {
-                const result = yield* createObjectFn({}, { db: space.db, target: space.db }) as Effect.Effect<
-                  { subject: readonly string[] },
-                  Error,
-                  never
-                >;
+                const result = yield* createObjectFn({}, { db: space.db, target: space.db }).pipe(
+                  Effect.provideService(Capability.Service, capabilities),
+                );
                 if (result.subject.length > 0) {
                   yield* Operation.invoke(LayoutOperation.Open, {
                     subject: [...result.subject],

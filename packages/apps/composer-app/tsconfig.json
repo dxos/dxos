@@ -257,9 +257,6 @@
       "path": "../../plugins/plugin-crx"
     },
     {
-      "path": "../../plugins/plugin-crx-bridge"
-    },
-    {
       "path": "../../plugins/plugin-daily-summary"
     },
     {
@@ -306,6 +303,9 @@
     },
     {
       "path": "../../plugins/plugin-kanban"
+    },
+    {
+      "path": "../../plugins/plugin-linear"
     },
     {
       "path": "../../plugins/plugin-map"
@@ -378,6 +378,9 @@
     },
     {
       "path": "../../plugins/plugin-sketch"
+    },
+    {
+      "path": "../../plugins/plugin-slack"
     },
     {
       "path": "../../plugins/plugin-space"

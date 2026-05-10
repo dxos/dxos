@@ -19,11 +19,11 @@ describe('SpacePlugin', () => {
       plugins: [ClientPlugin({}), SpacePlugin({})],
     });
 
-    // After autoStart: metadata, schema, OperationHandler all auto-cascade.
+    // After autoStart: CreateObject, schema, OperationHandler all auto-cascade.
     // UndoMappings auto-cascades on SetupOperationHandler.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([
-        moduleId('metadata'),
+        moduleId('CreateObject'),
         moduleId('schema'),
         moduleId('OperationHandler'),
         moduleId('UndoMappings'),

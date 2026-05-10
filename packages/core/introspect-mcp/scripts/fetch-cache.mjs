@@ -5,7 +5,10 @@
 
 // Downloads the `dxos-introspect-cache` artifact built by the
 // `Introspect Cache` GitHub workflow on the most recent successful commit to
-// main, and installs it at `<repo-root>/node_modules/.cache/dxos-introspect/cache.json`.
+// main and installs both files under
+// `<repo-root>/node_modules/.cache/dxos-introspect/`:
+//   - core.json    (symbol cache)
+//   - plugins.json (plugin metadata sidecar)
 //
 // Run from the worktree root:
 //   moon run introspect-mcp:fetch-cache
@@ -39,7 +42,9 @@ const findRepoRoot = (start) => {
 };
 
 const REPO_ROOT = findRepoRoot(__dirname);
-const CACHE_DEST = join(REPO_ROOT, 'node_modules/.cache/dxos-introspect/cache.json');
+const CACHE_DIR = join(REPO_ROOT, 'node_modules/.cache/dxos-introspect');
+const CACHE_DEST = join(CACHE_DIR, 'core.json');
+const PLUGINS_DEST = join(CACHE_DIR, 'plugins.json');
 const ARTIFACT_NAME = 'dxos-introspect-cache';
 const REPO = 'dxos/dxos';
 const WORKFLOW = 'introspect-cache.yml';
@@ -100,7 +105,7 @@ const main = async () => {
   log(`Found run #${latest.databaseId} (commit ${latest.headSha.slice(0, 12)}, ${latest.createdAt}).`);
 
   // `gh run download` extracts the artifact into a directory named after it
-  // (so the cache.json lands at <tmp>/dxos-introspect-cache/cache.json). Use a
+  // (so the core.json lands at <tmp>/dxos-introspect-cache/core.json). Use a
   // dedicated tmp dir under node_modules/.cache so we don't pollute the repo
   // root and so a partial download is easy to discard.
   const tmpDir = join(REPO_ROOT, 'node_modules/.cache/dxos-introspect-fetch');
@@ -112,34 +117,40 @@ const main = async () => {
   log(`Downloading "${ARTIFACT_NAME}" into ${tmpDir}…`);
   run('gh', ['run', 'download', String(latest.databaseId), '--repo', REPO, '--name', ARTIFACT_NAME, '--dir', tmpDir]);
 
-  // Locate the downloaded file. The artifact contains exactly one file
-  // (cache.json), but `gh run download --name` extracts directly into the
-  // dir, so the file should be at `<tmpDir>/cache.json`.
-  const downloaded = (() => {
-    const direct = join(tmpDir, 'cache.json');
+  // Locate downloaded files. The artifact bundles two siblings, core.json
+  // (symbol cache) and plugins.json (plugin metadata sidecar). `gh run
+  // download --name` extracts directly into the dir, so each lands at
+  // `<tmpDir>/<name>`.
+  const locate = (basename) => {
+    const direct = join(tmpDir, basename);
     if (existsSync(direct)) {
       return direct;
     }
     // Fallback: walk one level deep in case `gh` decides to nest.
     for (const entry of readdirSync(tmpDir)) {
-      const candidate = join(tmpDir, entry);
-      if (statSync(candidate).isFile() && entry.endsWith('.json')) {
+      const candidate = join(tmpDir, entry, basename);
+      if (existsSync(candidate) && statSync(candidate).isFile()) {
         return candidate;
       }
     }
-    throw new Error(`Could not find cache.json in ${tmpDir}`);
-  })();
+    throw new Error(`Could not find ${basename} in ${tmpDir}`);
+  };
+  const coreSrc = locate('core.json');
+  const pluginsSrc = locate('plugins.json');
 
   // Atomic install — rename only after the download succeeded so we never
-  // leave the destination half-written. Same convention as introspect's own
+  // leave a destination half-written. Same convention as introspect's own
   // saveCache.
-  mkdirSync(dirname(CACHE_DEST), { recursive: true });
-  renameSync(downloaded, CACHE_DEST);
+  mkdirSync(CACHE_DIR, { recursive: true });
+  renameSync(coreSrc, CACHE_DEST);
+  renameSync(pluginsSrc, PLUGINS_DEST);
   rmSync(tmpDir, { recursive: true, force: true });
 
-  const sizeKb = Math.round(statSync(CACHE_DEST).size / 1024);
-  log(`Installed cache at ${CACHE_DEST} (${sizeKb} KB).`);
-  log('Next MCP server start will reuse this cache for any package whose tree SHA matches HEAD.');
+  const coreKb = Math.round(statSync(CACHE_DEST).size / 1024);
+  const pluginsKb = Math.round(statSync(PLUGINS_DEST).size / 1024);
+  log(`Installed core cache at ${CACHE_DEST} (${coreKb} KB).`);
+  log(`Installed plugins sidecar at ${PLUGINS_DEST} (${pluginsKb} KB).`);
+  log('Next MCP server start will reuse these for any package whose tree SHA matches HEAD.');
 };
 
 main().catch((err) => {

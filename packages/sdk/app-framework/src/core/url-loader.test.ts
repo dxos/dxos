@@ -129,7 +129,9 @@ describe('UrlLoader', () => {
         const testPlugin = Plugin.make(Plugin.define(testMeta))();
         const loader = UrlLoader.make([testPlugin]);
         const result = yield* loader(testMeta.id);
-        assert.strictEqual(result.meta.id, testMeta.id);
+        assert.strictEqual(result.plugin.meta.id, testMeta.id);
+        // Builtins are not dev plugins.
+        assert.notOk(result.dev);
       }),
     );
 

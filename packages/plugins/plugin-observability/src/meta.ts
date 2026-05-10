@@ -13,4 +13,5 @@ export const meta: Plugin.Meta = {
     Track metrics, logs, and traces for system health and analytics.
   `,
   icon: 'ph--eye--regular',
+  tags: ['system'],
 };

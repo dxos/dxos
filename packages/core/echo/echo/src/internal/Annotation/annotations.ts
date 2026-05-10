@@ -481,7 +481,7 @@ export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation
 
   const getFromAst = (ast: SchemaAST.AST) =>
     SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(ast).pipe(
-      Option.map((meta) => meta[props.id] as unknown),
+      Option.flatMap((meta) => Option.fromNullable(meta[props.id])),
       Option.map(Schema.decodeUnknownSync(props.schema)),
     );
 

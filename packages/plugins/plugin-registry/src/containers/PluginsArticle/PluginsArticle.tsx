@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo } from 'react';
 
-import { type Plugin } from '@dxos/app-framework';
+import { type Plugin, type PluginManager } from '@dxos/app-framework';
 import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -35,6 +35,15 @@ export const PluginsArticle = composable<HTMLDivElement, PluginsArticleProps>(
     const { invoke, invokePromise } = useOperationInvoker();
     const plugins = useMemo(() => pluginsProp.sort(sortByPluginMeta), [pluginsProp]);
     const enabled = useAtomValue(manager.enabled);
+    const failed = useAtomValue(manager.failed);
+    const failuresById = useMemo(
+      () =>
+        failed.reduce<Record<string, PluginManager.PluginFailure>>((acc, failure) => {
+          acc[failure.id] = failure;
+          return acc;
+        }, {}),
+      [failed],
+    );
     const allSettings = useCapabilities(AppCapabilities.Settings);
 
     const handleChange = useCallback(
@@ -84,6 +93,7 @@ export const PluginsArticle = composable<HTMLDivElement, PluginsArticleProps>(
             plugins={plugins}
             enabled={enabled}
             extraTagsById={extraTagsById}
+            failuresById={failuresById}
             onClick={handleClick}
             onChange={handleChange}
             hasSettings={hasSettings}

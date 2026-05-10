@@ -7,6 +7,7 @@ import { Capability } from '@dxos/app-framework';
 import type { Blueprint, OperationHandlerSet } from '@dxos/compute';
 
 export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
+export const TextContent = Capability.lazy('TextContent', () => import('./text-content'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),

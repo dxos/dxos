@@ -9,17 +9,25 @@
 //   pnpm exec tsx --conditions=source packages/core/introspect/scripts/build-index.ts
 //
 // The script walks up to find the monorepo root, creates an introspector
-// with `prewarm: true, cache: true`, awaits `ready`, prints a one-line
-// summary, and exits. The cache lands at `<root>/.dxos-introspect/cache.json`
-// and is reused by every subsequent introspector run (MCP server, tests, etc.)
-// until source files change.
+// with `prewarm: true, cache: true`, awaits `ready`, and writes two files:
+//
+//   - core.json    — symbol cache (~14 MB), reused across runs
+//   - plugins.json — plugin metadata sidecar (~200 KB), regenerated every run
+//
+// Both land under `<root>/node_modules/.cache/dxos-introspect/`. The MCP
+// edge worker reads each from R2 independently (different update cadences,
+// different schema versions).
 
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
-import { createIntrospector } from '../src';
+import { createIntrospector, pluginsFilePath } from '../src';
+
+// Bumped whenever the sidecar shape changes. Must match the worker's
+// `fetchPluginsJson` version check (currently 1).
+const PLUGINS_SIDECAR_VERSION = 1;
 
 const USAGE = [
   'Usage: build-index [options]',
@@ -104,6 +112,26 @@ if (verbose) {
     logVerbose(`indexed ${pkg.name}`);
   }
 }
+
+// Write the plugin metadata sidecar. Atomic rename — same convention as
+// saveCache. Worker reads `{plugins, surfaces, capabilities, operations,
+// schemas}` directly off R2; keep the keys identical.
+const pluginsPath = pluginsFilePath(root);
+const pluginsTmp = `${pluginsPath}.tmp`;
+mkdirSync(dirname(pluginsPath), { recursive: true });
+const sidecar = {
+  version: PLUGINS_SIDECAR_VERSION,
+  plugins: intro.listPlugins(),
+  surfaces: intro.listSurfaces(),
+  capabilities: intro.listCapabilities(),
+  operations: intro.listOperations(),
+  schemas: intro.listSchemas(),
+};
+writeFileSync(pluginsTmp, JSON.stringify(sidecar));
+renameSync(pluginsTmp, pluginsPath);
+log(
+  `wrote plugins sidecar: ${sidecar.plugins.length} plugins, ${sidecar.surfaces.length} surfaces, ${sidecar.capabilities.length} capabilities, ${sidecar.operations.length} operations, ${sidecar.schemas.length} schemas → ${pluginsPath}`,
+);
 
 const elapsed = ((Date.now() - start) / 1000).toFixed(1);
 log(`done in ${elapsed}s — ${packages.length} packages indexed.`);

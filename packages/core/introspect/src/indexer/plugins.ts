@@ -33,6 +33,12 @@ export type PluginRecord = {
 type PackageLike = {
   name: string;
   path: string;
+  /**
+   * Other workspace packages this package depends on (`workspace:*` deps from
+   * package.json). Used to derive plugin-to-plugin dependency edges: if pkg A
+   * depends on pkg B and both are plugins, plugin A `dependsOn` plugin B.
+   */
+  workspaceDependencies?: readonly string[];
 };
 
 /**
@@ -52,6 +58,35 @@ export const extractPlugins = (rootPath: string, packages: readonly PackageLike[
       records.push(record);
     }
   }
+
+  // Resolve `dependsOn`: for each plugin, intersect its package's workspace
+  // dependencies with the set of packages that are themselves plugins. This
+  // is purely package-level — it doesn't infer dependencies from consumed
+  // capability slots, only from declared workspace deps in package.json.
+  // Stable order: sorted by plugin id so output is deterministic across runs.
+  const pluginIdByPackage = new Map<string, PluginId>();
+  for (const record of records) {
+    pluginIdByPackage.set(record.plugin.package, record.plugin.id);
+  }
+  const packageByName = new Map<string, PackageLike>(packages.map((pkg) => [pkg.name, pkg]));
+  for (const record of records) {
+    const pkg = packageByName.get(record.plugin.package);
+    const deps = pkg?.workspaceDependencies ?? [];
+    // Use a Set so duplicate dep entries (defensive — `discoverPackages`
+    // already dedupes via Object.entries) can't produce duplicate edges.
+    const dependsOnSet = new Set<PluginId>();
+    for (const depName of deps) {
+      const depPluginId = pluginIdByPackage.get(depName);
+      if (depPluginId && depPluginId !== record.plugin.id) {
+        dependsOnSet.add(depPluginId);
+      }
+    }
+    const dependsOn = [...dependsOnSet].sort();
+    // `Plugin.dependsOn` is `readonly` in the schema-derived type — replace
+    // the plugin object instead of mutating it in place.
+    record.plugin = { ...record.plugin, dependsOn };
+  }
+
   return records;
 };
 
@@ -108,13 +143,39 @@ const tryExtract = (rootPath: string, pkg: PackageLike): PluginRecord | null => 
     extractFromFile(sourceFile, rootPath, meta.id, { surfaces, capabilities, operations, schemas });
   }
 
+  // Plugins commonly ship multiple entrypoint variants (e.g.
+  // `FooPlugin.node.ts` + `FooPlugin.tsx` + `cli/plugin.ts`) that each call
+  // `addSchemaModule({ schema: [...] })` with the same set of types. Each
+  // `addSchemaModule` call produces a separate Schema record, so the same
+  // (pluginId, name) ends up duplicated 2-3x. Dedupe — keep first occurrence
+  // so the surfaced location is deterministic (first source file walked).
+  // Capabilities and operations are intentionally NOT deduped: their `type`
+  // field is the slot name (e.g. `Capabilities.OperationHandler`), and
+  // multiple `Capability.contributes` calls to the same slot represent
+  // genuinely distinct contributions.
+  const dedupedSchemas = dedupeBy(schemas, (s) => `${s.pluginId}|${s.name}`);
+
   return {
     plugin: meta,
     surfaces,
     capabilities,
     operations,
-    schemas,
+    schemas: dedupedSchemas,
   };
+};
+
+const dedupeBy = <T>(items: T[], keyFn: (item: T) => string): T[] => {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const item of items) {
+    const key = keyFn(item);
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    out.push(item);
+  }
+  return out;
 };
 
 const readPluginMeta = (file: SourceFile, pkg: PackageLike): Plugin | null => {
@@ -140,6 +201,10 @@ const readPluginMeta = (file: SourceFile, pkg: PackageLike): Plugin | null => {
     description: readStringProperty(initializer, 'description'),
     icon: readStringProperty(initializer, 'icon'),
     iconHue: readStringProperty(initializer, 'iconHue'),
+    tags: readStringArrayProperty(initializer, 'tags'),
+    // Filled in by `extractPlugins` once every plugin's package mapping is
+    // known — left empty here to keep the per-package walk independent.
+    dependsOn: [],
     metaLocation: locationOf(file, metaDecl.getStart()),
   };
 };
@@ -289,6 +354,30 @@ const applyTrim = (raw: string): string => {
     ...lines.filter((line) => line.trim()).map((line) => line.match(/^[ \t]*/)?.[0].length ?? 0),
   );
   return lines.map((line) => line.slice(minIndent)).join('\n');
+};
+
+const readStringArrayProperty = (obj: ObjectLiteralExpression, name: string): string[] => {
+  const prop = obj.getProperty(name);
+  if (!prop || prop.getKind() !== SyntaxKind.PropertyAssignment) {
+    return [];
+  }
+  const initializer = prop.asKindOrThrow(SyntaxKind.PropertyAssignment).getInitializer();
+  if (!initializer || initializer.getKind() !== SyntaxKind.ArrayLiteralExpression) {
+    return [];
+  }
+  const arr = initializer.asKindOrThrow(SyntaxKind.ArrayLiteralExpression);
+  return arr
+    .getElements()
+    .map((element) => {
+      if (element.getKind() === SyntaxKind.StringLiteral) {
+        return element.asKindOrThrow(SyntaxKind.StringLiteral).getLiteralValue();
+      }
+      if (element.getKind() === SyntaxKind.NoSubstitutionTemplateLiteral) {
+        return element.asKindOrThrow(SyntaxKind.NoSubstitutionTemplateLiteral).getLiteralValue();
+      }
+      return undefined;
+    })
+    .filter((value): value is string => typeof value === 'string');
 };
 
 const readRoleProperty = (obj: ObjectLiteralExpression): string[] => {
