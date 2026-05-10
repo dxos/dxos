@@ -98,9 +98,9 @@ export const componentRegistry: XmlWidgetRegistry = {
   status: {
     block: true,
     streaming: true,
-    factory: ({ children, range }) => {
+    factory: ({ children }) => {
       const text = getXmlTextChild(children);
-      return text ? new StatusWidget(text, range.from) : null;
+      return text ? new StatusWidget(text) : null;
     },
   },
 
