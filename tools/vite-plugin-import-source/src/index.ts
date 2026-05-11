@@ -30,7 +30,10 @@ const PluginImportSource = ({
 }: PluginImportSourceOptions = {}): Plugin => {
   let resolver: ResolverFactory;
 
-  const globOptions = { dot: true };
+  // `nocomment: true` keeps Minimatch from treating leading `#` (used for Node
+  // subpath imports like `#diagnostics-broadcast`) as a comment pattern that
+  // matches nothing.
+  const globOptions = { dot: true, nocomment: true };
   const isMatch = (filePath: string) =>
     include.some((pattern) => Minimatch(filePath, pattern, globOptions)) &&
     !exclude.some((pattern) => Minimatch(filePath, pattern, globOptions));
@@ -61,8 +64,8 @@ const PluginImportSource = ({
 
         // Filter by package name pattern before resolving.
         const match =
-          include.some((pattern) => Minimatch(source, pattern, { dot: true })) &&
-          !exclude.some((pattern) => Minimatch(source, pattern, { dot: true }));
+          include.some((pattern) => Minimatch(source, pattern, globOptions)) &&
+          !exclude.some((pattern) => Minimatch(source, pattern, globOptions));
 
         if (!match) {
           verbose && console.log(`[plugin-import-source] ${source} -> excluded`);

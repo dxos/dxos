@@ -13,6 +13,7 @@ import { AssistantBlueprint } from '@dxos/plugin-assistant/blueprints';
 import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
 import { ChessHandlers } from '@dxos/plugin-chess/operations';
 import { Chess } from '@dxos/plugin-chess/types';
+import { Game } from '@dxos/plugin-game/types';
 import { CalendarBlueprint, InboxBlueprint, InboxSendBlueprint } from '@dxos/plugin-inbox/blueprints';
 import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/operations';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
@@ -95,7 +96,7 @@ export const types: Type.AnyEntity[] = [
   // NOTE: Types referenced by blueprints above need to be added here.
   DataTypes,
   [Chat.Chat],
-  [Chess.Game],
+  [Game, Chess.State],
   [Markdown.Document],
   [Mailbox.Mailbox, Calendar.Calendar, Feed.Feed],
   [Blueprint.Blueprint],

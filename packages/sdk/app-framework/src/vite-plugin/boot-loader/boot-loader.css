@@ -230,7 +230,9 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  /* Sit just below the centered disc — half the disc plus the configured gap. */
+  /* 
+   * Sit just below the centered disc — half the disc plus the configured gap.
+   */
   transform: translate(-50%, calc(var(--boot-loader-disc-size) / 2 + var(--boot-loader-status-gap)));
   /*
    * Slightly de-emphasised vs body text so the brand mark + ring stay the
@@ -239,16 +241,21 @@
    */
   opacity: 0.5;
   /*
-   * Single-line viewport over a vertically-stacked track of every status
-   * the driver has emitted. The track translates upward by one line-height
-   * per `status()` call (see `--boot-loader-line` below), animated via
-   * CSS `transition` on `transform` so the new line slides in from below
-   * while the previous line slides out — independent of any
-   * `scroll-behavior` smooth-scroll support, which Playwright/headless
-   * Chrome strips even from spec-compliant `scrollTo({ behavior: 'smooth' })`
-   * calls.
+   * Terminal-style log viewport (3 rows at the default `line-height`) over
+   * a vertically-stacked track of every status the driver has emitted. The
+   * track is bottom-anchored via `justify-content: flex-end` so the newest
+   * line always sits on the last visible row, older lines stack above it,
+   * and anything that doesn't fit is clipped at the top by
+   * `overflow: hidden`. The driver runs a FLIP-style transform animation
+   * per append so each new line slides up from below the bottom edge —
+   * independent of any `scroll-behavior` smooth-scroll support, which
+   * Playwright/headless Chrome strips even from spec-compliant
+   * `scrollTo({ behavior: 'smooth' })` calls.
    */
-  height: 1.5em;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 4.5em;
   line-height: 1.5;
   letter-spacing: 0.01em;
   /* 
@@ -271,10 +278,13 @@
   display: flex;
   flex-direction: column;
   /*
-   * The driver writes `transform: translateY(<index>em)` directly per
-   * `status()` call (see `boot-loader.js`). The transition animates the
-   * change so the new line slides in from below while the previous one
-   * slides out at the top.
+   * Resting transform is `translateY(0)` — the bottom-anchored flex
+   * parent already positions the newest line on the last visible row.
+   * On each append the driver does a one-shot FLIP: snap to
+   * `translateY(<lineHeight>px)` with no transition (placing the new
+   * line just below the viewport), force a reflow, then animate back to
+   * 0 so the track rises by one line-height and the new entry slides up
+   * into the bottom row. See `boot-loader.js`.
    */
   transform: translateY(0);
   transition: transform 500ms ease-out;

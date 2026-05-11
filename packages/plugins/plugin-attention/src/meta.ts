@@ -12,4 +12,5 @@ export const meta: Plugin.Meta = {
     Track and manage focused attention on objects across your workspace.
     Highlight items requiring action and coordinate team focus on priority work.
   `,
+  tags: ['system'],
 };

@@ -3,4 +3,3 @@
 //
 
 export { MarkdownCard as default } from './MarkdownCard';
-export { MarkdownEditableCard } from './MarkdownEditableCard';

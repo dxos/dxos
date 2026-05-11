@@ -12,6 +12,7 @@ export const meta: Plugin.Meta = {
     Hierarchical navigation tree for browsing spaces, folders, and objects.
     Provides sidebar navigation with collapsible sections and quick access to workspace content.
   `,
+  tags: ['system'],
 };
 
 // TODO(wittjosiah): Factor out.

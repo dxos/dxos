@@ -10,19 +10,15 @@ import { Chess } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Chess.Game.typename]: {
-        'typename.label': 'Game',
-        'typename.label_zero': 'Games',
-        'typename.label_one': 'Game',
-        'typename.label_other': 'Games',
-        'object-name.placeholder': 'New game',
-        'add-object.label': 'Add game',
-        'rename-object.label': 'Rename game',
-        'delete-object.label': 'Delete game',
-        'object-deleted.label': 'Game deleted',
+      [Chess.State.typename]: {
+        'typename.label': 'Chess',
+        'typename.label_zero': 'Chess games',
+        'typename.label_one': 'Chess game',
+        'typename.label_other': 'Chess games',
       },
       [meta.id]: {
         'plugin.name': 'Chess',
+        'new-game.button': 'New game',
         'delete-game.label': 'Delete',
         'game.checkmate.label': 'Checkmate',
         'game.stalemate.label': 'Stalemate',

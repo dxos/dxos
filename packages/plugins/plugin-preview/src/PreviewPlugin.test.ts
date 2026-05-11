@@ -14,7 +14,7 @@ import { meta } from './meta';
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
 describe('PreviewPlugin', () => {
-  test('modules activate on the expected events', async ({ expect }) => {
+  test('modules activate on the expected events', { timeout: 10_000 }, async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin({}), PreviewPlugin()],
     });

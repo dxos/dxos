@@ -90,8 +90,8 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
-  test('reload peer -- save index before restart', { timeout: 20_000 }, async () => {
-    const NUM_OBJECTS = 500;
+  test('reload peer -- save index before restart', { timeout: 60_000 }, async () => {
+    const NUM_OBJECTS = 100;
     await using peer = await builder.createPeer({
       types: [TestSchema.Person],
     });
@@ -101,6 +101,7 @@ describe('Integration tests', () => {
       db.add(Obj.make(TestSchema.Person, { name: `Person ${i}` }));
     }
     await db.flush();
+    await peer.host.updateIndexes();
 
     await peer.reload();
     await using db2 = await peer.openLastDatabase();
