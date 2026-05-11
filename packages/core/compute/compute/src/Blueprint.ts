@@ -20,6 +20,7 @@ import * as Template from './Template';
  * Blueprints contain instructions, tools, and artifacts that guide the AI's behavior.
  * Blueprints may use tools to create and read artifacts, which are managed by the assistant.
  */
+// TODO(burdon): Rename Skill?
 export const Blueprint = Schema.Struct({
   /**
    * Global registry ID.
@@ -72,7 +73,6 @@ export const Blueprint = Schema.Struct({
   mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
 }).pipe(
   Type.object({
-    // TODO(burdon): Is this a DXN? Need to create a Format type for these IDs.
     typename: 'org.dxos.type.blueprint',
     version: '0.1.0',
   }),
