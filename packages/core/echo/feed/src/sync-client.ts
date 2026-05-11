@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 
 import { Context } from '@dxos/context';
 import type { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 
@@ -75,13 +76,29 @@ export class SyncClient {
   handleMessage(message: ProtocolMessage): Effect.Effect<void, never, never> {
     const requestId = 'requestId' in message && message.requestId != null ? String(message.requestId) : undefined;
     if (requestId == null) {
+      log.trace('feed sync client response ignored (no request id)', {
+        tag: message._tag,
+        senderPeerId: message.senderPeerId,
+      });
       return Effect.void;
     }
     const deferred = this.#handlers.get(requestId);
     if (deferred == null) {
+      log.trace('feed sync client response ignored (no pending rpc)', {
+        requestId,
+        tag: message._tag,
+        senderPeerId: message.senderPeerId,
+      });
       return Effect.void;
     }
     this.#handlers.delete(requestId);
+    log('feed sync client rpc completed', {
+      requestId,
+      tag: message._tag,
+      blockCount: 'blocks' in message ? message.blocks.length : undefined,
+      positionCount: 'positions' in message ? message.positions.length : undefined,
+      error: message._tag === 'Error' ? message.message : undefined,
+    });
     if (message._tag === 'Error') {
       return Effect.andThen(Deferred.fail(deferred, new Error(message.message)), () => Effect.void);
     }
@@ -113,10 +130,22 @@ export class SyncClient {
         position: lastPulledPosition,
         limit: opts.limit,
       };
+      log('feed sync client pull rpc sending', {
+        requestId,
+        spaceId: opts.spaceId,
+        feedNamespace: opts.feedNamespace,
+        afterPosition: lastPulledPosition,
+        limit: opts.limit,
+      });
       yield* self.#sendMessage(ctx, self.#withPeerIds(request));
       const message = yield* Deferred.await(deferred);
       const response = yield* self.#expectResponse<QueryResponse>(requestId, message, 'QueryResponse');
       if (response.blocks.length === 0) {
+        log.trace('feed sync client pull done (empty batch)', {
+          requestId,
+          spaceId: opts.spaceId,
+          feedNamespace: opts.feedNamespace,
+        });
         return { done: true };
       }
       yield* self.#feedStore.append({
@@ -136,6 +165,14 @@ export class SyncClient {
         lastPulledPosition: maxPulledPosition,
       });
 
+      log('feed sync client pull applied batch', {
+        requestId,
+        spaceId: opts.spaceId,
+        feedNamespace: opts.feedNamespace,
+        batchSize: response.blocks.length,
+        hasMore: response.hasMore,
+        maxPulledPosition,
+      });
       return { done: false };
     });
   }
@@ -157,6 +194,10 @@ export class SyncClient {
         limit: opts.limit,
       });
       if (unpositioned.blocks.length === 0) {
+        log.trace('feed sync client push skipped (nothing to send)', {
+          spaceId: opts.spaceId,
+          feedNamespace: opts.feedNamespace,
+        });
         return { done: true };
       }
       const requestId = crypto.randomUUID();
@@ -169,6 +210,12 @@ export class SyncClient {
         feedNamespace: opts.feedNamespace,
         blocks: unpositioned.blocks,
       };
+      log('feed sync client push rpc sending', {
+        requestId,
+        spaceId: opts.spaceId,
+        feedNamespace: opts.feedNamespace,
+        blockCount: unpositioned.blocks.length,
+      });
       yield* self.#sendMessage(ctx, self.#withPeerIds(request));
       const message = yield* Deferred.await(deferred);
       const response = yield* self.#expectResponse<AppendResponse>(requestId, message, 'AppendResponse');
@@ -181,6 +228,12 @@ export class SyncClient {
           sequence: block.sequence,
           position,
         })),
+      });
+      log('feed sync client push positions applied', {
+        requestId,
+        spaceId: opts.spaceId,
+        feedNamespace: opts.feedNamespace,
+        positionCount: response.positions.length,
       });
       return { done: false };
     });
