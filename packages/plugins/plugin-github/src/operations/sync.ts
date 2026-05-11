@@ -216,19 +216,21 @@ const upsertProject = Effect.fn('upsertProject')(function* (
 
   if (existing) {
     const snapshot = readSnapshot<ProjectSnapshot>(integration, fid) ?? {};
-    const local = existing as unknown as Record<string, unknown>;
-    const writes: Partial<typeof remoteFields> = {};
-    for (const key of ['name', 'description'] as const) {
-      const result = mergeField(local[key] as string | undefined, remoteFields[key], snapshot[key]);
-      if (result.source === 'remote' && local[key] !== result.value) {
-        writes[key] = result.value;
-      }
-    }
-    if (Object.keys(writes).length > 0) {
+    const nameResult = mergeField<string | undefined>(existing.name, remoteFields.name, snapshot.name);
+    const descriptionResult = mergeField<string | undefined>(
+      existing.description,
+      remoteFields.description,
+      snapshot.description,
+    );
+    const writeName = nameResult.source === 'remote' && existing.name !== nameResult.value;
+    const writeDescription = descriptionResult.source === 'remote' && existing.description !== descriptionResult.value;
+    if (writeName || writeDescription) {
       Obj.update(existing, (existing) => {
-        const m = existing as unknown as Record<string, unknown>;
-        for (const [k, v] of Object.entries(writes)) {
-          m[k] = v;
+        if (writeName) {
+          existing.name = nameResult.value;
+        }
+        if (writeDescription) {
+          existing.description = descriptionResult.value;
         }
       });
     }
@@ -267,30 +269,32 @@ const upsertTask = Effect.fn('upsertTask')(function* (
 
   if (existing) {
     const snapshot = readSnapshot<TaskSnapshot>(integration, fid) ?? {};
-    const local = existing as unknown as Record<string, unknown>;
-    const writes: Partial<TaskSnapshot> = {};
-    {
-      const r = mergeField(local.title as string | undefined, remoteFields.title, snapshot.title);
-      if (r.source === 'remote' && local.title !== r.value) {
-        writes.title = r.value;
-      }
-    }
-    {
-      const r = mergeField(local.description as string | undefined, remoteFields.description, snapshot.description);
-      if (r.source === 'remote' && local.description !== r.value) {
-        writes.description = r.value;
-      }
-    }
-    {
-      const r = mergeField(local.status as TaskSnapshot['status'], remoteFields.status, snapshot.status);
-      if (r.source === 'remote' && local.status !== r.value) {
-        writes.status = r.value;
-      }
-    }
+    const titleResult = mergeField<string | undefined>(existing.title, remoteFields.title, snapshot.title);
+    const descriptionResult = mergeField<string | undefined>(
+      existing.description,
+      remoteFields.description,
+      snapshot.description,
+    );
+    // existing.status is the full Task status union ('todo' | 'in-progress' | 'done' | undefined);
+    // the snapshot only ever holds GitHub's collapsed shape ('todo' | 'done'). Widen the merge
+    // type so both sides typecheck and let mergeField compare them as plain values.
+    const statusResult = mergeField<'todo' | 'in-progress' | 'done' | undefined>(
+      existing.status,
+      remoteFields.status,
+      snapshot.status,
+    );
+    const writeTitle = titleResult.source === 'remote' && existing.title !== titleResult.value;
+    const writeDescription = descriptionResult.source === 'remote' && existing.description !== descriptionResult.value;
+    const writeStatus = statusResult.source === 'remote' && existing.status !== statusResult.value;
     Obj.update(existing, (existing) => {
-      const m = existing as unknown as Record<string, unknown>;
-      for (const [k, v] of Object.entries(writes)) {
-        m[k] = v;
+      if (writeTitle) {
+        existing.title = titleResult.value;
+      }
+      if (writeDescription) {
+        existing.description = descriptionResult.value;
+      }
+      if (writeStatus) {
+        existing.status = statusResult.value;
       }
       if (assignedPerson && !existing.assigned) {
         existing.assigned = Ref.make(assignedPerson);
@@ -374,9 +378,8 @@ export const pushRepoUpdates: <R>(
     if (local && !Obj.isDeleted(local)) {
       const snapshot = readSnapshot<ProjectSnapshot>(integration, fid);
       if (snapshot) {
-        const localFields = local as unknown as Record<string, unknown>;
-        const localName = (localFields.name as string | undefined) ?? '';
-        const localDescription = (localFields.description as string | undefined) ?? '';
+        const localName = local.name ?? '';
+        const localDescription = local.description ?? '';
         const input: GitHubApi.RepoUpdateInput = {};
         let diverged = false;
         if (snapshot.description !== undefined && snapshot.description !== localDescription) {
@@ -414,10 +417,9 @@ export const pushRepoUpdates: <R>(
     if (!snapshot) {
       continue;
     }
-    const localFields = local as unknown as Record<string, unknown>;
-    const localTitle = (localFields.title as string | undefined) ?? '';
-    const localDescription = (localFields.description as string | undefined) ?? '';
-    const localStatus = localFields.status as string | undefined;
+    const localTitle = local.title ?? '';
+    const localDescription = local.description ?? '';
+    const localStatus = local.status;
     const desiredStatusForSnapshot: 'todo' | 'done' | undefined =
       localStatus === 'done' ? 'done' : localStatus === 'todo' || localStatus === 'in-progress' ? 'todo' : undefined;
 

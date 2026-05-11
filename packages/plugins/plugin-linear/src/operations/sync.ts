@@ -130,19 +130,21 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
 
   if (existing) {
     const snapshot = readSnapshot<ProjectSnapshot>(integration, remote.id) ?? {};
-    const local = existing as unknown as Record<string, unknown>;
-    const writes: Partial<typeof remoteFields> = {};
-    for (const key of ['name', 'description'] as const) {
-      const result = mergeField(local[key] as string | undefined, remoteFields[key], snapshot[key]);
-      if (result.source === 'remote' && local[key] !== result.value) {
-        writes[key] = result.value;
-      }
-    }
-    if (Object.keys(writes).length > 0) {
+    const nameResult = mergeField<string | undefined>(existing.name, remoteFields.name, snapshot.name);
+    const descriptionResult = mergeField<string | undefined>(
+      existing.description,
+      remoteFields.description,
+      snapshot.description,
+    );
+    const writeName = nameResult.source === 'remote' && existing.name !== nameResult.value;
+    const writeDescription = descriptionResult.source === 'remote' && existing.description !== descriptionResult.value;
+    if (writeName || writeDescription) {
       Obj.update(existing, (existing) => {
-        const m = existing as unknown as Record<string, unknown>;
-        for (const [k, v] of Object.entries(writes)) {
-          m[k] = v;
+        if (writeName) {
+          existing.name = nameResult.value;
+        }
+        if (writeDescription) {
+          existing.description = descriptionResult.value;
         }
       });
     }
@@ -186,56 +188,39 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
 
   if (existing) {
     const snapshot = readSnapshot<TaskSnapshot>(integration, issue.id) ?? {};
-    const local = existing as unknown as Record<string, unknown>;
-    const writes: Partial<TaskSnapshot> = {};
-    // title + description: simple string-typed merge.
-    {
-      const r = mergeField(local.title as string | undefined, remoteFields.title, snapshot.title);
-      if (r.source === 'remote' && local.title !== r.value) {
-        writes.title = r.value;
-      }
-    }
-    {
-      const r = mergeField(local.description as string | undefined, remoteFields.description, snapshot.description);
-      if (r.source === 'remote' && local.description !== r.value) {
-        writes.description = r.value;
-      }
-    }
-    {
-      const r = mergeField(
-        local.status as TaskSnapshot['status'],
-        remoteFields.status,
-        snapshot.status,
-      );
-      if (r.source === 'remote' && local.status !== r.value) {
-        writes.status = r.value;
-      }
-    }
-    {
-      const r = mergeField(
-        local.priority as TaskSnapshot['priority'],
-        remoteFields.priority,
-        snapshot.priority,
-      );
-      // priority can legitimately be `undefined` on either side.
-      if (r.source === 'remote' && local.priority !== r.value) {
-        writes.priority = r.value;
-      }
-    }
-    {
-      const r = mergeField(
-        local.estimate as number | undefined,
-        remoteFields.estimate,
-        snapshot.estimate,
-      );
-      if (r.source === 'remote' && local.estimate !== r.value) {
-        writes.estimate = r.value;
-      }
-    }
+    const titleResult = mergeField<string | undefined>(existing.title, remoteFields.title, snapshot.title);
+    const descriptionResult = mergeField<string | undefined>(
+      existing.description,
+      remoteFields.description,
+      snapshot.description,
+    );
+    const statusResult = mergeField<TaskSnapshot['status']>(existing.status, remoteFields.status, snapshot.status);
+    const priorityResult = mergeField<TaskSnapshot['priority']>(
+      existing.priority,
+      remoteFields.priority,
+      snapshot.priority,
+    );
+    const estimateResult = mergeField<number | undefined>(existing.estimate, remoteFields.estimate, snapshot.estimate);
+    const writeTitle = titleResult.source === 'remote' && existing.title !== titleResult.value;
+    const writeDescription = descriptionResult.source === 'remote' && existing.description !== descriptionResult.value;
+    const writeStatus = statusResult.source === 'remote' && existing.status !== statusResult.value;
+    const writePriority = priorityResult.source === 'remote' && existing.priority !== priorityResult.value;
+    const writeEstimate = estimateResult.source === 'remote' && existing.estimate !== estimateResult.value;
     Obj.update(existing, (existing) => {
-      const m = existing as unknown as Record<string, unknown>;
-      for (const [k, v] of Object.entries(writes)) {
-        m[k] = v;
+      if (writeTitle) {
+        existing.title = titleResult.value;
+      }
+      if (writeDescription) {
+        existing.description = descriptionResult.value;
+      }
+      if (writeStatus) {
+        existing.status = statusResult.value;
+      }
+      if (writePriority) {
+        existing.priority = priorityResult.value;
+      }
+      if (writeEstimate) {
+        existing.estimate = estimateResult.value;
       }
       if (project) {
         const currentProjectId = existing.project?.dxn.asEchoDXN()?.echoId;
@@ -316,7 +301,7 @@ export const pushTeamUpdates: <R>(
   // by-foreign-key for each remote id rather than walking every Project/Task
   // in the database — both yield the same set, and the by-fid query keeps
   // memory bounded for spaces with thousands of unrelated tasks.
-  for (const [id, remoteProject] of remoteProjectsById) {
+  for (const [id] of remoteProjectsById) {
     const local = yield* findByForeignId<Project.Project>(Project.Project, id);
     if (!local || Obj.isDeleted(local)) {
       continue;
@@ -325,9 +310,8 @@ export const pushTeamUpdates: <R>(
     if (!snapshot) {
       continue;
     }
-    const localFields = local as unknown as Record<string, unknown>;
-    const localName = (localFields.name as string | undefined) ?? '';
-    const localDescription = (localFields.description as string | undefined) ?? '';
+    const localName = local.name ?? '';
+    const localDescription = local.description ?? '';
     const input: LinearApi.ProjectUpdateInput = {};
     let diverged = false;
     if (snapshot.name !== undefined && snapshot.name !== localName) {
@@ -347,7 +331,6 @@ export const pushTeamUpdates: <R>(
       name: localName,
       description: localDescription,
     });
-    void remoteProject; // referenced for symmetry with task loop / future state checks.
     projects++;
   }
 
@@ -360,12 +343,11 @@ export const pushTeamUpdates: <R>(
     if (!snapshot) {
       continue;
     }
-    const localFields = local as unknown as Record<string, unknown>;
-    const localTitle = (localFields.title as string | undefined) ?? '';
-    const localDescription = (localFields.description as string | undefined) ?? '';
-    const localStatus = localFields.status as TaskSnapshot['status'];
-    const localPriority = localFields.priority as TaskSnapshot['priority'];
-    const localEstimate = localFields.estimate as number | undefined;
+    const localTitle = local.title ?? '';
+    const localDescription = local.description ?? '';
+    const localStatus = local.status;
+    const localPriority = local.priority;
+    const localEstimate = local.estimate;
 
     const input: LinearApi.IssueUpdateInput = {};
     let diverged = false;

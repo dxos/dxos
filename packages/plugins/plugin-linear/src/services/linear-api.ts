@@ -424,12 +424,9 @@ export const priorityNumberToTaskPriority = (
  * the Task model treats absent as "no opinion", so a round-tripped issue
  * keeps whatever priority it had on Linear if local has none.
  */
-export const taskPriorityToPriorityNumber = (priority: 'low' | 'medium' | 'high' | 'urgent' | undefined):
-  | 1
-  | 2
-  | 3
-  | 4
-  | undefined => {
+export const taskPriorityToPriorityNumber = (
+  priority: 'none' | 'low' | 'medium' | 'high' | 'urgent' | undefined,
+): 1 | 2 | 3 | 4 | undefined => {
   switch (priority) {
     case 'urgent':
       return 1;
@@ -439,6 +436,7 @@ export const taskPriorityToPriorityNumber = (priority: 'low' | 'medium' | 'high'
       return 3;
     case 'low':
       return 4;
+    case 'none':
     default:
       return undefined;
   }
