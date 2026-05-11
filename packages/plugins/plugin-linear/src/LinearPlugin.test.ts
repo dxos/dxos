@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { ClientPlugin } from '@dxos/plugin-client';
-import { IntegrationPlugin } from '@dxos/plugin-integration';
+import { IntegrationPlugin } from '@dxos/plugin-integration/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { LinearPlugin } from '#plugin';

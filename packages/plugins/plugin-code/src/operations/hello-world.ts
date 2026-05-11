@@ -4,13 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
+import { CodeOperation } from '../types';
+
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 import { SourceFile } from '#types';
 
-import { HelloWorld } from './definitions';
 
 const HELLO_PATH = 'src/hello.ts';
 
@@ -27,7 +28,7 @@ const HELLO_CONTENT =
     main();
   ` + '\n';
 
-const handler: Operation.WithHandler<typeof HelloWorld> = HelloWorld.pipe(
+const handler: Operation.WithHandler<typeof CodeOperation.HelloWorld> = CodeOperation.HelloWorld.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ project }) {
       const code = yield* Database.load(project);

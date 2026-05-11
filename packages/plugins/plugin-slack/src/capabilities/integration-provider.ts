@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import {
   IntegrationProvider as IntegrationProviderCapability,
   type OnTokenCreated,
-} from '@dxos/plugin-integration/types';
+} from '@dxos/plugin-integration';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { SLACK_SCOPES, SLACK_SOURCE } from '../constants';

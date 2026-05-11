@@ -22,7 +22,7 @@ import { IntegrationCoordinator, IntegrationProvider, type IntegrationProviderEn
 
 import { CUSTOM_TOKEN_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
 import { IntegrationProviderNotFoundError } from '../errors';
-import { IntegrationOperation } from '../operations';
+import { IntegrationOperation } from '../types';
 import { Integration } from '../types';
 
 /** Pending integration awaiting an OAuth callback. */

@@ -4,11 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
+import { TicTacToeOperation } from '../types';
+
 import { Operation } from '@dxos/compute';
 
-import { Print } from './definitions';
 
-const handler: Operation.WithHandler<typeof Print> = Print.pipe(
+const handler: Operation.WithHandler<typeof TicTacToeOperation.Print> = TicTacToeOperation.Print.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ board, size }) {
       const rows: string[] = [];

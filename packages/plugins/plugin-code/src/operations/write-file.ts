@@ -4,14 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
+import { CodeOperation } from '../types';
+
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 
 import { SourceFile } from '#types';
 
-import { WriteFile } from './definitions';
 
-const handler: Operation.WithHandler<typeof WriteFile> = WriteFile.pipe(
+const handler: Operation.WithHandler<typeof CodeOperation.WriteFile> = CodeOperation.WriteFile.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ project, path, content }) {
       const code = yield* Database.load(project);

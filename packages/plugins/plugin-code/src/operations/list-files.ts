@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
+import { CodeOperation } from '../types';
+
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 
-import { ListFiles } from './definitions';
 
-const handler: Operation.WithHandler<typeof ListFiles> = ListFiles.pipe(
+const handler: Operation.WithHandler<typeof CodeOperation.ListFiles> = CodeOperation.ListFiles.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ project }) {
       const code = yield* Database.load(project);

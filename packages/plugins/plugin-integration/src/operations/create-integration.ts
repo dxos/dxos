@@ -7,10 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 
-import { Integration } from '../types';
-import { CreateIntegration } from './definitions';
+import { Integration, IntegrationOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof CreateIntegration> = CreateIntegration.pipe(
+const handler: Operation.WithHandler<typeof IntegrationOperation.CreateIntegration> = IntegrationOperation.CreateIntegration.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ accessToken, name }) {
       // TODO(wittjosiah): the operation should just depend on `Database.Service`

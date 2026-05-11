@@ -14,7 +14,7 @@ import { withAuthorization } from '@dxos/functions';
 import {
   IntegrationProvider as IntegrationProviderCapability,
   type OnTokenCreated,
-} from '@dxos/plugin-integration/types';
+} from '@dxos/plugin-integration';
 import { OAuthProvider } from '@dxos/protocols';
 
 import {

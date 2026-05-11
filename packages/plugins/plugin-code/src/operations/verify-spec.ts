@@ -4,11 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
+import { CodeOperation } from '../types';
+
 import { Operation } from '@dxos/compute';
 
-import { VerifySpec } from './definitions';
 
-const handler: Operation.WithHandler<typeof VerifySpec> = VerifySpec.pipe(
+const handler: Operation.WithHandler<typeof CodeOperation.VerifySpec> = CodeOperation.VerifySpec.pipe(
   Operation.withHandler(
     Effect.fn(function* () {
       return { ok: true, messages: [] as string[] };

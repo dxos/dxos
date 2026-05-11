@@ -7,8 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 
-import { type Integration } from '../types';
-import { SetIntegrationTargets } from './definitions';
+import { type Integration, IntegrationOperation } from '../types';
 
 /**
  * Generic, service-agnostic selection diff. See definitions.ts.
@@ -19,7 +18,7 @@ import { SetIntegrationTargets } from './definitions';
  * that have an `object` but no `remoteId` (e.g. Gmail's single Mailbox) are
  * always preserved — the dialog isn't responsible for them.
  */
-const handler: Operation.WithHandler<typeof SetIntegrationTargets> = SetIntegrationTargets.pipe(
+const handler: Operation.WithHandler<typeof IntegrationOperation.SetIntegrationTargets> = IntegrationOperation.SetIntegrationTargets.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ integration, selected, existingTarget }) {
       // TODO(wittjosiah): the operation should just depend on `Database.Service`

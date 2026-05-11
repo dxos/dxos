@@ -4,6 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
+import { TicTacToeOperation } from '../types';
+
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { loadGame } from '@dxos/plugin-game/types';
@@ -11,9 +13,8 @@ import { loadGame } from '@dxos/plugin-game/types';
 import { checkWin, currentTurn, placeMarker } from '#components';
 import { TicTacToe } from '#types';
 
-import { MakeMove } from './definitions';
 
-const handler: Operation.WithHandler<typeof MakeMove> = MakeMove.pipe(
+const handler: Operation.WithHandler<typeof TicTacToeOperation.MakeMove> = TicTacToeOperation.MakeMove.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ game, position }) {
       const { variant } = yield* loadGame(game, TicTacToe.State);
