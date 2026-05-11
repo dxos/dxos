@@ -71,7 +71,7 @@ export const CreateObjectPanel = ({
   const handleSelectOption = useCallback(
     async (id: string) => {
       const metadata = resolve?.(id);
-      if (metadata && !metadata.inputSchema) {
+      if (metadata && !metadata.inputSchema && !metadata.customPanel) {
         await onCreateObject?.({ metadata });
       } else {
         onTypenameChange?.(id);
@@ -94,6 +94,17 @@ export const CreateObjectPanel = ({
   // TODO(burdon): Remove.
   if (!target) {
     return <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={onTargetChange} />;
+  }
+
+  if (metadata.customPanel) {
+    const CustomPanel = metadata.customPanel;
+    return (
+      <CustomPanel
+        target={target}
+        initialFormValues={initialFormValues}
+        onCreateObject={(data) => handleCreateObject(data)}
+      />
+    );
   }
 
   if (metadata.inputSchema) {
