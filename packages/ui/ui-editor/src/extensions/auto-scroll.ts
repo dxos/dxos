@@ -120,7 +120,7 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
             private destroyed = false;
             constructor(view: EditorView) {
               // Throttle so a continuous drag-resize (or a flurry of layout changes) coalesces
-              // into a single re-pin per ~100ms instead of dispatching every frame.
+              // into a single re-pin per ~50ms instead of dispatching every frame.
               const onResize = throttle(() => {
                 if (this.destroyed || !enabled) {
                   return;

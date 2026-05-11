@@ -351,7 +351,7 @@ export const Timeline = composable<HTMLDivElement, TimelineProps>(
                     {commit.timestamp && format(commit.timestamp, 'HH:mm:ss.SSS')}
                   </div>
                 )}
-                <CommitIcon commit={commit} />
+                {showIcon && <CommitIcon commit={commit} />}
                 <div
                   role='none'
                   className={mx(
