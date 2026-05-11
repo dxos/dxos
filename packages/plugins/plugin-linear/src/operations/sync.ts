@@ -382,9 +382,15 @@ export const pushTeamUpdates: <E, R>(
           });
         }
       }
-      if (snapshot.priority !== undefined && snapshot.priority !== localPriority) {
-        // priority can legitimately be `undefined` (no priority); send `null`
-        // to clear, otherwise the 1..4 numeric form.
+      if (snapshot.priority !== localPriority) {
+        // Unlike title/description/status, `undefined` is a meaningful value
+        // for priority on both sides ("no priority"). We compare by value
+        // only — gating on `snapshot.priority !== undefined` would silently
+        // drop pushes when the user assigns priority to a previously-empty
+        // issue.
+        //
+        // Send `null` to clear (Linear treats null distinctly from undefined),
+        // otherwise the 1..4 numeric form.
         input.priority = LinearApi.taskPriorityToPriorityNumber(localPriority) ?? null;
         diverged = true;
       }

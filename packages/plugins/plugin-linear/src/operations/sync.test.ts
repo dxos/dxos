@@ -227,6 +227,68 @@ describe('plugin-linear sync', () => {
     expect(issueUpdateInput?.stateId).toBe('state-completed-id');
   });
 
+  test('push: priority assigned to previously-unprioritised issue is pushed', async ({ expect }) => {
+    // Regression: an earlier guard `snapshot.priority !== undefined` silently
+    // dropped pushes when the remote had no priority — exactly the common
+    // "user sets a priority on a freshly-pulled issue" case.
+    const { db, integration } = await setup();
+    const layer = Database.layer(db);
+
+    const first = await Effect.gen(function* () {
+      return yield* upsertTask(integration, issue({ priority: 0 }), undefined);
+    }).pipe(Effect.provide(layer), runAndForwardErrors);
+
+    // Sanity check: the seeded snapshot really does say "no priority".
+    const snapshots = (integration.snapshots ?? {}) as Record<string, any>;
+    expect(snapshots['issue-1']?.priority).toBeUndefined();
+
+    Obj.update(first.task, (task) => {
+      task.priority = 'medium';
+    });
+
+    let issueUpdateInput: LinearApi.IssueUpdateInput | undefined;
+    await Effect.gen(function* () {
+      yield* pushTeamUpdates(integration, new Map([['issue-1', issue({ priority: 0 })]]), new Map(), {
+        updateIssue: (_id, input) => {
+          issueUpdateInput = input;
+          return Effect.succeed(undefined);
+        },
+        updateProject: () => Effect.succeed(undefined),
+        resolveStateId: () => undefined,
+      });
+    }).pipe(Effect.provide(layer), runAndForwardErrors);
+
+    // Linear maps medium → 3.
+    expect(issueUpdateInput?.priority).toBe(3);
+  });
+
+  test('push: locally clearing priority sends null to Linear', async ({ expect }) => {
+    const { db, integration } = await setup();
+    const layer = Database.layer(db);
+
+    const first = await Effect.gen(function* () {
+      return yield* upsertTask(integration, issue(), undefined);
+    }).pipe(Effect.provide(layer), runAndForwardErrors);
+
+    Obj.update(first.task, (task) => {
+      task.priority = undefined;
+    });
+
+    let issueUpdateInput: LinearApi.IssueUpdateInput | undefined;
+    await Effect.gen(function* () {
+      yield* pushTeamUpdates(integration, new Map([['issue-1', issue()]]), new Map(), {
+        updateIssue: (_id, input) => {
+          issueUpdateInput = input;
+          return Effect.succeed(undefined);
+        },
+        updateProject: () => Effect.succeed(undefined),
+        resolveStateId: () => undefined,
+      });
+    }).pipe(Effect.provide(layer), runAndForwardErrors);
+
+    expect(issueUpdateInput?.priority).toBeNull();
+  });
+
   test('push: project description divergence calls updateProject', async ({ expect }) => {
     const { db, integration } = await setup();
     const layer = Database.layer(db);
