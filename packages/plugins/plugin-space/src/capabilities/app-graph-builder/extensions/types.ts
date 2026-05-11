@@ -61,7 +61,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
             id: Segments.types,
             type: TYPES_SECTION_TYPE,
             label: ['types-section.label', { ns: meta.id }],
-            icon: 'ph--shapes--regular',
+            icon: 'ph--database--regular',
             space,
             position: 'fallback',
             testId: 'spacePlugin.typesSection',

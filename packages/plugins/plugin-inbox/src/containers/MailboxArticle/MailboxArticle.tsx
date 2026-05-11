@@ -188,14 +188,14 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
-        {isEmpty ? (
-          <Toolbar.Root>
-            <InitializeMailboxAction mailbox={subject} />
-          </Toolbar.Root>
-        ) : (
-          <ElevationProvider elevation='positioned'>
-            <Menu.Root {...menuActions} attendableId={id}>
+      <ElevationProvider elevation='positioned'>
+        <Menu.Root {...menuActions} attendableId={id}>
+          <Panel.Toolbar asChild>
+            {isEmpty ? (
+              <Toolbar.Root>
+                <InitializeMailboxAction mailbox={subject} />
+              </Toolbar.Root>
+            ) : (
               <Menu.Toolbar>
                 <QueryEditor
                   classNames='grow min-w-0 ps-1'
@@ -220,10 +220,10 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
                   onClick={handleClear}
                 />
               </Menu.Toolbar>
-            </Menu.Root>
-          </ElevationProvider>
-        )}
-      </Panel.Toolbar>
+            )}
+          </Panel.Toolbar>
+        </Menu.Root>
+      </ElevationProvider>
       <Panel.Content asChild>
         {isEmpty ? (
           <InitializeMailbox mailbox={subject} />

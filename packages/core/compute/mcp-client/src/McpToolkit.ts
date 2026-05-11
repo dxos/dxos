@@ -36,7 +36,7 @@ export class McpConnectionError extends Schema.TaggedError<McpConnectionError>('
 /**
  * Creates an OpaqueToolkit that connects to an MCP server and exposes its tools to the assistant.
  *
- * @param options MCP server URL and transport kind ('sse' for SSE, 'http' for Streamable HTTP).
+ * @param options MCP server URL and transport protocol ('http' for Streamable HTTP, 'sse' for SSE).
  * @returns An OpaqueToolkit containing all tools from the MCP server.
  */
 const CLIENT_INFO = { name: '@dxos/mcp-client', version: '0.8.3' };
