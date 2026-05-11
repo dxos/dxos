@@ -66,12 +66,12 @@ export type TimelineProps = ThemedClassName<{
   compact?: boolean;
   options?: TimelineOptions;
   debug?: boolean;
-  onCurrentChange?: (props: { current?: number; commit?: Commit }) => void;
+  onChange?: (props: { current?: number; commit?: Commit }) => void;
   /**
    * Callback when a commit with a link is clicked.
    * If provided, commits with links will be navigable.
    */
-  onCommitClick?: (commit: Commit | null) => void;
+  onSelect?: (commit: Commit | undefined) => void;
 }>;
 
 /**
@@ -88,8 +88,8 @@ export const Timeline = composable<HTMLDivElement, TimelineProps>(
       compact = false,
       options = compact ? compactOptions : defaultOptions,
       debug = false,
-      onCurrentChange,
-      onCommitClick,
+      onChange,
+      onSelect,
       ...props
     },
     forwardedRef,
@@ -208,24 +208,26 @@ export const Timeline = composable<HTMLDivElement, TimelineProps>(
     }, [commits, branches]);
 
     // Navigation.
-    const [current, setCurrent] = useState<number | undefined>();
-    const currentRef = useDynamicRef(current);
+    const [current, setCurrent] = useState<number | undefined>(undefined);
+    const currentRef = useDynamicRef<number | undefined>(current);
+    const selectedRef = useDynamicRef<number | undefined>(undefined);
     const currentCommit = useMemo(() => (current !== undefined ? commits[current] : undefined), [current, commits]);
 
     // Controlled `currentBranch` takes precedence over the branch derived from the selected commit.
     const highlightedBranch = currentBranch ?? currentCommit?.branch;
 
     useEffect(() => {
-      onCurrentChange?.({ current, commit: current === undefined ? undefined : commits[current] });
+      onChange?.({ current, commit: current === undefined ? undefined : commits[current] });
       const el = containerRef.current?.querySelector(`[data-index="${current}"]`);
       el?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
-    }, [current]);
+    }, [onChange, current]);
 
     // When the controlled `currentBranch` changes, jump to the first commit on that branch.
     useEffect(() => {
       if (!currentBranch) {
         return;
       }
+
       const index = commits.findIndex((commit) => commit.branch === currentBranch);
       if (index >= 0) {
         setCurrent(index);
@@ -284,15 +286,9 @@ export const Timeline = composable<HTMLDivElement, TimelineProps>(
           case 'Enter': {
             event.preventDefault();
             if (currentRef.current !== undefined) {
-              onCommitClick?.(commits[currentRef.current]);
+              selectedRef.current = currentRef.current === selectedRef.current ? undefined : currentRef.current;
+              onSelect?.(selectedRef.current !== undefined ? commits[selectedRef.current] : undefined);
             }
-            break;
-          }
-          // TODO(burdon): Not handled; must integrate with tabster.
-          case 'Escape': {
-            event.preventDefault();
-            setCurrent(undefined);
-            onCommitClick?.(null);
             break;
           }
         }
@@ -320,10 +316,11 @@ export const Timeline = composable<HTMLDivElement, TimelineProps>(
               return null;
             }
 
-            const hasLink = !!commit.link && !!onCommitClick;
+            const hasLink = !!commit.link && !!onSelect;
             const handleClick = () => {
               setCurrent(index);
-              onCommitClick?.(commit);
+              selectedRef.current = index;
+              onSelect?.(commit);
             };
 
             return (
