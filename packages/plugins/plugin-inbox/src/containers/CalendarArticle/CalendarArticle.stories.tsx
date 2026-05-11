@@ -12,8 +12,9 @@ import { Feed } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { PreviewPlugin } from '@dxos/plugin-preview';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import { StorybookPlugin } from '@dxos/plugin-testing/plugin';
 import { Filter, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 

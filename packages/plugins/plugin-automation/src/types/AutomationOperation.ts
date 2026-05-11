@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
@@ -10,7 +12,7 @@ import { Database } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import { TriggerTemplate } from '../types';
+import { TriggerTemplate } from './index';
 
 const AUTOMATION_OPERATION = `${meta.id}.operation`;
 

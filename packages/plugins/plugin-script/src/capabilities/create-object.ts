@@ -9,7 +9,7 @@ import { Operation, Script } from '@dxos/compute';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { SpaceCapabilities } from '@dxos/plugin-space/types';
 
-import { ScriptOperation } from '#operations';
+import { ScriptOperation } from '#types';
 import { Notebook } from '#types';
 
 export default Capability.makeModule(

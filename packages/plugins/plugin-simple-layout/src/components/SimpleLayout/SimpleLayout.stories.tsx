@@ -10,7 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Collection } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
-import { SearchPlugin } from '@dxos/plugin-search';
+import { SearchPlugin } from '@dxos/plugin-search/plugin';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { corePlugins } from '@dxos/plugin-testing';
 import { translations as searchTranslation } from '@dxos/react-ui-search/translations';

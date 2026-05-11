@@ -25,7 +25,7 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { LayoutState, type LayoutStateProps } from '#types';
+import { StorybookCapabilities } from '#types';
 
 const debounce_delay = 100;
 
@@ -71,14 +71,14 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
   const { t } = useTranslation(meta.id);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const registry = useContext(RegistryContext);
-  const stateAtom = useCapability(LayoutState);
+  const stateAtom = useCapability(StorybookCapabilities.LayoutState);
   const layout = useAtomValue(stateAtom);
   const [iter, setIter] = useState(0);
   const [open, setOpen] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const updateState = useCallback(
-    (updates: Partial<LayoutStateProps>) => {
+    (updates: Partial<StorybookCapabilities.LayoutStateProps>) => {
       const current = registry.get(stateAtom);
       registry.set(stateAtom, { ...current, ...updates });
     },

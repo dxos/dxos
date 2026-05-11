@@ -19,9 +19,10 @@ import { invariant } from '@dxos/invariant';
 // see `@dxos/plugin-testing/src/core.ts` for the rationale.
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/plugin';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import { StorybookPlugin } from '@dxos/plugin-testing/plugin';
 import { random } from '@dxos/random';
 import { Filter, type Space, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';

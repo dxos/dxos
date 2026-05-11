@@ -10,7 +10,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { Integration } from '@dxos/plugin-integration/types';
 
 import { meta } from '#meta';

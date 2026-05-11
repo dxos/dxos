@@ -13,7 +13,7 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Text } from '@dxos/schema';
 

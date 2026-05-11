@@ -9,7 +9,8 @@ import React, { useEffect, useState } from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import { StorybookPlugin } from '@dxos/plugin-testing/plugin';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 

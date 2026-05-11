@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';

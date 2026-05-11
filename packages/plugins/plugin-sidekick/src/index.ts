@@ -2,10 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-
-import { meta } from './meta';
-
-export const SidekickPlugin = Plugin.lazy(meta, () => import('./SidekickPlugin'));
-
+export * from './blueprints';
 export * from './meta';
+export * from './types';

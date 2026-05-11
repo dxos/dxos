@@ -4,7 +4,7 @@
 
 import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { AutomationEvents } from '@dxos/plugin-automation/types';
+import { AutomationEvents } from '@dxos/plugin-automation';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 

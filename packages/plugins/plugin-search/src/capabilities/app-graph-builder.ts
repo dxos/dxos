@@ -12,7 +12,7 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { SearchOperation } from '#operations';
+import { SearchOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

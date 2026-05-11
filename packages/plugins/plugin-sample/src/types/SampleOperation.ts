@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 // Operation definitions declare the contract for plugin actions.
 // Operations are the primary way plugins expose functionality to the framework,
 // other plugins, and AI assistants. Each operation has typed input/output schemas.

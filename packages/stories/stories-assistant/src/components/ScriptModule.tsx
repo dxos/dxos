@@ -8,7 +8,7 @@ import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
 import { Script } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { ScriptCapabilities } from '@dxos/plugin-script';
-import { ScriptContainer as ScriptContainerComponent } from '@dxos/plugin-script/containers';
+import { ScriptContainer as ScriptContainerComponent } from '@dxos/plugin-script';
 import { useQuery } from '@dxos/react-client/echo';
 
 import { type ComponentProps } from './types';

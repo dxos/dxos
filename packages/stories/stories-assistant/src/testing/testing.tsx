@@ -31,15 +31,15 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Assistant, AssistantOperation } from '@dxos/plugin-assistant';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
-import { AutomationPlugin } from '@dxos/plugin-automation';
+import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client/types';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
-import { PreviewPlugin } from '@dxos/plugin-preview';
-import { StorybookPlugin } from '@dxos/plugin-testing';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';
+import { StorybookPlugin } from '@dxos/plugin-testing/plugin';
 import { type Client, Config } from '@dxos/react-client';
 import { AccessToken } from '@dxos/types';
 

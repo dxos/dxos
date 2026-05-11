@@ -12,7 +12,7 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 
-import { ScriptOperation } from '#operations';
+import { ScriptOperation } from '#types';
 
 import { type Template } from '../templates';
 import { deployScript } from '../util';

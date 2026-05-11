@@ -25,7 +25,7 @@ import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { type QueueService } from '@dxos/functions';
 import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import type { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import type { AutomationCapabilities } from '@dxos/plugin-automation';
 import { Message } from '@dxos/types';
 
 import { AssistantOperation } from '#types';

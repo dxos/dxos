@@ -14,7 +14,7 @@ import { Sequence } from '@dxos/conductor';
 import { DXN, Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';

@@ -4,15 +4,15 @@
 
 import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework';
 import { type Config } from '@dxos/client';
-import { AutomationPlugin } from '@dxos/plugin-automation';
+import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { IntegrationPlugin } from '@dxos/plugin-integration';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
 import { ObservabilityPlugin } from '@dxos/plugin-observability';
-import { RegistryPlugin } from '@dxos/plugin-registry';
-import { SamplePlugin } from '@dxos/plugin-sample';
+import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
+import { SamplePlugin } from '@dxos/plugin-sample/plugin';
 import { SpacePlugin } from '@dxos/plugin-space';
 
 export type PluginConfig = {

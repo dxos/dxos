@@ -15293,6 +15293,9 @@ importers:
       '@huggingface/transformers':
         specifier: 'catalog:'
         version: 3.8.1
+      '@xenova/transformers':
+        specifier: 'catalog:'
+        version: 2.17.2
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -15321,9 +15324,6 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.7)
-      '@xenova/transformers':
-        specifier: 'catalog:'
-        version: 2.17.2
       react:
         specifier: ~19.2.3
         version: 19.2.3
