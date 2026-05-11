@@ -3,7 +3,7 @@
 //
 
 const PART = /^[a-z][a-zA-Z0-9]*$/;
-const ID = /^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)*$/;
+const ID = /^[a-z][a-zA-Z0-9]*(?:\.[a-z][a-zA-Z0-9]*)*$/;
 
 /**
  * Tagged template literal that constructs a well-formed, dot-delimited id string.
@@ -14,7 +14,7 @@ const ID = /^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)*$/;
  *   id`org.dxos.plugin.deck` // 'org.dxos.plugin.deck'
  *   id`${namespace}.${name}` // joins interpolated values
  */
-export function id(strings: TemplateStringsArray, ...values: any[]): string {
+export function id(strings: TemplateStringsArray, ...values: unknown[]): string {
   const raw = strings.reduce((out, str, i) => out + str + (i < values.length ? String(values[i]) : ''), '');
   if (!ID.test(raw)) {
     throw new Error(`Invalid id: ${JSON.stringify(raw)}`);
