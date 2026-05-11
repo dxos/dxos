@@ -99,6 +99,10 @@ export const bootLoaderPlugin = ({ status, markSvg }: BootLoaderOptions = {}): P
               children: [
                 {
                   tag: 'div',
+                  attrs: { id: 'boot-loader-status-fade' },
+                },
+                {
+                  tag: 'div',
                   attrs: { id: 'boot-loader-status-track' },
                   children: status
                     ? [{ tag: 'div', attrs: { class: 'boot-loader-status-line' }, children: status }]
