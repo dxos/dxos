@@ -42,6 +42,10 @@ export const Input = Schema.Struct({
   name: Schema.String,
   kind: InputKind,
   default: Schema.optional(Schema.Any),
+  /**
+   * Operation key invoked when `kind === 'operation'`. The referenced operation must accept void input —
+   * template inputs have no mechanism for passing arguments.
+   */
   operation: Schema.optional(Schema.String),
 });
 
@@ -98,7 +102,8 @@ export const processTemplate = (
               Effect.catchTag('NoSuchElementException', () => Effect.fail(new FunctionNotFoundError(input.operation!))),
             );
 
-            const result = yield* Operation.invoke(fn, {} as any).pipe(Effect.orDie);
+            // NOTE: Operations referenced by template inputs must accept void input — see `Input.operation`.
+            const result = yield* Operation.invoke(fn, undefined as any).pipe(Effect.orDie);
             return [input.name, result] as const;
           }
 

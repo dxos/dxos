@@ -109,17 +109,15 @@ export const TemplateForm = ({ id, template, commandEditable = true, onChange }:
               </Input.Root>
 
               <div>
-                {input.kind !== undefined && ['value', 'context', 'resolver', 'schema'].includes(input.kind) && (
-                  <div>
-                    <Input.Root>
-                      <Input.TextInput
-                        placeholder={t('command.placeholder')}
-                        classNames='w-full bg-transparent'
-                        value={input.default ?? ''}
-                        onChange={(event) => handleInputDefaultChange(input.name, event.target.value)}
-                      />
-                    </Input.Root>
-                  </div>
+                {input.kind === 'value' && (
+                  <Input.Root>
+                    <Input.TextInput
+                      placeholder={t('command.placeholder')}
+                      classNames='w-full bg-transparent'
+                      value={input.default ?? ''}
+                      onChange={(event) => handleInputDefaultChange(input.name, event.target.value)}
+                    />
+                  </Input.Root>
                 )}
               </div>
             </Fragment>

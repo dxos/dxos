@@ -114,7 +114,7 @@ describe('Template', () => {
       expect(result).toBe('Hello world!');
     });
 
-    test('resolves a function-kind input and substitutes the result', async () => {
+    test('resolves an operation-kind input and substitutes the result', async () => {
       const template = Template.make({
         source: 'Hello {{name}}.',
         inputs: [{ name: 'name', kind: 'operation', operation: 'test.greet' }],
