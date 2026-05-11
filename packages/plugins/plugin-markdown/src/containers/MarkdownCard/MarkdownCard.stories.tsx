@@ -9,7 +9,7 @@ import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown';
 import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';

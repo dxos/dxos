@@ -13,7 +13,7 @@ import { Collection } from '@dxos/echo';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';

@@ -12,7 +12,7 @@ import { Routine } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';

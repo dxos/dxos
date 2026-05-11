@@ -9,7 +9,7 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 import { Integration } from '@dxos/plugin-integration/types';
-import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban/types';
+import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
 import { Expando } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 

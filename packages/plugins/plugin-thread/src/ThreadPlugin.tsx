@@ -8,7 +8,7 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { ClientEvents } from '@dxos/plugin-client/types';
-import { MarkdownEvents } from '@dxos/plugin-markdown/types';
+import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
 import { AnchoredTo, Channel, Message, Thread } from '@dxos/types';

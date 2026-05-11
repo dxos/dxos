@@ -15,7 +15,7 @@ import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown';
 import { HasSubject } from '@dxos/types';
 
 import { WithProperties } from '#testing';

@@ -21,8 +21,8 @@ import { ChessBlueprint, ChessFunctions } from '@dxos/plugin-chess/blueprints';
 import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
 import { MapBlueprint } from '@dxos/plugin-map/blueprints';
-import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { MarkdownBlueprint } from '@dxos/plugin-markdown';
+import { Markdown } from '@dxos/plugin-markdown';
 import { ThreadBlueprint } from '@dxos/plugin-thread/blueprints';
 import { TranscriptionBlueprint } from '@dxos/plugin-transcription/blueprints';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -510,7 +510,7 @@ export const WithBoard: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
       const [{ Board }, { BoardPlugin }] = await Promise.all([
-        import('@dxos/plugin-board/types'),
+        import('@dxos/plugin-board'),
         import('@dxos/plugin-board'),
       ]);
       return {
@@ -520,11 +520,11 @@ export const WithBoard: Story = {
     },
     config: config.remote,
     onInit: async ({ space }) => {
-      const { Board } = await import('@dxos/plugin-board/types');
+      const { Board } = await import('@dxos/plugin-board');
       space.db.add(Board.makeBoard());
     },
     onChatCreated: async ({ space, binder }) => {
-      const { Board } = await import('@dxos/plugin-board/types');
+      const { Board } = await import('@dxos/plugin-board');
       const objects = await space.db.query(Filter.type(Board.Board)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },

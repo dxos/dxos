@@ -13,7 +13,7 @@ import { Sequence } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { DeckEvents } from '@dxos/plugin-deck/types';
-import { MarkdownEvents } from '@dxos/plugin-markdown/types';
+import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message } from '@dxos/types';

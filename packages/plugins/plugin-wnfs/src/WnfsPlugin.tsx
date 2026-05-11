@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { ClientEvents } from '@dxos/plugin-client/types';
-import { MarkdownEvents } from '@dxos/plugin-markdown/types';
+import { MarkdownEvents } from '@dxos/plugin-markdown';
 
 import { Blockstore, CreateObject, FileUploader, Markdown, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';

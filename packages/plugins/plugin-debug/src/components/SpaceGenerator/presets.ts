@@ -11,7 +11,7 @@ import { DXN, Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag
 import { invariant } from '@dxos/invariant';
 import { InboxOperation } from '@dxos/plugin-inbox/operations';
 import { Mailbox } from '@dxos/plugin-inbox/types';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown';
 import { type Space } from '@dxos/react-client/echo';
 import {
   type ComputeShape,

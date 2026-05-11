@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
 import { Collection } from '@dxos/echo';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown';
 
 import { meta } from '#meta';
 

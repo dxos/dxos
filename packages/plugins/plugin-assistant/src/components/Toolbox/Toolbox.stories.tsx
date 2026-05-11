@@ -12,7 +12,7 @@ import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MapPlugin } from '@dxos/plugin-map';
-import { TablePlugin } from '@dxos/plugin-table';
+import { TablePlugin } from '@dxos/plugin-table/plugin';
 import { corePlugins } from '@dxos/plugin-testing';
 
 import { translations } from '#translations';

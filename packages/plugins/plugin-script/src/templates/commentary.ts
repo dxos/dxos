@@ -21,7 +21,7 @@ import { createDocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Chess } from '@dxos/plugin-chess/types';
 import { Game, GameRef, loadGame } from '@dxos/plugin-game/types';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';

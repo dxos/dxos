@@ -19,7 +19,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const { Obj, Ref } = yield* Effect.tryPromise(() => import('@dxos/echo'));
     const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client/types'));
-    const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown/types'));
+    const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown'));
     const { Collection } = yield* Effect.tryPromise(() => import('@dxos/echo'));
 
     const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);

@@ -9,7 +9,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { DatabaseBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
 import { Routine } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
+import { MarkdownBlueprint } from '@dxos/plugin-markdown';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton } from '@dxos/react-ui';
 

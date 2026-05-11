@@ -10,7 +10,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Integration } from '@dxos/plugin-integration/types';
-import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban/types';
+import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
 import { Expando } from '@dxos/schema';
 
 import { meta } from '#meta';

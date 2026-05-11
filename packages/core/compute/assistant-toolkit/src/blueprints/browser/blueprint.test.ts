@@ -14,10 +14,10 @@ import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
-import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
+import { MarkdownBlueprint } from '@dxos/plugin-markdown';
+import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown';
+import { Markdown } from '@dxos/plugin-markdown';
 import { WithProperties } from '@dxos/plugin-markdown/testing';
-import { Markdown } from '@dxos/plugin-markdown/types';
 import { Person } from '@dxos/types';
 
 import { DatabaseBlueprint, DatabaseHandlers } from '../database';
