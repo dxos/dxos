@@ -58,7 +58,12 @@ describe('Registry', () => {
 
     expect(local.get(upstreamObj.id)).toBe(upstreamObj);
     expect(local.get(localObj.id)).toBe(localObj);
-    expect(local.list().map((o) => (o as any).value).sort()).toEqual([100, 200]);
+    expect(
+      local
+        .list()
+        .map((o) => (o as any).value)
+        .sort(),
+    ).toEqual([100, 200]);
 
     const allFoo = local.query(Query.select(Filter.key('org.example.type.foo'))).runSync();
     expect(allFoo).toHaveLength(1);

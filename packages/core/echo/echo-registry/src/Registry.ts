@@ -102,8 +102,7 @@ export class Service extends Context.Tag('@dxos/echo-registry/Service')<Service,
 /**
  * Build an Effect Layer providing a {@link Registry} with the given options.
  */
-export const layer = (options: Options = {}): Layer.Layer<Service> =>
-  Layer.sync(Service, () => make(options));
+export const layer = (options: Options = {}): Layer.Layer<Service> => Layer.sync(Service, () => make(options));
 
 /**
  * Build an Effect Layer that delegates to an upstream registry from the Effect environment.
@@ -114,9 +113,7 @@ export const layer = (options: Options = {}): Layer.Layer<Service> =>
  * const stack = Layer.provide(localLayer, upstreamLayer);
  * ```
  */
-export const layerWithUpstream = (
-  options: Omit<Options, 'upstream'> = {},
-): Layer.Layer<Service, never, Service> =>
+export const layerWithUpstream = (options: Omit<Options, 'upstream'> = {}): Layer.Layer<Service, never, Service> =>
   Layer.effect(
     Service,
     Effect.gen(function* () {

@@ -69,10 +69,11 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
     }, [companionTo]);
     const existingBlueprints = useQuery(space?.db, Filter.type(Blueprint.Blueprint));
     const pluginBlueprints = useMemo(
-      () => existingBlueprints.filter((blueprint) => {
-        const key = Obj.getMeta(blueprint).key;
-        return key !== undefined && blueprintKeys.includes(key);
-      }),
+      () =>
+        existingBlueprints.filter((blueprint) => {
+          const key = Obj.getMeta(blueprint).key;
+          return key !== undefined && blueprintKeys.includes(key);
+        }),
       [existingBlueprints, blueprintKeys],
     );
 
