@@ -153,9 +153,9 @@ export const reconcileBoardCards: (
 
         if (Object.keys(writes).length > 0) {
           Obj.update(existing, (existing) => {
-            const m = existing as unknown as Record<string, unknown>;
-            for (const [k, v] of Object.entries(writes)) {
-              m[k] = v;
+            const fields = existing as unknown as Record<string, unknown>;
+            for (const [key, value] of Object.entries(writes)) {
+              fields[key] = value;
             }
           });
           updated++;
@@ -195,9 +195,8 @@ export const reconcileBoardCards: (
 
     if (newRefs.length > 0) {
       Obj.update(kanban, (kanban) => {
-        const m = kanban as Obj.Mutable<typeof kanban>;
-        if (m.spec.kind === 'items') {
-          m.spec.items = [...(m.spec.items as ReadonlyArray<Ref.Ref<Obj.Unknown>>), ...newRefs];
+        if (kanban.spec.kind === 'items') {
+          kanban.spec.items = [...(kanban.spec.items as ReadonlyArray<Ref.Ref<Obj.Unknown>>), ...newRefs];
         }
       });
     }
@@ -245,14 +244,12 @@ export const reconcileBoardCards: (
 
     if (nameMerge.source === 'remote' && kanban.name !== nameMerge.value) {
       Obj.update(kanban, (kanban) => {
-        const m = kanban as Obj.Mutable<typeof kanban>;
-        m.name = nameMerge.value;
+        kanban.name = nameMerge.value;
       });
     }
     if (orderMerge.source === 'remote') {
       Obj.update(kanban, (kanban) => {
-        const m = kanban as Obj.Mutable<typeof kanban>;
-        m.arrangement.order = orderMerge.value;
+        kanban.arrangement.order = orderMerge.value;
       });
     } else if (orderMerge.source === 'local') {
       log.warn('trello pull: local column order diverged from snapshot; push of reorders is not yet implemented', {
@@ -261,14 +258,13 @@ export const reconcileBoardCards: (
     }
     if (columnsMerge.source === 'remote') {
       Obj.update(kanban, (kanban) => {
-        const m = kanban as Obj.Mutable<typeof kanban>;
-        const prev = m.arrangement.columns as Record<string, { ids: string[]; hidden?: boolean }>;
+        const prev = kanban.arrangement.columns as Record<string, { ids: string[]; hidden?: boolean }>;
         const merged = columnsMerge.value as Record<string, { ids: string[]; hidden?: boolean }>;
         // Remote columns are only Trello lists — never include UNCATEGORIZED. mergeDeep(remote-wins)
         // would drop the initial `{ hidden: true }` bucket from findOrCreateKanbanForBoard.
         const uncategorizedIds = merged[UNCATEGORIZED_VALUE]?.ids ?? prev[UNCATEGORIZED_VALUE]?.ids ?? [];
         const uncategorizedHidden = merged[UNCATEGORIZED_VALUE]?.hidden ?? prev[UNCATEGORIZED_VALUE]?.hidden ?? true;
-        m.arrangement.columns = {
+        kanban.arrangement.columns = {
           ...merged,
           [UNCATEGORIZED_VALUE]: { ids: uncategorizedIds, hidden: uncategorizedHidden },
         };
@@ -557,10 +553,9 @@ const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.p
               localObj = yield* findOrCreateKanbanForBoard(remoteBoard);
               const materializedRef = Ref.make(localObj);
               Obj.update(integrationObj, (integrationObj) => {
-                const mutable = integrationObj as Obj.Mutable<typeof integrationObj>;
-                const idx = mutable.targets.findIndex((t) => t.remoteId === foreignId);
+                const idx = integrationObj.targets.findIndex((target) => target.remoteId === foreignId);
                 if (idx >= 0) {
-                  mutable.targets[idx] = { ...mutable.targets[idx], object: materializedRef };
+                  integrationObj.targets[idx] = { ...integrationObj.targets[idx], object: materializedRef };
                 }
               });
             }
@@ -621,13 +616,12 @@ const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.p
                 // Match by `remoteId` (stable across runs) with a fallback to
                 // local-object echo id for legacy entries that lack `remoteId`.
                 Obj.update(integrationObj, (integrationObj) => {
-                  const m = integrationObj as Obj.Mutable<typeof integrationObj>;
-                  const idx = m.targets.findIndex((t) => {
-                    if (t.remoteId !== undefined) {
-                      return t.remoteId === boardId;
+                  const idx = integrationObj.targets.findIndex((target) => {
+                    if (target.remoteId !== undefined) {
+                      return target.remoteId === boardId;
                     }
-                    const localId = t.object?.target
-                      ? Obj.getMeta(t.object.target).keys.find((k) => k.source === TRELLO_SOURCE)?.id
+                    const localId = target.object?.target
+                      ? Obj.getMeta(target.object.target).keys.find((key) => key.source === TRELLO_SOURCE)?.id
                       : undefined;
                     return localId === boardId;
                   });
@@ -635,14 +629,14 @@ const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.p
                     return;
                   }
                   if (result._tag === 'Right') {
-                    m.targets[idx] = {
-                      ...m.targets[idx],
+                    integrationObj.targets[idx] = {
+                      ...integrationObj.targets[idx],
                       lastSyncAt: new Date().toISOString(),
                       lastError: undefined,
                     };
                   } else {
-                    m.targets[idx] = {
-                      ...m.targets[idx],
+                    integrationObj.targets[idx] = {
+                      ...integrationObj.targets[idx],
                       lastError: formatTrelloSyncFailure(result.left),
                     };
                   }
