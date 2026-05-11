@@ -47,6 +47,14 @@ export const State = Schema.Struct({
 
 export interface State extends Schema.Schema.Type<typeof State> {}
 
+/**
+ * Build a fresh Tic-Tac-Toe variant state with an empty board.
+ *
+ * @param size Board dimension (3..5). Defaults to 3. Must be an integer in [3, 5].
+ * @param winCondition Consecutive marks needed to win (1..size). Defaults to `size`.
+ * @param level Optional AI difficulty; omit for human-vs-human.
+ * @throws RangeError if `size` or `winCondition` is out of range.
+ */
 export const make = ({
   size = 3,
   winCondition,
@@ -56,7 +64,14 @@ export const make = ({
   winCondition?: number;
   level?: Level;
 } = {}): State => {
+  if (!Number.isInteger(size) || size < 3 || size > 5) {
+    throw new RangeError(`Invalid size: ${size}. Must be an integer in [3, 5].`);
+  }
   const effectiveWinCondition = winCondition ?? size;
+  if (!Number.isInteger(effectiveWinCondition) || effectiveWinCondition < 1 || effectiveWinCondition > size) {
+    throw new RangeError(`Invalid winCondition: ${effectiveWinCondition}. Must be an integer in [1, ${size}].`);
+  }
+
   const board = '-'.repeat(size * size);
 
   return Obj.make(State, {

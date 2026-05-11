@@ -12921,6 +12921,9 @@ importers:
       '@dxos/plugin-explorer':
         specifier: workspace:*
         version: link:../plugin-explorer
+      '@dxos/plugin-game':
+        specifier: workspace:*
+        version: link:../plugin-game
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -13048,9 +13051,6 @@ importers:
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../plugin-chess
-      '@dxos/plugin-game':
-        specifier: workspace:*
-        version: link:../plugin-game
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing

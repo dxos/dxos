@@ -85,6 +85,17 @@ export type GameRef<_V> = Ref.Ref<Game>;
 export const GameRef = <S extends Schema.Schema.AnyNoContext>(_variantSchema: S) =>
   Ref.Ref(Game) as Schema.Schema<GameRef<Schema.Schema.Type<S>>, any, never>;
 
+/**
+ * Build a base `Game` object referencing the given variant-state ECHO object.
+ *
+ * The variant is stored as a `Ref` so the underlying state (e.g. `Chess.State`,
+ * `TicTacToe.State`) lives as its own ECHO object alongside the Game.
+ *
+ * @param name Optional display name shown in the graph node and Properties form.
+ * @param variant Variant-specific state object (e.g. `Chess.State`, `TicTacToe.State`).
+ * @param players Optional initial players; copied into a mutable array on the Game.
+ * @returns A new `Game` object with `variant` stored as a Ref.
+ */
 export const make = ({
   name,
   variant,
