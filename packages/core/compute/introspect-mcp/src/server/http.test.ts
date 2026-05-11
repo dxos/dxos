@@ -31,7 +31,7 @@ describe('http integration', () => {
   let client: Client;
 
   beforeAll(async () => {
-    const tsx = join(FIXTURE_ROOT, '..', '..', '..', '..', '..', 'node_modules', '.bin', 'tsx');
+    const tsx = join(FIXTURE_ROOT, '..', '..', '..', '..', '..', '..', 'node_modules', '.bin', 'tsx');
     serverProcess = spawn(
       tsx,
       ['--conditions=source', CLI_PATH, '--root', FIXTURE_ROOT, '--http', String(PORT), '--host', HOST],
