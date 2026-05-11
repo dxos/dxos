@@ -2,7 +2,7 @@
 
 ## Summary
 
-`Routine` and `Agent` are two ECHO types that today live in different packages, model overlapping concerns, and were introduced for different reasons. They share the notion of a *named, instructed unit of LLM-driven work* with `blueprints` and `context`, but `Agent` adds runtime state (chat, plan, queue, scheduling) while `Routine` keeps the static specification of a callable unit (typed I/O, template instructions).
+`Routine` and `Agent` are two ECHO types that today live in different packages, model overlapping concerns, and were introduced for different reasons. They share the notion of a _named, instructed unit of LLM-driven work_ with `blueprints` and `context`, but `Agent` adds runtime state (chat, plan, queue, scheduling) while `Routine` keeps the static specification of a callable unit (typed I/O, template instructions).
 
 This document analyzes both types as they exist on `main` and outlines the design space for unification.
 
@@ -20,19 +20,19 @@ This document analyzes both types as they exist on `main` and outlines the desig
 
 ```ts
 Schema.Struct({
-  name:         Schema.optional(Schema.String),
-  description:  Schema.optional(Schema.String),
-  input:        JsonSchema.JsonSchema,                   // FormInput: false
-  output:       JsonSchema.JsonSchema,                   // FormInput: false
-  instructions: Template.Template,                       // Handlebars template, FormInput: false
-  blueprints:   Schema.Array(Ref.Ref(Blueprint)),
-  context:      Schema.Array(Schema.Any),                // FormInput: false
-})
+  name: Schema.optional(Schema.String),
+  description: Schema.optional(Schema.String),
+  input: JsonSchema.JsonSchema, // FormInput: false
+  output: JsonSchema.JsonSchema, // FormInput: false
+  instructions: Template.Template, // Handlebars template, FormInput: false
+  blueprints: Schema.Array(Ref.Ref(Blueprint)),
+  context: Schema.Array(Schema.Any), // FormInput: false
+});
 ```
 
 Companion: `Routine.make({...})` factory producing `Obj.make(Routine, {...})` with JsonSchema-coerced I/O defaults and a Template-wrapped instructions string.
 
-**Conceptual role**: a *declarative specification* of an LLM task — what it consumes, what it produces, what blueprints it may invoke, and the natural-language template that drives it. Roughly analogous to a function signature plus body.
+**Conceptual role**: a _declarative specification_ of an LLM task — what it consumes, what it produces, what blueprints it may invoke, and the natural-language template that drives it. Roughly analogous to a function signature plus body.
 
 ### 1.2 `Agent`
 
@@ -44,25 +44,26 @@ Companion: `Routine.make({...})` factory producing `Obj.make(Routine, {...})` wi
 
 ```ts
 Schema.Struct({
-  name:          Schema.optional(Schema.String),
-  enabled:       Schema.optional(Schema.Boolean),
-  instructions:  Ref.Ref(Text.Text),                      // Markdown
-  chat:          Schema.optional(Ref.Ref(Chat.Chat)),     // FormInput: false
-  plan:          Ref.Ref(Plan.Plan),                      // FormInput: false
-  artifacts:     Schema.Array({ name: String, data: Ref<Unknown> }),
-  queue:         Schema.optional(Ref.Ref(Queue)),         // FormInput: false
-  subscriptions: Schema.Array(Ref.Ref(Obj.Unknown)),      // FormInput: false
-  filterEvents:  Schema.optional(Schema.Boolean),
-  cron:          Schema.optional(Schema.String),
-})
+  name: Schema.optional(Schema.String),
+  enabled: Schema.optional(Schema.Boolean),
+  instructions: Ref.Ref(Text.Text), // Markdown
+  chat: Schema.optional(Ref.Ref(Chat.Chat)), // FormInput: false
+  plan: Ref.Ref(Plan.Plan), // FormInput: false
+  artifacts: Schema.Array({ name: String, data: Ref<Unknown> }),
+  queue: Schema.optional(Ref.Ref(Queue)), // FormInput: false
+  subscriptions: Schema.Array(Ref.Ref(Obj.Unknown)), // FormInput: false
+  filterEvents: Schema.optional(Schema.Boolean),
+  cron: Schema.optional(Schema.String),
+});
 ```
 
 Companions:
+
 - `Agent.makeInitialized(props, blueprint)` — Effect-flavored factory that allocates a `Feed`, a `Chat`, an input `Queue`, an `AiContextBinder` binding `blueprints + objects`, and a `Chat.CompanionTo` relation back to the Agent.
 - `Agent.resetChatHistory(agent)` — rebuilds chat/feed while preserving the existing context binder's blueprints and objects.
 - `Agent.getFromChatContext` — Effect that resolves the (single) Agent from `AiContextService`.
 
-**Conceptual role**: a *running, stateful entity*. It holds a live conversation (`chat`), a hierarchical work `plan`, accumulated `artifacts`, an input event `queue` with `subscriptions` and an optional `cron`. Triggers are toggled via `enabled`.
+**Conceptual role**: a _running, stateful entity_. It holds a live conversation (`chat`), a hierarchical work `plan`, accumulated `artifacts`, an input event `queue` with `subscriptions` and an optional `cron`. Triggers are toggled via `enabled`.
 
 ### 1.3 Related neighbors
 
@@ -76,20 +77,20 @@ Companions:
 
 ## 2. Overlap Analysis
 
-| Concern | `Routine` | `Agent` | Notes |
-|---|---|---|---|
-| Identity / `name` | yes (optional string) | yes (optional string) | Identical. |
-| Human description | `description` | — | Only Routine. Agents are described via their `instructions` blob. |
-| Natural-language body | `instructions: Template` | `instructions: Ref<Text>` (Markdown) | **Divergent representation.** Routine = embedded Handlebars template with typed inputs; Agent = referenced Markdown document. |
-| Blueprints | `blueprints: Ref<Blueprint>[]` (schema field) | bound at runtime via `AiContextBinder.bind({ blueprints })` | Routine declares them statically; Agent stores them in its context binder, not in the schema. |
-| Context / Knowledge | `context: any[]` (schema field, untyped) | `artifacts: {name, data}[]` + `AiContextBinder` `objects` | Routine has a loose `context` array; Agent splits this between named `artifacts` and the binder's `objects`. |
-| Typed I/O | `input` / `output` (JsonSchema) | — | Only Routine. Agents are event-driven and don't expose a typed call signature. |
-| Conversation state | — | `chat: Ref<Chat>` | Only Agent. |
-| Task plan | — | `plan: Ref<Plan>` | Only Agent. |
-| Eventing | — | `queue`, `subscriptions`, `filterEvents` | Only Agent. |
-| Scheduling | — | `cron` | Only Agent. |
-| Enable/disable switch | — | `enabled` | Only Agent. Routines are invoked on demand; nothing to disable. |
-| Icon | scroll | drone | Reflects the spec/instance distinction. |
+| Concern               | `Routine`                                     | `Agent`                                                     | Notes                                                                                                                         |
+| --------------------- | --------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Identity / `name`     | yes (optional string)                         | yes (optional string)                                       | Identical.                                                                                                                    |
+| Human description     | `description`                                 | —                                                           | Only Routine. Agents are described via their `instructions` blob.                                                             |
+| Natural-language body | `instructions: Template`                      | `instructions: Ref<Text>` (Markdown)                        | **Divergent representation.** Routine = embedded Handlebars template with typed inputs; Agent = referenced Markdown document. |
+| Blueprints            | `blueprints: Ref<Blueprint>[]` (schema field) | bound at runtime via `AiContextBinder.bind({ blueprints })` | Routine declares them statically; Agent stores them in its context binder, not in the schema.                                 |
+| Context / Knowledge   | `context: any[]` (schema field, untyped)      | `artifacts: {name, data}[]` + `AiContextBinder` `objects`   | Routine has a loose `context` array; Agent splits this between named `artifacts` and the binder's `objects`.                  |
+| Typed I/O             | `input` / `output` (JsonSchema)               | —                                                           | Only Routine. Agents are event-driven and don't expose a typed call signature.                                                |
+| Conversation state    | —                                             | `chat: Ref<Chat>`                                           | Only Agent.                                                                                                                   |
+| Task plan             | —                                             | `plan: Ref<Plan>`                                           | Only Agent.                                                                                                                   |
+| Eventing              | —                                             | `queue`, `subscriptions`, `filterEvents`                    | Only Agent.                                                                                                                   |
+| Scheduling            | —                                             | `cron`                                                      | Only Agent.                                                                                                                   |
+| Enable/disable switch | —                                             | `enabled`                                                   | Only Agent. Routines are invoked on demand; nothing to disable.                                                               |
+| Icon                  | scroll                                        | drone                                                       | Reflects the spec/instance distinction.                                                                                       |
 
 ### Where they meet in code
 
@@ -104,11 +105,11 @@ So in practice today **Routine is the call-form for Agent**: an Agent's invocati
 
 Two reasonable interpretations of the relationship:
 
-1. **Class vs. instance**. `Routine` is the static specification (function signature + prompt). `Agent` is the live process running it: bound conversation, plan, queue, schedule. Under this framing, an `Agent` *has-a* `Routine` (or several), not *is-a* `Routine`.
+1. **Class vs. instance**. `Routine` is the static specification (function signature + prompt). `Agent` is the live process running it: bound conversation, plan, queue, schedule. Under this framing, an `Agent` _has-a_ `Routine` (or several), not _is-a_ `Routine`.
 
-2. **Convergent siblings**. Both are "named, instructed, blueprint-aware units of LLM work" — Routine is the *one-shot tool-call* shape, Agent is the *long-running subscriber* shape. The overlap (`name`, `instructions`, `blueprints`, `context`) is a shared base; the differences are runtime extensions.
+2. **Convergent siblings**. Both are "named, instructed, blueprint-aware units of LLM work" — Routine is the _one-shot tool-call_ shape, Agent is the _long-running subscriber_ shape. The overlap (`name`, `instructions`, `blueprints`, `context`) is a shared base; the differences are runtime extensions.
 
-Either framing can support reconciliation; they differ in whether the unification happens *by composition* (Agent references a Routine) or *by inheritance* (a shared base schema with two specializations).
+Either framing can support reconciliation; they differ in whether the unification happens _by composition_ (Agent references a Routine) or _by inheritance_ (a shared base schema with two specializations).
 
 ---
 
@@ -134,7 +135,7 @@ Practical consequences: you cannot statically inspect "what blueprints does this
 
 ### 4.4 Naming of `queue` vs `feed`
 
-The Agent comment already flags this (`// TODO(burdon): Rename to Feed?`). The schema is named `queue` solely to satisfy `QueueAnnotation`. This is incidental to the audit but worth fixing on any pass.
+The Agent schema already has an inline comment suggesting a rename to `Feed`. The field is named `queue` solely to satisfy `QueueAnnotation`. This is incidental to the audit but worth fixing on any pass.
 
 ### 4.5 Multiple TODOs in `Agent`
 
@@ -168,15 +169,16 @@ Factor out a base schema (e.g. `Instructable`) containing `name`, `description`,
 Merge into a single type (likely keep the name `Agent` since it's the broader concept), making `input`/`output` and the runtime fields all optional. A "Routine" becomes "an Agent with `input`/`output` set and no `chat`/`queue`."
 
 - **Pros**: one ECHO type, one set of UI containers; fewer concepts for users.
-- **Cons**: a single schema with many optional fields is harder to reason about; loses the helpful semantic distinction between a *spec* and a *running instance*; the icon/label/listing UX has to handle two visually distinct objects.
+- **Cons**: a single schema with many optional fields is harder to reason about; loses the helpful semantic distinction between a _spec_ and a _running instance_; the icon/label/listing UX has to handle two visually distinct objects.
 
 ### Option D — Keep both, tighten the boundary
 
 Leave both types in place but:
+
 1. Replace `Routine.context: any[]` with `Routine.artifacts: {name, data: Ref}[]` to match Agent.
 2. Decide a single representation for `instructions` (recommend: `Template` everywhere, so Agents become parameterizable too — or `Ref<Text>` everywhere if Templates feel like overkill for Agents).
 3. Promote `blueprints` onto Agent's schema (or remove from Routine).
-4. Document the relationship explicitly: Agent *uses* Routines via `AgentPrompt`.
+4. Document the relationship explicitly: Agent _uses_ Routines via `AgentPrompt`.
 
 - **Pros**: minimal disruption; addresses the real inconsistencies without a model rewrite.
 - **Cons**: doesn't eliminate the overlap; still two typenames carrying similar concerns.
@@ -212,6 +214,7 @@ The alternative worth seriously considering is **Option B**, if the team prefers
 (For sizing the blast radius of any change.)
 
 **Routine** — 20+ non-test files, concentrated in:
+
 - `plugin-assistant` (capabilities, containers, plugin entrypoints, translations, CLI) — ~14
 - `core/compute` (assistant-toolkit, assistant-e2e, functions-runtime) — ~5
 - `plugin-script` (Notebook type, containers) — ~2
@@ -219,6 +222,7 @@ The alternative worth seriously considering is **Option B**, if the team prefers
 - `stories/stories-assistant` — ~2
 
 **Agent** — 22+ non-test files, concentrated in:
+
 - `plugin-assistant` (containers, capabilities, plugin entrypoints, translations, CLI) — ~12
 - `core/compute/assistant-toolkit` (blueprints/project + project-wizard functions) — ~8
 - `plugin-sidekick` (types) — ~2
