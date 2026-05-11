@@ -11,12 +11,13 @@ import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Record from 'effect/Record';
 import type * as Schema from 'effect/Schema';
-import { scheduleTask, yieldOrContinue } from 'main-thread-scheduling';
 
 import { type CleanupFn, type Trigger } from '@dxos/async';
 import { type Entity, type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type MaybePromise, type Position, byPosition, getDebugName, isNonNullable } from '@dxos/util';
+
+import { scheduleTask, yieldOrContinue } from '#scheduler';
 
 import * as Graph from './graph';
 import * as Node from './node';
