@@ -49,14 +49,14 @@ export interface McpToolkitOptions {
 
 export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.OpaqueToolkit, McpConnectionError> =>
   Effect.gen(function* () {
-    const client = yield* connectWithFallback(options);
+    const { client, protocol } = yield* connectWithFallback(options);
 
     const { tools } = yield* Effect.tryPromise({
       try: () => client.listTools(),
       catch: (cause) =>
         new McpConnectionError({
           url: options.url,
-          protocol: options.protocol,
+          protocol,
           message: `Failed to list MCP tools: ${formatCause(cause)}`,
         }),
     });
@@ -124,17 +124,19 @@ export const is405 = (error: unknown): boolean => {
  * Failures are surfaced as typed `McpConnectionError` so callers can recover (e.g. drop
  * the misconfigured server) without breaking the surrounding effect.
  */
-const connectWithFallback = (options: McpToolkitOptions): Effect.Effect<Client, McpConnectionError> =>
+const connectWithFallback = (
+  options: McpToolkitOptions,
+): Effect.Effect<{ client: Client; protocol: McpToolkitOptions['protocol'] }, McpConnectionError> =>
   Effect.gen(function* () {
     const fallbackProtocol = options.protocol === 'sse' ? 'http' : 'sse';
     const primary = yield* connectClient(options.url, options.protocol, options.apiKey).pipe(Effect.either);
     if (primary._tag === 'Right') {
-      return primary.right;
+      return { client: primary.right, protocol: options.protocol };
     }
     if (is405(primary.left)) {
       const fallback = yield* connectClient(options.url, fallbackProtocol, options.apiKey).pipe(Effect.either);
       if (fallback._tag === 'Right') {
-        return fallback.right;
+        return { client: fallback.right, protocol: fallbackProtocol };
       }
       return yield* Effect.fail(
         new McpConnectionError({
