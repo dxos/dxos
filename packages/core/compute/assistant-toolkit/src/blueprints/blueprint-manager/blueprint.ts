@@ -33,8 +33,8 @@ const make = () =>
       inputs: [
         {
           name: 'blueprints',
-          kind: 'function',
-          function: QueryBlueprints.meta.key,
+          kind: 'operation',
+          operation: QueryBlueprints.meta.key,
         },
       ],
     }),

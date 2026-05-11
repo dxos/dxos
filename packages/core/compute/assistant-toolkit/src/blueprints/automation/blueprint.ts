@@ -93,7 +93,7 @@ const make = () =>
     name: 'Triggers',
     description: 'Trigger management and automation.',
     instructions: {
-      source: Ref.make(Text.make(instructions)),
+      source: Ref.make(Text.make({ content: instructions })),
     },
   });
 

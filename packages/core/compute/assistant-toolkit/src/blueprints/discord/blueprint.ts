@@ -28,7 +28,7 @@ const make = () =>
     name: 'Discord',
     description: 'Discord integration.',
     instructions: {
-      source: Ref.make(Text.make(instructions)),
+      source: Ref.make(Text.make({ content: instructions })),
     },
     tools: Blueprint.toolDefinitions({ operations: [FetchMessages] }),
   });

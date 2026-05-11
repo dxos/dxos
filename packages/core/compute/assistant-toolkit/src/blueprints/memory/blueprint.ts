@@ -28,7 +28,7 @@ const make = () =>
     description: 'Persistent memory storage and retrieval.',
     agentCanEnable: true,
     instructions: {
-      source: Ref.make(Text.make(instructions)),
+      source: Ref.make(Text.make({ content: instructions })),
     },
     tools: Blueprint.toolDefinitions({ operations: [SaveMemory, QueryMemories, DeleteMemory] }),
   });

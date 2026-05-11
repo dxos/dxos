@@ -64,8 +64,8 @@ const make = () =>
       inputs: [
         {
           name: 'agent',
-          kind: 'function',
-          function: 'org.dxos.function.agent.get-context',
+          kind: 'operation',
+          operation: 'org.dxos.function.agent.getContext',
         },
       ],
     }),

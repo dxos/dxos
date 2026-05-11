@@ -16,7 +16,7 @@ Add the following code to your `TaskList` component and take a look at the funct
 import { DocumentModel } from '@dxos/document-model';
 import { usespace } from '@dxos/react-client';
 
-const TASK_TYPE = 'example.com/type/task';
+const TASK_TYPE = 'com.example.type.task';
 
 const TaskList = ({ space_key }) => {
   const [taskTitle, setTaskTitle] = useState('');

@@ -42,7 +42,7 @@
 
 ```yml
 rule:
-  function: 'example.com/chess'
+  function: 'com.example.function.chess'
   trigger:
     subscription:
       filter:
@@ -59,7 +59,7 @@ rule:
 
 ```yml
 rule:
-  function: 'example.com/email'
+  function: 'com.example.function.email'
   trigger:
     subscription:
       filter:
@@ -80,7 +80,7 @@ rule:
 
 ```yml
 rule:
-  function: 'example.com/gpt'
+  function: 'com.example.function.gpt'
   trigger:
     subscription:
       filter:
@@ -99,7 +99,7 @@ Generate a chess hint that is output to the current message thread?
 
 ```yml
 rule:
-  function: 'example.com/gpt'
+  function: 'com.example.function.gpt'
   trigger:
     subscription:
       filter:

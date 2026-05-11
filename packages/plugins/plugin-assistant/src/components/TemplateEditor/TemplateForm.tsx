@@ -137,33 +137,33 @@ const inputs: { kind: Template.InputKind; label: string }[] = [
     label: 'Value',
   },
   {
-    kind: 'pass-through',
-    label: 'Pass through',
+    kind: 'operation',
+    label: 'Operation',
   },
-  {
-    kind: 'retriever',
-    label: 'Retriever',
-  },
-  {
-    kind: 'function',
-    label: 'Function',
-  },
-  {
-    kind: 'query',
-    label: 'Query',
-  },
-  {
-    kind: 'resolver',
-    label: 'Resolver',
-  },
-  {
-    kind: 'context',
-    label: 'Context',
-  },
-  {
-    kind: 'schema',
-    label: 'Schema',
-  },
+  // {
+  //   kind: 'pass-through',
+  //   label: 'Pass through',
+  // },
+  // {
+  //   kind: 'retriever',
+  //   label: 'Retriever',
+  // },
+  // {
+  //   kind: 'query',
+  //   label: 'Query',
+  // },
+  // {
+  //   kind: 'resolver',
+  //   label: 'Resolver',
+  // },
+  // {
+  //   kind: 'context',
+  //   label: 'Context',
+  // },
+  // {
+  //   kind: 'schema',
+  //   label: 'Schema',
+  // },
 ];
 
 export const NAME_REGEXP = /\{\{([\w-]+)\}\}/;
@@ -208,7 +208,7 @@ const usePromptInputs = (template: Template.Template, onChange?: TemplateChangeC
             t.inputs![inputIndex].name = name;
           }
         } else {
-          t.inputs!.push({ name });
+          t.inputs!.push({ name, kind: 'value' });
         }
       });
 
