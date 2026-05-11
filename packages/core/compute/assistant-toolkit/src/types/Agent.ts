@@ -13,11 +13,11 @@ import { type Blueprint } from '@dxos/compute';
 import { Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation } from '@dxos/echo/internal';
 import { acquireReleaseResource } from '@dxos/effect';
 import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { QueueAnnotation, Text } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 
 import * as Chat from './Chat';
 import * as Plan from './Plan';
@@ -65,23 +65,28 @@ export const Agent = Schema.Struct({
   ).pipe(FormInputAnnotation.set(false)),
 
   /**
-   * Input feed for subscriptions.
-   */
-  // TODO(burdon): Rename to Feed?
-  // NOTE: Named `queue` to conform to subscribable schema (see QueueAnnotation).
-  queue: Schema.optional(Ref.Ref(Queue).pipe(FormInputAnnotation.set(false))),
-
-  /**
    * References to objects with a canonical queue property.
    * Schema must have the QueueAnnotation.
    */
+  // Change to trigger.
   // TODO(dmaretskyi): Turn into an array of objects when form-data
   subscriptions: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(FormInputAnnotation.set(false)),
+
+  /**
+   * Cron expression for a timer trigger that invokes the agent worker on a schedule.
+   * The timer trigger bypasses the qualifier and goes straight to the agent worker.
+   */
+  // Change to trigger.
+  cron: Schema.optional(Schema.String).annotations({
+    title: 'Cron',
+    description: 'Cron expression for a timer trigger that invokes the agent on a schedule.',
+  }),
 
   /**
    * Allow the agent to filter events.
    * Related events will be added to the input queue of the agent.
    * It is recommended to enable this.
+   * @deprecated
    */
   filterEvents: Schema.optional(Schema.Boolean).annotations({
     title: 'Filter events',
@@ -89,20 +94,16 @@ export const Agent = Schema.Struct({
   }),
 
   /**
-   * Cron expression for a timer trigger that invokes the agent worker on a schedule.
-   * The timer trigger bypasses the qualifier and goes straight to the agent worker.
+   * Input feed for subscriptions.
+   * @deprecated Subscriptions will write directly to the agent.
    */
-  cron: Schema.optional(Schema.String).annotations({
-    title: 'Cron',
-    description: 'Cron expression for a timer trigger that invokes the agent on a schedule.',
-  }),
+  queue: Schema.optional(Ref.Ref(Queue).pipe(FormInputAnnotation.set(false))),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.agent',
     version: '0.1.0',
   }),
-  LabelAnnotation.set(['name']),
-  QueueAnnotation.set(true),
+  Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--drone--regular',
     hue: 'sky',
@@ -130,7 +131,7 @@ export const makeInitialized = (
   Effect.gen(function* () {
     const agent = Obj.make(Agent, {
       ...props,
-      instructions: Ref.make(Text.make(props.instructions)),
+      instructions: Ref.make(Text.make({ content: props.instructions })),
       plan: Ref.make(Plan.makePlan({ tasks: [] })),
       artifacts: props.artifacts ?? [],
       subscriptions: props.subscriptions ?? [],

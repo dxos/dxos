@@ -85,7 +85,7 @@ describe('Agent', () => {
         const document = yield* Database.add(
           Obj.make(Markdown.Document, {
             name: 'Test Document',
-            content: Ref.make(Text.make('This is a test document with some content.')),
+            content: Ref.make(Text.make({ content: 'This is a test document with some content.' })),
           }),
         );
         yield* Database.flush();
