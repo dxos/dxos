@@ -10,16 +10,11 @@ import { TicTacToe } from '#types';
 export const translations = [
   {
     'en-US': {
-      [TicTacToe.Game.typename]: {
-        'typename.label': 'Game',
-        'typename.label_zero': 'Games',
-        'typename.label_one': 'Game',
-        'typename.label_other': 'Games',
-        'object-name.placeholder': 'New game',
-        'add-object.label': 'Add game',
-        'rename-object.label': 'Rename game',
-        'delete-object.label': 'Delete game',
-        'object-deleted.label': 'Game deleted',
+      [TicTacToe.State.typename]: {
+        'typename.label': 'Tic-Tac-Toe',
+        'typename.label_zero': 'Tic-Tac-Toe games',
+        'typename.label_one': 'Tic-Tac-Toe game',
+        'typename.label_other': 'Tic-Tac-Toe games',
       },
       [meta.id]: {
         'plugin.name': 'Tic-Tac-Toe',

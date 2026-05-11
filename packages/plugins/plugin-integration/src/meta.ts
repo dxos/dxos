@@ -12,4 +12,5 @@ export const meta: Plugin.Meta = {
     Manage integrations with external services.
     Connect your space to external services and manage your integrations here.
   `,
+  tags: ['system'],
 };

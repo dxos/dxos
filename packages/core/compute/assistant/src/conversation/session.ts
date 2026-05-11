@@ -13,7 +13,7 @@ import * as Record from 'effect/Record';
 import * as Runtime from 'effect/Runtime';
 
 import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { type Blueprint, type OperationRegistry, Operation, Trace } from '@dxos/compute';
+import { type Blueprint, type OperationRegistry, McpServer, Operation, Trace } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
@@ -34,12 +34,6 @@ import {
 import { McpServerError } from '../tracing';
 import { AiContextBinder, AiContextService } from './context';
 
-export interface McpServerConfig {
-  url: string;
-  protocol: 'sse' | 'http';
-  apiKey?: string;
-}
-
 export interface AiSessionRunProps<R = never> {
   prompt: string | ContentBlock.Any[];
   system?: string;
@@ -49,7 +43,7 @@ export interface AiSessionRunProps<R = never> {
   /**
    * Space-level MCP servers to connect alongside blueprint-defined ones.
    */
-  mcpServers?: readonly McpServerConfig[];
+  mcpServers?: readonly McpServer.McpServer[];
 }
 
 export type AiSessionOptions = {
@@ -234,14 +228,9 @@ export class AiSessionService extends Context.Tag('@dxos/assistant/AiSessionServ
   ): Layer.Layer<AiSessionService | AiContextService, never, Database.Service | Feed.FeedService> =>
     Layer.unwrapScoped(
       Effect.gen(function* () {
-        const feed = Feed.make();
-        yield* Database.add(feed);
+        const feed = yield* Database.add(Feed.make());
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        return AiSessionService.layer({
-          ...options,
-          feed,
-          runtime,
-        });
+        return AiSessionService.layer({ ...options, feed, runtime });
       }),
     );
 
@@ -269,16 +258,16 @@ const aiContextFromSession = Layer.effect(
 
 const connectMcpServers = (
   blueprints: readonly Blueprint.Blueprint[],
-  spaceMcpServers: readonly McpServerConfig[] = [],
+  spaceMcpServers: readonly McpServer.McpServer[] = [],
 ): Effect.Effect<OpaqueToolkit.OpaqueToolkit[], never, Trace.TraceService> => {
   const blueprintServers: McpToolkit.McpToolkitOptions[] = pipe(
     blueprints,
     Array.flatMap((_) => _.mcpServers ?? []),
-    Array.map(({ url, protocol }) => ({ url, kind: protocol })),
+    Array.map(({ url, protocol, apiKey }) => ({ url, protocol, apiKey })),
   );
   const spaceServers: McpToolkit.McpToolkitOptions[] = spaceMcpServers.map(({ url, protocol, apiKey }) => ({
     url,
-    kind: protocol,
+    protocol,
     apiKey,
   }));
   const allServers = [...blueprintServers, ...spaceServers];
@@ -296,12 +285,12 @@ const connectMcpServers = (
           Effect.gen(function* () {
             log.warn('Failed to connect to MCP server', {
               url: error.url,
-              kind: error.kind,
+              protocol: error.protocol,
               message: error.message,
             });
             yield* Trace.write(McpServerError, {
               url: error.url,
-              kind: error.kind,
+              protocol: error.protocol,
               message: error.message,
             });
           }),
@@ -314,13 +303,13 @@ const connectMcpServers = (
             log.warn('Unexpected MCP defect', { url: options.url, message });
             yield* Trace.write(McpServerError, {
               url: options.url,
-              kind: options.kind,
+              protocol: options.protocol,
               message: `Unexpected MCP failure: ${message}`,
             });
             return yield* Effect.fail(
               new McpToolkit.McpConnectionError({
                 url: options.url,
-                kind: options.kind,
+                protocol: options.protocol,
                 message,
               }),
             );

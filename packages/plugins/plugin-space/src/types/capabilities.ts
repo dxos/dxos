@@ -5,6 +5,7 @@
 import { type Atom } from '@effect-atom/atom-react';
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import type { ComponentType } from 'react';
 
 import { Capability } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
@@ -77,6 +78,19 @@ export namespace SpaceCapabilities {
     id: string;
     createObject: CreateObject;
     inputSchema?: Schema.Schema.AnyNoContext;
+    /**
+     * Optional custom React panel rendered in place of the default `inputSchema` form.
+     * Lets a plugin own the entire post-typename-selection flow (e.g. multi-stage forms).
+     * `onCreateObject` receives the collected data and triggers the same submit flow.
+     */
+    customPanel?: ComponentType<CreateObjectCustomPanelProps>;
   }>;
   export const CreateObjectEntry = Capability.make<CreateObjectEntry>(`${meta.id}.capability.create-object`);
+
+  /** Props passed to a `CreateObjectEntry.customPanel`. */
+  export type CreateObjectCustomPanelProps = {
+    target: Database.Database | Collection.Collection;
+    initialFormValues?: Record<string, any>;
+    onCreateObject: (data: Record<string, any>) => void | Promise<void>;
+  };
 }

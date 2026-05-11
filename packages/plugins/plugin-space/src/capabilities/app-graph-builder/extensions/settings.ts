@@ -58,7 +58,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
           data: `${meta.id}.general`,
           properties: {
             label: ['space-settings-properties.label', { ns: meta.id }],
-            icon: 'ph--sliders--regular',
+            icon: 'ph--brackets-curly--regular',
             iconHue: 'indigo',
             space,
             testId: 'spacePlugin.general',
