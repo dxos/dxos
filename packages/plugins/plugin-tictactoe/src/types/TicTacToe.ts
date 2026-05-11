@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Obj, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 
 export const Level = Schema.Literal('easy', 'medium', 'hard');
 export type Level = Schema.Schema.Type<typeof Level>;
@@ -43,6 +43,10 @@ export const State = Schema.Struct({
     icon: 'ph--hash-straight--regular',
     hue: 'cyan',
   }),
+  // Implementation detail of the unified `Game` schema (see plugin-chess/Chess.ts for the
+  // same reasoning). Keeps the state out of the navtree's typed branches so an orphaned
+  // state doesn't reappear after the wrapping Game is deleted.
+  SystemTypeAnnotation.set(true),
 );
 
 export interface State extends Schema.Schema.Type<typeof State> {}

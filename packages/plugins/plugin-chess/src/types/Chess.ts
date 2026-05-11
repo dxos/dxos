@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Obj, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.chess';
@@ -33,6 +33,11 @@ export const State = Schema.Struct({
     hue: 'amber',
   }),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  // Implementation detail of the unified `Game` schema. The user-facing object is `Game`;
+  // this state is only ever referenced via `Game.variant`. SystemType keeps it out of the
+  // navtree's typed branches so an orphaned state object doesn't reappear after the
+  // wrapping Game is deleted.
+  SystemTypeAnnotation.set(true),
 );
 
 export interface State extends Schema.Schema.Type<typeof State> {}
