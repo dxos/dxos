@@ -14,8 +14,9 @@ import { PluginDetail } from '#components';
 
 import { useRegistryPluginProvider, useRegistryPlugins, useRemotePluginIds } from '../../hooks';
 
-// TODO(burdon): Convert to ECHO type.
-export type PluginArticleProps = { subject: Plugin.Plugin };
+export type PluginArticleProps = {
+  subject: Plugin.Plugin;
+};
 
 export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   const pluginId = plugin.meta.id;
