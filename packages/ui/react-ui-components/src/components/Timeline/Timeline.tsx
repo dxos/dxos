@@ -352,16 +352,11 @@ export const Timeline = composable<HTMLDivElement, TimelineProps>(
                     {commit.timestamp && format(commit.timestamp, 'HH:mm:ss.SSS')}
                   </div>
                 )}
-                {showIcon &&
-                  (commit.icon ? (
-                    <Icon icon={commit.icon} classNames={mx(commit.level && levelColors[commit.level])} size={4} />
-                  ) : (
-                    <div />
-                  ))}
+                <CommitIcon commit={commit} />
                 <div
                   role='none'
                   className={mx(
-                    'text-sm truncate cursor-pointer text-subdued',
+                    'text-sm truncate cursor-pointer text-subdued font-thin dx-current-group dx-hover-group',
                     hasLink && 'underline decoration-dotted underline-offset-2',
                   )}
                 >
@@ -375,6 +370,24 @@ export const Timeline = composable<HTMLDivElement, TimelineProps>(
     );
   },
 );
+
+const CommitIcon = ({ commit }: { commit: Commit }) => {
+  if (!commit.icon) {
+    return <div />;
+  }
+
+  return (
+    <Icon
+      icon={commit.icon}
+      size={4}
+      synchronized
+      classNames={mx(
+        commit.icon === 'ph--spinner-gap--regular' && 'animate-spin',
+        commit.level !== undefined && levelColors[commit.level],
+      )}
+    />
+  );
+};
 
 type Span = {
   start: number;

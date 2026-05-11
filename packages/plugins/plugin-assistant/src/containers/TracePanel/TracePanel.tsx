@@ -22,7 +22,7 @@ import { ScrollContainer } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { ProcessTree, ProcessTreeProps } from '#components';
 
@@ -70,13 +70,12 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     return (
       <div
         {...composableProps(props, {
-          classNames: 'grid grid-rows-[min-content_1fr_min-content] divide-y divide-separator',
+          classNames: 'grid grid-rows-[minmax(0,8lh)_1fr_minmax(0,12lh)] divide-y divide-separator',
           ...attentionAttrs,
         })}
         ref={forwardedRef}
       >
         <ProcessTree
-          classNames={mx('max-h-[8lh] border-b border-separator')}
           processes={processes}
           onProcessSelect={handleProcessSelect}
           onProcessTerminate={onProcessTerminate}
@@ -100,7 +99,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
           <Syntax.Root data={selectedCommit}>
             <Syntax.Content>
               <Syntax.Viewport>
-                <Syntax.Code />
+                <Syntax.Code className='text-xs' />
               </Syntax.Viewport>
             </Syntax.Content>
           </Syntax.Root>
