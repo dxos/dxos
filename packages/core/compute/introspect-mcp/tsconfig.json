@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.base.json",
+  "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {},
   "exclude": [
     "src/__fixtures__"
@@ -10,13 +10,16 @@
   ],
   "references": [
     {
-      "path": "../../common/log"
+      "path": "../../../common/effect-zod"
     },
     {
-      "path": "../echo/echo"
+      "path": "../../../common/log"
     },
     {
-      "path": "../echo/echo-react"
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../introspect"
     },
     {
       "path": "../introspect-tools"

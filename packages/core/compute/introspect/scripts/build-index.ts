@@ -6,7 +6,7 @@
 //
 //   moon run introspect:index
 //   # or directly:
-//   pnpm exec tsx --conditions=source packages/core/introspect/scripts/build-index.ts
+//   pnpm exec tsx --conditions=source packages/core/compute/introspect/scripts/build-index.ts
 //
 // The script walks up to find the monorepo root, creates an introspector
 // with `prewarm: true, cache: true`, awaits `ready`, and writes two files:

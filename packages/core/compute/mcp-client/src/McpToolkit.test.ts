@@ -37,7 +37,7 @@ describe('connectWithFallback', () => {
       const toolkit = await runAndForwardErrors(
         McpToolkit.make({
           url: 'https://mcp.linear.app/mcp',
-          kind: 'sse',
+          protocol: 'sse',
           apiKey: process.env.LINEAR_API_KEY,
         }),
       );
@@ -53,7 +53,7 @@ describe('Browser Automation', () => {
       function* (_) {
         const browserAutomationToolkit = yield* McpToolkit.make({
           url: 'https://playwright-mcp-example.dxos.workers.dev/sse',
-          kind: 'sse',
+          protocol: 'sse',
         });
 
         const chat = yield* Chat.empty;
@@ -91,7 +91,7 @@ describe('Browser Automation', () => {
       function* (_) {
         const browserAutomationToolkit = yield* McpToolkit.make({
           url: 'https://playwright-mcp-example.dxos.workers.dev/sse',
-          kind: 'sse',
+          protocol: 'sse',
         });
 
         const chat = yield* Chat.empty;

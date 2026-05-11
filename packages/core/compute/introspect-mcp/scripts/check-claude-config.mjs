@@ -8,7 +8,7 @@
 // completes the JSON-RPC initialize handshake, and calls one tool.
 //
 // Run:
-//   node packages/core/introspect-mcp/scripts/check-claude-config.mjs
+//   node packages/core/compute/introspect-mcp/scripts/check-claude-config.mjs
 //
 // Exits 0 with a step-by-step trace if every step passes; non-zero with the
 // specific failure point otherwise.

@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -13,8 +15,6 @@ import { Annotation, JsonSchema, Obj, Ref, Type, type DXN, type Key } from '@dxo
 
 import type { NoHandlerError } from './errors';
 import type { Operation } from './index';
-
-// @import-as-namespace
 
 /**
  * Schema type that accepts any Encoded form but requires no Context.

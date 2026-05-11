@@ -12,7 +12,7 @@
 //
 // Exits 0 if the entire flow works; non-zero with diagnostics otherwise.
 // Run from any cwd:
-//   node packages/core/introspect-mcp/scripts/sanity.mjs
+//   node packages/core/compute/introspect-mcp/scripts/sanity.mjs
 
 import { spawn } from 'node:child_process';
 import { dirname, resolve } from 'node:path';

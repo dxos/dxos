@@ -73,7 +73,13 @@ const toToolResult = (shaped: ToolResult): McpToolResult => {
   if (shaped.truncated) {
     payload.truncated = shaped.truncated;
   }
+
   return {
-    content: [{ type: 'text', text: JSON.stringify(payload, null, 2) }],
+    content: [
+      {
+        type: 'text',
+        text: JSON.stringify(payload, null, 2),
+      },
+    ],
   };
 };

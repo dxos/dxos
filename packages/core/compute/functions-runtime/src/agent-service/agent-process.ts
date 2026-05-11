@@ -15,7 +15,6 @@ import * as Schema from 'effect/Schema';
 
 import { AiService, OpaqueToolkit, type ModelName } from '@dxos/ai';
 import {
-  type McpServerConfig,
   AiSession,
   AgentRequestBegin,
   AgentRequestEnd,
@@ -23,7 +22,7 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
-import { Operation, OperationRegistry, Trace } from '@dxos/compute';
+import { McpServer, Operation, OperationRegistry, Trace } from '@dxos/compute';
 import { Database, DXN, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -40,7 +39,7 @@ interface AgentProcessOptions {
   /**
    * Provider for space-level MCP server configs, called on each turn.
    */
-  getMcpServers?: () => McpServerConfig[];
+  getMcpServers?: () => McpServer.McpServer[];
 
   /**
    * If true, long-running tool calls are moved to the background after `backgroundThreshold`

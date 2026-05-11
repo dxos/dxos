@@ -5,7 +5,7 @@
 
 // Smoke test: spawn the CLI, send initialize + tools/list over stdio, print
 // a one-line summary. Avoids shell-quoting traps. Run from any cwd:
-//   node packages/core/introspect-mcp/scripts/smoke.mjs
+//   node packages/core/compute/introspect-mcp/scripts/smoke.mjs
 
 import { spawn } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';

@@ -6,7 +6,7 @@
 // Launch MCP Inspector against this server, with all paths absolutized and
 // pre-baked. Run from any cwd:
 //
-//   node packages/core/introspect-mcp/scripts/inspect.mjs
+//   node packages/core/compute/introspect-mcp/scripts/inspect.mjs
 //
 // The script:
 //   1. Resolves the CLI path and the monorepo root by walking up from this
