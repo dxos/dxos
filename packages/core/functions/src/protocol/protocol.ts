@@ -21,12 +21,12 @@ import {
 } from '@dxos/compute';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, JsonSchema, Ref, type Type } from '@dxos/echo';
-import { EchoClient, type EchoDatabaseImpl, type QueueFactory, createFeedServiceLayer } from '@dxos/echo-db';
+import { createFeedServiceLayer, EchoClient, type EchoDatabaseImpl, type QueueFactory } from '@dxos/echo-db';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
-import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol } from '@dxos/protocols';
+import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
 import { type FunctionServices } from '../sdk';
 import {
@@ -37,10 +37,22 @@ import {
 } from '../services';
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
+export interface FunctionWrappingOptions {
+  /**
+   * Additional types to register with the database.
+   */
+  types?: Type.AnyEntity[];
+
+  /**
+   * Toolkits to make available via the `OpaqueToolkitProvider`.
+   */
+  toolkits?: OpaqueToolkit.OpaqueToolkit[];
+}
+
 /**
  * Wraps a function handler made with `defineFunction` to a protocol that the functions-runtime expects.
  */
-export const wrapFunctionHandler = (func: Operation.WithHandler<Operation.Definition.Any>): FunctionProtocol.Func => {
+export const wrapFunctionHandler = (func: Operation.WithHandler<Operation.Definition.Any>, opts: FunctionWrappingOptions = {}): FunctionProtocol.Func => {
   if (!Operation.isOperationWithHandler(func)) {
     throw new TypeError('Expected operation with handler');
   }
@@ -81,11 +93,12 @@ export const wrapFunctionHandler = (func: Operation.WithHandler<Operation.Defini
           }
         }
 
-        await using funcContext = await new FunctionContext(context).open();
+        await using funcContext = await new FunctionContext(context, opts).open();
 
-        if (func.types.length > 0) {
+        const types = [...(opts.types ?? []), ...(func.types ?? [])];
+        if (types.length > 0) {
           invariant(funcContext.db, 'Database is required for functions with types');
-          await funcContext.db.graph.schemaRegistry.register(func.types as Type.AnyEntity[]);
+          await funcContext.db.graph.schemaRegistry.register(types as Type.AnyEntity[]);
         }
 
         const dataWithDecodedRefs =
@@ -132,10 +145,12 @@ class FunctionContext extends Resource {
   readonly client: EchoClient | undefined;
   db: EchoDatabaseImpl | undefined;
   queues: QueueFactory | undefined;
+  readonly opts: FunctionWrappingOptions;
 
-  constructor(context: FunctionProtocol.Context) {
+  constructor(context: FunctionProtocol.Context, opts: FunctionWrappingOptions) {
     super();
     this.context = context;
+    this.opts = opts;
     if (context.services.dataService && context.services.queryService) {
       this.client = new EchoClient().connectToService({
         dataService: context.services.dataService,
@@ -150,11 +165,11 @@ class FunctionContext extends Resource {
     this.db =
       this.client && this.context.spaceId
         ? this.client.constructDatabase({
-            spaceId: this.context.spaceId ?? failedInvariant(),
-            spaceKey: PublicKey.fromHex(this.context.spaceKey ?? failedInvariant('spaceKey missing in context')),
-            reactiveSchemaQuery: false,
-            preloadSchemaOnOpen: false,
-          })
+          spaceId: this.context.spaceId ?? failedInvariant(),
+          spaceKey: PublicKey.fromHex(this.context.spaceKey ?? failedInvariant('spaceKey missing in context')),
+          reactiveSchemaQuery: false,
+          preloadSchemaOnOpen: false,
+        })
         : undefined;
 
     await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
@@ -190,6 +205,10 @@ class FunctionContext extends Resource {
       ? makeOperationRegistryLayer(this.context.services.functionsService, this.context.spaceId as SpaceId | undefined)
       : emptyOperationRegistryLayer;
 
+    const traceWriterLayer = this.context.services.traceService
+      ? makeTraceWriterLayer(this.context.services.traceService)
+      : Trace.writerLayerNoop;
+
     return Layer.mergeAll(
       dbLayer,
       queuesLayer,
@@ -198,19 +217,33 @@ class FunctionContext extends Resource {
       operationServiceLayer,
       operationRegistryLayer,
       aiLayer,
-      // Default for operations that declare `OpaqueToolkitProvider` but expect the runtime to
-      // provide a sensible no-op (e.g. `AgentPrompt` running in a function worker without MCP
-      // servers or extra toolkits). Consumers can override by providing their own layer on top.
-      OpaqueToolkit.providerEmpty,
+      OpaqueToolkit.providerLayer(OpaqueToolkit.merge(...(this.opts.toolkits ?? []))),
+      traceWriterLayer,
+
       // `FunctionInvocationService` is deprecated; new code should yield `Operation.Service`.
       // The cloudflare wrapper provides only the unavailable layer to satisfy the (still-present)
       // type union — handlers that yield it will die at invocation time.
       FunctionInvocationService.layerNotAvailable,
-      // TODO(dmaretskyi): Forward trace events.
-      Trace.writerLayerNoop,
     );
   }
 }
+
+/**
+ * Backs `Trace.TraceService` with the EDGE-provided `TraceService` so that operation
+ * handlers can write trace events that are forwarded to the runtime's trace sink.
+ */
+const makeTraceWriterLayer = (traceService: TraceProtocol.TraceService): Layer.Layer<Trace.TraceService> =>
+  Layer.succeed(Trace.TraceService, {
+    write: (eventType, payload) => {
+      traceService.write([
+        {
+          key: eventType.key,
+          isEphemeral: eventType.isEphemeral,
+          data: payload,
+        },
+      ]);
+    },
+  });
 
 /**
  * AI service layer that proxies HTTP requests through the EDGE-provided `FunctionsAiService`.
