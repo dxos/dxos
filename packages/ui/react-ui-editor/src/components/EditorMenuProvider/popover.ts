@@ -53,6 +53,7 @@ export const popover = (options: PopoverOptions = {}): Extension => {
       placeholder({
         // TODO(burdon): Translations.
         content: `Press '${Array.isArray(options.trigger) ? options.trigger[0] : options.trigger}' for commands`,
+        focusOnly: true,
         ...options.placeholder,
       }),
   ].filter(isTruthy);

@@ -26,6 +26,7 @@ import { DoctorPlugin } from '@dxos/plugin-doctor';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { FeedPlugin } from '@dxos/plugin-feed';
 import { GalleryPlugin } from '@dxos/plugin-gallery';
+import { GamePlugin } from '@dxos/plugin-game';
 import { GitHubPlugin } from '@dxos/plugin-github';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { HelpPlugin } from '@dxos/plugin-help';
@@ -163,6 +164,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       CodePlugin.meta.id,
       FeedPlugin.meta.id,
       GalleryPlugin.meta.id,
+      GamePlugin.meta.id,
       IrohBeaconPlugin.meta.id,
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
@@ -222,6 +224,7 @@ export const getPlugins = ({
     ExplorerPlugin(),
     FeedPlugin(),
     GalleryPlugin(),
+    GamePlugin(),
     GitHubPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),

@@ -253,14 +253,8 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         value={value}
         onSelect={onSelect}
         disabled={disabled}
+        classNames={mx('flex gap-2 items-center px-2 rounded-xs', classNames)}
         ref={forwardedRef}
-        classNames={mx(
-          'flex gap-2 items-center',
-          'py-1 px-2 rounded-xs select-none',
-          'cursor-pointer data-[selected=true]:bg-hover-overlay hover:bg-hover-overlay',
-          disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent data-[selected=true]:bg-transparent',
-          classNames,
-        )}
       >
         {icon && <Icon icon={icon} classNames={iconClassNames} />}
         <span className='w-0 grow truncate'>{label}</span>

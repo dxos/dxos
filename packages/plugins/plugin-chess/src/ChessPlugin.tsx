@@ -3,19 +3,22 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppPlugin, AppActivationEvents } from '@dxos/app-toolkit';
 
-import { BlueprintDefinition, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
+import { BlueprintDefinition, GameVariant, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Chess } from '#types';
 
 export const ChessPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'game-variant',
+    activatesOn: AppActivationEvents.SetupSchema,
+    activate: GameVariant,
+  }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Chess.Game] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSchemaModule({ schema: [Chess.State] }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );

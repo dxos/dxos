@@ -240,22 +240,26 @@ export const WithBlueprints: Story = {
 export const WithChess: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
-      const [{ Chess }, { ChessPlugin }] = await Promise.all([
+      const [{ Chess }, { ChessPlugin }, { Game }, { GamePlugin }] = await Promise.all([
         import('@dxos/plugin-chess/types'),
         import('@dxos/plugin-chess'),
+        import('@dxos/plugin-game/types'),
+        import('@dxos/plugin-game'),
       ]);
       return {
-        plugins: [ChessPlugin()],
-        types: [Chess.Game],
+        plugins: [GamePlugin(), ChessPlugin()],
+        types: [Game, Chess.State],
       };
     },
     config: config.remote,
     onInit: async ({ space }) => {
-      const { Chess } = await import('@dxos/plugin-chess/types');
+      const [{ Chess }, { make: makeGame }] = await Promise.all([
+        import('@dxos/plugin-chess/types'),
+        import('@dxos/plugin-game/types'),
+      ]);
       // TODO(burdon): Add player DID (for user and assistant).
-      space.db.add(
+      const state = space.db.add(
         Chess.make({
-          name: 'Challenge',
           pgn: [
             '1. e4 e5',
             '2. Nf3 Nc6',
@@ -274,10 +278,11 @@ export const WithChess: Story = {
           ].join(' '),
         }),
       );
+      space.db.add(makeGame({ name: 'Challenge', variant: state }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const { Chess } = await import('@dxos/plugin-chess/types');
-      const objects = await space.db.query(Filter.type(Chess.Game)).run();
+      const { Game } = await import('@dxos/plugin-game/types');
+      const objects = await space.db.query(Filter.type(Game)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
@@ -656,22 +661,26 @@ export const WithTriggers: Story = {
 export const WithChessTrigger: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
-      const [{ Chess }, { ChessPlugin }] = await Promise.all([
+      const [{ Chess }, { ChessPlugin }, { Game }, { GamePlugin }] = await Promise.all([
         import('@dxos/plugin-chess/types'),
         import('@dxos/plugin-chess'),
+        import('@dxos/plugin-game/types'),
+        import('@dxos/plugin-game'),
       ]);
       return {
-        plugins: [ChessPlugin()],
-        types: [Chess.Game],
+        plugins: [GamePlugin(), ChessPlugin()],
+        types: [Game, Chess.State],
       };
     },
     config: config.remote,
     onInit: async ({ space }) => {
-      const { Chess } = await import('@dxos/plugin-chess/types');
+      const [{ Chess }, { Game, make: makeGame }] = await Promise.all([
+        import('@dxos/plugin-chess/types'),
+        import('@dxos/plugin-game/types'),
+      ]);
       // TODO(burdon): Add player DID (for user and assistant).
-      space.db.add(
+      const state = space.db.add(
         Chess.make({
-          name: 'Challenge',
           pgn: [
             '1. e4 e5',
             '2. Nf3 Nc6',
@@ -690,12 +699,13 @@ export const WithChessTrigger: Story = {
           ].join(' '),
         }),
       );
+      space.db.add(makeGame({ name: 'Challenge', variant: state }));
 
       space.db.add(
         Trigger.make({
           function: Ref.make(Operation.serialize(ChessFunctions.Play)),
           enabled: true,
-          spec: Trigger.specSubscription(Query.select(Filter.type(Chess.Game))),
+          spec: Trigger.specSubscription(Query.select(Filter.type(Game))),
           input: {
             id: '{{event.changedObjectId}}',
             side: 'black', // NOTE: Removing it makes the bot play itself.

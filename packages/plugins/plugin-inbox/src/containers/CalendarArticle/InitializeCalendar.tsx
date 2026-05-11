@@ -11,7 +11,7 @@ import { meta } from '#meta';
 import { InboxOperation } from '#operations';
 import { type Calendar } from '#types';
 
-import { Initialize } from '../../components';
+import { Initialize, InitializeAction } from '../../components';
 import { GOOGLE_CALENDAR_PROVIDER_ID } from '../../constants';
 
 export type InitializeCalendarProps = {
@@ -25,10 +25,6 @@ export const InitializeCalendar = composable<HTMLDivElement, InitializeCalendarP
       <Initialize
         {...props}
         target={calendar}
-        targetKey='calendar'
-        providerId={GOOGLE_CALENDAR_PROVIDER_ID}
-        operation={InboxOperation.SyncCalendar}
-        syncLabel={t('sync-calendar.label')}
         noIntegrationMessage={t('no-integrations.label')}
         emptyMessage={t('empty-calendar.message')}
         ref={forwardedRef}
@@ -38,3 +34,16 @@ export const InitializeCalendar = composable<HTMLDivElement, InitializeCalendarP
 );
 
 InitializeCalendar.displayName = 'InitializeCalendar';
+
+export const InitializeCalendarAction = ({ calendar }: InitializeCalendarProps) => {
+  const { t } = useTranslation(meta.id);
+  return (
+    <InitializeAction
+      target={calendar}
+      targetKey='calendar'
+      providerId={GOOGLE_CALENDAR_PROVIDER_ID}
+      operation={InboxOperation.SyncCalendar}
+      syncLabel={t('sync-calendar.label')}
+    />
+  );
+};

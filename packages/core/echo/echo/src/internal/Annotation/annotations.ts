@@ -533,6 +533,19 @@ export const IconAnnotation = makeUserAnnotation<IconAnnotation>({
 });
 
 /**
+ * Indicates that this entity's icon should be resolved from a property whose value is a `Ref`
+ * to another entity. Consumers (e.g. graph node builders) resolve the ref target and use that
+ * target's schema `IconAnnotation` in place of the static one declared on this schema.
+ *
+ * Useful for wrapper schemas that delegate their visual identity to a referenced sub-entity
+ * (e.g. a generic `Game` whose icon should come from its `variant` ref's typed state).
+ */
+export const IconFromRefAnnotation = makeUserAnnotation<string>({
+  id: 'org.dxos.annotation.icon.from-ref',
+  schema: Schema.String,
+});
+
+/**
  * Get the label of an entity.
  * Accepts both reactive entities and snapshots.
  */
