@@ -41,6 +41,7 @@ const BootLoaderHost = ({ initialStatus = 'Loading…', markSvg }: BootLoaderHos
     if (!container) {
       return;
     }
+
     // Mirror the HTML structure produced by `bootLoaderPlugin.transformIndexHtml`.
     const initialLine = initialStatus ? `<div class="boot-loader-status-line">${escapeHtml(initialStatus)}</div>` : '';
     const markHtml = markSvg ? `<div id="boot-loader-mark">${markSvg}</div>` : '';
@@ -51,9 +52,15 @@ const BootLoaderHost = ({ initialStatus = 'Loading…', markSvg }: BootLoaderHos
           <div id="boot-loader-dot"></div>
           ${markHtml}
         </div>
-        <div id="boot-loader-status">${initialLine}</div>
+        <div id="boot-loader-status">
+          <div id="boot-loader-status-fade"></div>
+          <div id="boot-loader-status-track">
+            ${initialLine}
+          </div>
+        </div>
       </div>
     `;
+
     // Evaluate the driver IIFE — it auto-promotes idle → state 1 (slow creep)
     // and exposes `window.__bootLoader.{status, progress, dismiss}` globally.
     const driverEl = document.createElement('script');

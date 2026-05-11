@@ -288,7 +288,9 @@ export const Timeline = composable<HTMLDivElement, TimelineProps>(
             }
             break;
           }
+          // TODO(burdon): Not handled; must integrate with tabster.
           case 'Escape': {
+            event.preventDefault();
             setCurrent(undefined);
             onCommitClick?.(null);
             break;
@@ -329,10 +331,7 @@ export const Timeline = composable<HTMLDivElement, TimelineProps>(
                 key={commit.id}
                 data-index={index}
                 aria-current={current === index}
-                className={mx(
-                  'group col-span-full grid grid-cols-subgrid gap-1 overflow-hidden items-center px-[2px]',
-                  'dx-current dx-hover',
-                )}
+                className='dx-row dx-current dx-hover group/row col-span-full grid grid-cols-subgrid gap-1 overflow-hidden items-center px-[2px]'
                 style={{ height: `${options.lineHeight}px` }}
                 onClick={handleClick}
               >
@@ -352,16 +351,11 @@ export const Timeline = composable<HTMLDivElement, TimelineProps>(
                     {commit.timestamp && format(commit.timestamp, 'HH:mm:ss.SSS')}
                   </div>
                 )}
-                {showIcon &&
-                  (commit.icon ? (
-                    <Icon icon={commit.icon} classNames={mx(commit.level && levelColors[commit.level])} size={4} />
-                  ) : (
-                    <div />
-                  ))}
+                {showIcon && <CommitIcon commit={commit} />}
                 <div
                   role='none'
                   className={mx(
-                    'text-sm truncate cursor-pointer text-subdued',
+                    'text-sm truncate cursor-pointer text-subdued font-thin dx-current-row dx-hover-row',
                     hasLink && 'underline decoration-dotted underline-offset-2',
                   )}
                 >
@@ -375,6 +369,24 @@ export const Timeline = composable<HTMLDivElement, TimelineProps>(
     );
   },
 );
+
+const CommitIcon = ({ commit }: { commit: Commit }) => {
+  if (!commit.icon) {
+    return <div />;
+  }
+
+  return (
+    <Icon
+      icon={commit.icon}
+      size={4}
+      synchronized
+      classNames={mx(
+        commit.icon === 'ph--spinner-gap--regular' && 'animate-spin',
+        commit.level !== undefined && levelColors[commit.level],
+      )}
+    />
+  );
+};
 
 type Span = {
   start: number;
