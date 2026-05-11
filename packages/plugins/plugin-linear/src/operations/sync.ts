@@ -6,7 +6,7 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 
-import { LayoutOperation, mergeField, readSnapshot, writeSnapshot } from '@dxos/app-toolkit';
+import { LayoutOperation, mergeField, readSnapshot, snapshotField, writeSnapshot } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -68,19 +68,24 @@ const TEAM_CONCURRENCY = 2;
 // Snapshot field shapes (stored on `Integration.snapshots`)
 //
 
-/** Snapshot for a Linear Project. */
+/**
+ * Snapshot shapes. Fields are typed `required` (not `?`) because every
+ * snapshot is written in one shot via {@link writeSnapshot} after a pull;
+ * the absence-of-snapshot case is modeled by `readSnapshot` returning
+ * `undefined`, not by partially-populated objects. `priority` and `estimate`
+ * carry `undefined` as a valid recorded value ("no priority", "no estimate").
+ */
 type ProjectSnapshot = {
-  name?: string;
-  description?: string;
+  name: string;
+  description: string;
 };
 
-/** Snapshot for a Linear Issue (mirrored as a Task locally). */
 type TaskSnapshot = {
-  title?: string;
-  description?: string;
-  status?: 'todo' | 'in-progress' | 'done';
-  priority?: 'low' | 'medium' | 'high' | 'urgent' | undefined;
-  estimate?: number | undefined;
+  title: string;
+  description: string;
+  status: 'todo' | 'in-progress' | 'done';
+  priority: 'low' | 'medium' | 'high' | 'urgent' | undefined;
+  estimate: number | undefined;
 };
 
 //
@@ -129,12 +134,16 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
   const existing = yield* findByForeignId<Project.Project>(Project.Project, remote.id);
 
   if (existing) {
-    const snapshot = readSnapshot<ProjectSnapshot>(integration, remote.id) ?? {};
-    const nameResult = mergeField<string | undefined>(existing.name, remoteFields.name, snapshot.name);
+    const snapshot = readSnapshot<ProjectSnapshot>(integration, remote.id);
+    const nameResult = mergeField<string | undefined>(
+      existing.name,
+      remoteFields.name,
+      snapshotField(snapshot, 'name'),
+    );
     const descriptionResult = mergeField<string | undefined>(
       existing.description,
       remoteFields.description,
-      snapshot.description,
+      snapshotField(snapshot, 'description'),
     );
     const writeName = nameResult.source === 'remote' && existing.name !== nameResult.value;
     const writeDescription = descriptionResult.source === 'remote' && existing.description !== descriptionResult.value;
@@ -191,26 +200,35 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
   const existing = yield* findByForeignId<Task.Task>(Task.Task, issue.id);
 
   if (existing) {
-    const snapshot = readSnapshot<TaskSnapshot>(integration, issue.id) ?? {};
-    // Task.title is required (non-optional), so widen the merge to plain string —
-    // the remote always provides one, and a snapshot is allowed to be undefined
-    // (first sync) since `mergeField` accepts `T | undefined` for snapshot.
-    const titleResult = mergeField<string>(existing.title, remoteFields.title, snapshot.title);
+    const snapshot = readSnapshot<TaskSnapshot>(integration, issue.id);
+    // Task.title is required (non-optional), so widen the merge to plain string.
+    const titleResult = mergeField<string>(existing.title, remoteFields.title, snapshotField(snapshot, 'title'));
     const descriptionResult = mergeField<string | undefined>(
       existing.description,
       remoteFields.description,
-      snapshot.description,
+      snapshotField(snapshot, 'description'),
     );
-    const statusResult = mergeField<TaskSnapshot['status']>(existing.status, remoteFields.status, snapshot.status);
+    // Task.status is optional on the schema (may be `undefined` locally), but
+    // every snapshot writes a concrete status — so widen to include undefined
+    // for the local side while the snapshot side stays narrow.
+    const statusResult = mergeField<TaskSnapshot['status'] | undefined>(
+      existing.status,
+      remoteFields.status,
+      snapshotField(snapshot, 'status'),
+    );
     // Linear's reverse mapper drops `0` (no priority) → undefined, so the
     // remote/snapshot side never holds 'none'. Widen to the full Task priority
     // union so a locally-set 'none' typechecks too.
     const priorityResult = mergeField<'none' | 'low' | 'medium' | 'high' | 'urgent' | undefined>(
       existing.priority,
       remoteFields.priority,
-      snapshot.priority,
+      snapshotField(snapshot, 'priority'),
     );
-    const estimateResult = mergeField<number | undefined>(existing.estimate, remoteFields.estimate, snapshot.estimate);
+    const estimateResult = mergeField<number | undefined>(
+      existing.estimate,
+      remoteFields.estimate,
+      snapshotField(snapshot, 'estimate'),
+    );
     const writeTitle = titleResult.source === 'remote' && existing.title !== titleResult.value;
     const writeDescription = descriptionResult.source === 'remote' && existing.description !== descriptionResult.value;
     const writeStatus = statusResult.source === 'remote' && existing.status !== statusResult.value;

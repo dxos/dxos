@@ -289,6 +289,35 @@ describe('plugin-linear sync', () => {
     expect(issueUpdateInput?.priority).toBeNull();
   });
 
+  test('pull: local priority on previously-unprioritised issue survives re-pull', async ({ expect }) => {
+    // Regression: when remote priority is undefined and snapshot.priority is
+    // also undefined (a *recorded* "no priority"), the merge must not treat
+    // it as "first sync" and clobber the user's local edit. This is the bug
+    // path that motivated the snapshotField/Snapshot wrapper API in
+    // app-toolkit/integration-sync.
+    const { db, integration } = await setup();
+    const layer = Database.layer(db);
+
+    // First pull: Linear says "no priority" (0 → undefined via the mapper).
+    const first = await Effect.gen(function* () {
+      return yield* upsertTask(integration, issue({ priority: 0 }), undefined);
+    }).pipe(Effect.provide(layer), runAndForwardErrors);
+
+    // User assigns priority locally.
+    Obj.update(first.task, (task) => {
+      task.priority = 'medium';
+    });
+    expect(first.task.priority).toBe('medium');
+
+    // Second pull with unchanged remote (still no priority). The local edit
+    // must survive.
+    await Effect.gen(function* () {
+      yield* upsertTask(integration, issue({ priority: 0 }), undefined);
+    }).pipe(Effect.provide(layer), runAndForwardErrors);
+
+    expect(first.task.priority).toBe('medium');
+  });
+
   test('push: project description divergence calls updateProject', async ({ expect }) => {
     const { db, integration } = await setup();
     const layer = Database.layer(db);

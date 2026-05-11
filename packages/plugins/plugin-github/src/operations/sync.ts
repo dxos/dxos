@@ -6,7 +6,7 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 
-import { LayoutOperation, mergeField, readSnapshot, writeSnapshot } from '@dxos/app-toolkit';
+import { LayoutOperation, mergeField, readSnapshot, snapshotField, writeSnapshot } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -65,17 +65,21 @@ const ISSUE_CONCURRENCY = 4;
 // Snapshot field shapes (stored on `Integration.snapshots`)
 //
 
-/** Snapshot for a GitHub repo (mirrored as a Project locally). `name` is read but not pushed. */
+/**
+ * Snapshot shapes. Fields are required (not `?`) because every snapshot is
+ * written in one shot via {@link writeSnapshot} after a pull; absence-of-
+ * snapshot is modeled by `readSnapshot` returning `undefined`. `name` on a
+ * Project is recorded but not pushed — see {@link GitHubApi.updateRepo}.
+ */
 type ProjectSnapshot = {
-  name?: string;
-  description?: string;
+  name: string;
+  description: string;
 };
 
-/** Snapshot for a GitHub issue (mirrored as a Task locally). */
 type TaskSnapshot = {
-  title?: string;
-  description?: string;
-  status?: 'todo' | 'done';
+  title: string;
+  description: string;
+  status: 'todo' | 'done';
 };
 
 //
@@ -215,12 +219,16 @@ const upsertProject = Effect.fn('upsertProject')(function* (
   const existing = yield* findByForeignId<Project.Project>(Project.Project, repo.id);
 
   if (existing) {
-    const snapshot = readSnapshot<ProjectSnapshot>(integration, fid) ?? {};
-    const nameResult = mergeField<string | undefined>(existing.name, remoteFields.name, snapshot.name);
+    const snapshot = readSnapshot<ProjectSnapshot>(integration, fid);
+    const nameResult = mergeField<string | undefined>(
+      existing.name,
+      remoteFields.name,
+      snapshotField(snapshot, 'name'),
+    );
     const descriptionResult = mergeField<string | undefined>(
       existing.description,
       remoteFields.description,
-      snapshot.description,
+      snapshotField(snapshot, 'description'),
     );
     const writeName = nameResult.source === 'remote' && existing.name !== nameResult.value;
     const writeDescription = descriptionResult.source === 'remote' && existing.description !== descriptionResult.value;
@@ -268,13 +276,13 @@ const upsertTask = Effect.fn('upsertTask')(function* (
   const existing = yield* findByForeignId<Task.Task>(Task.Task, issue.id);
 
   if (existing) {
-    const snapshot = readSnapshot<TaskSnapshot>(integration, fid) ?? {};
+    const snapshot = readSnapshot<TaskSnapshot>(integration, fid);
     // Task.title is required (non-optional) so the merge produces a string.
-    const titleResult = mergeField<string>(existing.title, remoteFields.title, snapshot.title);
+    const titleResult = mergeField<string>(existing.title, remoteFields.title, snapshotField(snapshot, 'title'));
     const descriptionResult = mergeField<string | undefined>(
       existing.description,
       remoteFields.description,
-      snapshot.description,
+      snapshotField(snapshot, 'description'),
     );
     // existing.status is the full Task status union ('todo' | 'in-progress' | 'done' | undefined);
     // the snapshot only ever holds GitHub's collapsed shape ('todo' | 'done'). Widen the merge
@@ -282,7 +290,7 @@ const upsertTask = Effect.fn('upsertTask')(function* (
     const statusResult = mergeField<'todo' | 'in-progress' | 'done' | undefined>(
       existing.status,
       remoteFields.status,
-      snapshot.status,
+      snapshotField(snapshot, 'status'),
     );
     const writeTitle = titleResult.source === 'remote' && existing.title !== titleResult.value;
     const writeDescription = descriptionResult.source === 'remote' && existing.description !== descriptionResult.value;

@@ -21,6 +21,21 @@ import { Obj } from '@dxos/echo';
 export type MergeResult<T> = { value: T; source: 'local' | 'remote' | 'unchanged' };
 
 /**
+ * Snapshot wrapper passed to the merge primitives.
+ *
+ * `undefined` means "no snapshot has ever been recorded for this id" — the
+ * merge treats it as first-sync and takes remote.
+ *
+ * `{ value }` means "the snapshot has a recorded value" — and `value` may
+ * itself be `undefined` (e.g. Linear's "no priority" sentinel). This is the
+ * critical distinction: if a caller collapses "no snapshot" and "snapshot
+ * value is undefined" into the same `undefined`, then a local edit that
+ * disagrees with a recorded-undefined snapshot gets clobbered on pull as if
+ * the user had never edited it.
+ */
+export type Snapshot<T> = { value: T } | undefined;
+
+/**
  * Per-field three-way merge over `(local, remote, snapshot)`.
  *
  * - No snapshot (first sync of this id): take remote.
@@ -32,12 +47,13 @@ export type MergeResult<T> = { value: T; source: 'local' | 'remote' | 'unchanged
  * Equality is `===` for primitives (numbers, strings, booleans). For object /
  * array values use {@link mergeDeep} instead.
  */
-export const mergeField = <T>(local: T, remote: T, snapshot: T | undefined): MergeResult<T> => {
+export const mergeField = <T>(local: T, remote: T, snapshot: Snapshot<T>): MergeResult<T> => {
   if (snapshot === undefined) {
     return { value: remote, source: local === remote ? 'unchanged' : 'remote' };
   }
-  const localChanged = local !== snapshot;
-  const remoteChanged = remote !== snapshot;
+  const snapshotValue = snapshot.value;
+  const localChanged = local !== snapshotValue;
+  const remoteChanged = remote !== snapshotValue;
   if (!localChanged && !remoteChanged) {
     return { value: local, source: 'unchanged' };
   }
@@ -72,13 +88,14 @@ const stableStringify = (value: unknown): string =>
   });
 
 /** Deep-equal merge for object values (e.g. arrangement). Same policy as {@link mergeField}. */
-export const mergeDeep = <T>(local: T, remote: T, snapshot: T | undefined): MergeResult<T> => {
+export const mergeDeep = <T>(local: T, remote: T, snapshot: Snapshot<T>): MergeResult<T> => {
   const eq = (a: unknown, b: unknown) => stableStringify(a) === stableStringify(b);
   if (snapshot === undefined) {
     return { value: remote, source: eq(local, remote) ? 'unchanged' : 'remote' };
   }
-  const localChanged = !eq(local, snapshot);
-  const remoteChanged = !eq(remote, snapshot);
+  const snapshotValue = snapshot.value;
+  const localChanged = !eq(local, snapshotValue);
+  const remoteChanged = !eq(remote, snapshotValue);
   if (!localChanged && !remoteChanged) {
     return { value: local, source: 'unchanged' };
   }
@@ -100,6 +117,22 @@ export const readSnapshot = <T extends object>(carrier: SnapshotCarrier, foreign
   const snapshots = (carrier.snapshots ?? {}) as Record<string, unknown>;
   return snapshots[foreignId] as T | undefined;
 };
+
+/**
+ * Build a {@link Snapshot} wrapper for one field of a snapshot object.
+ *
+ * Returns `undefined` when no snapshot exists for the id at all (first sync),
+ * or `{ value }` when the snapshot exists — `value` may itself be `undefined`
+ * if the field is a legitimate "no value" sentinel (e.g. Linear's priority).
+ */
+export const snapshotField = <T extends object, K extends keyof T>(snapshot: T | undefined, key: K): Snapshot<T[K]> =>
+  snapshot === undefined ? undefined : { value: snapshot[key] };
+
+/**
+ * Build a {@link Snapshot} wrapper from an optional raw value. Use when the
+ * caller already has the conditional "do I have a snapshot" check.
+ */
+export const snapshotOf = <T>(present: boolean, value: T): Snapshot<T> => (present ? { value } : undefined);
 
 /**
  * Writes `carrier.snapshots[foreignId] = snapshot` inside an `Obj.update`. Allocates

@@ -5,7 +5,7 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation, mergeDeep, mergeField, readSnapshot, writeSnapshot } from '@dxos/app-toolkit';
+import { LayoutOperation, mergeDeep, mergeField, readSnapshot, snapshotField, writeSnapshot } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -44,15 +44,19 @@ type MappedField = (typeof MAPPED_FIELDS)[number];
 type CardSnapshot = Partial<Record<MappedField, unknown>>;
 
 type BoardSnapshot = {
-  name?: string;
+  name: string;
   /**
    * Canonical column order at last pull (Trello list `pos` order). Display
    * reads this instead of `Object.keys(arrangement.columns)` because ECHO /
    * Automerge does not preserve insertion order across reload — keys come
    * back in canonical (alphabetical) order.
+   *
+   * Fields are required (not `?`) because the snapshot is always written in
+   * one shot at the end of a pull; the "no snapshot yet" state is modeled
+   * by `readSnapshot` returning `undefined`.
    */
-  order?: string[];
-  columns?: Record<string, { ids: string[] }>;
+  order: string[];
+  columns: Record<string, { ids: string[] }>;
 };
 
 // Per-field three-way merge primitives are shared with other integration plugins
@@ -145,12 +149,12 @@ export const reconcileBoardCards: (
           log.warn('trello pull: foreign-keyed local object is not an Expando; skipping', { cardId: card.id });
           continue;
         }
-        const snapshot = readSnapshot<CardSnapshot>(integration, card.id) ?? {};
+        const snapshot = readSnapshot<CardSnapshot>(integration, card.id);
 
         const merged: Record<MappedField, unknown> = { ...remoteFields };
         const writes: Partial<Record<MappedField, unknown>> = {};
         for (const field of MAPPED_FIELDS) {
-          const result = mergeField(existing[field], remoteFields[field], snapshot[field]);
+          const result = mergeField(existing[field], remoteFields[field], snapshotField(snapshot, field));
           merged[field] = result.value;
           if (result.source === 'remote' && existing[field] !== result.value) {
             writes[field] = result.value;
@@ -238,13 +242,21 @@ export const reconcileBoardCards: (
     // Board-level three-way merge: name + arrangement.order + arrangement.columns.
     // Local-wins outputs are left in place but currently NOT pushed back to
     // Trello — board rename and arrangement reorder push aren't implemented yet.
-    const boardSnapshot = readSnapshot<BoardSnapshot>(integration, remoteBoard.id) ?? {};
-    const nameMerge = mergeField<string | undefined>(kanban.name, remoteBoard.name, boardSnapshot.name);
-    const orderMerge = mergeDeep<string[]>([...kanban.arrangement.order], orderedListNames, boardSnapshot.order);
+    const boardSnapshot = readSnapshot<BoardSnapshot>(integration, remoteBoard.id);
+    const nameMerge = mergeField<string | undefined>(
+      kanban.name,
+      remoteBoard.name,
+      snapshotField(boardSnapshot, 'name'),
+    );
+    const orderMerge = mergeDeep<string[]>(
+      [...kanban.arrangement.order],
+      orderedListNames,
+      snapshotField(boardSnapshot, 'order'),
+    );
     const columnsMerge = mergeDeep<Record<string, { ids: string[] }>>(
       kanban.arrangement.columns as Record<string, { ids: string[] }>,
       remoteColumns,
-      boardSnapshot.columns,
+      snapshotField(boardSnapshot, 'columns'),
     );
 
     if (nameMerge.source === 'remote' && kanban.name !== nameMerge.value) {
