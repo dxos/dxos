@@ -347,8 +347,13 @@ export type GitHubPushResult = {
  *
  * After a successful push the snapshot is refreshed with the values just
  * sent so the next pass sees no divergence even before the next pull.
+ *
+ * The push callbacks' error type is generic. The reconciler doesn't inspect
+ * or recover from those errors — it propagates so the outer `Effect.either`
+ * at the call site can record a per-target `lastError`. Generic-`E` keeps
+ * this module decoupled from the HTTP error hierarchy of `GitHubApi`.
  */
-export const pushRepoUpdates: <R>(
+export const pushRepoUpdates: <E, R>(
   integration: Obj.Unknown & { snapshots?: Record<string, unknown> },
   repo: GitHubApi.GitHubRepo,
   remoteIssuesById: ReadonlyMap<string, GitHubApi.GitHubIssue>,
@@ -359,11 +364,11 @@ export const pushRepoUpdates: <R>(
       repo: string,
       issueNumber: number,
       input: GitHubApi.IssueUpdateInput,
-    ) => Effect.Effect<void, Error, R>;
+    ) => Effect.Effect<void, E, R>;
     /** Wraps `GitHubApi.updateRepo`. */
-    updateRepo: (owner: string, repo: string, input: GitHubApi.RepoUpdateInput) => Effect.Effect<void, Error, R>;
+    updateRepo: (owner: string, repo: string, input: GitHubApi.RepoUpdateInput) => Effect.Effect<void, E, R>;
   },
-) => Effect.Effect<GitHubPushResult, Error, Database.Service | R> = Effect.fn('pushRepoUpdates')(
+) => Effect.Effect<GitHubPushResult, E, Database.Service | R> = Effect.fn('pushRepoUpdates')(
   function* (integration, repo, remoteIssuesById, push) {
     let projects = 0;
     let tasks = 0;
@@ -641,15 +646,9 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
                     // is preserved.
                     const pushResult = yield* pushRepoUpdates(integrationObj, remoteRepo, remoteIssuesById, {
                       updateIssue: (owner, repoName, issueNumber, input) =>
-                        GitHubApi.updateIssue(owner, repoName, issueNumber, input).pipe(
-                          Effect.map(() => undefined),
-                          Effect.mapError((error) => error as Error),
-                        ),
+                        GitHubApi.updateIssue(owner, repoName, issueNumber, input).pipe(Effect.map(() => undefined)),
                       updateRepo: (owner, repoName, input) =>
-                        GitHubApi.updateRepo(owner, repoName, input).pipe(
-                          Effect.map(() => undefined),
-                          Effect.mapError((error) => error as Error),
-                        ),
+                        GitHubApi.updateRepo(owner, repoName, input).pipe(Effect.map(() => undefined)),
                     });
                     pushedProjects += pushResult.projects;
                     pushedTasks += pushResult.tasks;

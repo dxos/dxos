@@ -285,20 +285,25 @@ export type LinearPushResult = {
  * id for the issue's team. Status changes are only pushed when we have a
  * mapping (otherwise the push silently skips status — better than failing
  * the whole pass over an unrecognised workflow).
+ *
+ * The push callbacks' error type is generic. The reconciler doesn't inspect
+ * or recover from those errors — it propagates so the outer `Effect.either`
+ * at the call site can record a per-target `lastError`. Generic-`E` keeps
+ * this module decoupled from the GraphQL error hierarchy of `LinearApi`.
  */
-export const pushTeamUpdates: <R>(
+export const pushTeamUpdates: <E, R>(
   integration: Obj.Unknown & { snapshots?: Record<string, unknown> },
   remoteIssuesById: ReadonlyMap<string, LinearApi.Issue>,
   remoteProjectsById: ReadonlyMap<string, LinearApi.Project>,
   push: {
     /** Wraps `LinearApi.updateProject`. */
-    updateProject: (id: string, input: LinearApi.ProjectUpdateInput) => Effect.Effect<void, Error, R>;
+    updateProject: (id: string, input: LinearApi.ProjectUpdateInput) => Effect.Effect<void, E, R>;
     /** Wraps `LinearApi.updateIssue`. */
-    updateIssue: (id: string, input: LinearApi.IssueUpdateInput) => Effect.Effect<void, Error, R>;
+    updateIssue: (id: string, input: LinearApi.IssueUpdateInput) => Effect.Effect<void, E, R>;
     /** Resolve a desired Task status → Linear workflow-state id. Returns undefined when no mapping is known. */
     resolveStateId: (issue: LinearApi.Issue, status: 'todo' | 'in-progress' | 'done') => string | undefined;
   },
-) => Effect.Effect<LinearPushResult, Error, Database.Service | R> = Effect.fn('pushTeamUpdates')(
+) => Effect.Effect<LinearPushResult, E, Database.Service | R> = Effect.fn('pushTeamUpdates')(
   function* (integration, remoteIssuesById, remoteProjectsById, push) {
     let projects = 0;
     let tasks = 0;
@@ -550,10 +555,8 @@ const handler: Operation.WithHandler<typeof SyncLinearTeams> = SyncLinearTeams.p
                     }
 
                     const pushResult = yield* pushTeamUpdates(integrationObj, remoteIssuesById, remoteProjectsById, {
-                      updateProject: (id, input) =>
-                        LinearApi.updateProject(id, input).pipe(Effect.mapError((error) => error as Error)),
-                      updateIssue: (id, input) =>
-                        LinearApi.updateIssue(id, input).pipe(Effect.mapError((error) => error as Error)),
+                      updateProject: (id, input) => LinearApi.updateProject(id, input),
+                      updateIssue: (id, input) => LinearApi.updateIssue(id, input),
                       resolveStateId,
                     });
                     pushedProjects += pushResult.projects;

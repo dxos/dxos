@@ -138,24 +138,29 @@ export const reconcileBoardCards: (
       }
 
       if (existing) {
+        // Trello-managed cards are always Expandos (see the else branch below
+        // for the only create site). Narrowing here lets us index fields
+        // without an `unknown` cast.
+        if (!Obj.instanceOf(Expando.Expando, existing)) {
+          log.warn('trello pull: foreign-keyed local object is not an Expando; skipping', { cardId: card.id });
+          continue;
+        }
         const snapshot = readSnapshot<CardSnapshot>(integration, card.id) ?? {};
-        const fields = existing as unknown as Record<string, unknown>;
 
         const merged: Record<MappedField, unknown> = { ...remoteFields };
         const writes: Partial<Record<MappedField, unknown>> = {};
-        for (const k of MAPPED_FIELDS) {
-          const result = mergeField(fields[k], remoteFields[k], snapshot[k]);
-          merged[k] = result.value;
-          if (result.source === 'remote' && fields[k] !== result.value) {
-            writes[k] = result.value;
+        for (const field of MAPPED_FIELDS) {
+          const result = mergeField(existing[field], remoteFields[field], snapshot[field]);
+          merged[field] = result.value;
+          if (result.source === 'remote' && existing[field] !== result.value) {
+            writes[field] = result.value;
           }
         }
 
         if (Object.keys(writes).length > 0) {
           Obj.update(existing, (existing) => {
-            const fields = existing as unknown as Record<string, unknown>;
             for (const [key, value] of Object.entries(writes)) {
-              fields[key] = value;
+              existing[key] = value;
             }
           });
           updated++;
@@ -343,13 +348,16 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
     if (Obj.isDeleted(target)) {
       continue;
     }
+    // Trello-managed cards are always Expandos; narrowing here lets us
+    // index fields without an `unknown` cast.
+    if (!Obj.instanceOf(Expando.Expando, target)) {
+      continue;
+    }
 
-    const fields = target as unknown as Record<string, unknown>;
-
-    const foreignId = Obj.getMeta(target).keys.find((k) => k.source === TRELLO_SOURCE)?.id;
-    const name = typeof fields.name === 'string' ? fields.name : '';
-    const desc = typeof fields.description === 'string' ? fields.description : '';
-    const localListName = typeof fields.listName === 'string' ? fields.listName : undefined;
+    const foreignId = Obj.getMeta(target).keys.find((key) => key.source === TRELLO_SOURCE)?.id;
+    const name = typeof target.name === 'string' ? target.name : '';
+    const desc = typeof target.description === 'string' ? target.description : '';
+    const localListName = typeof target.listName === 'string' ? target.listName : undefined;
     const listId = localListName ? listIdByName.get(localListName) : undefined;
 
     if (localListName && !listId) {
