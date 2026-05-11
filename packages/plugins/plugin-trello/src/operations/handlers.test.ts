@@ -195,8 +195,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     // `SetIntegrationTargets` op is covered by its own test; here we just
     // simulate the dialog's effect on `integration.targets`.
     Obj.update(integration, (integration) => {
-      const m = integration as Obj.Mutable<typeof integration>;
-      m.targets = [{ remoteId: boardA.id, name: boardA.name }];
+      integration.targets = [{ remoteId: boardA.id, name: boardA.name }];
     });
     expect(integration.targets).toHaveLength(1);
     expect(integration.targets[0].object).toBeUndefined();
@@ -238,8 +237,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
 
     // Select both boards by recording `{ remoteId, name }` entries.
     Obj.update(integration, (integration) => {
-      const m = integration as Obj.Mutable<typeof integration>;
-      m.targets = discovered.targets.map((t) => ({ remoteId: t.id, name: t.name }));
+      integration.targets = discovered.targets.map((target) => ({ remoteId: target.id, name: target.name }));
     });
 
     await syncTrelloBoardHandler
