@@ -22,7 +22,9 @@ const makeStubService = (response: Response): EdgeFunctionEnv.FunctionsAiService
 
 const runRequest = (service: EdgeFunctionEnv.FunctionsAiService) =>
   HttpClient.HttpClient.pipe(
-    Effect.flatMap((client) => client.execute(HttpClientRequest.post('http://internal/provider/anthropic/v1/messages'))),
+    Effect.flatMap((client) =>
+      client.execute(HttpClientRequest.post('http://internal/provider/anthropic/v1/messages')),
+    ),
     Effect.provide(FunctionsAiHttpClient.layer(service)),
   );
 
@@ -30,7 +32,7 @@ const extractDefect = (exit: Exit.Exit<unknown, unknown>): Error | null => {
   if (Exit.isSuccess(exit)) {
     return null;
   }
-  return Chunk.toReadonlyArray(Cause.defects(exit.cause))[0] as Error | undefined ?? null;
+  return (Chunk.toReadonlyArray(Cause.defects(exit.cause))[0] as Error | undefined) ?? null;
 };
 
 describe('FunctionsAiHttpClient', () => {

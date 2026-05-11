@@ -79,8 +79,10 @@ export class FunctionsAiHttpClient {
             // Inspect the body before handing the response to `@effect/ai` so that structured
             // upstream errors surface as typed defects (`FunctionsAiUpstreamError` and friends)
             // rather than as the generic `HttpResponseError` from `@effect/ai/AiError`.
-            Effect.flatMap(Effect.promise(() => parseUpstreamError(response)), (typedError) =>
-              typedError ? Effect.die(typedError) : Effect.succeed(HttpClientResponse.fromWeb(request, response)),
+            Effect.flatMap(
+              Effect.promise(() => parseUpstreamError(response)),
+              (typedError) =>
+                typedError ? Effect.die(typedError) : Effect.succeed(HttpClientResponse.fromWeb(request, response)),
             ),
           ),
         );

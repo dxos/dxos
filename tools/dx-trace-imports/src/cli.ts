@@ -118,6 +118,6 @@ const main = async () => {
 };
 
 main().catch((err) => {
-  console.error(err instanceof Error ? err.stack ?? err.message : err);
+  console.error(err instanceof Error ? (err.stack ?? err.message) : err);
   process.exit(2);
 });
