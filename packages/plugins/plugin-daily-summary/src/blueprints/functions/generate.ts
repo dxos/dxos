@@ -52,7 +52,12 @@ export const SUMMARY_STRUCTURE = trim`
 const MarkdownDocument = Schema.Struct({
   name: Schema.optional(Schema.String),
   content: Ref.Ref(Text.Text),
-}).pipe(Type.object({ typename: 'org.dxos.type.document', version: '0.1.0' }));
+}).pipe(
+  Type.object({
+    typename: 'org.dxos.type.document',
+    version: '0.1.0',
+  }),
+);
 
 type MarkdownDoc = Schema.Schema.Type<typeof MarkdownDocument>;
 
@@ -73,19 +78,18 @@ export default GenerateSummary.pipe(
         const docName = `${SUMMARY_TITLE_PREFIX} ${dateLabel}`;
 
         const recentObjects = yield* Database.runQuery(Filter.updated({ after: cutoff }));
-
         const objectDescriptions = recentObjects.map((obj) => {
           return JSON.stringify(Obj.toJSON(obj));
         });
 
-        const content = yield* summarizeWithAi({
+        const content = yield* summarize({
           dateLabel,
           objectDescriptions,
           previousSummary,
           hours,
         });
 
-        const existingDoc = yield* findExistingDaySummary(docName);
+        const existingDoc = yield* getExistingDaySummary(docName);
 
         let doc;
         if (existingDoc) {
@@ -93,7 +97,7 @@ export default GenerateSummary.pipe(
           doc = existingDoc;
         } else {
           doc = makeMarkdownDoc({ name: docName, content });
-          const summariesCollection = yield* findOrCreateSummariesCollection();
+          const summariesCollection = yield* getOrCreateSummariesCollection();
           yield* CollectionModel.add({ object: doc, target: summariesCollection });
         }
 
@@ -105,6 +109,7 @@ export default GenerateSummary.pipe(
       },
       Effect.provide(
         Layer.mergeAll(
+          // TODO(burdon): Don't hardcode the model.
           AiService.model('@anthropic/claude-haiku-4-5'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
@@ -122,17 +127,14 @@ export default GenerateSummary.pipe(
   ),
 );
 
-const summarizeWithAi = Effect.fn(function* ({
-  dateLabel,
-  objectDescriptions,
-  previousSummary,
-  hours,
-}: {
+type SummarizeOptions = {
   dateLabel: string;
   objectDescriptions: string[];
   previousSummary?: string;
   hours: number;
-}) {
+};
+
+const summarize = Effect.fn(function* ({ dateLabel, objectDescriptions, previousSummary, hours }: SummarizeOptions) {
   const userContent = [
     `Date: ${dateLabel}`,
     `Time window: last ${hours} hours`,
@@ -153,30 +155,29 @@ const summarizeWithAi = Effect.fn(function* ({
   return text;
 });
 
-const findExistingDaySummary = Effect.fn(function* (docName: string) {
+const getExistingDaySummary = Effect.fn(function* (docName: string) {
   const docs = yield* Database.runQuery(Query.type(MarkdownDocument, { name: docName }));
   return docs.length > 0 ? docs[0] : null;
 });
 
-const updateDocContent = Effect.fn(function* (doc: MarkdownDoc, newContent: string) {
+const updateDocContent = Effect.fn(function* (doc: MarkdownDoc, content: string) {
   const textRef = doc.content;
   if (Ref.isRef(textRef)) {
     const text: Text.Text | undefined = yield* Effect.promise(() => textRef.load());
     if (text) {
-      Obj.update(text, (text) => {
-        text.content = newContent;
+      return Obj.update(text, (text) => {
+        text.content = content;
       });
-      return;
     }
   }
-  Obj.update(doc, (doc) => {
-    doc.content = Ref.make(Text.make(newContent));
+
+  return Obj.update(doc, (doc) => {
+    doc.content = Ref.make(Text.make(content));
   });
 });
 
-const findOrCreateSummariesCollection = Effect.fn(function* () {
+const getOrCreateSummariesCollection = Effect.fn(function* () {
   const collections = yield* Database.runQuery(Query.type(Collection.Collection, { name: SUMMARIES_COLLECTION_NAME }));
-
   if (collections.length > 0) {
     return collections[0];
   }
