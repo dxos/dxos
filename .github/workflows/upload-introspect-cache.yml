@@ -1,5 +1,6 @@
-# Builds the @dxos/introspect cache.json and uploads it to R2 so the
-# @dxos/introspect-service edge worker can read it. Triggers on push to the
+# Builds the @dxos/introspect core.json (symbol cache) and plugins.json
+# (plugin metadata sidecar) and uploads both to R2 so the
+# @dxos/introspect-service edge worker can read them. Triggers on push to the
 # `labs` branch; manual dispatch is also supported for ad-hoc reruns.
 #
 # Secrets required:
@@ -54,9 +55,16 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          ls -lh node_modules/.cache/dxos-introspect/cache.json
+          ls -lh \
+            node_modules/.cache/dxos-introspect/core.json \
+            node_modules/.cache/dxos-introspect/plugins.json
           pnpm exec wrangler r2 object put \
-            dxos-introspect-cache/dxos/labs/cache.json \
-            --file=node_modules/.cache/dxos-introspect/cache.json \
+            dxos-introspect-cache/dxos/labs/core.json \
+            --file=node_modules/.cache/dxos-introspect/core.json \
+            --content-type=application/json \
+            --remote
+          pnpm exec wrangler r2 object put \
+            dxos-introspect-cache/dxos/labs/plugins.json \
+            --file=node_modules/.cache/dxos-introspect/plugins.json \
             --content-type=application/json \
             --remote

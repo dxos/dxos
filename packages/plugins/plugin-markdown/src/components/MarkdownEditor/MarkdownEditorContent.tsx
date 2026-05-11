@@ -130,7 +130,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
           extensions,
         ].filter(isTruthy),
       }),
-      [id, viewMode, themeMode, extensions],
+      [id, viewMode, themeMode, extensions, compact],
     );
 
     useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => editorView, [editorView]);

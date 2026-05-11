@@ -13,4 +13,5 @@ export const meta: Plugin.Meta = {
     Access keyboard shortcuts, feature guides, and support resources.
   `,
   icon: 'ph--info--regular',
+  tags: ['system'],
 };

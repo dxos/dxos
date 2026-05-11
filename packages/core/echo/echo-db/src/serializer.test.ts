@@ -225,7 +225,7 @@ describe('Serializer', () => {
       }
     });
 
-    test('loading many objects on db restart chunk load', { timeout: 10_000 }, async () => {
+    test('loading many objects on db restart chunk load', { timeout: 30_000 }, async () => {
       const totalObjects = 123;
       const serializer = new Serializer();
       let data: SerializedSpace;

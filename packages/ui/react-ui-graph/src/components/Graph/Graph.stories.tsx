@@ -9,7 +9,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type Graph, type GraphModel, SelectionModel } from '@dxos/graph';
+import { type Graph, type GraphModel, type SelectionMode, SelectionModel } from '@dxos/graph';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
@@ -53,8 +53,8 @@ type DefaultStoryProps = GraphProps & {
   debug?: boolean;
   grid?: boolean | SVGGridProps;
   inspect?: boolean;
-  singleSelect?: boolean;
   graph: () => Graph.Any;
+  selectionMode?: SelectionMode;
   projectorType?: ProjectorType;
   projectorOptions?:
     | GraphForceProjectorOptions
@@ -67,7 +67,7 @@ const DefaultStory = ({
   debug,
   grid,
   inspect,
-  singleSelect,
+  selectionMode,
   graph: _graph,
   projectorType: _projectorType = 'force',
   projectorOptions,
@@ -78,11 +78,11 @@ const DefaultStory = ({
   const registry = useContext(RegistryContext);
 
   // Models.
+  const selection = useMemo(() => new SelectionModel({ mode: selectionMode }), [selectionMode]);
   const [model, setModel] = useState<GraphModel.ReactiveGraphModel | undefined>(() => {
     const graph = _graph?.();
     return graph ? new TestGraphModel(registry, graph) : undefined;
   });
-  const selection = useMemo(() => new SelectionModel(singleSelect), [singleSelect]);
 
   // Projector.
   const [projectorType, setProjectorType] = useState<ProjectorType>(_projectorType);
@@ -359,7 +359,7 @@ export const Projector: Story = {
     debug: true,
     drag: true,
     arrows: true,
-    singleSelect: true,
+    selectionMode: 'single',
     projectorType: 'hierarchical',
     projectorOptions: {
       duration: 500,

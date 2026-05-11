@@ -2,44 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-// `Picker` — generic listbox-with-input compound (the WAI-ARIA combobox
-// keyboard pattern, sans the search-domain bits).
+// `Picker` — generic listbox-with-input compound implementing the
+// WAI-ARIA combobox keyboard pattern. Search / filtering live one layer
+// up in `@dxos/react-ui-search`.
 //
-// Owns:
-//   - The virtual-highlight selection model (`selectedValue` updated by
-//     arrow keys; items don't receive browser focus, the input retains it).
-//   - An item registry (`registerItem` / `unregisterItem`) used by the
-//     input's keyboard handler to walk DOM-order siblings.
-//   - Auto-select-first-when-items-change behaviour.
-//   - `triggerSelect` so Enter from the input fires the highlighted
-//     item's `onSelect`.
-//
-// Does NOT own:
-//   - Query / search state (`query`, `onSearch`, `debounceMs`) — that
-//     lives in `@dxos/react-ui-search`'s `SearchList`, which composes
-//     `Picker` + adds the search-themed wrapper.
-//   - Filtering / ranking — same, see `useSearchListResults`.
-//   - The `<ul role='listbox'>` wrapper. Caller provides one (today's
-//     `SearchList.Viewport` / future `Combobox.Content` puts the role
-//     on the scroll surface).
-//   - Translations.
-//
-// Compound shape (matches Radix Select / Combobox patterns):
-//
-//   <Picker.Root>
-//     <Picker.Input value={query} onValueChange={setQuery} />
-//     <YourScrollWrapper role='listbox'>
-//       {items.map(item => (
-//         <Picker.Item key={item.id} value={item.id} onSelect={…}>
-//           {item.label}
-//         </Picker.Item>
-//       ))}
-//     </YourScrollWrapper>
-//   </Picker.Root>
-//
-// Why two contexts (Item / Input) — performance: items don't re-render
-// when the input value changes; the input doesn't re-render when an
-// item registers / unregisters.
+// The two contexts (Input / Item) are split so items don't re-render on
+// every keystroke and the input doesn't re-render on every (un)register.
 
 import { Slot } from '@radix-ui/react-slot';
 import React, {
@@ -67,10 +35,6 @@ import {
   usePickerItemContext,
 } from './context';
 
-//
-// Internal types.
-//
-
 type ItemData = {
   element: HTMLElement;
   disabled?: boolean;
@@ -78,22 +42,19 @@ type ItemData = {
 };
 
 //
-// Root — context provider; renders no DOM.
+// Root
 //
 
 type PickerRootProps = PropsWithChildren<{}>;
 
 const PickerRoot = ({ children }: PickerRootProps) => {
   const [selectedValue, setSelectedValue] = useState<string | undefined>(undefined);
-
-  // Item registry: value → { element, onSelect, disabled }.
   const itemsRef = useRef<Map<string, ItemData>>(new Map());
-
-  // Bumped on every (un)register so the auto-select-first effect can fire.
+  // Bumped on every (un)register to retrigger auto-select.
   const [itemVersion, setItemVersion] = useState(0);
 
-  // Auto-select first non-disabled item when the registry changes and the
-  // current selection is no longer valid (gone or disabled).
+  // Auto-select first non-disabled item when the current selection is
+  // gone or disabled.
   useEffect(() => {
     const current = selectedValue !== undefined ? itemsRef.current.get(selectedValue) : undefined;
     const isValid = current !== undefined && !current.disabled;
@@ -135,7 +96,7 @@ const PickerRoot = ({ children }: PickerRootProps) => {
     setItemVersion((v) => v + 1);
   }, []);
 
-  // DOM-order traversal of registered items (excludes disabled).
+  // DOM-order list of enabled item values.
   const getItemValues = useCallback(() => {
     return Array.from(itemsRef.current.entries())
       .filter(([, data]) => !data.disabled)
@@ -153,8 +114,7 @@ const PickerRoot = ({ children }: PickerRootProps) => {
     }
   }, [selectedValue]);
 
-  // Stable: items subscribe to this. Excludes the volatile bits (input
-  // helpers) that change with every keystroke.
+  // Stable values items subscribe to.
   const itemContextValue = useMemo(
     () => ({
       selectedValue,
@@ -165,7 +125,7 @@ const PickerRoot = ({ children }: PickerRootProps) => {
     [selectedValue, registerItem, unregisterItem],
   );
 
-  // Volatile: input subscribes to this. Includes the keyboard helpers.
+  // Volatile values the input subscribes to (keyboard helpers).
   const inputContextValue = useMemo(
     () => ({
       selectedValue,
@@ -186,7 +146,7 @@ const PickerRoot = ({ children }: PickerRootProps) => {
 PickerRoot.displayName = 'Picker.Root';
 
 //
-// Input — text input with virtual-highlight keyboard handling.
+// Input
 //
 
 type InputVariant = 'default' | 'subdued';
@@ -289,13 +249,8 @@ const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
       [selectedValue, onSelectedValueChange, getItemValues, triggerSelect, onValueChange, onKeyDown],
     );
 
-    // Spread `value` only when defined: a caller that wants a
-    // controlled input passes `value` + `onValueChange`; a caller that
-    // just wants the keyboard pattern (Default story) passes neither
-    // and gets an uncontrolled input that accepts keystrokes normally.
-    // Without this guard `value={value ?? ''}` would force-control the
-    // input, swallowing every keystroke when no `onValueChange` is
-    // wired (input visually accepts characters then re-renders empty).
+    // Only force-control when `value` is provided; otherwise leave the
+    // input uncontrolled so it accepts keystrokes without `onValueChange`.
     return (
       <Input.Root>
         <Input.TextInput
@@ -314,7 +269,7 @@ const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
 PickerInput.displayName = 'Picker.Input';
 
 //
-// Item — option that registers in the parent's registry.
+// Item
 //
 
 type PickerItemProps = ThemedClassName<{
@@ -335,7 +290,6 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
 
     const isSelected = selectedValue === value && !disabled;
 
-    // Register on mount, unregister on unmount.
     useEffect(() => {
       const element = internalRef.current;
       if (element) {
@@ -344,7 +298,6 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
       return () => unregisterItem(value);
     }, [value, onSelect, disabled, registerItem, unregisterItem]);
 
-    // Smooth-scroll the selected option into view.
     useEffect(() => {
       if (isSelected && internalRef.current) {
         internalRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -355,34 +308,20 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
       if (disabled) {
         return;
       }
-      // Move the virtual highlight to the clicked item so subsequent
-      // arrow keys continue from here, then fire the caller's select.
       onSelectedValueChange(value);
       onSelect?.();
     }, [disabled, value, onSelectedValueChange, onSelect]);
 
-    // Prevent the mousedown from moving focus off `Picker.Input` —
-    // browsers focus an element with any `tabIndex` (including `-1`) on
-    // click, which would steal focus from the input and break the
-    // input's arrow-key handler. Cancelling on `mousedown` keeps focus
-    // on the input while still letting the subsequent `click` fire.
+    // Keep focus on `Picker.Input`: any `tabIndex` (incl. `-1`) would
+    // steal focus on click and break the input's arrow-key handler.
     const handleMouseDown = useCallback((event: ReactMouseEvent<HTMLElement>) => {
       event.preventDefault();
     }, []);
 
     const Comp: any = asChild ? Slot : 'div';
 
-    // Default styling: pair `aria-selected` with `dx-selected` and add
-    // `dx-hover` for the standard hover affordance. Same grammar `Row`
-    // uses (see `ui-theme/src/css/components/selected.md`). Horizontal
-    // padding follows `--gutter` so item text aligns with sibling
-    // `Column.Center` content (input, status row); falls back to
-    // `0.75rem` (≈ `px-3`) when not nested under `Column.Root`. Vertical
-    // padding and the pointer cursor are baked in so callsites don't
-    // have to repeat them; callers can still append / override via
-    // `classNames`. `dx-selected` only fires when `aria-selected="true"`,
-    // which we set below from the virtual highlight — so unfocused
-    // items render plain.
+    // Padding follows `--gutter` to align with sibling `Column.Center`
+    // content; falls back to `0.75rem` when not nested under `Column.Root`.
     return (
       <Comp
         {...props}
@@ -400,10 +339,7 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
         data-selected={isSelected}
         data-disabled={disabled}
         data-value={value}
-        // tabIndex={-1} — combobox pattern keeps browser focus on the
-        // input; the selected option is highlighted via `aria-selected`,
-        // not via DOM focus. Differs from `Row` (listbox pattern,
-        // tabIndex={0}). See header comment.
+        // Browser focus stays on the input; highlight is via `aria-selected`.
         tabIndex={-1}
         className={mx(
           'dx-hover dx-selected px-[var(--gutter,0.75rem)] py-1 cursor-pointer select-none',
@@ -421,10 +357,6 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
 
 PickerItem.displayName = 'Picker.Item';
 
-//
-// Public namespace.
-//
-
 export const Picker = {
   Root: PickerRoot,
   Input: PickerInput,
@@ -433,7 +365,4 @@ export const Picker = {
 
 export type { PickerRootProps, PickerInputProps, PickerItemProps };
 
-// Re-export context hooks for higher layers (SearchList) that need to
-// compose: `useSearchListInputContext` etc. previously read these
-// values; they now route through Picker.
 export { usePickerInputContext, usePickerItemContext } from './context';

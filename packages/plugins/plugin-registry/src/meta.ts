@@ -26,4 +26,5 @@ export const meta: Plugin.Meta = {
     Browse available plugins and customize your workspace capabilities.
   `,
   icon: 'ph--squares-four--regular',
+  tags: ['system'],
 };

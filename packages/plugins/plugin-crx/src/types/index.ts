@@ -3,4 +3,5 @@
 //
 
 export * from './capabilities';
+export * as Clip from './Clip';
 export * as Settings from './Settings';
