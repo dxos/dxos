@@ -266,6 +266,11 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
     expect(result.tasks).toBe(0);
     expect(calls).toBe(0);
     expect(updateIssueInput).toBeUndefined();
+    // Snapshot status stays at the previous remote-pulled value so the
+    // divergence warning keeps firing each sync until either the user
+    // reverts locally or GitHub catches up.
+    const snapshots = (integration.snapshots ?? {}) as Record<string, any>;
+    expect(snapshots['5678']?.status).toBe('todo');
   });
 
   test('PR title divergence still pushes (only status is pull-only)', async ({ expect }) => {
