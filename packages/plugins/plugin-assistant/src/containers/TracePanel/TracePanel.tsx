@@ -18,9 +18,11 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useComputeRuntimeService } from '@dxos/plugin-automation/hooks';
 import { type Space } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
+import { ScrollContainer } from '@dxos/react-ui';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
-import { composable, mx } from '@dxos/ui-theme';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { ProcessTree, ProcessTreeProps } from '#components';
 
@@ -29,15 +31,18 @@ import { buildExecutionGraph } from './execution-graph';
 export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
 
 export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
-  ({ space, onProcessTerminate, ...props }, forwardedRef) => {
+  ({ space, attendableId, onProcessTerminate, ...props }, forwardedRef) => {
+    const attentionAttrs = useAttentionAttributes(attendableId);
     const { invokePromise } = useOperationInvoker();
     const { branches, commits } = useExecutionGraph(space);
     const runtime = useComputeRuntimeService(Process.ProcessMonitorService, space.id);
     const processes = useAtomValue(runtime?.processTreeAtom ?? atomEmpty);
 
+    const [selectedCommit, setSelectedCommit] = useState<Commit | null>(null);
     const handleCommitClick = useCallback(
-      (commit: Commit) => {
-        if (commit.link) {
+      (commit: Commit | null) => {
+        setSelectedCommit(commit);
+        if (commit?.link) {
           const dxn = DXN.tryParse(commit.link)?.asEchoDXN();
           if (dxn?.spaceId && dxn.echoId) {
             // TODO(dmaretskyi): Navigates, but fails to open.
@@ -47,7 +52,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
           }
         }
       },
-      [invokePromise],
+      [invokePromise, setSelectedCommit],
     );
 
     // Select current branch.
@@ -56,7 +61,6 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       (process: Process.Info) => {
         const branch = branches.find((branch) => branch === process.pid.toString());
         if (branch) {
-          log.info('select', { process, branch });
           setCurrentBranch(branch);
         }
       },
@@ -64,23 +68,44 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     );
 
     return (
-      <Panel.Root {...props} ref={forwardedRef}>
-        <Panel.Content className='grid grid-rows-[min-content_1fr] divide-y divide-separator'>
-          <ProcessTree
-            classNames={mx('max-h-[8lh] border-b border-separator')}
-            processes={processes}
-            onProcessSelect={handleProcessSelect}
-            onProcessTerminate={onProcessTerminate}
-          />
-          <Timeline
-            currentBranch={currentBranch}
-            branches={branches}
-            commits={commits}
-            compact
-            onCommitClick={handleCommitClick}
-          />
-        </Panel.Content>
-      </Panel.Root>
+      <div
+        {...composableProps(props, {
+          classNames: 'grid grid-rows-[min-content_1fr_min-content] divide-y divide-separator',
+          ...attentionAttrs,
+        })}
+        ref={forwardedRef}
+      >
+        <ProcessTree
+          classNames={mx('max-h-[8lh] border-b border-separator')}
+          processes={processes}
+          onProcessSelect={handleProcessSelect}
+          onProcessTerminate={onProcessTerminate}
+        />
+        <ScrollContainer.Root pin>
+          <ScrollContainer.Content thin>
+            <ScrollContainer.Viewport>
+              <Timeline
+                currentBranch={currentBranch}
+                branches={branches}
+                commits={commits}
+                compact
+                onCommitClick={handleCommitClick}
+              />
+            </ScrollContainer.Viewport>
+            <ScrollContainer.ScrollDownButton />
+            <ScrollContainer.Fade />
+          </ScrollContainer.Content>
+        </ScrollContainer.Root>
+        {selectedCommit && (
+          <Syntax.Root data={selectedCommit}>
+            <Syntax.Content>
+              <Syntax.Viewport>
+                <Syntax.Code />
+              </Syntax.Viewport>
+            </Syntax.Content>
+          </Syntax.Root>
+        )}
+      </div>
     );
   },
 );
