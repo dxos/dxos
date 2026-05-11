@@ -2,9 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+export * from './errors';
+
 export * as Blueprint from './Blueprint';
 export * as Credential from './Credential';
-export * from './errors';
+export * as McpServer from './McpServer';
 export * as Operation from './Operation';
 export * as OperationHandlerSet from './OperationHandlerSet';
 export * as OperationRegistry from './OperationRegistry';

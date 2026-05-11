@@ -7,6 +7,10 @@
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+// SSEClientTransport is marked @deprecated in the SDK in favor of StreamableHTTP, but the
+// SDK itself notes that clients should keep supporting both while servers migrate.
+// `connectWithFallback` below tries the configured protocol first, then the other on 405.
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import * as Cause from 'effect/Cause';
@@ -16,12 +20,6 @@ import * as Schema from 'effect/Schema';
 import { OpaqueToolkit } from '@dxos/ai';
 import { invariant } from '@dxos/invariant';
 
-export interface McpToolkitOptions {
-  url: string;
-  kind: 'sse' | 'http';
-  apiKey?: string;
-}
-
 /**
  * Typed failure raised when the MCP client cannot connect or list tools.
  * Carries the underlying cause and the server URL for diagnostics.
@@ -30,7 +28,7 @@ export class McpConnectionError extends Schema.TaggedError<McpConnectionError>('
   'McpConnectionError',
   {
     url: Schema.String,
-    kind: Schema.Literal('sse', 'http'),
+    protocol: Schema.Literal('sse', 'http'),
     message: Schema.String,
   },
 ) {}
@@ -38,21 +36,27 @@ export class McpConnectionError extends Schema.TaggedError<McpConnectionError>('
 /**
  * Creates an OpaqueToolkit that connects to an MCP server and exposes its tools to the assistant.
  *
- * @param options MCP server URL and transport kind ('sse' for SSE, 'http' for Streamable HTTP).
+ * @param options MCP server URL and transport protocol ('http' for Streamable HTTP, 'sse' for SSE).
  * @returns An OpaqueToolkit containing all tools from the MCP server.
  */
 const CLIENT_INFO = { name: '@dxos/mcp-client', version: '0.8.3' };
 
+export interface McpToolkitOptions {
+  url: string;
+  protocol: 'sse' | 'http';
+  apiKey?: string;
+}
+
 export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.OpaqueToolkit, McpConnectionError> =>
   Effect.gen(function* () {
-    const client = yield* connectWithFallback(options);
+    const { client, protocol } = yield* connectWithFallback(options);
 
     const { tools } = yield* Effect.tryPromise({
       try: () => client.listTools(),
       catch: (cause) =>
         new McpConnectionError({
           url: options.url,
-          kind: options.kind,
+          protocol,
           message: `Failed to list MCP tools: ${formatCause(cause)}`,
         }),
     });
@@ -120,39 +124,41 @@ export const is405 = (error: unknown): boolean => {
  * Failures are surfaced as typed `McpConnectionError` so callers can recover (e.g. drop
  * the misconfigured server) without breaking the surrounding effect.
  */
-const connectWithFallback = (options: McpToolkitOptions): Effect.Effect<Client, McpConnectionError> =>
+const connectWithFallback = (
+  options: McpToolkitOptions,
+): Effect.Effect<{ client: Client; protocol: McpToolkitOptions['protocol'] }, McpConnectionError> =>
   Effect.gen(function* () {
-    const fallbackKind = options.kind === 'sse' ? 'http' : 'sse';
-    const primary = yield* connectClient(options.url, options.kind, options.apiKey).pipe(Effect.either);
+    const fallbackProtocol = options.protocol === 'sse' ? 'http' : 'sse';
+    const primary = yield* connectClient(options.url, options.protocol, options.apiKey).pipe(Effect.either);
     if (primary._tag === 'Right') {
-      return primary.right;
+      return { client: primary.right, protocol: options.protocol };
     }
     if (is405(primary.left)) {
-      const fallback = yield* connectClient(options.url, fallbackKind, options.apiKey).pipe(Effect.either);
+      const fallback = yield* connectClient(options.url, fallbackProtocol, options.apiKey).pipe(Effect.either);
       if (fallback._tag === 'Right') {
-        return fallback.right;
+        return { client: fallback.right, protocol: fallbackProtocol };
       }
       return yield* Effect.fail(
         new McpConnectionError({
           url: options.url,
-          kind: fallbackKind,
-          message: `Failed to connect via ${fallbackKind} after 405 fallback: ${formatCause(fallback.left)}`,
+          protocol: fallbackProtocol,
+          message: `Failed to connect via ${fallbackProtocol} after 405 fallback: ${formatCause(fallback.left)}`,
         }),
       );
     }
     return yield* Effect.fail(
       new McpConnectionError({
         url: options.url,
-        kind: options.kind,
-        message: `Failed to connect via ${options.kind}: ${formatCause(primary.left)}`,
+        protocol: options.protocol,
+        message: `Failed to connect via ${options.protocol}: ${formatCause(primary.left)}`,
       }),
     );
   });
 
-const connectClient = (url: string, kind: McpToolkitOptions['kind'], apiKey?: string) =>
+const connectClient = (url: string, protocol: McpToolkitOptions['protocol'], apiKey?: string) =>
   Effect.tryPromise(() => {
     const client = new Client(CLIENT_INFO);
-    const transport = createTransport(url, kind, apiKey);
+    const transport = createTransport(url, protocol, apiKey);
     return client.connect(transport).then(() => client);
   });
 
@@ -168,27 +174,28 @@ const formatCause = (error: unknown): string => {
   if (Cause.isCause(error)) {
     return Cause.pretty(error);
   }
+
   return String(inner);
 };
 
 /**
- * Creates a transport for the given MCP server URL and kind.
+ * Creates a transport for the given MCP server URL and protocol.
  */
 const createTransport = (
   url: string,
-  kind: McpToolkitOptions['kind'],
+  protocol: McpToolkitOptions['protocol'],
   apiKey?: string,
 ): SSEClientTransport | StreamableHTTPClientTransport => {
   const urlObj = new URL(url);
   const requestInit: RequestInit | undefined = apiKey ? { headers: { Authorization: `Bearer ${apiKey}` } } : undefined;
-  switch (kind) {
+  switch (protocol) {
     case 'sse':
       return new SSEClientTransport(urlObj, { requestInit });
     case 'http':
       return new StreamableHTTPClientTransport(urlObj, { requestInit });
     default: {
-      const _exhaustive: never = kind;
-      return invariant(false, `Unsupported MCP transport kind: ${_exhaustive}`) as never;
+      const _exhaustive: never = protocol;
+      return invariant(false, `Unsupported MCP transport protocol: ${_exhaustive}`) as never;
     }
   }
 };
