@@ -18,7 +18,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 
 import { type ChatEvent } from '#components';
 import { useBlueprintRegistry, useContextBinder } from '#hooks';
-import { AssistantOperation } from '#operations';
+import { AssistantOperation } from '#types';
 
 import ChatContainer from '../ChatContainer';
 

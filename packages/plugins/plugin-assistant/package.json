@@ -13,70 +13,86 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#blueprints": "./src/blueprints/index.ts",
-    "#capabilities": "./src/capabilities/index.ts",
-    "#components": "./src/components/index.ts",
-    "#containers": "./src/containers/index.ts",
-    "#hooks": "./src/hooks/index.ts",
-    "#meta": "./src/meta.ts",
-    "#operations": "./src/operations/index.ts",
+    "#blueprints": {
+      "source": "./src/blueprints/index.ts",
+      "types": "./dist/types/src/blueprints/index.d.ts",
+      "default": "./dist/lib/neutral/blueprints/index.mjs"
+    },
+    "#capabilities": {
+      "source": "./src/capabilities/index.ts",
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "default": "./dist/lib/neutral/capabilities/index.mjs"
+    },
+    "#components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/neutral/components/index.mjs"
+    },
+    "#containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "default": "./dist/lib/neutral/containers/index.mjs"
+    },
+    "#hooks": {
+      "source": "./src/hooks/index.ts",
+      "types": "./dist/types/src/hooks/index.d.ts",
+      "default": "./dist/lib/neutral/hooks/index.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/neutral/meta.mjs"
+    },
+    "#operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "default": "./dist/lib/neutral/operations/index.mjs"
+    },
     "#plugin": {
-      "browser": "./src/AssistantPlugin.tsx",
-      "node": "./src/AssistantPlugin.node.ts",
-      "default": "./src/AssistantPlugin.tsx"
+      "source": {
+        "browser": "./src/AssistantPlugin.tsx",
+        "node": "./src/AssistantPlugin.node.ts"
+      },
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.mjs"
     },
     "#testing": "./src/testing/index.ts",
-    "#translations": "./src/translations.ts",
-    "#types": "./src/types/index.ts"
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/neutral/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/neutral/types/index.mjs"
+    }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     },
     "./components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
-      "browser": "./dist/lib/browser/components/index.mjs",
-      "node": "./dist/lib/node-esm/components/index.mjs"
+      "default": "./dist/lib/neutral/components/index.mjs"
     },
     "./hooks": {
       "source": "./src/hooks/index.ts",
       "types": "./dist/types/src/hooks/index.d.ts",
-      "browser": "./dist/lib/browser/hooks/index.mjs",
-      "node": "./dist/lib/node-esm/hooks/index.mjs"
+      "default": "./dist/lib/neutral/hooks/index.mjs"
     },
-    "./blueprints": {
-      "source": "./src/blueprints/index.ts",
-      "types": "./dist/types/src/blueprints/index.d.ts",
-      "browser": "./dist/lib/browser/blueprints/index.mjs",
-      "node": "./dist/lib/node-esm/blueprints/index.mjs",
-      "default": "./src/blueprints/index.ts"
-    },
-    "./cli": {
-      "source": "./src/cli/index.ts",
-      "types": "./dist/types/src/cli/index.d.ts",
-      "node": "./dist/lib/node-esm/cli/index.mjs"
-    },
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "browser": "./dist/lib/browser/operations/index.mjs",
-      "node": "./dist/lib/node-esm/operations/index.mjs"
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "browser": "./dist/lib/browser/translations.mjs",
-      "node": "./dist/lib/node-esm/translations.mjs"
-    },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "browser": "./dist/lib/browser/types/index.mjs",
-      "node": "./dist/lib/node-esm/types/index.mjs"
+      "default": "./dist/lib/neutral/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

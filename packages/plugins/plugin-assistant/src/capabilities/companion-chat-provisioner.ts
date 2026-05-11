@@ -17,8 +17,7 @@ import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { byPosition } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT } from '#meta';
-import { AssistantOperation } from '#operations';
-import { AssistantCapabilities } from '#types';
+import { AssistantCapabilities, AssistantOperation } from '#types';
 
 /**
  * Non-React capability that watches deck companion state and provisions transient chats

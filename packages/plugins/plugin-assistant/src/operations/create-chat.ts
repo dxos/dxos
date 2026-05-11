@@ -14,10 +14,9 @@ import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { AssistantBlueprint } from '#blueprints';
+import { AssistantOperation } from '#types';
 
-import { CreateChat } from './definitions';
-
-const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(
+const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = AssistantOperation.CreateChat.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ db, name, addToSpace = true }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);

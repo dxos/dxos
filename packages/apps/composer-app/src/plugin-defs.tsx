@@ -9,7 +9,7 @@ import { APP_DOMAIN } from '@dxos/app-toolkit';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
-import { AssistantPlugin } from '@dxos/plugin-assistant';
+import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { BoardPlugin } from '@dxos/plugin-board';

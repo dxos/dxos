@@ -4,8 +4,6 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * as AssistantOperation from './definitions';
-
 export const AssistantOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./create-chat'),
   () => import('./ensure-companion-chat'),
