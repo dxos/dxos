@@ -96,12 +96,92 @@ describe('CollectionSynchronizer', () => {
     peer.onConnectionOpen(peerId2);
 
     peer.setLocalCollectionState(collectionId, STATE_1);
-    // Drain microtasks scheduled by `setLocalCollectionState` and `onConnectionOpen`.
-    await Promise.resolve();
-    await Promise.resolve();
 
     expect(sentStates.map((m) => m.peerId).sort()).to.deep.equal([peerId1, peerId2].sort());
     expect(sentStates.every((m) => m.state === STATE_1)).to.equal(true);
+  });
+
+  test('coalesces bursts of setLocalCollectionState into a single broadcast', async () => {
+    // Multiple `setLocalCollectionState` calls within one tick should collapse into a
+    // single microtask run, broadcasting only the latest state. Guards against
+    // amplification when `_onHeadsChanged` fires repeatedly (e.g. during an import).
+    const peerId1 = 'peer1' as PeerId;
+    const collectionId = 'collection-test';
+
+    const sentStates: CollectionState[] = [];
+    const peer = await new CollectionSynchronizer({
+      queryCollectionState: () => {},
+      sendCollectionState: (_collectionId, _peerId, state) => {
+        sentStates.push(state);
+      },
+      shouldSyncCollection: () => true,
+    }).open();
+    onTestFinished(async () => {
+      await peer.close();
+    });
+
+    peer.onConnectionOpen(peerId1);
+
+    peer.setLocalCollectionState(collectionId, STATE_1);
+    peer.setLocalCollectionState(collectionId, STATE_1);
+    peer.setLocalCollectionState(collectionId, STATE_2);
+
+    expect(sentStates.length).to.equal(1);
+    expect(sentStates[0]).to.deep.equal(STATE_2);
+  });
+
+  test('does not push when the remote is already in sync', async () => {
+    // Diff-gating: after we know a peer's state matches ours, subsequent
+    // `setLocalCollectionState` calls with the same state should not re-send.
+    const peerId1 = 'peer1' as PeerId;
+    const collectionId = 'collection-test';
+
+    const sentStates: CollectionState[] = [];
+    const peer = await new CollectionSynchronizer({
+      queryCollectionState: () => {},
+      sendCollectionState: (_collectionId, _peerId, state) => {
+        sentStates.push(state);
+      },
+      shouldSyncCollection: () => true,
+    }).open();
+    onTestFinished(async () => {
+      await peer.close();
+    });
+
+    peer.onConnectionOpen(peerId1);
+
+    // Seed remote state matching what we're about to set locally — simulates the
+    // post-convergence steady state.
+    peer.onRemoteStateReceived(collectionId, peerId1, structuredClone(STATE_1));
+
+    peer.setLocalCollectionState(collectionId, STATE_1);
+
+    expect(sentStates.length).to.equal(0);
+  });
+
+  test('pushes when local diverges from known remote', async () => {
+    const peerId1 = 'peer1' as PeerId;
+    const collectionId = 'collection-test';
+
+    const sentStates: CollectionState[] = [];
+    const peer = await new CollectionSynchronizer({
+      queryCollectionState: () => {},
+      sendCollectionState: (_collectionId, _peerId, state) => {
+        sentStates.push(state);
+      },
+      shouldSyncCollection: () => true,
+    }).open();
+    onTestFinished(async () => {
+      await peer.close();
+    });
+
+    peer.onConnectionOpen(peerId1);
+    peer.onRemoteStateReceived(collectionId, peerId1, structuredClone(STATE_1));
+
+    peer.setLocalCollectionState(collectionId, STATE_2);
+
+    expect(sentStates.length).to.equal(1);
+    expect(sentStates[0]).to.deep.equal(STATE_2);
   });
 
   test('diff collection state', () => {
