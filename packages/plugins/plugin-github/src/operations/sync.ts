@@ -652,7 +652,7 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
                     // for this target so partial progress on other targets
                     // is preserved.
                     //
-                    // TODO(burdon): `remoteIssuesById` is built from
+                    // TODO(wittjosiah): `remoteIssuesById` is built from
                     //   `fetchRepoIssues(..., { since })`, so when
                     //   `maxDaysBack` is set this push pass cannot see
                     //   locally-edited tasks whose remote issue is older
