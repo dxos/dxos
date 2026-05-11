@@ -124,7 +124,7 @@ This means a Routine can be parameterized at call time (`input` schema + Templat
 
 ### 4.2 Two locations for `blueprints` + `context`
 
-- Routine puts them in the schema, so they are queryable, refable, surface-able.
+- Routine puts them in the schema, so they are queryable, refable, and can be surfaced.
 - Agent puts them in `AiContextBinder` (feed-backed runtime state) and only exposes `artifacts` and `subscriptions` on the schema.
 
 Practical consequences: you cannot statically inspect "what blueprints does this Agent use?" by reading its ECHO object — you must load the binder.
