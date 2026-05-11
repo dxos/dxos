@@ -42,9 +42,7 @@ export const Game = Schema.Struct({
     .annotations({ description: 'Players in the game.' })
     .pipe(FormInputAnnotation.set(false), Schema.optional),
   variant: Ref.Ref(Obj.Unknown)
-    .annotations({
-      description: 'Reference to variant-specific state object (e.g. Chess.State, TicTacToe.State).',
-    })
+    .annotations({ description: 'Reference to variant-specific state object.' })
     .pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
@@ -98,12 +96,12 @@ export const GameRef = <S extends Schema.Schema.AnyNoContext>(_variantSchema: S)
  */
 export const make = ({
   name,
-  variant,
   players,
+  variant,
 }: {
   name?: string;
-  variant: Obj.Unknown;
   players?: ReadonlyArray<Player>;
+  variant: Obj.Unknown;
 }): Game => {
   return Obj.make(Game, {
     name,
