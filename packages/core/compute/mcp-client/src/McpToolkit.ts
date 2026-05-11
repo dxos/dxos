@@ -7,6 +7,10 @@
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+// SSEClientTransport is marked @deprecated in the SDK in favor of StreamableHTTP, but the
+// SDK itself notes that clients should keep supporting both while servers migrate.
+// `connectWithFallback` below tries the configured protocol first, then the other on 405.
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import * as Cause from 'effect/Cause';

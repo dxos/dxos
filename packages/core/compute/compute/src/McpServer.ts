@@ -22,8 +22,13 @@ export const McpServer = Schema.Struct({
     description: 'URL of the MCP server',
   }),
 
-  protocol: Schema.Union(Schema.Literal('sse'), Schema.Literal('http')).annotations({
-    description: 'Transport protocol of the MCP server',
+  /**
+   * Transport protocol. Prefer `'http'` (Streamable HTTP) for new servers; `'sse'` is
+   * kept for compatibility with servers that haven't migrated and is deprecated per
+   * the MCP SDK. Clients support both during the migration period.
+   */
+  protocol: Schema.Union(Schema.Literal('http'), Schema.Literal('sse')).annotations({
+    description: 'Transport protocol of the MCP server (prefer "http"; "sse" deprecated)',
   }),
 
   /**
