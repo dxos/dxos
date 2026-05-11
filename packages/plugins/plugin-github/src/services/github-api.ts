@@ -186,6 +186,12 @@ const withAuth = (req: HttpClientRequest.HttpClientRequest, creds: GitHubCredent
  * Build an unauthenticated GitHub API request, fetch + decode it as a single JSON
  * response, and apply timeout + retry. `withAuth` is applied here so callers never
  * have to remember to attach credentials (forgetting would silently 401).
+ *
+ * `filterStatusOk` converts non-2xx responses into a typed `ResponseError`
+ * (carrying `status` and the raw body) BEFORE we try to decode the body —
+ * otherwise GitHub error envelopes (`{ message, documentation_url }`) would
+ * blow up against the success schema with a `ParseError`, masking the real
+ * cause (e.g. a 403 from an integration token that lacks issue write).
  */
 const githubRequest = <T>(
   build: () => HttpClientRequest.HttpClientRequest,
@@ -194,7 +200,10 @@ const githubRequest = <T>(
   Effect.gen(function* () {
     const creds = yield* GitHubCredentials;
     const httpClient = yield* HttpClient.HttpClient;
-    const clientNoTracer = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const clientNoTracer = httpClient.pipe(
+      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.filterStatusOk,
+    );
     return yield* clientNoTracer.execute(withAuth(build(), creds)).pipe(
       Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(schema))),
       Effect.timeout('15 seconds'),
@@ -242,7 +251,10 @@ const githubPaginated = <T>(
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
     const creds = yield* GitHubCredentials;
-    const clientNoTracer = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const clientNoTracer = httpClient.pipe(
+      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.filterStatusOk,
+    );
     const arraySchema = Schema.Array(itemSchema);
 
     let nextUrl: string | undefined;
@@ -377,7 +389,10 @@ const githubPatch = <T>(
   Effect.gen(function* () {
     const creds = yield* GitHubCredentials;
     const httpClient = yield* HttpClient.HttpClient;
-    const clientNoTracer = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const clientNoTracer = httpClient.pipe(
+      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.filterStatusOk,
+    );
     const request = withAuth(build(), creds).pipe(HttpClientRequest.bodyUnsafeJson(body));
     return yield* clientNoTracer.execute(request).pipe(
       Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(schema))),
