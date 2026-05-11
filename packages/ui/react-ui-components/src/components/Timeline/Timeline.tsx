@@ -288,7 +288,9 @@ export const Timeline = composable<HTMLDivElement, TimelineProps>(
             }
             break;
           }
+          // TODO(burdon): Not handled; must integrate with tabster.
           case 'Escape': {
+            event.preventDefault();
             setCurrent(undefined);
             onCommitClick?.(null);
             break;
@@ -329,10 +331,7 @@ export const Timeline = composable<HTMLDivElement, TimelineProps>(
                 key={commit.id}
                 data-index={index}
                 aria-current={current === index}
-                className={mx(
-                  'group col-span-full grid grid-cols-subgrid gap-1 overflow-hidden items-center px-[2px]',
-                  'dx-current dx-hover',
-                )}
+                className='dx-row dx-current dx-hover group/row col-span-full grid grid-cols-subgrid gap-1 overflow-hidden items-center px-[2px]'
                 style={{ height: `${options.lineHeight}px` }}
                 onClick={handleClick}
               >
@@ -356,7 +355,7 @@ export const Timeline = composable<HTMLDivElement, TimelineProps>(
                 <div
                   role='none'
                   className={mx(
-                    'text-sm truncate cursor-pointer text-subdued font-thin dx-current-group dx-hover-group',
+                    'text-sm truncate cursor-pointer text-subdued font-thin dx-current-row dx-hover-row',
                     hasLink && 'underline decoration-dotted underline-offset-2',
                   )}
                 >

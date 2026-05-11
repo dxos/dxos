@@ -70,7 +70,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     return (
       <div
         {...composableProps(props, {
-          classNames: 'grid grid-rows-[minmax(0,8lh)_1fr_minmax(0,12lh)] divide-y divide-separator',
+          classNames: 'h-full grid grid-rows-[minmax(0,4lh)_1fr_minmax(0,206px)] divide-y divide-separator',
           ...attentionAttrs,
         })}
         ref={forwardedRef}
@@ -80,14 +80,15 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
           onProcessSelect={handleProcessSelect}
           onProcessTerminate={onProcessTerminate}
         />
+
         <ScrollContainer.Root pin>
           <ScrollContainer.Content thin>
             <ScrollContainer.Viewport>
               <Timeline
-                currentBranch={currentBranch}
-                branches={branches}
-                commits={commits}
                 compact
+                commits={commits}
+                branches={branches}
+                currentBranch={currentBranch}
                 onCommitClick={handleCommitClick}
               />
             </ScrollContainer.Viewport>
@@ -95,6 +96,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
             <ScrollContainer.Fade />
           </ScrollContainer.Content>
         </ScrollContainer.Root>
+
         {selectedCommit && (
           <Syntax.Root data={selectedCommit}>
             <Syntax.Content>

@@ -96,9 +96,7 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
           const delta = scrollHeight - scrollTop - clientHeight;
           if (delta > 0) {
             setPinned(true);
-            view.dispatch({
-              effects: scrollerCrawlEffect.of(true),
-            });
+            view.dispatch({ effects: scrollerCrawlEffect.of(true) });
           } else if (delta < -1) {
             setPinned(false);
           }
@@ -127,15 +125,18 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
                 if (this.destroyed || !enabled) {
                   return;
                 }
+
                 setPinned(true);
                 requestAnimationFrame(() => {
                   if (this.destroyed) {
                     return;
                   }
-                  view.scrollDOM.scrollTop = view.scrollDOM.scrollHeight;
-                  view.dispatch({ effects: scrollerCrawlEffect.of(true) });
+
+                  view.scrollDOM.scrollTo({ top: view.scrollDOM.scrollHeight, behavior: 'instant' });
+                  view.dispatch({ effects: scrollerCrawlEffect.of(false) });
                 });
-              }, 100);
+              }, 50);
+
               this.observer = new ResizeObserver(() => {
                 // Skip the initial fire that ResizeObserver emits on `observe()`.
                 if (this.firstObservation) {
@@ -144,6 +145,7 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
                 }
                 onResize();
               });
+
               this.observer.observe(view.scrollDOM);
             }
             destroy() {

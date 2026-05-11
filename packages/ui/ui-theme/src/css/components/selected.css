@@ -12,8 +12,8 @@
   .dx-hover {
     @apply cursor-pointer hover:bg-highlight-surface-hover! hover:text-highlight-surface-text!;
   }
-  .dx-hover-group {
-    @apply group-hover:bg-highlight-surface-hover! group-hover:text-highlight-surface-text!;
+  .dx-hover-row {
+    @apply group-hover/row:bg-highlight-surface-hover! group-hover/row:text-highlight-surface-text!;
   }
 
   /* 
@@ -24,8 +24,8 @@
       aria-[current=true]:bg-highlight-surface aria-[current=true]:text-highlight-surface-text
       aria-[current=true]:after:ring-active-separator!;
   }
-  .dx-current-group {
-    @apply group-aria-[current=true]:bg-highlight-surface! group-aria-[current=true]:text-highlight-surface-text!;
+  .dx-current-row {
+    @apply group-aria-[current=true]/row:bg-highlight-surface! group-aria-[current=true]/row:text-highlight-surface-text!;
   }
 
   /* 
