@@ -136,8 +136,8 @@ test('migration moves data key/version into meta', async () => {
       if (!captured) {
         return;
       }
-      Obj.update(object, (obj) => {
-        const meta = Obj.getMeta(obj);
+      Obj.update(object, (object) => {
+        const meta = Obj.getMeta(object);
         meta.key = captured.key;
         meta.version = captured.version;
       });

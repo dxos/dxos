@@ -36,6 +36,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/effect": "workspace:*",
     "@dxos/test-utils": "workspace:*"
   }
 }

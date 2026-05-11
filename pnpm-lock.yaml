@@ -5889,6 +5889,9 @@ importers:
         specifier: 3.20.0
         version: 3.20.0
     devDependencies:
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../../common/test-utils

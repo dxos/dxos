@@ -8,6 +8,7 @@ import { describe, test } from 'vitest';
 
 import { Filter, Obj, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import { runAndForwardErrors } from '@dxos/effect';
 
 import { Registry } from './index';
 
@@ -95,7 +96,7 @@ describe('Registry', () => {
       return registry.list();
     });
 
-    const result = await Effect.runPromise(program.pipe(Effect.provide(Registry.layer({ initial: [obj] }))));
+    const result = await runAndForwardErrors(program.pipe(Effect.provide(Registry.layer({ initial: [obj] }))));
     expect(result).toHaveLength(1);
     expect((result[0] as any).value).toBe(42);
   });
@@ -114,7 +115,7 @@ describe('Registry', () => {
       Registry.layer({ initial: [upstreamObj] }),
     );
 
-    const result = await Effect.runPromise(program.pipe(Effect.provide(stack)));
+    const result = await runAndForwardErrors(program.pipe(Effect.provide(stack)));
     expect(result.sort()).toEqual([1, 2]);
   });
 });
