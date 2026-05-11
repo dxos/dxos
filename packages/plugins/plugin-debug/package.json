@@ -13,11 +13,6 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": {
-      "browser": "./src/DebugPlugin.tsx",
-      "node": "./src/DebugPlugin.node.ts",
-      "default": "./src/DebugPlugin.tsx"
-    },
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
@@ -37,6 +32,15 @@
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
       "default": "./dist/lib/neutral/meta.mjs"
+    },
+    "#plugin": {
+      "source": {
+        "node": "./src/DebugPlugin.node.ts",
+        "default": "./src/DebugPlugin.tsx"
+      },
+      "types": "./dist/types/src/DebugPlugin.d.ts",
+      "node": "./dist/lib/neutral/DebugPlugin.node.mjs",
+      "default": "./dist/lib/neutral/DebugPlugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",

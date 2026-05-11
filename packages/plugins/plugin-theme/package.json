@@ -13,11 +13,15 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": "./src/ThemePlugin.ts",
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
       "default": "./dist/lib/neutral/meta.mjs"
+    },
+    "#plugin": {
+      "source": "./src/ThemePlugin.ts",
+      "types": "./dist/types/src/ThemePlugin.d.ts",
+      "default": "./dist/lib/neutral/ThemePlugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -30,11 +34,6 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
-    },
-    "./meta": {
-      "source": "./src/meta.ts",
-      "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/neutral/meta.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",

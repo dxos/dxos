@@ -13,11 +13,15 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": "./src/PwaPlugin.tsx",
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
       "default": "./dist/lib/neutral/meta.mjs"
+    },
+    "#plugin": {
+      "source": "./src/PwaPlugin.tsx",
+      "types": "./dist/types/src/PwaPlugin.d.ts",
+      "default": "./dist/lib/neutral/PwaPlugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
