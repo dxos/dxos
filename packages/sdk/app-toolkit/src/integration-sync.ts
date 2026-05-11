@@ -47,12 +47,33 @@ export const mergeField = <T>(local: T, remote: T, snapshot: T | undefined): Mer
   if (localChanged && !remoteChanged) {
     return { value: local, source: 'local' };
   }
+  // Both changed → remote-wins by policy.
   return { value: remote, source: 'remote' };
 };
 
+/**
+ * Stable JSON stringify: sorts object keys recursively so structurally-equal
+ * objects with different insertion order serialize to the same string. ECHO /
+ * Automerge canonicalizes maps to alphabetical key order on reload, while a
+ * remote-derived map (e.g. Trello's `arrangement.columns` built in `pos`
+ * order) preserves insertion order — without sorting, the equality check
+ * below would flag a no-op merge as `remote` and force a write every sync.
+ */
+const stableStringify = (value: unknown): string =>
+  JSON.stringify(value, (_key, val) => {
+    if (val && typeof val === 'object' && !Array.isArray(val)) {
+      const sorted: Record<string, unknown> = {};
+      for (const key of Object.keys(val as Record<string, unknown>).sort()) {
+        sorted[key] = (val as Record<string, unknown>)[key];
+      }
+      return sorted;
+    }
+    return val;
+  });
+
 /** Deep-equal merge for object values (e.g. arrangement). Same policy as {@link mergeField}. */
 export const mergeDeep = <T>(local: T, remote: T, snapshot: T | undefined): MergeResult<T> => {
-  const eq = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+  const eq = (a: unknown, b: unknown) => stableStringify(a) === stableStringify(b);
   if (snapshot === undefined) {
     return { value: remote, source: eq(local, remote) ? 'unchanged' : 'remote' };
   }
@@ -67,6 +88,7 @@ export const mergeDeep = <T>(local: T, remote: T, snapshot: T | undefined): Merg
   if (localChanged && !remoteChanged) {
     return { value: local, source: 'local' };
   }
+  // Both changed → remote-wins by policy.
   return { value: remote, source: 'remote' };
 };
 

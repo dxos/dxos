@@ -549,12 +549,17 @@ const IssueUpdateResponseSchema = Schema.Struct({
  * Fails with {@link LinearGraphQLError} when Linear returns `success: false`
  * or the GraphQL envelope contains errors (e.g. token lacks `write` scope).
  */
+/**
+ * `description`, `priority`, and `estimate` accept `null` to clear the field
+ * on Linear. `undefined` means "leave unchanged" — Linear treats the two
+ * distinctly. `title` and `stateId` cannot meaningfully be cleared.
+ */
 export type IssueUpdateInput = {
   title?: string;
-  description?: string;
+  description?: string | null;
   stateId?: string;
-  priority?: number;
-  estimate?: number;
+  priority?: number | null;
+  estimate?: number | null;
 };
 
 export const updateIssue = (id: string, input: IssueUpdateInput): LinearEffect<void> =>
@@ -562,7 +567,9 @@ export const updateIssue = (id: string, input: IssueUpdateInput): LinearEffect<v
     const response = yield* linearGraphQL(ISSUE_UPDATE_MUTATION, { id, input }, IssueUpdateResponseSchema);
     if (!response.issueUpdate.success) {
       return yield* Effect.fail(
-        new LinearGraphQLError({ context: { messages: [`issueUpdate(${id}) returned success=false`] } }),
+        new LinearGraphQLError({
+          context: { messages: [`issueUpdate(${id}) returned success=false`], variables: { id, input } },
+        }),
       );
     }
   });
@@ -587,7 +594,7 @@ const ProjectUpdateResponseSchema = Schema.Struct({
 
 export type ProjectUpdateInput = {
   name?: string;
-  description?: string;
+  description?: string | null;
 };
 
 /** Update fields on a Linear project. Same semantics as {@link updateIssue}. */
@@ -596,7 +603,9 @@ export const updateProject = (id: string, input: ProjectUpdateInput): LinearEffe
     const response = yield* linearGraphQL(PROJECT_UPDATE_MUTATION, { id, input }, ProjectUpdateResponseSchema);
     if (!response.projectUpdate.success) {
       return yield* Effect.fail(
-        new LinearGraphQLError({ context: { messages: [`projectUpdate(${id}) returned success=false`] } }),
+        new LinearGraphQLError({
+          context: { messages: [`projectUpdate(${id}) returned success=false`], variables: { id, input } },
+        }),
       );
     }
   });

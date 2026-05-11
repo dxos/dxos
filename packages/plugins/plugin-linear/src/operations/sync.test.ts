@@ -231,7 +231,7 @@ describe('plugin-linear sync', () => {
     const { db, integration } = await setup();
     const layer = Database.layer(db);
 
-    const local = await Effect.gen(function* () {
+    const { project: local } = await Effect.gen(function* () {
       return yield* upsertProject(integration, project());
     }).pipe(Effect.provide(layer), runAndForwardErrors);
 

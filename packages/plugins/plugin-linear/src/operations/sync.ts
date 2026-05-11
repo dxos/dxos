@@ -149,7 +149,7 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
       });
     }
     writeSnapshot(integration, remote.id, remoteFields);
-    return existing;
+    return { project: existing, created: false };
   }
 
   const created = Obj.make(Project.Project, {
@@ -159,7 +159,7 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
   });
   const persisted = yield* Database.add(created);
   writeSnapshot(integration, remote.id, remoteFields);
-  return persisted;
+  return { project: persisted, created: true };
 });
 
 /**
@@ -382,14 +382,17 @@ export const pushTeamUpdates: <E, R>(
           });
         }
       }
-      if (snapshot.priority !== localPriority) {
-        // priority can legitimately be `undefined` (no priority); send 0 to clear.
-        const priorityNumber = LinearApi.taskPriorityToPriorityNumber(localPriority) ?? 0;
-        input.priority = priorityNumber;
+      if (snapshot.priority !== undefined && snapshot.priority !== localPriority) {
+        // priority can legitimately be `undefined` (no priority); send `null`
+        // to clear, otherwise the 1..4 numeric form.
+        input.priority = LinearApi.taskPriorityToPriorityNumber(localPriority) ?? null;
         diverged = true;
       }
-      if (snapshot.estimate !== localEstimate && localEstimate !== undefined) {
-        input.estimate = localEstimate;
+      if (snapshot.estimate !== localEstimate) {
+        // Send `null` when the user cleared the estimate locally; Linear
+        // treats explicit `null` as a clear (undefined would leave it
+        // unchanged on the remote).
+        input.estimate = localEstimate ?? null;
         diverged = true;
       }
       if (!diverged) {
@@ -499,10 +502,12 @@ const handler: Operation.WithHandler<typeof SyncLinearTeams> = SyncLinearTeams.p
                     const projectByRemoteId = new Map<string, Project.Project>();
                     const remoteProjectsById = new Map<string, LinearApi.Project>();
                     for (const project of projects) {
-                      const local = yield* upsertProject(integrationObj, project);
+                      const { project: local, created } = yield* upsertProject(integrationObj, project);
                       projectByRemoteId.set(project.id, local);
                       remoteProjectsById.set(project.id, project);
-                      pulledProjects++;
+                      if (created) {
+                        pulledProjects++;
+                      }
                     }
 
                     const since = sinceFromOptions(options);
@@ -534,23 +539,15 @@ const handler: Operation.WithHandler<typeof SyncLinearTeams> = SyncLinearTeams.p
                       return states.find((s) => s.type === desiredType)?.id;
                     };
 
-                    // Probe local mirrors for any status divergence before
-                    // paying for /states. Cheap pre-check: we already have
-                    // the remote issues + snapshots in scope.
-                    const needsStates = (() => {
-                      for (const [id] of remoteIssuesById) {
-                        const snapshot = readSnapshot<TaskSnapshot>(integrationObj, id);
-                        if (!snapshot) {
-                          continue;
-                        }
-                        // Same lookup pattern as pushTeamUpdates would do; we
-                        // inline it here only as a heuristic to skip /states.
-                        // Worst case (false positive): one extra round-trip.
-                        return true;
-                      }
-                      return false;
-                    })();
-                    if (needsStates) {
+                    // Lazy fetch: we only need workflow states if there are
+                    // candidate issues to push. By this point `upsertTask`
+                    // above has seeded a snapshot for every id in
+                    // `remoteIssuesById`, so the existence of issues is
+                    // equivalent to "at least one candidate" — a stronger
+                    // pre-check (e.g. checking for divergent local status)
+                    // would need a synchronous DB read per id and isn't
+                    // worth the complexity for a single round-trip.
+                    if (remoteIssuesById.size > 0) {
                       workflowStates = yield* LinearApi.fetchTeamWorkflowStates(remoteTeam.id);
                     }
 

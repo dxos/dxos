@@ -531,6 +531,17 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
               continue;
             }
 
+            // Project echo id for the filter is only available after upsert;
+            // when filtering to a single repo, resolve the existing local
+            // Project (if any) first and bail out before upsertProject's
+            // pull/merge side effects on unrelated repos.
+            if (repoFilterId) {
+              const existing = yield* findByForeignId<Project.Project>(Project.Project, remoteRepo.id);
+              if (!existing || existing.id !== repoFilterId) {
+                continue;
+              }
+            }
+
             // Always upsert by foreign-key. If `target.object` is already pointing
             // at the same Project (the normal round-trip), the upsert finds it,
             // refreshes its fields, and returns the same instance — and we leave
@@ -540,10 +551,6 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
             // upsert returned so the user-visible target tracks the actual record.
             const project = yield* upsertProject(integrationObj, remoteRepo);
             const rewireRef = !localObj || localObj.id !== project.id ? Ref.make(project) : undefined;
-
-            if (repoFilterId && project.id !== repoFilterId) {
-              continue;
-            }
 
             targetEntries.push({
               entry: target,
@@ -644,6 +651,15 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
                     // individual PATCHes propagate as a single Either-Left
                     // for this target so partial progress on other targets
                     // is preserved.
+                    //
+                    // TODO(burdon): `remoteIssuesById` is built from
+                    //   `fetchRepoIssues(..., { since })`, so when
+                    //   `maxDaysBack` is set this push pass cannot see
+                    //   locally-edited tasks whose remote issue is older
+                    //   than the window. Switch the candidate set to the
+                    //   local mirror (every Task with a GITHUB_SOURCE fk
+                    //   under this repo) once we store `number` per task
+                    //   so we don't need the remote payload to PATCH.
                     const pushResult = yield* pushRepoUpdates(integrationObj, remoteRepo, remoteIssuesById, {
                       updateIssue: (owner, repoName, issueNumber, input) =>
                         GitHubApi.updateIssue(owner, repoName, issueNumber, input).pipe(Effect.map(() => undefined)),
