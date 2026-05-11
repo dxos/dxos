@@ -176,7 +176,11 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
 ) {
   const status = LinearApi.stateTypeToTaskStatus(issue.state.type);
   const priority = LinearApi.priorityNumberToTaskPriority(issue.priority);
-  const remoteFields: TaskSnapshot = {
+  // No explicit annotation: TS infers each property at its exact type
+  // (`title: string`, etc.). Annotating as TaskSnapshot would widen
+  // `title` to `string | undefined` and break the `mergeField<string>`
+  // call below, since Task.title is required.
+  const remoteFields = {
     title: issue.title,
     description: issue.description ?? '',
     status,
@@ -188,14 +192,20 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
 
   if (existing) {
     const snapshot = readSnapshot<TaskSnapshot>(integration, issue.id) ?? {};
-    const titleResult = mergeField<string | undefined>(existing.title, remoteFields.title, snapshot.title);
+    // Task.title is required (non-optional), so widen the merge to plain string —
+    // the remote always provides one, and a snapshot is allowed to be undefined
+    // (first sync) since `mergeField` accepts `T | undefined` for snapshot.
+    const titleResult = mergeField<string>(existing.title, remoteFields.title, snapshot.title);
     const descriptionResult = mergeField<string | undefined>(
       existing.description,
       remoteFields.description,
       snapshot.description,
     );
     const statusResult = mergeField<TaskSnapshot['status']>(existing.status, remoteFields.status, snapshot.status);
-    const priorityResult = mergeField<TaskSnapshot['priority']>(
+    // Linear's reverse mapper drops `0` (no priority) → undefined, so the
+    // remote/snapshot side never holds 'none'. Widen to the full Task priority
+    // union so a locally-set 'none' typechecks too.
+    const priorityResult = mergeField<'none' | 'low' | 'medium' | 'high' | 'urgent' | undefined>(
       existing.priority,
       remoteFields.priority,
       snapshot.priority,

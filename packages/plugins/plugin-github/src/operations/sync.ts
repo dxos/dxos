@@ -269,7 +269,8 @@ const upsertTask = Effect.fn('upsertTask')(function* (
 
   if (existing) {
     const snapshot = readSnapshot<TaskSnapshot>(integration, fid) ?? {};
-    const titleResult = mergeField<string | undefined>(existing.title, remoteFields.title, snapshot.title);
+    // Task.title is required (non-optional) so the merge produces a string.
+    const titleResult = mergeField<string>(existing.title, remoteFields.title, snapshot.title);
     const descriptionResult = mergeField<string | undefined>(
       existing.description,
       remoteFields.description,
