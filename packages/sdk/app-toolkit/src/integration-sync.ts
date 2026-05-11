@@ -85,8 +85,7 @@ export const readSnapshot = <T extends object>(carrier: SnapshotCarrier, foreign
  */
 export const writeSnapshot = (carrier: SnapshotCarrier, foreignId: string, snapshot: object): void => {
   Obj.update(carrier, (carrier) => {
-    const m = carrier as Obj.Mutable<typeof carrier>;
-    const existing = (m.snapshots ?? {}) as Record<string, unknown>;
-    m.snapshots = { ...existing, [foreignId]: snapshot };
+    const existing = (carrier.snapshots ?? {}) as Record<string, unknown>;
+    carrier.snapshots = { ...existing, [foreignId]: snapshot };
   });
 };
