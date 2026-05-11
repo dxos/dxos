@@ -18,7 +18,7 @@ export const McpServer = Schema.Struct({
     description: 'Human-readable name of the MCP server',
   }),
 
-  url: Schema.String.annotations({ 
+  url: Schema.String.annotations({
     description: 'URL of the MCP server',
   }),
 
