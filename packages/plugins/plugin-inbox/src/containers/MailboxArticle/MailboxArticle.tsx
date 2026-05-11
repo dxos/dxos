@@ -13,7 +13,7 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { useAtomState } from '@dxos/react-hooks';
-import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
+import { ElevationProvider, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
@@ -29,7 +29,7 @@ import { InboxCapabilities, type Mailbox } from '#types';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { getMailboxMessagePath } from '../../paths';
 import { matchesFilter, sortByCreated } from '../../util';
-import { InitializeMailbox } from './InitializeMailbox';
+import { InitializeMailbox, InitializeMailboxAction } from './InitializeMailbox';
 
 export type MailboxArticleProps = AppSurface.ObjectArticleProps<
   Mailbox.Mailbox,
@@ -188,10 +188,14 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
 
   return (
     <Panel.Root>
-      {!isEmpty && (
-        <ElevationProvider elevation='positioned'>
-          <Menu.Root {...menuActions} attendableId={id}>
-            <Panel.Toolbar asChild>
+      <Panel.Toolbar asChild>
+        {isEmpty ? (
+          <Toolbar.Root>
+            <InitializeMailboxAction mailbox={subject} />
+          </Toolbar.Root>
+        ) : (
+          <ElevationProvider elevation='positioned'>
+            <Menu.Root {...menuActions} attendableId={id}>
               <Menu.Toolbar>
                 <QueryEditor
                   classNames='grow min-w-0 ps-1'
@@ -213,13 +217,13 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
                   icon='ph--x--regular'
                   iconOnly
                   label={t('mailbox-toolbar-clear-button.label')}
-                  onClick={() => handleClear()}
+                  onClick={handleClear}
                 />
               </Menu.Toolbar>
-            </Panel.Toolbar>
-          </Menu.Root>
-        </ElevationProvider>
-      )}
+            </Menu.Root>
+          </ElevationProvider>
+        )}
+      </Panel.Toolbar>
       <Panel.Content asChild>
         {isEmpty ? (
           <InitializeMailbox mailbox={subject} />
