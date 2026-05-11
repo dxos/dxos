@@ -50,11 +50,15 @@
     },
     "#plugin": {
       "source": {
-        "browser": "./src/AssistantPlugin.tsx",
+        "default": "./src/AssistantPlugin.tsx",
         "node": "./src/AssistantPlugin.node.ts"
       },
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
+      "types": {
+        "default": "./dist/types/src/AssistantPlugin.d.ts",
+        "node": "./dist/types/src/AssistantPlugin.node.d.ts"
+      },
+      "default": "./dist/lib/neutral/AssistantPlugin.mjs",
+      "node": "./dist/lib/neutral/AssistantPlugin.node.mjs"
     },
     "#testing": "./src/testing/index.ts",
     "#translations": {
