@@ -11,13 +11,13 @@ import { SpaceCapabilities } from '@dxos/plugin-space/types';
 import { Table } from '@dxos/react-ui-table/types';
 import { ViewModel } from '@dxos/schema';
 
-import { CreateTableSchema } from '#operations';
+import { TableOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
       id: Table.Table.typename,
-      inputSchema: CreateTableSchema,
+      inputSchema: TableOperation.CreateTableSchema,
       createObject: (props, options) =>
         Effect.gen(function* () {
           const object = yield* Effect.promise(async () => {

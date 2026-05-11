@@ -9,7 +9,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Operation } from '@dxos/compute';
 
-import { SheetOperation } from '#operations';
+import { SheetOperation } from '#types';
 import { Sheet } from '#types';
 
 export default Capability.makeModule(

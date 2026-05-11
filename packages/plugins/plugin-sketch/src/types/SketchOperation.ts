@@ -2,13 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
 
 import { meta } from '#meta';
 
-import { Sketch } from '../types';
+import { Sketch } from './index';
 
 const SKETCH_OPERATION = `${meta.id}.operation`;
 

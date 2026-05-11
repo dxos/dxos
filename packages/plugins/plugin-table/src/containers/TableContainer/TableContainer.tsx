@@ -27,10 +27,10 @@ import {
   useProjectionModel,
   useTableModel,
 } from '@dxos/react-ui-table';
+import { type Table } from '@dxos/react-ui-table/types';
 import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
 
 import { meta } from '#meta';
-import { type Table } from '#operations';
 
 export type TableContainerProps = AppSurface.ObjectArticleProps<Table.Table>;
 

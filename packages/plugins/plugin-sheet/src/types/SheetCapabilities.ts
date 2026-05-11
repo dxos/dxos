@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Capability } from '@dxos/app-framework';
-import { type ComputeGraphRegistry } from '@dxos/compute-hyperformula';
+import { type ComputeGraphRegistry as ComputeGraphRegistryType } from '@dxos/compute-hyperformula';
 import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid';
 
 import { meta } from '#meta';
@@ -16,11 +18,9 @@ export type GridRegistry = {
   get: (attendableId: string) => GridEntry | undefined;
 };
 
-export namespace SheetCapabilities {
-  export const ComputeGraphRegistry = Capability.make<ComputeGraphRegistry>(
-    `${meta.id}.capability.compute-graph-registry`,
-  );
+export const ComputeGraphRegistry = Capability.make<ComputeGraphRegistryType>(
+  `${meta.id}.capability.compute-graph-registry`,
+);
 
-  /** Registry of active grid instances keyed by attendable ID. */
-  export const GridInstances = Capability.make<GridRegistry>(`${meta.id}.capability.grid-instances`);
-}
+/** Registry of active grid instances keyed by attendable ID. */
+export const GridInstances = Capability.make<GridRegistry>(`${meta.id}.capability.grid-instances`);

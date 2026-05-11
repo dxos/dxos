@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
@@ -9,7 +11,7 @@ import { Database, Ref } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import { Gallery } from '../types';
+import { Gallery } from './index';
 
 const GALLERY_OPERATION = `${meta.id}.operation`;
 

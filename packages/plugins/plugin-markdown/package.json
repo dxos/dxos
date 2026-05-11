@@ -61,7 +61,11 @@
       "node": "./dist/lib/neutral/MarkdownPlugin.node.mjs",
       "default": "./dist/lib/neutral/MarkdownPlugin.mjs"
     },
-    "#testing": "./src/testing.ts",
+    "#testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "default": "./dist/lib/neutral/testing.mjs"
+    },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",

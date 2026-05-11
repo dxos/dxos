@@ -36,7 +36,7 @@ import {
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { SheetOperation } from '#operations';
+import { SheetOperation } from '#types';
 import { DEFAULT_COLS, DEFAULT_ROWS, SheetCapabilities } from '#types';
 
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';

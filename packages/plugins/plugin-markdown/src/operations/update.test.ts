@@ -22,7 +22,7 @@ import { trim } from '@dxos/util';
 import { WithProperties } from '#testing';
 
 import MarkdownBlueprint from '../blueprints/markdown-blueprint';
-import { Update } from './definitions';
+import { MarkdownOperation } from '../types';
 import { MarkdownOperationHandlerSet } from './index';
 
 ObjectId.dangerouslyDisableRandomness();
@@ -53,7 +53,7 @@ describe('update', () => {
         });
         yield* Database.add(doc);
 
-        yield* Operation.invoke(Update, {
+        yield* Operation.invoke(MarkdownOperation.Update, {
           doc: Ref.make(doc),
           edits: [{ oldString: 'Founders', newString: '# Founders' }],
         });

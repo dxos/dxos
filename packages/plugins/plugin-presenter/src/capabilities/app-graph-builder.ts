@@ -17,7 +17,7 @@ import { Markdown } from '@dxos/plugin-markdown';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { PresenterOperation } from '#operations';
+import { PresenterOperation } from '#types';
 import { PresenterCapabilities } from '#types';
 
 /** Match nodes that can be presented (Collection or Document). */

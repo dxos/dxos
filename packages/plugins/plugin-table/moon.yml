@@ -19,4 +19,5 @@ tasks:
       - '--entryPoint=src/operations/index.ts'
       - '--entryPoint=src/plugin.ts'
       - '--entryPoint=src/translations.ts'
+      - '--entryPoint=src/types/index.ts'
       - '--platform=neutral'

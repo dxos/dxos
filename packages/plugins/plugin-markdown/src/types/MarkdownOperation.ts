@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
@@ -12,7 +14,7 @@ import { trim } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { Markdown } from '../types';
+import { Markdown } from './index';
 
 const MARKDOWN_OPERATION = `${meta.id}.operation`;
 

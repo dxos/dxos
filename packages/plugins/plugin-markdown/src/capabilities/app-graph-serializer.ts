@@ -11,8 +11,8 @@ import { Collection } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { isSpace } from '@dxos/react-client/echo';
 
-import { MarkdownOperation } from '#operations';
 import { translations } from '#translations';
+import { MarkdownOperation } from '#types';
 import { Markdown } from '#types';
 
 export default Capability.makeModule(

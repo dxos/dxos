@@ -11,8 +11,8 @@ import { Collection } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { isSpace } from '@dxos/react-client/echo';
 
-import { SketchOperation } from '#operations';
 import { translations } from '#translations';
+import { SketchOperation } from '#types';
 import { Sketch } from '#types';
 
 export default Capability.makeModule(

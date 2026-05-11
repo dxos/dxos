@@ -1,0 +1,15 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+// @import-as-namespace
+
+import { type Atom } from '@effect-atom/atom-react';
+
+import { Capability } from '@dxos/app-framework';
+
+import { meta } from '#meta';
+
+import * as Settings from './Settings';
+
+export const Settings = Capability.make<Atom.Writable<SettingsNS.Settings>>(`${meta.id}.capability.settings`);

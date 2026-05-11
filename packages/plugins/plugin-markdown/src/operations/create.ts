@@ -8,10 +8,9 @@ import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { CollectionModel } from '@dxos/schema';
 
-import { Markdown } from '../types';
-import { Create } from './definitions';
+import { Markdown, MarkdownOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof Create> = Create.pipe(
+const handler: Operation.WithHandler<typeof MarkdownOperation.Create> = MarkdownOperation.Create.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ name, content }) {
       const object = Markdown.make({ name, content });

@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
@@ -9,7 +11,7 @@ import { Operation } from '@dxos/compute';
 
 import { meta } from '#meta';
 
-import { Outline } from '../types';
+import { Outline } from './index';
 
 const OUTLINER_OPERATION = `${meta.id}.operation`;
 

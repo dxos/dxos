@@ -8,9 +8,9 @@ import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { getTypenameFromQuery } from '@dxos/schema';
 
-import { AddRow } from './definitions';
+import { TableOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof AddRow> = AddRow.pipe(
+const handler: Operation.WithHandler<typeof TableOperation.AddRow> = TableOperation.AddRow.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ view, data }) {
       const db = Obj.getDatabase(view);

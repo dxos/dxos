@@ -1,4 +1,8 @@
+//
 // Copyright 2025 DXOS.org
+//
+
+// @import-as-namespace
 
 import * as Schema from 'effect/Schema';
 
@@ -10,8 +14,6 @@ import { SpaceSchema } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
 
 import { meta } from '#meta';
-
-export { Table };
 
 export const CreateTableSchema = Schema.Struct({
   name: Schema.optional(Schema.String),

@@ -71,11 +71,6 @@
       "types": "./dist/types/src/plugin.d.ts",
       "default": "./dist/lib/neutral/plugin.mjs"
     },
-    "./sdk": {
-      "source": "./src/sdk.ts",
-      "types": "./dist/types/src/sdk.d.ts",
-      "default": "./dist/lib/neutral/sdk.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",

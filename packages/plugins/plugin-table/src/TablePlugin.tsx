@@ -14,8 +14,8 @@ import { Table } from '@dxos/react-ui-table/types';
 
 import { BlueprintDefinition, CommentConfig, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
-import { TableOperation } from '#operations';
 import { translations } from '#translations';
+import { TableOperation } from '#types';
 
 export const TablePlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
