@@ -11,4 +11,4 @@ tasks:
       - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/plugin.ts'
       - '--entryPoint=src/translations.ts'
-      - '--platform=browser'
+      - '--platform=neutral'
