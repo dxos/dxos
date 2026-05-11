@@ -64,8 +64,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
 
     // Seed snapshot + local task as if a previous pull had run.
     Obj.update(integration, (integration) => {
-      const m = integration as Obj.Mutable<typeof integration>;
-      m.snapshots = {
+      integration.snapshots = {
         '5678': { title: 'Investigate flake', description: 'desc', status: 'todo' },
       };
     });
@@ -104,8 +103,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
     const { db, integration } = await setup();
 
     Obj.update(integration, (integration) => {
-      const m = integration as Obj.Mutable<typeof integration>;
-      m.snapshots = {
+      integration.snapshots = {
         '5678': { title: 'Investigate flake', description: 'desc', status: 'todo' },
       };
     });
@@ -137,8 +135,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
     const { db, integration } = await setup();
 
     Obj.update(integration, (integration) => {
-      const m = integration as Obj.Mutable<typeof integration>;
-      m.snapshots = {
+      integration.snapshots = {
         '5678': { title: 'Investigate flake', description: 'desc', status: 'todo' },
       };
     });
@@ -169,8 +166,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
     const { db, integration } = await setup();
 
     Obj.update(integration, (integration) => {
-      const m = integration as Obj.Mutable<typeof integration>;
-      m.snapshots = {
+      integration.snapshots = {
         '1234': { name: 'dxos/composer', description: 'composer monorepo' },
       };
     });
@@ -201,8 +197,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
     const { db, integration } = await setup();
 
     Obj.update(integration, (integration) => {
-      const m = integration as Obj.Mutable<typeof integration>;
-      m.snapshots = {
+      integration.snapshots = {
         '1234': { name: 'dxos/composer', description: 'composer monorepo' },
       };
     });
@@ -233,8 +228,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
     const { db, integration } = await setup();
 
     Obj.update(integration, (integration) => {
-      const m = integration as Obj.Mutable<typeof integration>;
-      m.snapshots = {
+      integration.snapshots = {
         '5678': { title: 'orig', description: '', status: 'todo' },
       };
     });
