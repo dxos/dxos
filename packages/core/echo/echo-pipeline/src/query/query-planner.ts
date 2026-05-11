@@ -218,6 +218,24 @@ export class QueryPlanner {
         ]);
       }
 
+      // Key
+      case 'key': {
+        return QueryPlan.Plan.make([
+          {
+            _tag: 'SelectStep',
+            scope: context.scope,
+            selector: {
+              _tag: 'WildcardSelector',
+            },
+          },
+          ...this._generateDeletedHandlingSteps(context),
+          {
+            _tag: 'FilterStep',
+            filter: { ...filter },
+          },
+        ]);
+      }
+
       // Text
       case 'text-search': {
         return QueryPlan.Plan.make([
@@ -364,6 +382,24 @@ export class QueryPlanner {
           }));
 
           return QueryPlan.Plan.make([...innerPlan.steps, ...childOfSteps]);
+        }
+
+        // Simple AND: all filters can be executed against in-memory objects after a wildcard select.
+        // Supports combining object/key/tag/property filters (e.g., `Filter.and(Filter.type(...), Filter.key(...))`).
+        const simpleTypes = new Set(['object', 'key', 'tag', 'compare', 'in', 'range', 'contains', 'not', 'or']);
+        if (flatFilters.every((f) => simpleTypes.has(f.type))) {
+          return QueryPlan.Plan.make([
+            {
+              _tag: 'SelectStep',
+              scope: context.scope,
+              selector: { _tag: 'WildcardSelector' },
+            },
+            ...this._generateDeletedHandlingSteps(context),
+            {
+              _tag: 'FilterStep',
+              filter: { type: 'and', filters: flatFilters },
+            },
+          ]);
         }
 
         throw queryTooComplexError(context.originalQuery);

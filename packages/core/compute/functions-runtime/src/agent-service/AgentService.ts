@@ -86,7 +86,7 @@ export const createSession: (
   Database.Service | Feed.FeedService | Blueprint.RegistryService | AgentService
 > = Effect.fn('createSession')(function* (opts) {
   const blueprints = yield* Effect.forEach(opts?.blueprints ?? [], (blueprint) =>
-    Blueprint.upsert(blueprint.key).pipe(Effect.map(Ref.make)),
+    Blueprint.upsert(Blueprint.getKey(blueprint)).pipe(Effect.map(Ref.make)),
   );
 
   const feed = yield* Database.add(Feed.make());

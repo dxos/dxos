@@ -44,7 +44,9 @@ export default Deploy.pipe(
       const newFunction = yield* Effect.promise(() =>
         functionsService.deploy(Context.default(), {
           ownerPublicKey: space.key,
-          version: loaded.version ? incrementSemverPatch(loaded.version) : '0.0.1',
+          version: Obj.getMeta(loaded).version
+            ? incrementSemverPatch(Obj.getMeta(loaded).version!)
+            : '0.0.1',
           functionId: existingFunctionId,
           entryPoint: buildResult.entryPoint,
           assets: buildResult.assets,

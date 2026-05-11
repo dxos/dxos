@@ -240,7 +240,7 @@ describe('Agent', () => {
         invariant(timerTrigger.function);
         const operation = yield* Database.load(timerTrigger.function);
         invariant(Obj.instanceOf(Operation.PersistentOperation, operation));
-        expect(operation.key).toBe(AgentWorker.meta.key);
+        expect(Obj.getMeta(operation).key).toBe(AgentWorker.meta.key);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

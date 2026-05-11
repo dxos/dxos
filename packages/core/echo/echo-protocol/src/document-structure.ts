@@ -230,6 +230,18 @@ export type ObjectMeta = {
    * NOTE: Optional for backwards compatibilty.
    */
   tags?: string[];
+
+  /**
+   * Fully-qualified registry key for the object (FQN format, e.g. `org.example.type.foo`).
+   * Identifies the canonical registry entry the object instance was created from.
+   */
+  key?: string;
+
+  /**
+   * Semantic version of the registry entry the object was created from.
+   * Must be a valid semver string (e.g. `1.2.3`).
+   */
+  version?: string;
 };
 
 /**

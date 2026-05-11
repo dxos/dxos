@@ -24,12 +24,14 @@ const ensureFunction = async (
   functionKey: string,
 ): Promise<Operation.PersistentOperation | undefined> => {
   const deployed = await getDeployedFunctions(Context.default(), client, true);
-  const match = deployed.find((fn) => fn.key === functionKey);
+  const match = deployed.find((fn) => Obj.getMeta(fn).key === functionKey);
   if (!match) {
     return undefined;
   }
 
-  const existing = await db.query(Query.type(Operation.PersistentOperation, { key: functionKey })).run();
+  const existing = await db
+    .query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(functionKey)))
+    .run();
   const [existingFunc] = existing;
   if (existingFunc) {
     Operation.setFrom(existingFunc, match);

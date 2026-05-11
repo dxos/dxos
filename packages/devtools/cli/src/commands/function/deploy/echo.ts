@@ -28,7 +28,7 @@ export const DATA_TYPES: Type.AnyEntity[] = [
 export const getNextVersion = (fnObject: Option.Option<Operation.PersistentOperation>) => {
   return Option.match(fnObject, {
     onNone: () => '0.0.1',
-    onSome: (fnObject) => incrementSemverPatch(fnObject.version),
+    onSome: (fnObject) => incrementSemverPatch(Obj.getMeta(fnObject).version ?? '0.0.0'),
   });
 };
 
@@ -71,15 +71,16 @@ export const upsertFunctionObject: (opts: {
     functionObject = existingObject;
   } else {
     functionObject = Obj.make(Operation.PersistentOperation, {
+      [Obj.Meta]: { version: uploadResult.version },
       name: path.basename(filePath, path.extname(filePath)),
-      version: uploadResult.version,
     });
     space.db.add(functionObject);
   }
   Obj.update(functionObject, (functionObject) => {
-    functionObject.key = uploadResult.meta.key ?? functionObject.key;
+    const meta = Obj.getMeta(functionObject);
+    meta.key = uploadResult.meta.key ?? meta.key;
+    meta.version = uploadResult.version;
     functionObject.name = name ?? uploadResult.meta.name ?? functionObject.name;
-    functionObject.version = uploadResult.version;
     functionObject.description = uploadResult.meta.description;
     functionObject.inputSchema = uploadResult.meta.inputSchema;
     functionObject.outputSchema = uploadResult.meta.outputSchema;

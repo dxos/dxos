@@ -96,6 +96,27 @@ export interface FilterTag extends Schema.Schema.Type<typeof FilterTag_> {}
 export const FilterTag: Schema.Schema<FilterTag> = FilterTag_;
 
 /**
+ * Filter objects by registry key (and optional semver range) stored in object meta.
+ */
+const FilterKey_ = Schema.Struct({
+  type: Schema.Literal('key'),
+
+  /**
+   * Fully-qualified registry key (FQN format, e.g. `org.example.type.foo`).
+   */
+  key: Schema.String,
+
+  /**
+   * Optional semver range that matches against the object's meta `version`.
+   * If omitted, matches any version (including objects with no version).
+   */
+  version: Schema.optional(Schema.String),
+});
+
+export interface FilterKey extends Schema.Schema.Type<typeof FilterKey_> {}
+export const FilterKey: Schema.Schema<FilterKey> = FilterKey_;
+
+/**
  * Range.
  */
 const FilterRange_ = Schema.Struct({
@@ -190,6 +211,7 @@ export const Filter = Schema.Union(
   FilterIn,
   FilterContains,
   FilterTag,
+  FilterKey,
   FilterRange,
   FilterTimestamp,
   FilterTextSearch,

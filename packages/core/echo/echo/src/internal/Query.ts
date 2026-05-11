@@ -35,6 +35,10 @@ export const prettyFilter = (filter: QueryAST.Filter): string => {
       return `Filter.contains(${JSON.stringify(filter.value)})`;
     case 'tag':
       return `Filter.tag(${JSON.stringify(filter.tag)})`;
+    case 'key':
+      return filter.version !== undefined
+        ? `Filter.key(${JSON.stringify(filter.key)}, { version: ${JSON.stringify(filter.version)} })`
+        : `Filter.key(${JSON.stringify(filter.key)})`;
     case 'range':
       return `Filter.range(${JSON.stringify(filter.from)}, ${JSON.stringify(filter.to)})`;
     case 'text-search':

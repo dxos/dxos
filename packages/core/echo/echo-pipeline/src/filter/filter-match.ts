@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as semver from 'semver';
+
 import { EncodedReference, ObjectStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
@@ -67,6 +69,10 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
       return tags.some((tag) => tag === filter.tag);
     }
 
+    case 'key': {
+      return matchKey(filter, obj.doc.meta.key, obj.doc.meta.version);
+    }
+
     case 'text-search': {
       // TODO(???): Implement text search.
       return false;
@@ -95,6 +101,25 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
     default:
       return false;
   }
+};
+
+/**
+ * Matches a `key` filter against an object's meta `key` and `version`.
+ * - `key` must match exactly.
+ * - If the filter specifies a `version` range, the object's `version` must satisfy it (semver).
+ *   Objects without a `version` do not match a version-constrained filter.
+ */
+const matchKey = (filter: QueryAST.FilterKey, objKey: string | undefined, objVersion: string | undefined): boolean => {
+  if (objKey !== filter.key) {
+    return false;
+  }
+  if (filter.version === undefined) {
+    return true;
+  }
+  if (objVersion === undefined) {
+    return false;
+  }
+  return semver.satisfies(objVersion, filter.version, { includePrerelease: true });
 };
 
 // TODO(burdon): Reconcile with filterMatchObject.
@@ -151,6 +176,10 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
     case 'tag': {
       const tags = obj[ATTR_META]?.tags ?? [];
       return tags.some((tag) => tag === filter.tag);
+    }
+
+    case 'key': {
+      return matchKey(filter, obj[ATTR_META]?.key, obj[ATTR_META]?.version);
     }
 
     // TODO: Implement text search.

@@ -45,7 +45,13 @@ const DefaultStory = () => {
         setResult({ functions: { standard: f1.length, echo: f2.length } });
       });
 
-      space.db.add(Obj.make(Operation.PersistentOperation, { name: 'test', version: '0.0.1', binding: FUNCTION_NAME }));
+      space.db.add(
+        Obj.make(Operation.PersistentOperation, {
+          [Obj.Meta]: { version: '0.0.1' },
+          name: 'test',
+          binding: FUNCTION_NAME,
+        }),
+      );
     }
   }, [space, graph]);
 

@@ -34,22 +34,28 @@ const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(
       // TODO(wittjosiah): This should be a space-level setting.
       // TODO(burdon): Clone when activated. Copy-on-write for template.
       const blueprints = yield* Effect.promise(() => db.query(Filter.type(Blueprint.Blueprint)).run());
-      let defaultAssistantBlueprint = blueprints.find((blueprint) => blueprint.key === AssistantBlueprint.key);
+      let defaultAssistantBlueprint = blueprints.find(
+        (blueprint) => Obj.getMeta(blueprint).key === AssistantBlueprint.key,
+      );
       if (!defaultAssistantBlueprint) {
         defaultAssistantBlueprint = db.add(AssistantBlueprint.make());
       }
-      let defaultDatabaseBlueprint = blueprints.find((blueprint) => blueprint.key === DatabaseBlueprint.key);
+      let defaultDatabaseBlueprint = blueprints.find(
+        (blueprint) => Obj.getMeta(blueprint).key === DatabaseBlueprint.key,
+      );
       if (!defaultDatabaseBlueprint) {
         defaultDatabaseBlueprint = db.add(DatabaseBlueprint.make());
       }
-      let defaultAgentWizardBlueprint = blueprints.find((blueprint) => blueprint.key === AgentWizardBlueprint.key);
+      let defaultAgentWizardBlueprint = blueprints.find(
+        (blueprint) => Obj.getMeta(blueprint).key === AgentWizardBlueprint.key,
+      );
       if (!defaultAgentWizardBlueprint) {
         defaultAgentWizardBlueprint = db.add(AgentWizardBlueprint.make());
       }
       // Dynamic import to avoid circular dependency with the barrel that also exports BlueprintManagerHandlers.
       const { BlueprintManagerBlueprint } = yield* Effect.promise(() => import('@dxos/assistant-toolkit'));
       let defaultBlueprintManagerBlueprint = blueprints.find(
-        (blueprint) => blueprint.key === BlueprintManagerBlueprint.key,
+        (blueprint) => Obj.getMeta(blueprint).key === BlueprintManagerBlueprint.key,
       );
       if (!defaultBlueprintManagerBlueprint) {
         defaultBlueprintManagerBlueprint = db.add(BlueprintManagerBlueprint.make());

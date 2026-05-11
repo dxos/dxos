@@ -62,7 +62,7 @@ export const updateFunctionMetadata = (
     }
 
     if (meta.key) {
-      storedFunction.key = meta.key;
+      Obj.getMeta(storedFunction).key = meta.key;
     } else {
       log.verbose('no key in function metadata', { functionId });
     }

@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { Annotation, Database, Filter, Obj, Type } from '@dxos/echo';
+import { Annotation, Database, Filter, Migration, Obj, Type } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
@@ -18,21 +18,50 @@ import * as Operation from './Operation';
 import * as Template from './Template';
 
 /**
- * Blueprint schema defines the structure for AI assistant blueprints.
- * Blueprints contain instructions, tools, and artifacts that guide the AI's behavior.
- * Blueprints may use tools to create and read artifacts, which are managed by the assistant.
+ * Legacy Blueprint schema (v0.1.0) — `key` is stored as a data property.
+ * @deprecated Use {@link Blueprint} (v0.2.0) instead; the `key` and `version` now live in the object meta.
  */
-// TODO(burdon): Rename Skill?
-export const Blueprint = Schema.Struct({
+export const LegacyBlueprint = Schema.Struct({
   /**
    * Global registry ID.
    * NOTE: The `key` property refers to the original registry entry.
    */
-  // TODO(burdon): Create Format type for DXN-like ids, such as this and schema type.
   key: Schema.String.annotations({
     description: 'Unique registration key for the blueprint',
   }),
 
+  name: Schema.String.annotations({
+    description: 'Human-readable name of the blueprint',
+  }),
+
+  description: Schema.optional(Schema.String),
+
+  instructions: Template.Template,
+
+  tools: Schema.Array(ToolId),
+
+  agentCanEnable: Schema.optional(Schema.Boolean),
+
+  mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
+}).pipe(
+  Type.object({
+    typename: 'org.dxos.type.blueprint',
+    version: '0.1.0',
+  }),
+);
+
+export interface LegacyBlueprint extends Schema.Schema.Type<typeof LegacyBlueprint> {}
+
+/**
+ * Blueprint schema defines the structure for AI assistant blueprints.
+ * Blueprints contain instructions, tools, and artifacts that guide the AI's behavior.
+ * Blueprints may use tools to create and read artifacts, which are managed by the assistant.
+ *
+ * The registry `key` and `version` are stored in the object meta — access them via
+ * `Obj.getMeta(blueprint).key` and `Obj.getMeta(blueprint).version`.
+ */
+// TODO(burdon): Rename Skill?
+export const Blueprint = Schema.Struct({
   /**
    * Human-readable name of the blueprint.
    */
@@ -76,7 +105,7 @@ export const Blueprint = Schema.Struct({
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.blueprint',
-    version: '0.1.0',
+    version: '0.2.0',
   }),
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
@@ -90,17 +119,70 @@ export const Blueprint = Schema.Struct({
  */
 export interface Blueprint extends Schema.Schema.Type<typeof Blueprint> {}
 
-type MakeProps = Pick<Blueprint, 'key' | 'name'> & Partial<Blueprint>;
+type MakeProps = { key: string; version?: string; name: string } & Partial<Blueprint>;
 
 /**
  * Create a new Blueprint.
+ * The `key` (and optional `version`) are stored in the object meta.
  */
-export const make = ({ tools = [], instructions = Template.make(), ...props }: MakeProps) =>
+export const make = ({ key, version, tools = [], instructions = Template.make(), ...props }: MakeProps) =>
   Obj.make(Blueprint, {
+    [Obj.Meta]: { key, version },
     tools,
     instructions,
     ...props,
   });
+
+/**
+ * Get the registry key for a blueprint.
+ */
+export const getKey = (blueprint: Blueprint): string => {
+  const key = Obj.getMeta(blueprint).key;
+  if (key === undefined) {
+    throw new Error('Blueprint is missing the meta key.');
+  }
+  return key;
+};
+
+/**
+ * Get the registry version for a blueprint, if any.
+ */
+export const getVersion = (blueprint: Blueprint): string | undefined => Obj.getMeta(blueprint).version;
+
+/**
+ * Migration from {@link LegacyBlueprint} (v0.1.0) to {@link Blueprint} (v0.2.0).
+ * Moves `key` from the data section into the object meta.
+ */
+// The migration framework currently aliases `before` and `object` in `onMigration`, so we snapshot
+// the legacy `key` during `transform` and read it back keyed by object id.
+const _blueprintMigrationSnapshots = new Map<string, { key: string }>();
+export const migration = Migration.define({
+  from: LegacyBlueprint,
+  to: Blueprint,
+  transform: async (from) => {
+    _blueprintMigrationSnapshots.set((from as any).id, { key: from.key });
+    return {
+      name: from.name,
+      description: from.description,
+      instructions: from.instructions,
+      tools: from.tools,
+      agentCanEnable: from.agentCanEnable,
+      mcpServers: from.mcpServers,
+    };
+  },
+  onMigration: async ({ object }) => {
+    const snapshot = _blueprintMigrationSnapshots.get((object as any).id);
+    if (!snapshot) {
+      return;
+    }
+    Obj.update(object, (obj) => {
+      const meta = Obj.getMeta(obj);
+      meta.key = snapshot.key;
+      meta.version ??= '0.1.0';
+    });
+    _blueprintMigrationSnapshots.delete((object as any).id);
+  },
+});
 
 /**
  * Util to create tool definitions for a blueprint.
@@ -134,10 +216,11 @@ export class Registry {
   constructor(blueprints: Blueprint[]) {
     const seen = new Set<string>();
     blueprints.forEach((blueprint) => {
-      if (seen.has(blueprint.key)) {
-        log.warn('duplicate blueprint', { key: blueprint.key });
+      const key = getKey(blueprint);
+      if (seen.has(key)) {
+        log.warn('duplicate blueprint', { key });
       } else {
-        seen.add(blueprint.key);
+        seen.add(key);
         this._blueprints.push(blueprint);
       }
     });
@@ -150,7 +233,7 @@ export class Registry {
   }
 
   getByKey(key: string): Blueprint | undefined {
-    return this._blueprints.find((blueprint) => blueprint.key === key);
+    return this._blueprints.find((blueprint) => Obj.getMeta(blueprint).key === key);
   }
 
   query(): Blueprint[] {
@@ -161,7 +244,11 @@ export class Registry {
     return Effect.gen(this, function* () {
       const blueprints = yield* Database.runQuery(Filter.type(Blueprint));
       for (const blueprint of blueprints) {
-        const registryBlueprint = this.getByKey(blueprint.key);
+        const blueprintKey = Obj.getMeta(blueprint).key;
+        if (!blueprintKey) {
+          continue;
+        }
+        const registryBlueprint = this.getByKey(blueprintKey);
         if (!registryBlueprint) {
           continue;
         }
@@ -197,7 +284,7 @@ export const resolve = (key: string): Effect.Effect<Blueprint, NotFoundError, Re
  */
 export const upsert = (key: string): Effect.Effect<Blueprint, NotFoundError, RegistryService | Database.Service> =>
   Effect.gen(function* () {
-    const local = yield* Database.runQuery(Filter.type(Blueprint, { key }));
+    const local = yield* Database.runQuery(Filter.and(Filter.type(Blueprint), Filter.key(key)));
     if (local.length > 0) {
       return local[0];
     }

@@ -11,7 +11,7 @@ import * as Pipeable from 'effect/Pipeable';
 import * as Schema$ from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
-import { Annotation, JsonSchema, Obj, Ref, Type, type DXN, type Key } from '@dxos/echo';
+import { Annotation, JsonSchema, Migration, Obj, Ref, Type, type DXN, type Key } from '@dxos/echo';
 
 import type { NoHandlerError } from './errors';
 import type { Operation } from './index';
@@ -277,22 +277,35 @@ export type InvokeRemote = <I, O, E>(
 ) => Effect.Effect<O, E>;
 
 /**
- * Database record of an operation.
+ * Legacy persistent operation schema (v0.1.0) — `key` and `version` are stored as data properties.
+ * @deprecated Use {@link PersistentOperation} (v0.2.0) instead; the `key` and `version` now live in the object meta.
  */
-export const PersistentOperation = Schema$.Struct({
-  /**
-   * Global registry ID.
-   * NOTE: The `key` property refers to the original registry entry.
-   */
-  // TODO(burdon): Create Format type for DXN-like ids, such as this and schema type.
-  // TODO(dmaretskyi): Consider making it part of ECHO meta.
-  // TODO(dmaretskyi): Make required.
-  key: Schema$.optional(Schema$.String).annotations({
-    description: 'Unique registration key for the blueprint',
-  }),
-
+export const LegacyPersistentOperation = Schema$.Struct({
+  key: Schema$.optional(Schema$.String),
   name: Schema$.NonEmptyString,
   version: Schema$.String,
+  description: Schema$.optional(Schema$.String),
+  updated: Schema$.optional(Schema$.String),
+  source: Schema$.optional(Ref.Ref(Obj.Unknown)),
+  inputSchema: Schema$.optional(JsonSchema.JsonSchema),
+  outputSchema: Schema$.optional(JsonSchema.JsonSchema),
+  services: Schema$.optional(Schema$.Array(Schema$.String)),
+  binding: Schema$.optional(Schema$.String),
+}).pipe(
+  Type.object({
+    typename: 'org.dxos.type.function',
+    version: '0.1.0',
+  }),
+);
+export interface LegacyPersistentOperation extends Schema$.Schema.Type<typeof LegacyPersistentOperation> {}
+
+/**
+ * Database record of an operation.
+ * The registry `key` and `version` live in the object meta — access via
+ * `Obj.getMeta(record).key` and `Obj.getMeta(record).version`.
+ */
+export const PersistentOperation = Schema$.Struct({
+  name: Schema$.NonEmptyString,
 
   description: Schema$.optional(Schema$.String),
 
@@ -322,7 +335,7 @@ export const PersistentOperation = Schema$.Struct({
   //  backward compatibility with existing data and avoid requiring data migration.
   Type.object({
     typename: 'org.dxos.type.function',
-    version: '0.1.0',
+    version: '0.2.0',
   }),
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--function--regular', hue: 'blue' }),
@@ -331,13 +344,25 @@ export const PersistentOperation = Schema$.Struct({
 export interface PersistentOperation extends Schema$.Schema.Type<typeof PersistentOperation> {}
 
 /**
+ * Get the registry key for a persistent operation record (from the object meta).
+ */
+export const getKey = (record: PersistentOperation): string | undefined => Obj.getMeta(record).key;
+
+/**
+ * Get the registry version for a persistent operation record (from the object meta).
+ */
+export const getVersion = (record: PersistentOperation): string | undefined => Obj.getMeta(record).version;
+
+/**
  * Serialize an operation definition to a persistent operation record.
  */
 export const serialize = (operation: Definition.Any): PersistentOperation => {
   return Obj.make(PersistentOperation, {
-    key: operation.meta.key,
+    [Obj.Meta]: {
+      key: operation.meta.key,
+      version: operation.meta.version ?? '0.0.0',
+    },
     name: operation.meta.name ?? '',
-    version: operation.meta.version ?? '0.0.0',
     description: operation.meta.description,
     updated: undefined,
     source: undefined,
@@ -351,8 +376,9 @@ export const serialize = (operation: Definition.Any): PersistentOperation => {
  * Deserialize a persistent operation record to an operation definition.
  */
 export const deserialize = (record: PersistentOperation): Definition.Any => {
+  const meta = Obj.getMeta(record);
   // Extract deployed function ID from ECHO meta keys (matches FUNCTIONS_META_KEY in @dxos/functions).
-  const deployedId = Obj.getMeta(record).keys.find((key) => key.source === 'org.dxos.service.function')?.id;
+  const deployedId = meta.keys.find((key) => key.source === 'org.dxos.service.function')?.id;
   return make({
     input: record.inputSchema ? JsonSchema.toEffectSchema(record.inputSchema) : Schema$.Unknown,
     output: record.outputSchema ? JsonSchema.toEffectSchema(record.outputSchema) : Schema$.Unknown,
@@ -360,9 +386,9 @@ export const deserialize = (record: PersistentOperation): Definition.Any => {
     executionMode: 'async',
     types: [],
     meta: {
-      key: record.key ?? record.name,
+      key: meta.key ?? record.name,
       name: record.name,
-      version: record.version,
+      version: meta.version ?? '0.0.0',
       description: record.description,
       deployedId,
     },
@@ -374,17 +400,58 @@ export const deserialize = (record: PersistentOperation): Definition.Any => {
  */
 export const setFrom = (target: PersistentOperation, source: PersistentOperation) => {
   Obj.update(target, (target) => {
-    target.key = source.key ?? target.key;
     target.name = source.name ?? target.name;
-    target.version = source.version;
     target.description = source.description;
     target.updated = source.updated;
     // TODO(dmaretskyi): A workaround for an ECHO bug.
     target.inputSchema = source.inputSchema ? JSON.parse(JSON.stringify(source.inputSchema)) : undefined;
     target.outputSchema = source.outputSchema ? JSON.parse(JSON.stringify(source.outputSchema)) : undefined;
-    Obj.getMeta(target).keys = JSON.parse(JSON.stringify(Obj.getMeta(source).keys));
+    const sourceMeta = Obj.getMeta(source);
+    const targetMeta = Obj.getMeta(target);
+    targetMeta.key = sourceMeta.key ?? targetMeta.key;
+    targetMeta.version = sourceMeta.version;
+    targetMeta.keys = JSON.parse(JSON.stringify(sourceMeta.keys));
   });
 };
+
+/**
+ * Migration from {@link LegacyPersistentOperation} (v0.1.0) to {@link PersistentOperation} (v0.2.0).
+ * Moves `key` and `version` from the data section into the object meta.
+ */
+// The migration framework currently aliases `before` and `object` in `onMigration`, so we snapshot
+// the legacy `key` and `version` during `transform` and read them back keyed by object id.
+const _operationMigrationSnapshots = new Map<string, { key?: string; version: string }>();
+export const migration = Migration.define({
+  from: LegacyPersistentOperation,
+  to: PersistentOperation,
+  transform: async (from) => {
+    _operationMigrationSnapshots.set((from as any).id, { key: from.key, version: from.version });
+    return {
+      name: from.name,
+      description: from.description,
+      updated: from.updated,
+      source: from.source as any,
+      inputSchema: from.inputSchema,
+      outputSchema: from.outputSchema,
+      services: from.services,
+      binding: from.binding,
+    };
+  },
+  onMigration: async ({ object }) => {
+    const snapshot = _operationMigrationSnapshots.get((object as any).id);
+    if (!snapshot) {
+      return;
+    }
+    Obj.update(object, (obj) => {
+      const meta = Obj.getMeta(obj);
+      if (snapshot.key !== undefined) {
+        meta.key = snapshot.key;
+      }
+      meta.version = snapshot.version;
+    });
+    _operationMigrationSnapshots.delete((object as any).id);
+  },
+});
 
 /**
  * Options for operation invocation.

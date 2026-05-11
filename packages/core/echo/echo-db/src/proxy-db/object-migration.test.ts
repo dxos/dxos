@@ -110,6 +110,70 @@ test('incrementally migrates new objects', async () => {
   }
 });
 
+test('migration moves data key/version into meta', async () => {
+  const RegistryEntryV1 = Schema.Struct({
+    key: Schema.String,
+    name: Schema.String,
+    version: Schema.String,
+  }).pipe(Type.object({ typename: 'com.example.type.registry-entry', version: '0.1.0' }));
+
+  const RegistryEntryV2 = Schema.Struct({
+    name: Schema.String,
+  }).pipe(Type.object({ typename: 'com.example.type.registry-entry', version: '0.2.0' }));
+
+  // Capture pre-migration data keyed by object id (the `before` argument to onMigration
+  // currently aliases `object`, so we snapshot the legacy fields during `transform`).
+  const preMigrationData = new Map<string, { key: string; version: string }>();
+  const migration = defineObjectMigration({
+    from: RegistryEntryV1,
+    to: RegistryEntryV2,
+    transform: async (from) => {
+      preMigrationData.set((from as any).id, { key: from.key, version: from.version });
+      return { name: from.name };
+    },
+    onMigration: async ({ object }) => {
+      const captured = preMigrationData.get((object as any).id);
+      if (!captured) {
+        return;
+      }
+      Obj.update(object, (obj) => {
+        const meta = Obj.getMeta(obj);
+        meta.key = captured.key;
+        meta.version = captured.version;
+      });
+    },
+  });
+
+  const { db, graph } = await builder.createDatabase();
+  await graph.schemaRegistry.register([RegistryEntryV1, RegistryEntryV2]);
+
+  db.add(
+    Obj.make(RegistryEntryV1, {
+      key: 'org.example.type.foo',
+      name: 'foo',
+      version: '1.2.3',
+    }),
+  );
+  await db.flush();
+  await db.runMigrations([migration]);
+
+  const objects = await db.query(Filter.type(RegistryEntryV2)).run();
+  expect(objects).to.have.length(1);
+  expect(objects[0].name).to.eq('foo');
+  expect(Obj.getMeta(objects[0]).key).to.eq('org.example.type.foo');
+  expect(Obj.getMeta(objects[0]).version).to.eq('1.2.3');
+
+  // The migrated object should be queryable by its meta key.
+  const byKey = await db.query(Filter.and(Filter.type(RegistryEntryV2), Filter.key('org.example.type.foo'))).run();
+  expect(byKey).to.have.length(1);
+
+  // And by semver range.
+  const byRange = await db
+    .query(Filter.and(Filter.type(RegistryEntryV2), Filter.key('org.example.type.foo', { version: '^1.0.0' })))
+    .run();
+  expect(byRange).to.have.length(1);
+});
+
 test('chained migrations', async () => {
   const { db, graph } = await builder.createDatabase();
   await graph.schemaRegistry.register([ContactV1, ContactV2, ContactV3]);

@@ -87,9 +87,11 @@ export const getDeployedFunctions = async (
       return [];
     }
     const fn = Obj.make(Operation.PersistentOperation, {
-      key: versionMeta.key,
+      [Obj.Meta]: {
+        key: versionMeta.key,
+        version: latest?.version ?? '0.0.0',
+      },
       name: versionMeta.name ?? versionMeta.key ?? record.id,
-      version: latest?.version ?? '0.0.0',
       updated: record?.updated !== undefined ? new Date(record.updated).toISOString() : undefined,
       description: versionMeta.description,
       inputSchema: versionMeta.inputSchema,
@@ -103,10 +105,10 @@ export const getDeployedFunctions = async (
   if (dedupe) {
     return Function$.pipe(
       functions,
-      Array.filter((_) => _.key !== undefined),
+      Array.filter((_) => Obj.getMeta(_).key !== undefined),
       Array.sort(Order.reverse(Order.mapInput(Order.string, (_: Operation.PersistentOperation) => _.updated ?? ''))),
-      Array.dedupeWith((self, that) => self.key === that.key),
-      Array.sort(Order.mapInput(Order.string, (_: Operation.PersistentOperation) => _.key ?? '')),
+      Array.dedupeWith((self, that) => Obj.getMeta(self).key === Obj.getMeta(that).key),
+      Array.sort(Order.mapInput(Order.string, (_: Operation.PersistentOperation) => Obj.getMeta(_).key ?? '')),
     );
   } else {
     return functions;
