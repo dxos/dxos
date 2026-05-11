@@ -21,7 +21,6 @@ import { LabelAnnotation } from '@dxos/echo/internal';
  */
 export const McpServer = Schema.Struct({
   ...McpServerSpec.McpServer.fields,
-  name: Schema.String,
   enabled: Schema.optional(Schema.Boolean),
 }).pipe(
   Type.object({

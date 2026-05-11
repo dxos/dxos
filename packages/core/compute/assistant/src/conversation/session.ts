@@ -268,11 +268,11 @@ const connectMcpServers = (
   const blueprintServers: McpToolkit.McpToolkitOptions[] = pipe(
     blueprints,
     Array.flatMap((_) => _.mcpServers ?? []),
-    Array.map(({ url, protocol }) => ({ url, kind: protocol })),
+    Array.map(({ url, protocol, apiKey }) => ({ url, protocol, apiKey })),
   );
   const spaceServers: McpToolkit.McpToolkitOptions[] = spaceMcpServers.map(({ url, protocol, apiKey }) => ({
     url,
-    kind: protocol,
+    protocol,
     apiKey,
   }));
   const allServers = [...blueprintServers, ...spaceServers];
@@ -290,12 +290,12 @@ const connectMcpServers = (
           Effect.gen(function* () {
             log.warn('Failed to connect to MCP server', {
               url: error.url,
-              kind: error.kind,
+              protocol: error.protocol,
               message: error.message,
             });
             yield* Trace.write(McpServerError, {
               url: error.url,
-              kind: error.kind,
+              protocol: error.protocol,
               message: error.message,
             });
           }),
@@ -308,13 +308,13 @@ const connectMcpServers = (
             log.warn('Unexpected MCP defect', { url: options.url, message });
             yield* Trace.write(McpServerError, {
               url: options.url,
-              kind: options.kind,
+              protocol: options.protocol,
               message: `Unexpected MCP failure: ${message}`,
             });
             return yield* Effect.fail(
               new McpToolkit.McpConnectionError({
                 url: options.url,
-                kind: options.kind,
+                protocol: options.protocol,
                 message,
               }),
             );

@@ -14,10 +14,14 @@ import * as Schema from 'effect/Schema';
  * and adds instance-level fields (`name`, `enabled`) and ECHO annotations.
  */
 export const McpServer = Schema.Struct({
-  /** URL of the MCP server. */
-  url: Schema.String.annotations({ description: 'URL of the MCP server' }),
+  name: Schema.String.pipe(Schema.optional).annotations({
+    description: 'Human-readable name of the MCP server',
+  }),
 
-  /** Transport protocol. */
+  url: Schema.String.annotations({ 
+    description: 'URL of the MCP server',
+  }),
+
   protocol: Schema.Union(Schema.Literal('sse'), Schema.Literal('http')).annotations({
     description: 'Transport protocol of the MCP server',
   }),

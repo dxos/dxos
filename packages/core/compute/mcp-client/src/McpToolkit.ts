@@ -18,7 +18,7 @@ import { invariant } from '@dxos/invariant';
 
 export interface McpToolkitOptions {
   url: string;
-  kind: 'sse' | 'http';
+  protocol: 'sse' | 'http';
   apiKey?: string;
 }
 
@@ -30,7 +30,7 @@ export class McpConnectionError extends Schema.TaggedError<McpConnectionError>('
   'McpConnectionError',
   {
     url: Schema.String,
-    kind: Schema.Literal('sse', 'http'),
+    protocol: Schema.Literal('sse', 'http'),
     message: Schema.String,
   },
 ) {}
@@ -52,7 +52,7 @@ export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.Op
       catch: (cause) =>
         new McpConnectionError({
           url: options.url,
-          kind: options.kind,
+          protocol: options.protocol,
           message: `Failed to list MCP tools: ${formatCause(cause)}`,
         }),
     });
@@ -122,37 +122,37 @@ export const is405 = (error: unknown): boolean => {
  */
 const connectWithFallback = (options: McpToolkitOptions): Effect.Effect<Client, McpConnectionError> =>
   Effect.gen(function* () {
-    const fallbackKind = options.kind === 'sse' ? 'http' : 'sse';
-    const primary = yield* connectClient(options.url, options.kind, options.apiKey).pipe(Effect.either);
+    const fallbackProtocol = options.protocol === 'sse' ? 'http' : 'sse';
+    const primary = yield* connectClient(options.url, options.protocol, options.apiKey).pipe(Effect.either);
     if (primary._tag === 'Right') {
       return primary.right;
     }
     if (is405(primary.left)) {
-      const fallback = yield* connectClient(options.url, fallbackKind, options.apiKey).pipe(Effect.either);
+      const fallback = yield* connectClient(options.url, fallbackProtocol, options.apiKey).pipe(Effect.either);
       if (fallback._tag === 'Right') {
         return fallback.right;
       }
       return yield* Effect.fail(
         new McpConnectionError({
           url: options.url,
-          kind: fallbackKind,
-          message: `Failed to connect via ${fallbackKind} after 405 fallback: ${formatCause(fallback.left)}`,
+          protocol: fallbackProtocol,
+          message: `Failed to connect via ${fallbackProtocol} after 405 fallback: ${formatCause(fallback.left)}`,
         }),
       );
     }
     return yield* Effect.fail(
       new McpConnectionError({
         url: options.url,
-        kind: options.kind,
-        message: `Failed to connect via ${options.kind}: ${formatCause(primary.left)}`,
+        protocol: options.protocol,
+        message: `Failed to connect via ${options.protocol}: ${formatCause(primary.left)}`,
       }),
     );
   });
 
-const connectClient = (url: string, kind: McpToolkitOptions['kind'], apiKey?: string) =>
+const connectClient = (url: string, protocol: McpToolkitOptions['protocol'], apiKey?: string) =>
   Effect.tryPromise(() => {
     const client = new Client(CLIENT_INFO);
-    const transport = createTransport(url, kind, apiKey);
+    const transport = createTransport(url, protocol, apiKey);
     return client.connect(transport).then(() => client);
   });
 
@@ -172,23 +172,23 @@ const formatCause = (error: unknown): string => {
 };
 
 /**
- * Creates a transport for the given MCP server URL and kind.
+ * Creates a transport for the given MCP server URL and protocol.
  */
 const createTransport = (
   url: string,
-  kind: McpToolkitOptions['kind'],
+  protocol: McpToolkitOptions['protocol'],
   apiKey?: string,
 ): SSEClientTransport | StreamableHTTPClientTransport => {
   const urlObj = new URL(url);
   const requestInit: RequestInit | undefined = apiKey ? { headers: { Authorization: `Bearer ${apiKey}` } } : undefined;
-  switch (kind) {
+  switch (protocol) {
     case 'sse':
       return new SSEClientTransport(urlObj, { requestInit });
     case 'http':
       return new StreamableHTTPClientTransport(urlObj, { requestInit });
     default: {
-      const _exhaustive: never = kind;
-      return invariant(false, `Unsupported MCP transport kind: ${_exhaustive}`) as never;
+      const _exhaustive: never = protocol;
+      return invariant(false, `Unsupported MCP transport protocol: ${_exhaustive}`) as never;
     }
   }
 };
