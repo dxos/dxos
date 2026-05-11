@@ -22,7 +22,7 @@ import { ScrollContainer } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { ProcessTree, ProcessTreeProps } from '#components';
 
@@ -38,9 +38,9 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     const runtime = useComputeRuntimeService(Process.ProcessMonitorService, space.id);
     const processes = useAtomValue(runtime?.processTreeAtom ?? atomEmpty);
 
-    const [selectedCommit, setSelectedCommit] = useState<Commit | null>(null);
-    const handleCommitClick = useCallback(
-      (commit: Commit | null) => {
+    const [selectedCommit, setSelectedCommit] = useState<Commit | undefined>();
+    const handleCommitSelect = useCallback(
+      (commit: Commit | undefined) => {
         setSelectedCommit(commit);
         if (commit?.link) {
           const dxn = DXN.tryParse(commit.link)?.asEchoDXN();
@@ -70,8 +70,11 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     return (
       <div
         {...composableProps(props, {
-          classNames: 'h-full grid grid-rows-[minmax(0,4lh)_1fr_minmax(0,206px)] divide-y divide-separator',
           ...attentionAttrs,
+          classNames: mx(
+            'h-full grid divide-y divide-separator',
+            selectedCommit ? 'grid-rows-[minmax(0,4lh)_1fr_minmax(0,206px)]' : 'grid-rows-[minmax(0,4lh)_1fr]',
+          ),
         })}
         ref={forwardedRef}
       >
@@ -83,17 +86,17 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
 
         <ScrollContainer.Root pin>
           <ScrollContainer.Content thin>
+            <ScrollContainer.Fade />
             <ScrollContainer.Viewport>
               <Timeline
                 compact
                 commits={commits}
                 branches={branches}
                 currentBranch={currentBranch}
-                onCommitClick={handleCommitClick}
+                onSelect={handleCommitSelect}
               />
             </ScrollContainer.Viewport>
             <ScrollContainer.ScrollDownButton />
-            <ScrollContainer.Fade />
           </ScrollContainer.Content>
         </ScrollContainer.Root>
 
