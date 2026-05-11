@@ -8,6 +8,7 @@ import type * as DataProto from '@dxos/protocols/proto/dxos/echo/service';
 
 import { type EdgeFunctionEnv } from './edge';
 import type * as FeedProtocol from './FeedProtocol';
+import type * as TraceProtocol from './TraceProtocol';
 
 //
 // Function protocol definition
@@ -59,7 +60,7 @@ export type Handler = (opts: { data: unknown; context: Context }) => Promise<unk
  */
 export interface Context {
   services: {
-    /**
+  /**
      * Query service.
      * Available if the function is invoked in context of a space.
      */
@@ -88,6 +89,8 @@ export interface Context {
      * Available if the function is invoked in context of a space.
      */
     functionsService?: EdgeFunctionEnv.FunctionsService;
+
+    traceService?: TraceProtocol.TraceService;
   };
 
   /**
