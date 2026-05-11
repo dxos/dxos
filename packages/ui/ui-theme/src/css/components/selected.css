@@ -8,7 +8,7 @@
 @layer dx-components {
   /* Pure visual affordance, no ARIA pair. Combine with dx-selected or dx-current. */
   .dx-hover {
-    @apply cursor-pointer hover:bg-highlight-surface! hover:text-highlight-surface-text!;
+    @apply cursor-pointer hover:bg-highlight-surface-hover! hover:text-highlight-surface-text!;
   }
 
   /* Pairs with Radix-managed `data-highlighted`. Don't set the attribute manually. */
