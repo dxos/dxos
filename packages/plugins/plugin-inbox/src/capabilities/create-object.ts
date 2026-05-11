@@ -10,7 +10,7 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { SpaceCapabilities } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
-import { InboxOperation } from '#operations';
+import { InboxOperation } from '#types';
 import { Calendar, Mailbox } from '#types';
 
 export default Capability.makeModule(

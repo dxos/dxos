@@ -3,6 +3,7 @@
 //
 
 export * as Discord from './Discord';
-export * from './capabilities';
-export * from './events';
+export * as DiscordCapabilities from './DiscordCapabilities';
+export * as DiscordEvents from './DiscordEvents';
+export * as DiscordOperation from './DiscordOperation';
 export * as Settings from './Settings';

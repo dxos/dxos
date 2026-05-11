@@ -10,11 +10,10 @@ import { Obj } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 
 import { getMailboxMessagePath } from '../paths';
-import { DraftMessage } from '../types';
+import { DraftMessage, InboxOperation } from '../types';
 import { createDraftMessage } from '../util';
-import { DraftEmailAndOpen } from './definitions';
 
-const handler: Operation.WithHandler<typeof DraftEmailAndOpen> = DraftEmailAndOpen.pipe(
+const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = InboxOperation.DraftEmailAndOpen.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ db, mode, message, subject, body, mailbox }) {
       const props = createDraftMessage({ mode, message, subject, body, mailbox });

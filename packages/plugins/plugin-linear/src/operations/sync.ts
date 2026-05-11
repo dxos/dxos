@@ -17,7 +17,7 @@ import { meta } from '#meta';
 import { LINEAR_SOURCE } from '../constants';
 import { formatLinearSyncFailure } from '../errors';
 import { LinearApi } from '../services';
-import { type SyncOptions, SyncLinearTeams } from './definitions';
+import { LinearOperation } from '../types';
 
 //
 // Direction: pull-only.
@@ -75,7 +75,7 @@ const findByForeignId = <T>(schema: Schema.Schema<any, any>, id: string) =>
     return results.length > 0 ? (results[0] as T) : undefined;
   });
 
-const sinceFromOptions = (options: SyncOptions | undefined): string | undefined => {
+const sinceFromOptions = (options: LinearOperation.SyncOptions | undefined): string | undefined => {
   const days = options?.maxDaysBack;
   if (typeof days !== 'number' || days <= 0) {
     return undefined;
@@ -156,7 +156,7 @@ const upsertTask = Effect.fn('upsertTask')(function* (issue: LinearApi.Issue, pr
 // Main handler
 //
 
-const handler: Operation.WithHandler<typeof SyncLinearTeams> = SyncLinearTeams.pipe(
+const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = LinearOperation.SyncLinearTeams.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ integration, team: teamRef }) {
       // TODO(wittjosiah): The operation should depend on `Database.Service` once
@@ -192,7 +192,7 @@ const handler: Operation.WithHandler<typeof SyncLinearTeams> = SyncLinearTeams.p
             entry: (typeof integrationObj.targets)[number];
             remoteTeam: LinearApi.Team;
             remoteId: string;
-            options: SyncOptions | undefined;
+            options: LinearOperation.SyncOptions | undefined;
           };
           const targetEntries: TargetEntry[] = [];
           /** Targets with a foreignId the integration token can't resolve — surfaced via lastError. */
@@ -217,7 +217,7 @@ const handler: Operation.WithHandler<typeof SyncLinearTeams> = SyncLinearTeams.p
               entry: target,
               remoteTeam,
               remoteId,
-              options: (target.options ?? undefined) as SyncOptions | undefined,
+              options: (target.options ?? undefined) as LinearOperation.SyncOptions | undefined,
             });
           }
 

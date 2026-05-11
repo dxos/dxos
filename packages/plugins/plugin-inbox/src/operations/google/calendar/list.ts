@@ -14,7 +14,7 @@ import { withAuthorization } from '@dxos/functions';
 
 import { GoogleCalendar } from '../../../apis';
 import { AccessTokenNotPopulatedError, IntegrationDatabaseMissingError } from '../../../errors';
-import { GetGoogleCalendars } from '../../definitions';
+import { InboxOperation } from '../../../types';
 
 const CALENDAR_LIST_URL =
   'https://www.googleapis.com/calendar/v3/users/me/calendarList?fields=items(id,summary,description,primary)';
@@ -35,7 +35,7 @@ const listGoogleCalendars = (token: string) =>
     return body.items ?? [];
   });
 
-const handler: Operation.WithHandler<typeof GetGoogleCalendars> = GetGoogleCalendars.pipe(
+const handler: Operation.WithHandler<typeof InboxOperation.GetGoogleCalendars> = InboxOperation.GetGoogleCalendars.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ integration }) {
       const target = integration.target;

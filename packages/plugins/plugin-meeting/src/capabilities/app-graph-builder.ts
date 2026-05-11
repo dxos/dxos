@@ -21,7 +21,7 @@ import { linkedSegment } from '@dxos/react-ui-attention';
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
-import { MeetingOperation } from '#operations';
+import { MeetingOperation } from '#types';
 import { Meeting, MeetingCapabilities } from '#types';
 
 /**

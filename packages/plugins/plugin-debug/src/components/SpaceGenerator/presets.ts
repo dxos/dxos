@@ -9,8 +9,8 @@ import { Routine, Trigger, Operation } from '@dxos/compute';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { InboxOperation } from '@dxos/plugin-inbox/operations';
-import { Mailbox } from '@dxos/plugin-inbox/types';
+import { InboxOperation } from '@dxos/plugin-inbox';
+import { Mailbox } from '@dxos/plugin-inbox';
 import { Markdown } from '@dxos/plugin-markdown';
 import { type Space } from '@dxos/react-client/echo';
 import {

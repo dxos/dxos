@@ -18,13 +18,13 @@ import { invariant } from '@dxos/invariant';
 import { AssistantBlueprint } from '@dxos/plugin-assistant';
 import { translations } from '@dxos/plugin-assistant/translations';
 import { ChessBlueprint, ChessFunctions } from '@dxos/plugin-chess/blueprints';
-import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
-import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
+import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox';
+import { Calendar, Mailbox } from '@dxos/plugin-inbox';
 import { MapBlueprint } from '@dxos/plugin-map/blueprints';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
 import { ThreadBlueprint } from '@dxos/plugin-thread/blueprints';
-import { TranscriptionBlueprint } from '@dxos/plugin-transcription/blueprints';
+import { TranscriptionBlueprint } from '@dxos/plugin-transcription';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text, ViewModel } from '@dxos/schema';
 import {

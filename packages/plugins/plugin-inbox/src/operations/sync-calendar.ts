@@ -15,8 +15,7 @@ import { Integration } from '@dxos/plugin-integration/types';
 
 import { meta } from '#meta';
 
-import { type Calendar } from '../types';
-import { SyncCalendar } from './definitions';
+import { type Calendar, InboxOperation } from '../types';
 
 const dispatch = (integration: Integration.Integration, calendar: Calendar.Calendar | undefined) =>
   Effect.gen(function* () {
@@ -46,7 +45,7 @@ const dispatch = (integration: Integration.Integration, calendar: Calendar.Calen
     );
   });
 
-const handler: Operation.WithHandler<typeof SyncCalendar> = SyncCalendar.pipe(
+const handler: Operation.WithHandler<typeof InboxOperation.SyncCalendar> = InboxOperation.SyncCalendar.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const integrationObj = yield* Database.load(input.integration).pipe(

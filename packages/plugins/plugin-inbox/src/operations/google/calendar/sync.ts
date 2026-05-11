@@ -25,8 +25,8 @@ import { GoogleCalendar } from '../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
 import { CalendarForeignKeyWrongTypeError } from '../../../errors';
 import { InboxResolver, GoogleCredentials } from '../../../services';
+import { InboxOperation } from '../../../types';
 import { Calendar } from '../../../types';
-import { GoogleCalendarSync } from '../../definitions';
 import { mapEvent } from './mapper';
 
 type BaseSyncProps<T = unknown> = {
@@ -184,7 +184,7 @@ const syncOneCalendar = (
     return queueEvents.length;
   });
 
-export default GoogleCalendarSync.pipe(
+export default InboxOperation.GoogleCalendarSync.pipe(
   Operation.withHandler(
     ({
       integration: integrationRef,

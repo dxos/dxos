@@ -1,4 +1,8 @@
+//
 // Copyright 2025 DXOS.org
+//
+
+// @import-as-namespace
 
 import * as Schema from 'effect/Schema';
 
@@ -8,7 +12,7 @@ import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { Meeting } from '../types';
+import { Meeting } from './index';
 
 const MEETING_OPERATION = `${meta.id}.operation`;
 

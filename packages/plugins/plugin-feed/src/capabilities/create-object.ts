@@ -11,7 +11,7 @@ import { Ref } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { SpaceCapabilities } from '@dxos/plugin-space/types';
 
-import { FeedOperation } from '#operations';
+import { FeedOperation } from '#types';
 import { Magazine, Subscription } from '#types';
 
 /** Starter feed seeded into every newly created Magazine. */

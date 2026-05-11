@@ -15,7 +15,7 @@ import { Row, RowList } from '@dxos/react-ui-list';
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
-import { MeetingOperation } from '#operations';
+import { MeetingOperation } from '#types';
 import { Meeting } from '#types';
 
 // TODO(wittjosiah): Add a story which renders meetings alongside call?

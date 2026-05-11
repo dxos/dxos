@@ -4,8 +4,6 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * as FeedOperation from './definitions';
-
 export const FeedOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./add-post-to-magazine'),
   () => import('./curate-magazine'),

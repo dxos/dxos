@@ -18,7 +18,7 @@ import { meta } from '#meta';
 import { TRELLO_PIVOT_FIELD, TRELLO_SOURCE } from '../constants';
 import { IntegrationDatabaseMissingError, formatTrelloSyncFailure } from '../errors';
 import { TrelloApi } from '../services';
-import { SyncTrelloBoard } from './definitions';
+import { TrelloOperation } from '../types';
 
 type TrelloBoard = TrelloApi.TrelloBoard;
 type TrelloCard = TrelloApi.TrelloCard;
@@ -552,7 +552,7 @@ export const findOrCreateKanbanForBoard: (board: TrelloBoard) => Effect.Effect<K
  */
 const TARGET_CONCURRENCY = 3;
 
-const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.pipe(
+const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = TrelloOperation.SyncTrelloBoard.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ integration, kanban: kanbanRef }) {
       // TODO(wittjosiah): the operation should just depend on `Database.Service`

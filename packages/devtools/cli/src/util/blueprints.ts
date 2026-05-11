@@ -14,9 +14,9 @@ import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
 import { ChessHandlers } from '@dxos/plugin-chess/operations';
 import { Chess } from '@dxos/plugin-chess/types';
 import { Game } from '@dxos/plugin-game/types';
-import { CalendarBlueprint, InboxBlueprint, InboxSendBlueprint } from '@dxos/plugin-inbox/blueprints';
-import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/operations';
-import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
+import { CalendarBlueprint, InboxBlueprint, InboxSendBlueprint } from '@dxos/plugin-inbox';
+import { InboxOperationHandlerSet } from '@dxos/plugin-inbox';
+import { Calendar, Mailbox } from '@dxos/plugin-inbox';
 import { KanbanBlueprint } from '@dxos/plugin-kanban';
 import { KanbanOperationHandlerSet } from '@dxos/plugin-kanban';
 import { MapBlueprint } from '@dxos/plugin-map/blueprints';
@@ -30,8 +30,8 @@ import { TableBlueprint } from '@dxos/plugin-table';
 import { TableOperationHandlerSet } from '@dxos/plugin-table';
 import { ThreadBlueprint } from '@dxos/plugin-thread/blueprints';
 import { ThreadOperationHandlerSet } from '@dxos/plugin-thread/operations';
-import { TranscriptionBlueprint } from '@dxos/plugin-transcription/blueprints';
-import { TranscriptionOperationHandlerSet } from '@dxos/plugin-transcription/operations';
+import { TranscriptionBlueprint } from '@dxos/plugin-transcription';
+import { TranscriptionOperationHandlerSet } from '@dxos/plugin-transcription';
 import { DataTypes } from '@dxos/schema';
 import {
   AnchoredTo,

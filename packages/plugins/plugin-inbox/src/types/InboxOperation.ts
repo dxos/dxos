@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
@@ -13,7 +15,7 @@ import { Actor, Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { Calendar, Mailbox } from '../types';
+import { Calendar, Mailbox } from './index';
 
 const INBOX_OPERATION = `${meta.id}.operation`;
 

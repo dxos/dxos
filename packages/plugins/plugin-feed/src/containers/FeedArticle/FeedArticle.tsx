@@ -12,7 +12,7 @@ import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { PostStack, type PostStackAction } from '#components';
 import { meta } from '#meta';
-import { FeedOperation } from '#operations';
+import { FeedOperation } from '#types';
 import { Subscription } from '#types';
 
 export type FeedArticleProps = AppSurface.ObjectArticleProps<Subscription.Feed>;

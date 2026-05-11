@@ -16,7 +16,7 @@ import { Integration } from '@dxos/plugin-integration/types';
 import { meta } from '#meta';
 
 import { IntegrationDatabaseMissingError } from '../errors';
-import { SyncContacts } from './definitions';
+import { InboxOperation } from '../types';
 
 const dispatch = (integration: Integration.Integration) =>
   Effect.gen(function* () {
@@ -34,7 +34,7 @@ const dispatch = (integration: Integration.Integration) =>
     );
   });
 
-const handler: Operation.WithHandler<typeof SyncContacts> = SyncContacts.pipe(
+const handler: Operation.WithHandler<typeof InboxOperation.SyncContacts> = InboxOperation.SyncContacts.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const target = input.integration.target;

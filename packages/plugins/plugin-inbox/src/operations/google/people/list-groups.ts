@@ -14,7 +14,7 @@ import { withAuthorization } from '@dxos/functions';
 
 import { GooglePeople } from '../../../apis';
 import { AccessTokenNotPopulatedError, IntegrationDatabaseMissingError } from '../../../errors';
-import { GetGoogleContactGroups } from '../../definitions';
+import { InboxOperation } from '../../../types';
 
 const CONTACT_GROUPS_BASE_URL = 'https://people.googleapis.com/v1/contactGroups';
 
@@ -42,37 +42,38 @@ const listAllContactGroups = (token: string) =>
     return groups;
   });
 
-const handler: Operation.WithHandler<typeof GetGoogleContactGroups> = GetGoogleContactGroups.pipe(
-  Operation.withHandler(
-    Effect.fn(function* ({ integration }) {
-      const target = integration.target;
-      const db = target ? Obj.getDatabase(target) : undefined;
-      if (!db) {
-        return yield* Effect.fail(new IntegrationDatabaseMissingError());
-      }
-
-      return yield* Effect.gen(function* () {
-        const integrationObj = yield* Database.load(integration);
-        const accessToken = yield* Database.load(integrationObj.accessToken);
-        if (!accessToken.token) {
-          return yield* Effect.fail(new AccessTokenNotPopulatedError());
+const handler: Operation.WithHandler<typeof InboxOperation.GetGoogleContactGroups> =
+  InboxOperation.GetGoogleContactGroups.pipe(
+    Operation.withHandler(
+      Effect.fn(function* ({ integration }) {
+        const target = integration.target;
+        const db = target ? Obj.getDatabase(target) : undefined;
+        if (!db) {
+          return yield* Effect.fail(new IntegrationDatabaseMissingError());
         }
 
-        const groups = yield* listAllContactGroups(accessToken.token).pipe(Effect.provide(FetchHttpClient.layer));
+        return yield* Effect.gen(function* () {
+          const integrationObj = yield* Database.load(integration);
+          const accessToken = yield* Database.load(integrationObj.accessToken);
+          if (!accessToken.token) {
+            return yield* Effect.fail(new AccessTokenNotPopulatedError());
+          }
 
-        const targets = groups.map((group) => ({
-          id: group.resourceName,
-          name: group.formattedName ?? group.name,
-          description:
-            group.memberCount !== undefined
-              ? `${group.memberCount} contact${group.memberCount === 1 ? '' : 's'}`
-              : undefined,
-        }));
+          const groups = yield* listAllContactGroups(accessToken.token).pipe(Effect.provide(FetchHttpClient.layer));
 
-        return { targets };
-      }).pipe(Effect.provide(Database.layer(db)));
-    }),
-  ),
-);
+          const targets = groups.map((group) => ({
+            id: group.resourceName,
+            name: group.formattedName ?? group.name,
+            description:
+              group.memberCount !== undefined
+                ? `${group.memberCount} contact${group.memberCount === 1 ? '' : 's'}`
+                : undefined,
+          }));
+
+          return { targets };
+        }).pipe(Effect.provide(Database.layer(db)));
+      }),
+    ),
+  );
 
 export default handler;

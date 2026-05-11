@@ -21,7 +21,7 @@ import { type Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
-import { InboxOperation } from '#operations';
+import { InboxOperation } from '#types';
 import { Calendar, DraftMessage, Mailbox } from '#types';
 
 import {

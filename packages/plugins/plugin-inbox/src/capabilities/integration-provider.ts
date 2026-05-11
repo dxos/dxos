@@ -23,14 +23,7 @@ import {
   GOOGLE_CONTACTS_PROVIDER_ID,
   GOOGLE_INTEGRATION_SOURCE,
 } from '../constants';
-import {
-  GetGoogleCalendars,
-  GetGoogleContactGroups,
-  SyncCalendar,
-  SyncContacts,
-  SyncMailbox,
-} from '../operations/definitions';
-import { CalendarSyncOptions, Mailbox, SyncOptions } from '../types';
+import { CalendarSyncOptions, InboxOperation, Mailbox, SyncOptions } from '../types';
 
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),
@@ -129,7 +122,7 @@ export default Capability.makeModule(
           ],
         },
         optionsSchema: SyncOptions,
-        sync: SyncMailbox,
+        sync: InboxOperation.SyncMailbox,
         onTokenCreated: gmailOnTokenCreated,
       },
       {
@@ -144,8 +137,8 @@ export default Capability.makeModule(
           ],
         },
         optionsSchema: CalendarSyncOptions,
-        getSyncTargets: GetGoogleCalendars,
-        sync: SyncCalendar,
+        getSyncTargets: InboxOperation.GetGoogleCalendars,
+        sync: InboxOperation.SyncCalendar,
         onTokenCreated: calendarOnTokenCreated,
       },
       {
@@ -159,8 +152,8 @@ export default Capability.makeModule(
             'https://www.googleapis.com/auth/userinfo.email',
           ],
         },
-        getSyncTargets: GetGoogleContactGroups,
-        sync: SyncContacts,
+        getSyncTargets: InboxOperation.GetGoogleContactGroups,
+        sync: InboxOperation.SyncContacts,
         onTokenCreated: calendarOnTokenCreated,
       },
     ]);

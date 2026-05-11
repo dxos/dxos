@@ -18,7 +18,7 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { FeedOperation } from '#operations';
+import { FeedOperation } from '#types';
 import { Magazine, Subscription } from '#types';
 
 export default Capability.makeModule(

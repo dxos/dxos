@@ -14,9 +14,8 @@ import {
 import { OAuthProvider } from '@dxos/protocols';
 
 import { GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants';
-import { GitHubOperation } from '../operations';
-import { SyncOptions } from '../operations/definitions';
 import { GitHubApi } from '../services';
+import { GitHubOperation } from '../types';
 
 /**
  * Service-specific token-created hook for GitHub.
@@ -65,7 +64,7 @@ export default Capability.makeModule(
         },
         getSyncTargets: GitHubOperation.GetGitHubRepositories,
         sync: GitHubOperation.SyncGitHubRepositories,
-        optionsSchema: SyncOptions,
+        optionsSchema: GitHubOperation.SyncOptions,
         onTokenCreated,
       },
     ]);

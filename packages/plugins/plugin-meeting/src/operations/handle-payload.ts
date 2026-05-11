@@ -9,10 +9,9 @@ import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { Filter, Query, parseId } from '@dxos/react-client/echo';
 import { type Message } from '@dxos/types';
 
-import { Meeting, MeetingCapabilities } from '../types';
-import { HandlePayload } from './definitions';
+import { Meeting, MeetingCapabilities, MeetingOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof HandlePayload> = HandlePayload.pipe(
+const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = MeetingOperation.HandlePayload.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ meetingId, transcriptDxn, transcriptionEnabled }) {
       const client = yield* Capability.get(ClientCapabilities.Client);

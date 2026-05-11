@@ -14,9 +14,8 @@ import {
 import { OAuthProvider } from '@dxos/protocols';
 
 import { LINEAR_PROVIDER_ID, LINEAR_SOURCE } from '../constants';
-import { LinearOperation } from '../operations';
-import { SyncOptions } from '../operations/definitions';
 import { LinearApi } from '../services';
+import { LinearOperation } from '../types';
 
 /**
  * Service-specific token-created hook for Linear.
@@ -63,7 +62,7 @@ export default Capability.makeModule(
         },
         getSyncTargets: LinearOperation.GetLinearTeams,
         sync: LinearOperation.SyncLinearTeams,
-        optionsSchema: SyncOptions,
+        optionsSchema: LinearOperation.SyncOptions,
         onTokenCreated,
       },
     ]);
