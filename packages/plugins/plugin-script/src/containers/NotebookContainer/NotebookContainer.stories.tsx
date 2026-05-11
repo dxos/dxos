@@ -11,7 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
-import { AssistantPlugin } from '@dxos/plugin-assistant';
+import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';

@@ -14,7 +14,7 @@ import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { SpaceCapabilities } from '@dxos/plugin-space/types';
 
-import { AssistantOperation } from '#operations';
+import { AssistantOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -19,7 +19,7 @@ import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Message } from '@dxos/types';
 
-import { AssistantPlugin } from '../cli';
+import { AssistantPlugin } from '#plugin';
 
 ObjectId.dangerouslyDisableRandomness();
 

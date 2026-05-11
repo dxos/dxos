@@ -20,8 +20,7 @@ import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
-import { AssistantOperation } from '#operations';
-import { AssistantCapabilities } from '#types';
+import { AssistantCapabilities, AssistantOperation } from '#types';
 
 /** Match ECHO objects that are NOT chats. */
 const whenNonChatObject = NodeMatcher.whenAll(

@@ -22,9 +22,9 @@ import { IconButton, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { Timeline } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { AssistantPlugin } from '../../cli';
 import { buildExecutionGraph } from './execution-graph';
 import { PLAYBACK_INTERVAL_MS, STEP_STORAGE_KEY, SimulatedAgent, useLocalStorageNumber } from './testing';
 import { TracePanel } from './TracePanel';

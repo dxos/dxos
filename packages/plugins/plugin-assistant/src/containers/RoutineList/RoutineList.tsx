@@ -13,7 +13,7 @@ import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton } from '@dxos/react-ui';
 
-import { AssistantOperation } from '#operations';
+import { AssistantOperation } from '#types';
 
 export type RoutineListProps = AppSurface.ObjectSectionProps<Obj.Unknown>;
 

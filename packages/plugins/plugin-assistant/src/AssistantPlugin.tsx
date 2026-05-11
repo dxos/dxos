@@ -35,9 +35,8 @@ import {
   Toolkit,
 } from '#capabilities';
 import { meta } from '#meta';
-import { AssistantOperation } from '#operations';
 import { translations } from '#translations';
-import { AssistantEvents } from '#types';
+import { AssistantEvents, AssistantOperation } from '#types';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

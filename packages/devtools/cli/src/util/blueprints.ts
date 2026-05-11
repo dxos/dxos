@@ -9,7 +9,7 @@ import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { DatabaseBlueprint, DatabaseHandlers } from '@dxos/assistant-toolkit';
 import { Blueprint, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Tag, type Type } from '@dxos/echo';
-import { AssistantBlueprint } from '@dxos/plugin-assistant/blueprints';
+import { AssistantBlueprint } from '@dxos/plugin-assistant';
 import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
 import { ChessHandlers } from '@dxos/plugin-chess/operations';
 import { Chess } from '@dxos/plugin-chess/types';

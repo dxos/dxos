@@ -8,9 +8,9 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 
-import { ResolveNavigationTargets } from './definitions';
+import { AssistantOperation } from '#types';
 
-export default ResolveNavigationTargets.pipe(
+export default AssistantOperation.ResolveNavigationTargets.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ query }) {
       const capabilities = yield* Capability.Service;
