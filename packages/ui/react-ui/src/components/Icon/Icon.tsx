@@ -20,7 +20,7 @@ export type IconProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.s
  * The Icon's size can be set directly or inherited from the `--dx-icon-size` CSS variable.
  */
 export const Icon = memo(
-  forwardRef<SVGSVGElement, IconProps>(({ classNames, icon, size, synchronized, ...props }, forwardedRef) => {
+  forwardRef<SVGSVGElement, IconProps>(({ classNames, icon, size, synchronized, style, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const spinDelay = useMemo(() => (synchronized ? `${-(Date.now() % 1_000)}ms` : undefined), [synchronized]);
     const href = useIconHref(icon);
@@ -28,7 +28,7 @@ export const Icon = memo(
     return (
       <svg
         {...props}
-        style={{ animationDelay: spinDelay }}
+        style={{ ...style, animationDelay: spinDelay }}
         className={tx('icon.root', { size }, classNames)}
         ref={forwardedRef}
       >
