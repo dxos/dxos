@@ -76,17 +76,27 @@ export class CollectionSynchronizer extends Resource {
     this._activeCollections.add(collectionId);
 
     log('setLocalCollectionState', { collectionId, state });
-    this._getOrCreatePerCollectionState(collectionId).localState = state;
+    const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
+    perCollectionState.localState = state;
 
     for (const peerId of this._connectedPeers) {
       this._diffCollectionState(collectionId, peerId);
     }
 
     queueMicrotask(async () => {
-      if (!this._ctx.disposed && this._activeCollections.has(collectionId)) {
-        this._refreshInterestedPeers(collectionId);
-        this.refreshCollection(collectionId);
+      if (this._ctx.disposed || !this._activeCollections.has(collectionId)) {
+        return;
       }
+      this._refreshInterestedPeers(collectionId);
+      // Push our state to interested peers. Without this, peers that queried us before we
+      // had state get a silent drop in `onCollectionStateQueried` and would wait up to
+      // {@link POLL_INTERVAL} + {@link MIN_QUERY_INTERVAL} for their polling loop to recover.
+      for (const peerId of perCollectionState.interestedPeers) {
+        this._sendCollectionState(collectionId, peerId, state);
+      }
+      // Pull peers' state. Routed through `refreshCollection` so {@link MIN_QUERY_INTERVAL}
+      // suppresses queries that may have just been issued by `onConnectionOpen`.
+      this.refreshCollection(collectionId);
     });
   }
 
@@ -167,6 +177,9 @@ export class CollectionSynchronizer extends Resource {
 
   /**
    * Callback when a peer queries the state of a collection.
+   *
+   * If we have no local state yet we silently drop the query; the peer will receive our
+   * state via the broadcast in {@link setLocalCollectionState} once we set it.
    */
   onCollectionStateQueried(collectionId: string, peerId: PeerId): void {
     const perCollectionState = this._getOrCreatePerCollectionState(collectionId);

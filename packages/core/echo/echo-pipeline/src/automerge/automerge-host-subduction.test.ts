@@ -110,7 +110,7 @@ describe('AutomergeHost with Subduction', () => {
     }
   });
 
-  test('loads remote document over replication network', { timeout: 60_000 }, async ({ expect }) => {
+  test('loads remote document over replication network', { timeout: 5_000 }, async ({ expect }) => {
     const level1 = await createLevel();
     const host1 = await setupAutomergeHost({ level: level1 });
 
@@ -125,7 +125,7 @@ describe('AutomergeHost with Subduction', () => {
       await host1.addReplicator(Context.default(), await network.createReplicator());
       await host2.addReplicator(Context.default(), await network.createReplicator());
 
-      const loaded = await host1.loadDoc<{ text: string }>(Context.default(), handle.documentId, { timeout: 45_000 });
+      const loaded = await host1.loadDoc<{ text: string }>(Context.default(), handle.documentId, { timeout: 1_000 });
       expect(loaded.doc()!.text).toEqual('Hello from Subduction');
     } finally {
       await host1.close();
@@ -134,7 +134,7 @@ describe('AutomergeHost with Subduction', () => {
     }
   });
 
-  test('collection synchronization', { timeout: 60_000 }, async ({ expect }) => {
+  test('collection synchronization', { timeout: 5_000 }, async ({ expect }) => {
     const NUM_DOCUMENTS = 10;
 
     const level1 = await createLevel();
@@ -161,7 +161,7 @@ describe('AutomergeHost with Subduction', () => {
 
       for (const documentId of documentIds) {
         await expect
-          .poll(() => host1.getHeads([documentId]), { timeout: 45_000 })
+          .poll(() => host1.getHeads([documentId]), { timeout: 1_000 })
           .toEqual(await host2.getHeads([documentId]));
       }
     } finally {
@@ -171,7 +171,7 @@ describe('AutomergeHost with Subduction', () => {
     }
   });
 
-  test('collection synchronization is bidirectional', { timeout: 120_000 }, async ({ expect }) => {
+  test('collection synchronization is bidirectional', { timeout: 10_000 }, async ({ expect }) => {
     const host1DocumentIds: DocumentId[] = [];
     const host2DocumentIds: DocumentId[] = [];
 
@@ -203,7 +203,7 @@ describe('AutomergeHost with Subduction', () => {
 
       for (const documentId of host1DocumentIds) {
         await expect
-          .poll(() => host2.getHeads([documentId]), { timeout: 45_000 })
+          .poll(() => host2.getHeads([documentId]), { timeout: 1_000 })
           .toEqual(await host1.getHeads([documentId]));
       }
 
@@ -213,7 +213,7 @@ describe('AutomergeHost with Subduction', () => {
 
       for (const documentId of host2DocumentIds) {
         await expect
-          .poll(() => host1.getHeads([documentId]), { timeout: 45_000 })
+          .poll(() => host1.getHeads([documentId]), { timeout: 1_000 })
           .toEqual(await host2.getHeads([documentId]));
       }
     } finally {

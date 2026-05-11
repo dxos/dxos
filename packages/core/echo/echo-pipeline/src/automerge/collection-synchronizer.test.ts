@@ -72,6 +72,38 @@ describe('CollectionSynchronizer', () => {
     expect(peer2.getRemoteCollectionStates(collectionId).get(peerId1)).to.deep.equal(STATE_1);
   });
 
+  test('pushes state to all interested peers on setLocalCollectionState', async () => {
+    // Push covers peers that queried us before we had state — `onCollectionStateQueried`
+    // silently drops that case; without this push the asker would wait up to POLL_INTERVAL
+    // for its polling loop to retry (further gated by MIN_QUERY_INTERVAL).
+    const peerId1 = 'peer1' as PeerId;
+    const peerId2 = 'peer2' as PeerId;
+    const collectionId = 'collection-test';
+
+    const sentStates: Array<{ peerId: PeerId; state: CollectionState }> = [];
+    const peer = await new CollectionSynchronizer({
+      queryCollectionState: () => {},
+      sendCollectionState: (_collectionId, peerId, state) => {
+        sentStates.push({ peerId, state });
+      },
+      shouldSyncCollection: () => true,
+    }).open();
+    onTestFinished(async () => {
+      await peer.close();
+    });
+
+    peer.onConnectionOpen(peerId1);
+    peer.onConnectionOpen(peerId2);
+
+    peer.setLocalCollectionState(collectionId, STATE_1);
+    // Drain microtasks scheduled by `setLocalCollectionState` and `onConnectionOpen`.
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(sentStates.map((m) => m.peerId).sort()).to.deep.equal([peerId1, peerId2].sort());
+    expect(sentStates.every((m) => m.state === STATE_1)).to.equal(true);
+  });
+
   test('diff collection state', () => {
     const diff = diffCollectionState(STATE_1, STATE_2);
 
