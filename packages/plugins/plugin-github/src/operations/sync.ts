@@ -443,7 +443,15 @@ export const pushRepoUpdates: <E, R>(
         input.body = localDescription;
         diverged = true;
       }
+      // Status push is pull-only for PRs. GitHub uses the same /issues/{n}
+      // endpoint for issues and PRs, but `state: 'closed'` on a PR rejects
+      // it (the closed-without-merge red badge), and merging requires a
+      // separate `PUT /pulls/{n}/merge` endpoint we don't support. The safe
+      // default is to never push a status change for a PR — log if local
+      // and snapshot diverge so the divergence is auditable.
+      const isPullRequest = remoteIssue.pull_request != null;
       if (
+        !isPullRequest &&
         snapshot.status !== undefined &&
         desiredStatusForSnapshot !== undefined &&
         snapshot.status !== desiredStatusForSnapshot
@@ -453,17 +461,34 @@ export const pushRepoUpdates: <E, R>(
           input.state = issueState;
           diverged = true;
         }
+      } else if (
+        isPullRequest &&
+        snapshot.status !== undefined &&
+        desiredStatusForSnapshot !== undefined &&
+        snapshot.status !== desiredStatusForSnapshot
+      ) {
+        log.warn('github push: PR status diverged locally; pull-only for PRs (status will not be pushed)', {
+          issueId: id,
+          number: remoteIssue.number,
+          localStatus,
+          snapshotStatus: snapshot.status,
+        });
       }
       if (!diverged) {
         continue;
       }
 
       yield* push.updateIssue(repo.owner.login, repo.name, remoteIssue.number, input);
+      // Refresh the snapshot: title / description / status sent. Status only
+      // gets refreshed when we actually pushed a state change (issues only) —
+      // for PRs we keep the snapshot's previous status, so the warning above
+      // keeps firing until either the user reverts locally or the PR's state
+      // changes on GitHub and a pull catches up.
       writeSnapshot(integration, id, {
         ...snapshot,
         title: localTitle,
         description: localDescription,
-        status: desiredStatusForSnapshot ?? snapshot.status,
+        status: input.state !== undefined ? (desiredStatusForSnapshot ?? snapshot.status) : snapshot.status,
       });
       tasks++;
     }

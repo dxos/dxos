@@ -224,6 +224,86 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
     expect(calls).toBe(0);
   });
 
+  test('PR status divergence is NOT pushed (status is pull-only for PRs)', async ({ expect }) => {
+    // GitHub's /issues/{n} endpoint accepts state changes for both issues and
+    // PRs, but `closed` on a PR rejects it (closed-without-merge). The push
+    // path skips status changes for PRs and logs instead.
+    const { db, integration } = await setup();
+
+    Obj.update(integration, (integration) => {
+      integration.snapshots = {
+        '5678': { title: 'fix flake', description: 'desc', status: 'todo' },
+      };
+    });
+    db.add(
+      Task.make({
+        [Obj.Meta]: { keys: [{ source: GITHUB_SOURCE, id: '5678' }] },
+        title: 'fix flake',
+        description: 'desc',
+        status: 'done',
+      }),
+    );
+
+    const pullRequestIssue = issue({
+      pull_request: { url: 'https://api.github.com/repos/dxos/dxos/pulls/42', merged_at: null },
+    });
+
+    let updateIssueInput: GitHubApi.IssueUpdateInput | undefined;
+    let calls = 0;
+    const result = await Effect.gen(function* () {
+      return yield* pushRepoUpdates(integration, repo(), new Map([['5678', pullRequestIssue]]), {
+        updateIssue: (_owner, _repo, _num, input) => {
+          calls++;
+          updateIssueInput = input;
+          return Effect.succeed(undefined);
+        },
+        updateRepo: () => Effect.succeed(undefined),
+      });
+    }).pipe(Effect.provide(Database.layer(db)), runAndForwardErrors);
+
+    // No task push (status was the only diverging field, and PR status is
+    // pull-only).
+    expect(result.tasks).toBe(0);
+    expect(calls).toBe(0);
+    expect(updateIssueInput).toBeUndefined();
+  });
+
+  test('PR title divergence still pushes (only status is pull-only)', async ({ expect }) => {
+    const { db, integration } = await setup();
+
+    Obj.update(integration, (integration) => {
+      integration.snapshots = {
+        '5678': { title: 'fix flake', description: 'desc', status: 'todo' },
+      };
+    });
+    db.add(
+      Task.make({
+        [Obj.Meta]: { keys: [{ source: GITHUB_SOURCE, id: '5678' }] },
+        title: 'fix flake (renamed)',
+        description: 'desc',
+        status: 'todo',
+      }),
+    );
+
+    const pullRequestIssue = issue({
+      pull_request: { url: 'https://api.github.com/repos/dxos/dxos/pulls/42', merged_at: null },
+    });
+
+    let updateIssueInput: GitHubApi.IssueUpdateInput | undefined;
+    await Effect.gen(function* () {
+      yield* pushRepoUpdates(integration, repo(), new Map([['5678', pullRequestIssue]]), {
+        updateIssue: (_owner, _repo, _num, input) => {
+          updateIssueInput = input;
+          return Effect.succeed(undefined);
+        },
+        updateRepo: () => Effect.succeed(undefined),
+      });
+    }).pipe(Effect.provide(Database.layer(db)), runAndForwardErrors);
+
+    expect(updateIssueInput).toEqual({ title: 'fix flake (renamed)' });
+    expect(updateIssueInput?.state).toBeUndefined();
+  });
+
   test('soft-deleted local task is not pushed', async ({ expect }) => {
     const { db, integration } = await setup();
 
