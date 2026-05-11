@@ -36,7 +36,7 @@ describe('test', () => {
     const space = await client.spaces.create();
     const fn = space.db.add(
       Obj.make(Operation.PersistentOperation, {
-        [Obj.Meta]: { version: '0.0.1' },
+        [Obj.Meta]: { key: 'com.example.function.test', version: '0.0.1' },
         name: 'test',
         binding: 'HELLO',
       }),

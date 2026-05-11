@@ -175,8 +175,8 @@ export const migration = Migration.define({
     if (!snapshot) {
       return;
     }
-    Obj.update(object, (obj) => {
-      const meta = Obj.getMeta(obj);
+    Obj.update(object, (object) => {
+      const meta = Obj.getMeta(object);
       meta.key = snapshot.key;
       meta.version ??= '0.1.0';
     });

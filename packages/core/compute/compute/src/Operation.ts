@@ -410,7 +410,11 @@ export const setFrom = (target: PersistentOperation, source: PersistentOperation
     const targetMeta = Obj.getMeta(target);
     targetMeta.key = sourceMeta.key ?? targetMeta.key;
     targetMeta.version = sourceMeta.version;
-    targetMeta.keys = JSON.parse(JSON.stringify(sourceMeta.keys));
+    // Only overwrite foreign keys when the source actually carries them; otherwise we'd wipe
+    // bindings (e.g. the deployedId set by `deserialize`) on records produced by `serialize`.
+    if (sourceMeta.keys.length > 0) {
+      targetMeta.keys = JSON.parse(JSON.stringify(sourceMeta.keys));
+    }
   });
 };
 
@@ -442,8 +446,8 @@ export const migration = Migration.define({
     if (!snapshot) {
       return;
     }
-    Obj.update(object, (obj) => {
-      const meta = Obj.getMeta(obj);
+    Obj.update(object, (object) => {
+      const meta = Obj.getMeta(object);
       if (snapshot.key !== undefined) {
         meta.key = snapshot.key;
       }

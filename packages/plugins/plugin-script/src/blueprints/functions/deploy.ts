@@ -39,14 +39,13 @@ export default Deploy.pipe(
       }
 
       const existingFunctionId = getUserFunctionIdInMetadata(Obj.getMeta(loaded));
+      const currentVersion = Obj.getMeta(loaded).version;
 
       const functionsService = FunctionsServiceClient.fromClient(client);
       const newFunction = yield* Effect.promise(() =>
         functionsService.deploy(Context.default(), {
           ownerPublicKey: space.key,
-          version: Obj.getMeta(loaded).version
-            ? incrementSemverPatch(Obj.getMeta(loaded).version!)
-            : '0.0.1',
+          version: currentVersion ? incrementSemverPatch(currentVersion) : '0.0.1',
           functionId: existingFunctionId,
           entryPoint: buildResult.entryPoint,
           assets: buildResult.assets,
