@@ -6,8 +6,7 @@ import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 import { FeedOperation } from '#operations';
-
-const BLUEPRINT_KEY = 'org.dxos.blueprint.magazine';
+import { Magazine } from '#types';
 
 const operations = [
   FeedOperation.ListCandidatePosts,
@@ -17,7 +16,7 @@ const operations = [
 
 const make = () =>
   Blueprint.make({
-    key: BLUEPRINT_KEY,
+    key: Magazine.BLUEPRINT_KEY,
     name: 'Magazine Curator',
     tools: Blueprint.toolDefinitions({ operations }),
     instructions: Template.make({
@@ -39,7 +38,7 @@ const make = () =>
   });
 
 const blueprint: Blueprint.Definition = {
-  key: BLUEPRINT_KEY,
+  key: Magazine.BLUEPRINT_KEY,
   make,
 };
 

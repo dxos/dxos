@@ -7,7 +7,5 @@ import { type ComponentType, lazy } from 'react';
 export type { MarkdownContainerProps } from './MarkdownContainer';
 
 export const MarkdownCard: ComponentType<any> = lazy(() => import('./MarkdownCard'));
-export const MarkdownEditableCard: ComponentType<any> = lazy(() =>
-  import('./MarkdownCard').then((m) => ({ default: m.MarkdownEditableCard })),
-);
+export const EditableMarkdownCard: ComponentType<any> = lazy(() => import('./EditableMarkdownCard'));
 export const MarkdownContainer: ComponentType<any> = lazy(() => import('./MarkdownContainer'));

@@ -4,11 +4,13 @@
 
 import React from 'react';
 
-import { type Plugin } from '@dxos/app-framework';
-import { Button, Icon, Input, Link, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { type Registry, type Plugin, type PluginManager } from '@dxos/app-framework';
+import { Button, Icon, Input, Link, ScrollArea, Select, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps, getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+
+import { PluginFailureBadge } from '../PluginFailureBadge';
 
 export type PluginDetailProps = {
   plugin: Plugin.Plugin;
@@ -25,10 +27,54 @@ export type PluginDetailProps = {
    */
   onInstall?: () => void;
   installing?: boolean;
+  /**
+   * When provided and the plugin is installed with a newer catalog version available,
+   * an Update button is shown in place of the enable Switch.
+   */
+  onUpdate?: () => void;
+  /** True when the catalog has a newer version than the one installed. */
+  hasUpdate?: boolean;
+  /** True while an in-flight update is running. Forces the Update button disabled state. */
+  updating?: boolean;
+  /** Available versions of this plugin from the catalog. When non-empty, a version picker is shown. */
+  versions?: readonly Registry.PluginVersion[];
+  /** Currently selected version tag in the picker. */
+  selectedVersionTag?: string;
+  /** Called when the user selects a different version in the picker. */
+  onVersionChange?: (tag: string) => void;
+  /** Called when the user clicks Install on the version picker. */
+  onInstallVersion?: () => void;
+  /** Currently installed version tag (used to mark the matching select option). */
+  installedVersionTag?: string;
+  /**
+   * Failure record for this plugin, if any. When present a warning badge is
+   * rendered next to the plugin name in the header.
+   */
+  failure?: PluginManager.PluginFailure;
 };
 
 export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
-  ({ plugin, enabled, onEnabledChange, onUninstall, onInstall, installing, ...props }, forwardedRef) => {
+  (
+    {
+      plugin,
+      enabled,
+      onEnabledChange,
+      onUninstall,
+      onInstall,
+      installing,
+      onUpdate,
+      hasUpdate,
+      updating,
+      versions,
+      selectedVersionTag,
+      onVersionChange,
+      onInstallVersion,
+      installedVersionTag,
+      failure,
+      ...props
+    },
+    forwardedRef,
+  ) => {
     const { t } = useTranslation(meta.id);
     const {
       id,
@@ -51,7 +97,10 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
             </div>
             <div role='none' className='flex flex-col gap-6'>
               <div role='none' className='grid grid-cols-[1fr_min-content] gap-x-3 w-full pt-1'>
-                <h2 className='text-xl'>{name}</h2>
+                <div className='flex items-center gap-2'>
+                  <h2 className='text-xl'>{name}</h2>
+                  {failure && <PluginFailureBadge failure={failure} size={5} />}
+                </div>
                 {onInstall ? (
                   <Button density='fine' variant='primary' disabled={installing} onClick={onInstall}>
                     {installing ? t('installing.label') : t('install.label')}
@@ -90,9 +139,50 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                   )}
                 </div>
               </div>
-              {onUninstall && (
-                <div role='none'>
-                  <Button onClick={onUninstall}>{t('uninstall.label')}</Button>
+              {versions && versions.length > 0 && (
+                <div role='none' className='flex flex-col gap-2'>
+                  <h2>{t('versions.label')}</h2>
+                  <div className='flex gap-2 items-center'>
+                    <Select.Root value={selectedVersionTag} onValueChange={onVersionChange}>
+                      <Select.TriggerButton classNames='min-w-32' />
+                      <Select.Portal>
+                        <Select.Content>
+                          <Select.Viewport>
+                            {versions.map((versionEntry) => (
+                              <Select.Option key={versionEntry.tag} value={versionEntry.tag}>
+                                {versionEntry.tag}
+                                {installedVersionTag === versionEntry.tag ? ` (${t('installed.label')})` : ''}
+                              </Select.Option>
+                            ))}
+                          </Select.Viewport>
+                        </Select.Content>
+                      </Select.Portal>
+                    </Select.Root>
+                    {onInstallVersion && (
+                      <Button
+                        density='fine'
+                        variant='primary'
+                        disabled={installing || selectedVersionTag === installedVersionTag}
+                        onClick={onInstallVersion}
+                      >
+                        {installing ? t('installing.label') : t('install-version.label')}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+              {(onUninstall || (hasUpdate && onUpdate) || updating) && (
+                <div role='none' className='flex gap-2'>
+                  {updating ? (
+                    <Button variant='primary' disabled>
+                      {t('updating.label')}
+                    </Button>
+                  ) : hasUpdate && onUpdate ? (
+                    <Button variant='primary' onClick={onUpdate}>
+                      {t('update.label')}
+                    </Button>
+                  ) : null}
+                  {onUninstall && <Button onClick={onUninstall}>{t('uninstall.label')}</Button>}
                 </div>
               )}
             </div>

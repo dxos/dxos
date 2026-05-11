@@ -10,8 +10,8 @@ import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
 import { ModelName } from '@dxos/ai';
-import { AiContextBinder, type McpServerConfig } from '@dxos/assistant';
-import { type Trace, Blueprint } from '@dxos/compute';
+import { AiContextBinder } from '@dxos/assistant';
+import { type Trace, Blueprint, McpServer } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 
@@ -113,7 +113,7 @@ export const layer = (opts?: {
   /**
    * Provider for space-level MCP server configs.
    */
-  getMcpServers?: () => McpServerConfig[];
+  getMcpServers?: () => McpServer.McpServer[];
 
   /**
    * If true, long-running tool calls are moved to the background and the agent is notified

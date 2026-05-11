@@ -161,9 +161,6 @@ export namespace SpaceOperation {
     objects: Schema.Array(Obj.Unknown).annotations({ description: 'The removed objects.' }),
     parentCollection: Collection.Collection.annotations({ description: 'The collection removed from.' }),
     indices: Schema.Array(Schema.Number).annotations({ description: 'The indices the objects were at.' }),
-    nestedObjectsList: Schema.Array(Schema.Array(Obj.Unknown)).annotations({
-      description: 'Nested objects that were removed.',
-    }),
     wasActive: Schema.Array(Schema.String).annotations({
       description: 'IDs of objects that were active before removal.',
     }),
@@ -426,9 +423,6 @@ export namespace SpaceOperation {
       objects: Schema.Array(Obj.Unknown).annotations({ description: 'The objects to restore.' }),
       parentCollection: Collection.Collection.annotations({ description: 'The collection to restore to.' }),
       indices: Schema.Array(Schema.Number).annotations({ description: 'The indices to restore at.' }),
-      nestedObjectsList: Schema.Array(Schema.Array(Obj.Unknown)).annotations({
-        description: 'Nested objects to restore.',
-      }),
       wasActive: Schema.Array(Schema.String).annotations({
         description: 'IDs of objects that were active before deletion.',
       }),

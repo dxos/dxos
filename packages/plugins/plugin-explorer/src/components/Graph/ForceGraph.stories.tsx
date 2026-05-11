@@ -3,19 +3,23 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import * as Effect from 'effect/Effect';
+import React, { useCallback, useMemo } from 'react';
 
-import { Type } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { Obj, Type, View } from '@dxos/echo';
+import { SelectionModel } from '@dxos/graph';
+import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
-import { type Space } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
-import { useAsyncEffect } from '@dxos/react-ui';
+import { useSpaces } from '@dxos/react-client/echo';
+import { DxAnchorActivate } from '@dxos/react-ui';
+import { type GraphProps, type GraphLayoutNode } from '@dxos/react-ui-graph';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { ViewModel } from '@dxos/schema';
+import { type SpaceGraphEdge, type SpaceGraphNode, ViewModel } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
-import { withRegistry } from '@dxos/storybook-utils';
 import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
 import { useGraphModel } from '#hooks';
@@ -29,26 +33,39 @@ const generator = random as any as ValueGenerator;
 random.seed(1);
 
 const DefaultStory = () => {
-  const client = useClient();
-  const [space, setSpace] = useState<Space>();
-  const [graph, setGraph] = useState<Graph.Graph>();
-
-  useAsyncEffect(async () => {
-    const space = client.spaces.get()[0];
-    void generate(space, generator);
-    const { view } = await ViewModel.makeFromDatabase({ db: space.db, typename: Type.getTypename(Graph.Graph) });
-    const graph = Graph.make({ name: 'Test', view });
-    space.db.add(graph);
-    setSpace(space);
-    setGraph(graph);
-  }, [client]);
-
+  const [space] = useSpaces();
   const model = useGraphModel(space);
-  if (!model || !space || !graph) {
-    return <Loading data={{ model: !!model, space: !!space, graph: !!graph }} />;
+
+  const selection = useMemo(() => new SelectionModel({ mode: 'single' }), []);
+
+  const handleInspect = useCallback<NonNullable<GraphProps<SpaceGraphNode, SpaceGraphEdge>['onInspect']>>(
+    (node: GraphLayoutNode<SpaceGraphNode>, event) => {
+      const obj = node.data?.data?.object;
+      if (!obj) {
+        return;
+      }
+      const dxn = Obj.getDXN(obj)?.toString();
+      if (!dxn) {
+        return;
+      }
+      const target = event.target as HTMLElement;
+      target.dispatchEvent(
+        new DxAnchorActivate({
+          dxn,
+          label: Obj.getLabel(obj) ?? dxn,
+          trigger: target,
+          kind: 'card',
+        }),
+      );
+    },
+    [],
+  );
+
+  if (!space || !model) {
+    return <Loading data={{ space: !!space, model: !!model }} />;
   }
 
-  return <ForceGraph model={model} />;
+  return <ForceGraph model={model} selection={selection} onInspect={handleInspect} />;
 };
 
 const meta = {
@@ -56,18 +73,33 @@ const meta = {
   component: ForceGraph,
   render: DefaultStory,
   decorators: [
-    withRegistry,
     withTheme(),
-    withLayout(),
-    withClientProvider({
-      createSpace: true,
-      types: [
-        Graph.Graph,
-        View.View,
-        HasRelationship.HasRelationship,
-        Organization.Organization,
-        Pipeline.Pipeline,
-        Person.Person,
+    withLayout({ layout: 'fullscreen' }),
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        StorybookPlugin({}),
+        ClientPlugin({
+          types: [
+            Graph.Graph,
+            View.View,
+            HasRelationship.HasRelationship,
+            Organization.Organization,
+            Pipeline.Pipeline,
+            Person.Person,
+          ],
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              const { personalSpace } = yield* initializeIdentity(client);
+              yield* Effect.promise(() => generate(personalSpace, generator));
+              const { view } = yield* Effect.promise(() =>
+                ViewModel.makeFromDatabase({ db: personalSpace.db, typename: Type.getTypename(Graph.Graph) }),
+              );
+              personalSpace.db.add(Graph.make({ name: 'Test', view }));
+              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+            }),
+        }),
+        PreviewPlugin(),
       ],
     }),
   ],

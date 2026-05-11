@@ -6,21 +6,21 @@
 
 import * as Schema from 'effect/Schema';
 
+import { McpServer as McpServerSpec } from '@dxos/compute';
 import { Annotation, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
 /**
  * MCP server configuration stored as a space-level ECHO object.
  *
+ * Composes the canonical connection spec from `@dxos/compute` (`url`, `protocol`, `apiKey`)
+ * and adds instance-level fields (`name`, `enabled`) plus ECHO annotations.
+ *
  * NOTE: `apiKey` is stored in plaintext and replicated to all peers with access to the space.
  * A future iteration should move secrets to per-device credential storage or use envelope encryption.
  */
 export const McpServer = Schema.Struct({
-  name: Schema.String,
-  url: Schema.String,
-  protocol: Schema.Union(Schema.Literal('sse'), Schema.Literal('http')),
-  /** Stored in plaintext; replicated to all peers in the space. */
-  apiKey: Schema.optional(Schema.String),
+  ...McpServerSpec.McpServer.fields,
   enabled: Schema.optional(Schema.Boolean),
 }).pipe(
   Type.object({

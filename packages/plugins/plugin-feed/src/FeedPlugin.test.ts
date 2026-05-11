@@ -23,7 +23,7 @@ describe('FeedPlugin', () => {
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([
         moduleId('AppGraphBuilder'),
-        moduleId('metadata'),
+        moduleId('CreateObject'),
         moduleId('schema'),
         moduleId('ReactSurface'),
       ]),

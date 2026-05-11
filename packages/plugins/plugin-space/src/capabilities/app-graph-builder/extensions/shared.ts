@@ -19,7 +19,6 @@ import { type Label } from '@dxos/ui-types/translations';
 import { meta } from '#meta';
 
 export {
-  type MetadataResolver,
   ACCEPT_ECHO_CLASS,
   CACHEABLE_PROPS,
   CAN_DROP_OBJECT,

@@ -56,9 +56,6 @@
       "path": "../../echo/echo-protocol"
     },
     {
-      "path": "../../mcp-client"
-    },
-    {
       "path": "../ai"
     },
     {
@@ -66,6 +63,9 @@
     },
     {
       "path": "../functions"
+    },
+    {
+      "path": "../mcp-client"
     }
   ]
 }

@@ -23,27 +23,8 @@ export default Capability.makeModule<IntegrationProviderEntry[]>(
         source: '',
         label: 'Custom Token',
       },
-      // TODO(wittjosiah): Implement linear, slack as dedicated plugins instead of presets.
-      /*
-      {
-        id: 'linear',
-        source: 'linear.app',
-        label: 'Linear',
-        oauth: {
-          provider: OAuthProvider.LINEAR,
-          scopes: ['read', 'write'],
-        },
-      },
-      {
-        id: 'slack',
-        source: 'slack.com',
-        label: 'Slack',
-        oauth: {
-          provider: OAuthProvider.SLACK,
-          scopes: ['channels:read', 'chat:write', 'users:read'],
-        },
-      },
-      */
+      // GitHub, Linear, and Slack are implemented as dedicated plugins
+      // (`@dxos/plugin-github`, `@dxos/plugin-linear`, `@dxos/plugin-slack`).
     ]);
   }),
 );

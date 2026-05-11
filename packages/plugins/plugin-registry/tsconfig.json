@@ -45,12 +45,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/mesh/edge-client"
-    },
-    {
-      "path": "../../core/protocols"
-    },
-    {
       "path": "../../devtools/cli-util"
     },
     {
@@ -61,9 +55,6 @@
     },
     {
       "path": "../../sdk/client-protocol"
-    },
-    {
-      "path": "../../sdk/react-edge-client"
     },
     {
       "path": "../../ui/react-ui"
@@ -79,9 +70,6 @@
     },
     {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../plugin-client"
     },
     {
       "path": "../plugin-graph"

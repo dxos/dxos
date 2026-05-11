@@ -33,17 +33,24 @@ export type BuildMeta = Plugin.Meta & { version: string };
  *
  * The host fetches this manifest, resolves every entry in `assets` against the
  * manifest URL, and persists them via the platform `PluginAssetCache` so the
- * plugin works offline. The entry module is always {@link ENTRY_FILENAME}; it
- * must appear in `assets`.
+ * plugin works offline. For production builds the entry module is always
+ * {@link ENTRY_FILENAME} and must appear in `assets`. For dev-server manifests
+ * pass `devEntry` (a path relative to the manifest URL) — the host then imports
+ * the entry directly from the dev server and skips offline caching, since the
+ * full asset graph isn't enumerable until build time.
  *
  * Exported from a vite-free module so tests and tooling can validate manifests
  * without paying the cost of loading vite + esbuild.
  */
-export const serializeManifest = (meta: BuildMeta, { assets }: { assets: readonly string[] }): string =>
+export const serializeManifest = (
+  meta: BuildMeta,
+  { assets, devEntry }: { assets: readonly string[]; devEntry?: string },
+): string =>
   JSON.stringify(
     {
       ...meta,
       assets,
+      ...(devEntry !== undefined ? { devEntry } : {}),
     },
     null,
     2,

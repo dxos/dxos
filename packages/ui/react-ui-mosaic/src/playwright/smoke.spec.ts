@@ -52,7 +52,7 @@ test.describe('Board', () => {
     const secondLabel = await column.item(1).title().textContent();
 
     // Drag first item below the second item.
-    await column.item(0).dragTo(column.item(1).locator, { x: 0, y: BELOW_OFFSET });
+    await column.item(0).dragTo(column.item(1).locator, { x: 0, y: BELOW_OFFSET }, 'bottom');
 
     // Item count should stay the same.
     await expect(column.items()).toHaveCount(countBefore);
@@ -73,7 +73,7 @@ test.describe('Board', () => {
     const draggedLabel = await col0.item(0).title().textContent();
 
     // Drag above the first item in the target column.
-    await col0.item(0).dragTo(col1.item(0).locator, { x: 0, y: ABOVE_OFFSET });
+    await col0.item(0).dragTo(col1.item(0).locator, { x: 0, y: ABOVE_OFFSET }, 'top');
 
     await expect(col0.items()).toHaveCount(col0CountBefore - 1);
     await expect(col1.items()).toHaveCount(col1CountBefore + 1);
@@ -89,7 +89,7 @@ test.describe('Board', () => {
     const draggedLabel = await col0.item(0).title().textContent();
 
     // Drag to below the first item in the target column.
-    await col0.item(0).dragTo(col1.item(0).locator, { x: 0, y: BELOW_OFFSET });
+    await col0.item(0).dragTo(col1.item(0).locator, { x: 0, y: BELOW_OFFSET }, 'bottom');
 
     await expect(col0.items()).toHaveCount(col0CountBefore - 1);
     await expect(col1.items()).toHaveCount(col1CountBefore + 1);

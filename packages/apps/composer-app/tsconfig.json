@@ -146,6 +146,9 @@
       "path": "../../core/compute/functions-runtime"
     },
     {
+      "path": "../../core/compute/mcp-client"
+    },
+    {
       "path": "../../core/compute/operation"
     },
     {
@@ -183,9 +186,6 @@
     },
     {
       "path": "../../core/halo/keyring"
-    },
-    {
-      "path": "../../core/mcp-client"
     },
     {
       "path": "../../core/mesh/edge-client"
@@ -254,9 +254,6 @@
       "path": "../../plugins/plugin-crx"
     },
     {
-      "path": "../../plugins/plugin-crx-bridge"
-    },
-    {
       "path": "../../plugins/plugin-daily-summary"
     },
     {
@@ -284,6 +281,9 @@
       "path": "../../plugins/plugin-gallery"
     },
     {
+      "path": "../../plugins/plugin-game"
+    },
+    {
       "path": "../../plugins/plugin-github"
     },
     {
@@ -303,6 +303,9 @@
     },
     {
       "path": "../../plugins/plugin-kanban"
+    },
+    {
+      "path": "../../plugins/plugin-linear"
     },
     {
       "path": "../../plugins/plugin-map"
@@ -375,6 +378,9 @@
     },
     {
       "path": "../../plugins/plugin-sketch"
+    },
+    {
+      "path": "../../plugins/plugin-slack"
     },
     {
       "path": "../../plugins/plugin-space"

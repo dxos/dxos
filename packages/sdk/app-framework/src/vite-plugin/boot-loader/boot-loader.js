@@ -67,6 +67,7 @@
     if (creepHandle != null) {
       return;
     }
+
     creepHandle = setInterval(function () {
       var element = document.getElementById('boot-loader-disc');
       if (!element) {
@@ -90,6 +91,33 @@
       clearInterval(creepHandle);
       creepHandle = null;
     }
+  }
+
+  // Read the element's *current animated* translateY in pixels — the
+  // interpolated value mid-transition, not the property as last written.
+  // `getComputedStyle(...).transform` returns a `matrix(...)` /
+  // `matrix3d(...)` string with the live, interpolated translation.
+  // Used by the status FLIP so successive appends chain off the in-flight
+  // position instead of yanking the track back to a fixed invert target.
+  function readTranslateY(element) {
+    var computed = window.getComputedStyle(element).transform;
+    if (!computed || computed === 'none') {
+      return 0;
+    }
+    var match = computed.match(/matrix.*\(([^)]+)\)/);
+    if (!match) {
+      return 0;
+    }
+    var values = match[1].split(',');
+    // 2D `matrix(a, b, c, d, tx, ty)` → ty at index 5.
+    // 3D `matrix3d(...)` (16 entries) → ty at index 13.
+    if (values.length === 6) {
+      return parseFloat(values[5]) || 0;
+    }
+    if (values.length === 16) {
+      return parseFloat(values[13]) || 0;
+    }
+    return 0;
   }
 
   window.__bootLoader = {
@@ -184,18 +212,49 @@
         // updates over the same row.
         lastLine.textContent = displayText;
       } else {
-        // Fresh phase (or first line) — append and slide the track up so
-        // the new line aligns with the single-line viewport. The CSS
-        // `transition` on the track's `transform` eases the move; we
-        // measure in pixels (not `em`) because some engines (and headless
-        // Chromium) don't reliably interpolate `transform` between
-        // `em`-valued translateY's.
+        // Fresh phase (or first line) — append to the bottom-anchored track
+        // (see `#boot-loader-status`'s `justify-content: flex-end` in
+        // `boot-loader.css`) and run a FLIP-style slide so the new line
+        // rises from below the viewport's bottom edge instead of snapping
+        // into place. The flex layout handles which lines are visible at
+        // rest (newest on the last row, older lines stacked above, anything
+        // that overflows is clipped at the top by `overflow: hidden`), so
+        // this code only owns the animation.
         var line = document.createElement('div');
         line.className = 'boot-loader-status-line';
         line.textContent = displayText;
+        // Read the track's current animated translateY before mutating
+        // anything. When a previous slide is still in flight this is
+        // somewhere in (0, lineHeight]; when the track is at rest it's 0.
+        // Reading via `getComputedStyle` (not `style.transform`) gives the
+        // interpolated mid-transition value, which is what the chain math
+        // below needs.
+        var currentY = readTranslateY(track);
+        // Measure the line height from a sibling when one exists — the
+        // newly appended line may not have laid out yet at the moment of
+        // the bounding-rect read in some engines. Pixels (not `em`) because
+        // some engines (and headless Chromium) don't reliably interpolate
+        // `transform` between `em`-valued translateY's.
+        var probe = track.lastElementChild;
         track.appendChild(line);
-        var lineHeight = line.getBoundingClientRect().height || 0;
-        track.style.transform = 'translateY(' + (track.children.length - 1) * -lineHeight + 'px)';
+        var lineHeight = (probe || line).getBoundingClientRect().height || 0;
+        // Invert: snap the track down to `currentY + lineHeight` with no
+        // transition. The `+ lineHeight` is the usual FLIP offset (the
+        // track just grew by a row, so this keeps every existing line at
+        // the pixel position it had before the append). The `+ currentY`
+        // is the chain term — if a previous slide was still in flight we
+        // pin the track to its in-flight position instead of yanking it
+        // back to its pre-animation start, so the previous line keeps
+        // rising smoothly through the append rather than jumping down.
+        // Then force a reflow and animate to translateY(0); the track
+        // covers the full `currentY + lineHeight` distance in one ride
+        // and bursts of rapid updates read as a continuous scroll rather
+        // than overlapping snaps.
+        track.style.transition = 'none';
+        track.style.transform = `translateY(${currentY + lineHeight}px)`;
+        void track.offsetHeight;
+        track.style.transition = '';
+        track.style.transform = 'translateY(0)';
       }
     },
 

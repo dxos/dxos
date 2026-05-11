@@ -2,76 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
-
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Script } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
-import { Annotation, Ref } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { type CreateObject } from '@dxos/plugin-space/types';
 
 import {
   AppGraphBuilder,
   BlueprintDefinition,
   Compiler,
+  CreateObject,
   OperationHandler,
   ReactSurface,
   ScriptSettings,
 } from '#capabilities';
 import { meta } from '#meta';
-import { ScriptOperation } from '#operations';
 import { translations } from '#translations';
 import { ScriptEvents } from '#types';
-import { Notebook } from '#types';
 
 export const ScriptPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
-  AppPlugin.addMetadataModule({
-    metadata: [
-      {
-        id: Script.Script.typename,
-        metadata: {
-          icon: Annotation.IconAnnotation.get(Script.Script).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Script.Script).pipe(Option.getOrThrow).hue ?? 'white',
-          // TODO(wittjosiah): Move out of metadata.
-          loadReferences: async (script: Script.Script) => await Ref.Array.loadAll([script.source]),
-          inputSchema: ScriptOperation.ScriptProps,
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const { object } = yield* Operation.invoke(ScriptOperation.CreateScript, props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-            })) satisfies CreateObject,
-        },
-      },
-      {
-        id: Notebook.Notebook.typename,
-        metadata: {
-          icon: Annotation.IconAnnotation.get(Notebook.Notebook).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Notebook.Notebook).pipe(Option.getOrThrow).hue ?? 'white',
-          inputSchema: ScriptOperation.NotebookProps,
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const object = Notebook.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-            })) satisfies CreateObject,
-        },
-      },
-    ],
-  }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Script.Script] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),

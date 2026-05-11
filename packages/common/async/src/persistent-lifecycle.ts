@@ -69,12 +69,20 @@ export class PersistentLifecycle<T> extends Resource {
       try {
         await this._restart();
       } catch (err) {
+        // Suppress noise from restarts that race with shutdown.
+        if (this._ctx?.disposed) {
+          return;
+        }
         log.warn('Restart failed', { err });
         this._restartTask?.schedule();
       }
     });
 
     this._currentState = await this._start().catch((err) => {
+      // Suppress noise when shutdown was requested while the initial start was in flight.
+      if (this._ctx?.disposed) {
+        return undefined;
+      }
       log.warn('Start failed', { err });
       this._restartTask?.schedule();
       return undefined;
