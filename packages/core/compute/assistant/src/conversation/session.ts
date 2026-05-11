@@ -13,7 +13,7 @@ import * as Record from 'effect/Record';
 import * as Runtime from 'effect/Runtime';
 
 import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { type Blueprint, type OperationRegistry, Operation, Trace } from '@dxos/compute';
+import { type Blueprint, type OperationRegistry, McpServer, Operation, Trace } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
@@ -34,12 +34,6 @@ import {
 import { McpServerError } from '../tracing';
 import { AiContextBinder, AiContextService } from './context';
 
-export interface McpServerConfig {
-  url: string;
-  protocol: 'sse' | 'http';
-  apiKey?: string;
-}
-
 export interface AiSessionRunProps<R = never> {
   prompt: string | ContentBlock.Any[];
   system?: string;
@@ -49,7 +43,7 @@ export interface AiSessionRunProps<R = never> {
   /**
    * Space-level MCP servers to connect alongside blueprint-defined ones.
    */
-  mcpServers?: readonly McpServerConfig[];
+  mcpServers?: readonly McpServer.McpServer[];
 }
 
 export type AiSessionOptions = {
@@ -269,7 +263,7 @@ const aiContextFromSession = Layer.effect(
 
 const connectMcpServers = (
   blueprints: readonly Blueprint.Blueprint[],
-  spaceMcpServers: readonly McpServerConfig[] = [],
+  spaceMcpServers: readonly McpServer.McpServer[] = [],
 ): Effect.Effect<OpaqueToolkit.OpaqueToolkit[], never, Trace.TraceService> => {
   const blueprintServers: McpToolkit.McpToolkitOptions[] = pipe(
     blueprints,

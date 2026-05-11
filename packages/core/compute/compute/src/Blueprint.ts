@@ -11,25 +11,9 @@ import { Annotation, Database, Filter, Obj, Type } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
+import * as McpServer from './McpServer';
 import * as Operation from './Operation';
 import * as Template from './Template';
-
-/**
- * MCP server definition.
- */
-export const McpServer = Schema.Struct({
-  /**
-   * URL of the MCP server.
-   */
-  url: Schema.String.annotations({
-    description: 'URL of the MCP server',
-  }),
-
-  protocol: Schema.Union(Schema.Literal('sse'), Schema.Literal('http')).annotations({
-    description: 'Protocol of the MCP server',
-  }),
-});
-export interface McpServer extends Schema.Schema.Type<typeof McpServer> {}
 
 /**
  * Blueprint schema defines the structure for AI assistant blueprints.
@@ -85,7 +69,7 @@ export const Blueprint = Schema.Struct({
   /**
    * Array of MCP servers that the AI assistant can use when this blueprint is active.
    */
-  mcpServers: Schema.optional(Schema.Array(McpServer)),
+  mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
 }).pipe(
   Type.object({
     // TODO(burdon): Is this a DXN? Need to create a Format type for these IDs.
