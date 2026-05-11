@@ -15,7 +15,7 @@
       "path": "../../common/storybook-utils"
     },
     {
-      "path": "../../core/introspect-tools"
+      "path": "../../core/compute/introspect-tools"
     },
     {
       "path": "../react-ui"
