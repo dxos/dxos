@@ -119,6 +119,7 @@ describe('IndexEngine', () => {
         spaceId,
         documentId: 'doc-1',
         queueId: null,
+        queueNamespace: null,
         recordId: null,
         updatedAt: Date.now(),
         data: {
@@ -156,6 +157,7 @@ describe('IndexEngine', () => {
         spaceId,
         documentId: obj1.documentId,
         queueId: null,
+        queueNamespace: null,
         recordId: null,
         updatedAt: Date.now(),
         data: { id: obj1.data.id, [ATTR_TYPE]: obj1.data[ATTR_TYPE], title: 'Hello World' },
@@ -195,6 +197,7 @@ describe('IndexEngine', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'd1',
           recordId: null,
           updatedAt: Date.now(),
@@ -207,6 +210,7 @@ describe('IndexEngine', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'd2',
           recordId: null,
           updatedAt: Date.now(),
@@ -219,6 +223,7 @@ describe('IndexEngine', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'd3',
           recordId: null,
           updatedAt: Date.now(),
@@ -269,6 +274,7 @@ describe('IndexEngine', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'doc-done-test',
           recordId: null,
           updatedAt: Date.now(),
@@ -305,6 +311,7 @@ describe('IndexEngine', () => {
         spaceId: spaceId1,
         documentId: 'doc-result-1',
         queueId: null,
+        queueNamespace: null,
         recordId: null,
         updatedAt: Date.now(),
         data: { id: id1, [ATTR_TYPE]: TYPE_A, title: 'Doc in space1' },
@@ -313,6 +320,7 @@ describe('IndexEngine', () => {
         spaceId: spaceId2,
         documentId: 'doc-result-2',
         queueId: null,
+        queueNamespace: null,
         recordId: null,
         updatedAt: Date.now(),
         data: { id: id2, [ATTR_TYPE]: TYPE_B, title: 'Doc in space2' },
@@ -355,6 +363,7 @@ describe('IndexEngine', () => {
         spaceId,
         documentId: 'doc-deleted',
         queueId: null,
+        queueNamespace: null,
         recordId: null,
         updatedAt: Date.now(),
         data: {
