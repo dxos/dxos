@@ -228,14 +228,9 @@ export class AiSessionService extends Context.Tag('@dxos/assistant/AiSessionServ
   ): Layer.Layer<AiSessionService | AiContextService, never, Database.Service | Feed.FeedService> =>
     Layer.unwrapScoped(
       Effect.gen(function* () {
-        const feed = Feed.make();
-        yield* Database.add(feed);
+        const feed = yield* Database.add(Feed.make());
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        return AiSessionService.layer({
-          ...options,
-          feed,
-          runtime,
-        });
+        return AiSessionService.layer({ ...options, feed, runtime });
       }),
     );
 

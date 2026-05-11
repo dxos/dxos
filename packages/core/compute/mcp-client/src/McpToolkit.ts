@@ -20,12 +20,6 @@ import * as Schema from 'effect/Schema';
 import { OpaqueToolkit } from '@dxos/ai';
 import { invariant } from '@dxos/invariant';
 
-export interface McpToolkitOptions {
-  url: string;
-  protocol: 'sse' | 'http';
-  apiKey?: string;
-}
-
 /**
  * Typed failure raised when the MCP client cannot connect or list tools.
  * Carries the underlying cause and the server URL for diagnostics.
@@ -46,6 +40,12 @@ export class McpConnectionError extends Schema.TaggedError<McpConnectionError>('
  * @returns An OpaqueToolkit containing all tools from the MCP server.
  */
 const CLIENT_INFO = { name: '@dxos/mcp-client', version: '0.8.3' };
+
+export interface McpToolkitOptions {
+  url: string;
+  protocol: 'sse' | 'http';
+  apiKey?: string;
+}
 
 export const make = (options: McpToolkitOptions): Effect.Effect<OpaqueToolkit.OpaqueToolkit, McpConnectionError> =>
   Effect.gen(function* () {
@@ -172,6 +172,7 @@ const formatCause = (error: unknown): string => {
   if (Cause.isCause(error)) {
     return Cause.pretty(error);
   }
+
   return String(inner);
 };
 
