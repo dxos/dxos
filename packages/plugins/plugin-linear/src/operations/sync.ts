@@ -288,116 +288,113 @@ export const pushTeamUpdates: <R>(
     /** Resolve a desired Task status → Linear workflow-state id. Returns undefined when no mapping is known. */
     resolveStateId: (issue: LinearApi.Issue, status: 'todo' | 'in-progress' | 'done') => string | undefined;
   },
-) => Effect.Effect<LinearPushResult, Error, Database.Service | R> = Effect.fn('pushTeamUpdates')(function* (
-  integration,
-  remoteIssuesById,
-  remoteProjectsById,
-  push,
-) {
-  let projects = 0;
-  let tasks = 0;
+) => Effect.Effect<LinearPushResult, Error, Database.Service | R> = Effect.fn('pushTeamUpdates')(
+  function* (integration, remoteIssuesById, remoteProjectsById, push) {
+    let projects = 0;
+    let tasks = 0;
 
-  // Iterate all locally-known objects with a Linear foreign key. We re-query
-  // by-foreign-key for each remote id rather than walking every Project/Task
-  // in the database — both yield the same set, and the by-fid query keeps
-  // memory bounded for spaces with thousands of unrelated tasks.
-  for (const [id] of remoteProjectsById) {
-    const local = yield* findByForeignId<Project.Project>(Project.Project, id);
-    if (!local || Obj.isDeleted(local)) {
-      continue;
-    }
-    const snapshot = readSnapshot<ProjectSnapshot>(integration, id);
-    if (!snapshot) {
-      continue;
-    }
-    const localName = local.name ?? '';
-    const localDescription = local.description ?? '';
-    const input: LinearApi.ProjectUpdateInput = {};
-    let diverged = false;
-    if (snapshot.name !== undefined && snapshot.name !== localName) {
-      input.name = localName;
-      diverged = true;
-    }
-    if (snapshot.description !== undefined && snapshot.description !== localDescription) {
-      input.description = localDescription;
-      diverged = true;
-    }
-    if (!diverged) {
-      continue;
-    }
-    yield* push.updateProject(id, input);
-    writeSnapshot(integration, id, {
-      ...snapshot,
-      name: localName,
-      description: localDescription,
-    });
-    projects++;
-  }
-
-  for (const [id, remoteIssue] of remoteIssuesById) {
-    const local = yield* findByForeignId<Task.Task>(Task.Task, id);
-    if (!local || Obj.isDeleted(local)) {
-      continue;
-    }
-    const snapshot = readSnapshot<TaskSnapshot>(integration, id);
-    if (!snapshot) {
-      continue;
-    }
-    const localTitle = local.title ?? '';
-    const localDescription = local.description ?? '';
-    const localStatus = local.status;
-    const localPriority = local.priority;
-    const localEstimate = local.estimate;
-
-    const input: LinearApi.IssueUpdateInput = {};
-    let diverged = false;
-    if (snapshot.title !== undefined && snapshot.title !== localTitle) {
-      input.title = localTitle;
-      diverged = true;
-    }
-    if (snapshot.description !== undefined && snapshot.description !== localDescription) {
-      input.description = localDescription;
-      diverged = true;
-    }
-    if (snapshot.status !== undefined && localStatus !== undefined && snapshot.status !== localStatus) {
-      const stateId = push.resolveStateId(remoteIssue, localStatus);
-      if (stateId) {
-        input.stateId = stateId;
-        diverged = true;
-      } else {
-        log.warn('linear push: no workflow state mapping for status; skipping status push', {
-          issueId: id,
-          status: localStatus,
-        });
+    // Iterate all locally-known objects with a Linear foreign key. We re-query
+    // by-foreign-key for each remote id rather than walking every Project/Task
+    // in the database — both yield the same set, and the by-fid query keeps
+    // memory bounded for spaces with thousands of unrelated tasks.
+    for (const [id] of remoteProjectsById) {
+      const local = yield* findByForeignId<Project.Project>(Project.Project, id);
+      if (!local || Obj.isDeleted(local)) {
+        continue;
       }
+      const snapshot = readSnapshot<ProjectSnapshot>(integration, id);
+      if (!snapshot) {
+        continue;
+      }
+      const localName = local.name ?? '';
+      const localDescription = local.description ?? '';
+      const input: LinearApi.ProjectUpdateInput = {};
+      let diverged = false;
+      if (snapshot.name !== undefined && snapshot.name !== localName) {
+        input.name = localName;
+        diverged = true;
+      }
+      if (snapshot.description !== undefined && snapshot.description !== localDescription) {
+        input.description = localDescription;
+        diverged = true;
+      }
+      if (!diverged) {
+        continue;
+      }
+      yield* push.updateProject(id, input);
+      writeSnapshot(integration, id, {
+        ...snapshot,
+        name: localName,
+        description: localDescription,
+      });
+      projects++;
     }
-    if (snapshot.priority !== localPriority) {
-      // priority can legitimately be `undefined` (no priority); send 0 to clear.
-      const priorityNumber = LinearApi.taskPriorityToPriorityNumber(localPriority) ?? 0;
-      input.priority = priorityNumber;
-      diverged = true;
-    }
-    if (snapshot.estimate !== localEstimate && localEstimate !== undefined) {
-      input.estimate = localEstimate;
-      diverged = true;
-    }
-    if (!diverged) {
-      continue;
-    }
-    yield* push.updateIssue(id, input);
-    writeSnapshot(integration, id, {
-      ...snapshot,
-      title: localTitle,
-      description: localDescription,
-      status: localStatus ?? snapshot.status,
-      priority: localPriority,
-      estimate: localEstimate ?? snapshot.estimate,
-    });
-    tasks++;
-  }
 
-  return { projects, tasks };
-});
+    for (const [id, remoteIssue] of remoteIssuesById) {
+      const local = yield* findByForeignId<Task.Task>(Task.Task, id);
+      if (!local || Obj.isDeleted(local)) {
+        continue;
+      }
+      const snapshot = readSnapshot<TaskSnapshot>(integration, id);
+      if (!snapshot) {
+        continue;
+      }
+      const localTitle = local.title ?? '';
+      const localDescription = local.description ?? '';
+      const localStatus = local.status;
+      const localPriority = local.priority;
+      const localEstimate = local.estimate;
+
+      const input: LinearApi.IssueUpdateInput = {};
+      let diverged = false;
+      if (snapshot.title !== undefined && snapshot.title !== localTitle) {
+        input.title = localTitle;
+        diverged = true;
+      }
+      if (snapshot.description !== undefined && snapshot.description !== localDescription) {
+        input.description = localDescription;
+        diverged = true;
+      }
+      if (snapshot.status !== undefined && localStatus !== undefined && snapshot.status !== localStatus) {
+        const stateId = push.resolveStateId(remoteIssue, localStatus);
+        if (stateId) {
+          input.stateId = stateId;
+          diverged = true;
+        } else {
+          log.warn('linear push: no workflow state mapping for status; skipping status push', {
+            issueId: id,
+            status: localStatus,
+          });
+        }
+      }
+      if (snapshot.priority !== localPriority) {
+        // priority can legitimately be `undefined` (no priority); send 0 to clear.
+        const priorityNumber = LinearApi.taskPriorityToPriorityNumber(localPriority) ?? 0;
+        input.priority = priorityNumber;
+        diverged = true;
+      }
+      if (snapshot.estimate !== localEstimate && localEstimate !== undefined) {
+        input.estimate = localEstimate;
+        diverged = true;
+      }
+      if (!diverged) {
+        continue;
+      }
+      yield* push.updateIssue(id, input);
+      writeSnapshot(integration, id, {
+        ...snapshot,
+        title: localTitle,
+        description: localDescription,
+        status: localStatus ?? snapshot.status,
+        priority: localPriority,
+        estimate: localEstimate ?? snapshot.estimate,
+      });
+      tasks++;
+    }
+
+    return { projects, tasks };
+  },
+);
 
 //
 // Main handler
@@ -543,8 +540,10 @@ const handler: Operation.WithHandler<typeof SyncLinearTeams> = SyncLinearTeams.p
                     }
 
                     const pushResult = yield* pushTeamUpdates(integrationObj, remoteIssuesById, remoteProjectsById, {
-                      updateProject: (id, input) => LinearApi.updateProject(id, input).pipe(Effect.mapError((error) => error as Error)),
-                      updateIssue: (id, input) => LinearApi.updateIssue(id, input).pipe(Effect.mapError((error) => error as Error)),
+                      updateProject: (id, input) =>
+                        LinearApi.updateProject(id, input).pipe(Effect.mapError((error) => error as Error)),
+                      updateIssue: (id, input) =>
+                        LinearApi.updateIssue(id, input).pipe(Effect.mapError((error) => error as Error)),
                       resolveStateId,
                     });
                     pushedProjects += pushResult.projects;

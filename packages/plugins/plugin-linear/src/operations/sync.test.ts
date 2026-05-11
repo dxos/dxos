@@ -50,12 +50,7 @@ describe('plugin-linear sync', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([
-      AccessToken.AccessToken,
-      Integration.Integration,
-      Project.Project,
-      Task.Task,
-    ]);
+    await graph.schemaRegistry.register([AccessToken.AccessToken, Integration.Integration, Project.Project, Task.Task]);
     const token = db.add(Obj.make(AccessToken.AccessToken, { source: LINEAR_SOURCE, token: 'tok' }));
     const integration = db.add(Obj.make(Integration.Integration, { accessToken: Ref.make(token), targets: [] }));
     return { db, integration };
@@ -240,8 +235,8 @@ describe('plugin-linear sync', () => {
       return yield* upsertProject(integration, project());
     }).pipe(Effect.provide(layer), runAndForwardErrors);
 
-    Obj.update(local, (proj) => {
-      proj.description = 'rewritten';
+    Obj.update(local, (local) => {
+      local.description = 'rewritten';
     });
 
     let projectInput: LinearApi.ProjectUpdateInput | undefined;

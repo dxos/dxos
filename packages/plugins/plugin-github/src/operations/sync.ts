@@ -362,104 +362,101 @@ export const pushRepoUpdates: <R>(
     /** Wraps `GitHubApi.updateRepo`. */
     updateRepo: (owner: string, repo: string, input: GitHubApi.RepoUpdateInput) => Effect.Effect<void, Error, R>;
   },
-) => Effect.Effect<GitHubPushResult, Error, Database.Service | R> = Effect.fn('pushRepoUpdates')(function* (
-  integration,
-  repo,
-  remoteIssuesById,
-  push,
-) {
-  let projects = 0;
-  let tasks = 0;
+) => Effect.Effect<GitHubPushResult, Error, Database.Service | R> = Effect.fn('pushRepoUpdates')(
+  function* (integration, repo, remoteIssuesById, push) {
+    let projects = 0;
+    let tasks = 0;
 
-  // Project (repo) push — description only.
-  {
-    const fid = String(repo.id);
-    const local = yield* findByForeignId<Project.Project>(Project.Project, repo.id);
-    if (local && !Obj.isDeleted(local)) {
-      const snapshot = readSnapshot<ProjectSnapshot>(integration, fid);
-      if (snapshot) {
-        const localName = local.name ?? '';
-        const localDescription = local.description ?? '';
-        const input: GitHubApi.RepoUpdateInput = {};
-        let diverged = false;
-        if (snapshot.description !== undefined && snapshot.description !== localDescription) {
-          input.description = localDescription;
-          diverged = true;
-        }
-        if (snapshot.name !== undefined && snapshot.name !== localName) {
-          // We deliberately don't push repo renames — see updateRepo above.
-          // Log instead so the user can chase down via the audit channel.
-          log.warn('github push: local repo name diverges from remote; rename push is intentionally disabled', {
-            repoId: fid,
-            localName,
-            snapshotName: snapshot.name,
-          });
-        }
-        if (diverged) {
-          yield* push.updateRepo(repo.owner.login, repo.name, input);
-          writeSnapshot(integration, fid, {
-            ...snapshot,
-            description: localDescription,
-          });
-          projects++;
+    // Project (repo) push — description only.
+    {
+      const fid = String(repo.id);
+      const local = yield* findByForeignId<Project.Project>(Project.Project, repo.id);
+      if (local && !Obj.isDeleted(local)) {
+        const snapshot = readSnapshot<ProjectSnapshot>(integration, fid);
+        if (snapshot) {
+          const localName = local.name ?? '';
+          const localDescription = local.description ?? '';
+          const input: GitHubApi.RepoUpdateInput = {};
+          let diverged = false;
+          if (snapshot.description !== undefined && snapshot.description !== localDescription) {
+            input.description = localDescription;
+            diverged = true;
+          }
+          if (snapshot.name !== undefined && snapshot.name !== localName) {
+            // We deliberately don't push repo renames — see updateRepo above.
+            // Log instead so the user can chase down via the audit channel.
+            log.warn('github push: local repo name diverges from remote; rename push is intentionally disabled', {
+              repoId: fid,
+              localName,
+              snapshotName: snapshot.name,
+            });
+          }
+          if (diverged) {
+            yield* push.updateRepo(repo.owner.login, repo.name, input);
+            writeSnapshot(integration, fid, {
+              ...snapshot,
+              description: localDescription,
+            });
+            projects++;
+          }
         }
       }
     }
-  }
 
-  // Task (issue) push — title / body / state.
-  for (const [id, remoteIssue] of remoteIssuesById) {
-    const local = yield* findByForeignId<Task.Task>(Task.Task, id);
-    if (!local || Obj.isDeleted(local)) {
-      continue;
-    }
-    const snapshot = readSnapshot<TaskSnapshot>(integration, id);
-    if (!snapshot) {
-      continue;
-    }
-    const localTitle = local.title ?? '';
-    const localDescription = local.description ?? '';
-    const localStatus = local.status;
-    const desiredStatusForSnapshot: 'todo' | 'done' | undefined =
-      localStatus === 'done' ? 'done' : localStatus === 'todo' || localStatus === 'in-progress' ? 'todo' : undefined;
+    // Task (issue) push — title / body / state.
+    for (const [id, remoteIssue] of remoteIssuesById) {
+      const local = yield* findByForeignId<Task.Task>(Task.Task, id);
+      if (!local || Obj.isDeleted(local)) {
+        continue;
+      }
+      const snapshot = readSnapshot<TaskSnapshot>(integration, id);
+      if (!snapshot) {
+        continue;
+      }
+      const localTitle = local.title ?? '';
+      const localDescription = local.description ?? '';
+      const localStatus = local.status;
+      const desiredStatusForSnapshot: 'todo' | 'done' | undefined =
+        localStatus === 'done' ? 'done' : localStatus === 'todo' || localStatus === 'in-progress' ? 'todo' : undefined;
 
-    const input: GitHubApi.IssueUpdateInput = {};
-    let diverged = false;
-    if (snapshot.title !== undefined && snapshot.title !== localTitle) {
-      input.title = localTitle;
-      diverged = true;
-    }
-    if (snapshot.description !== undefined && snapshot.description !== localDescription) {
-      input.body = localDescription;
-      diverged = true;
-    }
-    if (
-      snapshot.status !== undefined &&
-      desiredStatusForSnapshot !== undefined &&
-      snapshot.status !== desiredStatusForSnapshot
-    ) {
-      const issueState = taskStatusToIssueState(localStatus);
-      if (issueState) {
-        input.state = issueState;
+      const input: GitHubApi.IssueUpdateInput = {};
+      let diverged = false;
+      if (snapshot.title !== undefined && snapshot.title !== localTitle) {
+        input.title = localTitle;
         diverged = true;
       }
-    }
-    if (!diverged) {
-      continue;
+      if (snapshot.description !== undefined && snapshot.description !== localDescription) {
+        input.body = localDescription;
+        diverged = true;
+      }
+      if (
+        snapshot.status !== undefined &&
+        desiredStatusForSnapshot !== undefined &&
+        snapshot.status !== desiredStatusForSnapshot
+      ) {
+        const issueState = taskStatusToIssueState(localStatus);
+        if (issueState) {
+          input.state = issueState;
+          diverged = true;
+        }
+      }
+      if (!diverged) {
+        continue;
+      }
+
+      yield* push.updateIssue(repo.owner.login, repo.name, remoteIssue.number, input);
+      writeSnapshot(integration, id, {
+        ...snapshot,
+        title: localTitle,
+        description: localDescription,
+        status: desiredStatusForSnapshot ?? snapshot.status,
+      });
+      tasks++;
     }
 
-    yield* push.updateIssue(repo.owner.login, repo.name, remoteIssue.number, input);
-    writeSnapshot(integration, id, {
-      ...snapshot,
-      title: localTitle,
-      description: localDescription,
-      status: desiredStatusForSnapshot ?? snapshot.status,
-    });
-    tasks++;
-  }
-
-  return { projects, tasks };
-});
+    return { projects, tasks };
+  },
+);
 
 //
 // Main handler
