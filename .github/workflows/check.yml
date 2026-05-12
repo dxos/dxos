@@ -43,11 +43,8 @@ concurrency:
 # https://moonrepo.dev/docs/guides/ci
 jobs:
   check:
-    # pull-requests: write is scoped here (not top-level) so only this job can
-    # post the moon run report comment; build/test/e2e jobs stay read-only.
     permissions:
       contents: read
-      pull-requests: write
       packages: read
     runs-on: depot-ubuntu-24.04-8
     container:
@@ -94,11 +91,38 @@ jobs:
       - name: Check for peer dependency issues
         run: pnpm install --resolution-only --no-frozen-lockfile
 
-      - uses: 'moonrepo/run-report-action@v1'
+      - name: Upload moon run report
+        uses: actions/upload-artifact@v7
         if: >-
           (success() || failure()) &&
           github.event_name == 'pull_request' &&
           github.event.pull_request.head.repo.full_name == github.repository
+        with:
+          name: moon-run-report
+          path: .moon/cache/runReport.json
+          retention-days: 1
+          if-no-files-found: ignore
+
+  check-report:
+    needs: check
+    # Only post on same-repo PRs — fork PRs get read-only tokens regardless of
+    # declared permissions, and non-PR runs have no PR to comment on.
+    if: >-
+      always() &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Download moon run report
+        uses: actions/download-artifact@v5
+        with:
+          name: moon-run-report
+          path: .moon/cache
+
+      - uses: 'moonrepo/run-report-action@v1'
         with:
           access-token: ${{ secrets.GITHUB_TOKEN }}
 
