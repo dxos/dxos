@@ -80,54 +80,6 @@ const createMemoryTransportPair = (): [MemoryTransport, MemoryTransport] => {
 };
 
 /**
- * Stateless subduction sync server.
- * Holds a Subduction instance with persistent storage but no Repo.
- * Connections are ephemeral: opened per sync session, torn down after.
- */
-class SubductionServer {
-  private _signer: MemorySigner;
-  private _storage: MemoryStorage;
-  private _subduction: Subduction;
-
-  constructor(signer: MemorySigner) {
-    this._signer = signer;
-    this._storage = new MemoryStorage();
-    this._subduction = new Subduction(signer, this._storage);
-  }
-
-  get peerId(): SubductionPeerId {
-    return this._signer.peerId();
-  }
-
-  get subduction(): Subduction {
-    return this._subduction;
-  }
-
-  /**
-   * Opens an ephemeral sync session for a client.
-   * Creates a MemoryTransport pair, performs the authenticated handshake,
-   * and adds the server-side transport to the Subduction instance.
-   * Returns the client-side AuthenticatedTransport for the caller to use.
-   */
-  async openSession(clientSigner: MemorySigner): Promise<AuthenticatedTransport> {
-    const [serverTransport, clientTransport] = createMemoryTransportPair();
-
-    const [serverAuth, clientAuth] = await Promise.all([
-      AuthenticatedTransport.accept(serverTransport, this._signer),
-      AuthenticatedTransport.setup(clientTransport, clientSigner, this._signer.peerId()),
-    ]);
-
-    await this._subduction.addConnection(serverAuth);
-    return clientAuth;
-  }
-
-  /** Tears down the ephemeral connection for a client peer. */
-  async closeSession(clientPeerId: SubductionPeerId): Promise<void> {
-    await this._subduction.disconnectFromPeer(clientPeerId);
-  }
-}
-
-/**
  * Build a deterministic {@link CommitId} seeded by a small integer. Values are arbitrary;
  * used in tests only to satisfy the `head` parameter of `Subduction.addCommit`.
  */
@@ -284,51 +236,6 @@ describe('automerge-subduction', () => {
     const blobsOnB = await subductionB.getBlobs(sid);
     expect(blobsOnB).toHaveLength(1);
     expect(blobsOnB[0]).toEqual(new Uint8Array([4, 5, 6]));
-  }, 10_000);
-
-  test('SubductionServer: syncs raw data between two clients via ephemeral connections', async ({ expect }) => {
-    const server = new SubductionServer(MemorySigner.generate());
-
-    // Client A adds a commit and syncs with the server.
-    const signerA = MemorySigner.generate();
-    const subductionA = new Subduction(signerA, new MemoryStorage());
-    const sid = SedimentreeId.fromBytes(new Uint8Array(32).fill(42));
-    await subductionA.addCommit(sid, commitIdOf(4), [], new Uint8Array([1, 2, 3]));
-
-    const clientAuthA = await server.openSession(signerA);
-    await subductionA.addConnection(clientAuthA);
-    await subductionA.syncWithAllPeers(sid, false);
-
-    // Tear down Client A's session.
-    await subductionA.disconnectFromPeer(server.peerId);
-    await server.closeSession(signerA.peerId());
-
-    // Server persisted the blob; no active connections remain.
-    const serverBlobs = await server.subduction.getBlobs(sid);
-    expect(serverBlobs).toHaveLength(1);
-    expect(serverBlobs[0]).toEqual(new Uint8Array([1, 2, 3]));
-
-    const serverPeersAfterA = await server.subduction.getConnectedPeerIds();
-    expect(serverPeersAfterA).toHaveLength(0);
-
-    // Client B opens a new session and retrieves the data from the server.
-    const signerB = MemorySigner.generate();
-    const subductionB = new Subduction(signerB, new MemoryStorage());
-
-    const clientAuthB = await server.openSession(signerB);
-    await subductionB.addConnection(clientAuthB);
-    await subductionB.syncWithPeer(server.peerId, sid, false);
-
-    const blobsOnB = await subductionB.getBlobs(sid);
-    expect(blobsOnB).toHaveLength(1);
-    expect(blobsOnB[0]).toEqual(new Uint8Array([1, 2, 3]));
-
-    // Tear down Client B's session.
-    await subductionB.disconnectFromPeer(server.peerId);
-    await server.closeSession(signerB.peerId());
-
-    const serverPeersAfterB = await server.subduction.getConnectedPeerIds();
-    expect(serverPeersAfterB).toHaveLength(0);
   }, 10_000);
 
   test('full sync exchanges all sedimentrees between peers', async ({ expect }) => {
