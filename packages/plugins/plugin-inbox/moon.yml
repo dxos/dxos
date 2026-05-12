@@ -1,19 +1,12 @@
 layer: library
 language: typescript
 tags:
-  - ts-build
+  - ts-vite-build
   - ts-test
   - ts-test-storybook
   - pack
   - storybook
 tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/blueprints/index.ts'
-      - '--entryPoint=src/operations/index.ts'
-      - '--entryPoint=src/translations.ts'
-      - '--entryPoint=src/types/index.ts'
   deploy-functions:
     script: |
       $workspaceRoot/scripts/dx --profile main function deploy --runtime worker-loader $workspaceRoot/packages/plugins/plugin-inbox/src/functions/google/gmail/sync.ts && \

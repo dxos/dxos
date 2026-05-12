@@ -3,8 +3,10 @@
 //
 
 import { spawnSync } from 'node:child_process';
+import react from '@vitejs/plugin-react';
 // Vite 8 ships rolldown as its bundler by default (no `rolldown-vite` shim needed).
 import { defineConfig as viteDefineConfig, type Plugin, type UserConfig } from 'vite';
+import solid from 'vite-plugin-solid';
 
 // Relative import — same rationale as vitest.base.config.ts: avoids moon dep cycle through @dxos/log.
 import { DxosLogPlugin } from './tools/vite-plugin-log/src/plugin.ts';
@@ -32,6 +34,11 @@ export interface DxViteOptions {
   outDir?: string;
   /** Skip DxNodeStdPlugin (for node-only packages that don't target browser). Default: false. */
   nodeTarget?: boolean;
+  /**
+   * JSX runtime for `.tsx`/`.jsx` source files. Default: undefined (no JSX support).
+   * Set by the migration script based on package.json deps (`react` → 'react', `solid-js` → 'solid').
+   */
+  jsx?: 'react' | 'solid';
   /** Vitest config to merge in (from createTestConfig). */
   test?: UserConfig['test'];
 }
@@ -74,7 +81,8 @@ export const DxTsgoPlugin = (): Plugin => ({
  * DTS output: dist/types/src/**\/*.d.ts (via tsgo, run in closeBundle).
  */
 export const defineConfig = (options: DxViteOptions = {}): UserConfig => {
-  const { entry = 'src/index.ts', outDir = 'dist/lib', nodeTarget = false, test } = options;
+  const { entry = 'src/index.ts', outDir = 'dist/lib', nodeTarget = false, jsx, test } = options;
+  const jsxPlugin: Plugin[] = jsx === 'react' ? [react()] : jsx === 'solid' ? [solid()] : [];
   return viteDefineConfig({
     build: {
       lib: {
@@ -89,7 +97,26 @@ export const defineConfig = (options: DxViteOptions = {}): UserConfig => {
         // All non-relative, non-absolute imports are external. We only bundle local source files.
         // This covers @dxos/*, effect, react, and everything else automatically —
         // no workspace-external plugin needed.
-        external: (id) => !id.startsWith('.') && !id.startsWith('/') && !id.startsWith('\0'),
+        //
+        // Exception: `@oxc-project/runtime` provides the decorator/JSX/regenerator helpers that
+        // rolldown injects when it lowers `@decorator` / `async` / `for-await` syntax. Treating it
+        // as external would force every library consumer to install it (and it's not a declared
+        // dep), so we bundle the helpers inline.
+        external: (id) => {
+          // `node:*` imports need to flow through `DxNodeStdPlugin`'s `resolveId` so it can
+          // remap them to `@dxos/node-std/*`. Marking them external here would skip plugins
+          // and leave bare `node:fs` in the output, breaking downstream esbuild consumers
+          // that bundle for the browser.
+          if (id.startsWith('node:')) {
+            return false;
+          }
+          return (
+            !id.startsWith('@oxc-project/runtime') &&
+            !id.startsWith('.') &&
+            !id.startsWith('/') &&
+            !id.startsWith('\0')
+          );
+        },
         output: {
           chunkFileNames: 'chunk-[name].mjs',
         },
@@ -97,6 +124,7 @@ export const defineConfig = (options: DxViteOptions = {}): UserConfig => {
     },
     plugins: [
       ...(!nodeTarget ? [DxNodeStdPlugin()] : []),
+      ...jsxPlugin,
       DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
       DxTsgoPlugin(),
     ],

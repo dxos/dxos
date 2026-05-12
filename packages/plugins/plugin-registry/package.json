@@ -28,22 +28,16 @@
   },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
     },
     "./cli": {
-      "source": "./src/cli/index.ts",
-      "browser": "./dist/lib/browser/cli/index.mjs",
-      "node": "./dist/lib/node-esm/cli/index.mjs",
-      "types": "./dist/types/src/cli/index.d.ts"
+      "types": "./dist/types/src/cli/index.d.ts",
+      "import": "./dist/lib/cli.mjs"
     },
     "./translations": {
-      "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "browser": "./dist/lib/browser/translations.mjs",
-      "node": "./dist/lib/node-esm/translations.mjs"
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

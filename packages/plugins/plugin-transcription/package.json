@@ -30,34 +30,24 @@
   },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
     },
     "./components": {
-      "source": "./src/components/index.ts",
-      "browser": "./dist/lib/browser/components/index.mjs",
-      "node": "./dist/lib/node-esm/components/index.mjs",
-      "types": "./dist/types/src/components/index.d.ts"
+      "types": "./dist/types/src/components/index.d.ts",
+      "import": "./dist/lib/components.mjs"
     },
     "./hooks": {
-      "source": "./src/hooks/index.ts",
-      "browser": "./dist/lib/browser/hooks/index.mjs",
-      "node": "./dist/lib/node-esm/hooks/index.mjs",
-      "types": "./dist/types/src/hooks/index.d.ts"
+      "types": "./dist/types/src/hooks/index.d.ts",
+      "import": "./dist/lib/hooks.mjs"
     },
     "./blueprints": {
-      "source": "./src/blueprints/index.ts",
-      "browser": "./dist/lib/browser/blueprints/index.mjs",
-      "node": "./dist/lib/node-esm/blueprints/index.mjs",
-      "types": "./dist/types/src/blueprints/index.d.ts"
+      "types": "./dist/types/src/blueprints/index.d.ts",
+      "import": "./dist/lib/blueprints.mjs"
     },
     "./operations": {
-      "source": "./src/operations/index.ts",
-      "browser": "./dist/lib/browser/operations/index.mjs",
-      "node": "./dist/lib/node-esm/operations/index.mjs",
-      "types": "./dist/types/src/operations/index.d.ts"
+      "types": "./dist/types/src/operations/index.d.ts",
+      "import": "./dist/lib/operations.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
@@ -66,10 +56,8 @@
       "node": "./dist/lib/node-esm/translations.mjs"
     },
     "./types": {
-      "source": "./src/types/index.ts",
-      "browser": "./dist/lib/browser/types/index.mjs",
-      "node": "./dist/lib/node-esm/types/index.mjs",
-      "types": "./dist/types/src/types/index.d.ts"
+      "types": "./dist/types/src/types/index.d.ts",
+      "import": "./dist/lib/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

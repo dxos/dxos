@@ -7,6 +7,7 @@ tasks:
     deps:
       - dx-build:compile
       - ^:build
+      - ^:compile
     inputs:
       - /tsconfig.base.json
       - /vite.base.config.ts
@@ -20,6 +21,12 @@ tasks:
       - dist/types/
     options:
       timeout: 120
+  # Alias for backwards compatibility: many other moon projects declare
+  # dependencies like `foo:compile`. Now that the new build emits both
+  # `dist/lib/` and `dist/types/` in a single pass, `compile` is just `build`.
+  compile:
+    deps:
+      - build
 
 inheritedBy:
   tags: ts-vite-build
