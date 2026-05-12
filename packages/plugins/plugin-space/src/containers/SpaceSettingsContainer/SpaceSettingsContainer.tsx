@@ -20,7 +20,6 @@ import {
   Icon,
   IconButton,
   Input,
-  useFileDownload,
   useMulticastObservable,
   useTranslation,
 } from '@dxos/react-ui';
@@ -181,15 +180,12 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
     [t, space, personal],
   );
 
-  const download = useFileDownload();
   const handleBackupBinary = useCallback(async () => {
-    const archive = await space.internal.export({ format: SpaceArchive.Format.BINARY });
-    download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
-  }, [space, download]);
+    await invokePromise(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.BINARY });
+  }, [space, invokePromise]);
   const handleBackupJson = useCallback(async () => {
-    const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
-    download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
-  }, [space, download]);
+    await invokePromise(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.JSON });
+  }, [space, invokePromise]);
 
   const repairs = useCapabilities(SpaceCapabilities.Repair);
   const handleRepair = useCallback(async () => {
