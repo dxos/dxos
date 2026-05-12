@@ -155,6 +155,7 @@ jobs:
           quarantine: true
           run: moon run :test :test-browser :test-storybook --affected remote -- --no-file-parallelism
 
+      # Fallback for fork PRs and local runs where TRUNK_TOKEN is unavailable.
       - name: Test Affected (no analytics)
         if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN == '' }}
         run: moon run :test :test-browser :test-storybook --affected remote -- --no-file-parallelism
@@ -169,6 +170,7 @@ jobs:
           quarantine: true
           run: moon exec --on-failure continue :test :test-browser :test-storybook -- --no-file-parallelism
 
+      # Fallback for forks running against their own main where TRUNK_TOKEN is unavailable.
       - name: Test All (no analytics)
         if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN == '' }}
         run: moon exec --on-failure continue :test :test-browser :test-storybook -- --no-file-parallelism
