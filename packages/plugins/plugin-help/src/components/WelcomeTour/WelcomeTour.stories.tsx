@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { StorybookPlugin } from '@dxos/plugin-testing/plugin';
+import { StorybookPlugin } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Button, Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
