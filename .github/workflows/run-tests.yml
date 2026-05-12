@@ -12,9 +12,17 @@ on:
         required: false
         type: string
         default: '24.11.1'
+      use-trunk:
+        description: >
+          Wrap test runs with Trunk analytics uploader. Set to false for fork PRs
+          where TRUNK_TOKEN is unavailable (pull_request events from forks do not
+          receive secrets).
+        required: false
+        type: boolean
+        default: true
     secrets:
       TRUNK_TOKEN:
-        required: true
+        required: false
       CODECOV_TOKEN:
         required: false
 
@@ -25,8 +33,6 @@ permissions:
 
 jobs:
   test:
-    # Gate fork PRs on maintainer approval. github context is inherited from the caller.
-    environment: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository && 'external-pr' || '' }}
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:${{ inputs.node-version }}
@@ -67,7 +73,7 @@ jobs:
         run: rm -rf test-results
 
       - name: Test Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && inputs.use-trunk }}
         uses: trunk-io/analytics-uploader@v1
         with:
           junit-paths: 'test-results/**/results.xml'
@@ -76,8 +82,12 @@ jobs:
           quarantine: true
           run: moon run :test :test-browser :test-storybook --affected remote -- --no-file-parallelism
 
+      - name: Test Affected (no analytics)
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.use-trunk }}
+        run: moon run :test :test-browser :test-storybook --affected remote -- --no-file-parallelism
+
       - name: Test All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        if: ${{ steps.extract_branch.outputs.branch == 'main' && inputs.use-trunk }}
         uses: trunk-io/analytics-uploader@v1
         with:
           junit-paths: 'test-results/**/results.xml'
@@ -86,8 +96,12 @@ jobs:
           quarantine: true
           run: moon exec --on-failure continue :test :test-browser :test-storybook -- --no-file-parallelism
 
+      - name: Test All (no analytics)
+        if: ${{ steps.extract_branch.outputs.branch == 'main' && !inputs.use-trunk }}
+        run: moon exec --on-failure continue :test :test-browser :test-storybook -- --no-file-parallelism
+
       - uses: 'moonrepo/run-report-action@v1'
-        if: (success() || failure()) && (github.event_name == 'pull_request' || github.event_name == 'pull_request_target')
+        if: (success() || failure()) && inputs.use-trunk
         with:
           access-token: ${{ secrets.GITHUB_TOKEN }}
 

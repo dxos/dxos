@@ -2,7 +2,6 @@ name: Check
 
 on:
   pull_request:
-  pull_request_target:
   merge_group:
 
   push:
@@ -42,21 +41,12 @@ env:
 
 # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
 concurrency:
-  # Include event_name so pull_request and pull_request_target runs don't cancel each other.
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 # https://moonrepo.dev/docs/guides/ci
 jobs:
   check:
-    # pull_request handles same-repo PRs; pull_request_target handles fork PRs.
-    # Skip pull_request_target for same-repo PRs (avoid double runs) and
-    # skip pull_request for fork PRs (no secrets, would fail).
-    if: >-
-      (github.event_name != 'pull_request_target' || github.event.pull_request.head.repo.full_name != github.repository) &&
-      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-    # Gate fork PRs on maintainer approval before running fork code with secrets in scope.
-    environment: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository && 'external-pr' || '' }}
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -76,8 +66,6 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
-          # pull_request_target checks out the base branch by default; explicitly
-          # check out the PR head so we lint/build the contributor's actual code.
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Extract branch
@@ -105,40 +93,38 @@ jobs:
         run: pnpm install --resolution-only --no-frozen-lockfile
 
       - uses: 'moonrepo/run-report-action@v1'
-        if: (success() || failure()) && github.event_name == 'pull_request_target'
+        if: >-
+          (success() || failure()) &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
         with:
           access-token: ${{ secrets.GITHUB_TOKEN }}
 
   test:
-    # pull_request handles same-repo PRs; pull_request_target handles fork PRs.
-    # Skip pull_request_target for same-repo PRs (avoid double runs) and
-    # skip pull_request for fork PRs (no secrets, would fail).
-    if: >-
-      (github.event_name != 'pull_request_target' || github.event.pull_request.head.repo.full_name != github.repository) &&
-      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     strategy:
       matrix:
         node-version: ['24.11.1']
-    # Fork PRs: gate on maintainer approval AND isolate secrets — only TRUNK_TOKEN
-    # and CODECOV_TOKEN reach the test runner via the reusable workflow.
+    # Fork PRs run without Trunk analytics (no TRUNK_TOKEN available for pull_request events
+    # from forks). Same-repo PRs and push/schedule runs use Trunk as normal.
     uses: ./.github/workflows/run-tests.yml
     with:
       sha: ${{ github.event.pull_request.head.sha || github.sha }}
       node-version: ${{ matrix.node-version }}
+      use-trunk: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     secrets:
       TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   e2e:
-    # e2e only runs on direct pushes to release branches, never on PRs.
+    # e2e only runs on pushes/schedules to release branches, never on PRs.
+    # pull_request events have github.ref = refs/pull/N/merge so the startsWith
+    # checks below are already false — no explicit exclusion needed.
     if: >-
-      github.event_name != 'pull_request_target' && (
-        startsWith(github.ref, 'refs/heads/main') ||
-        startsWith(github.ref, 'refs/heads/rc-') ||
-        startsWith(github.ref, 'refs/heads/hotfix-') ||
-        startsWith(github.ref, 'refs/heads/release-please-') ||
-        inputs.e2e
-      )
+      startsWith(github.ref, 'refs/heads/main') ||
+      startsWith(github.ref, 'refs/heads/rc-') ||
+      startsWith(github.ref, 'refs/heads/hotfix-') ||
+      startsWith(github.ref, 'refs/heads/release-please-') ||
+      inputs.e2e
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -214,11 +200,6 @@ jobs:
           token: ${{ secrets.TRUNK_TOKEN }}
           quarantine: true
           run: moon exec --on-failure continue :e2e --concurrency=1
-
-      - uses: 'moonrepo/run-report-action@v1'
-        if: (success() || failure()) && github.event_name == 'pull_request_target'
-        with:
-          access-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Traces
         uses: actions/upload-artifact@v7
