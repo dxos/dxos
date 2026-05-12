@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Either from 'effect/Either';
-import * as Schema from 'effect/Schema';
 import * as Array from 'effect/Array';
+import * as Either from 'effect/Either';
 import { pipe } from 'effect/Function';
 import * as Order from 'effect/Order';
 import * as Pipeable from 'effect/Pipeable';
 import * as Predicate from 'effect/Predicate';
+import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
