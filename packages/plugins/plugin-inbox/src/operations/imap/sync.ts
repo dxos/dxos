@@ -186,13 +186,13 @@ const updateTargetMetadata = (
       return;
     }
     const cursor = formatCursor(uidValidity, uid);
-    Obj.update(integration, (mutable) => {
-      const next = [...mutable.targets];
+    Obj.update(integration, (integration) => {
+      const next = [...integration.targets];
       next[targetIndex] = {
         ...next[targetIndex],
         cursor,
         lastSyncAt: new Date().toISOString(),
       };
-      (mutable as Obj.Mutable<typeof mutable>).targets = next;
+      (integration as Obj.Mutable<typeof integration>).targets = next;
     });
   });

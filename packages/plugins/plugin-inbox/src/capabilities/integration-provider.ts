@@ -195,12 +195,12 @@ const imapOnTokenCreated: OnTokenCreated = ({ integration, existingTarget }) =>
     }
     if (existingTarget) {
       // Caller passed an existing Mailbox — swap into targets[0].object.
-      Obj.update(integration, (mutable) => {
-        const next = [...mutable.targets];
+      Obj.update(integration, (integration) => {
+        const next = [...integration.targets];
         if (next[0]) {
           next[0] = { ...next[0], object: existingTarget };
         }
-        (mutable as Obj.Mutable<typeof mutable>).targets = next;
+        (integration as Obj.Mutable<typeof integration>).targets = next;
       });
     }
   }).pipe(Effect.orDie);

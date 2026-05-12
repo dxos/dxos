@@ -43,11 +43,12 @@ type SocketEvents =
   | 'drain';
 
 // `readable-stream`'s Duplex extends EventEmitter at runtime, but its
-// type definitions don't always re-export the EventEmitter surface — we
-// declare it locally so this class can call `emit`, `on`, etc.
-interface TauriSocket extends Duplex {
-  emit(event: string | symbol, ...args: unknown[]): boolean;
-}
+// shipped type definitions don't always re-export the EventEmitter
+// surface — `emitEvent` casts past that gap so we can dispatch the
+// socket-style events `imapflow` listens for.
+const emitEvent = (target: Duplex, event: string | symbol, ...args: unknown[]): boolean =>
+  (target as unknown as { emit: (event: string | symbol, ...args: unknown[]) => boolean }).emit(event, ...args);
+
 class TauriSocket extends Duplex {
   #handle: number | undefined;
   #host: string = '';
@@ -70,7 +71,7 @@ class TauriSocket extends Duplex {
     if (!isTauri()) {
       const err = new Error('node:net is unavailable in this runtime (no Tauri).');
       // Defer so listeners attached after .connect() see the event.
-      queueMicrotask(() => this.emit('error', err));
+      queueMicrotask(() => emitEvent(this, 'error', err));
       return this;
     }
     if (!options.host || !options.port) {
@@ -96,9 +97,9 @@ class TauriSocket extends Duplex {
       .then((handle) => {
         this.#handle = handle;
         this.#connecting = false;
-        this.emit('connect');
+        emitEvent(this, 'connect');
         if (options.secureContext) {
-          this.emit('secureConnect');
+          emitEvent(this, 'secureConnect');
         }
         if (callback) {
           callback();
@@ -106,7 +107,7 @@ class TauriSocket extends Duplex {
       })
       .catch((err) => {
         this.#connecting = false;
-        this.emit('error', err instanceof Error ? err : new Error(String(err)));
+        emitEvent(this, 'error', err instanceof Error ? err : new Error(String(err)));
       });
 
     return this;
@@ -134,7 +135,7 @@ class TauriSocket extends Duplex {
       this.#handle = undefined;
     }
     callback(err);
-    this.emit('close', !!err);
+    emitEvent(this, 'close', !!err);
   }
 
   setKeepAlive(_enable?: boolean, _initialDelay?: number): this {
