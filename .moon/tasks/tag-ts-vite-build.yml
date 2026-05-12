@@ -6,6 +6,14 @@ tasks:
     command: pnpm exec vite build
     deps:
       - dx-build:compile
+      # vite.base.config.ts now houses vitest project builders too — those import
+      # `@dxos/esbuild-plugins`, `@dxos/vite-plugin-import-source`, and the
+      # `vite-plugin-log` plugin source at config-load time. On a clean CI run those
+      # workspace tools must be built before any vite build that imports the base
+      # config can resolve them.
+      - esbuild-plugins:compile
+      - vite-plugin-import-source:compile
+      - vite-plugin-log:compile
       - ^:build
       - ^:compile
     inputs:
