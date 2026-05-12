@@ -7,3 +7,5 @@ import { Plugin } from '@dxos/app-framework';
 import { meta } from './meta';
 
 export const CrmPlugin = Plugin.lazy(meta, () => import('#plugin'));
+
+export { CrmOperationHandlerSet } from './operations';

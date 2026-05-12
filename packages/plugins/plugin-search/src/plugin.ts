@@ -7,3 +7,5 @@ import { Plugin } from '@dxos/app-framework';
 import { meta } from './meta';
 
 export const SearchPlugin = Plugin.lazy(meta, () => import('#plugin'));
+
+export { SearchOperationHandlerSet } from './operations';

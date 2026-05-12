@@ -20,8 +20,8 @@ import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing'
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown';
-import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
+import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
 import { WithProperties } from '@dxos/plugin-markdown/testing';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';

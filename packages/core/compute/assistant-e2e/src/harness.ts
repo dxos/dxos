@@ -25,8 +25,8 @@ import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { InboxBlueprint } from '@dxos/plugin-inbox';
-import { InboxOperationHandlerSet } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox';
+import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/plugin';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 

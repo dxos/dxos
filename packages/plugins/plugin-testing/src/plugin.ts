@@ -8,3 +8,5 @@ import { meta } from './meta';
 
 export const StorybookPlugin = Plugin.lazy(meta, () => import('#plugin'));
 export type { StorybookPluginOptions } from '#plugin';
+
+export { TestingOperationHandlerSet } from './operations';

@@ -9,5 +9,3 @@ export * from './hooks';
 export * from './meta';
 export * from './transcriber';
 export * from './types';
-
-export { TranscriptionOperationHandlerSet } from './operations';

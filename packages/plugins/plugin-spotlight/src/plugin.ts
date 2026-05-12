@@ -7,3 +7,5 @@ import { Plugin } from '@dxos/app-framework';
 import { meta } from './meta';
 
 export const SpotlightPlugin = Plugin.lazy(meta, () => import('#plugin'));
+
+export { SpotlightOperationHandlerSet } from './operations';

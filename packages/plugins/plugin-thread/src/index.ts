@@ -9,5 +9,3 @@ export * from './calls';
 export * from './hooks';
 export * from './meta';
 export * from './types';
-
-export { ThreadOperationHandlerSet } from './operations';

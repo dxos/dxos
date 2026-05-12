@@ -5,5 +5,3 @@
 export * from './blueprints';
 export * from './meta';
 export * from './types';
-
-export { ChessOperationHandlerSet } from './operations';
