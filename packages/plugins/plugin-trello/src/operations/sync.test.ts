@@ -388,8 +388,7 @@ describe('pushBoardCards (push)', () => {
 
     // Seed a snapshot so we can detect a local divergence on `description` only.
     Obj.update(integration, (integration) => {
-      const mut = integration as Obj.Mutable<typeof integration>;
-      mut.snapshots = {
+      integration.snapshots = {
         card1: { name: 'Task A', description: 'orig', listName: 'To Do' },
       };
     });
@@ -434,8 +433,7 @@ describe('pushBoardCards (push)', () => {
     const { db, integration } = await setup();
 
     Obj.update(integration, (integration) => {
-      const mut = integration as Obj.Mutable<typeof integration>;
-      mut.snapshots = {
+      integration.snapshots = {
         card1: { name: 'Pulled', description: '', listName: 'To Do' },
       };
     });

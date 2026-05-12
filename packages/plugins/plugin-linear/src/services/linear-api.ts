@@ -417,3 +417,195 @@ export const priorityNumberToTaskPriority = (
       return undefined;
   }
 };
+
+/**
+ * Reverse of {@link priorityNumberToTaskPriority}. Used when pushing local
+ * priority edits back to Linear. We never produce 0 (No priority) on push —
+ * the Task model treats absent as "no opinion", so a round-tripped issue
+ * keeps whatever priority it had on Linear if local has none.
+ */
+export const taskPriorityToPriorityNumber = (
+  priority: 'none' | 'low' | 'medium' | 'high' | 'urgent' | undefined,
+): 1 | 2 | 3 | 4 | undefined => {
+  switch (priority) {
+    case 'urgent':
+      return 1;
+    case 'high':
+      return 2;
+    case 'medium':
+      return 3;
+    case 'low':
+      return 4;
+    case 'none':
+    default:
+      return undefined;
+  }
+};
+
+/**
+ * Reverse of {@link stateTypeToTaskStatus}. Used to pick a Linear workflow
+ * state when pushing a local status change. The Task → state-type mapping is
+ * lossy in one direction (canceled and completed both map to `done`), so on
+ * push we pick a single canonical Linear state-type per Task status:
+ *
+ * - `todo`        → `unstarted`
+ * - `in-progress` → `started`
+ * - `done`        → `completed`
+ *
+ * Callers resolve the resulting state-type to an actual workflow-state ID via
+ * {@link fetchTeamWorkflowStates} per team.
+ */
+export const taskStatusToStateType = (status: 'todo' | 'in-progress' | 'done'): StateType => {
+  switch (status) {
+    case 'in-progress':
+      return 'started';
+    case 'done':
+      return 'completed';
+    case 'todo':
+    default:
+      return 'unstarted';
+  }
+};
+
+//
+// Workflow states (needed to map Task.status → Linear state ID on push)
+//
+
+const WorkflowStateSchema = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  type: StateTypeSchema,
+});
+export type WorkflowState = Schema.Schema.Type<typeof WorkflowStateSchema>;
+
+const TEAM_WORKFLOW_STATES_QUERY = /* GraphQL */ `
+  query TeamWorkflowStates($teamId: String!, $first: Int!, $after: String) {
+    team(id: $teamId) {
+      states(first: $first, after: $after) {
+        nodes {
+          id
+          name
+          type
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+`;
+
+const TeamWorkflowStatesSchema = Schema.Struct({
+  team: Schema.Struct({
+    states: Schema.Struct({
+      nodes: Schema.Array(WorkflowStateSchema),
+      pageInfo: PageInfoSchema,
+    }),
+  }),
+});
+
+/**
+ * List workflow states (Backlog, In Progress, Done, etc.) for a team. Each
+ * state has a `type` (the cross-workspace category) plus an `id` we can pass
+ * to `issueUpdate(stateId: ...)`. State names are workspace-customisable; we
+ * never match by name on push.
+ */
+export const fetchTeamWorkflowStates = (teamId: string): LinearEffect<readonly WorkflowState[]> =>
+  paginate(TEAM_WORKFLOW_STATES_QUERY, { teamId }, (d) => d.team.states, TeamWorkflowStatesSchema);
+
+//
+// Mutations
+//
+
+const ISSUE_UPDATE_MUTATION = /* GraphQL */ `
+  mutation IssueUpdate($id: String!, $input: IssueUpdateInput!) {
+    issueUpdate(id: $id, input: $input) {
+      success
+      issue {
+        id
+      }
+    }
+  }
+`;
+
+const IssueUpdateResponseSchema = Schema.Struct({
+  issueUpdate: Schema.Struct({
+    success: Schema.Boolean,
+    issue: Schema.NullOr(Schema.Struct({ id: Schema.String })).pipe(Schema.optional),
+  }),
+});
+
+/**
+ * Update fields on a Linear issue. All input fields are optional; only fields
+ * explicitly set are sent (so `description: undefined` is dropped, vs. `null`
+ * or empty string which Linear treats as a clear).
+ *
+ * `stateId` must be a state from the issue's team — see
+ * {@link fetchTeamWorkflowStates}. `priority` is the 0–4 numeric form (use
+ * {@link taskPriorityToPriorityNumber}); `estimate` is the team's estimate
+ * unit (typically points).
+ *
+ * Fails with {@link LinearGraphQLError} when Linear returns `success: false`
+ * or the GraphQL envelope contains errors (e.g. token lacks `write` scope).
+ */
+/**
+ * `description`, `priority`, and `estimate` accept `null` to clear the field
+ * on Linear. `undefined` means "leave unchanged" — Linear treats the two
+ * distinctly. `title` and `stateId` cannot meaningfully be cleared.
+ */
+export type IssueUpdateInput = {
+  title?: string;
+  description?: string | null;
+  stateId?: string;
+  priority?: number | null;
+  estimate?: number | null;
+};
+
+export const updateIssue = (id: string, input: IssueUpdateInput): LinearEffect<void> =>
+  Effect.gen(function* () {
+    const response = yield* linearGraphQL(ISSUE_UPDATE_MUTATION, { id, input }, IssueUpdateResponseSchema);
+    if (!response.issueUpdate.success) {
+      return yield* Effect.fail(
+        new LinearGraphQLError({
+          context: { messages: [`issueUpdate(${id}) returned success=false`], variables: { id, input } },
+        }),
+      );
+    }
+  });
+
+const PROJECT_UPDATE_MUTATION = /* GraphQL */ `
+  mutation ProjectUpdate($id: String!, $input: ProjectUpdateInput!) {
+    projectUpdate(id: $id, input: $input) {
+      success
+      project {
+        id
+      }
+    }
+  }
+`;
+
+const ProjectUpdateResponseSchema = Schema.Struct({
+  projectUpdate: Schema.Struct({
+    success: Schema.Boolean,
+    project: Schema.NullOr(Schema.Struct({ id: Schema.String })).pipe(Schema.optional),
+  }),
+});
+
+export type ProjectUpdateInput = {
+  name?: string;
+  description?: string | null;
+};
+
+/** Update fields on a Linear project. Same semantics as {@link updateIssue}. */
+export const updateProject = (id: string, input: ProjectUpdateInput): LinearEffect<void> =>
+  Effect.gen(function* () {
+    const response = yield* linearGraphQL(PROJECT_UPDATE_MUTATION, { id, input }, ProjectUpdateResponseSchema);
+    if (!response.projectUpdate.success) {
+      return yield* Effect.fail(
+        new LinearGraphQLError({
+          context: { messages: [`projectUpdate(${id}) returned success=false`], variables: { id, input } },
+        }),
+      );
+    }
+  });

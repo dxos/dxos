@@ -124,7 +124,7 @@
     --dx-l0-avatar-size: 3rem;
     --dx-l1-size: calc(var(--dx-nav-sidebar-size) - var(--dx-l0-size));
     --dx-r0-size: var(--dx-rail-size);
-    --dx-r1-size: calc(var(--dx-complementary-sidebar-size) - var(--dx-r0-size));
+    --dx-r1-size: calc(var(--dx-complementary-sidebar-size) - var(--dx-r0-size) - 1px);
   }
 
   :root {

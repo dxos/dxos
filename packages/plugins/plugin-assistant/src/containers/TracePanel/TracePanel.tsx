@@ -38,9 +38,9 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     const runtime = useComputeRuntimeService(Process.ProcessMonitorService, space.id);
     const processes = useAtomValue(runtime?.processTreeAtom ?? atomEmpty);
 
-    const [selectedCommit, setSelectedCommit] = useState<Commit | null>(null);
-    const handleCommitClick = useCallback(
-      (commit: Commit | null) => {
+    const [selectedCommit, setSelectedCommit] = useState<Commit | undefined>();
+    const handleCommitSelect = useCallback(
+      (commit: Commit | undefined) => {
         setSelectedCommit(commit);
         if (commit?.link) {
           const dxn = DXN.tryParse(commit.link)?.asEchoDXN();
@@ -70,37 +70,41 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     return (
       <div
         {...composableProps(props, {
-          classNames: 'grid grid-rows-[min-content_1fr_min-content] divide-y divide-separator',
           ...attentionAttrs,
+          classNames: mx(
+            'h-full grid divide-y divide-separator',
+            selectedCommit ? 'grid-rows-[minmax(0,4lh)_1fr_minmax(0,206px)]' : 'grid-rows-[minmax(0,4lh)_1fr]',
+          ),
         })}
         ref={forwardedRef}
       >
         <ProcessTree
-          classNames={mx('max-h-[8lh] border-b border-separator')}
           processes={processes}
           onProcessSelect={handleProcessSelect}
           onProcessTerminate={onProcessTerminate}
         />
+
         <ScrollContainer.Root pin>
           <ScrollContainer.Content thin>
+            <ScrollContainer.Fade />
             <ScrollContainer.Viewport>
               <Timeline
-                currentBranch={currentBranch}
-                branches={branches}
-                commits={commits}
                 compact
-                onCommitClick={handleCommitClick}
+                commits={commits}
+                branches={branches}
+                currentBranch={currentBranch}
+                onSelect={handleCommitSelect}
               />
             </ScrollContainer.Viewport>
             <ScrollContainer.ScrollDownButton />
-            <ScrollContainer.Fade />
           </ScrollContainer.Content>
         </ScrollContainer.Root>
+
         {selectedCommit && (
           <Syntax.Root data={selectedCommit}>
             <Syntax.Content>
               <Syntax.Viewport>
-                <Syntax.Code />
+                <Syntax.Code className='text-xs' />
               </Syntax.Viewport>
             </Syntax.Content>
           </Syntax.Root>
