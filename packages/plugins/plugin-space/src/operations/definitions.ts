@@ -9,6 +9,7 @@ import { SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
 import { Operation } from '@dxos/compute';
 import { Collection, Database, Obj, QueryAST, Type, View } from '@dxos/echo';
+import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
 import { meta } from '#meta';
 
@@ -237,6 +238,49 @@ export namespace SpaceOperation {
     },
     services: [Capability.Service],
     input: Schema.Void,
+    output: Schema.Void,
+  });
+
+  export const OpenImportSpace = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}.open-import-space`,
+      name: 'Open Import Space Dialog',
+      description: 'Open the import space dialog to create a new space from a backup.',
+    },
+    services: [Capability.Service],
+    input: Schema.Void,
+    output: Schema.Void,
+  });
+
+  export const ImportSpace = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}.import-space`,
+      name: 'Import Space',
+      description: 'Import a space archive as a new space.',
+    },
+    services: [Capability.Service],
+    input: Schema.Struct({
+      archive: Schema.Struct({
+        filename: Schema.String,
+        contents: Schema.instanceOf(Uint8Array),
+      }),
+    }),
+    output: Schema.Struct({
+      space: SpaceSchema,
+    }),
+  });
+
+  export const ExportSpace = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}.export-space`,
+      name: 'Export Space',
+      description: 'Export a space as a backup and download the archive.',
+    },
+    services: [Capability.Service],
+    input: Schema.Struct({
+      space: SpaceSchema,
+      format: Schema.Enums(SpaceArchive.Format),
+    }),
     output: Schema.Void,
   });
 

@@ -26,3 +26,20 @@ tasks:
       - '--entryPoint=src/translations.ts'
       - '--entryPoint=src/types/index.ts'
       - '--platform=neutral'
+  check-module-structure:
+    # Fail when the operations entrypoint pulls in `@dxos/react-ui`. The operations
+    # module must remain UI-free so it can be loaded in non-DOM environments.
+    command: >-
+      pnpm exec dx-trace-imports
+      --from src/operations/index.ts
+      --to "@dxos/react-ui"
+      --conditions source,workerd,worker,node
+      --fail-on present
+    deps:
+      - dx-trace-imports:compile
+    inputs:
+      - tsconfig.json
+      - '@group(production)'
+      - /pnpm-lock.yaml
+    options:
+      timeout: 60
