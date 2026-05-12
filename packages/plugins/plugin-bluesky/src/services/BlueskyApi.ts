@@ -12,6 +12,7 @@ import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as ParseResult from 'effect/ParseResult';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
@@ -109,15 +110,19 @@ const SavedFeedSchema = Schema.Struct({
 /** Saved/pinned feed entry from `app.bsky.actor.getPreferences`. */
 export type SavedFeed = Schema.Schema.Type<typeof SavedFeedSchema>;
 
-// `getPreferences.preferences` is heterogeneous; only the
-// `app.bsky.actor.defs#savedFeedsPrefV2` entry carries `items`.
+// `getPreferences.preferences` is heterogeneous. Multiple entry types carry
+// an `items` array (`savedFeedsPrefV2`, `mutedWordsPref`, `labelersPref`, …)
+// each with a different shape, so we keep the wrapper schema permissive and
+// decode the saved-feed items per-entry below.
 const PreferencesEntrySchema = Schema.Struct({
   $type: Schema.optional(Schema.String),
-  items: Schema.optional(Schema.Array(SavedFeedSchema)),
+  items: Schema.optional(Schema.Array(Schema.Unknown)),
 });
 const GetPreferencesResponseSchema = Schema.Struct({
   preferences: Schema.Array(PreferencesEntrySchema),
 });
+
+const decodeSavedFeed = Schema.decodeUnknownOption(SavedFeedSchema);
 
 const ResolveHandleResponseSchema = Schema.Struct({ did: Schema.String });
 
@@ -510,6 +515,10 @@ export const getSavedFeeds = (): AuthedEffect<ReadonlyArray<SavedFeed>> =>
   }).pipe(
     Effect.map((response) => {
       const savedPref = response.preferences.find((pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPrefV2');
-      return savedPref?.items ?? [];
+      const items = savedPref?.items ?? [];
+      return items.flatMap((item) => {
+        const decoded = decodeSavedFeed(item);
+        return Option.isSome(decoded) ? [decoded.value] : [];
+      });
     }),
   );
