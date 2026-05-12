@@ -57,6 +57,9 @@ catalogs:
     '@babel/core':
       specifier: ^7.18.13
       version: 7.28.0
+    '@babel/preset-typescript':
+      specifier: ^7.27.1
+      version: 7.27.1
     '@babel/runtime':
       specifier: ^7.9.6
       version: 7.27.1
@@ -906,6 +909,9 @@ catalogs:
     autoprefixer:
       specifier: ^10.5.0
       version: 10.5.0
+    babel-preset-solid:
+      specifier: ^1.9.9
+      version: 1.9.9
     babylonjs-gltf2interface:
       specifier: ^7.0.0
       version: 7.54.3
@@ -21295,6 +21301,15 @@ importers:
 
   tools/dx-compile:
     dependencies:
+      '@babel/core':
+        specifier: 'catalog:'
+        version: 7.28.0
+      '@babel/preset-typescript':
+        specifier: 'catalog:'
+        version: 7.27.1(@babel/core@7.28.0)
+      babel-preset-solid:
+        specifier: 'catalog:'
+        version: 1.9.9(@babel/core@7.28.0)(solid-js@1.9.11)
       yargs:
         specifier: 'catalog:'
         version: 16.2.0
@@ -52668,7 +52683,7 @@ snapshots:
       '@one-ini/wasm': 0.1.1
       commander: 10.0.1
       minimatch: 10.2.5
-      semver: 7.7.3
+      semver: 7.7.4
 
   ee-first@1.1.1: {}
 
@@ -56000,7 +56015,7 @@ snapshots:
 
   make-dir@4.0.0:
     dependencies:
-      semver: 7.7.3
+      semver: 7.7.4
 
   manifold-3d@3.4.1(esbuild-wasm@0.16.17):
     dependencies:
