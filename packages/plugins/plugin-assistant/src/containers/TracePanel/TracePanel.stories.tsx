@@ -14,7 +14,7 @@ import { FeedTraceSink, ProcessManager } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { useComputeRuntime } from '@dxos/plugin-automation/hooks';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';

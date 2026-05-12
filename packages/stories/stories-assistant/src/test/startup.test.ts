@@ -45,8 +45,8 @@ describe('ClientPlugin startup', () => {
       { ClientCapabilities },
     ] = await Promise.all([
       import('@dxos/app-framework'),
-      import('@dxos/plugin-client'),
-      import('@dxos/plugin-graph'),
+      import('@dxos/plugin-client/plugin'),
+      import('@dxos/plugin-graph/plugin'),
       import('@dxos/plugin-client'),
     ]);
     mark('dynamic imports', phaseStart);

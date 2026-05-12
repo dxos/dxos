@@ -20,7 +20,7 @@ import { MemoryQueue } from '@dxos/echo-db';
 import { createQueueDXN } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';

@@ -11,7 +11,7 @@ import { Chat } from '@dxos/assistant-toolkit';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { Feed, Filter, Ref } from '@dxos/echo';
 import { ChessPlugin } from '@dxos/plugin-chess/plugin';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MapPlugin } from '@dxos/plugin-map/plugin';
 import { TablePlugin } from '@dxos/plugin-table/plugin';

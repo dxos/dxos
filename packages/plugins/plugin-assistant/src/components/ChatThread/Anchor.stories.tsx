@@ -9,7 +9,7 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { DxAnchor } from '@dxos/lit-ui/react';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';

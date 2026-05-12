@@ -9,7 +9,7 @@ import React, { useCallback, useMemo } from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Type, View } from '@dxos/echo';
 import { SelectionModel } from '@dxos/graph';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';

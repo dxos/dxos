@@ -13,7 +13,7 @@ import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
 import { Markdown } from '@dxos/plugin-markdown';
