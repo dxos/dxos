@@ -5,6 +5,7 @@
 import { Capability } from '@dxos/app-framework';
 import { OperationHandlerSet } from '@dxos/compute';
 
+export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 export const IdentityCreated = Capability.lazy('IdentityCreated', () => import('./identity-created'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',

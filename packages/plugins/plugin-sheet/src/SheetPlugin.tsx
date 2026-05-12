@@ -2,22 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
-
 import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { Annotation } from '@dxos/echo';
 import { AutomationEvents } from '@dxos/plugin-automation/types';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown/types';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { type CreateObject } from '@dxos/plugin-space/types';
 
 import {
   AnchorSort,
+  CommentConfig,
   ComputeGraphRegistry,
+  CreateObject,
   Markdown,
   OperationHandler,
   UndoMappings,
@@ -25,36 +20,12 @@ import {
   SheetState,
 } from '#capabilities';
 import { meta } from '#meta';
-import { SheetOperation } from '#operations';
 import { translations } from '#translations';
 import { Sheet } from '#types';
 
-import { serializer } from './serializer';
-
 export const SheetPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addMetadataModule({
-    metadata: {
-      id: Sheet.Sheet.typename,
-      metadata: {
-        label: (object: Sheet.Sheet) => object.name,
-        icon: Annotation.IconAnnotation.get(Sheet.Sheet).pipe(Option.getOrThrow).icon,
-        iconHue: Annotation.IconAnnotation.get(Sheet.Sheet).pipe(Option.getOrThrow).hue ?? 'white',
-        serializer,
-        comments: 'anchored',
-        createObject: ((props, options) =>
-          Effect.gen(function* () {
-            const object = Sheet.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              hidden: true,
-              targetNodeId: options.targetNodeId,
-            });
-          })) satisfies CreateObject,
-        scrollToAnchor: SheetOperation.ScrollToAnchor,
-      },
-    },
-  }),
+  AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
   AppPlugin.addSchemaModule({ schema: [Sheet.Sheet] }),

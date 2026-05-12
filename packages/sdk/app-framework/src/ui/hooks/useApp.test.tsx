@@ -20,7 +20,7 @@ const pluginLoader = (plugins: Plugin.Plugin[]) =>
     if (!plugin) {
       return yield* Effect.fail(new Error(`Plugin not found: ${id}`));
     }
-    return plugin;
+    return { plugin };
   });
 
 const TestHost = ({ manager }: { manager: PluginManager.PluginManager }) => {

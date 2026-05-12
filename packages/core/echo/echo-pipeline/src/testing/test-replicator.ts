@@ -9,13 +9,7 @@ import { log } from '@dxos/log';
 import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import * as TeleportAutomergeReplicator from '@dxos/teleport-extension-automerge-replicator';
 
-import type {
-  AutomergeReplicator,
-  AutomergeReplicatorConnection,
-  AutomergeReplicatorContext,
-  ShouldAdvertiseProps,
-  ShouldSyncCollectionProps,
-} from '../automerge';
+import type { AutomergeReplicator, AutomergeReplicatorConnection, AutomergeReplicatorContext } from '../automerge';
 
 export type TestReplicatorNetworkOptions = {
   latency?: number;
@@ -167,11 +161,11 @@ export class TestReplicatorConnection implements AutomergeReplicatorConnection {
     return false;
   }
 
-  async shouldAdvertise(_params: ShouldAdvertiseProps): Promise<boolean> {
+  async shouldAdvertise(): Promise<boolean> {
     return true;
   }
 
-  shouldSyncCollection(_params: ShouldSyncCollectionProps): boolean {
+  shouldSyncCollection(): boolean {
     return true;
   }
 }

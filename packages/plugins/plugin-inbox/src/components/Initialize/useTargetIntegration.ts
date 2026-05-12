@@ -12,17 +12,29 @@ import { Filter, useQuery } from '@dxos/react-client/echo';
 
 /**
  * Find the `Integration` whose `targets` include the given `target` object.
- *
- * Returns the matching integration (or `undefined` if none exists),
- * a `sync` callback that invokes `operation` with
+ * Returns the matching integration (or `undefined` if none exists).
+ */
+export const useTargetIntegration = <T extends Obj.Any>(
+  target: T,
+): { integration: Integration.Integration | undefined } => {
+  const db = Obj.getDatabase(target);
+  const integrations = useQuery(db, Filter.type(Integration.Integration));
+  const integration = integrations.find((candidate) =>
+    candidate.targets.some((entry) => entry.object?.dxn.asEchoDXN()?.echoId === target.id),
+  );
+  return { integration };
+};
+
+/**
+ * Build a `sync` callback that invokes `operation` with
  * `{ integration, [targetKey]: target }` payload and tracks an in-flight
  * `syncing` flag, so the empty-state UI can render a spinner / disabled
  * button without each callsite repeating the boilerplate.
  *
- * Used by `InitializeMailbox` (`targetKey='mailbox'`) and
- * `InitializeCalendar` (`targetKey='calendar'`).
+ * Used by `InitializeMailboxAction` (`targetKey='mailbox'`) and
+ * `InitializeCalendarAction` (`targetKey='calendar'`).
  */
-export const useTargetIntegration = <T extends Obj.Any>(
+export const useTargetSync = <T extends Obj.Any>(
   target: T,
   operation: Operation.Definition<any, any>,
   targetKey: string,
@@ -31,14 +43,9 @@ export const useTargetIntegration = <T extends Obj.Any>(
   sync: () => Promise<void>;
   syncing: boolean;
 } => {
-  const db = Obj.getDatabase(target);
+  const { integration } = useTargetIntegration(target);
   const { invokePromise } = useOperationInvoker();
   const [syncing, setSyncing] = useState(false);
-
-  const integrations = useQuery(db, Filter.type(Integration.Integration));
-  const integration = integrations.find((candidate) =>
-    candidate.targets.some((entry) => entry.object?.dxn.asEchoDXN()?.echoId === target.id),
-  );
 
   const sync = useCallback(async () => {
     if (!integration) {

@@ -159,7 +159,7 @@ export default Capability.makeModule(() =>
           execute: async ({ name, code }, { extensions }) => {
             invariant(extensions?.space, 'No space');
             invariant(extensions?.dispatch, 'No intent dispatcher');
-            const script = Obj.make(ScriptType, { name, source: Ref.make(Text.make(code)) });
+            const script = Obj.make(ScriptType, { name, source: Ref.make(Text.make({ content: code })) });
             extensions.space.db.add(script);
             await extensions.space.db.flush();
 

@@ -27,6 +27,7 @@ export { TEST_TAGS };
 
 const isDebug = !!process.env.VITEST_DEBUG;
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
+const DEBUG_TIMEOUT_MS = 3_600_000;
 
 export type ConfigOptions = {
   dirname: string;
@@ -139,7 +140,7 @@ const createBrowserProject = ({
         '!**/test/**/*.node.test.{ts,tsx}',
       ],
 
-      testTimeout: isDebug ? 3600_000 : 5000,
+      testTimeout: isDebug ? DEBUG_TIMEOUT_MS : 5000,
       isolate: false,
       poolOptions: {
         threads: {
@@ -180,7 +181,7 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       name: 'node',
       environment,
       retry,
-      testTimeout: timeout,
+      testTimeout: timeout ?? (isDebug ? DEBUG_TIMEOUT_MS : undefined),
       include: [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',

@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
@@ -16,7 +15,7 @@ import { type MaybePromise } from '@dxos/util';
 
 import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
-import { type CreateObject } from '#types';
+import { type SpaceCapabilities } from '#types';
 
 import { getSpaceDisplayName } from '../../util';
 
@@ -27,11 +26,7 @@ export type CreateObjectOption = {
   icon?: string;
 };
 
-export type Metadata = {
-  createObject: CreateObject;
-  inputSchema?: Schema.Schema.AnyNoContext;
-  icon?: string;
-};
+export type Metadata = SpaceCapabilities.CreateObjectEntry;
 
 export type CreateObjectPanelProps = {
   options: CreateObjectOption[];
@@ -76,7 +71,7 @@ export const CreateObjectPanel = ({
   const handleSelectOption = useCallback(
     async (id: string) => {
       const metadata = resolve?.(id);
-      if (metadata && !metadata.inputSchema) {
+      if (metadata && !metadata.inputSchema && !metadata.customPanel) {
         await onCreateObject?.({ metadata });
       } else {
         onTypenameChange?.(id);
@@ -91,14 +86,25 @@ export const CreateObjectPanel = ({
   );
   const inputSurfaceLookup = useInputSurfaceLookup({ target });
 
-  // TODO(wittjosiah): These inputs should be rolled into a `Form` once it supports the necessary variants.
+  // TODO(wittjosiah): Extends and use react-ui-form to handle variants.
+
   if (!metadata) {
     return <SelectType options={sortedOptions} onChange={handleSelectOption} />;
   }
 
-  // TODO(burdon): Remove.
   if (!target) {
     return <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={onTargetChange} />;
+  }
+
+  if (metadata.customPanel) {
+    const CustomPanel = metadata.customPanel;
+    return (
+      <CustomPanel
+        target={target}
+        initialFormValues={initialFormValues}
+        onCreateObject={(data) => handleCreateObject(data)}
+      />
+    );
   }
 
   if (metadata.inputSchema) {

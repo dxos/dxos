@@ -5,15 +5,14 @@
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { Create, Move, Play, Print } from '#operations';
+import { Move, Play, Print } from '#operations';
+import { Chess } from '#types';
 
-const BLUEPRINT_KEY = 'org.dxos.blueprint.chess';
-
-const operations = [Create, Move, Play, Print];
+const operations = [Move, Play, Print];
 
 const make = () =>
   Blueprint.make({
-    key: BLUEPRINT_KEY,
+    key: Chess.BLUEPRINT_KEY,
     name: 'Chess',
     tools: Blueprint.toolDefinitions({ operations }),
     instructions: Template.make({
@@ -27,7 +26,7 @@ const make = () =>
   });
 
 const blueprint: Blueprint.Definition = {
-  key: BLUEPRINT_KEY,
+  key: Chess.BLUEPRINT_KEY,
   make,
 };
 

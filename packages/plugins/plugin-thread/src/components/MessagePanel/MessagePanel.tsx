@@ -82,7 +82,10 @@ export const MessagePanel = ({
       (message.sender.identityDid && member.identity.did === message.sender.identityDid) ||
       (message.sender.identityKey && PublicKey.equals(member.identity.identityKey, message.sender.identityKey)),
   )?.identity;
-  const messageMetadata = getMessageMetadata(message.id, senderIdentity);
+  // Pass `message.sender` as the fallback so externally-synced messages
+  // (Slack, etc.) display the source-side sender name instead of "Anonymous"
+  // when no DXOS identity matches.
+  const messageMetadata = getMessageMetadata(message.id, senderIdentity, message.sender);
   const userIsAuthor = identity?.did === messageMetadata.authorId;
   const proposalBlock = message.blocks.find((block) => block._tag === 'proposal');
   const references = message.blocks.filter((block) => block._tag === 'reference').map((block) => block.reference);

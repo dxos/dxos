@@ -17,7 +17,7 @@ const defaultPluginLoader =
     Effect.sync(() => {
       const plugin = plugins.find((plugin) => plugin.meta.id === id);
       invariant(plugin, `Plugin not found: ${id}`);
-      return plugin;
+      return { plugin };
     });
 
 type SubCommands = [Command.Command<any, any, any, any>, ...Array<Command.Command<any, any, any, any>>];

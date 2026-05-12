@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { usePluginManager } from '@dxos/app-framework/ui';
 import { type Database, type Obj, type Ref } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { IconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { IntegrationCoordinator, IntegrationProvider } from '#types';
@@ -52,6 +52,12 @@ export const IntegrationAuthButton = ({ providerId, db, existingTarget }: Integr
   }
 
   return (
-    <Button onClick={handleClick}>{t('connect-integration.label', { provider: provider.label ?? provider.id })}</Button>
+    <IconButton
+      onClick={handleClick}
+      icon='ph--plugs--regular'
+      label={t('connect-integration.label', {
+        provider: provider.label ?? provider.id,
+      })}
+    />
   );
 };

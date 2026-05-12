@@ -68,6 +68,7 @@ export type UseAppOptions = {
   pluginManager?: PluginManager.PluginManager;
   pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];
   onPluginRemove?: PluginManager.ManagerOptions['onRemove'];
+  pluginRegistryProvider?: PluginManager.ManagerOptions['pluginRegistryProvider'];
   plugins?: Plugin.Plugin[];
   core?: string[];
   defaults?: string[];
@@ -113,6 +114,7 @@ export const useApp = ({
   pluginManager,
   pluginLoader: pluginLoaderProp,
   onPluginRemove,
+  pluginRegistryProvider,
   plugins: pluginsProp,
   core: coreProp,
   defaults: defaultsProp,
@@ -136,7 +138,7 @@ export const useApp = ({
         Effect.sync(() => {
           const plugin = plugins.find((plugin) => plugin.meta.id === id);
           invariant(plugin, `Plugin not found: ${id}`);
-          return plugin;
+          return { plugin };
         })),
     [pluginLoaderProp, plugins],
   );
@@ -158,10 +160,19 @@ export const useApp = ({
   );
   const isExternalManager = !!pluginManager;
   const manager = useMemo(() => {
-    const mgr = pluginManager ?? PluginManager.make({ pluginLoader, plugins, core, enabled, onRemove: onPluginRemove });
+    const mgr =
+      pluginManager ??
+      PluginManager.make({
+        pluginLoader,
+        plugins,
+        core,
+        enabled,
+        onRemove: onPluginRemove,
+        pluginRegistryProvider,
+      });
     log('useApp: useMemo created/reused manager', { provided: !!pluginManager });
     return mgr;
-  }, [pluginManager, pluginLoader, plugins, core, enabled, onPluginRemove]);
+  }, [pluginManager, pluginLoader, plugins, core, enabled, onPluginRemove, pluginRegistryProvider]);
 
   useEffect(() => {
     if (!cacheEnabled) {

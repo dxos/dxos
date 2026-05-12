@@ -7,4 +7,5 @@ import { Capability } from '@dxos/app-framework';
 import type { Blueprint } from '@dxos/compute';
 
 export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
+export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));

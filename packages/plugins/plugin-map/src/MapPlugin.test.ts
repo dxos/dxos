@@ -22,7 +22,7 @@ describe('MapPlugin', () => {
     });
 
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('metadata'), moduleId('schema')]),
+      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('CreateObject'), moduleId('schema')]),
     );
 
     await harness.fire(AppActivationEvents.SetupArtifactDefinition);

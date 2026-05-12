@@ -5,7 +5,6 @@
 import { describe, test } from 'vitest';
 
 import { ActivationEvents } from '@dxos/app-framework';
-import { AppActivationEvents } from '@dxos/app-toolkit/events';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
@@ -22,13 +21,7 @@ describe('TicTacToePlugin', () => {
     });
 
     // Modules expected to be active after a normal startup.
-    expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('metadata'), moduleId('schema'), moduleId('ReactSurface')]),
-    );
-
-    // SetupArtifactDefinition is fired by AssistantPlugin, which can't be included here due to a workspace cycle.
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-    expect(harness.manager.getActive()).toContain(moduleId('BlueprintDefinition'));
+    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('game-variant'), moduleId('schema')]));
 
     // Operation handlers are not loaded on startup — SetupOperationHandler fires lazily when an operation is invoked.
     await harness.fire(ActivationEvents.SetupOperationHandler);

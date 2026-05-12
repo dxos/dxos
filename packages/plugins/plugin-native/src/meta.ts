@@ -12,4 +12,5 @@ export const meta: Plugin.Meta = {
     Native platform integration providing desktop-specific features and system-level capabilities.
     Access native file dialogs, notifications, and OS integrations.
   `,
+  tags: ['system'],
 };

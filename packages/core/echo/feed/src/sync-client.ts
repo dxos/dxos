@@ -7,7 +7,7 @@ import * as Array from 'effect/Array';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 
-import { Context } from '@dxos/context';
+import { Context, ContextDisposedError } from '@dxos/context';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
@@ -122,6 +122,14 @@ export class SyncClient {
       const requestId = crypto.randomUUID();
       const deferred = yield* Deferred.make<ProtocolMessage, Error>();
       self.#handlers.set(requestId, deferred);
+      const cleanupDispose = ctx.disposed
+        ? () => {}
+        : ctx.onDispose(() => {
+            Effect.runFork(Deferred.fail(deferred, new ContextDisposedError()));
+          });
+      if (ctx.disposed) {
+        yield* Deferred.fail(deferred, new ContextDisposedError());
+      }
       const request: RequestPayload = {
         _tag: 'QueryRequest',
         requestId,
@@ -138,7 +146,13 @@ export class SyncClient {
         limit: opts.limit,
       });
       yield* self.#sendMessage(ctx, self.#withPeerIds(request));
-      const message = yield* Deferred.await(deferred);
+      const message = yield* Effect.ensuring(
+        Deferred.await(deferred),
+        Effect.sync(() => {
+          cleanupDispose();
+          self.#handlers.delete(requestId);
+        }),
+      );
       const response = yield* self.#expectResponse<QueryResponse>(requestId, message, 'QueryResponse');
       if (response.blocks.length === 0) {
         log.trace('feed sync client pull done (empty batch)', {
@@ -203,6 +217,14 @@ export class SyncClient {
       const requestId = crypto.randomUUID();
       const deferred = yield* Deferred.make<ProtocolMessage, Error>();
       self.#handlers.set(requestId, deferred);
+      const cleanupDispose = ctx.disposed
+        ? () => {}
+        : ctx.onDispose(() => {
+            Effect.runFork(Deferred.fail(deferred, new ContextDisposedError()));
+          });
+      if (ctx.disposed) {
+        yield* Deferred.fail(deferred, new ContextDisposedError());
+      }
       const request: RequestPayload = {
         _tag: 'AppendRequest',
         requestId,
@@ -217,7 +239,13 @@ export class SyncClient {
         blockCount: unpositioned.blocks.length,
       });
       yield* self.#sendMessage(ctx, self.#withPeerIds(request));
-      const message = yield* Deferred.await(deferred);
+      const message = yield* Effect.ensuring(
+        Deferred.await(deferred),
+        Effect.sync(() => {
+          cleanupDispose();
+          self.#handlers.delete(requestId);
+        }),
+      );
       const response = yield* self.#expectResponse<AppendResponse>(requestId, message, 'AppendResponse');
       yield* self.#feedStore.setPosition({
         spaceId: opts.spaceId,

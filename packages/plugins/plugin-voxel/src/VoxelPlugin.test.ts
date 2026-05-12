@@ -22,7 +22,7 @@ describe('VoxelPlugin', () => {
 
     // Modules expected to be active after a normal startup.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('metadata'), moduleId('schema'), moduleId('ReactSurface')]),
+      expect.arrayContaining([moduleId('CreateObject'), moduleId('schema'), moduleId('ReactSurface')]),
     );
 
     // SetupArtifactDefinition is fired by AssistantPlugin, which can't be included here due to a workspace cycle.

@@ -33,8 +33,8 @@
   --boot-loader-mark-size: min(300px, 62.5vmin);
   --boot-loader-dot-size: 6px;
   --boot-loader-line-thickness: 1px;
-  --boot-loader-line-feather: 2px;
-  --boot-loader-status-gap: 24px;
+  --boot-loader-line-feather: 1px;
+  --boot-loader-status-gap: 32px;
 
   position: fixed;
   inset: 0;
@@ -150,7 +150,7 @@
   height: 100%;
   border-radius: 50%;
   background: rgba(127, 127, 127, 0.18);
-  opacity: 0.2;
+  opacity: 0.3;
   /*
    * Feather the inner edge so the thin line gets soft anti-aliased edges
    * instead of a hard pixel cutoff (which can look stair-stepped on
@@ -186,7 +186,7 @@
   border-radius: 50%;
   background: conic-gradient(currentcolor calc(var(--boot-loader-bar-progress, 0) * 1%), transparent 0);
   transform: scaleX(-1);
-  opacity: 0.9;
+  opacity: 0.5;
 }
 
 /*
@@ -205,7 +205,7 @@
   margin: calc(var(--boot-loader-dot-size) / -2) 0 0 calc(var(--boot-loader-dot-size) / -2);
   border-radius: 50%;
   background: currentcolor;
-  opacity: 0;
+  opacity: 0.5;
   /*
    * Orbit radius = `disc/2 - line/2` so the dot's centre lands on the solid
    * line's centre rather than on the disc's outer edge (the line lives in
@@ -223,15 +223,18 @@
  * coincide with the start of the arc.
  */
 #boot-loader-disc[data-progress-active] #boot-loader-dot {
-  opacity: 0.9;
+  opacity: 0.5;
 }
 
 #boot-loader-status {
   position: absolute;
   top: 50%;
-  left: 50%;
-  /* Sit just below the centered disc — half the disc plus the configured gap. */
-  transform: translate(-50%, calc(var(--boot-loader-disc-size) / 2 + var(--boot-loader-status-gap)));
+  left: 0;
+  right: 0;
+  /* 
+   * Sit just below the centered disc — half the disc plus the configured gap.
+   */
+  transform: translate(0, calc(var(--boot-loader-disc-size) / 2 + var(--boot-loader-status-gap)));
   /*
    * Slightly de-emphasised vs body text so the brand mark + ring stay the
    * dominant focus, but high enough to remain legible on both light and dark
@@ -239,16 +242,21 @@
    */
   opacity: 0.5;
   /*
-   * Single-line viewport over a vertically-stacked track of every status
-   * the driver has emitted. The track translates upward by one line-height
-   * per `status()` call (see `--boot-loader-line` below), animated via
-   * CSS `transition` on `transform` so the new line slides in from below
-   * while the previous line slides out — independent of any
-   * `scroll-behavior` smooth-scroll support, which Playwright/headless
-   * Chrome strips even from spec-compliant `scrollTo({ behavior: 'smooth' })`
-   * calls.
+   * Terminal-style log viewport (3 rows at the default `line-height`) over
+   * a vertically-stacked track of every status the driver has emitted. The
+   * track is bottom-anchored via `justify-content: flex-end` so the newest
+   * line always sits on the last visible row, older lines stack above it,
+   * and anything that doesn't fit is clipped at the top by
+   * `overflow: hidden`. The driver runs a FLIP-style transform animation
+   * per append so each new line slides up from below the bottom edge —
+   * independent of any `scroll-behavior` smooth-scroll support, which
+   * Playwright/headless Chrome strips even from spec-compliant
+   * `scrollTo({ behavior: 'smooth' })` calls.
    */
-  height: 1.5em;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 4.5em;
   line-height: 1.5;
   letter-spacing: 0.01em;
   /* 
@@ -261,6 +269,21 @@
   overflow: hidden;
 }
 
+#boot-loader-status-fade {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 32px;
+  background: linear-gradient(to bottom, var(--boot-loader-bg-light, #fafafa), transparent);
+  z-index: 1;
+}
+@media (prefers-color-scheme: dark) {
+  #boot-loader-status-fade {
+    background: linear-gradient(to bottom, var(--boot-loader-bg-dark, #0a0a0a), transparent);
+  }
+}
+
 /*
  * Track of every appended `.boot-loader-status-line`. The driver writes
  * `--boot-loader-line` (0 = first line visible, 1 = second, …) on this
@@ -271,10 +294,13 @@
   display: flex;
   flex-direction: column;
   /*
-   * The driver writes `transform: translateY(<index>em)` directly per
-   * `status()` call (see `boot-loader.js`). The transition animates the
-   * change so the new line slides in from below while the previous one
-   * slides out at the top.
+   * Resting transform is `translateY(0)` — the bottom-anchored flex
+   * parent already positions the newest line on the last visible row.
+   * On each append the driver does a one-shot FLIP: snap to
+   * `translateY(<lineHeight>px)` with no transition (placing the new
+   * line just below the viewport), force a reflow, then animate back to
+   * 0 so the track rises by one line-height and the new entry slides up
+   * into the bottom row. See `boot-loader.js`.
    */
   transform: translateY(0);
   transition: transform 500ms ease-out;

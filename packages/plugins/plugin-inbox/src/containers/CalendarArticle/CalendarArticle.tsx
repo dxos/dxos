@@ -19,7 +19,7 @@ import { EventStack, type EventStackActionHandler } from '#components';
 import { meta } from '#meta';
 import { type Calendar } from '#types';
 
-import { InitializeCalendar } from './InitializeCalendar';
+import { InitializeCalendar, InitializeCalendarAction } from './InitializeCalendar';
 
 const byDate =
   (direction = -1) =>
@@ -94,10 +94,9 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
             </Panel.Content>
           </NaturalCalendar.Root>
         </Panel.Root>
-
         <Panel.Root>
           <Panel.Toolbar asChild>
-            <Toolbar.Root />
+            <Toolbar.Root>{isEmpty && <InitializeCalendarAction calendar={subject} />}</Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content asChild>
             {isEmpty ? (

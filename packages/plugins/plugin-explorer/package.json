@@ -102,6 +102,7 @@
   },
   "devDependencies": {
     "@dxos/echo-generator": "workspace:*",
+    "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",

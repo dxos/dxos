@@ -19,9 +19,9 @@ describe('TranscriptionPlugin', () => {
       plugins: [ClientPlugin({}), TranscriptionPlugin()],
     });
 
-    // After autoStart: metadata, schema, OperationHandler all auto-cascade.
+    // After autoStart: schema, OperationHandler all auto-cascade.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('metadata'), moduleId('schema'), moduleId('OperationHandler')]),
+      expect.arrayContaining([moduleId('schema'), moduleId('OperationHandler')]),
     );
 
     // SetupArtifactDefinition is fired by AssistantPlugin, which can't be included here due to a workspace cycle.

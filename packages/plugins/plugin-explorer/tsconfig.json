@@ -41,7 +41,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute"
+      "path": "../../core/compute/compute"
     },
     {
       "path": "../../core/echo/echo"
@@ -96,6 +96,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-preview"
     },
     {
       "path": "../plugin-search"

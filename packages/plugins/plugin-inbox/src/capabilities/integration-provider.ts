@@ -17,8 +17,19 @@ import {
 } from '@dxos/plugin-integration/types';
 import { OAuthProvider } from '@dxos/protocols';
 
-import { GMAIL_PROVIDER_ID, GOOGLE_CALENDAR_PROVIDER_ID, GOOGLE_INTEGRATION_SOURCE } from '../constants';
-import { GetGoogleCalendars, SyncCalendar, SyncMailbox } from '../operations/definitions';
+import {
+  GMAIL_PROVIDER_ID,
+  GOOGLE_CALENDAR_PROVIDER_ID,
+  GOOGLE_CONTACTS_PROVIDER_ID,
+  GOOGLE_INTEGRATION_SOURCE,
+} from '../constants';
+import {
+  GetGoogleCalendars,
+  GetGoogleContactGroups,
+  SyncCalendar,
+  SyncContacts,
+  SyncMailbox,
+} from '../operations/definitions';
 import { CalendarSyncOptions, Mailbox, SyncOptions } from '../types';
 
 const GoogleUserInfo = Schema.Struct({
@@ -135,6 +146,21 @@ export default Capability.makeModule(
         optionsSchema: CalendarSyncOptions,
         getSyncTargets: GetGoogleCalendars,
         sync: SyncCalendar,
+        onTokenCreated: calendarOnTokenCreated,
+      },
+      {
+        id: GOOGLE_CONTACTS_PROVIDER_ID,
+        source: GOOGLE_INTEGRATION_SOURCE,
+        label: 'Google Contacts',
+        oauth: {
+          provider: OAuthProvider.GOOGLE,
+          scopes: [
+            'https://www.googleapis.com/auth/contacts.readonly',
+            'https://www.googleapis.com/auth/userinfo.email',
+          ],
+        },
+        getSyncTargets: GetGoogleContactGroups,
+        sync: SyncContacts,
         onTokenCreated: calendarOnTokenCreated,
       },
     ]);

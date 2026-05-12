@@ -186,6 +186,12 @@ const withAuth = (req: HttpClientRequest.HttpClientRequest, creds: GitHubCredent
  * Build an unauthenticated GitHub API request, fetch + decode it as a single JSON
  * response, and apply timeout + retry. `withAuth` is applied here so callers never
  * have to remember to attach credentials (forgetting would silently 401).
+ *
+ * `filterStatusOk` converts non-2xx responses into a typed `ResponseError`
+ * (carrying `status` and the raw body) BEFORE we try to decode the body —
+ * otherwise GitHub error envelopes (`{ message, documentation_url }`) would
+ * blow up against the success schema with a `ParseError`, masking the real
+ * cause (e.g. a 403 from an integration token that lacks issue write).
  */
 const githubRequest = <T>(
   build: () => HttpClientRequest.HttpClientRequest,
@@ -194,7 +200,10 @@ const githubRequest = <T>(
   Effect.gen(function* () {
     const creds = yield* GitHubCredentials;
     const httpClient = yield* HttpClient.HttpClient;
-    const clientNoTracer = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const clientNoTracer = httpClient.pipe(
+      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.filterStatusOk,
+    );
     return yield* clientNoTracer.execute(withAuth(build(), creds)).pipe(
       Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(schema))),
       Effect.timeout('15 seconds'),
@@ -242,7 +251,10 @@ const githubPaginated = <T>(
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
     const creds = yield* GitHubCredentials;
-    const clientNoTracer = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+    const clientNoTracer = httpClient.pipe(
+      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.filterStatusOk,
+    );
     const arraySchema = Schema.Array(itemSchema);
 
     let nextUrl: string | undefined;
@@ -357,4 +369,87 @@ export const fetchIssueComments = (
         `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}/comments`,
       ),
     GitHubCommentSchema,
+  );
+
+//
+// Mutations (push)
+//
+
+/**
+ * PATCH a GitHub object. The shape mirrors {@link githubRequest} except the
+ * request method is PATCH and the body is `application/json`. Failures are
+ * propagated unchanged; the caller is expected to surface them on the target
+ * row's `lastError`. Retry rules are the same — 429 / 5xx retry, 4xx don't.
+ */
+const githubPatch = <T>(
+  build: () => HttpClientRequest.HttpClientRequest,
+  body: Record<string, unknown>,
+  schema: Schema.Schema<T>,
+): GitHubEffect<T> =>
+  Effect.gen(function* () {
+    const creds = yield* GitHubCredentials;
+    const httpClient = yield* HttpClient.HttpClient;
+    const clientNoTracer = httpClient.pipe(
+      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.filterStatusOk,
+    );
+    const request = withAuth(build(), creds).pipe(HttpClientRequest.bodyUnsafeJson(body));
+    return yield* clientNoTracer.execute(request).pipe(
+      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(schema))),
+      Effect.timeout('15 seconds'),
+      Effect.retry({
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+        while: shouldRetry,
+      }),
+      Effect.scoped,
+    );
+  });
+
+export type IssueUpdateInput = {
+  title?: string;
+  body?: string;
+  state?: 'open' | 'closed';
+  state_reason?: 'completed' | 'not_planned' | 'reopened' | null;
+};
+
+/**
+ * PATCH /repos/{owner}/{repo}/issues/{number} — update title / body / state.
+ *
+ * GitHub conflates issues and PRs at this endpoint: the same PATCH works for
+ * both, but PR-specific fields (head/base/draft) must go through the
+ * `/pulls/{n}` endpoint. We only touch issue-mappable fields here.
+ */
+export const updateIssue = (
+  owner: string,
+  repo: string,
+  issueNumber: number,
+  input: IssueUpdateInput,
+): GitHubEffect<GitHubIssue> =>
+  githubPatch(
+    () =>
+      HttpClientRequest.patch(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}`,
+      ),
+    input as unknown as Record<string, unknown>,
+    GitHubIssueSchema,
+  );
+
+export type RepoUpdateInput = {
+  /** GitHub allows the owner of a repo to rename it; this is rare and risky and we currently don't push it. */
+  name?: string;
+  description?: string;
+  homepage?: string;
+};
+
+/**
+ * PATCH /repos/{owner}/{repo} — update repo description and a small set of
+ * mapped metadata. Renames (`name`) are accepted by the API but we don't push
+ * them by default: a rename invalidates clones, breaks pinned URLs, and is
+ * almost never what a user wants from a sync mirror.
+ */
+export const updateRepo = (owner: string, repo: string, input: RepoUpdateInput): GitHubEffect<GitHubRepo> =>
+  githubPatch(
+    () => HttpClientRequest.patch(`${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`),
+    input as unknown as Record<string, unknown>,
+    GitHubRepoSchema,
   );

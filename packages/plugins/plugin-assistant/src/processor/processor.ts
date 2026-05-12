@@ -304,13 +304,13 @@ export class AiChatProcessor {
   }
 
   /**
-   * Records a per-server MCP failure, deduped by url+kind so repeat misconfigurations
+   * Records a per-server MCP failure, deduped by url+protocol so repeat misconfigurations
    * across turns do not spam the UI.
    */
   #handleMcpError(event: Trace.PayloadType<typeof McpServerError>) {
     log.warn('MCP server error', event);
     this.#registry.update(this.mcpErrors, (errors) => {
-      if (errors.some((existing) => existing.url === event.url && existing.kind === event.kind)) {
+      if (errors.some((existing) => existing.url === event.url && existing.protocol === event.protocol)) {
         return errors;
       }
       return [...errors, event];

@@ -6,27 +6,28 @@ import { Chess as ChessJS } from 'chess.js';
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
+import { loadGame } from '@dxos/plugin-game/types';
 
-import { type Chess } from '../types';
+import { Chess } from '../types';
 import { Move } from './definitions';
 
 const handler: Operation.WithHandler<typeof Move> = Move.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ game, move }) {
-      const obj = (yield* Database.load(game)) as Chess.Game;
+      const { variant } = yield* loadGame(game, Chess.State);
       const chess = new ChessJS();
-      if (obj.pgn) {
-        chess.loadPgn(obj.pgn);
-      } else if (obj.fen) {
-        chess.load(obj.fen);
+      if (variant.pgn) {
+        chess.loadPgn(variant.pgn);
+      } else if (variant.fen) {
+        chess.load(variant.fen);
       }
 
       chess.move(move, { strict: false });
       const pgn = chess.pgn();
-      Obj.update(obj, (obj) => {
-        const mutableGame = obj as Obj.Mutable<typeof obj>;
-        mutableGame.pgn = pgn;
+      Obj.update(variant, (variant) => {
+        const mutable = variant as Obj.Mutable<typeof variant>;
+        mutable.pgn = pgn;
       });
       return { pgn };
     }),
