@@ -5,63 +5,105 @@
 import * as Option from 'effect/Option';
 import { createEffect, createSignal, onCleanup } from 'solid-js';
 
-import { Operation } from '@dxos/compute';
-import { type Database, Filter, Obj } from '@dxos/echo';
-import { type Queue, type QueueAPI } from '@dxos/echo-db';
-import { getUserFunctionIdInMetadata } from '@dxos/functions';
-import {
-  InvocationOutcome,
-  type InvocationSpan,
-  InvocationTraceEndEvent,
-  type InvocationTraceEvent,
-  InvocationTraceStartEvent,
-  createInvocationSpans,
-} from '@dxos/functions-runtime';
-import { type DXN } from '@dxos/keys';
+import { Operation, Trace as TraceModule } from '@dxos/compute';
+import { type Database, Filter, Query } from '@dxos/echo';
+import { FeedTraceSink } from '@dxos/functions-runtime';
 
 import { type Column, Table } from '../../../../components';
 import { theme } from '../../../../theme';
 
+type Span = {
+  pid: string;
+  timestamp: number;
+  duration: number;
+  outcome?: TraceModule.OperationOutcome;
+  key?: string;
+  name?: string;
+  input?: unknown;
+  runtime?: TraceModule.PayloadType<typeof TraceModule.OperationStart>['runtime'];
+  error?: string;
+};
+
+const buildSpans = (messages: readonly TraceModule.Message[]): Span[] => {
+  type Entry = {
+    start?: { timestamp: number; data: TraceModule.PayloadType<typeof TraceModule.OperationStart> };
+    end?: { timestamp: number; data: TraceModule.PayloadType<typeof TraceModule.OperationEnd> };
+  };
+  const byPid = new Map<string, Entry>();
+  for (const message of messages) {
+    const pid = message.meta.pid;
+    if (!pid) {
+      continue;
+    }
+    const entry = byPid.get(pid) ?? {};
+    for (const event of message.events) {
+      if (TraceModule.isOfType(TraceModule.OperationStart, event)) {
+        entry.start = { timestamp: event.timestamp, data: event.data };
+      } else if (TraceModule.isOfType(TraceModule.OperationEnd, event)) {
+        entry.end = { timestamp: event.timestamp, data: event.data };
+      }
+    }
+    byPid.set(pid, entry);
+  }
+  const now = Date.now();
+  const spans: Span[] = [];
+  for (const [pid, { start, end }] of byPid.entries()) {
+    if (!start) {
+      continue;
+    }
+    spans.push({
+      pid,
+      timestamp: start.timestamp,
+      duration: end ? end.timestamp - start.timestamp : now - start.timestamp,
+      outcome: end?.data.outcome,
+      key: start.data.key,
+      name: start.data.name ?? end?.data.name,
+      input: start.data.input,
+      runtime: start.data.runtime,
+      error: end?.data.error,
+    });
+  }
+  return spans;
+};
+
 export type TraceProps = {
   db: Database.Database;
-  queues: QueueAPI;
-  queueDxn: Option.Option<DXN>;
   functionId: Option.Option<string>;
 };
 
 export const Trace = (props: TraceProps) => {
-  const [invocations, setInvocations] = createSignal<InvocationSpan[]>([]);
-  const [selectedInvocation, setSelectedInvocation] = createSignal<InvocationSpan | undefined>();
-  const [traceQueue, setTraceQueue] = createSignal<Queue<InvocationTraceEvent> | undefined>();
+  const [invocations, setInvocations] = createSignal<Span[]>([]);
+  const [selectedInvocationPid, setSelectedInvocationPid] = createSignal<string | undefined>();
   const [functions, setFunctions] = createSignal<Operation.PersistentOperation[]>([]);
 
   // Set up effects.
   useFunctionQuery(props.db, setFunctions);
-  useTraceQueue(props.queueDxn, props.queues, setTraceQueue);
-  useInvocationsSubscription(traceQueue, props.functionId, setInvocations, selectedInvocation, setSelectedInvocation);
+  useInvocationsSubscription(
+    props.db,
+    props.functionId,
+    setInvocations,
+    selectedInvocationPid,
+    setSelectedInvocationPid,
+  );
 
-  // Function name resolver (needs access to functions signal).
-  const getFunctionName = (invocationTarget: DXN | undefined): string | undefined => {
-    if (!invocationTarget) {
+  // Resolve selected invocation by pid against the current span list so updates are not stale.
+  const selectedInvocation = (): Span | undefined => {
+    const pid = selectedInvocationPid();
+    if (!pid) {
       return undefined;
     }
+    return invocations().find((span) => span.pid === pid);
+  };
 
-    const uuidPart = getUuidFromDxn(invocationTarget);
-    if (!uuidPart) {
-      return undefined;
+  const getTargetDisplayName = (span: Span): string => {
+    if (span.name) {
+      return span.name;
     }
-
-    return functions().find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === uuidPart)?.name;
+    const matchingFunction = functions().find((fn) => fn.key === span.key);
+    return matchingFunction?.name ?? span.key ?? span.pid;
   };
 
-  // Target display name (uses getFunctionName).
-  const getTargetDisplayName = (span: InvocationSpan): string => {
-    const targetDxn = span.invocationTarget?.dxn;
-    const name = getFunctionName(targetDxn);
-    return name ?? targetDxn?.toString().split(':').pop() ?? '?';
-  };
-
-  const columns: Column<InvocationSpan>[] = [
+  const columns: Column<Span>[] = [
     {
       header: 'Target',
       width: 40,
@@ -78,6 +120,11 @@ export const Trace = (props: TraceProps) => {
       render: (r) => formatStatus(r.outcome),
     },
     {
+      header: 'Runtime',
+      width: 22,
+      render: (r) => r.runtime ?? '-',
+    },
+    {
       header: 'Duration',
       width: 10,
       render: (r) => (r.duration ? `${r.duration}ms` : '-'),
@@ -90,23 +137,23 @@ export const Trace = (props: TraceProps) => {
         columns={columns}
         data={invocations()}
         onRowClick={(row) => {
-          setSelectedInvocation(row);
+          setSelectedInvocationPid(row.pid);
         }}
-        selectedId={selectedInvocation()?.id}
-        getId={(row) => row.id}
+        selectedId={selectedInvocationPid()}
+        getId={(row) => row.pid}
         theme={theme}
       />
       <box height='50%' flexDirection='column' padding={1}>
         {selectedInvocation() ? (
           <>
             <box height={1}>
-              <text>Invocation Details: {selectedInvocation()?.id}</text>
+              <text>Invocation Details: {selectedInvocation()?.pid}</text>
             </box>
             <box height={1}>
               <text>Target: {getTargetDisplayName(selectedInvocation()!)}</text>
             </box>
             <box height={1}>
-              <text>Status: {selectedInvocation()?.outcome}</text>
+              <text>Status: {selectedInvocation()?.outcome ?? 'pending'}</text>
             </box>
             <box marginTop={1} flexDirection='column'>
               <box height={1}>
@@ -119,8 +166,7 @@ export const Trace = (props: TraceProps) => {
                 <box height={1}>
                   <text>Error:</text>
                 </box>
-                <text>{selectedInvocation()?.error?.message}</text>
-                <text>{selectedInvocation()?.error?.stack}</text>
+                <text>{selectedInvocation()?.error}</text>
               </box>
             )}
           </>
@@ -134,17 +180,6 @@ export const Trace = (props: TraceProps) => {
   );
 };
 
-// Helper: Extracts the UUID part from a DXN.
-const getUuidFromDxn = (dxn: DXN | string | undefined): string | undefined => {
-  if (!dxn) {
-    return undefined;
-  }
-  const dxnString = dxn.toString();
-  const dxnParts = dxnString.split(':');
-  return dxnParts.at(-1);
-};
-
-// Helper: Format timestamp as time string.
 const formatTime = (timestamp: number): string => {
   return new Date(timestamp).toLocaleTimeString('en-US', {
     hour12: false,
@@ -155,18 +190,17 @@ const formatTime = (timestamp: number): string => {
   });
 };
 
-// Helper: Format invocation outcome as status string.
-const formatStatus = (outcome?: InvocationOutcome): string => {
-  if (outcome === InvocationOutcome.SUCCESS) {
-    return 'OK';
+const formatStatus = (outcome: TraceModule.OperationOutcome | undefined): string => {
+  switch (outcome) {
+    case 'success':
+      return 'OK';
+    case 'failure':
+      return 'ERR';
+    default:
+      return 'PEND';
   }
-  if (outcome === InvocationOutcome.FAILURE) {
-    return 'ERR';
-  }
-  return outcome ?? 'UNKNOWN';
 };
 
-// Effect: Query for Function objects to resolve target names.
 const useFunctionQuery = (
   db: Database.Database,
   setFunctions: (functions: Operation.PersistentOperation[]) => void,
@@ -181,79 +215,59 @@ const useFunctionQuery = (
   });
 };
 
-// Effect: Resolve the queue from the DXN.
-const useTraceQueue = (
-  queueDxn: Option.Option<DXN>,
-  queues: QueueAPI,
-  setTraceQueue: (queue: Queue<InvocationTraceEvent> | undefined) => void,
-) => {
-  createEffect(() => {
-    if (Option.isNone(queueDxn)) {
-      setTraceQueue(undefined);
-      return;
-    }
-
-    try {
-      const queue = queues.get<InvocationTraceEvent>(queueDxn.value);
-      setTraceQueue(queue);
-    } catch {
-      setTraceQueue(undefined);
-    }
-  });
-};
-
-// Effect: Subscribe to invocations using the query API (which handles polling automatically).
+/**
+ * Subscribe to the per-space trace feed and fold `Trace.Message`s into invocation spans.
+ */
 const useInvocationsSubscription = (
-  traceQueue: () => Queue<InvocationTraceEvent> | undefined,
+  db: Database.Database,
   functionId: Option.Option<string>,
-  setInvocations: (invocations: InvocationSpan[]) => void,
-  selectedInvocation: () => InvocationSpan | undefined,
-  setSelectedInvocation: (invocation: InvocationSpan | undefined) => void,
+  setInvocations: (invocations: Span[]) => void,
+  selectedInvocationPid: () => string | undefined,
+  setSelectedInvocationPid: (pid: string | undefined) => void,
 ) => {
   createEffect(() => {
-    const queue = traceQueue();
-    if (!queue) {
-      setInvocations([]);
-      return;
-    }
+    const feedQuery = db.query(FeedTraceSink.query);
 
-    // Query both start and end events from the trace queue.
-    // The query subscription automatically handles polling via beginPolling().
-    const query = queue.query(Filter.or(Filter.type(InvocationTraceStartEvent), Filter.type(InvocationTraceEndEvent)));
+    let messageQuery: ReturnType<Database.Database['query']> | undefined;
+    let messageUnsubscribe: (() => void) | undefined;
 
-    const update = async () => {
-      // Use run() to get all events, not just cached results.
-      const events = (await query.run()) as InvocationTraceEvent[];
-      let spans = createInvocationSpans(events);
-
-      // Filter by function ID if provided.
-      if (Option.isSome(functionId)) {
-        const targetId = functionId.value;
-        spans = spans.filter((span) => span.invocationTarget?.toString().includes(targetId));
+    const subscribeToMessages = () => {
+      messageUnsubscribe?.();
+      const feed = feedQuery.results[0];
+      if (!feed) {
+        setInvocations([]);
+        return;
       }
+      messageQuery = db.query(Query.type(TraceModule.Message).from(feed));
+      const update = async () => {
+        const messages = (await messageQuery!.run()) as TraceModule.Message[];
+        let spans = buildSpans(messages);
 
-      // Sort by time descending (newest first).
-      spans.sort((a, b) => b.timestamp - a.timestamp);
+        if (Option.isSome(functionId)) {
+          const target = functionId.value;
+          spans = spans.filter((span) => span.key === target);
+        }
 
-      setInvocations(spans);
+        spans.sort((a, b) => b.timestamp - a.timestamp);
+        setInvocations(spans);
 
-      // Auto-select first item if no selection exists.
-      if (spans.length > 0 && !selectedInvocation()) {
-        setSelectedInvocation(spans[0]);
-      }
+        if (spans.length > 0 && !selectedInvocationPid()) {
+          setSelectedInvocationPid(spans[0].pid);
+        }
+      };
+      messageUnsubscribe = messageQuery.subscribe(
+        () => {
+          void update();
+        },
+        { fire: true },
+      );
     };
 
-    // Subscribe to query updates. The query API automatically handles polling.
-    // Use { fire: true } to trigger the callback immediately for initial load.
-    const unsubscribe = query.subscribe(
-      () => {
-        void update();
-      },
-      { fire: true },
-    );
+    const feedUnsubscribe = feedQuery.subscribe(subscribeToMessages, { fire: true });
 
     onCleanup(() => {
-      unsubscribe();
+      messageUnsubscribe?.();
+      feedUnsubscribe();
     });
   });
 };

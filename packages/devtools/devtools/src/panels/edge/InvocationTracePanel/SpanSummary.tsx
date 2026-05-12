@@ -5,18 +5,16 @@
 import { formatDate } from 'date-fns/format';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { type InvocationSpan } from '@dxos/functions-runtime';
-import { InvocationOutcome } from '@dxos/functions-runtime';
 import { type Database } from '@dxos/react-client/echo';
 import { type ChromaticPalette, IconButton, Tag } from '@dxos/react-ui';
 
-import { useFunctionNameResolver } from './hooks';
+import { type InvocationSpan, useFunctionNameResolver } from './hooks';
 import { formatDuration } from './utils';
 
-const InvocationColor: Record<InvocationOutcome, ChromaticPalette> = {
-  [InvocationOutcome.PENDING]: 'blue',
-  [InvocationOutcome.SUCCESS]: 'emerald',
-  [InvocationOutcome.FAILURE]: 'red',
+const OutcomeColor: Record<'pending' | 'success' | 'failure', ChromaticPalette> = {
+  pending: 'blue',
+  success: 'emerald',
+  failure: 'red',
 };
 
 type SpanSummaryProps = {
@@ -33,7 +31,7 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ db, span, onClose }) => {
       return;
     }
 
-    const isInProgress = span.outcome === InvocationOutcome.PENDING;
+    const isInProgress = span.outcome === undefined;
     if (!isInProgress) {
       setCurrentDuration(span.duration);
       return;
@@ -44,19 +42,19 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ db, span, onClose }) => {
     return () => clearInterval(interval);
   }, [span]);
 
-  const targetDxn = useMemo(() => span.invocationTarget?.dxn, [span.invocationTarget]);
   const resolver = useFunctionNameResolver({ db });
-  const targetName = useMemo(() => resolver(targetDxn), [targetDxn, resolver]);
+  const targetName = useMemo(() => span.name ?? (span.key ? resolver(span.key) : undefined), [span, resolver]);
 
   const timestamp = useMemo(() => formatDate(span.timestamp, 'yyyy-MM-dd HH:mm:ss'), [span.timestamp]);
-  const outcomeColor = useMemo(() => InvocationColor[span.outcome] ?? 'neutral', [span.outcome]);
-  const outcomeLabel = useMemo(() => span.outcome.charAt(0).toUpperCase() + span.outcome.slice(1), [span.outcome]);
+  const outcomeKey = span.outcome ?? 'pending';
+  const outcomeColor = useMemo(() => OutcomeColor[outcomeKey] ?? 'neutral', [outcomeKey]);
+  const outcomeLabel = useMemo(() => outcomeKey.charAt(0).toUpperCase() + outcomeKey.slice(1), [outcomeKey]);
 
   return (
     <div className='p-2 overflow-auto' role='none'>
       <div className='flex justify-between items-start' role='none'>
         <div className='w-full flex flex-row justify-between' role='none'>
-          <h3 className='text-lg font-medium mb-1'>{targetName}</h3>
+          <h3 className='text-lg font-medium mb-1'>{targetName ?? span.key ?? span.pid}</h3>
           <IconButton icon='ph--x--regular' iconOnly label='Close panel' onClick={onClose} />
         </div>
         <div className='flex gap-2 items-center' role='none'>
@@ -64,21 +62,11 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ db, span, onClose }) => {
           <span className='text-sm text-neutral'>{timestamp}</span>
           <span className='text-sm'>{currentDuration && `${formatDuration(currentDuration)}s`}</span>
         </div>
-
-        {span.trigger && (
-          <div className='mt-2 text-sm' role='none'>
-            Trigger ID: <span className='font-mono'>{span.trigger.dxn?.toString().split(':').pop()}</span>
-          </div>
-        )}
       </div>
 
-      {span.error && (
-        <div className='my-2 text-sm font-medium'>
-          {span.error.name}: {span.error.message}
-        </div>
-      )}
+      {span.error && <div className='my-2 text-sm font-medium'>{span.error}</div>}
 
-      {Object.keys(span.input as any).length > 0 && (
+      {span.input != null && typeof span.input === 'object' && Object.keys(span.input as object).length > 0 && (
         <div className='mt-3'>
           <details className='text-sm'>
             <summary className='cursor-pointer font-medium'>Input Data</summary>

@@ -2,19 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Array from 'effect/Array';
-import * as Match from 'effect/Match';
-import * as Option from 'effect/Option';
-import * as Schema from 'effect/Schema';
-import React, { type FC, useCallback, useMemo, useState } from 'react';
+import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type Database, Filter, type Obj } from '@dxos/echo';
+import { Trace } from '@dxos/compute';
+import { type Database, type Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
-import { type InvocationSpan } from '@dxos/functions-runtime';
-import { TraceEvent } from '@dxos/functions-runtime';
-import { DXN } from '@dxos/keys';
-import { type SerializedError } from '@dxos/protocols';
-import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -24,15 +16,13 @@ import { composable, composableProps, mx } from '@dxos/ui-theme';
 import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { ExceptionPanel } from './ExceptionPanel';
-import { ExecutionGraphPanel } from './ExecutionGraphPanel';
-import { useFunctionNameResolver, useInvocationSpans } from './hooks';
+import { type InvocationSpan, useFunctionNameResolver, useInvocationMessages, useInvocationSpans } from './hooks';
 import { LogPanel } from './LogPanel';
 import { RawDataPanel } from './RawDataPanel';
 import { formatDuration } from './utils';
 
 export type InvocationTraceContainerProps = {
   db?: Database.Database;
-  queueDxn?: DXN;
   showSpaceSelector?: boolean;
   target?: Obj.Unknown;
   detailAxis?: 'block' | 'inline';
@@ -45,7 +35,6 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
     {
       classNames,
       db,
-      queueDxn,
       detailAxis = 'inline',
       showSpaceSelector = false,
       target,
@@ -55,7 +44,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
     forwardedRef,
   ) => {
     const resolver = useFunctionNameResolver({ db });
-    const hookSpans = useInvocationSpans({ queueDxn, target });
+    const hookSpans = useInvocationSpans({ db, target });
     const invocationSpans = invocationSpansProp ?? hookSpans;
 
     const [selectedId, setSelectedId] = useState<string>();
@@ -64,7 +53,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
         return undefined;
       }
 
-      return invocationSpans.find((span) => selectedId === span.id);
+      return invocationSpans.find((span) => selectedId === span.pid);
     }, [selectedId, invocationSpans]);
 
     const properties: TablePropertyDefinition[] = useMemo(() => {
@@ -91,7 +80,6 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
                 { id: 'pending', title: 'Pending', color: 'blue' },
                 { id: 'success', title: 'Success', color: 'emerald' },
                 { id: 'failure', title: 'Failure', color: 'red' },
-                { id: 'unknown', title: 'Unknown', color: 'neutral' },
               ],
             },
           },
@@ -102,12 +90,10 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
             size: 110,
           },
           {
-            name: 'queue',
-            title: 'Queue',
+            name: 'pid',
+            title: 'PID',
             format: Format.TypeFormat.String,
-            // TODO(burdon): Add formatter.
-            // formatter: (value: string) => value.split(':').pop(),
-            size: 400,
+            size: 200,
           },
         ];
       }
@@ -117,27 +103,15 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
 
     const rows = useMemo(() => {
       return invocationSpans.map((invocation) => {
-        const status = invocation.outcome;
-        // Handle both Ref objects and encoded references.
-        const targetDxn =
-          invocation.invocationTarget?.dxn ??
-          (invocation.invocationTarget && '/' in invocation.invocationTarget
-            ? DXN.parse((invocation.invocationTarget as any)['/'])
-            : undefined);
-
-        // TODO(burdon): Use InvocationTraceStartEvent.
+        const status = invocation.outcome ?? 'pending';
+        const targetLabel = invocation.name ?? (invocation.key ? resolver(invocation.key) : undefined);
         return {
-          id: invocation.id,
-          target: resolver(targetDxn),
-          // TODO(burdon): Change to timestamp?
+          id: invocation.pid,
+          target: targetLabel ?? invocation.key ?? invocation.pid,
           time: new Date(invocation.timestamp),
           duration: formatDuration(invocation.duration),
           status,
-          queue:
-            invocation.invocationTraceQueue?.dxn?.toString() ??
-            (invocation.invocationTraceQueue && '/' in invocation.invocationTraceQueue
-              ? (invocation.invocationTraceQueue as any)['/']
-              : 'unknown'),
+          pid: invocation.pid,
           _original: invocation,
         };
       });
@@ -184,7 +158,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
           <div className='relative flex-1 min-h-0'>
             <div className={mx('absolute inset-0 overflow-hidden', gridLayout)}>
               <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} />
-              {selectedInvocation && <Selected span={selectedInvocation} />}
+              {selectedInvocation && <Selected db={db} span={selectedInvocation} />}
             </div>
           </div>
         </PanelContainer>
@@ -193,21 +167,36 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
   },
 );
 
-const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
+const Selected: FC<{ db?: Database.Database; span: InvocationSpan }> = ({ db, span }) => {
   const [activeTab, setActiveTab] = useState('input');
 
-  const queue = span.invocationTraceQueue?.target;
-  const objects = useQuery(queue, Filter.everything());
-
-  const contents = Array.head(objects).pipe(
-    Option.getOrUndefined,
-    Match.value,
-    Match.not(Match.defined, () => 'unknown'),
-    Match.when(Schema.is(TraceEvent), () => 'logs'),
-    Match.orElse(() => 'execution-graph'),
+  const messages = useInvocationMessages({ db, pid: span.pid });
+  const hasLogs = useMemo(
+    () => messages.some((m: Trace.Message) => m.events.some((e: Trace.Event) => Trace.isOfType(Trace.Log, e))),
+    [messages],
+  );
+  const hasExceptions = useMemo(
+    () => messages.some((m: Trace.Message) => m.events.some((e: Trace.Event) => Trace.isOfType(Trace.Exception, e))),
+    [messages],
   );
 
-  const isLogQueue = 'logs' === contents || objects.length === 0;
+  // Reset to a valid tab when the current selection no longer exposes the active tab
+  // (e.g., switching to a span without logs while on the 'logs' tab).
+  useEffect(() => {
+    const allowed = new Set<string>(['input', 'raw']);
+    if (hasLogs) {
+      allowed.add('logs');
+    }
+    if (hasExceptions) {
+      allowed.add('exceptions');
+    }
+    if (span.error) {
+      allowed.add('failure');
+    }
+    if (!allowed.has(activeTab)) {
+      setActiveTab('input');
+    }
+  }, [span, hasLogs, hasExceptions, activeTab]);
 
   return (
     <div className='grid grid-cols-1 grid-rows-[min-content_1fr] min-h-0 overflow-hidden border-separator'>
@@ -219,38 +208,30 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
       >
         <Tabs.Tablist classNames='border-b border-separator'>
           <Tabs.Tab value='input'>Input</Tabs.Tab>
-          {isLogQueue && <Tabs.Tab value='logs'>Logs</Tabs.Tab>}
-          {isLogQueue && <Tabs.Tab value='errors'>Error logs</Tabs.Tab>}
-          {isLogQueue && <Tabs.Tab value='raw'>Raw</Tabs.Tab>}
+          {hasLogs && <Tabs.Tab value='logs'>Logs</Tabs.Tab>}
+          {hasExceptions && <Tabs.Tab value='exceptions'>Exceptions</Tabs.Tab>}
+          <Tabs.Tab value='raw'>Raw</Tabs.Tab>
           {span.error && <Tabs.Tab value='failure'>Failure</Tabs.Tab>}
-          {contents === 'execution-graph' && <Tabs.Tab value='execution-graph'>Execution Graph</Tabs.Tab>}
         </Tabs.Tablist>
         <Tabs.Panel value='input' classNames='min-h-0 min-w-0 w-full overflow-auto'>
           <JsonHighlighter data={span.input} />
         </Tabs.Panel>
-        {isLogQueue && (
+        {hasLogs && (
           <Tabs.Panel value='logs'>
-            <LogPanel objects={objects} />
+            <LogPanel messages={messages} />
           </Tabs.Panel>
         )}
-        {isLogQueue && (
-          <Tabs.Panel value='errors'>
-            <ExceptionPanel objects={objects} />
+        {hasExceptions && (
+          <Tabs.Panel value='exceptions'>
+            <ExceptionPanel messages={messages} />
           </Tabs.Panel>
         )}
-        {isLogQueue && (
-          <Tabs.Panel value='raw' classNames='min-h-0 min-w-0 w-full overflow-auto'>
-            <RawDataPanel classNames='text-xs' span={span} objects={objects} />
-          </Tabs.Panel>
-        )}
+        <Tabs.Panel value='raw' classNames='min-h-0 min-w-0 w-full overflow-auto'>
+          <RawDataPanel classNames='text-xs' span={span} messages={messages} />
+        </Tabs.Panel>
         {span.error && (
           <Tabs.Panel value='failure'>
-            <SpanErrorPanel exception={span.error} />
-          </Tabs.Panel>
-        )}
-        {contents === 'execution-graph' && (
-          <Tabs.Panel value='execution-graph'>
-            <ExecutionGraphPanel queue={queue} />
+            <SpanErrorPanel error={span.error} />
           </Tabs.Panel>
         )}
       </Tabs.Root>
@@ -258,20 +239,10 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   );
 };
 
-const SpanErrorPanel = ({ exception }: { exception: SerializedError }) => {
+const SpanErrorPanel: FC<{ error: string }> = ({ error }) => {
   return (
     <div className='text-xs whitespace-pre-wrap m-4'>
-      <div>Code: {exception.name}</div>
-      <div>Message: {exception.message}</div>
-      <div />
-      <div>Stack: {exception.stack}</div>
-      <div />
-      {exception.cause && (
-        <>
-          <div>Caused by:</div>
-          <SpanErrorPanel exception={exception.cause} />
-        </>
-      )}
+      <div>Message: {error}</div>
     </div>
   );
 };

@@ -4,33 +4,35 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { type TraceEvent } from '@dxos/functions-runtime';
+import { Trace } from '@dxos/compute';
 import { Message } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 type ExceptionPanelProps = {
-  objects?: TraceEvent[];
+  messages?: readonly Trace.Message[];
 };
 
-export const ExceptionPanel: FC<ExceptionPanelProps> = ({ objects }) => {
-  const errorLogs = useMemo(() => {
-    if (!objects?.length) {
+export const ExceptionPanel: FC<ExceptionPanelProps> = ({ messages }) => {
+  const exceptions = useMemo(() => {
+    if (!messages?.length) {
       return [];
     }
 
-    return objects
-      .flatMap((event) =>
-        event.logs
-          .filter((log) => log.level === 'error')
-          .map((log) => ({
-            ...log,
-            eventId: event.id,
+    return messages
+      .flatMap((message) =>
+        message.events
+          .filter((event) => Trace.isOfType(Trace.Exception, event))
+          .map((event) => ({
+            timestamp: event.timestamp,
+            name: event.data.name,
+            message: event.data.message,
+            stack: event.data.stack,
           })),
       )
       .sort((a, b) => a.timestamp - b.timestamp);
-  }, [objects]);
+  }, [messages]);
 
-  if (errorLogs.length === 0) {
+  if (exceptions.length === 0) {
     return (
       <div className={mx('flex w-full items-center justify-center m-4')}>
         <Message.Root>
@@ -42,28 +44,25 @@ export const ExceptionPanel: FC<ExceptionPanelProps> = ({ objects }) => {
 
   return (
     <div className={mx('p-1 overflow-auto')}>
-      {errorLogs.map((log, index) => {
-        const context = log.context as any;
-        const time = new Date(log.timestamp).toLocaleString();
-        const errorInfo = context?.err || {};
-        const errorName = errorInfo._id || 'Error';
-        const errorMessage = errorInfo.message || log.message;
-        const stack = context?.stack;
+      {exceptions.map((exception, index) => {
+        const time = new Date(exception.timestamp).toLocaleString();
 
         return (
           <div
-            key={`log-${index}`}
+            key={`exception-${index}`}
             className='mb-2 border border-red-200 dark:border-red-900 rounded-sm overflow-hidden'
           >
             <div className='p-2'>
               <div className='flex justify-between items-start'>
-                <div className='font-medium'>{errorName}</div>
+                <div className='font-medium'>{exception.name}</div>
                 <div className='text-xs font-mono opacity-80'>{time}</div>
               </div>
-              <div className='mt-1 text-xs font-mono whitespace-pre-wrap'>{errorMessage}</div>
+              <div className='mt-1 text-xs font-mono whitespace-pre-wrap'>{exception.message}</div>
             </div>
 
-            {stack && <pre className='p-3 text-xs bg-neutral-50 dark:bg-neutral-900 overflow-auto'>{stack}</pre>}
+            {exception.stack && (
+              <pre className='p-3 text-xs bg-neutral-50 dark:bg-neutral-900 overflow-auto'>{exception.stack}</pre>
+            )}
           </div>
         );
       })}

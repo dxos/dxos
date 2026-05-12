@@ -10,7 +10,6 @@ import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framewor
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Script } from '@dxos/compute';
 import { InvocationTraceContainer } from '@dxos/devtools';
-import { Feed } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -104,17 +103,10 @@ export default Capability.makeModule(() =>
         ),
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
-          const feed = space?.properties.invocationTraceFeed?.target;
-          const queueDxn = feed ? Feed.getQueueDxn(feed) : undefined;
           return (
             <Panel.Root role={role}>
               <Panel.Content>
-                <InvocationTraceContainer
-                  db={space?.db}
-                  queueDxn={queueDxn}
-                  target={data.companionTo}
-                  detailAxis='block'
-                />
+                <InvocationTraceContainer db={space?.db} target={data.companionTo} detailAxis='block' />
               </Panel.Content>
             </Panel.Root>
           );

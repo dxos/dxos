@@ -14,11 +14,9 @@ import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, spaceIdWithDefault, spaceLayer, withTypes } from '@dxos/cli-util';
 import { ClientService, ConfigService } from '@dxos/client';
-import { SpaceProperties } from '@dxos/client-protocol';
-import { Database, Feed, Filter, type Key } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
-import { InvocationTraceEndEvent, InvocationTraceStartEvent, TriggerDispatcher } from '@dxos/functions-runtime';
-import { invariant } from '@dxos/invariant';
+import { Trace as TraceModule } from '@dxos/compute';
+import { Database, type Key } from '@dxos/echo';
+import { TriggerDispatcher } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 
 import { App, render } from '../../../components';
@@ -39,7 +37,6 @@ export const trace = Command.make(
   ({ functionId, spaceId, localTriggers }) =>
     Effect.gen(function* () {
       const { db } = yield* Database.Service;
-      const { queues } = yield* QueueService;
       log.info('Starting invocation trace...');
 
       const logBuffer = createLogBuffer();
@@ -47,36 +44,16 @@ export const trace = Command.make(
       log.runtimeConfig.processors = [logBuffer.processor];
       log.info('trace: command starting', { spaceId, functionId, localTriggers });
 
-      // Query for SpaceProperties to get the invocation trace queue DXN.
-      const objects = yield* Database.runQuery(Filter.type(SpaceProperties));
-      const properties = objects.at(0);
-      invariant(properties, 'SpaceProperties not found');
-      const traceFeed = properties.invocationTraceFeed?.target;
-      const queueDxn = traceFeed ? Feed.getQueueDxn(traceFeed) : undefined;
-
-      if (!queueDxn) {
-        log.info('trace: no invocationTraceFeed found in space properties', { spaceId: db.spaceId });
-      } else {
-        log.info('trace: found invocationTraceFeed', { spaceId: db.spaceId, queueDxn });
-      }
-
       // Start trigger runtime in background if enabled
       const { profile } = yield* CommandConfig;
       const triggerRuntimeResult = localTriggers ? yield* createTriggerRuntime(spaceId, profile) : undefined;
       const triggerRuntime = triggerRuntimeResult?.runtime;
       const triggerRuntimeFiber = triggerRuntimeResult?.fiber;
 
-      // Render.
       yield* render({
         app: () => (
-          // TODO(wittjosiah): Rather than pass db and queues probably should have some sort of context provider then introduce hooks for interacting with the db and queues.
           <App focusElements={['table']} logBuffer={logBuffer} theme={theme}>
-            <Trace
-              db={db}
-              queues={queues}
-              queueDxn={queueDxn ? Option.some(queueDxn) : Option.none()}
-              functionId={functionId}
-            />
+            <Trace db={db} functionId={functionId} />
           </App>
         ),
         focusElements: ['table'],
@@ -96,7 +73,7 @@ export const trace = Command.make(
 ).pipe(
   Command.withDescription('Trace function invocations.'),
   Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
-  Command.provideEffectDiscard(() => withTypes(InvocationTraceStartEvent, InvocationTraceEndEvent)),
+  Command.provideEffectDiscard(() => withTypes(TraceModule.Message)),
 );
 
 /**

@@ -4,23 +4,24 @@
 
 import React, { type ComponentType, type FC, type JSX, useMemo } from 'react';
 
-import { type InvocationSpan } from '@dxos/functions-runtime';
-import { type TraceEvent } from '@dxos/functions-runtime';
+import { type Trace } from '@dxos/compute';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 
+import { type InvocationSpan } from './hooks';
+
 type RawDataPanelProps = {
   span: InvocationSpan;
-  objects?: TraceEvent[];
+  messages?: readonly Trace.Message[];
 };
 
-export const RawDataPanel: FC<ThemedClassName<RawDataPanelProps>> = ({ classNames, span, objects }) => {
+export const RawDataPanel: FC<ThemedClassName<RawDataPanelProps>> = ({ classNames, span, messages }) => {
   const combinedData = useMemo(() => {
     return {
       span,
-      traceEvents: objects ?? [],
+      messages: messages ?? [],
     };
-  }, [span, objects]);
+  }, [span, messages]);
 
   const rowRenderer = ({
     rows,

@@ -35,7 +35,7 @@ import {
   TestingPanel,
   WorkflowPanel,
 } from '@dxos/devtools';
-import { Feed, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
@@ -397,9 +397,7 @@ export default Capability.makeModule(
             return null;
           }
 
-          const feed = space.properties.invocationTraceFeed?.target;
-          const queueDxn = feed ? Feed.getQueueDxn(feed) : undefined;
-          return <InvocationTraceContainer db={space.db} queueDxn={queueDxn} detailAxis='block' />;
+          return <InvocationTraceContainer db={space.db} detailAxis='block' />;
         },
       }),
       Surface.create({

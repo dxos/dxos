@@ -9,11 +9,11 @@ import { describe, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Trigger, Operation } from '@dxos/compute';
+import { Trace, Trigger, Operation } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Feed, Obj, Query, Ref } from '@dxos/echo';
-import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
+import { FeedTraceSink } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import { failedInvariant } from '@dxos/invariant';
@@ -202,53 +202,50 @@ const checkEmails = async (feed: Feed.Feed, space: Space) => {
 };
 
 export const observeInvocations = async (space: Space, maxCount: number | null) => {
-  let initialCount = null;
-  const invocationData = new Map<
-    string,
-    {
-      count: number;
-      begin: InvocationTraceStartEvent;
-      end?: InvocationTraceEndEvent;
-    }
-  >();
+  let initialCount: number | null = null;
+  const seen = new Map<string, { count: number; startTimestamp?: number; reportedEnd: boolean }>();
   let count = 0;
   while (true) {
     try {
-      const traceFeed = space.properties.invocationTraceFeed?.target;
-      const traceQueueDxn = traceFeed ? Feed.getQueueDxn(traceFeed) : undefined;
-      const invocations = traceQueueDxn ? ((await space.queues.get(traceQueueDxn).queryObjects()) ?? []) : [];
+      const feeds = await space.db.query(FeedTraceSink.query).run();
+      const feed = feeds[0];
+      const messages = feed ? await space.db.query(Query.type(Trace.Message).from(feed)).run() : [];
 
-      for (const invocation of invocations) {
-        if (Obj.instanceOf(InvocationTraceStartEvent, invocation)) {
-          if (invocationData.has(invocation.invocationId)) {
-            continue;
-          }
-          invocationData.set(invocation.invocationId, {
-            count: count++,
-            begin: invocation,
-          });
-          console.log(`${count.toString().padStart(3, ' ')}: BEGIN ${JSON.stringify(invocation.input)}`);
-        } else if (Obj.instanceOf(InvocationTraceEndEvent, invocation)) {
-          const data = invocationData.get(invocation.invocationId);
-          if (!data || !!data.end) {
-            continue;
-          }
-          data.end = invocation;
-
-          const outcome = data.end.outcome;
-          console.log(
-            `${data.count.toString().padStart(3, ' ')}: END outcome=${outcome} duration=${data.end.timestamp - data.begin.timestamp}`,
-          );
-          if (outcome === 'failure') {
-            console.log(data.end.error?.stack);
+      for (const message of messages) {
+        const pid = message.meta.pid;
+        if (!pid) {
+          continue;
+        }
+        for (const event of message.events) {
+          if (Trace.isOfType(Trace.OperationStart, event)) {
+            if (seen.has(pid)) {
+              continue;
+            }
+            const seq = count++;
+            seen.set(pid, { count: seq, startTimestamp: event.timestamp, reportedEnd: false });
+            console.log(`${seq.toString().padStart(3, ' ')}: BEGIN ${JSON.stringify(event.data.input)}`);
+          } else if (Trace.isOfType(Trace.OperationEnd, event)) {
+            const entry = seen.get(pid);
+            if (!entry || entry.reportedEnd) {
+              continue;
+            }
+            entry.reportedEnd = true;
+            const duration = entry.startTimestamp ? event.timestamp - entry.startTimestamp : undefined;
+            console.log(
+              `${entry.count.toString().padStart(3, ' ')}: END outcome=${event.data.outcome} duration=${duration ?? '?'}`,
+            );
+            if (event.data.outcome === 'failure') {
+              console.log(event.data.error);
+            }
           }
         }
       }
+
       if (initialCount === null) {
-        initialCount = invocations.length;
+        initialCount = seen.size;
       }
 
-      if (maxCount !== null && invocationData.size >= maxCount + initialCount) {
+      if (maxCount !== null && seen.size >= maxCount + initialCount) {
         break;
       }
     } catch (err) {
