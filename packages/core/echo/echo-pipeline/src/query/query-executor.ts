@@ -1000,9 +1000,9 @@ export class QueryExecutor extends Resource {
                   try {
                     return isEncodedReference(ref)
                       ? {
-                          ref: DXN.parse(ref['/']),
-                          spaceId: item.spaceId,
-                        }
+                        ref: DXN.parse(ref['/']),
+                        spaceId: item.spaceId,
+                      }
                       : null;
                   } catch {
                     log.warn('invalid reference', { ref: ref['/'] });
@@ -1509,7 +1509,7 @@ export class QueryExecutor extends Resource {
       return null;
     }
     const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, meta.documentId as DocumentId, {
-      fetchFromNetwork: true,
+      fetchFromNetwork: false,
     });
     const doc = handle.doc();
     if (!doc) {
@@ -1573,7 +1573,7 @@ export class QueryExecutor extends Resource {
         }
 
         const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, link as AutomergeUrl, {
-          fetchFromNetwork: true,
+          fetchFromNetwork: false,
         });
         const doc = handle.doc();
         if (!doc) {
