@@ -18,21 +18,6 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { EdgeRegistryPluginProvider, type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
 import { Placeholder, type PlaceholderComponentProps, useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-// Pull `@dxos/app-toolkit/ui` into the main bundle's static graph so its
-// AppSurface namespace module is fully evaluated before any plugin's
-// `Capability.lazy(() => import('./react-surface'))` resolves. Without this
-// the ui chunk is only reached through dynamically-loaded plugin chunks,
-// and on Linux webkit (and Mac Playwright webkit) the first batch of
-// concurrent plugin activations races its module body: the dynamic-import
-// promise resolves while `var S = {}; __export(S, {Article: () => Article_var, ...})`
-// is still hoisted-undefined, and ~10 ReactSurface modules (plugin-crx,
-// -game, -feed, -zen, -sidekick, -transcription, -automation, -outliner,
-// -masonry, -gallery) crash with `undefined is not an object (evaluating
-// 'AppSurface.literal')`. PR #11312 papered over plugin-crx by reshuffling
-// its chunk graph; this is the generic fix. `@dxos/app-toolkit`'s
-// `sideEffects` field whitelists `./src/ui/**` so the bare import here is
-// not tree-shaken.
-import '@dxos/app-toolkit/ui';
 import { Composer } from '@dxos/brand';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { runAndForwardErrors } from '@dxos/effect';
