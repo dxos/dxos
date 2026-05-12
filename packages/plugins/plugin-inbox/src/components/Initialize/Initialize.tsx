@@ -36,7 +36,10 @@ export const Initialize = composable<HTMLDivElement, InitializeProps<any>>(
     return (
       <InitializeEmpty {...props} ref={forwardedRef}>
         {message && (
-          <Message.Root valence='warning'>
+          // `w-fit` constrains Message.Root so its inner `justify-between`
+          // header doesn't leave trailing whitespace for an absent action
+          // slot — see Message.Title's optional `onClose` button.
+          <Message.Root valence='warning' classNames='w-fit'>
             <Message.Title>{message}</Message.Title>
           </Message.Root>
         )}
