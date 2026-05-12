@@ -31,6 +31,7 @@ export namespace Format {
   export const Hostname = StringUtil.Hostname;
   export const JSON = StringUtil.JSON;
   export const Markdown = StringUtil.Markdown;
+  export const Password = StringUtil.Password;
   export const Regex = StringUtil.Regex;
   export const URL = StringUtil.URL;
   export const UUID = Schema.UUID;

@@ -10,6 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
+import { Format } from '@dxos/echo/internal';
 import { withAuthorization } from '@dxos/functions';
 import {
   type CredentialForm,
@@ -32,7 +33,6 @@ import {
 import {
   GetGoogleCalendars,
   GetGoogleContactGroups,
-  ImapSync,
   SyncCalendar,
   SyncContacts,
   SyncMailbox,
@@ -122,7 +122,7 @@ const ImapCredentialFormSchema = Schema.Struct({
     title: 'Username',
     description: 'IMAP login (typically your email address).',
   }),
-  password: Schema.String.annotations({
+  password: Format.Password.annotations({
     title: 'Password',
     description: 'IMAP password or app password. Gmail/iCloud require app passwords (2FA).',
   }),
@@ -141,21 +141,24 @@ const imapCredentialForm: CredentialForm<ImapCredentialFormValues> = {
     username: '',
     password: '',
   },
-  onSubmit: ({ values, provider }) =>
+  onSubmit: ({ values, provider, existingTarget }) =>
     Effect.sync(() => {
       const accessToken = Obj.make(AccessToken.AccessToken, {
         source: `${IMAP_INTEGRATION_SOURCE_PREFIX}:${values.host}`,
         account: values.username,
         token: values.password,
       });
-      const mailbox = Mailbox.make({ name: values.username || provider.label || 'IMAP' });
+      // Reuse the mailbox the user came from if there is one; otherwise leave
+      // the target.object empty and let `imapOnTokenCreated` materialize a
+      // fresh Mailbox after the integration is persisted.
+      const targetObject = existingTarget;
       const integration = IntegrationType.make({
         name: values.username || `${provider.label ?? 'IMAP'} (${values.host})`,
         providerId: provider.id,
         accessToken: Ref.make(accessToken),
         targets: [
           {
-            object: Ref.make(mailbox),
+            ...(targetObject ? { object: targetObject } : {}),
             options: {
               host: values.host,
               port: values.port,
@@ -171,38 +174,26 @@ const imapCredentialForm: CredentialForm<ImapCredentialFormValues> = {
     }),
 };
 
-const imapOnTokenCreated: OnTokenCreated = ({ integration, existingTarget }) =>
+const imapOnTokenCreated: OnTokenCreated = ({ integration, existingTarget, accessToken }) =>
   Effect.gen(function* () {
     const db = Obj.getDatabase(integration);
     if (!db) {
       return;
     }
-    // The credential form already attached a Mailbox target; only persist
-    // (and optionally swap to an existing one) here.
-    const target = integration.targets[0];
-    const mailboxRef = target?.object as Ref.Ref<Mailbox.Mailbox> | undefined;
-    if (mailboxRef) {
-      const mailbox = yield* Effect.promise(() => mailboxRef.load());
-      if (Mailbox.instanceOf(mailbox) && db) {
-        // Mailbox was already created via Mailbox.make; just ensure it's in
-        // the database (`finalizePendingEntry` adds the integration only).
-        try {
-          db.add(mailbox);
-        } catch {
-          // Already added — fine.
-        }
-      }
+    // `onSubmit` left `targets[0].object` unset when no `existingTarget` was
+    // provided — materialise a fresh Mailbox here. If a target object is
+    // already attached (either the existingTarget plumbed through onSubmit,
+    // or a stale value), keep it.
+    if (integration.targets[0]?.object) {
+      return;
     }
-    if (existingTarget) {
-      // Caller passed an existing Mailbox — swap into targets[0].object.
-      Obj.update(integration, (integration) => {
-        const next = [...integration.targets];
-        if (next[0]) {
-          next[0] = { ...next[0], object: existingTarget };
-        }
-        (integration as Obj.Mutable<typeof integration>).targets = next;
-      });
-    }
+    const mailboxName = accessToken.account || integration.name || 'IMAP';
+    const target = existingTarget ?? Ref.make(db.add(Mailbox.make({ name: mailboxName })));
+    Obj.update(integration, (integration) => {
+      const next = [...integration.targets];
+      next[0] = { ...next[0], object: target };
+      (integration as Obj.Mutable<typeof integration>).targets = next;
+    });
   }).pipe(Effect.orDie);
 
 const calendarOnTokenCreated: OnTokenCreated = ({ accessToken }) =>
@@ -279,7 +270,12 @@ export default Capability.makeModule(
               // No `oauth` — IMAP uses username + password / app password.
               credentialForm: imapCredentialForm,
               optionsSchema: ImapAccountOptions,
-              sync: ImapSync,
+              // Route through SyncMailbox (declares only Capability.Service)
+              // so the app's OperationInvoker can validate it; the handler
+              // then dispatches by `integration.providerId` to ImapFunctions
+              // .Sync via the space-scoped compute runtime where the four
+              // services (Database, Feed, Credential, Trace) are available.
+              sync: SyncMailbox,
               onTokenCreated: imapOnTokenCreated,
             },
           ]

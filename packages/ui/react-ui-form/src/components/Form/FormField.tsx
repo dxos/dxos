@@ -32,6 +32,7 @@ import {
   GeoPointField,
   MarkdownField,
   NumberField,
+  PasswordField,
   RefField,
   type RefFieldProps,
   SelectField,
@@ -274,6 +275,7 @@ const getFormField = ({ type, format }: FormFieldComponentProps): FormFieldCompo
     Match.withReturnType<FormFieldComponent | undefined>(),
     Match.when(Format.TypeFormat.GeoPoint, () => GeoPointField),
     Match.when(Format.TypeFormat.Markdown, () => MarkdownField),
+    Match.when(Format.TypeFormat.Password, () => PasswordField),
     Match.when(Format.TypeFormat.Text, () => TextAreaField),
     Match.orElse(() => undefined),
   );

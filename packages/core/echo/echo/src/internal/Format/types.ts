@@ -83,6 +83,8 @@ export enum TypeFormat {
   Hostname = 'hostname',
   JSON = 'json',
   Markdown = 'markdown',
+  /** Secret string. Forms render it with a masked input (`type="password"`). */
+  Password = 'password',
   Regex = 'regex',
   SingleSelect = 'single-select',
   Text = 'text',
@@ -149,6 +151,7 @@ export const formatToType: Record<TypeFormat, TypeEnum> = {
   [TypeFormat.Hostname]: TypeEnum.String,
   [TypeFormat.JSON]: TypeEnum.String,
   [TypeFormat.Markdown]: TypeEnum.String,
+  [TypeFormat.Password]: TypeEnum.String,
   [TypeFormat.Regex]: TypeEnum.String,
   [TypeFormat.URL]: TypeEnum.String,
   [TypeFormat.UUID]: TypeEnum.String,

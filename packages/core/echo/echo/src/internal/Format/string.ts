@@ -45,6 +45,18 @@ export const JSON = Schema.String.pipe(FormatAnnotation.set(TypeFormat.JSON));
 export const Markdown = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Markdown));
 
 /**
+ * Secret string (passwords, API tokens, app passwords). Forms render this
+ * with a masked input — the value is otherwise just a string at rest.
+ */
+export const Password = Schema.String.pipe(
+  FormatAnnotation.set(TypeFormat.Password),
+  Schema.annotations({
+    title: 'Password',
+    description: 'Secret string rendered as a masked input.',
+  }),
+);
+
+/**
  * Regex
  * https://json-schema.org/understanding-json-schema/reference/regular_expressions
  * https://ecma-international.org/publications-and-standards/standards/ecma-262

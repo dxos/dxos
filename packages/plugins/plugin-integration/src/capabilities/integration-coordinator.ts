@@ -81,7 +81,12 @@ const resolveProvider = (
 
 const openProviderFormDialog = (
   invoker: OperationInvokerExports.OperationInvoker,
-  input: { db: Database.Database; spaceId: Key.SpaceId; provider: IntegrationProviderEntry },
+  input: {
+    db: Database.Database;
+    spaceId: Key.SpaceId;
+    provider: IntegrationProviderEntry;
+    existingTarget?: Ref.Ref<Obj.Any>;
+  },
 ) =>
   invoker.invoke(LayoutOperation.UpdateDialog, {
     subject: PROVIDER_FORM_DIALOG,
@@ -92,6 +97,7 @@ const openProviderFormDialog = (
       spaceId: input.spaceId,
       providerId: input.provider.id,
       providerLabel: input.provider.label ?? input.provider.id,
+      existingTarget: input.existingTarget,
     },
   });
 
@@ -345,7 +351,7 @@ export default Capability.makeModule(
         // `submitCredentialForm`. OAuth providers re-enter here with
         // `loginHint`; non-OAuth providers complete directly in the form.
         if (provider.credentialForm && loginHint === undefined) {
-          yield* openProviderFormDialog(invoker, { db, spaceId, provider });
+          yield* openProviderFormDialog(invoker, { db, spaceId, provider, existingTarget });
           return { kind: 'dialog-opened' } as const;
         }
 
@@ -353,7 +359,7 @@ export default Capability.makeModule(
         // generic provider-form dialog (renders the default custom-token
         // schema for backwards compatibility).
         if (!provider.oauth) {
-          yield* openProviderFormDialog(invoker, { db, spaceId, provider });
+          yield* openProviderFormDialog(invoker, { db, spaceId, provider, existingTarget });
           return { kind: 'dialog-opened' } as const;
         }
 
@@ -513,6 +519,7 @@ export default Capability.makeModule(
       spaceId,
       providerId,
       values,
+      existingTarget,
     }) =>
       Effect.gen(function* () {
         const provider = yield* resolveProvider(getProviderEntries, providerId);
@@ -520,7 +527,7 @@ export default Capability.makeModule(
           return yield* Effect.fail(new Error(`Provider ${providerId} has no credentialForm.`));
         }
 
-        const result = yield* provider.credentialForm.onSubmit({ values, provider, db });
+        const result = yield* provider.credentialForm.onSubmit({ values, provider, db, existingTarget });
 
         if (result.kind === 'complete') {
           yield* finalizePendingEntry(invoker, {
@@ -528,6 +535,7 @@ export default Capability.makeModule(
             integration: result.integration,
             db,
             provider,
+            existingTarget,
           });
           return { kind: 'integration-created', integrationId: result.integration.id } as const;
         }
@@ -539,7 +547,7 @@ export default Capability.makeModule(
         if (!loginHint) {
           return yield* Effect.fail(new Error(`Provider ${providerId} credentialForm produced an empty loginHint.`));
         }
-        return yield* createIntegration({ db, spaceId, providerId, loginHint });
+        return yield* createIntegration({ db, spaceId, providerId, loginHint, existingTarget });
       }).pipe(Effect.mapError(mapCoordinatorError));
 
     return Capability.contributes(

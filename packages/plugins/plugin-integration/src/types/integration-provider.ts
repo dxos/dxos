@@ -106,6 +106,8 @@ export type CredentialForm<Values = any> = {
     values: Values;
     provider: IntegrationProviderEntry;
     db: Database.Database;
+    /** Existing target object the user is connecting from (e.g. an empty Mailbox). When set, providers should wire it as the new Integration's first target instead of creating a fresh placeholder. */
+    existingTarget?: Ref.Ref<Obj.Unknown>;
   }) => Effect.Effect<CredentialFormResult>;
 };
 
