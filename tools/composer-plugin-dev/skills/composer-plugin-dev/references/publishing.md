@@ -11,15 +11,17 @@ Community plugins are loaded by Composer at runtime from **GitHub releases**. Th
 
 No further PRs are needed for updates — the registry polls the repo's latest release automatically. Composer shows an **Update** affordance when a newer version exists; users can also roll back via the version picker.
 
-## 1. Pin `@dxos/*` to the Composer host
+## 1. Set `@dxos/*` versions
 
-Find the Composer host's main dist-tag and pin **all** `@dxos/*` deps to it:
+Because `@dxos/*` dependencies are externalized by the plugin bundle, the host's copy runs at runtime — your `package.json` version only affects build-time types and APIs. Any version with a compatible API will work; an exact match isn't required.
+
+For now, **use the latest `main` dist-tag** to build against the newest stable APIs:
 
 ```sh
 npm dist-tag ls @dxos/app-framework
 ```
 
-Bump these in lockstep when Composer releases.
+> This guidance will be updated when 0.9 ships.
 
 ## 2. GitHub Actions release workflow
 
