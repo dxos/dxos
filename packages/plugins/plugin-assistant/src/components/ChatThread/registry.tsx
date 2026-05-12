@@ -98,9 +98,9 @@ export const componentRegistry: XmlWidgetRegistry = {
   status: {
     block: true,
     streaming: true,
-    factory: ({ children, range }) => {
+    factory: ({ children }) => {
       const text = getXmlTextChild(children);
-      return text ? new StatusWidget(text, range.from) : null;
+      return text ? new StatusWidget(text) : null;
     },
   },
 
@@ -159,6 +159,10 @@ export function createBlockRenderer(viewType: Assistant.ChatView | undefined): B
     }
     let str = blockToMarkdownImpl(context, message, block);
     if (str && !block.pending) {
+      // Use a blank line as the block separator so each rendered block parses as its own
+      // markdown block. A single newline lets CommonMark absorb a following `<prompt>` (an
+      // HTML type-7 tag, which can't interrupt an open paragraph) into the previous
+      // paragraph, rendering the prompt bubble inline next to the prior assistant text.
       return (str += '\n');
     }
     return str;
@@ -193,7 +197,7 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
         if (block.disposition === 'synthetic') {
           return renderXMLBlock('synthetic', { content: block.text, pending: block.pending });
         } else {
-          return `<prompt>${block.text}</prompt>`;
+          return `\n<prompt>${block.text}</prompt>`;
         }
       } else {
         const text = block.text.trim();

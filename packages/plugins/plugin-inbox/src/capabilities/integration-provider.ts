@@ -23,11 +23,19 @@ import { AccessToken } from '@dxos/types';
 import {
   GMAIL_PROVIDER_ID,
   GOOGLE_CALENDAR_PROVIDER_ID,
+  GOOGLE_CONTACTS_PROVIDER_ID,
   GOOGLE_INTEGRATION_SOURCE,
   IMAP_INTEGRATION_SOURCE_PREFIX,
   IMAP_PROVIDER_ID,
 } from '../constants';
-import { GetGoogleCalendars, ImapSync, SyncCalendar, SyncMailbox } from '../operations/definitions';
+import {
+  GetGoogleCalendars,
+  GetGoogleContactGroups,
+  ImapSync,
+  SyncCalendar,
+  SyncContacts,
+  SyncMailbox,
+} from '../operations/definitions';
 import { CalendarSyncOptions, ImapAccountOptions, Mailbox, SyncOptions } from '../types';
 
 const GoogleUserInfo = Schema.Struct({
@@ -158,7 +166,7 @@ const imapCredentialForm: CredentialForm<ImapCredentialFormValues> = {
           },
         ],
       });
-      return { accessToken, integration };
+      return { kind: 'complete' as const, accessToken, integration };
     }),
 };
 
@@ -239,6 +247,21 @@ export default Capability.makeModule(
         optionsSchema: CalendarSyncOptions,
         getSyncTargets: GetGoogleCalendars,
         sync: SyncCalendar,
+        onTokenCreated: calendarOnTokenCreated,
+      },
+      {
+        id: GOOGLE_CONTACTS_PROVIDER_ID,
+        source: GOOGLE_INTEGRATION_SOURCE,
+        label: 'Google Contacts',
+        oauth: {
+          provider: OAuthProvider.GOOGLE,
+          scopes: [
+            'https://www.googleapis.com/auth/contacts.readonly',
+            'https://www.googleapis.com/auth/userinfo.email',
+          ],
+        },
+        getSyncTargets: GetGoogleContactGroups,
+        sync: SyncContacts,
         onTokenCreated: calendarOnTokenCreated,
       },
       {

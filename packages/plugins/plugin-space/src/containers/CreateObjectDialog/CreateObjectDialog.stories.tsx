@@ -59,9 +59,9 @@ const mockInputSchema = Schema.Struct({
 });
 
 const mockMetadata: Metadata = {
+  id: 'org.dxos.type.document',
   createObject: () => Effect.succeed({ id: 'mock-id', subject: [], object: {} as any }),
   inputSchema: mockInputSchema,
-  icon: 'ph--file-text--regular',
 };
 
 const meta = {

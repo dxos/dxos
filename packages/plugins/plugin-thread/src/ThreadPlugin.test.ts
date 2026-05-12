@@ -20,9 +20,9 @@ describe('ThreadPlugin', () => {
       plugins: [ClientPlugin({}), ThreadPlugin()],
     });
 
-    // After autoStart: AppGraphBuilder, metadata, schema, OperationHandler, UndoMappings all auto-cascade.
+    // After autoStart: AppGraphBuilder, CreateObject, schema, OperationHandler, UndoMappings all auto-cascade.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('metadata'), moduleId('schema')]),
+      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('CreateObject'), moduleId('schema')]),
     );
 
     // SetupArtifactDefinition is fired by AssistantPlugin, which can't be included here due to a workspace cycle.

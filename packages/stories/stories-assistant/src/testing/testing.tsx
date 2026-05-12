@@ -256,11 +256,11 @@ type StoryPluginOptions = {
 };
 
 const StoryPlugin = Plugin.define<StoryPluginOptions>({
-  id: 'example.com/plugin/testing',
+  id: 'com.example.plugin.testing',
   name: 'Testing',
 }).pipe(
   Plugin.addModule({
-    id: 'example.com/plugin/testing/module/testing',
+    id: 'com.example.plugin.testing.module.testing',
     activatesOn: AppActivationEvents.SetupArtifactDefinition,
     activate: () =>
       Effect.succeed([
@@ -274,7 +274,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
       ]),
   }),
   Plugin.addModule({
-    id: 'example.com/plugin/testing/module/setup',
+    id: 'com.example.plugin.testing.module.setup',
     activatesOn: ActivationEvent.allOf(ActivationEvents.OperationInvokerReady, ClientEvents.SpacesReady),
     activate: Effect.fnUntraced(function* () {
       const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
@@ -290,7 +290,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
     }),
   }),
   Plugin.addModule(({ onChatCreated }) => ({
-    id: 'example.com/plugin/testing/module/operation-handler',
+    id: 'com.example.plugin.testing.module.operationHandler',
     activatesOn: ActivationEvents.SetupOperationHandler,
     activate: Effect.fnUntraced(function* () {
       const client = yield* Capability.get(ClientCapabilities.Client);

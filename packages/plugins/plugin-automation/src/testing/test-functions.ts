@@ -9,8 +9,8 @@ import { JsonSchema, Ref } from '@dxos/echo';
 
 export const functions = [
   {
-    key: 'example.com/function/chess',
-    name: 'example.com/function/chess',
+    key: 'com.example.function.chess',
+    name: 'com.example.function.chess',
     version: '0.1.0',
     inputSchema: JsonSchema.toJsonSchema(
       Schema.Struct({
@@ -21,8 +21,8 @@ export const functions = [
     ),
   },
   {
-    key: 'example.com/function/forex',
-    name: 'example.com/function/forex',
+    key: 'com.example.function.forex',
+    name: 'com.example.function.forex',
     version: '0.1.0',
     binding: 'FOREX',
     inputSchema: JsonSchema.toJsonSchema(
@@ -33,8 +33,8 @@ export const functions = [
     ),
   },
   {
-    key: 'example.com/function/ping-contact',
-    name: 'example.com/function/ping-contact',
+    key: 'com.example.function.ping-contact',
+    name: 'com.example.function.ping-contact',
     version: '0.0.1',
     inputSchema: JsonSchema.toJsonSchema(
       Schema.Struct({

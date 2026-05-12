@@ -33,7 +33,7 @@ export default Capability.makeModule(
 
           const key = dxn.toString();
           if (seenSchemaDxns.has(key)) {
-            log.warn('skipping duplicate schema for echo registration', { dxn: key });
+            log('skipping duplicate schema for echo registration', { dxn: key });
             continue;
           }
 

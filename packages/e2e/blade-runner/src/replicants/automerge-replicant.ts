@@ -8,7 +8,7 @@ import { IndexedDBStorageAdapter } from '@automerge/automerge-repo-storage-index
 
 import { createLevel } from '@dxos/client-services';
 import { Context } from '@dxos/context';
-import { FIND_PARAMS, LevelDBStorageAdapter } from '@dxos/echo-pipeline';
+import { LevelDBStorageAdapter } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 import { trace } from '@dxos/tracing';
@@ -114,8 +114,7 @@ export class AutomergeReplicant {
     await Promise.all(
       docIds.map(async (id) => {
         try {
-          const handle = await this._repo!.find<DocStruct>(id, FIND_PARAMS);
-          await handle.whenReady();
+          const handle = await this._repo!.find<DocStruct>(id);
           docsLoaded[id] = { length: handle.doc().text.length };
           return handle;
         } catch (error) {

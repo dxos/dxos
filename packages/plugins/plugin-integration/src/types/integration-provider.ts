@@ -67,28 +67,46 @@ export type OnTokenCreated = (input: {
 export type IntegrationOAuthSpec = {
   provider: OAuthProvider;
   scopes: readonly string[];
+  /**
+   * Use a top-level redirect flow instead of the default popup +
+   * `postMessage`. Required for providers that nullify `window.opener`
+   * (e.g. atproto / bsky.social). Edge redirects to `/redirect/oauth?...`
+   * which a NavigationHandler picks up via persisted localStorage state.
+   */
+  useRedirectFlow?: boolean;
 };
 
 /**
- * Per-provider credential form for non-OAuth integrations. Replaces the
- * one-shape-fits-all CustomTokenDialog — the dialog renders `schema` and
- * delegates persistence to `onSubmit`. Mutually exclusive with `oauth`.
+ * Result of a provider credential form submission.
+ *
+ * `complete` — for non-OAuth flows: the form yields a fully built
+ * `AccessToken` + `Integration` and the coordinator persists them.
+ *
+ * `oauth` — for OAuth flows that need pre-flight input (e.g. atproto
+ * handle): the coordinator opens the auth window and forwards
+ * `loginHint` to Edge.
+ */
+export type CredentialFormResult =
+  | { kind: 'complete'; accessToken: AccessToken.AccessToken; integration: Integration.Integration }
+  | { kind: 'oauth'; loginHint?: string };
+
+/**
+ * Per-provider form rendered by the generic provider-form dialog. One
+ * shape covers both non-OAuth (custom token, IMAP) and OAuth pre-flight
+ * (atproto handle) — the discriminator on `onSubmit`'s result tells the
+ * coordinator which path to take next.
  */
 export type CredentialForm<Values = any> = {
   /** Schema rendered by the generic provider-form dialog. */
   schema: Schema.Schema<Values, any>;
   /** Optional defaults pre-filled into the form. */
   defaultValues?: Partial<Values>;
-  /**
-   * Build the AccessToken + Integration from form values. The coordinator
-   * runs `finalizePendingEntry` on the result (db.add, dispatchAccessTokenCreated,
-   * onTokenCreated, navigate, optional sync-targets dialog).
-   */
+  /** Build the next step of the integration flow from form values. */
   onSubmit: (input: {
     values: Values;
     provider: IntegrationProviderEntry;
     db: Database.Database;
-  }) => Effect.Effect<{ accessToken: AccessToken.AccessToken; integration: Integration.Integration }, Error>;
+  }) => Effect.Effect<CredentialFormResult>;
 };
 
 /**
@@ -107,9 +125,10 @@ export type IntegrationProviderEntry = {
   /** Schema describing per-target rows in `Integration.targets` `.options`. */
   optionsSchema?: Schema.Schema<any, any>;
   /**
-   * Custom credential form for providers without OAuth. Mutually exclusive
-   * with `oauth`. When omitted on a non-OAuth provider, the coordinator
-   * renders a default `{ source, account?, token }` form.
+   * Renders before authentication. Use for non-OAuth credentials (custom
+   * token, IMAP host/port/user/password) or OAuth pre-flight inputs (atproto
+   * handle / DID). The submit result decides what runs next — see
+   * {@link CredentialFormResult}.
    */
   credentialForm?: CredentialForm<any>;
   onTokenCreated?: OnTokenCreated;

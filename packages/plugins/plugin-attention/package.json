@@ -32,6 +32,12 @@
       "browser": "./dist/lib/browser/operations/index.mjs",
       "node": "./dist/lib/node-esm/operations/index.mjs"
     },
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "browser": "./dist/lib/browser/plugin.mjs",
+      "node": "./dist/lib/node-esm/plugin.mjs"
+    },
     "./types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",

@@ -21,12 +21,7 @@ describe('MeetingPlugin', () => {
     });
 
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([
-        moduleId('AppGraphBuilder'),
-        moduleId('metadata'),
-        moduleId('schema'),
-        moduleId('ReactSurface'),
-      ]),
+      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('schema'), moduleId('ReactSurface')]),
     );
 
     await harness.fire(ActivationEvents.SetupOperationHandler);

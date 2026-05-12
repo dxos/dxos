@@ -5,36 +5,10 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Database, Ref } from '@dxos/echo';
+import { Database } from '@dxos/echo';
+import { GameRef } from '@dxos/plugin-game/types';
 
 import { Chess } from '../types';
-
-export const Create = Operation.make({
-  meta: {
-    key: 'org.dxos.function.chess.create',
-    name: 'Create Chess',
-    description: 'Creates a new chess game.',
-  },
-  input: Schema.Struct({
-    name: Schema.optional(
-      Schema.String.annotations({
-        description: 'Name of the game.',
-      }),
-    ),
-    pgn: Schema.optional(
-      Schema.String.annotations({
-        description: 'Portable Game Notation.',
-      }),
-    ),
-    fen: Schema.optional(
-      Schema.String.annotations({
-        description: 'Forsyth-Edwards Notation.',
-      }),
-    ),
-  }),
-  output: Chess.Game,
-  services: [Database.Service],
-});
 
 export const Move = Operation.make({
   meta: {
@@ -43,8 +17,8 @@ export const Move = Operation.make({
     description: 'Makes a move in the given chess game.',
   },
   input: Schema.Struct({
-    game: Ref.Ref(Chess.Game).annotations({
-      description: 'The ID of the chess object.',
+    game: GameRef(Chess.State).annotations({
+      description: 'The ID of the game object (variant must be Chess).',
     }),
     move: Schema.String.annotations({
       description: 'The move to make in the chess game.',
@@ -66,8 +40,8 @@ export const Play = Operation.make({
     description: 'Uses the chess engine to play the next move.',
   },
   input: Schema.Struct({
-    game: Ref.Ref(Chess.Game).annotations({
-      description: 'The ID of the chess object.',
+    game: GameRef(Chess.State).annotations({
+      description: 'The ID of the game object (variant must be Chess).',
     }),
     side: Schema.optional(Schema.Literal('white', 'black', 'any')).annotations({
       description: 'The side to play.',

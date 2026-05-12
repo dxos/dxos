@@ -12,13 +12,13 @@ import { type Observability } from '@dxos/observability';
 import { AssistantPlugin } from '@dxos/plugin-assistant';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { AutomationPlugin } from '@dxos/plugin-automation';
+import { BlueskyPlugin } from '@dxos/plugin-bluesky';
 import { BoardPlugin } from '@dxos/plugin-board';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { CodePlugin } from '@dxos/plugin-code';
 import { ConductorPlugin } from '@dxos/plugin-conductor';
 import { CrxPlugin } from '@dxos/plugin-crx';
-import { CrxBridgePlugin } from '@dxos/plugin-crx-bridge';
 import { DailySummaryPlugin } from '@dxos/plugin-daily-summary';
 import { DebugPlugin } from '@dxos/plugin-debug';
 import { DeckPlugin } from '@dxos/plugin-deck';
@@ -27,6 +27,7 @@ import { DoctorPlugin } from '@dxos/plugin-doctor';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { FeedPlugin } from '@dxos/plugin-feed';
 import { GalleryPlugin } from '@dxos/plugin-gallery';
+import { GamePlugin } from '@dxos/plugin-game';
 import { GitHubPlugin } from '@dxos/plugin-github';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { HelpPlugin } from '@dxos/plugin-help';
@@ -34,6 +35,7 @@ import { InboxPlugin } from '@dxos/plugin-inbox';
 import { IntegrationPlugin } from '@dxos/plugin-integration';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon';
 import { KanbanPlugin } from '@dxos/plugin-kanban';
+import { LinearPlugin } from '@dxos/plugin-linear';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
@@ -58,6 +60,7 @@ import { SheetPlugin } from '@dxos/plugin-sheet';
 import { SidekickPlugin } from '@dxos/plugin-sidekick';
 import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
 import { SketchPlugin } from '@dxos/plugin-sketch';
+import { SlackPlugin } from '@dxos/plugin-slack';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { SpacetimePlugin } from '@dxos/plugin-spacetime';
 import { SpotlightPlugin } from '@dxos/plugin-spotlight';
@@ -99,6 +102,10 @@ export type PluginConfig = State & {
   isMobile?: boolean;
 };
 
+/**
+ * System plugins.
+ */
+// TODO(burdon): Replace this hardcoded list by filtering plugins on `meta.tags.includes('system')`.
 export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): string[] => {
   const layoutPluginId = isPopover
     ? SpotlightPlugin.meta.id
@@ -110,7 +117,6 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     AutomationPlugin.meta.id,
     ClientPlugin.meta.id,
     CrxPlugin.meta.id,
-    CrxBridgePlugin.meta.id,
     GraphPlugin.meta.id,
     HelpPlugin.meta.id,
     IntegrationPlugin.meta.id,
@@ -119,11 +125,9 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     OperationPlugin.meta.id,
     NavTreePlugin.meta.id,
     ObservabilityPlugin.meta.id,
-    PreviewPlugin.meta.id,
     !isTauri && isPwa && PwaPlugin.meta.id,
     RegistryPlugin.meta.id,
     RuntimePlugin.meta.id,
-    SearchPlugin.meta.id,
     SettingsPlugin.meta.id,
     SpacePlugin.meta.id,
     StatusBarPlugin.meta.id,
@@ -142,6 +146,8 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     KanbanPlugin.meta.id,
     MarkdownPlugin.meta.id,
     MasonryPlugin.meta.id,
+    PreviewPlugin.meta.id,
+    SearchPlugin.meta.id,
     SheetPlugin.meta.id,
     SketchPlugin.meta.id,
     TablePlugin.meta.id,
@@ -159,6 +165,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       CodePlugin.meta.id,
       FeedPlugin.meta.id,
       GalleryPlugin.meta.id,
+      GamePlugin.meta.id,
       IrohBeaconPlugin.meta.id,
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
@@ -191,6 +198,7 @@ export const getPlugins = ({
     AssistantPlugin(),
     AttentionPlugin(),
     AutomationPlugin(),
+    BlueskyPlugin(),
     BoardPlugin(),
     ChessPlugin(),
     ClientPlugin({
@@ -211,7 +219,6 @@ export const getPlugins = ({
     }),
     ConductorPlugin(),
     CrxPlugin(),
-    CrxBridgePlugin(),
     DailySummaryPlugin(),
     DebugPlugin({ logStore }),
     DiscordPlugin(),
@@ -219,6 +226,7 @@ export const getPlugins = ({
     ExplorerPlugin(),
     FeedPlugin(),
     GalleryPlugin(),
+    GamePlugin(),
     GitHubPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
@@ -227,6 +235,7 @@ export const getPlugins = ({
     OperationPlugin(),
     KanbanPlugin(),
     layoutPlugin,
+    LinearPlugin(),
     MapPlugin(),
     isLabs && MapPluginSolid(),
     MarkdownPlugin(),
@@ -255,6 +264,7 @@ export const getPlugins = ({
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
+    SlackPlugin(),
     SpacetimePlugin(),
     SpacePlugin({
       observability: true,

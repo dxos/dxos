@@ -37,7 +37,7 @@ export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => 
       <Message.Content asChild>
         <ul className='flex flex-col gap-0.5 text-sm'>
           {errors.map((error) => (
-            <li key={`${error.url}::${error.kind}`} className='truncate'>
+            <li key={`${error.url}::${error.protocol}`} className='truncate'>
               <span className='font-mono'>{error.url}</span>
               {' — '}
               <span>{error.message}</span>

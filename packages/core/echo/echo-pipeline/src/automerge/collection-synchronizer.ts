@@ -76,17 +76,29 @@ export class CollectionSynchronizer extends Resource {
     this._activeCollections.add(collectionId);
 
     log('setLocalCollectionState', { collectionId, state });
-    this._getOrCreatePerCollectionState(collectionId).localState = state;
+    const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
+    perCollectionState.localState = state;
 
     for (const peerId of this._connectedPeers) {
       this._diffCollectionState(collectionId, peerId);
     }
 
-    queueMicrotask(async () => {
-      if (!this._ctx.disposed && this._activeCollections.has(collectionId)) {
-        this._refreshInterestedPeers(collectionId);
-        this.refreshCollection(collectionId);
-      }
+    this._scheduleBroadcast(collectionId);
+  }
+
+  /**
+   * Coalesce bursts of `setLocalCollectionState` (e.g. from `_onHeadsChanged` during an
+   * import) into one broadcast microtask per collection. If another call arrives while
+   * the microtask is pending, we just flag the collection dirty — the in-flight run
+   * already reads the latest `localState`. If it arrives during the run itself, we
+   * schedule exactly one follow-up.
+   */
+  private _scheduleBroadcast(collectionId: string): void {
+    const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
+    queueMicrotask(() => {
+      this._refreshInterestedPeers(collectionId);
+      this._broadcastLocalState(collectionId);
+      this.refreshCollection(collectionId);
     });
   }
 
@@ -167,6 +179,9 @@ export class CollectionSynchronizer extends Resource {
 
   /**
    * Callback when a peer queries the state of a collection.
+   *
+   * If we have no local state yet we silently drop the query; the peer will receive our
+   * state via {@link _broadcastLocalState} once `setLocalCollectionState` is called.
    */
   onCollectionStateQueried(collectionId: string, peerId: PeerId): void {
     const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
@@ -234,7 +249,33 @@ export class CollectionSynchronizer extends Resource {
       remoteStates: new Map(),
       interestedPeers: new Set(),
       lastQueried: new Map(),
+      lastBroadcast: new Map(),
     }));
+  }
+
+  /**
+   * Push local state to interested peers whose last-known remote state differs from local
+   * (or is unknown), then pull from peers via {@link refreshCollection}.
+   *
+   * Diff-gating avoids spamming peers that are already in sync; this matters because
+   * {@link setLocalCollectionState} is called on every local heads change.
+   */
+  private _broadcastLocalState(collectionId: string): void {
+    if (this._ctx.disposed || !this._activeCollections.has(collectionId)) {
+      return;
+    }
+    const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
+    const localState = perCollectionState.localState;
+    if (!localState) {
+      return;
+    }
+    for (const peerId of perCollectionState.interestedPeers) {
+      const lastBroadcast = perCollectionState.lastBroadcast.get(peerId) ?? 0;
+      if (Date.now() - lastBroadcast > MIN_QUERY_INTERVAL) {
+        perCollectionState.lastBroadcast.set(peerId, Date.now());
+        this._sendCollectionState(collectionId, peerId, localState);
+      }
+    }
   }
 
   private _refreshInterestedPeers(collectionId: string): void {
@@ -253,6 +294,7 @@ type PerCollectionState = {
   remoteStates: Map<PeerId, CollectionState>;
   interestedPeers: Set<PeerId>;
   lastQueried: Map<PeerId, number>;
+  lastBroadcast: Map<PeerId, number>;
 };
 
 export type CollectionState = {

@@ -32,6 +32,11 @@ export default defineConfig({
         // We need to specify the 'panel' entry point here because it's not mentioned in manifest.json.
         panel: resolve(__dirname, 'panel.html'),
       },
+      // `@anthropic-ai/tokenizer` is a CJS-only package whose transitive `tiktoken`
+      // wasm import contains top-level await. Rolldown rejects mixing TLA with
+      // require(); externalize the tokenizer chain. The Chrome extension bundle
+      // never actually exercises this LLM tokenization code path.
+      external: ['@anthropic-ai/tokenizer', 'tiktoken', 'tiktoken/lite', /^tiktoken\//],
     },
   },
   resolve: {

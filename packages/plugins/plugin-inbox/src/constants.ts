@@ -13,6 +13,9 @@ export const GMAIL_PROVIDER_ID = 'gmail';
 /** `IntegrationProvider.id` for Google Calendar OAuth / sync; use as `providerId` on `integration--auth` surfaces. */
 export const GOOGLE_CALENDAR_PROVIDER_ID = 'google-calendar';
 
+/** `IntegrationProvider.id` for Google Contacts OAuth / sync; use as `providerId` on `integration--auth` surfaces. */
+export const GOOGLE_CONTACTS_PROVIDER_ID = 'google-contacts';
+
 /** `AccessToken.source` prefix for IMAP credentials (full value: `imap:<host>`). */
 export const IMAP_INTEGRATION_SOURCE_PREFIX = 'imap';
 

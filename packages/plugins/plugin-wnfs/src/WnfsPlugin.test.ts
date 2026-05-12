@@ -19,9 +19,9 @@ describe('WnfsPlugin', () => {
       plugins: [ClientPlugin({}), WnfsPlugin()],
     });
 
-    // After autoStart: metadata, schema, and OperationHandler all auto-cascade.
+    // After autoStart: CreateObject, schema, and OperationHandler all auto-cascade.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('metadata'), moduleId('schema'), moduleId('OperationHandler')]),
+      expect.arrayContaining([moduleId('CreateObject'), moduleId('schema'), moduleId('OperationHandler')]),
     );
   });
 });

@@ -22,8 +22,8 @@ describe('ChessPlugin', () => {
       plugins: [ClientPlugin({}), ChessPlugin()],
     });
 
-    // Modules expected to be active after a normal startup.
-    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('metadata'), moduleId('schema')]));
+    // Modules expected to be active after a normal startup (headless/node variant).
+    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema')]));
 
     // SetupArtifactDefinition is fired by AssistantPlugin, which can't be included here due to a workspace cycle.
     await harness.fire(AppActivationEvents.SetupArtifactDefinition);

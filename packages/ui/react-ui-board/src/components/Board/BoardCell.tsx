@@ -64,7 +64,7 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
 
   return (
     <Card.Root
-      classNames={mx('absolute', dragState === 'dragging' && 'opacity-50', classNames)}
+      classNames={mx('absolute grid-rows-[auto_1fr]', dragState === 'dragging' && 'opacity-50', classNames)}
       style={getBoardRect(board, layout)}
       onClick={() => onSelect?.(item.id)}
       ref={rootRef}

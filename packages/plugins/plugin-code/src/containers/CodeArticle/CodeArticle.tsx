@@ -10,7 +10,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { createDocAccessor } from '@dxos/echo-db';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Panel, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Panel, Toolbar, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
@@ -87,7 +87,10 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(({ role,
 
   return (
     <Panel.Root role={role} ref={forwardedRef}>
-      <Panel.Toolbar />
+      {/* TODO(burdon): Add toolbar actions (cf. SpecArticle's Editor.Toolbar). */}
+      <Panel.Toolbar asChild>
+        <Toolbar.Root></Toolbar.Root>
+      </Panel.Toolbar>
       <Panel.Content asChild>
         <div className='dx-container grid grid-cols-[30rem_1fr] divide-x divide-separator' role='none'>
           <div className='dx-container grid grid-rows-[1fr_2fr] divide-y divide-separator'>

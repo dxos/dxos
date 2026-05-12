@@ -13,4 +13,5 @@ export const meta: Plugin.Meta = {
     Renders the commands dialog as the primary content.
   `,
   icon: 'ph--magnifying-glass--regular',
+  tags: ['system'],
 };

@@ -481,7 +481,7 @@ export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation
 
   const getFromAst = (ast: SchemaAST.AST) =>
     SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(ast).pipe(
-      Option.map((meta) => meta[props.id] as unknown),
+      Option.flatMap((meta) => Option.fromNullable(meta[props.id])),
       Option.map(Schema.decodeUnknownSync(props.schema)),
     );
 
@@ -530,6 +530,19 @@ export interface IconAnnotation extends Schema.Schema.Type<typeof IconAnnotation
 export const IconAnnotation = makeUserAnnotation<IconAnnotation>({
   id: 'org.dxos.annotation.icon',
   schema: IconAnnotationSchema,
+});
+
+/**
+ * Indicates that this entity's icon should be resolved from a property whose value is a `Ref`
+ * to another entity. Consumers (e.g. graph node builders) resolve the ref target and use that
+ * target's schema `IconAnnotation` in place of the static one declared on this schema.
+ *
+ * Useful for wrapper schemas that delegate their visual identity to a referenced sub-entity
+ * (e.g. a generic `Game` whose icon should come from its `variant` ref's typed state).
+ */
+export const IconFromRefAnnotation = makeUserAnnotation<string>({
+  id: 'org.dxos.annotation.icon.from-ref',
+  schema: Schema.String,
 });
 
 /**
