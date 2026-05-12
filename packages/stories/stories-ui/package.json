@@ -13,6 +13,7 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "exports": {},
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
@@ -78,6 +79,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "exports": {}
+  }
 }
