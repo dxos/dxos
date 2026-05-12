@@ -1,0 +1,25 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+# New library build pipeline: vite + rolldown for JS, tsgo for .d.ts (run via DxTsgoPlugin in closeBundle).
+# Packages migrate from `ts-build` to `ts-vite-build` once they have a `vite.config.ts` and updated exports.
+tasks:
+  build:
+    command: pnpm exec vite build
+    deps:
+      - dx-build:compile
+      - ^:build
+    inputs:
+      - /tsconfig.base.json
+      - /vite.base.config.ts
+      - /vitest.base.config.ts
+      - /tools/vite-plugin-log/src/**/*
+      - tsconfig.json
+      - vite.config.ts
+      - '@group(sources)'
+    outputs:
+      - dist/lib/
+      - dist/types/
+    options:
+      timeout: 120
+
+inheritedBy:
+  tags: ts-vite-build

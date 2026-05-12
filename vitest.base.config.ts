@@ -36,6 +36,8 @@ export type ConfigOptions = {
   storybook?: boolean;
 };
 
+export const createTestConfig = (options: ConfigOptions): ViteUserConfig['test'] => createConfig(options).test;
+
 export const createConfig = (options: ConfigOptions): ViteUserConfig => {
   const { dirname, node, browser, storybook } = options;
 
