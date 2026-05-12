@@ -269,8 +269,11 @@ pub async fn net_tcp_connect(
     let tx_write = spawn_conn_task(stream, on_data, secure, host);
     let handle = ConnHandle {
         tx_write,
-        // Real handle would track the spawn — kept implicit so cancel = drop.
-        join: tauri::async_runtime::spawn(async {}),
+        // Placeholder join — real shutdown happens by dropping `tx_write`,
+        // which closes the channel and lets the per-connection task exit.
+        // `tokio::spawn` matches the `tokio::task::JoinHandle` field type
+        // (tauri::async_runtime::spawn returns its own JoinHandle variant).
+        join: tokio::spawn(async {}),
     };
     let mut conns = state.connections.lock().await;
     conns.insert(id, handle);
