@@ -154,6 +154,7 @@ export const translations: Resource[] = [
         'debug.button': 'Debug',
         'online-switch.label': 'Online',
         'run-prompt.label': 'Run prompt',
+        'routine-running.label': 'Running…',
         'typename.label': 'Typename',
         'branch-thread.menu': 'Branch chat',
         'chat-toolbar.title': 'Chat toolbar',
