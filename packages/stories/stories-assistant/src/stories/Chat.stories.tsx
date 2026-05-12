@@ -159,7 +159,7 @@ export const Default: Story = {
 export const WithPlanning: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
-      const { MarkdownPlugin } = await import('@dxos/plugin-markdown');
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
       return {
         plugins: [MarkdownPlugin()],
       };
