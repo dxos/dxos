@@ -3,4 +3,4 @@
 //
 
 export * as AiContext from './AiContext';
-export * from './AiSession';
+export * as AiSession from './AiSession';

@@ -13,7 +13,7 @@ import * as Match from 'effect/Match';
 
 import { AiService, ConsolePrinter, OpaqueToolkit, type ModelName } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
-import { AiContext, AiSession, AiSessionService, CompleteBlock } from '@dxos/assistant';
+import { AiContext, AiSession, CompleteBlock } from '@dxos/assistant';
 import {
   Blueprint,
   Credential,
@@ -145,16 +145,16 @@ export const AssistantTestLayer = ({
                 return { binder };
               }).pipe(Effect.provide(services)),
             ),
-            ServiceResolver.succeed(AiSessionService, (context) =>
+            ServiceResolver.succeed(AiSession.Service, (context) =>
               Effect.gen(function* () {
                 if (!context.conversation) {
-                  return yield* Effect.fail(new ServiceNotAvailableError(AiSessionService.key));
+                  return yield* Effect.fail(new ServiceNotAvailableError(AiSession.Service.key));
                 }
                 const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
                 const runtime = yield* Effect.runtime<Feed.FeedService>();
                 const session = yield* acquireReleaseResource(
                   () =>
-                    new AiSession({
+                    new AiSession.Session({
                       feed,
                       runtime,
                     }),

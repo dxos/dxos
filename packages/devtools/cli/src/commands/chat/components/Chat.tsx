@@ -32,7 +32,7 @@ import { StatusBar } from './StatusBar';
 export type ChatProps = {
   db: Database.Database;
   processor: ChatProcessor;
-  conversation: AiSession;
+  conversation: AiSession.Session;
   model: ModelName;
   verbose?: boolean;
   onChatSelect?: (chat: Assistant.Chat) => void;

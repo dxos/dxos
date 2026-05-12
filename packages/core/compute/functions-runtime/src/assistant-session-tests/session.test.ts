@@ -46,7 +46,7 @@ describe('AiSession', () => {
       ]);
 
       const runtime = yield* Effect.runtime<Feed.FeedService>();
-      const session = new AiSession({ feed, runtime });
+      const session = new AiSession.Session({ feed, runtime });
       yield* Effect.promise(() => session.open());
 
       expect(session.context.getBlueprints()).toHaveLength(1);

@@ -83,7 +83,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         }
         const feed = yield* Database.resolve(DXN.parse(feedDxn), Feed.Feed).pipe(Effect.orDie);
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const session = yield* acquireReleaseResource(() => new AiSession({ feed, runtime }));
+        const session = yield* acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
         let inputQueue: AgentEvent[] = [...(yield* AgentEventsKey.get)];
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);

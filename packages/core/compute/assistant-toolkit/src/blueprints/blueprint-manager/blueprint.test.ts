@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AiContext, AiSessionService } from '@dxos/assistant';
+import { AiContext, AiSession } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -29,13 +29,13 @@ const TestLayer = AssistantTestLayer({
   tracing: 'pretty',
 });
 
-const provideTestLayers = Effect.provide(AiSessionService.layerNewFeed().pipe(Layer.provideMerge(TestLayer)));
+const provideTestLayers = Effect.provide(AiSession.Service.layerNewFeed().pipe(Layer.provideMerge(TestLayer)));
 
 /**
  * Gets the conversation DXN for passing to Operation.invoke options.
  */
 const getConversationDxn = Effect.gen(function* () {
-  const session = yield* AiSessionService;
+  const session = yield* AiSession.Service;
   return Obj.getDXN(session.feed).toString() as DXN.String;
 });
 
@@ -168,7 +168,7 @@ describe('Blueprint Manager', () => {
         yield* Database.flush();
         expect(stored.name).toBe('___TEST_MUTATED_BLUEPRINT_NAME___');
 
-        const session = yield* AiSessionService;
+        const session = yield* AiSession.Service;
         yield* Effect.promise(() => session.context.open());
         yield* Effect.promise(() =>
           session.context.bind({

@@ -11,7 +11,7 @@ import * as Stream from 'effect/Stream';
 import { type AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } from '@dxos/ai';
 import {
   AiContext,
-  type AiSession,
+  AiSession,
   createSystemPrompt,
   formatSystemPrompt,
   McpServerError,
@@ -113,7 +113,7 @@ export class AiChatProcessor {
   public readonly mcpErrors = Atom.make<readonly Trace.PayloadType<typeof McpServerError>[]>([]);
 
   constructor(
-    private readonly _conversation: AiSession,
+    private readonly _conversation: AiSession.Session,
     private readonly _runtime: AutomationCapabilities.ComputeRuntime,
     private readonly _feed: Feed.Feed,
     private readonly _options: AiChatProcessorOptions = defaultOptions,

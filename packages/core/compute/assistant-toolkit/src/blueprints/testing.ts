@@ -7,19 +7,19 @@ import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 
 import { ConsolePrinter } from '@dxos/ai';
-import { AiContext, type AiSession, type AiSessionRunProps, GenerationObserver } from '@dxos/assistant';
+import { AiContext, AiSession, GenerationObserver } from '@dxos/assistant';
 import type { Blueprint } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-export type TestStep = Pick<AiSessionRunProps, 'prompt' | 'system'> & {
+export type TestStep = Pick<AiSession.RunProps, 'prompt' | 'system'> & {
   test?: () => Promise<void>;
 };
 
 /**
  * Runs the prompt steps, calling the test function after each step.
  */
-export const runSteps = Effect.fn(function* (session: AiSession, steps: TestStep[]) {
+export const runSteps = Effect.fn(function* (session: AiSession.Session, steps: TestStep[]) {
   for (const { test, ...props } of steps) {
     yield* session.createRequest({
       ...props,

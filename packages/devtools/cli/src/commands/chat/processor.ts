@@ -123,7 +123,7 @@ export class ChatProcessor {
     const runtime = await runAndForwardErrors(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );
-    const session = new AiSession({ feed, runtime, registry: this._registry });
+    const session = new AiSession.Session({ feed, runtime, registry: this._registry });
     await session.open();
 
     // Bind blueprints.
