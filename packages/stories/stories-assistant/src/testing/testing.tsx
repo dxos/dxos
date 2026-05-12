@@ -39,7 +39,7 @@ import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { StorybookPlugin } from '@dxos/plugin-testing';
+import { StorybookPlugin } from '@dxos/plugin-testing/plugin';
 import { corePlugins } from '@dxos/plugin-testing';
 import { type Client, Config } from '@dxos/react-client';
 import { AccessToken } from '@dxos/types';

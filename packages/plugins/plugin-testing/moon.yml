@@ -8,3 +8,4 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/harness.ts'
+      - '--entryPoint=src/plugin.ts'
