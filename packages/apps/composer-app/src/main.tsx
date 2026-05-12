@@ -18,6 +18,19 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { EdgeRegistryPluginProvider, type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
 import { Placeholder, type PlaceholderComponentProps, useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
+// `AppSurface` is referenced via `_keepAppSurfaceEager` below to pull
+// `@dxos/app-toolkit/ui` into the main bundle's static graph. Without this
+// the ui chunk is only reached through dynamically-loaded plugin
+// react-surface chunks; on Linux webkit (and Mac Playwright webkit) the
+// first batch of concurrent plugin activations races its module body:
+// `Capability.lazy(() => import('./react-surface'))` resolves while
+// `var S = {}; __export(S, {Article: () => Article_var, ...})` is still
+// hoisted-undefined, and ~10 ReactSurface modules (plugin-crx, -game,
+// -feed, -zen, -sidekick, -transcription, -automation, -outliner,
+// -masonry, -gallery) crash with `undefined is not an object (evaluating
+// 'AppSurface.literal')`. PR #11312 papered over plugin-crx by reshuffling
+// its chunk graph; this is the generic fix.
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Composer } from '@dxos/brand';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -76,6 +89,12 @@ const bootStatus = (text: string) => window.__bootLoader?.status({ humanized: te
 // time, so the whole block tree-shakes out of prod bundles.
 const BOOT_ID = import.meta.env?.DEV ? Math.random().toString(36).slice(2, 10) : '';
 const MODULE_EVAL_TIME = Date.now();
+
+// See the import-site comment on `AppSurface` above. A live global
+// assignment keeps the named import from being tree-shaken (the package
+// declares `sideEffects: false`, so a bare `import '@dxos/app-toolkit/ui'`
+// or any pure local reference would be dropped by rolldown).
+(globalThis as any).__dxosKeepAppSurfaceEager = AppSurface;
 if (import.meta.env?.DEV) {
   log('composer main: module evaluated', { bootId: BOOT_ID, t: MODULE_EVAL_TIME });
   const importMeta = import.meta as any;
