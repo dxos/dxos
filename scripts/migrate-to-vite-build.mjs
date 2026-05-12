@@ -122,7 +122,8 @@ const buildEntryRecord = (entryPoints) => {
   return record;
 };
 
-const buildViteConfig = (pkgDir, entryPoints, hasTests, jsx, testEnvOverride) => {
+const buildViteConfig = (pkgDir, entryPoints, hasTests, jsx, testEnvOverride, extras = {}) => {
+  const { browser = false, storybook = false } = extras;
   const relToRoot = relative(pkgDir, REPO_ROOT) || '.';
   const baseImport = `${relToRoot}/vite.base.config.ts`;
   const entryRecord = buildEntryRecord(entryPoints);
@@ -142,8 +143,11 @@ const buildViteConfig = (pkgDir, entryPoints, hasTests, jsx, testEnvOverride) =>
     // `happy-dom` / `jsdom` setups in their previous vitest.config get the same;
     // everything else defaults to plain node.
     const env = testEnvOverride ?? (jsx ? 'happy-dom' : undefined);
-    const testValue = env ? `{ node: { environment: '${env}' } }` : `{ node: true }`;
-    optionsBits.push(`  test: ${testValue},`);
+    const testParts = [];
+    testParts.push(env ? `node: { environment: '${env}' }` : `node: true`);
+    if (browser) testParts.push(`browser: 'chromium'`);
+    if (storybook) testParts.push(`storybook: true`);
+    optionsBits.push(`  test: { ${testParts.join(', ')} },`);
   }
 
   const body = optionsBits.length
@@ -362,6 +366,8 @@ const migrate = (pkgRel) => {
   }
 
   const hasTests = /\bts-test\b/.test(moonText);
+  const hasBrowserTests = /\bts-test-browser\b/.test(moonText);
+  const hasStorybookTests = /\bts-test-storybook\b/.test(moonText);
 
   // Preserve a `happy-dom` / `jsdom` environment if the existing vitest.config.ts
   // (or vite.config.ts on a re-run) sets one. Non-JSX packages can still need a
@@ -434,7 +440,13 @@ const migrate = (pkgRel) => {
     entryNames.add(required);
   }
 
-  writeFileSync(viteConfigPath, buildViteConfig(pkgDir, entryPoints, hasTests, jsx, testEnvOverride));
+  writeFileSync(
+    viteConfigPath,
+    buildViteConfig(pkgDir, entryPoints, hasTests, jsx, testEnvOverride, {
+      browser: hasBrowserTests,
+      storybook: hasStorybookTests,
+    }),
+  );
 
   if (existsSync(vitestConfigPath)) {
     rmSync(vitestConfigPath);

@@ -6,7 +6,6 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
-    translations: 'src/translations.ts',
     blueprints: 'src/blueprints/index.ts',
     capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
@@ -17,9 +16,10 @@ export default defineConfig({
     TranscriptionPlugin: 'src/TranscriptionPlugin.tsx',
     'TranscriptionPlugin.node': 'src/TranscriptionPlugin.node.ts',
     testing: 'src/testing/index.ts',
+    translations: 'src/translations.ts',
     types: 'src/types/index.ts',
     index: 'src/index.ts',
   },
   jsx: 'react',
-  test: { node: { environment: 'happy-dom' } },
+  test: { node: { environment: 'happy-dom' }, storybook: true },
 });

@@ -5,5 +5,5 @@
 import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
-  test: { node: true },
+  test: { node: true, browser: 'chromium' },
 });

@@ -6,7 +6,6 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
-    translations: 'src/translations.ts',
     capabilities: 'src/capabilities/index.ts',
     'capabilities/node': 'src/capabilities/node.ts',
     components: 'src/components/index.ts',
@@ -14,6 +13,7 @@ export default defineConfig({
     hooks: 'src/hooks/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
+    translations: 'src/translations.ts',
     SpacePlugin: 'src/SpacePlugin.ts',
     'SpacePlugin.node': 'src/SpacePlugin.node.ts',
     types: 'src/types/index.ts',
@@ -21,5 +21,5 @@ export default defineConfig({
     index: 'src/index.ts',
   },
   jsx: 'react',
-  test: { node: { environment: 'happy-dom' } },
+  test: { node: { environment: 'happy-dom' }, storybook: true },
 });
