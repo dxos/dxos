@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Either, Schema } from 'effect';
 import * as Array from 'effect/Array';
 import { pipe } from 'effect/Function';
 import * as Order from 'effect/Order';
@@ -14,7 +15,6 @@ import { Trace } from '@dxos/compute';
 import { AGENT_PROCESS_KEY, Process } from '@dxos/functions-runtime';
 import { LogLevel, log } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
-import { Either, Schema } from 'effect';
 
 /**
  * Branch name for top-level operation invocations.
@@ -435,8 +435,8 @@ export const CommitSelector = {
    */
   compose:
     (next: CommitSelector) =>
-      (prev: CommitSelector): CommitSelector =>
-        CommitSelector.make((commits) => next.select(prev.select(commits))),
+    (prev: CommitSelector): CommitSelector =>
+      CommitSelector.make((commits) => next.select(prev.select(commits))),
 
   /**
    * If `prev` selector matches no commits, return `next` selector, otherwise return `prev` selector.
@@ -450,22 +450,22 @@ export const CommitSelector = {
    */
   orElse:
     (next: CommitSelector) =>
-      (prev: CommitSelector): CommitSelector =>
-        CommitSelector.make((commits) => {
-          const selected = prev.select(commits);
-          if (selected.length > 0) {
-            return selected;
-          }
-          return next.select(commits);
-        }),
+    (prev: CommitSelector): CommitSelector =>
+      CommitSelector.make((commits) => {
+        const selected = prev.select(commits);
+        if (selected.length > 0) {
+          return selected;
+        }
+        return next.select(commits);
+      }),
 
   /**
    * Selects commits that match either of the given selectors.
    */
   andAlso:
     (next: CommitSelector) =>
-      (prev: CommitSelector): CommitSelector =>
-        CommitSelector.unionAll(prev, next),
+    (prev: CommitSelector): CommitSelector =>
+      CommitSelector.unionAll(prev, next),
 
   /**
    * Selects the first n commits.

@@ -179,7 +179,7 @@ const makePromptAgentToolkit = (options: {
         ),
       },
     }),
-  ) { }
+  ) {}
   const layer = PromptAgentToolkit.toLayer({
     completeJob: Effect.fnUntraced(function* (result) {
       if (result.failure) {

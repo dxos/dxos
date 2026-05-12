@@ -26,6 +26,7 @@ import { refFromEncodedReference } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
 import { type FunctionServices } from '../sdk';
@@ -36,7 +37,6 @@ import {
   QueueService,
 } from '../services';
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
-import { log } from '@dxos/log';
 
 export interface FunctionWrappingOptions {
   /**
@@ -53,7 +53,10 @@ export interface FunctionWrappingOptions {
 /**
  * Wraps a function handler made with `defineFunction` to a protocol that the functions-runtime expects.
  */
-export const wrapFunctionHandler = (func: Operation.WithHandler<Operation.Definition.Any>, opts: FunctionWrappingOptions = {}): FunctionProtocol.Func => {
+export const wrapFunctionHandler = (
+  func: Operation.WithHandler<Operation.Definition.Any>,
+  opts: FunctionWrappingOptions = {},
+): FunctionProtocol.Func => {
   if (!Operation.isOperationWithHandler(func)) {
     throw new TypeError('Expected operation with handler');
   }
@@ -166,11 +169,11 @@ class FunctionContext extends Resource {
     this.db =
       this.client && this.context.spaceId
         ? this.client.constructDatabase({
-          spaceId: this.context.spaceId ?? failedInvariant(),
-          spaceKey: PublicKey.fromHex(this.context.spaceKey ?? failedInvariant('spaceKey missing in context')),
-          reactiveSchemaQuery: false,
-          preloadSchemaOnOpen: false,
-        })
+            spaceId: this.context.spaceId ?? failedInvariant(),
+            spaceKey: PublicKey.fromHex(this.context.spaceKey ?? failedInvariant('spaceKey missing in context')),
+            reactiveSchemaQuery: false,
+            preloadSchemaOnOpen: false,
+          })
         : undefined;
 
     await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));

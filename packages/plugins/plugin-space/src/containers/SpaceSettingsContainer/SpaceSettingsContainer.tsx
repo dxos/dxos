@@ -14,15 +14,7 @@ import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
 import { SpaceState } from '@dxos/react-client/echo';
-import {
-  Button,
-  DropdownMenu,
-  Icon,
-  IconButton,
-  Input,
-  useMulticastObservable,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Button, DropdownMenu, Icon, IconButton, Input, useMulticastObservable, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, Settings } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 

@@ -60,7 +60,7 @@ export type Handler = (opts: { data: unknown; context: Context }) => Promise<unk
  */
 export interface Context {
   services: {
-  /**
+    /**
      * Query service.
      * Available if the function is invoked in context of a space.
      */
