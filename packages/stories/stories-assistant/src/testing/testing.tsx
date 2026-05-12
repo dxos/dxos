@@ -34,12 +34,10 @@ import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
-import { MarkdownBlueprint } from '@dxos/plugin-markdown';
-import { Markdown } from '@dxos/plugin-markdown';
+import { MarkdownBlueprint, Markdown } from '@dxos/plugin-markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
-import { StorybookPlugin } from '@dxos/plugin-testing/plugin';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { type Client, Config } from '@dxos/react-client';
 import { AccessToken } from '@dxos/types';
 

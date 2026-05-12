@@ -10,7 +10,10 @@
   },
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": [
+    "./src/ui/**",
+    "./dist/lib/**/ui/**"
+  ],
   "type": "module",
   "exports": {
     ".": {
