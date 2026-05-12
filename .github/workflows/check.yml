@@ -98,13 +98,13 @@ jobs:
           github.event_name == 'pull_request' &&
           github.event.pull_request.head.repo.full_name == github.repository
         with:
-          name: moon-run-report
+          name: moon-check-report
           path: .moon/cache/runReport.json
           retention-days: 1
           if-no-files-found: ignore
 
   check-report:
-    needs: check
+    needs: [check, test]
     # Only post on same-repo PRs — fork PRs get read-only tokens regardless of
     # declared permissions, and non-PR runs have no PR to comment on.
     if: >-
@@ -116,16 +116,29 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - name: Download moon run report
-        id: download-report
+      - name: Download check moon report
+        id: download-check-report
         continue-on-error: true
         uses: actions/download-artifact@v5
         with:
-          name: moon-run-report
+          name: moon-check-report
           path: .moon/cache
 
       - uses: 'moonrepo/run-report-action@v1'
-        if: steps.download-report.outcome == 'success'
+        if: steps.download-check-report.outcome == 'success'
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download test moon report
+        id: download-test-report
+        continue-on-error: true
+        uses: actions/download-artifact@v5
+        with:
+          name: moon-test-report
+          path: .moon/cache
+
+      - uses: 'moonrepo/run-report-action@v1'
+        if: steps.download-test-report.outcome == 'success'
         with:
           access-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -206,6 +219,18 @@ jobs:
           name: vitest-report
           path: test-results
           retention-days: 7
+
+      - name: Upload moon run report
+        uses: actions/upload-artifact@v7
+        if: >-
+          (success() || failure()) &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        with:
+          name: moon-test-report
+          path: .moon/cache/runReport.json
+          retention-days: 1
+          if-no-files-found: ignore
 
       - uses: codecov/codecov-action@v5
         if: ${{ env.VITEST_COVERAGE == 'true' }}
