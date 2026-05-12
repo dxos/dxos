@@ -23,7 +23,7 @@ export type CreateCustomIntegrationResult = { kind: 'integration-created'; integ
  */
 export type IntegrationCoordinator = {
   /**
-   * Create flow entry: OAuth → in-memory stubs + popup, persist on callback; non-OAuth → `CUSTOM_TOKEN_DIALOG`, then {@link createCustomIntegration}. `providerId` selects the registry entry stored on the Integration.
+   * Create flow entry: OAuth → in-memory stubs + popup, persist on callback; non-OAuth → `PROVIDER_FORM_DIALOG`, then {@link createCustomIntegration}. `providerId` selects the registry entry stored on the Integration.
    * Providers with `oauth.requiresLoginHint` open `OAUTH_LOGIN_HINT_DIALOG`
    * unless a `loginHint` is supplied. Providers with
    * `oauth.useRedirectFlow` persist the pending entry to `localStorage`

@@ -10,12 +10,6 @@ export const SYNC_TARGETS_DIALOG = `${meta.id}.SyncTargetsDialog`;
 /** Surface id for the per-provider credential-form dialog (custom tokens, OAuth pre-flight inputs). */
 export const PROVIDER_FORM_DIALOG = `${meta.id}.ProviderFormDialog`;
 
-/**
- * Surface id for the custom-token entry dialog.
- * @deprecated Alias for {@link PROVIDER_FORM_DIALOG}.
- */
-export const CUSTOM_TOKEN_DIALOG = PROVIDER_FORM_DIALOG;
-
 /** Provider id for manually entered access tokens. */
 export const CUSTOM_PROVIDER_ID = 'custom';
 

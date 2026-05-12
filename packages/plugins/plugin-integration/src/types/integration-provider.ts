@@ -106,7 +106,7 @@ export type CredentialForm<Values = any> = {
     values: Values;
     provider: IntegrationProviderEntry;
     db: Database.Database;
-  }) => Effect.Effect<CredentialFormResult, Error>;
+  }) => Effect.Effect<CredentialFormResult>;
 };
 
 /**

@@ -22,48 +22,47 @@ import { OAUTH_REDIRECT_PATH } from '../constants';
  * and is fire-and-forget — Startup itself completes immediately so the
  * rest of the boot sequence is not blocked.
  */
+/** Edge stamps the literal "undefined" into the URL when no tokens were produced. */
+const isPresent = (value: string | null): value is string => !!value && value !== 'undefined';
+
+const readRedirectTokens = (): { accessTokenId: string; accessToken: string } | undefined => {
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+  const url = new URL(window.location.href);
+  if (url.pathname !== OAUTH_REDIRECT_PATH) {
+    return undefined;
+  }
+
+  const accessTokenId = url.searchParams.get('accessTokenId');
+  const accessToken = url.searchParams.get('accessToken');
+
+  // Strip the OAuth params and rewrite to root regardless, so the deck
+  // doesn't try to resolve `/redirect/oauth` as a workspace.
+  window.history.replaceState(null, '', '/');
+
+  if (!isPresent(accessTokenId) || !isPresent(accessToken)) {
+    log.warn('oauth redirect: missing tokens', { accessTokenId, hasAccessToken: isPresent(accessToken) });
+    return undefined;
+  }
+  return { accessTokenId, accessToken };
+};
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    if (typeof window === 'undefined') {
-      return Capability.contributes(Capabilities.Null, null);
+    const tokens = readRedirectTokens();
+    if (tokens) {
+      log('oauth redirect: capturing tokens', { accessTokenId: tokens.accessTokenId });
+      const capabilities = yield* Capability.Service;
+      void runAndForwardErrors(
+        Effect.gen(function* () {
+          const coordinator = yield* Capability.waitFor(IntegrationCoordinator);
+          yield* coordinator
+            .finalizeRedirectFlow(tokens)
+            .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('redirect-flow finalize failed', { error }))));
+        }).pipe(Effect.provideService(Capability.Service, capabilities)),
+      );
     }
-
-    const url = new URL(window.location.href);
-    if (url.pathname !== OAUTH_REDIRECT_PATH) {
-      return Capability.contributes(Capabilities.Null, null);
-    }
-
-    const accessTokenId = url.searchParams.get('accessTokenId');
-    const accessToken = url.searchParams.get('accessToken');
-
-    // Edge stamps the literal "undefined" into the URL when the OAuth flow
-    // failed before producing tokens; treat that as missing.
-    const valid = !!accessTokenId && !!accessToken && accessTokenId !== 'undefined' && accessToken !== 'undefined';
-
-    // Strip the OAuth params and rewrite to root regardless, so the deck
-    // doesn't try to resolve `/redirect/oauth` as a workspace.
-    window.history.replaceState(null, '', '/');
-
-    if (!valid) {
-      log.warn('oauth redirect: missing tokens', {
-        accessTokenId,
-        hasAccessToken: !!accessToken && accessToken !== 'undefined',
-      });
-      return Capability.contributes(Capabilities.Null, null);
-    }
-
-    log('oauth redirect: capturing tokens', { accessTokenId });
-
-    const capabilities = yield* Capability.Service;
-    void runAndForwardErrors(
-      Effect.gen(function* () {
-        const coordinator = yield* Capability.waitFor(IntegrationCoordinator);
-        yield* coordinator
-          .finalizeRedirectFlow({ accessTokenId, accessToken })
-          .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('redirect-flow finalize failed', { error }))));
-      }).pipe(Effect.provideService(Capability.Service, capabilities)),
-    );
-
     return Capability.contributes(Capabilities.Null, null);
   }),
 );

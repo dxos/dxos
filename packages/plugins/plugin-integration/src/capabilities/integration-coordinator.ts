@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context as DxContext } from '@dxos/context';
-import { type Database, type Key, Obj, Ref } from '@dxos/echo';
+import { type Database, DXN, type Key, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -234,6 +234,8 @@ type PendingSnapshot = {
   providerId: string;
   tokenSnapshot: { source: string; account?: string; scopes: readonly string[] };
   integrationSnapshot: { name: string; providerId: string };
+  /** Serialized DXN of the existing target to attach the first new selection to. */
+  existingTargetDxn?: string;
 };
 
 const writePendingSnapshot = (accessTokenId: string, snapshot: PendingSnapshot): void => {
@@ -385,6 +387,7 @@ export default Capability.makeModule(
             providerId: provider.id,
             tokenSnapshot: { source: provider.source, account, scopes: oauth.scopes },
             integrationSnapshot: { name: label, providerId: provider.id },
+            ...(existingTarget ? { existingTargetDxn: existingTarget.dxn.toString() } : {}),
           });
         }
 
@@ -465,7 +468,11 @@ export default Capability.makeModule(
           targets: [],
         });
 
-        yield* finalizePendingEntry(invoker, { token, integration, db: space.db, provider });
+        const existingTarget = snapshot.existingTargetDxn
+          ? space.db.makeRef<Obj.Any>(DXN.parse(snapshot.existingTargetDxn))
+          : undefined;
+
+        yield* finalizePendingEntry(invoker, { token, integration, db: space.db, provider, existingTarget });
       }).pipe(Effect.mapError(mapCoordinatorError));
 
     const createCustomIntegration: IntegrationCoordinator['createCustomIntegration'] = ({

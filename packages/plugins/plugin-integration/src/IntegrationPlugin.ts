@@ -40,8 +40,6 @@ export const IntegrationPlugin = Plugin.define(meta).pipe(
     activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, ActivationEvents.OperationInvokerReady),
     activate: Coordinator,
   }),
-  // Capture redirect-flow OAuth callbacks at startup before the deck URL handler
-  // tries to interpret `/redirect/oauth` as an object path.
   Plugin.addModule({
     activatesOn: ActivationEvents.Startup,
     activate: OAuthRedirect,
