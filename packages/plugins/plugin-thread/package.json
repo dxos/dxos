@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-thread",
   "version": "0.8.3",
-  "private": true,
   "description": "DXOS Threads Surface plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
