@@ -11,6 +11,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
+import { isTauri } from '@dxos/util';
 import {
   type CredentialForm,
   Integration as IntegrationType,
@@ -264,16 +265,25 @@ export default Capability.makeModule(
         sync: SyncContacts,
         onTokenCreated: calendarOnTokenCreated,
       },
-      {
-        id: IMAP_PROVIDER_ID,
-        source: IMAP_INTEGRATION_SOURCE_PREFIX,
-        label: 'IMAP',
-        // No `oauth` — IMAP uses username + password / app password.
-        credentialForm: imapCredentialForm,
-        optionsSchema: ImapAccountOptions,
-        sync: ImapSync,
-        onTokenCreated: imapOnTokenCreated,
-      },
+      // IMAP is gated to the native (Tauri) app for now: the in-tree
+      // `node:net` shim only resolves inside the Tauri webview. The plain
+      // web build has no reachable socket transport, so we keep the
+      // provider hidden until either the desktop app is running or a
+      // remote `compute-runtime` target gains `node:net` support.
+      ...(isTauri()
+        ? [
+            {
+              id: IMAP_PROVIDER_ID,
+              source: IMAP_INTEGRATION_SOURCE_PREFIX,
+              label: 'IMAP',
+              // No `oauth` — IMAP uses username + password / app password.
+              credentialForm: imapCredentialForm,
+              optionsSchema: ImapAccountOptions,
+              sync: ImapSync,
+              onTokenCreated: imapOnTokenCreated,
+            },
+          ]
+        : []),
     ]);
   }),
 );

@@ -15,6 +15,7 @@ import { Integration } from '@dxos/plugin-integration/types';
 
 import { meta } from '#meta';
 
+import { IMAP_PROVIDER_ID } from '../constants';
 import { Mailbox } from '../types';
 import { SyncMailbox } from './definitions';
 
@@ -24,10 +25,17 @@ const syncOne = (integration: Integration.Integration, mailbox: Mailbox.Mailbox)
     const db = Obj.getDatabase(mailbox);
     invariant(db);
     const runtime = computeRuntime.getRuntime(db.spaceId);
-    const { GmailFunctions } = yield* Effect.promise(() => import('./google/gmail'));
+
+    // Dispatch on the integration's providerId so non-Gmail integrations
+    // (currently IMAP, native-only) route to the right sync handler.
+    const syncOperation =
+      integration.providerId === IMAP_PROVIDER_ID
+        ? (yield* Effect.promise(() => import('./imap'))).ImapFunctions.Sync
+        : (yield* Effect.promise(() => import('./google/gmail'))).GmailFunctions.Sync;
+
     yield* Effect.tryPromise(() =>
       runtime.runPromise(
-        Operation.invoke(GmailFunctions.Sync, {
+        Operation.invoke(syncOperation, {
           integration: Ref.make(integration),
           mailbox: Ref.make(mailbox),
         }),
