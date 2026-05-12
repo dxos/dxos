@@ -66,6 +66,7 @@ jobs:
           fetch-depth: 0
           lfs: true
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
 
       - name: Extract branch
         id: extract_branch
