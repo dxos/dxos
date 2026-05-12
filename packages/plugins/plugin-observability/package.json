@@ -40,8 +40,12 @@
       "default": "./dist/lib/neutral/operations/index.mjs"
     },
     "#plugin": {
-      "source": "./src/ObservabilityPlugin.ts",
+      "source": {
+        "node": "./src/ObservabilityPlugin.node.ts",
+        "default": "./src/ObservabilityPlugin.ts"
+      },
       "types": "./dist/types/src/ObservabilityPlugin.d.ts",
+      "node": "./dist/lib/neutral/ObservabilityPlugin.node.mjs",
       "default": "./dist/lib/neutral/ObservabilityPlugin.mjs"
     },
     "#translations": {

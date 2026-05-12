@@ -12,7 +12,8 @@ import { Database, Ref } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import { Magazine, Subscription } from './index';
+import * as Magazine from './Magazine';
+import * as Subscription from './Subscription';
 
 const FEED_OPERATION = `${meta.id}.operation`;
 

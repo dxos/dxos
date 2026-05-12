@@ -19,8 +19,12 @@
       "default": "./dist/lib/neutral/blueprints/index.mjs"
     },
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "node": "./src/capabilities/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "node": "./dist/lib/neutral/capabilities/node.mjs",
       "default": "./dist/lib/neutral/capabilities/index.mjs"
     },
     "#components": {
@@ -54,6 +58,7 @@
         "default": "./src/ScriptPlugin.tsx"
       },
       "types": "./dist/types/src/ScriptPlugin.d.ts",
+      "node": "./dist/lib/neutral/ScriptPlugin.node.mjs",
       "default": "./dist/lib/neutral/ScriptPlugin.mjs"
     },
     "#testing": "./src/testing/index.ts",

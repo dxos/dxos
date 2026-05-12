@@ -45,8 +45,12 @@
       "default": "./dist/lib/neutral/operations/index.mjs"
     },
     "#plugin": {
-      "source": "./src/ChessPlugin.tsx",
+      "source": {
+        "node": "./src/ChessPlugin.node.ts",
+        "default": "./src/ChessPlugin.tsx"
+      },
       "types": "./dist/types/src/ChessPlugin.d.ts",
+      "node": "./dist/lib/neutral/ChessPlugin.node.mjs",
       "default": "./dist/lib/neutral/ChessPlugin.mjs"
     },
     "#translations": {

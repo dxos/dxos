@@ -50,14 +50,13 @@
       "default": "./dist/lib/neutral/operations/index.mjs"
     },
     "#plugin": {
-      "source": "./src/SpacePlugin.ts",
+      "source": {
+        "node": "./src/SpacePlugin.node.ts",
+        "default": "./src/SpacePlugin.ts"
+      },
       "types": "./dist/types/src/SpacePlugin.d.ts",
+      "node": "./dist/lib/neutral/SpacePlugin.node.mjs",
       "default": "./dist/lib/neutral/SpacePlugin.mjs"
-    },
-    "#plugin/node": {
-      "source": "./src/SpacePlugin.node.ts",
-      "types": "./dist/types/src/SpacePlugin.node.d.ts",
-      "default": "./dist/lib/neutral/SpacePlugin.node.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",

@@ -44,8 +44,12 @@
       "default": "./dist/lib/neutral/operations/index.mjs"
     },
     "#plugin": {
-      "source": "./src/WnfsPlugin.tsx",
+      "source": {
+        "node": "./src/WnfsPlugin.node.ts",
+        "default": "./src/WnfsPlugin.tsx"
+      },
       "types": "./dist/types/src/WnfsPlugin.d.ts",
+      "node": "./dist/lib/neutral/WnfsPlugin.node.mjs",
       "default": "./dist/lib/neutral/WnfsPlugin.mjs"
     },
     "#translations": {

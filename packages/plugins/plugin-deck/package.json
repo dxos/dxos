@@ -45,8 +45,12 @@
       "default": "./dist/lib/neutral/operations/index.mjs"
     },
     "#plugin": {
-      "source": "./src/DeckPlugin.ts",
+      "source": {
+        "node": "./src/DeckPlugin.node.ts",
+        "default": "./src/DeckPlugin.ts"
+      },
       "types": "./dist/types/src/DeckPlugin.d.ts",
+      "node": "./dist/lib/neutral/DeckPlugin.node.mjs",
       "default": "./dist/lib/neutral/DeckPlugin.mjs"
     },
     "#translations": {

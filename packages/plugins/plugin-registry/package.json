@@ -19,8 +19,13 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#plugin": {
-      "node": "./src/RegistryPlugin.node.ts",
-      "default": "./src/RegistryPlugin.tsx"
+      "source": {
+        "node": "./src/RegistryPlugin.node.ts",
+        "default": "./src/RegistryPlugin.tsx"
+      },
+      "types": "./dist/types/src/RegistryPlugin.d.ts",
+      "node": "./dist/lib/neutral/RegistryPlugin.node.mjs",
+      "default": "./dist/lib/neutral/RegistryPlugin.mjs"
     },
     "#translations": "./src/translations.ts",
     "#types": "./src/types.ts"

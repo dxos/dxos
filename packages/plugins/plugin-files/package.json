@@ -40,8 +40,12 @@
       "default": "./dist/lib/neutral/operations/index.mjs"
     },
     "#plugin": {
-      "source": "./src/FilesPlugin.tsx",
+      "source": {
+        "node": "./src/FilesPlugin.node.ts",
+        "default": "./src/FilesPlugin.tsx"
+      },
       "types": "./dist/types/src/FilesPlugin.d.ts",
+      "node": "./dist/lib/neutral/FilesPlugin.node.mjs",
       "default": "./dist/lib/neutral/FilesPlugin.mjs"
     },
     "#translations": {

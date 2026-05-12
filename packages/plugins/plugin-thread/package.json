@@ -50,8 +50,12 @@
       "default": "./dist/lib/neutral/operations/index.mjs"
     },
     "#plugin": {
-      "source": "./src/ThreadPlugin.tsx",
+      "source": {
+        "node": "./src/ThreadPlugin.node.ts",
+        "default": "./src/ThreadPlugin.tsx"
+      },
       "types": "./dist/types/src/ThreadPlugin.d.ts",
+      "node": "./dist/lib/neutral/ThreadPlugin.node.mjs",
       "default": "./dist/lib/neutral/ThreadPlugin.mjs"
     },
     "#testing": {

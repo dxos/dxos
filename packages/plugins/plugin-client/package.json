@@ -45,14 +45,13 @@
       "default": "./dist/lib/neutral/operations/index.mjs"
     },
     "#plugin": {
-      "source": "./src/ClientPlugin.ts",
+      "source": {
+        "node": "./src/ClientPlugin.node.ts",
+        "default": "./src/ClientPlugin.ts"
+      },
       "types": "./dist/types/src/ClientPlugin.d.ts",
+      "node": "./dist/lib/neutral/ClientPlugin.node.mjs",
       "default": "./dist/lib/neutral/ClientPlugin.mjs"
-    },
-    "#plugin/node": {
-      "source": "./src/ClientPlugin.node.ts",
-      "types": "./dist/types/src/ClientPlugin.node.d.ts",
-      "default": "./dist/lib/neutral/ClientPlugin.node.mjs"
     },
     "#testing": {
       "source": "./src/testing/index.ts",

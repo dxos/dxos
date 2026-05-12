@@ -11850,6 +11850,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -11902,9 +11905,6 @@ importers:
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -11950,6 +11950,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
@@ -14855,6 +14858,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -14943,9 +14949,6 @@ importers:
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -15527,6 +15530,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log

@@ -45,8 +45,12 @@
       "default": "./dist/lib/neutral/operations/index.mjs"
     },
     "#plugin": {
-      "source": "./src/NavTreePlugin.tsx",
+      "source": {
+        "node": "./src/NavTreePlugin.node.ts",
+        "default": "./src/NavTreePlugin.tsx"
+      },
       "types": "./dist/types/src/NavTreePlugin.d.ts",
+      "node": "./dist/lib/neutral/NavTreePlugin.node.mjs",
       "default": "./dist/lib/neutral/NavTreePlugin.mjs"
     },
     "#testing": {
