@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
@@ -32,14 +32,24 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
   const { hasAttention } = useAttention(attendableId);
   const invoke = usePromptHandler(subject);
   const [state, setState] = useState<RunState>({ status: 'idle' });
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const handleRun = useCallback(async () => {
     setState({ status: 'running' });
     try {
       const result = await invoke();
-      setState({ status: 'success', result });
+      if (mountedRef.current) {
+        setState({ status: 'success', result });
+      }
     } catch (err) {
-      setState({ status: 'error', error: err instanceof Error ? err : new Error(String(err)) });
+      if (mountedRef.current) {
+        setState({ status: 'error', error: err instanceof Error ? err : new Error(String(err)) });
+      }
     }
   }, [invoke]);
 

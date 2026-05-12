@@ -17,7 +17,6 @@ import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { TaskList } from '#components';
 import { useChatKeymapExtensions, useChatToolbarActions, useDebug } from '#hooks';
 
 import {
@@ -26,6 +25,7 @@ import {
   type ChatPromptProps as NaturalChatPromptProps,
 } from '../ChatPrompt';
 import { ChatThread as NaturalChatThread, type ChatThreadProps as NaturalChatThreadProps } from '../ChatThread';
+import { TaskList } from '../TaskList';
 import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
 import { type ChatEvent } from './events';
 

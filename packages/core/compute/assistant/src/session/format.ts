@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import { type FunctionNotFoundError, type Operation, type OperationRegistry, Template } from '@dxos/compute';
 import { type Database, Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
-import type { ObjectNotFoundError } from '@dxos/echo/Err';
+import { type ObjectNotFoundError } from '@dxos/echo/Err';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
