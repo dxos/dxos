@@ -118,7 +118,6 @@ const buildEntryRecord = (entryPoints) => {
 const buildViteConfig = (pkgDir, entryPoints, hasTests, jsx) => {
   const relToRoot = relative(pkgDir, REPO_ROOT) || '.';
   const baseImport = `${relToRoot}/vite.base.config.ts`;
-  const testImport = `${relToRoot}/vitest.base.config.ts`;
   const entryRecord = buildEntryRecord(entryPoints);
   const optionsBits = [];
   if (entryRecord) {
@@ -131,29 +130,15 @@ const buildViteConfig = (pkgDir, entryPoints, hasTests, jsx) => {
   if (jsx) {
     optionsBits.push(`  jsx: '${jsx}',`);
   }
-
-  let body;
   if (hasTests) {
-    // JSX packages typically render components and need a DOM. The base config
-    // defaults to `node` env when only `node: true` is passed; for JSX packages
-    // we ask for `happy-dom` so things like `document.createElement` work.
-    const nodeArg = jsx ? `{ environment: 'happy-dom' }` : `true`;
-    body =
-      `import path from 'node:path';\n` +
-      `import { fileURLToPath } from 'node:url';\n\n` +
-      `import { defineConfig } from '${baseImport}';\n` +
-      `import { createTestConfig } from '${testImport}';\n\n` +
-      `const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));\n\n` +
-      `export default defineConfig({\n` +
-      optionsBits.join('\n') +
-      (optionsBits.length ? '\n' : '') +
-      `  test: createTestConfig({ dirname, node: ${nodeArg} }),\n` +
-      `});\n`;
-  } else {
-    body =
-      `import { defineConfig } from '${baseImport}';\n\n` +
-      `export default defineConfig(${entryRecord ? `{\n${optionsBits.join('\n')}\n}` : ''});\n`;
+    // JSX packages typically render components and need a DOM. Non-JSX defaults to node env.
+    const testValue = jsx ? `{ node: { environment: 'happy-dom' } }` : `{ node: true }`;
+    optionsBits.push(`  test: ${testValue},`);
   }
+
+  const body = optionsBits.length
+    ? `import { defineConfig } from '${baseImport}';\n\nexport default defineConfig({\n${optionsBits.join('\n')}\n});\n`
+    : `import { defineConfig } from '${baseImport}';\n\nexport default defineConfig();\n`;
 
   return `//\n// Copyright 2026 DXOS.org\n//\n\n${body}`;
 };
@@ -304,12 +289,24 @@ const migrate = (pkgRel) => {
     console.warn(`SKIP ${pkgRel}: no src/index.ts and no explicit --entryPoint`);
     return;
   }
-  if (!/^\s*-\s+ts-build\s*$/m.test(moonText)) {
-    console.warn(`SKIP ${pkgRel}: not tagged ts-build`);
+  const alreadyMigrated = /^\s*-\s+ts-vite-build\s*$/m.test(moonText);
+  if (!alreadyMigrated && !/^\s*-\s+ts-build\s*$/m.test(moonText)) {
+    console.warn(`SKIP ${pkgRel}: not tagged ts-build or ts-vite-build`);
     return;
   }
 
   const entryPoints = parseEntryPoints(moonText);
+  if (entryPoints.length === 0 && alreadyMigrated && existsSync(viteConfigPath)) {
+    // Re-running on a migrated package: recover entries from the existing vite.config.ts
+    // (moon.yml no longer carries the `--entryPoint=` args).
+    const existing = readFileSync(viteConfigPath, 'utf8');
+    const entryBlock = existing.match(/entry:\s*\{([\s\S]*?)\}/);
+    if (entryBlock) {
+      for (const m of entryBlock[1].matchAll(/(?:['"]([^'"]+)['"]|(\w[\w-]*))\s*:\s*['"]([^'"]+)['"]/g)) {
+        entryPoints.push(m[3]);
+      }
+    }
+  }
   if (entryPoints.length === 0) {
     // No entryPoints declared — assume default src/index.ts (matches dx-compile behavior).
     entryPoints.push('src/index.ts');
@@ -380,7 +377,7 @@ if (args.length === 0) {
 let targets = [];
 if (args[0] === '--all-simple') {
   const out = execSync(
-    `for f in $(find packages -name moon.yml); do if grep -qE "ts-build" "$f" && ! grep -qE "bundlePackage|injectGlobals|importGlobals|alias|--platform|moduleFormat|mainFields" "$f"; then dirname "$f"; fi; done`,
+    `for f in $(find packages -name moon.yml); do if grep -qE "ts-(vite-)?build" "$f" && ! grep -qE "bundlePackage|injectGlobals|importGlobals|alias|--platform|moduleFormat|mainFields" "$f"; then dirname "$f"; fi; done`,
     { cwd: REPO_ROOT, encoding: 'utf8' },
   );
   targets = out.split('\n').filter(Boolean);
