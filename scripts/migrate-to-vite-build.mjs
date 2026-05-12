@@ -215,7 +215,9 @@ const rewriteImports = (pkgJson) => {
   const required = new Set();
   const visit = (node) => {
     if (typeof node === 'string') {
-      const m = node.match(/^\.\/dist\/lib\/(?:browser|node|node-esm|node-cjs|neutral)\/(.+?)(?:\/index)?\.(?:mjs|cjs)$/);
+      const m = node.match(
+        /^\.\/dist\/lib\/(?:browser|node|node-esm|node-cjs|neutral)\/(.+?)(?:\/index)?\.(?:mjs|cjs)$/,
+      );
       if (m) {
         const entry = m[1];
         required.add(entry);
