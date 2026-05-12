@@ -13,61 +13,23 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#capabilities": {
-      "source": "./src/capabilities/index.ts",
-      "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/neutral/capabilities/index.mjs"
-    },
-    "#components": {
-      "source": "./src/components/index.ts",
-      "types": "./dist/types/src/components/index.d.ts",
-      "default": "./dist/lib/neutral/components/index.mjs"
-    },
-    "#containers": {
-      "source": "./src/containers/index.ts",
-      "types": "./dist/types/src/containers/index.d.ts",
-      "default": "./dist/lib/neutral/containers/index.mjs"
-    },
-    "#meta": {
-      "source": "./src/meta.ts",
-      "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/neutral/meta.mjs"
-    },
-    "#operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "default": "./dist/lib/neutral/operations/index.mjs"
-    },
+    "#capabilities": "./src/capabilities/index.ts",
+    "#components": "./src/components/index.ts",
+    "#containers": "./src/containers/index.ts",
+    "#meta": "./src/meta.ts",
+    "#operations": "./src/operations/index.ts",
     "#plugin": {
-      "source": {
-        "node": "./src/RegistryPlugin.node.ts",
-        "default": "./src/RegistryPlugin.tsx"
-      },
-      "types": "./dist/types/src/RegistryPlugin.d.ts",
-      "node": "./dist/lib/neutral/RegistryPlugin.node.mjs",
-      "default": "./dist/lib/neutral/RegistryPlugin.mjs"
+      "node": "./src/RegistryPlugin.node.ts",
+      "default": "./src/RegistryPlugin.tsx"
     },
-    "#translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types.ts",
-      "types": "./dist/types/src/types.d.ts",
-      "default": "./dist/lib/neutral/types.mjs"
-    }
+    "#translations": "./src/translations.ts",
+    "#types": "./src/types.ts"
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
-    },
-    "./cli": {
-      "source": "./src/cli/index.ts",
-      "types": "./dist/types/src/cli/index.d.ts",
-      "default": "./dist/lib/neutral/cli/index.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",

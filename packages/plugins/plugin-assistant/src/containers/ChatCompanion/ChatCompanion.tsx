@@ -12,7 +12,7 @@ import { Chat } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
 import { Blueprint } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 

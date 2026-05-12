@@ -13,7 +13,7 @@ import { type Markdown } from '@dxos/plugin-markdown';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { comments, createExternalCommentSync } from '@dxos/ui-editor';
 
-import { ThreadOperation } from '#operations';
+import { ThreadOperation } from '#types';
 import { type ThreadState } from '#types';
 
 // TODO(burdon): Factor out.

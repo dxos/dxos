@@ -10,8 +10,7 @@ import { AppCapabilities, AppNode, LayoutOperation, getObjectPathFromObject, get
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
-import { DeckCapabilities } from '@dxos/plugin-deck';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
+import { DeckCapabilities, DeckOperation } from '@dxos/plugin-deck';
 import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown';
 import { linkedSegment } from '@dxos/react-ui-attention';

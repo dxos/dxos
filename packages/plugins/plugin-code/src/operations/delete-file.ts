@@ -4,13 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { CodeOperation } from '../types';
-
 import { Operation } from '@dxos/compute';
 import { Database, Obj, type Ref } from '@dxos/echo';
 
 import { type SourceFile } from '#types';
 
+import { CodeOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof CodeOperation.DeleteFile> = CodeOperation.DeleteFile.pipe(
   Operation.withHandler(

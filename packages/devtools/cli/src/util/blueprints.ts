@@ -10,17 +10,15 @@ import { DatabaseBlueprint, DatabaseHandlers } from '@dxos/assistant-toolkit';
 import { Blueprint, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Tag, type Type } from '@dxos/echo';
 import { AssistantBlueprint } from '@dxos/plugin-assistant';
-import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
-import { ChessHandlers } from '@dxos/plugin-chess/operations';
-import { Chess } from '@dxos/plugin-chess/types';
-import { Game } from '@dxos/plugin-game/types';
+import { Chess, ChessBlueprint, ChessOperationHandlerSet } from '@dxos/plugin-chess';
+import { Game } from '@dxos/plugin-game';
 import { CalendarBlueprint, InboxBlueprint, InboxSendBlueprint } from '@dxos/plugin-inbox';
 import { InboxOperationHandlerSet } from '@dxos/plugin-inbox';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox';
 import { KanbanBlueprint } from '@dxos/plugin-kanban';
 import { KanbanOperationHandlerSet } from '@dxos/plugin-kanban';
-import { MapBlueprint } from '@dxos/plugin-map/blueprints';
-import { MapOperationHandlerSet } from '@dxos/plugin-map/operations';
+import { MapBlueprint } from '@dxos/plugin-map';
+import { MapOperationHandlerSet } from '@dxos/plugin-map';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
@@ -28,8 +26,7 @@ import { ScriptBlueprint } from '@dxos/plugin-script';
 import { ScriptOperationHandlerSet } from '@dxos/plugin-script';
 import { TableBlueprint } from '@dxos/plugin-table';
 import { TableOperationHandlerSet } from '@dxos/plugin-table';
-import { ThreadBlueprint } from '@dxos/plugin-thread/blueprints';
-import { ThreadOperationHandlerSet } from '@dxos/plugin-thread/operations';
+import { ThreadBlueprint, ThreadOperationHandlerSet } from '@dxos/plugin-thread';
 import { TranscriptionBlueprint } from '@dxos/plugin-transcription';
 import { TranscriptionOperationHandlerSet } from '@dxos/plugin-transcription';
 import { DataTypes } from '@dxos/schema';
@@ -73,7 +70,7 @@ export const blueprintRegistry = new Blueprint.Registry([
 export const operationHandlers = OperationHandlerSet.merge(
   // NOTE: Operation handlers referenced by blueprints above need to be added here.
   DatabaseHandlers,
-  ChessHandlers,
+  ChessOperationHandlerSet,
   InboxOperationHandlerSet,
   KanbanOperationHandlerSet,
   MapOperationHandlerSet,

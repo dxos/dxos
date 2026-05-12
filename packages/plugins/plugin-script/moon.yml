@@ -11,13 +11,8 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/ScriptPlugin.tsx'
-      - '--entryPoint=src/ScriptPlugin.node.ts'
       - '--entryPoint=src/blueprints/index.ts'
-      - '--entryPoint=src/capabilities/index.ts'
-      - '--entryPoint=src/components/index.ts'
       - '--entryPoint=src/containers/index.ts'
-      - '--entryPoint=src/hooks/index.ts'
-      - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/operations/index.ts'
       - '--entryPoint=src/plugin.ts'
       - '--entryPoint=src/templates/index.ts'

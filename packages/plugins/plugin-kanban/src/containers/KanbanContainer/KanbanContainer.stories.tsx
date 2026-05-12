@@ -17,10 +17,10 @@ import { type Mutable } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 // `/plugin` entrypoints used here for the same reason as `corePlugins()` —
 // see `@dxos/plugin-testing/src/core.ts` for the rationale.
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { SpacePlugin } from '@dxos/plugin-space/plugin';
+import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { StorybookPlugin } from '@dxos/plugin-testing/plugin';
 import { random } from '@dxos/random';

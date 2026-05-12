@@ -33,7 +33,7 @@ import { Assistant, AssistantOperation } from '@dxos/plugin-assistant';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientPlugin } from '@dxos/plugin-client';
-import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client/types';
+import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';

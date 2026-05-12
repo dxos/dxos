@@ -10,7 +10,7 @@ import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/ass
 import { Filter, type Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CallState, type MediaState, ThreadCapabilities } from '@dxos/plugin-thread';
 import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { type buf } from '@dxos/protocols/buf';

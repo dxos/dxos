@@ -53,7 +53,7 @@
         "default": "./src/IntegrationPlugin.ts"
       },
       "types": "./dist/types/src/IntegrationPlugin.d.ts",
-      "node": "./dist/lib/neutral/IntegrationPlugin.node.mjs",
+      "node": "./dist/lib/node-esm/IntegrationPlugin.node.mjs",
       "default": "./dist/lib/neutral/IntegrationPlugin.mjs"
     },
     "#translations": {
@@ -72,11 +72,6 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
-    },
-    "./cli": {
-      "source": "./src/cli/index.ts",
-      "types": "./dist/types/src/cli/index.d.ts",
-      "default": "./dist/lib/neutral/cli/index.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",

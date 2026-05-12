@@ -4,8 +4,6 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * as ThreadOperation from './definitions';
-
 export const ThreadOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./add-message'),
   () => import('./append-channel-message'),

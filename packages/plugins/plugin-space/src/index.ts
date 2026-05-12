@@ -6,9 +6,10 @@ import { Plugin } from '@dxos/app-framework';
 
 import { meta } from './meta';
 
-export { SpaceCapabilities, SpaceEvents } from './types';
-
 export * from './meta';
+export * from './types';
 export * from './util';
+
+export { CollectionOperation, SpaceOperation } from './operations/definitions';
 
 export const SpacePlugin = Plugin.lazy(meta, () => import('#plugin'));

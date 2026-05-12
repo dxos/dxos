@@ -14,7 +14,6 @@ tasks:
       - '--entryPoint=src/IntegrationPlugin.node.ts'
       - '--entryPoint=src/capabilities/index.ts'
       - '--entryPoint=src/capabilities/node.ts'
-      - '--entryPoint=src/cli/index.ts'
       - '--entryPoint=src/components/index.ts'
       - '--entryPoint=src/containers/index.ts'
       - '--entryPoint=src/hooks/index.ts'
@@ -24,3 +23,4 @@ tasks:
       - '--entryPoint=src/translations.ts'
       - '--entryPoint=src/types/index.ts'
       - '--platform=neutral'
+      - '--platform=node'

@@ -9,7 +9,7 @@ import { PERSONAL_SPACE_TAG } from '@dxos/app-toolkit';
 import { Obj, Ref } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Migrations } from '@dxos/migrations';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 

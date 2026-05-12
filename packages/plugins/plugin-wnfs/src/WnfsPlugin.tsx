@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { ClientEvents } from '@dxos/plugin-client/types';
+import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 
 import { Blockstore, CreateObject, FileUploader, Markdown, OperationHandler, ReactSurface } from '#capabilities';
@@ -17,7 +17,7 @@ import { WnfsCapabilities, WnfsFile } from '#types';
 export const WnfsPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [WnfsFile.File] }),
+  AppPlugin.addSchemaModule({ schema: [WnfsFile.WnfsFile] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({

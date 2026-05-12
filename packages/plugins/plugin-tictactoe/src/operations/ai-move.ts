@@ -4,15 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { TicTacToeOperation } from '../types';
-
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { loadGame } from '@dxos/plugin-game/types';
+import { loadGame } from '@dxos/plugin-game';
 
 import { checkWin, computeAiMove, currentTurn } from '#components';
 import { TicTacToe } from '#types';
 
+import { TicTacToeOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof TicTacToeOperation.AiMove> = TicTacToeOperation.AiMove.pipe(
   Operation.withHandler(

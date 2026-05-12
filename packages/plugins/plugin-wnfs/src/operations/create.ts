@@ -6,10 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 
-import { WnfsFile } from '../types';
-import { Create } from './definitions';
+import { WnfsFile, WnfsOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof Create> = Create.pipe(
+const handler: Operation.WithHandler<typeof WnfsOperation.Create> = WnfsOperation.Create.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ name, type, cid }) {
       return {

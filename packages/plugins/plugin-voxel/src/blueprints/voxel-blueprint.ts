@@ -9,7 +9,12 @@ import { VoxelOperation } from '#types';
 
 const BLUEPRINT_KEY = 'dxos.org/blueprint/voxel';
 
-const operations = [VoxelOperation.AddVoxels, VoxelOperation.GenerateShape, VoxelOperation.QueryWorld, VoxelOperation.RemoveVoxels];
+const operations = [
+  VoxelOperation.AddVoxels,
+  VoxelOperation.GenerateShape,
+  VoxelOperation.QueryWorld,
+  VoxelOperation.RemoveVoxels,
+];
 
 const make = () =>
   Blueprint.make({

@@ -11,10 +11,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
-import {
-  IntegrationProvider as IntegrationProviderCapability,
-  type OnTokenCreated,
-} from '@dxos/plugin-integration';
+import { IntegrationProvider as IntegrationProviderCapability, type OnTokenCreated } from '@dxos/plugin-integration';
 import { OAuthProvider } from '@dxos/protocols';
 
 import {

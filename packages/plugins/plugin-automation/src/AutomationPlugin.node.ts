@@ -5,7 +5,7 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Operation, Trace, Trigger } from '@dxos/compute';
-import { ClientEvents } from '@dxos/plugin-client/types';
+import { ClientEvents } from '@dxos/plugin-client';
 
 import { AppGraphBuilder, ComputeRuntime, OperationHandler } from '#capabilities';
 import { meta } from '#meta';

@@ -4,14 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { CodeOperation } from '../types';
-
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 import { SourceFile } from '#types';
 
+import { CodeOperation } from '../types';
 
 type ScaffoldFile = { path: string; content: string };
 

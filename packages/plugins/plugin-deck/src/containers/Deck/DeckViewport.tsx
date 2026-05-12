@@ -25,7 +25,7 @@ import { hoverableControls, hoverableFocusedWithinControls, mainPaddingTransitio
 
 import { useBreakpoints, useCompanions, useDeckState, useHoistStatusbar, useSelectedCompanion } from '#hooks';
 import { meta } from '#meta';
-import { DeckOperation } from '#operations';
+import { DeckOperation } from '#types';
 import { getMode } from '#types';
 
 import { layoutAppliesTopbar } from '../../util';

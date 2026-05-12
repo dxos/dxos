@@ -14,8 +14,8 @@ import { ObjectId } from '@dxos/keys';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Message } from '@dxos/types';
 

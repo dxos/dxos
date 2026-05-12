@@ -12,9 +12,9 @@ import { linkedSegment } from '@dxos/react-ui-attention';
 import { AnchoredTo, Thread } from '@dxos/types';
 
 import { ThreadCapabilities } from '../types';
-import { Create, Select } from './definitions';
+import { ThreadOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof Create> = Create.pipe(
+const handler: Operation.WithHandler<typeof ThreadOperation.Create> = ThreadOperation.Create.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ name, anchor: _anchor, subject }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
@@ -37,7 +37,7 @@ const handler: Operation.WithHandler<typeof Create> = Create.pipe(
         },
       });
 
-      yield* Operation.invoke(Select, { current: Obj.getDXN(thread).toString() });
+      yield* Operation.invoke(ThreadOperation.Select, { current: Obj.getDXN(thread).toString() });
       yield* Operation.invoke(LayoutOperation.UpdateCompanion, {
         subject: linkedSegment('comments'),
       });

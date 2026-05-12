@@ -4,7 +4,7 @@
 
 import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { AttentionEvents } from '@dxos/plugin-attention/types';
+import { AttentionEvents } from '@dxos/plugin-attention';
 
 import { AppGraphBuilder, BlueprintDefinition, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';

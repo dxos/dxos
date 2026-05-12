@@ -11,8 +11,8 @@ import { Sequence } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SpaceCapabilities } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space';
+import { SpaceCapabilities } from '@dxos/plugin-space';
 
 import { AssistantOperation } from '#types';
 

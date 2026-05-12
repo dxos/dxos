@@ -15,7 +15,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { OperationInvoker as OperationInvokerExports } from '@dxos/operation';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { AccessToken } from '@dxos/types';
 
 import { IntegrationCoordinator, IntegrationProvider, type IntegrationProviderEntry } from '#types';

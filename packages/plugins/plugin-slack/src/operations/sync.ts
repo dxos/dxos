@@ -12,7 +12,7 @@ import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { Channel, ContentBlock, Message } from '@dxos/types';
 
 import { meta } from '#meta';

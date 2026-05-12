@@ -11,7 +11,7 @@ import { Blueprint, Operation } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { AssistantBlueprint } from '#blueprints';
 import { AssistantOperation } from '#types';

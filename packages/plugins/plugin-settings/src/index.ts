@@ -8,6 +8,6 @@ import { meta } from './meta';
 
 export const SettingsPlugin = Plugin.lazy(meta, () => import('./SettingsPlugin'));
 
-export * from './meta';
-
 export * from './actions';
+export * from './meta';
+export { SETTINGS_ID, SETTINGS_KEY } from './types';

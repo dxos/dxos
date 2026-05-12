@@ -4,10 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { TicTacToeOperation } from '../types';
-
 import { Operation } from '@dxos/compute';
 
+import { TicTacToeOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof TicTacToeOperation.Print> = TicTacToeOperation.Print.pipe(
   Operation.withHandler(

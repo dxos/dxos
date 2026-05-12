@@ -47,7 +47,7 @@ describe('ClientPlugin startup', () => {
       import('@dxos/app-framework'),
       import('@dxos/plugin-client'),
       import('@dxos/plugin-graph'),
-      import('@dxos/plugin-client/types'),
+      import('@dxos/plugin-client'),
     ]);
     mark('dynamic imports', phaseStart);
 

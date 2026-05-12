@@ -11,10 +11,10 @@ import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
-import { ClientEvents } from '@dxos/plugin-client/types';
-import { DeckEvents } from '@dxos/plugin-deck/types';
+import { ClientEvents } from '@dxos/plugin-client';
+import { DeckEvents } from '@dxos/plugin-deck';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message } from '@dxos/types';
 

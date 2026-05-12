@@ -12,7 +12,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { DeckCapabilities, PLANK_COMPANION_TYPE, type StoredDeckState } from '@dxos/plugin-deck/types';
+import { DeckCapabilities, PLANK_COMPANION_TYPE, type StoredDeckState } from '@dxos/plugin-deck';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { byPosition } from '@dxos/util';
 

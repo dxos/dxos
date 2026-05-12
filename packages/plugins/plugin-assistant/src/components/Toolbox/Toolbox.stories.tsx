@@ -8,10 +8,10 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
-import { ChessPlugin } from '@dxos/plugin-chess';
+import { ChessPlugin } from '@dxos/plugin-chess/plugin';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { MapPlugin } from '@dxos/plugin-map';
+import { MapPlugin } from '@dxos/plugin-map/plugin';
 import { TablePlugin } from '@dxos/plugin-table/plugin';
 import { corePlugins } from '@dxos/plugin-testing';
 
