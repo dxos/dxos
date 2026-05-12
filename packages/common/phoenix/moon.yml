@@ -10,3 +10,6 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--platform=node'
       - '--injectGlobals'
+  test:
+    deps:
+      - ~:compile

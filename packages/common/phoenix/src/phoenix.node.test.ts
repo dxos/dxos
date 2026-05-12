@@ -12,7 +12,7 @@ import { Trigger } from '@dxos/async';
 import { Phoenix } from './phoenix';
 import { TEST_DIR, clearFiles, neverEndingProcess } from './testing-utils';
 
-describe.skipIf(process.env.CI)('DaemonManager', () => {
+describe('DaemonManager', () => {
   test('kill process by pid', async () => {
     const child = spawn('node', ['-e', `(${neverEndingProcess.toString()})()`]);
     const trigger = new Trigger();
@@ -24,9 +24,7 @@ describe.skipIf(process.env.CI)('DaemonManager', () => {
     await trigger.wait({ timeout: 1_000 });
   });
 
-  // Quarantined: flaky on CI (timeout starting the detached watchdog process under
-  // the moon test runner). Local runs still cover the suite during development.
-  test.skip('start/stop detached watchdog', async () => {
+  test('start/stop detached watchdog', async () => {
     const runId = Math.random().toString();
     const pidFile = join(TEST_DIR, `pid-${runId}.pid`);
     const logFile = join(TEST_DIR, `file-${runId}.log`);
@@ -45,9 +43,11 @@ describe.skipIf(process.env.CI)('DaemonManager', () => {
         errFile,
       });
 
-      await expect.poll(() => existsSync(params.logFile), { timeout: 1000 }).toBe(true);
-      const logs = readFileSync(params.logFile, { encoding: 'utf-8' });
-      expect(logs).to.contain('neverEndingProcess started');
+      await expect
+        .poll(() => (existsSync(params.logFile) ? readFileSync(params.logFile, { encoding: 'utf-8' }) : ''), {
+          timeout: 5_000,
+        })
+        .toContain('neverEndingProcess started');
     }
 
     // Stop
