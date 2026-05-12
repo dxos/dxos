@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { type Obj } from '@dxos/echo';
-import { make as makeGame } from '@dxos/plugin-game/types';
+import { make as makeGame } from '@dxos/plugin-game';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 

@@ -13,7 +13,7 @@ import { Feed, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { type AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { type AutomationCapabilities } from '@dxos/plugin-automation';
 import { type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 

@@ -76,7 +76,7 @@ const DefaultStory = () => {
   );
 
   return (
-    <div role='none' className='w-96'>
+    <div className='w-96'>
       <ObjectPicker.Root open={isOpen} onOpenChange={setIsOpen}>
         <ObjectPicker.Trigger asChild>
           <Button variant='primary' data-testid='trigger' classNames='w-full'>

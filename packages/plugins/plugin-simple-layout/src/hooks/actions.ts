@@ -11,7 +11,7 @@ import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
 import { byPosition } from '@dxos/util';
 
-import { type SimpleLayoutState } from '#types';
+import { SimpleLayoutCapabilities } from '#types';
 
 // TODO(wittjosiah): Factor out to shared location with plugin-deck.
 export const PLANK_COMPANION_TYPE = 'org.dxos.plugin.deck.plank-companion';
@@ -22,7 +22,9 @@ export type CompanionActionsConfig = {
   /** Optional: highlight companion with this variant */
   selectedVariant?: string;
   /** State updater for toggling the drawer. */
-  updateState: (fn: (state: SimpleLayoutState) => SimpleLayoutState) => void;
+  updateState: (
+    fn: (state: SimpleLayoutCapabilities.SimpleLayoutState) => SimpleLayoutCapabilities.SimpleLayoutState,
+  ) => void;
 };
 
 /**
@@ -32,7 +34,7 @@ export type CompanionActionsConfig = {
 // TODO(burdon): Use builder pattern.
 export const createCompanionActions = (
   graph: AppCapabilities.AppGraph['graph'],
-  stateAtom: Atom.Atom<SimpleLayoutState>,
+  stateAtom: Atom.Atom<SimpleLayoutCapabilities.SimpleLayoutState>,
   get: (atom: Atom.Atom<any>) => any,
   config: CompanionActionsConfig,
 ): Pick<ActionGraphProps, 'nodes' | 'edges'> => {

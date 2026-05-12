@@ -10,8 +10,7 @@ import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 
 import { meta } from '#meta';
-import { HelpOperation } from '#operations';
-import { HelpCapabilities } from '#types';
+import { HelpCapabilities, HelpOperation } from '#types';
 
 import { SHORTCUTS_DIALOG } from '../constants';
 

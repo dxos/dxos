@@ -7,10 +7,10 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import type { OperationHandlerSet } from '@dxos/compute';
 
-import { GitHubHandlers } from '#operations';
+import { GitHubOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Capabilities.OperationHandler, GitHubHandlers);
+    return Capability.contributes(Capabilities.OperationHandler, GitHubOperationHandlerSet);
   }),
 );

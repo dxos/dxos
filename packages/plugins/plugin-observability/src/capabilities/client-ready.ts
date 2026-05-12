@@ -10,8 +10,7 @@ import { log } from '@dxos/log';
 import { type Observability, ObservabilityProvider } from '@dxos/observability';
 
 import { meta } from '#meta';
-import { ObservabilityOperation } from '#operations';
-import { ClientCapability, ObservabilityCapabilities } from '#types';
+import { ObservabilityCapabilities, ObservabilityOperation } from '#types';
 
 export type ClientReadyOptions = {
   namespace: string;
@@ -24,7 +23,7 @@ export default Capability.makeModule(
     const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const stateAtom = yield* Capability.get(ObservabilityCapabilities.State);
-    const client = yield* Capability.get(ClientCapability);
+    const client = yield* Capability.get(ObservabilityCapabilities.ClientCapability);
 
     const sendPrivacyNotice = async () => {
       const environment = client?.config?.values.runtime?.app?.env?.DX_ENVIRONMENT;

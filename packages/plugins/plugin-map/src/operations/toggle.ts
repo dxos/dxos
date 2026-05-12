@@ -7,10 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Capabilities } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 
-import { MapCapabilities } from '../types';
-import { Toggle } from './definitions';
+import { MapCapabilities, MapOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof Toggle> = Toggle.pipe(
+const handler: Operation.WithHandler<typeof MapOperation.Toggle> = MapOperation.Toggle.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       yield* Capabilities.updateAtomValue(MapCapabilities.State, (state) => ({

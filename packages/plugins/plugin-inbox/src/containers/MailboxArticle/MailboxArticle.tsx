@@ -23,7 +23,7 @@ import { HasSubject, Message } from '@dxos/types';
 
 import { type MessageStackActionHandler, MessageStack } from '#components';
 import { meta } from '#meta';
-import { InboxOperation } from '#operations';
+import { InboxOperation } from '#types';
 import { InboxCapabilities, type Mailbox } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';

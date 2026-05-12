@@ -95,10 +95,7 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
         </NativeSyntaxHighlighter>
 
         {copyButton && (
-          <div
-            role='none'
-            className='pointer-events-none absolute top-1 right-1 z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100'
-          >
+          <div className='pointer-events-none absolute top-1 right-1 z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100'>
             <Clipboard.Provider>
               <Clipboard.IconButton
                 value={source}

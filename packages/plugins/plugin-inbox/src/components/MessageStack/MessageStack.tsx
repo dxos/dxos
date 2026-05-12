@@ -211,7 +211,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
             )}
             {messageLabels.length > 0 && (
               <Card.Row>
-                <div role='none' className='flex flex-wrap gap-1 py-1'>
+                <div className='flex flex-wrap gap-1 py-1'>
                   {messageLabels.map(({ id: labelId, label, hue: labelHue }) => (
                     <button
                       key={labelId}
@@ -294,7 +294,7 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
               const { from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
               return (
                 <Card.Row key={message.id} icon='ph--user--regular'>
-                  <div role='none' className='flex flex-col py-1'>
+                  <div className='flex flex-col py-1'>
                     <button
                       type='button'
                       className='flex items-center justify-between w-full gap-2 text-start text-sm dx-hover dx-focus-ring'

@@ -65,7 +65,7 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
   }, []);
 
   return (
-    <div role='none' className='contents'>
+    <div className='contents'>
       <Grid.Root id='story' editing={editing} onEditingChange={handleEditingChange}>
         {/* TODO(burdon): Why is this property not just "cells" or "values" */}
         <Grid.Content {...props} initialCells={cells} onClick={handleClick} />

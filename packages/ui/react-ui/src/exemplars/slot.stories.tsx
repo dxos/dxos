@@ -59,9 +59,7 @@ const Leaf = composable<HTMLButtonElement>(({ children, ...props }, forwardedRef
 
 /** This isn't a valid child for a `slottable` component. */
 const Simple = ({ children, classNames }: ThemedClassName<PropsWithChildren>) => (
-  <div role='none' className={mx(classNames)}>
-    {children}
-  </div>
+  <div className={mx(classNames)}>{children}</div>
 );
 
 const meta = {
@@ -99,7 +97,7 @@ export const Inner: Story = {
     <Outer asChild role='article' classNames='border-orange-500'>
       <Middle asChild>
         <Leaf>
-          <div role='none'>Leaf</div>
+          <div>Leaf</div>
         </Leaf>
       </Middle>
     </Outer>

@@ -110,7 +110,7 @@ export const Welcome = ({
         </h1>
 
         {state === WelcomeState.INIT && (
-          <div role='none' className='flex flex-col gap-8'>
+          <div className='flex flex-col gap-8'>
             <div className='flex flex-col gap-2'>
               <h1 className='text-2xl'>{identity ? t('existing-identity.title') : t('login.title')}</h1>
               {!identity && <p className='text-subdued'>{t('beta.description')}</p>}
@@ -127,7 +127,7 @@ export const Welcome = ({
                 </div>
               </>
             )}
-            <div role='none' className='flex gap-2'>
+            <div className='flex gap-2'>
               <Input.Root>
                 <div className='flex flex-col w-full'>
                   <Input.TextInput
@@ -162,7 +162,7 @@ export const Welcome = ({
         )}
 
         {state === WelcomeState.SPACE_INVITATION && (
-          <div role='none' className='flex flex-col gap-8'>
+          <div className='flex flex-col gap-8'>
             <div className='flex flex-col gap-2'>
               <h1 className='text-2xl'>{t('space-invitation.title')}</h1>
               <p className='text-subdued'>{t('space-invitation.description')}</p>
@@ -191,7 +191,7 @@ export const Welcome = ({
         )}
 
         {(state === WelcomeState.EMAIL_SENT || state === WelcomeState.LOGIN_SENT) && (
-          <div role='none' className='flex flex-col gap-8'>
+          <div className='flex flex-col gap-8'>
             <div className='flex flex-col gap-2'>
               <h1 className='text-2xl'>{t('check-email.title')}</h1>
               <p className='text-subdued'>

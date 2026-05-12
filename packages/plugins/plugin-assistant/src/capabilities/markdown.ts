@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
+import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 
-import { AssistantOperation } from '#operations';
+import { AssistantOperation } from '#types';
 
 import { promptRunExtension } from '../extensions';
 

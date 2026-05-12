@@ -11,9 +11,21 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/MarkdownPlugin.tsx'
+      - '--entryPoint=src/MarkdownPlugin.node.ts'
       - '--entryPoint=src/blueprints/index.ts'
-      - '--entryPoint=src/types/index.ts'
+      - '--entryPoint=src/capabilities/index.ts'
+      - '--entryPoint=src/capabilities/node.ts'
+      - '--entryPoint=src/components/index.ts'
+      - '--entryPoint=src/containers/index.ts'
+      - '--entryPoint=src/hooks/index.ts'
+      - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/operations/index.ts'
+      - '--entryPoint=src/plugin.ts'
+      - '--entryPoint=src/testing.ts'
+      - '--entryPoint=src/translations.ts'
+      - '--entryPoint=src/types/index.ts'
+      - '--platform=neutral'
   check-module-structure:
     # Fail when the operations entrypoint pulls in `@dxos/react-ui`. The operations
     # module must remain UI-free so it can be loaded in non-DOM environments.

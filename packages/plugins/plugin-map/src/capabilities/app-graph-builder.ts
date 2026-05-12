@@ -14,7 +14,7 @@ import { AtomObj } from '@dxos/echo-atom';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-import { MapOperation } from '#operations';
+import { MapOperation } from '#types';
 import { Map } from '#types';
 
 export default Capability.makeModule(

@@ -4,8 +4,6 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * as FilesOperation from './definitions';
-
 export const FilesOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./close'),
   () => import('./export'),

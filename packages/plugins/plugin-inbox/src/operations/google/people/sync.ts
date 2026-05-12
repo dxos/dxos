@@ -13,13 +13,13 @@ import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Integration } from '@dxos/plugin-integration/types';
+import { Integration } from '@dxos/plugin-integration';
 import { Person } from '@dxos/types';
 
 import { GooglePeople } from '../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
 import { InboxResolver, GoogleCredentials } from '../../../services';
-import { GoogleContactsSync } from '../../definitions';
+import { InboxOperation } from '../../../types';
 import { mapGooglePerson } from './mapper';
 
 /**
@@ -145,7 +145,7 @@ const syncOneGroup = (
     return upserted;
   });
 
-export default GoogleContactsSync.pipe(
+export default InboxOperation.GoogleContactsSync.pipe(
   Operation.withHandler(({ integration: integrationRef, contactGroupResourceName }) =>
     Effect.gen(function* () {
       const integrationObj = yield* Database.load(integrationRef);

@@ -9,12 +9,11 @@ import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import {
-  SentenceNormalization,
-  SentenceNormalizationOutput,
-  type MessageWithRangeIdType,
-  type SentenceNormalizationInputType,
-} from '../operations/definitions';
+import { TranscriptOperation } from '../types';
+
+type MessageWithRangeIdType = TranscriptOperation.MessageWithRangeIdType;
+type SentenceNormalizationInputType = TranscriptOperation.SentenceNormalizationInputType;
+const { SentenceNormalization, SentenceNormalizationOutput } = TranscriptOperation;
 
 export type MessageWithRangeId = MessageWithRangeIdType;
 

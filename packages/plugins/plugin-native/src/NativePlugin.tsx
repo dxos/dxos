@@ -4,7 +4,7 @@
 
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { AssistantEvents } from '@dxos/plugin-assistant/types';
+import { AssistantEvents } from '@dxos/plugin-assistant';
 
 import { Ollama, SpotlightListener, Updater } from '#capabilities';
 import { meta } from '#meta';

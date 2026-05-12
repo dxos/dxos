@@ -251,11 +251,7 @@ const BOARD_CONTENT_NAME = 'Board.Content';
 type BoardContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 const BoardContent = ({ classNames, children, ...props }: BoardContentProps) => {
-  return (
-    <div role='none' className={mx(classNames)}>
-      {children}
-    </div>
-  );
+  return <div className={mx(classNames)}>{children}</div>;
 };
 
 BoardContent.displayName = BOARD_CONTENT_NAME;

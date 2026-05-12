@@ -7,12 +7,11 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { loadGame } from '@dxos/plugin-game/types';
+import { loadGame } from '@dxos/plugin-game';
 
-import { Chess } from '../types';
-import { Move } from './definitions';
+import { Chess, ChessOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof Move> = Move.pipe(
+const handler: Operation.WithHandler<typeof ChessOperation.Move> = ChessOperation.Move.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ game, move }) {
       const { variant } = yield* loadGame(game, Chess.State);

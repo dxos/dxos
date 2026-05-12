@@ -17,10 +17,10 @@ import { log } from '@dxos/log';
 import { HasSubject, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { InboxOperation } from '../types';
 import { renderMarkdown } from '../util';
-import { ClassifyEmail } from './definitions';
 
-const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
+const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = InboxOperation.ClassifyEmail.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ message }) {

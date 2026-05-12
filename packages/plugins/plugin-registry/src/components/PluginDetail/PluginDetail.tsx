@@ -91,12 +91,12 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
     return (
       <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
         <ScrollArea.Viewport>
-          <div role='none' className='dx-document grid grid-cols-[min-content_1fr] gap-4 p-4'>
-            <div role='none'>
+          <div className='dx-document grid grid-cols-[min-content_1fr] gap-4 p-4'>
+            <div>
               <Icon classNames={mx('p-1 rounded-md', styles.fill, styles.surfaceText)} icon={icon} size={14} />
             </div>
-            <div role='none' className='flex flex-col gap-6'>
-              <div role='none' className='grid grid-cols-[1fr_min-content] gap-x-3 w-full pt-1'>
+            <div className='flex flex-col gap-6'>
+              <div className='grid grid-cols-[1fr_min-content] gap-x-3 w-full pt-1'>
                 <div className='flex items-center gap-2'>
                   <h2 className='text-xl'>{name}</h2>
                   {failure && <PluginFailureBadge failure={failure} size={5} />}
@@ -112,16 +112,16 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 )}
                 <p className='pt-0.5 text-sm text-description'>{id}</p>
               </div>
-              <div role='none'>
+              <div>
                 <p className='text-description'>{description}</p>
               </div>
               {screenshots && screenshots.length > 0 && (
-                <div role='none' className='flex flex-col gap-2'>
+                <div className='flex flex-col gap-2'>
                   <h2>Preview</h2>
                   <img src={screenshots[0]} alt={name} className='aspect-video object-fit' />
                 </div>
               )}
-              <div role='none' className='flex flex-col gap-2'>
+              <div className='flex flex-col gap-2'>
                 <h2>Resources</h2>
                 <div className='flex gap-2'>
                   {homePage && (
@@ -140,7 +140,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 </div>
               </div>
               {versions && versions.length > 0 && (
-                <div role='none' className='flex flex-col gap-2'>
+                <div className='flex flex-col gap-2'>
                   <h2>{t('versions.label')}</h2>
                   <div className='flex gap-2 items-center'>
                     <Select.Root value={selectedVersionTag} onValueChange={onVersionChange}>
@@ -172,7 +172,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 </div>
               )}
               {(onUninstall || (hasUpdate && onUpdate) || updating) && (
-                <div role='none' className='flex gap-2'>
+                <div className='flex gap-2'>
                   {updating ? (
                     <Button variant='primary' disabled>
                       {t('updating.label')}

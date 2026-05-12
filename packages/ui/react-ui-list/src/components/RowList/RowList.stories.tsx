@@ -79,7 +79,7 @@ const MasterDetailStory = () => {
   const [selected, setSelected] = useState<string | undefined>(allItems[0].id);
   const detail = allItems.find(({ id }) => id === selected);
   return (
-    <div role='none' className='dx-container grid grid-cols-[20rem_1fr] divide-x divide-separator'>
+    <div className='dx-container grid grid-cols-[20rem_1fr] divide-x divide-separator'>
       <RowList.Root selectedId={selected} onSelectChange={setSelected}>
         <RowList.Viewport>
           <RowList.Content aria-label='Items'>

@@ -7,7 +7,7 @@ import React from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
-import { Mailbox } from '@dxos/plugin-inbox/types';
+import { Mailbox } from '@dxos/plugin-inbox';
 import { useQuery } from '@dxos/react-client/echo';
 
 import { type ModuleProps } from './types';

@@ -21,7 +21,7 @@ export const ZenArticle = ({ role, subject: dream, attendableId: _attendableId }
     <Panel.Root role={role} classNames='dx-document'>
       <Panel.Content className='grid grid-rows-[3fr_1fr]'>
         <Mixer dream={dream} engine={engine} />
-        <div role='none' className='flex flex-col p-2'>
+        <div className='flex flex-col p-2'>
           <Oscilloscope mode='waveform' active={playing} source={outputNode} />
         </div>
       </Panel.Content>

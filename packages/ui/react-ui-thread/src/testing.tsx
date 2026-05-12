@@ -46,10 +46,7 @@ export type MessagePartProps<PartValue> = {
 
 export const MessageStoryBlock = <PartValue,>({ part }: MessagePartProps<PartValue>) => {
   return (
-    <div
-      role='none'
-      className={mx('grid grid-cols-subgrid col-span-3', hoverableControls, hoverableFocusedWithinControls)}
-    >
+    <div className={mx('grid grid-cols-subgrid col-span-3', hoverableControls, hoverableFocusedWithinControls)}>
       <pre className='font-mono max-w-full overflow-x-auto col-span-3'>
         <code>{JSON.stringify(part, undefined, 2)}</code>
       </pre>

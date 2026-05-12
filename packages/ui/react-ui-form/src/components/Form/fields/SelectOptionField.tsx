@@ -120,7 +120,7 @@ export const SelectOptionField = ({
   return (
     <Input.Root validationValence={status}>
       <FormFieldLabel error={error} readonly={readonly} label={label} />
-      <div role='none'>
+      <div>
         {options && (
           <List.Root
             items={options}

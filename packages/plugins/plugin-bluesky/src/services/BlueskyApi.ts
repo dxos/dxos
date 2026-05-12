@@ -19,7 +19,7 @@ import * as Schema from 'effect/Schema';
 
 import { type Client } from '@dxos/client';
 import { Database, Obj, type Ref } from '@dxos/echo';
-import { type Integration } from '@dxos/plugin-integration/types';
+import { type Integration } from '@dxos/plugin-integration';
 
 import { BSKY_PUBLIC_API, DEFAULT_FEED_LIMIT } from '../constants';
 import { IntegrationDatabaseMissingError, MissingBlueskyHandleError, PdsResolutionFailedError } from '../errors';

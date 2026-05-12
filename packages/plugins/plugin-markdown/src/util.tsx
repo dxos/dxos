@@ -4,7 +4,7 @@
 
 import { debounce } from '@dxos/async';
 import { Obj } from '@dxos/echo';
-import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
+import { type TypedObjectSerializer } from '@dxos/plugin-space';
 
 import { Markdown } from '#types';
 

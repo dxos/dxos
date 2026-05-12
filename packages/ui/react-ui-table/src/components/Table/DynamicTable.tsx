@@ -96,8 +96,8 @@ export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
   }, [registry, model]);
 
   return (
-    <div role='none' className={mx('dx-expander grid', classNames)}>
-      <div role='none' className='grid min-h-0 overflow-hidden'>
+    <div className={mx('dx-expander grid', classNames)}>
+      <div className='grid min-h-0 overflow-hidden'>
         <Table.Root ref={tableRef}>
           <Table.Content model={model} presentation={presentation} ignoreAttention onRowClick={onRowClick} />
         </Table.Root>

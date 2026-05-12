@@ -13,7 +13,7 @@ import { composable, composableProps } from '@dxos/ui-theme';
 
 import { Chat } from '#components';
 import { useStatus } from '#hooks';
-import { ThreadOperation } from '#operations';
+import { ThreadOperation } from '#types';
 
 export type ChannelChatProps = {
   space: Space;

@@ -18,7 +18,7 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation/hooks';
-import { Graph } from '@dxos/plugin-explorer/types';
+import { Graph } from '@dxos/plugin-explorer';
 import { DropdownMenu, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Text, ViewModel } from '@dxos/schema';

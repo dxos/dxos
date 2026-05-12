@@ -137,7 +137,7 @@ export const EditorMenuProvider = ({
       </Popover.Portal>
 
       {/* Content */}
-      <div role='none' className='contents' ref={setRoot}>
+      <div className='contents' ref={setRoot}>
         {children}
       </div>
     </Popover.Root>

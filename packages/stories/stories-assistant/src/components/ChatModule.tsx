@@ -6,9 +6,9 @@ import React from 'react';
 
 import { Agent } from '@dxos/assistant-toolkit';
 import { Feed, Filter, Obj } from '@dxos/echo';
+import { Assistant } from '@dxos/plugin-assistant';
 import { Chat } from '@dxos/plugin-assistant/components';
 import { useBlueprintRegistry, useChatProcessor, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
-import { Assistant } from '@dxos/plugin-assistant/types';
 import { useComputeRuntime } from '@dxos/plugin-automation/hooks';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, Popover, Toolbar } from '@dxos/react-ui';

@@ -50,7 +50,7 @@ export const ChatOptions = ({
   const { t } = useTranslation(meta.id);
 
   return (
-    <div role='none' className='flex'>
+    <div className='flex'>
       <Popover.Root>
         <Popover.Trigger asChild>
           <IconButton variant='ghost' icon='ph--plus--regular' iconOnly label={t('context-objects.button')} />
@@ -229,7 +229,7 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
       {adding ? (
         <McpServerForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
       ) : (
-        <div role='none'>
+        <div>
           <IconButton
             variant='ghost'
             icon='ph--plus--regular'
@@ -333,7 +333,7 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
           onChange={(event) => setApiKey(event.target.value)}
         />
       </Input.Root>
-      <div role='none' className='flex gap-2'>
+      <div className='flex gap-2'>
         <IconButton
           variant='ghost'
           icon='ph--check--regular'
@@ -418,7 +418,7 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
         </SearchList.Viewport>
       </SearchList.Content>
 
-      <div role='none' className={mx('flex flex-col', styles.toolbar)}>
+      <div className={mx('flex flex-col', styles.toolbar)}>
         <Select.Root value={typename === ANY ? undefined : typename} onValueChange={setTypename}>
           <Select.TriggerButton placeholder={t('type-filter.placeholder')} />
           <Select.Portal>

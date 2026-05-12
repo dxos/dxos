@@ -213,14 +213,12 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     return (
       <>
         {/* Markdown editor. */}
-        <div role='none' className={mx('dx-container', classNames)} ref={parentRef} />
+        <div className={mx('dx-container', classNames)} ref={parentRef} />
 
         {/* React widgets are rendered in portals outside of the editor. */}
         <ErrorBoundary name='markdown-stream'>
           {widgets.map(({ Component, root, id, props }) => (
-            <div key={id} role='none'>
-              {createPortal(<Component view={view} {...props} />, root)}
-            </div>
+            <div key={id}>{createPortal(<Component view={view} {...props} />, root)}</div>
           ))}
           {footerRoot && footerVisible && createPortal(footer, footerRoot)}
         </ErrorBoundary>
