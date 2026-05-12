@@ -68,7 +68,7 @@ const CompanionStory = () => {
   }
 
   return (
-    <div role='none' {...attentionAttrs} className='grid grid-cols-[1fr_1fr]'>
+    <div {...attentionAttrs} className='grid grid-cols-[1fr_1fr]'>
       <Surface.Surface type={AppSurface.Article} data={mailboxData} />
       <Surface.Surface type={AppSurface.Article} data={companionData} />
     </div>

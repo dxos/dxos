@@ -93,7 +93,7 @@ export const MessagePanel = ({
   return (
     <MessageRoot {...messageMetadata} classNames={[hoverableControls, hoverableFocusedWithinControls]}>
       <MessageHeading authorName={messageMetadata.authorName} timestamp={messageMetadata.timestamp}>
-        <div role='none' className={buttonGroupClassNames}>
+        <div className={buttonGroupClassNames}>
           {userIsAuthor && editable && (
             <IconButton
               data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
@@ -191,15 +191,11 @@ const TextboxBlock = ({
     editing && view?.focus();
   }, [editing, view]);
 
-  return <div role='none' ref={parentRef} className='me-4' {...focusAttributes} />;
+  return <div ref={parentRef} className='me-4' {...focusAttributes} />;
 };
 
 const ProposalBlock = ({ block }: { block: ContentBlock.Proposal }) => {
-  return (
-    <div role='none' className='me-4 italic'>
-      {block.text}
-    </div>
-  );
+  return <div className='me-4 italic'>{block.text}</div>;
 };
 
 const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: Obj.Unknown }>(({ subject }, forwardedRef) => {

@@ -36,9 +36,7 @@ const SettingsViewport = composable<HTMLDivElement>(({ children, ...props }, for
   return (
     <ScrollArea.Root {...composableProps(props)} orientation='vertical' centered thin ref={forwardedRef}>
       <ScrollArea.Viewport classNames='px-4 pointer-coarse:px-2'>
-        <div role='none' className='dx-document flex flex-col gap-2 py-4'>
-          {children}
-        </div>
+        <div className='dx-document flex flex-col gap-2 py-4'>{children}</div>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );

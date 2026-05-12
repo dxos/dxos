@@ -43,7 +43,7 @@ const DefaultStory = () => {
 
   const dxn = Obj.getDXN(organization).toString();
   return (
-    <div role='none' className='flex flex-col gap-2 p-4'>
+    <div className='flex flex-col gap-2 p-4'>
       <p>
         Click{' '}
         <DxAnchor className='dx-tag--anchor' dxn={dxn}>

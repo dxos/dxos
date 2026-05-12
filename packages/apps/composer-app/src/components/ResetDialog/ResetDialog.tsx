@@ -133,7 +133,7 @@ export const ResetDialog = ({
             <AlertDialog.Description>{t(error ? error.message : 'reset-dialog.message')}</AlertDialog.Description>
             {error && (
               <>
-                <div role='none'>
+                <div>
                   <div className='flex items-center justify-between py-3'>
                     <IconButton
                       icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
@@ -143,7 +143,7 @@ export const ResetDialog = ({
                       onClick={() => setShowStack((showStack) => !showStack)}
                       data-testid='resetDialog.showStackTrace'
                     />
-                    <div role='none' className='flex items-center gap-1'>
+                    <div className='flex items-center gap-1'>
                       <IconButton
                         icon='ph--clipboard--duotone'
                         iconOnly
@@ -196,7 +196,7 @@ export const ResetDialog = ({
               </DropdownMenu.Root>
             )}
 
-            <div role='none' className='flex-grow' />
+            <div className='flex-grow' />
             {observabilityProp &&
               isNotMobile &&
               (feedbackSent ? (

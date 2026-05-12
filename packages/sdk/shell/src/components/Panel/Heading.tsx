@@ -19,7 +19,7 @@ export type HeadingProps = PropsWithChildren<{
 export const Heading = forwardRef<HTMLDivElement, HeadingProps>(
   ({ children, titleId, title, corner, ssrOnly }, forwardedRef) => {
     return (
-      <div role='none' className='pb-2 relative' ref={forwardedRef}>
+      <div className='pb-2 relative' ref={forwardedRef}>
         {corner}
         <h1
           {...(!ssrOnly && { id: titleId })}

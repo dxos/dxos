@@ -148,7 +148,7 @@ const SurfaceContextProvider = memo(
       if (debug) {
         return (
           <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback}>
-            <div role='none' className='contents' data-id={id} data-role={role}>
+            <div className='contents' data-id={id} data-role={role}>
               <SurfaceContext.Provider value={contextValue}>
                 <SurfaceInfo ref={forwardedRef}>
                   {onProfilerRender && !profilerId.includes('org.dxos.plugin.debug') ? (
@@ -167,7 +167,7 @@ const SurfaceContextProvider = memo(
 
       return (
         <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback}>
-          <div role='none' className='contents' data-id={id} data-role={role}>
+          <div className='contents' data-id={id} data-role={role}>
             <SurfaceContext.Provider value={contextValue}>
               <Component id={id} role={role} data={data} limit={limit} {...rest} ref={forwardedRef} />
             </SurfaceContext.Provider>

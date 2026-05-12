@@ -101,9 +101,9 @@ const MessageTitle = forwardRef<HTMLHeadingElement, MessageTitleProps>(
     const { titleId, valence } = useMessageContext(MESSAGE_TITLE_NAME);
     const icon = iconProp ?? messageIcons[valence];
     return (
-      <div role='none' className={tx('message.header', {}, classNames)} id={titleId} ref={forwardedRef}>
+      <div className={tx('message.header', {}, classNames)} id={titleId} ref={forwardedRef}>
         {icon && (
-          <div role='none' className={tx('message.icon', { valence })}>
+          <div className={tx('message.icon', { valence })}>
             <Icon icon={icon} />
           </div>
         )}

@@ -31,7 +31,7 @@ export const FeedbackForm = ({ onSave, disabled, onDownloadLogs }: FeedbackFormP
           <Form.FieldSet />
           <Form.Submit icon='ph--paper-plane-tilt--regular' label={t('send-feedback.label')} disabled={disabled} />
           {onDownloadLogs && (
-            <div role='none' className='flex w-full pt-form-padding'>
+            <div className='flex w-full pt-form-padding'>
               <IconButton
                 classNames='w-full'
                 type='button'

@@ -201,7 +201,7 @@ const CardIconBlock = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChildr
     const { tx } = useThemeContext();
 
     return (
-      <div {...props} role='none' className={tx('card.icon-block', { padding }, classNames)} ref={forwardedRef}>
+      <div {...props} className={tx('card.icon-block', { padding }, classNames)} ref={forwardedRef}>
         {children}
       </div>
     );
@@ -371,7 +371,6 @@ const CardHtml = ({ html, variant = 'default', ...props }: CardHtmlProps & Theme
   return (
     <div
       {...props}
-      role='none'
       className={tx('card.text', { variant })}
       // eslint-disable-next-line react/no-danger
       dangerouslySetInnerHTML={{ __html: sanitized }}
@@ -407,7 +406,7 @@ const CardPoster = (props: CardPosterProps) => {
 
   if (props.image) {
     return (
-      <div role='none' className='col-span-full'>
+      <div className='col-span-full'>
         <Image
           classNames={[tx('card.poster', {}), aspect, props.classNames]}
           src={props.image}

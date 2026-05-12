@@ -78,17 +78,17 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
         </Panel.Toolbar>
         <Panel.Content>
           <ChatComponent.Content>
-            <div role='none' className='dx-container relative'>
+            <div className='dx-container relative'>
               <ChatComponent.Thread viewType={view} />
               {view !== 'summary' && (
-                <div role='none' className='absolute bottom-2 left-0 right-0'>
-                  <div role='none' className='dx-document px-4'>
+                <div className='absolute bottom-2 left-0 right-0'>
+                  <div className='dx-document px-4'>
                     <ChatComponent.Status classNames='px-3 rounded-sm bg-group-surface' />
                   </div>
                 </div>
               )}
             </div>
-            <div role='none' className='dx-document px-4 pb-4'>
+            <div className='dx-document px-4 pb-4'>
               <ChatComponent.Prompt
                 {...chatProps}
                 outline

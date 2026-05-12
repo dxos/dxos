@@ -127,8 +127,8 @@ export const Chat = ({ classNames, host, url, onClip }: ChatProps) => {
   return (
     <div className={mx('flex flex-col bg-base-surface', classNames)}>
       {/* TODO(burdon): Replace with chat from plugin-assistant. */}
-      <div role='none' className='flex flex-col'>
-        <div role='none' className='flex relative items-center'>
+      <div className='flex flex-col'>
+        <div className='flex relative items-center'>
           <Input.Root>
             <Input.TextInput
               ref={inputRef}

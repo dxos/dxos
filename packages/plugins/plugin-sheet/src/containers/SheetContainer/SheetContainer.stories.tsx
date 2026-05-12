@@ -92,7 +92,7 @@ export const Spec = () => {
 
   return (
     <AttendableContainer id={Obj.getDXN(sheet).toString()} classNames='contents'>
-      <div role='none' className='w-full grid grid-cols-[1fr_20rem]'>
+      <div className='w-full grid grid-cols-[1fr_20rem]'>
         <SheetContainer
           role='article'
           space={space}
@@ -101,7 +101,7 @@ export const Spec = () => {
           registry={registry}
           ignoreAttention
         />
-        <div role='none' data-testid='grid.range-list'>
+        <div data-testid='grid.range-list'>
           <RangeList sheet={sheet} />
         </div>
       </div>

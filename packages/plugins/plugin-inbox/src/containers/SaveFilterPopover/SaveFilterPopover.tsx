@@ -26,8 +26,8 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
   }, [mailbox, name, filter, invokePromise]);
 
   return (
-    <div role='none' className='p-2 flex gap-2'>
-      <div role='none' className='flex-1'>
+    <div className='p-2 flex gap-2'>
+      <div className='flex-1'>
         <Input.Root>
           <Input.Label srOnly>{t('saved-filter-name.label')}</Input.Label>
           <Input.TextInput

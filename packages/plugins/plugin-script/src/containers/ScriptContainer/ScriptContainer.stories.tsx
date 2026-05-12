@@ -58,7 +58,7 @@ const DefaultStory = (_: DefaultStoryProps) => {
   }
 
   return (
-    <div role='none' className='flex flex-col min-h-[80vh] w-document-max-width'>
+    <div className='flex flex-col min-h-[80vh] w-document-max-width'>
       <ScriptContainer role='article' subject={script} attendableId='story-script' />
     </div>
   );
