@@ -76,7 +76,9 @@ export const DxTsgoPlugin = (): Plugin => ({
   closeBundle() {
     const result = spawnSync('pnpm', ['exec', 'dx-build'], { stdio: 'inherit' });
     if (result.status !== 0) {
-      throw new Error('dx-build (tsgo) failed');
+      throw new Error(
+        `dx-build (tsgo) failed: status=${result.status} signal=${result.signal} error=${result.error?.message ?? 'none'} cwd=${process.cwd()}`,
+      );
     }
   },
 });
