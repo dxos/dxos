@@ -9,7 +9,7 @@ import type { Database, Key, Obj, Ref } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-/** Result of {@link IntegrationCoordinator.createIntegration}: OAuth draft (`oauth-started`), custom dialog (`dialog-opened`; finish via {@link IntegrationCoordinator.createCustomIntegration}), or unused sync persist (`integration-created`). */
+/** Result of {@link IntegrationCoordinator.createIntegration}: OAuth draft (`oauth-started`), custom dialog or login-hint dialog (`dialog-opened`), or unused sync persist (`integration-created`). */
 export type CreateIntegrationResult =
   | { kind: 'oauth-started'; draftIntegrationId: string }
   | { kind: 'dialog-opened' }
@@ -23,7 +23,12 @@ export type CreateCustomIntegrationResult = { kind: 'integration-created'; integ
  */
 export type IntegrationCoordinator = {
   /**
-   * Create flow entry: OAuth → in-memory stubs + popup, persist on callback; non-OAuth → `CUSTOM_TOKEN_DIALOG`, then {@link createCustomIntegration}. `providerId` selects the registry entry stored on the Integration.
+   * Create flow entry: OAuth → in-memory stubs + popup, persist on callback; non-OAuth → `PROVIDER_FORM_DIALOG`, then {@link createCustomIntegration}. `providerId` selects the registry entry stored on the Integration.
+   * Providers with `oauth.requiresLoginHint` open `OAUTH_LOGIN_HINT_DIALOG`
+   * unless a `loginHint` is supplied. Providers with
+   * `oauth.useRedirectFlow` persist the pending entry to `localStorage`
+   * and open the auth URL in a new tab; finalize runs in the new tab via
+   * the `/redirect/oauth` NavigationHandler.
    */
   createIntegration: (input: {
     db: Database.Database;
@@ -31,8 +36,10 @@ export type IntegrationCoordinator = {
     providerId: string;
     /** Optional first target ref when starting from an existing surface (e.g. mailbox/calendar); forwarded to `onTokenCreated` and sync-target UI. */
     existingTarget?: Ref.Ref<Obj.Unknown>;
+    /** Provider-specific hint forwarded to Edge as `loginHint` (atproto handle / DID). */
+    loginHint?: string;
   }) => Effect.Effect<CreateIntegrationResult, Error>;
-  /** Persist manual token + Integration after `CUSTOM_TOKEN_DIALOG`; same finalize path as OAuth (`AccessTokenCreated`, navigation). */
+  /** Persist manual token + Integration after `PROVIDER_FORM_DIALOG`; same finalize path as OAuth (`AccessTokenCreated`, navigation). */
   createCustomIntegration: (input: {
     db: Database.Database;
     providerId: string;
@@ -41,6 +48,25 @@ export type IntegrationCoordinator = {
     token: string;
     name?: string;
   }) => Effect.Effect<CreateCustomIntegrationResult, Error>;
+  /**
+   * Form-driven submit dispatched from the generic provider-form dialog.
+   * Looks up the provider, runs `provider.credentialForm.onSubmit`, and
+   * branches on the result: `complete` finalizes directly (non-OAuth);
+   * `oauth` re-enters {@link createIntegration} with `loginHint`.
+   */
+  submitCredentialForm: (input: {
+    db: Database.Database;
+    spaceId: Key.SpaceId;
+    providerId: string;
+    values: unknown;
+  }) => Effect.Effect<CreateIntegrationResult, Error>;
+  /**
+   * Finalize a redirect-flow OAuth callback received via `/redirect/oauth`.
+   * Restores the pending entry from `localStorage`, builds the
+   * `AccessToken` + `Integration`, and runs the standard finalize path.
+   * Called by the plugin-integration NavigationHandler.
+   */
+  finalizeRedirectFlow: (input: { accessTokenId: string; accessToken: string }) => Effect.Effect<void, Error>;
 };
 
 export const IntegrationCoordinator = Capability.make<IntegrationCoordinator>(

@@ -101,6 +101,14 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: moon run :lint :build
 
+      - name: Check module structure (affected)
+        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        run: moon run :check-module-structure --affected remote
+
+      - name: Check module structure (all)
+        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        run: moon run :check-module-structure
+
       - name: Check for peer dependency issues
         run: pnpm install --resolution-only --no-frozen-lockfile
 

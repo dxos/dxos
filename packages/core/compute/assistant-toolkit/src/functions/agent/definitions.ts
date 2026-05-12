@@ -7,13 +7,15 @@ import * as Schema from 'effect/Schema';
 import { AiService, OpaqueToolkit, ModelName } from '@dxos/ai';
 import { Routine, Trace, Operation, OperationRegistry } from '@dxos/compute';
 import { Database, Feed, Ref } from '@dxos/echo';
+import { Text } from '@dxos/schema';
 
 import * as Chat from '../../types/Chat';
 
+// TODO(dmaretskyi): Rename to RunRoutine.
 export const AgentPrompt = Operation.make({
   meta: {
     key: 'org.dxos.function.prompt',
-    name: 'Agent',
+    name: 'Run Routine',
     description: 'Agentic worker that executes a provided prompt using blueprints and tools.',
   },
   input: Schema.Struct({
@@ -40,6 +42,9 @@ export const AgentPrompt = Operation.make({
     }),
   }),
   output: Schema.Any,
+  // ECHO types that the handler loads via Database.load(). Declaring them here ensures the
+  // runtime registers their schema before remote invocation (e.g. via the EDGE function service).
+  types: [Routine.Routine, Text.Text, Feed.Feed, Chat.Chat],
   services: [
     AiService.AiService,
     Database.Service,
@@ -48,4 +53,4 @@ export const AgentPrompt = Operation.make({
     OperationRegistry.Service,
     Trace.TraceService,
   ],
-});
+}).pipe(Operation.intrinsic);

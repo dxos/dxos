@@ -14,6 +14,7 @@ import { RuntimeProvider } from '@dxos/effect';
 import { type FeedStore, SyncClient } from '@dxos/feed';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 import { EdgeService } from '@dxos/protocols';
 import { createBuf } from '@dxos/protocols/buf';
@@ -113,6 +114,10 @@ export class FeedSyncer extends Resource {
         if (service !== EdgeService.QUEUE_REPLICATOR) {
           return;
         }
+        log('feed sync edge ingress', {
+          serviceId: msg.serviceId,
+          payloadByteLength: msg.payload?.value?.byteLength,
+        });
         const handleMessageEffect = Effect.gen(this, function* () {
           const decoded = yield* Effect.try({
             try: () => cborXdecode(msg.payload!.value),
@@ -120,7 +125,17 @@ export class FeedSyncer extends Resource {
           });
           const payload = yield* Schema.validate(FeedProtocol.ProtocolMessage)(decoded);
           yield* this.#syncClient.handleMessage(payload);
-        });
+        }).pipe(
+          Effect.tapError((cause) =>
+            Effect.sync(() =>
+              log('feed sync edge message handling failed', {
+                serviceId: msg.serviceId,
+                payloadByteLength: msg.payload?.value?.byteLength,
+                cause: cause instanceof Error ? cause.message : String(cause),
+              }),
+            ),
+          ),
+        );
 
         void RuntimeProvider.runPromise(this.#runtime)(handleMessageEffect);
       }),
@@ -128,7 +143,12 @@ export class FeedSyncer extends Resource {
 
     this._ctx.onDispose(
       // NOTE: This will fire immediately if the connection is already open.
-      this.#edgeClient.onReconnected(async () => {}),
+      this.#edgeClient.onReconnected(async () => {
+        log('feed sync edge reconnected', {
+          peerKey: this.#edgeClient.peerKey,
+          identityKey: this.#edgeClient.identityKey,
+        });
+      }),
     );
 
     this.#feedStore.onNewBlocks.on(this._ctx, () => {
@@ -242,6 +262,16 @@ export class FeedSyncer extends Resource {
   ): Effect.Effect<void, unknown, never> {
     return Effect.gen(this, function* () {
       const encoded = encoder.encode(message);
+      const serviceId = this.#getTargetServiceId(message);
+      const rpcTag = 'blocks' in message ? 'AppendRequest' : 'QueryRequest';
+      log('feed sync edge rpc outgoing', {
+        tag: rpcTag,
+        serviceId,
+        payloadByteLength: encoded.byteLength,
+        spaceId: message.spaceId,
+        feedNamespace: message.feedNamespace,
+        requestId: message.requestId,
+      });
       yield* Effect.tryPromise(async () =>
         this.#edgeClient.send(
           ctx,
@@ -250,9 +280,19 @@ export class FeedSyncer extends Resource {
               identityKey: this.#edgeClient.identityKey,
               peerKey: this.#edgeClient.peerKey,
             },
-            serviceId: this.#getTargetServiceId(message),
+            serviceId,
             payload: { value: bufferToArray(encoded) },
           }),
+        ),
+      ).pipe(
+        Effect.tapError((cause) =>
+          Effect.sync(() =>
+            log('feed sync edge send failed', {
+              serviceId,
+              tag: rpcTag,
+              cause: cause instanceof Error ? cause.message : String(cause),
+            }),
+          ),
         ),
       );
     });

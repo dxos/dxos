@@ -129,6 +129,9 @@ const importMapExcludedSubpaths: Readonly<Record<string, ReadonlySet<string>>> =
   // `node:async_hooks` (AsyncLocalStorage) and has no browser shim. Client
   // code imports `solid-js`, `solid-js/store`, and `solid-js/web` only.
   'solid-js': new Set(['web/storage']),
+  // `effect` publishes `./.index` for bundler internals — maps to `effect/.index`, which Vite
+  // often cannot resolve for the import map and is not part of the plugin-facing surface.
+  effect: new Set(['.index']),
 };
 
 /**

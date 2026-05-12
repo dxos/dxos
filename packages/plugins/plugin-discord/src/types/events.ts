@@ -3,7 +3,7 @@
 //
 
 import { type ActivationEvent } from '@dxos/app-framework';
-import { AppActivationEvents } from '@dxos/app-toolkit';
+import { AppActivationEvents } from '@dxos/app-toolkit/events';
 
 import { DiscordCapabilities } from './capabilities';
 

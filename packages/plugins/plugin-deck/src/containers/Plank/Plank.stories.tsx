@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
+import { AppActivationEvents } from '@dxos/app-toolkit/events';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';

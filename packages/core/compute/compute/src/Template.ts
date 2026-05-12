@@ -6,13 +6,13 @@
 
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import handlebars from 'handlebars';
 
 import { Database, Ref } from '@dxos/echo';
 import type { ObjectNotFoundError } from '@dxos/echo/Err';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
+import Handlebars from '@dxos/vendor-kbn-handlebars';
 
 import { FunctionNotFoundError } from './errors';
 import * as Operation from './Operation';
@@ -78,8 +78,9 @@ export const make = ({ id, source, inputs = [] }: MakeProps = {}): Template => (
 export const process = <Options extends {}>(source: string, variables: Partial<Options> = {}): string => {
   invariant(typeof source === 'string');
   let section = 0;
+  const handlebars = Handlebars.create();
   handlebars.registerHelper('section', () => String(++section));
-  const template = handlebars.compile(source.trim());
+  const template = handlebars.compileAST(source.trim());
   const output = template(variables);
   return output.trim().replace(/(\n\s*){3,}/g, '\n\n');
 };

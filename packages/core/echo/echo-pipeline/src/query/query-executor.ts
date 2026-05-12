@@ -226,7 +226,7 @@ declare global {
   }
 }
 
-const TRACE_QUERY_EXECUTION = !!import.meta.env.DX_TRACE_QUERY_EXECUTION;
+const TRACE_QUERY_EXECUTION = !!import.meta.env?.DX_TRACE_QUERY_EXECUTION;
 
 const MAX_DEPTH_FOR_DELETION_TRACING = 10;
 const MAX_DEPTH_FOR_CHILD_OF_TRACING = 10;
@@ -1509,7 +1509,7 @@ export class QueryExecutor extends Resource {
       return null;
     }
     const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, meta.documentId as DocumentId, {
-      fetchFromNetwork: true,
+      fetchFromNetwork: false,
     });
     const doc = handle.doc();
     if (!doc) {
@@ -1573,7 +1573,7 @@ export class QueryExecutor extends Resource {
         }
 
         const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, link as AutomergeUrl, {
-          fetchFromNetwork: true,
+          fetchFromNetwork: false,
         });
         const doc = handle.doc();
         if (!doc) {

@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Node } from '@dxos/plugin-graph';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Node } from '@dxos/app-graph';
+import { linkedSegment } from '@dxos/react-ui-attention/types';
 
 /** Well-known local segment names (private — use the path helpers below). */
 const Segments = {

@@ -33,7 +33,7 @@ export const AgentWorker = Operation.make({
     Trace.TraceService,
     OpaqueToolkit.OpaqueToolkitProvider,
   ],
-});
+}).pipe(Operation.intrinsic);
 
 export const Qualifier = Operation.make({
   meta: {
@@ -48,7 +48,7 @@ export const Qualifier = Operation.make({
   }),
   output: Schema.Void,
   services: [AiService.AiService, Database.Service],
-});
+}).pipe(Operation.intrinsic);
 
 export const GetContext = Operation.make({
   meta: {
@@ -71,7 +71,7 @@ export const GetContext = Operation.make({
     ),
   }),
   services: [AiContextService, Database.Service],
-});
+}).pipe(Operation.intrinsic);
 
 export const AddArtifact = Operation.make({
   meta: {
@@ -89,4 +89,4 @@ export const AddArtifact = Operation.make({
   }),
   output: Schema.Void,
   services: [AiContextService, Database.Service],
-});
+}).pipe(Operation.intrinsic);
