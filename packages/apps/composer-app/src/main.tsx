@@ -76,7 +76,6 @@ const bootStatus = (text: string) => window.__bootLoader?.status({ humanized: te
 // time, so the whole block tree-shakes out of prod bundles.
 const BOOT_ID = import.meta.env?.DEV ? Math.random().toString(36).slice(2, 10) : '';
 const MODULE_EVAL_TIME = Date.now();
-
 if (import.meta.env?.DEV) {
   log('composer main: module evaluated', { bootId: BOOT_ID, t: MODULE_EVAL_TIME });
   const importMeta = import.meta as any;
