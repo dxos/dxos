@@ -42,6 +42,12 @@ type SocketEvents =
   | 'timeout'
   | 'drain';
 
+// `readable-stream`'s Duplex extends EventEmitter at runtime, but its
+// type definitions don't always re-export the EventEmitter surface — we
+// declare it locally so this class can call `emit`, `on`, etc.
+interface TauriSocket extends Duplex {
+  emit(event: string | symbol, ...args: unknown[]): boolean;
+}
 class TauriSocket extends Duplex {
   #handle: number | undefined;
   #host: string = '';
@@ -106,7 +112,7 @@ class TauriSocket extends Duplex {
     return this;
   }
 
-  _write(chunk: Buffer | Uint8Array | string, _encoding: string, callback: (err?: Error) => void): void {
+  override _write(chunk: Buffer | Uint8Array | string, _encoding: string, callback: (err?: Error) => void): void {
     if (this.#handle === undefined) {
       callback(new Error('Socket is not connected.'));
       return;
@@ -117,11 +123,11 @@ class TauriSocket extends Duplex {
       .catch((err) => callback(err instanceof Error ? err : new Error(String(err))));
   }
 
-  _read(): void {
+  override _read(): void {
     // Push happens inside the channel onmessage callback.
   }
 
-  _destroy(err: Error | null, callback: (err: Error | null) => void): void {
+  override _destroy(err: Error | null, callback: (err: Error | null) => void): void {
     this.#destroyed = true;
     if (this.#handle !== undefined) {
       void invoke('net_tcp_close', { handle: this.#handle }).catch(() => {});
@@ -159,7 +165,8 @@ class TauriSocket extends Duplex {
     return this.#connecting;
   }
 
-  get destroyed(): boolean {
+  /** Mirror `node:net.Socket.destroyed`. Tracked alongside Duplex's own flag. */
+  get destroyedFlag(): boolean {
     return this.#destroyed;
   }
 }

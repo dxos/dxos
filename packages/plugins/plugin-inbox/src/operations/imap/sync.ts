@@ -6,6 +6,8 @@ import { subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Credential, Trace } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -90,8 +92,7 @@ export default ImapSync.pipe(
       Effect.provide(
         Layer.mergeAll(
           InboxResolver.Live,
-          ImapLive,
-          ImapCredentials.fromIntegration(integrationRef),
+          Layer.provide(ImapLive, ImapCredentials.fromIntegration(integrationRef)),
         ),
       ),
     ),
@@ -190,7 +191,7 @@ const updateTargetMetadata = (
       next[targetIndex] = {
         ...next[targetIndex],
         cursor,
-        lastSyncAt: new Date(),
+        lastSyncAt: new Date().toISOString(),
       };
       (mutable as Obj.Mutable<typeof mutable>).targets = next;
     });

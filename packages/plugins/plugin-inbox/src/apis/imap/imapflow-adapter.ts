@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import type { Credential } from '@dxos/compute';
 import { log } from '@dxos/log';
 
 import {
@@ -155,43 +156,59 @@ const makeConnection = (client: any): ImapConnection => ({
  * Cloudflare's `nodejs_compat` polyfill on Workers, the in-tree shim on
  * Tauri, nothing in plain browsers (where the import will fail and the
  * adapter surfaces `ImapError({ reason: 'unavailable' })`).
+ *
+ * Credentials are resolved when the Layer is built (`Layer.effect` captures
+ * `ImapCredentials` at construction time), so `Imap.connect()` Effects only
+ * expose `Scope.Scope` in their requirement channel — much friendlier to
+ * the operation framework's strict service typing.
  */
-export const ImapLive: Layer.Layer<Imap, never, ImapCredentials> = Layer.succeed(Imap, {
-  connect: () =>
-    Effect.gen(function* () {
-      const auth = yield* ImapCredentials.get();
-      const client = yield* Effect.acquireRelease(
-        Effect.tryPromise({
-          try: async () => {
-            // Lazy import: keeps `imapflow` out of bundles that never call
-            // `connect` (e.g. plain-browser sessions hitting the credential
-            // form's unavailability branch).
-            const { ImapFlow } = (await import('imapflow')) as { ImapFlow: any };
-            const c = new ImapFlow({
-              host: auth.host,
-              port: auth.port,
-              secure: auth.secure,
-              auth: { user: auth.username, pass: readPassword(auth) },
-              logger: false,
-              emitLogs: false,
-            });
-            await c.connect();
-            return c;
-          },
-          catch: mapError,
+export const ImapLive: Layer.Layer<Imap, ImapError, ImapCredentials | Credential.CredentialsService> = Layer.effect(
+  Imap,
+  Effect.gen(function* () {
+    // Resolve auth eagerly when the layer is built so the resulting service
+    // surface (`Imap.connect`) doesn't leak `CredentialsService` /
+    // `ImapCredentials` into the requirement channel. Layers are built once
+    // per operation invocation, so this matches the credential lifetime
+    // already established by `ImapCredentials.fromIntegration(...)`.
+    const credentials = yield* ImapCredentials;
+    const auth = yield* credentials.get();
+    return {
+      connect: () =>
+        Effect.gen(function* () {
+          const client = yield* Effect.acquireRelease(
+            Effect.tryPromise({
+              try: async () => {
+                // Lazy import: keeps `imapflow` out of bundles that never
+                // call `connect` (e.g. plain-browser sessions hitting the
+                // credential form's unavailability branch).
+                const { ImapFlow } = (await import('imapflow')) as { ImapFlow: any };
+                const c = new ImapFlow({
+                  host: auth.host,
+                  port: auth.port,
+                  secure: auth.secure,
+                  auth: { user: auth.username, pass: readPassword(auth) },
+                  logger: false,
+                  emitLogs: false,
+                });
+                await c.connect();
+                return c;
+              },
+              catch: mapError,
+            }),
+            (client) =>
+              Effect.promise(async () => {
+                try {
+                  await client.logout();
+                } catch (cause) {
+                  log.warn('imapflow logout failed', { cause });
+                  try {
+                    await client.close();
+                  } catch {}
+                }
+              }),
+          );
+          return makeConnection(client);
         }),
-        (client) =>
-          Effect.promise(async () => {
-            try {
-              await client.logout();
-            } catch (cause) {
-              log.warn('imapflow logout failed', { cause });
-              try {
-                await client.close();
-              } catch {}
-            }
-          }),
-      );
-      return makeConnection(client);
-    }),
-});
+    };
+  }),
+);

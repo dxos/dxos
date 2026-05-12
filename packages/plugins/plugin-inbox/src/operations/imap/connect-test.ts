@@ -5,6 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
 
@@ -34,7 +36,7 @@ export default ImapTestConnection.pipe(
       };
     }).pipe(
       Effect.scoped,
-      Effect.provide(Layer.mergeAll(ImapLive, ImapCredentials.fromIntegration(integrationRef))),
+      Effect.provide(Layer.provide(ImapLive, ImapCredentials.fromIntegration(integrationRef))),
       Effect.catchTag('ImapError', (error) =>
         Effect.succeed({
           ok: false as const,

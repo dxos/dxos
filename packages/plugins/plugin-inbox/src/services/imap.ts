@@ -9,9 +9,6 @@ import * as Redacted from 'effect/Redacted';
 import type * as Scope from 'effect/Scope';
 import * as Schema from 'effect/Schema';
 
-import type { Credential } from '@dxos/compute';
-
-import { ImapCredentials } from './imap-credentials';
 
 /** Auth + connection settings for an IMAP session. */
 export class ImapAuth extends Schema.Class<ImapAuth>('ImapAuth')({
@@ -78,14 +75,10 @@ export interface ImapConnection {
 export type ImapServiceShape = {
   /**
    * Acquire an authenticated IMAP session. Scope-managed; the session is
-   * closed on scope exit. Credentials come from `ImapCredentials` so callers
-   * never pass them explicitly.
+   * closed on scope exit. Credentials are bound at the Layer level, so
+   * callers see only `Scope.Scope` in the requirement channel.
    */
-  readonly connect: () => Effect.Effect<
-    ImapConnection,
-    ImapError,
-    Scope.Scope | ImapCredentials | Credential.CredentialsService
-  >;
+  readonly connect: () => Effect.Effect<ImapConnection, ImapError, Scope.Scope>;
 };
 
 /**
