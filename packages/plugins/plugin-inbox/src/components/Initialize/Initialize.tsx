@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type Obj } from '@dxos/echo';
-import { Message } from '@dxos/react-ui';
+import { Icon } from '@dxos/react-ui';
 import { composable } from '@dxos/ui-theme';
 
 import { InitializeEmpty } from './InitializeEmpty';
@@ -36,12 +36,16 @@ export const Initialize = composable<HTMLDivElement, InitializeProps<any>>(
     return (
       <InitializeEmpty {...props} ref={forwardedRef}>
         {message && (
-          // `w-fit` constrains Message.Root so its inner `justify-between`
-          // header doesn't leave trailing whitespace for an absent action
-          // slot — see Message.Title's optional `onClose` button.
-          <Message.Root valence='warning' classNames='w-fit'>
-            <Message.Title>{message}</Message.Title>
-          </Message.Root>
+          // Mirrors `Message.Root` (warning valence) without the third
+          // grid column it reserves for an optional close-button, which
+          // showed up here as trailing whitespace.
+          <div
+            role='alert'
+            className='inline-flex items-center gap-2 rounded-sm px-2 py-1 font-medium text-warning-text border-warning-text bg-warning-surface'
+          >
+            <Icon icon='ph--warning--duotone' size={4} />
+            <span>{message}</span>
+          </div>
         )}
       </InitializeEmpty>
     );
