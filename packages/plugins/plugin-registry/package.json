@@ -18,12 +18,16 @@
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
-    "#translations": "./src/translations.ts",
     "#plugin": {
-      "browser": "./src/RegistryPlugin.tsx",
-      "node": "./src/RegistryPlugin.node.ts",
-      "default": "./src/RegistryPlugin.tsx"
+      "source": {
+        "node": "./src/RegistryPlugin.node.ts",
+        "default": "./src/RegistryPlugin.tsx"
+      },
+      "types": "./dist/types/src/RegistryPlugin.d.ts",
+      "node": "./dist/lib/RegistryPlugin.node.mjs",
+      "default": "./dist/lib/RegistryPlugin.mjs"
     },
+    "#translations": "./src/translations.ts",
     "#types": "./src/types.ts"
   },
   "exports": {
@@ -31,9 +35,9 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./cli": {
-      "types": "./dist/types/src/cli/index.d.ts",
-      "import": "./dist/lib/cli.mjs"
+    "./plugin": {
+      "types": "./dist/types/src/plugin.d.ts",
+      "import": "./dist/lib/plugin.mjs"
     },
     "./translations": {
       "types": "./dist/types/src/translations.d.ts",

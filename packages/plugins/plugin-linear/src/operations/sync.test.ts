@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
-import { Integration } from '@dxos/plugin-integration/types';
+import { Integration } from '@dxos/plugin-integration';
 import { AccessToken, Project, Task } from '@dxos/types';
 
 import { LINEAR_SOURCE } from '../constants';

@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './capabilities';
-export * from './events';
+export * as SimpleLayoutCapabilities from './SimpleLayoutCapabilities';
+export * as SimpleLayoutEvents from './SimpleLayoutEvents';

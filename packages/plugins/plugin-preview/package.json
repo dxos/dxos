@@ -13,14 +13,30 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#capabilities": "./src/capabilities/index.ts",
-    "#meta": "./src/meta.ts",
-    "#plugin": {
-      "browser": "./src/PreviewPlugin.tsx",
-      "node": "./src/PreviewPlugin.node.ts",
-      "default": "./src/PreviewPlugin.tsx"
+    "#capabilities": {
+      "source": "./src/capabilities/index.ts",
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "default": "./dist/lib/capabilities.mjs"
     },
-    "#translations": "./src/translations.ts"
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/meta.mjs"
+    },
+    "#plugin": {
+      "source": {
+        "node": "./src/PreviewPlugin.node.ts",
+        "default": "./src/PreviewPlugin.tsx"
+      },
+      "types": "./dist/types/src/PreviewPlugin.d.ts",
+      "node": "./dist/lib/PreviewPlugin.node.mjs",
+      "default": "./dist/lib/PreviewPlugin.mjs"
+    },
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    }
   },
   "exports": {
     ".": {
@@ -30,6 +46,10 @@
     "./plugin": {
       "types": "./dist/types/src/plugin.d.ts",
       "import": "./dist/lib/plugin.mjs"
+    },
+    "./testing": {
+      "types": "./dist/types/src/testing.d.ts",
+      "import": "./dist/lib/testing.mjs"
     },
     "./translations": {
       "types": "./dist/types/src/translations.d.ts",

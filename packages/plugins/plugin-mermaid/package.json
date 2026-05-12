@@ -13,13 +13,25 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": "./src/MermaidPlugin.tsx",
-    "#meta": "./src/meta.ts"
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/meta.mjs"
+    },
+    "#plugin": {
+      "source": "./src/MermaidPlugin.tsx",
+      "types": "./dist/types/src/MermaidPlugin.d.ts",
+      "default": "./dist/lib/MermaidPlugin.mjs"
+    }
   },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./plugin": {
+      "types": "./dist/types/src/plugin.d.ts",
+      "import": "./dist/lib/plugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

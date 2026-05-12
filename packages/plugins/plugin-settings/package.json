@@ -1,6 +1,7 @@
 {
   "name": "@dxos/plugin-settings",
   "version": "0.8.3",
+  "private": true,
   "description": "DXOS Settings plugin for managing application settings.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -13,10 +14,10 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": "./src/SettingsPlugin.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#plugin": "./src/SettingsPlugin.ts",
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
   },
@@ -29,13 +30,13 @@
       "types": "./dist/types/src/plugin.d.ts",
       "import": "./dist/lib/plugin.mjs"
     },
+    "./testing": {
+      "types": "./dist/types/src/testing.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
     "./translations": {
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    },
-    "./types": {
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -59,8 +60,5 @@
   "peerDependencies": {
     "effect": "catalog:",
     "react": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

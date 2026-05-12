@@ -52,7 +52,6 @@ export const GraphModule = ({ space }: ComponentProps) => {
 
       {open && (
         <div
-          role='none'
           className={mx(
             'flex absolute left-2 right-2 bottom-2 h-[8rem]',
             'overflow-hidden bg-base-surface border border-subdued-separator opacity-80',
@@ -62,7 +61,7 @@ export const GraphModule = ({ space }: ComponentProps) => {
         </div>
       )}
 
-      <div role='none' className='absolute bottom-4 right-4 z-10'>
+      <div className='absolute bottom-4 right-4 z-10'>
         <IconButton
           variant='ghost'
           icon={open ? 'ph--x--regular' : 'ph--arrow-line-up--regular'}

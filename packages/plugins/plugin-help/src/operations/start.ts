@@ -7,10 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Capabilities } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 
-import { HelpCapabilities } from '../types';
-import { Start } from './definitions';
+import { HelpCapabilities, HelpOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof Start> = Start.pipe(
+const handler: Operation.WithHandler<typeof HelpOperation.Start> = HelpOperation.Start.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       yield* Capabilities.updateAtomValue(HelpCapabilities.State, (state) => ({ ...state, running: true }));

@@ -9,6 +9,7 @@ export default defineConfig({
     index: 'src/index.ts',
     MermaidPlugin: 'src/MermaidPlugin.tsx',
     meta: 'src/meta.ts',
+    plugin: 'src/plugin.ts',
   },
   jsx: 'react',
   test: { node: { environment: 'happy-dom' }, storybook: true },

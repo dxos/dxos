@@ -13,39 +13,63 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#blueprints": "./src/blueprints/index.ts",
-    "#capabilities": "./src/capabilities/index.ts",
-    "#containers": "./src/containers/index.ts",
-    "#meta": "./src/meta.ts",
-    "#operations": "./src/operations/index.ts",
-    "#plugin": {
-      "browser": "./src/TablePlugin.tsx",
-      "node": "./src/TablePlugin.node.ts",
-      "default": "./src/TablePlugin.tsx"
+    "#blueprints": {
+      "source": "./src/blueprints/index.ts",
+      "types": "./dist/types/src/blueprints/index.d.ts",
+      "default": "./dist/lib/blueprints.mjs"
     },
-    "#translations": "./src/translations.ts",
-    "#types": "./src/types/index.ts"
+    "#capabilities": {
+      "source": "./src/capabilities/index.ts",
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "default": "./dist/lib/capabilities.mjs"
+    },
+    "#containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "default": "./dist/lib/containers.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/meta.mjs"
+    },
+    "#operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "default": "./dist/lib/operations.mjs"
+    },
+    "#plugin": {
+      "source": {
+        "node": "./src/TablePlugin.node.ts",
+        "default": "./src/TablePlugin.tsx"
+      },
+      "types": "./dist/types/src/TablePlugin.d.ts",
+      "node": "./dist/lib/TablePlugin.node.mjs",
+      "default": "./dist/lib/TablePlugin.mjs"
+    },
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
+    }
   },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./blueprints": {
-      "types": "./dist/types/src/blueprints/index.d.ts",
-      "import": "./dist/lib/blueprints.mjs"
-    },
-    "./operations": {
-      "types": "./dist/types/src/operations/index.d.ts",
-      "import": "./dist/lib/operations.mjs"
+    "./plugin": {
+      "types": "./dist/types/src/plugin.d.ts",
+      "import": "./dist/lib/plugin.mjs"
     },
     "./translations": {
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    },
-    "./types": {
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

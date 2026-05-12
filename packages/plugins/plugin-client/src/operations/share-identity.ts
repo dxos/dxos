@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
+import { ObservabilityOperation } from '@dxos/plugin-observability';
 
 import { Account } from '../types';
 import { ShareIdentity } from './definitions';

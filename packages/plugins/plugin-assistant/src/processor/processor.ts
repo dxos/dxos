@@ -25,10 +25,10 @@ import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { type QueueService } from '@dxos/functions';
 import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import type { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import type { AutomationCapabilities } from '@dxos/plugin-automation';
 import { Message } from '@dxos/types';
 
-import { UpdateChatName } from '../operations/definitions';
+import { AssistantOperation } from '#types';
 
 /**
  * @deprecated Services type for the old direct-conversation processor path.
@@ -260,7 +260,7 @@ export class AiChatProcessor {
    * Update the current chat's name.
    */
   async updateName(chat: Chat.Chat): Promise<void> {
-    unwrapExit(await this._runtime.runPromiseExit(Operation.invoke(UpdateChatName, { chat })));
+    unwrapExit(await this._runtime.runPromiseExit(Operation.invoke(AssistantOperation.UpdateChatName, { chat })));
   }
 
   /**
@@ -347,6 +347,6 @@ export class AiChatProcessor {
 
     // TODO(dmaretskyi): Operation.schedule didn't work.
     log.info('scheduling chat name update', { hasName: !!chat.name, chance });
-    return Operation.schedule(UpdateChatName, { chat });
+    return Operation.schedule(AssistantOperation.UpdateChatName, { chat });
   }
 }

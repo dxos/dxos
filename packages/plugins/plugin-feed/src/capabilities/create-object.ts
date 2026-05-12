@@ -8,10 +8,10 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SpaceCapabilities } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space';
+import { SpaceCapabilities } from '@dxos/plugin-space';
 
-import { FeedOperation } from '#operations';
+import { FeedOperation } from '#types';
 import { Magazine, Subscription } from '#types';
 
 /** Starter feed seeded into every newly created Magazine. */

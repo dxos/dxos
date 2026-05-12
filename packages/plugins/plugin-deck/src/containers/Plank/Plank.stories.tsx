@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit/events';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
@@ -71,7 +71,7 @@ const DefaultStory = () => {
   return (
     <Main.Root>
       <Main.Content bounce handlesFocus classNames='grid' style={{ '--main-spacing': '0' } as any}>
-        <div role='none' className='relative overflow-hidden bg-deck-surface'>
+        <div className='relative overflow-hidden bg-deck-surface'>
           <StackContext.Provider value={{ orientation: 'horizontal', size: 'contain', rail: true }}>
             <Plank.Root graph={graph} part='solo' layoutMode='solo'>
               <Plank.Content solo companion={false} encapsulate={false}>

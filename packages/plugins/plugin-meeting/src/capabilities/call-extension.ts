@@ -10,15 +10,15 @@ import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/ass
 import { Filter, type Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CallState, type MediaState, ThreadCapabilities } from '@dxos/plugin-thread';
-import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
+import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { type Space } from '@dxos/react-client/echo';
 import { type Channel, type Message } from '@dxos/types';
 
-import { MeetingOperation } from '#operations';
+import { MeetingOperation } from '#types';
 import { Meeting, MeetingCapabilities } from '#types';
 
 // TODO(wittjosiah): Factor out.

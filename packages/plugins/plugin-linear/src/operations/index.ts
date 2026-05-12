@@ -4,9 +4,7 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const LinearHandlers = OperationHandlerSet.lazy(
+export const LinearOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./get-teams'),
   () => import('./sync'),
 );
-
-export * as LinearOperation from './definitions';

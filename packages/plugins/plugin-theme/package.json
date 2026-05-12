@@ -13,18 +13,26 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#plugin": "./src/ThemePlugin.ts",
-    "#meta": "./src/meta.ts",
-    "#translations": "./src/translations.ts"
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/meta.mjs"
+    },
+    "#plugin": {
+      "source": "./src/ThemePlugin.ts",
+      "types": "./dist/types/src/ThemePlugin.d.ts",
+      "default": "./dist/lib/ThemePlugin.mjs"
+    },
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    }
   },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
-    },
-    "./meta": {
-      "types": "./dist/types/src/meta.d.ts",
-      "import": "./dist/lib/meta.mjs"
     },
     "./plugin": {
       "types": "./dist/types/src/plugin.d.ts",

@@ -77,7 +77,7 @@ export const BlueprintEditor = ({ object }: BlueprintEditorProps) => {
   }, [db, existingBlueprint, fn, blueprintKey, object.name, instructions]);
 
   return (
-    <div role='none' className='flex flex-col'>
+    <div className='flex flex-col'>
       <Form.Section label={t('blueprint-editor.label')} description={t('blueprint-editor.description')} />
 
       <Input.Root>
@@ -91,7 +91,7 @@ export const BlueprintEditor = ({ object }: BlueprintEditorProps) => {
         />
       </Input.Root>
 
-      <div role='none' className='pt-2'>
+      <div className='pt-2'>
         <Button disabled={(!existingBlueprint && !fn?.key) || creating} onClick={handleSave}>
           {t(existingBlueprint ? 'update-blueprint.label' : 'create-blueprint.label')}
         </Button>

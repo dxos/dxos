@@ -8,11 +8,10 @@ import localforage from 'localforage';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
-import { AttentionCapabilities } from '@dxos/plugin-attention/types';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
 
 import { meta } from '#meta';
-import { FilesOperation } from '#operations';
-import { FileCapabilities, type FilesState } from '#types';
+import { FileCapabilities, FilesOperation, type FilesState } from '#types';
 
 import { PREFIX, findFile, handleToLocalDirectory, handleToLocalFile } from '../util';
 

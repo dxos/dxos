@@ -4,8 +4,8 @@
 
 import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { AttentionEvents } from '@dxos/plugin-attention/types';
-import { ClientEvents } from '@dxos/plugin-client/types';
+import { AttentionEvents } from '@dxos/plugin-attention';
+import { ClientEvents } from '@dxos/plugin-client';
 import { Event, Message } from '@dxos/types';
 
 import {

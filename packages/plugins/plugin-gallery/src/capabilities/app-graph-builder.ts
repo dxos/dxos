@@ -8,8 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { DeckCapabilities } from '@dxos/plugin-deck';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
+import { DeckCapabilities, DeckOperation } from '@dxos/plugin-deck';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
 

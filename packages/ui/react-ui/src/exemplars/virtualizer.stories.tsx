@@ -66,7 +66,6 @@ export const Default = {
           <ScrollArea.Root orientation='vertical' centered>
             <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
               <div
-                role='none'
                 style={{
                   position: 'relative',
                   height: virtualizer.getTotalSize(),

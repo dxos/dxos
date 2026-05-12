@@ -11,6 +11,9 @@ export default defineConfig({
     capabilities: 'src/capabilities/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
+    plugin: 'src/plugin.ts',
+    translations: 'src/translations.ts',
+    types: 'src/types/index.ts',
   },
   test: { node: true },
 });

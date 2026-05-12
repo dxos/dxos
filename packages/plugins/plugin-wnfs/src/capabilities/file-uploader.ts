@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { SpaceOperation } from '@dxos/plugin-space';
 
-import { WnfsOperation } from '#operations';
+import { WnfsOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

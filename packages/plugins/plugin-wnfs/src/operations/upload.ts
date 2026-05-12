@@ -7,13 +7,12 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { upload } from '../helpers';
-import { WnfsCapabilities } from '../types';
-import { Upload } from './definitions';
+import { WnfsCapabilities, WnfsOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof Upload> = Upload.pipe(
+const handler: Operation.WithHandler<typeof WnfsOperation.Upload> = WnfsOperation.Upload.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ file, db }) {
       const client = yield* Capability.get(ClientCapabilities.Client);

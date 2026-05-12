@@ -7,13 +7,14 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    translations: 'src/translations.ts',
+    DebugPlugin: 'src/DebugPlugin.tsx',
+    'DebugPlugin.node': 'src/DebugPlugin.node.ts',
     capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',
-    DebugPlugin: 'src/DebugPlugin.tsx',
-    'DebugPlugin.node': 'src/DebugPlugin.node.ts',
+    plugin: 'src/plugin.ts',
+    translations: 'src/translations.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',

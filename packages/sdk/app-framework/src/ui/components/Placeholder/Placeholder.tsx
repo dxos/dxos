@@ -141,8 +141,8 @@ export const Placeholder = ({ stage = 1, progress, logo }: PlaceholderComponentP
 
   return (
     <ThemeProvider tx={defaultTx}>
-      <div role='none' className='relative dx-container h-dvh flex flex-col'>
-        <div role='none' className='flex flex-col grow justify-center items-center'>
+      <div className='relative dx-container h-dvh flex flex-col'>
+        <div className='flex flex-col grow justify-center items-center'>
           {typeof logo === 'function' ? (
             logo({ className: logoClassName })
           ) : logo ? (

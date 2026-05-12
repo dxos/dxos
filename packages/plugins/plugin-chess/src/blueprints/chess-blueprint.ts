@@ -5,10 +5,9 @@
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { Move, Play, Print } from '#operations';
-import { Chess } from '#types';
+import { Chess, ChessOperation } from '#types';
 
-const operations = [Move, Play, Print];
+const operations = [ChessOperation.Move, ChessOperation.Play, ChessOperation.Print];
 
 const make = () =>
   Blueprint.make({

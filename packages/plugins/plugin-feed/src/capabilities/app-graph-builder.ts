@@ -11,14 +11,14 @@ import { AppCapabilities, AppNode, AppNodeMatcher, createObjectNode, getActiveSp
 import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
-import { AttentionCapabilities } from '@dxos/plugin-attention/types';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { FeedOperation } from '#operations';
+import { FeedOperation } from '#types';
 import { Magazine, Subscription } from '#types';
 
 export default Capability.makeModule(

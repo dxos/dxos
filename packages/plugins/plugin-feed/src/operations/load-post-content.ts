@@ -8,10 +8,10 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
+import { FeedOperation, type Subscription } from '../types';
 import { fetchArticle } from '../util';
-import { LoadPostContent } from './definitions';
 
-export default LoadPostContent.pipe(
+export default FeedOperation.LoadPostContent.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ post: postRef }) {
       // Resolve the database from the ref's already-loaded target so we can supply
@@ -23,7 +23,7 @@ export default LoadPostContent.pipe(
       const db = Obj.getDatabase(target);
       invariant(db, 'Post is not in a database.');
 
-      const post = yield* Database.load(postRef).pipe(Effect.provide(Database.layer(db)));
+      const post: Subscription.Post = yield* Database.load(postRef).pipe(Effect.provide(Database.layer(db)));
       if (!post.link || post.content) {
         return;
       }

@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 
-import { ResetProject } from './definitions';
+import { CodeOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof ResetProject> = ResetProject.pipe(
+const handler: Operation.WithHandler<typeof CodeOperation.ResetProject> = CodeOperation.ResetProject.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ project }) {
       const code = yield* Database.load(project);

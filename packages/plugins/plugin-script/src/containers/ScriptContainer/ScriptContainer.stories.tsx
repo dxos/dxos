@@ -11,7 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Blueprint } from '@dxos/compute';
 import { Script } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';
@@ -58,7 +58,7 @@ const DefaultStory = (_: DefaultStoryProps) => {
   }
 
   return (
-    <div role='none' className='flex flex-col min-h-[80vh] w-document-max-width'>
+    <div className='flex flex-col min-h-[80vh] w-document-max-width'>
       <ScriptContainer role='article' subject={script} attendableId='story-script' />
     </div>
   );

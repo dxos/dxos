@@ -9,9 +9,9 @@ import { Operation } from '@dxos/compute';
 import { type Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
+import { FeedOperation } from '../types';
 import { type Magazine, Subscription } from '../types';
 import { dxnToObjectId, extractImageUrls, makeSnippet, stripHtml } from '../util';
-import { CurateMagazine } from './definitions';
 
 /**
  * Returns the canonical space.db proxy for a Post by id, if it has been
@@ -133,7 +133,7 @@ export const curateMagazine = async (space: Space, magazine: Magazine.Magazine):
   return { added: appended };
 };
 
-const handler: Operation.WithHandler<typeof CurateMagazine> = CurateMagazine.pipe(
+const handler: Operation.WithHandler<typeof FeedOperation.CurateMagazine> = FeedOperation.CurateMagazine.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ magazine: magazineRef }) {
       const magazine = yield* Effect.promise(() => magazineRef.load());

@@ -131,7 +131,7 @@ const RootAttentionProvider = ({ children, attention: propsAttention, onChange }
 
   return (
     <AttentionContextProvider attention={attention}>
-      <div role='none' className='contents' onFocusCapture={handleFocus}>
+      <div className='contents' onFocusCapture={handleFocus}>
         {children}
       </div>
     </AttentionContextProvider>

@@ -57,6 +57,9 @@ catalogs:
     '@babel/core':
       specifier: ^7.18.13
       version: 7.28.0
+    '@babel/preset-typescript':
+      specifier: ^7.27.1
+      version: 7.27.1
     '@babel/runtime':
       specifier: ^7.9.6
       version: 7.27.1
@@ -912,6 +915,9 @@ catalogs:
     autoprefixer:
       specifier: ^10.5.0
       version: 10.5.0
+    babel-preset-solid:
+      specifier: ^1.9.9
+      version: 1.9.9
     babylonjs-gltf2interface:
       specifier: ^7.0.0
       version: 7.54.3
@@ -8755,6 +8761,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
@@ -10575,6 +10584,9 @@ importers:
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../plugin-table
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -10660,9 +10672,6 @@ importers:
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -10950,6 +10959,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
@@ -12019,6 +12031,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -12071,9 +12086,6 @@ importers:
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -12119,6 +12131,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
@@ -15024,6 +15039,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -15112,9 +15130,6 @@ importers:
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -15465,6 +15480,9 @@ importers:
       '@huggingface/transformers':
         specifier: 'catalog:'
         version: 3.8.1
+      '@xenova/transformers':
+        specifier: 'catalog:'
+        version: 2.17.2
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -15493,9 +15511,6 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.7)
-      '@xenova/transformers':
-        specifier: 'catalog:'
-        version: 2.17.2
       react:
         specifier: ~19.2.3
         version: 19.2.3
@@ -15696,6 +15711,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -21388,6 +21406,15 @@ importers:
 
   tools/dx-compile:
     dependencies:
+      '@babel/core':
+        specifier: 'catalog:'
+        version: 7.28.0
+      '@babel/preset-typescript':
+        specifier: 'catalog:'
+        version: 7.27.1(@babel/core@7.28.0)
+      babel-preset-solid:
+        specifier: 'catalog:'
+        version: 1.9.9(@babel/core@7.28.0)(solid-js@1.9.11)
       yargs:
         specifier: 'catalog:'
         version: 16.2.0
@@ -49921,7 +49948,7 @@ snapshots:
 
   '@vue/compiler-core@3.5.13':
     dependencies:
-      '@babel/parser': 7.29.0
+      '@babel/parser': 7.28.5
       '@vue/shared': 3.5.13
       entities: 4.5.0
       estree-walker: 2.0.2
@@ -49934,7 +49961,7 @@ snapshots:
 
   '@vue/compiler-sfc@3.5.13':
     dependencies:
-      '@babel/parser': 7.29.0
+      '@babel/parser': 7.28.5
       '@vue/compiler-core': 3.5.13
       '@vue/compiler-dom': 3.5.13
       '@vue/compiler-ssr': 3.5.13
@@ -50985,7 +51012,7 @@ snapshots:
 
   ast-kit@2.2.0:
     dependencies:
-      '@babel/parser': 7.29.0
+      '@babel/parser': 7.28.5
       pathe: 2.0.3
 
   ast-module-types@6.0.1: {}
@@ -53196,7 +53223,7 @@ snapshots:
       '@one-ini/wasm': 0.1.1
       commander: 10.0.1
       minimatch: 10.2.5
-      semver: 7.7.3
+      semver: 7.7.4
 
   ee-first@1.1.1: {}
 
@@ -54434,7 +54461,7 @@ snapshots:
       es6-error: 4.1.1
       matcher: 3.0.0
       roarr: 2.15.4
-      semver: 7.7.3
+      semver: 7.7.4
       serialize-error: 7.0.1
 
   global-modules@0.2.3:
@@ -56533,7 +56560,7 @@ snapshots:
 
   make-dir@4.0.0:
     dependencies:
-      semver: 7.7.3
+      semver: 7.7.4
 
   manifold-3d@3.4.1(esbuild-wasm@0.16.17):
     dependencies:
@@ -57733,7 +57760,7 @@ snapshots:
 
   node-abi@3.47.0:
     dependencies:
-      semver: 7.7.3
+      semver: 7.7.4
 
   node-addon-api@4.3.0:
     optional: true
@@ -57855,7 +57882,7 @@ snapshots:
     dependencies:
       hosted-git-info: 4.1.0
       is-core-module: 2.16.1
-      semver: 7.7.3
+      semver: 7.7.4
       validate-npm-package-license: 3.0.4
 
   normalize-package-data@6.0.1:
@@ -59838,8 +59865,8 @@ snapshots:
   rolldown-plugin-dts@0.18.3(@typescript/native-preview@7.0.0-dev.20260421.2)(oxc-resolver@11.9.0)(rolldown@1.0.0-beta.52(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(typescript@6.0.3):
     dependencies:
       '@babel/generator': 7.28.5
-      '@babel/parser': 7.29.0
-      '@babel/types': 7.29.0
+      '@babel/parser': 7.28.5
+      '@babel/types': 7.28.5
       ast-kit: 2.2.0
       birpc: 3.0.0
       dts-resolver: 2.1.3(oxc-resolver@11.9.0)

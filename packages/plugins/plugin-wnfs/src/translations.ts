@@ -10,7 +10,7 @@ import { WnfsFile } from '#types';
 export const translations = [
   {
     'en-US': {
-      [WnfsFile.File.typename]: {
+      [WnfsFile.WnfsFile.typename]: {
         'typename.label': 'File',
         'typename.label_zero': 'Files',
         'typename.label_one': 'File',

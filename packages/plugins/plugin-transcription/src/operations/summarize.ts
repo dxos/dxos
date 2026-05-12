@@ -14,12 +14,12 @@ import { Trace, Operation, OperationRegistry } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { Summarize } from './definitions';
+import { TranscriptOperation } from '../types';
 
 /**
  * Summarize a transcript of a meeting.
  */
-const handler: Operation.WithHandler<typeof Summarize> = Summarize.pipe(
+const handler: Operation.WithHandler<typeof TranscriptOperation.Summarize> = TranscriptOperation.Summarize.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ transcript, notes }) {

@@ -8,9 +8,9 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { View } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { PreviewPlugin } from '@dxos/plugin-preview';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Filter, useObject, useQuery, useSpaces } from '@dxos/react-client/echo';

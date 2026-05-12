@@ -2,6 +2,5 @@ layer: library
 language: typescript
 tags:
   - ts-vite-build
-  - ts-test-storybook
+  - ts-test
   - pack
-  - storybook

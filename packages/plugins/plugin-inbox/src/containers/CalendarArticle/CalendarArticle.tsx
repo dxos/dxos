@@ -80,7 +80,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
 
   return (
     <div role={role} className='@container dx-container overflow-hidden'>
-      <div role='none' className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] h-full'>
+      <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] h-full'>
         <Panel.Root className='hidden @3xl:block'>
           <NaturalCalendar.Root>
             <Panel.Toolbar asChild>

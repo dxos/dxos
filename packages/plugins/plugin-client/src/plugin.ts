@@ -1,7 +1,11 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-// Eager re-export of `ClientPlugin`. See `@dxos/plugin-testing/src/core.ts`
-// for the rationale.
-export * from './ClientPlugin';
+import { Plugin } from '@dxos/app-framework';
+
+import { meta } from './meta';
+
+export const ClientPlugin = Plugin.lazy(meta, () => import('#plugin'));
+
+export { ClientOperationHandlerSet } from './operations';
