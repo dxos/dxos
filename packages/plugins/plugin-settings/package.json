@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-settings",
   "version": "0.8.3",
-  "private": true,
   "description": "DXOS Settings plugin for managing application settings.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
