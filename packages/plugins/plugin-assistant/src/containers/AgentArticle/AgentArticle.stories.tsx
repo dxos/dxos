@@ -13,7 +13,7 @@ import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins, StorybookPlugin } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
