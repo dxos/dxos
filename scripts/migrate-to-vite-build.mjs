@@ -122,7 +122,7 @@ const buildEntryRecord = (entryPoints) => {
   return record;
 };
 
-const buildViteConfig = (pkgDir, entryPoints, hasTests, jsx) => {
+const buildViteConfig = (pkgDir, entryPoints, hasTests, jsx, testEnvOverride) => {
   const relToRoot = relative(pkgDir, REPO_ROOT) || '.';
   const baseImport = `${relToRoot}/vite.base.config.ts`;
   const entryRecord = buildEntryRecord(entryPoints);
@@ -138,8 +138,11 @@ const buildViteConfig = (pkgDir, entryPoints, hasTests, jsx) => {
     optionsBits.push(`  jsx: '${jsx}',`);
   }
   if (hasTests) {
-    // JSX packages typically render components and need a DOM. Non-JSX defaults to node env.
-    const testValue = jsx ? `{ node: { environment: 'happy-dom' } }` : `{ node: true }`;
+    // JSX packages need a DOM (component rendering); non-JSX packages with explicit
+    // `happy-dom` / `jsdom` setups in their previous vitest.config get the same;
+    // everything else defaults to plain node.
+    const env = testEnvOverride ?? (jsx ? 'happy-dom' : undefined);
+    const testValue = env ? `{ node: { environment: '${env}' } }` : `{ node: true }`;
     optionsBits.push(`  test: ${testValue},`);
   }
 
@@ -212,7 +215,7 @@ const rewriteImports = (pkgJson) => {
   const required = new Set();
   const visit = (node) => {
     if (typeof node === 'string') {
-      const m = node.match(/^\.\/dist\/lib\/(?:browser|node|node-esm|node-cjs)\/(.+?)(?:\/index)?\.(?:mjs|cjs)$/);
+      const m = node.match(/^\.\/dist\/lib\/(?:browser|node|node-esm|node-cjs|neutral)\/(.+?)(?:\/index)?\.(?:mjs|cjs)$/);
       if (m) {
         const entry = m[1];
         required.add(entry);
@@ -303,6 +306,43 @@ const migrate = (pkgRel) => {
   }
 
   const entryPoints = parseEntryPoints(moonText);
+  // Pull additional entries out of the existing package.json `exports` and `imports`.
+  // Necessary when main added a new sub-path export (e.g. `./types`) but the local
+  // moon.yml + vite.config.ts haven't picked it up yet (post-merge state).
+  {
+    const pkg = JSON.parse(readFileSync(pkgJsonPath, 'utf8'));
+    const addCandidate = (rel) => {
+      if (existsSync(resolve(pkgDir, rel)) && !entryPoints.includes(rel)) {
+        entryPoints.push(rel);
+      }
+    };
+    const collect = (node) => {
+      if (typeof node === 'string' && /^\.\/src\/.+\.tsx?$/.test(node)) {
+        addCandidate(node.replace(/^\.\//, ''));
+      } else if (node && typeof node === 'object') {
+        for (const v of Object.values(node)) collect(v);
+      }
+    };
+    collect(pkg.exports);
+    collect(pkg.imports);
+    // Infer from export-key names: `./testing` → `src/testing.ts` or `src/testing/index.ts`.
+    for (const key of Object.keys(pkg.exports ?? {})) {
+      if (key === '.' || key === './package.json') continue;
+      const name = key.replace(/^\.\//, '');
+      for (const candidate of [`src/${name}.ts`, `src/${name}.tsx`, `src/${name}/index.ts`, `src/${name}/index.tsx`]) {
+        if (existsSync(resolve(pkgDir, candidate))) {
+          addCandidate(candidate);
+          break;
+        }
+      }
+    }
+    // Always include src/index.ts when present.
+    if (existsSync(resolve(pkgDir, 'src/index.ts'))) {
+      addCandidate('src/index.ts');
+    } else if (existsSync(resolve(pkgDir, 'src/index.tsx'))) {
+      addCandidate('src/index.tsx');
+    }
+  }
   if (entryPoints.length === 0 && alreadyMigrated && existsSync(viteConfigPath)) {
     // Re-running on a migrated package: recover entries from the existing vite.config.ts
     // (moon.yml no longer carries the `--entryPoint=` args).
@@ -320,6 +360,32 @@ const migrate = (pkgRel) => {
   }
 
   const hasTests = /\bts-test\b/.test(moonText);
+
+  // Preserve a `happy-dom` / `jsdom` environment if the existing vitest.config.ts
+  // (or vite.config.ts on a re-run) sets one. Non-JSX packages can still need a
+  // DOM at test time (e.g. @dxos/web-context uses `CustomEvent` / `document`
+  // directly). When no config picks it up but the test sources clearly touch the
+  // DOM, default to `happy-dom`.
+  let testEnvOverride;
+  for (const candidate of [vitestConfigPath, viteConfigPath]) {
+    if (existsSync(candidate)) {
+      const existing = readFileSync(candidate, 'utf8');
+      const m = existing.match(/environment:\s*['"]([^'"]+)['"]/);
+      if (m && (m[1] === 'happy-dom' || m[1] === 'jsdom')) {
+        testEnvOverride = m[1];
+        break;
+      }
+    }
+  }
+  if (!testEnvOverride && hasTests && existsSync(srcDir)) {
+    const usesDom = execSync(
+      `grep -rEl "\\b(document|window|HTMLElement|CustomEvent|navigator)\\b" "${srcDir}" --include='*.test.ts' --include='*.test.tsx' 2>/dev/null || true`,
+      { encoding: 'utf8' },
+    ).trim();
+    if (usesDom) {
+      testEnvOverride = 'happy-dom';
+    }
+  }
 
   const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf8'));
 
@@ -366,7 +432,7 @@ const migrate = (pkgRel) => {
     entryNames.add(required);
   }
 
-  writeFileSync(viteConfigPath, buildViteConfig(pkgDir, entryPoints, hasTests, jsx));
+  writeFileSync(viteConfigPath, buildViteConfig(pkgDir, entryPoints, hasTests, jsx, testEnvOverride));
 
   if (existsSync(vitestConfigPath)) {
     rmSync(vitestConfigPath);

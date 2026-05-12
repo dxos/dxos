@@ -8,6 +8,7 @@ export default defineConfig({
   entry: {
     react: 'src/react.ts',
     testing: 'src/testing/index.ts',
+    index: 'src/index.ts',
   },
   jsx: 'react',
   test: { node: { environment: 'happy-dom' } },

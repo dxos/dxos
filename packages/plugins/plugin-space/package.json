@@ -49,10 +49,8 @@
       "import": "./dist/lib/plugin.mjs"
     },
     "./translations": {
-      "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "browser": "./dist/lib/browser/translations.mjs",
-      "node": "./dist/lib/node-esm/translations.mjs"
+      "import": "./dist/lib/translations.mjs"
     },
     "./types": {
       "types": "./dist/types/src/types/index.d.ts",

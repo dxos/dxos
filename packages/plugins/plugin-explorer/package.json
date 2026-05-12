@@ -32,10 +32,8 @@
       "import": "./dist/lib/meta.mjs"
     },
     "./translations": {
-      "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "browser": "./dist/lib/browser/translations.mjs",
-      "node": "./dist/lib/node-esm/translations.mjs"
+      "import": "./dist/lib/translations.mjs"
     },
     "./components": {
       "types": "./dist/types/src/components/index.d.ts",

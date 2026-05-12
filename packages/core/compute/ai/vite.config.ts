@@ -6,9 +6,9 @@ import { defineConfig } from '../../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
-    index: 'src/index.ts',
     resolvers: 'src/resolvers/index.ts',
     testing: 'src/testing/index.ts',
+    index: 'src/index.ts',
   },
-  test: { node: true },
+  test: { node: { environment: 'happy-dom' } },
 });

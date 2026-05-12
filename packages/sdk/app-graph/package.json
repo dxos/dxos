@@ -12,6 +12,16 @@
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
+  "imports": {
+    "#scheduler": {
+      "source": {
+        "browser": "./src/scheduler.browser.ts",
+        "default": "./src/scheduler.ts"
+      },
+      "types": "./dist/types/src/scheduler.d.ts",
+      "default": "./dist/lib/scheduler.mjs"
+    }
+  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",

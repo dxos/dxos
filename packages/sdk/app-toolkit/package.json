@@ -21,10 +21,8 @@
       "import": "./dist/lib/index.mjs"
     },
     "./events": {
-      "source": "./src/activation-events.ts",
       "types": "./dist/types/src/activation-events.d.ts",
-      "browser": "./dist/lib/browser/activation-events.mjs",
-      "node": "./dist/lib/node-esm/activation-events.mjs"
+      "import": "./dist/lib/activation-events.mjs"
     },
     "./query": {
       "types": "./dist/types/src/query.d.ts",

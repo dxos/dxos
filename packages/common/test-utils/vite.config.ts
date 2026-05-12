@@ -6,7 +6,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
-    index: 'src/index.ts',
     playwright: 'src/playwright.ts',
+    index: 'src/index.ts',
   },
 });

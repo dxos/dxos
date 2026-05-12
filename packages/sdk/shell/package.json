@@ -17,7 +17,7 @@
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/bundle/shell.js"
+      "import": "./dist/lib/index.mjs"
     },
     "./style.css": "./dist/bundle/shell.css",
     "./react": {
