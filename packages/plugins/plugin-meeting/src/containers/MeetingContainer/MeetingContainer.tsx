@@ -10,7 +10,7 @@ import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 
 import { meta } from '#meta';
-import { MeetingOperation } from '#operations';
+import { MeetingOperation } from '#types';
 import { type Meeting } from '#types';
 
 export type MeetingContainerProps = AppSurface.ObjectArticleProps<Meeting.Meeting>;

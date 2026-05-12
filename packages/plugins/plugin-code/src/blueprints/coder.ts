@@ -5,30 +5,20 @@
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import {
-  DeleteFile,
-  HelloWorld,
-  ListFiles,
-  ReadFile,
-  ResetProject,
-  RunBuildAgent,
-  ScaffoldProject,
-  VerifySpec,
-  WriteFile,
-} from '#operations';
+import { CodeOperation } from '#types';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.coder';
 
 const operations = [
-  VerifySpec,
-  RunBuildAgent,
-  ListFiles,
-  ReadFile,
-  WriteFile,
-  DeleteFile,
-  ScaffoldProject,
-  HelloWorld,
-  ResetProject,
+  CodeOperation.VerifySpec,
+  CodeOperation.RunBuildAgent,
+  CodeOperation.ListFiles,
+  CodeOperation.ReadFile,
+  CodeOperation.WriteFile,
+  CodeOperation.DeleteFile,
+  CodeOperation.ScaffoldProject,
+  CodeOperation.HelloWorld,
+  CodeOperation.ResetProject,
 ];
 
 /**

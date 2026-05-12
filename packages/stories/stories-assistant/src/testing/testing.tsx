@@ -29,18 +29,15 @@ import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { AssistantPlugin } from '@dxos/plugin-assistant';
-import { AssistantOperation } from '@dxos/plugin-assistant/operations';
-import { Assistant } from '@dxos/plugin-assistant/types';
-import { AutomationPlugin } from '@dxos/plugin-automation';
-import { ClientPlugin } from '@dxos/plugin-client';
-import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client/types';
-import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
-import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
-import { Markdown } from '@dxos/plugin-markdown/types';
-import { PreviewPlugin } from '@dxos/plugin-preview';
-import { StorybookPlugin } from '@dxos/plugin-testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import { Assistant, AssistantOperation } from '@dxos/plugin-assistant';
+import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
+import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
+import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { MarkdownBlueprint, Markdown } from '@dxos/plugin-markdown';
+import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { type Client, Config } from '@dxos/react-client';
 import { AccessToken } from '@dxos/types';
 
@@ -256,11 +253,11 @@ type StoryPluginOptions = {
 };
 
 const StoryPlugin = Plugin.define<StoryPluginOptions>({
-  id: 'example.com/plugin/testing',
+  id: 'com.example.plugin.testing',
   name: 'Testing',
 }).pipe(
   Plugin.addModule({
-    id: 'example.com/plugin/testing/module/testing',
+    id: 'com.example.plugin.testing.module.testing',
     activatesOn: AppActivationEvents.SetupArtifactDefinition,
     activate: () =>
       Effect.succeed([
@@ -274,7 +271,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
       ]),
   }),
   Plugin.addModule({
-    id: 'example.com/plugin/testing/module/setup',
+    id: 'com.example.plugin.testing.module.setup',
     activatesOn: ActivationEvent.allOf(ActivationEvents.OperationInvokerReady, ClientEvents.SpacesReady),
     activate: Effect.fnUntraced(function* () {
       const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
@@ -290,7 +287,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
     }),
   }),
   Plugin.addModule(({ onChatCreated }) => ({
-    id: 'example.com/plugin/testing/module/operation-handler',
+    id: 'com.example.plugin.testing.module.operationHandler',
     activatesOn: ActivationEvents.SetupOperationHandler,
     activate: Effect.fnUntraced(function* () {
       const client = yield* Capability.get(ClientCapabilities.Client);

@@ -15,7 +15,7 @@ import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 
 import { meta } from '#meta';
-import { FeedOperation } from '#operations';
+import { FeedOperation } from '#types';
 import { type Magazine, Subscription } from '#types';
 
 import { dxnToObjectId, findStarTag, hasMetaTag, useStarTag } from '../../util';

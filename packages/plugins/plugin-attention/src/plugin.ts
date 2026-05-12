@@ -1,7 +1,11 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-// Eager re-export of `AttentionPlugin`. See `@dxos/plugin-testing/src/core.ts`
-// for the rationale.
-export * from './AttentionPlugin';
+import { Plugin } from '@dxos/app-framework';
+
+import { meta } from './meta';
+
+export const AttentionPlugin = Plugin.lazy(meta, () => import('#plugin'));
+
+export { AttentionOperationHandlerSet } from './operations';

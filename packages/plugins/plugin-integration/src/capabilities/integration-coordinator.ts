@@ -9,20 +9,25 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context as DxContext } from '@dxos/context';
-import { type Database, type Key, Obj, Ref } from '@dxos/echo';
+import { type Database, DXN, type Key, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { OperationInvoker as OperationInvokerExports } from '@dxos/operation';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { AccessToken } from '@dxos/types';
 
 import { IntegrationCoordinator, IntegrationProvider, type IntegrationProviderEntry } from '#types';
 
-import { CUSTOM_TOKEN_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
-import { IntegrationProviderNotFoundError } from '../errors';
-import { IntegrationOperation } from '../operations';
+import {
+  PROVIDER_FORM_DIALOG,
+  SYNC_TARGETS_DIALOG,
+  integrationDeckSubject,
+  pendingIntegrationStorageKey,
+} from '../constants';
+import { IntegrationProviderNotFoundError, SpaceUnavailableError } from '../errors';
+import { IntegrationOperation } from '../types';
 import { Integration } from '../types';
 
 /** Pending integration awaiting an OAuth callback. */
@@ -74,16 +79,17 @@ const resolveProvider = (
     return provider;
   });
 
-const openCustomTokenDialog = (
+const openProviderFormDialog = (
   invoker: OperationInvokerExports.OperationInvoker,
-  input: { db: Database.Database; provider: IntegrationProviderEntry },
+  input: { db: Database.Database; spaceId: Key.SpaceId; provider: IntegrationProviderEntry },
 ) =>
   invoker.invoke(LayoutOperation.UpdateDialog, {
-    subject: CUSTOM_TOKEN_DIALOG,
+    subject: PROVIDER_FORM_DIALOG,
     state: true,
     blockAlign: 'start',
     props: {
       db: input.db,
+      spaceId: input.spaceId,
       providerId: input.provider.id,
       providerLabel: input.provider.label ?? input.provider.id,
     },
@@ -126,7 +132,7 @@ const navigateToNewIntegration = (
 ): Effect.Effect<void, never> =>
   invoker
     .invoke(LayoutOperation.Open, {
-      subject: [`${getSpacePath(db.spaceId)}/integrations/${integrationId}`],
+      subject: [integrationDeckSubject(getSpacePath(db.spaceId), integrationId)],
       navigation: 'immediate',
     })
     .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('navigate to new integration failed', { error }))));
@@ -193,6 +199,7 @@ const initiateOAuthFlow = (
   spaceId: Key.SpaceId,
   oauth: NonNullable<IntegrationProviderEntry['oauth']>,
   accessTokenId: string,
+  loginHint: string | undefined,
 ): Effect.Effect<{ authUrl: string }, Error> =>
   Effect.tryPromise({
     try: () =>
@@ -201,6 +208,7 @@ const initiateOAuthFlow = (
         scopes: [...oauth.scopes],
         spaceId,
         accessTokenId,
+        ...(loginHint ? { loginHint } : {}),
       }),
     catch: (error) => (error instanceof Error ? error : new Error(String(error))),
   });
@@ -209,6 +217,51 @@ const openOAuthPopupWindow = (authUrl: string): Effect.Effect<void, never> =>
   Effect.sync(() => {
     window.open(authUrl, 'oauthPopup', 'width=500,height=600');
   });
+
+/**
+ * Open the auth URL in a new top-level browser tab. Used for
+ * `useRedirectFlow` providers (e.g. atproto) where the auth server
+ * nullifies `window.opener` and rejects popups.
+ */
+const openOAuthRedirectWindow = (authUrl: string): Effect.Effect<void, never> =>
+  Effect.sync(() => {
+    window.open(authUrl, '_blank');
+  });
+
+/** Snapshot of an in-flight OAuth flow persisted in `localStorage` for redirect-flow providers. */
+type PendingSnapshot = {
+  spaceId: Key.SpaceId;
+  providerId: string;
+  tokenSnapshot: { source: string; account?: string; scopes: readonly string[] };
+  integrationSnapshot: { name: string; providerId: string };
+  /** Serialized DXN of the existing target to attach the first new selection to. */
+  existingTargetDxn?: string;
+};
+
+const writePendingSnapshot = (accessTokenId: string, snapshot: PendingSnapshot): void => {
+  try {
+    localStorage.setItem(pendingIntegrationStorageKey(accessTokenId), JSON.stringify(snapshot));
+  } catch (error) {
+    log.warn('failed to persist pending integration snapshot', { error });
+  }
+};
+
+const readPendingSnapshot = (accessTokenId: string): PendingSnapshot | undefined => {
+  const raw = localStorage.getItem(pendingIntegrationStorageKey(accessTokenId));
+  if (!raw) {
+    return undefined;
+  }
+  try {
+    return JSON.parse(raw) as PendingSnapshot;
+  } catch (error) {
+    log.warn('failed to parse pending integration snapshot', { error });
+    return undefined;
+  }
+};
+
+const deletePendingSnapshot = (accessTokenId: string): void => {
+  localStorage.removeItem(pendingIntegrationStorageKey(accessTokenId));
+};
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -282,20 +335,39 @@ export default Capability.makeModule(
       spaceId,
       providerId,
       existingTarget,
+      loginHint,
     }) =>
       Effect.gen(function* () {
         const provider = yield* resolveProvider(getProviderEntries, providerId);
 
+        // Provider has a pre-flight form (atproto handle, IMAP creds, custom
+        // token, …) — show it and let the form's submit re-enter via
+        // `submitCredentialForm`. OAuth providers re-enter here with
+        // `loginHint`; non-OAuth providers complete directly in the form.
+        if (provider.credentialForm && loginHint === undefined) {
+          yield* openProviderFormDialog(invoker, { db, spaceId, provider });
+          return { kind: 'dialog-opened' } as const;
+        }
+
+        // Non-OAuth provider with no `credentialForm`: fall back to the
+        // generic provider-form dialog (renders the default custom-token
+        // schema for backwards compatibility).
         if (!provider.oauth) {
-          yield* openCustomTokenDialog(invoker, { db, provider });
+          yield* openProviderFormDialog(invoker, { db, spaceId, provider });
           return { kind: 'dialog-opened' } as const;
         }
 
         const oauth = provider.oauth;
         const label = provider.label ?? provider.id;
+        // Pre-flight forms (atproto handle, …) supply a `loginHint` that
+        // is meaningful as the account label too — store it so the
+        // resulting Integration shows e.g. `user.bsky.social` rather than
+        // just `bsky.app`.
+        const account = loginHint;
 
         const token = Obj.make(AccessToken.AccessToken, {
           source: provider.source,
+          ...(account ? { account } : {}),
           scopes: [...oauth.scopes],
           token: '',
         });
@@ -308,16 +380,99 @@ export default Capability.makeModule(
 
         pending.set(token.id, { token, integration, db, provider, existingTarget });
 
+        if (oauth.useRedirectFlow) {
+          // Persist a snapshot so the new tab can finalize without sharing memory.
+          writePendingSnapshot(token.id, {
+            spaceId,
+            providerId: provider.id,
+            tokenSnapshot: { source: provider.source, account, scopes: oauth.scopes },
+            integrationSnapshot: { name: label, providerId: provider.id },
+            ...(existingTarget ? { existingTargetDxn: existingTarget.dxn.toString() } : {}),
+          });
+        }
+
         const edge = getEdgeClient();
         edgeOrigin = new URL(edge.baseUrl).origin;
 
-        const { authUrl } = yield* initiateOAuthFlow(edge, spaceId, oauth, token.id).pipe(
-          Effect.tapError(() => Effect.sync(() => pending.delete(token.id))),
+        const { authUrl } = yield* initiateOAuthFlow(edge, spaceId, oauth, token.id, loginHint).pipe(
+          Effect.tapError(() =>
+            Effect.sync(() => {
+              pending.delete(token.id);
+              if (oauth.useRedirectFlow) {
+                deletePendingSnapshot(token.id);
+              }
+            }),
+          ),
         );
 
-        yield* openOAuthPopupWindow(authUrl);
+        if (oauth.useRedirectFlow) {
+          yield* openOAuthRedirectWindow(authUrl);
+        } else {
+          yield* openOAuthPopupWindow(authUrl);
+        }
 
         return { kind: 'oauth-started', draftIntegrationId: integration.id } as const;
+      }).pipe(Effect.mapError(mapCoordinatorError));
+
+    const finalizeRedirectFlow: IntegrationCoordinator['finalizeRedirectFlow'] = ({
+      accessTokenId,
+      accessToken: accessTokenValue,
+    }) =>
+      Effect.gen(function* () {
+        // Prefer the in-memory pending entry (same-tab redirect, rare).
+        const inMemory = takePendingEntry(accessTokenId);
+        if (inMemory) {
+          deletePendingSnapshot(accessTokenId);
+          Obj.update(inMemory.token, (token) => {
+            token.token = accessTokenValue;
+          });
+          yield* finalizePendingEntry(invoker, inMemory);
+          return;
+        }
+
+        // Recover from the persisted snapshot (new-tab redirect, the common case).
+        const snapshot = readPendingSnapshot(accessTokenId);
+        if (!snapshot) {
+          log.warn('finalizeRedirectFlow: no pending snapshot', { accessTokenId });
+          return;
+        }
+        deletePendingSnapshot(accessTokenId);
+
+        const space = client.spaces.get(snapshot.spaceId);
+        if (!space) {
+          return yield* Effect.fail(new SpaceUnavailableError(snapshot.spaceId));
+        }
+        yield* Effect.tryPromise({
+          try: () => space.waitUntilReady(),
+          catch: (error) => new SpaceUnavailableError(snapshot.spaceId, error),
+        });
+
+        const provider = yield* resolveProvider(getProviderEntries, snapshot.providerId);
+
+        // Pin the AccessToken's echo id to the original `accessTokenId` so
+        // Edge's tokenInfo (keyed by the id passed to /oauth/initiate) can
+        // be looked up later by /atproto/proxy. Without this, the
+        // snapshot-recovery path mints a fresh id that the proxy doesn't
+        // know about and authenticated XRPC calls 500.
+        const token = Obj.make(AccessToken.AccessToken, {
+          id: accessTokenId,
+          source: snapshot.tokenSnapshot.source,
+          ...(snapshot.tokenSnapshot.account ? { account: snapshot.tokenSnapshot.account } : {}),
+          scopes: [...snapshot.tokenSnapshot.scopes],
+          token: accessTokenValue,
+        });
+        const integration = Obj.make(Integration.Integration, {
+          name: snapshot.integrationSnapshot.name,
+          providerId: snapshot.integrationSnapshot.providerId,
+          accessToken: Ref.make(token),
+          targets: [],
+        });
+
+        const existingTarget = snapshot.existingTargetDxn
+          ? space.db.makeRef<Obj.Any>(DXN.parse(snapshot.existingTargetDxn))
+          : undefined;
+
+        yield* finalizePendingEntry(invoker, { token, integration, db: space.db, provider, existingTarget });
       }).pipe(Effect.mapError(mapCoordinatorError));
 
     const createCustomIntegration: IntegrationCoordinator['createCustomIntegration'] = ({
@@ -353,11 +508,48 @@ export default Capability.makeModule(
         return { kind: 'integration-created', integrationId: integration.id } as const;
       }).pipe(Effect.mapError(mapCoordinatorError));
 
-    return Capability.contributes(IntegrationCoordinator, { createIntegration, createCustomIntegration }, () =>
-      Effect.sync(() => {
-        window.removeEventListener('message', handleMessage);
-        pending.clear();
-      }),
+    const submitCredentialForm: IntegrationCoordinator['submitCredentialForm'] = ({
+      db,
+      spaceId,
+      providerId,
+      values,
+    }) =>
+      Effect.gen(function* () {
+        const provider = yield* resolveProvider(getProviderEntries, providerId);
+        if (!provider.credentialForm) {
+          return yield* Effect.fail(new Error(`Provider ${providerId} has no credentialForm.`));
+        }
+
+        const result = yield* provider.credentialForm.onSubmit({ values, provider, db });
+
+        if (result.kind === 'complete') {
+          yield* finalizePendingEntry(invoker, {
+            token: result.accessToken,
+            integration: result.integration,
+            db,
+            provider,
+          });
+          return { kind: 'integration-created', integrationId: result.integration.id } as const;
+        }
+
+        // OAuth pre-flight: re-enter createIntegration with the captured loginHint.
+        // Guard against an empty hint — otherwise createIntegration would re-open
+        // the credential-form dialog and we'd loop.
+        const loginHint = result.loginHint?.trim();
+        if (!loginHint) {
+          return yield* Effect.fail(new Error(`Provider ${providerId} credentialForm produced an empty loginHint.`));
+        }
+        return yield* createIntegration({ db, spaceId, providerId, loginHint });
+      }).pipe(Effect.mapError(mapCoordinatorError));
+
+    return Capability.contributes(
+      IntegrationCoordinator,
+      { createIntegration, createCustomIntegration, finalizeRedirectFlow, submitCredentialForm },
+      () =>
+        Effect.sync(() => {
+          window.removeEventListener('message', handleMessage);
+          pending.clear();
+        }),
     );
   }),
 );

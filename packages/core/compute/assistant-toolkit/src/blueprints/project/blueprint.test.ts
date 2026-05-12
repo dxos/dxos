@@ -19,10 +19,10 @@ import { TriggerDispatcher } from '@dxos/functions-runtime';
 import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
-import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
-import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
+import { MarkdownBlueprint } from '@dxos/plugin-markdown';
+import { Markdown } from '@dxos/plugin-markdown';
+import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
 import { WithProperties } from '@dxos/plugin-markdown/testing';
-import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -85,7 +85,7 @@ describe('Agent', () => {
         const document = yield* Database.add(
           Obj.make(Markdown.Document, {
             name: 'Test Document',
-            content: Ref.make(Text.make('This is a test document with some content.')),
+            content: Ref.make(Text.make({ content: 'This is a test document with some content.' })),
           }),
         );
         yield* Database.flush();

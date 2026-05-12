@@ -17,7 +17,7 @@ import {
 } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-import { SimpleLayoutState } from '#types';
+import { SimpleLayoutCapabilities } from '#types';
 
 import { createCompanionActions } from './actions';
 import { useSimpleLayoutState } from './useSimpleLayoutState';
@@ -39,7 +39,7 @@ export const useNavbarActions = (): NavbarActions => {
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
-  const stateAtom = useCapability(SimpleLayoutState);
+  const stateAtom = useCapability(SimpleLayoutCapabilities.State);
   const { updateState } = useSimpleLayoutState();
 
   // Create a computed atom that derives everything from graph connections and state.

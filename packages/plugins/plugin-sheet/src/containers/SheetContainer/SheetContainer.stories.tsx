@@ -17,9 +17,9 @@ import { AttendableContainer } from '@dxos/react-ui-attention';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ComputeGraphContext, useComputeGraph } from '#components';
-import { SheetOperation } from '#operations';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '#testing';
 import { translations } from '#translations';
+import { SheetOperation } from '#types';
 import { Sheet } from '#types';
 
 import RangeList from '../RangeList';

@@ -12,7 +12,7 @@ import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { Channel, ContentBlock, Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -20,7 +20,7 @@ import { meta } from '#meta';
 import { SLACK_SOURCE } from '../constants';
 import { IntegrationDatabaseMissingError, formatSlackSyncFailure } from '../errors';
 import { SlackApi } from '../services';
-import { SyncSlackChannel } from './definitions';
+import { SlackOperation } from '../types';
 
 type SlackConversation = SlackApi.SlackConversation;
 type SlackMessage = SlackApi.SlackMessage;
@@ -252,7 +252,7 @@ const TARGET_CONCURRENCY = 3;
  * `queues`, used to build `Feed.FeedService`) is resolved via the Client
  * capability — same shape as `plugin-thread`'s `AppendChannelMessage`.
  */
-const handler: Operation.WithHandler<typeof SyncSlackChannel> = SyncSlackChannel.pipe(
+const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = SlackOperation.SyncSlackChannel.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ integration, channel: channelRef }) {
       const integrationTarget = integration.target;

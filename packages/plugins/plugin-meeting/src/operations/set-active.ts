@@ -7,10 +7,9 @@ import { Operation } from '@dxos/compute';
 import { Obj, Type } from '@dxos/echo';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 
-import { Meeting, MeetingCapabilities } from '../types';
-import { SetActive } from './definitions';
+import { Meeting, MeetingCapabilities, MeetingOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof SetActive> = SetActive.pipe(
+const handler: Operation.WithHandler<typeof MeetingOperation.SetActive> = MeetingOperation.SetActive.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ object }) {
       const store = yield* Capability.get(MeetingCapabilities.State);

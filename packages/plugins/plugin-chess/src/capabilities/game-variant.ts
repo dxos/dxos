@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { GameCapabilities, type GameVariant } from '@dxos/plugin-game/types';
+import { GameCapabilities, type GameVariant } from '@dxos/plugin-game';
 
 import { ChessArticle, ChessCard } from '#containers';
 import { Chess } from '#types';

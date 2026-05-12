@@ -57,7 +57,7 @@ describe('format', () => {
 
         const blueprint = db.add(
           Blueprint.make({
-            key: 'example.com/blueprint/test',
+            key: 'com.example.blueprint.test',
             name: 'Test',
             instructions: Template.make({
               source: trim`
@@ -95,7 +95,7 @@ describe('format', () => {
 
         const blueprint = db.add(
           Blueprint.make({
-            key: 'example.com/blueprint/test',
+            key: 'com.example.blueprint.test',
             name: 'Test',
             instructions: Template.make({
               source: trim`
@@ -107,8 +107,8 @@ describe('format', () => {
               inputs: [
                 {
                   name: 'organizations',
-                  kind: 'function',
-                  function: OrganizationList.meta.key,
+                  kind: 'operation',
+                  operation: OrganizationList.meta.key,
                 },
               ],
             }),

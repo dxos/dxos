@@ -8,9 +8,9 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 
-import { LayoutState, type LayoutStateProps } from '#types';
+import { StorybookCapabilities } from '#types';
 
-const defaultState: LayoutStateProps = {
+const defaultState: StorybookCapabilities.LayoutStateProps = {
   sidebarState: 'closed',
   complementarySidebarState: 'closed',
   dialogOpen: false,
@@ -19,9 +19,9 @@ const defaultState: LayoutStateProps = {
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (props?: { initialState?: Partial<LayoutStateProps> }) {
+  Effect.fnUntraced(function* (props?: { initialState?: Partial<StorybookCapabilities.LayoutStateProps> }) {
     const { initialState } = props ?? {};
-    const stateAtom = Atom.make<LayoutStateProps>({ ...defaultState, ...initialState });
+    const stateAtom = Atom.make<StorybookCapabilities.LayoutStateProps>({ ...defaultState, ...initialState });
 
     const layoutAtom = Atom.make((get): AppCapabilities.Layout => {
       const state = get(stateAtom);
@@ -37,6 +37,9 @@ export default Capability.makeModule(
       };
     });
 
-    return [Capability.contributes(LayoutState, stateAtom), Capability.contributes(AppCapabilities.Layout, layoutAtom)];
+    return [
+      Capability.contributes(StorybookCapabilities.LayoutState, stateAtom),
+      Capability.contributes(AppCapabilities.Layout, layoutAtom),
+    ];
   }),
 );

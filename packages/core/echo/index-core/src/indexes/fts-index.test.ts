@@ -55,6 +55,7 @@ describe('FtsIndex', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'doc-1',
           recordId: null,
           updatedAt: Date.now(),
@@ -100,6 +101,7 @@ describe('FtsIndex', () => {
       const obj1: IndexerObject = {
         spaceId,
         queueId: null,
+        queueNamespace: null,
         documentId: 'doc-1',
         recordId: null,
         updatedAt: Date.now(),
@@ -120,6 +122,7 @@ describe('FtsIndex', () => {
       const obj2: IndexerObject = {
         spaceId,
         queueId: null,
+        queueNamespace: null,
         documentId: 'doc-1',
         recordId: null,
         updatedAt: Date.now(),
@@ -158,6 +161,7 @@ describe('FtsIndex', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'doc-100',
           recordId: null,
           updatedAt: Date.now(),
@@ -170,6 +174,7 @@ describe('FtsIndex', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'doc-200',
           recordId: null,
           updatedAt: Date.now(),
@@ -182,6 +187,7 @@ describe('FtsIndex', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'doc-1000',
           recordId: null,
           updatedAt: Date.now(),
@@ -231,6 +237,7 @@ describe('FtsIndex', () => {
       const obj1: IndexerObject = {
         spaceId: space1,
         queueId: null,
+        queueNamespace: null,
         documentId: 'doc-s1',
         recordId: null,
         updatedAt: Date.now(),
@@ -244,6 +251,7 @@ describe('FtsIndex', () => {
       const obj2: IndexerObject = {
         spaceId: space2,
         queueId: null,
+        queueNamespace: null,
         documentId: 'doc-s2',
         recordId: null,
         updatedAt: Date.now(),
@@ -303,6 +311,7 @@ describe('FtsIndex', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'doc-1',
           recordId: null,
           updatedAt: Date.now(),
@@ -316,6 +325,7 @@ describe('FtsIndex', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'doc-2',
           recordId: null,
           updatedAt: Date.now(),
@@ -386,6 +396,7 @@ describe('FtsIndex', () => {
       const spaceObj: IndexerObject = {
         spaceId,
         queueId: null,
+        queueNamespace: null,
         documentId: 'doc-space',
         recordId: null,
         updatedAt: Date.now(),
@@ -399,6 +410,7 @@ describe('FtsIndex', () => {
       const queue1Obj: IndexerObject = {
         spaceId,
         queueId: queue1,
+        queueNamespace: 'data',
         documentId: null,
         recordId: null,
         updatedAt: Date.now(),
@@ -412,6 +424,7 @@ describe('FtsIndex', () => {
       const queue2Obj: IndexerObject = {
         spaceId,
         queueId: queue2,
+        queueNamespace: 'data',
         documentId: null,
         recordId: null,
         updatedAt: Date.now(),
@@ -461,6 +474,7 @@ describe('FtsIndex', () => {
       const spaceObj: IndexerObject = {
         spaceId,
         queueId: null,
+        queueNamespace: null,
         documentId: 'doc-space',
         recordId: null,
         updatedAt: Date.now(),
@@ -474,6 +488,7 @@ describe('FtsIndex', () => {
       const queueObj: IndexerObject = {
         spaceId,
         queueId,
+        queueNamespace: 'data',
         documentId: null,
         recordId: null,
         updatedAt: Date.now(),
@@ -524,6 +539,7 @@ describe('FtsIndex', () => {
       const space1Obj: IndexerObject = {
         spaceId: space1,
         queueId: null,
+        queueNamespace: null,
         documentId: 'doc-s1',
         recordId: null,
         updatedAt: Date.now(),
@@ -537,6 +553,7 @@ describe('FtsIndex', () => {
       const space2Obj: IndexerObject = {
         spaceId: space2,
         queueId: null,
+        queueNamespace: null,
         documentId: 'doc-s2',
         recordId: null,
         updatedAt: Date.now(),
@@ -550,6 +567,7 @@ describe('FtsIndex', () => {
       const queueObj: IndexerObject = {
         spaceId: space2,
         queueId: queueInSpace2,
+        queueNamespace: 'data',
         documentId: null,
         recordId: null,
         updatedAt: Date.now(),
@@ -594,6 +612,7 @@ describe('FtsIndex', () => {
           {
             spaceId,
             queueId: ObjectId.random(),
+            queueNamespace: 'data',
             documentId: null,
             recordId: null,
             updatedAt: Date.now(),
@@ -602,6 +621,7 @@ describe('FtsIndex', () => {
           {
             spaceId,
             queueId: ObjectId.random(),
+            queueNamespace: 'data',
             documentId: null,
             recordId: null,
             updatedAt: Date.now(),
@@ -635,6 +655,7 @@ describe('FtsIndex', () => {
         const object: IndexerObject = {
           spaceId,
           queueId: ObjectId.random(),
+          queueNamespace: 'data',
           documentId: null,
           recordId: null,
           updatedAt: Date.now(),
@@ -668,6 +689,7 @@ describe('FtsIndex', () => {
         const objects: IndexerObject[] = Array.from({ length: count }, (_, i) => ({
           spaceId,
           queueId: ObjectId.random(),
+          queueNamespace: 'data',
           documentId: null,
           recordId: null,
           updatedAt: Date.now(),

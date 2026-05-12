@@ -167,6 +167,21 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
 };
 
 /**
+ * Marks an operation as intrinsic — provided directly by the DXOS platform runtime rather than
+ * deployed as a user function. The `intrinsic:<key>` deployedId routes invocations to the
+ * built-in implementation registered with the runtime.
+ */
+export const intrinsic = <const O extends Operation.Definition.Any>(op: O): O => {
+  return {
+    ...op,
+    meta: {
+      ...op.meta,
+      deployedId: `intrinsic:${op.meta.key}`,
+    },
+  };
+};
+
+/**
  * Attaches a handler to an Operation definition.
  * The handler may use any services declared in the operation, plus Operation.Service (always available).
  * Dual API: can be called directly or used in a pipe.
@@ -330,11 +345,16 @@ export const PersistentOperation = Schema$.Struct({
 );
 export interface PersistentOperation extends Schema$.Schema.Type<typeof PersistentOperation> {}
 
+const FUNCTION_META_KEY = 'org.dxos.service.function';
+
 /**
  * Serialize an operation definition to a persistent operation record.
  */
 export const serialize = (operation: Definition.Any): PersistentOperation => {
   return Obj.make(PersistentOperation, {
+    [Obj.Meta]: {
+      keys: operation.meta.deployedId ? [{ source: FUNCTION_META_KEY, id: operation.meta.deployedId }] : [],
+    },
     key: operation.meta.key,
     name: operation.meta.name ?? '',
     version: operation.meta.version ?? '0.0.0',
@@ -352,7 +372,7 @@ export const serialize = (operation: Definition.Any): PersistentOperation => {
  */
 export const deserialize = (record: PersistentOperation): Definition.Any => {
   // Extract deployed function ID from ECHO meta keys (matches FUNCTIONS_META_KEY in @dxos/functions).
-  const deployedId = Obj.getMeta(record).keys.find((key) => key.source === 'org.dxos.service.function')?.id;
+  const deployedId = Obj.getMeta(record).keys.find((key) => key.source === FUNCTION_META_KEY)?.id;
   return make({
     input: record.inputSchema ? JsonSchema.toEffectSchema(record.inputSchema) : Schema$.Unknown,
     output: record.outputSchema ? JsonSchema.toEffectSchema(record.outputSchema) : Schema$.Unknown,

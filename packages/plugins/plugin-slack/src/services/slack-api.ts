@@ -14,7 +14,7 @@ import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { Database, type Ref } from '@dxos/echo';
-import { Integration } from '@dxos/plugin-integration/types';
+import { Integration } from '@dxos/plugin-integration';
 
 import { SLACK_API_BASE } from '../constants';
 import { SlackApiError } from '../errors';

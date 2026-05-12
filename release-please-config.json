@@ -540,6 +540,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-bluesky/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-board/package.json",
           "jsonpath": "$.version"
         },
@@ -1215,6 +1220,11 @@
         },
         {
           "type": "json",
+          "path": "tools/dx-trace-imports/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "tools/lockfile-explorer/package.json",
           "jsonpath": "$.version"
         },
@@ -1276,6 +1286,11 @@
         {
           "type": "json",
           "path": "vendor/hyperformula/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "vendor/kbn-handlebars/package.json",
           "jsonpath": "$.version"
         },
         {

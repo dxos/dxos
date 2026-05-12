@@ -8,9 +8,9 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 
 import { SEARCH_DIALOG } from '../constants';
-import { OpenSearch } from './definitions';
+import { SearchOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof OpenSearch> = OpenSearch.pipe(
+const handler: Operation.WithHandler<typeof SearchOperation.OpenSearch> = SearchOperation.OpenSearch.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       yield* Operation.invoke(LayoutOperation.UpdateDialog, {

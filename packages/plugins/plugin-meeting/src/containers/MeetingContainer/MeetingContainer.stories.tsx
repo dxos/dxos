@@ -10,10 +10,10 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
 import { Feed, Obj, Ref } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { MarkdownPlugin } from '@dxos/plugin-markdown';
-import { MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown/types';
+import { MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
+import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Query, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -64,7 +64,7 @@ const meta = {
                   created: new Date().toISOString(),
                   participants: [],
                   transcript: Ref.make(Transcript.make(Ref.make(transcriptFeed))),
-                  notes: Ref.make(Text.make('Notes')),
+                  notes: Ref.make(Text.make({ content: 'Notes' })),
                   summary: Ref.make(Text.make()),
                 }),
               );

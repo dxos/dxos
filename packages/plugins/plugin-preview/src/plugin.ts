@@ -1,7 +1,9 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-// Eager re-export of `PreviewPlugin`. See `@dxos/plugin-testing/src/core.ts`
-// for the rationale.
-export * from './PreviewPlugin';
+import { Plugin } from '@dxos/app-framework';
+
+import { meta } from './meta';
+
+export const PreviewPlugin = Plugin.lazy(meta, () => import('#plugin'));

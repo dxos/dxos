@@ -10,7 +10,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
-import { type SimpleLayoutState, SimpleLayoutState as SimpleLayoutStateCapability } from '#types';
+import { SimpleLayoutCapabilities } from '#types';
 
 /**
  * URL handler for simple layout that syncs browser URL with layout state.
@@ -99,19 +99,22 @@ export default Capability.makeModule(
     // Sync URL with layout state changes.
     let lastWorkspace: string | undefined;
     let lastActive: string | undefined;
-    const unsubscribe = yield* Capabilities.subscribeAtom(SimpleLayoutStateCapability, (state: SimpleLayoutState) => {
-      const { workspace, active } = state;
+    const unsubscribe = yield* Capabilities.subscribeAtom(
+      SimpleLayoutCapabilities.State,
+      (state: SimpleLayoutCapabilities.SimpleLayoutState) => {
+        const { workspace, active } = state;
 
-      if (workspace !== lastWorkspace || active !== lastActive) {
-        lastWorkspace = workspace;
-        lastActive = active;
+        if (workspace !== lastWorkspace || active !== lastActive) {
+          lastWorkspace = workspace;
+          lastActive = active;
 
-        const path = active ? toUrlPath(active) : toUrlPath(workspace);
-        if (window.location.pathname !== path) {
-          history.pushState(null, '', `${path}${window.location.search}`);
+          const path = active ? toUrlPath(active) : toUrlPath(workspace);
+          if (window.location.pathname !== path) {
+            history.pushState(null, '', `${path}${window.location.search}`);
+          }
         }
-      }
-    });
+      },
+    );
 
     return Capability.contributes(Capabilities.Null, null, () =>
       Effect.sync(() => {

@@ -12,7 +12,7 @@ import { Button, Panel, toLocalizedString, useTranslation } from '@dxos/react-ui
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { FilesOperation } from '#operations';
+import { FilesOperation } from '#types';
 import { type LocalEntity, type LocalFile } from '#types';
 
 export type LocalFileContainerProps = {

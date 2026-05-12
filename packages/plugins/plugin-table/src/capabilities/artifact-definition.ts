@@ -15,7 +15,7 @@ import { defineArtifact } from '@dxos/compute';
 import { Obj, Query } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import { Table, TableView } from '@dxos/react-ui-table/types';
 import { ViewModel } from '@dxos/schema';

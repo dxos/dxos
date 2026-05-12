@@ -9,7 +9,7 @@ import { AppCapabilities, LayoutOperation, getCollectionsPath, getSpacePath } fr
 import { Operation } from '@dxos/compute';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { SpaceEvents } from '@dxos/plugin-space';
-import { SpaceCapabilities } from '@dxos/plugin-space/types';
+import { SpaceCapabilities } from '@dxos/plugin-space';
 
 import README_CONTENT from '../content/README.md?raw';
 
@@ -18,8 +18,8 @@ const SPACE_ICON = 'house-line';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const { Obj, Ref } = yield* Effect.tryPromise(() => import('@dxos/echo'));
-    const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client/types'));
-    const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown/types'));
+    const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
+    const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown'));
     const { Collection } = yield* Effect.tryPromise(() => import('@dxos/echo'));
 
     const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);

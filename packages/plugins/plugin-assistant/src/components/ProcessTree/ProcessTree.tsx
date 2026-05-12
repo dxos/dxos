@@ -61,6 +61,7 @@ export const ProcessTree = composable<HTMLDivElement, ProcessTreeProps>(
                       <Tooltip.Trigger className='p-1' content={process.state.toString()}>
                         <Icon
                           size={4}
+                          synchronized
                           classNames={mx(
                             process.state === Process.State.RUNNING && 'animate-spin',
                             process.state === Process.State.FAILED && 'text-error-text',

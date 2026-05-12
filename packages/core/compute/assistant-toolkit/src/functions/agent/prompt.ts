@@ -149,8 +149,11 @@ export default AgentPrompt.pipe(
           ),
         );
       },
+      Effect.tapBoth({
+        onSuccess: () => Database.flush(),
+        onFailure: () => Database.flush(),
+      }),
       Effect.scoped,
-      Effect.provide(Trace.writerLayerNoop),
     ),
   ),
   Operation.opaqueHandler,
