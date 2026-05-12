@@ -54,10 +54,10 @@ export type Options = {
   registry?: Registry.Registry;
 };
 
-// TODO(dmaretskyi): Take from model characteristics. opus has 200k max tokens.
 /**
  * Summarization threshold in tokens.
  */
+// TODO(dmaretskyi): Take from model characteristics. opus has 200k max tokens.
 const SUMMARY_THRESHOLD = 80_000;
 
 /**
