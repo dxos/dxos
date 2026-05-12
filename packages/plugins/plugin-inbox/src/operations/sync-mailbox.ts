@@ -33,7 +33,7 @@ const syncOne = (integration: Integration.Integration, mailbox: Mailbox.Mailbox)
         ? (yield* Effect.promise(() => import('./imap'))).ImapFunctions.Sync
         : (yield* Effect.promise(() => import('./google/gmail'))).GmailFunctions.Sync;
 
-    yield* Effect.tryPromise(() =>
+    return yield* Effect.tryPromise(() =>
       runtime.runPromise(
         Operation.invoke(syncOperation, {
           integration: Ref.make(integration),
@@ -41,6 +41,7 @@ const syncOne = (integration: Integration.Integration, mailbox: Mailbox.Mailbox)
         }),
       ),
     ).pipe(
+      Effect.map(() => true as const),
       Effect.catchAll((error) => {
         log.catch(error);
         return Operation.invoke(LayoutOperation.AddToast, {
@@ -49,7 +50,7 @@ const syncOne = (integration: Integration.Integration, mailbox: Mailbox.Mailbox)
           duration: 5_000,
           title: ['sync-mailbox-error.title', { ns: meta.id }],
           closeLabel: ['close.label', { ns: meta.id }],
-        });
+        }).pipe(Effect.as(false as const));
       }),
     );
   });
@@ -79,17 +80,26 @@ const handler: Operation.WithHandler<typeof SyncMailbox> = SyncMailbox.pipe(
         }
       }
 
+      let allOk = pairs.length > 0;
       for (const { integration, mailbox } of pairs) {
-        yield* syncOne(integration, mailbox);
+        const ok = yield* syncOne(integration, mailbox);
+        if (!ok) {
+          allOk = false;
+        }
       }
 
-      yield* Operation.invoke(LayoutOperation.AddToast, {
-        id: `${meta.id}/sync-mailbox-success`,
-        icon: 'ph--check--regular',
-        duration: 3_000,
-        title: ['sync-mailbox-success.title', { ns: meta.id }],
-        closeLabel: ['close.label', { ns: meta.id }],
-      });
+      // Only show the success toast when every mailbox completed without
+      // hitting the catchAll above — otherwise the failure toast emitted
+      // inside syncOne is the only signal the user gets.
+      if (allOk) {
+        yield* Operation.invoke(LayoutOperation.AddToast, {
+          id: `${meta.id}/sync-mailbox-success`,
+          icon: 'ph--check--regular',
+          duration: 3_000,
+          title: ['sync-mailbox-success.title', { ns: meta.id }],
+          closeLabel: ['close.label', { ns: meta.id }],
+        });
+      }
     }),
   ),
 );

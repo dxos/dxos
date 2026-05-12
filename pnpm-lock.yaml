@@ -2434,6 +2434,9 @@ importers:
       '@dxos/migrations':
         specifier: workspace:*
         version: link:../../sdk/migrations
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../common/node-std
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability

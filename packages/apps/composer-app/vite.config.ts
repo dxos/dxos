@@ -173,6 +173,16 @@ export default defineConfig((env) => ({
       ['node:tls']: path.resolve(dirname, 'src/native/node-net-shim.ts'),
       ['net']: path.resolve(dirname, 'src/native/node-net-shim.ts'),
       ['tls']: path.resolve(dirname, 'src/native/node-net-shim.ts'),
+      // imapflow uses Buffer + Duplex streams extensively. Vite externalises
+      // node:buffer / node:stream / stream by default, so the runtime sees
+      // them as undefined. Route them through @dxos/node-std shims (Buffer
+      // backed by `buffer`, Stream backed by `readable-stream`).
+      ['node:buffer']: '@dxos/node-std/buffer',
+      ['buffer']: '@dxos/node-std/buffer',
+      ['node:stream']: '@dxos/node-std/stream',
+      ['stream']: '@dxos/node-std/stream',
+      ['node:events']: '@dxos/node-std/events',
+      ['events']: '@dxos/node-std/events',
       ['tiktoken/lite']: path.resolve(dirname, 'stub.mjs'),
       // NOTE: react-ui must be aliased because vite-plugin-import-source only intercepts imports from
       //   source files — imports embedded inside compiled dist/ files bypass it entirely.
