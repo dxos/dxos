@@ -108,6 +108,7 @@ export const translations: Resource[] = [
         'assistant-dialog.title': 'Assistant',
         'open-assistant.label': 'Open assistant',
         'reset-blueprints.label': 'Reset blueprints',
+        'import-compute-operations.label': 'Import compute operations',
 
         'no-results.message': 'No results',
 
