@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { Annotation, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
@@ -13,6 +15,7 @@ import * as Template from './Template';
  * Executable instructions, which may use Blueprints.
  * May reference additional context.
  */
+// TODO(burdon): Name?
 export const Routine = Schema.Struct({
   /**
    * Name of the routine.
@@ -39,6 +42,7 @@ export const Routine = Schema.Struct({
    * Natural language instructions for the routine.
    * These should provide concrete course of action for the AI to follow.
    */
+  // TODO(burdon): Form editor.
   instructions: Template.Template.pipe(Annotation.FormInputAnnotation.set(false)),
 
   /**

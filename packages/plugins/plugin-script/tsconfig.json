@@ -181,6 +181,9 @@
       "path": "../plugin-explorer"
     },
     {
+      "path": "../plugin-game"
+    },
+    {
       "path": "../plugin-graph"
     },
     {

@@ -197,14 +197,6 @@
       // status injected by `bootLoaderPlugin`) into the track so the
       // CSS `transform` translation applies uniformly.
       var track = document.getElementById('boot-loader-status-track');
-      if (!track) {
-        track = document.createElement('div');
-        track.id = 'boot-loader-status-track';
-        while (element.firstChild) {
-          track.appendChild(element.firstChild);
-        }
-        element.appendChild(track);
-      }
       var lastLine = track.lastElementChild;
       if (range && lastLine) {
         // Range tick — replace the current visible line's text in place,

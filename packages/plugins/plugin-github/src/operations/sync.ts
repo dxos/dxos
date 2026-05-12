@@ -6,11 +6,11 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, mergeField, readSnapshot, snapshotField, writeSnapshot } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Actor, Message, Organization, Person, Project, Task, Thread } from '@dxos/types';
+import { Organization, Person, Project, Task } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -20,25 +20,37 @@ import { GitHubApi } from '../services';
 import { type SyncOptions, SyncGitHubRepositories } from './definitions';
 
 //
-// Direction: pull-only.
+// Direction: bidirectional (pull-then-push) for projects and tasks.
 //
-// v1 of this plugin pulls Organization, Person, Project, Task (issue/PR), and
-// Thread/Message (comments) from GitHub into ECHO and never writes back. Push
-// is intentionally deferred — the open question is attribution: a user-to-server
-// OAuth token attributes any write to the authorizing user, which is wrong in
-// shared spaces; an installation token attributes to the GitHub App with body-
-// prefix attribution but needs server-side minting (KMS). Both options are real
-// follow-ups but neither is in scope here.
+// Each sync pass first pulls every reachable Organization, Person, Project,
+// and Task from GitHub into ECHO, then walks the local mirrors and pushes
+// any field that diverged from the snapshot taken at the end of the previous
+// pull. Snapshots live on `Integration.snapshots[<github id>]` (where ids
+// are the GitHub-issued numeric ids, stringified for stable foreign-key
+// matching).
 //
-// Practical consequence: local edits to mapped fields (Task.title,
-// Task.description, Task.status, Org.name, etc.) are overwritten by the remote
-// value on every sync. Local edits to NON-mapped fields (Task.priority,
-// Task.estimate, Task.project, Person.notes, etc.) are preserved.
+// Mapped fields per object:
+//   Project (repo): description (description-only — see updateRepo for why
+//                   `name` is intentionally not pushed)
+//   Task (issue):   title, description, status (open/closed)
 //
-// Sync target shape: the user picks REPOSITORIES. The repos' owning orgs (and
-// org members) are auto-pulled — a single Organization per unique owner across
-// the selected repos, deduped within one sync pass. The user does not pick
-// orgs directly.
+// Conflict policy is remote-wins (mirrors Trello/Linear). Comments are NOT
+// synced (the chunked-yield rewrite is still pending; see TODO below).
+//
+// Attribution caveat: pushed edits are attributed to the GitHub App / OAuth
+// user that owns the integration token, not to the local user who made the
+// edit. This is unavoidable with the current token model — a write from
+// "Person A in space" appears on GitHub as a write from the App. Document
+// before enabling for shared spaces.
+//
+// New local objects (no GitHub foreign key) are NOT pushed in this pass —
+// creating a new GitHub issue requires (owner, repo) which we currently
+// don't surface from local Tasks unambiguously.
+//
+// Sync target shape: the user picks REPOSITORIES. The repos' owning orgs
+// (and org members) are auto-pulled — a single Organization per unique owner
+// across the selected repos, deduped within one sync pass. The user does
+// not pick orgs directly.
 //
 
 //
@@ -48,6 +60,27 @@ import { type SyncOptions, SyncGitHubRepositories } from './definitions';
 /** Per-target parallelism across selected repos. */
 const REPO_CONCURRENCY = 4;
 const ISSUE_CONCURRENCY = 4;
+
+//
+// Snapshot field shapes (stored on `Integration.snapshots`)
+//
+
+/**
+ * Snapshot shapes. Fields are required (not `?`) because every snapshot is
+ * written in one shot via {@link writeSnapshot} after a pull; absence-of-
+ * snapshot is modeled by `readSnapshot` returning `undefined`. `name` on a
+ * Project is recorded but not pushed — see {@link GitHubApi.updateRepo}.
+ */
+type ProjectSnapshot = {
+  name: string;
+  description: string;
+};
+
+type TaskSnapshot = {
+  title: string;
+  description: string;
+  status: 'todo' | 'done';
+};
 
 //
 // Foreign-key + lookup helpers
@@ -67,7 +100,7 @@ const findByForeignId = <T>(schema: Schema.Schema<any, any>, id: string | number
   });
 
 //
-// Field mappers (GitHub → DXOS)
+// Field mappers (GitHub ↔ DXOS)
 //
 
 /**
@@ -78,6 +111,23 @@ const findByForeignId = <T>(schema: Schema.Schema<any, any>, id: string | number
  */
 const issueStateToTaskStatus = (state: string): 'todo' | 'done' => (state === 'closed' ? 'done' : 'todo');
 
+/**
+ * Reverse of {@link issueStateToTaskStatus}. `'in-progress'` is collapsed to
+ * `open` since GitHub has no equivalent state. Returns undefined when the
+ * status is unrecognised so the caller can skip the push instead of failing.
+ */
+const taskStatusToIssueState = (status: string | undefined): 'open' | 'closed' | undefined => {
+  switch (status) {
+    case 'done':
+      return 'closed';
+    case 'todo':
+    case 'in-progress':
+      return 'open';
+    default:
+      return undefined;
+  }
+};
+
 const sinceFromOptions = (options: SyncOptions | undefined): string | undefined => {
   const days = options?.maxDaysBack;
   if (typeof days !== 'number' || days <= 0) {
@@ -87,7 +137,7 @@ const sinceFromOptions = (options: SyncOptions | undefined): string | undefined 
 };
 
 //
-// Upsert helpers (all pull-only)
+// Pull (snapshot-driven three-way merge for Project + Task; simple upsert for Org/Person)
 //
 
 const upsertOrganization = Effect.fn('upsertOrganization')(function* (org: GitHubApi.GitHubOrg) {
@@ -149,55 +199,125 @@ const upsertPerson = Effect.fn('upsertPerson')(function* (
   return yield* Database.add(created);
 });
 
-const upsertProject = Effect.fn('upsertProject')(function* (repo: GitHubApi.GitHubRepo) {
+/**
+ * Pull a GitHub repo into ECHO as a Project. Mapped fields go through
+ * three-way merge against `integration.snapshots[<repo id>]`; the snapshot
+ * is then refreshed to remote-current so the next push pass sees only
+ * fields the user has edited locally. `name` is recorded in the snapshot
+ * (so we can detect divergence) but is not pushed back — see
+ * {@link GitHubApi.updateRepo}.
+ */
+const upsertProject = Effect.fn('upsertProject')(function* (
+  integration: Obj.Unknown & { snapshots?: Record<string, unknown> },
+  repo: GitHubApi.GitHubRepo,
+) {
+  const remoteFields: Required<ProjectSnapshot> = {
+    name: repo.full_name,
+    description: repo.description ?? '',
+  };
+  const fid = String(repo.id);
   const existing = yield* findByForeignId<Project.Project>(Project.Project, repo.id);
+
   if (existing) {
-    Obj.update(existing, (existing) => {
-      existing.name = repo.full_name;
-      if (repo.description != null) {
-        existing.description = repo.description;
-      }
-    });
+    const snapshot = readSnapshot<ProjectSnapshot>(integration, fid);
+    const nameResult = mergeField<string | undefined>(
+      existing.name,
+      remoteFields.name,
+      snapshotField(snapshot, 'name'),
+    );
+    const descriptionResult = mergeField<string | undefined>(
+      existing.description,
+      remoteFields.description,
+      snapshotField(snapshot, 'description'),
+    );
+    const writeName = nameResult.source === 'remote' && existing.name !== nameResult.value;
+    const writeDescription = descriptionResult.source === 'remote' && existing.description !== descriptionResult.value;
+    if (writeName || writeDescription) {
+      Obj.update(existing, (existing) => {
+        if (writeName) {
+          existing.name = nameResult.value;
+        }
+        if (writeDescription) {
+          existing.description = descriptionResult.value;
+        }
+      });
+    }
+    writeSnapshot(integration, fid, remoteFields);
     return existing;
   }
+
   const created = Obj.make(Project.Project, {
     [Obj.Meta]: { keys: [fkFor(repo.id)] },
     name: repo.full_name,
     description: repo.description ?? undefined,
   });
-  return yield* Database.add(created);
+  const persisted = yield* Database.add(created);
+  writeSnapshot(integration, fid, remoteFields);
+  return persisted;
 });
 
 /**
- * Pull-only upsert for issue/PR → Task. Mapped fields (title, description,
- * status) are overwritten by remote on every sync; non-mapped fields (priority,
- * estimate, etc.) are preserved.
+ * Pull a GitHub issue into ECHO as a Task. Same merge shape as
+ * {@link upsertProject}, against snapshot fields {title, description, status}.
+ * Non-mapped fields (`Task.priority`, `Task.estimate`, etc.) are preserved.
  */
 const upsertTask = Effect.fn('upsertTask')(function* (
+  integration: Obj.Unknown & { snapshots?: Record<string, unknown> },
   issue: GitHubApi.GitHubIssue,
   assignedPerson: Person.Person | undefined,
   project: Project.Project,
 ) {
+  const remoteFields: Required<TaskSnapshot> = {
+    title: issue.title,
+    description: issue.body ?? '',
+    status: issueStateToTaskStatus(issue.state),
+  };
+  const fid = String(issue.id);
   const existing = yield* findByForeignId<Task.Task>(Task.Task, issue.id);
+
   if (existing) {
+    const snapshot = readSnapshot<TaskSnapshot>(integration, fid);
+    // Task.title is required (non-optional) so the merge produces a string.
+    const titleResult = mergeField<string>(existing.title, remoteFields.title, snapshotField(snapshot, 'title'));
+    const descriptionResult = mergeField<string | undefined>(
+      existing.description,
+      remoteFields.description,
+      snapshotField(snapshot, 'description'),
+    );
+    // existing.status is the full Task status union ('todo' | 'in-progress' | 'done' | undefined);
+    // the snapshot only ever holds GitHub's collapsed shape ('todo' | 'done'). Widen the merge
+    // type so both sides typecheck and let mergeField compare them as plain values.
+    const statusResult = mergeField<'todo' | 'in-progress' | 'done' | undefined>(
+      existing.status,
+      remoteFields.status,
+      snapshotField(snapshot, 'status'),
+    );
+    const writeTitle = titleResult.source === 'remote' && existing.title !== titleResult.value;
+    const writeDescription = descriptionResult.source === 'remote' && existing.description !== descriptionResult.value;
+    const writeStatus = statusResult.source === 'remote' && existing.status !== statusResult.value;
     Obj.update(existing, (existing) => {
-      existing.title = issue.title;
-      existing.description = issue.body ?? '';
-      existing.status = issueStateToTaskStatus(issue.state);
+      if (writeTitle) {
+        existing.title = titleResult.value;
+      }
+      if (writeDescription) {
+        existing.description = descriptionResult.value;
+      }
+      if (writeStatus) {
+        existing.status = statusResult.value;
+      }
       if (assignedPerson && !existing.assigned) {
         existing.assigned = Ref.make(assignedPerson);
       }
-      // Maintain the Task → Project ref. Only overwrite when missing or
-      // pointing somewhere else (e.g. transferred-repo edge case); leave a
-      // user-set project alone if it already matches.
       const currentProjectId = existing.project?.dxn.asEchoDXN()?.echoId;
       const projectId = Ref.make(project).dxn.asEchoDXN()?.echoId;
       if (!existing.project || (currentProjectId && projectId && currentProjectId !== projectId)) {
         existing.project = Ref.make(project);
       }
     });
+    writeSnapshot(integration, fid, remoteFields);
     return { task: existing, created: false };
   }
+
   const created = Task.make({
     [Obj.Meta]: { keys: [fkFor(issue.id)] },
     title: issue.title,
@@ -207,97 +327,175 @@ const upsertTask = Effect.fn('upsertTask')(function* (
     project: Ref.make(project),
   });
   const persisted = yield* Database.add(created);
+  writeSnapshot(integration, fid, remoteFields);
   return { task: persisted, created: true };
 });
 
+//
+// Push (snapshot diff → GitHub mutations)
+//
+
+export type GitHubPushResult = {
+  projects: number;
+  tasks: number;
+};
+
 /**
- * Pull-only upsert for issue/PR comments. One {@link Thread.Thread} per Task
- * (foreign-keyed `task:<task-fid>`); one {@link Message.Message} per remote
- * comment (foreign-keyed by comment.id). Local Messages without a foreign key
- * are preserved (the user might have added their own commentary). Remote
- * deletions are NOT mirrored — keep history.
+ * Push reconciler for one repo. Walks the locally-mirrored Project for the
+ * given repo plus every Task whose foreign key matches one of the issues we
+ * just pulled, diffs against the snapshot, and PATCHes any diverged field
+ * back to GitHub.
+ *
+ * Behaviour:
+ *   - Project description divergence → PATCH /repos/{owner}/{repo}.
+ *     `name` divergence is logged but NOT pushed (rename is destructive and
+ *     almost never desired from a sync mirror).
+ *   - Task title / description / status divergence → PATCH the issue.
+ *   - Tombstones (`Obj.isDeleted`) are skipped.
+ *
+ * After a successful push the snapshot is refreshed with the values just
+ * sent so the next pass sees no divergence even before the next pull.
+ *
+ * The push callbacks' error type is generic. The reconciler doesn't inspect
+ * or recover from those errors — it propagates so the outer `Effect.either`
+ * at the call site can record a per-target `lastError`. Generic-`E` keeps
+ * this module decoupled from the HTTP error hierarchy of `GitHubApi`.
  */
-const syncCommentsForTask = Effect.fn('syncCommentsForTask')(function* (
-  task: Task.Task,
-  comments: ReadonlyArray<GitHubApi.GitHubComment>,
-  authorByLogin: Map<string, Person.Person>,
-) {
-  if (comments.length === 0) {
-    return 0;
-  }
+export const pushRepoUpdates: <E, R>(
+  integration: Obj.Unknown & { snapshots?: Record<string, unknown> },
+  repo: GitHubApi.GitHubRepo,
+  remoteIssuesById: ReadonlyMap<string, GitHubApi.GitHubIssue>,
+  push: {
+    /** Wraps `GitHubApi.updateIssue`. */
+    updateIssue: (
+      owner: string,
+      repo: string,
+      issueNumber: number,
+      input: GitHubApi.IssueUpdateInput,
+    ) => Effect.Effect<void, E, R>;
+    /** Wraps `GitHubApi.updateRepo`. */
+    updateRepo: (owner: string, repo: string, input: GitHubApi.RepoUpdateInput) => Effect.Effect<void, E, R>;
+  },
+) => Effect.Effect<GitHubPushResult, E, Database.Service | R> = Effect.fn('pushRepoUpdates')(
+  function* (integration, repo, remoteIssuesById, push) {
+    let projects = 0;
+    let tasks = 0;
 
-  // Find or create the thread anchored to this task.
-  const taskFid = Obj.getMeta(task).keys.find((key) => key.source === GITHUB_SOURCE)?.id;
-  if (!taskFid) {
-    return yield* Effect.dieMessage('Task missing GitHub foreign key — upsertTask must run first.');
-  }
-  let thread = yield* findByForeignId<Thread.Thread>(Thread.Thread, `task:${taskFid}`);
-  if (!thread) {
-    const created = Thread.make({
-      [Obj.Meta]: { keys: [{ source: GITHUB_SOURCE, id: `task:${taskFid}` }] },
-      name: 'Comments',
-      status: 'active',
-      messages: [],
-    });
-    thread = yield* Database.add(created);
-    // TODO(wittjosiah): Anchor thread → task via AnchoredTo relation. Skipped in
-    //   v1 because the relation API requires a Database service round-trip
-    //   that didn't fit the current handler shape; comments still discoverable
-    //   via the foreign key (`task:<fid>`) but won't show in document/table
-    //   comments-companion plank until the relation is added.
-  }
-
-  // Index existing messages by comment foreign id so we can update in place.
-  const existingByFid = new Map<string, Message.Message>();
-  for (const ref of thread.messages) {
-    const target = ref.target;
-    if (!target) {
-      continue;
-    }
-    const fid = Obj.getMeta(target).keys.find((key) => key.source === GITHUB_SOURCE)?.id;
-    if (fid) {
-      existingByFid.set(fid, target);
-    }
-  }
-
-  let added = 0;
-  const newRefs: Array<Ref.Ref<Message.Message>> = [];
-  for (const comment of comments) {
-    const existing = existingByFid.get(String(comment.id));
-    const senderLogin = comment.user?.login ?? 'unknown';
-    // TODO(wittjosiah): Upsert a Person for unknown comment authors via
-    //   `ensurePerson` (in the main handler scope) once comments are re-enabled,
-    //   so external commenters get a `contact` ref like assignees do.
-    const sender = authorByLogin.get(senderLogin);
-    const senderActor: Actor.Actor = sender ? { name: senderLogin, contact: Ref.make(sender) } : { name: senderLogin };
-    if (existing) {
-      Obj.update(existing, (existing) => {
-        existing.blocks = [{ _tag: 'text', text: comment.body ?? '' }];
-        if (comment.created_at) {
-          existing.created = comment.created_at;
+    // Project (repo) push — description only.
+    {
+      const fid = String(repo.id);
+      const local = yield* findByForeignId<Project.Project>(Project.Project, repo.id);
+      if (local && !Obj.isDeleted(local)) {
+        const snapshot = readSnapshot<ProjectSnapshot>(integration, fid);
+        if (snapshot) {
+          const localName = local.name ?? '';
+          const localDescription = local.description ?? '';
+          const input: GitHubApi.RepoUpdateInput = {};
+          let diverged = false;
+          if (snapshot.description !== undefined && snapshot.description !== localDescription) {
+            input.description = localDescription;
+            diverged = true;
+          }
+          if (snapshot.name !== undefined && snapshot.name !== localName) {
+            // We deliberately don't push repo renames — see updateRepo above.
+            // Log instead so the user can chase down via the audit channel.
+            log.warn('github push: local repo name diverges from remote; rename push is intentionally disabled', {
+              repoId: fid,
+              localName,
+              snapshotName: snapshot.name,
+            });
+          }
+          if (diverged) {
+            yield* push.updateRepo(repo.owner.login, repo.name, input);
+            writeSnapshot(integration, fid, {
+              ...snapshot,
+              description: localDescription,
+            });
+            projects++;
+          }
         }
-      });
-      continue;
+      }
     }
-    const message = Message.make({
-      [Obj.Meta]: { keys: [fkFor(comment.id)] },
-      created: comment.created_at ?? new Date().toISOString(),
-      sender: senderActor,
-      blocks: [{ _tag: 'text', text: comment.body ?? '' }],
-    });
-    const persisted = yield* Database.add(message);
-    newRefs.push(Ref.make(persisted));
-    added++;
-  }
 
-  if (newRefs.length > 0) {
-    Obj.update(thread, (thread) => {
-      thread.messages = [...thread.messages, ...newRefs];
-    });
-  }
+    // Task (issue) push — title / body / state.
+    for (const [id, remoteIssue] of remoteIssuesById) {
+      const local = yield* findByForeignId<Task.Task>(Task.Task, id);
+      if (!local || Obj.isDeleted(local)) {
+        continue;
+      }
+      const snapshot = readSnapshot<TaskSnapshot>(integration, id);
+      if (!snapshot) {
+        continue;
+      }
+      const localTitle = local.title ?? '';
+      const localDescription = local.description ?? '';
+      const localStatus = local.status;
+      const desiredStatusForSnapshot: 'todo' | 'done' | undefined =
+        localStatus === 'done' ? 'done' : localStatus === 'todo' || localStatus === 'in-progress' ? 'todo' : undefined;
 
-  return added;
-});
+      const input: GitHubApi.IssueUpdateInput = {};
+      let diverged = false;
+      if (snapshot.title !== undefined && snapshot.title !== localTitle) {
+        input.title = localTitle;
+        diverged = true;
+      }
+      if (snapshot.description !== undefined && snapshot.description !== localDescription) {
+        input.body = localDescription;
+        diverged = true;
+      }
+      // Status push is pull-only for PRs. GitHub uses the same /issues/{n}
+      // endpoint for issues and PRs, but `state: 'closed'` on a PR rejects
+      // it (the closed-without-merge red badge), and merging requires a
+      // separate `PUT /pulls/{n}/merge` endpoint we don't support. The safe
+      // default is to never push a status change for a PR — log if local
+      // and snapshot diverge so the divergence is auditable.
+      const isPullRequest = remoteIssue.pull_request != null;
+      if (
+        !isPullRequest &&
+        snapshot.status !== undefined &&
+        desiredStatusForSnapshot !== undefined &&
+        snapshot.status !== desiredStatusForSnapshot
+      ) {
+        const issueState = taskStatusToIssueState(localStatus);
+        if (issueState) {
+          input.state = issueState;
+          diverged = true;
+        }
+      } else if (
+        isPullRequest &&
+        snapshot.status !== undefined &&
+        desiredStatusForSnapshot !== undefined &&
+        snapshot.status !== desiredStatusForSnapshot
+      ) {
+        log.warn('github push: PR status diverged locally; pull-only for PRs (status will not be pushed)', {
+          issueId: id,
+          number: remoteIssue.number,
+          localStatus,
+          snapshotStatus: snapshot.status,
+        });
+      }
+      if (!diverged) {
+        continue;
+      }
+
+      yield* push.updateIssue(repo.owner.login, repo.name, remoteIssue.number, input);
+      // Refresh the snapshot: title / description / status sent. Status only
+      // gets refreshed when we actually pushed a state change (issues only) —
+      // for PRs we keep the snapshot's previous status, so the warning above
+      // keeps firing until either the user reverts locally or the PR's state
+      // changes on GitHub and a pull catches up.
+      writeSnapshot(integration, id, {
+        ...snapshot,
+        title: localTitle,
+        description: localDescription,
+        status: input.state !== undefined ? (desiredStatusForSnapshot ?? snapshot.status) : snapshot.status,
+      });
+      tasks++;
+    }
+
+    return { projects, tasks };
+  },
+);
 
 //
 // Main handler
@@ -366,6 +564,17 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
               continue;
             }
 
+            // Project echo id for the filter is only available after upsert;
+            // when filtering to a single repo, resolve the existing local
+            // Project (if any) first and bail out before upsertProject's
+            // pull/merge side effects on unrelated repos.
+            if (repoFilterId) {
+              const existing = yield* findByForeignId<Project.Project>(Project.Project, remoteRepo.id);
+              if (!existing || existing.id !== repoFilterId) {
+                continue;
+              }
+            }
+
             // Always upsert by foreign-key. If `target.object` is already pointing
             // at the same Project (the normal round-trip), the upsert finds it,
             // refreshes its fields, and returns the same instance — and we leave
@@ -373,12 +582,8 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
             // a different object, the upsert may have created a new Project (or
             // resolved an unrelated one); rewire `target.object` to whatever the
             // upsert returned so the user-visible target tracks the actual record.
-            const project = yield* upsertProject(remoteRepo);
+            const project = yield* upsertProject(integrationObj, remoteRepo);
             const rewireRef = !localObj || localObj.id !== project.id ? Ref.make(project) : undefined;
-
-            if (repoFilterId && project.id !== repoFilterId) {
-              continue;
-            }
 
             targetEntries.push({
               entry: target,
@@ -435,6 +640,8 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
           }
 
           let pulledTasks = 0;
+          let pushedProjects = 0;
+          let pushedTasks = 0;
 
           const perTarget = yield* Effect.forEach(
             targetEntries,
@@ -446,6 +653,7 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
                     const issues = yield* GitHubApi.fetchRepoIssues(remoteRepo.owner.login, remoteRepo.name, {
                       since,
                     });
+                    const remoteIssuesById = new Map<string, GitHubApi.GitHubIssue>();
                     yield* Effect.forEach(
                       issues,
                       (issue) =>
@@ -458,7 +666,8 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
                             ? yield* ensurePerson(assigneeUser, undefined)
                             : undefined;
 
-                          const { created } = yield* upsertTask(issue, assignedPerson, project);
+                          const { created } = yield* upsertTask(integrationObj, issue, assignedPerson, project);
+                          remoteIssuesById.set(String(issue.id), issue);
                           if (created) {
                             pulledTasks++;
                           }
@@ -469,6 +678,29 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
                         }),
                       { concurrency: ISSUE_CONCURRENCY },
                     );
+
+                    // Push: snapshot-diff the local Project + Tasks for this
+                    // repo and PATCH only the diverged fields. Errors on
+                    // individual PATCHes propagate as a single Either-Left
+                    // for this target so partial progress on other targets
+                    // is preserved.
+                    //
+                    // TODO(wittjosiah): `remoteIssuesById` is built from
+                    //   `fetchRepoIssues(..., { since })`, so when
+                    //   `maxDaysBack` is set this push pass cannot see
+                    //   locally-edited tasks whose remote issue is older
+                    //   than the window. Switch the candidate set to the
+                    //   local mirror (every Task with a GITHUB_SOURCE fk
+                    //   under this repo) once we store `number` per task
+                    //   so we don't need the remote payload to PATCH.
+                    const pushResult = yield* pushRepoUpdates(integrationObj, remoteRepo, remoteIssuesById, {
+                      updateIssue: (owner, repoName, issueNumber, input) =>
+                        GitHubApi.updateIssue(owner, repoName, issueNumber, input).pipe(Effect.map(() => undefined)),
+                      updateRepo: (owner, repoName, input) =>
+                        GitHubApi.updateRepo(owner, repoName, input).pipe(Effect.map(() => undefined)),
+                    });
+                    pushedProjects += pushResult.projects;
+                    pushedTasks += pushResult.tasks;
                   }),
                 );
                 return { remoteId, result };
@@ -526,6 +758,10 @@ const handler: Operation.WithHandler<typeof SyncGitHubRepositories> = SyncGitHub
               projects: targetEntries.length,
               tasks: pulledTasks,
               comments: 0,
+            },
+            pushed: {
+              projects: pushedProjects,
+              tasks: pushedTasks,
             },
           };
         }).pipe(

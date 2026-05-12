@@ -146,6 +146,9 @@
       "path": "../../core/compute/functions-runtime"
     },
     {
+      "path": "../../core/compute/mcp-client"
+    },
+    {
       "path": "../../core/compute/operation"
     },
     {
@@ -183,9 +186,6 @@
     },
     {
       "path": "../../core/halo/keyring"
-    },
-    {
-      "path": "../../core/mcp-client"
     },
     {
       "path": "../../core/mesh/edge-client"
@@ -282,6 +282,9 @@
     },
     {
       "path": "../../plugins/plugin-gallery"
+    },
+    {
+      "path": "../../plugins/plugin-game"
     },
     {
       "path": "../../plugins/plugin-github"

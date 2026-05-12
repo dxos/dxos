@@ -5,41 +5,10 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Database, Ref } from '@dxos/echo';
+import { Database } from '@dxos/echo';
+import { GameRef } from '@dxos/plugin-game/types';
 
 import { TicTacToe } from '#types';
-
-export const Create = Operation.make({
-  meta: {
-    key: 'org.dxos.function.tictactoe.create',
-    name: 'Create Tic-Tac-Toe',
-    description: 'Creates a new Tic-Tac-Toe game.',
-  },
-  input: Schema.Struct({
-    name: Schema.optional(
-      Schema.String.annotations({
-        description: 'Name of the game.',
-      }),
-    ),
-    size: Schema.optional(
-      Schema.Number.annotations({
-        description: 'Board dimension (3, 4, or 5). Default 3.',
-      }),
-    ),
-    winCondition: Schema.optional(
-      Schema.Number.annotations({
-        description: 'Consecutive marks needed to win. Defaults to size.',
-      }),
-    ),
-    level: Schema.optional(
-      TicTacToe.Level.annotations({
-        description: 'AI difficulty level.',
-      }),
-    ),
-  }),
-  output: TicTacToe.Game,
-  services: [Database.Service],
-});
 
 export const MakeMove = Operation.make({
   meta: {
@@ -48,8 +17,8 @@ export const MakeMove = Operation.make({
     description: 'Places a marker on the board and updates game state.',
   },
   input: Schema.Struct({
-    game: Ref.Ref(TicTacToe.Game).annotations({
-      description: 'The ID of the Tic-Tac-Toe game.',
+    game: GameRef(TicTacToe.State).annotations({
+      description: 'The ID of the game object (variant must be Tic-Tac-Toe).',
     }),
     position: Schema.String.annotations({
       description: 'Position as "row,col" e.g. "1,2".',
@@ -73,8 +42,8 @@ export const AiMove = Operation.make({
     description: 'Uses the AI engine to play the next move.',
   },
   input: Schema.Struct({
-    game: Ref.Ref(TicTacToe.Game).annotations({
-      description: 'The ID of the Tic-Tac-Toe game.',
+    game: GameRef(TicTacToe.State).annotations({
+      description: 'The ID of the game object (variant must be Tic-Tac-Toe).',
     }),
     level: Schema.optional(
       TicTacToe.Level.annotations({

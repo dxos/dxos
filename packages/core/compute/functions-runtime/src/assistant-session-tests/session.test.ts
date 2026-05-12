@@ -26,7 +26,7 @@ describe('AiSession', () => {
       // Create blueprint.
       const blueprint = db.add(
         Blueprint.make({
-          key: 'example.com/blueprint/Test',
+          key: 'com.example.blueprint.test',
           name: 'Test Blueprint',
         }),
       );

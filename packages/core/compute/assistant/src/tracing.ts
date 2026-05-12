@@ -50,7 +50,7 @@ export const AgentRequestEnd = Trace.EventType('assistant.agentRequestEnd', {
 export const McpServerError = Trace.EventType('assistant.mcpServerError', {
   schema: Schema.Struct({
     url: Schema.String,
-    kind: Schema.Literal('sse', 'http'),
+    protocol: Schema.Literal('sse', 'http'),
     message: Schema.String,
   }),
   isEphemeral: true,

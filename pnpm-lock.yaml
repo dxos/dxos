@@ -2491,6 +2491,9 @@ importers:
       '@dxos/plugin-gallery':
         specifier: workspace:*
         version: link:../../plugins/plugin-gallery
+      '@dxos/plugin-game':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-game
       '@dxos/plugin-github':
         specifier: workspace:*
         version: link:../../plugins/plugin-github
@@ -2830,7 +2833,7 @@ importers:
         version: link:../../common/log
       '@dxos/mcp-client':
         specifier: workspace:*
-        version: link:../../core/mcp-client
+        version: link:../../core/compute/mcp-client
       '@dxos/merkle-search-tree':
         specifier: workspace:*
         version: link:../../common/merkle-search-tree
@@ -4569,7 +4572,7 @@ importers:
         version: link:../../../common/log
       '@dxos/mcp-client':
         specifier: workspace:*
-        version: link:../../mcp-client
+        version: link:../mcp-client
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
@@ -5224,6 +5227,135 @@ importers:
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.94.4(effect@3.20.0)
+
+  packages/core/compute/introspect:
+    dependencies:
+      '@dxos/introspect-tools':
+        specifier: workspace:*
+        version: link:../introspect-tools
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      glob:
+        specifier: '>=10.5.0'
+        version: 13.0.3
+      ts-morph:
+        specifier: 'catalog:'
+        version: 16.0.0
+    devDependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../echo/echo
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../echo/echo-react
+      '@types/node':
+        specifier: 22.10.2
+        version: 22.10.2
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.7
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+      react:
+        specifier: ~19.2.3
+        version: 19.2.3
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.5(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(esbuild@0.28.0)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.12))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/core/compute/introspect-mcp:
+    dependencies:
+      '@dxos/effect-zod':
+        specifier: workspace:*
+        version: link:../../../common/effect-zod
+      '@dxos/introspect':
+        specifier: workspace:*
+        version: link:../introspect
+      '@dxos/introspect-tools':
+        specifier: workspace:*
+        version: link:../introspect-tools
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      '@modelcontextprotocol/sdk':
+        specifier: '>=1.26.0'
+        version: 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+      zod:
+        specifier: 'catalog:'
+        version: 4.3.6
+    devDependencies:
+      '@types/node':
+        specifier: 22.10.2
+        version: 22.10.2
+      tsx:
+        specifier: 'catalog:'
+        version: 4.21.0
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.5(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(esbuild@0.28.0)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.12))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/core/compute/introspect-tools:
+    dependencies:
+      '@dxos/effect-zod':
+        specifier: workspace:*
+        version: link:../../../common/effect-zod
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+      zod:
+        specifier: 'catalog:'
+        version: 4.3.6
+    devDependencies:
+      '@types/node':
+        specifier: 22.10.2
+        version: 22.10.2
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.5(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(esbuild@0.28.0)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.12))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/core/compute/mcp-client:
+    dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@effect/ai':
+        specifier: 'catalog:'
+        version: 0.33.2(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
+      '@modelcontextprotocol/sdk':
+        specifier: '>=1.26.0'
+        version: 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
 
   packages/core/compute/operation:
     dependencies:
@@ -5931,135 +6063,6 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
 
-  packages/core/introspect:
-    dependencies:
-      '@dxos/introspect-tools':
-        specifier: workspace:*
-        version: link:../introspect-tools
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      glob:
-        specifier: '>=10.5.0'
-        version: 13.0.3
-      ts-morph:
-        specifier: 'catalog:'
-        version: 16.0.0
-    devDependencies:
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../echo/echo
-      '@dxos/echo-react':
-        specifier: workspace:*
-        version: link:../echo/echo-react
-      '@types/node':
-        specifier: 22.10.2
-        version: 22.10.2
-      '@types/react':
-        specifier: ~19.2.7
-        version: 19.2.7
-      effect:
-        specifier: 3.20.0
-        version: 3.20.0
-      react:
-        specifier: ~19.2.3
-        version: 19.2.3
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
-      vitest:
-        specifier: 'catalog:'
-        version: 4.1.5(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(esbuild@0.28.0)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.12))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-
-  packages/core/introspect-mcp:
-    dependencies:
-      '@dxos/effect-zod':
-        specifier: workspace:*
-        version: link:../../common/effect-zod
-      '@dxos/introspect':
-        specifier: workspace:*
-        version: link:../introspect
-      '@dxos/introspect-tools':
-        specifier: workspace:*
-        version: link:../introspect-tools
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@modelcontextprotocol/sdk':
-        specifier: '>=1.26.0'
-        version: 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
-      effect:
-        specifier: 3.20.0
-        version: 3.20.0
-      zod:
-        specifier: 'catalog:'
-        version: 4.3.6
-    devDependencies:
-      '@types/node':
-        specifier: 22.10.2
-        version: 22.10.2
-      tsx:
-        specifier: 'catalog:'
-        version: 4.21.0
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
-      vitest:
-        specifier: 'catalog:'
-        version: 4.1.5(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(esbuild@0.28.0)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.12))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-
-  packages/core/introspect-tools:
-    dependencies:
-      '@dxos/effect-zod':
-        specifier: workspace:*
-        version: link:../../common/effect-zod
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      effect:
-        specifier: 3.20.0
-        version: 3.20.0
-      zod:
-        specifier: 'catalog:'
-        version: 4.3.6
-    devDependencies:
-      '@types/node':
-        specifier: 22.10.2
-        version: 22.10.2
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
-      vitest:
-        specifier: 'catalog:'
-        version: 4.1.5(@opentelemetry/api@1.9.0)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(esbuild@0.28.0)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.12))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-
-  packages/core/mcp-client:
-    dependencies:
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../compute/ai
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@effect/ai':
-        specifier: 'catalog:'
-        version: 0.33.2(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
-      '@modelcontextprotocol/sdk':
-        specifier: '>=1.26.0'
-        version: 1.27.1(@cfworker/json-schema@4.1.1)(zod@4.3.6)
-      effect:
-        specifier: 3.20.0
-        version: 3.20.0
-
   packages/core/mesh/edge-client:
     dependencies:
       '@dxos/async':
@@ -6658,6 +6661,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client
+      '@dxos/plugin-game':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-game
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../../plugins/plugin-inbox
@@ -8414,6 +8420,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
+      '@dxos/plugin-game':
+        specifier: workspace:*
+        version: link:../plugin-game
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -10043,6 +10052,79 @@ importers:
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.3.6(esbuild@0.28.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(rollup@3.30.0)(storybook@10.3.6(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@6.0.3)(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(webpack@5.105.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.28.0))
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.7
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.7)
+      react:
+        specifier: ~19.2.3
+        version: 19.2.3
+      react-dom:
+        specifier: ~19.2.3
+        version: 19.2.3(react@19.2.3)
+      vite:
+        specifier: '>=8.0.0'
+        version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/plugins/plugin-game:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute/compute
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
+      '@dxos/react-ui-search':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-search
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+    devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
+      '@dxos/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.7
@@ -12909,6 +12991,9 @@ importers:
       '@dxos/plugin-explorer':
         specifier: workspace:*
         version: link:../plugin-explorer
+      '@dxos/plugin-game':
+        specifier: workspace:*
+        version: link:../plugin-game
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -14976,6 +15061,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-game':
+        specifier: workspace:*
+        version: link:../plugin-game
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -17122,6 +17210,9 @@ importers:
       '@dxos/plugin-explorer':
         specifier: workspace:*
         version: link:../../plugins/plugin-explorer
+      '@dxos/plugin-game':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-game
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../../plugins/plugin-graph
@@ -19454,7 +19545,7 @@ importers:
     dependencies:
       '@dxos/introspect-tools':
         specifier: workspace:*
-        version: link:../../core/introspect-tools
+        version: link:../../core/compute/introspect-tools
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui

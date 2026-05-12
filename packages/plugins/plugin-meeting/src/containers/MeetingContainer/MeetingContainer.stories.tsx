@@ -64,7 +64,7 @@ const meta = {
                   created: new Date().toISOString(),
                   participants: [],
                   transcript: Ref.make(Transcript.make(Ref.make(transcriptFeed))),
-                  notes: Ref.make(Text.make('Notes')),
+                  notes: Ref.make(Text.make({ content: 'Notes' })),
                   summary: Ref.make(Text.make()),
                 }),
               );

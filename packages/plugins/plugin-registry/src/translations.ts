@@ -26,6 +26,11 @@ export const translations = [
         'plugin-url.label': 'Plugin URL',
         'load-plugin.label': 'Load Plugin',
         'loading.label': 'Loading...',
+        'filter.label': 'Filter plugins',
+        'filter.placeholder': 'Filter…',
+        'registry.loading.label': 'Loading registry plugins…',
+        'registry.error.label': 'Failed to load registry plugins: {{message}}',
+        'registry.empty.label': 'No registry plugins available.',
         'dev-plugin.section.title': 'Dev plugin',
         'dev-plugin.description':
           'Load a plugin from a local Vite dev server (the `composerPlugin` defaults to port 3967). Composer reattaches it on every reload, surviving HMR — useful when iterating on a community plugin against a live registry version.',
