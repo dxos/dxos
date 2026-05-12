@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import { IntegrationCoordinator } from '#types';
@@ -19,9 +18,10 @@ import { OAUTH_REDIRECT_PATH } from '../constants';
  * rewrites `window.location` to `/` synchronously, so the deck's URL
  * handler doesn't try to interpret the redirect path. The actual finalize
  * work waits on `IntegrationCoordinator` (which depends on `ClientReady`)
- * and is fire-and-forget — Startup itself completes immediately so the
- * rest of the boot sequence is not blocked.
+ * and runs on a daemon fiber so Startup completes immediately and the rest
+ * of the boot sequence isn't blocked.
  */
+
 /** Edge stamps the literal "undefined" into the URL when no tokens were produced. */
 const isPresent = (value: string | null): value is string => !!value && value !== 'undefined';
 
@@ -53,14 +53,13 @@ export default Capability.makeModule(
     const tokens = readRedirectTokens();
     if (tokens) {
       log('oauth redirect: capturing tokens', { accessTokenId: tokens.accessTokenId });
-      const capabilities = yield* Capability.Service;
-      void runAndForwardErrors(
+      yield* Effect.forkDaemon(
         Effect.gen(function* () {
           const coordinator = yield* Capability.waitFor(IntegrationCoordinator);
           yield* coordinator
             .finalizeRedirectFlow(tokens)
             .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('redirect-flow finalize failed', { error }))));
-        }).pipe(Effect.provideService(Capability.Service, capabilities)),
+        }),
       );
     }
     return Capability.contributes(Capabilities.Null, null);
