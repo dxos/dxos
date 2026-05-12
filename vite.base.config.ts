@@ -224,6 +224,11 @@ const createStorybookProject = (dirname: string) =>
       include: ['react', 'react-dom', 'react/jsx-runtime'],
     },
     plugins: [
+      // Source-mapped imports of @dxos/* point at the package's TS sources, so the
+      // browser test environment sees `import 'node:events'` (and similar) directly.
+      // Without this resolver vite externalises them and you get
+      // `Module "node:events" has been externalized for browser compatibility`.
+      nodeStdResolvePlugin(),
       storybookTest({
         configDir: path.join(dirname, '.storybook'),
         // The --ci flag will skip prompts and not open a browser.
