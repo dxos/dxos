@@ -26,12 +26,8 @@ on:
         required: false
         default: false
 
-# Limit GITHUB_TOKEN to read-only for fork code execution safety.
-# pull-requests: write is needed for moonrepo/run-report-action to post PR comments.
-# packages: read is needed to pull the ghcr.io container image.
 permissions:
   contents: read
-  pull-requests: write
   packages: read
 
 env:
@@ -47,6 +43,12 @@ concurrency:
 # https://moonrepo.dev/docs/guides/ci
 jobs:
   check:
+    # pull-requests: write is scoped here (not top-level) so only this job can
+    # post the moon run report comment; build/test/e2e jobs stay read-only.
+    permissions:
+      contents: read
+      pull-requests: write
+      packages: read
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
