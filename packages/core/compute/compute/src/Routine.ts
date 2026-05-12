@@ -13,7 +13,7 @@ import * as Template from './Template';
 
 /**
  * Prompt-based operation.
- * May reference bluesprints and additional context.
+ * May reference blueprints and additional context.
  */
 export const Routine = Schema.Struct({
   name: Schema.optional(Schema.String),

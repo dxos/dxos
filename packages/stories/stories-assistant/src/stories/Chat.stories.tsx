@@ -15,7 +15,6 @@ import { Reply } from '@dxos/compute/testing';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { AssistantPlugin } from '@dxos/plugin-assistant';
 import { AssistantBlueprint } from '@dxos/plugin-assistant/blueprints';
 import { translations } from '@dxos/plugin-assistant/translations';
 import { ChessBlueprint, ChessFunctions } from '@dxos/plugin-chess/blueprints';
@@ -162,7 +161,7 @@ export const WithPlanning: Story = {
     lazyPlugins: async () => {
       const { MarkdownPlugin } = await import('@dxos/plugin-markdown');
       return {
-        plugins: [MarkdownPlugin(), AssistantPlugin()],
+        plugins: [MarkdownPlugin()],
       };
     },
     config: config.remote,

@@ -4,15 +4,13 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Feed, Filter, Obj } from '@dxos/echo';
 import { Chat } from '@dxos/plugin-assistant/components';
 import { useBlueprintRegistry, useChatProcessor, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { useComputeRuntime } from '@dxos/plugin-automation/hooks';
-import { useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, Popover, Toolbar } from '@dxos/react-ui';
 
 import { ExecutionGraphModule } from './ExecutionGraphModule';
@@ -28,7 +26,8 @@ export const ChatModule = ({ space }: ModuleProps) => {
   // TODO(burdon): Better way to get the agent?
   const parent = chat ? Obj.getParent(chat) : undefined;
   const agent = parent && Obj.instanceOf(Agent.Agent, parent) ? parent : undefined;
-  // const plan = useObject(agent?.plan);
+  const [plan] = useObject(agent?.plan.target);
+  const hasPlan = (plan?.tasks?.length ?? 0) > 0;
 
   const blueprintRegistry = useBlueprintRegistry();
   const runtime = useComputeRuntime(space.id);
@@ -49,12 +48,7 @@ export const ChatModule = ({ space }: ModuleProps) => {
           <Chat.Toolbar />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <Chat.Content
-            classNames={[
-              'relative grid',
-              agent?.plan.target ? 'grid-rows-[auto_1fr_3fr_auto]' : 'grid-rows-[auto_1fr_auto]',
-            ]}
-          >
+          <Chat.Content>
             <Toolbar.Root>
               <Toolbar.Text classNames='text-subdued'>{chat?.name}</Toolbar.Text>
               <Popover.Root>
@@ -69,10 +63,12 @@ export const ChatModule = ({ space }: ModuleProps) => {
                 </Popover.Portal>
               </Popover.Root>
             </Toolbar.Root>
-            {agent?.plan.target && (
-              <Surface.Surface type={AppSurface.Article} data={{ subject: agent.plan.target, attendableId: 'story' }} />
-            )}
             <Chat.Thread />
+            {hasPlan && (
+              <div className='flex flex-col items-center py-2 overflow-hidden'>
+                <Chat.TaskList classNames='max-h-[120px] border border-separator rounded-sm text-description' />
+              </div>
+            )}
             <Chat.Prompt
               {...chatProps}
               classNames='border-none rounded-none'

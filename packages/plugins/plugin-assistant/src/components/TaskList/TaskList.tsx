@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Plan } from '@dxos/assistant-toolkit';
 import { useObject } from '@dxos/react-client/echo';
-import { Input, Tag, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, Tag, type ThemedClassName } from '@dxos/react-ui';
 import { Row, RowList } from '@dxos/react-ui-list';
 import { composable, composableProps } from '@dxos/ui-theme';
 
@@ -23,14 +23,16 @@ export const TaskList = composable<HTMLDivElement, TaskListProps>(({ plan, ...pr
       <RowList.Viewport {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
         <RowList.Content aria-label='Tasks'>
           {tasks.map((task) => (
-            <Row key={task.id} id={task.id} classNames='py-1'>
-              <Input.Root>
-                <div className='flex items-center gap-2'>
-                  <Input.Checkbox checked={task.status === 'done'} disabled />
-                  <Input.Label classNames='truncate flex-1'>{task.title}</Input.Label>
-                  {task.status === 'in-progress' && <Tag palette='warning'>pending</Tag>}
-                </div>
-              </Input.Root>
+            <Row key={task.id} id={task.id} classNames='py-0'>
+              <div className='flex items-center gap-2'>
+                <Icon
+                  icon={task.status === 'done' ? 'ph--check--regular' : 'ph--circle--regular'}
+                  classNames={task.status === 'done' ? 'text-success-text' : undefined}
+                  size={4}
+                />
+                <span className='truncate flex-1'>{task.title}</span>
+                {task.status === 'in-progress' && <Tag palette='info'>pending</Tag>}
+              </div>
             </Row>
           ))}
         </RowList.Content>
