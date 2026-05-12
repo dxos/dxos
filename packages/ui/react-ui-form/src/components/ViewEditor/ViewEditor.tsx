@@ -24,7 +24,7 @@ import {
   createEchoChangeCallback,
   getTypenameFromQuery,
 } from '@dxos/schema';
-import { mx, osTranslations, subtleHover } from '@dxos/ui-theme';
+import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -329,14 +329,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                   classNames={'grid grid-cols-subgrid col-span-5'}
                   aria-expanded={expandedField === field.id}
                 >
-                  <div
-                    role='none'
-                    className={mx(
-                      subtleHover,
-                      'grid grid-cols-subgrid col-span-5',
-                      'rounded-xs cursor-pointer min-h-10',
-                    )}
-                  >
+                  <div className='grid grid-cols-subgrid col-span-5 rounded-xs cursor-pointer min-h-10 dx-hover'>
                     <List.ItemDragHandle disabled={readonly || schemaReadonly} />
                     <List.ItemTitle classNames={hidden && 'text-subdued'} onClick={() => handleToggleField(field)}>
                       {field.path}

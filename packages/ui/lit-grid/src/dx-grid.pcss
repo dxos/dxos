@@ -125,7 +125,7 @@
       [role='columnheader'],
       [role='rowheader'] {
         &[aria-selected] {
-          --grid-cell-surface: var(--color-grid-selection-overlay);
+          --grid-cell-surface: var(--color-grid-selection-surface);
 
           &:focus:not([aria-readonly='true']),
           &:focus-visible,
@@ -147,7 +147,7 @@
     }
 
     &:has(.dx-grid__row--cta__cell:hover) .dx-grid__row--cta__cell {
-      background: var(--color-grid-hover-overlay);
+      background: var(--color-grid-highlight-surface);
     }
   }
 

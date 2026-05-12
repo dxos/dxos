@@ -55,8 +55,6 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={EventTile}
-                classNames='my-2'
-                gap={8}
                 items={items}
                 draggable={false}
                 getId={(item) => item.event.id}
