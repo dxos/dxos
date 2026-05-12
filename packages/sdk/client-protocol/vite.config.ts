@@ -6,8 +6,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
-    types: 'src/types/index.ts',
     index: 'src/index.ts',
+    types: 'src/types/index.ts',
   },
   test: { node: true },
 });

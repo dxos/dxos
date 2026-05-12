@@ -6,6 +6,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    index: 'src/index.ts',
+    translations: 'src/translations.ts',
     capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
@@ -13,9 +15,7 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     FilesPlugin: 'src/FilesPlugin.tsx',
     'FilesPlugin.node': 'src/FilesPlugin.node.ts',
-    translations: 'src/translations.ts',
     types: 'src/types/index.ts',
-    index: 'src/index.ts',
   },
   jsx: 'react',
   test: { node: { environment: 'happy-dom' } },

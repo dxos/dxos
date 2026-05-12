@@ -323,8 +323,23 @@ const migrate = (pkgRel) => {
       }
     };
     const collect = (node) => {
-      if (typeof node === 'string' && /^\.\/src\/.+\.tsx?$/.test(node)) {
-        addCandidate(node.replace(/^\.\//, ''));
+      if (typeof node === 'string') {
+        // `./src/x.ts` — direct source reference.
+        if (/^\.\/src\/.+\.tsx?$/.test(node)) {
+          addCandidate(node.replace(/^\.\//, ''));
+          return;
+        }
+        // `./dist/types/src/x/y.d.ts` — types path mirrors the src layout.
+        const tm = node.match(/^\.\/dist\/types\/src\/(.+)\.d\.ts$/);
+        if (tm) {
+          const rel = tm[1];
+          for (const c of [`src/${rel}.ts`, `src/${rel}.tsx`, `src/${rel}/index.ts`, `src/${rel}/index.tsx`]) {
+            if (existsSync(resolve(pkgDir, c))) {
+              addCandidate(c);
+              break;
+            }
+          }
+        }
       } else if (node && typeof node === 'object') {
         for (const v of Object.values(node)) collect(v);
       }

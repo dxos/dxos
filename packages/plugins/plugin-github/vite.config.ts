@@ -6,11 +6,11 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    index: 'src/index.ts',
     GitHubPlugin: 'src/GitHubPlugin.ts',
     capabilities: 'src/capabilities/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
-    index: 'src/index.ts',
   },
   test: { node: true },
 });

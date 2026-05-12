@@ -5,6 +5,10 @@
 import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
+  entry: {
+    index: 'src/index.ts',
+    'components/IconPicker/icons': 'src/components/IconPicker/icons.ts',
+  },
   jsx: 'react',
   test: { node: { environment: 'happy-dom' }, storybook: true },
 });

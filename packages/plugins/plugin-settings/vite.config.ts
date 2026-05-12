@@ -6,14 +6,14 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    index: 'src/index.ts',
+    plugin: 'src/plugin.ts',
+    translations: 'src/translations.ts',
+    types: 'src/types/index.ts',
     SettingsPlugin: 'src/SettingsPlugin.ts',
     capabilities: 'src/capabilities/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
-    translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
-    plugin: 'src/plugin.ts',
-    index: 'src/index.ts',
   },
   jsx: 'react',
   test: { node: { environment: 'happy-dom' } },

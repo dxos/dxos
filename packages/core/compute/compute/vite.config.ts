@@ -6,9 +6,9 @@ import { defineConfig } from '../../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    index: 'src/index.ts',
     StorageService: 'src/StorageService.ts',
     testing: 'src/testing/index.ts',
-    index: 'src/index.ts',
   },
   test: { node: true },
 });

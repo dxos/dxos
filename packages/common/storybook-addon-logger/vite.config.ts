@@ -6,9 +6,9 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    index: 'src/index.ts',
     manager: 'src/manager.tsx',
     preview: 'src/preview.tsx',
-    index: 'src/index.ts',
   },
   jsx: 'react',
 });

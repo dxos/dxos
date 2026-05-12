@@ -6,6 +6,7 @@ import { defineConfig } from '../../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    index: 'src/index.ts',
     internal: 'src/internal/index.ts',
     testing: 'src/testing/index.ts',
     Annotation: 'src/Annotation.ts',
@@ -28,7 +29,6 @@ export default defineConfig({
     Tag: 'src/Tag.ts',
     Type: 'src/Type.ts',
     Extension: 'src/Extension.ts',
-    index: 'src/index.ts',
   },
   test: { node: { environment: 'happy-dom' } },
 });
