@@ -43,17 +43,6 @@ const parseEntryPoints = (moonYmlText) => {
   return entries;
 };
 
-const swapTag = (moonYmlText) =>
-  moonYmlText
-    .split('\n')
-    .filter((line, idx, arr) => {
-      // Drop the `compile:` task block entirely (it lives under `tasks:` with `args:`).
-      // We do this by tracking indentation: once we hit `compile:` we skip until we hit a
-      // less-indented line.
-      return true;
-    })
-    .join('\n');
-
 /** Rewrite moon.yml: swap `ts-build` → `ts-vite-build`, drop the `compile` task block. */
 const rewriteMoonYml = (text) => {
   const lines = text.split('\n');
@@ -68,12 +57,10 @@ const rewriteMoonYml = (text) => {
     const indent = line.length - trimmed.length;
 
     if (inCompileTask) {
-      // Inside compile block — skip everything indented deeper than `compile:` itself, plus blank lines.
       if (trimmed === '' || indent > compileIndent) {
         continue;
       }
       inCompileTask = false;
-      // fall through to process this sibling line
     }
 
     // Detect `compile:` task header. Match any indentation so this works regardless of how `tasks:`
