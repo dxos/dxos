@@ -6,9 +6,8 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
-import type * as Scope from 'effect/Scope';
 import * as Schema from 'effect/Schema';
-
+import type * as Scope from 'effect/Scope';
 
 /** Auth + connection settings for an IMAP session. */
 export class ImapAuth extends Schema.Class<ImapAuth>('ImapAuth')({

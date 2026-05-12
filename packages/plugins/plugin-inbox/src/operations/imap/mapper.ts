@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Obj, Ref } from '@dxos/echo';
 import { Message, Person } from '@dxos/types';
 
-import { resolve, type Resolver } from '../../services/resolver';
 import { type ImapBody, type ImapEnvelope } from '../../services';
+import { resolve, type Resolver } from '../../services/resolver';
 
 const formatAddress = (addr: { name?: string; address: string }): string =>
   addr.name ? `"${addr.name}" <${addr.address}>` : addr.address;

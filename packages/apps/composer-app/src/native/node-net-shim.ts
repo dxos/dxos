@@ -17,9 +17,8 @@
  * throws and the IMAP credential form surfaces an "unavailable" message.
  */
 
-import { EventEmitter } from 'events';
-
 import { Channel, invoke } from '@tauri-apps/api/core';
+import { EventEmitter } from 'events';
 import { Duplex } from 'readable-stream';
 
 const isTauri = (): boolean => typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
@@ -32,15 +31,7 @@ type ConnectOptions = {
   secureContext?: boolean;
 };
 
-type SocketEvents =
-  | 'connect'
-  | 'secureConnect'
-  | 'data'
-  | 'end'
-  | 'close'
-  | 'error'
-  | 'timeout'
-  | 'drain';
+type SocketEvents = 'connect' | 'secureConnect' | 'data' | 'end' | 'close' | 'error' | 'timeout' | 'drain';
 
 // `readable-stream`'s Duplex extends EventEmitter at runtime, but its
 // shipped type definitions don't always re-export the EventEmitter

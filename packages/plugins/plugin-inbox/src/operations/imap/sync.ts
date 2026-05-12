@@ -90,10 +90,7 @@ export default ImapSync.pipe(
     }).pipe(
       Effect.scoped,
       Effect.provide(
-        Layer.mergeAll(
-          InboxResolver.Live,
-          Layer.provide(ImapLive, ImapCredentials.fromIntegration(integrationRef)),
-        ),
+        Layer.mergeAll(InboxResolver.Live, Layer.provide(ImapLive, ImapCredentials.fromIntegration(integrationRef))),
       ),
     ),
   ),
@@ -146,7 +143,9 @@ const syncOneMailbox = (integration: Integration.Integration, mailboxRef: Ref.Re
     const foreignSource = `imap:${host}`;
     const existingForeignIds = new Set(
       existing.flatMap((msg) =>
-        Obj.getMeta(msg).keys.filter((key) => key.source === foreignSource).map((key) => key.id),
+        Obj.getMeta(msg)
+          .keys.filter((key) => key.source === foreignSource)
+          .map((key) => key.id),
       ),
     );
 

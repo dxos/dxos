@@ -11,7 +11,6 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
-import { isTauri } from '@dxos/util';
 import {
   type CredentialForm,
   Integration as IntegrationType,
@@ -20,6 +19,7 @@ import {
 } from '@dxos/plugin-integration/types';
 import { OAuthProvider } from '@dxos/protocols';
 import { AccessToken } from '@dxos/types';
+import { isTauri } from '@dxos/util';
 
 import {
   GMAIL_PROVIDER_ID,

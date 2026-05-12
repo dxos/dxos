@@ -3,7 +3,5 @@
   "identifier": "net-capability",
   "description": "Outbound TCP/TLS commands backing the webview node:net shim. Restricted to the main window so the popover/spotlight cannot reach IMAP servers.",
   "windows": ["main"],
-  "permissions": [
-    "core:default"
-  ]
+  "permissions": ["core:default"]
 }

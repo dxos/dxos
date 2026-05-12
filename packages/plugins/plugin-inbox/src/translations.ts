@@ -148,8 +148,7 @@ export const translations = [
         'imap-form.host.placeholder': 'imap.example.com',
         'imap-form.username.label': 'Username',
         'imap-form.password.label': 'Password',
-        'imap-form.app-password.message':
-          'Use an app password if your provider requires it (Gmail, iCloud, Yahoo).',
+        'imap-form.app-password.message': 'Use an app password if your provider requires it (Gmail, iCloud, Yahoo).',
         'imap-form.test-connection.label': 'Test connection',
         'imap-form.unavailable.message':
           'IMAP requires the desktop app or remote functions. Add a Cloudflare functions endpoint to enable it in the browser.',

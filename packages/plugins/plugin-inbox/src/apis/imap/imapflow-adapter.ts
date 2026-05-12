@@ -53,10 +53,12 @@ const tryImap = <A>(thunk: () => Promise<A>): Effect.Effect<A, ImapError> =>
   Effect.tryPromise({ try: thunk, catch: mapError });
 
 const toAddresses = (entries: ReadonlyArray<{ name?: string; address?: string }> | undefined): ImapAddress[] =>
-  (entries ?? []).filter((entry) => typeof entry.address === 'string').map((entry) => ({
-    name: entry.name,
-    address: entry.address as string,
-  }));
+  (entries ?? [])
+    .filter((entry) => typeof entry.address === 'string')
+    .map((entry) => ({
+      name: entry.name,
+      address: entry.address as string,
+    }));
 
 /**
  * Builds an {@link ImapConnection} bound to a connected `imapflow` client.
