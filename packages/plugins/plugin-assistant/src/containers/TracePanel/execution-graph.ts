@@ -14,6 +14,7 @@ import { Trace } from '@dxos/compute';
 import { AGENT_PROCESS_KEY, Process } from '@dxos/functions-runtime';
 import { LogLevel, log } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
+import { Either, Schema } from 'effect';
 
 /**
  * Branch name for top-level operation invocations.
@@ -138,6 +139,14 @@ export const buildExecutionGraph = ({
 
   for (const event of events) {
     if (Trace.isOfType(AgentRequestBegin, event)) {
+      const result = Schema.validateEither(AgentRequestBegin.schema)(event.data);
+      if (Either.isLeft(result)) {
+        log.warn('invalid trace event', {
+          error: result.left,
+        });
+        continue;
+      }
+
       builder.addCommit({
         id: event.id,
         branch: event.meta.parentPid ?? MAIN_BRANCH,
@@ -155,6 +164,14 @@ export const buildExecutionGraph = ({
         message: 'Agent processing request...',
       });
     } else if (Trace.isOfType(AgentRequestEnd, event)) {
+      const result = Schema.validateEither(AgentRequestEnd.schema)(event.data);
+      if (Either.isLeft(result)) {
+        log.warn('invalid trace event', {
+          error: result.left,
+        });
+        continue;
+      }
+
       builder.addCommit({
         id: event.id,
         branch: event.meta.parentPid ?? MAIN_BRANCH,
@@ -176,6 +193,14 @@ export const buildExecutionGraph = ({
         message: 'Agent completed request',
       });
     } else if (Trace.isOfType(CompleteBlock, event)) {
+      const result = Schema.validateEither(CompleteBlock.schema)(event.data);
+      if (Either.isLeft(result)) {
+        log.warn('invalid trace event', {
+          error: result.left,
+        });
+        continue;
+      }
+
       switch (event.data.block._tag) {
         case 'text': {
           if (event.data.role === 'user') {
@@ -225,6 +250,14 @@ export const buildExecutionGraph = ({
         }
       }
     } else if (Trace.isOfType(Trace.OperationStart, event)) {
+      const result = Schema.validateEither(Trace.OperationStart.schema)(event.data);
+      if (Either.isLeft(result)) {
+        log.warn('invalid trace event', {
+          error: result.left,
+        });
+        continue;
+      }
+
       builder.addCommit({
         id: `${event.id}:${event.data.key}:start`,
         branch: event.meta.parentPid ?? MAIN_BRANCH,
@@ -248,6 +281,14 @@ export const buildExecutionGraph = ({
         message: event.data.name ?? event.data.key,
       });
     } else if (Trace.isOfType(Trace.OperationEnd, event)) {
+      const result = Schema.validateEither(Trace.OperationEnd.schema)(event.data);
+      if (Either.isLeft(result)) {
+        log.warn('invalid trace event', {
+          error: result.left,
+        });
+        continue;
+      }
+
       const children = builder.findCommits(
         CommitSelector.anyTags([
           event.meta.pid && tagPid(event.meta.pid),
@@ -394,8 +435,8 @@ export const CommitSelector = {
    */
   compose:
     (next: CommitSelector) =>
-    (prev: CommitSelector): CommitSelector =>
-      CommitSelector.make((commits) => next.select(prev.select(commits))),
+      (prev: CommitSelector): CommitSelector =>
+        CommitSelector.make((commits) => next.select(prev.select(commits))),
 
   /**
    * If `prev` selector matches no commits, return `next` selector, otherwise return `prev` selector.
@@ -409,22 +450,22 @@ export const CommitSelector = {
    */
   orElse:
     (next: CommitSelector) =>
-    (prev: CommitSelector): CommitSelector =>
-      CommitSelector.make((commits) => {
-        const selected = prev.select(commits);
-        if (selected.length > 0) {
-          return selected;
-        }
-        return next.select(commits);
-      }),
+      (prev: CommitSelector): CommitSelector =>
+        CommitSelector.make((commits) => {
+          const selected = prev.select(commits);
+          if (selected.length > 0) {
+            return selected;
+          }
+          return next.select(commits);
+        }),
 
   /**
    * Selects commits that match either of the given selectors.
    */
   andAlso:
     (next: CommitSelector) =>
-    (prev: CommitSelector): CommitSelector =>
-      CommitSelector.unionAll(prev, next),
+      (prev: CommitSelector): CommitSelector =>
+        CommitSelector.unionAll(prev, next),
 
   /**
    * Selects the first n commits.

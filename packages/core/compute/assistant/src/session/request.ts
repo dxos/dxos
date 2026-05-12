@@ -137,6 +137,7 @@ export class AiRequest {
       this._pending.push(message);
       yield* this._observer.onMessage(message);
       for (const block of message.blocks) {
+        log.info('write complete block', { messageId: message.id, role: message.sender.role!, block: JSON.stringify(block) });
         yield* Trace.write(CompleteBlock, {
           messageId: message.id,
           role: message.sender.role!,

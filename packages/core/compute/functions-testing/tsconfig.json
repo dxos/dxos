@@ -31,13 +31,16 @@
       "path": "../../../sdk/schema"
     },
     {
+      "path": "../../echo/echo"
+    },
+    {
+      "path": "../../protocols"
+    },
+    {
       "path": "../assistant-toolkit"
     },
     {
       "path": "../compute"
-    },
-    {
-      "path": "../../echo/echo"
     },
     {
       "path": "../functions"
@@ -50,9 +53,6 @@
     },
     {
       "path": "../operation"
-    },
-    {
-      "path": "../../protocols"
     }
   ]
 }
