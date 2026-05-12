@@ -13,7 +13,7 @@ import * as Match from 'effect/Match';
 
 import { AiService, ConsolePrinter, OpaqueToolkit, type ModelName } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
-import { AiContextBinder, AiContextService, AiSession, AiSessionService, CompleteBlock } from '@dxos/assistant';
+import { AiContext, AiSession, AiSessionService, CompleteBlock } from '@dxos/assistant';
 import {
   Blueprint,
   Credential,
@@ -30,7 +30,7 @@ import {
 import { Database, DXN, Feed, Tag, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { acquireReleaseResource } from '@dxos/effect';
-import type { TestContextService } from '@dxos/effect/testing';
+import { type TestContextService } from '@dxos/effect/testing';
 import { configuredCredentialsLayer, QueueService } from '@dxos/functions';
 
 import { AgentService } from '../agent-service';
@@ -128,16 +128,16 @@ export const AssistantTestLayer = ({
             Effect.map(Layer.succeedContext),
           );
           return ServiceResolver.compose(
-            ServiceResolver.succeed(AiContextService, (context) =>
+            ServiceResolver.succeed(AiContext.Service, (context) =>
               Effect.gen(function* () {
                 if (!context.conversation) {
-                  return yield* Effect.fail(new ServiceNotAvailableError(AiContextService.key));
+                  return yield* Effect.fail(new ServiceNotAvailableError(AiContext.Service.key));
                 }
                 const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
                 const runtime = yield* Effect.runtime<Feed.FeedService>();
                 const binder = yield* acquireReleaseResource(
                   () =>
-                    new AiContextBinder({
+                    new AiContext.Binder({
                       feed,
                       runtime,
                     }),

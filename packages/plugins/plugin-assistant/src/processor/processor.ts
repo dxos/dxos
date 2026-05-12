@@ -10,7 +10,7 @@ import * as Stream from 'effect/Stream';
 
 import { type AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } from '@dxos/ai';
 import {
-  AiContextService,
+  AiContext,
   type AiSession,
   createSystemPrompt,
   formatSystemPrompt,
@@ -151,7 +151,7 @@ export class AiChatProcessor {
         const blueprints = this.context.getBlueprints();
         const objects = this.context.getObjects();
         return yield* formatSystemPrompt({ system: this._options.system, blueprints, objects });
-      }).pipe(Effect.provideService(AiContextService, { binder: this.context }), Effect.orDie),
+      }).pipe(Effect.provideService(AiContext.Service, { binder: this.context }), Effect.orDie),
     );
   }
 

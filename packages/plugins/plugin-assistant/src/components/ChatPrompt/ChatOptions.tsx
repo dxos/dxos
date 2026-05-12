@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import React, { type JSX, useCallback, useMemo, useState } from 'react';
 
-import { type AiContextBinder } from '@dxos/assistant';
+import { type AiContext } from '@dxos/assistant';
 import { type Chat as ChatModule, McpServer } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/compute';
 import { Annotation, type Database, Filter, Obj, Type } from '@dxos/echo';
@@ -28,7 +28,7 @@ const styles = {
 export type ChatOptionsProps = {
   chat?: ChatModule.Chat;
   db: Database.Database;
-  context: AiContextBinder;
+  context: AiContext.Binder;
   blueprintRegistry?: Blueprint.Registry;
   presets?: { id: string; label: string }[];
   preset?: string;

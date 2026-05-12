@@ -17,7 +17,7 @@ import {
 import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-framework/testing';
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
-import { AiContextBinder } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { Agent, AgentBlueprint, AgentHandlers, PlanningBlueprint, PlanningHandlers } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
 import { Blueprint, Routine } from '@dxos/compute';
@@ -260,7 +260,7 @@ type CreateAgentOptions = {
 };
 
 type StoryPluginOptions = {
-  onChatCreated?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;
+  onChatCreated?: (props: { space: Space; chat: Assistant.Chat; binder: AiContext.Binder }) => Promise<void>;
 
   /**
    * If set, the story creates an Agent (with its own Chat) instead of a standalone Chat.
@@ -320,7 +320,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
           const feed = yield* Effect.promise(() => chat.feed.load());
           const feedServiceLayer = createFeedServiceLayer(space.queues);
           const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
-          const binder = new AiContextBinder({ feed, runtime, registry });
+          const binder = new AiContext.Binder({ feed, runtime, registry });
           yield* Effect.tryPromise(() => binder.open());
           yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder }));
           yield* Effect.tryPromise(() => binder.close());
@@ -353,7 +353,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
               });
               const feedServiceLayer = createFeedServiceLayer(space.queues);
               const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
-              const binder = new AiContextBinder({ feed, runtime, registry });
+              const binder = new AiContext.Binder({ feed, runtime, registry });
 
               // Story-specific behaviour to allow chat creation to be extended.
               space.db.add(chat);

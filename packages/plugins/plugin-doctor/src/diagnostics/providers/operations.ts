@@ -3,7 +3,7 @@
 //
 
 import { AiService } from '@dxos/ai';
-import { AiContextService, AiSessionService } from '@dxos/assistant';
+import { AiContext, AiSessionService } from '@dxos/assistant';
 import { Blueprint, Credential, Operation, StorageService, Trace } from '@dxos/compute';
 import { Database, Feed } from '@dxos/echo';
 import { Filter } from '@dxos/echo';
@@ -22,7 +22,7 @@ import { type DiagnosticIssue, type DiagnosticProvider } from '../types';
  */
 export const KNOWN_SERVICES: ReadonlySet<string> = new Set(
   [
-    AiContextService,
+    AiContext.Service,
     AiService.AiService,
     AiSessionService,
     Blueprint.RegistryService,

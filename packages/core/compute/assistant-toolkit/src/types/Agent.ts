@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
-import { AiContextBinder, AiContextService } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/compute';
 import { Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
@@ -141,7 +141,7 @@ export const makeInitialized = (
     yield* Database.add(agent);
     const feed = yield* Database.add(Feed.make());
     const runtime = yield* Effect.runtime<Feed.FeedService>();
-    const contextBinder = new AiContextBinder({ feed, runtime });
+    const contextBinder = new AiContext.Binder({ feed, runtime });
     // TODO(dmaretskyi): Blueprint registry.
     const agentBlueprint = yield* Database.add(Obj.clone(blueprint, { deep: true }));
     yield* Effect.promise(() =>
@@ -194,7 +194,7 @@ export const resetChatHistory = (
     const runtime = yield* Effect.runtime<Feed.FeedService>();
     const existingContextBinder = yield* acquireReleaseResource(
       () =>
-        new AiContextBinder({
+        new AiContext.Binder({
           feed: existingFeed,
           runtime,
         }),
@@ -203,7 +203,7 @@ export const resetChatHistory = (
     const objects = existingContextBinder.getObjects().map((object) => Ref.make(object));
 
     const feed = yield* Database.add(Feed.make());
-    const contextBinder = new AiContextBinder({ feed, runtime });
+    const contextBinder = new AiContext.Binder({ feed, runtime });
     yield* Effect.promise(() =>
       contextBinder.bind({
         blueprints,
@@ -229,8 +229,8 @@ export const resetChatHistory = (
     );
   }).pipe(Effect.scoped);
 
-export const getFromChatContext: Effect.Effect<Agent, Error, AiContextService> = Effect.gen(function* () {
-  const agents = yield* Function.pipe(AiContextService.findObjects(Agent));
+export const getFromChatContext: Effect.Effect<Agent, Error, AiContext.Service> = Effect.gen(function* () {
+  const agents = yield* Function.pipe(AiContext.Service.findObjects(Agent));
   if (agents.length !== 1) {
     return yield* Effect.fail(new Error(`There should be exactly one agent in context. Got: ${agents.length}`));
   }

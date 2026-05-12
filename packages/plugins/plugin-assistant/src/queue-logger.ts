@@ -3,7 +3,7 @@
 //
 
 import { type Queue, Ref, type Space, getSpace } from '@dxos/client/echo';
-import { type Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
+import { Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
 import { DXN, Feed, Obj } from '@dxos/echo';
 import { InvocationTraceEndEvent, InvocationTraceEventType, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
@@ -16,7 +16,7 @@ export class QueueLogger implements SequenceLogger {
   private _space: Space;
   private _invocationTraceQueue: Queue<InvocationTraceEvent>;
 
-  constructor(private readonly sequence: Sequence) {
+  constructor(private readonly sequence: Sequence.Sequence) {
     const space = getSpace(sequence);
     invariant(space, 'Space not found');
     this._space = space;

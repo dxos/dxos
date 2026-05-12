@@ -2,33 +2,33 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
 import { Annotation, Key, Obj, Type } from '@dxos/echo';
 
-// TODO(burdon): Rename (Sequence) and create NS.
-
-export const SequenceStep = Schema.Struct({
+export const Step = Schema.Struct({
   id: Key.ObjectId,
   instructions: Schema.String,
   tools: Schema.optional(Schema.Array(ToolId)),
 });
 
-export interface SequenceStep extends Schema.Schema.Type<typeof SequenceStep> {}
+export interface Step extends Schema.Schema.Type<typeof Step> {}
 
-export const SequenceDefinition = Schema.Struct({
-  steps: Schema.Array(SequenceStep.pipe(Schema.omit('id'))),
+export const Definition = Schema.Struct({
+  steps: Schema.Array(Step.pipe(Schema.omit('id'))),
 });
 
-export interface SequenceDefinition extends Schema.Schema.Type<typeof SequenceDefinition> {}
+export interface Definition extends Schema.Schema.Type<typeof Definition> {}
 
 /**
  * @deprecated
  */
 export const Sequence = Schema.Struct({
   name: Schema.optional(Schema.String),
-  steps: Schema.Array(SequenceStep),
+  steps: Schema.Array(Step),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.sequence',
@@ -45,13 +45,13 @@ export interface Sequence extends Schema.Schema.Type<typeof Sequence> {}
 /**
  * Sequence builder API.
  */
-export namespace SequenceBuilder {
-  export const create = () => new Builder();
+export namespace Builder {
+  export const create = () => new Impl();
 
-  class Builder {
-    private readonly _steps: SequenceStep[] = [];
+  class Impl {
+    private readonly _steps: Step[] = [];
 
-    step(instructions: string, options?: { tools?: ToolId[] }): Builder {
+    step(instructions: string, options?: { tools?: ToolId[] }): Impl {
       this._steps.push({
         id: Key.ObjectId.random(),
         instructions,
@@ -70,12 +70,12 @@ export namespace SequenceBuilder {
 /**
  * Sequence parser API.
  */
-export namespace SequenceParser {
-  export const create = () => new Parser();
+export namespace Parser {
+  export const create = () => new Impl();
 
-  class Parser {
-    parse({ steps }: SequenceDefinition): Sequence {
-      const builder = SequenceBuilder.create();
+  class Impl {
+    parse({ steps }: Definition): Sequence {
+      const builder = Builder.create();
       for (const step of steps) {
         builder.step(step.instructions, {
           tools: [...(step.tools ?? [])],

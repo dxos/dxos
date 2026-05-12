@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Atom, Registry } from '@effect-atom/atom-react';
 import * as EArray from 'effect/Array';
 import * as Context from 'effect/Context';
@@ -20,8 +22,7 @@ import { ComplexSet, isNonNullable } from '@dxos/util';
 /**
  * Thread message that binds or unbinds contextual objects to a conversation.
  */
-// TODO(burdon): Move to @dxos/schema ContentBlock?
-export const ContextBinding = Schema.Struct({
+export const Binding = Schema.Struct({
   blueprints: Schema.Struct({
     added: Schema.Array(Ref.Ref(Blueprint.Blueprint)),
     removed: Schema.Array(Ref.Ref(Blueprint.Blueprint)),
@@ -38,7 +39,7 @@ export const ContextBinding = Schema.Struct({
   }),
 );
 
-export interface ContextBinding extends Schema.Schema.Type<typeof ContextBinding> {}
+export interface Binding extends Schema.Schema.Type<typeof Binding> {}
 
 export type BindingProps = Partial<{
   blueprints: Ref.Ref<Blueprint.Blueprint>[];
@@ -59,7 +60,7 @@ export class Bindings {
   }
 }
 
-export type AiContextBinderOptions = {
+export type BinderOptions = {
   feed: Feed.Feed;
   runtime: Runtime.Runtime<Feed.FeedService>;
   registry?: Registry.Registry;
@@ -69,15 +70,15 @@ export type AiContextBinderOptions = {
  * Manages bindings of blueprints and objects to a conversation.
  */
 // TODO(burdon): Context should manage ephemeral state of bindings until prompt is issued?
-export class AiContextBinder extends Resource {
+export class Binder extends Resource {
   private readonly _blueprints = Atom.make<Blueprint.Blueprint[]>([]).pipe(Atom.keepAlive);
   private readonly _objects = Atom.make<Obj.Unknown[]>([]).pipe(Atom.keepAlive);
   private readonly _registry: Registry.Registry;
   private readonly _feed: Feed.Feed;
   private readonly _runtime: Runtime.Runtime<Feed.FeedService>;
-  #bindingsQuery: QueryResult.QueryResult<ContextBinding> | undefined;
+  #bindingsQuery: QueryResult.QueryResult<Binding> | undefined;
 
-  constructor(options: AiContextBinderOptions) {
+  constructor(options: BinderOptions) {
     super();
     assertArgument(options.feed, 'options.feed', 'Feed is required');
     assertArgument(options.runtime, 'options.runtime', 'Feed runtime is required');
@@ -129,7 +130,7 @@ export class AiContextBinder extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    this.#bindingsQuery = await Runtime.runPromise(this._runtime)(Feed.query(this._feed, Query.type(ContextBinding)));
+    this.#bindingsQuery = await Runtime.runPromise(this._runtime)(Feed.query(this._feed, Query.type(Binding)));
 
     // Process initial state before returning.
     const initialResults = await this.#bindingsQuery.run();
@@ -158,7 +159,7 @@ export class AiContextBinder extends Resource {
     }
   }
 
-  private async _updateBindings(items: ContextBinding[]): Promise<void> {
+  private async _updateBindings(items: Binding[]): Promise<void> {
     // Skip update if no items - preserve existing state set by bind().
     if (items.length === 0) {
       return;
@@ -229,7 +230,7 @@ export class AiContextBinder extends Resource {
     log('bind', { blueprints: addedBlueprints.length, objects: addedObjects.length });
     await Runtime.runPromise(this._runtime)(
       Feed.append(this._feed, [
-        Obj.make(ContextBinding, {
+        Obj.make(Binding, {
           blueprints: {
             added: addedBlueprints,
             removed: [],
@@ -269,7 +270,7 @@ export class AiContextBinder extends Resource {
     log('unbind', { blueprints: blueprints?.length, objects: objects?.length });
     await Runtime.runPromise(this._runtime)(
       Feed.append(this._feed, [
-        Obj.make(ContextBinding, {
+        Obj.make(Binding, {
           blueprints: {
             added: [],
             removed: blueprints ?? [],
@@ -319,7 +320,7 @@ export class AiContextBinder extends Resource {
   /**
    * Reduce results into sets of blueprints and objects.
    */
-  private _reduce(items: ContextBinding[]): Bindings {
+  private _reduce(items: Binding[]): Bindings {
     return Function.pipe(
       items,
       EArray.reduce(new Bindings(), (context, { blueprints, objects }) => {
@@ -380,23 +381,21 @@ export class AiContextBinder extends Resource {
   }
 }
 
-export class AiContextService extends Context.Tag('@dxos/assistant/AiContextService')<
-  AiContextService,
+export class Service extends Context.Tag('@dxos/assistant/AiContextService')<
+  Service,
   {
-    binder: AiContextBinder;
+    binder: Binder;
   }
 >() {
-  static bindContext = ({ blueprints, objects }: BindingProps): Effect.Effect<void, never, AiContextService> =>
+  static bindContext = ({ blueprints, objects }: BindingProps): Effect.Effect<void, never, Service> =>
     Effect.gen(function* () {
-      const { binder } = yield* AiContextService;
+      const { binder } = yield* Service;
       yield* Effect.promise(() => binder.bind({ blueprints, objects }));
     });
 
-  static findObjects = <T extends Type.AnyEntity>(
-    type: T,
-  ): Effect.Effect<Schema.Schema.Type<T>[], never, AiContextService> => {
+  static findObjects = <T extends Type.AnyEntity>(type: T): Effect.Effect<Schema.Schema.Type<T>[], never, Service> => {
     return Effect.gen(function* () {
-      const { binder } = yield* AiContextService;
+      const { binder } = yield* Service;
       return binder.getObjects().filter(Obj.instanceOf(type));
     });
   };

@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './context';
-export * from './session';
+export * as AiContext from './AiContext';
+export * from './AiSession';

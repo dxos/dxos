@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AiContextBinder } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { Chat, DatabaseBlueprint, AgentWizardBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
@@ -56,9 +56,9 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
 
       const feedServiceLayer = createFeedServiceLayer(space.queues);
       const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
-      const binder = new AiContextBinder({ feed, runtime, registry });
+      const binder = new AiContext.Binder({ feed, runtime, registry });
       yield* Effect.promise(() =>
-        binder.use((b: AiContextBinder) =>
+        binder.use((b: AiContext.Binder) =>
           b.bind({
             blueprints: [
               Ref.make(defaultAssistantBlueprint!),

@@ -8,7 +8,7 @@ import React, { type FC, useCallback, useMemo } from 'react';
 import { Capabilities } from '@dxos/app-framework';
 import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { AiContextBinder } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { Blueprint } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
@@ -61,7 +61,7 @@ export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showCon
     const runtime = await runAndForwardErrors(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );
-    const binder = new AiContextBinder({ feed: feedTarget, runtime, registry: atomRegistry });
+    const binder = new AiContext.Binder({ feed: feedTarget, runtime, registry: atomRegistry });
     await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
   }, [space, blueprints, blueprintsDefinitions]);
 

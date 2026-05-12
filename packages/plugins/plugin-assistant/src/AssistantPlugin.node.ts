@@ -4,7 +4,7 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { ContextBinding } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
 import { Blueprint, Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
@@ -25,7 +25,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       Chat.Chat,
       Chat.CompanionTo,
       Blueprint.Blueprint,
-      ContextBinding,
+      AiContext.Binding,
       Feed.Feed,
       HasSubject.HasSubject,
       Message.Message,
@@ -33,7 +33,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       Agent.Agent,
       McpServer.McpServer,
       Plan.Plan,
-      Sequence,
+      Sequence.Sequence,
       Memory.Memory,
       Text.Text,
     ],

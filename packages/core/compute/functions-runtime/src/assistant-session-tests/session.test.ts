@@ -6,14 +6,14 @@ import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import { describe, expect } from 'vitest';
 
-import { AiSession, ContextBinding } from '@dxos/assistant';
+import { AiSession, AiContext } from '@dxos/assistant';
 import { Blueprint } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 
 describe('AiSession', () => {
   const TestLayer = TestDatabaseLayer({
-    types: [Blueprint.Blueprint, ContextBinding],
+    types: [Blueprint.Blueprint, AiContext.Binding],
   });
 
   it.effect('loads blueprints on open', () =>
@@ -33,7 +33,7 @@ describe('AiSession', () => {
 
       // Add blueprint to feed via binding.
       yield* Feed.append(feed, [
-        Obj.make(ContextBinding, {
+        Obj.make(AiContext.Binding, {
           blueprints: {
             added: [Ref.make(blueprint)],
             removed: [],

@@ -89,6 +89,9 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
               )}
             </div>
             <div className='dx-document px-4 pb-4'>
+              <div className='flex flex-col items-center py-2 overflow-hidden'>
+                <ChatComponent.TaskList classNames='max-h-[120px] border border-separator rounded-sm text-description' />
+              </div>
               <ChatComponent.Prompt
                 {...chatProps}
                 outline

@@ -40,7 +40,7 @@ export const translations: Resource[] = [
         'delete-object.label': 'Delete routine',
         'object-deleted.label': 'Routine deleted',
       },
-      [Sequence.typename]: {
+      [Sequence.Sequence.typename]: {
         'typename.label': 'Sequence',
         'typename.label_zero': 'Sequences',
         'typename.label_one': 'Sequence',

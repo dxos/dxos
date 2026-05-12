@@ -32,9 +32,9 @@ import {
   formatSystemPrompt,
 } from '../session';
 import { McpServerError } from '../tracing';
-import { AiContextBinder, AiContextService } from './context';
+import * as AiContext from './AiContext';
 
-export interface AiSessionRunProps<R = never> {
+export type AiSessionRunProps<R = never> = {
   prompt: string | ContentBlock.Any[];
   system?: string;
   observer?: GenerationObserver;
@@ -44,7 +44,7 @@ export interface AiSessionRunProps<R = never> {
    * Space-level MCP servers to connect alongside blueprint-defined ones.
    */
   mcpServers?: readonly McpServer.McpServer[];
-}
+};
 
 export type AiSessionOptions = {
   feed: Feed.Feed;
@@ -66,7 +66,7 @@ export class AiSession extends Resource {
   /**
    * Blueprints and objects bound to the session.
    */
-  private readonly _binder: AiContextBinder;
+  private readonly _binder: AiContext.Binder;
   private readonly _feed: Feed.Feed;
   private readonly _runtime: Runtime.Runtime<Feed.FeedService>;
 
@@ -76,7 +76,11 @@ export class AiSession extends Resource {
     this._runtime = options.runtime;
     invariant(this._feed);
     invariant(this._runtime);
-    this._binder = new AiContextBinder({ feed: this._feed, runtime: this._runtime, registry: options.registry });
+    this._binder = new AiContext.Binder({
+      feed: this._feed,
+      runtime: this._runtime,
+      registry: options.registry,
+    });
   }
 
   protected override async _open(): Promise<void> {
@@ -188,7 +192,7 @@ export class AiSession extends Resource {
     }).pipe(
       Effect.provide(
         Layer.mergeAll(
-          Layer.succeed(AiContextService, {
+          Layer.succeed(AiContext.Service, {
             binder: this.context,
           }),
           Layer.succeed(AiSessionService, this),
@@ -207,7 +211,7 @@ export class AiSessionService extends Context.Tag('@dxos/assistant/AiSessionServ
   /**
    * Create a new session layer from options.
    */
-  static layer = (options: AiSessionOptions): Layer.Layer<AiSessionService | AiContextService> =>
+  static layer = (options: AiSessionOptions): Layer.Layer<AiSessionService | AiContext.Service> =>
     aiContextFromSession.pipe(
       Layer.provideMerge(
         Layer.scoped(
@@ -225,7 +229,7 @@ export class AiSessionService extends Context.Tag('@dxos/assistant/AiSessionServ
    */
   static layerNewFeed = (
     options?: Omit<AiSessionOptions, 'feed' | 'runtime'>,
-  ): Layer.Layer<AiSessionService | AiContextService, never, Database.Service | Feed.FeedService> =>
+  ): Layer.Layer<AiSessionService | AiContext.Service, never, Database.Service | Feed.FeedService> =>
     Layer.unwrapScoped(
       Effect.gen(function* () {
         const feed = yield* Database.add(Feed.make());
@@ -247,7 +251,7 @@ export class AiSessionService extends Context.Tag('@dxos/assistant/AiSessionServ
 }
 
 const aiContextFromSession = Layer.effect(
-  AiContextService,
+  AiContext.Service,
   Effect.gen(function* () {
     const session = yield* AiSessionService;
     return {

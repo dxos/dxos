@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { AiContextService } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
@@ -25,7 +25,7 @@ export const UpdateTasks = Operation.make({
     tasks: Schema.Array(SimpleTask),
   }),
   output: Schema.Any,
-  services: [AiContextService, Database.Service],
+  services: [AiContext.Service, Database.Service],
 });
 
 /**

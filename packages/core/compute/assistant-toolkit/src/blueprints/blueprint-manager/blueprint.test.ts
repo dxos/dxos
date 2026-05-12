@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AiContextService, AiSessionService } from '@dxos/assistant';
+import { AiContext, AiSessionService } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -72,7 +72,7 @@ describe('Blueprint Manager', () => {
         expect(enabled[0].key).toBe('org.dxos.blueprint.database');
         expect(rejected).toHaveLength(0);
 
-        const { binder } = yield* AiContextService;
+        const { binder } = yield* AiContext.Service;
         const bound = binder.getBlueprints();
         expect(bound.some((bp: Blueprint.Blueprint) => bp.key === 'org.dxos.blueprint.database')).toBe(true);
       },
@@ -96,7 +96,7 @@ describe('Blueprint Manager', () => {
         expect(rejected).toHaveLength(1);
         expect(rejected[0].key).toBe('org.dxos.blueprint.discord');
 
-        const { binder } = yield* AiContextService;
+        const { binder } = yield* AiContext.Service;
         const bound = binder.getBlueprints();
         expect(bound.some((bp: Blueprint.Blueprint) => bp.key === 'org.dxos.blueprint.discord')).toBe(false);
       },

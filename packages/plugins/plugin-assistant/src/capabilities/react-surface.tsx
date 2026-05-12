@@ -88,8 +88,8 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'companion-invocations',
         role: 'article',
-        filter: (data): data is { companionTo: Sequence } =>
-          (Obj.instanceOf(Sequence, data.companionTo) || Obj.instanceOf(Routine.Routine, data.companionTo)) &&
+        filter: (data): data is { companionTo: Sequence.Sequence } =>
+          (Obj.instanceOf(Sequence.Sequence, data.companionTo) || Obj.instanceOf(Routine.Routine, data.companionTo)) &&
           data.subject === 'invocations',
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
