@@ -102,6 +102,7 @@
     "@vitest/spy": "catalog:",
     "@vitest/ui": "catalog:",
     "@vitest/utils": "catalog:",
+    "buffer": "catalog:",
     "chalk": "catalog:",
     "chalk-table": "catalog:",
     "cli-highlight": "catalog:",
