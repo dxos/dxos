@@ -30,6 +30,9 @@ export const TaskList = composable<HTMLDivElement, TaskListProps>(({ plan, ...pr
                   classNames={task.status === 'done' ? 'text-success-text' : undefined}
                   size={4}
                 />
+                <span className='sr-only'>
+                  {task.status === 'done' ? 'done' : task.status === 'in-progress' ? 'in progress' : 'to do'}
+                </span>
                 <span className='truncate flex-1'>{task.title}</span>
                 {task.status === 'in-progress' && <Tag palette='info'>pending</Tag>}
               </div>
