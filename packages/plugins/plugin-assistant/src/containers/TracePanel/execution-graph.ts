@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Either, Schema } from 'effect';
+import * as Either from 'effect/Either';
+import * as Schema from 'effect/Schema';
 import * as Array from 'effect/Array';
 import { pipe } from 'effect/Function';
 import * as Order from 'effect/Order';

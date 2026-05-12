@@ -3,26 +3,15 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { URL } from 'node:url';
 import { describe, test } from 'vitest';
 
 import { AgentPrompt, DatabaseBlueprint, Chat } from '@dxos/assistant-toolkit';
 import { Client } from '@dxos/client';
-import { type Space } from '@dxos/client/echo';
 import { Blueprint, Operation, Routine, Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import {
-  InvocationOutcome,
-  type InvocationTraceEndEvent,
-  InvocationTraceEndEvent as InvocationTraceEndEventSchema,
-  type InvocationTraceStartEvent,
-  InvocationTraceStartEvent as InvocationTraceStartEventSchema,
-} from '@dxos/functions-runtime';
-import { invariant } from '@dxos/invariant';
 import { dbg, log } from '@dxos/log';
 import { ErrorCodec } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
