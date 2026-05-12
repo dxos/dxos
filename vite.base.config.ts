@@ -59,9 +59,19 @@ export const DxNodeStdPlugin = (): Plugin => ({
   name: 'DxNodeStd',
   enforce: 'pre',
   resolveId(id) {
-    const mod = id.startsWith('node:') ? id.slice(5) : id;
-    if (NODE_STD_MODULES.includes(mod)) {
-      return { id: `@dxos/node-std/${mod}`, external: true };
+    if (id.startsWith('node:')) {
+      const mod = id.slice(5);
+      if (NODE_STD_MODULES.includes(mod)) {
+        return { id: `@dxos/node-std/${mod}`, external: true };
+      }
+      // Other `node:*` (child_process, http, os, net, …) stay as `node:*` literals
+      // so downstream bundlers (esbuild, the consuming app's vite) can decide how to
+      // resolve them. Returning `id` here defeats vite's library-mode default that
+      // rewrites them to the unloadable `__vite-browser-external` placeholder.
+      return { id, external: true };
+    }
+    if (NODE_STD_MODULES.includes(id)) {
+      return { id: `@dxos/node-std/${id}`, external: true };
     }
   },
 });

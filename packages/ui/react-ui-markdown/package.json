@@ -13,9 +13,8 @@
   "type": "module",
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs"
+      "import": "./dist/lib/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

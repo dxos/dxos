@@ -19,25 +19,20 @@
   },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./meta": {
-      "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
-      "browser": "./dist/lib/browser/meta.mjs"
+      "import": "./dist/lib/meta.mjs"
     },
     "./plugin": {
-      "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "browser": "./dist/lib/browser/plugin.mjs"
+      "import": "./dist/lib/plugin.mjs"
     },
     "./translations": {
-      "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "browser": "./dist/lib/browser/translations.mjs",
-      "node": "./dist/lib/node-esm/translations.mjs"
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

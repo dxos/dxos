@@ -1,10 +1,5 @@
 layer: tool
 language: typescript
 tags:
-  - ts-build
+  - ts-vite-build
   - pack
-tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--platform=browser'

@@ -23,7 +23,14 @@ import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-const BUNDLE_FLAGS = /bundlePackage|injectGlobals|importGlobals|alias|--platform|moduleFormat|mainFields/;
+// Only flags that the new vite/rolldown pipeline genuinely can't reproduce:
+//   - bundlePackage: inlines a third-party CJS/wasm dep into the output
+//   - alias / moduleFormat / mainFields: rewrite esbuild resolution in ways that
+//     don't map onto a vite library build
+// `--platform=browser` / `--platform=node` / `--injectGlobals` / `--importGlobals`
+// are intentionally allowed: the vite build emits a single ESM bundle and leaves
+// node polyfills/globals to the consuming app, which is the modern shape.
+const BUNDLE_FLAGS = /bundlePackage|alias|moduleFormat|mainFields/;
 
 /** Derive an entry name from a source path: `src/hooks/index.ts` → `hooks`, `src/index.ts` → `index`. */
 const entryNameFromPath = (srcPath) => {
@@ -377,7 +384,7 @@ if (args.length === 0) {
 let targets = [];
 if (args[0] === '--all-simple') {
   const out = execSync(
-    `for f in $(find packages -name moon.yml); do if grep -qE "ts-(vite-)?build" "$f" && ! grep -qE "bundlePackage|injectGlobals|importGlobals|alias|--platform|moduleFormat|mainFields" "$f"; then dirname "$f"; fi; done`,
+    `for f in $(find packages -name moon.yml); do if grep -qE "ts-(vite-)?build" "$f" && ! grep -qE "bundlePackage|alias|moduleFormat|mainFields" "$f"; then dirname "$f"; fi; done`,
     { cwd: REPO_ROOT, encoding: 'utf8' },
   );
   targets = out.split('\n').filter(Boolean);
