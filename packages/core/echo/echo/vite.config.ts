@@ -30,5 +30,5 @@ export default defineConfig({
     Type: 'src/Type.ts',
     Extension: 'src/Extension.ts',
   },
-  test: { node: { environment: 'happy-dom' } },
+  test: { node: true },
 });

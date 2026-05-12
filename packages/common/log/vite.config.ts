@@ -12,5 +12,5 @@ export default defineConfig({
     'processors/console-stub': 'src/processors/console-stub.ts',
     'processors/console-processor': 'src/processors/console-processor.ts',
   },
-  test: { node: { environment: 'happy-dom' } },
+  test: { node: true },
 });

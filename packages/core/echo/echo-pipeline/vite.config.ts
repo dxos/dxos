@@ -10,5 +10,5 @@ export default defineConfig({
     testing: 'src/testing/index.ts',
     filter: 'src/filter/index.ts',
   },
-  test: { node: { environment: 'happy-dom' } },
+  test: { node: true },
 });

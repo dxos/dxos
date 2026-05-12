@@ -10,5 +10,5 @@ export default defineConfig({
     resolvers: 'src/resolvers/index.ts',
     testing: 'src/testing/index.ts',
   },
-  test: { node: { environment: 'happy-dom' } },
+  test: { node: true },
 });

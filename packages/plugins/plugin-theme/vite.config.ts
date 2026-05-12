@@ -13,5 +13,5 @@ export default defineConfig({
     ThemePlugin: 'src/ThemePlugin.ts',
   },
   jsx: 'react',
-  test: { node: { environment: 'happy-dom' } },
+  test: { node: { environment: 'jsdom' } },
 });
