@@ -10,7 +10,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
 
 import { type ModelType, MODEL_TYPES } from '../models';
-import { Voxel } from './index';
+import * as Voxel from './Voxel';
 
 const VoxelCoord = Schema.Struct({
   x: Schema.Number.annotations({ description: 'X coordinate.' }),

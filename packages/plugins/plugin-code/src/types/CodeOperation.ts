@@ -9,7 +9,8 @@ import * as Schema from 'effect/Schema';
 import { Operation } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
 
-import { CodeProject, Spec } from './index';
+import * as CodeProject from './CodeProject';
+import * as Spec from './Spec';
 
 export const VerifySpec = Operation.make({
   meta: {

@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Operation } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
 
-import { Discord } from './index';
+import * as Discord from './Discord';
 
 export const CreateBot = Operation.make({
   meta: {

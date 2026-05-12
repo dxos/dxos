@@ -11,7 +11,7 @@ import { Operation } from '@dxos/compute';
 
 import { meta } from '#meta';
 
-import { Outline } from './index';
+import * as Outline from './Outline';
 
 const OUTLINER_OPERATION = `${meta.id}.operation`;
 

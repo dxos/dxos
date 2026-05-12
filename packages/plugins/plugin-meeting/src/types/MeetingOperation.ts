@@ -12,7 +12,7 @@ import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { Meeting } from './index';
+import * as Meeting from './Meeting';
 
 const MEETING_OPERATION = `${meta.id}.operation`;
 

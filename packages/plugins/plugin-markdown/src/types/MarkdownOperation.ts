@@ -14,7 +14,7 @@ import { trim } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { Markdown } from './index';
+import * as Markdown from './Markdown';
 
 const MARKDOWN_OPERATION = `${meta.id}.operation`;
 

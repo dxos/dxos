@@ -10,7 +10,7 @@ import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { GameRef } from '@dxos/plugin-game';
 
-import { Chess } from './index';
+import * as Chess from './Chess';
 
 export const Move = Operation.make({
   meta: {

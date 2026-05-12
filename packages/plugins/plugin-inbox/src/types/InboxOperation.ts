@@ -15,7 +15,8 @@ import { Actor, Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { Calendar, Mailbox } from './index';
+import * as Calendar from './Calendar';
+import * as Mailbox from './Mailbox';
 
 const INBOX_OPERATION = `${meta.id}.operation`;
 

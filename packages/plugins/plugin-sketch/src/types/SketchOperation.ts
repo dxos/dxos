@@ -10,7 +10,7 @@ import { Operation } from '@dxos/compute';
 
 import { meta } from '#meta';
 
-import { Sketch } from './index';
+import * as Sketch from './Sketch';
 
 const SKETCH_OPERATION = `${meta.id}.operation`;
 

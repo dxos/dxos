@@ -11,7 +11,7 @@ import { Database, Ref } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import { Gallery } from './index';
+import * as Gallery from './Gallery';
 
 const GALLERY_OPERATION = `${meta.id}.operation`;
 

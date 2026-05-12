@@ -12,7 +12,7 @@ import { AccessToken } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { Integration } from './index';
+import * as Integration from './Integration';
 
 const INTEGRATION_OPERATION = `${meta.id}.operation`;
 

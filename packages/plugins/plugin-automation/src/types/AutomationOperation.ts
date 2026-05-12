@@ -12,7 +12,7 @@ import { Database } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import { TriggerTemplate } from './index';
+import { TriggerTemplate } from './schema';
 
 const AUTOMATION_OPERATION = `${meta.id}.operation`;
 
