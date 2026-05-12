@@ -154,7 +154,6 @@ export default AgentPrompt.pipe(
         onFailure: () => Database.flush(),
       }),
       Effect.scoped,
-      Effect.provide(Trace.writerLayerNoop),
     ),
   ),
   Operation.opaqueHandler,

@@ -36,6 +36,7 @@ import {
   QueueService,
 } from '../services';
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
+import { log } from '@dxos/log';
 
 export interface FunctionWrappingOptions {
   /**
@@ -209,6 +210,16 @@ class FunctionContext extends Resource {
       ? makeTraceWriterLayer(this.context.services.traceService)
       : Trace.writerLayerNoop;
 
+    log.info('Creating function context layer', {
+      traceService: !!this.context.services.traceService,
+      functionsService: !!this.context.services.functionsService,
+      functionsAiService: !!this.context.services.functionsAiService,
+      spaceId: this.context.spaceId,
+      spaceRootUrl: this.context.spaceRootUrl,
+      toolkits: this.opts.toolkits?.length ?? 0,
+      types: this.opts.types?.length ?? 0,
+    });
+
     return Layer.mergeAll(
       dbLayer,
       queuesLayer,
@@ -235,6 +246,9 @@ class FunctionContext extends Resource {
 const makeTraceWriterLayer = (traceService: TraceProtocol.TraceService): Layer.Layer<Trace.TraceService> =>
   Layer.succeed(Trace.TraceService, {
     write: (eventType, payload) => {
+      log.info('Writing trace event', {
+        eventType: eventType.key,
+      });
       traceService.write([
         {
           key: eventType.key,
