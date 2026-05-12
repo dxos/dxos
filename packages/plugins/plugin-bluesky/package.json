@@ -1,0 +1,67 @@
+{
+  "name": "@dxos/plugin-bluesky",
+  "version": "0.8.3",
+  "private": true,
+  "description": "DXOS plugin that integrates Bluesky / atproto as a sync source via the generic Integration mechanism.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "imports": {
+    "#capabilities": "./src/capabilities/index.ts",
+    "#meta": "./src/meta.ts",
+    "#operations": "./src/operations/index.ts",
+    "#translations": "./src/translations.ts"
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/compute": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-feed": "workspace:*",
+    "@dxos/plugin-integration": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

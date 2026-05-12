@@ -310,6 +310,9 @@
       "path": "packages/plugins/plugin-automation/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-bluesky/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-board/tsconfig.json"
     },
     {
