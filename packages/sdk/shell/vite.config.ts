@@ -12,8 +12,8 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 
 export default defineConfig({
   entry: {
-    "react": "src/react.ts",
-    "testing": "src/testing/index.ts"
+    react: 'src/react.ts',
+    testing: 'src/testing/index.ts',
   },
   jsx: 'react',
   test: createTestConfig({ dirname, node: { environment: 'happy-dom' } }),

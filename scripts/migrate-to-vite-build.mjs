@@ -169,13 +169,31 @@ const rewriteExports = (pkgJson, entryPoints) => {
   for (const ep of entryPoints.length === 0 ? ['src/index.ts'] : entryPoints) {
     entrySourceByName.set(entryNameFromPath(ep), ep);
   }
+  // For exports like `./icons` whose `source` condition points to a deeper file
+  // (e.g. `./src/components/IconPicker/icons.ts`), match by source path rather
+  // than by export-key name.
+  const entryNameBySourcePath = new Map();
+  for (const [name, source] of entrySourceByName) {
+    entryNameBySourcePath.set(source.replace(/^\.\//, ''), name);
+  }
 
   for (const key of Object.keys(oldExports)) {
-    const name = key === '.' ? 'index' : key.replace(/^\.\//, '');
-    const source = entrySourceByName.get(name);
+    const oldValue = oldExports[key];
+    // Try matching by export-key name first.
+    let name = key === '.' ? 'index' : key.replace(/^\.\//, '');
+    let source = entrySourceByName.get(name);
+    // If that fails, fall back to the `source` condition in the old export entry.
+    if (!source && oldValue && typeof oldValue === 'object' && typeof oldValue.source === 'string') {
+      const srcRel = oldValue.source.replace(/^\.\//, '');
+      const matchedName = entryNameBySourcePath.get(srcRel);
+      if (matchedName) {
+        name = matchedName;
+        source = entrySourceByName.get(matchedName);
+      }
+    }
     if (!source) {
       // Preserve unknown export keys verbatim (e.g. ./package.json).
-      newExports[key] = oldExports[key];
+      newExports[key] = oldValue;
       continue;
     }
     const typesPath = source.replace(/^src\//, 'dist/types/src/').replace(/\.tsx?$/, '.d.ts');

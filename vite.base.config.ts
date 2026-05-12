@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { spawnSync } from 'node:child_process';
 import react from '@vitejs/plugin-react';
+import { spawnSync } from 'node:child_process';
 // Vite 8 ships rolldown as its bundler by default (no `rolldown-vite` shim needed).
 import { defineConfig as viteDefineConfig, type Plugin, type UserConfig } from 'vite';
 import solid from 'vite-plugin-solid';
@@ -111,10 +111,7 @@ export const defineConfig = (options: DxViteOptions = {}): UserConfig => {
             return false;
           }
           return (
-            !id.startsWith('@oxc-project/runtime') &&
-            !id.startsWith('.') &&
-            !id.startsWith('/') &&
-            !id.startsWith('\0')
+            !id.startsWith('@oxc-project/runtime') && !id.startsWith('.') && !id.startsWith('/') && !id.startsWith('\0')
           );
         },
         output: {
