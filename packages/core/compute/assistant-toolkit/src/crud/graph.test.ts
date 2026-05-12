@@ -28,7 +28,7 @@ describe('graph', () => {
     'calculator',
     Effect.fn(
       function* (_) {
-        const request = new AiRequest();
+        const request = new AiRequest.Request();
         const toolkit = yield* OpaqueToolkit.fromContext(Toolkit);
         const response = yield* request.run({
           toolkit,

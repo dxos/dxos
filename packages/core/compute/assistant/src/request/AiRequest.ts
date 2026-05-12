@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import type * as AiError from '@effect/ai/AiError';
 import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Array from 'effect/Array';
@@ -28,14 +30,13 @@ import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { type AiAssistantError } from '../errors';
-import { CompleteBlock, PartialBlock } from '../tracing';
+import { type AiAssistantError, CompleteBlock, PartialBlock } from '../util';
 import { formatSystemPrompt, formatUserPrompt } from './format';
 import { GenerationObserver } from './observer';
 
-export type AiRequestRunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
+export type RunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
-export type AiRequestRunRequirements =
+export type RunRequirements =
   | LanguageModel.LanguageModel
   | ToolExecutionService
   | ToolResolverService
@@ -44,7 +45,7 @@ export type AiRequestRunRequirements =
   | OperationRegistry.Service
   | Trace.TraceService;
 
-export type AiRequestOptions = {
+export type Options = {
   /**
    * Summarize before executing the prompt if the existing history exceeds this threshold.
    */
@@ -59,7 +60,7 @@ export type AiRequestOptions = {
   onOutput?: (message: Message.Message) => Effect.Effect<void, never, never>;
 };
 
-export type AiRequestRunProps<R = never> = {
+export type RunProps<R = never> = {
   prompt: string | ContentBlock.Any[];
   // TODO(wittjosiah): Rename to systemPrompt.
   system?: string;
@@ -69,7 +70,7 @@ export type AiRequestRunProps<R = never> = {
   toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
 };
 
-export type AiRequestBeginProps = {
+export type BeginProps = {
   prompt: string | ContentBlock.Any[];
   system?: string;
   history?: Message.Message[];
@@ -77,12 +78,12 @@ export type AiRequestBeginProps = {
   blueprints?: readonly Blueprint.Blueprint[];
 };
 
-export type AiRequestTurnProps<R = never> = {
+export type TurnProps<R = never> = {
   system: string;
   toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
 };
 
-export type AiRequestTurnResult = {
+export type TurnResult = {
   messages: Message.Message[];
   done: boolean;
 };
@@ -97,7 +98,7 @@ export type AiRequestTurnResult = {
  * Could be run locally in the app or remotely.
  * Could be personal or shared.
  */
-export class AiRequest {
+export class Request {
   /** Prevents concurrent execution of session. */
   private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));
 
@@ -115,7 +116,7 @@ export class AiRequest {
   private _ended = 0;
   private _toolCalls = 0;
 
-  constructor(private readonly _options: AiRequestOptions = {}) {
+  constructor(private readonly _options: Options = {}) {
     this._observer = _options.observer ?? GenerationObserver.noop();
     this._onOutput = _options.onOutput ?? (() => Effect.void);
   }
@@ -172,7 +173,7 @@ export class AiRequest {
     history = [],
     blueprints = [],
     objects = [],
-  }: AiRequestBeginProps): Effect.Effect<void, AiRequestRunError, AiRequestRunRequirements> =>
+  }: BeginProps): Effect.Effect<void, RunError, RunRequirements> =>
     Effect.gen(this, function* () {
       this._started = Date.now();
       this._history = [...history];
@@ -202,7 +203,7 @@ export class AiRequest {
   runAgentTurn = <const R = never>({
     system,
     toolkit: opaqueToolkit,
-  }: AiRequestTurnProps<R>): Effect.Effect<AiRequestTurnResult, AiRequestRunError, AiRequestRunRequirements | R> =>
+  }: TurnProps<R>): Effect.Effect<TurnResult, RunError, RunRequirements | R> =>
     Effect.gen(this, function* () {
       log.info('request', {
         system: { snippet: createSnippet(system), length: system.length },
@@ -283,7 +284,7 @@ export class AiRequest {
     toolkit: opaqueToolkit,
   }: {
     toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
-  }): Effect.Effect<void, AiRequestRunError, AiRequestRunRequirements | R> =>
+  }): Effect.Effect<void, RunError, RunRequirements | R> =>
     Effect.gen(this, function* () {
       const toolkit = opaqueToolkit ? yield* opaqueToolkit.handlers : undefined;
       const toolCalls = this.getToolCalls();
@@ -315,7 +316,7 @@ export class AiRequest {
     objects = [],
     blueprints = [],
     toolkit,
-  }: AiRequestRunProps<R>): Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements | R> =>
+  }: RunProps<R>): Effect.Effect<Message.Message[], RunError, RunRequirements | R> =>
     Effect.gen(this, function* () {
       yield* this.begin({ prompt, system: systemTemplate, history, objects, blueprints });
 

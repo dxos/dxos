@@ -34,7 +34,7 @@ export const sentenceNormalization = SentenceNormalization.pipe(
       // TODO(dmaretskyi): runStructured was removed from AiRequest. Reimplement using new API.
       return yield* Effect.die(
         new Error(
-          'Sentence normalization needs to be reimplemented - runStructured was removed from AiRequest. Use AiRequest.run or LanguageModel.generateObject.',
+          'Sentence normalization needs to be reimplemented - runStructured was removed from AiRequest.Request. Use AiRequest.run or LanguageModel.generateObject.',
         ),
       );
     }),

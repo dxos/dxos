@@ -11,12 +11,7 @@ import * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
 
 import { AiService, type ModelName, OpaqueToolkit } from '@dxos/ai';
-import {
-  AiSession,
-  type AiRequestRunError,
-  type AiRequestRunRequirements,
-  ToolExecutionServices,
-} from '@dxos/assistant';
+import { AiRequest, AiSession, ToolExecutionServices } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
 import { type OperationHandlerSet, Blueprint } from '@dxos/compute';
@@ -67,7 +62,7 @@ export class ChatProcessor {
   }
 
   async execute(
-    request: Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements>,
+    request: Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements>,
     model: ModelName,
   ) {
     const fiber = request.pipe(

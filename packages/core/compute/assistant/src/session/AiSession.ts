@@ -25,16 +25,10 @@ import { McpToolkit } from '@dxos/mcp-client';
 import { Message, type ContentBlock } from '@dxos/types';
 
 import { ToolExecutionServices } from '../functions';
-import {
-  AiRequest,
-  type AiRequestRunError,
-  type AiRequestRunRequirements,
-  type GenerationObserver,
-  createToolkit,
-  formatSystemPrompt,
-} from '../session';
-import { McpServerError } from '../tracing';
+import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request';
+import { McpServerError } from '../util';
 import * as AiContext from './AiContext';
+import { createToolkit } from './toolkit';
 
 export type RunProps<R = never> = {
   prompt: string | ContentBlock.Any[];
@@ -132,7 +126,7 @@ export class Session extends Resource {
    */
   public createRequest<R = never>(
     params: RunProps<R>,
-  ): Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements | R> {
+  ): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements | R> {
     return Effect.gen(this, function* () {
       const history = yield* Effect.promise(() => this.getHistory());
       const blueprints = this.context.getBlueprints();
@@ -144,7 +138,7 @@ export class Session extends Resource {
         objects: objects.length,
       });
 
-      const request = new AiRequest({
+      const request = new AiRequest.Request({
         summarizationThreshold: SUMMARY_THRESHOLD,
         observer: params.observer,
         onOutput: (message) =>
@@ -246,7 +240,7 @@ export class Service extends Context.Tag('@dxos/assistant/AiSessionService')<Ser
    */
   static run = <R = never>(
     params: RunProps<R>,
-  ): Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements | Service | R> =>
+  ): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements | Service | R> =>
     Effect.gen(function* () {
       const session = yield* Service;
       return yield* session.createRequest(params);

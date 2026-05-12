@@ -23,7 +23,7 @@ const handler: Operation.WithHandler<typeof TranscriptOperation.Summarize> = Tra
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ transcript, notes }) {
-        const result = yield* new AiRequest({
+        const result = yield* new AiRequest.Request({
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
         }).run({
           prompt: `Transcript: ${transcript}\n\nNotes: ${notes}`,

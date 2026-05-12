@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 
 import { ConsolePrinter } from '@dxos/ai';
-import { AiContext, AiSession, GenerationObserver } from '@dxos/assistant';
+import { AiContext, AiRequest, AiSession, GenerationObserver } from '@dxos/assistant';
 import type { Blueprint } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -19,7 +19,13 @@ export type TestStep = Pick<AiSession.RunProps, 'prompt' | 'system'> & {
 /**
  * Runs the prompt steps, calling the test function after each step.
  */
-export const runSteps = Effect.fn(function* (session: AiSession.Session, steps: TestStep[]) {
+export const runSteps: (
+  session: AiSession.Session,
+  steps: TestStep[],
+) => Effect.Effect<void, AiRequest.RunError, AiRequest.RunRequirements> = Effect.fn(function* (
+  session: AiSession.Session,
+  steps: TestStep[],
+) {
   for (const { test, ...props } of steps) {
     yield* session.createRequest({
       ...props,
