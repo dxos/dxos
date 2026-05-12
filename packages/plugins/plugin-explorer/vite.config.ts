@@ -7,14 +7,14 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    ExplorerPlugin: 'src/ExplorerPlugin.tsx',
-    capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
-    containers: 'src/containers/index.ts',
     hooks: 'src/hooks/index.ts',
-    meta: 'src/meta.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
+    capabilities: 'src/capabilities/index.ts',
+    containers: 'src/containers/index.ts',
+    meta: 'src/meta.ts',
+    ExplorerPlugin: 'src/ExplorerPlugin.tsx',
     types: 'src/types/index.ts',
   },
   jsx: 'react',

@@ -14,12 +14,14 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "import": "./dist/lib/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     },
     "./extraction": {
+      "source": "./src/extraction/index.ts",
       "types": "./dist/types/src/extraction/index.d.ts",
-      "import": "./dist/lib/extraction.mjs"
+      "default": "./dist/lib/neutral/extraction/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

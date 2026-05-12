@@ -7,12 +7,12 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    TransformerPlugin: 'src/TransformerPlugin.tsx',
+    plugin: 'src/plugin.ts',
+    translations: 'src/translations.ts',
     components: 'src/components/index.ts',
     hooks: 'src/hooks/index.ts',
     meta: 'src/meta.ts',
-    plugin: 'src/plugin.ts',
-    translations: 'src/translations.ts',
+    TransformerPlugin: 'src/TransformerPlugin.tsx',
   },
   jsx: 'react',
   test: { node: { environment: 'happy-dom' }, storybook: true },

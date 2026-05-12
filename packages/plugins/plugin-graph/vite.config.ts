@@ -7,11 +7,11 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    GraphPlugin: 'src/GraphPlugin.ts',
-    hooks: 'src/hooks/index.ts',
-    meta: 'src/meta.ts',
     plugin: 'src/plugin.ts',
     testing: 'src/testing.ts',
+    hooks: 'src/hooks/index.ts',
+    meta: 'src/meta.ts',
+    GraphPlugin: 'src/GraphPlugin.ts',
   },
   jsx: 'react',
   test: { node: { environment: 'happy-dom' } },

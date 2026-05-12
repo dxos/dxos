@@ -7,12 +7,12 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    CrxPlugin: 'src/CrxPlugin.tsx',
+    plugin: 'src/plugin.ts',
+    translations: 'src/translations.ts',
     capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     meta: 'src/meta.ts',
-    plugin: 'src/plugin.ts',
-    translations: 'src/translations.ts',
+    CrxPlugin: 'src/CrxPlugin.tsx',
     types: 'src/types/index.ts',
   },
   jsx: 'react',

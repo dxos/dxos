@@ -7,9 +7,9 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    MermaidPlugin: 'src/MermaidPlugin.tsx',
-    meta: 'src/meta.ts',
     plugin: 'src/plugin.ts',
+    meta: 'src/meta.ts',
+    MermaidPlugin: 'src/MermaidPlugin.tsx',
   },
   jsx: 'react',
   test: { node: { environment: 'happy-dom' }, storybook: true },

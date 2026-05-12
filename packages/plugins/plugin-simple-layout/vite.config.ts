@@ -7,14 +7,14 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    SimpleLayoutPlugin: 'src/SimpleLayoutPlugin.ts',
+    plugin: 'src/plugin.ts',
+    translations: 'src/translations.ts',
     capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     hooks: 'src/hooks/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
-    plugin: 'src/plugin.ts',
-    translations: 'src/translations.ts',
+    SimpleLayoutPlugin: 'src/SimpleLayoutPlugin.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',

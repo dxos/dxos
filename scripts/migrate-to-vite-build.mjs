@@ -297,6 +297,17 @@ const migrate = (pkgRel) => {
       console.warn(`SKIP ${pkgRel}: uses worker/import.meta.url URL patterns`);
       return;
     }
+    // Skip packages importing raw assets (`?url` / `?raw` / `?inline`). Vite's library
+    // mode inlines them as base64 into the bundle (e.g. plugin-zen pulled 50MB of .m4a
+    // into a single chunk), which then blows past PWA precache limits on the consumer.
+    const importsAssets = execSync(
+      `grep -rEl "from ['\\\"][^'\\\"]+\\?(url|raw|inline)['\\\"]" "${srcDir}" 2>/dev/null || true`,
+      { encoding: 'utf8' },
+    ).trim();
+    if (importsAssets) {
+      console.warn(`SKIP ${pkgRel}: imports raw assets via ?url / ?raw / ?inline`);
+      return;
+    }
   }
 
   // Skip packages where the default entry (src/index.ts) doesn't exist and no

@@ -7,10 +7,10 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    PwaPlugin: 'src/PwaPlugin.tsx',
-    meta: 'src/meta.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
+    meta: 'src/meta.ts',
+    PwaPlugin: 'src/PwaPlugin.tsx',
   },
   jsx: 'react',
   test: { node: { environment: 'happy-dom' } },
