@@ -14,8 +14,7 @@ import { Feed as EchoFeed, Obj, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { corePlugins } from '@dxos/plugin-testing';
-import { StorybookPlugin } from '@dxos/plugin-testing/plugin';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 

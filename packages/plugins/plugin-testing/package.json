@@ -31,11 +31,6 @@
       "types": "./dist/types/src/harness.d.ts",
       "browser": "./dist/lib/browser/harness.mjs",
       "node": "./dist/lib/node-esm/harness.mjs"
-    },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "browser": "./dist/lib/browser/plugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
