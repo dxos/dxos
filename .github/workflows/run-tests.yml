@@ -20,7 +20,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
   packages: read
 
 jobs:
@@ -94,14 +93,6 @@ jobs:
       - name: Test All (no analytics)
         if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN == '' }}
         run: moon exec --on-failure continue :test :test-browser :test-storybook -- --no-file-parallelism
-
-      - uses: 'moonrepo/run-report-action@v1'
-        if: >-
-          (success() || failure()) &&
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository
-        with:
-          access-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Test Results
         if: always()
