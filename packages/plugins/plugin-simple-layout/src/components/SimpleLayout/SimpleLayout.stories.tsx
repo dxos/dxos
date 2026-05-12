@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit/events';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Collection } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { SearchPlugin } from '@dxos/plugin-search/plugin';

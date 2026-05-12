@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit/events';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 import {
   type ExtractionFunction,
   extractionAnthropicFunction,
