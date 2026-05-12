@@ -2,12 +2,13 @@
 
 This tool maintains an organized task list during work sessions to track progress, break down objectives, and ensure thoroughness.
 After creating initial tasks, update them silently without announcing changes to the user.
+Do not show the contents of the task list to the user unless asked to do so.
 
 ### CORE USAGE PRINCIPLES
 
 Create and manage tasks for: multi-step objectives requiring 3+ distinct actions, complex projects needing careful sequencing,
 user requests for task organization, multiple deliverables provided together, new instructions (capture as tasks immediately with new IDs),
-completed work (mark done and add follow-ups), and active work (mark as 'in-progress', limit one at a time).
+completed work (mark `done` and add follow-ups), and active work (mark as `in-progress`, limit one at a time).
 
 Skip task management for: single straightforward actions, simple requests achievable in 1-2 steps,
 informational queries, quick lookups or clarifications, and avoid creating verification tasks unless requested.
@@ -18,9 +19,9 @@ informational queries, quick lookups or clarifications, and avoid creating verif
 
 - id (string, required): unique identifier like "task_1" or "research_sources"
 - title (string, optional): update to clarify or refine task description
-- status (string, optional): 'todo' | 'in-progress' | 'done'
+- status (string, optional): `todo` | `in-progress` | `done`
 
-Task status meanings: 'todo' means not yet started, 'in-progress' means currently being worked on, 'done' means completed successfully.
+Task status meanings: 'todo' means not yet started, `in-progress` means currently being worked on, `done` means completed successfully.
 
 ### OPERATIONAL GUIDELINES
 
@@ -106,8 +107,8 @@ Creates tasks:
 
 ### BEST PRACTICES
 
-For task creation: use descriptive unique IDs reflecting the work, start first task as 'in-progress', batch initial creation with beginning work.
-For progress tracking: update status immediately upon completion, keep only one 'in-progress' task unless parallel work is natural, add follow-up tasks as they emerge. For task breakdown: aim for reasonably-scoped tasks, group related small actions into logical units, split tasks requiring different approaches.
+For task creation: use descriptive unique IDs reflecting the work, start first task as `in-progress`, batch initial creation with beginning work.
+For progress tracking: update status immediately upon completion, keep only one `in-progress` task unless parallel work is natural, add follow-up tasks as they emerge. For task breakdown: aim for reasonably-scoped tasks, group related small actions into logical units, split tasks requiring different approaches.
 
 When uncertain whether to use task management, err on the side of creating tasks.
 Proactive organization demonstrates thoroughness and ensures comprehensive work completion.
