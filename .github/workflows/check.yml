@@ -103,45 +103,6 @@ jobs:
           retention-days: 1
           if-no-files-found: ignore
 
-  check-report:
-    needs: [check, test]
-    # Only post on same-repo PRs — fork PRs get read-only tokens regardless of
-    # declared permissions, and non-PR runs have no PR to comment on.
-    if: >-
-      always() &&
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: Download check moon report
-        id: download-check-report
-        continue-on-error: true
-        uses: actions/download-artifact@v5
-        with:
-          name: moon-check-report
-          path: .moon/cache
-
-      - uses: 'moonrepo/run-report-action@v1'
-        if: steps.download-check-report.outcome == 'success'
-        with:
-          access-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Download test moon report
-        id: download-test-report
-        continue-on-error: true
-        uses: actions/download-artifact@v5
-        with:
-          name: moon-test-report
-          path: .moon/cache
-
-      - uses: 'moonrepo/run-report-action@v1'
-        if: steps.download-test-report.outcome == 'success'
-        with:
-          access-token: ${{ secrets.GITHUB_TOKEN }}
-
   test:
     runs-on: depot-ubuntu-24.04-8
     container:
@@ -341,6 +302,45 @@ jobs:
         with:
           name: ${{ github.job }}
           result: ${{ job.status }}
+
+  check-report:
+    needs: [check, test]
+    # Only post on same-repo PRs — fork PRs get read-only tokens regardless of
+    # declared permissions, and non-PR runs have no PR to comment on.
+    if: >-
+      always() &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Download check moon report
+        id: download-check-report
+        continue-on-error: true
+        uses: actions/download-artifact@v5
+        with:
+          name: moon-check-report
+          path: .moon/cache
+
+      - uses: 'moonrepo/run-report-action@v1'
+        if: steps.download-check-report.outcome == 'success'
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download test moon report
+        id: download-test-report
+        continue-on-error: true
+        uses: actions/download-artifact@v5
+        with:
+          name: moon-test-report
+          path: .moon/cache
+
+      - uses: 'moonrepo/run-report-action@v1'
+        if: steps.download-test-report.outcome == 'success'
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
 
   report:
     needs: test
