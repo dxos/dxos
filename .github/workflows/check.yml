@@ -117,12 +117,15 @@ jobs:
       pull-requests: write
     steps:
       - name: Download moon run report
+        id: download-report
+        continue-on-error: true
         uses: actions/download-artifact@v5
         with:
           name: moon-run-report
           path: .moon/cache
 
       - uses: 'moonrepo/run-report-action@v1'
+        if: steps.download-report.outcome == 'success'
         with:
           access-token: ${{ secrets.GITHUB_TOKEN }}
 
