@@ -12,14 +12,6 @@ on:
         required: false
         type: string
         default: '24.11.1'
-      use-trunk:
-        description: >
-          Wrap test runs with Trunk analytics uploader. Set to false for fork PRs
-          where TRUNK_TOKEN is unavailable (pull_request events from forks do not
-          receive secrets).
-        required: false
-        type: boolean
-        default: true
     secrets:
       TRUNK_TOKEN:
         required: false
@@ -46,10 +38,13 @@ jobs:
       # while still excluding the heavier opt-in tag families.
       VITEST_TAGS_FILTER: '!llm && !sync && !sync-e2e && !functions-e2e && !tracing-e2e'
       VITEST_ENV: 'node'
-      VITEST_COVERAGE: 'true'
+      VITEST_COVERAGE: ${{ secrets.CODECOV_TOKEN != '' && 'true' || 'false' }}
       VITEST_XML_REPORT: 'true'
       # NOTE: Browser tests also require a process for chromium. Limiting to 4 provides headroom for those processes.
       MOON_CONCURRENCY: 4
+      # Exposed so step conditions can branch on token presence without referencing
+      # secrets directly (secrets are not allowed in if: expressions).
+      TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -73,7 +68,7 @@ jobs:
         run: rm -rf test-results
 
       - name: Test Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && inputs.use-trunk }}
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN != '' }}
         uses: trunk-io/analytics-uploader@v1
         with:
           junit-paths: 'test-results/**/results.xml'
@@ -83,11 +78,11 @@ jobs:
           run: moon run :test :test-browser :test-storybook --affected remote -- --no-file-parallelism
 
       - name: Test Affected (no analytics)
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.use-trunk }}
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN == '' }}
         run: moon run :test :test-browser :test-storybook --affected remote -- --no-file-parallelism
 
       - name: Test All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' && inputs.use-trunk }}
+        if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN != '' }}
         uses: trunk-io/analytics-uploader@v1
         with:
           junit-paths: 'test-results/**/results.xml'
@@ -97,11 +92,11 @@ jobs:
           run: moon exec --on-failure continue :test :test-browser :test-storybook -- --no-file-parallelism
 
       - name: Test All (no analytics)
-        if: ${{ steps.extract_branch.outputs.branch == 'main' && !inputs.use-trunk }}
+        if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN == '' }}
         run: moon exec --on-failure continue :test :test-browser :test-storybook -- --no-file-parallelism
 
       - uses: 'moonrepo/run-report-action@v1'
-        if: (success() || failure()) && inputs.use-trunk
+        if: (success() || failure()) && env.TRUNK_TOKEN != ''
         with:
           access-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -114,7 +109,7 @@ jobs:
           retention-days: 7
 
       - uses: codecov/codecov-action@v5
-        if: ${{ inputs.node-version == '24.11.1' }}
+        if: ${{ inputs.node-version == '24.11.1' && env.VITEST_COVERAGE == 'true' }}
         with:
           directory: ./coverage
           fail_ci_if_error: false

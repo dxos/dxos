@@ -106,13 +106,13 @@ jobs:
     strategy:
       matrix:
         node-version: ['24.11.1']
-    # Fork PRs run without Trunk analytics (no TRUNK_TOKEN available for pull_request events
-    # from forks). Same-repo PRs and push/schedule runs use Trunk as normal.
+    # Fork PRs run without Trunk analytics and coverage — secrets are withheld by
+    # GitHub for pull_request events from forks; run-tests.yml conditions on
+    # token presence directly.
     uses: ./.github/workflows/run-tests.yml
     with:
       sha: ${{ github.event.pull_request.head.sha || github.sha }}
       node-version: ${{ matrix.node-version }}
-      use-trunk: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     secrets:
       TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
