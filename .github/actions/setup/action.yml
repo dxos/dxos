@@ -57,7 +57,9 @@ runs:
 
     - name: Install dependencies
       run: |
-        if [ "${{ inputs.verify-integrity }}" != "true" ]; then
+        if [ "${{ inputs.verify-integrity }}" = "true" ]; then
+          pnpm set verify-store-integrity true
+        else
           pnpm set verify-store-integrity false
         fi
         pnpm install --prefer-offline
