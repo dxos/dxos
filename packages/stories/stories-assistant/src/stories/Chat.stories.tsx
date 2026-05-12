@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { AgentPrompt, LinearBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
+import { AgentPrompt, LinearBlueprint, PlanningBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Routine, Template } from '@dxos/compute';
 import { Script, Trigger } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
@@ -15,6 +15,7 @@ import { Reply } from '@dxos/compute/testing';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { AssistantPlugin } from '@dxos/plugin-assistant';
 import { AssistantBlueprint } from '@dxos/plugin-assistant/blueprints';
 import { translations } from '@dxos/plugin-assistant/translations';
 import { ChessBlueprint, ChessFunctions } from '@dxos/plugin-chess/blueprints';
@@ -153,6 +154,23 @@ export const Default: Story = {
   }),
   args: {
     modules: [[ChatModule]],
+  },
+};
+
+export const WithPlanning: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown');
+      return {
+        plugins: [MarkdownPlugin(), AssistantPlugin()],
+      };
+    },
+    config: config.remote,
+    createAgent: true,
+  }),
+  args: {
+    modules: [[ChatModule]],
+    blueprints: [MarkdownBlueprint.key, PlanningBlueprint.key],
   },
 };
 

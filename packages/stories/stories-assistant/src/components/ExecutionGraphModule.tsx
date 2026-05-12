@@ -9,9 +9,9 @@ import { InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { type Queue, useQueue } from '@dxos/react-client/echo';
 import { Timeline, useExecutionGraph } from '@dxos/react-ui-components';
 
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const ExecutionGraphModule = ({ space, traceQueue }: ComponentProps & { traceQueue?: Queue }) => {
+export const ExecutionGraphModule = ({ space, traceQueue }: ModuleProps & { traceQueue?: Queue }) => {
   const traceFeed = space.properties?.invocationTraceFeed?.target;
   const traceQueueDxn = traceFeed ? Feed.getQueueDxn(traceFeed) : undefined;
   const invocations = useQueue(traceQueueDxn)?.objects.filter(Obj.instanceOf(InvocationTraceStartEvent)) ?? [];

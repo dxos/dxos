@@ -19,9 +19,9 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { ResearchInputQueue } from '../testing';
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const GraphModule = ({ space }: ComponentProps) => {
+export const GraphModule = ({ space }: ModuleProps) => {
   const [filter, setFilter] = useState<Filter.Any>();
   const [open, setOpen] = useState(false);
 
@@ -75,7 +75,7 @@ export const GraphModule = ({ space }: ComponentProps) => {
   );
 };
 
-export const SearchBar = ({ space, onSubmit }: ComponentProps & Pick<ChatEditorProps, 'onSubmit'>) => {
+export const SearchBar = ({ space, onSubmit }: ModuleProps & Pick<ChatEditorProps, 'onSubmit'>) => {
   const { state: flushState, handleFlush } = useFlush(space);
   const editorRef = useRef<EditorController>(null);
 

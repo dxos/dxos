@@ -18,9 +18,9 @@ import {
   outliner,
 } from '@dxos/ui-editor';
 
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const TasksModule = ({ space }: ComponentProps) => {
+export const TasksModule = ({ space }: ModuleProps) => {
   const { themeMode } = useThemeContext();
   const [document] = useQuery(space.db, Filter.type(Markdown.Document));
   if (!document?.content.target) {

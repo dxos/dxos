@@ -1,17 +1,20 @@
-TASK MANAGEMENT TOOL - USAGE GUIDELINES
+## PLANNING TOOL
 
 This tool maintains an organized task list during work sessions to track progress, break down objectives, and ensure thoroughness.
 After creating initial tasks, update them silently without announcing changes to the user.
 
-=== CORE USAGE PRINCIPLES ===
+### CORE USAGE PRINCIPLES
 
-Create and manage tasks for: multi-step objectives requiring 3+ distinct actions, complex projects needing careful sequencing, user requests for task organization, multiple deliverables provided together, new instructions (capture as tasks immediately with new IDs), completed work (mark done and add follow-ups), and active work (mark as 'in-progress', limit one at a time).
+Create and manage tasks for: multi-step objectives requiring 3+ distinct actions, complex projects needing careful sequencing,
+user requests for task organization, multiple deliverables provided together, new instructions (capture as tasks immediately with new IDs),
+completed work (mark done and add follow-ups), and active work (mark as 'in-progress', limit one at a time).
 
-Skip task management for: single straightforward actions, simple requests achievable in 1-2 steps, informational queries, quick lookups or clarifications, and avoid creating verification tasks unless requested.
+Skip task management for: single straightforward actions, simple requests achievable in 1-2 steps,
+informational queries, quick lookups or clarifications, and avoid creating verification tasks unless requested.
 
-=== TOOL SPECIFICATION ===
+### TOOL SPECIFICATION
 
-update-tasks requires an array of task objects. Each task object contains:
+`update-tasks` requires an array of task objects. Each task object contains:
 
 - id (string, required): unique identifier like "task_1" or "research_sources"
 - title (string, optional): update to clarify or refine task description
@@ -19,11 +22,14 @@ update-tasks requires an array of task objects. Each task object contains:
 
 Task status meanings: 'todo' means not yet started, 'in-progress' means currently being worked on, 'done' means completed successfully.
 
-=== OPERATIONAL GUIDELINES ===
+### OPERATIONAL GUIDELINES
 
-Update tasks in real-time as work progresses. Mark tasks 'done' immediately upon completion. Maintain only ONE task with 'in-progress' status at a time. Complete current tasks before starting new ones. Use specific, actionable task titles. Break complex work into manageable logical pieces. Batch task updates with other actions when possible for efficiency.
+Update tasks in realtime as work progresses. Mark tasks `done` immediately upon completion.
+Maintain only ONE task with `in-progress` status at a time. Complete current tasks before starting new ones.
+Use specific, actionable task titles. Break complex work into manageable logical pieces.
+Batch task updates with other actions when possible for efficiency.
 
-=== USAGE EXAMPLES ===
+### USAGE EXAMPLES
 
 <example type="research_project">
 <user_message>I need to research sustainable packaging options and write a report comparing costs and environmental impact.</user_message>
@@ -98,7 +104,7 @@ Creates tasks:
 <reasoning>One-step action with immediate completion, no organizational benefit from tasks.</reasoning>
 </example>
 
-=== BEST PRACTICES ===
+### BEST PRACTICES
 
 For task creation: use descriptive unique IDs reflecting the work, start first task as 'in-progress', batch initial creation with beginning work.
 For progress tracking: update status immediately upon completion, keep only one 'in-progress' task unless parallel work is natural, add follow-up tasks as they emerge. For task breakdown: aim for reasonably-scoped tasks, group related small actions into logical units, split tasks requiring different approaches.

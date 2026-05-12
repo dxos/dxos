@@ -10,9 +10,9 @@ import { useContextBinder } from '@dxos/plugin-assistant/hooks';
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const CommentsModule = ({ space }: ComponentProps) => {
+export const CommentsModule = ({ space }: ModuleProps) => {
   const chats = useQuery(space.db, Filter.type(Assistant.Chat));
   const feedTarget = chats.at(-1)?.feed.target;
   const context = useContextBinder(space, feedTarget);

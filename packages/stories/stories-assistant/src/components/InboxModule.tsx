@@ -10,9 +10,9 @@ import { Filter } from '@dxos/echo';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { useQuery } from '@dxos/react-client/echo';
 
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const InboxModule = ({ space }: ComponentProps) => {
+export const InboxModule = ({ space }: ModuleProps) => {
   const mailboxes = useQuery(space.db, Filter.type(Mailbox.Mailbox));
   const mailbox = mailboxes[0];
 

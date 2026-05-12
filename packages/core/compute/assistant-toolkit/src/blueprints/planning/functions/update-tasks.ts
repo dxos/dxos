@@ -17,7 +17,7 @@ const SimpleTask = Plan.Task.omit('chat');
 
 export const UpdateTasks = Operation.make({
   meta: {
-    key: 'org.dxos.function.planning.updateTasks',
+    key: 'org.dxos.function.planning.update-tasks', // TODO(burdon): Are hyphens allowed?
     name: 'Update tasks',
     description: INSTRUCTIONS,
   },
@@ -28,10 +28,15 @@ export const UpdateTasks = Operation.make({
   services: [AiContextService, Database.Service],
 });
 
+/**
+ * Updates the planning document (Agent.plan) with the given tasks.
+ */
 export default UpdateTasks.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ tasks: newTasks }) {
       const agent = yield* Agent.getFromChatContext;
+      // TODO(burdon): How to specify requirements/preconditions before calling?
+      // TODO(burdon): How to report non-technical error?
       const plan = yield* Database.load(agent.plan);
 
       Obj.update(plan, (plan) => {

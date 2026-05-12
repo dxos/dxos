@@ -26,7 +26,7 @@ import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { isNonNullable } from '@dxos/util';
 
-import { ChatModule, type ComponentProps } from '../components';
+import { ChatModule, type ModuleProps } from '../components';
 import { config, getDecorators } from '../testing';
 
 // TODO(burdon): Move into Chat.stories.tsx
@@ -34,7 +34,7 @@ import { config, getDecorators } from '../testing';
 const panelClassNames = 'bg-base-surface rounded-xs border border-separator overflow-hidden';
 
 type DefaultStoryProps = {
-  modules: FC<ComponentProps>[][];
+  modules: FC<ModuleProps>[][];
   blueprints?: string[];
   showContext?: boolean;
 };
@@ -75,7 +75,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: DefaultStoryPro
     await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
   }, [space, blueprints, blueprintsDefinitions]);
 
-  const handleEvent = useCallback<NonNullable<ComponentProps['onEvent']>>((event) => {
+  const handleEvent = useCallback<NonNullable<ModuleProps['onEvent']>>((event) => {
     log.info('event', { event });
   }, []);
 

@@ -21,10 +21,10 @@ import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Loading } from '@dxos/react-ui/testing';
 import { isNonNullable } from '@dxos/util';
 
-import { type ComponentProps, ContextModule } from '../components';
+import { type ModuleProps, ContextModule } from '../components';
 
 export type ModuleContainerProps = {
-  modules: FC<ComponentProps>[][];
+  modules: FC<ModuleProps>[][];
   blueprints?: string[];
   showContext?: boolean;
 };
@@ -65,7 +65,7 @@ export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showCon
     await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
   }, [space, blueprints, blueprintsDefinitions]);
 
-  const handleEvent = useCallback<NonNullable<ComponentProps['onEvent']>>((event) => {
+  const handleEvent = useCallback<NonNullable<ModuleProps['onEvent']>>((event) => {
     log.info('event', { event });
   }, []);
 
@@ -102,6 +102,7 @@ export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showCon
                   item={{ id: `module-${i}` }}
                   classNames='bg-base-surface rounded-xs border border-separator overflow-hidden'
                 >
+                  {/* TODO(burdon): Should these be surfaces? */}
                   <Component space={space} onEvent={handleEvent} />
                 </StackItem.Root>
               ))}

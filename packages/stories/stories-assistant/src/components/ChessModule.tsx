@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -10,9 +10,9 @@ import { Filter } from '@dxos/echo';
 import { Game } from '@dxos/plugin-game/types';
 import { useQuery } from '@dxos/react-client/echo';
 
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const ChessModule: FC<ComponentProps> = ({ space }) => {
+export const ChessModule = ({ space }: ModuleProps) => {
   const objects = useQuery(space.db, Filter.type(Game));
   const game = objects.at(-1);
 
