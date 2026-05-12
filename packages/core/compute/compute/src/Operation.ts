@@ -572,17 +572,21 @@ export const migration = Migration.define({
     };
   },
   onMigration: async ({ object }) => {
-    const snapshot = _operationMigrationSnapshots.get((object as any).id);
+    const id = (object as any).id;
+    const snapshot = _operationMigrationSnapshots.get(id);
     if (!snapshot) {
       return;
     }
-    Obj.update(object, (object) => {
-      const meta = Obj.getMeta(object);
-      if (snapshot.key !== undefined) {
-        meta.key = snapshot.key;
-      }
-      meta.version = snapshot.version;
-    });
-    _operationMigrationSnapshots.delete((object as any).id);
+    try {
+      Obj.update(object, (object) => {
+        const meta = Obj.getMeta(object);
+        if (snapshot.key !== undefined) {
+          meta.key = snapshot.key;
+        }
+        meta.version = snapshot.version;
+      });
+    } finally {
+      _operationMigrationSnapshots.delete(id);
+    }
   },
 });

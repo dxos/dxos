@@ -111,7 +111,7 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
  * Matches a meta `key` / `version` constraint against an object's meta `key` and `version`.
  * - `key` must match exactly.
  * - If `versionRange` is set, the object's `version` must satisfy it (semver).
- *   Objects without a `version` do not match a version-constrained filter.
+ *   Objects without a `version` or with an invalid `version` do not match a version-constrained filter.
  */
 const matchMetaKey = (
   key: string,
@@ -125,7 +125,10 @@ const matchMetaKey = (
   if (versionRange === undefined) {
     return true;
   }
-  if (objVersion === undefined) {
+  if (objVersion === undefined || semver.valid(objVersion) === null) {
+    return false;
+  }
+  if (semver.validRange(versionRange) === null) {
     return false;
   }
   return semver.satisfies(objVersion, versionRange, { includePrerelease: true });

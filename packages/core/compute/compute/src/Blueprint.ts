@@ -284,15 +284,19 @@ export const migration = Migration.define({
     };
   },
   onMigration: async ({ object }) => {
-    const snapshot = _blueprintMigrationSnapshots.get((object as any).id);
+    const id = (object as any).id;
+    const snapshot = _blueprintMigrationSnapshots.get(id);
     if (!snapshot) {
       return;
     }
-    Obj.update(object, (object) => {
-      const meta = Obj.getMeta(object);
-      meta.key = snapshot.key;
-      meta.version ??= '0.1.0';
-    });
-    _blueprintMigrationSnapshots.delete((object as any).id);
+    try {
+      Obj.update(object, (object) => {
+        const meta = Obj.getMeta(object);
+        meta.key = snapshot.key;
+        meta.version ??= '0.1.0';
+      });
+    } finally {
+      _blueprintMigrationSnapshots.delete(id);
+    }
   },
 });
