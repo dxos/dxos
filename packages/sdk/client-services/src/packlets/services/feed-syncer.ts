@@ -128,7 +128,7 @@ export class FeedSyncer extends Resource {
         }).pipe(
           Effect.tapError((cause) =>
             Effect.sync(() =>
-              log.warn('feed sync edge message handling failed', {
+              log('feed sync edge message handling failed', {
                 serviceId: msg.serviceId,
                 payloadByteLength: msg.payload?.value?.byteLength,
                 cause: cause instanceof Error ? cause.message : String(cause),
@@ -287,7 +287,7 @@ export class FeedSyncer extends Resource {
       ).pipe(
         Effect.tapError((cause) =>
           Effect.sync(() =>
-            log.warn('feed sync edge send failed', {
+            log('feed sync edge send failed', {
               serviceId,
               tag: rpcTag,
               cause: cause instanceof Error ? cause.message : String(cause),

@@ -210,7 +210,7 @@ class FunctionContext extends Resource {
       ? makeTraceWriterLayer(this.context.services.traceService)
       : Trace.writerLayerNoop;
 
-    log.info('Creating function context layer', {
+    log('Creating function context layer', {
       traceService: !!this.context.services.traceService,
       functionsService: !!this.context.services.functionsService,
       functionsAiService: !!this.context.services.functionsAiService,
@@ -246,7 +246,7 @@ class FunctionContext extends Resource {
 const makeTraceWriterLayer = (traceService: TraceProtocol.TraceService): Layer.Layer<Trace.TraceService> =>
   Layer.succeed(Trace.TraceService, {
     write: (eventType, payload) => {
-      log.info('Writing trace event', {
+      log('Writing trace event', {
         eventType: eventType.key,
       });
       traceService.write([

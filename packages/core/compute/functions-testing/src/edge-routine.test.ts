@@ -108,14 +108,14 @@ describe('Edge routine', { tags: ['functions-e2e'] }, () => {
 
     await sync(space);
 
-    log.info('trigger created and synced');
+    log('trigger created and synced');
     log.break();
 
     const runResult: any = await client.edge.http.forceRunCronTrigger(Context.default(), space.id, trigger.id);
     if (runResult._kind === 'error') {
       throw ErrorCodec.decode(runResult.error);
     }
-    log.info('trigger ran', { runResult });
+    log('trigger ran', { runResult });
     expect(runResult.result.count).toBe(3);
   });
 });

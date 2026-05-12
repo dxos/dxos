@@ -141,7 +141,7 @@ export const buildExecutionGraph = ({
     if (Trace.isOfType(AgentRequestBegin, event)) {
       const result = Schema.validateEither(AgentRequestBegin.schema)(event.data);
       if (Either.isLeft(result)) {
-        log.warn('invalid trace event', {
+        log('invalid trace event', {
           error: result.left,
         });
         continue;
@@ -166,7 +166,7 @@ export const buildExecutionGraph = ({
     } else if (Trace.isOfType(AgentRequestEnd, event)) {
       const result = Schema.validateEither(AgentRequestEnd.schema)(event.data);
       if (Either.isLeft(result)) {
-        log.warn('invalid trace event', {
+        log('invalid trace event', {
           error: result.left,
         });
         continue;
@@ -195,7 +195,7 @@ export const buildExecutionGraph = ({
     } else if (Trace.isOfType(CompleteBlock, event)) {
       const result = Schema.validateEither(CompleteBlock.schema)(event.data);
       if (Either.isLeft(result)) {
-        log.warn('invalid trace event', {
+        log('invalid trace event', {
           error: result.left,
         });
         continue;
@@ -252,7 +252,7 @@ export const buildExecutionGraph = ({
     } else if (Trace.isOfType(Trace.OperationStart, event)) {
       const result = Schema.validateEither(Trace.OperationStart.schema)(event.data);
       if (Either.isLeft(result)) {
-        log.warn('invalid trace event', {
+        log('invalid trace event', {
           error: result.left,
         });
         continue;
@@ -283,7 +283,7 @@ export const buildExecutionGraph = ({
     } else if (Trace.isOfType(Trace.OperationEnd, event)) {
       const result = Schema.validateEither(Trace.OperationEnd.schema)(event.data);
       if (Either.isLeft(result)) {
-        log.warn('invalid trace event', {
+        log('invalid trace event', {
           error: result.left,
         });
         continue;
