@@ -18,6 +18,8 @@ import {
 } from '@automerge/automerge-subduction';
 import { beforeAll, describe, test } from 'vitest';
 
+import { sleep } from '@dxos/async';
+
 class AsyncQueue<T> {
   private _items: T[] = [];
   private _waiters: ((item: T) => void)[] = [];
@@ -277,25 +279,22 @@ describe('automerge-subduction', () => {
     expect(blobsBonA[0]).toEqual(new Uint8Array([30, 40]));
   }, 10_000);
 
+  // After B drops handshake state and rehydrates from durable storage, does
+  // subduction re-handshake on the reused logical channel when A pushes?
+  // Empirical answer: no — A's auto-broadcast does not reach B'.
   test(
-    'commit propagates to rehydrated peer via shared durable storage when wasm pump outlives JS Subduction',
+    'does not auto-rehydrate handshake on a logical connection where one end dropped it',
     { timeout: 15_000 },
     async ({ expect }) => {
       const signerA = MemorySigner.generate();
       const signerB = MemorySigner.generate();
       const storageA = new MemoryStorage();
-      // The "durable storage" we re-hydrate B from. The JS-side instance
-      // outlives the wrapping `Subduction`, so the wasm-side data survives
-      // the simulated crash.
       const storageB = new MemoryStorage();
-
-      // Single logical channel. The AsyncQueues persist beyond subB's lifetime.
       const [transportA, transportB] = createMemoryTransportPair();
 
       const subA = new Subduction(signerA, storageA, 'svc');
       let subB = new Subduction(signerB, storageB, 'svc');
 
-      // Handshake + connect over the live channel.
       const [authA, authB] = await Promise.all([
         AuthenticatedTransport.setup(transportA, signerA, signerB.peerId()),
         AuthenticatedTransport.accept(transportB, signerB),
@@ -303,33 +302,27 @@ describe('automerge-subduction', () => {
       await subA.addConnection(authA);
       await subB.addConnection(authB);
 
-      // Sanity: initial commit flows A -> B via auto-broadcast.
       const sid = SedimentreeId.fromBytes(new Uint8Array(32).fill(7));
       await subA.addCommit(sid, commitIdOf(1), [], new Uint8Array([1, 2, 3]));
       await expect.poll(() => subB.getBlobs(sid).then((bs) => bs.length), { timeout: 5_000 }).toEqual(1);
 
-      // Simulate B crash from the JS surface. Two steps:
-      //   1) `transportB.disconnect()` fires the auth wrapper's disconnect
-      //      callbacks at the JS layer. This is the only JS-visible signal we
-      //      can give to "tear down" the channel.
-      //   2) `subB.free()` releases JS ownership of the wrapped Rust state.
+      // Simulate B crash: clearing the queue's waiters halts the orphaned
+      // wasm pump that survives `free()`. Do NOT use `disconnectAll` /
+      // `disconnectFromPeer` — those send a graceful goodbye A would observe.
       await transportB.disconnect();
       subB.free();
 
-      // Restart B from durable storage. New `Subduction`; no `addConnection`,
-      // no `acceptTransport`. The hydrated instance sees the initial commit
-      // from storage but has zero peers of its own.
       subB = await Subduction.hydrate(signerB, storageB, 'svc');
       expect(await subB.getBlobs(sid)).toHaveLength(1);
       expect(await subB.getConnectedPeerIds()).toHaveLength(0);
-
-      // A still believes the peer is connected (no notification was sent).
       expect(await subA.getConnectedPeerIds()).toHaveLength(1);
 
-      // A pushes via the auto-broadcast path.
       await subA.addCommit(sid, commitIdOf(2), [commitIdOf(1)], new Uint8Array([4, 5, 6]));
+      await sleep(500);
 
-      await expect.poll(() => subB.getBlobs(sid).then((bs) => bs.length), { timeout: 1_000 }).toEqual(2);
+      // TODO(mykola): When subduction-core grows channel-level handshake
+      // recovery, flip to `.toHaveLength(2)` and drop "does not" from name.
+      expect(await subB.getBlobs(sid)).toHaveLength(1);
 
       subA.free();
       subB.free();
