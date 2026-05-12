@@ -14,7 +14,6 @@ import {
   SedimentreeId,
   Subduction,
   commitIdOfBase58Id,
-  type PeerId as SubductionPeerId,
 } from '@automerge/automerge-subduction';
 import { beforeAll, describe, test } from 'vitest';
 
