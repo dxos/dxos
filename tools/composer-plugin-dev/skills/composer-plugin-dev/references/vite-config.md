@@ -45,7 +45,7 @@ Both files become **GitHub release assets** — see [publishing.md](./publishing
 pnpm dev   # vite dev server, default port 3967
 ```
 
-In Composer: **Settings → Plugins → Plugin Registry → Enable dev plugin**. The toggle persists across reloads, so HMR-driven page reloads keep the dev plugin attached. Edits require a manual reload.
+In Composer: **Settings → Plugins → Enable dev plugin**. The toggle persists across reloads, so HMR-driven page reloads keep the dev plugin attached. No URL configuration needed — `composerPlugin` defaults to port 3967, which Composer expects. Edits require a manual reload.
 
 ## Inside the dxos monorepo
 

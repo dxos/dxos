@@ -59,11 +59,13 @@ Pass `node-version` or `pnpm-version` inputs if your project requires specific v
 
 ### Dev server (no build needed)
 
-`composerPlugin` serves a dev manifest at `http://localhost:3967/manifest.json` when running `pnpm dev`. In Composer:
+`composerPlugin` serves a dev manifest on port 3967 by default — the same port Composer expects — so no URL configuration is needed:
 
-1. Open **Settings → Plugins → Plugin Registry**.
-2. Paste `http://localhost:3967/manifest.json` into **Load by URL**.
-3. Enable the **Dev plugin** toggle — persists across reloads.
+```sh
+pnpm dev
+```
+
+In Composer, open **Settings → Plugins** and enable the **Dev plugin** toggle. It persists across reloads.
 
 > **Note:** Fast Refresh does not work cross-origin. Edits are picked up on the next manual page reload.
 
@@ -73,7 +75,7 @@ Pass `node-version` or `pnpm-version` inputs if your project requires specific v
 pnpm build && pnpm preview
 ```
 
-Load `http://localhost:3967/manifest.json` from the same dialog to test the production bundle and offline caching.
+Enable the same **Dev plugin** toggle in **Settings → Plugins** to load the preview build.
 
 ## 4. Register in the community index
 
