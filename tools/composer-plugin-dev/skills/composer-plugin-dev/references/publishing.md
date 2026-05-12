@@ -15,7 +15,7 @@ No further PRs are needed for updates — the registry polls the repo's latest r
 
 Because `@dxos/*` dependencies are externalized by the plugin bundle, the host's copy runs at runtime — your `package.json` version only affects build-time types and APIs. Any version with a compatible API will work; an exact match isn't required.
 
-For now, **use the latest `main` dist-tag** to build against the newest stable APIs:
+For now, **use the latest `main` dist-tag** to stay current with the host:
 
 ```sh
 npm dist-tag ls @dxos/app-framework
