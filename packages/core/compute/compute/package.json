@@ -14,14 +14,17 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
     "./StorageService": {
+      "source": "./src/StorageService.ts",
       "types": "./dist/types/src/StorageService.d.ts",
       "import": "./dist/lib/StorageService.mjs"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     }

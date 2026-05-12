@@ -17,14 +17,17 @@
   },
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
     "./playwright": {
+      "source": "./src/playwright/index.ts",
       "types": "./dist/types/src/playwright/index.d.ts",
       "import": "./dist/lib/playwright.mjs"
     },
     "./translations": {
+      "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     }

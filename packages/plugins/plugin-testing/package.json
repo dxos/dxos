@@ -46,14 +46,17 @@
   },
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
     "./harness": {
+      "source": "./src/harness.ts",
       "types": "./dist/types/src/harness.d.ts",
       "import": "./dist/lib/harness.mjs"
     },
     "./plugin": {
+      "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
       "import": "./dist/lib/plugin.mjs"
     }

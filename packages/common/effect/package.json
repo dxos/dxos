@@ -13,10 +13,12 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
     "./testing": {
+      "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
       "import": "./dist/lib/testing.mjs"
     }

@@ -197,6 +197,12 @@ const rewriteExports = (pkgJson, entryPoints) => {
     }
     const typesPath = source.replace(/^src\//, 'dist/types/src/').replace(/\.tsx?$/, '.d.ts');
     newExports[key] = {
+      // `source` lets @dxos/vite-plugin-import-source redirect `@dxos/<pkg>/<subpath>` to
+      // the matching `src/*.ts` during dev/test. Critical when a package consumes its
+      // own sub-exports (e.g. `@dxos/react-ui/testing` imports `@dxos/react-ui`); without
+      // it the storybook tests pick up the compiled bundle's ThemeContext while the
+      // story components keep the src-version, producing "Missing ThemeContext".
+      source: `./${source}`,
       types: `./${typesPath}`,
       import: `./dist/lib/${name}.mjs`,
     };

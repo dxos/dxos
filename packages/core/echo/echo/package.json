@@ -14,94 +14,117 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
     "./internal": {
+      "source": "./src/internal/index.ts",
       "types": "./dist/types/src/internal/index.d.ts",
       "import": "./dist/lib/internal.mjs"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
     "./Annotation": {
+      "source": "./src/Annotation.ts",
       "types": "./dist/types/src/Annotation.d.ts",
       "import": "./dist/lib/Annotation.mjs"
     },
     "./Database": {
+      "source": "./src/Database.ts",
       "types": "./dist/types/src/Database.d.ts",
       "import": "./dist/lib/Database.mjs"
     },
     "./Entity": {
+      "source": "./src/Entity.ts",
       "types": "./dist/types/src/Entity.d.ts",
       "import": "./dist/lib/Entity.mjs"
     },
     "./Err": {
+      "source": "./src/Err.ts",
       "types": "./dist/types/src/Err.d.ts",
       "import": "./dist/lib/Err.mjs"
     },
     "./Feed": {
+      "source": "./src/Feed.ts",
       "types": "./dist/types/src/Feed.d.ts",
       "import": "./dist/lib/Feed.mjs"
     },
     "./Filter": {
+      "source": "./src/Filter.ts",
       "types": "./dist/types/src/Filter.d.ts",
       "import": "./dist/lib/Filter.mjs"
     },
     "./Format": {
+      "source": "./src/Format.ts",
       "types": "./dist/types/src/Format.d.ts",
       "import": "./dist/lib/Format.mjs"
     },
     "./JsonSchema": {
+      "source": "./src/JsonSchema.ts",
       "types": "./dist/types/src/JsonSchema.d.ts",
       "import": "./dist/lib/JsonSchema.mjs"
     },
     "./Key": {
+      "source": "./src/Key.ts",
       "types": "./dist/types/src/Key.d.ts",
       "import": "./dist/lib/Key.mjs"
     },
     "./Migration": {
+      "source": "./src/Migration.ts",
       "types": "./dist/types/src/Migration.d.ts",
       "import": "./dist/lib/Migration.mjs"
     },
     "./Obj": {
+      "source": "./src/Obj.ts",
       "types": "./dist/types/src/Obj.d.ts",
       "import": "./dist/lib/Obj.mjs"
     },
     "./Order": {
+      "source": "./src/Order.ts",
       "types": "./dist/types/src/Order.d.ts",
       "import": "./dist/lib/Order.mjs"
     },
     "./Query": {
+      "source": "./src/Query.ts",
       "types": "./dist/types/src/Query.d.ts",
       "import": "./dist/lib/Query.mjs"
     },
     "./QueryResult": {
+      "source": "./src/QueryResult.ts",
       "types": "./dist/types/src/QueryResult.d.ts",
       "import": "./dist/lib/QueryResult.mjs"
     },
     "./Ref": {
+      "source": "./src/Ref.ts",
       "types": "./dist/types/src/Ref.d.ts",
       "import": "./dist/lib/Ref.mjs"
     },
     "./Relation": {
+      "source": "./src/Relation.ts",
       "types": "./dist/types/src/Relation.d.ts",
       "import": "./dist/lib/Relation.mjs"
     },
     "./SchemaRegistry": {
+      "source": "./src/SchemaRegistry.ts",
       "types": "./dist/types/src/SchemaRegistry.d.ts",
       "import": "./dist/lib/SchemaRegistry.mjs"
     },
     "./Tag": {
+      "source": "./src/Tag.ts",
       "types": "./dist/types/src/Tag.d.ts",
       "import": "./dist/lib/Tag.mjs"
     },
     "./Type": {
+      "source": "./src/Type.ts",
       "types": "./dist/types/src/Type.d.ts",
       "import": "./dist/lib/Type.mjs"
     },
     "./Extension": {
+      "source": "./src/Extension.ts",
       "types": "./dist/types/src/Extension.d.ts",
       "import": "./dist/lib/Extension.mjs"
     }

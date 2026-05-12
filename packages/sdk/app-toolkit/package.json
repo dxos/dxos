@@ -17,6 +17,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
@@ -25,10 +26,12 @@
       "import": "./dist/lib/activation-events.mjs"
     },
     "./query": {
+      "source": "./src/query.ts",
       "types": "./dist/types/src/query.d.ts",
       "import": "./dist/lib/query.mjs"
     },
     "./ui": {
+      "source": "./src/ui/index.ts",
       "types": "./dist/types/src/ui/index.d.ts",
       "import": "./dist/lib/ui.mjs"
     }

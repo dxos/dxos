@@ -62,18 +62,22 @@
   },
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
     "./diagnostics": {
+      "source": "./src/diagnostics/index.ts",
       "types": "./dist/types/src/diagnostics/index.d.ts",
       "import": "./dist/lib/diagnostics.mjs"
     },
     "./plugin": {
+      "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
       "import": "./dist/lib/plugin.mjs"
     },
     "./translations": {
+      "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     }

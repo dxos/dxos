@@ -26,10 +26,12 @@
   },
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
     "./plugin": {
+      "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
       "import": "./dist/lib/plugin.mjs"
     }

@@ -14,14 +14,17 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
     "./manager": {
+      "source": "./src/manager.tsx",
       "types": "./dist/types/src/manager.d.ts",
       "import": "./dist/lib/manager.mjs"
     },
     "./preview": {
+      "source": "./src/preview.tsx",
       "types": "./dist/types/src/preview.d.ts",
       "import": "./dist/lib/preview.mjs"
     }

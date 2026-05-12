@@ -17,14 +17,17 @@
   },
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
     "./data": {
+      "source": "./src/data.ts",
       "types": "./dist/types/src/data.d.ts",
       "import": "./dist/lib/data.mjs"
     },
     "./translations": {
+      "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     }

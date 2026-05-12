@@ -17,18 +17,22 @@
   },
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
     "./translations": {
+      "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
     "./types": {
+      "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
     }

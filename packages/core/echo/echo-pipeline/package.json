@@ -14,14 +14,17 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
     "./filter": {
+      "source": "./src/filter/index.ts",
       "types": "./dist/types/src/filter/index.d.ts",
       "import": "./dist/lib/filter.mjs"
     }

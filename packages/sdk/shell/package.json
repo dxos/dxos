@@ -16,15 +16,18 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
     "./style.css": "./dist/bundle/shell.css",
     "./react": {
+      "source": "./src/react.ts",
       "types": "./dist/types/src/react.d.ts",
       "import": "./dist/lib/react.mjs"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     }
