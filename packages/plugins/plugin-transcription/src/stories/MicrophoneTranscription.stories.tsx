@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit/events';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 import {
   type ExtractionFunction,
   extractionAnthropicFunction,
@@ -20,9 +20,9 @@ import { MemoryQueue } from '@dxos/echo-db';
 import { createQueueDXN } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { PreviewPlugin } from '@dxos/plugin-preview';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { IndexKind, useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';

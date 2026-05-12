@@ -15,7 +15,7 @@ import { hoverableControls, hoverableFocusedWithinControls, iconSize } from '@dx
 
 import { useBreakpoints } from '#hooks';
 import { meta } from '#meta';
-import { DeckOperation } from '#operations';
+import { DeckOperation } from '#types';
 import { type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '#types';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';

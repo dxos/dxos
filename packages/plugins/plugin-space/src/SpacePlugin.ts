@@ -5,8 +5,8 @@
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Tag } from '@dxos/echo';
-import { AttentionEvents } from '@dxos/plugin-attention/types';
-import { ClientEvents } from '@dxos/plugin-client/types';
+import { AttentionEvents } from '@dxos/plugin-attention';
+import { ClientEvents } from '@dxos/plugin-client';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { DataTypes } from '@dxos/schema';

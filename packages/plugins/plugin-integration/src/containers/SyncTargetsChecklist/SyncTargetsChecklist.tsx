@@ -14,7 +14,7 @@ import { osTranslations } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import type { RemoteTarget } from '#types';
 
-import { SetIntegrationTargets } from '../../operations/definitions';
+import { IntegrationOperation } from '../../types';
 import { type Integration } from '../../types';
 
 export type SyncTargetsChecklistProps = {
@@ -72,7 +72,7 @@ export const SyncTargetsChecklist = ({ integration, availableTargets, existingTa
       const chosen = availableTargets
         .filter((target) => selected.has(target.id))
         .map((target) => ({ remoteId: target.id, name: target.name }));
-      const result = await invokePromise(SetIntegrationTargets, {
+      const result = await invokePromise(IntegrationOperation.SetIntegrationTargets, {
         integration: Ref.make(integration),
         selected: chosen,
         existingTarget,

@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import { Credential } from '@dxos/compute';
 import { Database, type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Integration } from '@dxos/plugin-integration/types';
+import { Integration } from '@dxos/plugin-integration';
 
 /**
  * Creates the service interface from a cached token.

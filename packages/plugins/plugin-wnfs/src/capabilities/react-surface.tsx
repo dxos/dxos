@@ -24,9 +24,9 @@ export default Capability.makeModule(() =>
         id: 'article',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
-          AppSurface.object(AppSurface.Article, WnfsFile.File),
-          AppSurface.object(AppSurface.Section, WnfsFile.File),
-          AppSurface.object(AppSurface.Slide, WnfsFile.File),
+          AppSurface.object(AppSurface.Article, WnfsFile.WnfsFile),
+          AppSurface.object(AppSurface.Section, WnfsFile.WnfsFile),
+          AppSurface.object(AppSurface.Slide, WnfsFile.WnfsFile),
         ),
         component: ({ data, role }) => <FileContainer role={role} subject={data.subject} />,
       }),

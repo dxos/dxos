@@ -15,13 +15,13 @@ import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown';
 import { HasSubject } from '@dxos/types';
 
 import { WithProperties } from '#testing';
 
 import MarkdownBlueprint from '../blueprints/markdown-blueprint';
-import { Create } from './definitions';
+import { MarkdownOperation } from '../types';
 import { MarkdownOperationHandlerSet } from './index';
 
 ObjectId.dangerouslyDisableRandomness();
@@ -48,7 +48,7 @@ describe('create', () => {
       function* (_) {
         const name = 'BlueYard';
         const content = 'Founders and portfolio of BlueYard.';
-        const result = yield* Operation.invoke(Create, {
+        const result = yield* Operation.invoke(MarkdownOperation.Create, {
           name,
           content,
         });

@@ -14,14 +14,13 @@ import { Sequence } from '@dxos/conductor';
 import { DXN, Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { AutomationCapabilities } from '@dxos/plugin-automation';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
-import { AssistantOperation } from '#operations';
-import { AssistantCapabilities } from '#types';
+import { AssistantCapabilities, AssistantOperation } from '#types';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
 const computeOperationsToImport = [AgentPrompt] as const;

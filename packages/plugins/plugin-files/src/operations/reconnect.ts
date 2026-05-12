@@ -8,10 +8,10 @@ import { Capabilities } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 
 import { FileCapabilities } from '../types';
+import { FilesOperation } from '../types';
 import { getDirectoryChildren } from '../util';
-import { Reconnect } from './definitions';
 
-const handler: Operation.WithHandler<typeof Reconnect> = Reconnect.pipe(
+const handler: Operation.WithHandler<typeof FilesOperation.Reconnect> = FilesOperation.Reconnect.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ id }) {
       const state = yield* Capabilities.getAtomValue(FileCapabilities.State);

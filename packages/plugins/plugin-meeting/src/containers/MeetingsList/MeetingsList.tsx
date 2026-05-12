@@ -8,14 +8,14 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { Query, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { Row, RowList } from '@dxos/react-ui-list';
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
-import { MeetingOperation } from '#operations';
+import { MeetingOperation } from '#types';
 import { Meeting } from '#types';
 
 // TODO(wittjosiah): Add a story which renders meetings alongside call?

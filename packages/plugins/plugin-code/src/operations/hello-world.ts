@@ -10,7 +10,7 @@ import { trim } from '@dxos/util';
 
 import { SourceFile } from '#types';
 
-import { HelloWorld } from './definitions';
+import { CodeOperation } from '../types';
 
 const HELLO_PATH = 'src/hello.ts';
 
@@ -27,7 +27,7 @@ const HELLO_CONTENT =
     main();
   ` + '\n';
 
-const handler: Operation.WithHandler<typeof HelloWorld> = HelloWorld.pipe(
+const handler: Operation.WithHandler<typeof CodeOperation.HelloWorld> = CodeOperation.HelloWorld.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ project }) {
       const code = yield* Database.load(project);

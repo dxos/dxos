@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Channel } from '@dxos/types';
 
-import { CreateChannel } from './definitions';
+import { ThreadOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof CreateChannel> = CreateChannel.pipe(
+const handler: Operation.WithHandler<typeof ThreadOperation.CreateChannel> = ThreadOperation.CreateChannel.pipe(
   Operation.withHandler((input) =>
     Effect.sync(() => ({
       object: Channel.make({ name: input.name }),

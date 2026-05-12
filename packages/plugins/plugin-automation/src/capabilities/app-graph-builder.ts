@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Script } from '@dxos/compute';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { SETTINGS_SECTION_TYPE } from '@dxos/plugin-space/types';
+import { SETTINGS_SECTION_TYPE } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';

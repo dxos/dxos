@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 
 import { SlackApi } from '../services';
-import { GetSlackChannels } from './definitions';
+import { SlackOperation } from '../types';
 
 /**
  * Friendly label for a Slack conversation, derived from its type:
@@ -55,7 +55,7 @@ const conversationKind = (conversation: SlackApi.SlackConversation): string => {
  * are created here. Materialization happens lazily in `SyncSlackChannel` on
  * first sync of a target.
  */
-const handler: Operation.WithHandler<typeof GetSlackChannels> = GetSlackChannels.pipe(
+const handler: Operation.WithHandler<typeof SlackOperation.GetSlackChannels> = SlackOperation.GetSlackChannels.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ integration }) {
       return yield* Effect.gen(function* () {

@@ -3,7 +3,7 @@
 //
 
 import { ActivationEvent } from '@dxos/app-framework';
-import { AppActivationEvents } from '@dxos/app-toolkit/events';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 
 import { meta } from '#meta';
 

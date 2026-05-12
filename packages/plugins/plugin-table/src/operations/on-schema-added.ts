@@ -5,14 +5,14 @@ import * as Effect from 'effect/Effect';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { SpaceOperation } from '@dxos/plugin-space';
 
-import { OnSchemaAdded, Create } from './definitions';
+import { TableOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof OnSchemaAdded> = OnSchemaAdded.pipe(
+const handler: Operation.WithHandler<typeof TableOperation.OnSchemaAdded> = TableOperation.OnSchemaAdded.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ db, schema }) {
-      const { object } = yield* Operation.invoke(Create, {
+      const { object } = yield* Operation.invoke(TableOperation.Create, {
         db,
         typename: Type.getTypename(schema),
       });

@@ -8,9 +8,9 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 
 import { ThreadCapabilities } from '../types';
-import { Select } from './definitions';
+import { ThreadOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof Select> = Select.pipe(
+const handler: Operation.WithHandler<typeof ThreadOperation.Select> = ThreadOperation.Select.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);

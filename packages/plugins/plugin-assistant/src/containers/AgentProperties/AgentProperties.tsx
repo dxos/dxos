@@ -14,7 +14,7 @@ import { Operation } from '@dxos/compute';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { log } from '@dxos/log';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { FeedAnnotation } from '@dxos/schema';

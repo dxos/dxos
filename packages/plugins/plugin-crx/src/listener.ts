@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 import { type Capabilities, type CapabilityManager } from '@dxos/app-framework';
 import { getActiveSpace } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { SpaceOperation } from '@dxos/plugin-space';
 
 import { Clip } from '#types';
 
