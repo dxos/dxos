@@ -10,12 +10,21 @@
   },
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": [
+    "./src/ui/**",
+    "./dist/lib/**/ui/**"
+  ],
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./events": {
+      "source": "./src/activation-events.ts",
+      "types": "./dist/types/src/activation-events.d.ts",
+      "browser": "./dist/lib/browser/activation-events.mjs",
+      "node": "./dist/lib/node-esm/activation-events.mjs"
     },
     "./query": {
       "types": "./dist/types/src/query.d.ts",
