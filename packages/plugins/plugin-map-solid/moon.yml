@@ -1,6 +1,10 @@
 layer: library
 language: typescript
 tags:
-  - ts-vite-build
+  - ts-build
   - ts-test
   - pack
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'

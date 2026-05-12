@@ -327,7 +327,13 @@ const migrate = (pkgRel) => {
   };
   let jsx;
   if ('solid-js' in allDeps) {
-    jsx = 'solid';
+    // Solid packages need vite-plugin-solid in BOTH the build and the vitest node
+    // project for tests to pass. vitest.base.config.ts's createNodeProject currently
+    // only wires `@vitejs/plugin-react`, so Solid JSX hits the React transform and
+    // tests crash with "Client-only API called on the server side". Skip these
+    // until createNodeProject grows a `solid` knob.
+    console.warn(`SKIP ${pkgRel}: solid-js package — needs vitest-side solid plugin support`);
+    return;
   } else if ('react' in allDeps || 'react-dom' in allDeps) {
     jsx = 'react';
   }
