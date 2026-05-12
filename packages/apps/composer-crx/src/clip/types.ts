@@ -7,8 +7,8 @@
  * `window` `CustomEvent('composer:clip')` bridge.
  *
  * Source of truth for the envelope shape. The Composer-side receiver
- * (`@dxos/plugin-crx-bridge`) keeps a schema-validated mirror and will
- * reject anything that doesn't decode.
+ * (`@dxos/plugin-crx`) keeps a schema-validated mirror and will reject
+ * anything that doesn't decode.
  */
 export type Clip = {
   version: 1;

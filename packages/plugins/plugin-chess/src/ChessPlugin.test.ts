@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { ActivationEvents } from '@dxos/app-framework';
-import { AppActivationEvents } from '@dxos/app-toolkit';
+import { AppActivationEvents } from '@dxos/app-toolkit/events';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
@@ -22,8 +22,8 @@ describe('ChessPlugin', () => {
       plugins: [ClientPlugin({}), ChessPlugin()],
     });
 
-    // Modules expected to be active after a normal startup.
-    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('CreateObject'), moduleId('schema')]));
+    // Modules expected to be active after a normal startup (headless/node variant).
+    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema')]));
 
     // SetupArtifactDefinition is fired by AssistantPlugin, which can't be included here due to a workspace cycle.
     await harness.fire(AppActivationEvents.SetupArtifactDefinition);

@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Feed, Filter } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useFlush } from '@dxos/plugin-assistant/hooks';
-import { D3ForceGraph } from '@dxos/plugin-explorer/components';
+import { ForceGraph } from '@dxos/plugin-explorer/components';
 import { useGraphModel } from '@dxos/plugin-explorer/hooks';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
@@ -48,7 +48,7 @@ export const GraphModule = ({ space }: ComponentProps) => {
   return (
     <StackItem.Content toolbar classNames={['relative h-full grid', open && 'grid-rows-[min-content_1fr]']}>
       <SearchBar space={space} onSubmit={handleSubmit} />
-      <D3ForceGraph classNames='min-h-[50vh]' model={model} />
+      <ForceGraph classNames='min-h-[50vh]' model={model} />
 
       {open && (
         <div

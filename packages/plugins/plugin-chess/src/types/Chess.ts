@@ -7,25 +7,16 @@ import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Obj, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.chess';
 
-export const Game = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  players: Schema.Struct({
-    white: Schema.optional(
-      Schema.String.annotations({
-        description: 'DID of white player',
-      }),
-    ),
-    black: Schema.optional(
-      Schema.String.annotations({
-        description: 'DID of black player',
-      }),
-    ),
-  }).pipe(FormInputAnnotation.set(false), Schema.optional),
+/**
+ * Chess variant state. Referenced by the base `Game` object via `Game.variant`.
+ * Players, name, and other game-shared fields live on the base `Game`.
+ */
+export const State = Schema.Struct({
   pgn: Schema.String.annotations({
     description: 'Portable Game Notation.',
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
@@ -34,20 +25,24 @@ export const Game = Schema.Struct({
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
-    typename: 'org.dxos.type.chess',
+    typename: 'org.dxos.type.chess.state',
     version: '0.1.0',
   }),
-  LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--shield-chevron--regular',
     hue: 'amber',
   }),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  // Implementation detail of the unified `Game` schema. The user-facing object is `Game`;
+  // this state is only ever referenced via `Game.variant`. SystemType keeps it out of the
+  // navtree's typed branches so an orphaned state object doesn't reappear after the
+  // wrapping Game is deleted.
+  SystemTypeAnnotation.set(true),
 );
 
-export interface Game extends Schema.Schema.Type<typeof Game> {}
+export interface State extends Schema.Schema.Type<typeof State> {}
 
-export const make = ({ name, pgn, fen }: { name?: string; pgn?: string; fen?: string } = {}) => {
+export const make = ({ pgn, fen }: { pgn?: string; fen?: string } = {}): State => {
   const chess = new ChessJS();
   if (pgn) {
     try {
@@ -57,10 +52,8 @@ export const make = ({ name, pgn, fen }: { name?: string; pgn?: string; fen?: st
     }
   }
 
-  return Obj.make(Game, {
-    name,
+  return Obj.make(State, {
     pgn,
     fen,
-    players: {},
   });
 };

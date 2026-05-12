@@ -148,7 +148,20 @@ export const createObjectNode = ({
   }
 
   const schema = Obj.getSchema(object);
-  const iconAnnotation = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
+  const staticIcon = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
+  const iconFromRefProp = schema ? Option.getOrUndefined(Annotation.IconFromRefAnnotation.get(schema)) : undefined;
+  // If the schema delegates its icon to a referenced sub-entity, resolve that ref's target
+  // and use its schema's IconAnnotation. Falls back to the static icon if the ref is not yet loaded.
+  const delegatedIcon = (() => {
+    if (!iconFromRefProp) {
+      return undefined;
+    }
+    const refValue = (object as any)?.[iconFromRefProp];
+    const target = Ref.isRef(refValue) ? refValue.target : undefined;
+    const targetSchema = target ? Obj.getSchema(target as Obj.Unknown) : undefined;
+    return targetSchema ? Option.getOrUndefined(Annotation.IconAnnotation.get(targetSchema)) : undefined;
+  })();
+  const iconAnnotation = delegatedIcon ?? staticIcon;
   const graphProps = schema ? Option.getOrUndefined(GraphPropsAnnotation.get(schema)) : undefined;
 
   const partials = Obj.instanceOf(Collection.Collection, object)

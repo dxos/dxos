@@ -22,12 +22,6 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
-    "./deprecated": {
-      "source": "./src/deprecated/index.ts",
-      "types": "./dist/types/src/deprecated/index.d.ts",
-      "browser": "./dist/lib/browser/deprecated/index.mjs",
-      "node": "./dist/lib/node-esm/deprecated/index.mjs"
-    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",

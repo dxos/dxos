@@ -54,8 +54,6 @@ const GraphInner = <Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge
 ) => {
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>(null);
-  // TODO(wittjosiah): This doesn't work for some reason.
-  // const graph = useAtomValue(model?.graphAtom ?? EMPTY_ATOM);
 
   const { projector, renderer } = useMemo(() => {
     let projector = projectorProp;
@@ -70,8 +68,8 @@ const GraphInner = <Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge
         // TODO(burdon): Replace drag when projector is updated.
         drag: drag ? createGraphDrag(context, projector) : undefined,
         arrows: { end: arrows },
-        onNodeClick: onSelect ? (node: GraphLayoutNode, event) => onSelect(node, event) : undefined,
-        onNodePointerEnter: onInspect ? (node: GraphLayoutNode, event) => onInspect(node, event) : undefined,
+        onNodeClick: onSelect,
+        onNodePointerEnter: onInspect,
       });
     }
 
@@ -99,21 +97,20 @@ const GraphInner = <Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge
   useEffect(() => {
     projector.updateData(model?.graph);
 
-    // Subscribe to model changes if reactive model.
-    const unsubscribeModel = model
-      ? model.subscribe(() => {
-          projector.updateData(model?.graph);
-        })
-      : undefined;
-
     return combine(
-      unsubscribeModel,
+      // Subscribe to model changes if reactive model.
+      model
+        ? model.subscribe(() => {
+            projector.updateData(model?.graph);
+          })
+        : undefined,
+
       projector.updated.on(({ layout }) => {
         try {
           renderer.render(layout);
         } catch (error) {
-          void projector.stop();
           log.catch(error);
+          void projector.stop();
         }
       }),
     );

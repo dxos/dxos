@@ -47,8 +47,15 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
  * Sync targets are Linear teams. Per-target `SyncOptions.maxDaysBack` caps
  * how far back issues are pulled by `Issue.updatedAt`.
  *
- * Scope `read` is sufficient for v1 (pull-only). `write`/`issues:create`
- * would be needed if/when bidirectional Task sync is added.
+ * Scopes:
+ *   - `read`  — required for pull (projects, issues, workflow states).
+ *   - `write` — required to push local edits back via `issueUpdate` and
+ *               `projectUpdate`. Linear treats issue and project mutations
+ *               under a single umbrella `write` scope; there's no narrower
+ *               permission for "edit only, never create".
+ *
+ * Note: existing tokens issued with `read` only will return permission errors
+ * on push. Re-consent via the integration setup flow upgrades the scope.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -59,7 +66,7 @@ export default Capability.makeModule(
         label: 'Linear',
         oauth: {
           provider: OAuthProvider.LINEAR,
-          scopes: ['read'],
+          scopes: ['read', 'write'],
         },
         getSyncTargets: LinearOperation.GetLinearTeams,
         sync: LinearOperation.SyncLinearTeams,

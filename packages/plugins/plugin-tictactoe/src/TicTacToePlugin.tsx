@@ -3,19 +3,21 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppPlugin, AppActivationEvents } from '@dxos/app-toolkit';
 
-import { BlueprintDefinition, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
+import { GameVariant, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { TicTacToe } from '#types';
 
 export const TicTacToePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
+  Plugin.addModule({
+    id: 'game-variant',
+    activatesOn: AppActivationEvents.SetupSchema,
+    activate: GameVariant,
+  }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [TicTacToe.Game] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSchemaModule({ schema: [TicTacToe.State] }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );

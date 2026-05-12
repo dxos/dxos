@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useAtomCapability, usePluginManager } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
+import { AppActivationEvents } from '@dxos/app-toolkit/events';
 import { corePlugins } from '@dxos/plugin-testing';
 
 import { DeckSettings, DeckState } from '#capabilities';

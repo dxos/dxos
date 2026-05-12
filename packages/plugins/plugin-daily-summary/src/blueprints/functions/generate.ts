@@ -57,7 +57,7 @@ const MarkdownDocument = Schema.Struct({
 type MarkdownDoc = Schema.Schema.Type<typeof MarkdownDocument>;
 
 const makeMarkdownDoc = ({ name, content }: { name: string; content: string }) => {
-  const doc = Obj.make(MarkdownDocument, { name, content: Ref.make(Text.make(content)) });
+  const doc = Obj.make(MarkdownDocument, { name, content: Ref.make(Text.make({ content })) });
   Obj.setParent(doc.content.target!, doc);
   return doc;
 };
@@ -170,7 +170,7 @@ const updateDocContent = Effect.fn(function* (doc: MarkdownDoc, newContent: stri
     }
   }
   Obj.update(doc, (doc) => {
-    doc.content = Ref.make(Text.make(newContent));
+    doc.content = Ref.make(Text.make({ content: newContent }));
   });
 });
 

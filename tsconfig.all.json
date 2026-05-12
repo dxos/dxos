@@ -175,6 +175,18 @@
       "path": "packages/core/compute/functions-testing/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/introspect/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute/introspect-mcp/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute/introspect-tools/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute/mcp-client/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/operation/tsconfig.json"
     },
     {
@@ -215,18 +227,6 @@
     },
     {
       "path": "packages/core/halo/keyring/tsconfig.json"
-    },
-    {
-      "path": "packages/core/introspect/tsconfig.json"
-    },
-    {
-      "path": "packages/core/introspect-mcp/tsconfig.json"
-    },
-    {
-      "path": "packages/core/introspect-tools/tsconfig.json"
-    },
-    {
-      "path": "packages/core/mcp-client/tsconfig.json"
     },
     {
       "path": "packages/core/mesh/edge-client/tsconfig.json"
@@ -310,6 +310,9 @@
       "path": "packages/plugins/plugin-automation/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-bluesky/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-board/tsconfig.json"
     },
     {
@@ -329,9 +332,6 @@
     },
     {
       "path": "packages/plugins/plugin-crx/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-crx-bridge/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-daily-summary/tsconfig.json"
@@ -359,6 +359,9 @@
     },
     {
       "path": "packages/plugins/plugin-gallery/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-game/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-github/tsconfig.json"
@@ -715,6 +718,9 @@
       "path": "tools/dx-tools/tsconfig.json"
     },
     {
+      "path": "tools/dx-trace-imports/tsconfig.json"
+    },
+    {
       "path": "tools/lockfile-explorer/tsconfig.json"
     },
     {
@@ -749,6 +755,9 @@
     },
     {
       "path": "vendor/hyperformula/tsconfig.json"
+    },
+    {
+      "path": "vendor/kbn-handlebars/tsconfig.json"
     },
     {
       "path": "vendor/quickjs/tsconfig.json"

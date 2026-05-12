@@ -310,6 +310,26 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/introspect/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute/introspect-mcp/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute/introspect-tools/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute/mcp-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/operation/package.json",
           "jsonpath": "$.version"
         },
@@ -376,26 +396,6 @@
         {
           "type": "json",
           "path": "packages/core/halo/keyring/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/introspect/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/introspect-mcp/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/introspect-tools/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/mcp-client/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -540,6 +540,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-bluesky/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-board/package.json",
           "jsonpath": "$.version"
         },
@@ -571,11 +576,6 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-crx/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-crx-bridge/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -621,6 +621,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-gallery/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-game/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1215,6 +1220,11 @@
         },
         {
           "type": "json",
+          "path": "tools/dx-trace-imports/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "tools/lockfile-explorer/package.json",
           "jsonpath": "$.version"
         },
@@ -1276,6 +1286,11 @@
         {
           "type": "json",
           "path": "vendor/hyperformula/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "vendor/kbn-handlebars/package.json",
           "jsonpath": "$.version"
         },
         {

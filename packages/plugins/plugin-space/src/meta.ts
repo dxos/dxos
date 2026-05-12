@@ -13,4 +13,5 @@ export const meta: Plugin.Meta = {
     Create, manage, and share spaces with granular access control and invitation management.
   `,
   icon: 'ph--planet--regular',
+  tags: ['system'],
 };

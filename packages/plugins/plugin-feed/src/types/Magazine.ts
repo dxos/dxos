@@ -74,7 +74,7 @@ export const make = (
   Obj.make(Magazine, {
     ...props,
     feeds: props.feeds ?? [],
-    instructions: Ref.make(Text.make(props.instructions ?? '')),
+    instructions: Ref.make(Text.make({ content: props.instructions ?? '' })),
     posts: props.posts ?? [],
   });
 

@@ -13,6 +13,7 @@ import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { CreateAtom, Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { Expando } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -64,6 +65,45 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               icon: 'ph--sign-in--regular',
               testId: 'spacePlugin.joinSpace',
               disposition: 'menu',
+            },
+          }),
+          Node.makeAction({
+            id: SpaceOperation.OpenImportSpace.meta.key,
+            data: () => Operation.invoke(SpaceOperation.OpenImportSpace),
+            properties: {
+              label: ['import-space.label', { ns: meta.id }],
+              icon: 'ph--upload--regular',
+              testId: 'spacePlugin.importSpace',
+            },
+          }),
+          Node.makeAction({
+            id: `${SpaceOperation.ExportSpace.meta.key}.binary`,
+            data: Effect.fnUntraced(function* () {
+              const client = yield* Capability.get(ClientCapabilities.Client);
+              const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
+              if (space) {
+                yield* Operation.invoke(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.BINARY });
+              }
+            }),
+            properties: {
+              label: ['export-space-binary.label', { ns: meta.id }],
+              icon: 'ph--download--regular',
+              testId: 'spacePlugin.exportSpaceBinary',
+            },
+          }),
+          Node.makeAction({
+            id: `${SpaceOperation.ExportSpace.meta.key}.json`,
+            data: Effect.fnUntraced(function* () {
+              const client = yield* Capability.get(ClientCapabilities.Client);
+              const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
+              if (space) {
+                yield* Operation.invoke(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.JSON });
+              }
+            }),
+            properties: {
+              label: ['export-space-json.label', { ns: meta.id }],
+              icon: 'ph--download--regular',
+              testId: 'spacePlugin.exportSpaceJson',
             },
           }),
           Node.makeAction({

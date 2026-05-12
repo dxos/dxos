@@ -30,7 +30,7 @@ export const layer = toolkit.toLayer({
 
 const Random = Operation.make({
   meta: {
-    key: 'example.com/function/random',
+    key: 'com.example.function.random',
     name: 'random',
     description: 'Gets a random number.',
   },

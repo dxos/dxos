@@ -34,7 +34,7 @@ const DefaultStory = () => {
     invariant(space, 'TemplateForm story requires at least one space');
     return space.db.add(
       Blueprint.make({
-        key: 'example.com/blueprint/test',
+        key: 'com.example.blueprint.test',
         name: 'Test',
         instructions: Template.make({ source: TEMPLATE }),
       }),
@@ -48,11 +48,7 @@ const DefaultStory = () => {
     [blueprint],
   );
 
-  return (
-    <div className='flex w-[40rem] border border-separator overflow-hidden'>
-      <TemplateForm id={blueprint.id} template={blueprint.instructions} onChange={handleChange} />
-    </div>
-  );
+  return <TemplateForm id={blueprint.id} template={blueprint.instructions} onChange={handleChange} />;
 };
 
 const meta = {

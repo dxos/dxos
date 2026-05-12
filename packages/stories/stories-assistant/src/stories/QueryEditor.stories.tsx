@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { Obj, Tag } from '@dxos/echo';
 import { translations } from '@dxos/plugin-assistant/translations';
-import { D3ForceGraph } from '@dxos/plugin-explorer/components';
+import { ForceGraph } from '@dxos/plugin-explorer/components';
 import { useGraphModel } from '@dxos/plugin-explorer/hooks';
 import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
@@ -50,7 +50,7 @@ const DefaultStory = ({ value: valueProp }: QueryEditorProps) => {
         </ScrollArea.Root>
         <div className='p-2 text-right text-info-text text-xs'>{objects.length}</div>
       </div>
-      <D3ForceGraph model={model} />
+      <ForceGraph model={model} />
     </div>
   );
 };

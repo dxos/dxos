@@ -71,7 +71,7 @@ export const CreateObjectPanel = ({
   const handleSelectOption = useCallback(
     async (id: string) => {
       const metadata = resolve?.(id);
-      if (metadata && !metadata.inputSchema) {
+      if (metadata && !metadata.inputSchema && !metadata.customPanel) {
         await onCreateObject?.({ metadata });
       } else {
         onTypenameChange?.(id);
@@ -86,14 +86,25 @@ export const CreateObjectPanel = ({
   );
   const inputSurfaceLookup = useInputSurfaceLookup({ target });
 
-  // TODO(wittjosiah): These inputs should be rolled into a `Form` once it supports the necessary variants.
+  // TODO(wittjosiah): Extends and use react-ui-form to handle variants.
+
   if (!metadata) {
     return <SelectType options={sortedOptions} onChange={handleSelectOption} />;
   }
 
-  // TODO(burdon): Remove.
   if (!target) {
     return <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={onTargetChange} />;
+  }
+
+  if (metadata.customPanel) {
+    const CustomPanel = metadata.customPanel;
+    return (
+      <CustomPanel
+        target={target}
+        initialFormValues={initialFormValues}
+        onCreateObject={(data) => handleCreateObject(data)}
+      />
+    );
   }
 
   if (metadata.inputSchema) {

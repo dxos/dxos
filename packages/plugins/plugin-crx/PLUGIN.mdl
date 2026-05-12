@@ -1,18 +1,18 @@
 ---
 id: org.dxos.plugin.crx
 name: CrxPlugin
-version: 0.1.0
+version: 0.2.0
 ---
 
-Manages how the Composer app coordinates with the `@dxos/composer-crx` browser
-extension. Owns the user-facing settings surface (master toggle, default space
-behavior, etc.) and the capability that exposes those settings to other
-plugins.
+Coordinates with the `@dxos/composer-crx` browser extension. Owns both the
+user-facing settings surface and the receiver bridge that materializes
+incoming clippings as `Person`, `Organization`, or `Note` objects in the
+active space.
 
-Scope is deliberately narrow: this plugin does **not** receive clippings from
-the extension — that responsibility lives in `@dxos/plugin-crx-bridge`, which
-will in a future pass consult the settings contributed here before
-materializing an object.
+The extension discovers this tab via `chrome.tabs.query` over a configured list
+of URLs and delivers the payload as a same-origin `window` `CustomEvent`. The
+extension owns the DOM picker and bridge sender; this plugin owns envelope
+validation, clip → ECHO object mapping, and user feedback (toast).
 
 ## Extensions
 
@@ -40,6 +40,71 @@ type Settings
                                  # object after a successful clip.
 ```
 
+```mdl
+type ClipKind
+  supported: person | organization | note
+  note: |
+    At runtime, `Clip.kind` is modeled as `string` so new kinds can ship
+    from the extension without breaking envelope decoding. The receiver
+    accepts `person`, `organization`, and `note` only; any other value is
+    rejected with `unsupportedKind`.
+```
+
+```mdl
+type ClipSource
+  fields:
+    url: string
+    title: string
+    favicon?: string
+    clippedAt: string           # ISO timestamp
+```
+
+```mdl
+type ClipSelection
+  fields:
+    text: string                # innerText of the picked subtree
+    html?: string               # outerHTML, possibly truncated
+    htmlTruncated?: boolean
+    rect?: { x: number, y: number, width: number, height: number }
+```
+
+```mdl
+type ClipHints
+  desc: |
+    Cheap signals harvested from the whole page at pick time. MVP uses a subset
+    (og:title, og:image) as fallbacks; a future agent stage may interpret all of them.
+  fields:
+    ogTitle?: string
+    ogDescription?: string
+    ogImage?: string
+    jsonLd?: unknown[]
+    h1?: string
+    firstImage?: string
+```
+
+```mdl
+type Clip
+  desc: |
+    The on-the-wire envelope is intentionally permissive so that older
+    receivers can read newer versions just far enough to respond with
+    `unsupportedVersion`. Version-specific validation runs after the
+    envelope decode succeeds.
+  fields:
+    version: number             # runtime check: only 1 is supported
+    kind: string                # runtime check against ClipKind.supported
+    source: ClipSource
+    selection: ClipSelection
+    hints?: ClipHints
+```
+
+```mdl
+type ClipAck
+  fields:
+    ok: boolean
+    id?: string                 # ID of the created object when ok = true
+    error?: string              # stable error code when ok = false
+```
+
 ## Features
 
 ```mdl
@@ -53,7 +118,7 @@ feat F-1: Settings Capability
       UI surfaces it.
 
   req F-1.2:
-    when: another plugin (e.g., plugin-crx-bridge) reads the capability
+    when: another plugin reads the capability
     then: it receives the current Settings with defaults applied
 ```
 
@@ -65,6 +130,98 @@ feat F-2: Settings Surface
     then: |
       a form is shown with switches for `enabled` and `autoOpenAfterClip`,
       wired to the Settings atom and persisted on change.
+```
+
+```mdl
+feat F-3: Clip Ingestion Listener
+
+  req F-3.1:
+    when: plugin is activated
+    then: a single window event listener for `composer:clip` is registered
+
+  req F-3.2:
+    when: the page unloads or the plugin is disabled
+    then: the listener is removed cleanly
+
+  req F-3.3:
+    when: any payload arrives
+    then: a `composer:clip:ack` CustomEvent is dispatched on `window` carrying ClipAck
+```
+
+```mdl
+feat F-4: Envelope Validation
+
+  req F-4.1:
+    when: a `composer:clip` event is received
+    then: the `detail` is decoded against the Clip schema
+
+  req F-4.2:
+    when: the payload fails schema decoding
+    then: ack is { ok: false, error: 'invalidPayload' } and no object is created
+
+  req F-4.3:
+    when: the payload has a version other than 1
+    then: ack is { ok: false, error: 'unsupportedVersion' }
+```
+
+```mdl
+feat F-5: Clip → Object Mapping
+
+  req F-5.1:
+    when: kind = 'person'
+    then: |
+      a Person is created with best-effort fields:
+        fullName  ← hints.h1 ?? hints.ogTitle ?? firstLine(selection.text)
+        image     ← hints.ogImage
+        notes     ← selection.text (truncated to a reasonable size)
+        urls      ← [{ label: source.title, value: source.url }]
+
+  req F-5.2:
+    when: kind = 'organization'
+    then: |
+      an Organization is created with best-effort fields:
+        name        ← hints.ogTitle ?? hints.h1 ?? firstLine(selection.text)
+        description ← hints.ogDescription
+        image       ← hints.ogImage
+        website     ← source.url
+
+  req F-5.3:
+    when: kind = 'note'
+    then: |
+      a Markdown document is created with a small prelude (title, source link,
+      timestamp) followed by the picked subtree's rendered text.
+
+  req F-5.4:
+    when: there is no name/title candidate
+    then: the object is still created; empty name is acceptable
+
+  req F-5.5:
+    when: kind is unknown (future kinds)
+    then: ack is { ok: false, error: 'unsupportedKind' } and no object is created
+```
+
+```mdl
+feat F-6: Space Resolution
+
+  req F-6.1:
+    when: the active space cannot be determined
+    then: no object is created; ack is { ok: false, error: 'noSpace' }
+
+  req F-6.2:
+    when: the active space is resolved
+    then: the object is added via SpaceOperation.AddObject with target = space.db
+```
+
+```mdl
+feat F-7: User Feedback
+
+  req F-7.1:
+    when: an object is created successfully
+    then: a success toast is shown naming the kind and (when present) its label
+
+  req F-7.2:
+    when: creation fails
+    then: an error toast is shown with the stable error code
 ```
 
 ## Acceptance
@@ -83,6 +240,52 @@ test T-2: Toggling enabled persists
   given: settings surface rendered
   when: user toggles the `enabled` switch off
   then: subsequent reads of the atom observe enabled === false
+```
+
+```mdl
+test T-3: Valid person clip creates Person
+  given: plugin active, a default space present
+  when: window dispatches `composer:clip` with kind=person, hints.h1='Jane Doe'
+  then:
+    - a Person is created with fullName='Jane Doe'
+    - an ack event carries { ok: true, id: <non-empty> }
+    - a success toast is shown
+```
+
+```mdl
+test T-4: Organization mapping falls back to og:title
+  given: plugin active
+  when: clip arrives with kind=organization, hints.ogTitle='DXOS', hints.h1 undefined
+  then:
+    - Organization.name === 'DXOS'
+    - Organization.website === source.url
+```
+
+```mdl
+test T-5: Invalid payload is rejected
+  given: plugin active
+  when: window dispatches `composer:clip` with a malformed detail (missing kind)
+  then:
+    - no object is created
+    - ack is { ok: false, error: 'invalidPayload' }
+```
+
+```mdl
+test T-6: Missing name is allowed
+  given: plugin active
+  when: clip arrives with kind=person and no hints and empty selection.text
+  then:
+    - a Person is created (empty fullName)
+    - ack is { ok: true, id: <non-empty> }
+```
+
+```mdl
+test T-7: Unsupported envelope version
+  given: plugin active
+  when: clip arrives with version=2
+  then:
+    - no object is created
+    - ack is { ok: false, error: 'unsupportedVersion' }
 ```
 
 ---

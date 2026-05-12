@@ -52,7 +52,7 @@ const CardContext = createContext<CardContextValue>({});
 
 const CARD_ROOT_NAME = 'Card.Root';
 
-type CardRootOwnProps = {
+type CardRootProps = {
   id?: string;
   border?: boolean;
   fullWidth?: boolean;
@@ -64,26 +64,31 @@ type CardRootOwnProps = {
   'data-testid'?: string;
 };
 
-type CardRootProps = CardRootOwnProps;
-
-const CardRoot = slottable<HTMLDivElement, CardRootOwnProps>(
-  ({ children, id, asChild, role, border = true, fullWidth, density, ...props }, forwardedRef) => {
+// `Card.Root` does not support `asChild`. The Column grid is the root element
+// (one `<div>` carrying both the `dx-card` and `dx-column-root` classes
+// instead of the previous outer-card + inner-column pair), so caller-provided
+// HTML attributes — `onClick`, `tabIndex`, `style`, `data-*`, `grid-template-rows`
+// overrides via `classNames` — land directly on the grid container. Slot-parents
+// (`Focus.Item asChild`, `Mosaic.Tile asChild`, etc.) continue to work because
+// `composable()` preserves the COMPOSABLE marker that slottable parents check
+// before warning, and Radix `Slot` merges the parent's props onto the inner
+// `<div>` exactly the way `slottable`'s `Slot`/`Primitive.div` branch did.
+const CardRoot = composable<HTMLDivElement, CardRootProps>(
+  ({ children, id, role, border = true, fullWidth, density, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
 
     return (
-      <Comp
-        {...rest}
-        {...(id && { 'data-object-id': id })}
+      <Column.Root
+        asChild
+        gutter={density === 'coarse' ? 'lg' : 'md'}
+        classNames={tx('card.root', { border, fullWidth }, className)}
         role={role ?? 'group'}
-        className={tx('card.root', { border, fullWidth }, className)}
-        ref={forwardedRef}
       >
-        <Column.Root classNames='overflow-hidden' gutter={density === 'coarse' ? 'lg' : 'md'}>
+        <div {...rest} {...(id && { 'data-object-id': id })} ref={forwardedRef}>
           {children}
-        </Column.Root>
-      </Comp>
+        </div>
+      </Column.Root>
     );
   },
 );
@@ -253,6 +258,7 @@ const CARD_ROW_NAME = 'Card.Row';
 
 type CardRowProps = { icon?: string; fullWidth?: boolean };
 
+// TODO(burdon): fullWidth should mean no columns.
 const CardRow = slottable<HTMLDivElement, CardRowProps>(({ children, asChild, icon, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
   const Comp = asChild ? Slot : Primitive.div;
