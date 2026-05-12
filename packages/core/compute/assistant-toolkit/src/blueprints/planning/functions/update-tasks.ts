@@ -3,13 +3,30 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
+import { AiContextService } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 import { Plan, Agent } from '../../../types';
-import { UpdateTasks } from './definitions';
+import INSTRUCTIONS from './update-tasks.md?raw';
+
+const SimpleTask = Plan.Task.omit('chat');
+
+export const UpdateTasks = Operation.make({
+  meta: {
+    key: 'org.dxos.function.planning.updateTasks',
+    name: 'Update tasks',
+    description: INSTRUCTIONS,
+  },
+  input: Schema.Struct({
+    tasks: Schema.Array(SimpleTask),
+  }),
+  output: Schema.Any,
+  services: [AiContextService, Database.Service],
+});
 
 export default UpdateTasks.pipe(
   Operation.withHandler(
@@ -34,8 +51,8 @@ export default UpdateTasks.pipe(
       });
 
       return trim`
-        Tasks updated. Don't forget to mark tasks as done when you're done with them or update their status to 'in-progress' when you start working on them.
-        Current plan:
+        You must update the task status to 'in-progress' when you start and 'done' when complete.
+        Current plan updated:
         <plan>
           ${Plan.formatPlan(plan)}
         </plan>
