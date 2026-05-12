@@ -277,29 +277,6 @@ export type InvokeRemote = <I, O, E>(
 ) => Effect.Effect<O, E>;
 
 /**
- * Legacy persistent operation schema (v0.1.0) — `key` and `version` are stored as data properties.
- * @deprecated Use {@link PersistentOperation} (v0.2.0) instead; the `key` and `version` now live in the object meta.
- */
-export const LegacyPersistentOperation = Schema$.Struct({
-  key: Schema$.optional(Schema$.String),
-  name: Schema$.NonEmptyString,
-  version: Schema$.String,
-  description: Schema$.optional(Schema$.String),
-  updated: Schema$.optional(Schema$.String),
-  source: Schema$.optional(Ref.Ref(Obj.Unknown)),
-  inputSchema: Schema$.optional(JsonSchema.JsonSchema),
-  outputSchema: Schema$.optional(JsonSchema.JsonSchema),
-  services: Schema$.optional(Schema$.Array(Schema$.String)),
-  binding: Schema$.optional(Schema$.String),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.function',
-    version: '0.1.0',
-  }),
-);
-export interface LegacyPersistentOperation extends Schema$.Schema.Type<typeof LegacyPersistentOperation> {}
-
-/**
  * Database record of an operation.
  * The registry `key` and `version` live in the object meta — access via
  * `Obj.getMeta(record).key` and `Obj.getMeta(record).version`.
@@ -417,45 +394,6 @@ export const setFrom = (target: PersistentOperation, source: PersistentOperation
     }
   });
 };
-
-/**
- * Migration from {@link LegacyPersistentOperation} (v0.1.0) to {@link PersistentOperation} (v0.2.0).
- * Moves `key` and `version` from the data section into the object meta.
- */
-// The migration framework currently aliases `before` and `object` in `onMigration`, so we snapshot
-// the legacy `key` and `version` during `transform` and read them back keyed by object id.
-const _operationMigrationSnapshots = new Map<string, { key?: string; version: string }>();
-export const migration = Migration.define({
-  from: LegacyPersistentOperation,
-  to: PersistentOperation,
-  transform: async (from) => {
-    _operationMigrationSnapshots.set((from as any).id, { key: from.key, version: from.version });
-    return {
-      name: from.name,
-      description: from.description,
-      updated: from.updated,
-      source: from.source as any,
-      inputSchema: from.inputSchema,
-      outputSchema: from.outputSchema,
-      services: from.services,
-      binding: from.binding,
-    };
-  },
-  onMigration: async ({ object }) => {
-    const snapshot = _operationMigrationSnapshots.get((object as any).id);
-    if (!snapshot) {
-      return;
-    }
-    Obj.update(object, (object) => {
-      const meta = Obj.getMeta(object);
-      if (snapshot.key !== undefined) {
-        meta.key = snapshot.key;
-      }
-      meta.version = snapshot.version;
-    });
-    _operationMigrationSnapshots.delete((object as any).id);
-  },
-});
 
 /**
  * Options for operation invocation.
@@ -582,3 +520,69 @@ export const withInvocationOptions = (options: InvokeOptions): Layer.Layer<Servi
       });
     }),
   );
+
+//
+// Legacy schemas and migrations.
+//
+
+/**
+ * Persistent operation schema v0.1.0 — `key` and `version` are stored as data properties.
+ * @deprecated Use {@link PersistentOperation} (v0.2.0) instead; the `key` and `version` now live in the object meta.
+ */
+export const PersistentOperation_v0_1_0 = Schema$.Struct({
+  key: Schema$.optional(Schema$.String),
+  name: Schema$.NonEmptyString,
+  version: Schema$.String,
+  description: Schema$.optional(Schema$.String),
+  updated: Schema$.optional(Schema$.String),
+  source: Schema$.optional(Ref.Ref(Obj.Unknown)),
+  inputSchema: Schema$.optional(JsonSchema.JsonSchema),
+  outputSchema: Schema$.optional(JsonSchema.JsonSchema),
+  services: Schema$.optional(Schema$.Array(Schema$.String)),
+  binding: Schema$.optional(Schema$.String),
+}).pipe(
+  Type.object({
+    typename: 'org.dxos.type.function',
+    version: '0.1.0',
+  }),
+);
+export interface PersistentOperation_v0_1_0 extends Schema$.Schema.Type<typeof PersistentOperation_v0_1_0> {}
+
+/**
+ * Migration from {@link PersistentOperation_v0_1_0} (v0.1.0) to {@link PersistentOperation} (v0.2.0).
+ * Moves `key` and `version` from the data section into the object meta.
+ */
+// The migration framework currently aliases `before` and `object` in `onMigration`, so we snapshot
+// the legacy `key` and `version` during `transform` and read them back keyed by object id.
+const _operationMigrationSnapshots = new Map<string, { key?: string; version: string }>();
+export const migration = Migration.define({
+  from: PersistentOperation_v0_1_0,
+  to: PersistentOperation,
+  transform: async (from) => {
+    _operationMigrationSnapshots.set((from as any).id, { key: from.key, version: from.version });
+    return {
+      name: from.name,
+      description: from.description,
+      updated: from.updated,
+      source: from.source as any,
+      inputSchema: from.inputSchema,
+      outputSchema: from.outputSchema,
+      services: from.services,
+      binding: from.binding,
+    };
+  },
+  onMigration: async ({ object }) => {
+    const snapshot = _operationMigrationSnapshots.get((object as any).id);
+    if (!snapshot) {
+      return;
+    }
+    Obj.update(object, (object) => {
+      const meta = Obj.getMeta(object);
+      if (snapshot.key !== undefined) {
+        meta.key = snapshot.key;
+      }
+      meta.version = snapshot.version;
+    });
+    _operationMigrationSnapshots.delete((object as any).id);
+  },
+});

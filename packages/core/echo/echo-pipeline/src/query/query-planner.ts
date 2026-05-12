@@ -218,24 +218,6 @@ export class QueryPlanner {
         ]);
       }
 
-      // Key
-      case 'key': {
-        return QueryPlan.Plan.make([
-          {
-            _tag: 'SelectStep',
-            scope: context.scope,
-            selector: {
-              _tag: 'WildcardSelector',
-            },
-          },
-          ...this._generateDeletedHandlingSteps(context),
-          {
-            _tag: 'FilterStep',
-            filter: { ...filter },
-          },
-        ]);
-      }
-
       // Text
       case 'text-search': {
         return QueryPlan.Plan.make([
@@ -385,13 +367,12 @@ export class QueryPlanner {
         }
 
         // Simple AND: all filters are root-executable against in-memory objects after a wildcard select.
-        // Supports combining true root selectors (`object`, `key`, `tag`) plus negations / unions of those.
+        // Supports combining true root selectors (`object`, `tag`) plus negations / unions of those.
         // Property-level filters (`compare`, `in`, `range`, `contains`) are intentionally excluded because
         // `filterMatchObject` only handles them as nested predicates inside an `object` filter, not at the root.
         const isRootExecutable = (filter: QueryAST.Filter): boolean => {
           switch (filter.type) {
             case 'object':
-            case 'key':
             case 'tag':
               return true;
             case 'not':

@@ -181,9 +181,11 @@ export type KeyFilterOptions = {
  */
 export const key = (key: string, options?: KeyFilterOptions): Any => {
   return new FilterClass({
-    type: 'key',
-    key,
-    version: options?.version,
+    type: 'object',
+    typename: null,
+    props: {},
+    metaKey: key,
+    metaVersion: options?.version,
   });
 };
 

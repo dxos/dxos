@@ -61,16 +61,20 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
         }
       }
 
+      // Check registry meta key / version if specified.
+      if (
+        filter.metaKey !== undefined &&
+        !matchMetaKey(filter.metaKey, filter.metaVersion, obj.doc.meta.key, obj.doc.meta.version)
+      ) {
+        return false;
+      }
+
       return true;
     }
 
     case 'tag': {
       const tags = ObjectStructure.getTags(obj.doc);
       return tags.some((tag) => tag === filter.tag);
-    }
-
-    case 'key': {
-      return matchKey(filter, obj.doc.meta.key, obj.doc.meta.version);
     }
 
     case 'text-search': {
@@ -104,22 +108,27 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
 };
 
 /**
- * Matches a `key` filter against an object's meta `key` and `version`.
+ * Matches a meta `key` / `version` constraint against an object's meta `key` and `version`.
  * - `key` must match exactly.
- * - If the filter specifies a `version` range, the object's `version` must satisfy it (semver).
+ * - If `versionRange` is set, the object's `version` must satisfy it (semver).
  *   Objects without a `version` do not match a version-constrained filter.
  */
-const matchKey = (filter: QueryAST.FilterKey, objKey: string | undefined, objVersion: string | undefined): boolean => {
-  if (objKey !== filter.key) {
+const matchMetaKey = (
+  key: string,
+  versionRange: string | undefined,
+  objKey: string | undefined,
+  objVersion: string | undefined,
+): boolean => {
+  if (objKey !== key) {
     return false;
   }
-  if (filter.version === undefined) {
+  if (versionRange === undefined) {
     return true;
   }
   if (objVersion === undefined) {
     return false;
   }
-  return semver.satisfies(objVersion, filter.version, { includePrerelease: true });
+  return semver.satisfies(objVersion, versionRange, { includePrerelease: true });
 };
 
 // TODO(burdon): Reconcile with filterMatchObject.
@@ -170,16 +179,20 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
         }
       }
 
+      // Check registry meta key / version if specified.
+      if (
+        filter.metaKey !== undefined &&
+        !matchMetaKey(filter.metaKey, filter.metaVersion, obj[ATTR_META]?.key, obj[ATTR_META]?.version)
+      ) {
+        return false;
+      }
+
       return true;
     }
 
     case 'tag': {
       const tags = obj[ATTR_META]?.tags ?? [];
       return tags.some((tag) => tag === filter.tag);
-    }
-
-    case 'key': {
-      return matchKey(filter, obj[ATTR_META]?.key, obj[ATTR_META]?.version);
     }
 
     // TODO: Implement text search.

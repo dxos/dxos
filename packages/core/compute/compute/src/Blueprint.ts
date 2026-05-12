@@ -18,41 +18,6 @@ import * as Operation from './Operation';
 import * as Template from './Template';
 
 /**
- * Legacy Blueprint schema (v0.1.0) — `key` is stored as a data property.
- * @deprecated Use {@link Blueprint} (v0.2.0) instead; the `key` and `version` now live in the object meta.
- */
-export const LegacyBlueprint = Schema.Struct({
-  /**
-   * Global registry ID.
-   * NOTE: The `key` property refers to the original registry entry.
-   */
-  key: Schema.String.annotations({
-    description: 'Unique registration key for the blueprint',
-  }),
-
-  name: Schema.String.annotations({
-    description: 'Human-readable name of the blueprint',
-  }),
-
-  description: Schema.optional(Schema.String),
-
-  instructions: Template.Template,
-
-  tools: Schema.Array(ToolId),
-
-  agentCanEnable: Schema.optional(Schema.Boolean),
-
-  mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.blueprint',
-    version: '0.1.0',
-  }),
-);
-
-export interface LegacyBlueprint extends Schema.Schema.Type<typeof LegacyBlueprint> {}
-
-/**
  * Blueprint schema defines the structure for AI assistant blueprints.
  * Blueprints contain instructions, tools, and artifacts that guide the AI's behavior.
  * Blueprints may use tools to create and read artifacts, which are managed by the assistant.
@@ -148,41 +113,6 @@ export const getKey = (blueprint: Blueprint): string => {
  * Get the registry version for a blueprint, if any.
  */
 export const getVersion = (blueprint: Blueprint): string | undefined => Obj.getMeta(blueprint).version;
-
-/**
- * Migration from {@link LegacyBlueprint} (v0.1.0) to {@link Blueprint} (v0.2.0).
- * Moves `key` from the data section into the object meta.
- */
-// The migration framework currently aliases `before` and `object` in `onMigration`, so we snapshot
-// the legacy `key` during `transform` and read it back keyed by object id.
-const _blueprintMigrationSnapshots = new Map<string, { key: string }>();
-export const migration = Migration.define({
-  from: LegacyBlueprint,
-  to: Blueprint,
-  transform: async (from) => {
-    _blueprintMigrationSnapshots.set((from as any).id, { key: from.key });
-    return {
-      name: from.name,
-      description: from.description,
-      instructions: from.instructions,
-      tools: from.tools,
-      agentCanEnable: from.agentCanEnable,
-      mcpServers: from.mcpServers,
-    };
-  },
-  onMigration: async ({ object }) => {
-    const snapshot = _blueprintMigrationSnapshots.get((object as any).id);
-    if (!snapshot) {
-      return;
-    }
-    Obj.update(object, (object) => {
-      const meta = Obj.getMeta(object);
-      meta.key = snapshot.key;
-      meta.version ??= '0.1.0';
-    });
-    _blueprintMigrationSnapshots.delete((object as any).id);
-  },
-});
 
 /**
  * Util to create tool definitions for a blueprint.
@@ -292,3 +222,77 @@ export const upsert = (key: string): Effect.Effect<Blueprint, NotFoundError, Reg
   });
 
 export class NotFoundError extends BaseError.extend('BlueprintNotFound', 'Blueprint not found') {}
+
+//
+// Legacy schemas and migrations.
+//
+
+/**
+ * Blueprint schema v0.1.0 — `key` is stored as a data property.
+ * @deprecated Use {@link Blueprint} (v0.2.0) instead; the `key` and `version` now live in the object meta.
+ */
+export const Blueprint_v0_1_0 = Schema.Struct({
+  /**
+   * Global registry ID.
+   * NOTE: The `key` property refers to the original registry entry.
+   */
+  key: Schema.String.annotations({
+    description: 'Unique registration key for the blueprint',
+  }),
+
+  name: Schema.String.annotations({
+    description: 'Human-readable name of the blueprint',
+  }),
+
+  description: Schema.optional(Schema.String),
+
+  instructions: Template.Template,
+
+  tools: Schema.Array(ToolId),
+
+  agentCanEnable: Schema.optional(Schema.Boolean),
+
+  mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
+}).pipe(
+  Type.object({
+    typename: 'org.dxos.type.blueprint',
+    version: '0.1.0',
+  }),
+);
+
+export interface Blueprint_v0_1_0 extends Schema.Schema.Type<typeof Blueprint_v0_1_0> {}
+
+/**
+ * Migration from {@link Blueprint_v0_1_0} (v0.1.0) to {@link Blueprint} (v0.2.0).
+ * Moves `key` from the data section into the object meta.
+ */
+// The migration framework currently aliases `before` and `object` in `onMigration`, so we snapshot
+// the legacy `key` during `transform` and read it back keyed by object id.
+const _blueprintMigrationSnapshots = new Map<string, { key: string }>();
+export const migration = Migration.define({
+  from: Blueprint_v0_1_0,
+  to: Blueprint,
+  transform: async (from) => {
+    _blueprintMigrationSnapshots.set((from as any).id, { key: from.key });
+    return {
+      name: from.name,
+      description: from.description,
+      instructions: from.instructions,
+      tools: from.tools,
+      agentCanEnable: from.agentCanEnable,
+      mcpServers: from.mcpServers,
+    };
+  },
+  onMigration: async ({ object }) => {
+    const snapshot = _blueprintMigrationSnapshots.get((object as any).id);
+    if (!snapshot) {
+      return;
+    }
+    Obj.update(object, (object) => {
+      const meta = Obj.getMeta(object);
+      meta.key = snapshot.key;
+      meta.version ??= '0.1.0';
+    });
+    _blueprintMigrationSnapshots.delete((object as any).id);
+  },
+});

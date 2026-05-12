@@ -141,9 +141,11 @@ class FilterClass implements Filter$.Any {
 
   static key(key: string, options?: Filter$.KeyFilterOptions): Filter$.Any {
     return new FilterClass({
-      type: 'key',
-      key,
-      version: options?.version,
+      type: 'object',
+      typename: null,
+      props: {},
+      metaKey: key,
+      metaVersion: options?.version,
     });
   }
 
@@ -660,10 +662,6 @@ const prettyFilter = (filter: QueryAST.Filter): string => {
       return `Filter.text(${JSON.stringify(filter.text)})`;
     case 'tag':
       return `Filter.tag(${JSON.stringify(filter.tag)})`;
-    case 'key':
-      return filter.version !== undefined
-        ? `Filter.key(${JSON.stringify(filter.key)}, { version: ${JSON.stringify(filter.version)} })`
-        : `Filter.key(${JSON.stringify(filter.key)})`;
     case 'child-of':
       return `Filter.childOf([${filter.parents.map((parent) => JSON.stringify(parent)).join(', ')}], { transitive: ${filter.transitive} })`;
     case 'timestamp':
