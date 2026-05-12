@@ -2,21 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Pipeline, env, pipeline } from '@xenova/transformers';
+import type { Pipeline } from '@xenova/transformers';
 import { useEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-// Configure cache and runtime settings.
-env.cacheDir = './.cache';
-env.allowLocalModels = true;
-
-// Configure ONNX runtime for WebGPU.
-(env.backends.onnx as any).wasm.numThreads = 1;
-(env.backends.onnx as any).provider = 'webgpu';
-(env.backends.onnx as any).webgpu = {
-  profilingMode: true,
+// `@xenova/transformers` ships large WASM/ONNX binaries that take vite a
+// while to pre-bundle. Keeping it out of this module's static graph means
+// importing this file (e.g. when storybook discovers stories that pull in
+// Voice.tsx) is cheap; the model runtime only loads when `usePipeline` is
+// actually invoked with `active: true`. The previous top-level
+// `env.cacheDir = …` / WebGPU config now runs once on first load.
+let _transformersPromise: Promise<typeof import('@xenova/transformers')> | undefined;
+const loadTransformers = () => {
+  if (!_transformersPromise) {
+    _transformersPromise = import('@xenova/transformers').then((mod) => {
+      mod.env.cacheDir = './.cache';
+      mod.env.allowLocalModels = true;
+      (mod.env.backends.onnx as any).wasm.numThreads = 1;
+      (mod.env.backends.onnx as any).provider = 'webgpu';
+      (mod.env.backends.onnx as any).webgpu = { profilingMode: true };
+      return mod;
+    });
+  }
+  return _transformersPromise;
 };
 
 export type PipelineConfig = {
@@ -84,6 +94,7 @@ export const usePipeline = ({ active, model, debug }: PipelineConfig) => {
           }
         }
 
+        const { pipeline } = await loadTransformers();
         const pipe = await pipeline('automatic-speech-recognition', model, {
           quantized: true,
           progress_callback: (progress: any) => {
