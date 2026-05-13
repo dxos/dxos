@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AiContextService } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref, Relation, Tag } from '@dxos/echo';
 import { trim } from '@dxos/util';
@@ -225,7 +225,7 @@ export const ContextAdd = Operation.make({
     }),
   }),
   output: Schema.Void,
-  services: [AiContextService],
+  services: [AiContext.Service],
 }).pipe(Operation.intrinsic);
 
 export const ContextRemove = Operation.make({
@@ -243,7 +243,7 @@ export const ContextRemove = Operation.make({
     }),
   }),
   output: Schema.Void,
-  services: [AiContextService],
+  services: [AiContext.Service],
 }).pipe(Operation.intrinsic);
 
 export const RelationCreate = Operation.make({

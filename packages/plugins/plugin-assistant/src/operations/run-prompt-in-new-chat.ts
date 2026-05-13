@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
-import { AiContextBinder } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Blueprint, Routine, Template, Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
@@ -35,10 +35,10 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewCha
             invariant(space, 'Space not found.');
             const feedServiceLayer = createFeedServiceLayer(space.queues);
             const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
-            const binder = new AiContextBinder({ feed: feedTarget, runtime, registry });
+            const binder = new AiContext.Binder({ feed: feedTarget, runtime, registry });
             yield* Effect.promise(() =>
-              binder.use(async (b: AiContextBinder) => {
-                const bindingProps: Parameters<AiContextBinder['bind']>[0] = {};
+              binder.use(async (b: AiContext.Binder) => {
+                const bindingProps: Parameters<AiContext.Binder['bind']>[0] = {};
 
                 if (objects && objects.length > 0) {
                   bindingProps.objects = objects.map((obj) => Ref.make(obj));

@@ -85,7 +85,7 @@ export default Commentary.pipe(
         const moveNotation = lastMove.san;
 
         // Generate AI commentary about the move
-        const result = yield* new AiRequest({
+        const result = yield* new AiRequest.Request({
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'chess-commentary' })),
         }).run({
           prompt:

@@ -157,7 +157,7 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: 'invocations',
         match: NodeMatcher.whenAny(
-          NodeMatcher.whenEchoTypeMatches(Sequence),
+          NodeMatcher.whenEchoTypeMatches(Sequence.Sequence),
           NodeMatcher.whenEchoTypeMatches(Routine.Routine),
         ),
         connector: () =>

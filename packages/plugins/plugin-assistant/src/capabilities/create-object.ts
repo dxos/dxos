@@ -63,10 +63,10 @@ export default Capability.makeModule(
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Sequence.typename,
+        id: Sequence.Sequence.typename,
         createObject: (props, options) =>
           Effect.gen(function* () {
-            const object = Obj.make(Sequence, props);
+            const object = Obj.make(Sequence.Sequence, props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,

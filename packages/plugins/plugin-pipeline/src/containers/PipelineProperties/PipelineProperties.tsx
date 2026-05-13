@@ -15,7 +15,7 @@ import { Form, ViewEditor } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { type ProjectionModel, ViewModel } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';
-import { mx, osTranslations, subtleHover } from '@dxos/ui-theme';
+import { mx, osTranslations } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -179,7 +179,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
                   classNames={listItemGrid}
                   aria-expanded={expandedId === column.view.dxn.toString()}
                 >
-                  <div className={mx(subtleHover, listItemGrid, 'rounded-xs cursor-pointer min-h-10')}>
+                  <div className={mx(listItemGrid, 'dx-hover rounded-xs cursor-pointer min-h-10')}>
                     <List.ItemDragHandle />
                     <List.ItemTitle onClick={() => handleToggleField(column)}>
                       {column.name || t('untitled-view.title')}

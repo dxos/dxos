@@ -1,41 +1,38 @@
-//
-// Copyright 2026 DXOS.org
-//
+## PLANNING TOOL
 
-import * as Schema from 'effect/Schema';
+This tool maintains an organized task list.
+Use this to track progress, break down objectives, and ensure thoroughness.
+If you are asked to create a plan use this tool instead of creating a new document.
+After creating initial tasks, update them silently without announcing changes to the user.
+Important: Do not show or summarize the contents of the task list unless the user asks for this.
 
-import { AiContextService } from '@dxos/assistant';
-import { Operation } from '@dxos/compute';
-import { Database } from '@dxos/echo';
-import { trim } from '@dxos/util';
+### CORE USAGE PRINCIPLES
 
-import { Plan } from '../../../types';
+Create and manage tasks for: multi-step objectives requiring 3+ distinct actions, complex projects needing careful sequencing,
+user requests for task organization, multiple deliverables provided together, new instructions (capture as tasks immediately with new IDs),
+completed work (mark `done` and add follow-ups), and active work (mark as `in-progress`, limit one at a time).
 
-const INSTRUCTIONS = trim`
-TASK MANAGEMENT TOOL - USAGE GUIDELINES
+Skip task management for: single straightforward actions, simple requests achievable in 1-2 steps,
+informational queries, quick lookups or clarifications, and avoid creating verification tasks unless requested.
 
-This tool maintains an organized task list during work sessions to track progress, break down objectives, and ensure thoroughness. After creating initial tasks, update them silently without announcing changes to the user.
+### TOOL SPECIFICATION
 
-=== CORE USAGE PRINCIPLES ===
+`update-tasks` requires an array of task objects. Each task object contains:
 
-Create and manage tasks for: multi-step objectives requiring 3+ distinct actions, complex projects needing careful sequencing, user requests for task organization, multiple deliverables provided together, new instructions (capture as tasks immediately with new IDs), completed work (mark done and add follow-ups), and active work (mark as 'in-progress', limit one at a time).
-
-Skip task management for: single straightforward actions, simple requests achievable in 1-2 steps, informational queries, quick lookups or clarifications, and avoid creating verification tasks unless requested.
-
-=== TOOL SPECIFICATION ===
-
-update-tasks requires an array of task objects. Each task object contains:
 - id (string, required): unique identifier like "task_1" or "research_sources"
 - title (string, optional): update to clarify or refine task description
-- status (string, optional): 'todo' | 'in-progress' | 'done'
+- status (string, optional): `todo` | `in-progress` | `done`
 
-Task status meanings: 'todo' means not yet started, 'in-progress' means currently being worked on, 'done' means completed successfully.
+Task status meanings: 'todo' means not yet started, `in-progress` means currently being worked on, `done` means completed successfully.
 
-=== OPERATIONAL GUIDELINES ===
+### OPERATIONAL GUIDELINES
 
-Update tasks in real-time as work progresses. Mark tasks 'done' immediately upon completion. Maintain only ONE task with 'in-progress' status at a time. Complete current tasks before starting new ones. Use specific, actionable task titles. Break complex work into manageable logical pieces. Batch task updates with other actions when possible for efficiency.
+Update tasks in realtime as work progresses. Mark tasks `done` immediately upon completion.
+Maintain only ONE task with `in-progress` status at a time. Complete current tasks before starting new ones.
+Use specific, actionable task titles. Break complex work into manageable logical pieces.
+Batch task updates with other actions when possible for efficiency.
 
-=== USAGE EXAMPLES ===
+### USAGE EXAMPLES
 
 <example type="research_project">
 <user_message>I need to research sustainable packaging options and write a report comparing costs and environmental impact.</user_message>
@@ -110,28 +107,10 @@ Creates tasks:
 <reasoning>One-step action with immediate completion, no organizational benefit from tasks.</reasoning>
 </example>
 
-=== BEST PRACTICES ===
+### BEST PRACTICES
 
-For task creation: use descriptive unique IDs reflecting the work, start first task as 'in-progress', batch initial creation with beginning work. For progress tracking: update status immediately upon completion, keep only one 'in-progress' task unless parallel work is natural, add follow-up tasks as they emerge. For task breakdown: aim for reasonably-scoped tasks, group related small actions into logical units, split tasks requiring different approaches.
+For task creation: use descriptive unique IDs reflecting the work, start first task as `in-progress`, batch initial creation with beginning work.
+For progress tracking: update status immediately upon completion, keep only one `in-progress` task unless parallel work is natural, add follow-up tasks as they emerge. For task breakdown: aim for reasonably-scoped tasks, group related small actions into logical units, split tasks requiring different approaches.
 
-When uncertain whether to use task management, err on the side of creating tasks. Proactive organization demonstrates thoroughness and ensures comprehensive work completion.
-`;
-
-const TaskProps = Schema.Struct({
-  id: Plan.TaskId,
-  title: Schema.String,
-  status: Schema.Literal('todo', 'in-progress', 'done'),
-});
-
-export const UpdateTasks = Operation.make({
-  meta: {
-    key: 'org.dxos.function.planning.update-tasks',
-    name: 'Update tasks',
-    description: INSTRUCTIONS,
-  },
-  input: Schema.Struct({
-    tasks: Schema.Array(TaskProps),
-  }),
-  output: Schema.Any,
-  services: [AiContextService, Database.Service],
-});
+When uncertain whether to use task management, err on the side of creating tasks.
+Proactive organization demonstrates thoroughness and ensures comprehensive work completion.

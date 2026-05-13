@@ -416,7 +416,7 @@ export interface InvokeOptions {
   spaceId?: Key.SpaceId;
   /**
    * DXN string of the conversation feed (queue).
-   * Passed to the process environment so nested operations can resolve AiContextService and related services.
+   * Passed to the process environment so nested operations can resolve AiContext.Service and related services.
    */
   conversation?: DXN.String;
   /**

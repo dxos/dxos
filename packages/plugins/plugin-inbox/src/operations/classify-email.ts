@@ -41,7 +41,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
         const messageContent = Function.pipe([message], Array.flatMap(renderMarkdown), Array.join('\n\n'));
         const tagList = tags.map((tag) => `- ${tag.label}`).join('\n');
 
-        const result = yield* new AiRequest({
+        const result = yield* new AiRequest.Request({
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'classify' })),
         }).run({
           prompt:

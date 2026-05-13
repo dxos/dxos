@@ -11,7 +11,7 @@ import { describe, it } from 'vitest';
 
 import { Feed, Obj, Ref, Type } from '@dxos/echo';
 
-import { AiContextBinder } from './context';
+import * as AiContext from './AiContext';
 
 const createMockFeedRuntime = (): Runtime.Runtime<Feed.FeedService> => {
   const mockFeedService: Context.Tag.Service<Feed.FeedService> = {
@@ -28,11 +28,11 @@ const createMockFeedRuntime = (): Runtime.Runtime<Feed.FeedService> => {
   return Effect.runSync(Effect.runtime<Feed.FeedService>().pipe(Effect.provide(layer)));
 };
 
-describe('AiContextBinder', () => {
+describe('AiContext.Binder', () => {
   it('should handle bind with Ref', async () => {
     const feed = Feed.make();
     const runtime = createMockFeedRuntime();
-    const binder = new AiContextBinder({ feed, runtime });
+    const binder = new AiContext.Binder({ feed, runtime });
 
     const TestSchema = Schema.Struct({}).pipe(
       Type.object({

@@ -9,9 +9,9 @@ import { useQuery, useQueue } from '@dxos/react-client/echo';
 import { getHashHue } from '@dxos/ui-theme';
 
 import { ResearchInputQueue } from '../testing';
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const ResearchInputModule = ({ space }: ComponentProps) => {
+export const ResearchInputModule = ({ space }: ModuleProps) => {
   const [researchInput] = useQuery(space.db, Filter.type(ResearchInputQueue));
   const feed = researchInput?.feed.target;
   const queue = useQueue(feed ? Feed.getQueueDxn(feed) : undefined);

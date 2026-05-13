@@ -17,8 +17,8 @@ import {
 import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-framework/testing';
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
-import { AiContextBinder } from '@dxos/assistant';
-import { AgentHandlers, PlanningBlueprint, PlanningHandlers } from '@dxos/assistant-toolkit';
+import { AiContext } from '@dxos/assistant';
+import { Agent, AgentBlueprint, AgentHandlers, PlanningBlueprint, PlanningHandlers } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
 import { Blueprint, Routine } from '@dxos/compute';
 import { Trigger } from '@dxos/compute';
@@ -28,9 +28,11 @@ import { Feed, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Assistant, AssistantOperation } from '@dxos/plugin-assistant';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
+import { AutomationCapabilities, AutomationEvents } from '@dxos/plugin-automation';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
@@ -75,7 +77,8 @@ type DecoratorsProps = {
   lazyPlugins?: () => Promise<LazyPluginsResult>;
   accessTokens?: AccessToken.AccessToken[];
   onInit?: (props: { client: Client; space: Space }) => Promise<void>;
-} & (Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & Pick<StoryPluginOptions, 'onChatCreated'>);
+} & (Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> &
+  Pick<StoryPluginOptions, 'onChatCreated' | 'createAgent'>);
 
 /**
  * Builds the full plugin list for the plugin manager.
@@ -86,6 +89,7 @@ const buildPluginManagerOptions = ({
   accessTokens = [],
   onInit,
   onChatCreated,
+  createAgent,
   ...props
 }: Omit<DecoratorsProps, 'lazyPlugins'>): WithPluginManagerOptions => ({
   plugins: [
@@ -139,7 +143,7 @@ const buildPluginManagerOptions = ({
 
     // Test-specific.
     StorybookPlugin({}),
-    StoryPlugin({ onChatCreated }),
+    StoryPlugin({ onChatCreated, createAgent }),
     ...plugins,
   ],
 });
@@ -248,8 +252,19 @@ export const accessTokensFromEnv = (tokens: Record<string, string | undefined>) 
     .map(([source, token]) => Obj.make(AccessToken.AccessToken, { source, token: token! }));
 };
 
+type CreateAgentOptions = {
+  name?: string;
+  instructions?: string;
+};
+
 type StoryPluginOptions = {
-  onChatCreated?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;
+  onChatCreated?: (props: { space: Space; chat: Assistant.Chat; binder: AiContext.Binder }) => Promise<void>;
+
+  /**
+   * If set, the story creates an Agent (with its own Chat) instead of a standalone Chat.
+   * Accepts `true` for defaults, or an options object for name/instructions.
+   */
+  createAgent?: boolean | CreateAgentOptions;
 };
 
 const StoryPlugin = Plugin.define<StoryPluginOptions>({
@@ -270,9 +285,13 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
         Capability.contributes(Capabilities.OperationHandler, ExampleHandlers),
       ]),
   }),
-  Plugin.addModule({
+  Plugin.addModule(({ createAgent, onChatCreated }) => ({
     id: 'com.example.plugin.testing.module.setup',
-    activatesOn: ActivationEvent.allOf(ActivationEvents.OperationInvokerReady, ClientEvents.SpacesReady),
+    activatesOn: ActivationEvent.allOf(
+      ActivationEvents.OperationInvokerReady,
+      ClientEvents.SpacesReady,
+      AutomationEvents.ComputeRuntimeReady,
+    ),
     activate: Effect.fnUntraced(function* () {
       const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
       const client = yield* Capability.get(ClientCapabilities.Client);
@@ -282,10 +301,34 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
       // Ensure workspace is set.
       yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(space.id) });
 
-      // Create initial chat.
-      yield* invoke(AssistantOperation.CreateChat, { db: space.db });
+      if (createAgent) {
+        const agentOptions = typeof createAgent === 'object' ? createAgent : {};
+        const agent = yield* Agent.makeInitialized(
+          {
+            name: agentOptions.name ?? 'Default',
+            instructions: agentOptions.instructions ?? '',
+          },
+          AgentBlueprint.make(),
+        ).pipe(withComputeRuntime(space.id));
+        yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
+
+        if (onChatCreated) {
+          const registry = yield* Capability.get(Capabilities.AtomRegistry);
+          const chat = yield* Effect.promise(() => agent.chat!.load());
+          const feed = yield* Effect.promise(() => chat.feed.load());
+          const feedServiceLayer = createFeedServiceLayer(space.queues);
+          const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
+          const binder = new AiContext.Binder({ feed, runtime, registry });
+          yield* Effect.tryPromise(() => binder.open());
+          yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder }));
+          yield* Effect.tryPromise(() => binder.close());
+        }
+      } else {
+        // Create initial chat.
+        yield* invoke(AssistantOperation.CreateChat, { db: space.db });
+      }
     }),
-  }),
+  })),
   Plugin.addModule(({ onChatCreated }) => ({
     id: 'com.example.plugin.testing.module.operationHandler',
     activatesOn: ActivationEvents.SetupOperationHandler,
@@ -308,7 +351,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
               });
               const feedServiceLayer = createFeedServiceLayer(space.queues);
               const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
-              const binder = new AiContextBinder({ feed, runtime, registry });
+              const binder = new AiContext.Binder({ feed, runtime, registry });
 
               // Story-specific behaviour to allow chat creation to be extended.
               space.db.add(chat);
@@ -331,3 +374,14 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
   })),
   Plugin.make,
 );
+
+const withComputeRuntime =
+  (spaceId: SpaceId) =>
+  <A, E, R>(
+    effect: Effect.Effect<A, E, R>,
+  ): Effect.Effect<A, E, Exclude<R, AutomationCapabilities.ComputeServices> | Capability.Service> =>
+    Effect.gen(function* () {
+      const provider = yield* Capability.get(AutomationCapabilities.ComputeRuntime).pipe(Effect.orDie);
+      const runtime = yield* provider.getRuntime(spaceId).runtimeEffect;
+      return yield* effect.pipe(Effect.provide(runtime));
+    });

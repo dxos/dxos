@@ -10,14 +10,14 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { DataTypes } from '@dxos/schema';
 import { Organization } from '@dxos/types';
 
-import { SequenceBuilder } from './sequence';
+import * as Sequence from './Sequence';
 
 // TODO(burdon): Conslidate with existing artifact definition and create JSON DSL.
 
 // TODO(burdon): Don't run on CI.
 describe.skip('Sequence', () => {
   test('follows a simple sequence', { timeout: 60_000 }, async () => {
-    const sequence = SequenceBuilder.create()
+    const sequence = Sequence.Builder.create()
       .step('Generate an idea for a new product. Do not use any external tools for this.')
       .step('Write a short description of the product.')
       .step('Run a market research to see if the product is viable. Do not use any external tools for this.')
@@ -63,7 +63,7 @@ describe.skip('Sequence', () => {
   //     },
   //   });
 
-  //   const sequence = SequenceBuilder.create()
+  //   const sequence = Sequence.Builder.create()
   //     .step(
   //       'Determine if the email is introduction, question, or spam. Bail if email does not fit into one of these categories.',
   //     )
@@ -116,7 +116,7 @@ describe.skip('Sequence', () => {
     // createGraphWriterTool({ db, schema: DataTypes }),
     // ];
 
-    const sequence = SequenceBuilder.create()
+    const sequence = Sequence.Builder.create()
       .step('Research founders of the organization. Do deep research.', {
         // tools: [exa.id],
       })

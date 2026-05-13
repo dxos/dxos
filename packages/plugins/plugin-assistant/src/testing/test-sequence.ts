@@ -3,9 +3,9 @@
 //
 
 import { ToolId } from '@dxos/ai';
-import { type SequenceDefinition, SequenceParser } from '@dxos/conductor';
+import { Sequence } from '@dxos/conductor';
 
-export const RESEARCH_SEQUENCE_DEFINITION: SequenceDefinition = {
+export const RESEARCH_SEQUENCE_DEFINITION: Sequence.Definition = {
   steps: [
     {
       instructions: 'Research information and entities related to the selected objects.',
@@ -23,4 +23,4 @@ export const RESEARCH_SEQUENCE_DEFINITION: SequenceDefinition = {
   ],
 };
 
-export const RESEARCH_SEQUENCE = SequenceParser.create().parse(RESEARCH_SEQUENCE_DEFINITION);
+export const RESEARCH_SEQUENCE = Sequence.Parser.create().parse(RESEARCH_SEQUENCE_DEFINITION);

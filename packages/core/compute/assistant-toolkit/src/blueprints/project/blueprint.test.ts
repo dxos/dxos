@@ -95,7 +95,7 @@ describe('Agent', () => {
         const chatFeed = agent.chat?.target?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const session = yield* acquireReleaseResource(() => new AiSession({ feed: chatFeed, runtime }));
+        const session = yield* acquireReleaseResource(() => new AiSession.Session({ feed: chatFeed, runtime }));
         yield* Effect.promise(() => session.context.open());
 
         const documentDxn = Obj.getDXN(document);
@@ -133,7 +133,7 @@ describe('Agent', () => {
         invariant(chatFeed, 'Agent chat feed not found.');
         yield* Database.flush();
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const session = yield* acquireReleaseResource(() => new AiSession({ feed: chatFeed, runtime }));
+        const session = yield* acquireReleaseResource(() => new AiSession.Session({ feed: chatFeed, runtime }));
         yield* Effect.promise(() => session.context.open());
 
         yield* session
@@ -286,7 +286,7 @@ describe('Agent', () => {
         invariant(chatFeed, 'Agent chat feed not found.');
         yield* Database.flush();
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const session = yield* acquireReleaseResource(() => new AiSession({ feed: chatFeed, runtime }));
+        const session = yield* acquireReleaseResource(() => new AiSession.Session({ feed: chatFeed, runtime }));
         yield* Effect.promise(() => session.context.open());
 
         yield* session

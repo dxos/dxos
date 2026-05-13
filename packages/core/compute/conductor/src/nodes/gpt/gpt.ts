@@ -144,7 +144,7 @@ export const gptNode = defineComputeNode({
         }).pipe(Effect.provideService(Trace.TraceService, traceWriter)),
     });
 
-    const request = new AiRequest({ observer });
+    const request = new AiRequest.Request({ observer });
     const fullPrompt = context != null ? `<context>\n${JSON.stringify(context)}\n</context>\n\n${prompt}` : prompt;
 
     const trace = yield* Trace.TraceService;

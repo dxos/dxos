@@ -9,15 +9,15 @@ import * as Option from 'effect/Option';
 import { type FunctionNotFoundError, type Operation, type OperationRegistry, Template } from '@dxos/compute';
 import { type Database, Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
-import type { ObjectNotFoundError } from '@dxos/echo/Err';
+import { type ObjectNotFoundError } from '@dxos/echo/Err';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { AiAssistantError } from '../errors';
+import { AiAssistantError } from '../util';
+import type * as AiRequest from './AiRequest';
 import { ArtifactDiffResolver } from './artifact-diff';
-import { type AiRequestRunError, type AiRequestRunProps } from './request';
 
 /**
  * Formats the system prompt.
@@ -27,7 +27,7 @@ export const formatSystemPrompt = ({
   system,
   blueprints = [],
   objects = [],
-}: Pick<AiRequestRunProps, 'system' | 'blueprints' | 'objects'>): Effect.Effect<
+}: Pick<AiRequest.RunProps, 'system' | 'blueprints' | 'objects'>): Effect.Effect<
   string,
   FunctionNotFoundError | ObjectNotFoundError,
   Database.Service | OperationRegistry.Service | Operation.Service
@@ -79,7 +79,7 @@ export const formatSystemPrompt = ({
 export const formatUserPrompt = ({
   prompt,
   history = [],
-}: Pick<AiRequestRunProps, 'prompt' | 'history'>): Effect.Effect<Message.Message, AiRequestRunError> =>
+}: Pick<AiRequest.RunProps, 'prompt' | 'history'>): Effect.Effect<Message.Message, AiRequest.RunError> =>
   Effect.gen(function* () {
     const blocks: ContentBlock.Any[] = [];
 

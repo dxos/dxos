@@ -29,8 +29,8 @@ export const AgentPrompt = Operation.make({
     /**
      * @default @anthropic/claude-opus-4-6
      */
-
     model: Schema.optional(ModelName),
+
     /**
      * Input object or data.
      * References get auto-resolved.

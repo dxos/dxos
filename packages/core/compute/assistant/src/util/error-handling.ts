@@ -7,7 +7,7 @@ import * as HttpClientError from '@effect/platform/HttpClientError';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { AiModelError } from '../errors';
+import { AiModelError } from './errors';
 
 const AnthropicErrorResponse = Schema.Struct({
   type: Schema.Literal('error'),
@@ -17,7 +17,7 @@ const AnthropicErrorResponse = Schema.Struct({
   }),
 });
 
-// TODO(dmaretskyi): Needs rework
+// TODO(dmaretskyi): Needs rework.
 export const mapAiError = (err: AiError.AiError): Effect.Effect<AiError.AiError> =>
   Effect.gen(function* () {
     const cause = err.cause;
@@ -30,6 +30,7 @@ export const mapAiError = (err: AiError.AiError): Effect.Effect<AiError.AiError>
         message: body.error.message,
         context: { model: 'anthropic', type: body.error.type },
       });
+
       return AiError.UnknownError.make({
         description: body.error.message,
         module: err.module,

@@ -107,12 +107,10 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
     return (
       <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container asChild withFocus currentId={currentId} onCurrentChange={handleCurrentChange}>
-          <ScrollArea.Root padding centered>
+          <ScrollArea.Root>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={threads ? (ThreadTile as any) : MessageTile}
-                classNames='my-2'
-                gap={8}
                 items={items as any}
                 draggable={false}
                 getId={(item: any) => item.threadId ?? item.message?.id}

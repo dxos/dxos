@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
-import { AiContextService } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { Trace, TriggerEvent, Operation, OperationRegistry } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { QueueService } from '@dxos/functions';
@@ -70,7 +70,7 @@ export const GetContext = Operation.make({
       }),
     ),
   }),
-  services: [AiContextService, Database.Service],
+  services: [AiContext.Service, Database.Service],
 }).pipe(Operation.intrinsic);
 
 export const AddArtifact = Operation.make({
@@ -88,5 +88,5 @@ export const AddArtifact = Operation.make({
     }),
   }),
   output: Schema.Void,
-  services: [AiContextService, Database.Service],
+  services: [AiContext.Service, Database.Service],
 }).pipe(Operation.intrinsic);

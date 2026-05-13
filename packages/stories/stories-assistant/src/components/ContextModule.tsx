@@ -13,9 +13,9 @@ import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const ContextModule = ({ space }: ComponentProps) => {
+export const ContextModule = ({ space }: ModuleProps) => {
   const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
   const feedTarget = chats.at(-1)?.feed.target;
   const binder = useContextBinder(space, feedTarget);

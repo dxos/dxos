@@ -32,7 +32,7 @@ export default AgentWorker.pipe(
       );
       invariant(chatFeed, 'Agent chat feed not found.');
       const runtime = yield* Effect.runtime<Feed.FeedService>();
-      const session = yield* acquireReleaseResource(() => new AiSession({ feed: chatFeed, runtime }));
+      const session = yield* acquireReleaseResource(() => new AiSession.Session({ feed: chatFeed, runtime }));
 
       const agentsInContext = session.context.getObjects().filter(Obj.instanceOf(Agent.Agent));
       if (agentsInContext.length !== 1) {

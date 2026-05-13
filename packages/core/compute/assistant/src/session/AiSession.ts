@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Registry } from '@effect-atom/atom-react';
+// @import-as-namespace
+
+import { type Registry } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -23,18 +25,12 @@ import { McpToolkit } from '@dxos/mcp-client';
 import { Message, type ContentBlock } from '@dxos/types';
 
 import { ToolExecutionServices } from '../functions';
-import {
-  AiRequest,
-  type AiRequestRunError,
-  type AiRequestRunRequirements,
-  type GenerationObserver,
-  createToolkit,
-  formatSystemPrompt,
-} from '../session';
-import { McpServerError } from '../tracing';
-import { AiContextBinder, AiContextService } from './context';
+import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request';
+import { McpServerError } from '../util';
+import * as AiContext from './AiContext';
+import { createToolkit } from './toolkit';
 
-export interface AiSessionRunProps<R = never> {
+export type RunProps<R = never> = {
   prompt: string | ContentBlock.Any[];
   system?: string;
   observer?: GenerationObserver;
@@ -44,39 +40,43 @@ export interface AiSessionRunProps<R = never> {
    * Space-level MCP servers to connect alongside blueprint-defined ones.
    */
   mcpServers?: readonly McpServer.McpServer[];
-}
+};
 
-export type AiSessionOptions = {
+export type Options = {
   feed: Feed.Feed;
   runtime: Runtime.Runtime<Feed.FeedService>;
   registry?: Registry.Registry;
 };
 
-// TODO(dmaretskyi): Take from model characteristics. opus has 200k max tokens.
 /**
  * Summarization threshold in tokens.
  */
+// TODO(dmaretskyi): Take from model characteristics. opus has 200k max tokens.
 const SUMMARY_THRESHOLD = 80_000;
 
 /**
  * Durable conversation state (initiated by users and agents) backed by a Feed.
  * Executes tools based on AI responses and supports cancellation of in-progress requests.
  */
-export class AiSession extends Resource {
+export class Session extends Resource {
   /**
    * Blueprints and objects bound to the session.
    */
-  private readonly _binder: AiContextBinder;
+  private readonly _binder: AiContext.Binder;
   private readonly _feed: Feed.Feed;
   private readonly _runtime: Runtime.Runtime<Feed.FeedService>;
 
-  public constructor(options: AiSessionOptions) {
+  public constructor(options: Options) {
     super();
     this._feed = options.feed;
     this._runtime = options.runtime;
     invariant(this._feed);
     invariant(this._runtime);
-    this._binder = new AiContextBinder({ feed: this._feed, runtime: this._runtime, registry: options.registry });
+    this._binder = new AiContext.Binder({
+      feed: this._feed,
+      runtime: this._runtime,
+      registry: options.registry,
+    });
   }
 
   protected override async _open(): Promise<void> {
@@ -120,12 +120,13 @@ export class AiSession extends Resource {
       Layer.provide(Operation.withInvocationOptions({ conversation: Obj.getDXN(this._feed).toString() })),
     );
   }
+
   /**
    * Creates a new cancelable request effect.
    */
   public createRequest<R = never>(
-    params: AiSessionRunProps<R>,
-  ): Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements | R> {
+    params: RunProps<R>,
+  ): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements | R> {
     return Effect.gen(this, function* () {
       const history = yield* Effect.promise(() => this.getHistory());
       const blueprints = this.context.getBlueprints();
@@ -137,7 +138,7 @@ export class AiSession extends Resource {
         objects: objects.length,
       });
 
-      const request = new AiRequest({
+      const request = new AiRequest.Request({
         summarizationThreshold: SUMMARY_THRESHOLD,
         observer: params.observer,
         onOutput: (message) =>
@@ -188,10 +189,10 @@ export class AiSession extends Resource {
     }).pipe(
       Effect.provide(
         Layer.mergeAll(
-          Layer.succeed(AiContextService, {
+          Layer.succeed(AiContext.Service, {
             binder: this.context,
           }),
-          Layer.succeed(AiSessionService, this),
+          Layer.succeed(Service, this),
           Operation.withInvocationOptions({ conversation: Obj.getDXN(this._feed).toString() }),
         ),
       ),
@@ -203,17 +204,17 @@ export class AiSession extends Resource {
 /**
  * Gives access to the ai session.
  */
-export class AiSessionService extends Context.Tag('@dxos/assistant/AiSessionService')<AiSessionService, AiSession>() {
+export class Service extends Context.Tag('@dxos/assistant/AiSessionService')<Service, Session>() {
   /**
    * Create a new session layer from options.
    */
-  static layer = (options: AiSessionOptions): Layer.Layer<AiSessionService | AiContextService> =>
+  static layer = (options: Options): Layer.Layer<Service | AiContext.Service> =>
     aiContextFromSession.pipe(
       Layer.provideMerge(
         Layer.scoped(
-          AiSessionService,
+          Service,
           Effect.gen(function* () {
-            const session = yield* acquireReleaseResource(() => new AiSession(options));
+            const session = yield* acquireReleaseResource(() => new Session(options));
             return session;
           }),
         ),
@@ -224,13 +225,13 @@ export class AiSessionService extends Context.Tag('@dxos/assistant/AiSessionServ
    * Create a new session with a new feed.
    */
   static layerNewFeed = (
-    options?: Omit<AiSessionOptions, 'feed' | 'runtime'>,
-  ): Layer.Layer<AiSessionService | AiContextService, never, Database.Service | Feed.FeedService> =>
+    options?: Omit<Options, 'feed' | 'runtime'>,
+  ): Layer.Layer<Service | AiContext.Service, never, Database.Service | Feed.FeedService> =>
     Layer.unwrapScoped(
       Effect.gen(function* () {
         const feed = yield* Database.add(Feed.make());
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        return AiSessionService.layer({ ...options, feed, runtime });
+        return Service.layer({ ...options, feed, runtime });
       }),
     );
 
@@ -238,18 +239,18 @@ export class AiSessionService extends Context.Tag('@dxos/assistant/AiSessionServ
    * Run a prompt in the current session.
    */
   static run = <R = never>(
-    params: AiSessionRunProps<R>,
-  ): Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements | AiSessionService | R> =>
+    params: RunProps<R>,
+  ): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements | Service | R> =>
     Effect.gen(function* () {
-      const session = yield* AiSessionService;
+      const session = yield* Service;
       return yield* session.createRequest(params);
     });
 }
 
 const aiContextFromSession = Layer.effect(
-  AiContextService,
+  AiContext.Service,
   Effect.gen(function* () {
-    const session = yield* AiSessionService;
+    const session = yield* Service;
     return {
       binder: session.context,
     };
