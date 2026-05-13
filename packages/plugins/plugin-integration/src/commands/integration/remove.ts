@@ -12,8 +12,7 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
-import { DXN, Filter } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, DXN, Filter } from '@dxos/echo';
 import { AccessToken } from '@dxos/types';
 
 import { printTokenRemoved } from './util';

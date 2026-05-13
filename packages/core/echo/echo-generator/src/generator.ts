@@ -3,8 +3,7 @@
 //
 
 import { type Space } from '@dxos/client/echo';
-import { Filter } from '@dxos/echo';
-import { Obj, type Type } from '@dxos/echo';
+import { Filter, Obj, type Type } from '@dxos/echo';
 import { EchoSchema, getTypeAnnotation } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';

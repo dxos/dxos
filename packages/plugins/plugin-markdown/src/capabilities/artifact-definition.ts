@@ -12,8 +12,7 @@ import { ToolResult, createTool } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ArtifactId, createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 

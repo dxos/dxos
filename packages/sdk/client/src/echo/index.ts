@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Reconcile under Hyperspace namespace (incl. client-protocol above).
+// TODO(burdon): Reconcile under Hyperspace (incl. space proxy); namespace (incl. client-protocol above).
 
 export { isSpace, type Echo, type Space, SpaceSchema, SpaceProperties } from '@dxos/client-protocol';
 export {

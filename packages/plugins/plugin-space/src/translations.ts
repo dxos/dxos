@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { Event, Message, Organization, Person, Pipeline, Project, Task } from '@dxos/types';
 

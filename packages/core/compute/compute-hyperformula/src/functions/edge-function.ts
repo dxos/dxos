@@ -6,8 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { Operation } from '@dxos/compute';
-import { Filter } from '@dxos/echo';
-import { JsonSchema, Obj } from '@dxos/echo';
+import { Filter, JsonSchema, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 import { type ProcedureAst } from '@dxos/vendor-hyperformula';

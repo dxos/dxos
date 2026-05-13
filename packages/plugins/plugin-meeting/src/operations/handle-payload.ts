@@ -4,8 +4,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { DXN } from '@dxos/echo';
-import { Filter, Query } from '@dxos/echo';
+import { DXN, Filter, Query } from '@dxos/echo';
 import { parseId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type Message } from '@dxos/types';

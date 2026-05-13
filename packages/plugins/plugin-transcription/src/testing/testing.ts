@@ -9,8 +9,7 @@ import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/ass
 import { scheduleTaskInterval } from '@dxos/async';
 import { type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { Filter } from '@dxos/echo';
-import { type Key, Obj, Ref, Type } from '@dxos/echo';
+import { Filter, type Key, Obj, Ref, Type } from '@dxos/echo';
 import { createQueueDXN } from '@dxos/echo/internal';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';

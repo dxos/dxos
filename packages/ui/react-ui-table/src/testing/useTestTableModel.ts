@@ -5,8 +5,7 @@
 import { RegistryContext } from '@effect-atom/atom-react';
 import { type RefObject, useCallback, useContext, useMemo, useRef } from 'react';
 
-import { type Database, type Type } from '@dxos/echo';
-import { Filter } from '@dxos/echo';
+import { type Database, Filter, type Type } from '@dxos/echo';
 import { isMutable } from '@dxos/echo/internal';
 import { random } from '@dxos/random';
 import { useQuery, useSchema } from '@dxos/react-client/echo';

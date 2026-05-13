@@ -6,8 +6,7 @@ import * as Predicate from 'effect/Predicate';
 import React, { Fragment, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Query } from '@dxos/echo';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Panel as DxPanel, Flex, type FlexProps, useControlledState } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';

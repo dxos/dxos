@@ -14,8 +14,7 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 
-import { Obj } from '@dxos/echo';
-import { Filter, Query } from '@dxos/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { parseId } from '@dxos/keys';
 import { ClientProvider, useShell } from '@dxos/react-client';
 import { useQuery, useSpace, useSpaces } from '@dxos/react-client/echo';

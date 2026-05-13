@@ -8,8 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
-import { Database } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Database, View } from '@dxos/echo';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space';
 import { Table } from '@dxos/react-ui-table/types';
 

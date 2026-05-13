@@ -5,8 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Entity, Query } from '@dxos/echo';
-import { Filter } from '@dxos/echo';
+import { Entity, Filter, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';

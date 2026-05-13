@@ -7,8 +7,7 @@ import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-networ
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Obj, Ref } from '@dxos/echo';
-import { Query } from '@dxos/echo';
+import { Obj, Query, Ref } from '@dxos/echo';
 import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
