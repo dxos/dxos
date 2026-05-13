@@ -129,23 +129,14 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   constructor(
     private readonly _service: FeedProtocol.QueueService,
     private readonly _refResolver: Ref.Resolver,
-    echoIdOrDxn: EchoId.EchoId | DXN,
+    echoId: EchoId.EchoId,
     private readonly _database?: Database.Database,
     subspaceTag?: string,
   ) {
-    if (echoIdOrDxn instanceof DXN) {
-      // Legacy: accept a queue-kind DXN for backward compatibility.
-      const parts = echoIdOrDxn.asQueueDXN();
-      this._subspaceTag = parts?.subspaceTag ?? failedInvariant('Missing subspaceTag in DXN');
-      this._spaceId = (parts?.spaceId ?? failedInvariant('Missing spaceId in DXN')) as SpaceId;
-      this._queueId = parts?.queueId ?? failedInvariant('Missing queueId in DXN');
-      this._echoId = EchoId.fromSpaceAndObjectId(this._spaceId, this._queueId as any);
-    } else {
-      this._echoId = echoIdOrDxn;
-      this._spaceId = (EchoId.getSpaceId(echoIdOrDxn) ?? failedInvariant('Missing spaceId in EchoId')) as SpaceId;
-      this._queueId = EchoId.getObjectId(echoIdOrDxn) ?? failedInvariant('Missing queueId in EchoId');
-      this._subspaceTag = subspaceTag ?? 'data';
-    }
+    this._echoId = echoId;
+    this._spaceId = (EchoId.getSpaceId(echoId) ?? failedInvariant('Missing spaceId in EchoId')) as SpaceId;
+    this._queueId = EchoId.getObjectId(echoId) ?? failedInvariant('Missing queueId in EchoId');
+    this._subspaceTag = subspaceTag ?? 'data';
   }
 
   /**

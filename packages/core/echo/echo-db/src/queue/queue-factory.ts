@@ -39,18 +39,16 @@ export class QueueFactory extends Resource implements QueueAPI {
   get<T extends Entity.Unknown>(dxnOrEchoId: EchoId.EchoId | DXN): Queue<T> {
     assertState(this._service, 'Service not set');
 
-    // Normalize to EchoId + subspaceTag.
+    // Normalize to EchoId.
     let echoId: EchoId.EchoId;
-    let subspaceTag: string;
     if (dxnOrEchoId instanceof DXN) {
-      const queueDxn = dxnOrEchoId.asQueueDXN();
-      assertArgument(queueDxn != null, 'dxnOrEchoId', 'LegacyDXN must be a QUEUE-kind DXN');
-      echoId = EchoId.fromSpaceAndObjectId(queueDxn.spaceId as any, queueDxn.queueId as any);
-      subspaceTag = queueDxn.subspaceTag;
+      // Backward-compat: convert ECHO-kind DXN (dxn:echo:spaceId:objectId) to EchoId.
+      const echoDxn = dxnOrEchoId.asEchoDXN();
+      assertArgument(echoDxn != null && echoDxn.spaceId != null, 'dxnOrEchoId', 'LegacyDXN must be an ECHO-kind DXN with spaceId');
+      echoId = EchoId.fromSpaceAndObjectId(echoDxn.spaceId as any, echoDxn.echoId as any);
     } else {
       assertArgument(EchoId.isEchoId(dxnOrEchoId), 'dxnOrEchoId', 'must be an EchoId or LegacyDXN');
       echoId = dxnOrEchoId;
-      subspaceTag = 'data';
     }
 
     const queue = this._queues.get(echoId);
@@ -64,7 +62,6 @@ export class QueueFactory extends Resource implements QueueAPI {
       this._graph.createRefResolver({ context: { space: this._spaceId, feed: echoId } }),
       echoId,
       database,
-      subspaceTag,
     );
     this._queues.set(echoId, newQueue);
     return newQueue as any as Queue<T>;

@@ -23,16 +23,6 @@ export const LOCAL_SPACE_TAG = '@';
 /** @deprecated Use `EchoId` namespace. */
 export const DXN_ECHO_REGEXP = /@(dxn:[a-zA-Z0-p:@]+)/;
 
-/** @deprecated Queues are migrating to feeds (regular ECHO objects). */
-// TODO(burdon): Namespace for.
-export const QueueSubspaceTags = Object.freeze({
-  DATA: 'data',
-  TRACE: 'trace',
-});
-
-/** @deprecated */
-export type QueueSubspaceTag = (typeof QueueSubspaceTags)[keyof typeof QueueSubspaceTags];
-
 /**
  * Legacy DXN class — kept for transitional callers during the URI/DXN/EchoId refactor.
  * New code should use the `DXN`, `EchoId`, and `URI` namespaces directly.
@@ -78,14 +68,6 @@ export class LegacyDXN {
     // TODO(burdon): Rename to OBJECT? (BREAKING CHANGE to update "echo").
     // TODO(burdon): Add separate Kind for space?
     ECHO: 'echo',
-
-    /**
-     * The subspace tag enables us to partition queues by usage within the context of a space.
-     * dxn:queue:<subspace_tag>:<space_id>:<queue_id>[:object_id]
-     * dxn:queue:data:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
-     * dxn:queue:trace:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
-     */
-    QUEUE: 'queue',
   });
 
   /**
@@ -162,14 +144,6 @@ export class LegacyDXN {
   static fromLocalObjectId(id: string): LegacyDXN {
     assertArgument(ObjectId.isValid(id), 'id', `Invalid object ID: ${id}`);
     return new LegacyDXN(LegacyDXN.kind.ECHO, [LOCAL_SPACE_TAG, id]);
-  }
-
-  static fromQueue(subspaceTag: QueueSubspaceTag, spaceId: SpaceId, queueId: ObjectId, objectId?: ObjectId) {
-    assertArgument(SpaceId.isValid(spaceId), `Invalid space ID: ${spaceId}`);
-    assertArgument(ObjectId.isValid(queueId), 'queueId', `Invalid queue ID: ${queueId}`);
-    assertArgument(!objectId || ObjectId.isValid(objectId), 'objectId', `Invalid object ID: ${objectId}`);
-
-    return new LegacyDXN(LegacyDXN.kind.QUEUE, [subspaceTag, spaceId, queueId, ...(objectId ? [objectId] : [])]);
   }
 
   #kind: string;
@@ -282,24 +256,6 @@ export class LegacyDXN {
     };
   }
 
-  asQueueDXN(): LegacyDXN.QueueDXN | undefined {
-    if (this.kind !== LegacyDXN.kind.QUEUE) {
-      return undefined;
-    }
-
-    const [subspaceTag, spaceId, queueId, objectId] = this.#parts;
-    if (typeof queueId !== 'string') {
-      return undefined;
-    }
-
-    return {
-      subspaceTag: subspaceTag as QueueSubspaceTag,
-      spaceId: spaceId as SpaceId,
-      queueId,
-      objectId: objectId as string | undefined,
-    };
-  }
-
   /**
    * Produces a new DXN with the given parts appended.
    */
@@ -328,12 +284,5 @@ export declare namespace LegacyDXN {
   export type EchoDXN = {
     spaceId?: SpaceId;
     echoId: string; // TODO(dmaretskyi): Rename to `objectId` and use `ObjectId` for the type.
-  };
-
-  export type QueueDXN = {
-    subspaceTag: QueueSubspaceTag;
-    spaceId: SpaceId;
-    queueId: string; // TODO(dmaretskyi): ObjectId.
-    objectId?: string; // TODO(dmaretskyi): ObjectId.
   };
 }

@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getSpaceIdFromPath, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
 import { Database, Filter, Key, Obj, Query } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { EchoId, LegacyDXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
 import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
@@ -34,7 +34,7 @@ export default Capability.makeModule(
           ];
         }
 
-        const dxn = DXN.tryParse(query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn);
+        const dxn = LegacyDXN.tryParse(query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn);
         if (!dxn) {
           return [];
         }
@@ -73,7 +73,8 @@ export default Capability.makeModule(
         return Effect.succeed(Option.none());
       }
 
-      const mailboxDxn = DXN.fromSpaceAndObjectId(spaceId, mailboxId as Key.ObjectId);
+      const mailboxDxn = LegacyDXN.fromSpaceAndObjectId(spaceId, mailboxId as Key.ObjectId);
+      const mailboxEchoId = EchoId.fromSpaceAndObjectId(spaceId, mailboxId as Key.ObjectId);
       const mailboxRef = space.db.makeRef(mailboxDxn);
 
       const isMessagePath = isLinkedSegment(qualifiedPath);
@@ -82,12 +83,12 @@ export default Capability.makeModule(
       return Database.loadOption(mailboxRef).pipe(
         Effect.flatMap((mailboxOption) => {
           if (Option.isNone(mailboxOption) || !Mailbox.instanceOf(mailboxOption.value)) {
-            return Effect.succeed(Option.none<DXN>());
+            return Effect.succeed(Option.none<EchoId.EchoId>());
           }
 
           // For non-message paths, the mailbox existing is sufficient.
           if (!messageId || !Key.ObjectId.isValid(messageId)) {
-            return Effect.succeed(Option.some(mailboxDxn));
+            return Effect.succeed(Option.some(mailboxEchoId));
           }
 
           // For message paths, verify the message exists in the feed or as a mailbox-scoped draft.
@@ -100,7 +101,7 @@ export default Capability.makeModule(
               const feed = await mailbox.feed.load();
               const messages = await space.db.query(Query.select(Filter.id(messageId)).from(feed)).run();
               if (messages.length > 0) {
-                return Option.some(Obj.getDXN(messages[0]));
+                return Option.some(EchoId.parse(Obj.getDXN(messages[0]).toString()));
               }
             }
 
@@ -108,11 +109,11 @@ export default Capability.makeModule(
               | Message.Message
               | undefined;
             if (fromDb && DraftMessage.belongsTo(fromDb, mailboxDxnString)) {
-              return Option.some(Obj.getDXN(fromDb));
+              return Option.some(EchoId.parse(Obj.getDXN(fromDb).toString()));
             }
 
-            return Option.none<DXN>();
-          }).pipe(Effect.catchAll(() => Effect.succeed(Option.none<DXN>())));
+            return Option.none<EchoId.EchoId>();
+          }).pipe(Effect.catchAll(() => Effect.succeed(Option.none<EchoId.EchoId>())));
         }),
       );
     };

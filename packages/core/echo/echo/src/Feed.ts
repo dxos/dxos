@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { EchoId, LegacyDXN as DXN, type SpaceId, type ObjectId } from '@dxos/keys';
+import { EchoId, type SpaceId, type ObjectId } from '@dxos/keys';
 
 import * as Annotation from './Annotation';
 import type * as Entity from './Entity';
@@ -117,27 +117,6 @@ export const getQueueDxn = (feed: Feed): EchoId.EchoId | undefined => {
     return undefined;
   }
   return EchoId.fromSpaceAndObjectId(self.spaceId as SpaceId, self.echoId as ObjectId);
-};
-
-/**
- * Creates a Feed object from a queue DXN, inferring the feed's id and namespace from the DXN parts.
- *
- * The resulting Feed, when added to the same space as the queue, will have a queue DXN
- * equal to the input (see `Feed.getQueueDxn`). Useful when migrating `Ref(Queue)` fields to
- * `Ref(Feed.Feed)`.
- *
- * @remarks Unsafe because the caller must ensure the queue DXN's space matches the database
- * the feed is added to; the feed id is set from the queue id, bypassing id generation.
- */
-export const unsafeFromQueueDXN = (queueDxn: DXN): Feed => {
-  const parts = queueDxn.asQueueDXN();
-  if (!parts) {
-    throw new Error(`Expected a queue DXN, got: ${queueDxn.toString()}`);
-  }
-  return Obj.make(Feed, {
-    id: parts.queueId as ObjectId,
-    namespace: parts.subspaceTag === 'trace' ? 'trace' : undefined,
-  });
 };
 
 //

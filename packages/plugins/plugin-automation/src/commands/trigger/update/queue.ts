@@ -132,7 +132,7 @@ const updateQueue = Effect.fn(function* (trigger: Trigger.Trigger, queueOption: 
     });
     Obj.update(trigger, (trigger) => {
       if (trigger.spec?.kind === 'queue') {
-        trigger.spec.queue = queueDxn;
+        trigger.spec.queue = EchoId.parse(queueDxn);
       }
     });
   }

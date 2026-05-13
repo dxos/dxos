@@ -3,7 +3,7 @@
 //
 
 import { BaseError } from '@dxos/errors';
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 
 /**
  * Agent could not execute prompt.
