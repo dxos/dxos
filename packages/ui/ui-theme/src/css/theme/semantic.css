@@ -96,8 +96,10 @@
   /* Grid */
 
   --color-grid-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+  --color-grid-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
   --color-grid-highlight: oklch(from var(--color-emerald-500) l c h / 0.5);
-  --color-grid-selection-surface: var(--color-blue-500);
+  --color-grid-selection-surface: var(--color-red-500);
+  --color-grid-selection-text: var(--color-neutral-50);
   --color-grid-comment: light-dark(var(--color-green-400), var(--color-green-600));
   --color-grid-comment-active: light-dark(
     oklch(from var(--color-green-400) l c h / 0.5),

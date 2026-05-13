@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Script, Operation } from '@dxos/compute';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { getUserFunctionIdInMetadata } from '@dxos/functions';
-import { InvocationOutcome } from '@dxos/functions-runtime';
+import { InvocationOutcome, InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { type InvocationTraceEvent } from '@dxos/functions-runtime';
 import { createInvocationSpans } from '@dxos/functions-runtime';
 import { type DXN } from '@dxos/keys';
@@ -54,7 +54,15 @@ export const useInvocationTargetsForScript = (target: Obj.Unknown | undefined) =
 
 export const useInvocationSpans = ({ queueDxn, target }: { queueDxn?: DXN; target?: Obj.Unknown }) => {
   const functionsForScript = useInvocationTargetsForScript(target);
-  const events = useFeedQueryByDxn(queueDxn, Filter.everything()) as InvocationTraceEvent[];
+  const items = useFeedQueryByDxn(queueDxn, Filter.everything());
+  const events = useMemo(
+    () =>
+      items.filter(
+        (item): item is InvocationTraceEvent =>
+          Obj.instanceOf(InvocationTraceStartEvent, item) || Obj.instanceOf(InvocationTraceEndEvent, item),
+      ),
+    [items],
+  );
   const invocationSpans = useMemo(() => createInvocationSpans(events), [events]);
   const scopedInvocationSpans = useMemo(() => {
     if (functionsForScript) {
