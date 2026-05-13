@@ -10,6 +10,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { LayerSpec, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
 import { LayerStack, ProcessManager } from '@dxos/compute-runtime';
+import { invariant } from '@dxos/invariant';
 // Explicit import so the emitted `.d.ts` references the package via its public
 // alias instead of a relative `node_modules` path (TS2883).
 import { OperationInvoker } from '@dxos/operation';
@@ -51,6 +52,15 @@ export default Capability.makeModule(
     const handlerSets = yield* Capability.getAll(Capabilities.OperationHandler);
     const traceSinkFactories = yield* Capability.getAll(Capabilities.TraceSink);
 
+    // Forward reference to `ProcessManager.ProcessManagerService`. The runtime
+    // that owns the manager depends transitively on `ServiceResolver` (which is
+    // built from the `LayerStack` below), so we cannot materialise it before
+    // the stack exists. Instead we publish the manager into this holder as
+    // soon as the runtime is built, and the ambient layer reads it lazily via
+    // `Layer.effect` — slice init only runs once a process actually triggers
+    // service resolution, by which point the holder is populated.
+    let processManagerHolder: ProcessManager.Manager | undefined;
+
     // Expose the foundational app-framework services through the LayerStack so
     // that operations declaring `services: [Capability.Service]` (and friends)
     // can resolve them via the ServiceResolver. Without this, only consumers
@@ -60,13 +70,23 @@ export default Capability.makeModule(
       {
         affinity: 'application',
         requires: [],
-        provides: [Capability.Service, Plugin.Service, Registry.AtomRegistry],
+        provides: [Capability.Service, Plugin.Service, Registry.AtomRegistry, ProcessManager.ProcessManagerService],
       },
       () =>
         Layer.mergeAll(
           Layer.succeed(Capability.Service, capabilityManager),
           Layer.succeed(Plugin.Service, pluginManager),
           Layer.succeed(Registry.AtomRegistry, atomRegistry),
+          Layer.effect(
+            ProcessManager.ProcessManagerService,
+            Effect.sync(() => {
+              invariant(
+                processManagerHolder,
+                'ProcessManagerService accessed before the process-manager runtime was initialised',
+              );
+              return processManagerHolder;
+            }),
+          ),
         ),
     );
 
@@ -119,6 +139,17 @@ export default Capability.makeModule(
     // fresh scope and is a stable reference for the lifetime of the runtime.
     const processMonitor = managedRuntime.runSync(
       Effect.flatMap(Process.ProcessMonitorService, Effect.succeed) as Effect.Effect<Process.Monitor, never, never>,
+    );
+
+    // Publish the manager into the ambient-layer holder so that
+    // `ProcessManager.ProcessManagerService` becomes resolvable through the
+    // LayerStack alongside the other framework-supplied services.
+    processManagerHolder = managedRuntime.runSync(
+      Effect.flatMap(ProcessManager.ProcessManagerService, Effect.succeed) as Effect.Effect<
+        ProcessManager.Manager,
+        never,
+        never
+      >,
     );
 
     // Eagerly extract the operation invoker built by ProcessOperationInvoker.layer.
