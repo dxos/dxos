@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { createFeedServiceLayer, type Queue, type Space, getSpace } from '@dxos/client/echo';
+import { createFeedServiceLayer, type Space, getSpace } from '@dxos/client/echo';
 import { Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
 import { DXN, Feed, Obj, Ref } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -70,7 +70,7 @@ export class QueueLogger implements SequenceLogger {
         break;
       case 'step-start':
       case 'step-complete':
-        void this._getTraceEventQueue(event.invocationId).append([
+        void this._appendTraceEvent(event.invocationId, [
           Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,
@@ -88,7 +88,7 @@ export class QueueLogger implements SequenceLogger {
         ]);
         break;
       case 'message':
-        void this._getTraceEventQueue(event.invocationId).append([
+        void this._appendTraceEvent(event.invocationId, [
           Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,
@@ -106,7 +106,7 @@ export class QueueLogger implements SequenceLogger {
         ]);
         break;
       case 'block':
-        void this._getTraceEventQueue(event.invocationId).append([
+        void this._appendTraceEvent(event.invocationId, [
           Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,
@@ -137,12 +137,14 @@ export class QueueLogger implements SequenceLogger {
     );
   }
 
-  // TODO(burdon): The per-invocation trace event queues address feeds by raw queue DXN
-  // (no backing Feed.Feed object). Migration to Feed.append is blocked on either
-  // (a) materializing a Feed object per invocation, or (b) a lower-level
-  // FeedService.appendByDxn primitive. Tracked as Phase 6 work in echo/AUDIT.md.
-  private _getTraceEventQueue(invocationId: string): Queue<TraceEvent> {
-    const dxn = this._getTraceQueueDxn(invocationId);
-    return this._space.queues.get(dxn);
+  /**
+   * Appends to the per-invocation trace event queue, addressed by raw queue DXN
+   * (no backing `Feed.Feed` object — these are ad-hoc per-invocation queues).
+   */
+  private _appendTraceEvent(invocationId: string, items: TraceEvent[]): Promise<void> {
+    return Feed.appendByDxn(this._getTraceQueueDxn(invocationId), items).pipe(
+      Effect.provide(this._feedServiceLayer),
+      runAndForwardErrors,
+    );
   }
 }

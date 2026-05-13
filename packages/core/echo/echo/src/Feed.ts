@@ -175,6 +175,13 @@ export class FeedService extends Context.Tag('@dxos/echo/Feed/FeedService')<
      * Syncs the feed with the server.
      */
     sync(feed: Feed, options?: SyncOptions): Promise<void>;
+
+    /**
+     * Appends items to a feed addressed by its underlying queue DXN, without requiring
+     * a persisted `Feed.Feed` object. Used by ad-hoc / per-invocation feeds (e.g. trace
+     * event queues) where materializing a `Feed.Feed` per write would be wasteful.
+     */
+    appendByDxn(queueDxn: DXN, items: Entity.Unknown[]): Promise<void>;
   }
 >() {}
 
@@ -203,6 +210,9 @@ export const notAvailable: Layer.Layer<FeedService> = Layer.succeed(FeedService,
     throw new Error('Feed.FeedService not available');
   },
   sync: () => {
+    throw new Error('Feed.FeedService not available');
+  },
+  appendByDxn: () => {
     throw new Error('Feed.FeedService not available');
   },
 } as Context.Tag.Service<FeedService>);
@@ -293,6 +303,22 @@ export const sync = (feed: Feed, options?: SyncOptions): Effect.Effect<void, nev
   Effect.gen(function* () {
     const service = yield* FeedService;
     yield* Effect.promise(() => service.sync(feed, options));
+  });
+
+/**
+ * Appends items to a feed addressed by its underlying queue DXN.
+ * Use when a `Feed.Feed` object hasn't been (or won't be) materialized — e.g. ad-hoc
+ * per-invocation trace queues.
+ *
+ * @example
+ * ```ts
+ * yield* Feed.appendByDxn(queueDxn, [Obj.make(TraceEvent, { ... })]);
+ * ```
+ */
+export const appendByDxn = (queueDxn: DXN, items: Entity.Unknown[]): Effect.Effect<void, never, FeedService> =>
+  Effect.gen(function* () {
+    const service = yield* FeedService;
+    yield* Effect.promise(() => service.appendByDxn(queueDxn, items));
   });
 
 /**
