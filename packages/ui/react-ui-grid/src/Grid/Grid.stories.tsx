@@ -127,6 +127,29 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+/**
+ * Single focusable cell — for verifying focus-ring alignment with grid lines.
+ */
+export const SingleCell: Story = {
+  args: {
+    id: 'story',
+    limitColumns: 1,
+    limitRows: 1,
+    columnDefault: { grid: { size: 200, resizeable: false } },
+    rowDefault: { grid: { size: 40, resizeable: false } },
+    initialCells: {
+      grid: {
+        '0,0': { value: 'Focus me' },
+      },
+    },
+  },
+  render: (args) => (
+    <div className='h-full grid place-items-center'>
+      <GridStory {...args} />
+    </div>
+  ),
+};
+
 export const Basic: Story = {
   args: {
     id: 'story',
