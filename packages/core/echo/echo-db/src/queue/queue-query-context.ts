@@ -58,10 +58,12 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
       (_) => Promise.all(_),
     );
 
-    return objects.filter((object): object is Entity.Unknown => object !== undefined).map((object) => ({
-      id: object.id,
-      result: object as T,
-    }));
+    return objects
+      .filter((object): object is Entity.Unknown => object !== undefined)
+      .map((object) => ({
+        id: object.id,
+        result: object as T,
+      }));
   }
 
   /**
