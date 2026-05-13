@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import * as DXN from './dxn';
+import * as DXN from './DXN';
 
 describe('DXN.isDXN', () => {
   test('accepts new-format DXNs', ({ expect }) => {

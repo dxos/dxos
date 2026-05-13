@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import type { ObjectId } from './object-id';
 import type { SpaceId } from './space-id';
-import type * as URI from './uri';
+import type * as URI from './URI';
 
 // New format patterns.
 const QUALIFIED_RE = /^echo:\/\/([^/]+)\/([^/]+)$/;

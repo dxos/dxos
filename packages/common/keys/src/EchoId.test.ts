@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import * as EchoId from './echo-id';
+import * as EchoId from './EchoId';
 import { type ObjectId } from './object-id';
 import { type SpaceId } from './space-id';
 

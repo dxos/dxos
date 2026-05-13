@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import type * as URI from './uri';
+import type * as URI from './URI';
 
 /**
  * Full DXN regex per spec — new format only: `dxn:<nsid>[:<version>]`.

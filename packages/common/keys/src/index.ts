@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-export * as DXN from './dxn';
-export * as EchoId from './echo-id';
-export * as URI from './uri';
+export * as DXN from './DXN';
+export * as EchoId from './EchoId';
+export * as URI from './URI';
 
 export * from './identity-did';
 export * from './legacy-dxn';
