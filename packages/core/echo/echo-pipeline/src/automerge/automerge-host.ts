@@ -392,29 +392,13 @@ export class AutomergeHost extends Resource {
         this._sharePolicyChangedTask!.schedule();
       }
     } else {
-      // Storage-only branch.
-      //
-      // HACK: the subduction fork's `DocumentQuery` collapsed the old
-      // `'loading'` (storage) and `'requesting'` (network) states into a
-      // single `'loading'` state, with per-source state living on a
-      // private `#sources` map. So we can't ask the query "is storage
-      // still pending?" vs "is the network still pending?" off
-      // `progress.peek()`.
-      //
-      // Workaround: probe the storage adapter directly. If chunks exist
-      // for the doc id, `StorageSubsystem` will populate the handle on
-      // its own and the shared `whenReady()` below will resolve from
-      // storage. We never schedule `_sharePolicyChangedTask`, so under
-      // {@link OPTIMIZED_SHARE_POLICY} no outbound announce goes out and
-      // the network sources stay dormant — storage effectively always
-      // wins the race. If chunks don't exist, throw `'unavailable'`
-      // immediately without ever consulting the network.
-      //
-      // The JSDoc on {@link LoadDocOptions.fetchFromNetwork} already
-      // calls out the residual race: an inbound peer announce can still
-      // deliver the doc, but the resulting handle is identical
-      // regardless of which source got there first.
-      //
+      // Note: This is a Hack.
+      // Storage-only branch. The subduction fork's `DocumentQuery` merged
+      // storage/network into a single `'loading'` state, so we can't tell
+      // them apart via `progress.peek()`. Workaround: probe storage
+      // directly and throw `'unavailable'` if nothing is on disk, without
+      // ever scheduling a network announce. See `fetchFromNetwork` JSDoc
+      // for the residual inbound-announce race.
       // TODO(mykola): replace with per-source state inspection once the
       // patched fork exposes it on `DocumentProgress`.
       const chunks = await this._storage.loadRange([progress.documentId]);
