@@ -20,4 +20,5 @@ export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/
 export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
 export { importSpace, type ImportSpaceOptions } from './import';
-export { getSpace, getSyncSummary, type PeerSyncState, type SpaceSyncStateMap } from './util';
+export { getSyncSummary, type PeerSyncState, type SpaceSyncStateMap } from './util';
+export { getSpace } from './space-proxy';
