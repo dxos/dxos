@@ -44,4 +44,13 @@ export const createFeedServiceLayer = (queues: QueueAPI) =>
       queue.setParentEntity(feed as Obj.Unknown);
       return queue.query(queryOrFilter as any);
     },
+
+    sync: async (feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void> => {
+      const feedDxn = Feed.getQueueDxn(feed);
+      if (!feedDxn) {
+        throw new Error('Unable to sync feed: make sure feed is stored in the database');
+      }
+      const queue = queues.get(feedDxn);
+      await queue.sync(options);
+    },
   });

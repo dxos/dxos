@@ -100,8 +100,8 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         if (from._tag !== 'scope') {
           return undefined;
         }
-        return Option.fromNullable(from.scope.queues).pipe(
-          Option.flatMap((queues) => Array.head(queues)),
+        return Option.fromNullable(from.scope.feeds).pipe(
+          Option.flatMap((feeds) => Array.head(feeds)),
           Option.map(String),
           Option.getOrUndefined,
         );

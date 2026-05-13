@@ -80,6 +80,16 @@ export interface RetentionOptions {
   cursor?: string;
 }
 
+/**
+ * Sync options for a feed.
+ */
+export interface SyncOptions {
+  /** Push local changes to the server. Defaults to true. */
+  shouldPush?: boolean;
+  /** Pull remote changes from the server. Defaults to true. */
+  shouldPull?: boolean;
+}
+
 //
 // Factory
 //
@@ -160,6 +170,11 @@ export class FeedService extends Context.Tag('@dxos/echo/Feed/FeedService')<
       <Q extends Query.Any>(feed: Feed, query: Q): QueryResult.QueryResult<Query.Type<Q>>;
       <F extends Filter.Any>(feed: Feed, filter: F): QueryResult.QueryResult<Filter.Type<F>>;
     };
+
+    /**
+     * Syncs the feed with the server.
+     */
+    sync(feed: Feed, options?: SyncOptions): Promise<void>;
   }
 >() {}
 
@@ -185,6 +200,9 @@ export const notAvailable: Layer.Layer<FeedService> = Layer.succeed(FeedService,
     throw new Error('Feed.FeedService not available');
   },
   query: () => {
+    throw new Error('Feed.FeedService not available');
+  },
+  sync: () => {
     throw new Error('Feed.FeedService not available');
   },
 } as Context.Tag.Service<FeedService>);
@@ -261,6 +279,21 @@ export const runQuery: {
   <F extends Filter.Any>(feed: Feed, filter: F): Effect.Effect<Filter.Type<F>[], never, FeedService>;
 } = (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
   query(feed, queryOrFilter as any).pipe(Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())));
+
+/**
+ * Syncs the feed with the server.
+ *
+ * @example
+ * ```ts
+ * yield* Feed.sync(feed);
+ * yield* Feed.sync(feed, { shouldPush: false });
+ * ```
+ */
+export const sync = (feed: Feed, options?: SyncOptions): Effect.Effect<void, never, FeedService> =>
+  Effect.gen(function* () {
+    const service = yield* FeedService;
+    yield* Effect.promise(() => service.sync(feed, options));
+  });
 
 /**
  * Creates a cursor for iterating over feed items.

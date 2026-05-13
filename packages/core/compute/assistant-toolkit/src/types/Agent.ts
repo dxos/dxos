@@ -11,7 +11,6 @@ import * as Schema from 'effect/Schema';
 import { AiContext } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/compute';
 import { Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
-import { Queue } from '@dxos/echo-db';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { acquireReleaseResource } from '@dxos/effect';
@@ -97,7 +96,7 @@ export const Agent = Schema.Struct({
    * Input feed for subscriptions.
    * @deprecated Subscriptions will write directly to the agent.
    */
-  queue: Schema.optional(Ref.Ref(Queue).pipe(FormInputAnnotation.set(false))),
+  feed: Schema.optional(Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false))),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.agent',
@@ -168,7 +167,7 @@ export const makeInitialized = (
 
     Obj.update(agent, (agent) => {
       agent.chat = Ref.make(chat);
-      agent.queue = Ref.fromDXN(inputQueue.dxn);
+      agent.feed = Ref.fromDXN(inputQueue.dxn);
     });
 
     return agent;
