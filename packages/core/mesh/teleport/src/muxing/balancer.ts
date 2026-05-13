@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import varint from '../vendor/varint';
-
 import { Event, type Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import varint from '../vendor/varint';
 import { Framer } from './framer';
 
 const MAX_CHUNK_SIZE = 8192;
