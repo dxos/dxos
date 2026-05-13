@@ -7,8 +7,7 @@ import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Obj, Relation, Type } from '@dxos/echo';
-import { Filter, Query } from '@dxos/echo';
+import { Filter, Obj, Query, Relation, Type } from '@dxos/echo';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 import {
   TestReplicationNetwork,

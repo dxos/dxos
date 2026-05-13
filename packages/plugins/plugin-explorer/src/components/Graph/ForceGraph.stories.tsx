@@ -34,7 +34,7 @@ random.seed(1);
 
 const DefaultStory = () => {
   const [space] = useSpaces();
-  const model = useGraphModel(space);
+  const model = useGraphModel(space?.db);
 
   const selection = useMemo(() => new SelectionModel({ mode: 'single' }), []);
 

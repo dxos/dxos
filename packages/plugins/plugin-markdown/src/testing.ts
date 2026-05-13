@@ -6,9 +6,7 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Obj, Ref } from '@dxos/echo';
-import { Database } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Database, Obj, Ref } from '@dxos/echo';
 
 // Eager re-export of `MarkdownPlugin`. See `@dxos/plugin-testing/src/core.ts`
 // for the rationale.

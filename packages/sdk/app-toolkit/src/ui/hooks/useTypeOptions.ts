@@ -4,14 +4,14 @@
 
 import { useMemo } from 'react';
 
-import { type Space } from '@dxos/react-client/echo';
+import { type Database } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
 
 import { type TypeInputOptions, getTypenames } from '../../type-options';
 
-export const useTypeOptions = ({ space, annotation }: { space?: Space; annotation: TypeInputOptions }) => {
+export const useTypeOptions = ({ db, annotation }: { db?: Database.Database; annotation: TypeInputOptions }) => {
   const { t } = useTranslation();
-  const typenames = getTypenames({ annotation, space });
+  const typenames = getTypenames({ annotation, db });
   return useMemo(
     () =>
       typenames

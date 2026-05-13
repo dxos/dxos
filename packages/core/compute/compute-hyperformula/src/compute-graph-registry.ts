@@ -5,10 +5,11 @@
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { type Space, type SpaceId } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import type { Operation } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ConfigParams, FunctionPluginDefinition, FunctionTranslationsPackage } from '@dxos/vendor-hyperformula';
 import { HyperFormula } from '@dxos/vendor-hyperformula';

@@ -30,7 +30,7 @@ random.seed(1);
 
 const DefaultStory = () => {
   const [space] = useSpaces();
-  const model = useGraphModel(space);
+  const model = useGraphModel(space?.db);
   if (!space || !model) {
     return <Loading data={{ space: !!space, model: !!model }} />;
   }

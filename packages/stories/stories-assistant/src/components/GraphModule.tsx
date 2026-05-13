@@ -30,7 +30,7 @@ export const GraphModule = ({ space }: ModuleProps) => {
   const queue = useQueue(feed ? Feed.getQueueDxn(feed) : undefined);
 
   // TODO(burdon): Clean-up API.
-  const model = useGraphModel(space, undefined, undefined, queue);
+  const model = useGraphModel(space.db, undefined, undefined, queue);
   useEffect(() => {
     model?.setFilter(filter ?? Filter.everything());
   }, [model, filter]);
