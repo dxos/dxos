@@ -6,8 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
-import { Annotation } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import {
   Format,
   FormatAnnotation,

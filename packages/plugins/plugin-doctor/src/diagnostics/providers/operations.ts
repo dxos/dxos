@@ -5,8 +5,7 @@
 import { AiService } from '@dxos/ai';
 import { AiContext, AiSession } from '@dxos/assistant';
 import { Blueprint, Credential, Operation, StorageService, Trace } from '@dxos/compute';
-import { Database, Feed } from '@dxos/echo';
-import { Filter } from '@dxos/echo';
+import { Database, Feed, Filter } from '@dxos/echo';
 import { FunctionInvocationService, QueueService } from '@dxos/functions';
 
 import { meta } from '#meta';

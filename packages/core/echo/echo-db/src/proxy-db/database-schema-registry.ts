@@ -8,8 +8,7 @@ import type * as Types from 'effect/Types';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { JsonSchema, Obj, type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
-import { Filter } from '@dxos/echo';
+import { Filter, JsonSchema, Obj, type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
 import {
   PersistentSchema,
   TypeAnnotationId,

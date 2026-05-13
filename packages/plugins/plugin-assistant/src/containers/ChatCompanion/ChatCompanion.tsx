@@ -39,7 +39,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
           return;
         }
 
-        if (event.type === 'submit' && !getSpace(chat)) {
+        if (event.type === 'submit' && !Obj.getDatabase(chat)) {
           await invokePromise(SpaceOperation.AddObject, {
             object: chat,
             target: space.db,

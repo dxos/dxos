@@ -5,10 +5,10 @@
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { Event } from '@dxos/async';
-import { Filter, type Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Resource } from '@dxos/context';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

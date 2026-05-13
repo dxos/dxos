@@ -80,8 +80,16 @@ export type LoadDocOptions = {
   timeout?: number;
 
   /**
-   * If true, the document will be fetched from the network if it is not found in the local storage.
-   * Setting this to false does not guarantee that the document will not be fetched from the network.
+   * Controls whether `loadDoc` is allowed to wait on the network.
+   *
+   * - `true` / unset (default): announce that we want the doc and wait
+   *   until any source (storage OR network) delivers it.
+   * - `false`: probe local storage only. If chunks for the doc exist
+   *   on disk, wait for storage to populate the handle; otherwise
+   *   throw `'unavailable'` immediately without ever consulting the
+   *   network. Note that this does not guarantee that the document
+   *   will not be fetched from the network — an inbound peer announce
+   *   can still deliver bytes — but the host will never request it.
    */
   fetchFromNetwork?: boolean;
 };
@@ -367,14 +375,39 @@ export class AutomergeHost extends Resource {
     // Readiness lives on the `DocumentQuery`, not the `DocHandle` — see
     // {@link getHandleState}.
     const progress = this._repo.findWithProgress<T>(documentId as DocumentId);
-    const state = progress.peek();
-    if (state.state === 'ready') {
-      return state.handle;
+    const initial = progress.peek();
+    if (initial.state === 'ready') {
+      return initial.handle;
     }
-    if (!this._useSubduction) {
-      this._documentsToRequest.add(progress.documentId);
-      this._sharePolicyChangedTask!.schedule();
+
+    // Default: when `fetchFromNetwork` is unset, behave as if it were
+    // `true` — wait on any source. Only an explicit `false` activates
+    // the storage-only branch.
+    if (opts?.fetchFromNetwork !== false) {
+      // Network branch: announce that we want the doc, then fall through
+      // to `whenReady()` and wait for any source (storage or network) to
+      // deliver it.
+      if (!this._useSubduction) {
+        this._documentsToRequest.add(progress.documentId);
+        this._sharePolicyChangedTask!.schedule();
+      }
+    } else {
+      // Note: This is a Hack.
+      // Storage-only branch. The subduction fork's `DocumentQuery` merged
+      // storage/network into a single `'loading'` state, so we can't tell
+      // them apart via `progress.peek()`. Workaround: probe storage
+      // directly and throw `'unavailable'` if nothing is on disk, without
+      // ever scheduling a network announce. See `fetchFromNetwork` JSDoc
+      // for the residual inbound-announce race.
+      // TODO(mykola): replace with per-source state inspection once the
+      // patched fork exposes it on `DocumentProgress`.
+      const chunks = await this._storage.loadRange([progress.documentId]);
+      const onDisk = chunks.some((chunk) => chunk.data && chunk.data.length > 0);
+      if (!onDisk) {
+        throw new Error(`Document ${progress.documentId} is unavailable`);
+      }
     }
+
     const readyPromise = progress.whenReady();
     return opts?.timeout
       ? await cancelWithContext(ctx, asyncTimeout(readyPromise, opts.timeout))

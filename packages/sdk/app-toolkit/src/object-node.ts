@@ -6,8 +6,7 @@ import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-
 import * as Option from 'effect/Option';
 
 import { Node } from '@dxos/app-graph';
-import { Collection, type Database, Obj, Ref } from '@dxos/echo';
-import { Annotation } from '@dxos/echo';
+import { Annotation, Collection, type Database, Obj, Ref } from '@dxos/echo';
 import { type TreeData } from '@dxos/react-ui-list';
 
 import { GraphPropsAnnotation } from './annotations';

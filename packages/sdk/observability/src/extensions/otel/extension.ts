@@ -63,7 +63,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   const endpoint = isNode()
     ? (process.env.DX_OTEL_ENDPOINT ?? _endpoint ?? buildSecrets.OTEL_ENDPOINT)
-    : config.values.runtime?.app?.env?.DX_OTEL_ENDPOINT;
+    : (config.values.runtime?.app?.env?.DX_OTEL_ENDPOINT ?? _endpoint);
   const headers =
     _headers ??
     Match.value(isNode()).pipe(
@@ -74,10 +74,12 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
       Option.getOrElse(() => undefined),
     );
 
-  if (!endpoint || !headers) {
-    log.info('Missing OTEL_ENDPOINT or OTEL_HEADERS');
+  if (!endpoint) {
+    log.info('Missing OTEL_ENDPOINT');
     return stubExtension;
   }
+  // Headers are optional when using a proxy that injects auth server-side.
+  const resolvedHeaders = headers ?? {};
 
   // Matches edge's `ctx.tag` span attribute (stamped by the edge log middleware
   // when it reads the `X-DXOS-Client-Tag` header, see
@@ -110,7 +112,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const logs = logsEnabled
     ? new OtelLogs({
         endpoint,
-        headers,
+        headers: resolvedHeaders,
         resource,
         getTags: () => Object.fromEntries(tags),
         logLevel,
@@ -120,7 +122,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const metrics = metricsEnabled
     ? new OtelMetrics({
         endpoint,
-        headers,
+        headers: resolvedHeaders,
         resource,
         getTags: () => Object.fromEntries(tags),
       })
@@ -129,7 +131,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const traces = tracesEnabled
     ? new OtelTraces({
         endpoint,
-        headers,
+        headers: resolvedHeaders,
         resource,
         getTags: () => Object.fromEntries(tags),
       })

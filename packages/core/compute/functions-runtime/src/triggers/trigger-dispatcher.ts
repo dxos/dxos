@@ -22,8 +22,7 @@ import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
 import { Process, Trigger, TriggerEvent, Operation } from '@dxos/compute';
-import { DXN, Filter, Obj, Query } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, DXN, Filter, Obj, Query } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
 import { QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';

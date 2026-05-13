@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { FEEDBACK_LOGS_MAX_SIZE } from '../constants';
+
 type Env = {
   ASSETS: Fetcher;
   ENVIRONMENT?: string;
@@ -11,7 +13,7 @@ type Env = {
 };
 
 const OTEL_MAX_BODY_SIZE = 800 * 1024 * 1024; // 800MB.
-const FEEDBACK_LOGS_MAX_BODY_SIZE = 8 * 1024 * 1024; // 8MB.
+const FEEDBACK_LOGS_MAX_BODY_SIZE = FEEDBACK_LOGS_MAX_SIZE;
 
 const ALLOWED_ORIGINS = new Set([
   'https://composer.space',

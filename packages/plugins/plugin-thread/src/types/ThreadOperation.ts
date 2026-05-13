@@ -7,11 +7,10 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { SpaceSchema } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
-import { Database, Key, Obj, Ref } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Database, Key, Obj, Ref } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown';
-import { SpaceSchema } from '@dxos/react-client/echo';
 import { Actor, AnchoredTo, Channel, Message, Thread } from '@dxos/types';
 
 import { meta } from '#meta';

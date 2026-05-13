@@ -6,8 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
 export const Column = Schema.Struct({

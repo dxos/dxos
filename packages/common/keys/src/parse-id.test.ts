@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { parseId } from './util';
+import { parseId } from './parse-id';
 
 describe('parseId', () => {
   test('space id', () => {
