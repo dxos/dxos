@@ -10,7 +10,8 @@ import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { Annotation, JsonSchema, Obj, Query, Type } from '@dxos/echo';
-import { Filter, useObject } from '@dxos/react-client/echo';
+import { Filter } from '@dxos/echo';
+import { useObject } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';

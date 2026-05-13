@@ -8,7 +8,8 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Filter, type Space, SpaceState, isSpace } from '@dxos/client/echo';
+import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
+import { Filter } from '@dxos/echo';
 import { Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { TestSchema } from '@dxos/echo/testing';

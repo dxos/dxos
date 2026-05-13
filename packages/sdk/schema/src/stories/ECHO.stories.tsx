@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Config } from '@dxos/client';
-import { Filter } from '@dxos/client/echo';
+import { Filter } from '@dxos/echo';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';

@@ -9,8 +9,9 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute-hyperformula';
 import { Obj, Relation } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { ThreadOperation } from '@dxos/plugin-thread';
-import { Filter, Query, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { AnchoredTo, Thread } from '@dxos/types';
 

@@ -23,6 +23,7 @@
     "@astrojs/rss": "catalog:",
     "@astrojs/starlight": "catalog:",
     "@bryanguffey/astro-standard-site": "catalog:",
+    "@dxos/keys": "workspace:*",
     "astro": "catalog:",
     "sharp": "catalog:",
     "starlight-links-validator": "catalog:"

@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Filter, type Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
+import { Filter } from '@dxos/echo';
 import { Obj, type Type } from '@dxos/echo';
 import { EchoSchema, getTypeAnnotation } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';

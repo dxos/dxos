@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter } from '@dxos/client/echo';
+import { Filter } from '@dxos/echo';
 import { Database, Feed, JsonSchema, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { Collection, View } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';

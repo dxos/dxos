@@ -6,7 +6,7 @@ import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
-import { Filter } from '@dxos/client/echo';
+import { Filter } from '@dxos/echo';
 import { JsonSchema, Obj, Query, Ref } from '@dxos/echo';
 import { Collection, View } from '@dxos/echo';
 import { random } from '@dxos/random';

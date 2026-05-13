@@ -12,10 +12,11 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Agent, SyncTriggers } from '@dxos/assistant-toolkit';
 import { Operation } from '@dxos/compute';
 import { DXN, Obj, Ref } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { log } from '@dxos/log';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
-import { Filter, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { FeedAnnotation } from '@dxos/schema';
 

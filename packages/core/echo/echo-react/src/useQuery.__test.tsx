@@ -8,7 +8,7 @@
 import { renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
-import { Filter } from '@dxos/client/echo';
+import { Filter } from '@dxos/echo';
 import { Obj, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
