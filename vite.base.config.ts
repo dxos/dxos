@@ -148,6 +148,14 @@ export type NodeOptions = {
   timeout?: number;
   setupFiles?: string[];
   plugins?: Plugin[];
+  /**
+   * Which JSX runtime to wire into the vitest node project. Defaults to `'react'`
+   * (matches the workspace baseline); pass `'solid'` for Solid packages so JSX in
+   * tests + storybook decorators gets the Solid client transform instead of the
+   * React `_jsx` runtime — without it Solid stories trip
+   * `Client-only API called on the server side`.
+   */
+  jsx?: 'react' | 'solid';
 };
 
 export type BrowserOptions = {
@@ -163,7 +171,14 @@ export type TestOptions = {
   storybook?: boolean;
 };
 
-const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = [], plugins = [] }: NodeOptions = {}) =>
+const createNodeProject = ({
+  environment = 'node',
+  retry,
+  timeout,
+  setupFiles = [],
+  plugins = [],
+  jsx = 'react',
+}: NodeOptions = {}) =>
   defineProject({
     esbuild: {
       target: 'esnext',
@@ -193,7 +208,7 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       process.env.VITE_INSPECT ? Inspect() : undefined,
       // Log-meta injection only — no dev file sink (vitest is a test runner, not a dev server).
       DxosLogPlugin({ logToFile: false }),
-      react(),
+      jsx === 'solid' ? solid() : react(),
     ],
   });
 
@@ -383,9 +398,18 @@ function nodeStdResolvePlugin(): Plugin {
   };
 }
 
-const buildTestConfig = (dirname: string, options: TestOptions): ViteUserConfig['test'] => {
+const buildTestConfig = (
+  dirname: string,
+  options: TestOptions,
+  outerJsx?: 'react' | 'solid',
+): ViteUserConfig['test'] => {
   const { node, browser, storybook } = options;
-  const nodeProject = node ? createNodeProject(typeof node === 'boolean' ? undefined : node) : undefined;
+  // Outer `defineConfig({ jsx })` propagates into the node test project so a Solid
+  // package's tests get the Solid client transform without each per-package
+  // vite.config.ts having to wire `test.node.jsx` itself.
+  const nodeOptions =
+    typeof node === 'boolean' ? (outerJsx ? { jsx: outerJsx } : undefined) : { jsx: outerJsx, ...node };
+  const nodeProject = node ? createNodeProject(nodeOptions) : undefined;
   const storybookProject = storybook ? createStorybookProject(dirname) : undefined;
   const browserProjects = normalizeBrowserOptions(browser).map((b) => createBrowserProject(b));
 
@@ -438,6 +462,21 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
   // Solid: ssr-aware client transform.
   const jsxPlugin: Plugin[] = jsx === 'react' ? [react()] : jsx === 'solid' ? [solid()] : [];
   return viteDefineConfig({
+    // Worker output config. Library packages that use `new Worker(new URL('#x',
+    // import.meta.url))` rely on vite's worker bundler to lift the referenced source
+    // into a separate worker chunk. The default worker config doesn't run our
+    // DxNodeStdPlugin / DxRawAssetsPlugin / vite-plugin-wasm, so workers that pull
+    // in @dxos/* or WASM deps (notably @dxos/client's automerge-backed coordinator)
+    // fall over with `[UNLOADABLE_DEPENDENCY]`. Re-use the same plugin set.
+    worker: {
+      format: 'es',
+      plugins: () => [
+        ...(!nodeTarget ? [DxNodeStdPlugin()] : []),
+        ...(assetsAsFiles ? [DxRawAssetsPlugin()] : []),
+        WasmPlugin(),
+        DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
+      ],
+    },
     build: {
       lib: {
         entry,
@@ -486,7 +525,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
       DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
       DxTsgoPlugin(),
     ],
-    ...(test ? { test: buildTestConfig(process.cwd(), test) } : {}),
+    ...(test ? { test: buildTestConfig(process.cwd(), test, jsx) } : {}),
   });
 };
 

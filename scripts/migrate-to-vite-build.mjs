@@ -354,19 +354,9 @@ const migrate = (pkgRel) => {
   // Skip packages that use vite-specific worker patterns. Vite/rolldown's built-in
   // `vite:worker-import-meta-url` plugin tries to bundle the referenced source as a
   // separate worker chunk — which fails for libraries that consume WASM or other
-  // assets from the worker. These packages stay on the esbuild flow until we have a
-  // proper worker-externalization strategy.
   const srcDir = resolve(pkgDir, 'src');
   let hasRawAssetImports = false;
   if (existsSync(srcDir)) {
-    const usesWorker = execSync(
-      `grep -rEl "new (Shared)?Worker\\(new URL\\(|import\\.meta\\.url.*new URL" "${srcDir}" 2>/dev/null || true`,
-      { encoding: 'utf8' },
-    ).trim();
-    if (usesWorker) {
-      console.warn(`SKIP ${pkgRel}: uses worker/import.meta.url URL patterns`);
-      return;
-    }
     // `?url` / `?raw` / `?inline` asset imports — let the base config emit them as
     // separate files instead of base64-inlining them into the JS bundle.
     hasRawAssetImports = !!execSync(
@@ -499,15 +489,11 @@ const migrate = (pkgRel) => {
     ...(pkgJson.devDependencies ?? {}),
     ...(pkgJson.peerDependencies ?? {}),
   };
+  // `jsx` flows through to both the library build (vite-plugin-solid / @vitejs/plugin-react)
+  // and the vitest node project's createNodeProject(jsx).
   let jsx;
   if ('solid-js' in allDeps) {
-    // Solid packages need vite-plugin-solid in BOTH the build and the vitest node
-    // project for tests to pass. vitest.base.config.ts's createNodeProject currently
-    // only wires `@vitejs/plugin-react`, so Solid JSX hits the React transform and
-    // tests crash with "Client-only API called on the server side". Skip these
-    // until createNodeProject grows a `solid` knob.
-    console.warn(`SKIP ${pkgRel}: solid-js package — needs vitest-side solid plugin support`);
-    return;
+    jsx = 'solid';
   } else if ('react' in allDeps || 'react-dom' in allDeps) {
     jsx = 'react';
   }
