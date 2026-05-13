@@ -40,7 +40,12 @@ Mentions of the word "Queue" in [internal/common/proxy/change-context.ts](packag
 
    Producers and consumers updated across `@dxos/echo`, `@dxos/echo-query`, `@dxos/echo-db`, `@dxos/echo-pipeline`, `@dxos/app-toolkit`, and the relevant UI/plugin call sites (`react-ui-form`, `plugin-pipeline`, `plugin-space`, `plugin-debug`, `assistant-toolkit`). Wire-format breakage was accepted (no backwards-compat shim for serialized ASTs).
 
-5. **`org.dxos.type.queue` vs `org.dxos.type.feed`.** `Queue` registers typename `org.dxos.type.queue` (echo-db `queue/types.ts:88`); `Feed` registers `org.dxos.type.feed` (Feed.ts:47). Existing persisted `Ref(Queue)` fields point at the old typename. The migration helper `Feed.unsafeFromQueueDXN` exists, but a schema-level rewrite pass is needed for stored data and `Ref(Queue) → Ref(Feed.Feed)` typed fields.
+5. **~~`org.dxos.type.queue` vs `org.dxos.type.feed`.~~** ✅ **Phase 3** (disregarding stored-data migration per user direction). Removed the `Queue` schema declaration entirely from `echo-db/src/queue/types.ts` — the `Queue<T>` interface remains for typing runtime instances obtained via `QueueFactory`, but `org.dxos.type.queue` is no longer registered as a schema typename. Migrated `Ref(Queue) → Ref(Feed.Feed)` in:
+   - `assistant-toolkit/src/types/Agent.ts` (`Agent.queue` field).
+   - `conductor/src/nodes/registry.ts` (`make-queue` node output).
+   - `conductor/src/nodes/gpt/gpt.ts` (`conversation` input/output).
+   - `functions-runtime/src/trace.ts` (`InvocationTraceStartEvent.invocationTraceQueue` field and `InvocationSpan` type).
+   `Feed.unsafeFromQueueDXN` is the bridge for any persisted `Ref(Queue)` data; we accepted breakage there.
 
 6. **Behavioral gaps between `Queue` and `Feed`.** Callers using these `Queue` members must be rewritten, not just renamed:
    - `Queue.isLoading` / `Queue.error` / `Queue.objects` — no analogue on `Feed`; consumers must move to `Feed.query(...)` → `QueryResult.subscribe`.
@@ -48,5 +53,6 @@ Mentions of the word "Queue" in [internal/common/proxy/change-context.ts](packag
    - `Queue.queryObjects()` / `Queue.getObjectsById()` / `Queue.refresh()` — replaced by `Feed.runQuery` / `Feed.query`.
    - `Queue.sync({ shouldPush, shouldPull })` — no analogue on `FeedService`. Either add to `FeedService` or expose at the EchoDB layer.
    - `Queue.delete(ids)` ↔ `Feed.remove(items)` — name differs and the parameter types differ (Queue takes ids, Feed takes objects/snapshots). Mechanical migration is non-trivial where call sites only have ids.
+   - **Partial: pulled into Phase 3 by the schema rename.** `qualifier.ts` (assistant-toolkit project blueprint) was migrated from `queueTarget.append(items)` to `Feed.append(feed, items)` (Effect) and its operation now declares `Feed.FeedService` in `services`. Type/runtime mismatch at consumer boundaries (`useQuery`, `ExecutionGraphPanel`) is bridged with narrow casts in `devtools/InvocationTracePanel/InvocationTraceContainer.tsx`, `plugin-assistant/AgentArticle.tsx`, and `stories-assistant/ExecutionGraphModule.tsx` (TODOs flag the Feed-aware React integration that should replace them).
 
 7. **Cursor / retention not yet implemented on Feed.** `Feed.cursor`, `Feed.next`, `Feed.nextOption`, `Feed.setRetention` are stubbed (`Effect.die`/`Effect.void`). Any caller relying on iteration semantics has no working replacement yet.

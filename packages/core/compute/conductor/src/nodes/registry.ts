@@ -7,10 +7,9 @@ import * as Schema from 'effect/Schema';
 import { JSONPath } from 'jsonpath-plus';
 
 import { Operation } from '@dxos/compute';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { View } from '@dxos/echo';
-import { Queue } from '@dxos/echo-db';
 import { isInstanceOf } from '@dxos/echo/internal';
 import { QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -137,7 +136,7 @@ export const registry: Record<NodeType, Executable> = {
   // Creates a new queue.
   'make-queue': defineComputeNode({
     input: Schema.Struct({}),
-    output: Schema.Struct({ [DEFAULT_OUTPUT]: Ref.Ref(Queue) }),
+    output: Schema.Struct({ [DEFAULT_OUTPUT]: Ref.Ref(Feed.Feed) }),
     exec: synchronizedComputeFunction(
       Effect.fnUntraced(function* () {
         const { queues } = yield* QueueService;

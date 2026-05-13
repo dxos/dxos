@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Trigger } from '@dxos/compute';
-import { Obj, Ref, Type } from '@dxos/echo';
-import { Queue } from '@dxos/echo-db';
+import { Feed, Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FunctionRuntimeKind, SerializedError } from '@dxos/protocols';
@@ -65,7 +64,7 @@ export const InvocationTraceStartEvent = Schema.Struct({
    * Queue for function/workflow invocation events.
    * If missing, events are assumed to be in the same Feed.
    */
-  invocationTraceQueue: Schema.optional(Ref.Ref(Queue)),
+  invocationTraceQueue: Schema.optional(Ref.Ref(Feed.Feed)),
   /**
    * DXN of the invoked function/workflow.
    */
@@ -175,7 +174,7 @@ export type InvocationSpan = {
   duration: number;
   outcome: InvocationOutcome;
   input: unknown;
-  invocationTraceQueue?: Ref.Ref<Queue>;
+  invocationTraceQueue?: Ref.Ref<Feed.Feed>;
   invocationTarget?: Ref.Ref<Obj.Unknown>;
   trigger?: Ref.Ref<Trigger.Trigger>;
   error?: SerializedError;

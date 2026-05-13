@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import React, { type FC, useCallback, useMemo, useState } from 'react';
 
 import { type Database, Filter, type Obj } from '@dxos/echo';
+import { type Queue } from '@dxos/react-client/echo';
 import { Format } from '@dxos/echo/internal';
 import { type InvocationSpan } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
@@ -196,7 +197,9 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
 const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   const [activeTab, setActiveTab] = useState('input');
 
-  const queue = span.invocationTraceQueue?.target;
+  // Schema field is Ref(Feed.Feed) (typed), but at runtime the hypergraph resolves queue-kinded DXNs to a Queue instance.
+  // TODO(burdon): Replace with a Feed-aware query hook once Feed has React integration.
+  const queue = span.invocationTraceQueue?.target as Queue | undefined;
   const objects = useQuery(queue, Filter.everything());
 
   const contents = Array.head(objects).pipe(

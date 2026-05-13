@@ -14,7 +14,7 @@ export {
   type EchoDatabase,
   type ObjectMigration,
   ObjectVersion,
-  Queue,
+  type Queue,
   type Selection,
   type SubscriptionHandle,
 } from '@dxos/echo-db';

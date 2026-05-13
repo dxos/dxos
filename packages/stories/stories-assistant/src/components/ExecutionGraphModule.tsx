@@ -16,7 +16,8 @@ export const ExecutionGraphModule = ({ space, traceQueue }: ModuleProps & { trac
   const traceQueueDxn = traceFeed ? Feed.getQueueDxn(traceFeed) : undefined;
   const invocations = useQueue(traceQueueDxn)?.objects.filter(Obj.instanceOf(InvocationTraceStartEvent)) ?? [];
   // Use provided traceQueue, or fall back to the per-invocation trace queue from the most recent invocation.
-  const queue = traceQueue ?? invocations?.at(-1)?.invocationTraceQueue?.target;
+  // Schema field is Ref(Feed.Feed) (typed), but at runtime queue-kinded DXNs resolve to a Queue instance.
+  const queue = traceQueue ?? (invocations?.at(-1)?.invocationTraceQueue?.target as Queue | undefined);
   const { branches, commits } = useExecutionGraph(queue);
 
   return (
