@@ -85,8 +85,16 @@
       cursor: pointer;
       position: relative;
 
-      border-right: 1px solid var(--color-grid-line);
-      border-bottom: 1px solid var(--color-grid-line);
+      /*
+       * Paint grid lines via inset box-shadow rather than border so the cell's
+       * content-box equals its border-box. This lets `.dx-grid__cell__content`
+       * (with block-size/inline-size: 100%) fill the cell exactly — including
+       * the right/bottom edges. When focused, the cell-content's own border
+       * (focus ring) then aligns with the grid lines pixel-for-pixel.
+       */
+      box-shadow:
+        inset calc(-1 * var(--dx-grid-focus-indicator-width)) 0 0 var(--color-grid-line),
+        inset 0 calc(-1 * var(--dx-grid-focus-indicator-width)) 0 var(--color-grid-line);
 
       &[aria-readonly='true'] {
         cursor: default;
@@ -108,15 +116,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        /*
-         * Extend by the cell's border-right / border-bottom width so the
-         * cell-content's own border (which becomes the focus ring on focus)
-         * sits at the same pixels as the grid-line borders. Unfocused: the
-         * transparent border lets the grid line show through. Focused: the
-         * focus-ring color paints over the grid line.
-         */
-        block-size: calc(100% + var(--dx-grid-focus-indicator-width));
-        inline-size: calc(100% + var(--dx-grid-focus-indicator-width));
+        block-size: 100%;
         position: relative;
         border: var(--dx-grid-focus-indicator-width) solid transparent;
         border-radius: 2px;
@@ -176,11 +176,11 @@
         &:focus,
         &:focus-within {
           & > .dx-grid__cell__content {
-            min-block-size: calc(100% + var(--dx-grid-focus-indicator-width));
+            min-block-size: 100%;
             block-size: min-content;
             max-block-size: min(12em, 50vh);
 
-            min-inline-size: calc(100% + var(--dx-grid-focus-indicator-width));
+            min-inline-size: 100%;
             inline-size: min-content;
             max-inline-size: min(60ch, 90vw);
 
