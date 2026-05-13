@@ -103,9 +103,26 @@ Mentions of the word "Queue" in [internal/common/proxy/change-context.ts](packag
 
 ### Phase 5 — implement Feed iteration / retention (#7)
 
-- Implement `Feed.cursor`, `Feed.next`, `Feed.nextOption` (currently `Effect.die`).
-- Implement `Feed.setRetention` (currently `Effect.void`); likely requires wire-protocol support on top of `FeedService`/`QueueService`.
-- Add unit tests for both.
+**Status:** speculative. No consumer currently imports `Feed.cursor`, `Feed.next`, `Feed.nextOption`, or `Feed.setRetention`. Phase 5 can be deferred indefinitely; this spec captures the intended shape so it can be picked up when a real use case arrives.
+
+**Cursor iteration:**
+
+- `Feed.cursor<T>(feed): Effect<Cursor<T>, never, FeedService>` — opens an iteration session over the underlying queue starting from the first item.
+- `Feed.next<T>(cursor): Effect<T, FeedExhausted, FeedService>` — pulls the next item, failing with `FeedExhausted` at end-of-stream.
+- `Feed.nextOption<T>(cursor): Effect<Option<T>, never, FeedService>` — same as `next` but returns `Option.none` instead of failing at end-of-stream.
+- Internally backed by the existing queue block-level cursor that the indexer already uses ([queue-data-source.ts](packages/core/echo/echo-pipeline/src/db-host/queue-data-source.ts)); expose it through `FeedService.cursor(feed)` returning a token that opaquely carries the queue DXN, namespace, and last-read position.
+- Likely worth surfacing as an Effect `Stream` (`Feed.stream(feed): Stream<T>`) once the primitive lands, since `.cursor` + `.next` is awkward in Effect-gen code.
+
+**Retention:**
+
+- `Feed.setRetention(feed, options): Effect<void, never, FeedService>` where `options: { cursor?: string; count?: number }` — set local-only retention policy (server-side eviction is out of scope).
+- Requires a `FeedService.setRetention(feed, options)` method and a wire-protocol change in the EDGE queue service to honor a retention hint.
+- Open question: where does retention state live — on the `Feed.Feed` schema as a field, or on the queue server as side data? Until that's decided, leave `setRetention` as `Effect.void`.
+
+**Testing:**
+
+- Add cursor iteration tests in [feed.test.ts](packages/core/echo/echo-db/src/queue/feed.test.ts) mirroring the existing append/query tests.
+- Add a retention test once the wire-protocol piece is in place.
 
 ### Phase 6 — delete the legacy `Queue<T>` surface
 
