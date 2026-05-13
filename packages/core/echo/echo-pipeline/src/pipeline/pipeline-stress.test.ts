@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { inspect } from 'node:util';
-
 import * as fc from 'fast-check';
+import { inspect } from 'node:util';
 import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
@@ -17,7 +16,6 @@ import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
 import { TestFeedBuilder } from '../testing';
-
 import { Pipeline } from './pipeline';
 
 const NUM_AGENTS = 2;

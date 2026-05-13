@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { spawn } from 'node:child_process';
-
 import * as Effect from 'effect/Effect';
+import { spawn } from 'node:child_process';
 
 /**
  * Copy text to the system clipboard.

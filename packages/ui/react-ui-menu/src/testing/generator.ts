@@ -6,7 +6,7 @@ import { Atom, Registry, RegistryContext } from '@effect-atom/atom-react';
 import { useContext, useEffect } from 'react';
 
 import { Graph, Node } from '@dxos/app-graph';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { type ActionGraphProps } from '../hooks/useMenuActions';
 import { type MenuItem, type MenuItemGroup, type MenuItemsAccessor } from '../types';
@@ -38,15 +38,15 @@ const icons = {
 
 export const createActions = (params?: CreateActionsProps) => {
   const { callback = () => console.log('invoke'), count = 12, type = Node.ActionType } = params ?? {};
-  return faker.helpers.multiple(
+  return random.helpers.multiple(
     () => ({
-      id: faker.string.uuid(),
+      id: random.string.uuid(),
       type,
       data: type === Node.ActionGroupType ? Node.actionGroupSymbol : callback,
       properties: {
-        label: faker.lorem.words(2),
-        icon: faker.helpers.arrayElement(icons[faker.helpers.arrayElement(Object.keys(icons)) as keyof typeof icons]),
-        disabled: faker.helpers.arrayElement([true, false]),
+        label: random.lorem.words(2),
+        icon: random.helpers.arrayElement(icons[random.helpers.arrayElement(Object.keys(icons)) as keyof typeof icons]),
+        disabled: random.helpers.arrayElement([true, false]),
         ...(type === Node.ActionGroupType && { variant: 'dropdownMenu' }),
       },
     }),
@@ -112,7 +112,7 @@ export const useMutateActions = (actionsAtom: Atom.Writable<ActionGraphProps>) =
           ...node,
           properties: {
             ...node.properties,
-            icon: faker.helpers.arrayElement(node.properties?.icon?.endsWith('regular') ? icons.fill : icons.regular),
+            icon: random.helpers.arrayElement(node.properties?.icon?.endsWith('regular') ? icons.fill : icons.regular),
             disabled: !node.properties?.disabled,
           },
         };

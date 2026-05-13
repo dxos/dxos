@@ -6,6 +6,7 @@ import { EditorView } from '@codemirror/view';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { PublicKey } from '@dxos/react-client';
@@ -19,11 +20,11 @@ import { type ContentBlock, type Message } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
-import { useOnEditAnalytics } from '../../hooks';
-import { meta } from '../../meta';
-import { getMessageMetadata } from '../../util';
+import { useOnEditAnalytics } from '#hooks';
+import { meta } from '#meta';
 
 import { command } from '../../extensions/command';
+import { getMessageMetadata } from '../../util';
 
 export const buttonGroupClassNames = 'flex flex-row items-center gap-0.5 pe-2';
 export const buttonClassNames = 'p-1! transition-opacity';
@@ -81,7 +82,10 @@ export const MessagePanel = ({
       (message.sender.identityDid && member.identity.did === message.sender.identityDid) ||
       (message.sender.identityKey && PublicKey.equals(member.identity.identityKey, message.sender.identityKey)),
   )?.identity;
-  const messageMetadata = getMessageMetadata(message.id, senderIdentity);
+  // Pass `message.sender` as the fallback so externally-synced messages
+  // (Slack, etc.) display the source-side sender name instead of "Anonymous"
+  // when no DXOS identity matches.
+  const messageMetadata = getMessageMetadata(message.id, senderIdentity, message.sender);
   const userIsAuthor = identity?.did === messageMetadata.authorId;
   const proposalBlock = message.blocks.find((block) => block._tag === 'proposal');
   const references = message.blocks.filter((block) => block._tag === 'reference').map((block) => block.reference);
@@ -89,14 +93,14 @@ export const MessagePanel = ({
   return (
     <MessageRoot {...messageMetadata} classNames={[hoverableControls, hoverableFocusedWithinControls]}>
       <MessageHeading authorName={messageMetadata.authorName} timestamp={messageMetadata.timestamp}>
-        <div role='none' className={buttonGroupClassNames}>
+        <div className={buttonGroupClassNames}>
           {userIsAuthor && editable && (
             <IconButton
               data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
               variant='ghost'
               icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
               iconOnly
-              label={t(editing ? 'save message label' : 'edit message label')}
+              label={t(editing ? 'save-message.label' : 'edit-message.label')}
               classNames={[buttonClassNames, hoverableControlItem]}
               onClick={handleEdit}
             />
@@ -108,7 +112,7 @@ export const MessagePanel = ({
               variant='ghost'
               icon='ph--check--regular'
               iconOnly
-              label={t('accept proposal label')}
+              label={t('accept-proposal.label')}
               classNames={[buttonClassNames, hoverableControlItem]}
               onClick={handleAcceptProposal}
             />
@@ -119,7 +123,7 @@ export const MessagePanel = ({
               variant='ghost'
               icon='ph--x--regular'
               iconOnly
-              label={t('delete message label')}
+              label={t('delete-message.label')}
               classNames={[buttonClassNames, hoverableControlItem]}
               onClick={handleDelete}
             />
@@ -187,15 +191,11 @@ const TextboxBlock = ({
     editing && view?.focus();
   }, [editing, view]);
 
-  return <div role='none' ref={parentRef} className='me-4' {...focusAttributes} />;
+  return <div ref={parentRef} className='me-4' {...focusAttributes} />;
 };
 
 const ProposalBlock = ({ block }: { block: ContentBlock.Proposal }) => {
-  return (
-    <div role='none' className='me-4 italic'>
-      {block.text}
-    </div>
-  );
+  return <div className='me-4 italic'>{block.text}</div>;
 };
 
 const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: Obj.Unknown }>(({ subject }, forwardedRef) => {
@@ -210,7 +210,12 @@ const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: Obj.Unknown
       className={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}
       ref={forwardedRef}
     >
-      <Surface.Surface role='card--content' limit={1} data={{ subject }} fallback={title} />
+      <Surface.Surface
+        type={AppSurface.Card}
+        limit={1}
+        data={{ subject } satisfies AppSurface.ObjectCardData}
+        fallback={title}
+      />
     </Card.Root>
   );
 });

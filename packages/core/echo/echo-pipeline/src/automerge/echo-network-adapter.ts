@@ -20,7 +20,6 @@ import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import { isNonNullable } from '@dxos/util';
 
 import { createIdFromSpaceKey } from '../common/space-id';
-
 import {
   type AutomergeReplicator,
   type AutomergeReplicatorConnection,

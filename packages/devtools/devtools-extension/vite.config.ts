@@ -2,19 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import ReactPlugin from '@vitejs/plugin-react';
-import { join, resolve } from 'node:path';
-import { defineConfig } from 'vite';
 // import VitePluginFonts from 'unplugin-fonts/vite';
 import { crx as ChromeExtensionPlugin } from '@crxjs/vite-plugin';
+import ReactPlugin from '@vitejs/plugin-react';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import SourceMapsPlugin from 'rollup-plugin-sourcemaps';
+import { defineConfig } from 'vite';
 import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 
 import packageJson from './package.json';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 
 // https://vitejs.dev/config
 export default defineConfig({
@@ -32,6 +32,18 @@ export default defineConfig({
         // We need to specify the 'panel' entry point here because it's not mentioned in manifest.json.
         panel: resolve(__dirname, 'panel.html'),
       },
+      // `@anthropic-ai/tokenizer` is a CJS-only package whose transitive `tiktoken`
+      // wasm import contains top-level await. Rolldown rejects mixing TLA with
+      // require(); externalize the tokenizer chain. The Chrome extension bundle
+      // never actually exercises this LLM tokenization code path.
+      external: ['@anthropic-ai/tokenizer', 'tiktoken', 'tiktoken/lite', /^tiktoken\//],
+    },
+  },
+  resolve: {
+    alias: {
+      // `@anthropic-ai/tokenizer` transitively pulls in `tiktoken/lite`, whose wasm uses top-level await
+      // that rolldown can't put behind a CJS require. The tokenizer isn't needed in the extension bundle.
+      ['tiktoken/lite']: resolve(__dirname, 'stub.mjs'),
     },
   },
   worker: {

@@ -1,0 +1,492 @@
+---
+id: org.dxos.plugin.discord
+name: DiscordPlugin
+version: 0.1.0
+---
+
+A Composer plugin that configures and controls a Discord bot. The bot runs as a
+Cloudflare Worker, receives Discord slash commands, and communicates with DXOS
+EDGE. The plugin stores bot identity and configuration as ECHO objects in the
+space — the bot's credentials, guild bindings, and channel mappings are all
+first-class replicated data.
+
+Two packages:
+- `packages/plugins/plugin-discord` — Composer plugin (types, surfaces, operations).
+- `packages/experimental/discord-worker` — Cloudflare Worker (slash command handler).
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+| `service`   | `org.dxos.mdl.service@1.0`    |
+
+## Types
+
+```mdl
+type BotStatus
+  literals: disconnected | connected | error
+```
+
+```mdl
+type ChannelBinding
+  desc: A Discord channel mapped to the current space.
+  fields:
+    channelId: string
+    channelName: string
+```
+
+```mdl
+type Bot
+  desc: >
+    Core ECHO object representing a Discord bot instance.
+    Stores identity, credentials, and guild binding.
+    NOTE: In the current phase the HALO keypair lives directly in this object.
+    A future phase will promote the bot to its own ECHO identity.
+  fields:
+    name: string
+    token?: string                # Discord bot token (encrypted in space)
+    applicationId?: string        # Discord application ID
+    did?: string                  # Bot DID derived from HALO keypair
+    publicKey?: string            # HALO public key (hex)
+    privateKey?: string           # HALO private key (hex)
+    guildId?: string              # Connected Discord guild ID
+    guildName?: string            # Connected guild display name
+    channels: ChannelBinding[]    # Tracked channels
+    status: BotStatus             # Connection state
+    inviteUrl?: string            # OAuth URL for adding bot to guild
+```
+
+## Components
+
+```mdl
+component BotArticle
+  desc: >
+    Configuration article surface bound to a Bot object.
+    Displays bot identity, connection status, and guild binding.
+    Initial version is minimal — read-only display with setup actions.
+  props:
+    bot: Bot
+  state:
+    tokenVisible: boolean         # Toggle masked/unmasked token display
+  slots:
+    header?: ReactNode
+    actions?: ReactNode           # Slot for future admin actions
+  actions:
+    copyInviteUrl()               # Copy OAuth invite URL to clipboard
+    disconnect()                  # Remove guild binding
+    setToken(token: string)       # Paste-to-set bot token
+    setApplicationId(id: string)  # Set Discord application ID
+  emits:
+    onDisconnect()
+  layout: |
+    ┌─────────────────────────────────┐
+    │ [header slot]                   │
+    ├─────────────────────────────────┤
+    │ Status: ● connected             │
+    │ Name:   my-bot                  │
+    ├─────────────────────────────────┤
+    │ Application ID  [__________]    │
+    │ Bot Token       [••••••••] 👁   │
+    ├─────────────────────────────────┤
+    │ Invite URL      [Copy]          │
+    ├─────────────────────────────────┤
+    │ Guild: My Server                │
+    │ Channels:                       │
+    │   #general                      │
+    │   #bugs                         │
+    ├─────────────────────────────────┤
+    │ [actions slot]                  │
+    │ [Disconnect]                    │
+    └─────────────────────────────────┘
+```
+
+## Services
+
+```mdl
+service EdgeGateway
+  desc: >
+    DXOS EDGE endpoint that receives requests from the Cloudflare Worker.
+    Validates bot DID membership and routes commands to the appropriate space.
+  ops:
+    connect(did: string, guildId: string, guildName: string, channelId: string, spaceKey: string) → void
+    track(did: string, spaceKey: string, markdown: string, threadName: string) → void
+  errors:
+    Unauthorized: DID is not a member of the target space
+    SpaceNotFound: space key does not match any known space
+```
+
+```mdl
+service DiscordApi
+  desc: Discord REST API used by the Worker to fetch thread messages.
+  loading: lazy
+  ops:
+    getThreadMessages(channelId: string, botToken: string) → Message[]
+  errors:
+    Forbidden: bot lacks permissions to read the channel
+    NotFound: channel does not exist
+```
+
+## Operations
+
+```mdl
+op createBot
+  desc: Creates a new Bot object with a generated HALO keypair and stores it in the space.
+  input:
+    name: string
+    applicationId?: string
+  output: Bot
+  effects: [echo:write]
+  note: >
+    Generates a HALO keypair using the DXOS client available in the plugin context.
+    Derives the DID from the public key. Constructs the OAuth invite URL from
+    the application ID with pre-configured scopes (bot, applications.commands).
+```
+
+```mdl
+op setToken
+  desc: Sets the Discord bot token on an existing Bot object.
+  input:
+    bot: Bot
+    token: string
+  output: Bot
+  effects: [echo:write]
+  note: Token is stored encrypted in the space via ECHO.
+```
+
+```mdl
+op connectGuild
+  desc: >
+    Called when the /connect slash command completes successfully.
+    Updates the Bot object with guild info and channel binding.
+  input:
+    bot: Bot
+    guildId: string
+    guildName: string
+    channelId: string
+    channelName: string
+  output: Bot
+  effects: [echo:write]
+  note: >
+    Triggered by EDGE after the Worker forwards the /connect interaction.
+    Adds the guild binding and initial channel to the Bot object.
+```
+
+```mdl
+op disconnectGuild
+  desc: Removes guild binding from the Bot object.
+  input:
+    bot: Bot
+  output: Bot
+  effects: [echo:write]
+  note: Clears guildId, guildName, channels. Sets status to disconnected.
+```
+
+```mdl
+op trackThread
+  desc: >
+    Called when the /track slash command completes.
+    Creates a Markdown document in the space from a Discord thread transcript.
+  input:
+    spaceKey: string
+    threadName: string
+    markdown: string
+  output: Document
+  effects: [echo:write]
+  note: >
+    Creates a new Markdown document with the thread content.
+    Placeholder for future agent behavior — initially just a raw transcript.
+```
+
+## Features
+
+```mdl
+feat F-1: Bot Creation
+
+  req F-1.1: User can create a Bot object from Composer via blueprint.
+  req F-1.2: HALO keypair generated and stored in Bot on creation.
+  req F-1.3: DID derived from public key and stored in Bot.
+  req F-1.4: Bot created with status disconnected.
+```
+
+```mdl
+feat F-2: Bot Configuration
+
+  req F-2.1: User can set the Discord bot token via the BotArticle surface.
+  req F-2.2: User can set the Discord application ID.
+  req F-2.3: Invite URL auto-generated from application ID with scopes: bot, applications.commands.
+  req F-2.4: Invite URL can be copied to clipboard.
+  req F-2.5: Bot token displayed masked by default, toggleable.
+```
+
+```mdl
+feat F-3: Guild Connection (/connect)
+
+  req F-3.1: Discord /connect slash command registered with the Worker.
+  req F-3.2:
+    when: user invokes /connect <space-key> in Discord
+    then: Worker forwards to EDGE with bot DID
+  req F-3.3:
+    when: EDGE validates DID membership
+    then: Bot object updated with guild and channel info
+  req F-3.4:
+    when: connection succeeds
+    then: Bot.status set to connected; ephemeral Discord confirmation sent
+  req F-3.5:
+    when: EDGE rejects the DID
+    then: ephemeral Discord error sent; Bot unchanged
+```
+
+```mdl
+feat F-4: Thread Tracking (/track)
+
+  req F-4.1: Discord /track slash command registered with the Worker.
+  req F-4.2:
+    when: user invokes /track in a Discord thread
+    then: Worker fetches all messages in the thread
+  req F-4.3:
+    when: messages fetched
+    then: formatted as Markdown (author, timestamp, content per message)
+  req F-4.4:
+    when: Markdown ready
+    then: Worker POSTs to EDGE; new Markdown document created in space
+  req F-4.5:
+    when: document created
+    then: ephemeral Discord confirmation with document reference
+```
+
+```mdl
+feat F-5: Configuration Surface
+
+  req F-5.1: BotArticle rendered as article surface when Bot object selected.
+  req F-5.2: Shows bot name, status indicator, application ID, masked token.
+  req F-5.3: Shows connected guild name and tracked channels when connected.
+  req F-5.4: Disconnect button removes guild binding.
+  req F-5.5: Copy button for invite URL.
+```
+
+```mdl
+feat F-6: Worker (discord-worker)
+
+  req F-6.1: Cloudflare Worker receives Discord interaction webhooks.
+  req F-6.2: Verifies Discord request signatures.
+  req F-6.3: Routes /connect and /track to appropriate handlers.
+  req F-6.4: Stateless — all persistent state lives in the space.
+  req F-6.5: Bot token stored as Cloudflare Worker secret for Discord API calls.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create bot with keypair
+  given: user is in a space in Composer
+  when: user creates a Discord Bot via blueprint
+  then:
+    - Bot object created in space
+    - Bot.did is a valid DID string
+    - Bot.publicKey and Bot.privateKey are set
+    - Bot.status === disconnected
+    - Bot.channels is empty
+```
+
+```mdl
+test T-2: Set bot token
+  given: a Bot object exists in the space
+  when: user pastes a bot token in the BotArticle
+  then:
+    - Bot.token is set
+    - Token displays masked in the UI
+```
+
+```mdl
+test T-3: Generate invite URL
+  given: a Bot with applicationId set
+  when: BotArticle renders
+  then:
+    - Invite URL contains the application ID
+    - URL includes scopes: bot, applications.commands
+    - Copy button copies URL to clipboard
+```
+
+```mdl
+test T-4: Connect guild via slash command
+  given: a Bot exists with valid DID, Worker is deployed
+  when: user runs /connect <space-key> in Discord
+  then:
+    - Worker POSTs to EDGE with DID and guild info
+    - Bot.guildId and Bot.guildName populated
+    - Bot.status === connected
+    - Ephemeral Discord message confirms connection
+```
+
+```mdl
+test T-5: Reject unauthorized connect
+  given: a Bot whose DID is not a member of the target space
+  when: /connect <space-key> invoked
+  then:
+    - EDGE returns Unauthorized
+    - Ephemeral Discord error message shown
+    - Bot object unchanged
+```
+
+```mdl
+test T-6: Track thread creates document
+  given: a connected Bot, user is in a Discord thread with 5 messages
+  when: user runs /track
+  then:
+    - Worker fetches 5 thread messages
+    - Markdown document created in space
+    - Document contains all 5 messages with author and timestamp
+    - Ephemeral Discord confirmation sent
+```
+
+```mdl
+test T-7: Disconnect guild
+  given: a Bot with status connected and a guild binding
+  when: user clicks Disconnect in BotArticle
+  then:
+    - Bot.guildId and Bot.guildName cleared
+    - Bot.channels emptied
+    - Bot.status === disconnected
+```
+
+```mdl
+test T-8: BotArticle displays configuration
+  given: a Bot with token, applicationId, and connected guild
+  when: BotArticle renders
+  then:
+    - Status indicator shows connected
+    - Token displayed as masked (••••)
+    - Guild name visible
+    - Channel list visible
+    - Disconnect button enabled
+```
+
+---
+
+## Design Notes
+
+### Authentication Model
+
+The initial authentication model is stateless DID-in-header (approach 3):
+- Worker includes the bot DID in requests to EDGE.
+- EDGE validates that the DID is a member of the target space.
+- No request signing in this phase.
+
+**Future iteration:** Add HALO request signing. The Worker signs each request
+with the bot's private key (stored as a Cloudflare secret). EDGE verifies
+the signature against the DID's public key.
+
+### Bot Identity Evolution
+
+Current phase: Bot's HALO keypair (publicKey, privateKey) stored directly in
+the Bot config object. The bot does not have a full ECHO identity.
+
+Future phase: Bot promoted to its own ECHO identity with full HALO credentials.
+The Bot type schema is designed so this migration is additive — the keypair
+fields become redundant but don't break.
+
+### Worker Configuration
+
+The Worker requires two secrets:
+- `DISCORD_PUBLIC_KEY` — for verifying Discord interaction signatures.
+- `BOT_TOKEN` — for Discord API calls (fetching thread messages).
+
+**Future iteration:** Worker fetches its own config from the space via EDGE,
+eliminating the need for env-var configuration. The bot authenticates to EDGE
+with its DID, pulls its token and other config from the Bot ECHO object.
+
+### Relationship to existing discord-bot
+
+The `packages/experimental/discord-bot` package is superseded by this design.
+Useful code (Discord.js patterns, message fetching) should be absorbed into
+`discord-worker`. The experimental package can be deleted once the Worker is
+functional.
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: dxos.spec/ext/type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: dxos.spec/ext/feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: dxos.spec/ext/test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```
+
+```mdl
+ext service
+  uri: org.dxos.mdl.service@1.0
+  desc: An external or system-level dependency providing named operations.
+  fields:
+    desc?: Prose
+    loading?: eager | lazy
+    ops?: OpMap                 # name(params) → ReturnType
+    errors?: ErrorMap
+    note?: Prose
+```

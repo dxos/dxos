@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import type { WatchEvent } from '@tauri-apps/plugin-fs';
+import * as Effect from 'effect/Effect';
 
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';

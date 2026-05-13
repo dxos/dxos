@@ -128,7 +128,7 @@ export const scroller = ({ overScroll = 0 }: ScrollerOptions = {}) => {
   return [
     scrollPlugin,
 
-    // Listen for effect.s
+    // Listen for effect.
     EditorView.updateListener.of((update) => {
       update.transactions.forEach((transaction) => {
         try {
@@ -150,12 +150,13 @@ export const scroller = ({ overScroll = 0 }: ScrollerOptions = {}) => {
 
     // Styles.
     EditorView.theme({
-      '.cm-content': {
-        paddingBottom: `${overScroll}px`,
-      },
       '.cm-scroller': {
-        overflowAnchor: 'none',
-        paddingBottom: '0',
+        overflowY: 'scroll',
+        // Browser scroll-anchoring: when widgets above the viewport resize (e.g. tool blocks
+        // expanding their TogglePanel), the browser picks a stable element near the viewport
+        // top and adjusts `scrollTop` so the user's view doesn't jump. Auto-scroll's pinning
+        // logic still has the final word when pinned (forces scrollTop to scrollHeight).
+        overflowAnchor: 'auto',
       },
       '.cm-scroller.cm-hide-scrollbar::-webkit-scrollbar': {
         display: 'none',
@@ -166,6 +167,16 @@ export const scroller = ({ overScroll = 0 }: ScrollerOptions = {}) => {
       },
       '&:hover .cm-scroller::-webkit-scrollbar-thumb': {
         background: 'var(--color-scrollbar-thumb)',
+      },
+      // Spacer below the last text line. Implemented as a real block pseudo-element
+      // (rather than `padding-bottom` on `.cm-content`) so it materializes in the
+      // scroller's `scrollHeight` regardless of how `padding` is reset by the base
+      // theme or downstream classes — this is what gives auto-scroll its head-room
+      // so the last line stays `overScroll` px above the viewport bottom.
+      '.cm-content::after': {
+        content: '""',
+        display: 'block',
+        height: `${overScroll}px`,
       },
       '.cm-scroll-button': {
         position: 'absolute',
@@ -179,39 +190,48 @@ export const scroller = ({ overScroll = 0 }: ScrollerOptions = {}) => {
 /**
  * Creates a smooth crawler that follows the live bottom of a CodeMirror 6 EditorView.
  *
- * Each animation frame the step is:
- *   step = clamp(|delta| * k, minStep, maxStep)  -- but never more than |delta|
+ * Uses a critically-damped spring: each frame applies a restoring force toward the
+ * target and a damping force opposing current velocity. With damping = 2·ω, the
+ * system is critically damped — fastest approach without overshoot. The spring
+ * naturally sprints when far behind and eases as it approaches, so streaming
+ * content is followed tightly without the jerk of explicit accel/decel state.
  *
- * Capping at |delta| is critical: it prevents overshoot, which would otherwise cause
- * oscillation when the proportional step (or minStep) exceeds the remaining distance.
- * The crawler settles exactly at the target with no bounce.
+ * Integration uses real elapsed wall-clock time so the perceived speed stays
+ * constant when requestAnimationFrame is throttled (e.g. low-power mode dropping
+ * from 60Hz to 30Hz).
  *
- * @param k Fraction of remaining distance moved each frame (0 < k < 1).
- * @param minStep Min step size in px; prevents stalling on large distances.
- * @param maxStep Max step size in px.
- * @param targetDelta Snap-to-target threshold in px.
+ * @param omega Spring stiffness in rad/s. Higher = snappier follow. ~12–18 feels good.
+ * @param snapThreshold Snap-to-target distance threshold in px.
+ * @param snapVelocity Snap-to-target velocity threshold in px/s.
  */
-export function createCrawler(view: EditorView, k = 0.3, maxStep = 2, targetDelta = 0.5) {
+export function createCrawler(view: EditorView, omega = 5, snapThreshold = 5, snapVelocity = 50) {
   const el = view.scrollDOM;
 
-  let currentTop = 0; // Float-precision position; avoids browser integer-rounding of scrollTop.
+  let currentTop = 0;
+  let velocity = 0;
   let rafId: number | null = null;
+  let lastTime = 0;
 
-  function frame() {
-    // Recompute each frame so the animation chases a live-updating document's bottom.
+  function frame(now: number) {
+    // Clamp dt to handle long pauses (tab backgrounded) and the first frame.
+    const dt = lastTime === 0 ? 1 / 60 : Math.min(0.1, (now - lastTime) / 1000);
+    lastTime = now;
+
     const targetTop = el.scrollHeight - el.clientHeight;
     const delta = targetTop - currentTop;
-    const absDelta = Math.abs(delta);
-    if (absDelta < targetDelta) {
+    if (Math.abs(delta) < snapThreshold && Math.abs(velocity) < snapVelocity) {
       el.scrollTop = targetTop;
       currentTop = targetTop;
+      velocity = 0;
       rafId = null;
+      lastTime = 0;
       return;
     }
 
-    // Clamp step to [minStep, maxStep], then cap at absDelta to prevent overshoot.
-    const step = Math.sign(delta) * Math.min(absDelta, Math.max(1, Math.min(absDelta * k, maxStep)));
-    currentTop += step;
+    // Critically-damped spring: a = ω²·delta − 2ω·v.
+    const accel = omega * omega * delta - 2 * omega * velocity;
+    velocity += accel * dt;
+    currentTop += velocity * dt;
     el.scrollTop = currentTop;
     rafId = requestAnimationFrame(frame);
   }
@@ -220,12 +240,15 @@ export function createCrawler(view: EditorView, k = 0.3, maxStep = 2, targetDelt
     scroll: () => {
       if (rafId === null) {
         currentTop = el.scrollTop;
+        lastTime = 0;
         rafId = requestAnimationFrame(frame);
       }
     },
     cancel: () => {
       if (rafId !== null) {
         cancelAnimationFrame(rafId);
+        velocity = 0;
+        lastTime = 0;
         rafId = null;
       }
     },

@@ -7,8 +7,7 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { Database, type Entity, Obj, QueryAST, Ref } from '@dxos/echo';
-import { Filter, Query } from '@dxos/echo';
+import { Database, type Entity, Filter, Obj, Query, QueryAST, Ref } from '@dxos/echo';
 import { type AnyProperties, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -29,7 +28,6 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type HypergraphImpl } from '../hypergraph';
-
 import { DatabaseSchemaRegistry } from './database-schema-registry';
 import { type ObjectMigration } from './object-migration';
 
@@ -257,7 +255,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     if (!isEchoObject(obj)) {
-      const schema = Obj.getSchema(obj);
+      const schema = Obj.getSchema(obj as unknown as Obj.Unknown);
       if (schema != null) {
         if (!this.schemaRegistry.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
           throw createSchemaNotRegisteredError(schema);

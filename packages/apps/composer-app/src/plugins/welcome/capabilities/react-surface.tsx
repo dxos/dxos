@@ -7,19 +7,25 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 
-import { ABOUT_DIALOG, AboutDialog, WELCOME_SCREEN, WelcomeScreen } from '../components';
-import { meta } from '../meta';
+import {
+  ABOUT_DIALOG,
+  AboutDialog,
+  NATIVE_REDIRECT_DIALOG,
+  NativeRedirectDialog,
+  WELCOME_SCREEN,
+  WelcomeScreen,
+} from '../components';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}.welcome`,
-        role: 'dialog',
-        filter: (data): data is any => data.component === WELCOME_SCREEN,
+        id: 'welcome',
+        filter: AppSurface.component(AppSurface.Dialog, WELCOME_SCREEN),
         component: () => {
           const client = useClient();
           const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
@@ -28,9 +34,13 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
+        id: 'native-redirect',
+        filter: AppSurface.component<{ onOpenHere: () => void }>(AppSurface.Dialog, NATIVE_REDIRECT_DIALOG),
+        component: ({ data }) => <NativeRedirectDialog {...data.props} />,
+      }),
+      Surface.create({
         id: ABOUT_DIALOG,
-        role: 'dialog',
-        filter: (data): data is { component: string } => data.component === ABOUT_DIALOG,
+        filter: AppSurface.component(AppSurface.Dialog, ABOUT_DIALOG),
         component: () => <AboutDialog />,
       }),
     ]),

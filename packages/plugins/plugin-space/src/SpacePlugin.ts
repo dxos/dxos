@@ -2,20 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
-import * as Schema from 'effect/Schema';
-
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Annotation, Ref, Tag, Type } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Tag } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
-import { ClientEvents } from '@dxos/plugin-client/types';
-import { translations as componentsTranslations } from '@dxos/react-ui-components';
-import { translations as formTranslations } from '@dxos/react-ui-form';
-import { DataTypes, createDefaultSchema } from '@dxos/schema';
+import { ClientEvents } from '@dxos/plugin-client';
+import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { DataTypes } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 import {
   AnchoredTo,
@@ -27,14 +21,16 @@ import {
   Organization,
   Person,
   Pipeline,
+  Project,
   Task,
 } from '@dxos/types';
 
 import {
-  AppGraphBuilder,
   AppGraphSerializer,
+  CreateObject,
   IdentityCreated,
   Migrations,
+  NavigationHandler,
   NavigationResolver,
   OperationHandler,
   UndoMappings,
@@ -44,112 +40,19 @@ import {
   SpaceSettings,
   SpaceState,
   SpacesReady,
-} from './capabilities';
-import { meta } from './meta';
-import { translations } from './translations';
-import { SpaceEvents } from './types';
-import { type CreateObject, type SpacePluginOptions } from './types';
-import { SpaceOperation } from './operations';
+  AppGraphBuilder,
+} from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { SpaceEvents } from '#types';
+import { type SpacePluginOptions } from '#types';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
-  AppPlugin.addMetadataModule({
-    metadata: [
-      {
-        id: Collection.Collection.typename,
-        metadata: {
-          icon: Annotation.IconAnnotation.get(Collection.Collection).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Collection.Collection).pipe(Option.getOrThrow).hue ?? 'white',
-          // TODO(wittjosiah): Move out of metadata.
-          loadReferences: async (collection: Collection.Collection) => await Ref.Array.loadAll(collection.objects),
-          inputSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const object = Collection.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: false,
-                targetNodeId: options.targetNodeId,
-              });
-            })) satisfies CreateObject,
-        },
-      },
-      {
-        id: Type.getTypename(Type.PersistentType),
-        metadata: {
-          icon: Annotation.IconAnnotation.get(Type.PersistentType).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Type.PersistentType).pipe(Option.getOrThrow).hue ?? 'white',
-          inputSchema: SpaceOperation.StoredSchemaForm,
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const result = yield* Operation.invoke(SpaceOperation.AddSchema, {
-                db: options.db,
-                name: props.name,
-                schema: createDefaultSchema(),
-              });
-              return {
-                id: result.id,
-                subject: [],
-                object: result.object,
-              };
-            })) satisfies CreateObject,
-        },
-      },
-      {
-        id: Organization.Organization.typename,
-        metadata: {
-          icon: Annotation.IconAnnotation.get(Organization.Organization).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Organization.Organization).pipe(Option.getOrThrow).hue ?? 'white',
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const object = Organization.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-            })) satisfies CreateObject,
-        },
-      },
-      {
-        id: Person.Person.typename,
-        metadata: {
-          icon: Annotation.IconAnnotation.get(Person.Person).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Person.Person).pipe(Option.getOrThrow).hue ?? 'white',
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const object = Person.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-            })) satisfies CreateObject,
-        },
-      },
-      {
-        id: Task.Task.typename,
-        metadata: {
-          icon: Annotation.IconAnnotation.get(Task.Task).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Task.Task).pipe(Option.getOrThrow).hue ?? 'white',
-          inputSchema: Task.Task,
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const object = Task.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-            })) satisfies CreateObject,
-        },
-      },
-    ],
-  }),
-  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
+  AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
+    activate: () => NavigationHandler({ invitationProp }),
+  })),
+  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addReactRootModule({ activate: ReactRoot }),
   AppPlugin.addSchemaModule({
@@ -164,6 +67,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       Organization.Organization,
       Person.Person,
       Pipeline.Pipeline,
+      Project.Project,
       Tag.Tag,
       Task.Task,
     ],
@@ -177,7 +81,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
     activatesOn: ActivationEvent.oneOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
-    activatesAfter: [SpaceEvents.StateReady],
+    firesAfterActivation: [SpaceEvents.StateReady],
     activate: SpaceState,
   }),
   Plugin.addModule(
@@ -196,7 +100,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
         id: Capability.getModuleTag(ReactSurface),
         activatesOn: ActivationEvents.SetupReactSurface,
         // TODO(wittjosiah): Should occur before the settings dialog is loaded when surfaces activation is more granular.
-        activatesBefore: [SpaceEvents.SetupSettingsPanel],
+        firesBeforeActivation: [SpaceEvents.SetupSettingsPanel],
         activate: () => ReactSurface({ createInvitationUrl }),
       };
     },
@@ -235,7 +139,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.IdentityCreated,
-    activatesAfter: [SpaceEvents.PersonalSpaceReady],
+    firesAfterActivation: [SpaceEvents.PersonalSpaceReady],
     activate: IdentityCreated,
   }),
   Plugin.addModule({
@@ -259,3 +163,5 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default SpacePlugin;

@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { addressToA1Notation } from '@dxos/compute';
+import { addressToA1Notation } from '@dxos/compute-hyperformula';
 
-import { Sheet } from '../types';
+import { Sheet } from '#types';
 
 // TODO(burdon): Create testing endpoint.
 // TODO(burdon): Move to react-ui-sheet.

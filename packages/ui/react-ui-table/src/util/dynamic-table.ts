@@ -5,8 +5,7 @@
 import { type Registry } from '@effect-atom/atom-react';
 import type * as Types from 'effect/Types';
 
-import { Filter, JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type } from '@dxos/echo';
-import { type View } from '@dxos/echo';
+import { Filter, JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
 import {
   ProjectionModel,
   type SchemaPropertyDefinition,
@@ -93,8 +92,8 @@ const setProperties = (
     const field = projection.getFields().find((field) => field.path === property.name);
     if (field) {
       if (property.size !== undefined) {
-        Obj.change(table, (obj) => {
-          obj.sizes[field.path] = property.size!;
+        Obj.update(table, (table) => {
+          table.sizes[field.path] = property.size!;
         });
       }
 
@@ -111,9 +110,9 @@ const setProperties = (
         const currentQuery = Query.fromAst(Obj.getSnapshot(view).query.ast);
         // Use any type parameter since we're working with dynamic field paths
         const newQuery = currentQuery.orderBy(Order.property<any>(field.path as string, property.sort));
-        Obj.change(view, (obj) => {
+        Obj.update(view, (view) => {
           // Type assertion needed because Query AST types have some variance issues.
-          obj.query.ast = newQuery.ast as typeof obj.query.ast;
+          view.query.ast = newQuery.ast as typeof view.query.ast;
         });
       }
     }

@@ -2,22 +2,39 @@
 // Copyright 2025 DXOS.org
 //
 
+import { StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
 import { addEventListener, combine, throttle } from '@dxos/async';
 import { Domino } from '@dxos/ui';
-
-import { scrollerCrawlEffect, scrollerLineEffect } from './scroller';
 import { getSize } from '@dxos/ui-theme';
 
-export type AutoScrollToProps = {};
+import { scrollerCrawlEffect, scrollerLineEffect } from './scroller';
+
+/** Enable or disable autoscroll. */
+export const autoScrollEffect = StateEffect.define<boolean>();
+
+export type AutoScrollProps = {
+  /**
+   * If true, immediately jump to the bottom and re-pin whenever the size of the
+   * document view (the scroll container) changes — e.g. when a sidebar toggles
+   * or the window is resized. This avoids the visible "stuck near bottom" gap
+   * that otherwise appears because the previous `scrollTop` no longer reaches
+   * the new content height.
+   * @default true
+   */
+  scrollOnResize?: boolean;
+};
 
 /**
  * Extension that supports pinning the scroll position and automatically scrolls to the bottom when content is added.
  */
-export const autoScroll = (_: AutoScrollToProps = {}) => {
+export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
   let buttonContainer: HTMLDivElement | undefined;
   let isPinned = true;
+  let jumpPending = false;
+  let enabled = true;
+  let firstUpdate = true;
 
   const setPinned = (pinned: boolean) => {
     buttonContainer?.classList.toggle('opacity-0', pinned);
@@ -25,8 +42,51 @@ export const autoScroll = (_: AutoScrollToProps = {}) => {
   };
 
   return [
-    // Update listener for logging when scrolling is needed.
-    EditorView.updateListener.of(({ view, heightChanged, state }) => {
+    // Update listener for scrolling when content changes.
+    EditorView.updateListener.of((update) => {
+      const { view, heightChanged, state, startState } = update;
+
+      // Handle enable/disable effect.
+      for (const tr of update.transactions) {
+        for (const effect of tr.effects) {
+          if (effect.is(autoScrollEffect)) {
+            enabled = effect.value;
+            if (enabled) {
+              setPinned(true);
+              view.dispatch({
+                effects: scrollerCrawlEffect.of(true),
+              });
+            } else {
+              view.dispatch({
+                effects: scrollerCrawlEffect.of(false),
+              });
+            }
+          }
+        }
+      }
+
+      if (!enabled) {
+        return;
+      }
+
+      // Jump to bottom instantly when content first appears (either inserted into
+      // an empty doc, or present as initialValue when the editor is created).
+      if (isPinned && (firstUpdate || startState.doc.length === 0) && state.doc.length > 0) {
+        firstUpdate = false;
+        jumpPending = true;
+        requestAnimationFrame(() => {
+          view.scrollDOM.scrollTop = view.scrollDOM.scrollHeight;
+          jumpPending = false;
+        });
+        return;
+      }
+      firstUpdate = false;
+
+      // Suppress crawl while the initial jump is pending.
+      if (jumpPending) {
+        return;
+      }
+
       // Maybe scroll if doc changed and pinned.
       // NOTE: Geometry changed is triggered when widgets change height (e.g., toggle tool block).
       if (heightChanged) {
@@ -34,12 +94,10 @@ export const autoScroll = (_: AutoScrollToProps = {}) => {
           // NOTE: Use scroll geometry instead of coordsAtPos to avoid forced layout/scroll side-effects.
           const { scrollTop, scrollHeight, clientHeight } = view.scrollDOM;
           const delta = scrollHeight - scrollTop - clientHeight;
-          if (delta > 0 && scrollTop > 0) {
+          if (delta > 0) {
             setPinned(true);
-            view.dispatch({
-              effects: scrollerCrawlEffect.of(true),
-            });
-          } else if (delta < 0) {
+            view.dispatch({ effects: scrollerCrawlEffect.of(true) });
+          } else if (delta < -1) {
             setPinned(false);
           }
         } else {
@@ -50,6 +108,53 @@ export const autoScroll = (_: AutoScrollToProps = {}) => {
         }
       }
     }),
+
+    // Re-pin and jump to bottom when the scroll container itself resizes (e.g. sidebar toggle,
+    // window resize). Doc-driven height changes are handled by the updateListener above; this
+    // observer covers the case where the viewport changes while the doc length is unchanged.
+    scrollOnResize
+      ? ViewPlugin.fromClass(
+          class {
+            private readonly observer: ResizeObserver;
+            private firstObservation = true;
+            private destroyed = false;
+            constructor(view: EditorView) {
+              // Throttle so a continuous drag-resize (or a flurry of layout changes) coalesces
+              // into a single re-pin per ~50ms instead of dispatching every frame.
+              const onResize = throttle(() => {
+                if (this.destroyed || !enabled) {
+                  return;
+                }
+
+                setPinned(true);
+                requestAnimationFrame(() => {
+                  if (this.destroyed) {
+                    return;
+                  }
+
+                  view.scrollDOM.scrollTo({ top: view.scrollDOM.scrollHeight, behavior: 'instant' });
+                  view.dispatch({ effects: scrollerCrawlEffect.of(false) });
+                });
+              }, 50);
+
+              this.observer = new ResizeObserver(() => {
+                // Skip the initial fire that ResizeObserver emits on `observe()`.
+                if (this.firstObservation) {
+                  this.firstObservation = false;
+                  return;
+                }
+                onResize();
+              });
+
+              this.observer.observe(view.scrollDOM);
+            }
+            destroy() {
+              this.destroyed = true;
+              this.observer.disconnect();
+            }
+          },
+        )
+      : [],
 
     // Detect user scroll and unpin (or re-pin if scrolled to the bottom).
     ViewPlugin.fromClass(
@@ -87,7 +192,7 @@ export const autoScroll = (_: AutoScrollToProps = {}) => {
           const button = Domino.of('button')
             .classNames('dx-button bg-accent-surface')
             .attributes({ 'data-density': 'fine' })
-            .children(icon)
+            .append(icon)
             .on('click', () => {
               setPinned(true);
               view.dispatch({
@@ -97,7 +202,7 @@ export const autoScroll = (_: AutoScrollToProps = {}) => {
 
           buttonContainer = Domino.of('div')
             .classNames('cm-scroll-button transition-opacity duration-300 opacity-0')
-            .children(button).root as HTMLDivElement;
+            .append(button).root as HTMLDivElement;
 
           view.scrollDOM.parentElement!.appendChild(buttonContainer);
         }

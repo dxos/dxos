@@ -36,25 +36,34 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/log-store-idb"
+    },
+    {
       "path": "../../common/random"
     },
     {
       "path": "../../common/storybook-utils"
     },
     {
+      "path": "../../common/tracing"
+    },
+    {
       "path": "../../common/util"
     },
     {
-      "path": "../../core/assistant-toolkit"
+      "path": "../../core/compute/assistant-toolkit"
     },
     {
-      "path": "../../core/blueprints"
+      "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute"
+      "path": "../../core/compute/compute-hyperformula"
     },
     {
-      "path": "../../core/conductor"
+      "path": "../../core/compute/conductor"
+    },
+    {
+      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
@@ -64,12 +73,6 @@
     },
     {
       "path": "../../core/echo/echo-pipeline"
-    },
-    {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"
@@ -115,6 +118,9 @@
     },
     {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-introspect"
     },
     {
       "path": "../../ui/react-ui-mosaic"
@@ -166,6 +172,9 @@
     },
     {
       "path": "../plugin-table"
+    },
+    {
+      "path": "../plugin-testing"
     },
     {
       "path": "../plugin-theme"

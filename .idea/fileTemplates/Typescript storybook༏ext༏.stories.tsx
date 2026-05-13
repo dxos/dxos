@@ -2,9 +2,8 @@
 // Copyright ${YEAR} DXOS.org
 //
 
-import React from 'react';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 

@@ -5,10 +5,10 @@
 import { Atom } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
-import { type Script } from '@dxos/functions';
+import { type Script } from '@dxos/compute';
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/ui-theme';
 import { type ActionGraphProps, Menu, MenuRootProps, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import {
   type CreateDeployOptions,
@@ -17,8 +17,8 @@ import {
   createFormat,
   createTemplateSelect,
   useDeployDeps,
-} from '../../hooks';
-import { meta } from '../../meta';
+} from '#hooks';
+import { meta } from '#meta';
 
 export type ScriptToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
   script: Script.Script;

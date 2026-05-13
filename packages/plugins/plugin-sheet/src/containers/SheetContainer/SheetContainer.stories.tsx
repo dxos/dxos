@@ -8,27 +8,28 @@ import React, { useContext } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { corePlugins } from '@dxos/plugin-testing';
-import { useSpace } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout } from '@dxos/react-ui/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { ComputeGraphContext, useComputeGraph } from '../../components';
-import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
-import { translations } from '../../translations';
-import { Sheet } from '../../types';
-import { SheetOperation } from '../../operations';
+import { ComputeGraphContext, useComputeGraph } from '#components';
+import { createTestCells, useTestSheet, withComputeGraphDecorator } from '#testing';
+import { translations } from '#translations';
+import { SheetOperation } from '#types';
+import { Sheet } from '#types';
+
 import RangeList from '../RangeList';
-
 import { SheetContainer } from './SheetContainer';
 
 const meta = {
   title: 'plugins/plugin-sheet/containers/SheetContainer',
   component: SheetContainer,
   decorators: [
+    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator(),
@@ -58,7 +59,7 @@ const meta = {
 export default meta;
 
 export const Default = () => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const graph = useComputeGraph(space);
   const { registry } = useContext(ComputeGraphContext) ?? {};
   const sheet = useTestSheet(space, graph, { cells: createTestCells() });
@@ -81,7 +82,7 @@ export const Default = () => {
 };
 
 export const Spec = () => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const graph = useComputeGraph(space);
   const { registry } = useContext(ComputeGraphContext) ?? {};
   const sheet = useTestSheet(space, graph, { cells: { A1: { value: 'Ready' } } });
@@ -91,7 +92,7 @@ export const Spec = () => {
 
   return (
     <AttendableContainer id={Obj.getDXN(sheet).toString()} classNames='contents'>
-      <div role='none' className='w-full grid grid-cols-[1fr_20rem]'>
+      <div className='w-full grid grid-cols-[1fr_20rem]'>
         <SheetContainer
           role='article'
           space={space}
@@ -100,7 +101,7 @@ export const Spec = () => {
           registry={registry}
           ignoreAttention
         />
-        <div role='none' data-testid='grid.range-list'>
+        <div data-testid='grid.range-list'>
           <RangeList sheet={sheet} />
         </div>
       </div>

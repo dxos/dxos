@@ -5,13 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities } from '@dxos/app-framework';
-import { Operation } from '@dxos/operation';
-
-import { Close } from './definitions';
+import { Operation } from '@dxos/compute';
 
 import { FileCapabilities } from '../types';
+import { FilesOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof Close> = Close.pipe(
+const handler: Operation.WithHandler<typeof FilesOperation.Close> = FilesOperation.Close.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ id }) {
       yield* Capabilities.updateAtomValue(FileCapabilities.State, (current) => ({

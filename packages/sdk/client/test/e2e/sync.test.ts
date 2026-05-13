@@ -3,19 +3,20 @@
 //
 
 import { describe, test } from 'vitest';
-import { Client, Config } from '@dxos/client';
-import { Obj, Database } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
-import type { SpaceSyncState } from '@dxos/echo-db';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import type { SpaceId } from '@dxos/keys';
-import { EdgeService } from '@dxos/protocols';
-import { sleep } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
-import { log } from '@dxos/log';
 
-// DX_TEST_TAGS=sync-e2e pnpm vitest run sync.test.ts
-describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout: 120_000, retry: 0 }, async () => {
+import { sleep } from '@dxos/async';
+import { Client, Config } from '@dxos/client';
+import { Stream } from '@dxos/codec-protobuf/stream';
+import { Obj, Database } from '@dxos/echo';
+import type { SpaceSyncState } from '@dxos/echo-db';
+import { TestSchema } from '@dxos/echo/testing';
+import type { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { EdgeService } from '@dxos/protocols';
+import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+
+// pnpm vitest run --tagsFilter=sync-e2e sync.test.ts
+describe('sync', { timeout: 120_000, retry: 0, tags: ['sync-e2e'] }, async () => {
   test('sync stuck', async () => {
     const ITERATIONS = 10,
       BURST_SIZE = 30,

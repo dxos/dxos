@@ -2,8 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './app-graph-builder';
-export * from './blueprint-definition';
-export * from './navigation-resolver';
-export * from './operation-handler';
-export * from './react-surface';
+import { Capability } from '@dxos/app-framework';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Blueprint, OperationHandlerSet } from '@dxos/compute';
+
+export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
+export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
+export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
+export const IntegrationProvider = Capability.lazy('IntegrationProvider', () => import('./integration-provider'));
+export const NavigationResolver = Capability.lazy('NavigationResolver', () => import('./navigation-resolver'));
+export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
+  'OperationHandler',
+  () => import('./operation-handler'),
+);
+export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const InboxSettings = Capability.lazy('InboxSettings', () => import('./settings'));

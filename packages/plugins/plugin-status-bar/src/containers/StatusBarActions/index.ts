@@ -2,6 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-import { StatusBarActions } from './StatusBarActions';
-
-export default StatusBarActions;
+export { StatusBarActions as default } from './StatusBarActions';

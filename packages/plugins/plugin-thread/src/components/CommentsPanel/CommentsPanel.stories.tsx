@@ -10,25 +10,26 @@ import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Query, Relation } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { faker } from '@dxos/random';
-import { useDatabase, useQuery } from '@dxos/react-client/echo';
+import { random } from '@dxos/random';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
 
-import { CommentsPanel } from './CommentsPanel';
 import { createCommentThread, createProposalThread } from '../../testing/data';
+import { CommentsPanel } from './CommentsPanel';
 
-faker.seed(1);
+random.seed(1);
 
 const DefaultStory = () => {
   const identity = useIdentity();
-  const db = useDatabase();
+  const [space] = useSpaces();
+  const db = space?.db;
   const anchors = useQuery(db, Query.type(AnchoredTo.AnchoredTo));
 
   useAsyncEffect(async () => {

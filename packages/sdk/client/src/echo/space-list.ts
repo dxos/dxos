@@ -16,13 +16,12 @@ import {
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject } from '@dxos/debug';
-import { Obj } from '@dxos/echo';
-import { type Database } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { type EchoClient, Filter, Query } from '@dxos/echo-db';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ApiError, trace as Trace } from '@dxos/protocols';
+import { ApiError } from '@dxos/protocols';
 import {
   Invitation,
   type Space as SerializedSpace,
@@ -35,7 +34,6 @@ import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
-
 import { SpaceProxy } from './space-proxy';
 
 @trace.resource()
@@ -44,8 +42,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _invitationProxy?: InvitationsProxy;
   private readonly _spacesStream: PushStream<Space[]>;
   private readonly _spaceCreated = new Event<PublicKey>();
-  private readonly _instanceId = PublicKey.random().toHex();
-
   /** Subscriptions for RPC streams that need to be re-established on reconnect. */
   private readonly _streamSubscriptions = new SubscriptionList();
 
@@ -53,10 +49,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     private readonly _config: Config | undefined,
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _echoClient: EchoClient,
-    /**
-     * @internal
-     */
-    readonly _traceParent?: string,
   ) {
     const spacesStream = new PushStream<Space[]>();
     super(spacesStream.observable, []);
@@ -83,8 +75,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    */
   @trace.span()
   async _open(ctx: Context): Promise<void> {
-    log.trace('dxos.sdk.echo-proxy.open', Trace.begin({ id: this._instanceId, parentId: this._traceParent }));
+    log('opening space list');
     this._ctx = new Context({
+      parent: ctx,
       onError: (error) => {
         log.catch(error);
       },
@@ -113,7 +106,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     // TODO(nf): trigger automatically? feedback on how many were resumed?
 
     await gotInitialUpdate.wait();
-    log.trace('dxos.sdk.echo-proxy.open', Trace.end({ id: this._instanceId }));
+    log('opened space list');
   }
 
   /**
@@ -144,7 +137,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     let isFirstDataAfterReconnect = isReconnect;
 
     invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
-    const spacesStream = this._serviceProvider.services.SpacesService.querySpaces(undefined, { timeout: RPC_TIMEOUT });
+    const spacesStream = this._serviceProvider.services.SpacesService.querySpaces(undefined, {
+      timeout: RPC_TIMEOUT,
+      ctx: this._ctx,
+    });
     spacesStream.subscribe((data) => {
       let emitUpdate = false;
       const newSpaces = this.get() as SpaceProxy[];
@@ -193,7 +189,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     this._streamSubscriptions.add(() => spacesStream.close());
   }
 
-  private _openSpaceAsync(spaceProxy: Space): void {
+  private _openSpaceAsync(spaceProxy: SpaceProxy): void {
+    spaceProxy._setParentCtx(this._ctx);
     void spaceProxy.open().catch((err) => log.catch(err));
   }
 
@@ -207,7 +204,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   async setConfig(config: IndexConfig): Promise<void> {
-    await this._serviceProvider.services.QueryService?.setConfig(config, { timeout: 20_000 }); // TODO(dmaretskyi): Set global timeout instead.
+    await this._serviceProvider.services.QueryService?.setConfig(config, {
+      timeout: 20_000,
+      ctx: this._ctx,
+    }); // TODO(dmaretskyi): Set global timeout instead.
   }
 
   /**
@@ -250,12 +250,20 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     meta?: SpaceProperties,
     options?: { tags?: string[]; membershipPolicy?: MembershipPolicy },
   ): Promise<Space> {
+    return this._createSpaceInternal(this._ctx, meta, options);
+  }
+
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  private async _createSpaceInternal(
+    ctx: Context,
+    meta?: SpaceProperties,
+    options?: { tags?: string[]; membershipPolicy?: MembershipPolicy },
+  ): Promise<Space> {
     invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
-    const traceId = PublicKey.random().toHex();
-    log.trace('dxos.sdk.echo-proxy.create-space', Trace.begin({ id: traceId }));
+    log('creating space');
     const space = await this._serviceProvider.services.SpacesService.createSpace(
       { tags: options?.tags ?? [], membershipPolicy: options?.membershipPolicy ?? MembershipPolicy.INVITE },
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, ctx },
     );
 
     await this._spaceCreated.waitForCondition(() => {
@@ -268,7 +276,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
 
-    log.trace('dxos.sdk.echo-proxy.create-space', Trace.end({ id: traceId }));
+    log('created space');
     return spaceProxy;
   }
 
@@ -279,7 +287,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     invariant(this._serviceProvider.services.SpacesService, 'SpaceService is not available.');
     const { newSpaceId } = await this._serviceProvider.services.SpacesService.importSpace(
       { archive },
-      { timeout: IMPORT_SPACE_TIMEOUT },
+      { timeout: IMPORT_SPACE_TIMEOUT, ctx: this._ctx },
     );
     invariant(SpaceId.isValid(newSpaceId), 'Invalid space ID');
     await this._spaceCreated.waitForCondition(() => {
@@ -301,7 +309,12 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   async joinBySpaceKey(spaceKey: PublicKey): Promise<Space> {
-    const response = await this._serviceProvider.services.SpacesService!.joinBySpaceKey({ spaceKey });
+    return this._joinBySpaceKeyInternal(this._ctx, spaceKey);
+  }
+
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  private async _joinBySpaceKeyInternal(ctx: Context, spaceKey: PublicKey): Promise<Space> {
+    const response = await this._serviceProvider.services.SpacesService!.joinBySpaceKey({ spaceKey }, { ctx });
     return this._findProxy(response.space);
   }
 

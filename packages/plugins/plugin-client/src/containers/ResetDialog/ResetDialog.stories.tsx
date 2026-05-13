@@ -12,9 +12,9 @@ import { usePluginManager } from '@dxos/app-framework/ui';
 import { Dialog } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { ClientPlugin } from '../../ClientPlugin';
-import { translations } from '../../translations';
+import { translations } from '#translations';
 
+import { ClientPlugin } from '../../ClientPlugin';
 import { ResetDialog, type ResetDialogProps } from './ResetDialog';
 
 const DefaultStory = (props: Omit<ResetDialogProps, 'capabilityManager'>) => {
@@ -56,13 +56,13 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    mode: 'reset storage' as const,
+    mode: 'reset-storage' as const,
   } as any,
 };
 
 export const JoinNewIdentity: Story = {
   args: {
-    mode: 'join new identity' as const,
+    mode: 'join-new-identity' as const,
   } as any,
 };
 

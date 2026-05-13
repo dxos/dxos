@@ -5,8 +5,7 @@
 import { Atom, type Registry } from '@effect-atom/atom-react';
 import * as Predicate from 'effect/Predicate';
 
-import { Obj } from '@dxos/echo';
-import { type View } from '@dxos/echo';
+import { Obj, type View } from '@dxos/echo';
 import { Format, TypeEnum, getValue } from '@dxos/echo/internal';
 import { cellClassesForFieldType, formatForDisplay } from '@dxos/react-ui-form';
 import {
@@ -20,7 +19,6 @@ import { VIEW_FIELD_LIMIT } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 
 import { tableButtons, tableControls } from '../util';
-
 import { type SelectionMode } from './selection-model';
 import { type TableModel, type TableRow } from './table-model';
 

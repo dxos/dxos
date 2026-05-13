@@ -2,5 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './Json';
+export * from './JsonHighlighter';
+export * from './Syntax';
 export * from './SyntaxHighlighter';

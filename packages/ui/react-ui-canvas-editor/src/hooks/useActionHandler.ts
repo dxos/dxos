@@ -15,7 +15,6 @@ import { doLayout, fireBullet, getCenter, getRect, rectUnion } from '../layout';
 import { createRectangle } from '../shapes';
 import { createId, itemSize } from '../testing';
 import { type CanvasBoard, isPolygon } from '../types';
-
 import { useEditorContext } from './useEditorContext';
 
 // TODO(burdon): Handle multiple actions.

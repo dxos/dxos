@@ -5,7 +5,6 @@
 import { createAnchorMap, defaultAnchors } from '../components';
 import { type ShapeDef } from '../components';
 import { type RectangleShape } from '../types';
-
 import { DefaultFrameComponent } from './Default';
 
 export type CreateRectangleProps = Omit<RectangleShape, 'type'>;

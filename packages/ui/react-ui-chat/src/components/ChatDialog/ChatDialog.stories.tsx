@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { Input, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
 
 import { ChatDialog } from './ChatDialog';
 

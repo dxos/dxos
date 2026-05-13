@@ -8,7 +8,6 @@ import React from 'react';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { alice } from '../../testing/fixtures';
-
 import { SpaceMemberListImpl } from './SpaceMemberList';
 
 const meta = {

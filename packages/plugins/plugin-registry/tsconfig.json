@@ -18,10 +18,16 @@
   ],
   "references": [
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/effect"
     },
     {
       "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/log"
     },
     {
       "path": "../../common/random"
@@ -33,10 +39,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo"
+      "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/operation"
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../devtools/cli-util"
@@ -70,6 +76,9 @@
     },
     {
       "path": "../plugin-observability"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

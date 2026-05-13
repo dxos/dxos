@@ -5,7 +5,7 @@
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 const Graph = Capability.lazy('Graph', () => import('./graph'));
 
@@ -17,9 +17,11 @@ const Graph = Capability.lazy('Graph', () => import('./graph'));
 export const GraphPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: ActivationEvents.Startup,
-    activatesBefore: [AppActivationEvents.SetupAppGraph, AppActivationEvents.SetupMetadata],
-    activatesAfter: [AppActivationEvents.AppGraphReady],
+    firesBeforeActivation: [AppActivationEvents.SetupAppGraph],
+    firesAfterActivation: [AppActivationEvents.AppGraphReady],
     activate: Graph,
   }),
   Plugin.make,
 );
+
+export default GraphPlugin;

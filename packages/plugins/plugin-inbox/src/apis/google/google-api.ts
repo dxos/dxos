@@ -7,9 +7,12 @@ import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';
 import * as Schedule from 'effect/Schedule';
 
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Credential } from '@dxos/compute';
 import { withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
 
+import { GoogleApiError } from '../../errors';
 import { GoogleCredentials } from '../../services/google-credentials';
 
 /**
@@ -49,16 +52,18 @@ export const makeGoogleApiRequest = Effect.fn('makeGoogleApiRequest')(function* 
     HttpClientRequest.setHeader('accept', 'application/json'),
     httpClientWithTracerDisabled.execute,
     Effect.flatMap((res) => res.json),
-    Effect.timeout('1 second'),
+    Effect.timeout('10 second'),
     Effect.retry(Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)))),
     Effect.scoped,
     Effect.withSpan('GoogleApiRequest'),
   );
 
-  // TODO(burdon): Handle errors (esp. 401).
   if ((response as any).error) {
-    // throw new Error((response as any).error);
-    log.catch((response as any).error);
+    const err = (response as any).error;
+    const code: number | undefined = typeof err === 'object' ? err?.code : undefined;
+    const message: string = typeof err === 'object' ? (err?.message ?? JSON.stringify(err)) : String(err);
+    log.warn('google api error', { url, code, message });
+    return yield* Effect.fail(new GoogleApiError(code, message));
   }
 
   return response;

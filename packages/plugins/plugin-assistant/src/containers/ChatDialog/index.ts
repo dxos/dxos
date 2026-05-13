@@ -2,6 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ChatDialog } from './ChatDialog';
-
-export default ChatDialog;
+export { ChatDialog as default } from './ChatDialog';

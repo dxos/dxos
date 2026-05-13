@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Database } from '@dxos/echo';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export const TriggerTemplate = Schema.Union(
   Schema.Struct({ type: Schema.Literal('timer'), cron: Schema.String }),

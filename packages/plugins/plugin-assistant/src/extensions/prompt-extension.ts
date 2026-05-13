@@ -89,7 +89,7 @@ class PromptRunWidget extends WidgetType {
   override toDOM() {
     return Domino.of('div')
       .classNames('relative')
-      .children(
+      .append(
         Domino.of('button')
           .classNames('dx-button absolute right-0 top-4')
           .on('mousedown', (event) => {
@@ -97,10 +97,10 @@ class PromptRunWidget extends WidgetType {
             event.stopPropagation();
             this.onClick(this.prompt);
           })
-          .children(
+          .append(
             Domino.of('svg', Domino.SVG)
               .classNames('w-4 h-4 cursor-pointer')
-              .children(
+              .append(
                 Domino.of('use', Domino.SVG).attributes({
                   href: Domino.icon('ph--play--regular'),
                 }),

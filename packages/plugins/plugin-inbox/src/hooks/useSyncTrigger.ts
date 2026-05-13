@@ -5,16 +5,14 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { type Client } from '@dxos/client';
+import { Trigger, Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
-import { type Database, Filter, Obj, Ref } from '@dxos/echo';
-import { LegacyDXN } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
-import { Trigger } from '@dxos/functions';
+import { type Database, DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
-import { Query, useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 
-import { Calendar } from '../types';
+import { Calendar } from '#types';
 
 /**
  * Finds or imports a function by key from Edge into the space database.
@@ -59,7 +57,7 @@ export const useSyncTrigger = ({
 }) => {
   const client = useClient();
   const [pending, setPending] = useState(false);
-  const triggers = useQuery(db, Filter.type(Trigger.Trigger));
+  const triggers = useQuery(db, Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-inbox.useSyncTrigger'));
 
   const subjectDxn = Obj.getDXN(subject);
   const syncTrigger = useMemo(
@@ -71,7 +69,7 @@ export const useSyncTrigger = ({
         const mailboxRef = trigger.input?.mailbox;
         const calendarRef = trigger.input?.calendar;
         const ref = mailboxRef ?? calendarRef;
-        return ref?.dxn && LegacyDXN.equalsEchoId(ref.dxn, subjectDxn);
+        return ref?.dxn && DXN.equalsEchoId(ref.dxn, subjectDxn);
       }),
     [triggers, subjectDxn],
   );
@@ -98,7 +96,7 @@ export const useSyncTrigger = ({
       const inputKey = Obj.getTypename(subject) === Calendar.Calendar.typename ? 'calendar' : 'mailbox';
       const trigger = Trigger.make({
         enabled: true,
-        spec: { kind: 'timer', cron: '*/5 * * * *' },
+        spec: Trigger.specTimer('*/5 * * * *'),
         function: Ref.make(fn),
         input: { [inputKey]: db.makeRef(Obj.getDXN(subject)), ...extraInput },
       });

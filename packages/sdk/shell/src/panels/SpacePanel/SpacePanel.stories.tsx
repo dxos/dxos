@@ -14,7 +14,6 @@ import { InvitationList, InvitationListItemImpl, SpaceMemberListImpl } from '../
 import { InvitationManager, type InvitationManagerProps } from '../../steps';
 import { StorybookDialog } from '../../story-components';
 import { inviteWithState } from '../../testing/fixtures';
-
 import { SpaceManagerImpl } from './SpaceManager';
 import { SpacePanelImpl } from './SpacePanel';
 import { type SpacePanelImplProps } from './SpacePanelProps';
@@ -23,7 +22,7 @@ const noopProps: SpacePanelImplProps = {
   titleId: 'storybookSpacePanel__title',
   send: () => {},
   createInvitationUrl: (code: string) => code,
-  activeView: 'space manager',
+  activeView: 'space-manager',
   space: { key: PublicKey.random(), properties: { name: 'Example space' } },
 };
 
@@ -39,10 +38,10 @@ type Story = StoryObj<typeof meta>;
 
 export const SpaceManager = () => {
   return (
-    <StorybookDialog inOverlayLayout>
+    <StorybookDialog>
       <SpacePanelImpl
         {...noopProps}
-        activeView='space manager'
+        activeView='space-manager'
         SpaceManager={(props) => {
           return (
             <SpaceManagerImpl
@@ -59,10 +58,10 @@ export const SpaceManager = () => {
 
 export const SpaceManagerWithInvites = () => {
   return (
-    <StorybookDialog inOverlayLayout>
+    <StorybookDialog>
       <SpacePanelImpl
         {...noopProps}
-        activeView='space manager'
+        activeView='space-manager'
         SpaceManager={(props) => {
           return (
             <SpaceManagerImpl
@@ -79,10 +78,10 @@ export const SpaceManagerWithInvites = () => {
 
 export const SpaceManagerWithMoreInvites = () => {
   return (
-    <StorybookDialog inOverlayLayout>
+    <StorybookDialog>
       <SpacePanelImpl
         {...noopProps}
-        activeView='space manager'
+        activeView='space-manager'
         SpaceManager={(props) => {
           return (
             <SpaceManagerImpl
@@ -103,10 +102,10 @@ export const SpaceManagerWithMoreInvites = () => {
 
 export const SpaceManagerWithEvenMoreInvites = () => {
   return (
-    <StorybookDialog inOverlayLayout>
+    <StorybookDialog>
       <SpacePanelImpl
         {...noopProps}
-        activeView='space manager'
+        activeView='space-manager'
         SpaceManager={(props) => {
           return (
             <SpaceManagerImpl
@@ -165,10 +164,10 @@ export const SpaceManagerWithEvenMoreInvites = () => {
 
 export const SpaceManagerWithMember = () => {
   return (
-    <StorybookDialog inOverlayLayout>
+    <StorybookDialog>
       <SpacePanelImpl
         {...noopProps}
-        activeView='space manager'
+        activeView='space-manager'
         SpaceManager={(props) => {
           return (
             <SpaceManagerImpl
@@ -199,10 +198,10 @@ export const SpaceManagerWithMember = () => {
 
 export const SpaceManagerWithMembers = () => {
   return (
-    <StorybookDialog inOverlayLayout>
+    <StorybookDialog>
       <SpacePanelImpl
         {...noopProps}
-        activeView='space manager'
+        activeView='space-manager'
         SpaceManager={(props) => {
           return (
             <SpaceManagerImpl
@@ -236,10 +235,10 @@ export const SpaceManagerWithMembers = () => {
 
 export const SpaceManagerWithMoreMembers = () => {
   return (
-    <StorybookDialog inOverlayLayout>
+    <StorybookDialog>
       <SpacePanelImpl
         {...noopProps}
-        activeView='space manager'
+        activeView='space-manager'
         SpaceManager={(props) => {
           return (
             <SpaceManagerImpl
@@ -299,10 +298,10 @@ export const SpaceManagerWithMoreMembers = () => {
 
 const SpaceInvitationManagerState = (extraprops?: Partial<InvitationManagerProps>) => {
   return (
-    <StorybookDialog inOverlayLayout>
+    <StorybookDialog>
       <SpacePanelImpl
         {...noopProps}
-        activeView='space invitation manager'
+        activeView='space-invitation-manager'
         SpaceManager={(props) => {
           return (
             <SpaceManagerImpl

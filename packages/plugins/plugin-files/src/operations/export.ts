@@ -6,17 +6,17 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, type SerializedNode, SettingsOperation } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 import { type Node } from '@dxos/plugin-graph';
 import { byPosition } from '@dxos/util';
 
-import { Export } from './definitions';
+import { meta } from '#meta';
 
-import { meta } from '../meta';
 import { FileCapabilities, type FilesState } from '../types';
+import { FilesOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof Export> = Export.pipe(
+const handler: Operation.WithHandler<typeof FilesOperation.Export> = FilesOperation.Export.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const { explore } = yield* Capability.get(AppCapabilities.AppGraph);

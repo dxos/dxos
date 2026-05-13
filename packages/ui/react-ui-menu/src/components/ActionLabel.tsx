@@ -10,7 +10,8 @@ import { type TFunction, toLocalizedString, useTranslation } from '@dxos/react-u
 import { mx } from '@dxos/ui-theme';
 import { type MenuActionProperties } from '@dxos/ui-types';
 
-import { translationKey } from '../translations';
+import { translationKey } from '#translations';
+
 import { getShortcut } from '../util';
 
 type Action = Node.Action<MenuActionProperties> | Node.ActionGroup<Omit<MenuActionProperties, 'variant'>>;

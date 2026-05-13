@@ -3,10 +3,9 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { getSpace } from '@dxos/client/echo';
-import { Collection, Obj, Ref, Relation } from '@dxos/echo';
+import { Operation } from '@dxos/compute';
+import { Collection, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 
 import { SpaceOperation } from './definitions';
 
@@ -16,26 +15,17 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RestoreObjects> = Spa
       const objects = input.objects as Obj.Unknown[];
       const parentCollection = input.parentCollection as Collection.Collection;
       const indices = input.indices as number[];
-      const nestedObjectsList = input.nestedObjectsList as Obj.Unknown[][];
       const wasActive = input.wasActive as string[];
 
-      const space = getSpace(objects[0]);
-      invariant(space);
+      const db = Obj.getDatabase(objects[0]);
+      invariant(db);
 
-      const restoredObjects = objects.map((obj: Obj.Unknown) => space.db.add(obj));
+      const restoredObjects = objects.map((obj: Obj.Unknown) => db.add(obj));
 
-      nestedObjectsList.flat().forEach((obj: Obj.Unknown) => {
-        if (Obj.isObject(obj)) {
-          space.db.add(obj);
-        } else if (Relation.isRelation(obj)) {
-          space.db.add(obj);
-        }
-      });
-
-      Obj.change(parentCollection, (obj) => {
+      Obj.update(parentCollection, (parentCollection) => {
         indices.forEach((index: number, i: number) => {
           if (index !== -1) {
-            obj.objects.splice(index, 0, Ref.make(restoredObjects[i] as Obj.Unknown));
+            parentCollection.objects.splice(index, 0, Ref.make(restoredObjects[i] as Obj.Unknown));
           }
         });
       });

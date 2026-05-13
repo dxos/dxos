@@ -15,7 +15,6 @@ import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
 import { createMappedFeedWriter } from '../common';
-
 import { createMessageSelector } from './message-selector';
 import { TimeframeClock, mapFeedIndexesToTimeframe, startAfter } from './timeframe-clock';
 

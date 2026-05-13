@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SwarmConnection, type SwarmNetworkManager, createTeleportProtocolFactory } from '@dxos/network-manager';
-import { InvalidInvitationError, InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
+import { InvalidInvitationError, InvalidInvitationExtensionRoleError } from '@dxos/protocols';
 import { type AdmissionKeypair, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AuthenticationResponse, type IntroductionResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
@@ -64,6 +64,7 @@ export type InvitationConnectionProps = {
  *  TODO: the flow logic should either be contained in invitations-handler or in extensions, not be split across
  *  TODO: potentially re-evaluate host-side API to allow multiple concurrent connection, so that mutex can be removed
  */
+@_trace.resource()
 export class InvitationsHandler {
   /**
    * @internal
@@ -87,6 +88,33 @@ export class InvitationsHandler {
       type: invitation.type,
     });
     metrics.increment('dxos.invitation.host');
+
+    const hostSpanId = `invitation-host-${invitation.invitationId}`;
+    // Reassign ctx to the child context so downstream `@trace.span` calls stay in the same trace.
+    // Link child -> parent disposal so `ctx.dispose()` inside this flow still completes the
+    // invitation stream (the caller's ctx owns `stream.complete()` via onDispose).
+    // Do NOT await `invitationCtx.dispose()` here: `derive()` registers a parent -> child
+    // dispose hook, so awaiting the parent dispose would re-enter the still-pending child
+    // dispose promise and deadlock.
+    const invitationCtx = ctx;
+    ctx =
+      _trace.spanStart({
+        id: hostSpanId,
+        instance: this,
+        methodName: 'handleInvitationFlow',
+        parentCtx: ctx,
+        op: 'invitation.host',
+        attributes: {
+          'ctx.dxos.invitation.id': invitation.invitationId,
+          'ctx.dxos.invitation.kind': Invitation.Kind[invitation.kind],
+        },
+      }) ?? ctx;
+    if (ctx !== invitationCtx) {
+      ctx.onDispose(() => {
+        void invitationCtx.dispose();
+      });
+    }
+    ctx.onDispose(() => _trace.spanEnd(hostSpanId));
     const guardedState = createGuardedInvitationState(ctx, invitation, stream);
     // Called for every connecting peer.
     const createExtension = (): InvitationHostExtension => {
@@ -132,15 +160,14 @@ export class InvitationsHandler {
           });
 
           scheduleTask(connectionCtx, async () => {
-            const traceId = PublicKey.random().toHex();
             try {
-              log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.begin({ id: traceId }));
+              log('opening host invitation handler');
               log.verbose('connected', { ...protocol.toJSON() });
               const deviceKey = await extension.completedTrigger.wait({ timeout: invitation.timeout });
               log.verbose('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
               guardedState.set(extension, Invitation.State.SUCCESS);
               metrics.increment('dxos.invitation.success');
-              log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.end({ id: traceId }));
+              log('host invitation handler opened');
               admitted = true;
 
               if (!invitation.multiUse) {
@@ -159,7 +186,6 @@ export class InvitationsHandler {
                   log.error('failed', err);
                 }
               }
-              log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.error({ id: traceId, error: err }));
               // Close connection
               extensionsCtx.close(err);
             }
@@ -232,6 +258,34 @@ export class InvitationsHandler {
     });
     const { timeout = INVITATION_TIMEOUT } = invitation;
 
+    const guestSpanId = `invitation-guest-${invitation.invitationId}`;
+    // Reassign ctx to the child context returned by spanStart so downstream calls
+    // (`edgeInvitationHandler.handle`, `_joinSwarm`, etc.) inherit this span as their
+    // parent rather than starting a new root trace.
+    // Link child -> parent disposal so `ctx.dispose()` inside this flow still completes the
+    // invitation stream. See note in `handleInvitationFlow`: must not await the parent
+    // dispose here (`derive()` registers a parent -> child dispose hook, so awaiting would
+    // re-enter the still-pending child dispose promise and deadlock).
+    const invitationCtx = ctx;
+    ctx =
+      _trace.spanStart({
+        id: guestSpanId,
+        instance: this,
+        methodName: 'acceptInvitation',
+        parentCtx: ctx,
+        op: 'invitation.guest',
+        attributes: {
+          'ctx.dxos.invitation.id': invitation.invitationId,
+          'ctx.dxos.invitation.kind': Invitation.Kind[invitation.kind],
+        },
+      }) ?? ctx;
+    if (ctx !== invitationCtx) {
+      ctx.onDispose(() => {
+        void invitationCtx.dispose();
+      });
+    }
+    ctx.onDispose(() => _trace.spanEnd(guestSpanId));
+
     if (deviceProfile) {
       invariant(invitation.kind === Invitation.Kind.DEVICE, 'deviceProfile provided for non-device invitation');
     }
@@ -279,9 +333,8 @@ export class InvitationsHandler {
           });
 
           scheduleTask(connectionCtx, async () => {
-            const traceId = PublicKey.random().toHex();
             try {
-              log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.begin({ id: traceId }));
+              log('opening guest invitation handler');
 
               scheduleTask(
                 connectionCtx,
@@ -345,7 +398,7 @@ export class InvitationsHandler {
               admitted = true;
 
               // 4. Record credential in our HALO.
-              const result = await protocol.accept(admissionResponse, admissionRequest);
+              const result = await protocol.accept(ctx, admissionResponse, admissionRequest);
 
               // 5. Success.
               log.verbose('dxos.sdk.invitations-handler.guest.admitted-by-host', {
@@ -357,7 +410,7 @@ export class InvitationsHandler {
                 ...result,
                 state: Invitation.State.SUCCESS,
               });
-              log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.end({ id: traceId }));
+              log('guest invitation handler opened');
             } catch (err: any) {
               if (err instanceof TimeoutError) {
                 log.verbose('timeout', { ...protocol.toJSON() });
@@ -367,7 +420,6 @@ export class InvitationsHandler {
                 guardedState.error(extension, err);
               }
               extensionCtx.close(err);
-              log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.error({ id: traceId, error: err }));
             }
           });
         },
@@ -389,8 +441,8 @@ export class InvitationsHandler {
     };
 
     const edgeInvitationHandler = new EdgeInvitationHandler(this._connectionProps?.edgeInvitations, this._edgeClient, {
-      onInvitationSuccess: async (admissionResponse, admissionRequest) => {
-        const result = await protocol.accept(admissionResponse, admissionRequest);
+      onInvitationSuccess: async (edgeCtx, admissionResponse, admissionRequest) => {
+        const result = await protocol.accept(edgeCtx, admissionResponse, admissionRequest);
         log.info('admitted by edge', { ...protocol.toJSON() });
         guardedState.complete({ ...guardedState.current, ...result, state: Invitation.State.SUCCESS });
       },

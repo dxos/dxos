@@ -5,22 +5,25 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
+import * as Equal from 'effect/Equal';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as Utils from 'effect/Utils';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath } from '@dxos/effect';
-import { assertArgument } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { type LegacyDXN as DXN, ObjectId } from '@dxos/keys';
-import { assumeType } from '@dxos/util';
+import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
 import * as Entity from './Entity';
 import * as Err from './Err';
-import * as objInternal from './internal/Obj';
 import * as internal from './internal';
-import type * as Ref from './Ref';
+import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils';
+import * as objInternal from './internal/Obj';
+import * as Ref from './Ref';
 import type * as Type from './Type';
 
 /**
@@ -80,8 +83,6 @@ export const Unknown: Type.Obj<Unknown> = Schema.Struct({
       [internal.SchemaKindId]: (schema as any)[internal.SchemaKindId],
     }) as unknown as Type.Obj<Unknown>,
 );
-
-/**
 
 /**
  * Object with arbitrary properties.
@@ -303,7 +304,7 @@ export const clone: <T extends Unknown>(obj: T, opts?: CloneOptions) => T = objI
 
 /**
  * Makes all properties mutable recursively.
- * Used to provide a mutable view of an object within `Obj.change`.
+ * Used to provide a mutable view of an object within `Obj.update`.
  */
 export type Mutable<T> = internal.Mutable<T>;
 
@@ -311,33 +312,33 @@ export type Mutable<T> = internal.Mutable<T>;
  * Perform mutations on an echo object within a controlled context.
  *
  * All mutations within the callback are batched and trigger a single notification
- * when the callback completes. Direct mutations outside of `Obj.change` will throw
+ * when the callback completes. Direct mutations outside of `Obj.update` will throw
  * an error for echo objects.
  *
  * This function also works with nested objects within echo objects (e.g., Template structs)
  * that are reactive at runtime.
  *
- * @param obj - The echo object to mutate. Use `Relation.change` for relations.
+ * @param obj - The echo object to mutate. Use `Relation.update` for relations.
  * @param callback - The callback that performs mutations on the object.
  *
  * @example
  * ```ts
  * const person = Obj.make(Person, { name: 'John', age: 25 });
  *
- * // Mutate within Obj.change
- * Obj.change(person, (obj) => {
+ * // Mutate within Obj.update
+ * Obj.update(person, (obj) => {
  *   obj.name = 'Jane';
  *   obj.age = 30;
  * });
  * // ONE notification fires here
  *
  * // Direct mutation throws
- * person.name = 'Bob'; // Error: Cannot modify outside Obj.change()
+ * person.name = 'Bob'; // Error: Cannot modify outside Obj.update()
  * ```
  *
- * Note: Only accepts objects. Use `Relation.change` for relations.
+ * Note: Only accepts objects. Use `Relation.update` for relations.
  */
-export const change = <T extends Unknown>(obj: T, callback: internal.ChangeCallback<T>): void => {
+export const update = <T extends Unknown>(obj: T, callback: internal.ChangeCallback<T>): void => {
   internal.change(obj, callback);
 };
 
@@ -372,7 +373,7 @@ export const getValue = (obj: Unknown | Snapshot, path: readonly (string | numbe
  * whether to initialize nested data as an empty object or array.
  *
  * Similar to lodash.set and setDeep from @dxos/util, but schema-aware.
- * Must be called within an `Obj.change` callback.
+ * Must be called within an `Obj.update` callback.
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
@@ -386,7 +387,7 @@ export const getValue = (obj: Unknown | Snapshot, path: readonly (string | numbe
  * ```ts
  * const person = Obj.make(Person, { name: 'John' });
  * // Person schema has: addresses: Schema.Array(Address)
- * Obj.change(person, (obj) => {
+ * Obj.update(person, (obj) => {
  *   Obj.setValue(obj, ['addresses', 0, 'street'], '123 Main St');
  * });
  * // Creates: person.addresses = [{ street: '123 Main St' }]
@@ -469,16 +470,19 @@ export const getDXN = (entity: Unknown | Snapshot): DXN => {
 /**
  * @returns The DXN of the object's type.
  * @example dxn:com.example.type.person:1.0.0
+ * @throws If the object is missing its type (corrupted object).
  */
-// TODO(wittjosiah): Narrow types.
-export const getTypeDXN: (obj: unknown | undefined) => DXN | undefined = internal.getTypeDXN as any;
+export const getTypeDXN = (obj: Unknown | Snapshot): DXN => {
+  const type = internal.getTypeDXN(obj);
+  invariant(type != null, 'Corrupted object: missing type.');
+  return type;
+};
 
 /**
  * Get the schema of the object.
  * Returns the branded ECHO schema used to create the object.
  */
-// TODO(wittjosiah): Narrow types.
-export const getSchema: (obj: unknown | undefined) => Type.AnyEntity | undefined = internal.getSchema as any;
+export const getSchema: (obj: Unknown | Snapshot) => Type.AnyEntity | undefined = internal.getSchema as any;
 
 /**
  * @returns The typename of the object's type.
@@ -516,7 +520,7 @@ export const Meta = internal.MetaId;
 export type ReadonlyMeta = internal.ReadonlyMeta;
 
 /**
- * Mutable meta type returned by `Obj.getMeta` inside an `Obj.change` callback.
+ * Mutable meta type returned by `Obj.getMeta` inside an `Obj.update` callback.
  */
 export type Meta = internal.Meta;
 
@@ -524,7 +528,7 @@ export type Meta = internal.Meta;
 // TODO(dmaretskyi): Allow returning undefined.
 /**
  * Get the metadata for an object.
- * Returns mutable meta when passed a mutable object (inside `Obj.change` callback).
+ * Returns mutable meta when passed a mutable object (inside `Obj.update` callback).
  * Returns read-only meta when passed a regular object or snapshot.
  *
  * @example
@@ -533,7 +537,7 @@ export type Meta = internal.Meta;
  * const meta = Obj.getMeta(person);  // ReadonlyMeta
  *
  * // Mutable access inside change callback
- * Obj.change(person, (obj) => {
+ * Obj.update(person, (obj) => {
  *   const meta = Obj.getMeta(obj);     // ObjectMeta (mutable)
  *   meta.tags ??= [];
  *   meta.tags.push('important');
@@ -558,7 +562,7 @@ export const getKeys: {
 
 /**
  * Delete all keys from the object for the specified source.
- * Must be called within an `Obj.change` callback.
+ * Must be called within an `Obj.update` callback.
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
@@ -567,7 +571,7 @@ export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => in
 
 /**
  * Add a tag to the object.
- * Must be called within an `Obj.change` callback.
+ * Must be called within an `Obj.update` callback.
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
@@ -576,7 +580,7 @@ export const addTag = (entity: Mutable<Unknown>, tag: string): void => internal.
 
 /**
  * Remove a tag from the object.
- * Must be called within an `Obj.change` callback.
+ * Must be called within an `Obj.update` callback.
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
@@ -602,7 +606,7 @@ export const getLabel = (entity: Unknown | Snapshot): string | undefined => inte
 
 /**
  * Set the label of the object.
- * Must be called within an `Obj.change` callback.
+ * Must be called within an `Obj.update` callback.
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
@@ -617,7 +621,7 @@ export const getDescription = (entity: Unknown | Snapshot): string | undefined =
 
 /**
  * Set the description of the object.
- * Must be called within an `Obj.change` callback.
+ * Must be called within an `Obj.update` callback.
  *
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
@@ -662,6 +666,122 @@ export const setParent = (entity: Unknown, parent: Any | undefined) => {
   entity[internal.ParentId] = parent;
 };
 
+interface UpdateFromOptions<T> {
+  exclude?: (keyof T)[];
+  include?: (keyof T)[];
+}
+
+const valuesEqual = (left: unknown, right: unknown): boolean => {
+  if (left === right) {
+    return true;
+  }
+  if (left === null || right === null) {
+    return left === right;
+  }
+  if (typeof left !== 'object' || typeof right !== 'object') {
+    return Utils.structuralRegion(() => Equal.equals(left, right));
+  }
+  if (Ref.isRef(left) && Ref.isRef(right)) {
+    return left.dxn.toString() === right.dxn.toString();
+  }
+  if (Ref.isRef(left) || Ref.isRef(right)) {
+    return false;
+  }
+  if (Array.isArray(left) && Array.isArray(right)) {
+    if (left.length !== right.length) {
+      return false;
+    }
+    for (let index = 0; index < left.length; index++) {
+      if (!valuesEqual(left[index], right[index])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return false;
+  }
+  const leftRecord = left as Record<string, unknown>;
+  const rightRecord = right as Record<string, unknown>;
+  const keys = new Set([
+    ...Object.keys(leftRecord).filter((key) => key !== 'id'),
+    ...Object.keys(rightRecord).filter((key) => key !== 'id'),
+  ]);
+  for (const key of keys) {
+    const leftHas = Object.hasOwn(leftRecord, key);
+    const rightHas = Object.hasOwn(rightRecord, key);
+    const leftValue = leftHas ? leftRecord[key] : undefined;
+    const rightValue = rightHas ? rightRecord[key] : undefined;
+    if (!valuesEqual(leftValue, rightValue)) {
+      return false;
+    }
+  }
+  return true;
+};
+
+/**
+ * Breaks reactive proxies on assigned values so echo-db assignment accepts nested structs (same idea as link assignment).
+ */
+const prepareAssignValue = (value: unknown): unknown =>
+  deepMapValues(value, (nested, recurse) => {
+    if (nested === null || typeof nested !== 'object') {
+      return nested;
+    }
+    if (Ref.isRef(nested)) {
+      return nested;
+    }
+    if (Array.isArray(nested)) {
+      return recurse(nested);
+    }
+    if (isProxy(nested)) {
+      return recurse({ ...getProxyTarget(nested) });
+    }
+    return recurse(nested);
+  });
+
+/**
+ * For each key present on `source` (except `id`), assigns `target[key]` when the current value differs.
+ * References are compared by target DXN; other values use Effect `Equal.equals` inside a structural region,
+ * with recursive comparison for arrays and plain object-shaped property bags (excluding `id`).
+ *
+ * Must be called within an `Obj.update` callback.
+ *
+ * @returns Whether any property was updated.
+ */
+export const updateFrom = <T extends Unknown>(
+  target: Mutable<T>,
+  source: T,
+  options?: UpdateFromOptions<T>,
+): boolean => {
+  assertArgument(isObject(target), 'Expected an echo object target.');
+  assertArgument(isObject(source), 'Expected an echo object source.');
+  let keys = Object.keys(source as Record<string, unknown>).filter((key) => key !== 'id');
+  if (options?.include !== undefined) {
+    const include = new Set(options.include.map((key) => String(key)));
+    keys = keys.filter((key) => include.has(key));
+  }
+  if (options?.exclude !== undefined) {
+    const exclude = new Set(options.exclude.map((key) => String(key)));
+    keys = keys.filter((key) => !exclude.has(key));
+  }
+  let updated = false;
+  const sourceRecord = source as Record<string, unknown>;
+  const targetRecord = target as Record<string, unknown>;
+  for (const key of keys) {
+    if (!Object.hasOwn(sourceRecord, key)) {
+      continue;
+    }
+    const nextValue = sourceRecord[key];
+    const prevValue = Object.hasOwn(targetRecord, key) ? targetRecord[key] : undefined;
+    if (valuesEqual(prevValue, nextValue)) {
+      continue;
+    }
+    targetRecord[key] = prepareAssignValue(nextValue) as never;
+    updated = true;
+  }
+  return updated;
+};
+
 //
 // JSON
 //
@@ -691,7 +811,7 @@ export const toJSON = (entity: Unknown | Snapshot): JSON => objInternal.objectTo
  */
 export const fromJSON: (
   json: unknown,
-  options?: { refResolver?: Ref.Resolver; dxn?: DXN; database?: Database.Database },
+  options?: { refResolver?: Ref.Resolver; dxn?: DXN; database?: Database.Database; parent?: Unknown },
 ) => Promise<Unknown> = objInternal.objectFromJSON as any;
 
 /**

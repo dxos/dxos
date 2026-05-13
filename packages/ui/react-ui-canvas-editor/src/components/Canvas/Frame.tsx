@@ -29,7 +29,6 @@ import { type Polygon } from '../../types';
 import { type Anchor, createAnchorMap, resizeAnchors } from '../anchors';
 import { styles } from '../styles';
 import { type TextBoxProps } from '../TextBox';
-
 import { AnchorComponent } from './Anchor';
 import { type ShapeComponentProps, shapeAttrs } from './Shape';
 

@@ -16,7 +16,7 @@ import {
   getRelativeFilename,
 } from '@dxos/log';
 
-import { type OtelOptions, setDiagLogger } from './otel';
+import { type OtelOptions, resolveOtlpUrl, setDiagLogger } from './otel';
 
 const FLATTEN_DEPTH = 1;
 
@@ -35,7 +35,7 @@ export class OtelLogs {
   constructor(private readonly options: OtelLogOptions) {
     setDiagLogger(options.consoleDiagLogLevel);
     const logExporter = new OTLPLogExporter({
-      url: this.options.endpoint + '/v1/logs',
+      url: resolveOtlpUrl(this.options.endpoint + '/v1/logs'),
       headers: this.options.headers,
       concurrencyLimit: 10, // an optional limit on pending requests
     });
@@ -81,8 +81,11 @@ export class OtelLogs {
   }
 }
 
+/** Maps {@link LogLevel} to OpenTelemetry {@link SeverityNumber}. */
 const convertLevel = (level: LogLevel): SeverityNumber => {
   switch (level) {
+    case LogLevel.TRACE:
+      return SeverityNumber.TRACE;
     case LogLevel.DEBUG:
       return SeverityNumber.DEBUG;
     case LogLevel.VERBOSE:
@@ -94,7 +97,7 @@ const convertLevel = (level: LogLevel): SeverityNumber => {
     case LogLevel.ERROR:
       return SeverityNumber.ERROR;
     default:
-      return SeverityNumber.ERROR;
+      return SeverityNumber.UNSPECIFIED;
   }
 };
 

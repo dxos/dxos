@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Doc from '@effect/printer/Doc';
 import * as Ansi from '@effect/printer-ansi/Ansi';
+import * as Doc from '@effect/printer/Doc';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 

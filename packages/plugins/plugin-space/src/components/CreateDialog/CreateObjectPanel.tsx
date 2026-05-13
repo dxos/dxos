@@ -2,21 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { type Database, Obj } from '@dxos/echo';
-import { type Collection } from '@dxos/echo';
+import { type Collection, type Database, Obj } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { type Space, type SpaceId } from '@dxos/react-client/echo';
+import { type SpaceId } from '@dxos/keys';
+import { type Space } from '@dxos/react-client/echo';
 import { toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { type MaybePromise } from '@dxos/util';
 
-import { useInputSurfaceLookup } from '../../hooks';
-import { meta } from '../../meta';
-import { type CreateObject } from '../../types';
+import { useInputSurfaceLookup } from '#hooks';
+import { meta } from '#meta';
+import { type SpaceCapabilities } from '#types';
+
 import { getSpaceDisplayName } from '../../util';
 
 /** Display-ready option for the create object search list. */
@@ -26,11 +26,7 @@ export type CreateObjectOption = {
   icon?: string;
 };
 
-export type Metadata = {
-  createObject: CreateObject;
-  inputSchema?: Schema.Schema.AnyNoContext;
-  icon?: string;
-};
+export type Metadata = SpaceCapabilities.CreateObjectEntry;
 
 export type CreateObjectPanelProps = {
   options: CreateObjectOption[];
@@ -75,7 +71,7 @@ export const CreateObjectPanel = ({
   const handleSelectOption = useCallback(
     async (id: string) => {
       const metadata = resolve?.(id);
-      if (metadata && !metadata.inputSchema) {
+      if (metadata && !metadata.inputSchema && !metadata.customPanel) {
         await onCreateObject?.({ metadata });
       } else {
         onTypenameChange?.(id);
@@ -90,14 +86,25 @@ export const CreateObjectPanel = ({
   );
   const inputSurfaceLookup = useInputSurfaceLookup({ target });
 
-  // TODO(wittjosiah): These inputs should be rolled into a `Form` once it supports the necessary variants.
+  // TODO(wittjosiah): Extends and use react-ui-form to handle variants.
+
   if (!metadata) {
     return <SelectType options={sortedOptions} onChange={handleSelectOption} />;
   }
 
-  // TODO(burdon): Remove.
   if (!target) {
     return <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={onTargetChange} />;
+  }
+
+  if (metadata.customPanel) {
+    const CustomPanel = metadata.customPanel;
+    return (
+      <CustomPanel
+        target={target}
+        initialFormValues={initialFormValues}
+        onCreateObject={(data) => handleCreateObject(data)}
+      />
+    );
   }
 
   if (metadata.inputSchema) {
@@ -140,24 +147,23 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <SearchList.Content classNames='gap-form-gap'>
-        <SearchList.Input
-          autoFocus
-          data-testid='create-object-form.schema-input'
-          placeholder={t('schema input placeholder')}
-        />
-        <SearchList.Viewport>
-          {results.map((option) => (
-            <SearchList.Item
-              key={option.id}
-              value={option.id}
-              label={option.label}
-              icon={option.icon ?? 'ph--placeholder--regular'}
-              onSelect={() => onChange(option.id)}
-            />
-          ))}
-        </SearchList.Viewport>
-      </SearchList.Content>
+      <SearchList.Input
+        classNames='mb-form-gap'
+        autoFocus
+        data-testid='create-object-form.schema-input'
+        placeholder={t('schema-input.placeholder')}
+      />
+      <SearchList.Viewport>
+        {results.map((option) => (
+          <SearchList.Item
+            key={option.id}
+            value={option.id}
+            label={option.label}
+            icon={option.icon ?? 'ph--placeholder--regular'}
+            onSelect={() => onChange(option.id)}
+          />
+        ))}
+      </SearchList.Viewport>
     </SearchList.Root>
   );
 };
@@ -202,25 +208,24 @@ const SelectSpace = ({ spaces, defaultSpaceId, onChange }: SelectSpaceProps) => 
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <SearchList.Content>
-        <SearchList.Input
-          autoFocus
-          data-testid='create-object-form.space-input'
-          placeholder={t('space input placeholder')}
-        />
-        <SearchList.Viewport>
-          {results.map((space) => {
-            return (
-              <SearchList.Item
-                key={space.id}
-                value={space.id}
-                label={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
-                onSelect={() => onChange?.(space.db)}
-              />
-            );
-          })}
-        </SearchList.Viewport>
-      </SearchList.Content>
+      <SearchList.Input
+        classNames='mb-form-gap'
+        autoFocus
+        data-testid='create-object-form.space-input'
+        placeholder={t('space-input.placeholder')}
+      />
+      <SearchList.Viewport>
+        {results.map((space) => {
+          return (
+            <SearchList.Item
+              key={space.id}
+              value={space.id}
+              label={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
+              onSelect={() => onChange?.(space.db)}
+            />
+          );
+        })}
+      </SearchList.Viewport>
     </SearchList.Root>
   );
 };

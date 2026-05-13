@@ -10,7 +10,6 @@ import { mx } from '@dxos/ui-theme';
 
 import { useEditorContext } from '../../hooks';
 import { type CanvasBoard } from '../../types';
-
 import { DEFS_ID, MARKER_PREFIX, ShapeComponent, type ShapeComponentProps } from './Shape';
 
 export type ShapesProps = ThemedClassName<{ layout: CanvasBoard.Layout }> & HTMLAttributes<HTMLDivElement>;

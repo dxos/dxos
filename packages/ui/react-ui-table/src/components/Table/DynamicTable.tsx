@@ -6,8 +6,7 @@ import { RegistryContext } from '@effect-atom/atom-react';
 import type * as Types from 'effect/Types';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type Type } from '@dxos/echo';
-import { type JsonSchema } from '@dxos/echo';
+import { type JsonSchema, type Type } from '@dxos/echo';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
@@ -16,7 +15,6 @@ import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRowAction } from '../../model';
 import { type Table as TableType } from '../../types';
 import { type TablePropertyDefinition, getBaseSchema, makeDynamicTable } from '../../util';
-
 import { Table, type TableController } from './Table';
 
 export type DynamicTableProps<T extends Type.AnyEntity = Type.AnyEntity> = ThemedClassName<{
@@ -39,7 +37,7 @@ export type DynamicTableProps<T extends Type.AnyEntity = Type.AnyEntity> = Theme
 export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
   classNames,
   schema,
-  name = 'com.example.dynamic-table', // Remove default or make random; this will lead to type collisions.
+  name = 'com.example.dynamicTable', // Remove default or make random; this will lead to type collisions.
   rows,
   properties,
   jsonSchema: jsonSchemaProp,
@@ -97,8 +95,8 @@ export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
   }, [registry, model]);
 
   return (
-    <div role='none' className={mx('dx-expander grid', classNames)}>
-      <div role='none' className='grid min-h-0 overflow-hidden'>
+    <div className={mx('dx-expander grid', classNames)}>
+      <div className='grid min-h-0 overflow-hidden'>
         <Table.Root ref={tableRef}>
           <Table.Content model={model} presentation={presentation} ignoreAttention onRowClick={onRowClick} />
         </Table.Root>

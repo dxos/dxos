@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { type InspectOptionsStylized, type inspect } from 'node:util';
-
 import base32Decode from 'base32-decode';
 import base32Encode from 'base32-encode';
+import { type InspectOptionsStylized, type inspect } from 'node:util';
 
 import {
   type DevtoolsFormatter,
@@ -217,7 +216,7 @@ export class PublicKey implements Equatable {
     return 'B' + base32Encode(this._value, 'RFC4648');
   }
 
-  truncate(length = undefined): string {
+  truncate(length?: number): string {
     return truncateKey(this, length);
   }
 

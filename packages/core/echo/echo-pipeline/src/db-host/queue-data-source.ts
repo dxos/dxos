@@ -6,8 +6,8 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 
 import { type Context } from '@dxos/context';
-import { type ObjectJSON } from '@dxos/echo/internal';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
+import { type ObjectJSON } from '@dxos/echo/internal';
 import { RuntimeProvider } from '@dxos/effect';
 import { type FeedStore } from '@dxos/feed';
 import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
@@ -132,6 +132,7 @@ export class QueueDataSource implements IndexDataSource {
               objects.push({
                 spaceId: cursor.spaceId,
                 queueId: block.feedId ?? failedInvariant(),
+                queueNamespace: cursor.resourceId,
                 documentId: null,
                 recordId: null,
                 data,

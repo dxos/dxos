@@ -1,0 +1,28 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+// Operation handler that mutates an existing ECHO object.
+// ECHO objects are reactive — direct property assignment triggers replication
+// to other peers and re-renders in the UI.
+
+import * as Effect from 'effect/Effect';
+
+import { Operation } from '@dxos/compute';
+import { Obj } from '@dxos/echo';
+
+import { SampleOperation } from '../types';
+
+const handler: Operation.WithHandler<typeof SampleOperation.UpdateStatus> = SampleOperation.UpdateStatus.pipe(
+  Operation.withHandler(({ item, status }) =>
+    // `Effect.sync` wraps a synchronous side-effect. For async work, use `Effect.promise`.
+    // `Obj.update` provides a mutable draft for safe property assignment on ECHO objects.
+    Effect.sync(() => {
+      Obj.update(item, (item) => {
+        item.status = status;
+      });
+    }),
+  ),
+);
+
+export default handler;

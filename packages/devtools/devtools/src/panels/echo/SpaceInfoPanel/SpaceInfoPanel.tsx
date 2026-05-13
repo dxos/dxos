@@ -14,7 +14,6 @@ import { Toolbar } from '@dxos/react-ui';
 import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState, useSpacesInfo } from '../../../hooks';
-
 import { FeedTable, type FeedTableProps } from './FeedTable';
 import { PipelineTable, type PipelineTableProps } from './PipelineTable';
 import { SpaceProperties } from './SpaceProperties';

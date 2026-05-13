@@ -62,12 +62,22 @@ export type SchemaProperty = Pick<SchemaAST.PropertySignature, 'name' | 'type' |
  */
 export const getProperties = (ast: SchemaAST.AST): SchemaProperty[] => {
   const properties = SchemaAST.getPropertySignatures(ast);
-  return properties.map((prop) => ({
-    ...getBaseType(prop),
-    name: prop.name,
-    isOptional: prop.isOptional,
-    isReadonly: prop.isReadonly,
-  }));
+  return properties.map((prop) => {
+    const { type, refinements } = getBaseType(prop);
+    // Merge PropertySignature-level annotations (e.g., title, description set via .annotations())
+    // onto the unwrapped base type so downstream consumers see them.
+    const mergedType =
+      prop.annotations && Reflect.ownKeys(prop.annotations).length > 0
+        ? ({ ...type, annotations: { ...type.annotations, ...prop.annotations } } as SchemaAST.AST)
+        : type;
+    return {
+      type: mergedType,
+      refinements,
+      name: prop.name,
+      isOptional: prop.isOptional,
+      isReadonly: prop.isReadonly,
+    };
+  });
 };
 
 //
@@ -318,6 +328,20 @@ export const isOption = (node: SchemaAST.AST): boolean => {
  */
 export const isLiteralUnion = (node: SchemaAST.AST): node is SchemaAST.Union<SchemaAST.Literal> => {
   return SchemaAST.isUnion(node) && node.types.every(SchemaAST.isLiteral);
+};
+
+/**
+ * Extracts the literal values from a schema that is a union of literals
+ * (e.g. `Schema.Literal('a', 'b')` or `Schema.Union(Schema.Literal('a'), Schema.Literal('b'))`).
+ * Returns an empty array if the schema is not a literal union.
+ */
+export const getLiteralValues = <S extends Schema.Schema<any, any, any>>(
+  schema: S,
+): ReadonlyArray<Schema.Schema.Type<S>> => {
+  if (!isLiteralUnion(schema.ast)) {
+    return [];
+  }
+  return schema.ast.types.map((node) => node.literal as Schema.Schema.Type<S>);
 };
 
 /**

@@ -4,10 +4,11 @@
 
 import React, { useCallback } from 'react';
 
-import { type Database } from '@dxos/react-client/echo';
+import { type Database } from '@dxos/echo';
 import { type Actor } from '@dxos/types';
 
-import { useActorContact } from '../../hooks';
+import { useActorContact } from '#hooks';
+
 import { UserIconButton } from '../UserIconButton';
 
 export type EventAttendeeProps = {
@@ -21,7 +22,7 @@ export const EventAttendee = ({ attendee, db, onContactCreate }: EventAttendeePr
   const handleContactCreate = useCallback(() => onContactCreate?.(attendee), [attendee]);
 
   return (
-    <div role='none' className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
+    <div className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
       <UserIconButton title={attendee.name} value={contactDxn} onContactCreate={handleContactCreate} />
       <h3 className='truncate text-primary-text'>{attendee.name || attendee.email}</h3>
     </div>

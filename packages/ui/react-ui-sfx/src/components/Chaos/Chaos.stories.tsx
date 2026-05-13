@@ -12,7 +12,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { useAudioStream } from '../../hooks';
 import { type ShaderOptions } from '../../shaders';
-
 import { Chaos, type ChaosProps, defaultShaderOptions, shaderPresets } from './Chaos';
 
 type ControlsOptions = ShaderOptions & { preset: string; audio: boolean };

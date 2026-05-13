@@ -2,31 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { FC, forwardRef, RefObject, useRef } from 'react';
+import React, { FC, forwardRef, useState } from 'react';
 
 import type { Obj } from '@dxos/echo';
 import { Board, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
 
-import { useKanbanItemEventHandler } from '../../hooks';
-import { type ColumnStructure, UNCATEGORIZED_VALUE } from '../../types';
+import { useKanbanItemEventHandler } from '#hooks';
+import { type ColumnStructure, UNCATEGORIZED_VALUE } from '#types';
 
-import { useKanbanBoard } from './KanbanBoard';
+import { type KanbanColumnProps, useKanbanBoard } from './context';
+
+export { type KanbanColumnProps };
 
 const KANBAN_COLUMN_NAME = 'KanbanBoard.Column';
-
-export type KanbanColumnProps = Pick<MosaicTileProps<ColumnStructure>, 'location' | 'data' | 'debug'>;
 
 /**
  * Mosaic Tile for Kanban column.
  */
 export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
-  ({ data: column, location, debug }, forwardedRef) => {
+  ({ data: column, location, debug, draggable }, forwardedRef) => {
     const { model } = useBoard<ColumnStructure, Obj.Unknown>(KANBAN_COLUMN_NAME);
     const { columnFieldPath, change, onCardAdd, getPivotAttributes, itemTile } = useKanbanBoard(KANBAN_COLUMN_NAME);
 
     const { title } = getPivotAttributes(column.columnValue);
     const uncategorized = column.columnValue === UNCATEGORIZED_VALUE;
-    const dragHandleRef = useRef<HTMLButtonElement | null>(null);
+    const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
 
     const eventHandler = useKanbanItemEventHandler({
       column,
@@ -41,7 +41,8 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
         location={location}
         classNames='grid grid-rows-[var(--dx-rail-action)_1fr_var(--dx-rail-action)]'
         debug={debug}
-        dragHandleRef={dragHandleRef}
+        draggable={draggable}
+        dragHandle={dragHandle}
         ref={forwardedRef}
       >
         {uncategorized ? (
@@ -49,18 +50,20 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
             <span className='font-medium'>{title}</span>
           </div>
         ) : (
-          <Board.Column.Header label={title} dragHandleRef={dragHandleRef as RefObject<HTMLButtonElement>} />
+          <Board.Column.Header label={title} dragHandleRef={setDragHandle} />
         )}
         <Board.Column.Body
           data={column}
           eventHandler={eventHandler}
           Tile={itemTile as FC<MosaicTileProps<Obj.Unknown>>}
         />
-        {onCardAdd && (
-          <Board.Column.Footer
-            onAdd={() => onCardAdd(column.columnValue === UNCATEGORIZED_VALUE ? undefined : column.columnValue)}
-          />
-        )}
+        <Board.Column.Footer
+          onAdd={
+            onCardAdd
+              ? () => onCardAdd(column.columnValue === UNCATEGORIZED_VALUE ? undefined : column.columnValue)
+              : undefined
+          }
+        />
       </Board.Column.Root>
     );
   },

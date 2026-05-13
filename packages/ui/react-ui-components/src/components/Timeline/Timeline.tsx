@@ -2,17 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';
 import { Icon, type ThemedClassName, useDynamicRef, useForwardedRef, useTranslation } from '@dxos/react-ui';
-import { ScrollContainer, type ScrollController } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
 
 export type TimelineOptions = {
   lineHeight: number;
@@ -57,40 +56,46 @@ export type TimelineProps = ThemedClassName<{
   /** Optional whitelist. */
   branches?: string[];
   commits?: Commit[];
+  /**
+   * Controlled value for the highlighted branch.
+   * When provided, takes precedence over the branch derived from the currently selected commit.
+   */
+  currentBranch?: string | null;
   showTimestamp?: boolean;
   showIcon?: boolean;
   compact?: boolean;
   options?: TimelineOptions;
   debug?: boolean;
-  onCurrentChange?: (props: { current?: number; commit?: Commit }) => void;
+  onChange?: (props: { current?: number; commit?: Commit }) => void;
   /**
    * Callback when a commit with a link is clicked.
    * If provided, commits with links will be navigable.
    */
-  onCommitClick?: (commit: Commit) => void;
+  onSelect?: (commit: Commit | undefined) => void;
 }>;
 
 /**
  * GitGraph-style timeline.
  */
-export const Timeline = forwardRef<ScrollController, TimelineProps>(
+export const Timeline = composable<HTMLDivElement, TimelineProps>(
   (
     {
-      classNames,
       branches: branchesProp,
       commits = empty,
+      currentBranch,
       showTimestamp = false,
       showIcon = true,
       compact = false,
       options = compact ? compactOptions : defaultOptions,
       debug = false,
-      onCurrentChange,
-      onCommitClick,
+      onChange,
+      onSelect,
+      ...props
     },
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
-    const scrollerRef = useForwardedRef(forwardedRef);
+    const containerRef = useForwardedRef(forwardedRef);
 
     // Auto-discover branches if not provided.
     const branches = useMemo(() => {
@@ -109,8 +114,64 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
 
     // NOTE: Assumes commits are in topological order.
     const getCommitIndex = (id: string) => commits.findIndex((c) => c.id === id);
-    const getBranchIndex = (branch: string): number => branches.findIndex((b) => b === branch);
     const getBranch = (id: string) => commits.find((c) => c.id === id)?.branch;
+
+    /**
+     * Assign branches to lanes, reusing lanes once a branch has been merged.
+     * Unmerged branches keep their lane active (they may still be in progress).
+     */
+    const { branchLane, laneCount } = useMemo(() => {
+      const visibleBranches = new Set(branches);
+
+      const commitBranch = new Map<string, string>();
+      for (const commit of commits) {
+        commitBranch.set(commit.id, commit.branch);
+      }
+
+      // Find the row at which each branch is merged by another branch.
+      const mergeRow = new Map<string, number>();
+      for (let row = 0; row < commits.length; row++) {
+        const commit = commits[row]!;
+        for (const parentId of commit.parents ?? []) {
+          const parentBranch = commitBranch.get(parentId);
+          if (parentBranch && parentBranch !== commit.branch && visibleBranches.has(parentBranch)) {
+            mergeRow.set(parentBranch, Math.max(mergeRow.get(parentBranch) ?? row, row));
+          }
+        }
+      }
+
+      const branchLane = new Map<string, number>();
+      if (branches.length > 0) {
+        branchLane.set(branches[0]!, 0);
+      }
+
+      const activeLanes = new Set<number>([0]);
+      let maxLane = 0;
+
+      for (let row = 0; row < commits.length; row++) {
+        const commit = commits[row]!;
+        if (visibleBranches.has(commit.branch) && !branchLane.has(commit.branch)) {
+          let lane = 1;
+          while (activeLanes.has(lane)) {
+            lane++;
+          }
+          branchLane.set(commit.branch, lane);
+          activeLanes.add(lane);
+          maxLane = Math.max(maxLane, lane);
+        }
+
+        // Release lanes for branches that have been merged at this row.
+        for (const [branch, endRow] of mergeRow) {
+          if (endRow === row && branch !== branches[0] && branchLane.has(branch)) {
+            activeLanes.delete(branchLane.get(branch)!);
+          }
+        }
+      }
+
+      return { branchLane, laneCount: maxLane + 1 };
+    }, [commits, branches]);
+
+    const getBranchIndex = (branch: string): number => branchLane.get(branch) ?? -1;
 
     /**
      * Create spans for each branch.
@@ -147,16 +208,31 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
     }, [commits, branches]);
 
     // Navigation.
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [current, setCurrent] = useState<number | undefined>();
-    const currentRef = useDynamicRef(current);
+    const [current, setCurrent] = useState<number | undefined>(undefined);
+    const currentRef = useDynamicRef<number | undefined>(current);
+    const selectedRef = useDynamicRef<number | undefined>(undefined);
     const currentCommit = useMemo(() => (current !== undefined ? commits[current] : undefined), [current, commits]);
 
+    // Controlled `currentBranch` takes precedence over the branch derived from the selected commit.
+    const highlightedBranch = currentBranch ?? currentCommit?.branch;
+
     useEffect(() => {
-      onCurrentChange?.({ current, commit: current === undefined ? undefined : commits[current] });
+      onChange?.({ current, commit: current === undefined ? undefined : commits[current] });
       const el = containerRef.current?.querySelector(`[data-index="${current}"]`);
       el?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
-    }, [current]);
+    }, [onChange, current]);
+
+    // When the controlled `currentBranch` changes, jump to the first commit on that branch.
+    useEffect(() => {
+      if (!currentBranch) {
+        return;
+      }
+
+      const index = commits.findIndex((commit) => commit.branch === currentBranch);
+      if (index >= 0) {
+        setCurrent(index);
+      }
+    }, [currentBranch]);
 
     useEffect(() => {
       if (!containerRef.current) {
@@ -207,8 +283,12 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
             }
             break;
           }
-          case 'Escape': {
-            setCurrent(undefined);
+          case 'Enter': {
+            event.preventDefault();
+            if (currentRef.current !== undefined) {
+              selectedRef.current = currentRef.current === selectedRef.current ? undefined : currentRef.current;
+              onSelect?.(selectedRef.current !== undefined ? commits[selectedRef.current] : undefined);
+            }
             break;
           }
         }
@@ -216,92 +296,93 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
     }, [commits, containerRef.current]);
 
     return (
-      <ScrollContainer.Root classNames={classNames} pin ref={scrollerRef}>
-        <ScrollContainer.Viewport>
-          <div
-            role='none'
-            tabIndex={0}
-            className='grid outline-none'
-            style={{
-              gridTemplateColumns: ['min-content', showTimestamp && '96px', showIcon && '1.5rem', '1fr']
-                .filter(Boolean)
-                .join(' '),
-            }}
-            ref={containerRef}
-          >
-            {commits.length < 1 ? (
-              <p className='col-span-full text-description p-trim-md'>{t('no commits message')}</p>
-            ) : (
-              commits.map((commit, index) => {
-                // Skip branches that are not whitelisted.
-                const idx = getBranchIndex(commit.branch);
-                if (idx === -1) {
-                  return null;
-                }
+      <div
+        {...composableProps(props, { classNames: 'grid auto-rows-min outline-none' })}
+        tabIndex={0}
+        style={{
+          gridTemplateColumns: ['min-content', showTimestamp && '96px', showIcon && '1.5rem', '1fr']
+            .filter(Boolean)
+            .join(' '),
+        }}
+        ref={containerRef}
+      >
+        {commits.length < 1 ? (
+          <p className='col-span-full text-description p-trim-md'>{t('no-commits.message')}</p>
+        ) : (
+          commits.map((commit, index) => {
+            // Skip branches that are not whitelisted.
+            const idx = getBranchIndex(commit.branch);
+            if (idx === -1) {
+              return null;
+            }
 
-                const hasLink = !!commit.link && !!onCommitClick;
-                const handleClick = () => {
-                  setCurrent(index);
-                  if (hasLink) {
-                    onCommitClick(commit);
-                  }
-                };
+            const hasLink = !!commit.link && !!onSelect;
+            const handleClick = () => {
+              setCurrent(index);
+              selectedRef.current = index;
+              onSelect?.(commit);
+            };
 
-                return (
-                  <div
-                    key={commit.id}
-                    data-index={index}
-                    aria-current={current === index}
-                    className={mx(
-                      'group col-span-full grid grid-cols-subgrid gap-1 overflow-hidden items-center',
-                      'aria-[current=true]:bg-active-surface hover:bg-hover-surface',
-                      hasLink && 'cursor-pointer',
-                    )}
-                    style={{ height: `${options.lineHeight}px` }}
-                    onClick={handleClick}
-                  >
-                    <div role='none' className='px-1'>
-                      <LineVector
-                        branches={branches}
-                        spans={spans}
-                        index={index}
-                        commit={commit}
-                        currentCommit={currentCommit}
-                        options={options}
-                      />
-                    </div>
-                    {showTimestamp && (
-                      <div className='text-xs font-mono truncate items-center text-subdued'>
-                        {commit.timestamp && format(commit.timestamp, 'HH:mm:ss.SSS')}
-                      </div>
-                    )}
-                    {showIcon &&
-                      (commit.icon ? (
-                        <Icon icon={commit.icon} classNames={mx(commit.level && levelColors[commit.level])} size={4} />
-                      ) : (
-                        <div />
-                      ))}
-                    <div
-                      role='none'
-                      className={mx(
-                        'text-sm truncate cursor-pointer text-subdued group-hover:text-base-surface-text',
-                        hasLink && 'underline decoration-dotted underline-offset-2',
-                      )}
-                    >
-                      {debug ? JSON.stringify({ id: commit.id, parents: commit.parents }) : commit.message}
-                    </div>
+            return (
+              <div
+                key={commit.id}
+                data-index={index}
+                aria-current={current === index}
+                className='dx-row dx-current dx-hover group/row col-span-full grid grid-cols-subgrid gap-1 overflow-hidden items-center px-[2px]'
+                style={{ height: `${options.lineHeight}px` }}
+                onClick={handleClick}
+              >
+                <div className='px-1'>
+                  <LineVector
+                    branchLane={branchLane}
+                    laneCount={laneCount}
+                    spans={spans}
+                    index={index}
+                    commit={commit}
+                    highlightedBranch={highlightedBranch}
+                    options={options}
+                  />
+                </div>
+                {showTimestamp && (
+                  <div className='text-xs font-mono truncate items-center text-subdued'>
+                    {commit.timestamp && format(commit.timestamp, 'HH:mm:ss.SSS')}
                   </div>
-                );
-              })
-            )}
-          </div>
-        </ScrollContainer.Viewport>
-        <ScrollContainer.ScrollDownButton />
-        <ScrollContainer.Fade />
-      </ScrollContainer.Root>
+                )}
+                {showIcon && <CommitIcon commit={commit} />}
+                <div
+                  className={mx(
+                    'text-sm truncate cursor-pointer text-subdued font-thin dx-current-row dx-hover-row',
+                    hasLink && 'underline decoration-dotted underline-offset-2',
+                  )}
+                >
+                  {debug ? JSON.stringify({ id: commit.id, parents: commit.parents }) : commit.message}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
     );
   },
 );
+
+const CommitIcon = ({ commit }: { commit: Commit }) => {
+  if (!commit.icon) {
+    return <div />;
+  }
+
+  return (
+    <Icon
+      icon={commit.icon}
+      size={4}
+      synchronized
+      classNames={mx(
+        commit.icon === 'ph--spinner-gap--regular' && 'animate-spin',
+        commit.level !== undefined && levelColors[commit.level],
+      )}
+    />
+  );
+};
 
 type Span = {
   start: number;
@@ -329,21 +410,22 @@ const levelColors: Record<LogLevel, string> = {
 };
 
 type LineVectorProps = {
-  branches: readonly string[];
+  branchLane: Map<string, number>;
+  laneCount: number;
   spans: Map<string, Span>;
   index: number;
   commit: Commit;
-  currentCommit: Commit | undefined;
+  highlightedBranch: string | undefined;
   options: TimelineOptions;
 };
 
 /**
  * SVG for node and connector paths.
  */
-const LineVector = ({ branches, spans, index, commit, currentCommit, options }: LineVectorProps) => {
+const LineVector = ({ branchLane, laneCount, spans, index, commit, highlightedBranch, options }: LineVectorProps) => {
   const halfHeight = options.lineHeight / 2;
   const cx = (c: number) => c * options.columnWidth + options.columnWidth / 2;
-  const getBranchIndex = (branch: string): number => branches.findIndex((b) => b === branch);
+  const getBranchIndex = (branch: string): number => branchLane.get(branch) ?? -1;
 
   // Create connector path.
   const createPath = (index: number, commit: Commit, branch: string, span: Span): string | undefined => {
@@ -380,25 +462,30 @@ const LineVector = ({ branches, spans, index, commit, currentCommit, options }: 
     }
   };
 
-  const col = branches.findIndex((branch) => branch === commit.branch);
+  const col = getBranchIndex(commit.branch);
   const color = colors[col % colors.length];
   const opacity = (branch: string | undefined) => [
     'duration-500 transition-opacity',
-    branch === currentCommit?.branch ? 'opacity-100' : 'opacity-50',
+    highlightedBranch === undefined || branch === highlightedBranch ? 'opacity-100' : 'opacity-50',
   ];
 
   return (
-    <svg width={branches.length * options.columnWidth} height={options.lineHeight}>
+    <svg width={laneCount * options.columnWidth} height={options.lineHeight}>
       {/* Connectors */}
-      {branches.map((branch, col) => {
-        const color = colors[col % colors.length];
-        const span = spans.get(branch);
-        const path = span && createPath(index, commit, branch, span);
+      {[...spans.entries()].map(([branch, span]) => {
+        const lane = getBranchIndex(branch);
+        if (lane < 0) {
+          return null;
+        }
+        const color = colors[lane % colors.length];
+        const path = createPath(index, commit, branch, span);
         if (!path) {
           return null;
         }
 
-        return <path key={col} d={path} fill='none' className={mx(options.lineStyle, color.stroke, opacity(branch))} />;
+        return (
+          <path key={branch} d={path} fill='none' className={mx(options.lineStyle, color.stroke, opacity(branch))} />
+        );
       })}
 
       {/* Node */}

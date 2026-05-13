@@ -11,7 +11,7 @@ import { type AttendableId, type Related, useAttention } from '@dxos/react-ui-at
 import { mx } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
 
 import { MenuSignifierHorizontal } from './MenuSignifier';
 

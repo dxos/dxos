@@ -5,10 +5,10 @@
 import { RegistryContext } from '@effect-atom/atom-react';
 import { type RefObject, useCallback, useContext, useMemo, useRef } from 'react';
 
-import { type Database, type Type } from '@dxos/echo';
+import { type Database, Filter, type Type } from '@dxos/echo';
 import { isMutable } from '@dxos/echo/internal';
-import { faker } from '@dxos/random';
-import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
+import { random } from '@dxos/random';
+import { useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientStory } from '@dxos/react-client/testing';
 import { useGlobalFilteredObjects } from '@dxos/react-ui-search';
 import { type ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
@@ -18,7 +18,7 @@ import { useAddRow, useProjectionModel, useTableModel } from '../hooks';
 import { type TableModel, TablePresentation } from '../model';
 import { Table } from '../types';
 
-faker.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
+random.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
 
 export type TestTableModel<T extends Type.AnyObj = Type.AnyObj> = {
   schema: T | undefined;

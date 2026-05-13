@@ -9,9 +9,9 @@
 import { describe, expect, test } from 'vitest';
 
 import { Filter, Order, Query } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
 import { type QueryAST } from '@dxos/echo-protocol';
-import { LegacyDXN as DXN, SpaceId } from '@dxos/keys';
+import { TestSchema } from '@dxos/echo/testing';
+import { SpaceId } from '@dxos/keys';
 
 import { QueryPlanner } from './query-planner';
 
@@ -1014,8 +1014,8 @@ describe('QueryPlanner', () => {
     `);
   });
 
-  test('select items from a specific queue', () => {
-    const query = Query.select(Filter.type(TestSchema.Task)).from({ queues: [QUEUE_DXN] });
+  test('select items from a specific feed', () => {
+    const query = Query.select(Filter.type(TestSchema.Task)).from({ feeds: [QUEUE_DXN] });
 
     const plan = planner.createPlan(query.ast);
     expect(plan).toMatchInlineSnapshot(`
@@ -1024,7 +1024,7 @@ describe('QueryPlanner', () => {
           {
             "_tag": "SelectStep",
             "scope": {
-              "queues": [
+              "feeds": [
                 "dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E",
               ],
             },
@@ -1062,10 +1062,10 @@ describe('QueryPlanner', () => {
     `);
   });
 
-  test('select items from all queues in a space', () => {
+  test('select items from all feeds in a space', () => {
     const query = Query.select(Filter.type(TestSchema.Task)).from({
       spaceIds: [SPACE_ID],
-      allQueuesFromSpaces: true,
+      allFeedsFromSpaces: true,
     });
 
     const plan = planner.createPlan(query.ast);
@@ -1075,7 +1075,7 @@ describe('QueryPlanner', () => {
           {
             "_tag": "SelectStep",
             "scope": {
-              "allQueuesFromSpaces": true,
+              "allFeedsFromSpaces": true,
               "spaceIds": [
                 "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
               ],
@@ -1388,7 +1388,7 @@ describe('QueryPlanner', () => {
           {
             "_tag": "SelectStep",
             "scope": {
-              "allQueuesFromSpaces": true,
+              "allFeedsFromSpaces": true,
             },
             "selector": {
               "_tag": "TypeSelector",
@@ -1424,26 +1424,26 @@ describe('QueryPlanner', () => {
     `);
   });
 
-  test('from specific feed via queues scope', () => {
-    const query = Query.select(Filter.type(TestSchema.Task)).from({ queues: [QUEUE_DXN] });
+  test('from specific feed via feeds scope', () => {
+    const query = Query.select(Filter.type(TestSchema.Task)).from({ feeds: [QUEUE_DXN] });
 
     const plan = planner.createPlan(query.ast);
     expect(plan.steps[0]).toMatchObject({
       _tag: 'SelectStep',
-      scope: { queues: [QUEUE_DXN] },
+      scope: { feeds: [QUEUE_DXN] },
     });
   });
 
   test('from specific space with feeds', () => {
     const query = Query.select(Filter.type(TestSchema.Person)).from({
       spaceIds: [SPACE_ID],
-      allQueuesFromSpaces: true,
+      allFeedsFromSpaces: true,
     });
 
     const plan = planner.createPlan(query.ast);
     expect(plan.steps[0]).toMatchObject({
       _tag: 'SelectStep',
-      scope: { spaceIds: [SPACE_ID], allQueuesFromSpaces: true },
+      scope: { spaceIds: [SPACE_ID], allFeedsFromSpaces: true },
     });
   });
 

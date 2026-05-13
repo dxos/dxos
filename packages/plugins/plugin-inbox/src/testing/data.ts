@@ -10,7 +10,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { ObjectId } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 
-import { Mailbox } from '../types';
+import { Mailbox } from '#types';
 
 import { Builder } from './builder';
 
@@ -33,7 +33,7 @@ export const initializeMailbox = async (space: Space, count = 0) => {
     throw new Error('Mailbox missing backing feed');
   }
 
-  const { messages } = new Builder().createLinkedMessages(count, space).build();
+  const { messages } = new Builder().createMessages(count, { links: { space }, threads: 10 }).build();
   await runAndForwardErrors(Feed.append(feed, messages).pipe(Effect.provide(createFeedServiceLayer(space.queues))));
   return mailbox;
 };

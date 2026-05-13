@@ -7,9 +7,9 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import React from 'react';
 
 import { log } from '@dxos/log';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { blast, defaultOptions, dropFile, join, typewriter } from '@dxos/ui-editor';
+import { blast, defaultOptions, dropFile, join, snippets } from '@dxos/ui-editor';
 
 import { EditorStory, content } from './components';
 
@@ -27,16 +27,16 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 //
-// Typewriter
+// Snippets
 //
 
-const typewriterItems = localStorage.getItem('org.dxos.testing.typewriter')?.split(',');
+const snippetItems = localStorage.getItem('org.dxos.testing.snippets')?.split(',');
 
-export const Typewriter: Story = {
+export const Snippets: Story = {
   render: () => (
     <EditorStory
-      text={join('# Typewriter', '', content.paragraphs, content.footer)}
-      extensions={[typewriter({ items: typewriterItems })]}
+      text={join('# Snippets', '', content.paragraphs, content.footer)}
+      extensions={[snippets({ items: snippetItems })]}
     />
   ),
 };
@@ -50,15 +50,15 @@ export const Blast: Story = {
     <EditorStory
       text={join('# Blast', '', content.paragraphs, content.codeblocks, content.paragraphs)}
       extensions={[
-        typewriter({ items: typewriterItems }),
+        snippets({ items: snippetItems }),
         blast(
           defaultsDeep(
             {
               effect: 2,
               particleGravity: 0.2,
               particleShrinkRate: 0.995,
-              color: () => [faker.number.int({ min: 100, max: 200 }), 0, 0],
-              // color: () => [faker.number.int(256), faker.number.int(256), faker.number.int(256)],
+              color: () => [random.number.int({ min: 100, max: 200 }), 0, 0],
+              // color: () => [random.number.int(256), random.number.int(256), random.number.int(256)],
             },
             defaultOptions,
           ),

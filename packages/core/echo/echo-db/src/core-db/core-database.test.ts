@@ -6,10 +6,9 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Entity, Filter, Obj, Ref } from '@dxos/echo';
-import { Query } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
+import { type Entity, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import { TestSchema } from '@dxos/echo/testing';
 import { LegacyDXN, ObjectId, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
@@ -19,7 +18,6 @@ import { type DocHandleProxy, type RepoProxy } from '../automerge';
 import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder, createTmpPath } from '../testing';
-
 import { type CoreDatabase } from './core-database';
 
 describe('CoreDatabase', () => {
@@ -239,11 +237,11 @@ describe('CoreDatabase', () => {
       const partiallyLoadedLinks = range(3).map(() => createTextObject('test2'));
       const objectsToAdd = range(2).map(() => Obj.make(TestSchema.Expando, {}));
       const rootObject = Obj.make(TestSchema.Expando, {});
-      Obj.change(rootObject, (root: any) => {
+      Obj.update(rootObject, (rootObject: any) => {
         [linksToRemove, loadedLinks, partiallyLoadedLinks]
           .flatMap((v: any[]) => v)
           .forEach((obj: any) => {
-            root[obj.id] = Ref.make(obj);
+            rootObject[obj.id] = Ref.make(obj);
           });
       });
 

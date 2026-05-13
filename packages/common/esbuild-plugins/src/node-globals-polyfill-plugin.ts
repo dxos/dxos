@@ -2,9 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { resolve } from 'path';
-
 import type { Plugin } from 'esbuild';
+import { resolve } from 'path';
 
 /**
  * Injects node globals such as `Buffer` or `process`.

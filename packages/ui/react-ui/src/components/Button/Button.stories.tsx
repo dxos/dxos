@@ -8,7 +8,6 @@ import React from 'react';
 import { withTheme } from '../../testing';
 import { withLayoutVariants } from '../../testing';
 import { Icon } from '../Icon';
-
 import { Button, ButtonGroup, type ButtonProps } from './Button';
 
 const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {

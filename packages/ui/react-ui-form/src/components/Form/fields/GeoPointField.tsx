@@ -8,7 +8,8 @@ import { GeoLocation, type GeoPoint } from '@dxos/echo/internal';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
 
-import { translationKey } from '../../../translations';
+import { translationKey } from '#translations';
+
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 export const GeoPointField = ({
@@ -62,17 +63,17 @@ export const GeoPointField = ({
       {layout === 'static' ? (
         <LatLng {...value} />
       ) : (
-        <div role='none' className='grid grid-cols-2 gap-form-gap'>
+        <div className='grid grid-cols-2 gap-form-gap'>
           <div>
             <Input.Root>
-              {layout !== 'inline' && <Input.Label>{t('latitude label')}</Input.Label>}
+              {layout !== 'inline' && <Input.Label>{t('latitude.label')}</Input.Label>}
               <Input.TextInput
                 type='number'
                 step='0.00001'
                 min='-90'
                 max='90'
                 disabled={!!readonly}
-                placeholder={t('latitude placeholder')}
+                placeholder={t('latitude.placeholder')}
                 value={latitudeText ?? ''}
                 onChange={handleChange('latitude', setLatitudeText)}
                 onBlur={onBlur}
@@ -81,14 +82,14 @@ export const GeoPointField = ({
           </div>
           <div>
             <Input.Root>
-              {layout !== 'inline' && <Input.Label>{t('longitude label')}</Input.Label>}
+              {layout !== 'inline' && <Input.Label>{t('longitude.label')}</Input.Label>}
               <Input.TextInput
                 type='number'
                 step='0.00001'
                 min='-180'
                 max='180'
                 disabled={!!readonly}
-                placeholder={t('longitude placeholder')}
+                placeholder={t('longitude.placeholder')}
                 value={longitudeText ?? ''}
                 onChange={handleChange('longitude', setLongitudeText)}
                 onBlur={onBlur}

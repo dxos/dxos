@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Browser, type ConsoleMessage, type Locator, type Page, expect } from '@playwright/test';
 import os from 'node:os';
-
-import type { Browser, ConsoleMessage, Locator, Page } from '@playwright/test';
 
 import { Trigger } from '@dxos/async';
 import { ShellManager } from '@dxos/shell/testing';
@@ -19,6 +18,7 @@ import { DeckManager } from './plugins';
 //   At least via `navigator.userAgent.platform`.
 const isMac = os.platform() === 'darwin';
 const modifier = isMac ? 'Meta' : 'Control';
+
 export const INITIAL_URL = 'http://localhost:4173';
 
 export class AppManager {
@@ -123,9 +123,24 @@ export class AppManager {
   }
 
   async shareSpace(): Promise<void> {
-    await this.currentWorkspace.getByTestId('navtree.spaceSettings').click();
-    await this.currentWorkspace.getByTestId('spacePlugin.members').getByTestId('treeItem.heading').click();
-    await this.currentWorkspace.getByTestId('navtree.backToSpace').click();
+    // Members is nested under the Settings section in the navtree. Scope
+    // the generic treeItem.toggle / treeItem.heading testids to the
+    // settings/members rows by their row testids, and expand settings
+    // first if its members heading isn't visible yet.
+    const membersHeading = this.currentWorkspace
+      .getByTestId('spacePlugin.members')
+      .first()
+      .getByTestId('treeItem.heading')
+      .first();
+    if (!(await membersHeading.isVisible())) {
+      await this.currentWorkspace
+        .getByTestId('spacePlugin.settings')
+        .first()
+        .getByTestId('treeItem.toggle')
+        .first()
+        .click();
+    }
+    await membersHeading.click();
   }
 
   async createSpaceInvitation(): Promise<string> {
@@ -322,11 +337,20 @@ export class AppManager {
   }
 
   async openPluginRegistry(): Promise<void> {
-    await this.page.getByTestId('treeView.pluginRegistry').click();
+    // Direct-navigate to the registry workspace rather than clicking the
+    // pinned tree node. The click path requires the layout/settings
+    // operation handlers to be fully registered before the click fires; in
+    // firefox that initialisation occasionally lags behind first paint, so
+    // the click is silently swallowed and the test then times out waiting
+    // for the registry tree to render. URL-driven navigation has no such
+    // dependency on operation-handler registration.
+    await this.page.goto(`${INITIAL_URL.replace(/\/$/, '')}/!dxos:plugin-registry`);
+    await this.page.getByTestId('pluginRegistry.recommended').waitFor({ state: 'visible' });
   }
 
   async openRegistryCategory(category: string): Promise<void> {
-    await this.page.getByTestId(`pluginRegistry.${category}`).click();
+    await this.page.goto(`${INITIAL_URL.replace(/\/$/, '')}/!dxos:plugin-registry/plugin-registry%3E${category}`);
+    await this.page.getByTestId(`pluginRegistry.${category}`).waitFor({ state: 'visible' });
   }
 
   getPluginToggle(plugin: string): Locator {
@@ -334,7 +358,19 @@ export class AppManager {
   }
 
   async enablePlugin(plugin: string): Promise<void> {
-    await this.getPluginToggle(plugin).click();
+    const toggle = this.getPluginToggle(plugin);
+    // Wait for the toggle to be present and stable before clicking — the
+    // plugin list re-renders after the workspace switch and the React
+    // onClick handler may not be bound on the first render that produces
+    // the checkbox element.
+    await expect(toggle).toBeVisible();
+    await expect(toggle).not.toBeChecked();
+    await toggle.click();
+    // Wait for the click to actually flip the toggle's checked state before
+    // reloading — the click handler persists the enable into storage and
+    // navigating mid-write leaves the new page's plugin manager in an
+    // inconsistent state where the lazy plugin chunk fetch can be cancelled.
+    await expect(toggle).toBeChecked();
     await this.page.goto(INITIAL_URL);
     await this.page.getByTestId('treeView.userAccount').waitFor();
   }

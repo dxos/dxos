@@ -5,13 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
-import { NativeFilesystemCapabilities } from '../types';
+import { NativeFilesystemCapabilities, NativeFilesystemOperation } from '../types';
 
-import { CloseDirectory } from './definitions';
-
-export default CloseDirectory.pipe(
+export default NativeFilesystemOperation.CloseDirectory.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ id }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);

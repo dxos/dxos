@@ -3,3 +3,4 @@
 //
 
 export * from './Timeline';
+export { renderTimelineAscii } from './timeline-printer';

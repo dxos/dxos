@@ -127,7 +127,7 @@ export const whenEchoType =
  * @example
  * ```ts
  * GraphBuilder.createExtension({
- *   id: 'object-settings',
+ *   id: 'object-properties',
  *   match: NodeMatcher.whenEchoObject,
  *   connector: (object) => {
  *     // `object` is typed as Obj.Unknown
@@ -201,10 +201,10 @@ export const whenAll: {
  *
  * @example
  * ```ts
- * // Match nodes that are either Sequences or Prompts
+ * // Match nodes that are either Sequences or Routines
  * const whenInvocable = NodeMatcher.whenAny(
  *   NodeMatcher.whenEchoTypeMatches(Sequence),
- *   NodeMatcher.whenEchoTypeMatches(Prompt.Prompt),
+ *   NodeMatcher.whenEchoTypeMatches(Routine.Routine),
  * );
  * ```
  */

@@ -4,14 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 
-import { Voxel } from '../types';
+import { Voxel, VoxelOperation } from '../types';
 
-import { QueryWorld } from './definitions';
-
-const handler: Operation.WithHandler<typeof QueryWorld> = QueryWorld.pipe(
+const handler: Operation.WithHandler<typeof VoxelOperation.QueryWorld> = VoxelOperation.QueryWorld.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ world }) {
       const worldObj = (yield* Database.load(world)) as Voxel.World;

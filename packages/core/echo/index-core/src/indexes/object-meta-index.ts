@@ -26,6 +26,8 @@ export const ObjectMeta = Schema.Struct({
   recordId: Schema.Number,
   objectId: Schema.String,
   queueId: Schema.String,
+  /** Queue subspace namespace (e.g. 'data', 'trace'). Empty string for non-queue objects. */
+  queueNamespace: Schema.String,
   spaceId: Schema.String,
   documentId: Schema.String,
   entityKind: Schema.String,
@@ -84,6 +86,7 @@ export class ObjectMetaIndex implements Index {
       recordId INTEGER PRIMARY KEY AUTOINCREMENT,
       objectId TEXT NOT NULL,
       queueId TEXT NOT NULL DEFAULT '',
+      queueNamespace TEXT NOT NULL DEFAULT '',
       spaceId TEXT NOT NULL,
       documentId TEXT NOT NULL DEFAULT '',
       entityKind TEXT NOT NULL,
@@ -102,6 +105,11 @@ export class ObjectMetaIndex implements Index {
     // Add timestamp columns for tables created before they were introduced.
     yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN createdAt INTEGER`, () => Effect.void);
     yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN updatedAt INTEGER`, () => Effect.void);
+    // Add queueNamespace column for tables created before it was introduced.
+    yield* Effect.catchAll(
+      sql`ALTER TABLE objectMeta ADD COLUMN queueNamespace TEXT NOT NULL DEFAULT ''`,
+      () => Effect.void,
+    );
 
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_objectId ON objectMeta(spaceId, objectId)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_typeDxn ON objectMeta(spaceId, typeDxn)`;
@@ -246,7 +254,7 @@ export class ObjectMetaIndex implements Index {
           objects,
           (object) =>
             Effect.gen(function* () {
-              const { spaceId, queueId, documentId, data } = object;
+              const { spaceId, queueId, queueNamespace, documentId, data } = object;
 
               // Extract metadata (Logic emulating Echo APIs as strict imports are unavailable).
               const castData = data;
@@ -288,6 +296,7 @@ export class ObjectMetaIndex implements Index {
                 yield* sql`
                   UPDATE objectMeta SET
                     version = ${version},
+                    queueNamespace = ${queueNamespace ?? ''},
                     entityKind = ${entityKind},
                     typeDxn = ${typeDxn},
                     deleted = ${deleted},
@@ -300,12 +309,12 @@ export class ObjectMetaIndex implements Index {
               } else {
                 yield* sql`
                   INSERT INTO objectMeta (
-                    objectId, queueId, spaceId, documentId, 
+                    objectId, queueId, queueNamespace, spaceId, documentId,
                     entityKind, typeDxn, deleted, source, target, parent, version,
                     createdAt, updatedAt
                   ) VALUES (
-                    ${objectId}, ${queueId ?? ''}, ${spaceId}, ${documentId ?? ''}, 
-                    ${entityKind}, ${typeDxn}, ${deleted}, 
+                    ${objectId}, ${queueId ?? ''}, ${queueNamespace ?? ''}, ${spaceId}, ${documentId ?? ''},
+                    ${entityKind}, ${typeDxn}, ${deleted},
                     ${source}, ${target}, ${parent}, ${version},
                     ${sourceTimestamp}, ${sourceTimestamp}
                   )
@@ -453,6 +462,10 @@ export class ObjectMetaIndex implements Index {
 
   /**
    * Query children by parent object ids.
+   * Matches both:
+   * - Objects whose `parent` field references one of the given parent ids (standard parent/child hierarchy).
+   * - Queue items whose `queueId` equals one of the parent ids (e.g. items inside a Feed, since a feed's queue
+   *   DXN uses the feed's object id as its queue id — see `Feed.getQueueDxn`).
    */
   queryChildren = Effect.fn('ObjectMetaIndex.queryChildren')(
     (query: {
@@ -465,8 +478,9 @@ export class ObjectMetaIndex implements Index {
         }
 
         const sql = yield* SqlClient.SqlClient;
+        const parentDxns = query.parentIds.map((id) => DXN.fromLocalObjectId(id).toString());
         const rows =
-          yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId IN ${sql.in(query.spaceId)} AND parent IN ${sql.in(query.parentIds.map((id) => DXN.fromLocalObjectId(id).toString()))}`;
+          yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', query.spaceId)} AND (${sql.in('parent', parentDxns)} OR ${sql.in('queueId', query.parentIds)})`;
 
         return rows.map((row) => ({
           ...row,

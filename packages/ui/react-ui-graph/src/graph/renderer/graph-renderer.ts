@@ -9,7 +9,6 @@ import { log } from '@dxos/log';
 
 import { type D3Callable, type D3Selection, type Point, getCircumferencePoints } from '../../util';
 import { type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from '../types';
-
 import { createBullets } from './bullets';
 import { Renderer, type RendererOptions } from './renderer';
 
@@ -251,20 +250,20 @@ const createNode: D3Callable = <Data>(group: D3Selection, options: GraphRenderer
       options.onNodePointerEnter(node, event);
     });
 
-    group.attr('data-hover', 'handled'); // TODO(burdon): ???
+    group.attr('data-hover', 'handled');
   } else if (options.highlight !== false) {
     circle.on('pointerenter', function () {
       select(this.closest('g.dx-node')).raise();
       if (options.labels) {
-        select(this.parentElement).classed('dx-active', true).classed('dx-highlight', true);
+        select(this.parentElement).classed('dx-node-active', true).classed('dx-highlight', true);
       }
     });
 
     group.on('pointerleave', function () {
       if (options.labels) {
-        select(this).classed('dx-active', false);
+        select(this).classed('dx-node-active', false);
         setTimeout(() => {
-          if (!select(this).classed('dx-active')) {
+          if (!select(this).classed('dx-node-active')) {
             select(this).classed('dx-highlight', false);
           }
         }, 300);

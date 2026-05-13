@@ -11,6 +11,7 @@ tasks:
     inputs:
       - '@group(sources)'
       - /vitest.base.config.ts
+      - /pnpm-lock.yaml # Ensure cache is invalidated when dependencies change.
       - vitest.config.ts
       - $VITEST_COVERAGE
       - $VITEST_DEBUG

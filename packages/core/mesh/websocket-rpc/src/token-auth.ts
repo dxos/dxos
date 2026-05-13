@@ -6,9 +6,8 @@
 // https://stackoverflow.com/questions/4361173/http-headers-in-websockets-client-api/77060459#77060459
 
 import { type IncomingMessage } from 'http';
-import { type Socket } from 'node:net';
-
 import WebSocket from 'isomorphic-ws';
+import { type Socket } from 'node:net';
 
 import { log } from '@dxos/log';
 

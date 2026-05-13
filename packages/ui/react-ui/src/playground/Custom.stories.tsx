@@ -20,10 +20,17 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
             </Button>
           </div>
           <div className='flex justify-center'>
-            <IconButton {...args} label='Test' icon='ph--atom--regular' density='coarse' />
+            <IconButton {...args} label='Test' icon='ph--circle--regular' density='coarse' />
           </div>
           <div className='flex justify-center'>
-            <IconButton {...args} label='Test' icon='ph--atom--regular' iconOnly density='coarse' classNames='px-1.5' />
+            <IconButton
+              {...args}
+              label='Test'
+              icon='ph--circle--regular'
+              iconOnly
+              density='coarse'
+              classNames='px-1.5'
+            />
           </div>
         </div>
 
@@ -35,13 +42,13 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
             </Button>
           </div>
           <div className='flex justify-center'>
-            <IconButton {...args} label='Test' icon='ph--atom--regular' density='fine' classNames='px-2' />
+            <IconButton {...args} label='Test' icon='ph--circle--regular' density='fine' classNames='px-2' />
           </div>
           <div className='flex justify-center'>
             <IconButton
               {...args}
               label='Test'
-              icon='ph--atom--regular'
+              icon='ph--circle--regular'
               iconOnly
               density='fine'
               classNames='py-1 px-1.5'
@@ -60,7 +67,7 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
             <IconButton
               {...args}
               label='Test'
-              icon='ph--atom--regular'
+              icon='ph--circle--regular'
               density='fine'
               classNames={'!h-[24px] !text-[14px] p-1 min-h-0 gap-0.5'}
             />
@@ -69,7 +76,7 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
             <IconButton
               {...args}
               label='Test'
-              icon='ph--atom--regular'
+              icon='ph--circle--regular'
               iconOnly
               density='fine'
               classNames={'!h-[24px] !text-[14px] p-1 min-h-0'}

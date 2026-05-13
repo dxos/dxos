@@ -2,9 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
-
 import * as Args from '@effect/cli/Args';
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
@@ -12,14 +9,16 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 import { CommandConfig, Common, flushAndSync, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
 import { FUNCTIONS_META_KEY } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
-import { Operation } from '@dxos/operation';
 import { PublicKey } from '@dxos/keys';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 

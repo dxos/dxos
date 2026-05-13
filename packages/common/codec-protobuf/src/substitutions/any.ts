@@ -5,7 +5,6 @@
 import { type EncodingOptions, type WithTypeUrl } from '../common';
 import { type TypeMapperContext } from '../mapping';
 import type { Schema } from '../schema';
-
 import { structSubstitutions } from './struct';
 
 export const anySubstitutions = {

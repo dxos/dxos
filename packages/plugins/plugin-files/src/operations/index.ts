@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/operation';
-
-export * as FilesOperation from './definitions';
+import { OperationHandlerSet } from '@dxos/compute';
 
 export const FilesOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./close'),

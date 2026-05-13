@@ -2,6 +2,4 @@
 // Copyright 2020 DXOS.org
 //
 
-import { QueuesPanel } from './QueuesPanel';
-
-export default QueuesPanel;
+export { QueuesPanel as default } from './QueuesPanel';

@@ -7,10 +7,9 @@ import * as Stream from 'effect/Stream';
 
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { type OperationInvoker } from '@dxos/operation';
+import { OperationInvoker } from '@dxos/operation';
 
 import { UndoOperation } from '../../common';
-
 import { EmptyHistoryError } from './errors';
 import type { HistoryEntry } from './types';
 import { resolveMessage } from './undo-mapping';

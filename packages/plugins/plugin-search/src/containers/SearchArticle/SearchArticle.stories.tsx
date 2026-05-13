@@ -9,21 +9,21 @@ import React from 'react';
 import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins, StorybookPlugin } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
-import { SearchContextProvider } from '../../hooks';
-import { translations } from '../../translations';
+import { SearchContextProvider } from '#hooks';
+import { translations } from '#translations';
 
 import { SearchArticle } from './SearchArticle';
 
-faker.seed(0);
+random.seed(0);
 
 const DefaultStory = () => {
   const spaces = useSpaces();
@@ -34,14 +34,13 @@ const DefaultStory = () => {
 
   return (
     <SearchContextProvider>
-      <SearchArticle space={space} />
+      <SearchArticle role='article' space={space} attendableId={space.id} />
     </SearchContextProvider>
   );
 };
 
 const meta = {
   title: 'plugins/plugin-search/containers/SearchArticle',
-  component: SearchArticle,
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
@@ -56,7 +55,7 @@ const meta = {
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
 
-              const factory = createObjectFactory(personalSpace.db, faker as any);
+              const factory = createObjectFactory(personalSpace.db, random as any);
               yield* Effect.promise(() =>
                 factory([
                   { type: Organization.Organization, count: 10 },
@@ -71,7 +70,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof SearchArticle>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

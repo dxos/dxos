@@ -12,10 +12,13 @@ export const meta: Plugin.Meta = {
     Intelligent AI assistant that can analyze and interact with objects across your spaces.
     Chat naturally to get insights, search content, and perform actions using AI-powered context awareness.
   `,
-  icon: 'ph--atom--regular',
+  icon: 'ph--sparkle--regular',
   iconHue: 'sky',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-assistant',
   tags: ['labs'],
 };
 
 export const ASSISTANT_DIALOG = `${meta.id}.assistant.dialog`;
+
+/** Companion variant identifier for the assistant chat panel. */
+export const ASSISTANT_COMPANION_VARIANT = 'assistant-chat';

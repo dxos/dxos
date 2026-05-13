@@ -23,13 +23,14 @@ import {
   type AdmissionResponse,
   type SpaceAdmissionRequest,
 } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { trace } from '@dxos/tracing';
 
 import { type InvitationProtocol } from './invitation-protocol';
 import { type FlowLockHolder, type GuardedInvitationState } from './invitation-state';
 import { tryAcquireBeforeContextDisposed } from './utils';
 
 export interface EdgeInvitationHandlerCallbacks {
-  onInvitationSuccess(response: AdmissionResponse, request: AdmissionRequest): Promise<void>;
+  onInvitationSuccess(ctx: Context, response: AdmissionResponse, request: AdmissionRequest): Promise<void>;
 }
 
 export const MAX_RETRIES_PER_INVITATION = 5;
@@ -41,6 +42,7 @@ export type EdgeInvitationConfig = {
   retryJitter?: number;
 };
 
+@trace.resource()
 export class EdgeInvitationHandler implements FlowLockHolder {
   private _flowLock: MutexGuard | undefined;
 
@@ -113,6 +115,7 @@ export class EdgeInvitationHandler implements FlowLockHolder {
     scheduleMicroTask(ctx, tryHandleInvitation);
   }
 
+  @trace.span({ op: 'invitation.edge' })
   private async _handleSpaceInvitationFlow(
     ctx: Context,
     guardedState: GuardedInvitationState,
@@ -132,7 +135,7 @@ export class EdgeInvitationHandler implements FlowLockHolder {
       });
 
       const admissionResponse = await this._mapToAdmissionResponse(response);
-      await this._callbacks.onInvitationSuccess(admissionResponse, { space: admissionRequest });
+      await this._callbacks.onInvitationSuccess(ctx, admissionResponse, { space: admissionRequest });
     } catch (error) {
       guardedState.set(this, Invitation.State.ERROR);
       throw error;

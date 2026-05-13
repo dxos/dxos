@@ -4,8 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Format, Obj, Ref, Type } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Annotation, Format, Obj, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
 
@@ -25,7 +24,7 @@ export const Map = Schema.Struct({
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
-  ViewAnnotation.set(true),
+  ViewAnnotation.set(['view']),
   Annotation.IconAnnotation.set({
     icon: 'ph--compass--regular',
     hue: 'green',

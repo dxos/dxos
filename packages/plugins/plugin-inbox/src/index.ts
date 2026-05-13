@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
+export * from './blueprints';
 export * from './meta';
-// TODO(wittjosiah): Remove. This is needed for debug plugin currently.
-export * from './operations';
-
-export * from './InboxPlugin';
+export * from './types';

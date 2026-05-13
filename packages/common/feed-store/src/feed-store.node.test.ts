@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { type TestItem, TestItemBuilder } from './testing';
@@ -27,7 +27,7 @@ describe('FeedStore', () => {
       for (const i of Array.from(Array(numBlocks)).keys()) {
         await feed.append({
           id: String(i),
-          value: faker.lorem.sentence(),
+          value: random.lorem.sentence(),
         } as TestItem);
       }
 

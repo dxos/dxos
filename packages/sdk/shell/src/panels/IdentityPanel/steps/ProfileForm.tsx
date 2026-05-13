@@ -29,7 +29,7 @@ export const ProfileForm = (props: ProfileFormProps) => {
   const handleUpdateProfile = async (profile: NonNullable<Identity['profile']>) => {
     await onUpdateProfile?.(profile).catch((error) => {
       log.catch(error);
-      setValidationMessage(t('failed to update profile message'));
+      setValidationMessage(t('failed-to-update-profile.message'));
     });
   };
 
@@ -52,19 +52,19 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
   const copied = textValue === identityHex;
   return (
     <>
-      <div role='none' className='grow flex flex-col justify-center'>
+      <div className='grow flex flex-col justify-center'>
         <TextInput
           {...{ validationMessage }}
-          label={<InputLabel classNames='m-0'>{t('display name input label')}</InputLabel>}
+          label={<InputLabel classNames='m-0'>{t('display-name-input.label')}</InputLabel>}
           disabled={disabled}
           data-testid='display-name-input'
-          placeholder={t('display name input placeholder')}
+          placeholder={t('display-name-input.placeholder')}
           value={displayName}
           onChange={({ target: { value } }) => setDisplayName(value)}
         />
 
-        <InputLabel classNames='mb-2'>{t('emoji and color label')}</InputLabel>
-        <div role='none' className='grid grid-cols-[1fr_min-content] gap-y-2'>
+        <InputLabel classNames='mb-2'>{t('emoji-and-color.label')}</InputLabel>
+        <div className='grid grid-cols-[1fr_min-content] gap-y-2'>
           <EmojiPickerBlock
             emoji={emoji}
             onChangeEmoji={setEmoji}
@@ -85,7 +85,7 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
           }}
           data-testid='update-profile-form-copy-key'
         >
-          {t(copied ? 'copy success label' : 'copy self public key label')}
+          {t(copied ? 'copy-success.label' : 'copy-self-did.label')}
         </Action>
         <Action
           variant='ghost'
@@ -93,7 +93,7 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
           onClick={() => send?.({ type: 'unchooseAction' })}
           data-testid='update-profile-form-back'
         >
-          {t('back label')}
+          {t('back.label')}
         </Action>
         <Action
           variant='primary'
@@ -106,7 +106,7 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
           }
           data-testid='update-profile-form-continue'
         >
-          {t('done label')}
+          {t('done.label')}
         </Action>
       </ActionBar>
     </>

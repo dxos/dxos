@@ -7,7 +7,6 @@ import { type Timer } from 'd3';
 import { useEffect, useState } from 'react';
 
 import { type GlobeController } from '../components';
-
 import { type Vector } from './context';
 
 export type SpinnerOptions = {

@@ -2,20 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import path from 'node:path';
-
 import * as FileSystem from '@effect/platform/FileSystem';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import path from 'node:path';
 
 import { CommandConfig } from '@dxos/cli-util';
-import { Filter, type Space } from '@dxos/client/echo';
-import { Database, Obj, Ref, type Type } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
-import { Script, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
+import { type Space } from '@dxos/client/echo';
+import { Script, Operation } from '@dxos/compute';
+import { Collection, Database, Filter, Obj, Ref, type Type } from '@dxos/echo';
+import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { incrementSemverPatch } from '@dxos/functions-runtime/edge';
-import { Operation } from '@dxos/operation';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { Text } from '@dxos/schema';
 
@@ -77,15 +75,17 @@ export const upsertFunctionObject: (opts: {
     });
     space.db.add(functionObject);
   }
-  Obj.change(functionObject, (obj) => {
-    obj.key = uploadResult.meta.key ?? obj.key;
-    obj.name = name ?? uploadResult.meta.name ?? obj.name;
-    obj.version = uploadResult.version;
-    obj.description = uploadResult.meta.description;
-    obj.inputSchema = uploadResult.meta.inputSchema;
-    obj.outputSchema = uploadResult.meta.outputSchema;
+  Obj.update(functionObject, (functionObject) => {
+    functionObject.key = uploadResult.meta.key ?? functionObject.key;
+    functionObject.name = name ?? uploadResult.meta.name ?? functionObject.name;
+    functionObject.version = uploadResult.version;
+    functionObject.description = uploadResult.meta.description;
+    functionObject.inputSchema = uploadResult.meta.inputSchema;
+    functionObject.outputSchema = uploadResult.meta.outputSchema;
   });
-  Obj.change(functionObject, (fn) => setUserFunctionIdInMetadata(Obj.getMeta(fn), uploadResult.functionId));
+  Obj.update(functionObject, (functionObject) =>
+    setUserFunctionIdInMetadata(Obj.getMeta(functionObject), uploadResult.functionId),
+  );
   if (verbose) {
     yield* Console.log('Upserted function object', functionObject.id);
   }
@@ -97,8 +97,8 @@ const makeObjectNavigableInComposer = Effect.fn(function* (space: Space, obj: Ob
   if (collectionRef) {
     const collection = yield* Database.load(collectionRef);
     if (collection) {
-      Obj.change(collection, (obj) => {
-        obj.objects.push(Ref.make(obj));
+      Obj.update(collection, (collection) => {
+        collection.objects.push(Ref.make(collection));
       });
     }
   }
@@ -125,16 +125,16 @@ export const upsertComposerScript = Effect.fn(function* ({
       () => functionObject.source!.load() as Promise<Script.Script>,
     )) as Script.Script;
     const source = (yield* Effect.tryPromise(() => script.source!.load())) as Text.Text;
-    Obj.change(source, (s: Obj.Mutable<Text.Text>) => {
-      s.content = scriptFileContent;
+    Obj.update(source, (source: Obj.Mutable<Text.Text>) => {
+      source.content = scriptFileContent;
     });
     if (verbose) {
       yield* Console.log('Updated composer script', script.id);
     }
   } else {
     const obj = yield* Database.add(Script.make({ name: scriptFileName, source: scriptFileContent }));
-    Obj.change(functionObject, (obj) => {
-      obj.source = Ref.make(obj);
+    Obj.update(functionObject, (functionObject) => {
+      functionObject.source = Ref.make(functionObject);
     });
     yield* makeObjectNavigableInComposer(space, obj);
     if (verbose) {

@@ -5,7 +5,7 @@
 import { type Registry, RegistryContext } from '@effect-atom/atom-react';
 import { useContext, useEffect } from 'react';
 
-import { type CompleteCellRange, inRange } from '@dxos/compute';
+import { type CompleteCellRange, inRange } from '@dxos/compute-hyperformula';
 import { Obj } from '@dxos/echo';
 import {
   type ActionGraphProps,
@@ -14,11 +14,11 @@ import {
   createMenuItemGroup,
 } from '@dxos/react-ui-menu';
 
-import { meta } from '../../meta';
-import { type SheetModel } from '../../model';
-import { type StyleKey, type StyleValue, rangeFromIndex, rangeToIndex } from '../../types';
-import { useSheetContext } from '../SheetRoot';
+import { meta } from '#meta';
+import { type StyleKey, type StyleValue, rangeFromIndex, rangeToIndex } from '#types';
 
+import { type SheetModel } from '../../model';
+import { useSheetContext } from '../SheetRoot';
 import { type ToolbarState, type ToolbarStateAtom } from './useToolbarState';
 
 export type StyleState = Partial<Record<StyleValue, boolean>>;
@@ -103,13 +103,13 @@ const createStyleActions = ({ model, state, stateAtom, registry, cursorFallbackR
         ) {
           // this value should be unset
           if (index >= 0) {
-            Obj.change(model.sheet, (obj) => {
+            Obj.update(model.sheet, (obj) => {
               obj.ranges?.splice(index, 1);
             });
           }
           registry.set(stateAtom, { ...currentState, [nextRangeEntity.value]: false });
         } else {
-          Obj.change(model.sheet, (obj) => {
+          Obj.update(model.sheet, (obj) => {
             obj.ranges?.push(nextRangeEntity);
           });
           registry.set(stateAtom, { ...currentState, [nextRangeEntity.value]: true });
@@ -119,7 +119,7 @@ const createStyleActions = ({ model, state, stateAtom, registry, cursorFallbackR
         key: 'style',
         value: styleValue as StyleValue,
         icon,
-        label: [`range value ${styleValue} label`, { ns: meta.id }],
+        label: [`range-value.${styleValue}.label`, { ns: meta.id }],
         checked: !!state[styleValue as StyleValue],
       },
     );

@@ -8,7 +8,6 @@ import { TestStream, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 
 import { type TransportOptions } from '../transport';
-
 import { getRtcConnectionFactory } from './rtc-connection-factory';
 import { RtcPeerConnection } from './rtc-peer-connection';
 import { type RtcTransportChannel } from './rtc-transport-channel';

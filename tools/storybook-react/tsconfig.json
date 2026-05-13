@@ -7,6 +7,7 @@
     "out"
   ],
   "include": [
+    ".storybook/*.d.ts",
     ".storybook/*.mjs",
     ".storybook/*.ts",
     ".storybook/*.tsx",
@@ -30,6 +31,9 @@
     },
     {
       "path": "../vite-plugin-import-source"
+    },
+    {
+      "path": "../vite-plugin-log"
     }
   ]
 }

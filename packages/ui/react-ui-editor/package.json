@@ -12,18 +12,24 @@
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
+  "imports": {
+    "#translations": "./src/translations.ts"
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "browser": "./dist/lib/browser/translations.mjs",
+      "node": "./dist/lib/node-esm/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
   "files": [
     "dist",
     "src"
@@ -56,6 +62,7 @@
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -90,6 +97,7 @@
     "@automerge/automerge": "catalog:",
     "@automerge/automerge-repo": "catalog:",
     "@automerge/automerge-repo-network-broadcastchannel": "catalog:",
+    "@dxos/ai": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-atom": "workspace:*",
@@ -104,6 +112,7 @@
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
+    "@effect/ai": "catalog:",
     "@effect/platform": "catalog:",
     "@types/chai": "catalog:",
     "@types/chai-dom": "catalog:",

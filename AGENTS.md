@@ -48,6 +48,11 @@
 - Avoid single letter variable names.
 - Avoid re-exports. Prefer importing symbols directly from the package that defines them.
 - Use barrel imports whenever possible.
+- Prefer ES `#private` fields/methods over TypeScript `private` keyword in new code. Existing `_private` convention is fine to keep.
+- For files imported as a namespace (i.e., marked with `// @import-as-namespace`), avoid prefixing top-level types with the namespace name. Inside `Foo.ts` prefer `Manager`, `Service`, `Options` over `FooManager`, `FooService`, `FooOptions` — callers see `Foo.Manager` either way.
+- Common suffix for constructor option-bag types is `Options` (e.g., `SpawnOptions`, `ManagerImplOptions`) — pick this over `Opts`/`Props`/`Config` for consistency.
+- Consider taking an options object when a constructor or function has more than a few readonly props, especially when several are optional or share a logical grouping.
+- Class member ordering (consider): static fields → public readonly → public mutable → private readonly (incl. constructor-injected) → private mutable → constructor → public methods → private methods. Within each group, rank properties roughly from most-important to least — importance signals include "further up the stack" (closer to public API), required over optional, readonly over mutable.
 
 ### React
 
@@ -60,9 +65,12 @@
 
 ## Workflow
 
-- Never work on main; if not already in a worktree, create a new git worktree for the branch you are working on.
-- When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
-- Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
+- Never work on `main`
+  - Before working on code, suggest to the user a worktree name then create the worktree using this or the name provided by the user (adding the agent-name prefix, e.g., `claude/`).
+  - When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
+  - Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
+  - If there are unstaged changes, stash these and move them into the worktree.
+  - IMPORTANT: Do not change the branch or worktree name after you have started unless you are instructed to directly by the user.
 - Check `moon.yml` for available package tasks
 - Run linter at natural stopping points
 - Confirm work complete before final build/lint check
@@ -87,6 +95,10 @@ Examples:
 - If the Check workflow fails, inspect the failure with `gh run view <run-id>` and `gh run view <run-id> --log-failed`, identify the failing job/test, and fix it.
 - When the user asks "what is the CI status" or similar, always check the **Check** workflow specifically.
 
+## Committing and Pushing
+
+- **IMPORTANT**: Before every `git commit` and `git push`, run `git status` and check for ALL modified, staged, and untracked files. Every changed file must either be committed or explicitly acknowledged with the user. Never leave unstaged changes behind silently — if a file was modified during your work, it must be included in the commit or you must ask the user whether to include it.
+
 ## Submitting PRs
 
 - When the user asks you to submit a PR:
@@ -94,8 +106,10 @@ Examples:
   - Merge `origin/main` in to current branch and resolve conflicts.
   - Format code with `pnpm format` and check that `moon run :lint -- --fix` succeeds.
   - Check `moon run :test` succeeds.
-  - Commit and push any pending changes.
+  - Commit and push all pending changes.
+  - **IMPORTANT**: Verify `git status` shows a clean working tree after the final push. If any files remain modified or untracked, either commit them or confirm with the user before proceeding.
   - Monitor CI (every 5 minutes): `gh run list --branch <branch> --limit 3 --workflow "Check"` and `pnpm -w gh-action --verify --watch`.
+  - You must attempt to diagnose and if possible fix all CI errors -- regardless of whether they relate to the current branch
   - **IMPORTANT**: Address and RESPOND to all PR review comments.
   - Update the PR description with a summary of the changes and the reasoning behind major changes.
   - Add any reference linear issues if available in PR description as "closes DX-123" or "part of DX-123".
@@ -121,3 +135,7 @@ This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.4. All are manage
 - The `pnpm.onlyBuiltDependencies` allowlist in `pnpm-workspace.yaml` controls which native addons are built; warnings about "ignored build scripts" for packages not in the list are normal.
 - Builds must complete before running `serve` commands, because moon tasks have `deps` on `:prebuild`/`:build` targets.
 - No Docker or external services are required for unit tests or local dev. Signal servers for networking tests are pre-compiled binaries spawned automatically by tests.
+
+### DXOS APIs
+
+Read additional information about DXOS APIs in ./agents/instructions

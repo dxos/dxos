@@ -11,7 +11,8 @@ import { keymap, listener } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { hexToEmoji, hexToHue, isTruthy } from '@dxos/util';
 
-import { translationKey } from '../translations';
+import { translationKey } from '#translations';
+
 import { type MessageMetadata } from '../types';
 
 const avatarSize = 7;
@@ -26,28 +27,25 @@ export const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
     { authorImgSrc, authorId, authorName, authorAvatarProps, continues = true, children, classNames, ...rootProps },
     forwardedRef,
   ) => {
+    // Must wrap the message since Avatar.Label may be used in the content.
     return (
-      // Must wrap the message since Avatar.Label may be used in the content.
       <Avatar.Root>
         <div
-          role='none'
           data-testid='thread.message'
           {...rootProps}
           className={mx('grid grid-cols-subgrid col-span-2', classNames)}
           ref={forwardedRef}
         >
-          <div role='none' className='flex flex-col items-center gap-2 pt-1'>
+          <div className='flex flex-col items-center gap-2 pt-1'>
             <Avatar.Content
               size={avatarSize}
               hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')}
               fallback={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')}
               {...(authorImgSrc && { imgSrc: authorImgSrc })}
             />
-            {continues && <div role='none' className='w-px grow bg-separator' />}
+            {continues && <div className='w-px grow bg-separator' />}
           </div>
-          <div role='none' className='py-1 min-w-0'>
-            {children}
-          </div>
+          <div className='py-1 min-w-0'>{children}</div>
         </div>
       </Avatar.Root>
     );
@@ -59,7 +57,7 @@ export type MessageHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'div'
 
 export const MessageHeading = ({ children, classNames, timestamp, authorName, ...props }: MessageHeadingProps) => {
   return (
-    <div role='none' {...props} className={mx('flex gap-2 items-start', classNames)}>
+    <div {...props} className={mx('flex gap-2 items-start', classNames)}>
       <p className='grow'>
         <MessageAuthorName authorName={authorName} />
         {timestamp && <MessageTime timestamp={timestamp} />}
@@ -74,7 +72,7 @@ export type MessageAuthorNameProps = Pick<MessageMetadata, 'authorName'>;
 export const MessageAuthorName = ({ authorName }: MessageAuthorNameProps) => {
   const { t } = useTranslation(translationKey);
   return (
-    <Avatar.Label classNames='block truncate text-sm text-subdued'>{authorName ?? t('anonymous label')}</Avatar.Label>
+    <Avatar.Label classNames='block truncate text-sm text-subdued'>{authorName ?? t('anonymous.label')}</Avatar.Label>
   );
 };
 
@@ -165,7 +163,6 @@ export const MessageTextbox = ({
   return (
     <MessageRoot {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
       <div
-        role='none'
         ref={parentRef}
         className={mx('py-0.5 me-1 rounded-xs dx-focus-ring', disabled && 'opacity-50')}
         {...focusAttributes}

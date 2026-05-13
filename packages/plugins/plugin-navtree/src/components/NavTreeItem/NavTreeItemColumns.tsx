@@ -7,12 +7,12 @@ import React, { Fragment, memo, useMemo } from 'react';
 import { Node } from '@dxos/app-graph';
 import { Popover, Treegrid, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
-import { useActions } from '../../hooks';
-import { meta } from '../../meta';
+import { useActions } from '#hooks';
+import { meta } from '#meta';
+
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
 import { type NavTreeItemColumnsProps } from '../types';
-
 import { NavTreeItemAction } from './NavTreeItemAction';
 
 export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumnsProps) => {
@@ -59,7 +59,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
   const ActionRoot = popoverAnchorId === `${NAV_TREE_ITEM}:${item.id}` ? Popover.Anchor : Fragment;
 
   return (
-    <div role='none' className='contents dx-app-no-drag'>
+    <div className='contents dx-app-no-drag'>
       {primaryAction?.properties?.disposition === 'list-item-primary' && !primaryAction?.properties?.disabled ? (
         <Treegrid.Cell classNames='contents'>
           <NavTreeItemAction
@@ -82,7 +82,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
           <Treegrid.Cell classNames='contents'>
             <NavTreeItemAction
               testId={`navtree.treeItem.actionsLevel${level}`}
-              label={t('tree item actions label')}
+              label={t('tree-item-actions.label')}
               icon='ph--dots-three-vertical--regular'
               parent={item}
               path={path}

@@ -13,6 +13,7 @@ import React, {
   type ReactNode,
 } from 'react';
 
+import { type Database } from '@dxos/echo';
 import { type Format } from '@dxos/echo/internal';
 import { Icon, Input, Tooltip } from '@dxos/react-ui';
 import { inputTextLabel } from '@dxos/ui-theme';
@@ -50,6 +51,8 @@ export type FormFieldComponentProps<T = any> = {
   placeholder?: string;
   autoFocus?: boolean;
   layout?: Presentation;
+  /** Database the form is editing against; populated for fields whose value is an ECHO object/Ref. */
+  db?: Database.Database;
 } & FormFieldStateProps<T>;
 
 /**
@@ -77,7 +80,7 @@ export type FormFieldLabelProps = {
 export const FormFieldLabel = ({ label, error, readonly, asChild }: FormFieldLabelProps) => {
   const Label = readonly || asChild ? 'span' : Input.Label;
   return (
-    <div role='none' className='flex items-center justify-between'>
+    <div className='flex items-center justify-between'>
       <Label className={inputTextLabel}>{label}</Label>
       {error && (
         <Tooltip.Trigger asChild content={error} side='bottom'>
@@ -113,7 +116,7 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
   const str = String(value ?? '');
 
   return (
-    <div role='none' className='contents'>
+    <div className='contents'>
       <Input.Root validationValence={status}>
         {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
         {layout === 'static' ? <p>{str}</p> : children ? children({ value }) : null}

@@ -5,7 +5,6 @@
 import { type EditorState } from '@codemirror/state';
 
 import { type Range } from '../types';
-
 import { singleValueFacet } from './facet';
 
 /**

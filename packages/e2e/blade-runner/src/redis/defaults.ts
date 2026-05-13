@@ -2,14 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type NetConnectOpts } from 'node:net';
-
 import type WebSocket from 'isomorphic-ws';
+import { type NetConnectOpts } from 'node:net';
 
 import { isNode } from '@dxos/util';
 
 import { type RedisOptions } from '../env';
-
 import { WebSocketConnector } from './websocket-connector';
 
 export const REDIS_PORT = 6379;

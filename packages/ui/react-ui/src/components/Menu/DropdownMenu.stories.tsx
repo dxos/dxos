@@ -7,7 +7,6 @@ import React, { useRef, useState } from 'react';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
-
 import { DropdownMenu } from './DropdownMenu';
 
 const DefaultStory = () => {

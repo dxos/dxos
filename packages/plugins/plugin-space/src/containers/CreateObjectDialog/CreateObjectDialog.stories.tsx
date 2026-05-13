@@ -13,8 +13,8 @@ import { type Space } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type CreateObjectOption, type Metadata, CreateObjectPanel } from '../../components';
-import { translations } from '../../translations';
+import { type CreateObjectOption, type Metadata, CreateObjectPanel } from '#components';
+import { translations } from '#translations';
 
 const mockOptions: CreateObjectOption[] = [
   { id: 'org.dxos.type.document', label: 'Document', icon: 'ph--file-text--regular' },
@@ -59,9 +59,9 @@ const mockInputSchema = Schema.Struct({
 });
 
 const mockMetadata: Metadata = {
+  id: 'org.dxos.type.document',
   createObject: () => Effect.succeed({ id: 'mock-id', subject: [], object: {} as any }),
   inputSchema: mockInputSchema,
-  icon: 'ph--file-text--regular',
 };
 
 const meta = {

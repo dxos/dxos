@@ -12,17 +12,45 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "imports": {
+    "#capabilities": {
+      "source": "./src/capabilities/index.ts",
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "default": "./dist/lib/neutral/capabilities/index.mjs"
+    },
+    "#components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/neutral/components/index.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/neutral/meta.mjs"
+    },
+    "#plugin": {
+      "source": {
+        "node": "./src/MapPlugin.node.ts",
+        "default": "./src/MapPlugin.tsx"
+      },
+      "types": "./dist/types/src/MapPlugin.d.ts",
+      "node": "./dist/lib/neutral/MapPlugin.node.mjs",
+      "default": "./dist/lib/neutral/MapPlugin.mjs"
+    }
+  },
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
+    },
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
   "files": [
     "dist",
     "src"

@@ -7,14 +7,14 @@ import * as Option from 'effect/Option';
 import { useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck';
 import { type Node } from '@dxos/plugin-graph';
 import { Path, type TreeModel } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
-import { type NavTreeItemGraphNode } from '../types';
-import { filterItems } from '../util';
+import { type NavTreeItemGraphNode } from '#types';
 
+import { filterItems } from '../util';
 import { useNavTreeState } from './useNavTreeState';
 
 // TODO(wittjosiah): Move companion/hidden nodes to their own edge categories so this filter is unnecessary.

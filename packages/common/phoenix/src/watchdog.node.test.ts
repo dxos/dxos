@@ -4,7 +4,6 @@
 
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { TEST_DIR, clearFiles, neverEndingProcess } from './testing-utils';

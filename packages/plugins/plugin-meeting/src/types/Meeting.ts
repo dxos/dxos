@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
-import { Thread, Transcript } from '@dxos/types';
+import { Transcript } from '@dxos/types';
 
 // TODO(wittjosiah): Factor out. Brand.
 const IdentityDidSchema = Schema.String;
@@ -44,11 +44,6 @@ export const Meeting = Schema.Struct({
    * Generated summary of the meeting.
    */
   summary: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
-
-  /**
-   * Message thread for the meeting.
-   */
-  thread: Ref.Ref(Thread.Thread).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.meeting',
@@ -60,13 +55,5 @@ export const Meeting = Schema.Struct({
     hue: 'rose',
   }),
 );
+
 export interface Meeting extends Schema.Schema.Type<typeof Meeting> {}
-
-// TODO(burdon): Create with decode consistently: Schema.decodeSync(TranscriptionSettingsSchema)({}))
-export const Settings = Schema.mutable(
-  Schema.Struct({
-    entityExtraction: Schema.optional(Schema.Boolean).pipe(Schema.withConstructorDefault(() => true)),
-  }),
-);
-
-export interface Settings extends Schema.Schema.Type<typeof Settings> {}

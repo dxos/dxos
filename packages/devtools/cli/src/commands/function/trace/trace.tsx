@@ -15,7 +15,7 @@ import * as Option from 'effect/Option';
 import { CommandConfig, Common, spaceIdWithDefault, spaceLayer, withTypes } from '@dxos/cli-util';
 import { ClientService, ConfigService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Database, Filter, type Key } from '@dxos/echo';
+import { Database, Feed, Filter, type Key } from '@dxos/echo';
 import { QueueService } from '@dxos/functions';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent, TriggerDispatcher } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
@@ -24,7 +24,6 @@ import { log } from '@dxos/log';
 import { App, render } from '../../../components';
 import { theme } from '../../../theme';
 import { createLogBuffer, triggerRuntimeLayer } from '../../../util';
-
 import { Trace } from './components/Trace';
 
 // Defines the custom `trace` command for edge functions.
@@ -52,12 +51,13 @@ export const trace = Command.make(
       const objects = yield* Database.runQuery(Filter.type(SpaceProperties));
       const properties = objects.at(0);
       invariant(properties, 'SpaceProperties not found');
-      const queueDxn = properties.invocationTraceQueue?.dxn;
+      const traceFeed = properties.invocationTraceFeed?.target;
+      const queueDxn = traceFeed ? Feed.getQueueDxn(traceFeed) : undefined;
 
       if (!queueDxn) {
-        log.info('trace: no invocationTraceQueue found in space properties', { spaceId: db.spaceId });
+        log.info('trace: no invocationTraceFeed found in space properties', { spaceId: db.spaceId });
       } else {
-        log.info('trace: found invocationTraceQueue', { spaceId: db.spaceId, queueDxn });
+        log.info('trace: found invocationTraceFeed', { spaceId: db.spaceId, queueDxn });
       }
 
       // Start trigger runtime in background if enabled

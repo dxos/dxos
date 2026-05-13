@@ -60,7 +60,7 @@ const regex = {
   // @dxn:queue:data:xxx
   dxn: /@?dxn:[\w@:]+/g,
 
-  // dxos.org/type/xxx
+  // example.com/path/xxx
   url: /[\w.-]+\.[\w.-]+\/[\w/]+/g,
 };
 

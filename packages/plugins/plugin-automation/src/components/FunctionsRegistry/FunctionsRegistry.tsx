@@ -6,17 +6,18 @@ import * as Schema from 'effect/Schema';
 import { useState } from 'react';
 import React, { useCallback } from 'react';
 
+import * as OperationModule from '@dxos/compute';
 import { Context } from '@dxos/context';
-import * as OperationModule from '@dxos/operation';
+import { Filter, Query } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
-import { Filter, Query, type Space, useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { IconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 const grid = 'grid grid-cols-[1fr_1fr_auto] min-h-[2.5rem]';
 
@@ -66,7 +67,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
   );
 
   return (
-    <Settings.Container>
+    <Settings.Panel>
       {functions.length > 0 && (
         <List.Root<OperationModule.Operation.PersistentOperation>
           items={functions}
@@ -96,7 +97,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
                     iconOnly
                     icon={state(func) === 'update' ? 'ph--arrows-clockwise--regular' : 'ph--download--regular'}
                     label={
-                      state(func) === 'update' ? t('update function button label') : t('import function button label')
+                      state(func) === 'update' ? t('update-function-button.label') : t('import-function-button.label')
                     }
                     disabled={state(func) === 'none'}
                     onClick={() => hanleImportOrUpdate(func)}
@@ -108,10 +109,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
         </List.Root>
       )}
 
-      {functions.length === 0 && !loading && (
-        <div className='text-center py-4 text-gray-500'>{t('no functions found')}</div>
-      )}
-      {loading && <div className='text-center py-4 text-gray-500'>{t('loading functions')}</div>}
-    </Settings.Container>
+      {loading && <div className='text-center py-4 text-gray-500'>{t('loading-functions.message')}</div>}
+    </Settings.Panel>
   );
 };

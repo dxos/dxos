@@ -5,10 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { Plugin } from '@dxos/app-framework';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
 
 import { PluginDetail } from './PluginDetail';
 
@@ -29,9 +29,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     plugin: Plugin.define({
-      id: 'example.com/plugin/test-plugin',
+      id: 'com.example.plugin.test',
       name: 'Test Plugin',
-      description: faker.lorem.paragraphs(2),
+      description: random.lorem.paragraphs(2),
       icon: 'ph--bug--regular',
       iconHue: 'sky',
       homePage: 'https://example.com',

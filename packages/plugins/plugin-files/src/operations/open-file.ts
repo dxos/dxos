@@ -6,14 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Trigger } from '@dxos/async';
-import { Operation } from '@dxos/operation';
-
-import { OpenFile } from './definitions';
+import { Operation } from '@dxos/compute';
 
 import { FileCapabilities } from '../types';
+import { FilesOperation } from '../types';
 import { handleToLocalFile, legacyFileToLocalFile } from '../util';
 
-const handler: Operation.WithHandler<typeof OpenFile> = OpenFile.pipe(
+const handler: Operation.WithHandler<typeof FilesOperation.OpenFile> = FilesOperation.OpenFile.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       if ('showOpenFilePicker' in window) {

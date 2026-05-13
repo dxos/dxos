@@ -28,7 +28,7 @@ import {
 } from '@dxos/react-ui-gameboard';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 
-import { type Chess } from '../../types';
+import { type Chess } from '#types';
 
 import { Info, type InfoProps } from './Info';
 import { ExtendedChessModel } from './types';
@@ -42,14 +42,14 @@ export interface ChessboardController {
 //
 
 type RootProps = PropsWithChildren<{
-  game: Chess.Game;
+  state: Chess.State;
 }>;
 
-const Root = forwardRef<ChessboardController, RootProps>(({ game, children }, forwardedRef) => {
+const Root = forwardRef<ChessboardController, RootProps>(({ state, children }, forwardedRef) => {
   const registry = useContext(RegistryContext);
-  const model = useMemo(() => new ExtendedChessModel(registry, game), [registry]);
+  const model = useMemo(() => new ExtendedChessModel(registry, state), [registry]);
   const click = useSoundEffect('Click');
-  const [pgn, updatePgn] = useObject(game, 'pgn');
+  const [pgn, updatePgn] = useObject(state, 'pgn');
 
   // Controller.
   useImperativeHandle(forwardedRef, () => {

@@ -80,6 +80,132 @@ describe('GraphBuilder', () => {
       }
     });
 
+    test('connects resolved node to parent via child edge', async ({ expect }) => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+      const childId = qualifyId('root', '~child');
+
+      GraphBuilder.addExtension(
+        builder,
+        GraphBuilder.createExtensionRaw({
+          id: 'resolver',
+          resolver: (id) =>
+            id === childId ? Atom.make({ id: childId, type: EXAMPLE_TYPE, data: 'resolved' }) : Atom.make(null),
+        }),
+      );
+
+      const graph = builder.graph;
+      await Graph.initialize(graph, childId);
+
+      {
+        const node = Graph.getNode(graph, childId).pipe(Option.getOrNull);
+        expect(node?.id).to.equal(childId);
+        expect(node?.data).to.equal('resolved');
+      }
+
+      // Verify the resolved node is a child of root.
+      {
+        const children = registry.get(graph.connections('root', 'child'));
+        expect(children.some((n) => n.id === childId)).to.be.true;
+      }
+    });
+
+    test('out-of-order: resolver fires before parent exists', async ({ expect }) => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+      const parentId = qualifyId('root', 'parent');
+      const childId = qualifyId('root', 'parent', '~child');
+
+      GraphBuilder.addExtension(builder, [
+        GraphBuilder.createExtensionRaw({
+          id: 'resolver',
+          resolver: (id) =>
+            id === childId ? Atom.make({ id: childId, type: EXAMPLE_TYPE, data: 'resolved-child' }) : Atom.make(null),
+        }),
+        GraphBuilder.createExtensionRaw({
+          id: 'connector',
+          connector: (node) =>
+            Atom.make((get) =>
+              Function.pipe(
+                get(node),
+                Option.filter((n) => n.id === 'root'),
+                Option.map(() => [{ id: 'parent', type: EXAMPLE_TYPE, data: 'parent-data' }]),
+                Option.getOrElse(() => []),
+              ),
+            ),
+        }),
+      ]);
+
+      const graph = builder.graph;
+
+      // Resolve child BEFORE parent exists in the graph.
+      await Graph.initialize(graph, childId);
+
+      {
+        const node = Graph.getNode(graph, childId).pipe(Option.getOrNull);
+        expect(node?.id).to.equal(childId);
+        expect(node?.data).to.equal('resolved-child');
+      }
+
+      // Now expand root to create parent via connector.
+      Graph.expand(graph, Node.RootId, 'child');
+      await GraphBuilder.flush(builder);
+
+      {
+        const parent = Graph.getNode(graph, parentId).pipe(Option.getOrNull);
+        expect(parent?.data).to.equal('parent-data');
+      }
+
+      // The resolved child should be connected to the parent.
+      {
+        const children = registry.get(graph.connections(parentId, 'child'));
+        expect(children.some((n) => n.id === childId)).to.be.true;
+      }
+    });
+
+    test('onNone does not remove connector-owned node', async ({ expect }) => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+      const nodeId = qualifyId('root', 'shared');
+
+      // Connector that produces root/shared. No resolver matches root/shared.
+      GraphBuilder.addExtension(
+        builder,
+        GraphBuilder.createExtensionRaw({
+          id: 'connector',
+          connector: (node) =>
+            Atom.make((get) =>
+              Function.pipe(
+                get(node),
+                Option.filter((n) => n.id === 'root'),
+                Option.map(() => [{ id: 'shared', type: EXAMPLE_TYPE, data: 'from-connector' }]),
+                Option.getOrElse(() => []),
+              ),
+            ),
+        }),
+      );
+
+      const graph = builder.graph;
+
+      // Connector produces root/shared.
+      Graph.expand(graph, Node.RootId, 'child');
+      await GraphBuilder.flush(builder);
+
+      {
+        const node = Graph.getNode(graph, nodeId).pipe(Option.getOrNull);
+        expect(node?.data).to.equal('from-connector');
+      }
+
+      // Initialize fires for the same ID. No resolver matches, so onNone fires.
+      // The connector-owned node should NOT be removed.
+      await Graph.initialize(graph, nodeId);
+
+      {
+        const node = Graph.getNode(graph, nodeId).pipe(Option.getOrNull);
+        expect(node?.data).to.equal('from-connector');
+      }
+    });
+
     test('does not overwrite connector-produced node', async () => {
       const registry = Registry.make();
       const builder = GraphBuilder.make({ registry });
@@ -357,6 +483,132 @@ describe('GraphBuilder', () => {
       await GraphBuilder.flush(builder);
       expect(count).to.equal(3);
       expect(exists).to.be.true;
+    });
+
+    describe('inline nodes', () => {
+      const parent = (child?: Node.NodeArg<any>): Node.NodeArg<any> => ({
+        id: 'parent-node',
+        type: EXAMPLE_TYPE,
+        data: null,
+        nodes: child ? [child] : [],
+      });
+
+      const inlineChild = (overrides?: Partial<Node.NodeArg<any>>): Node.NodeArg<any> => ({
+        id: 'inline-child',
+        type: EXAMPLE_TYPE,
+        data: null,
+        ...overrides,
+      });
+
+      const makeGraph = () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const nodesAtom = Atom.make<Node.NodeArg<any>[]>([]);
+        GraphBuilder.addExtension(
+          builder,
+          GraphBuilder.createExtensionRaw({
+            id: 'inline-connector',
+            connector: () => Atom.make((get) => get(nodesAtom)),
+          }),
+        );
+        const graph = builder.graph;
+        Graph.expand(graph, Node.RootId, 'child');
+        return { registry, builder, graph, nodesAtom };
+      };
+
+      const getInlineChild = (graph: Graph.ExpandableGraph) =>
+        Graph.getNode(graph, 'root/parent-node/inline-child').pipe(Option.getOrNull);
+
+      test('are removed when connector re-runs with data change', async () => {
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+        registry.set(nodesAtom, [parent(inlineChild())]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)).to.not.be.null;
+
+        // Remove inline child while also changing parent data to trigger the update.
+        registry.set(nodesAtom, [{ ...parent(), data: 'v2' }]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)).to.be.null;
+      });
+
+      test('are removed when only inline children change', async () => {
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+        registry.set(nodesAtom, [parent(inlineChild())]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)).to.not.be.null;
+
+        // Remove inline child without touching parent — tests change detection covers inline children.
+        registry.set(nodesAtom, [parent()]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)).to.be.null;
+      });
+
+      test('are added when connector re-runs', async () => {
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+        registry.set(nodesAtom, [parent()]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)).to.be.null;
+
+        registry.set(nodesAtom, [parent(inlineChild())]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)).to.not.be.null;
+      });
+
+      test('reactively update data', async ({ expect }) => {
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+        registry.set(nodesAtom, [parent(inlineChild({ data: 'v1' }))]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)?.data).to.equal('v1');
+
+        // Change only the inline child's data — parent is unchanged.
+        registry.set(nodesAtom, [parent(inlineChild({ data: 'v2' }))]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)?.data).to.equal('v2');
+      });
+
+      test('reactively update properties', async ({ expect }) => {
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+        registry.set(nodesAtom, [parent(inlineChild({ properties: { label: 'before' } }))]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)?.properties.label).to.equal('before');
+
+        registry.set(nodesAtom, [parent(inlineChild({ properties: { label: 'after' } }))]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)?.properties.label).to.equal('after');
+      });
+
+      test('deeply nested inline nodes reactively update', async ({ expect }) => {
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+
+        const withGrandchild = (data: string) =>
+          parent({
+            id: 'child',
+            type: EXAMPLE_TYPE,
+            data: null,
+            nodes: [{ id: 'grandchild', type: EXAMPLE_TYPE, data }],
+          });
+
+        registry.set(nodesAtom, [withGrandchild('v1')]);
+        await GraphBuilder.flush(builder);
+
+        expect(Graph.getNode(graph, 'root/parent-node/child/grandchild').pipe(Option.getOrNull)?.data).to.equal('v1');
+
+        // Change only the grandchild's data — all ancestors unchanged.
+        registry.set(nodesAtom, [withGrandchild('v2')]);
+        await GraphBuilder.flush(builder);
+
+        expect(Graph.getNode(graph, 'root/parent-node/child/grandchild').pipe(Option.getOrNull)?.data).to.equal('v2');
+      });
     });
 
     test('sort edges', async () => {

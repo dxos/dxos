@@ -6,9 +6,9 @@ import { join } from 'node:path';
 import { type ClassDeclaration } from 'ts-morph';
 import { describe, expect, test } from 'vitest';
 
+import { Flowchart } from '../mermaid';
 import { ProjectProcessor } from './project-processor';
 import { WorkspaceProcessor } from './workspace-processor';
-import { Flowchart } from '../mermaid';
 
 const pick = <T extends object>(obj: T, keys: (keyof T)[]): Partial<T> =>
   keys.reduce((result, key) => (key in obj ? { ...result, [key]: obj[key] } : result), {} as Partial<T>);

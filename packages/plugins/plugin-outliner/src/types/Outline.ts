@@ -28,6 +28,6 @@ export interface Outline extends Schema.Schema.Type<typeof Outline> {}
 export const make = ({ name, content }: { name?: string; content?: string } = {}): Outline => {
   return Obj.make(Outline, {
     name,
-    content: Ref.make(Text.make(content)),
+    content: Ref.make(Text.make({ content })),
   });
 };

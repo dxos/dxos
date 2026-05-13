@@ -7,14 +7,14 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
 import { computeDiffsWithCursors } from '@dxos/assistant';
+import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
-import { Operation } from '@dxos/operation';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
-import { CreateProposals } from './definitions';
+import { ThreadOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof CreateProposals> = CreateProposals.pipe(
+const handler: Operation.WithHandler<typeof ThreadOperation.CreateProposals> = ThreadOperation.CreateProposals.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ doc, diffs }) {
       const object = yield* Database.load(doc);

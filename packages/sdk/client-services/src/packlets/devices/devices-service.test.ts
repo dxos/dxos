@@ -11,7 +11,6 @@ import { type Device, type DevicesService } from '@dxos/protocols/proto/dxos/cli
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
-
 import { DevicesServiceImpl } from './devices-service';
 
 describe('DevicesService', () => {

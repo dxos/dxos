@@ -15,7 +15,6 @@ import wasm from 'vite-plugin-wasm';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
-
 // import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
 // @ts-ignore
@@ -118,6 +117,14 @@ export default defineConfig({
             matches: ['http://*/*', 'https://*/*'],
             run_at: 'document_start',
             js: ['src/content.ts'],
+          },
+        ],
+        // Expose the icon sprite to pages so the picker's SVG `<use href=...>`
+        // references resolve when it's injected into arbitrary sites.
+        web_accessible_resources: [
+          {
+            resources: ['icons.svg'],
+            matches: ['http://*/*', 'https://*/*'],
           },
         ],
       },

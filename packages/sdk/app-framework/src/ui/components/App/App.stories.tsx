@@ -55,11 +55,7 @@ const DefaultStory = ({ plugins }: DefaultStoryProps) => {
     plugins,
     core,
     placeholder: () => {
-      return (
-        <div role='none' className='text-description'>
-          Loading...
-        </div>
-      );
+      return <div className='text-description'>Loading...</div>;
     },
   });
 
@@ -67,7 +63,7 @@ const DefaultStory = ({ plugins }: DefaultStoryProps) => {
 };
 
 const meta = {
-  title: 'sdk/app-framework/App',
+  title: 'sdk/app-framework/components/App',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: {

@@ -3,9 +3,7 @@
 //
 
 import 'reveal.js/dist/reveal.css';
-
 import 'reveal.js/dist/theme/black.css';
-
 // https://github.com/highlightjs/highlight.js/tree/main/src/styles
 // import 'highlight.js/styles/github-dark.css';
 import 'highlight.js/styles/tokyo-night-dark.css';
@@ -154,7 +152,7 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
         })}
         ref={forwardedRef}
       >
-        <div role='none' className='relative aspect-video h-full w-full h-auto max-h-full overflow-hidden'>
+        <div className='relative aspect-video h-full w-full h-auto max-h-full overflow-hidden'>
           <div ref={deckDivRef} className='absolute inset-0 reveal'>
             {/* NOTE: Must be in head. */}
             <style>

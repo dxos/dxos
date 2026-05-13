@@ -4,11 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type OperationInvoker } from '@dxos/operation';
+import { OperationInvoker } from '@dxos/operation';
 
 import { Capabilities } from '../../common';
 import { Capability } from '../../core';
-
 import * as HistoryTracker from './history-tracker';
 import * as UndoRegistry from './undo-registry';
 

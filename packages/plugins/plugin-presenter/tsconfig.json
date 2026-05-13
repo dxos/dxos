@@ -36,10 +36,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo"
+      "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/operation"
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../sdk/app-framework"
@@ -58,6 +58,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
     },
     {
       "path": "../../ui/react-ui-form"
@@ -85,6 +88,9 @@
     },
     {
       "path": "../plugin-stack"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

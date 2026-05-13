@@ -5,15 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { TextCrawl } from '../TextCrawl';
-
 import { ProgressBar, type ProgressBarProps } from './ProgressBar';
 
-const createItem = () => ({ id: `t-${Math.floor(Math.random() * 1000)}`, text: faker.lorem.sentences(1) });
+const createItem = () => ({ id: `t-${Math.floor(Math.random() * 1000)}`, text: random.lorem.sentences(1) });
 
 type TestItem = { id: string; text: string };
 
@@ -45,7 +44,7 @@ const DefaultStory = ({ items, ...props }: DefaultStoryProps) => {
   }, [running]);
 
   return (
-    <div role='none' className='flex flex-col w-[400px] gap-8 overflow-hidden'>
+    <div className='flex flex-col w-[400px] gap-8 overflow-hidden'>
       <Toolbar.Root>
         <Toolbar.Button onClick={() => setRunning(true)}>Start</Toolbar.Button>
         <Toolbar.Button onClick={() => setRunning(false)}>Stop</Toolbar.Button>
@@ -56,7 +55,7 @@ const DefaultStory = ({ items, ...props }: DefaultStoryProps) => {
         <div className='p-2 text-subdued'>{nodes.length}</div>
       </Toolbar.Root>
 
-      <div role='none' className='flex flex-col gap-1'>
+      <div className='flex flex-col gap-1'>
         <ProgressBar
           nodes={nodes}
           index={index}

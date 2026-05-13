@@ -10,7 +10,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { StatusBar } from './index';
 
-export const DefaultStory = () => (
+const DefaultStory = () => (
   <StatusBar.EndContent>
     <StatusBar.Button>
       <Icon icon='ph--mailbox--regular' />

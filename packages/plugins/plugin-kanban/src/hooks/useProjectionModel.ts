@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 
-import { type Kanban } from '../types';
+import { type Kanban } from '#types';
 
 /**
  * Loads the kanban view and builds a ProjectionModel for field projections and pivot.
@@ -30,11 +30,11 @@ export const useProjectionModel = <S extends Type.AnyEntity>(
 
   useAsyncEffect(
     async (controller) => {
-      if (!schema || !kanban) {
+      if (!schema || !kanban || kanban.spec.kind !== 'view') {
         return;
       }
       try {
-        const view = await kanban.view.load();
+        const view = await kanban.spec.view.load();
         if (controller.signal.aborted) {
           return;
         }

@@ -39,7 +39,6 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/protobuf-test": "workspace:*",
     "@types/argparse": "catalog:",
-    "@types/glob": "catalog:",
     "@types/mocha": "catalog:",
     "expect": "catalog:",
     "mocha": "catalog:",

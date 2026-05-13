@@ -3,11 +3,10 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { JOIN_DIALOG } from '../constants';
 import { type JoinDialogProps } from '../containers/JoinDialog';
-
 import { SpaceOperation } from './definitions';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Join> = SpaceOperation.Join.pipe(

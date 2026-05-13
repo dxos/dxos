@@ -2,15 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
-import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
-import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import {
   type Edge,
   attachClosestEdge,
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
+import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, {
@@ -30,7 +30,6 @@ import { mx } from '@dxos/ui-theme';
 
 import { type ItemDragState, StackItemContext, idle, useStack, useStackItem } from '../StackContext';
 import { type StackItemData, type StackItemSize } from '../types';
-
 import { StackItemContent, type StackItemContentProps } from './StackItemContent';
 import { StackItemDragHandle, type StackItemDragHandleProps } from './StackItemDragHandle';
 import {
@@ -49,9 +48,8 @@ import {
   type StackItemSigilProps,
 } from './StackItemSigil';
 
-// NOTE: 48rem fills the screen on a MacbookPro with the sidebars closed.
-export const DEFAULT_HORIZONTAL_SIZE = 48 satisfies StackItemSize;
 export const DEFAULT_VERTICAL_SIZE = 'min-content' satisfies StackItemSize;
+export const DEFAULT_HORIZONTAL_SIZE = 50 satisfies StackItemSize;
 export const DEFAULT_EXTRINSIC_SIZE = DEFAULT_HORIZONTAL_SIZE satisfies StackItemSize;
 
 //
@@ -59,13 +57,13 @@ export const DEFAULT_EXTRINSIC_SIZE = DEFAULT_HORIZONTAL_SIZE satisfies StackIte
 //
 
 type StackItemRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
+  role?: 'article' | 'section';
   item: Omit<StackItemData, 'type'>;
   order?: number;
   prevSiblingId?: string;
   nextSiblingId?: string;
   size?: StackItemSize;
   onSizeChange?: (nextSize: StackItemSize) => void;
-  role?: 'article' | 'section';
   disableRearrange?: boolean;
   focusIndicatorVariant?: 'over-all' | 'group' | 'over-all-always' | 'group-always';
 };
@@ -73,16 +71,16 @@ type StackItemRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
 const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
   (
     {
-      item,
-      children,
       classNames,
-      size: propsSize,
-      onSizeChange,
+      children,
+      style,
       role,
+      item,
       order,
       prevSiblingId,
       nextSiblingId,
-      style,
+      size: sizeProp,
+      onSizeChange,
       disableRearrange,
       focusIndicatorVariant = 'over-all',
       ...props
@@ -97,7 +95,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
     const [dragState, setDragState] = useState<ItemDragState>(idle);
     const { orientation, rail, onRearrange, size: stackSize, stackId } = useStack();
     const [size = orientation === 'horizontal' ? DEFAULT_HORIZONTAL_SIZE : DEFAULT_VERTICAL_SIZE, setInternalSize] =
-      useState(propsSize);
+      useState(sizeProp);
 
     const Root = role ?? 'div';
 

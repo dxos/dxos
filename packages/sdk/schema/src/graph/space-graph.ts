@@ -3,7 +3,7 @@
 //
 
 import { type CleanupFn } from '@dxos/async';
-import { type Database, type Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { type Database, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { type Queue, type QueueImpl } from '@dxos/echo-db';
 import { type Graph, GraphModel } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
@@ -228,7 +228,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
     ];
 
     objects.forEach((object) => {
-      const schema = Obj.getSchema(object);
+      const schema = Entity.getSchema(object);
 
       // Relations.
       if (Relation.isRelation(object)) {

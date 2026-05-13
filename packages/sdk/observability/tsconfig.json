@@ -30,10 +30,16 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/log-store-idb"
     },
     {
       "path": "../../common/node-std"
@@ -43,6 +49,9 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/mesh/messaging"
     },
     {
       "path": "../../core/mesh/network-manager"

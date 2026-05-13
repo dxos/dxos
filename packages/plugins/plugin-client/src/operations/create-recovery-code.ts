@@ -6,13 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
-
-import { CreateRecoveryCode } from './definitions';
 
 import { RECOVERY_CODE_DIALOG } from '../constants';
 import { ClientCapabilities } from '../types';
+import { CreateRecoveryCode } from './definitions';
 
 const handler: Operation.WithHandler<typeof CreateRecoveryCode> = CreateRecoveryCode.pipe(
   Operation.withHandler(

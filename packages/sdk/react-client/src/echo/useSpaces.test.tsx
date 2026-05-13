@@ -6,7 +6,6 @@ import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
 import { createClient, createClientContextProvider } from '../testing/util';
-
 import { useSpace, useSpaces } from './useSpaces';
 
 describe('useSpaces', () => {
@@ -34,7 +33,7 @@ describe('useSpace', () => {
   test('returns undefined when no id provided', async () => {
     const { client } = await createClient({ createIdentity: true });
     const wrapper = await createClientContextProvider(client);
-    const { result } = renderHook(() => useSpace(), { wrapper });
+    const { result } = renderHook(() => useSpace(undefined), { wrapper });
     expect(result.current).to.be.undefined;
   });
 

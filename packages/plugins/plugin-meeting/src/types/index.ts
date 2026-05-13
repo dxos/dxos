@@ -4,5 +4,6 @@
 
 /** @deprecated Use Event instead. */
 export * as Meeting from './Meeting';
-
-export * from './capabilities';
+export * as MeetingCapabilities from './MeetingCapabilities';
+export * as MeetingOperation from './MeetingOperation';
+export * as Settings from './Settings';

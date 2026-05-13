@@ -10,8 +10,9 @@ import { JsonView, Panel } from '@dxos/devtools';
 import { log } from '@dxos/log';
 import { IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
+import { meta } from '#meta';
+
 import { type EncodedTrackName, type GlobalState } from '../../calls';
-import { meta } from '../../meta';
 
 export type CallDebugPanelProps = ThemedClassName<{ state?: GlobalState }>;
 
@@ -70,7 +71,7 @@ export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
       icon='ph--video-conference--regular'
       open={open}
       onToggle={handleToggle}
-      title={t('meeting status title')}
+      title={t('meeting-status.title')}
       info={<div className='flex items-center gap-2'> {state?.call.joined ? 'Active' : 'Inactive'}</div>}
       maxHeight={0}
     >
@@ -78,13 +79,13 @@ export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
         <div className='flex items-center gap-2 items-center'>
           <Input.Root>
             <Input.Switch checked={showDetailedWebRTCStats} onCheckedChange={handleShowDetailedWebRTCStats} />
-            <Input.Label>{t('show webrtc stats title')}</Input.Label>
+            <Input.Label>{t('show-webrtc-stats.title')}</Input.Label>
           </Input.Root>
         </div>
         <div className='flex items-center gap-2 items-center'>
           <Input.Root>
             <Input.Switch checked={showServiceHistory} onCheckedChange={handleToggleServiceHistory} />
-            <Input.Label>{t('show calls history title')}</Input.Label>
+            <Input.Label>{t('show-calls-history.title')}</Input.Label>
           </Input.Root>
         </div>
         <div className='flex items-center gap-2 items-center'>

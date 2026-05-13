@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as LanguageModel from '@effect/ai/LanguageModel';
+import * as Prompt from '@effect/ai/Prompt';
+import * as Effect from 'effect/Effect';
 import React, {
   ReactNode,
   type ComponentType,
@@ -13,15 +16,11 @@ import React, {
   createElement,
 } from 'react';
 
-import * as Effect from 'effect/Effect';
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Prompt from '@effect/ai/Prompt';
-
 import { AiService } from '@dxos/ai';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
+import { type Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
-import { type Operation } from '@dxos/operation';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation/hooks';
 import {
   Button,
@@ -39,7 +38,7 @@ import {
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { trim } from '@dxos/util';
 
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
 /**
  * Maps DXOS react-ui registry keys to components. Keys use compound names (e.g. Panel.Root) or
@@ -145,11 +144,10 @@ const buildGenUiSystemPrompt = (): string => {
       on:click='org.dxos.plugin.layout.operation.add-toast({"id":"t1","title":"Done!"})'
 
     Supported tags:
-${componentCatalog}
+    ${componentCatalog}
 
     Available operations (use the key as-is in on:* attributes):
-
-${operationCatalog}
+    ${operationCatalog}
 
     Operation argument reference:
     - add-toast: {"id":"<unique>", "title":"<text>", "description":"<text>", "icon":"<phosphor-id>", "duration":<ms>}
@@ -374,7 +372,7 @@ const GenUiMarkupPreview = ({ markup }: { markup: string }) => {
   return <div className='min-h-[120px] overflow-auto'>{rendered}</div>;
 };
 
-export const GenUiModule = ({ space }: ComponentProps) => {
+export const GenUiModule = ({ space }: ModuleProps) => {
   const [input, setInput] = useState('');
   const [markup, setMarkup] = useState('');
   const [generating, setGenerating] = useState(false);

@@ -2,10 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './anchor-sort';
-export * from './compute-graph-registry';
-export * from './markdown';
-export * from './operation-handler';
-export * from './undo-mappings';
-export * from './react-surface';
-export * from './state';
+import { Capability } from '@dxos/app-framework';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Operation } from '@dxos/compute';
+import { OperationHandlerSet } from '@dxos/compute';
+
+export const AnchorSort = Capability.lazy('AnchorSort', () => import('./anchor-sort'));
+export const CommentConfig = Capability.lazy('CommentConfig', () => import('./comment-config'));
+export const ComputeGraphRegistry = Capability.lazy('ComputeGraphRegistry', () => import('./compute-graph-registry'));
+export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
+export const Markdown = Capability.lazy('Markdown', () => import('./markdown'));
+export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
+  'OperationHandler',
+  () => import('./operation-handler'),
+);
+export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const SheetState = Capability.lazy('SheetState', () => import('./state'));
+export const UndoMappings = Capability.lazy('UndoMappings', () => import('./undo-mappings'));

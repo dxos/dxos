@@ -3,6 +3,7 @@
 //
 
 import type * as ConfigError from 'effect/ConfigError';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 import type * as Option from 'effect/Option';
@@ -13,24 +14,19 @@ import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
+import { type Credential, Trace, Operation, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
 import { type Database, Feed, type Key } from '@dxos/echo';
-import { CredentialsService, type FunctionInvocationService, type QueueService, TracingService } from '@dxos/functions';
-import {
-  FunctionImplementationResolver,
-  FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
-  RemoteFunctionExecutionService,
-} from '@dxos/functions-runtime';
-import { type OperationHandlerSet } from '@dxos/operation';
+import { type QueueService, credentialsLayerFromDatabase } from '@dxos/functions';
 
-// TODO(burdon): Factor out (see plugin-assistant/processor.ts)
 export type AiChatServices =
   | AiService.AiService
-  | CredentialsService
+  | Credential.CredentialsService
   | Database.Service
-  | Feed.Service
-  | FunctionInvocationService
+  | Feed.FeedService
+  | Operation.Service
+  | OperationRegistry.Service
   | QueueService
-  | TracingService;
+  | Trace.TraceService;
 
 // TODO(wittjosiah): Factor out.
 export const Provider = Schema.Literal('edge', 'lmstudio', 'ollama');
@@ -59,13 +55,35 @@ export const chatLayer = ({
     Match.exhaustive,
   );
 
-  return FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
-    Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
-    Layer.provideMerge(RemoteFunctionExecutionService.withClient(spaceId)),
+  const operationServiceLayer = Layer.effect(
+    Operation.Service,
+    Effect.gen(function* () {
+      const handlers = yield* functions.handlers;
+      return {
+        invoke: (op: any, ...args: any[]) => {
+          const handler = handlers.find((h: any) => h.meta.key === op.meta.key);
+          if (!handler) {
+            return Effect.die(`No handler found for operation: ${op.meta.key}`);
+          }
+          const result = handler.handler(args[0]);
+          if (Effect.isEffect(result)) {
+            return result as Effect.Effect<unknown>;
+          }
+          return Effect.promise(() => Promise.resolve(result));
+        },
+        schedule: () => Effect.void,
+        invokePromise: async () => ({ error: new Error('Not implemented') }),
+      } as Operation.OperationService;
+    }),
+  );
+
+  return operationServiceLayer.pipe(
+    Layer.provideMerge(OperationRegistry.layer),
+    Layer.provideMerge(OperationHandlerSet.provide(functions)),
     Layer.provideMerge(aiServiceLayer),
-    Layer.provideMerge(CredentialsService.layerFromDatabase()),
+    Layer.provideMerge(credentialsLayerFromDatabase()),
     Layer.provideMerge(spaceLayer(spaceId, true)),
-    Layer.provideMerge(TracingService.layerNoop),
+    Layer.provideMerge(Trace.writerLayerNoop),
     Layer.provideMerge(Feed.notAvailable),
   );
 };

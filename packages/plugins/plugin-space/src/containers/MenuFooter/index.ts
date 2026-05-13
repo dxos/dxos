@@ -2,6 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-import { MenuFooter } from './MenuFooter';
-
-export default MenuFooter;
+export { MenuFooter as default } from './MenuFooter';

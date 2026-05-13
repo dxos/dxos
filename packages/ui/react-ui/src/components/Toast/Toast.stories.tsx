@@ -7,7 +7,6 @@ import React, { type ReactNode, useState } from 'react';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
-
 import { Toast } from './Toast';
 
 type ActionTriggerProps = { altText: string; trigger: ReactNode };

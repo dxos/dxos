@@ -3,10 +3,9 @@
 // This file has been automatically migrated to valid ESM format by Storybook.
 //
 
+import { type StorybookConfig } from '@storybook/web-components-vite';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-import { type StorybookConfig } from '@storybook/web-components-vite';
 import { type InlineConfig } from 'vite';
 
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
@@ -46,10 +45,13 @@ export const config = ({ stories: baseStories, ...baseConfig }: Partial<Storyboo
     // NOTE: Dynamic imports seems to help avoid conflicts with storybook's internal esbuild-register usage & Vite 7.
     const { mergeConfig } = await import('vite');
     const { default: Inspect } = await import('vite-plugin-inspect');
+    const { DxosLogPlugin } = await import('@dxos/vite-plugin-log');
 
     return mergeConfig(config, {
       plugins: [
         isTrue(process.env.DX_INSPECT) && Inspect(),
+
+        DxosLogPlugin(),
 
         IconsPlugin({
           symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',

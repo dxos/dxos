@@ -9,7 +9,6 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { type ListeningHandle, type Messenger, type PeerInfo, PeerInfoHash, type SwarmEvent } from '@dxos/messaging';
-import { trace } from '@dxos/protocols';
 import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, isNonNullable } from '@dxos/util';
 
@@ -18,7 +17,6 @@ import { type SwarmController, type Topology } from '../topology';
 import { type TransportFactory } from '../transport';
 import { type Topic } from '../types';
 import { type WireProtocolProvider } from '../wire-protocol';
-
 import { type Connection, ConnectionState } from './connection';
 import { type ConnectionLimiter } from './connection-limiter';
 import { Peer } from './peer';
@@ -86,11 +84,7 @@ export class Swarm {
     private readonly _connectionLimiter: ConnectionLimiter,
     private readonly _initiationDelay = INITIATION_DELAY,
   ) {
-    log.trace(
-      'dxos.mesh.swarm.constructor',
-      trace.begin({ id: this._instanceId, data: { topic: this._topic.toHex(), peer: this._ownPeer } }),
-    );
-    log('creating swarm', { peerId: _ownPeer });
+    log('creating swarm', { topic: this._topic.toHex(), peer: this._ownPeer });
     _topology.init(this._getSwarmController());
 
     this._swarmMessenger = new SwarmMessenger({
@@ -99,7 +93,6 @@ export class Swarm {
       onOffer: async (ctx, msg) => await this.onOffer(ctx, msg),
       topic: this._topic,
     });
-    log.trace('dxos.mesh.swarm.constructor', trace.end({ id: this._instanceId }));
   }
 
   get connections() {

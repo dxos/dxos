@@ -2,11 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Option from 'effect/Option';
-
 import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Annotation, Type } from '@dxos/echo';
 
 import {
   AppGraphBuilder,
@@ -15,33 +12,23 @@ import {
   MeetingState,
   OperationHandler,
   ReactSurface,
-} from './capabilities';
-import { meta } from './meta';
-import { translations } from './translations';
-import { Meeting, MeetingCapabilities } from './types';
+} from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { Meeting, MeetingCapabilities } from '#types';
 
 const StateReady = AppActivationEvents.createStateEvent(meta.id);
 const SettingsReady = AppActivationEvents.createSettingsEvent(MeetingCapabilities.Settings.identifier);
 
 export const MeetingPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addMetadataModule({
-    metadata: {
-      id: Type.getTypename(Meeting.Meeting),
-      metadata: {
-        label: (object: Meeting.Meeting) => object.name || new Date(object.created).toLocaleString(),
-        icon: Annotation.IconAnnotation.get(Meeting.Meeting).pipe(Option.getOrThrow).icon,
-        iconHue: Annotation.IconAnnotation.get(Meeting.Meeting).pipe(Option.getOrThrow).hue ?? 'white',
-      },
-    },
-  }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Meeting.Meeting], id: 'schemas' }),
+  AppPlugin.addSchemaModule({ schema: [Meeting.Meeting] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupSettings,
-    activatesAfter: [SettingsReady],
+    firesAfterActivation: [SettingsReady],
     activate: MeetingSettings,
   }),
   Plugin.addModule({
@@ -49,7 +36,7 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
     activatesOn: ActivationEvent.oneOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
-    activatesAfter: [StateReady],
+    firesAfterActivation: [StateReady],
     activate: MeetingState,
   }),
   Plugin.addModule({
@@ -58,3 +45,5 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default MeetingPlugin;

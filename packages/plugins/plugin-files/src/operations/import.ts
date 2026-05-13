@@ -6,13 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 import { type MaybePromise, byPosition } from '@dxos/util';
 
-import { Import } from './definitions';
+import { FilesOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof Import> = Import.pipe(
+const handler: Operation.WithHandler<typeof FilesOperation.Import> = FilesOperation.Import.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ rootDir: rootDirInput }) {
       const rootDir =

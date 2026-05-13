@@ -15,7 +15,6 @@ import { getInputPoint, pointAdd, pointSubtract } from '../layout';
 import { createRectangle, parseAnchorId } from '../shapes';
 import { createId, itemSize } from '../testing';
 import { type CanvasGraphModel, type Polygon, isPolygon } from '../types';
-
 import { useEditorContext } from './useEditorContext';
 import { getClosestAnchor } from './useLayout';
 import { useSnap } from './useSnap';

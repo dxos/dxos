@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { log } from '@dxos/log';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
 
-import { SpotlightState } from '../types';
+import { SpotlightCapabilities } from '../types';
 
 const DISMISS_DEBOUNCE_MS = 100;
 
@@ -27,7 +27,7 @@ export const SpotlightOperationHandlerSet = OperationHandlerSet.make(
          */
         if (input.subject) {
           // Cancel any pending dismiss and switch content.
-          yield* Capabilities.updateAtomValue(SpotlightState, (state) => {
+          yield* Capabilities.updateAtomValue(SpotlightCapabilities.State, (state) => {
             if (state.dismissTimeout !== undefined) {
               clearTimeout(state.dismissTimeout);
             }
@@ -39,7 +39,7 @@ export const SpotlightOperationHandlerSet = OperationHandlerSet.make(
           });
         } else if (input.state === false) {
           // Schedule dismiss after a short delay.
-          yield* Capabilities.updateAtomValue(SpotlightState, (state) => {
+          yield* Capabilities.updateAtomValue(SpotlightCapabilities.State, (state) => {
             if (state.dismissTimeout !== undefined) {
               clearTimeout(state.dismissTimeout);
             }

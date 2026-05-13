@@ -58,13 +58,26 @@ export class Serializer {
     invariant(data.version === Serializer.version, `Invalid version: ${data.version}`);
 
     const { objects } = data;
+    const deferred: Obj.JSON[] = [];
     for (const object of objects) {
       const shouldImport = opts?.onObject ? await opts.onObject(object) : true;
+      if (!shouldImport) {
+        continue;
+      }
 
-      if (shouldImport) {
+      if (object['@relationSource'] || object['@relationTarget']) {
+        deferred.push(object);
+      } else {
         await this._importObject(database, object);
       }
     }
+
+    // Flush so source/target objects are queryable before importing relations.
+    await database.flush();
+    for (const object of deferred) {
+      await this._importObject(database, object);
+    }
+
     await database.flush();
   }
 

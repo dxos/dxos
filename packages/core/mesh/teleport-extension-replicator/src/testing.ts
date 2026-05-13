@@ -3,7 +3,6 @@
 //
 
 import { pipeline } from 'stream';
-
 import { onTestFinished } from 'vitest';
 
 import { FeedFactory, type FeedOptions, FeedStore } from '@dxos/feed-store';

@@ -59,6 +59,12 @@ export interface CapabilityManager {
    * @returns The capability.
    */
   waitFor<T>(interfaceDef: Capability.InterfaceDef<T>): Effect.Effect<T, Error>;
+
+  /**
+   * Get capabilities grouped by the module that contributed them.
+   * @returns An atom containing a record from module ID to capability implementations.
+   */
+  atomByModule<T>(interfaceDef: Capability.InterfaceDef<T>): Atom.Atom<Record<string, T[]>>;
 }
 
 /**
@@ -75,6 +81,17 @@ class CapabilityManagerImpl implements CapabilityManager {
     return Atom.make((get) => {
       const current = get(this._capabilityEntries(id));
       return current.map((c) => c.implementation);
+    }).pipe(Atom.keepAlive);
+  });
+
+  readonly _capabilitiesByModule = Atom.family<string, Atom.Atom<Record<string, unknown[]>>>((id: string) => {
+    return Atom.make((get) => {
+      const entries = get(this._capabilityEntries(id));
+      const result: Record<string, unknown[]> = {};
+      for (const entry of entries) {
+        (result[entry.moduleId] ??= []).push(entry.implementation);
+      }
+      return result;
     }).pipe(Atom.keepAlive);
   });
 
@@ -162,6 +179,10 @@ class CapabilityManagerImpl implements CapabilityManager {
       cancel();
       return result;
     });
+  }
+
+  atomByModule<T>(interfaceDef: Capability.InterfaceDef<T>): Atom.Atom<Record<string, T[]>> {
+    return this._capabilitiesByModule(interfaceDef.identifier) as Atom.Atom<Record<string, T[]>>;
   }
 }
 

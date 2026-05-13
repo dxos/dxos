@@ -10,37 +10,40 @@ import { expect, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { Obj, type QueryAST, Type } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Filter, Obj, type QueryAST, Type, View } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { ClientPlugin } from '@dxos/plugin-client';
+// `/plugin` entrypoints used here for the same reason as `corePlugins()` —
+// see `@dxos/plugin-testing/src/core.ts` for the rationale.
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
+import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
-import { Filter, type Space, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
-import { withLayout } from '@dxos/react-ui/testing';
+import { random } from '@dxos/random';
+import { type Space, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
-import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout } from '@dxos/react-ui/testing';
 import { ViewModel, getTypenameFromQuery } from '@dxos/schema';
 // TODO(wittjosiah): Replace with echo/testing.
 import { Organization, Person } from '@dxos/types';
 
-import { useProjectionModel } from '../../hooks';
-import { KanbanPlugin } from '../../KanbanPlugin';
-import { translations } from '../../translations';
-import { Kanban } from '../../types';
+import { useProjectionModel } from '#hooks';
+import { translations } from '#translations';
+import { Kanban } from '#types';
 
-faker.seed(0);
+import { KanbanPlugin } from '../../KanbanPlugin';
+
+random.seed(0);
 
 const createOrg = (status?: Organization.Organization['status']) => ({
-  name: faker.commerce.productName(),
-  description: faker.lorem.paragraph(),
-  image: faker.image.url(),
-  website: faker.internet.url(),
-  status: (status ?? faker.helpers.arrayElement(Organization.StatusOptions).id) as Organization.Organization['status'],
+  name: random.commerce.productName(),
+  description: random.lorem.paragraph(),
+  image: random.image.url(),
+  website: random.internet.url(),
+  status: (status ?? random.helpers.arrayElement(Organization.StatusOptions).id) as Organization.Organization['status'],
 });
 
 //
@@ -79,31 +82,33 @@ const withKanbanPlugins = ({ types = [], onSpaceCreated }: ClientSetupOptions): 
 
 /**
  * Renders the first Kanban in the space via Surface (resolves to KanbanContainer),
- * with a sidebar containing ViewEditor and JsonFilter.
+ * with a sidebar containing ViewEditor and Json filter.
  */
 const DefaultComponent = () => {
   const registry = useContext(RegistryContext);
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const [kanban] = useQuery(space?.db, Filter.type(Kanban.Kanban));
-  const typename = kanban?.view.target?.query ? getTypenameFromQuery(kanban.view.target.query.ast) : undefined;
+  const viewRef = kanban && kanban.spec.kind === 'view' ? kanban.spec.view : undefined;
+  const view = viewRef?.target;
+  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(space?.db, typename);
   const projection = useProjectionModel(schema, kanban, registry);
 
-  const data = useMemo(() => (kanban ? { subject: kanban } : {}), [kanban]);
+  const data = useMemo(() => (kanban ? { subject: kanban, attendableId: 'story' } : undefined), [kanban]);
 
   const handleUpdateQuery = useCallback(
     (newQuery: QueryAST.Query) => {
       invariant(schema);
-      invariant(kanban?.view.target);
+      invariant(view);
       if (Type.isMutable(schema)) {
         schema.updateTypename(getTypenameFromQuery(newQuery));
       }
-      Obj.change(kanban.view.target, (view) => {
+      Obj.update(view, (view) => {
         view.query.ast = newQuery as Mutable<QueryAST.Query>;
       });
     },
-    [kanban, schema],
+    [view, schema],
   );
 
   const handleDeleteField = useCallback(
@@ -115,22 +120,29 @@ const DefaultComponent = () => {
     [schema, projection],
   );
 
-  if (!schema || !kanban?.view.target) {
+  if (!schema || !view) {
     return null;
   }
 
   return (
     <div className='grow grid grid-cols-[1fr_350px] overflow-hidden h-full w-full'>
-      <Surface.Surface role='article' data={data} limit={1} />
+      <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
       <div className='flex flex-col h-full overflow-hidden border-l border-separator'>
         <ViewEditor
           registry={space?.db.schemaRegistry}
           schema={schema}
-          view={kanban.view.target}
+          view={view}
           onQueryChanged={handleUpdateQuery}
           onDelete={schema && Type.isMutable(schema) ? handleDeleteField : undefined}
         />
-        <JsonFilter data={{ view: kanban.view.target, schema }} classNames='text-xs' />
+        <Syntax.Root data={{ view, schema }}>
+          <Syntax.Content>
+            <Syntax.Filter />
+            <Syntax.Viewport>
+              <Syntax.Code classNames='text-xs' />
+            </Syntax.Viewport>
+          </Syntax.Content>
+        </Syntax.Root>
       </div>
     </div>
   );
@@ -183,9 +195,9 @@ export const Default: Story = {
 
     // Wait for the kanban columns to render by finding the status tags.
     // Organization.StatusOptions: prospect, qualified, active, commit, reject.
-    const activeTag = await canvas.findByText('Active', undefined, { timeout: 30_000 });
-    const prospectTag = await canvas.findByText('Prospect', undefined, { timeout: 10_000 });
-    const commitTag = await canvas.findByText('Commit', undefined, { timeout: 10_000 });
+    const activeTag = await canvas.findByText('Active', undefined, { timeout: 12_000 });
+    const prospectTag = await canvas.findByText('Prospect', undefined, { timeout: 12_000 });
+    const commitTag = await canvas.findByText('Commit', undefined, { timeout: 12_000 });
 
     // Verify all expected columns are rendered.
     await expect(activeTag).toBeTruthy();

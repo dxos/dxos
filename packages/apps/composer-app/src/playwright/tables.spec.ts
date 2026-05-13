@@ -4,12 +4,12 @@
 
 import { expect, test } from '@playwright/test';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { AppManager } from './app-manager';
 import { Table } from './plugins';
 
-faker.seed(0);
+random.seed(0);
 
 // TODO(wittjosiah): Fix table tests.
 test.describe.skip('Table tests', () => {
@@ -28,7 +28,7 @@ test.describe.skip('Table tests', () => {
   test('create', async () => {
     await host.createObject({ type: 'Table' });
 
-    const title = faker.lorem.sentence();
+    const title = random.lorem.sentence();
     await Table.createTable(host.page, title);
 
     await expect(Table.getDataRow(host.page)).toHaveCount(1);
@@ -37,7 +37,7 @@ test.describe.skip('Table tests', () => {
   test('can add rows', async () => {
     await host.createObject({ type: 'Table' });
 
-    const title = faker.lorem.sentence();
+    const title = random.lorem.sentence();
     await Table.createTable(host.page, title);
 
     await expect(Table.getDataRow(host.page)).toHaveCount(1);
@@ -59,7 +59,7 @@ test.describe.skip('Table tests', () => {
 
   test('can delete rows', async () => {
     await host.createObject({ type: 'Table' });
-    const title = faker.lorem.sentence();
+    const title = random.lorem.sentence();
     await Table.createTable(host.page, title);
     await expect(Table.getDataRow(host.page)).toHaveCount(1);
 
@@ -84,7 +84,7 @@ test.describe.skip('Table tests', () => {
 
   test('can add columns', async () => {
     await host.createObject({ type: 'Table' });
-    const title = faker.lorem.sentence();
+    const title = random.lorem.sentence();
     await Table.createTable(host.page, title);
     await expect(Table.getHeaderCell(host.page)).toHaveCount(2);
 
@@ -95,7 +95,7 @@ test.describe.skip('Table tests', () => {
 
   test('can delete columns', async () => {
     await host.createObject({ type: 'Table' });
-    const title = faker.lorem.sentence();
+    const title = random.lorem.sentence();
     await Table.createTable(host.page, title);
 
     const COLUMNS = 4;
@@ -120,7 +120,7 @@ test.describe.skip('Table tests', () => {
 
   test('can rename columns', async () => {
     await host.createObject({ type: 'Table' });
-    const title = faker.lorem.sentence();
+    const title = random.lorem.sentence();
 
     await Table.createTable(host.page, title);
     await expect(Table.getHeaderCell(host.page)).toHaveCount(2);
@@ -128,7 +128,7 @@ test.describe.skip('Table tests', () => {
     await Table.getAddColumnButton(host.page).click();
     await expect(Table.getHeaderCell(host.page)).toHaveCount(3);
 
-    const newColumnName = faker.lorem.word();
+    const newColumnName = random.lorem.word();
 
     await Table.getColumnMenu(host.page).last().click();
     await Table.getOpenColumnSettings(host.page).click();

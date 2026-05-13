@@ -5,13 +5,13 @@
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import { useCallback } from 'react';
 
-import { type AiContextBinder } from '@dxos/assistant';
+import { type AiContext } from '@dxos/assistant';
 import { type Database, type Obj } from '@dxos/echo';
 import { type LegacyDXN } from '@dxos/keys';
 
 export type UseContextObjectsProps = {
   db?: Database.Database;
-  context?: AiContextBinder;
+  context?: AiContext.Binder;
 };
 
 export type UseContextObjects = {

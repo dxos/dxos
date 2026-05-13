@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
 import 'zx/globals';
+
+import { highlight } from 'cli-highlight';
+import semver from 'semver';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { highlight } from 'cli-highlight';
 import { fetch } from 'zx';
-import semver from 'semver';
 
 const argv = yargs(hideBin(process.argv))
   .usage('Usage: $0 <packageName[@version]> [options]')

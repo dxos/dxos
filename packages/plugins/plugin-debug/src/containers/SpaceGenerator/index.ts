@@ -2,6 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SpaceGenerator } from './SpaceGenerator';
-
-export default SpaceGenerator;
+export { SpaceGenerator as default } from './SpaceGenerator';

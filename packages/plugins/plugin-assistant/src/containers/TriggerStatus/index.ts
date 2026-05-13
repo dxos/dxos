@@ -2,6 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-import { TriggerStatus } from './TriggerStatus';
-
-export default TriggerStatus;
+export { SpaceStatus, SpaceStatus as default } from './TriggerStatus';

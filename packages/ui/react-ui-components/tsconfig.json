@@ -37,10 +37,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/compute/assistant"
     },
     {
       "path": "../../core/echo/echo"
@@ -71,6 +71,9 @@
     },
     {
       "path": "../react-ui-markdown"
+    },
+    {
+      "path": "../react-ui-sfx"
     },
     {
       "path": "../react-ui-syntax-highlighter"

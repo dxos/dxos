@@ -6,10 +6,11 @@ import React, { type Dispatch, type SetStateAction, useMemo, useState } from 're
 import { QR } from 'react-qr-rounded';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
-import { type Space, useSpaceInvitations } from '@dxos/react-client/echo';
+import { useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { Button, Clipboard, Icon, useId, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
@@ -26,8 +27,8 @@ import {
 } from '@dxos/shell/react';
 import { hexToEmoji } from '@dxos/util';
 
-import { meta } from '../../meta';
-import { SpaceOperation } from '../../operations';
+import { meta } from '#meta';
+import { SpaceOperation } from '#operations';
 
 // TODO(wittjosiah): Copied from Shell.
 const activeActionKey = 'dxos:react-shell/space-manager/active-action';
@@ -40,10 +41,9 @@ const handleInvitationEvent = (invitation: Invitation, subscription: ZenObservab
   }
 };
 
-export type MembersContainerProps = {
-  space: Space;
+export type MembersContainerProps = AppSurface.SpaceArticleProps<{
   createInvitationUrl: (invitationCode: string) => string;
-};
+}>;
 
 export const MembersContainer = ({ space, createInvitationUrl }: MembersContainerProps) => {
   const { t } = useTranslation(meta.id);
@@ -67,8 +67,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
   const inviteActions = useMemo(
     (): Record<string, ActionMenuItem> => ({
       inviteOne: {
-        label: t('invite one label', { ns: shellTranslationKey }),
-        description: t('invite one description', { ns: shellTranslationKey }),
+        label: t('invite-one.label', { ns: shellTranslationKey }),
+        description: t('invite-one.description', { ns: shellTranslationKey }),
         icon: 'ph--user-plus--regular',
         testId: 'membersContainer.inviteOne',
         onClick: async () => {
@@ -87,8 +87,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
         },
       },
       inviteMany: {
-        label: t('invite many label', { ns: shellTranslationKey }),
-        description: t('invite many description', { ns: shellTranslationKey }),
+        label: t('invite-many.label', { ns: shellTranslationKey }),
+        description: t('invite-many.description', { ns: shellTranslationKey }),
         icon: 'ph--users-three--regular',
         testId: 'membersContainer.inviteMany',
         onClick: async () => {
@@ -120,17 +120,19 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
 
   return (
     <Clipboard.Provider>
-      <Settings.Root>
-        <Settings.Section title={t('members verbose label')} description={t('members description')}>
-          <Settings.Frame>
-            <Settings.FrameItem title={t('members label')}>
+      <Settings.Viewport>
+        <Settings.Section title={t('members-verbose.label')} description={t('members.description')}>
+          <Settings.Panel>
+            <div role='group' className='min-w-0'>
+              <h3 className='text-lg mb-2'>{t('members.label')}</h3>
               <SpaceMemberList spaceKey={space.key} includeSelf />
-            </Settings.FrameItem>
-            <Settings.FrameItem title={t('invitations label')}>
+            </div>
+            <div role='group' className='min-w-0'>
+              <h3 className='text-lg mb-2'>{t('invitations.label')}</h3>
               {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
               {!selectedInvitation && (
                 <>
-                  <p className='text-description mb-2'>{t('space invitation description')}</p>
+                  <p className='text-description mb-2'>{t('space-invitation.description')}</p>
                   <InvitationList
                     className='mb-2'
                     send={handleSend}
@@ -146,10 +148,10 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
                   />
                 </>
               )}
-            </Settings.FrameItem>
-          </Settings.Frame>
+            </div>
+          </Settings.Panel>
         </Settings.Section>
-      </Settings.Root>
+      </Settings.Viewport>
     </Clipboard.Provider>
   );
 };
@@ -205,9 +207,9 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   const emoji = hexToEmoji(id);
   return (
     <>
-      <p className='text-description'>{t('qr code description', { ns: meta.id })}</p>
+      <p className='text-description'>{t('qr-code.description', { ns: meta.id })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content] my-2 gap-2'>
-        <div role='none' className='w-full aspect-square relative text-description'>
+        <div className='w-full aspect-square relative text-description'>
           <QR
             rounding={100}
             backgroundColor='transparent'
@@ -223,12 +225,12 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
           </Centered>
         </div>
         <span id={qrLabel} className='sr-only'>
-          {t('qr label')}
+          {t('qr.label')}
         </span>
         <Clipboard.Button value={url ?? 'never'} />
       </div>
       <Button variant='ghost' onClick={onCancel}>
-        {t('cancel label')}
+        {t('cancel.label')}
       </Button>
     </>
   );
@@ -240,12 +242,12 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
 
   return (
     <>
-      <p className='text-description'>{t('auth other device emoji message')}</p>
+      <p className='text-description'>{t('auth-other-device-emoji.message')}</p>
       {emoji && <Emoji text={emoji} className='mx-auto my-2 text-center' />}
-      <p className='text-description'>{t('auth code message')}</p>
+      <p className='text-description'>{t('auth-code.message')}</p>
       <AuthCode code={code} large classNames='mx-auto my-2 text-center grow' />
       <Button variant='ghost' onClick={onCancel}>
-        {t('cancel label')}
+        {t('cancel.label')}
       </Button>
     </>
   );

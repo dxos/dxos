@@ -15,22 +15,26 @@ import {
   ObservabilityState,
   OperationHandler,
   ReactSurface,
-} from './capabilities';
-import { meta } from './meta';
-import { translations } from './translations';
-import { ClientReadyEvent, ObservabilityEvents } from './types';
-import { ObservabilityCapabilities } from './types';
+} from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { ObservabilityCapabilities, ObservabilityEvents } from '#types';
 
 export type ObservabilityPluginOptions = {
   namespace: string;
   observability: () => Promise<Observability.Observability>;
+  /**
+   * Optional callback invoked by the help/feedback UI to download captured logs.
+   * When omitted the "Download logs" action is hidden.
+   */
+  downloadLogs?: () => void | Promise<void>;
 };
 
 export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule(({ namespace, observability }) => ({
+  Plugin.addModule(({ observability }) => ({
     id: 'observability',
     activatesOn: ActivationEvents.Startup,
     activate: () =>
@@ -46,7 +50,7 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
   Plugin.addModule(({ namespace }) => ({
     id: Capability.getModuleTag(ObservabilityState),
     activatesOn: ActivationEvents.Startup,
-    activatesAfter: [ObservabilityEvents.StateReady],
+    firesAfterActivation: [ObservabilityEvents.StateReady],
     activate: () => ObservabilityState({ namespace }),
   })),
   Plugin.addModule(({ namespace }) => ({
@@ -54,13 +58,21 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
     activatesOn: ActivationEvents.Startup,
     activate: () => Effect.succeed(Capability.contributes(ObservabilityCapabilities.Namespace, namespace)),
   })),
+  Plugin.addModule(({ downloadLogs }) => ({
+    id: 'log-downloader',
+    activatesOn: ActivationEvents.Startup,
+    activate: () =>
+      Effect.succeed(
+        downloadLogs !== undefined ? Capability.contributes(ObservabilityCapabilities.LogDownloader, downloadLogs) : [],
+      ),
+  })),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   Plugin.addModule(({ namespace, observability }) => ({
     id: Capability.getModuleTag(ClientReady),
     activatesOn: ActivationEvent.allOf(
       ActivationEvents.OperationInvokerReady,
       ObservabilityEvents.StateReady,
-      ClientReadyEvent,
+      ObservabilityEvents.ClientReadyEvent,
     ),
     activate: () =>
       Effect.gen(function* () {
@@ -70,3 +82,5 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
   })),
   Plugin.make,
 );
+
+export default ObservabilityPlugin;

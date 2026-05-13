@@ -5,23 +5,16 @@
 import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
-import { usePluginManager } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { type Database, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Annotation, type Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
-import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type EditorMenuGroup, type EditorMenuItem } from '@dxos/react-ui-editor';
 import { insertAtCursor, insertAtLineStart } from '@dxos/ui-editor';
 
+import { Markdown } from '../types';
+
 export const useLinkQuery = (db: Database.Database | undefined) => {
   const { t } = useTranslation();
-
-  const manager = usePluginManager();
-  const resolve = useCallback(
-    (typename: string) =>
-      manager.capabilities.getAll(AppCapabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {},
-    [manager],
-  );
 
   const filter = useMemo(
     () =>
@@ -40,30 +33,22 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
       const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : (query?.toLowerCase() ?? '');
       const results = await db?.query(Query.select(filter)).run();
 
-      // TODO(wittjosiah): Use `Obj.Unknown` type.
-      const getLabel = (object: any) => {
-        const label = Obj.getLabel(object);
-        if (label) {
-          return label;
-        }
-
-        // TODO(wittjosiah): Remove metadata labels.
+      const getLabel = (object: Obj.Unknown): Label => {
         const type = Obj.getTypename(object)!;
-        const metadata = resolve(type);
-        return metadata.label?.(object) || ['object name placeholder', { ns: type, default: 'New object' }];
+        return Obj.getLabel(object) ?? ['object-name.placeholder', { ns: type, defaultValue: 'New object' }];
       };
 
       const items =
         results
           ?.filter((object) => toLocalizedString(getLabel(object), t).toLowerCase().includes(name))
-          // TODO(wittjosiah): Remove `any` type.
-          .map((object: any): EditorMenuItem => {
-            const metadata = resolve(Obj.getTypename(object)!);
+          .map((object: Obj.Unknown): EditorMenuItem => {
+            const schema = Obj.getSchema(object);
+            const icon = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema))?.icon : undefined;
             const label = toLocalizedString(getLabel(object), t);
             return {
               id: object.id,
               label,
-              icon: metadata.icon,
+              icon,
               onSelect: ({ view, head }) => {
                 const link = `[${label}](${Obj.getDXN(object)})`;
                 // "@@" inserts a block embed on its own line instead of an inline link.
@@ -76,9 +61,30 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
             };
           }) ?? [];
 
-      return [{ id: 'echo', items }];
+      // Add "Create new document" option at the end.
+      const createItem: EditorMenuItem = {
+        id: 'create-document',
+        label: ['add-object.label', { ns: Markdown.Document.typename }],
+        icon: 'ph--plus--regular',
+        onSelect: ({ view, head }) => {
+          const doc = Markdown.make({ name: name || undefined });
+          db?.add(doc);
+          const label = name || t('object-name.placeholder', { ns: Markdown.Document.typename });
+          const link = `[${label}](${Obj.getDXN(doc)})`;
+          if (query?.startsWith('@')) {
+            insertAtLineStart(view, head, `!${link}\n`);
+          } else {
+            insertAtCursor(view, head, `${link} `);
+          }
+        },
+      };
+
+      return [
+        { id: 'echo', items },
+        { id: 'create', items: [createItem] },
+      ];
     },
-    [db, filter, resolve],
+    [db, filter, t],
   );
 
   return handleLinkQuery;

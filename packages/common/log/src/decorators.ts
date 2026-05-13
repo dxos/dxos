@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { inspect } from 'node:util';
-
 import chalk from 'chalk';
+import { inspect } from 'node:util';
 
 import { type LogMethods } from './log';
 import { type CallMetadata } from './meta';

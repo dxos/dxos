@@ -5,7 +5,6 @@
 import { expect, test } from '@playwright/test';
 
 import { FILTER } from '../constants';
-
 import { AppManager } from './app-manager';
 
 enum Groceries {
@@ -109,8 +108,8 @@ test.describe('Basic test', () => {
       await host.toggleTodo(Groceries.Butter);
       await guest.filterTodos(FILTER.ACTIVE);
 
-      await expect(guest.hasText(Groceries.Milk)).not.toBeVisible();
-      await expect(guest.hasText(Groceries.Butter)).not.toBeVisible();
+      await expect(guest.todo(Groceries.Milk)).toHaveCount(0);
+      await expect(guest.todo(Groceries.Butter)).toHaveCount(0);
       await expect(guest.todo(Groceries.Eggs)).toBeVisible();
       await expect(guest.todo(Groceries.Flour)).toBeVisible();
       expect(await guest.todoCount()).toEqual(2);
@@ -126,8 +125,8 @@ test.describe('Basic test', () => {
       await host.toggleTodo(Groceries.Butter);
       await guest.filterTodos(FILTER.COMPLETED);
 
-      await expect(guest.hasText(Groceries.Eggs)).not.toBeVisible();
-      await expect(guest.hasText(Groceries.Flour)).not.toBeVisible();
+      await expect(guest.todo(Groceries.Eggs)).toHaveCount(0);
+      await expect(guest.todo(Groceries.Flour)).toHaveCount(0);
       await expect(guest.todo(Groceries.Milk)).toBeVisible();
       await expect(guest.todo(Groceries.Butter)).toBeVisible();
       expect(await guest.todoCount()).toEqual(2);
@@ -148,10 +147,10 @@ test.describe('Basic test', () => {
 
       await host.clearCompleted();
 
-      await expect(guest.hasText(Groceries.Eggs)).not.toBeVisible();
-      await expect(guest.hasText(Groceries.Milk)).not.toBeVisible();
-      await expect(guest.hasText(Groceries.Butter)).not.toBeVisible();
-      await expect(guest.hasText(Groceries.Flour)).not.toBeVisible();
+      await expect(guest.todo(Groceries.Eggs)).toHaveCount(0);
+      await expect(guest.todo(Groceries.Milk)).toHaveCount(0);
+      await expect(guest.todo(Groceries.Butter)).toHaveCount(0);
+      await expect(guest.todo(Groceries.Flour)).toHaveCount(0);
     });
   });
 });

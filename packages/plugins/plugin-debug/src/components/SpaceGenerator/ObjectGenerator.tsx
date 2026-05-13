@@ -4,23 +4,22 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { addressToA1Notation } from '@dxos/compute';
+import { addressToA1Notation } from '@dxos/compute-hyperformula';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, type Type } from '@dxos/echo';
-import { View } from '@dxos/echo';
-import { type OperationInvoker } from '@dxos/operation';
-import { Markdown } from '@dxos/plugin-markdown/types';
-import { Sheet } from '@dxos/plugin-sheet/types';
-import { Sketch } from '@dxos/plugin-sketch/types';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { faker } from '@dxos/random';
+import { DXN, Filter, Key, type Type, View } from '@dxos/echo';
+import { OperationInvoker } from '@dxos/operation';
+import { Markdown } from '@dxos/plugin-markdown';
+import { Sheet } from '@dxos/plugin-sheet';
+import { Sketch } from '@dxos/plugin-sketch';
+import { SpaceOperation } from '@dxos/plugin-space';
+import { random } from '@dxos/random';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { getTypenameFromQuery } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
-const generator: ValueGenerator = faker as any;
+const generator: ValueGenerator = random as any;
 
 const findViewByTypename = async (views: View.View[], typename: string) => {
   return views.find((view) => getTypenameFromQuery(view.query.ast) === typename);
@@ -57,8 +56,8 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
       const objects = range(n).map(() => {
         return space.db.add(
           Markdown.make({
-            name: faker.commerce.productName(),
-            content: faker.lorem.sentences(5),
+            name: random.commerce.productName(),
+            content: random.lorem.sentences(5),
           }),
         );
       });
@@ -71,7 +70,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     Sketch.Sketch.typename,
     async (space, n, cb) => {
       const objects = range(n).map(() => {
-        const obj = space.db.add(Sketch.make({ name: faker.commerce.productName() }));
+        const obj = space.db.add(Sketch.make({ name: random.commerce.productName() }));
         return obj;
       });
 
@@ -107,7 +106,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
         // TODO(burdon): Set formatting for columns.
         return space.db.add(
           Sheet.make({
-            name: faker.commerce.productName(),
+            name: random.commerce.productName(),
             cells,
           }),
         );

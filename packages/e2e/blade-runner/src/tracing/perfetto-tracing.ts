@@ -12,14 +12,14 @@ import { PerfettoEvents } from './perfetto-events';
 export const PERFETTO_EVENTS = new PerfettoEvents();
 
 export const registerPerfettoTracer = () => {
-  TRACE_PROCESSOR.remoteTracing.registerProcessor({
+  TRACE_PROCESSOR.tracingBackend = {
     startSpan: ({ name }) => {
       PERFETTO_EVENTS.begin({ name });
       return {
         end: () => PERFETTO_EVENTS.end({ name }),
       };
     },
-  });
+  };
 };
 
 /**

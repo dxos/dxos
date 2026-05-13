@@ -9,20 +9,21 @@ import React from 'react';
 import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { ClientPlugin } from '@dxos/plugin-client';
-import { PreviewPlugin } from '@dxos/plugin-preview';
+import { Filter } from '@dxos/echo';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
-import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { random } from '@dxos/random';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
 
 import { RecordArticle } from './RecordArticle';
 
-faker.seed(0);
+random.seed(0);
 
 const PERSON_COUNT = 100;
 
@@ -35,7 +36,7 @@ const DefaultStory = () => {
     return <Loading />;
   }
 
-  return <RecordArticle role='article' subject={org} />;
+  return <RecordArticle role='article' subject={org} attendableId='story' />;
 };
 
 const meta = {
@@ -57,7 +58,7 @@ const meta = {
               const space = yield* Effect.promise(() => client.spaces.create());
               yield* Effect.promise(() => space.waitUntilReady());
 
-              const factory = createObjectFactory(space.db, faker as any);
+              const factory = createObjectFactory(space.db, random as any);
               yield* Effect.promise(() =>
                 factory([
                   { type: Organization.Organization, count: 1 },

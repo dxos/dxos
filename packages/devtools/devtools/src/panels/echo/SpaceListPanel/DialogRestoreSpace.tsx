@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
-import { Button, Dialog, Icon } from '@dxos/react-ui';
+import { Button, Dialog, Icon, Toolbar } from '@dxos/react-ui';
 
 export type DialogRestoreSpaceProps = {
   handleFile: (backupFile: File) => Promise<void>;
@@ -26,11 +26,13 @@ export const DialogRestoreSpace = ({ handleFile, open, onOpenChange, spaceName }
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={(nextOpen) => setIsOpen(nextOpen)}>
-      {!isControlled && (
-        <Dialog.Trigger asChild>
-          <Button>Import space</Button>
-        </Dialog.Trigger>
-      )}
+      <Toolbar.Root>
+        {!isControlled && (
+          <Dialog.Trigger asChild>
+            <Button>Import space</Button>
+          </Dialog.Trigger>
+        )}
+      </Toolbar.Root>
       <Dialog.Overlay>
         <Dialog.Content>
           <Dialog.Header>

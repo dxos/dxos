@@ -10,7 +10,6 @@ import { PublicKey } from '@dxos/keys';
 
 import { ReplicantEnvImpl } from '../env';
 import { type ReplicantProps } from '../plan';
-
 import { WebSocketConnector } from './websocket-connector';
 import { WebSocketRedisProxy } from './websocket-redis-proxy';
 

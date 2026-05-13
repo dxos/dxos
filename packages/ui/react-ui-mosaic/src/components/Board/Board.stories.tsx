@@ -10,24 +10,24 @@ import { expect, within } from 'storybook/test';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { mx } from '@dxos/ui-theme';
 
+import { translations } from '#translations';
+
 import { useEventHandlerAdapter } from '../../hooks';
 import { TestColumn, TestItem } from '../../testing';
-import { translations } from '../../translations';
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicEventHandler } from '../Mosaic';
-
 import { Board, type BoardModel } from './Board';
 import { DefaultBoardColumn } from './Column';
 
-faker.seed(999);
+random.seed(999);
 
-const randomItems = () => faker.number.int({ min: 0, max: 20 });
+const randomItems = () => random.number.int({ min: 0, max: 20 });
 
 const createTestData = (db: Database.Database, columns: number, items?: (column: number) => number) => {
   Array.from({ length: columns }).forEach((_, i) => {
@@ -37,8 +37,8 @@ const createTestData = (db: Database.Database, columns: number, items?: (column:
         items: Array.from({ length: items?.(i) ?? 0 }).map((_, j) => {
           const item = db.add(
             Obj.make(TestItem, {
-              name: faker.lorem.sentence(3),
-              description: faker.lorem.paragraph(1),
+              name: random.lorem.sentence(3),
+              description: random.lorem.paragraph(1),
               label: `${String.fromCharCode(65 + i)}-${j}`,
             }),
           );
@@ -80,7 +80,9 @@ const useTestBoardModel = (): TestBoardModelResult => {
     const orderedColumnsAtom = Atom.make((get) => {
       const cols = get(columnsAtom);
       const order = get(orderAtom);
-      if (order.length === 0) return cols;
+      if (order.length === 0) {
+        return cols;
+      }
       const byId = new Map(cols.map((column) => [getColumnId(column), column]));
       const ordered = order.map((id) => byId.get(id)).filter((column): column is TestColumn => column != null);
       const appended = cols.filter((column) => !order.includes(getColumnId(column)));
@@ -114,25 +116,25 @@ const useTestBoardModel = (): TestBoardModelResult => {
         invariant(space);
         const item = space.db.add(
           Obj.make(TestItem, {
-            name: faker.lorem.sentence(3),
-            description: faker.lorem.paragraph(1),
+            name: random.lorem.sentence(3),
+            description: random.lorem.paragraph(1),
           }),
         );
 
-        Obj.change(column, (column) => {
+        Obj.update(column, (column) => {
           column.items.push(Ref.make(item));
         });
 
         return item;
       },
       onItemDelete: (column: TestColumn, current: TestItem) => {
-        Obj.change(column, (mutableColumn) => {
-          if (!mutableColumn.items) {
+        Obj.update(column, (column) => {
+          if (!column.items) {
             return;
           }
-          const idx = mutableColumn.items.findIndex((ref: Ref.Ref<TestItem>) => ref.target?.id === current?.id);
+          const idx = column.items.findIndex((ref: Ref.Ref<TestItem>) => ref.target?.id === current?.id);
           if (idx !== -1) {
-            mutableColumn.items.splice(idx, 1);
+            column.items.splice(idx, 1);
           }
         });
       },
@@ -164,17 +166,16 @@ const useTestBoardModel = (): TestBoardModelResult => {
   return { model, eventHandler };
 };
 
-const DefaultStory = ({ debug = false }: DefaultStoryProps) => {
+const DefaultStory = ({ debug = false, columns: columnsProp = 0 }: DefaultStoryProps) => {
   const { model, eventHandler } = useTestBoardModel();
   const columns = useAtomValue(model.columns);
-
-  if (columns.length === 0) {
-    return <></>;
+  if (columnsProp > 0 && columns.length === 0) {
+    return <Loading />;
   }
 
   return (
     <Mosaic.Root asChild debug={debug}>
-      <div role='none' className={mx('grid md:p-2 overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
+      <div className={mx('grid md:p-2 overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
         <Board.Root model={model}>
           <Board.Content id='board' debug={debug} eventHandler={eventHandler} Tile={DefaultBoardColumn} />
         </Board.Root>

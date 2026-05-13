@@ -2,6 +2,4 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DocumentPresenterContainer } from './DocumentPresenterContainer';
-
-export default DocumentPresenterContainer;
+export { DocumentPresenterContainer as default } from './DocumentPresenterContainer';

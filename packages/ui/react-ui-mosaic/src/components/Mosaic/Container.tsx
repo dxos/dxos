@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
@@ -22,11 +22,10 @@ import React, {
 } from 'react';
 
 import { type AllowedAxis } from '@dxos/react-ui';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { useFocus } from '../Focus';
-
 import { type MosaicDraggingState, useMosaicRootContext } from './Root';
 import {
   type LocationType,
@@ -108,7 +107,6 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
     },
     forwardedRef,
   ) => {
-    const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
@@ -288,16 +286,15 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
         registerScrollTo={registerScrollTo}
       >
         <Comp
-          className={mx('h-full', className)}
-          style={
-            {
+          {...composableProps(props, {
+            classNames: 'h-full',
+            style: {
               [MOSAIC_CONTAINER_PLACEHOLDER_WIDTH]:
                 state.type === 'active' && state.bounds ? `${state.bounds.width}px` : '0px',
               [MOSAIC_CONTAINER_PLACEHOLDER_HEIGHT]:
                 state.type === 'active' && state.bounds ? `${state.bounds.height}px` : '0px',
-            } as CSSProperties
-          }
-          {...rest}
+            } as CSSProperties,
+          })}
           {...{
             [`data-${MOSAIC_CONTAINER_STATE_ATTR}`]: state.type,
           }}

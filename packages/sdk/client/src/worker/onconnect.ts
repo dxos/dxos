@@ -3,8 +3,9 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
+import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
+import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
@@ -22,12 +23,18 @@ void navigator.locks.request(STORAGE_LOCK_KEY, (_lock: Lock | null) => {
   return lockPromise;
 });
 
+// The worker does not load config itself — all config comes from the first connecting client.
+// Subsequent client connections can still refresh a small set of last-writer-wins fields via
+// `WorkerRuntime.updateSignalMetadata`.
+const clientConfigOverlay = new Trigger<ConfigProto | undefined>();
+
 const setupRuntime = async () => {
   const { WorkerRuntime } = await import('@dxos/client-services');
 
   const workerRuntime = new WorkerRuntime({
     configProvider: async () => {
-      const config = new Config(await Storage(), Envs(), Local(), Defaults());
+      const overlay = await clientConfigOverlay.wait();
+      const config = new Config(overlay ?? {});
       log.config({ filter: config.get('runtime.client.log.filter'), prefix: config.get('runtime.client.log.prefix') });
       return config;
     },
@@ -70,10 +77,19 @@ export const onconnect = async (event: MessageEvent<any>) => {
   const systemChannel = new MessageChannel();
   const appChannel = new MessageChannel();
 
-  // set log configuration forwarded from localStorage setting
+  // Set log configuration forwarded from localStorage setting and receive client config overlay.
   // TODO(nf): block worker initialization until this is set? we usually win the race.
   port.onmessage = (event) => {
     (globalThis as any).localStorage_dxlog = event.data.dxlog;
+    // Only the first client's overlay seeds the worker's core config (Trigger.wake is a NOOP once
+    // resolved). Subsequent clients refresh the signal metadata tags only, preserving the
+    // pre-DX-930 per-session semantics.
+    clientConfigOverlay.wake(event.data.config);
+    if (event.data.config) {
+      void workerRuntimePromise
+        .then((runtime) => runtime.updateSignalMetadata(new Config(event.data.config)))
+        .catch((err) => log.catch(err));
+    }
   };
   // NOTE: This is intentiontally not using protobuf because it occurs before the rpc connection is established.
   port.postMessage(
@@ -95,3 +111,16 @@ export const onconnect = async (event: MessageEvent<any>) => {
 };
 
 export const getWorkerServiceHost = async () => (await workerRuntimePromise).host;
+
+/**
+ * Returns the config seeded by the first connecting client.
+ *
+ * Waits until at least one client has connected and supplied its config, so callers that need to
+ * bootstrap observability / telemetry inside the shared worker do not have to independently
+ * re-read Storage/Envs/Local/Defaults (which would duplicate what the main thread already did and
+ * could drift from the client's view).
+ */
+export const getWorkerConfig = async (): Promise<Config> => {
+  const overlay = await clientConfigOverlay.wait();
+  return new Config(overlay ?? {});
+};

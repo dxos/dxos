@@ -8,7 +8,6 @@ import React from 'react';
 import { withLayout, withTheme } from '../../testing';
 import { IconButton } from '../Button';
 import { Toolbar } from '../Toolbar';
-
 import { Main, useSidebars } from './Main';
 
 type StoryMainArgs = {};

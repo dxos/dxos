@@ -3,8 +3,8 @@
 //
 
 import * as Reactivity from '@effect/experimental/Reactivity';
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import * as SqlClient from '@effect/sql/SqlClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -55,6 +55,7 @@ describe('FtsIndex', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'doc-1',
           recordId: null,
           updatedAt: Date.now(),
@@ -100,6 +101,7 @@ describe('FtsIndex', () => {
       const obj1: IndexerObject = {
         spaceId,
         queueId: null,
+        queueNamespace: null,
         documentId: 'doc-1',
         recordId: null,
         updatedAt: Date.now(),
@@ -120,6 +122,7 @@ describe('FtsIndex', () => {
       const obj2: IndexerObject = {
         spaceId,
         queueId: null,
+        queueNamespace: null,
         documentId: 'doc-1',
         recordId: null,
         updatedAt: Date.now(),
@@ -158,6 +161,7 @@ describe('FtsIndex', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'doc-100',
           recordId: null,
           updatedAt: Date.now(),
@@ -170,6 +174,7 @@ describe('FtsIndex', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'doc-200',
           recordId: null,
           updatedAt: Date.now(),
@@ -182,6 +187,7 @@ describe('FtsIndex', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'doc-1000',
           recordId: null,
           updatedAt: Date.now(),
@@ -231,6 +237,7 @@ describe('FtsIndex', () => {
       const obj1: IndexerObject = {
         spaceId: space1,
         queueId: null,
+        queueNamespace: null,
         documentId: 'doc-s1',
         recordId: null,
         updatedAt: Date.now(),
@@ -244,6 +251,7 @@ describe('FtsIndex', () => {
       const obj2: IndexerObject = {
         spaceId: space2,
         queueId: null,
+        queueNamespace: null,
         documentId: 'doc-s2',
         recordId: null,
         updatedAt: Date.now(),
@@ -303,6 +311,7 @@ describe('FtsIndex', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'doc-1',
           recordId: null,
           updatedAt: Date.now(),
@@ -316,6 +325,7 @@ describe('FtsIndex', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'doc-2',
           recordId: null,
           updatedAt: Date.now(),
@@ -386,6 +396,7 @@ describe('FtsIndex', () => {
       const spaceObj: IndexerObject = {
         spaceId,
         queueId: null,
+        queueNamespace: null,
         documentId: 'doc-space',
         recordId: null,
         updatedAt: Date.now(),
@@ -399,6 +410,7 @@ describe('FtsIndex', () => {
       const queue1Obj: IndexerObject = {
         spaceId,
         queueId: queue1,
+        queueNamespace: 'data',
         documentId: null,
         recordId: null,
         updatedAt: Date.now(),
@@ -412,6 +424,7 @@ describe('FtsIndex', () => {
       const queue2Obj: IndexerObject = {
         spaceId,
         queueId: queue2,
+        queueNamespace: 'data',
         documentId: null,
         recordId: null,
         updatedAt: Date.now(),
@@ -461,6 +474,7 @@ describe('FtsIndex', () => {
       const spaceObj: IndexerObject = {
         spaceId,
         queueId: null,
+        queueNamespace: null,
         documentId: 'doc-space',
         recordId: null,
         updatedAt: Date.now(),
@@ -474,6 +488,7 @@ describe('FtsIndex', () => {
       const queueObj: IndexerObject = {
         spaceId,
         queueId,
+        queueNamespace: 'data',
         documentId: null,
         recordId: null,
         updatedAt: Date.now(),
@@ -524,6 +539,7 @@ describe('FtsIndex', () => {
       const space1Obj: IndexerObject = {
         spaceId: space1,
         queueId: null,
+        queueNamespace: null,
         documentId: 'doc-s1',
         recordId: null,
         updatedAt: Date.now(),
@@ -537,6 +553,7 @@ describe('FtsIndex', () => {
       const space2Obj: IndexerObject = {
         spaceId: space2,
         queueId: null,
+        queueNamespace: null,
         documentId: 'doc-s2',
         recordId: null,
         updatedAt: Date.now(),
@@ -550,6 +567,7 @@ describe('FtsIndex', () => {
       const queueObj: IndexerObject = {
         spaceId: space2,
         queueId: queueInSpace2,
+        queueNamespace: 'data',
         documentId: null,
         recordId: null,
         updatedAt: Date.now(),
@@ -579,4 +597,118 @@ describe('FtsIndex', () => {
       expect(objectIds).not.toContain(space2Obj.data.id);
     }, Effect.provide(TestLayer)),
   );
+
+  describe('querySnapshotsJSON', () => {
+    it.effect(
+      'returns snapshots for all present recordIds',
+      Effect.fnUntraced(function* () {
+        const index = new FtsIndex();
+        const metaIndex = new ObjectMetaIndex();
+        yield* index.migrate();
+        yield* metaIndex.migrate();
+
+        const spaceId = SpaceId.random();
+        const objects: IndexerObject[] = [
+          {
+            spaceId,
+            queueId: ObjectId.random(),
+            queueNamespace: 'data',
+            documentId: null,
+            recordId: null,
+            updatedAt: Date.now(),
+            data: { id: ObjectId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'alpha' },
+          },
+          {
+            spaceId,
+            queueId: ObjectId.random(),
+            queueNamespace: 'data',
+            documentId: null,
+            recordId: null,
+            updatedAt: Date.now(),
+            data: { id: ObjectId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'beta' },
+          },
+        ];
+
+        yield* metaIndex.update(objects);
+        yield* metaIndex.lookupRecordIds(objects);
+        yield* index.update(objects);
+
+        const recordIds = objects.map((o) => o.recordId!);
+        const snapshots = yield* index.querySnapshotsJSON(recordIds);
+
+        expect(snapshots).toHaveLength(2);
+        const snapshotMap = new Map(snapshots.map((s) => [s.recordId, s.snapshot]));
+        expect((snapshotMap.get(objects[0].recordId!) as any).value).toBe('alpha');
+        expect((snapshotMap.get(objects[1].recordId!) as any).value).toBe('beta');
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'omits stale recordIds not present in FTS index',
+      Effect.fnUntraced(function* () {
+        const index = new FtsIndex();
+        const metaIndex = new ObjectMetaIndex();
+        yield* index.migrate();
+        yield* metaIndex.migrate();
+
+        const spaceId = SpaceId.random();
+        const object: IndexerObject = {
+          spaceId,
+          queueId: ObjectId.random(),
+          queueNamespace: 'data',
+          documentId: null,
+          recordId: null,
+          updatedAt: Date.now(),
+          data: { id: ObjectId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'present' },
+        };
+
+        yield* metaIndex.update([object]);
+        yield* metaIndex.lookupRecordIds([object]);
+        yield* index.update([object]);
+
+        // Query with the real id plus a stale/non-existent id.
+        const staleId = 99999;
+        const snapshots = yield* index.querySnapshotsJSON([object.recordId!, staleId]);
+
+        expect(snapshots).toHaveLength(1);
+        expect(snapshots[0].recordId).toBe(object.recordId!);
+        expect((snapshots[0].snapshot as any).value).toBe('present');
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'handles more than 999 recordIds without exceeding SQLite variable limit',
+      Effect.fnUntraced(function* () {
+        const index = new FtsIndex();
+        const metaIndex = new ObjectMetaIndex();
+        yield* index.migrate();
+        yield* metaIndex.migrate();
+
+        const spaceId = SpaceId.random();
+        const count = 1100;
+        const objects: IndexerObject[] = Array.from({ length: count }, (_, i) => ({
+          spaceId,
+          queueId: ObjectId.random(),
+          queueNamespace: 'data',
+          documentId: null,
+          recordId: null,
+          updatedAt: Date.now(),
+          data: { id: ObjectId.random(), [ATTR_TYPE]: TYPE_PERSON, index: i },
+        }));
+
+        yield* metaIndex.update(objects);
+        yield* metaIndex.lookupRecordIds(objects);
+        yield* index.update(objects);
+
+        const recordIds = objects.map((o) => o.recordId!);
+        const snapshots = yield* index.querySnapshotsJSON(recordIds);
+
+        expect(snapshots).toHaveLength(count);
+        const returnedIds = new Set(snapshots.map((s) => s.recordId));
+        for (const id of recordIds) {
+          expect(returnedIds.has(id)).toBe(true);
+        }
+      }, Effect.provide(TestLayer)),
+    );
+  });
 });

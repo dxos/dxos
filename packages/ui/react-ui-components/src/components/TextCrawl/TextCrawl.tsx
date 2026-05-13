@@ -11,6 +11,7 @@ import React, {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from 'react';
 
 import { type ClassNameValue, type ThemedClassName } from '@dxos/react-ui';
@@ -18,7 +19,11 @@ import { mx } from '@dxos/ui-theme';
 
 const emptyLines: string[] = [];
 
-// TODO(burdon): Factor out? Effect literal.
+// The per-line opacity fade runs at 1/3 of the ribbon translate duration, so
+// the active line is fully bright by the time the ribbon settles in place.
+const LINE_FADE_RATIO = 1 / 3;
+
+// TODO(burdon): Factor out to theme?
 export type Size = 'sm' | 'md' | 'lg';
 export const sizes: Size[] = ['sm', 'md', 'lg'];
 
@@ -45,7 +50,7 @@ export const TextCrawl = ({
   transition = 500,
   ...props
 }: TextCrawlProps) => {
-  const [index, setIndex] = useState(greedy ? lines.length - 1 : 0);
+  const [index, setIndex] = useState(() => (greedy ? Math.max(0, lines.length - 1) : 0));
 
   // Control ribbon.
   const controllerRef = useRef<TextRibbonController>(null);
@@ -68,6 +73,20 @@ export const TextCrawl = ({
     setPosition(index, false);
   }, []);
 
+  // Greedy: keep uncontrolled index on the last line when lines or greedy change.
+  useEffect(() => {
+    if (!greedy || indexProp !== undefined) {
+      return;
+    }
+
+    const lastIndex = Math.max(0, lines.length - 1);
+    if (lines.length === 0) {
+      return;
+    }
+
+    setIndex((prev) => (prev === lastIndex ? prev : lastIndex));
+  }, [greedy, lines, indexProp]);
+
   // Controlled.
   useEffect(() => {
     if (indexProp === undefined || indexProp === index) {
@@ -86,7 +105,9 @@ export const TextCrawl = ({
     }
 
     let i: NodeJS.Timeout;
-    setPosition(index, index !== 0 && !wasReset);
+    const lastLineIndex = Math.max(0, lines.length - 1);
+    const showLastLineImmediately = greedy && index === lastLineIndex;
+    setPosition(index, index !== 0 && !wasReset && !showLastLineImmediately);
     if (cyclic && index >= lines.length) {
       i = setTimeout(() => {
         setIndex(0);
@@ -97,7 +118,7 @@ export const TextCrawl = ({
     return () => {
       clearTimeout(i);
     };
-  }, [wasReset, lines, index, indexProp, cyclic]);
+  }, [wasReset, lines, index, indexProp, cyclic, greedy]);
 
   // Auto-advance.
   const lastUpdatedRef = useRef(Date.now());
@@ -123,7 +144,7 @@ export const TextCrawl = ({
     };
 
     if (wasReset) {
-      setIndex(greedy ? lines.length - 1 : 0);
+      setIndex(greedy ? Math.max(0, lines.length - 1) : 0);
     } else {
       const now = Date.now();
       const wasVisible = now - lastUpdatedRef.current >= minDuration;
@@ -188,29 +209,34 @@ export const TextRibbon = forwardRef<TextRibbonController, TextRibbonProps>(
   ) => {
     const { className, lineHeight } = sizeClassNames[size];
     const containerRef = useRef<HTMLDivElement>(null);
+    const reducedMotion = useReducedMotion();
 
     const setPosition = useCallback<TextRibbonController['setPosition']>(
       (index, animate = false) => {
         if (containerRef.current) {
-          containerRef.current.style.transition = animate ? `transform ${transition}ms ease-in-out` : 'transform 0ms';
+          const shouldAnimate = animate && !reducedMotion;
+          containerRef.current.style.transition = shouldAnimate
+            ? `transform ${transition}ms ease-in-out`
+            : 'transform 0ms';
           containerRef.current.style.transform = `translateY(-${index * lineHeight}px)`;
         }
       },
-      [lineHeight, transition],
+      [lineHeight, transition, reducedMotion],
     );
 
     // Controller.
     useImperativeHandle(forwardedRef, () => ({ setPosition }), [setPosition]);
 
     return (
-      <div role='none' className={mx('relative overflow-hidden', className, classNames)}>
-        <div role='none' ref={containerRef} className={mx('flex flex-col')}>
+      <div className={mx('relative overflow-hidden', className, classNames)}>
+        <div ref={containerRef} className={mx('flex flex-col')}>
           {lines.map((line, i) => (
             <Line
               key={i}
               line={lines[i]}
               active={index === i || (i === 0 && index === lines.length)}
               transition={transition}
+              reducedMotion={reducedMotion}
               classNames={[className, textClassNames]}
             />
           ))}
@@ -219,6 +245,7 @@ export const TextRibbon = forwardRef<TextRibbonController, TextRibbonProps>(
               line={lines[0]}
               active={index === lines.length || index === 0}
               transition={transition}
+              reducedMotion={reducedMotion}
               classNames={[className, textClassNames]}
             />
           )}
@@ -233,14 +260,33 @@ const Line = ({
   line,
   active,
   transition,
-}: ThemedClassName<{ line: string; active: boolean; transition: number }>) => {
+  reducedMotion,
+}: ThemedClassName<{ line: string; active: boolean; transition: number; reducedMotion: boolean }>) => {
   return (
     <div
-      role='none'
-      style={{ transitionDuration: `${transition / 3}ms` }}
+      style={{ transitionDuration: reducedMotion ? '0ms' : `${transition * LINE_FADE_RATIO}ms` }}
       className={mx('flex items-center truncate transition-opacity', active ? 'opacity-100' : 'opacity-50', classNames)}
     >
       {line}
     </div>
   );
 };
+
+const subscribeReducedMotion = (onChange: () => void): (() => void) => {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return () => {};
+  }
+  const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
+};
+
+const getReducedMotionSnapshot = (): boolean => {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return false;
+  }
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+};
+
+const useReducedMotion = (): boolean =>
+  useSyncExternalStore(subscribeReducedMotion, getReducedMotionSnapshot, () => false);

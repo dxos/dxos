@@ -16,7 +16,6 @@ import {
   createCredentialSignerWithKey,
   createDelegatedSpaceInvitationCredential,
 } from '../credentials';
-
 import { InvitationStateMachine } from './invitation-state-machine';
 
 describe('InvitationStateMachine', () => {

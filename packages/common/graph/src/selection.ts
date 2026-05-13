@@ -6,16 +6,25 @@ import { Atom, Registry } from '@effect-atom/atom-react';
 
 import { invariant } from '@dxos/invariant';
 
+export type SelectionMode = 'single' | 'multi';
+
+export type SelectionModelProps = {
+  mode?: SelectionMode;
+};
+
 /**
  * Reactive selection model.
  */
+// TODO(burdon): Reconcile with react-ui-attention.
 export class SelectionModel {
   private readonly _registry: Registry.Registry;
   private readonly _selected: Atom.Writable<Set<string>>;
+  private readonly _mode: SelectionMode;
 
-  constructor(private readonly _singleSelect: boolean = false) {
+  constructor({ mode = 'multi' }: SelectionModelProps = {}) {
     this._registry = Registry.make();
     this._selected = Atom.make<Set<string>>(new Set<string>());
+    this._mode = mode;
   }
 
   /**
@@ -77,7 +86,7 @@ export class SelectionModel {
     const current = this._registry.get(this._selected);
     this._registry.set(
       this._selected,
-      new Set<string>(this._singleSelect ? [id] : [...Array.from(current.values()), id]),
+      new Set<string>(this._mode === 'single' ? [id] : [...Array.from(current.values()), id]),
     );
   }
 

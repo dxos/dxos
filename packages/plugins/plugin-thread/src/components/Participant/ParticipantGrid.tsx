@@ -8,7 +8,6 @@ import { type ThemedClassName } from '@dxos/react-ui';
 
 import { type UserState } from '../../calls';
 import { ResponsiveGrid } from '../ResponsiveGrid';
-
 import { Participant, SCREENSHARE_SUFFIX } from './Participant';
 
 const getId = (user: UserState): string => user.id!;

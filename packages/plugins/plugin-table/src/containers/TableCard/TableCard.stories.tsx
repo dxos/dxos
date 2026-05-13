@@ -7,23 +7,22 @@ import React from 'react';
 
 import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Obj, View } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
-import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { useTestTableModel } from '@dxos/react-ui-table/testing';
+import { translations as tableTranslations } from '@dxos/react-ui-table/translations';
 import { Table } from '@dxos/react-ui-table/types';
+import { withTheme } from '@dxos/react-ui/testing';
 import { ViewModel, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
 
 import { TableCard } from './TableCard';
 
-faker.seed(1234);
+random.seed(1234);
 
 const DefaultStory = () => {
   const { schema, table } = useTestTableModel();
@@ -33,7 +32,7 @@ const DefaultStory = () => {
 
   return (
     <CardContainer icon='ph--text-aa--regular'>
-      <TableCard subject={table} />
+      <TableCard role='card--content' subject={table} />
     </CardContainer>
   );
 };
@@ -49,7 +48,7 @@ const meta = {
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         // Configure schema.
-        const typename = 'example.com/SingleSelect';
+        const typename = 'com.example.type.singleSelect';
         const selectOptions = [
           { id: 'one', title: 'One', color: 'emerald' },
           { id: 'two', title: 'Two', color: 'blue' },
@@ -82,8 +81,8 @@ const meta = {
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
             Obj.make(storedSchema, {
-              single: faker.helpers.arrayElement([...selectOptionIds, undefined]),
-              multiple: faker.helpers.randomSubset(selectOptionIds),
+              single: random.helpers.arrayElement([...selectOptionIds, undefined]),
+              multiple: random.helpers.randomSubset(selectOptionIds),
             }),
           );
         });

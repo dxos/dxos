@@ -7,24 +7,24 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-import { Obj } from '@dxos/echo';
-import { faker } from '@dxos/random';
-import { Filter, useQuery } from '@dxos/react-client/echo';
+import { Filter, Obj } from '@dxos/echo';
+import { random } from '@dxos/random';
+import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Person } from '@dxos/types';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
 
 import { ObjectPicker } from './ObjectPicker';
 
-faker.seed(1);
+random.seed(1);
 
 const createPerson = () =>
   Obj.make(Person.Person, {
-    fullName: faker.person.fullName(),
+    fullName: random.person.fullName(),
   });
 
 const omitId = Schema.omit<any, any, ['id']>('id');
@@ -65,7 +65,9 @@ const DefaultStory = () => {
   const handleCreateCallback = useCallback(
     (values: any) => {
       console.log('[on create]', values);
-      if (!space) return;
+      if (!space) {
+        return;
+      }
       const newPerson = space.db.add(Obj.make(Person.Person, values));
       mockHandleCreate(values);
       return newPerson;
@@ -74,7 +76,7 @@ const DefaultStory = () => {
   );
 
   return (
-    <div role='none' className='w-96'>
+    <div className='w-96'>
       <ObjectPicker.Root open={isOpen} onOpenChange={setIsOpen}>
         <ObjectPicker.Trigger asChild>
           <Button variant='primary' data-testid='trigger' classNames='w-full'>
@@ -85,7 +87,7 @@ const DefaultStory = () => {
           classNames='dx-card-popover-width'
           options={options}
           createSchema={personSchema}
-          createOptionLabel={['create new person label', { ns: osTranslations }]}
+          createOptionLabel={['create-new-person.label', { ns: osTranslations }]}
           createOptionIcon='ph--user-plus--regular'
           createInitialValuePath='fullName'
           onCreate={handleCreateCallback}

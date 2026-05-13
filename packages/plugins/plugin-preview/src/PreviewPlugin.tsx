@@ -6,12 +6,12 @@ import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Organization, Person } from '@dxos/types';
 
-import { PreviewPopover, ReactSurface } from './capabilities';
-import { meta } from './meta';
-import { translations } from './translations';
+import { PreviewPopover, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
 
 export const PreviewPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Person.Person, Organization.Organization], id: 'schema' }),
+  AppPlugin.addSchemaModule({ schema: [Person.Person, Organization.Organization] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
@@ -21,3 +21,5 @@ export const PreviewPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default PreviewPlugin;

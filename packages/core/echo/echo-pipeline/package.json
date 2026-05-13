@@ -30,13 +30,6 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "testing.d.ts",
     "testing.js",
@@ -46,6 +39,7 @@
   "dependencies": {
     "@automerge/automerge": "catalog:",
     "@automerge/automerge-repo": "catalog:",
+    "@automerge/automerge-subduction": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -83,6 +77,7 @@
     "@dxos/util": "workspace:*",
     "@effect/sql": "catalog:",
     "@effect/sql-sqlite-node": "catalog:",
+    "bs58check": "catalog:",
     "crc-32": "catalog:",
     "effect": "catalog:",
     "fast-deep-equal": "catalog:",

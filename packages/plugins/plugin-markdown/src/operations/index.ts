@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/operation';
-
-export * as MarkdownOperation from './definitions';
+import { OperationHandlerSet } from '@dxos/compute';
 
 export const MarkdownOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./create'),
@@ -12,5 +10,5 @@ export const MarkdownOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./open'),
   () => import('./scroll-to-anchor'),
   () => import('./set-view-mode'),
-  () => import('./update'),
+  () => import('./update-markdown'),
 );

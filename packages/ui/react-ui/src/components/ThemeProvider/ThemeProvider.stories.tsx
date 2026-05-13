@@ -7,7 +7,6 @@ import React from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { withLayout, withTheme } from '../../testing';
-
 import { ThemeProvider } from './ThemeProvider';
 
 const meta = {

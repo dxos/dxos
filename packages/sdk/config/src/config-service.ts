@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { dirname } from 'node:path';
-
 import * as FileSystem from '@effect/platform/FileSystem';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import { dirname } from 'node:path';
 import * as Yaml from 'yaml';
 
 import { DX_CONFIG, DX_DATA, getProfileConfigPath, getProfilePath } from '@dxos/client-protocol';

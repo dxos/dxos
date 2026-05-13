@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { Sheet } from '../types';
+import type { Sheet } from '#types';
 
 export const createTestCells = (testSheetName = 'test'): Record<string, Sheet.CellValue> => ({
   B1: { value: 'Qty2' },

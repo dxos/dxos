@@ -4,6 +4,7 @@
 
 import { type AnyDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
 import * as SqlClient from '@effect/sql/SqlClient';
+import * as Effect from 'effect/Effect';
 
 import { asyncTimeout, DeferredTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
@@ -11,9 +12,9 @@ import { todo } from '@dxos/debug';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
-import { IndexEngine } from '@dxos/index-core';
+import { IndexEngine, type IndexingResult } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
@@ -32,15 +33,22 @@ import {
   type RootDocumentSpaceKeyProvider,
   deriveCollectionIdFromSpaceId,
 } from '../automerge';
-
 import { AutomergeDataSource } from './automerge-data-source';
 import { DataServiceImpl } from './data-service';
 import { type DatabaseRoot } from './database-root';
+import { hintFromIndexingResult } from './invalidation-hint';
 import { LocalQueueServiceImpl } from './local-queue-service';
 import { QueryServiceImpl } from './query-service';
 import { QueueDataSource } from './queue-data-source';
 import { SpaceStateManager } from './space-state-manager';
-import * as Effect from 'effect/Effect';
+
+/**
+ * Executes "PRAGMA quick_check;" on SQLite database on startup.
+ *
+ * NOTE: Keep DISABLED in production, "quick" check is O(dbSize) which took 6 seconds for my relatively-small profile.
+ *
+ */
+const RUN_SQLITE_QUICK_CHECK_ON_STARTUP = false;
 
 export type EchoHostProps = {
   kv: LevelDB;
@@ -59,6 +67,12 @@ export type EchoHostProps = {
    * Callback to run blocking queue sync.
    */
   syncQueue?: (ctx: Context, request: SyncQueueRequest) => Promise<void>;
+
+  /**
+   * Enable Subduction sedimentree transport for Automerge document replication.
+   * @default false
+   */
+  useSubduction?: boolean;
 };
 
 /**
@@ -93,6 +107,7 @@ export class EchoHost extends Resource {
     runtime,
     assignQueuePositions = false,
     syncQueue,
+    useSubduction,
   }: EchoHostProps) {
     super();
 
@@ -102,6 +117,7 @@ export class EchoHost extends Resource {
       dataMonitor: this._echoDataMonitor,
       peerIdProvider,
       getSpaceKeyByRootDocumentId,
+      useSubduction,
     });
 
     this._runtime = runtime;
@@ -236,7 +252,6 @@ export class EchoHost extends Resource {
     await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
     log('echo-host: feed store migration done');
     this._feedStore.onNewBlocks.on(this._ctx, () => {
-      this._queryService.invalidateQueries();
       this._updateIndexes.schedule();
     });
 
@@ -250,7 +265,6 @@ export class EchoHost extends Resource {
       );
     });
     this._automergeHost.documentsSaved.on(this._ctx, () => {
-      this._queryService.invalidateQueries();
       this._updateIndexes.schedule();
     });
     this._updateIndexes.schedule();
@@ -324,9 +338,9 @@ export class EchoHost extends Resource {
     const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, automergeUrl, {
       fetchFromNetwork: true,
     });
-    await handle.whenReady();
+    const query = this._automergeHost.findWithProgress<DatabaseDirectory>(handle.documentId);
 
-    return this._spaceStateManager.assignRootToSpace(spaceId, handle);
+    return this._spaceStateManager.assignRootToSpace(spaceId, query);
   }
 
   // TODO(dmaretskyi): Change to document id.
@@ -371,68 +385,131 @@ export class EchoHost extends Resource {
   }
 
   private _runUpdateIndexes = async (): Promise<void> => {
-    let totalUpdated = 0;
-    let totalDone = true;
+    if (this._ctx.disposed || !this.isOpen) {
+      return;
+    }
 
-    {
-      performance.mark('indexEngine.update.automerge:start');
-      const { updated, done } = await this._indexEngine
-        .update(this._ctx, this._automergeDataSource, { spaceId: null, limit: 50 })
-        .pipe(RuntimeProvider.runPromise(this._runtime));
-      totalUpdated += updated;
-      totalDone &&= done;
-      performance.measure('Index Automerge', {
-        start: 'indexEngine.update.automerge:start',
-        detail: {
-          devtools: {
-            dataType: 'track-entry',
-            track: 'Indexing',
-            trackGroup: 'ECHO', // Group related tracks together
-            color: 'tertiary-dark',
-            properties: [['count', updated]],
+    try {
+      const combinedResult = _makeEmptyMergedResult();
+
+      {
+        performance.mark('indexEngine.update.automerge:start');
+        const result = await this._indexEngine
+          .update(this._ctx, this._automergeDataSource, { spaceId: null, limit: 50 })
+          .pipe(RuntimeProvider.runPromise(this._runtime));
+        _mergeInto(combinedResult, result);
+        performance.measure('Index Automerge', {
+          start: 'indexEngine.update.automerge:start',
+          detail: {
+            devtools: {
+              dataType: 'track-entry',
+              track: 'Indexing',
+              trackGroup: 'ECHO', // Group related tracks together
+              color: 'tertiary-dark',
+              properties: [['count', result.updated]],
+            },
           },
-        },
-      });
-    }
+        });
+      }
+      if (this._ctx.disposed || !this.isOpen) {
+        return;
+      }
 
-    {
-      performance.mark('indexEngine.update.queue:start');
-      const { updated, done } = await this._indexEngine
-        .update(this._ctx, this._queueDataSource, { spaceId: null, limit: 50 })
-        .pipe(RuntimeProvider.runPromise(this._runtime));
-      totalUpdated += updated;
-      totalDone &&= done;
-      performance.measure('Index Queues', {
-        start: 'indexEngine.update.queue:start',
-        detail: {
-          devtools: {
-            dataType: 'track-entry',
-            track: 'Indexing',
-            trackGroup: 'ECHO',
-            color: 'tertiary-dark',
-            properties: [['count', updated]],
+      {
+        performance.mark('indexEngine.update.queue:start');
+        const result = await this._indexEngine
+          .update(this._ctx, this._queueDataSource, { spaceId: null, limit: 50 })
+          .pipe(RuntimeProvider.runPromise(this._runtime));
+        _mergeInto(combinedResult, result);
+        performance.measure('Index Queues', {
+          start: 'indexEngine.update.queue:start',
+          detail: {
+            devtools: {
+              dataType: 'track-entry',
+              track: 'Indexing',
+              trackGroup: 'ECHO',
+              color: 'tertiary-dark',
+              properties: [['count', result.updated]],
+            },
           },
-        },
+        });
+      }
+
+      log.verbose('indexEngine update completed', {
+        updated: combinedResult.updated,
+        done: combinedResult.done,
+        spaces: combinedResult.spaces.size,
+        queues: combinedResult.queues.size,
+        documents: combinedResult.documents.size,
+        types: combinedResult.types.size,
+        objects: combinedResult.objects.size,
       });
-    }
+      await sleep(1);
+      if (!combinedResult.done) {
+        this._indexesUpToDate = false;
+        this._updateIndexes!.schedule();
+      } else {
+        this._indexesUpToDate = true;
+      }
 
-    log.verbose('indexEngine update completed', { updated: totalUpdated, done: totalDone });
-    await sleep(1);
-    if (!totalDone) {
-      this._indexesUpToDate = false;
-      this._updateIndexes!.schedule();
-    } else {
-      this._indexesUpToDate = true;
-    }
-
-    // Invalidate queries after index update completes so queries can see newly indexed data.
-    if (totalUpdated > 0) {
+      // Invalidate queries after index update — the indexer is the sole invalidation source.
+      const hint = hintFromIndexingResult(combinedResult);
+      if (hint) {
+        this._queryService.invalidateQueries(hint);
+      }
+    } catch (err) {
+      if (this._ctx.disposed || !this.isOpen) {
+        return;
+      }
+      log.catch(err);
+      // Failsafe: prevent queries from freezing if the indexer faults.
       this._queryService.invalidateQueries();
+      throw err;
     }
   };
 }
 
 export type { EchoDataStats };
+
+type MutableIndexingAccumulator = {
+  updated: number;
+  done: boolean;
+  spaces: Set<SpaceId>;
+  queues: Set<ObjectId>;
+  documents: Set<string>;
+  types: Set<string>;
+  objects: Set<ObjectId>;
+};
+
+const _makeEmptyMergedResult = (): MutableIndexingAccumulator => ({
+  updated: 0,
+  done: true,
+  spaces: new Set(),
+  queues: new Set(),
+  documents: new Set(),
+  types: new Set(),
+  objects: new Set(),
+});
+
+const _mergeInto = (acc: MutableIndexingAccumulator, r: IndexingResult): void => {
+  acc.updated += r.updated;
+  acc.done = acc.done && r.done;
+  for (const s of r.spaces) {
+    acc.spaces.add(s);
+  }
+  for (const q of r.queues) {
+    acc.queues.add(q);
+  }
+  for (const d of r.documents) {
+    acc.documents.add(d);
+  }
+  for (const t of r.types) {
+    acc.types.add(t);
+  }
+  for (const o of r.objects) {
+    acc.objects.add(o);
+  }
+};
 
 export type EchoStatsDiagnostic = {
   loadedDocsCount: number;
@@ -441,15 +518,41 @@ export type EchoStatsDiagnostic = {
 
 /**
  * Sqlite health check on startup.
+ *
+ * Always runs a cheap schema-level probe (`PRAGMA schema_version` + a read from
+ * `sqlite_schema`). These do not walk user data, but they fail fast if the DB
+ * file header or schema root page is unreadable.
+ *
+ * Additionally runs `PRAGMA quick_check` when `RUN_SQLITE_QUICK_CHECK_ON_STARTUP`
+ * is enabled. That walks every page and is O(dbSize) — slow on OPFS.
  */
 const testSqlite = () =>
   Effect.gen(function* () {
+    log('begin sqlite health check');
     const sql = yield* SqlClient.SqlClient;
     const databases = yield* sql<{ seq: number; name: string; file: string }>`PRAGMA database_list`;
     log('SQLite databases', { databases });
-    const [result] = yield* sql<{ quick_check: string }>`PRAGMA quick_check`;
-    if (result.quick_check !== 'ok') {
-      throw new Error('SQLite quick check failed');
+
+    // Cheap header/schema probe: forces SQLite to read the file header and
+    // schema root page. Catches catastrophic corruption (bad header,
+    // unreadable schema) without walking user data.
+    const [schemaVersion] = yield* sql<{ schema_version: number }>`PRAGMA schema_version`;
+    const [schemaCount] = yield* sql<{ n: number }>`SELECT count(*) AS n FROM sqlite_schema`;
+    log('sqlite schema probe passed', {
+      schemaVersion: schemaVersion.schema_version,
+      objectCount: schemaCount.n,
+    });
+
+    if (RUN_SQLITE_QUICK_CHECK_ON_STARTUP) {
+      // NOTE: This is slow on non-trivial databases: O(dbSize).
+      log('starting sqlite quick_check');
+      const [result] = yield* sql<{ quick_check: string }>`PRAGMA quick_check`;
+      if (result.quick_check !== 'ok') {
+        throw new Error('SQLite quick check failed');
+      }
+      log('sqlite quick_check passed');
+    } else {
+      log('sqlite quick_check skipped');
     }
-    log('SQLite quick check passed');
+    log('sqlite health check complete');
   });

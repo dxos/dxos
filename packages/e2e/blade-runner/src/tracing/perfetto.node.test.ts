@@ -3,7 +3,6 @@
 //
 
 import path from 'node:path';
-
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { scheduleMicroTask, sleep } from '@dxos/async';

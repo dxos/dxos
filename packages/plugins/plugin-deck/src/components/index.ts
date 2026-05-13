@@ -1,5 +1,9 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-export * from './DeckLayout';
+import { type ComponentType, lazy } from 'react';
+
+export const DeckSettings: ComponentType<any> = lazy(() => import('./DeckSettings'));
+
+export { Matrix } from './Matrix';

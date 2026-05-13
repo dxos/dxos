@@ -13,7 +13,6 @@ import { ConnectivityError } from '@dxos/protocols';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { type Transport, type TransportOptions, type TransportStats } from '../transport';
-
 import { type RtcPeerConnection } from './rtc-peer-connection';
 import { createRtcTransportStats, describeSelectedRemoteCandidate } from './rtc-transport-stats';
 

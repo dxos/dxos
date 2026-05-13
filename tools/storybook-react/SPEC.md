@@ -241,9 +241,9 @@ Use `createObjectFactory` from `@dxos/schema/testing` for bulk data:
 
 ```typescript
 import { createObjectFactory } from '@dxos/schema/testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
-const factory = createObjectFactory(space.db, faker);
+const factory = createObjectFactory(space.db, random);
 yield *
   Effect.promise(() =>
     factory([
@@ -253,12 +253,12 @@ yield *
   );
 ```
 
-### Seed Faker
+### Seed Random
 
-Seed faker for reproducible test data:
+Seed random for reproducible test data:
 
 ```typescript
-faker.seed(0);
+random.seed(0);
 ```
 
 ## Checklist
@@ -269,5 +269,5 @@ faker.seed(0);
 - [ ] Includes `corePlugins()` when using `withPluginManager`.
 - [ ] Registers ECHO types via `ClientPlugin({ types: [...] })`.
 - [ ] Uses `initializeIdentity` instead of manual createIdentity/waitUntilReady.
-- [ ] Seeds faker for reproducible data.
+- [ ] Seeds random for reproducible data.
 - [ ] Uses `satisfies Meta<typeof ...>` for type safety.

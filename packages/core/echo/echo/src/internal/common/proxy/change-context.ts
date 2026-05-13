@@ -35,7 +35,7 @@ const pendingOwnerNotifications = new Set<object>();
 /**
  * Enter a change context for the given key.
  * While in a change context, mutations are allowed on the associated object.
- * Nested Obj.change calls are not supported.
+ * Nested Obj.update calls are not supported.
  *
  * @param key - The key to enter the change context for (target object or ObjectCore).
  * @returns A cleanup function that exits the change context.

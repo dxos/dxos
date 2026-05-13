@@ -6,7 +6,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '../../testing';
-
 import { Tree, TreeItem } from './Tree';
 
 type StorybookTreeProps = {
@@ -33,7 +32,7 @@ const StorybookTreeItem = ({ data, prefix }: StorybookTreeItemProps) => {
 
         return (
           <TreeItem.Root key={id} id={id} collapsible={!valueIsScalar} defaultOpen>
-            <div role='none' className='grow flex'>
+            <div className='grow flex'>
               {valueIsScalar ? <TreeItem.MockOpenTrigger /> : <TreeItem.OpenTrigger />}
               <TreeItem.Heading classNames='grow pt-1'>{valueIsScalar ? String(value) : key}</TreeItem.Heading>
             </div>

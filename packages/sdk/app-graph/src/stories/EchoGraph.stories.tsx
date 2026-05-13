@@ -8,16 +8,16 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Filter, type Space, SpaceState, isSpace } from '@dxos/client/echo';
-import { Obj, Query } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
+import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
-import { faker } from '@dxos/random';
+import { TestSchema } from '@dxos/echo/testing';
+import { random } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Icon, IconButton, Input, Select } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
 import { Path, Tree, type TreeModel } from '@dxos/react-ui-list';
+import { withTheme } from '@dxos/react-ui/testing';
 import { getSize, mx } from '@dxos/ui-theme';
 import { safeParseInt } from '@dxos/util';
 
@@ -25,7 +25,6 @@ import * as CreateAtom from '../atoms';
 import * as Graph from '../graph';
 import * as GraphBuilder from '../graph-builder';
 import * as Node from '../node';
-
 import { JsonTree } from './Tree';
 
 const DEFAULT_PERIOD = 500;
@@ -146,8 +145,8 @@ const runAction = async (client: Client, action: Action) => {
     case Action.RENAME_SPACE: {
       const space = getRandomSpace(client);
       if (space) {
-        Obj.change(space.properties, (obj) => {
-          obj.name = faker.commerce.productName();
+        Obj.update(space.properties, (obj) => {
+          obj.name = random.commerce.productName();
         });
       }
       break;
@@ -157,7 +156,7 @@ const runAction = async (client: Client, action: Action) => {
       getRandomSpace(client)?.db.add(
         Obj.make(TestSchema.Expando, {
           type: 'test',
-          name: faker.commerce.productName(),
+          name: random.commerce.productName(),
         }),
       );
       break;
@@ -176,8 +175,8 @@ const runAction = async (client: Client, action: Action) => {
       if (space) {
         const objects = await space.db.query(Filter.type(TestSchema.Expando, { type: 'test' })).run();
         const object = objects[Math.floor(Math.random() * objects.length)];
-        Obj.change(object, (obj) => {
-          obj.name = faker.commerce.productName();
+        Obj.update(object, (object) => {
+          object.name = random.commerce.productName();
         });
       }
       break;

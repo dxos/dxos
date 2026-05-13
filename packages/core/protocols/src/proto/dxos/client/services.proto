@@ -443,12 +443,22 @@ message JoinBySpaceKeyRequest {
 }
 
 message SpaceArchive {
+  enum Format {
+    // Tar-based binary archive (default).
+    BINARY = 0;
+    // JSON encoding of {@link dxos.echo.db.SerializedSpace}.
+    JSON = 1;
+  }
+
   string filename = 1;
   bytes contents = 2;
+  optional Format format = 3;
 }
 
 message ExportSpaceRequest {
   string space_id = 1;
+  // Archive format to produce. Defaults to BINARY.
+  optional SpaceArchive.Format format = 2;
 }
 
 message ExportSpaceResponse {

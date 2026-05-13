@@ -14,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { LegacyDXN as DXN, ObjectId, SpaceId } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
-import { type DataSourceCursor, type IndexDataSource, IndexEngine } from './index-engine';
+import { type DataSourceCursor, type IndexDataSource, IndexEngine, type IndexingResult } from './index-engine';
 import { type IndexCursor, IndexTracker } from './index-tracker';
 import { FtsIndex, type IndexerObject, ObjectMetaIndex, ReverseRefIndex } from './indexes';
 
@@ -119,6 +119,7 @@ describe('IndexEngine', () => {
         spaceId,
         documentId: 'doc-1',
         queueId: null,
+        queueNamespace: null,
         recordId: null,
         updatedAt: Date.now(),
         data: {
@@ -156,6 +157,7 @@ describe('IndexEngine', () => {
         spaceId,
         documentId: obj1.documentId,
         queueId: null,
+        queueNamespace: null,
         recordId: null,
         updatedAt: Date.now(),
         data: { id: obj1.data.id, [ATTR_TYPE]: obj1.data[ATTR_TYPE], title: 'Hello World' },
@@ -195,6 +197,7 @@ describe('IndexEngine', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'd1',
           recordId: null,
           updatedAt: Date.now(),
@@ -207,6 +210,7 @@ describe('IndexEngine', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'd2',
           recordId: null,
           updatedAt: Date.now(),
@@ -219,6 +223,7 @@ describe('IndexEngine', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'd3',
           recordId: null,
           updatedAt: Date.now(),
@@ -269,6 +274,7 @@ describe('IndexEngine', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'doc-done-test',
           recordId: null,
           updatedAt: Date.now(),
@@ -287,6 +293,113 @@ describe('IndexEngine', () => {
       });
       expect(updated2).toBe(0);
       expect(done2).toBe(true);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'IndexingResult contains correct sets for a batch with multiple objects across spaces',
+    Effect.fnUntraced(function* () {
+      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
+      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex, reverseRefIndex });
+      const dataSource = new MockIndexDataSource();
+      const spaceId1 = SpaceId.random();
+      const spaceId2 = SpaceId.random();
+      const id1 = ObjectId.random();
+      const id2 = ObjectId.random();
+
+      const obj1: IndexerObject = {
+        spaceId: spaceId1,
+        documentId: 'doc-result-1',
+        queueId: null,
+        queueNamespace: null,
+        recordId: null,
+        updatedAt: Date.now(),
+        data: { id: id1, [ATTR_TYPE]: TYPE_A, title: 'Doc in space1' },
+      };
+      const obj2: IndexerObject = {
+        spaceId: spaceId2,
+        documentId: 'doc-result-2',
+        queueId: null,
+        queueNamespace: null,
+        recordId: null,
+        updatedAt: Date.now(),
+        data: { id: id2, [ATTR_TYPE]: TYPE_B, title: 'Doc in space2' },
+      };
+
+      dataSource.push([obj1, obj2]);
+
+      const result: IndexingResult = yield* engine.update(Context.default(), dataSource, { spaceId: null });
+
+      expect(result.updated).toBeGreaterThan(0);
+      expect(result.done).toBe(false);
+
+      // Spaces: both spaceIds should be present.
+      expect(result.spaces.has(spaceId1)).toBe(true);
+      expect(result.spaces.has(spaceId2)).toBe(true);
+
+      // Documents: both doc IDs should be present.
+      expect(result.documents.has('doc-result-1')).toBe(true);
+      expect(result.documents.has('doc-result-2')).toBe(true);
+
+      // Types: both TYPE_A and TYPE_B.
+      expect(result.types.has(TYPE_A)).toBe(true);
+      expect(result.types.has(TYPE_B)).toBe(true);
+
+      // Object ids.
+      expect(result.objects.has(id1)).toBe(true);
+      expect(result.objects.has(id2)).toBe(true);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'IndexingResult includes typename for deleted objects',
+    Effect.fnUntraced(function* () {
+      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
+      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex, reverseRefIndex });
+      const dataSource = new MockIndexDataSource();
+      const spaceId = SpaceId.random();
+
+      const deletedObj: IndexerObject = {
+        spaceId,
+        documentId: 'doc-deleted',
+        queueId: null,
+        queueNamespace: null,
+        recordId: null,
+        updatedAt: Date.now(),
+        data: {
+          id: ObjectId.random(),
+          [ATTR_TYPE]: TYPE_DEFAULT,
+          '@deleted': true,
+        },
+      };
+
+      dataSource.push([deletedObj]);
+
+      const result: IndexingResult = yield* engine.update(Context.default(), dataSource, { spaceId: null });
+
+      expect(result.updated).toBeGreaterThan(0);
+      // Deleted objects should still contribute their typename to the hint.
+      expect(result.types.has(TYPE_DEFAULT)).toBe(true);
+      expect(result.spaces.has(spaceId)).toBe(true);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'IndexingResult is empty when no objects are indexed',
+    Effect.fnUntraced(function* () {
+      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
+      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex, reverseRefIndex });
+      const dataSource = new MockIndexDataSource();
+
+      const result: IndexingResult = yield* engine.update(Context.default(), dataSource, { spaceId: null });
+
+      expect(result.updated).toBe(0);
+      expect(result.done).toBe(true);
+      expect(result.spaces.size).toBe(0);
+      expect(result.queues.size).toBe(0);
+      expect(result.documents.size).toBe(0);
+      expect(result.types.size).toBe(0);
+      expect(result.objects.size).toBe(0);
     }, Effect.provide(TestLayer)),
   );
 });

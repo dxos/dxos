@@ -9,13 +9,15 @@ import type * as Option from 'effect/Option';
 import type * as Schema$ from 'effect/Schema';
 
 import type { AiModelResolver as AiModelResolver$, AiService as AiService$ } from '@dxos/ai';
-import type { GenericToolkit } from '@dxos/ai';
+import type { OpaqueToolkit } from '@dxos/ai';
 import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
-import type { Blueprint } from '@dxos/blueprints';
-import type { Database, Type } from '@dxos/echo';
+import type { Blueprint, Operation } from '@dxos/compute';
+import type { Database, DXN, Type } from '@dxos/echo';
 import { EchoId } from '@dxos/keys';
 import type { AnchoredTo } from '@dxos/types';
+
+import { LAYOUT_CAPABILITY_ID } from './capability-ids';
 import type { FileInfo } from './file';
 import type { NodeSerializer } from './graph';
 import type { Resource } from './translations';
@@ -48,7 +50,7 @@ export namespace AppCapabilities {
    * Layout capability - provides reactive access to the current layout state.
    * @category Capability
    */
-  export const Layout = Capability$.make<Atom.Atom<Layout>>('org.dxos.app-framework.capability.layout');
+  export const Layout = Capability$.make<Atom.Atom<Layout>>(LAYOUT_CAPABILITY_ID);
 
   /**
    * @category Capability
@@ -102,16 +104,6 @@ export namespace AppCapabilities {
    */
   export const Settings = Capability$.make<Settings>('org.dxos.app-framework.capability.settings');
 
-  export type Metadata = Readonly<{
-    id: string;
-    metadata: Record<string, any>;
-  }>;
-
-  /**
-   * @category Capability
-   */
-  export const Metadata = Capability$.make<Metadata>('org.dxos.app-framework.capability.metadata');
-
   export type Schema = ReadonlyArray<Type.AnyEntity>;
 
   /**
@@ -119,23 +111,17 @@ export namespace AppCapabilities {
    */
   export const Schema = Capability$.make<Schema>('org.dxos.app-framework.capability.schema');
 
-  export type Toolkit = GenericToolkit.GenericToolkit;
+  export type Toolkit = OpaqueToolkit.OpaqueToolkit;
 
   /**
    * @category Capability
    */
   export const Toolkit = Capability$.make<Toolkit>('org.dxos.app-framework.capability.ai-toolkit');
 
-  // TODO(burdon): Move type upstream (into blueprint package).
-  export type BlueprintDefinition = {
-    key: string;
-    make: () => Blueprint.Blueprint;
-  };
-
   /**
    * @category Capability
    */
-  export const BlueprintDefinition = Capability$.make<BlueprintDefinition>(
+  export const BlueprintDefinition = Capability$.make<Blueprint.Definition>(
     'org.dxos.app-framework.capability.blueprint-definition',
   );
 
@@ -168,6 +154,31 @@ export namespace AppCapabilities {
    */
   export const AnchorSort = Capability$.make<AnchorSort>('org.dxos.app-framework.capability.anchor-sort');
 
+  /** Text content extractor contributed per typename by plugins that support text extraction. */
+  export type TextContent = Readonly<{
+    id: string;
+    getTextContent: (object: any) => Promise<string | undefined>;
+  }>;
+
+  /**
+   * @category Capability
+   */
+  export const TextContent = Capability$.make<TextContent>('org.dxos.app-framework.capability.text-content');
+
+  /** Comment configuration contributed per typename by plugins that support commenting. */
+  export type CommentConfig = Readonly<{
+    id: string;
+    comments: 'anchored' | 'unanchored';
+    selectionMode?: string;
+    getAnchorLabel?: (obj: any, anchor: string) => string | undefined;
+    scrollToAnchor?: Operation.Definition.Any;
+  }>;
+
+  /**
+   * @category Capability
+   */
+  export const CommentConfig = Capability$.make<CommentConfig>('org.dxos.app-framework.capability.comment-config');
+
   export type NavigationTarget = {
     /** Navigation path usable with the Open operation. */
     path: string;
@@ -191,6 +202,18 @@ export namespace AppCapabilities {
 
   export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>(
     'org.dxos.app-framework.capability.navigation-target-resolver',
+  );
+
+  /**
+   * Handler called by layout plugins on navigation events (page load, popstate, deep link).
+   * Plugins contribute handlers to react to URL query params or other URL parts
+   * without the layout plugin needing to know about specific params.
+   * @category Capability
+   */
+  export type NavigationHandler = (url: URL) => Effect$.Effect<void>;
+
+  export const NavigationHandler = Capability$.make<NavigationHandler>(
+    'org.dxos.app-toolkit.capability.navigation-handler',
   );
 
   /**

@@ -7,8 +7,9 @@ import React from 'react';
 
 import { DropdownMenu, useTranslation } from '@dxos/react-ui';
 
+import { translationKey } from '#translations';
+
 import { type ModalController, type TableModel } from '../../model';
-import { translationKey } from '../../translations';
 
 export type ColumnActionsMenuProps = {
   model: TableModel;
@@ -36,7 +37,7 @@ export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => 
                 data-testid='column-sort-descending'
                 onClick={() => model.setSort(state.fieldId, 'desc')}
               >
-                {t('column action sort descending')}
+                {t('column-action-sort-descending.menu')}
               </DropdownMenu.Item>
             )}
             {(!isCurrentColumnSorted || currentSort?.direction === 'desc') && (
@@ -44,22 +45,22 @@ export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => 
                 data-testid='column-sort-ascending'
                 onClick={() => model.setSort(state.fieldId, 'asc')}
               >
-                {t('column action sort ascending')}
+                {t('column-action-sort-ascending.menu')}
               </DropdownMenu.Item>
             )}
             {isCurrentColumnSorted && (
               <DropdownMenu.Item data-testid='column-clear-sort' onClick={() => model.clearSort()}>
-                {t('column action clear sorting')}
+                {t('column-action-clear-sorting.menu')}
               </DropdownMenu.Item>
             )}
             {model.getColumnCount() > 1 && model.features.schemaEditable && (
               <DropdownMenu.Item data-testid='column-delete' onClick={() => model.deleteColumn(state.fieldId)}>
-                {t('column action delete')}
+                {t('column-action-delete.menu')}
               </DropdownMenu.Item>
             )}
             {model.features.schemaEditable && (
               <DropdownMenu.Item data-testid='column-settings' onClick={() => modals.openColumnSettings()}>
-                {t('column action settings')}
+                {t('column-action-settings.menu')}
               </DropdownMenu.Item>
             )}
           </DropdownMenu.Viewport>

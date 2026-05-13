@@ -183,7 +183,10 @@ class GraphImpl implements WritableGraph {
   // TODO(wittjosiah): Atom feature request, support for something akin to `ComplexMap` to allow for complex arguments.
   readonly _connections = Atom.family<string, Atom.Atom<Node.Node[]>>((key) => {
     return Atom.make((get) => {
-      if (!key || primaryParts(key).length < 2) {
+      const parts = key ? primaryParts(key) : [];
+      // Empty id (e.g. from `useConnections(graph, undefined, ...)`) yields a key like `\u0001child\u0002outbound`,
+      // which has 2 parts but an empty id — treat as no connections rather than throwing.
+      if (parts.length < 2 || !parts[0]) {
         return [];
       }
       const { id, relation } = relationFromConnectionKey(key);

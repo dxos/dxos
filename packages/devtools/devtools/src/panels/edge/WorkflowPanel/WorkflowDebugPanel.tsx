@@ -7,22 +7,21 @@ import type * as Layer from 'effect/Layer';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type ComputeGraph, ValueBag, type WorkflowLoader } from '@dxos/conductor';
-import { Database } from '@dxos/echo';
+import { type ComputeGraph, ComputeNodeContext, ValueBag, type WorkflowLoader } from '@dxos/conductor';
 import { Context } from '@dxos/context';
+import { Database } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { runAndForwardErrors } from '@dxos/effect';
-import { createEventLogger } from '@dxos/functions';
 import { QueueService } from '@dxos/functions';
 import { type RuntimeServices, ServiceContainer } from '@dxos/functions-runtime';
 import { RemoteFunctionExecutionService } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { LegacyDXN as DXN } from '@dxos/keys';
-import { LogLevel, log } from '@dxos/log';
+import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Avatar, Input, type ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { useDevtoolsState } from '../../../hooks';
@@ -137,6 +136,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
               Effect.withSpan('runWorkflow'),
               Effect.flatMap(ValueBag.unwrap),
               Effect.provide(createLocalExecutionContext(space)),
+              Effect.provide(ComputeNodeContext.layerNoop),
               Effect.scoped,
             ),
         );
@@ -156,7 +156,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
   };
 
   return (
-    <div role='none' className={mx('dx-container flex flex-col', props.classNames)}>
+    <div className={mx('dx-container flex flex-col', props.classNames)}>
       <MessageThread ref={scrollerRef} history={history} />
 
       <Toolbar.Root>
@@ -220,25 +220,25 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
         </div>
       )}
 
-      {data && (
-        <SyntaxHighlighter language='json' className={mx(wrapper, 'text-xs')}>
-          {JSON.stringify(data, null, 2)}
-        </SyntaxHighlighter>
-      )}
+      {data && <JsonHighlighter data={data} classNames={mx(wrapper, 'text-xs')} />}
     </div>
   );
 };
 
 const RobotAvatar = () => (
   <Avatar.Root>
-    <Avatar.Content size={6} variant='circle' icon='ph--robot--regular' />
+    <Avatar.Content size={6} variant='circle' icon='ph--drone--regular' />
   </Avatar.Root>
 );
 
 const createLocalExecutionContext = (space: Space): Layer.Layer<RuntimeServices> => {
   return new ServiceContainer()
     .setServices({
-      eventLogger: createEventLogger(LogLevel.INFO),
+      trace: {
+        write: (event, payload) => {
+          log.info(event.key, payload as object);
+        },
+      },
       database: Database.makeService(space.db),
       queues: QueueService.make(space.queues, undefined),
       functionCallService: RemoteFunctionExecutionService.mock(),

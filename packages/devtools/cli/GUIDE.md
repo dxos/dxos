@@ -35,7 +35,7 @@ pnpm unlink --global @dxos/cli
 ```bash
 dx trigger create subscription --enabled
   --function-id <uuid> \n
-  --typename "dxos.org/type/Chess" \n
+  --typename "org.dxos.type.chess" \n
   --input "game={{event.subject}}"
 ```
 

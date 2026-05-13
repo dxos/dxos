@@ -42,13 +42,13 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/compute"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"
@@ -64,6 +64,9 @@
     },
     {
       "path": "../../sdk/types"
+    },
+    {
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
@@ -94,6 +97,9 @@
     },
     {
       "path": "../plugin-stack"
+    },
+    {
+      "path": "../plugin-testing"
     },
     {
       "path": "../plugin-thread"

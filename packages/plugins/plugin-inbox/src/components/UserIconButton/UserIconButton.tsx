@@ -7,7 +7,7 @@ import React, { useCallback, useRef } from 'react';
 import { type DXN } from '@dxos/echo';
 import { DxAnchorActivate, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type UserIconButtonProps = ThemedClassName<{
   value?: DXN;
@@ -43,7 +43,7 @@ export const UserIconButton = ({ value, title, onContactCreate }: UserIconButton
       icon={value ? 'ph--user--regular' : 'ph--user-plus--regular'}
       iconOnly
       size={4}
-      label={value ? t('show contact label') : t('create contact label')}
+      label={value ? t('show-contact.label') : t('create-contact.label')}
       onClick={handleSenderClick}
     />
   );

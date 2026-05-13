@@ -26,7 +26,7 @@ const AT_DXN_PATTERN = /@(dxn:[a-zA-Z0-9]+(?::[a-zA-Z0-9@_-]+)+)/g;
 /**
  * Extracts all DXN references from a string.
  */
-export const extractDxnsFromString = (text: string): string[] => {
+export const extractDxnFromString = (text: string): string[] => {
   const dxns: string[] = [];
   const seen = new Set<string>();
 
@@ -80,7 +80,7 @@ export const extractDxnsFromObject = (obj: unknown): string[] => {
         addDxn(value.slice(1));
       }
       // Also extract DXNs from within the string.
-      const extracted = extractDxnsFromString(value);
+      const extracted = extractDxnFromString(value);
       for (const dxn of extracted) {
         addDxn(dxn);
       }
@@ -142,7 +142,7 @@ export const extractFirstDxnFromToolInput = (input: string): string | undefined 
     return dxns[0];
   } catch {
     // If JSON parsing fails, try to extract from the raw string.
-    const dxns = extractDxnsFromString(input);
+    const dxns = extractDxnFromString(input);
     return dxns[0];
   }
 };
@@ -161,7 +161,7 @@ export const extractFirstDxnFromToolResult = (result: string | undefined): strin
     return dxns[0];
   } catch {
     // If JSON parsing fails, try to extract from the raw string.
-    const dxns = extractDxnsFromString(result);
+    const dxns = extractDxnFromString(result);
     return dxns[0];
   }
 };

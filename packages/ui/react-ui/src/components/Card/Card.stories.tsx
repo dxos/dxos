@@ -5,13 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Card } from './Card';
 
-faker.seed(0);
+random.seed(0);
 
 type DefaultStoryProps = {
   title: string;
@@ -65,20 +65,20 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const image = faker.image.url();
+const image = random.image.url();
 
 export const Default: Story = {
   args: {
-    title: faker.commerce.productName(),
-    description: faker.lorem.paragraph(3),
+    title: random.commerce.productName(),
+    description: random.lorem.paragraph(3),
     image,
   },
 };
 
 export const FullWidth: Story = {
   args: {
-    title: faker.commerce.productName(),
-    description: faker.lorem.paragraph(3),
+    title: random.commerce.productName(),
+    description: random.lorem.paragraph(3),
     image,
     fullWidth: true,
   },
@@ -86,7 +86,7 @@ export const FullWidth: Story = {
 
 export const Simple: Story = {
   args: {
-    title: faker.commerce.productName(),
+    title: random.commerce.productName(),
   },
   render: ({ title }) => {
     const handleRef = useRef<HTMLButtonElement>(null);
@@ -104,8 +104,8 @@ export const Simple: Story = {
 
 export const Description: Story = {
   args: {
-    title: faker.commerce.productName(),
-    description: faker.lorem.paragraph(3),
+    title: random.commerce.productName(),
+    description: random.lorem.paragraph(3),
   },
   render: ({ title, description }) => {
     const handleRef = useRef<HTMLButtonElement>(null);
@@ -129,18 +129,18 @@ export const Description: Story = {
 export const Mock = () => (
   <div className='grid grid-cols-[2rem_1fr_2rem] w-full dx-card-min-width dx-card-max-width border border-separator rounded-xs'>
     <div className='grid grid-cols-subgrid col-span-full'>
-      <div role='none' className='grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center'>
+      <div className='grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center'>
         <Icon icon='ph--dots-six-vertical--regular' />
       </div>
       <div className='p-1 whitespace-normal break-words text-description items-center'>
         This line is very very long and it should wrap.
       </div>
-      <div role='none' className='grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center'>
+      <div className='grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center'>
         <Icon icon='ph--x--regular' />
       </div>
     </div>
     <div className='grid grid-cols-subgrid col-span-3'>
-      <div role='none' className='grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center'>
+      <div className='grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center'>
         <Icon icon='ph--dots-six-vertical--regular' />
       </div>
       <div className='p-1 text-description items-center col-span-2'>

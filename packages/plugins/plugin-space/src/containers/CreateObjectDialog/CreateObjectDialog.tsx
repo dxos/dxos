@@ -7,24 +7,21 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Capability } from '@dxos/app-framework';
-import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { AppCapabilities, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
-import { Collection, Database, Obj, Type } from '@dxos/echo';
+import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { useLayout } from '@dxos/app-toolkit/ui';
+import { Operation } from '@dxos/compute';
+import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { ViewAnnotation } from '@dxos/schema';
 
-import {
-  type CreateObjectOption,
-  CreateObjectPanel,
-  type CreateObjectPanelProps,
-  type Metadata,
-} from '../../components';
-import { meta } from '../../meta';
+import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps } from '#components';
+import { meta } from '#meta';
+import { SpaceCapabilities } from '#types';
 
 export const CREATE_OBJECT_DIALOG = `${meta.id}.CreateObjectDialog`;
 
@@ -51,26 +48,24 @@ export const CreateObjectDialog = ({
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const client = useClient();
   const spaces = useSpaces();
+  const layout = useLayout();
   const closeRef = useRef<HTMLButtonElement | null>(null);
 
   const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
   // TODO(wittjosiah): Support database schemas.
   const schemas = db?.schemaRegistry.query({ location: ['runtime'], includeSystem: false }).runSync();
 
+  const createObjectEntries = useCapabilities(SpaceCapabilities.CreateObjectEntry);
+
   const resolve = useCallback<NonNullable<CreateObjectPanelProps['resolve']>>(
-    (id) => {
-      const metadata = manager.capabilities
-        .getAll(AppCapabilities.Metadata)
-        .find(({ id: entryId }) => entryId === id)?.metadata;
-      return metadata?.createObject ? (metadata as Metadata) : undefined;
-    },
-    [manager],
+    (id) => createObjectEntries.find((entry) => entry.id === id),
+    [createObjectEntries],
   );
 
   const viewTypenames = useMemo(() => {
     const set = new Set<string>();
     for (const schema of schemas ?? []) {
-      if (ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
+      if (ViewAnnotation.has(schema)) {
         set.add(Type.getTypename(schema));
       }
     }
@@ -79,16 +74,18 @@ export const CreateObjectDialog = ({
 
   const options = useMemo<CreateObjectOption[]>(
     () =>
-      manager.capabilities
-        .getAll(AppCapabilities.Metadata)
-        .filter((entry) => entry.metadata?.createObject)
+      createObjectEntries
         .filter((entry) => (views === true ? viewTypenames.has(entry.id) : true))
-        .map((entry) => ({
-          id: entry.id,
-          label: t('typename label', { ns: entry.id, defaultValue: entry.id }),
-          icon: entry.metadata?.icon,
-        })),
-    [manager, views, viewTypenames, t],
+        .map((entry) => {
+          const schema = schemas?.find((s) => Type.getTypename(s) === entry.id);
+          const iconAnnotation = schema ? Annotation.IconAnnotation.get(schema).pipe(Option.getOrUndefined) : undefined;
+          return {
+            id: entry.id,
+            label: t('typename.label', { ns: entry.id, defaultValue: entry.id }),
+            icon: iconAnnotation?.icon,
+          };
+        }),
+    [createObjectEntries, views, viewTypenames, schemas, t],
   );
 
   const handleCreateObject = useCallback<NonNullable<CreateObjectPanelProps['onCreateObject']>>(
@@ -111,9 +108,19 @@ export const CreateObjectDialog = ({
         });
         const shouldNavigate = _shouldNavigate ?? (() => true);
         if (result.subject.length > 0 && shouldNavigate(result.object)) {
-          yield* operationInvoker.invoke(LayoutOperation.Open, {
-            subject: [...result.subject],
-          });
+          if (layout.mode === 'multi') {
+            yield* operationInvoker.invoke(LayoutOperation.Set, {
+              subject: [...result.subject],
+            });
+            yield* operationInvoker.invoke(LayoutOperation.Expose, {
+              subject: result.subject[0],
+            });
+          } else {
+            yield* operationInvoker.invoke(LayoutOperation.Open, {
+              subject: [...result.subject],
+              navigation: 'immediate',
+            });
+          }
         }
 
         onCreateObject?.(result.object);
@@ -122,15 +129,15 @@ export const CreateObjectDialog = ({
         Effect.provideService(Operation.Service, operationInvoker),
         runAndForwardErrors,
       ),
-    [target, _shouldNavigate, onCreateObject, manager.capabilities, operationInvoker],
+    [target, _shouldNavigate, onCreateObject, manager.capabilities, operationInvoker, layout.mode],
   );
 
   return (
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title>
-          {t('create object dialog title', {
-            object: t('typename label', { ns: typename, defaultValue: views ? 'View' : 'Object' }),
+          {t('create-object-dialog.title', {
+            object: t('typename.label', { ns: typename, defaultValue: views ? 'View' : 'Object' }),
           })}
         </Dialog.Title>
         <Dialog.Close asChild>

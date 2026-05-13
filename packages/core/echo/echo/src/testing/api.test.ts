@@ -8,7 +8,6 @@ import { describe, test } from 'vitest';
 import { raise } from '@dxos/debug';
 
 import { Entity, Obj, Ref, Relation, Type } from '../index';
-
 import { TestSchema } from './test-schema';
 
 describe('Experimental API review', () => {

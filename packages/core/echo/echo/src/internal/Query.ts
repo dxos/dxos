@@ -43,6 +43,8 @@ export const prettyFilter = (filter: QueryAST.Filter): string => {
         : `Filter.textSearch(${JSON.stringify(filter.text)})`;
     case 'timestamp':
       return `Filter.${filter.field}.${filter.operator}(${filter.value})`;
+    case 'child-of':
+      return `Filter.childOf([${filter.parents.map((p) => JSON.stringify(p)).join(', ')}], { transitive: ${filter.transitive} })`;
     case 'not':
       return `Filter.not(${prettyFilter(filter.filter)})`;
     case 'and':
@@ -107,6 +109,9 @@ export const prettyQuery = (query: QueryAST.Query): string => {
       if (opts.deleted !== undefined) {
         parts.push(`deleted: ${JSON.stringify(opts.deleted)}`);
       }
+      if (opts.debugLabel !== undefined) {
+        parts.push(`debugLabel: ${JSON.stringify(opts.debugLabel)}`);
+      }
       return `${prettyQuery(query.query)}.options({ ${parts.join(', ')} })`;
     }
     case 'from': {
@@ -116,11 +121,11 @@ export const prettyQuery = (query: QueryAST.Query): string => {
         if (scope.spaceIds !== undefined) {
           parts.push(`spaceIds: [${scope.spaceIds.map((s) => JSON.stringify(s)).join(', ')}]`);
         }
-        if (scope.queues !== undefined) {
-          parts.push(`queues: [${scope.queues.map(String).join(', ')}]`);
+        if (scope.feeds !== undefined) {
+          parts.push(`feeds: [${scope.feeds.map(String).join(', ')}]`);
         }
-        if (scope.allQueuesFromSpaces !== undefined) {
-          parts.push(`allQueuesFromSpaces: ${scope.allQueuesFromSpaces}`);
+        if (scope.allFeedsFromSpaces !== undefined) {
+          parts.push(`allFeedsFromSpaces: ${scope.allFeedsFromSpaces}`);
         }
         return `${prettyQuery(query.query)}.from({ ${parts.join(', ')} })`;
       }

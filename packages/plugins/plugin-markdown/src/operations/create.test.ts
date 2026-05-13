@@ -4,33 +4,39 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AiContextService, AiConversationService } from '@dxos/assistant';
-import { AssistantTestLayer } from '@dxos/assistant/testing';
-import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { DXN, Database, Obj, Query, Ref } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Blueprint, Operation } from '@dxos/compute';
+import { Collection, Database, DXN, Feed, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionInvocationService } from '@dxos/functions';
+import { AgentService } from '@dxos/functions-runtime';
+import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown';
 import { HasSubject } from '@dxos/types';
 
-import { WithProperties } from '../testing';
-import MarkdownBlueprint from '../blueprints/markdown-blueprint';
+import { WithProperties } from '#testing';
 
-import { Create } from './definitions';
+import MarkdownBlueprint from '../blueprints/markdown-blueprint';
+import { MarkdownOperation } from '../types';
 import { MarkdownOperationHandlerSet } from './index';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
+  aiServicePreset: 'edge-remote',
   operationHandlers: MarkdownOperationHandlerSet,
-  types: [SpaceProperties, Collection.Collection, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
+  types: [
+    SpaceProperties,
+    Collection.Collection,
+    Blueprint.Blueprint,
+    Markdown.Document,
+    HasSubject.HasSubject,
+    Feed.Feed,
+  ],
+  blueprints: [MarkdownBlueprint.make()],
   tracing: 'pretty',
 });
 
@@ -41,7 +47,7 @@ describe('create', () => {
       function* (_) {
         const name = 'BlueYard';
         const content = 'Founders and portfolio of BlueYard.';
-        const result = yield* FunctionInvocationService.invokeFunction(Create, {
+        const result = yield* Operation.invoke(MarkdownOperation.Create, {
           name,
           content,
         });
@@ -57,18 +63,15 @@ describe('create', () => {
     ),
   );
 
-  it.scoped(
+  it.effect(
     'create a markdown document',
     Effect.fnUntraced(
       function* (_) {
-        const markdownBlueprint = yield* Database.add(Obj.clone(MarkdownBlueprint.make()));
-        yield* AiContextService.bindContext({
-          blueprints: [Ref.make(markdownBlueprint)],
+        const agent = yield* AgentService.createSession({
+          blueprints: [MarkdownBlueprint.make()],
         });
-
-        yield* AiConversationService.run({
-          prompt: `Create a document with a cookie recipe.`,
-        });
+        yield* agent.submitPrompt('Create a document with a cookie recipe.');
+        yield* agent.waitForCompletion();
 
         {
           const docs = yield* Database.runQuery(Query.type(Markdown.Document));
@@ -85,7 +88,7 @@ describe('create', () => {
         }
       },
       WithProperties,
-      Effect.provide(AiConversationService.layerNewQueue().pipe(Layer.provideMerge(TestLayer))),
+      Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,

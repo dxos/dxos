@@ -6,7 +6,7 @@ import { setAutoFreeze } from 'immer';
 
 import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { translations as stackTranslations } from '@dxos/react-ui-stack';
+import { translations as stackTranslations } from '@dxos/react-ui-stack/translations';
 
 import {
   AppGraphBuilder,
@@ -17,10 +17,10 @@ import {
   ReactRoot,
   ReactSurface,
   UrlHandler,
-} from './capabilities';
-import { meta } from './meta';
-import { translations } from './translations';
-import { DeckEvents } from './types';
+} from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { DeckEvents } from '#types';
 
 // NOTE(Zan): When producing values with immer, we shouldn't auto-freeze them because
 //   our signal implementation needs to add some hidden properties to the produced values.
@@ -34,11 +34,11 @@ export const DeckPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations: [...translations, ...stackTranslations] }),
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupSettings,
-    activatesAfter: [DeckEvents.SettingsReady],
+    firesAfterActivation: [DeckEvents.SettingsReady],
     activate: DeckSettings,
   }),
   Plugin.addModule({
-    activatesOn: DeckEvents.SettingsReady,
+    activatesOn: ActivationEvent.allOf(DeckEvents.SettingsReady, ActivationEvents.OperationInvokerReady),
     activate: CheckAppScheme,
   }),
   Plugin.addModule({
@@ -46,7 +46,7 @@ export const DeckPlugin = Plugin.define(meta).pipe(
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
     activatesOn: ActivationEvent.oneOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
-    activatesAfter: [AppActivationEvents.LayoutReady, DeckEvents.StateReady],
+    firesAfterActivation: [AppActivationEvents.LayoutReady, DeckEvents.StateReady],
     activate: DeckState,
   }),
   Plugin.addModule({
@@ -63,3 +63,5 @@ export const DeckPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default DeckPlugin;

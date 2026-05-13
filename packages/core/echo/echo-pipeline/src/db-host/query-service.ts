@@ -23,7 +23,7 @@ import { trace } from '@dxos/tracing';
 
 import { type AutomergeHost } from '../automerge';
 import { QueryExecutor } from '../query';
-
+import { type InvalidationHint, mergeHints } from './invalidation-hint';
 import type { SpaceStateManager } from './space-state-manager';
 
 export type QueryServiceProps = {
@@ -53,12 +53,36 @@ type ActiveQuery = {
   close: () => Promise<void>;
 };
 
+type QueryInvalidationStats = {
+  totalInvalidations: number;
+  catchAllInvalidations: number;
+  hintedInvalidations: number;
+  totalDirtyQueriesExecuted: number;
+  totalExecutionBatches: number;
+  averageDirtyPerBatch: number;
+  averageQueriesActive: number;
+};
+
 @trace.resource()
 export class QueryServiceImpl extends Resource implements QueryService {
   // TODO(dmaretskyi): We need to implement query deduping. Idle composer has 80 queries with only 10 being unique.
   private readonly _queries = new Set<ActiveQuery>();
 
   private _updateQueries!: DeferredTask;
+
+  // 'all' = catch-all; null = no pending hint.
+  #pendingHint: InvalidationHint | 'all' | null = null;
+
+  // Diagnostic counters.
+  #stats: QueryInvalidationStats = {
+    totalInvalidations: 0,
+    catchAllInvalidations: 0,
+    hintedInvalidations: 0,
+    totalDirtyQueriesExecuted: 0,
+    totalExecutionBatches: 0,
+    averageDirtyPerBatch: 0,
+    averageQueriesActive: 0,
+  };
 
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
   constructor(private readonly _params: QueryServiceProps) {
@@ -76,6 +100,12 @@ export class QueryServiceImpl extends Resource implements QueryService {
           };
         });
       },
+    });
+
+    trace.diagnostic<QueryInvalidationStats>({
+      id: 'query-invalidation',
+      name: 'Query Invalidation',
+      fetch: async () => ({ ...this.#stats }),
     });
   }
 
@@ -117,11 +147,19 @@ export class QueryServiceImpl extends Resource implements QueryService {
   }
 
   /**
-   * Schedule re-execution of all queries.
+   * Schedule re-execution of queries, optionally guided by a targeted hint.
+   * When called without a hint, all queries are marked dirty (catch-all invalidation).
    */
-  invalidateQueries() {
-    for (const query of this._queries) {
-      query.dirty = true;
+  invalidateQueries(hint?: InvalidationHint): void {
+    this.#stats.totalInvalidations++;
+    if (!hint) {
+      this.#pendingHint = 'all';
+      this.#stats.catchAllInvalidations++;
+    } else {
+      this.#stats.hintedInvalidations++;
+      if (this.#pendingHint !== 'all') {
+        this.#pendingHint = this.#pendingHint ? mergeHints(this.#pendingHint, hint) : hint;
+      }
     }
     this._updateQueries.schedule();
   }
@@ -166,15 +204,37 @@ export class QueryServiceImpl extends Resource implements QueryService {
 
   @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
   private async _executeQueries(_ctx: Context) {
-    // TODO(dmaretskyi): How do we integrate this tracing info into the tracing API.
+    const hint = this.#pendingHint;
+    this.#pendingHint = null;
+
+    // Apply hint to determine which queries need re-execution.
+    for (const query of this._queries) {
+      if (!query.open) {
+        continue;
+      }
+      if (query.firstResult) {
+        // First run is always executed regardless of hint.
+        query.dirty = true;
+        continue;
+      }
+      if (hint === 'all') {
+        query.dirty = true;
+        continue;
+      }
+      if (hint && query.executor.matchesHint(hint)) {
+        query.dirty = true;
+      }
+    }
+
     const begin = performance.now();
-    let count = 0;
+    let dirtyCount = 0;
+    const activeCount = this._queries.size;
     await Promise.all(
       Array.from(this._queries).map(async (query) => {
         if (!query.dirty || !query.open) {
           return;
         }
-        count++;
+        dirtyCount++;
 
         try {
           const { changed } = await query.executor.execQuery();
@@ -184,10 +244,22 @@ export class QueryServiceImpl extends Resource implements QueryService {
             query.sendResults(query.executor.getResults());
           }
         } catch (err) {
-          log.catch(err);
+          log.catch(err, {
+            queryId: query.executor.queryId,
+            query: JSON.stringify(query.executor.query),
+          });
+          query.onError(err as Error);
         }
       }),
     );
-    log.verbose('executed queries', { count, duration: performance.now() - begin });
+
+    this.#stats.totalExecutionBatches++;
+    this.#stats.totalDirtyQueriesExecuted += dirtyCount;
+    this.#stats.averageDirtyPerBatch = this.#stats.totalDirtyQueriesExecuted / this.#stats.totalExecutionBatches;
+    this.#stats.averageQueriesActive =
+      (this.#stats.averageQueriesActive * (this.#stats.totalExecutionBatches - 1) + activeCount) /
+      this.#stats.totalExecutionBatches;
+
+    log.verbose('executed queries', { dirty: dirtyCount, active: activeCount, duration: performance.now() - begin });
   }
 }

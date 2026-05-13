@@ -5,7 +5,15 @@
 import { Registry } from '@effect-atom/atom-react';
 import { describe, test } from 'vitest';
 
-import { AttentionManager, expandAttendableId, getSegmentId, getParentId, isSeparatorPrefixed } from './attention';
+import {
+  AttentionManager,
+  expandAttendableId,
+  getLinkedVariant,
+  getParentId,
+  getSegmentId,
+  isLinkedSegment,
+  linkedSegment,
+} from './attention';
 
 describe('AttentionManager', () => {
   test('takes an initial attended id', ({ expect }) => {
@@ -64,7 +72,7 @@ describe('AttentionManager', () => {
     expect(attention.get('root')).to.deep.equal({ hasAttention: false, isAncestor: true, isRelated: false });
   });
 
-  test('separator-prefixed segment marks parent with isRelated and isAncestor', ({ expect }) => {
+  test('linked segment marks parent with isRelated and isAncestor', ({ expect }) => {
     const registry = Registry.make();
     const attention = new AttentionManager(registry);
 
@@ -91,7 +99,7 @@ describe('AttentionManager', () => {
     });
   });
 
-  test('switching from separator-prefixed to non-prefixed clears parent isRelated', ({ expect }) => {
+  test('switching from linked segment to non-linked clears parent isRelated', ({ expect }) => {
     const registry = Registry.make();
     const attention = new AttentionManager(registry);
 
@@ -156,11 +164,30 @@ describe('expandAttendableId', () => {
   });
 });
 
-describe('isSeparatorPrefixed', () => {
-  test('detects separator prefix on last segment', ({ expect }) => {
-    expect(isSeparatorPrefixed('root/space/obj/~settings')).toBe(true);
-    expect(isSeparatorPrefixed('root/space/obj')).toBe(false);
-    expect(isSeparatorPrefixed('~standalone')).toBe(true);
+describe('isLinkedSegment', () => {
+  test('detects linked prefix on last segment', ({ expect }) => {
+    expect(isLinkedSegment('root/space/obj/~settings')).toBe(true);
+    expect(isLinkedSegment('root/space/obj')).toBe(false);
+    expect(isLinkedSegment('~standalone')).toBe(true);
+  });
+});
+
+describe('linkedSegment', () => {
+  test('builds a linked segment', ({ expect }) => {
+    expect(linkedSegment('settings')).toBe('~settings');
+    expect(linkedSegment('comments')).toBe('~comments');
+  });
+});
+
+describe('getLinkedVariant', () => {
+  test('extracts variant from linked last segment', ({ expect }) => {
+    expect(getLinkedVariant('root/space/obj/~settings')).toBe('settings');
+    expect(getLinkedVariant('root/a/~comments')).toBe('comments');
+  });
+
+  test('returns segment as-is when not linked', ({ expect }) => {
+    expect(getLinkedVariant('root/space/obj')).toBe('obj');
+    expect(getLinkedVariant('root')).toBe('root');
   });
 });
 

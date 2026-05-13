@@ -28,7 +28,6 @@ import {
   StoragePanel,
   SwarmPanel,
   TestingPanel,
-  TracingPanel,
   WorkflowPanel,
 } from '../panels';
 
@@ -66,10 +65,6 @@ export const useRoutes = () => {
             {
               path: '/client/diagnostics',
               element: <DiagnosticsPanel />,
-            },
-            {
-              path: '/client/tracing',
-              element: <TracingPanel />,
             },
           ],
         },

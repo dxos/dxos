@@ -1,0 +1,195 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Atom } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
+import { Obj } from '@dxos/echo';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { linkedSegment } from '@dxos/react-ui-attention';
+import { type SelectionManager, type SelectionMode, defaultSelection } from '@dxos/react-ui-attention';
+import { Channel } from '@dxos/types';
+
+import { meta } from '#meta';
+import { ThreadOperation } from '#types';
+import { ThreadCapabilities, type ThreadState } from '#types';
+
+import { getAnchor } from '../util';
+
+type CommentDisabledParams = {
+  stateAtom: Atom.Atom<Atom.Writable<ThreadState>[]>;
+  selectionManager: SelectionManager;
+  objectId: string;
+  commentsType: string;
+  selectionMode: SelectionMode | undefined;
+};
+
+/**
+ * Atom family to derive whether the comment button should be disabled.
+ * Uses a composite key to ensure proper caching.
+ */
+const commentDisabledFamily = Atom.family(
+  ({ stateAtom, selectionManager, objectId, commentsType, selectionMode }: CommentDisabledParams) =>
+    Atom.make((get) => {
+      const stateAtoms = get(stateAtom);
+      const state = stateAtoms[0] ? get(stateAtoms[0]) : undefined;
+      const toolbar = state?.toolbar ?? {};
+      const selectionState = get(selectionManager.state);
+      const selection =
+        selectionState.selections[objectId] ?? (selectionMode ? defaultSelection(selectionMode) : undefined);
+      const anchor = getAnchor(selection);
+      const invalidSelection = !anchor;
+      const overlappingComment = toolbar[objectId];
+      return (commentsType === 'anchored' && invalidSelection) || overlappingComment;
+    }),
+);
+
+/** Match ECHO objects that are NOT Channels (i.e. objects that can have comments). */
+const whenCommentableObject = NodeMatcher.whenAll(
+  NodeMatcher.whenEchoObjectMatches,
+  NodeMatcher.whenNot(NodeMatcher.whenEchoTypeMatches(Channel.Channel)),
+);
+
+// TODO(wittjosiah): Highlight active calls in L1.
+//  Track active meetings by subscribing to meetings query and polling the swarms of recent meetings in the space.
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const capabilities = yield* Capability.Service;
+
+    const getCommentConfig = (typename: string) =>
+      capabilities.getAll(AppCapabilities.CommentConfig).find(({ id }) => id === typename);
+
+    const extensions = yield* Effect.all([
+      GraphBuilder.createExtension({
+        id: 'active-call',
+        match: NodeMatcher.whenRoot,
+        connector: (node, get) => {
+          const callManagerAtom = capabilities.atom(ThreadCapabilities.CallManager);
+          const [call] = get(callManagerAtom);
+          if (!call) {
+            return Effect.succeed([]);
+          }
+          // Use derived joinedAtom for efficient subscription.
+          const joined = get(call.joinedAtom);
+          return Effect.succeed(
+            joined
+              ? [
+                  AppNode.makeDeckCompanion({
+                    id: 'active-call',
+                    label: ['call-panel.label', { ns: meta.id }],
+                    icon: 'ph--video-conference--regular',
+                    data: null,
+                    position: 'hoist',
+                  }),
+                ]
+              : [],
+          );
+        },
+      }),
+      GraphBuilder.createTypeExtension({
+        id: 'channel-chat-companion',
+        type: Channel.Channel,
+        connector: (channel, get) => {
+          const callManager = capabilities.get(ThreadCapabilities.CallManager);
+          // Use derived atoms for efficient subscription.
+          const joined = get(callManager.joinedAtom);
+          const roomId = get(callManager.roomIdAtom);
+          const isActive = joined && roomId === Obj.getDXN(channel).toString();
+          if (!isActive) {
+            return Effect.succeed([]);
+          }
+
+          return Effect.succeed([
+            AppNode.makeCompanion({
+              id: 'chat',
+              label: ['channel-companion.label', { ns: meta.id }],
+              icon: 'ph--hash--regular',
+              data: 'chat',
+              position: 'hoist',
+            }),
+          ]);
+        },
+      }),
+      GraphBuilder.createExtension({
+        id: 'comments-companion',
+        match: (node) => {
+          if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
+            return Option.none();
+          }
+          const commentConfig = getCommentConfig(Obj.getTypename(node.data)!);
+          return commentConfig ? Option.some(node) : Option.none();
+        },
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeCompanion({
+              id: linkedSegment('comments'),
+              label: ['comments.label', { ns: meta.id }],
+              icon: 'ph--chat-text--regular',
+              data: 'comments',
+              position: 'hoist',
+            }),
+          ]),
+      }),
+      GraphBuilder.createExtension({
+        id: 'comment-toolbar',
+        match: (node) => {
+          if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
+            return Option.none();
+          }
+          const commentConfig = getCommentConfig(Obj.getTypename(node.data)!);
+          return commentConfig ? Option.some(node) : Option.none();
+        },
+        actions: (matched, get) => {
+          const object = matched.data;
+          const objectDxn = Obj.getDXN(object).toString();
+          const stateAtom = capabilities.atom(ThreadCapabilities.State);
+          const selectionManager = capabilities.get(AttentionCapabilities.Selection);
+          const commentConfig = getCommentConfig(Obj.getTypename(object)!)!;
+
+          const disabled = get(
+            commentDisabledFamily({
+              stateAtom,
+              selectionManager,
+              objectId: objectDxn,
+              commentsType: commentConfig.comments,
+              selectionMode: commentConfig.selectionMode as SelectionMode | undefined,
+            }),
+          );
+
+          return Effect.succeed([
+            {
+              id: 'comment',
+              data: Effect.fnUntraced(function* () {
+                const config = getCommentConfig(Obj.getTypename(object)!)!;
+                const selection = selectionManager.getSelection(objectDxn);
+                const anchor =
+                  (config.comments === 'anchored' ? getAnchor(selection) : undefined) ?? Date.now().toString();
+                const name = config.getAnchorLabel?.(object, anchor);
+                yield* Operation.invoke(ThreadOperation.Create, {
+                  anchor,
+                  name,
+                  subject: object,
+                });
+              }),
+              properties: {
+                label: ['add-comment.label', { ns: meta.id }],
+                icon: 'ph--chat-text--regular',
+                disposition: 'toolbar',
+                disabled,
+                testId: 'thread.comment.add',
+              },
+            },
+          ]);
+        },
+      }),
+    ]);
+
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+  }),
+);

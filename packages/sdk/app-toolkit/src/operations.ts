@@ -5,7 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
+import { SelectionSchema } from '@dxos/react-ui-attention/types';
 
 import { Label } from './translations';
 
@@ -39,7 +40,7 @@ export namespace LayoutOperation {
       ),
     }),
     output: Schema.Void,
-  });
+  }).pipe(Operation.intrinsic);
 
   export const UpdateComplementary = Operation.make({
     meta: {
@@ -60,7 +61,7 @@ export namespace LayoutOperation {
       ),
     }),
     output: Schema.Void,
-  });
+  }).pipe(Operation.intrinsic);
 
   //
   // Dialog Operations
@@ -98,7 +99,7 @@ export namespace LayoutOperation {
       ),
     }),
     output: Schema.Void,
-  });
+  }).pipe(Operation.intrinsic);
 
   //
   // Popover Operations
@@ -169,7 +170,7 @@ export namespace LayoutOperation {
       ),
     ),
     output: Schema.Void,
-  });
+  }).pipe(Operation.intrinsic);
 
   //
   // Toast Operations
@@ -203,7 +204,7 @@ export namespace LayoutOperation {
     services: [Capability.Service],
     input: Toast,
     output: Schema.Void,
-  });
+  }).pipe(Operation.intrinsic);
 
   //
   // Layout Mode Operations
@@ -229,7 +230,7 @@ export namespace LayoutOperation {
       }),
     ),
     output: Schema.Void,
-  });
+  }).pipe(Operation.intrinsic);
 
   //
   // Workspace Operations
@@ -247,7 +248,7 @@ export namespace LayoutOperation {
       subject: Schema.String.annotations({ description: 'The id of the workspace to switch to.' }),
     }),
     output: Schema.Void,
-  });
+  }).pipe(Operation.intrinsic);
 
   export const RevertWorkspace = Operation.make({
     meta: {
@@ -264,6 +265,8 @@ export namespace LayoutOperation {
   //
   // Main Content Operations
   //
+
+  const NavigationMode = Schema.Literal('immediate', 'validate');
 
   export const Open = Operation.make({
     meta: {
@@ -289,6 +292,12 @@ export namespace LayoutOperation {
       ),
       workspace: Schema.optional(Schema.String.annotations({ description: 'The workspace to open the items in.' })),
       scrollIntoView: Schema.optional(Schema.Boolean.annotations({ description: 'Scroll the items into view.' })),
+      navigation: Schema.optional(
+        NavigationMode.annotations({
+          description:
+            'How navigation should resolve the requested path. Validate checks the path first; immediate opens it directly and lets the graph catch up.',
+        }),
+      ),
       pivotId: Schema.optional(
         Schema.String.annotations({ description: 'The id of the item to place new items next to.' }),
       ),
@@ -300,7 +309,7 @@ export namespace LayoutOperation {
       ),
     }),
     output: Schema.Array(Schema.String).annotations({ description: 'The resolved navigation paths that were opened.' }),
-  });
+  }).pipe(Operation.intrinsic);
 
   export const Close = Operation.make({
     meta: {
@@ -314,7 +323,7 @@ export namespace LayoutOperation {
       subject: Schema.Array(Schema.String.annotations({ description: 'Ids of the items to close.' })),
     }),
     output: Schema.Void,
-  });
+  }).pipe(Operation.intrinsic);
 
   export const Set = Operation.make({
     meta: {
@@ -347,7 +356,7 @@ export namespace LayoutOperation {
       ref: Schema.optional(Schema.String.annotations({ description: 'A reference id for the scroll target.' })),
     }),
     output: Schema.Void,
-  });
+  }).pipe(Operation.intrinsic);
 
   export const Expose = Operation.make({
     meta: {
@@ -358,6 +367,41 @@ export namespace LayoutOperation {
     services: [Capability.Service],
     input: Schema.Struct({
       subject: Schema.String.annotations({ description: 'The id of the item to expose.' }),
+    }),
+    output: Schema.Void,
+  });
+
+  //
+  // Companion Operations
+  //
+
+  export const UpdateCompanion = Operation.make({
+    meta: {
+      key: `${LAYOUT_PLUGIN}.operation.update-companion`,
+      name: 'Update Companion',
+      description: 'Update the companion plank for a primary plank.',
+    },
+    services: [Capability.Service],
+    input: Schema.Struct({
+      subject: Schema.Union(Schema.String, Schema.Null),
+    }),
+    output: Schema.Void,
+  });
+
+  //
+  // Selection Operations
+  //
+
+  export const Select = Operation.make({
+    meta: {
+      key: `${LAYOUT_PLUGIN}.operation.select`,
+      name: 'Select',
+      description: 'Select items in an attention context.',
+    },
+    services: [Capability.Service],
+    input: Schema.Struct({
+      contextId: Schema.String.annotations({ description: 'The id of the attention context.' }),
+      subject: SelectionSchema.annotations({ description: 'The selection to apply.' }),
     }),
     output: Schema.Void,
   });

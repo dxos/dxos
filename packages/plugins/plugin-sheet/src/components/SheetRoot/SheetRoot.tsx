@@ -4,7 +4,12 @@
 
 import React, { type PropsWithChildren, createContext, useCallback, useContext, useState } from 'react';
 
-import { type CellAddress, type CellRange, type CompleteCellRange, type ComputeGraph } from '@dxos/compute';
+import {
+  type CellAddress,
+  type CellRange,
+  type CompleteCellRange,
+  type ComputeGraph,
+} from '@dxos/compute-hyperformula';
 import { raise } from '@dxos/debug';
 import {
   Grid,
@@ -14,8 +19,9 @@ import {
   useGridContext,
 } from '@dxos/react-ui-grid';
 
+import { type Sheet } from '#types';
+
 import { type SheetModel, useSheetModel } from '../../model';
-import { type Sheet } from '../../types';
 
 export type SheetContextValue = {
   id: string;

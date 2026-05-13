@@ -8,10 +8,10 @@ import { DropdownMenu, IconButton, type ThemedClassName, useTranslation } from '
 import { Stack, StackItem, type StackProps } from '@dxos/react-ui-stack';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import { type Notebook } from '../../types';
-import { type TypescriptEditorProps } from '../TypescriptEditor';
+import { meta } from '#meta';
+import { type Notebook } from '#types';
 
+import { type TypescriptEditorProps } from '../TypescriptEditor';
 import { NotebookCell, type NotebookCellProps } from './NotebookCell';
 import { NotebookMenu } from './NotebookMenu';
 
@@ -72,7 +72,7 @@ const NotebookSection = ({
               variant='ghost'
               icon='ph--dots-three--regular'
               iconOnly
-              label={t('notebook cell insert label')}
+              label={t('notebook-cell-insert.label')}
             />
           </DropdownMenu.Trigger>
           <NotebookMenu cell={cell} onCellInsert={onCellInsert} onCellDelete={onCellDelete} />

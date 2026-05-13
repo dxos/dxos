@@ -7,14 +7,14 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
-import { type Space, type SpaceId } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
 import { ClientProvider, type ClientProviderProps } from '../client';
-
 import { ClientStory } from './context';
 
 type InitializeProps = {

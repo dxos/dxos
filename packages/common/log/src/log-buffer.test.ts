@@ -4,9 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { type LogConfig, LogEntry, type LogEntryInit, LogLevel } from './index';
 import { LogBuffer } from './log-buffer';
-
-import { type LogConfig, type LogEntry, LogLevel } from './index';
 
 const baseConfig: LogConfig = {
   options: {},
@@ -14,11 +13,12 @@ const baseConfig: LogConfig = {
   processors: [],
 };
 
-const createEntry = (overrides: Partial<LogEntry> = {}): LogEntry => ({
-  level: LogLevel.INFO,
-  message: 'test message',
-  ...overrides,
-});
+const createEntry = (overrides: Partial<LogEntryInit> = {}): LogEntry =>
+  new LogEntry({
+    level: LogLevel.INFO,
+    message: 'test message',
+    ...overrides,
+  });
 
 describe('LogBuffer', () => {
   test('pushes and serializes log entries', ({ expect }) => {
@@ -124,7 +124,9 @@ describe('LogBuffer', () => {
 
     const lines = buffer.serialize().split('\n');
     const record = JSON.parse(lines[0]);
-    expect(record.c).toBeUndefined();
+    // Circular values fall back to String(value) rather than dropping the entry.
+    expect(record.c).toBeDefined();
+    expect(JSON.parse(record.c!).self).toBe('[object Object]');
   });
 
   test('serialize returns empty string for empty buffer', ({ expect }) => {

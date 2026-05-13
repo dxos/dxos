@@ -6,57 +6,58 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-db';
-import { Button, Toolbar } from '@dxos/react-ui';
+import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { migrateCanvas } from '../../migrations';
-import { data } from '../../testing';
-import { Sketch as SketchNs } from '../../types';
+import { data } from '#testing';
+import { Sketch } from '#types';
 
-import { Sketch } from './Sketch';
+import { migrateCanvas } from '../../migrations';
+import { SketchComponent } from './Sketch';
 
 const DefaultStory = () => {
-  const [sketch, setSketch] = useState(createObject(SketchNs.make({ canvas: { content: data.v2 } })));
+  const [sketch, setSketch] = useState(createObject(Sketch.make({ canvas: { content: data.v2 } })));
 
   const handleClear = () => {
-    const sketch = createObject(SketchNs.make());
+    const sketch = createObject(Sketch.make());
     setSketch(sketch);
   };
 
   const handleCreate = () => {
-    const sketch = createObject(SketchNs.make({ canvas: { content: data.v2 } }));
+    const sketch = createObject(Sketch.make({ canvas: { content: data.v2 } }));
     console.log(JSON.stringify(sketch, undefined, 2));
     setSketch(sketch);
   };
 
   const handleMigrate = async () => {
     const content = await migrateCanvas(data.v1);
-    setSketch(createObject(SketchNs.make({ canvas: { content } })));
+    setSketch(createObject(Sketch.make({ canvas: { content } })));
   };
 
   return (
-    <div className='flex flex-col grow overflow-hidden'>
-      <Toolbar.Root>
-        <Button variant='primary' onClick={handleClear}>
-          Clear
-        </Button>
-        <Button variant='ghost' onClick={handleCreate}>
-          Create
-        </Button>
-        <Button variant='ghost' onClick={handleMigrate}>
-          Load V1 Sample
-        </Button>
-      </Toolbar.Root>
-      <div className='flex grow overflow-hidden'>
-        <Sketch sketch={sketch} assetsBaseUrl={null} autoZoom />
-      </div>
-    </div>
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Button variant='primary' onClick={handleClear}>
+            Clear
+          </Button>
+          <Button variant='ghost' onClick={handleCreate}>
+            Create
+          </Button>
+          <Button variant='ghost' onClick={handleMigrate}>
+            Load V1 Sample
+          </Button>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <SketchComponent classNames='dx-attention-surface' sketch={sketch} assetsBaseUrl={null} autoZoom />
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
 const meta = {
   title: 'plugins/plugin-sketch/components/Sketch',
-  component: Sketch as any,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {

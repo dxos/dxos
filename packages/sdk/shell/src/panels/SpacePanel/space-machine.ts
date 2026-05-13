@@ -10,7 +10,6 @@ import { type Space } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
 import { type StepEvent } from '../../steps';
-
 import { type ErsatzSpace } from './SpacePanelProps';
 
 type SpaceMachineContext = {

@@ -12,8 +12,9 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/ui-theme';
 
+import { translations } from '#translations';
+
 import { meta } from './meta';
-import compositeEnUs from './translations/en-US';
 
 export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'noCache' | 'resourceExtensions'>> & {
   appName?: string;
@@ -46,7 +47,7 @@ export default Capability.makeModule(
           const _resources = useCapabilities(AppCapabilities.Translations);
           const { themeMode } = useAtomValue(themeAtom);
           const resources = useMemo(
-            () => [compositeEnUs(appName), ...resourceExtensions, ..._resources.flat()],
+            () => [...translations, ...resourceExtensions, ..._resources.flat()],
             [appName, resourceExtensions, _resources],
           );
 

@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type EditorView } from '@codemirror/view';
 import { EditorSelection } from '@codemirror/state';
+import { type EditorView } from '@codemirror/view';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import React, {
@@ -37,7 +37,7 @@ import {
 } from '@dxos/ui-editor';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 //
 // Controller
@@ -133,7 +133,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>(({ childr
         createThemeExtensions({
           themeMode,
           slots: {
-            scroll: { className: scrollable ? '' : '!overflow-hidden' },
+            scroller: { className: scrollable ? '' : '!overflow-hidden' },
           },
         }),
         outliner({ showSelected }),
@@ -153,7 +153,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>(({ childr
         items: [
           {
             id: 'delete-row',
-            label: t('delete row'),
+            label: t('delete-row.menu'),
             onSelect: ({ view }) => {
               // TODO(burdon): Timeout hack since menu steals focus.
               setTimeout(() => {

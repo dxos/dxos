@@ -8,10 +8,16 @@ import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 
+/**
+ * HTTP header sent on every Edge request to classify traffic for metering.
+ */
+export const EDGE_CLIENT_TAG_HEADER = 'X-DXOS-Client-Tag';
+
 // TODO(burdon): Rename EdgerRouterEndpoint.
 // If we would rename it, we need to be careful to not break composer production.
 export enum EdgeService {
   AUTOMERGE_REPLICATOR = 'automerge-replicator',
+  SUBDUCTION_REPLICATOR = 'subduction-replicator',
   /**
    * Control feed replicator (hypercore append only logs) for the space.
    */
@@ -309,8 +315,14 @@ export type EdgeAuthChallenge = {
 };
 
 export enum OAuthProvider {
-  GOOGLE = 'google',
+  ATPROTO = 'atproto',
+  /** @deprecated Use ATPROTO instead. */
   BLUESKY = 'bluesky',
+  GITHUB = 'github',
+  GOOGLE = 'google',
+  LINEAR = 'linear',
+  SLACK = 'slack',
+  TRELLO = 'trello',
 }
 
 export const InitiateOAuthFlowRequestSchema = Schema.Struct({

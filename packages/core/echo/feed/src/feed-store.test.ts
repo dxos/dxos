@@ -312,7 +312,9 @@ describe('Feed V2', () => {
         // Ideally we use Cause.isDie(cause) -> error
         // But for quick check:
         let error = cause.value || cause.defect || cause;
-        if (cause._tag === 'Die') error = cause.value || cause.defect;
+        if (cause._tag === 'Die') {
+          error = cause.value || cause.defect;
+        }
 
         expect(error).toBeDefined();
         expect(error.message).toBe('Cursor token mismatch');

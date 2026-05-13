@@ -6,8 +6,8 @@ import React from 'react';
 
 import { Dialog, useTranslation } from '@dxos/react-ui';
 
-import { ShortcutsList } from '../../components';
-import { meta } from '../../meta';
+import { ShortcutsList } from '#components';
+import { meta } from '#meta';
 
 export const ShortcutsDialogContent = () => {
   const { t } = useTranslation(meta.id);
@@ -15,7 +15,7 @@ export const ShortcutsDialogContent = () => {
   return (
     <Dialog.Content>
       <Dialog.Header>
-        <Dialog.Title>{t('shortcuts dialog title')}</Dialog.Title>
+        <Dialog.Title>{t('shortcuts-dialog.title')}</Dialog.Title>
         <Dialog.Close asChild>
           <Dialog.CloseIconButton />
         </Dialog.Close>

@@ -5,8 +5,10 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { createUrl, makeGoogleApiRequest } from '../google-api';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Credential } from '@dxos/compute';
 
+import { createUrl, makeGoogleApiRequest } from '../google-api';
 import { Event, ListEventsResponse } from './types';
 
 /**
@@ -27,6 +29,8 @@ export const listEventsByStartTime = Effect.fn(function* (
   timeMax: string,
   pageSize: number,
   pageToken?: string | undefined,
+  /** Free-text Events.list `q` filter (optional provider search). */
+  searchQuery?: string | undefined,
 ) {
   const url = createUrl([API_URL, 'calendars', encodeURIComponent(calendarId), 'events'], {
     timeMin,
@@ -37,6 +41,7 @@ export const listEventsByStartTime = Effect.fn(function* (
     //   Expanded instances can be deduplicated downstream by recurringEventId.
     singleEvents: true,
     orderBy: 'startTime',
+    ...(searchQuery ? { q: searchQuery } : {}),
   }).toString();
   return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(ListEventsResponse)));
 });
@@ -52,6 +57,7 @@ export const listEventsByUpdated = Effect.fn(function* (
   updatedMin: string,
   pageSize: number,
   pageToken?: string | undefined,
+  searchQuery?: string | undefined,
 ) {
   const url = createUrl([API_URL, 'calendars', encodeURIComponent(calendarId), 'events'], {
     updatedMin,
@@ -60,6 +66,7 @@ export const listEventsByUpdated = Effect.fn(function* (
     // Don't create individual instances of recurring events.
     singleEvents: false,
     orderBy: 'updated',
+    ...(searchQuery ? { q: searchQuery } : {}),
   }).toString();
   return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(ListEventsResponse)));
 });

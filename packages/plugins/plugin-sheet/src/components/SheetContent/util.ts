@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { inRange } from '@dxos/compute';
+import { inRange } from '@dxos/compute-hyperformula';
 import { createDocAccessor } from '@dxos/echo-db';
 import { cellClassesForFieldType, parseValue } from '@dxos/react-ui-form';
 import {
@@ -21,8 +21,9 @@ import {
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/ui-theme';
 
+import { cellClassNameForRange, rangeFromIndex } from '#types';
+
 import { type SheetModel } from '../../model';
-import { cellClassNameForRange, rangeFromIndex } from '../../types';
 
 const createDxGridColumns = (model: SheetModel): DxGridAxisMeta => {
   return model.sheet.columns.reduce(

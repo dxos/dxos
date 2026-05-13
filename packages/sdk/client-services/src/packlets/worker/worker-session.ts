@@ -41,10 +41,6 @@ export class WorkerSession {
   @logInfo
   public origin?: string;
 
-  // TODO(nf): factor out?
-  public observabilityGroup?: string;
-  public signalTelemetryEnabled?: boolean;
-
   @logInfo
   public lockKey?: string;
 
@@ -55,21 +51,21 @@ export class WorkerSession {
     this._serviceHost = serviceHost;
 
     const middleware: Pick<ClientRpcServerProps, 'handleCall' | 'handleStream'> = {
-      handleCall: async (method, params, handler) => {
+      handleCall: async (method, params, handler, options) => {
         const error = await readySignal.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
         if (error) {
           throw error;
         }
 
-        return handler(method, params);
+        return handler(method, params, options);
       },
-      handleStream: async (method, params, handler) => {
+      handleStream: async (method, params, handler, options) => {
         const error = await readySignal.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
         if (error) {
           throw error;
         }
 
-        return handler(method, params);
+        return handler(method, params, options);
       },
     };
 
@@ -95,8 +91,6 @@ export class WorkerSession {
           start: async (request) => {
             this.origin = request.origin;
             this.lockKey = request.lockKey;
-            this.observabilityGroup = request.observabilityGroup;
-            this.signalTelemetryEnabled = request.signalTelemetryEnabled;
             this._startTrigger.wake();
           },
 

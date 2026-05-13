@@ -14,7 +14,6 @@ import { type QueryRequest } from '@dxos/protocols/proto/dxos/edge/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type Message, type PeerInfo, PeerInfoHash, type SignalStatus, type SwarmEvent } from '../signal-methods';
-
 import { type SignalManager } from './signal-manager';
 
 /**

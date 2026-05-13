@@ -1,6 +1,11 @@
 .worktrees/
 .claude/worktrees/
 
+# Claude Code harness session lock — per-machine runtime state, not source.
+.claude/scheduled_tasks.lock
+
+.dev.vars
+
 # Logs
 logs/
 npm-debug.log*
@@ -9,6 +14,8 @@ yarn-error.log*
 debug-storybook.log
 .log*
 debug-storybook.log
+# vite-plugin-log dev file sink (default filename is `app.log`).
+app.log
 
 # Vitest
 vitest-results.json
@@ -186,3 +193,6 @@ vitest.config.*.timestamp*
 .moon/cache
 .moon/docker
 node_modules
+
+# @dxos/introspect symbol cache (regenerated as needed).
+.dxos-introspect/

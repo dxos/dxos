@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type LayoutMode } from '../types';
+import { type LayoutMode } from '#types';
 
 export const layoutAppliesTopbar = (breakpoint: string, layoutMode?: LayoutMode) => {
   return (

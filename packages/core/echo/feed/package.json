@@ -25,13 +25,6 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"
@@ -49,8 +42,10 @@
     "@dxos/util": "workspace:*",
     "@effect/sql": "catalog:",
     "@effect/sql-sqlite-node": "catalog:",
-    "@effect/vitest": "catalog:",
     "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:"
   },
   "publishConfig": {
     "access": "public"

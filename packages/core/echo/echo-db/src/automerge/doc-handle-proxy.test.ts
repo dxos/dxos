@@ -5,12 +5,12 @@
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { AutomergeHost, DocumentsSynchronizer } from '@dxos/echo-pipeline';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { DocHandleProxy } from './doc-handle-proxy';
-import { Context } from '@dxos/context';
 
 describe('DocHandleProxy', () => {
   test('get update from handle', async () => {

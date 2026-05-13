@@ -3,10 +3,9 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { SPACE_RENAME_POPOVER } from '../constants';
-
 import { SpaceOperation } from './definitions';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Rename> = SpaceOperation.Rename.pipe(

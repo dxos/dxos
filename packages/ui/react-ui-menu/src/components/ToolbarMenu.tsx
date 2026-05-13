@@ -9,7 +9,8 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { composable, composableProps } from '@dxos/ui-theme';
 import { type MenuActionProperties } from '@dxos/ui-types';
 
-import { translationKey } from '../translations';
+import { translationKey } from '#translations';
+
 import {
   type MenuAction,
   type MenuItem,
@@ -20,7 +21,6 @@ import {
   isSeparator,
 } from '../types';
 import { executeMenuAction } from '../util';
-
 import { ActionLabel, actionLabel } from './ActionLabel';
 import { DropdownMenu } from './DropdownMenu';
 import { type MenuScopedProps, useMenuItems, useMenuScoped } from './Menu';

@@ -7,7 +7,6 @@ import { fireEvent, render, waitFor } from '@solidjs/testing-library';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { defaultRegistry } from '../registry';
-
 import { useAtomSet } from './useAtomSet';
 import { useAtomValue } from './useAtomValue';
 

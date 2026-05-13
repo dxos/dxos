@@ -11,7 +11,6 @@ import { type Identity } from '@dxos/react-client/halo';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
 import { type StepEvent } from '../../steps';
-
 import { type IdentityPanelInitialDisposition } from './IdentityPanelProps';
 
 type IdentityMachineContext = {

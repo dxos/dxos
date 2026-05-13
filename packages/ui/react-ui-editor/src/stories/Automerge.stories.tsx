@@ -7,20 +7,21 @@ import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-networ
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Obj, Ref } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
+import { Obj, Query, Ref } from '@dxos/echo';
 import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
+import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';
-import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
+import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
 import { Button, useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
+import { translations } from '#translations';
+
 import { useTextEditor } from '../hooks';
-import { translations } from '../translations';
 
 const initialContent = 'Hello world!';
 
@@ -43,7 +44,7 @@ const Editor = ({ source, messenger, identity, autoFocus }: EditorProps) => {
       initialValue: DocAccessor.getValue(source),
       extensions: [
         createBasicExtensions({ placeholder: 'Type here...', search: true }),
-        createThemeExtensions({ themeMode, slots: { scroll: { className: 'p-2' } } }),
+        createThemeExtensions({ themeMode, slots: { scroller: { className: 'p-2' } } }),
         createDataExtensions({ id: 'test', text: source, messenger, identity }),
       ],
     }),

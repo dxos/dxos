@@ -6,20 +6,19 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
+import { Operation, Trigger } from '@dxos/compute';
 import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { TestSchema, useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { translations as formTranslations } from '@dxos/react-ui-form';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
-import { functions } from '../../testing';
-import { translations } from '../../translations';
+import { functions } from '#testing';
+import { translations } from '#translations';
 
 import { TriggerEditor, type TriggerEditorProps } from './TriggerEditor';
 
@@ -42,12 +41,12 @@ const DefaultStory = (props: Partial<TriggerEditorProps>) => {
     }
 
     const functions = await space.db.query(Filter.type(Operation.PersistentOperation)).run();
-    const fn = functions.find((fn) => fn.name === 'example.com/function/forex');
+    const fn = functions.find((fn) => fn.name === 'com.example.function.forex');
     invariant(fn);
     const trigger = space.db.add(
       Trigger.make({
         function: Ref.make(fn),
-        spec: { kind: 'webhook' },
+        spec: Trigger.specWebhook(),
         input: {
           from: 'USD',
           to: 'JPY',
@@ -99,7 +98,7 @@ const meta = {
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
             Obj.make(TestSchema.ContactType, {
-              name: faker.person.fullName(),
+              name: random.person.fullName(),
               identifiers: [],
             }),
           );

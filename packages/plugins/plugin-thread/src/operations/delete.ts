@@ -6,16 +6,15 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
+import { Operation } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
-import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
+import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { Thread } from '@dxos/types';
 
-import { Delete } from './definitions';
-
 import { ThreadCapabilities } from '../types';
+import { ThreadOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof Delete> = Delete.pipe(
+const handler: Operation.WithHandler<typeof ThreadOperation.Delete> = ThreadOperation.Delete.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject, anchor, thread: _thread }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);

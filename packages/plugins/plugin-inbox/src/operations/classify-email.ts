@@ -9,20 +9,19 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { AiSession, GenerationObserver } from '@dxos/assistant';
-import { Database, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
-import { ContextQueueService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
-import { EchoId, LegacyDXN } from '@dxos/keys';
+import { AiRequest, GenerationObserver } from '@dxos/assistant';
+import { Trace, Operation, OperationRegistry } from '@dxos/compute';
+import { Database, Feed, Filter, Obj, Ref, Relation, Tag, Type } from '@dxos/echo';
+import { DXN, LegacyDXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { HasSubject, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { InboxOperation } from '../types';
 import { renderMarkdown } from '../util';
 
-import { ClassifyEmail } from './definitions';
-
-const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
+const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = InboxOperation.ClassifyEmail.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ message }) {
@@ -43,7 +42,7 @@ const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
         const messageContent = Function.pipe([message], Array.flatMap(renderMarkdown), Array.join('\n\n'));
         const tagList = tags.map((tag) => `- ${tag.label}`).join('\n');
 
-        const result = yield* new AiSession({
+        const result = yield* new AiRequest.Request({
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'classify' })),
         }).run({
           prompt:
@@ -85,11 +84,11 @@ const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
         log.info('queueDXNInfo', queueDXNInfo);
 
         if (!queueDXNInfo) {
-          return yield* Effect.fail(new Error('Message is not in a queue'));
+          return yield* Effect.fail(new Error('Message is not in a feed'));
         }
 
-        const queueEchoId = EchoId.fromSpaceAndObjectId(queueDXNInfo.spaceId, queueDXNInfo.queueId as any);
-        const queue = yield* QueueService.getQueue(queueEchoId);
+        const feedDxn = DXN.fromSpaceAndObjectId(queueDXNInfo.spaceId, queueDXNInfo.queueId);
+        const feed = yield* Database.load(Ref.fromDXN(feedDxn));
 
         const relation = Relation.make(HasSubject.HasSubject, {
           [Relation.Source]: selectedTag,
@@ -100,7 +99,7 @@ const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
           completedAt: new Date().toISOString(),
         });
 
-        yield* QueueService.append(queue, [relation]).pipe(Effect.provide(ContextQueueService.layer(queue)));
+        yield* Feed.append(feed, [relation]);
         yield* Database.flush();
 
         return {
@@ -113,8 +112,15 @@ const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
           AiService.model('@anthropic/claude-haiku-4-5'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
-          TracingService.layerNoop,
-          FunctionInvocationService.layerNotAvailable,
+          Trace.writerLayerNoop,
+          Database.notAvailable,
+          Feed.notAvailable,
+          Layer.succeed(Operation.Service, {
+            invoke: () => Effect.die('Not available.'),
+            schedule: () => Effect.die('Not available.'),
+            invokePromise: async () => ({ error: new Error('Not available.') }),
+          } as any),
+          Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
         ),
       ),
     ),

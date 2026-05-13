@@ -23,15 +23,16 @@ export const logProcessor: LogProcessor = (config: LogConfig, entry: LogEntry) =
   }
 
   const additionalProperties: Record<string, string | boolean | number> = {};
-  if (entry.meta) {
-    additionalProperties.transaction = `${getRelativeFilename(entry.meta.F)}:${entry.meta.L}`;
-    if (entry.meta.S?.hostSessionId) {
-      additionalProperties.service_host_issue = true;
-      additionalProperties.service_host_session = entry.meta.S?.hostSessionId;
-    }
-    if (entry.meta.S?.uptimeSeconds != null) {
-      additionalProperties.uptime_seconds = entry.meta.S.uptimeSeconds;
-    }
+  const { filename, line } = entry.computedMeta;
+  if (filename !== undefined && line !== undefined) {
+    additionalProperties.transaction = `${filename}:${line}`;
+  }
+  if (entry.meta?.S?.hostSessionId) {
+    additionalProperties.service_host_issue = true;
+    additionalProperties.service_host_session = entry.meta.S.hostSessionId;
+  }
+  if (entry.meta?.S?.uptimeSeconds != null) {
+    additionalProperties.uptime_seconds = entry.meta.S.uptimeSeconds;
   }
 
   if (capturedError instanceof InvariantViolation) {
@@ -39,16 +40,4 @@ export const logProcessor: LogProcessor = (config: LogConfig, entry: LogEntry) =
   }
 
   posthog.captureException(capturedError, additionalProperties);
-};
-
-const getRelativeFilename = (filename: string) => {
-  // TODO(burdon): Hack uses "packages" as an anchor (pre-parse NX?)
-  // Including `packages/` part of the path so that excluded paths (e.g. from dist) are clickable in vscode.
-  const match = filename.match(/.+\/(packages\/.+\/.+)/);
-  if (match) {
-    const [, filePath] = match;
-    return filePath;
-  }
-
-  return filename;
 };

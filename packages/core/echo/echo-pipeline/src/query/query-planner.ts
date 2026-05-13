@@ -254,6 +254,24 @@ export class QueryPlanner {
         ]);
       }
 
+      // ChildOf
+      case 'child-of': {
+        return QueryPlan.Plan.make([
+          {
+            _tag: 'SelectStep',
+            scope: context.scope,
+            selector: {
+              _tag: 'WildcardSelector',
+            },
+          },
+          ...this._generateDeletedHandlingSteps(context),
+          {
+            _tag: 'FilterStep',
+            filter: { ...filter },
+          },
+        ]);
+      }
+
       // Compare
       case 'compare':
         throw queryTooComplexError(context.originalQuery);
@@ -271,7 +289,8 @@ export class QueryPlanner {
       case 'and': {
         const flatFilters = _flattenAnd(filter.filters);
         const timestampFilters = flatFilters.filter((f): f is QueryAST.FilterTimestamp => f.type === 'timestamp');
-        const nonTimestampFilters = flatFilters.filter((f) => f.type !== 'timestamp');
+        const childOfFilters = flatFilters.filter((f): f is QueryAST.FilterChildOf => f.type === 'child-of');
+        const otherFilters = flatFilters.filter((f) => f.type !== 'timestamp' && f.type !== 'child-of');
 
         if (timestampFilters.length > 0 && context.selectionInverted) {
           throw new QueryError({
@@ -281,8 +300,8 @@ export class QueryPlanner {
           });
         }
 
-        if (timestampFilters.length > 0 && nonTimestampFilters.length <= 1) {
-          const innerFilter = nonTimestampFilters[0];
+        if (timestampFilters.length > 0 && otherFilters.length <= 1 && childOfFilters.length === 0) {
+          const innerFilter = otherFilters[0];
           const innerPlan = innerFilter
             ? this._generateSelectionFromFilter(innerFilter, context)
             : QueryPlan.Plan.make([
@@ -315,12 +334,36 @@ export class QueryPlanner {
           ]);
         }
 
-        if (timestampFilters.length > 0) {
+        if (timestampFilters.length > 0 && childOfFilters.length === 0) {
           throw new QueryError({
             message:
               'Timestamp filters can only be combined with a single type or property filter via AND. Split complex filters into a subquery.',
             context: { query: context.originalQuery },
           });
+        }
+
+        if (childOfFilters.length > 0) {
+          const remainingFilters = flatFilters.filter((f) => f.type !== 'child-of');
+          const innerPlan =
+            remainingFilters.length === 1
+              ? this._generateSelectionFromFilter(remainingFilters[0], context)
+              : remainingFilters.length > 1
+                ? this._generateSelectionFromFilter({ type: 'and', filters: remainingFilters }, context)
+                : QueryPlan.Plan.make([
+                    {
+                      _tag: 'SelectStep',
+                      scope: context.scope,
+                      selector: { _tag: 'WildcardSelector' },
+                    },
+                    ...this._generateDeletedHandlingSteps(context),
+                  ]);
+
+          const childOfSteps: QueryPlan.Step[] = childOfFilters.map((f) => ({
+            _tag: 'FilterStep' as const,
+            filter: f,
+          }));
+
+          return QueryPlan.Plan.make([...innerPlan.steps, ...childOfSteps]);
         }
 
         throw queryTooComplexError(context.originalQuery);

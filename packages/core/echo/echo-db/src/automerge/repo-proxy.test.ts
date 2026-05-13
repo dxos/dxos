@@ -17,7 +17,6 @@ import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
 
 import { createTmpPath } from '../testing';
-
 import { type DocHandleProxy } from './doc-handle-proxy';
 import { RepoProxy } from './repo-proxy';
 

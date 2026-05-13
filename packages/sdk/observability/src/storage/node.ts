@@ -1,11 +1,10 @@
+import yaml from 'js-yaml';
 //
 // Copyright 2022 DXOS.org
 //
 import { existsSync, statSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import yaml from 'js-yaml';
 import { v4 as uuid, validate as validateUuid } from 'uuid';
 
 /**

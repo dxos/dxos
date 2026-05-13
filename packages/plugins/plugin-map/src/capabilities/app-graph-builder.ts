@@ -1,0 +1,45 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
+import { Obj, View } from '@dxos/echo';
+import { AtomObj } from '@dxos/echo-atom';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+
+import { meta } from '#meta';
+import { MapOperation } from '#types';
+import { Map } from '#types';
+
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const extensions = yield* GraphBuilder.createExtension({
+      id: MapOperation.Toggle.meta.key,
+      match: (node) => Option.map(NodeMatcher.whenEchoType(View.View)(node), (view) => ({ view, node })),
+      actions: ({ view, node }, get) => {
+        const presentationRef = (node.properties as any).presentation;
+        const target = presentationRef ? get(AtomObj.make(presentationRef)) : undefined;
+        if (!Obj.instanceOf(Map.Map, target)) {
+          return Effect.succeed([]);
+        }
+        return Effect.succeed([
+          Node.makeAction({
+            id: `${view.id}.toggle-map`,
+            data: () => Operation.invoke(MapOperation.Toggle, undefined),
+            properties: {
+              label: ['toggle-type.label', { ns: meta.id }],
+              icon: 'ph--compass--regular',
+            },
+          }),
+        ]);
+      },
+    });
+
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+  }),
+);

@@ -10,8 +10,9 @@ import { useObject } from '@dxos/react-client/echo';
 import { IconButton, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
-import { Journal as JournalType, getDateString, parseDateString } from '../../types';
+import { meta } from '#meta';
+import { Journal as JournalType, getDateString, parseDateString } from '#types';
+
 import { Outline, type OutlineController, type OutlineRootProps } from '../Outline';
 
 const RECENT = 7 * 24 * 60 * 60 * 1_000;
@@ -31,10 +32,12 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
   const entryRefs = useMemo(
     () =>
       Object.entries(journalSnapshot?.entries ?? {})
-        .toSorted(([a], [b]) => (a < b ? 1 : a > b ? -1 : 0))
+        .toSorted(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
         .map(([dateKey, ref]) => ({ dateKey, ref })),
     [journalSnapshot],
   );
+
+  const hasTodayEntry = useMemo(() => entryRefs.some(({ dateKey }) => dateKey === getDateString()), [entryRefs]);
 
   const handleCreateEntry = useCallback(() => {
     if (!journal) {
@@ -42,22 +45,28 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
     }
 
     const entry = JournalType.makeEntry();
-    Obj.change(journal, (obj) => {
-      obj.entries[getDateString(date)] = Ref.make(entry);
+    Obj.update(journal, (journal) => {
+      journal.entries[getDateString(date)] = Ref.make(entry);
     });
   }, [journal, date]);
 
   return (
     <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
       <ScrollArea.Viewport>
-        {entryRefs.length === 0 && (
+        {entryRefs.map(({ dateKey, ref }, i) => (
+          <JournalEntry
+            key={dateKey}
+            entryRef={ref}
+            classNames='p-2'
+            onSelect={onSelect}
+            autoFocus={i === entryRefs.length - 1}
+          />
+        ))}
+        {!hasTodayEntry && (
           <div className='p-2'>
-            <IconButton label={t('create entry label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
+            <IconButton label={t('start-today.label')} icon='ph--calendar-plus--regular' onClick={handleCreateEntry} />
           </div>
         )}
-        {entryRefs.map(({ dateKey, ref }, i) => (
-          <JournalEntry key={dateKey} entryRef={ref} classNames='p-2' onSelect={onSelect} autoFocus={i === 0} />
-        ))}
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
@@ -110,7 +119,7 @@ const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntry
           onClick={handleFocus}
         />
         {isRecent && date && <div className='text-sm text-subdued'>{format(date, 'EEEE')}</div>}
-        {isToday && <div className='text-xs'>{t('today label')}</div>}
+        {isToday && <div className='text-xs'>{t('today.label')}</div>}
       </div>
       <Outline.Root
         ref={outlinerRef}
@@ -120,7 +129,7 @@ const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntry
         showSelected={false}
         {...props}
       >
-        <Outline.Content classNames='pt-2 pb-2' />
+        <Outline.Content classNames='py-2' />
       </Outline.Root>
     </div>
   );

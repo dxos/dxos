@@ -2,29 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
-import { Obj } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { InvocationTraceStartEvent } from '@dxos/functions-runtime';
-import { EchoId } from '@dxos/keys';
-import { type Queue, useQueue } from '@dxos/react-client/echo';
+import { type Queue, useFeedQuery } from '@dxos/react-client/echo';
 import { Timeline, useExecutionGraph } from '@dxos/react-ui-components';
 
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const ExecutionGraphModule = ({ space, traceQueue }: ComponentProps & { traceQueue?: Queue }) => {
-  const legacyDxn = space.properties?.invocationTraceQueue?.dxn;
-  const invocationQueueEchoId = useMemo(() => {
-    if (!legacyDxn) return undefined;
-    const echoDxn = legacyDxn.asEchoDXN();
-    return echoDxn?.spaceId && echoDxn?.echoId
-      ? EchoId.fromSpaceAndObjectId(echoDxn.spaceId, echoDxn.echoId as any)
-      : undefined;
-  }, [legacyDxn]);
-  const invocations =
-    useQueue(invocationQueueEchoId)?.objects.filter(Obj.instanceOf(InvocationTraceStartEvent)) ?? [];
+export const ExecutionGraphModule = ({ space, traceQueue }: ModuleProps & { traceQueue?: Queue }) => {
+  const traceFeed = space.properties?.invocationTraceFeed?.target;
+  const invocations = useFeedQuery(traceFeed, Filter.type(InvocationTraceStartEvent));
   // Use provided traceQueue, or fall back to the per-invocation trace queue from the most recent invocation.
-  const queue = traceQueue ?? invocations?.at(-1)?.invocationTraceQueue?.target;
+  // useExecutionGraph still consumes Queue<Unknown>; runtime resolution returns a Queue instance.
+  // TODO(burdon): Migrate useExecutionGraph to take a Feed.
+  const queue = traceQueue ?? (invocations?.at(-1)?.invocationTraceQueue?.target as Queue | undefined);
   const { branches, commits } = useExecutionGraph(queue);
 
   return (

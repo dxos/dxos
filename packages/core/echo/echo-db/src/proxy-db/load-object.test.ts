@@ -5,15 +5,13 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { Obj, Ref, Type } from '@dxos/echo';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { EchoTestBuilder, createTmpPath } from '../testing';
-
 import { loadObjectReferences } from './load-object';
 
 // TODO(dmaretskyi): Refactor to test Ref.load() instead.

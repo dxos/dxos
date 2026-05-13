@@ -5,21 +5,21 @@
 import * as Predicate from 'effect/Predicate';
 import React, { Fragment, useMemo } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Obj, Query } from '@dxos/echo';
-import { Filter, useObject, useQuery, useSchema } from '@dxos/react-client/echo';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Filter, Obj, Query } from '@dxos/echo';
+import { useObject, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Panel as DxPanel, Flex, type FlexProps, useControlledState } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { type GeoMarker, type MapRootProps } from '@dxos/react-ui-geo';
 import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
 import { getDeep } from '@dxos/util';
 
-import { type GeoControlProps, GlobeControl, MapControl } from '../../components';
-import { type Map } from '../../types';
+import { type GeoControlProps, GlobeControl, MapControl } from '#components';
+import { type Map } from '#types';
 
 export type MapControlType = 'globe' | 'map';
 
-export type MapContainerProps = SurfaceComponentProps<
+export type MapContainerProps = AppSurface.ObjectArticleProps<
   Map.Map,
   GeoControlProps & Pick<MapRootProps, 'onChange'> & { type?: MapControlType }
 >;

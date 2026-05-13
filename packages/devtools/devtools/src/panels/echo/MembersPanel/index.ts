@@ -2,6 +2,4 @@
 // Copyright 2020 DXOS.org
 //
 
-import { MembersPanel } from './MembersPanel';
-
-export default MembersPanel;
+export { MembersPanel as default } from './MembersPanel';

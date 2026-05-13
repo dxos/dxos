@@ -2,10 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './anchor-sort';
-export * from './app-graph-serializer';
-export * from './blueprint-definition';
-export * from './operation-handler';
-export * from './react-surface';
-export * from './settings';
-export * from './state';
+import { Capability } from '@dxos/app-framework';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Blueprint, Operation, OperationHandlerSet } from '@dxos/compute';
+
+export const AnchorSort = Capability.lazy('AnchorSort', () => import('./anchor-sort'));
+export const AppGraphSerializer = Capability.lazy('AppGraphSerializer', () => import('./app-graph-serializer'));
+export const CommentConfig = Capability.lazy('CommentConfig', () => import('./comment-config'));
+export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
+export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
+export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
+  'OperationHandler',
+  () => import('./operation-handler'),
+);
+export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const MarkdownSettings = Capability.lazy('MarkdownSettings', () => import('./settings'));
+export const MarkdownState = Capability.lazy('MarkdownState', () => import('./state'));

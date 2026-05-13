@@ -8,15 +8,11 @@ import { Card, Icon, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { Subscription } from '../../types';
+import { Subscription } from '#types';
 
 export type PostStackAction = { type: 'current'; postId: string };
 
 export type PostStackActionHandler = (action: PostStackAction) => void;
-
-//
-// PostStack
-//
 
 export type PostStackProps = {
   id: string;
@@ -77,10 +73,6 @@ export const PostStack = composable<HTMLDivElement, PostStackProps>(
 
 PostStack.displayName = 'PostStack';
 
-//
-// PostTile
-//
-
 type PostTileData = {
   post: Subscription.Post;
   onAction?: PostStackActionHandler;
@@ -89,25 +81,31 @@ type PostTileData = {
 type PostTileProps = Pick<MosaicTileProps<PostTileData>, 'data' | 'location' | 'current'>;
 
 const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, current }, forwardedRef) => {
-  const { post } = data;
+  const post = data?.post;
   const { setCurrentId } = useMosaicContainer('PostTile');
   const { t } = useTranslation(Subscription.Post.typename);
 
   const handleCurrentChange = useCallback(() => {
-    setCurrentId(post.id);
-  }, [post.id, setCurrentId]);
+    if (post) {
+      setCurrentId(post.id);
+    }
+  }, [post, setCurrentId]);
+
+  if (!post) {
+    return null;
+  }
 
   const published = post.published ? new Date(post.published).toLocaleDateString() : undefined;
 
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current' id={post.id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root ref={forwardedRef}>
+        <Card.Root ref={forwardedRef} fullWidth>
           <Card.Toolbar>
             <Card.IconBlock>
               <Card.Icon icon='ph--dot-outline--regular' />
             </Card.IconBlock>
-            <Card.Text classNames='truncate'>{post.title ?? t('post title placeholder')}</Card.Text>
+            <Card.Text classNames='truncate'>{post.title ?? t('post-title.placeholder')}</Card.Text>
             {post.link && (
               <Card.IconBlock>
                 <a href={post.link} target='_blank' rel='noreferrer' className='shrink-0'>

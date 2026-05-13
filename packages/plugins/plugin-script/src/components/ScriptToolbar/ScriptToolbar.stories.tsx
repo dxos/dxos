@@ -8,12 +8,12 @@ import React, { useMemo } from 'react';
 
 import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Script } from '@dxos/functions';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { Script } from '@dxos/compute';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type ScriptToolbarState, type ScriptToolbarStateStore } from '../../hooks';
-import { translations } from '../../translations';
+import { type ScriptToolbarState, type ScriptToolbarStateStore } from '#hooks';
+import { translations } from '#translations';
 
 import { ScriptToolbar } from './ScriptToolbar';
 

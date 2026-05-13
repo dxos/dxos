@@ -8,7 +8,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 export const Debug = () => {
   const manager = usePluginManager();
@@ -26,11 +26,7 @@ export const Debug = () => {
     eventsFired,
   };
 
-  return (
-    <SyntaxHighlighter language='json' classNames='text-xs opacity-75 rounded-sm'>
-      {JSON.stringify(object, undefined, 2)}
-    </SyntaxHighlighter>
-  );
+  return <JsonHighlighter data={object} classNames='text-xs opacity-75 rounded-sm' />;
 };
 
 export default Capability.makeModule(() =>

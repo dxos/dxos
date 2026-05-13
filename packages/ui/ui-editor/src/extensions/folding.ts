@@ -21,10 +21,10 @@ export const folding = (): Extension => {
       markerDOM: (open) => {
         return Domino.of('div')
           .classNames('flex h-full justify-center items-center')
-          .children(
+          .append(
             Domino.of('svg', Domino.SVG)
               .classNames(mx('w-4 h-4 cursor-pointer', open && 'rotate-90'))
-              .children(
+              .append(
                 Domino.of('use', Domino.SVG).attributes({
                   href: Domino.icon('ph--caret-right--regular'),
                 }),

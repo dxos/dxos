@@ -48,11 +48,11 @@ export const fontBody = '"Inter Variable", ui-sans-serif, system-ui, sans-serif'
 export const fontMono = '"JetBrains Mono Variable", ui-monospace, "Cascadia Code", "Source Code Pro", monospace';
 
 export const markdownTheme = {
-  code: 'font-mono! text-cm-code',
-  codeMark: 'font-mono! text-cm-code-mark',
+  code: 'font-mono! cm-code-inline',
+  codeMark: 'font-mono! cm-code-mark',
   mark: 'font-mono!',
   heading: (level: HeadingLevel) => ({
-    className: mx(headings[level].className, 'font-light text-cm-heading-number'),
+    className: mx(headings[level].className, 'font-light text-(--color-cm-heading-number)'),
     color: 'var(--color-cm-heading) !important',
     lineHeight: headings[level].lineHeight,
     fontSize: headings[level].fontSize,
@@ -108,12 +108,21 @@ export const baseTheme = EditorView.baseTheme({
    * Scroller
    */
   '.cm-scroller': {
-    overflowAnchor: 'none',
+    // Browser scroll-anchoring: see comment in `scroller.ts`. `auto` lets the browser pin a
+    // stable element near the viewport top so widget resizes (e.g. tool-block TogglePanel
+    // open/close) don't jump the user's view.
+    overflowAnchor: 'auto',
   },
   '.cm-scroller::-webkit-scrollbar': {
-    width: '8px',
+    width: 'var(--scrollbar-size,8px)',
+    height: 'var(--scrollbar-size,8px)',
   },
-  '.cm-scroller::-webkit-scrollbar-track': {},
+  '.cm-scroller::-webkit-scrollbar-corner': {
+    background: 'transparent',
+  },
+  '.cm-scroller::-webkit-scrollbar-track': {
+    background: 'transparent',
+  },
   '.cm-scroller::-webkit-scrollbar-thumb': {
     background: 'transparent',
     transition: 'background 0.15s',
@@ -152,7 +161,7 @@ export const baseTheme = EditorView.baseTheme({
    * Height is set to match the corresponding line (which may have wrapped).
    */
   '.cm-gutterElement': {
-    lineHeight: 1.5,
+    lineHeight: '24px',
     fontSize: '12px',
   },
 

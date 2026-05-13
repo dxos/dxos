@@ -12,4 +12,5 @@ export const meta: Plugin.Meta = {
     Core client connectivity and peer-to-peer networking infrastructure.
     Manages identity, authentication, and real-time synchronization across devices.
   `,
+  tags: ['system'],
 };

@@ -34,25 +34,19 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/compute/assistant"
     },
     {
-      "path": "../../core/blueprints"
+      "path": "../../core/compute/compute"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-atom"
-    },
-    {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"
@@ -104,6 +98,9 @@
     },
     {
       "path": "../plugin-table"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

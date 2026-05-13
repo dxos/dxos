@@ -6,7 +6,6 @@ import { mkdir, readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { type AddressInfo } from 'node:net';
 import { join } from 'node:path';
-
 import type { BrowserContext, BrowserType } from 'playwright';
 
 import { Context } from '@dxos/context';

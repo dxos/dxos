@@ -7,11 +7,12 @@ import { inspect } from 'node:util';
 import { Event, MulticastObservable, SubscriptionList, Trigger, asyncTimeout } from '@dxos/async';
 import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf/stream';
+import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ApiError, trace as Trace } from '@dxos/protocols';
+import { ApiError } from '@dxos/protocols';
 import {
   type Contact,
   type Device,
@@ -32,8 +33,6 @@ import { InvitationsProxy } from '../invitations';
 
 @trace.resource()
 export class HaloProxy implements Halo {
-  private readonly _instanceId = PublicKey.random().toHex();
-
   /** Subscriptions for overall lifecycle (reconnected event listener). */
   private readonly _subscriptions = new SubscriptionList();
   /** Subscriptions for RPC streams that need to be re-established on reconnect. */
@@ -52,13 +51,7 @@ export class HaloProxy implements Halo {
 
   private _haloCredentialStream?: Stream<Credential>;
 
-  constructor(
-    private readonly _serviceProvider: ClientServicesProvider,
-    /**
-     * @internal
-     */
-    public _traceParent?: string,
-  ) {}
+  constructor(private readonly _serviceProvider: ClientServicesProvider) {}
 
   [inspect.custom](): string {
     return inspectObject(this);
@@ -112,7 +105,7 @@ export class HaloProxy implements Halo {
    * @internal
    */
   async _open(): Promise<void> {
-    log.trace('dxos.sdk.halo-proxy.open', Trace.begin({ id: this._instanceId, parentId: this._traceParent }));
+    log('opening halo proxy');
     const gotIdentity = this._identityChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
 
@@ -137,7 +130,7 @@ export class HaloProxy implements Halo {
     await this._setupInvitationProxy();
     this._setupStreams();
 
-    log.trace('dxos.sdk.halo-proxy.open', Trace.end({ id: this._instanceId }));
+    log('opened halo proxy');
     await Promise.all([gotIdentity]);
   }
 
@@ -166,7 +159,7 @@ export class HaloProxy implements Halo {
       {
         spaceKey: identity.spaceKey!,
       },
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, ctx: Context.default() },
     );
     this._haloCredentialStream.subscribe((data) => {
       this._credentialsChanged.emit([...this._credentials.get(), data]);
@@ -191,6 +184,7 @@ export class HaloProxy implements Halo {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identityStream = this._serviceProvider.services.IdentityService.queryIdentity(undefined, {
       timeout: RPC_TIMEOUT,
+      ctx: Context.default(),
     });
     identityStream.subscribe((data) => {
       // Set tracing identity. For early stage debugging.
@@ -205,6 +199,7 @@ export class HaloProxy implements Halo {
 
     const contactsStream = this._serviceProvider.services.ContactsService!.queryContacts(undefined, {
       timeout: RPC_TIMEOUT,
+      ctx: Context.default(),
     });
     contactsStream.subscribe((data) => {
       this._contactsChanged.emit(data.contacts ?? []);
@@ -214,6 +209,7 @@ export class HaloProxy implements Halo {
     invariant(this._serviceProvider.services.DevicesService, 'DevicesService not available');
     const devicesStream = this._serviceProvider.services.DevicesService.queryDevices(undefined, {
       timeout: RPC_TIMEOUT,
+      ctx: Context.default(),
     });
     devicesStream.subscribe((data) => {
       if (data.devices) {
@@ -258,6 +254,15 @@ export class HaloProxy implements Halo {
    * @param deviceProfile - optional device profile that will be merged with defaults
    */
   async createIdentity(profile: ProfileDocument = {}, deviceProfile?: DeviceProfileDocument): Promise<Identity> {
+    return this._createIdentityInternal(Context.default(), profile, deviceProfile);
+  }
+
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  private async _createIdentityInternal(
+    ctx: Context,
+    profile: ProfileDocument = {},
+    deviceProfile?: DeviceProfileDocument,
+  ): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     invariant(!this.identity.get(), 'Identity already exists');
     const deviceProfileWithDefaults = {
@@ -269,7 +274,7 @@ export class HaloProxy implements Halo {
         profile,
         deviceProfile: deviceProfileWithDefaults,
       },
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, ctx },
     );
     this._identityChanged.emit(identity);
     return identity;
@@ -279,15 +284,22 @@ export class HaloProxy implements Halo {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identity = await this._serviceProvider.services.IdentityService.recoverIdentity(args, {
       timeout: RPC_TIMEOUT,
+      ctx: Context.default(),
     });
     this._identityChanged.emit(identity);
     return identity;
   }
 
   async updateProfile(profile: ProfileDocument): Promise<Identity> {
+    return this._updateProfileInternal(Context.default(), profile);
+  }
+
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  private async _updateProfileInternal(ctx: Context, profile: ProfileDocument): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identity = await this._serviceProvider.services.IdentityService.updateProfile(profile, {
       timeout: RPC_TIMEOUT,
+      ctx,
     });
     this._identityChanged.emit(identity);
     return identity;
@@ -356,7 +368,7 @@ export class HaloProxy implements Halo {
         spaceKey: identity.spaceKey!,
         credentials,
       },
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, ctx: Context.default() },
     );
   }
 
@@ -389,7 +401,7 @@ export class HaloProxy implements Halo {
         },
         nonce,
       },
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, ctx: Context.default() },
     );
   }
 }

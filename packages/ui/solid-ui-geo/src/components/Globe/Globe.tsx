@@ -18,6 +18,8 @@ import { type ControlPosition } from 'leaflet';
 import { type Accessor, type JSX, type Setter, Show, createEffect, createMemo, createSignal } from 'solid-js';
 import { type Topology } from 'topojson-specification';
 
+import { mx } from '@dxos/ui-theme';
+
 import { GlobeContextProvider, type GlobeContextProviderProps, useGlobeContext } from '../../hooks';
 import {
   type Features,
@@ -29,7 +31,6 @@ import {
   timer,
 } from '../../util';
 import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
-import { mx } from '@dxos/ui-theme';
 
 /**
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute

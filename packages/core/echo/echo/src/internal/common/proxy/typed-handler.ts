@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type InspectOptionsStylized } from 'node:util';
-
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
+import { type InspectOptionsStylized } from 'node:util';
 
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
@@ -13,7 +12,6 @@ import { invariant } from '@dxos/invariant';
 
 import { getSchemaDXN } from '../../Annotation';
 import { ObjectDeletedId, ParentId, SchemaId, TypeId } from '../types';
-
 import { executeChange, isInChangeContext, queueNotification } from './change-context';
 import { defineHiddenProperty } from './define-hidden-property';
 import { createPropertyDeleteError } from './errors';
@@ -228,7 +226,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
     const echoRoot = getEchoRoot(target);
 
-    // Check readonly enforcement - mutations only allowed within Obj.change().
+    // Check readonly enforcement - mutations only allowed within Obj.update().
     // Skip check if the object is still being initialized (no ChangeId handler yet).
     // Also skip for non-initialized root objects (those without EventId).
     // Skip for symbol properties (internal infrastructure, not user data).
@@ -236,8 +234,8 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const isSymbolProp = typeof prop === 'symbol';
     if (isInitialized && !isSymbolProp && !isInChangeContext(echoRoot)) {
       throw new Error(
-        `Cannot modify object property "${String(prop)}" outside of Obj.change(). ` +
-          'Use Obj.change(obj, (mutableObj) => { mutableObj.property = value; }) instead.',
+        `Cannot modify object property "${String(prop)}" outside of Obj.update(). ` +
+          'Use Obj.update(obj, (mutableObj) => { mutableObj.property = value; }) instead.',
       );
     }
 
@@ -267,7 +265,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   deleteProperty(target: ProxyTarget, property: string | symbol): boolean {
     const echoRoot = getEchoRoot(target);
 
-    // Check readonly enforcement - mutations only allowed within Obj.change().
+    // Check readonly enforcement - mutations only allowed within Obj.update().
     // Skip for symbol properties (internal infrastructure, not user data).
     const isInitialized = (echoRoot as any)[ChangeId] === true || EventId in echoRoot;
     const isSymbolProp = typeof property === 'symbol';
@@ -285,15 +283,15 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
     const echoRoot = getEchoRoot(target);
 
-    // Check readonly enforcement - mutations only allowed within Obj.change().
+    // Check readonly enforcement - mutations only allowed within Obj.update().
     // Skip check if the object is still being initialized (no ChangeId handler yet).
     // Skip for symbol properties (internal infrastructure, not user data).
     const isInitialized = ChangeId in echoRoot || EventId in echoRoot;
     const isSymbolProp = typeof property === 'symbol';
     if (isInitialized && !isSymbolProp && !isInChangeContext(echoRoot)) {
       throw new Error(
-        `Cannot modify object property "${String(property)}" outside of Obj.change(). ` +
-          'Use Obj.change(obj, (mutableObj) => { mutableObj.property = value; }) instead.',
+        `Cannot modify object property "${String(property)}" outside of Obj.update(). ` +
+          'Use Obj.update(obj, (mutableObj) => { mutableObj.property = value; }) instead.',
       );
     }
 

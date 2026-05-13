@@ -31,7 +31,6 @@ import { useDensityContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { DensityProvider } from '../DensityProvider';
 import { Icon } from '../Icon';
-
 import { ListDropIndicator } from './ListDropIndicator';
 
 type ListProps = ThemedClassName<ListPrimitiveProps & { density?: Density }>;
@@ -76,7 +75,7 @@ const MockListItemOpenTrigger = ({
 }: ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'children'>>) => {
   const density = useDensityContext();
   const { tx } = useThemeContext();
-  return <div role='none' {...props} className={tx('list.item.openTrigger', { density }, classNames)} />;
+  return <div {...props} className={tx('list.item.openTrigger', { density }, classNames)} />;
 };
 
 type ListItemHeadingProps = ThemedClassName<ListPrimitiveItemHeadingProps>;

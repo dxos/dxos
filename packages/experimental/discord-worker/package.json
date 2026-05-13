@@ -1,0 +1,23 @@
+{
+  "name": "@dxos/discord-worker",
+  "version": "0.8.3",
+  "private": true,
+  "description": "Cloudflare Worker for Discord bot slash commands.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "DXOS.org",
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

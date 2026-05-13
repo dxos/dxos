@@ -5,14 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing';
 import { withLayoutVariants } from '../../testing';
-
 import { Select } from './Select';
 
-faker.seed(1234);
+random.seed(1234);
 
 type ItemProps = { id: string; text: string };
 
@@ -53,6 +52,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    items: Array.from({ length: 16 }).map((_, i) => ({ id: `item-${i}`, text: faker.lorem.word() })),
+    items: Array.from({ length: 16 }).map((_, i) => ({ id: `item-${i}`, text: random.lorem.word() })),
   },
 };

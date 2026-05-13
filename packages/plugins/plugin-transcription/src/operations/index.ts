@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/operation';
-
-export * as TranscriptOperation from './definitions';
+import { OperationHandlerSet } from '@dxos/compute';
 
 export const TranscriptionOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./create'),

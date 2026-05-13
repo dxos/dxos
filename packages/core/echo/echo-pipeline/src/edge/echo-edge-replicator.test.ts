@@ -18,7 +18,6 @@ import type { Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { openAndClose } from '@dxos/test-utils';
 
 import type { AutomergeReplicatorConnection, AutomergeReplicatorContext } from '../automerge';
-
 import { EchoEdgeReplicator } from './echo-edge-replicator';
 
 describe('EchoEdgeReplicator', () => {

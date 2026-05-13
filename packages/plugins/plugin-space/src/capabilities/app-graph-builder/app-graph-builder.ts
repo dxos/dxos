@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 
-import { type SpacePluginOptions } from '../../types';
+import { type SpacePluginOptions } from '#types';
 
 import {
   createCollectionExtensions,
@@ -21,10 +21,10 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* ({ shareableLinkOrigin = window.location.origin }: SpacePluginOptions = {}) {
     const extensions = yield* Effect.all([
       createSpaceExtensions(),
+      createSettingsExtensions(),
       createTypeExtensions(),
       createCollectionExtensions({ shareableLinkOrigin }),
       createCompanionExtensions(),
-      createSettingsExtensions(),
     ]);
 
     return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());

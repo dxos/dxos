@@ -3,7 +3,6 @@
 //
 
 import { type Error as SerializedErrorProto } from '../proto/gen/dxos/error.ts';
-
 import { reconstructError } from './helpers.ts';
 
 export const encodeError = (err: any): SerializedErrorProto => {

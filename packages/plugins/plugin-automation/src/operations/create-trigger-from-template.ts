@@ -5,70 +5,67 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
-import { Obj, Ref } from '@dxos/echo';
-import { Script, Trigger } from '@dxos/functions';
-import { EchoId } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { Filter } from '@dxos/react-client/echo';
+import { Operation, Script, Trigger } from '@dxos/compute';
+import { Filter, Obj, Ref } from '@dxos/echo';
+import { type DXN } from '@dxos/keys';
+import { SpaceOperation } from '@dxos/plugin-space';
 
-import { meta } from '../meta';
-import { CreateTriggerFromTemplate } from './definitions';
+import { meta } from '#meta';
 
-const handler: Operation.WithHandler<typeof CreateTriggerFromTemplate> = CreateTriggerFromTemplate.pipe(
-  Operation.withHandler(
-    Effect.fnUntraced(function* ({ db, template, enabled = false, scriptName, input }) {
-      const trigger = Trigger.make({ enabled, input });
+import { AutomationOperation } from '../types';
 
-      // TODO(wittjosiah): Factor out function lookup by script name?
-      if (scriptName) {
-        const scripts = yield* Effect.promise(() => db.query(Filter.type(Script.Script, { name: scriptName })).run());
-        const [script] = scripts;
-        if (script) {
-          const functions = yield* Effect.promise(() =>
-            db.query(Filter.type(Operation.PersistentOperation, { source: Ref.make(script) })).run(),
-          );
-          const [fn] = functions;
-          if (fn) {
-            Obj.change(trigger, (obj) => {
-              obj.function = Ref.make(fn);
-            });
+const handler: Operation.WithHandler<typeof AutomationOperation.CreateTriggerFromTemplate> =
+  AutomationOperation.CreateTriggerFromTemplate.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ db, template, enabled = false, scriptName, input }) {
+        const trigger = Trigger.make({ enabled, input });
+
+        // TODO(wittjosiah): Factor out function lookup by script name?
+        if (scriptName) {
+          const scripts = yield* Effect.promise(() => db.query(Filter.type(Script.Script, { name: scriptName })).run());
+          const [script] = scripts;
+          if (script) {
+            const functions = yield* Effect.promise(() =>
+              db.query(Filter.type(Operation.PersistentOperation, { source: Ref.make(script) })).run(),
+            );
+            const [fn] = functions;
+            if (fn) {
+              Obj.update(trigger, (trigger) => {
+                trigger.function = Ref.make(fn);
+              });
+            }
           }
         }
-      }
 
-      switch (template.type) {
-        case 'timer': {
-          Obj.change(trigger, (obj) => {
-            obj.spec = { kind: 'timer', cron: template.cron };
-          });
-          break;
+        switch (template.type) {
+          case 'timer': {
+            Obj.update(trigger, (trigger) => {
+              trigger.spec = Trigger.specTimer(template.cron);
+            });
+            break;
+          }
+          case 'queue': {
+            Obj.update(trigger, (trigger) => {
+              trigger.spec = Trigger.specQueue((template.queueDXN as DXN).toString());
+            });
+            break;
+          }
+          default: {
+            break;
+          }
         }
-        case 'queue': {
-          Obj.change(trigger, (obj) => {
-            obj.spec = {
-              kind: 'queue',
-              queue: EchoId.parse(String(template.queueDXN)),
-            };
-          });
-          break;
-        }
-        default: {
-          break;
-        }
-      }
 
-      yield* Operation.invoke(SpaceOperation.AddObject, {
-        object: trigger,
-        target: db,
-        hidden: true,
-      });
-      yield* Operation.invoke(LayoutOperation.Open, {
-        subject: [`${getSpacePath(db.spaceId)}/settings/${meta.id}.automations`],
-        workspace: getSpacePath(db.spaceId),
-      });
-    }),
-  ),
-);
+        yield* Operation.invoke(SpaceOperation.AddObject, {
+          object: trigger,
+          target: db,
+          hidden: true,
+        });
+        yield* Operation.invoke(LayoutOperation.Open, {
+          subject: [`${getSpacePath(db.spaceId)}/settings/${meta.id}.automations`],
+          workspace: getSpacePath(db.spaceId),
+        });
+      }),
+    ),
+  );
 
 export default handler;

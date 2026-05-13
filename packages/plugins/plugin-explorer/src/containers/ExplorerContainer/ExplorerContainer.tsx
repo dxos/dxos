@@ -4,26 +4,23 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { type Filter } from '@dxos/echo';
-import { type View } from '@dxos/echo';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type Filter, Obj, type View } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { useGlobalSearch } from '@dxos/plugin-search';
-import { getSpace, useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 
-import { D3ForceGraph } from '../../components';
-import { useGraphModel } from '../../hooks';
+import { ForceGraph } from '#components';
+import { useGraphModel } from '#hooks';
 
-export type ExplorerContainerProps = SurfaceComponentProps<View.View>;
+export type ExplorerContainerProps = AppSurface.ObjectArticleProps<View.View>;
 
-export const ExplorerContainer = ({ role, subject: view }: ExplorerContainerProps) => {
-  useObject(view);
-  const space = view && getSpace(view);
+export const ExplorerContainer = ({ role, subject, attendableId: _attendableId }: ExplorerContainerProps) => {
+  const [view] = useObject(subject);
+  const db = view && Obj.getDatabase(view);
   const [filter, setFilter] = useState<Filter.Any>();
-  const model = useGraphModel(space, filter);
-  const { match } = useGlobalSearch();
+  const model = useGraphModel(db, filter);
 
   const builder = useMemo(() => new QueryBuilder(), []);
   const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>((value) => {
@@ -32,7 +29,7 @@ export const ExplorerContainer = ({ role, subject: view }: ExplorerContainerProp
 
   const showToolbar = role === 'article';
 
-  if (!space || !model) {
+  if (!db || !model) {
     return null;
   }
 
@@ -41,12 +38,12 @@ export const ExplorerContainer = ({ role, subject: view }: ExplorerContainerProp
       {showToolbar && (
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <QueryEditor db={space.db} onChange={handleChange} />
+            <QueryEditor db={db} onChange={handleChange} />
           </Toolbar.Root>
         </Panel.Toolbar>
       )}
       <Panel.Content asChild>
-        <D3ForceGraph model={model} match={match} />
+        <ForceGraph model={model} />
       </Panel.Content>
     </Panel.Root>
   );

@@ -7,8 +7,9 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Filter, Obj, Query, Type, View } from '@dxos/echo';
+import { DatabaseSchemaRegistry, RuntimeSchemaRegistry } from '@dxos/echo-db';
+import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
   Format,
   type JsonPath,
@@ -18,8 +19,6 @@ import {
   getPropertyMetaAnnotation,
   toJsonSchema,
 } from '@dxos/echo/internal';
-import { DatabaseSchemaRegistry, RuntimeSchemaRegistry } from '@dxos/echo-db';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { invariant } from '@dxos/invariant';
 
 import { TestSchema } from '../testing';
@@ -844,7 +843,7 @@ describe('ProjectionModel', () => {
 
     // Modify the schema - add a field.
     // Type assertion needed because PersistentSchema's type doesn't include [KindId] but runtime value does.
-    Obj.change(mutable.persistentSchema as unknown as Obj.Unknown, (s: any) => {
+    Obj.update(mutable.persistentSchema as unknown as Obj.Unknown, (s: any) => {
       s.jsonSchema.properties!.status = { type: 'string' };
     });
     projectionModel.normalizeView();

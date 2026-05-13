@@ -8,16 +8,15 @@ import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Account } from '@dxos/plugin-client/types';
-import { ClientOperation } from '@dxos/plugin-client/operations';
-import { HelpOperation } from '@dxos/plugin-help/operations';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { ClientOperation } from '@dxos/plugin-client';
+import { Account } from '@dxos/plugin-client';
+import { HelpOperation } from '@dxos/plugin-help';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { type Client } from '@dxos/react-client';
 import { type Credential, DeviceType, type Identity } from '@dxos/react-client/halo';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { queryAllCredentials, removeQueryParamByValue } from '../../util';
-
 import { WELCOME_SCREEN } from './components';
 import { OVERLAY_CLASSES, OVERLAY_STYLE } from './components/Welcome/Welcome';
 import { activateAccount, getProfile, matchServiceCredential, upgradeCredential } from './credentials';
@@ -50,6 +49,15 @@ export class OnboardingManager {
 
   private _identity: Identity | null = null;
   private _credential: Credential | null = null;
+  /**
+   * Set by {@link destroy}. `initialize` checks this at every `await` boundary
+   * so it bails out instead of mutating state after the manager has been torn
+   * down. Necessary because `WelcomeCapabilities.Onboarding` contributes the
+   * manager synchronously and runs `initialize()` as a fire-and-forget
+   * background side-effect — `destroy()` can fire while async work is still
+   * in flight.
+   */
+  private _destroyed = false;
 
   constructor({
     invokePromise,
@@ -66,7 +74,7 @@ export class OnboardingManager {
     this._invokePromise = invokePromise;
     this._client = client;
     this._hubUrl = hubUrl;
-    this._skipAuth = ['main', 'labs'].includes(client.config.values.runtime?.app?.env?.DX_ENVIRONMENT) || !this._hubUrl;
+    this._skipAuth = !this._hubUrl;
     this._token = token;
     this._tokenType = tokenType;
     this._recoverIdentity = recoverIdentity || false;
@@ -75,6 +83,9 @@ export class OnboardingManager {
 
     this._subscriptions.add(
       this._client.halo.identity.subscribe((identity) => {
+        if (this._destroyed) {
+          return;
+        }
         this._identity = identity;
 
         // If joining an existing identity, optimistically assume that credential will be found and close welcome.
@@ -86,26 +97,51 @@ export class OnboardingManager {
 
     this._subscriptions.add(
       this._client.halo.credentials.subscribe((credentials) => {
+        if (this._destroyed) {
+          return;
+        }
         this._setCredential(credentials);
       }).unsubscribe,
     );
   }
 
   async initialize(): Promise<void> {
+    // Helper used between every async step so a `destroy()` issued mid-flight
+    // (e.g. plugin reset, HMR) short-circuits before any state mutation. We
+    // can't actually cancel the in-flight RPC, but bailing here prevents
+    // post-destroy writes to `this._identity` / `this._credential` and stops
+    // the cascade of dependent steps.
+    const aborted = () => this._destroyed;
+
     await this._fetchBetaCredential();
+    if (aborted()) {
+      return;
+    }
+
     if (this._credential && this._hubUrl) {
       // Don't block app loading on network request.
       void this._upgradeCredential();
       // Automatically start join space flow if already authed.
-      this._spaceInvitationCode && (await this._openJoinSpace());
+      if (this._spaceInvitationCode) {
+        await this._openJoinSpace();
+        if (aborted()) {
+          return;
+        }
+      }
       // Ensure that recovery credential is present.
       await this._setupRecovery();
+      if (aborted()) {
+        return;
+      }
       // Ensure that agent is present.
       await this._createAgent();
       return;
     } else if (!this._skipAuth) {
       // Show welcome screen if no credential found and not skipping auth.
       await this._showWelcome();
+      if (aborted()) {
+        return;
+      }
     }
 
     if (this._deviceInvitationCode !== undefined) {
@@ -117,9 +153,21 @@ export class OnboardingManager {
     } else if (!this._identity && ((this._token && this._tokenType === 'verify') || this._skipAuth)) {
       // If there's no existing identity and a verification token (or if skipping auth), setup a new identity.
       await this._createIdentity();
+      if (aborted()) {
+        return;
+      }
       await this._setupRecovery();
+      if (aborted()) {
+        return;
+      }
       await this._startHelp();
+      if (aborted()) {
+        return;
+      }
       await this._createAgent();
+      if (aborted()) {
+        return;
+      }
       await this._activateAccount();
     } else if (!this._identity && this._token && this._tokenType === 'login') {
       // If there's no existing identity and a login token, recover the identity.
@@ -127,6 +175,9 @@ export class OnboardingManager {
     } else if (this._identity && this._token) {
       // If there's an existing identity and a verification token, activate the account.
       await this._activateAccount();
+    }
+    if (aborted()) {
+      return;
     }
 
     if (this._skipAuth && this._spaceInvitationCode) {
@@ -136,6 +187,7 @@ export class OnboardingManager {
   }
 
   async destroy(): Promise<void> {
+    this._destroyed = true;
     await this._ctx.dispose();
   }
 
@@ -154,13 +206,13 @@ export class OnboardingManager {
 
     await this._invokePromise(LayoutOperation.AddToast, {
       id: 'passkey-setup-toast',
-      title: ['passkey setup toast title', { ns: meta.id }],
-      description: ['passkey setup toast description', { ns: meta.id }],
+      title: ['passkey-setup-toast.title', { ns: meta.id }],
+      description: ['passkey-setup-toast.description', { ns: meta.id }],
       duration: Infinity,
       icon: 'ph--key--regular',
-      closeLabel: ['close label', { ns: osTranslations }],
-      actionLabel: ['passkey setup toast action label', { ns: meta.id }],
-      actionAlt: ['passkey setup toast action alt', { ns: meta.id }],
+      closeLabel: ['close.label', { ns: osTranslations }],
+      actionLabel: ['passkey-setup-toast-action.label', { ns: meta.id }],
+      actionAlt: ['passkey-setup-toast-action.alt', { ns: meta.id }],
       onAction: async () => {
         await this._invokePromise(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(Account.id) });
         await this._invokePromise(LayoutOperation.Open, {
@@ -176,6 +228,9 @@ export class OnboardingManager {
   }
 
   private _setCredential(credentials: Credential[]): void {
+    if (this._destroyed) {
+      return;
+    }
     const credential = credentials
       .toSorted((a, b) => b.issuanceDate.getTime() - a.issuanceDate.getTime())
       .find(matchServiceCredential(['composer:beta']));

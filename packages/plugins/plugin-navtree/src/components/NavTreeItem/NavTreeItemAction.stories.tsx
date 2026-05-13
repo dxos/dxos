@@ -9,32 +9,32 @@ import { RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Node } from '@dxos/app-graph';
 import { corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { NavTreeItemAction, type NavTreeItemActionMenuProps } from './NavTreeItemAction';
 
 const parent = {
-  id: faker.string.uuid(),
+  id: random.string.uuid(),
   type: 'node',
   data: null,
   properties: {
-    label: faker.lorem.words(2),
+    label: random.lorem.words(2),
     icon: 'ph--circle--regular',
   },
 } satisfies Node.NodeArg<any>;
 
 // TODO(burdon): Factor out across tests.
-const menuActions = faker.helpers.multiple(
+const menuActions = random.helpers.multiple(
   () =>
     ({
-      id: faker.string.uuid(),
+      id: random.string.uuid(),
       type: 'action',
       data: () =>
         Effect.sync(() => {
           console.log('invoke');
         }),
       properties: {
-        label: faker.lorem.words(2),
+        label: random.lorem.words(2),
         icon: 'ph--circle--regular',
       },
     }) satisfies Node.NodeArg<any>,

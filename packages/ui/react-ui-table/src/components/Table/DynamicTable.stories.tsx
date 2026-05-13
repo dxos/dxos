@@ -6,22 +6,22 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import type * as Types from 'effect/Types';
 import React, { useMemo, useState } from 'react';
 
-import { type JsonSchema, Obj } from '@dxos/echo';
+import { Filter, type JsonSchema, Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
-import { faker } from '@dxos/random';
-import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
+import { random } from '@dxos/random';
+import { useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
 import { TestSchema } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
-import { type TableFeatures } from '../../model';
-import { translations } from '../../translations';
+import { translations } from '#translations';
 
+import { type TableFeatures } from '../../model';
 import { DynamicTable } from './DynamicTable';
 
-faker.seed(0);
+random.seed(0);
 
 const useTestPropertiesAndObjects = () => {
   const properties = useMemo<SchemaPropertyDefinition[]>(
@@ -34,9 +34,9 @@ const useTestPropertiesAndObjects = () => {
 
   const [rows] = useState<any[]>(
     Array.from({ length: 10 }, () => ({
-      id: faker.string.uuid(),
-      name: faker.person.fullName(),
-      age: faker.number.int({ min: 18, max: 80 }),
+      id: random.string.uuid(),
+      name: random.person.fullName(),
+      age: random.number.int({ min: 18, max: 80 }),
     })),
   );
 
@@ -118,10 +118,10 @@ export const WithJsonSchema: StoryObj = {
 
     const [rows] = useState<any[]>(
       Array.from({ length: 15 }, () => ({
-        name: faker.person.fullName(),
-        age: faker.number.int({ min: 18, max: 80 }),
-        email: faker.internet.email(),
-        active: faker.datatype.boolean(),
+        name: random.person.fullName(),
+        age: random.number.int({ min: 18, max: 80 }),
+        email: random.internet.email(),
+        active: random.datatype.boolean(),
       })),
     );
 
@@ -149,8 +149,8 @@ export const WithEchoSchema: StoryObj = {
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
             Obj.make(TestSchema.Person, {
-              name: faker.person.fullName(),
-              email: faker.internet.email(),
+              name: random.person.fullName(),
+              email: random.internet.email(),
             }),
           );
         });

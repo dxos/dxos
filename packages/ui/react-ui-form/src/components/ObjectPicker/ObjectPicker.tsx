@@ -6,9 +6,11 @@ import type * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, forwardRef, useCallback, useState } from 'react';
 
 import { type Palette, Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Combobox, useSearchListInput, useSearchListResults } from '@dxos/react-ui-search';
+import { Combobox } from '@dxos/react-ui-list';
+import { useSearchListResults } from '@dxos/react-ui-search';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { Form } from '../Form';
 import { type FormFieldMap } from '../Form/FormFieldComponent';
 
@@ -26,7 +28,14 @@ export type ObjectPickerContentProps = ThemedClassName<{
   createSchema?: Schema.Schema.AnyNoContext;
   createInitialValuePath?: string;
   createFieldMap?: FormFieldMap;
-  onCreate?: (values: any) => void;
+  /**
+   * Persist a newly-created object given the form values. May be async (e.g.
+   * to write to a database). The Promise is awaited before the inline create
+   * form is collapsed back to the picker list, so consumers can complete
+   * follow-up work (assign the new ref to a parent slot, close the popover)
+   * before the picker UI re-renders.
+   */
+  onCreate?: (values: any) => unknown | Promise<unknown>;
   onSelect: (id: string) => void;
 }>;
 
@@ -50,13 +59,13 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
     const [showForm, setShowForm] = useState(false);
     const [formInitialValue, setFormInitialValue] = useState<string>('');
 
-    const { results, handleSearch } = useSearchListResults({
+    const { results, query, handleSearch } = useSearchListResults({
       items: options,
     });
 
     const handleFormSave = useCallback(
-      (values: any) => {
-        onCreate?.(values);
+      async (values: any) => {
+        await onCreate?.(values);
         setShowForm(false);
         setFormInitialValue('');
       },
@@ -91,7 +100,7 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
 
     if (showForm && createSchema) {
       return (
-        <Combobox.Content {...props} onSearch={handleSearch} onKeyDownCapture={handleKeyDown} ref={forwardedRef}>
+        <Combobox.Content {...props} onKeyDownCapture={handleKeyDown} ref={forwardedRef}>
           <Popover.Viewport>
             <Form.Root
               testId='create-referenced-object-form'
@@ -115,8 +124,13 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
     }
 
     return (
-      <Combobox.Content {...props} onSearch={handleSearch} onKeyDownCapture={handleKeyDown} ref={forwardedRef}>
-        <Combobox.Input placeholder={t('ref field combobox input placeholder')} autoFocus />
+      <Combobox.Content {...props} onKeyDownCapture={handleKeyDown} ref={forwardedRef}>
+        <Combobox.Input
+          placeholder={t('ref-field-combobox-input.placeholder')}
+          autoFocus
+          value={query}
+          onValueChange={handleSearch}
+        />
         <Combobox.List>
           {results.map((option) => (
             <Combobox.Item
@@ -130,10 +144,11 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
           ))}
           {createSchema && onCreate && (
             <CreateItem
+              query={query}
               createOptionLabel={createOptionLabel}
               createOptionIcon={createOptionIcon ?? 'ph--plus--regular'}
-              onCreateItemSelect={(query: string) => {
-                setFormInitialValue(query);
+              onCreateItemSelect={(currentQuery: string) => {
+                setFormInitialValue(currentQuery);
                 setShowForm(true);
               }}
             />
@@ -146,20 +161,21 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
 );
 
 const CreateItem = ({
+  query,
   createOptionLabel,
   createOptionIcon,
   onCreateItemSelect,
 }: {
+  query: string;
   createOptionLabel?: [string, { ns: string }];
   createOptionIcon: string;
   onCreateItemSelect: (query: string) => void;
 }) => {
   const { t } = useTranslation(translationKey);
-  const { query } = useSearchListInput();
 
   const label = createOptionLabel
     ? t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: query })
-    : t('create option label');
+    : t('create-option.label');
 
   return (
     <Combobox.Item

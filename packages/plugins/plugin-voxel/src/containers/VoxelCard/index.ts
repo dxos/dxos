@@ -2,6 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-import { VoxelCard } from './VoxelCard';
-
-export default VoxelCard;
+export { VoxelCard as default } from './VoxelCard';

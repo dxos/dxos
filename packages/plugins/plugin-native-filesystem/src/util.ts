@@ -13,7 +13,7 @@ import {
   type FilesystemEntry,
   type FilesystemFile,
   type FilesystemWorkspace,
-} from './types';
+} from '#types';
 
 /** Persisted per-workspace metadata stored in `.composer/meta.json`. */
 export type ComposerConfig = { icon?: string; hue?: string; spaceId?: string };

@@ -15,7 +15,6 @@ import { ComplexMap } from '@dxos/util';
 
 import type { KeyPath, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
-
 import { type EchoArray } from './echo-array';
 import { type EchoReactiveHandler } from './echo-handler';
 

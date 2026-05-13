@@ -7,7 +7,6 @@ import { drag, pointer, select } from 'd3';
 import { type SVGContext } from '../../hooks';
 import { type Point } from '../../util';
 import { type GraphLayoutNode } from '../types';
-
 import { type GraphProjector } from './graph-projector';
 
 enum Mode {

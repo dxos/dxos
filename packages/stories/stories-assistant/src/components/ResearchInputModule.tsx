@@ -2,32 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { Entity, Filter } from '@dxos/echo';
-import { EchoId } from '@dxos/keys';
-import { useQuery, useQueue } from '@dxos/react-client/echo';
+import { useFeedQuery, useQuery } from '@dxos/react-client/echo';
 import { getHashHue } from '@dxos/ui-theme';
 
 import { ResearchInputQueue } from '../testing';
+import { type ModuleProps } from './types';
 
-import { type ComponentProps } from './types';
-
-export const ResearchInputModule = ({ space }: ComponentProps) => {
+export const ResearchInputModule = ({ space }: ModuleProps) => {
   const [researchInput] = useQuery(space.db, Filter.type(ResearchInputQueue));
-  const legacyDxn = researchInput?.queue.dxn;
-  const queueEchoId = useMemo(() => {
-    if (!legacyDxn) return undefined;
-    const echoDxn = legacyDxn.asEchoDXN();
-    return echoDxn?.spaceId && echoDxn?.echoId
-      ? EchoId.fromSpaceAndObjectId(echoDxn.spaceId, echoDxn.echoId as any)
-      : undefined;
-  }, [legacyDxn]);
-  const queue = useQueue(queueEchoId);
+  const objects = useFeedQuery(researchInput?.feed.target, Filter.everything());
 
   return (
     <ul className='flex flex-col gap-4 p-4 h-full overflow-y-auto'>
-      {queue?.objects.map((object) => (
+      {objects.map((object) => (
         <li key={object.id}>
           <DebugCard object={object} />
         </li>

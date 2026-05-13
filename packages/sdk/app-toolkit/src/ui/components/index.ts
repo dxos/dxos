@@ -3,4 +3,5 @@
 //
 
 export * from './NotFoundArticle';
-export * from './surface';
+
+export * as AppSurface from './app-surface';

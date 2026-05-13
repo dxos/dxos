@@ -2,10 +2,14 @@ layer: library
 language: typescript
 tags:
   - ts-build
+  - ts-test
   - pack
 tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/ThemePlugin.ts'
       - '--entryPoint=src/meta.ts'
-      - '--platform=browser'
+      - '--entryPoint=src/plugin.ts'
+      - '--entryPoint=src/translations.ts'
+      - '--platform=neutral'

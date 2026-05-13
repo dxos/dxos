@@ -11,8 +11,18 @@ import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
 import type * as Types from 'effect/Types';
 
-import { type Database, Filter, Format, JsonSchema, Obj, Query, Ref, type SchemaRegistry, Type } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import {
+  type Database,
+  Filter,
+  Format,
+  JsonSchema,
+  Obj,
+  Query,
+  Ref,
+  type SchemaRegistry,
+  Type,
+  View,
+} from '@dxos/echo';
 import {
   type JsonSchemaType,
   LabelAnnotation,
@@ -60,9 +70,9 @@ export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivo
     },
   });
 
-  // Create change callback that wraps mutations in Obj.change.
+  // Create change callback that wraps mutations in Obj.update.
   const changeCallback: ProjectionChangeCallback = {
-    projection: (mutate) => Obj.change(view, (obj) => mutate(obj.projection as Mutable<View.Projection>)),
+    projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
     schema: (mutate) => mutate(jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema>),
   };
 
@@ -92,8 +102,8 @@ export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivo
 
   // Sort fields to match the order in the params.
   if (fields) {
-    Obj.change(view, (obj) => {
-      (obj.projection.fields as Mutable<View.Projection>['fields']).sort((a, b) => {
+    Obj.update(view, (view) => {
+      (view.projection.fields as Mutable<View.Projection>['fields']).sort((a, b) => {
         const indexA = fields.indexOf(a.path);
         const indexB = fields.indexOf(b.path);
         return indexA - indexB;
@@ -104,8 +114,8 @@ export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivo
   if (pivotFieldName) {
     const fieldId = projection.getFieldId(pivotFieldName);
     if (fieldId) {
-      Obj.change(view, (obj) => {
-        obj.projection.pivotFieldId = fieldId;
+      Obj.update(view, (view) => {
+        view.projection.pivotFieldId = fieldId;
       });
     }
   }
@@ -139,9 +149,9 @@ export const makeWithReferences = async ({
     pivotFieldName,
   });
 
-  // Create change callback that wraps mutations in Obj.change.
+  // Create change callback that wraps mutations in Obj.update.
   const changeCallback: ProjectionChangeCallback = {
-    projection: (mutate) => Obj.change(view, (obj) => mutate(obj.projection as Mutable<View.Projection>)),
+    projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
     schema: (mutate) => mutate(jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema>),
   };
 

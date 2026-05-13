@@ -107,6 +107,28 @@ const update = (state: EditorState, _options: TableOptions) => {
   return builder.finish();
 };
 
+/** Renders cell text into el, processing inline markdown (bold, italic, code). */
+const renderCellContent = (el: HTMLElement, text: string): void => {
+  const parts = text.split(/(`[^`\n]+`|\*\*[^*\n]+\*\*|__[^_\n]+__|\*[^*\n]+\*|_[^_\n]+_)/);
+  for (const part of parts) {
+    if (part.length > 2 && part.startsWith('`') && part.endsWith('`')) {
+      const code = document.createElement('code');
+      code.textContent = part.slice(1, -1);
+      el.appendChild(code);
+    } else if ((part.startsWith('**') && part.endsWith('**')) || (part.startsWith('__') && part.endsWith('__'))) {
+      const strong = document.createElement('strong');
+      strong.textContent = part.slice(2, -2);
+      el.appendChild(strong);
+    } else if ((part.startsWith('*') && part.endsWith('*')) || (part.startsWith('_') && part.endsWith('_'))) {
+      const em = document.createElement('em');
+      em.textContent = part.slice(1, -1);
+      el.appendChild(em);
+    } else {
+      el.appendChild(document.createTextNode(part));
+    }
+  }
+};
+
 class TableWidget extends WidgetType {
   constructor(readonly _table: Table) {
     super();
@@ -132,7 +154,7 @@ class TableWidget extends WidgetType {
     this._table.header?.forEach((cell) => {
       const th = document.createElement('th');
       th.setAttribute('class', 'cm-table-head');
-      tr.appendChild(th).textContent = cell;
+      renderCellContent(tr.appendChild(th), cell);
     });
 
     const body = table.appendChild(document.createElement('tbody'));
@@ -141,7 +163,7 @@ class TableWidget extends WidgetType {
       row.forEach((cell) => {
         const td = document.createElement('td');
         td.setAttribute('class', 'cm-table-cell');
-        tr.appendChild(td).textContent = cell;
+        renderCellContent(tr.appendChild(td), cell);
       });
     });
 

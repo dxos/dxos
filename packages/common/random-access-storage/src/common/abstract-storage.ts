@@ -4,7 +4,6 @@
 
 import { join } from 'node:path';
 import { inspect } from 'node:util';
-
 import type { RandomAccessStorage } from 'random-access-storage';
 
 import { inspectObject } from '@dxos/debug';

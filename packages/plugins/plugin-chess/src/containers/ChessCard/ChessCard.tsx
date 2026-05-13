@@ -4,16 +4,21 @@
 
 import React from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { Obj } from '@dxos/echo';
+import { type GameVariantSurfaceProps } from '@dxos/plugin-game';
 
-import { Chessboard } from '../../components';
-import { type Chess } from '../../types';
+import { Chessboard } from '#components';
+import { Chess } from '#types';
 
-export type ChessCardProps = SurfaceComponentProps<Chess.Game>;
+export type ChessCardProps = GameVariantSurfaceProps;
 
-export const ChessCard = ({ subject: game }: ChessCardProps) => {
+export const ChessCard = ({ variant }: ChessCardProps) => {
+  if (!Obj.instanceOf(Chess.State, variant)) {
+    return null;
+  }
+
   return (
-    <Chessboard.Root game={game}>
+    <Chessboard.Root state={variant}>
       <Chessboard.Content>
         <Chessboard.Board />
       </Chessboard.Content>

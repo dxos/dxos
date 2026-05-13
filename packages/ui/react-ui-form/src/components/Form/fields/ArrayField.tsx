@@ -9,7 +9,8 @@ import React, { useCallback } from 'react';
 import { findNode, getArrayElementType, getDiscriminatedType, isDiscriminatedUnion, isNestedType } from '@dxos/effect';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 
-import { translationKey } from '../../../translations';
+import { translationKey } from '#translations';
+
 import { getFormProperties } from '../../../util';
 import { useFormValues } from '../Form';
 import { FormField, type FormFieldProps } from '../FormField';
@@ -77,10 +78,10 @@ export const ArrayField = ({
         <FormFieldLabel readonly={readonly} label={label} asChild />
       )}
 
-      <div role='none' className='flex flex-col gap-form-gap'>
+      <div className='flex flex-col gap-form-gap'>
         {values?.map((_, index) => {
           return (
-            <div role='none' key={index} className='flex gap-form-gap last:mb-form-gap'>
+            <div key={index} className='grid grid-cols-[1fr_min-content] gap-form-gap last:mb-form-gap items-center'>
               <FormField
                 autoFocus={index === values.length - 1}
                 type={elementType}
@@ -91,13 +92,13 @@ export const ArrayField = ({
               />
 
               {!readonly && layout !== 'static' && (
-                <div role='none' className='flex flex-col h-full justify-end'>
+                <div className='flex flex-col h-full justify-end'>
                   {/* NOTE: Aligns with center of last field if multi-field object. */}
-                  <div role='none' className='flex items-center h-[2rem]'>
+                  <div className='flex items-center h-[2rem]'>
                     <IconButton
                       icon='ph--x--regular'
                       iconOnly
-                      label={t('button remove')}
+                      label={t('remove.button')}
                       onClick={() => handleDelete(index)}
                       classNames='self-center'
                     />
@@ -111,7 +112,12 @@ export const ArrayField = ({
 
       {/* TODO(burdon): Get label from schema. */}
       {!readonly && layout !== 'static' && (
-        <IconButton classNames='flex w-full' icon='ph--plus--regular' label={t('add field')} onClick={handleAdd} />
+        <IconButton
+          classNames='flex w-full'
+          icon='ph--plus--regular'
+          label={t('add-item.button')}
+          onClick={handleAdd}
+        />
       )}
     </>
   );

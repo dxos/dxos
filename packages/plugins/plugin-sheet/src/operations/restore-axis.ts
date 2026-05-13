@@ -1,14 +1,14 @@
 //
+
+import * as Effect from 'effect/Effect';
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
+import { Operation } from '@dxos/compute';
 
-import { Operation } from '@dxos/operation';
+import { SheetOperation } from '../types';
 
-import { RestoreAxis } from './definitions';
-
-const handler: Operation.WithHandler<typeof RestoreAxis> = RestoreAxis.pipe(
+const handler: Operation.WithHandler<typeof SheetOperation.RestoreAxis> = SheetOperation.RestoreAxis.pipe(
   Operation.withHandler(({ model, axis, ...restoreData }) =>
     Effect.sync(() => {
       model[axis === 'col' ? 'restoreColumn' : 'restoreRow'](restoreData);

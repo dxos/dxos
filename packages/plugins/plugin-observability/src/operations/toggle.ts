@@ -6,16 +6,14 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Observability } from '@dxos/observability';
-import { Operation } from '@dxos/operation';
 
-import { type ObservabilitySettingsProps } from '../containers';
-import { meta } from '../meta';
-import { ObservabilityCapabilities } from '../types';
+import { meta } from '#meta';
 
-import { Toggle } from './definitions';
+import { ObservabilityCapabilities, ObservabilityOperation, type Settings } from '../types';
 
-const handler: Operation.WithHandler<typeof Toggle> = Toggle.pipe(
+const handler: Operation.WithHandler<typeof ObservabilityOperation.Toggle> = ObservabilityOperation.Toggle.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const namespace = yield* Capability.get(ObservabilityCapabilities.Namespace);
@@ -27,7 +25,7 @@ const handler: Operation.WithHandler<typeof Toggle> = Toggle.pipe(
       if (!settingsObj) {
         return false;
       }
-      const settings = registry.get(settingsObj.atom) as ObservabilitySettingsProps;
+      const settings = registry.get(settingsObj.atom) as Settings.Settings;
       const newEnabled = input.state ?? !settings.enabled;
       registry.set(settingsObj.atom, { ...settings, enabled: newEnabled });
       observability.events.captureEvent('observability.toggle', {

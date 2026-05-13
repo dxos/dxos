@@ -5,7 +5,6 @@
 import React, { useCallback } from 'react';
 
 import { type DxGridCellIndex, type GridScopedProps, useGridContext } from '../Grid';
-
 import { CellEditor, type CellEditorProps } from './CellEditor';
 
 export type GridCellEditorProps = GridScopedProps<

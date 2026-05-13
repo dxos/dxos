@@ -43,14 +43,14 @@ const InvitationActions = ({
                 : 'error status label',
           )}
         </InputLabel>
-        <div role='none' className='grow' />
+        <div className='grow' />
         <ActionBar>
           <Action
             disabled={!active}
             onClick={() => send({ type: `reset${Kind}Invitation` })}
             data-testid='invitation-rescuer-reset'
           >
-            {t('reset label')}
+            {t('reset.label')}
           </Action>
         </ActionBar>
       </>
@@ -58,14 +58,14 @@ const InvitationActions = ({
   } else {
     return (
       <>
-        <InputLabel classNames='text-description'>{t('connecting status label')}</InputLabel>
-        <div role='none' className='grow' />
+        <InputLabel classNames='text-description'>{t('connecting-status.label')}</InputLabel>
+        <div className='grow' />
         <ActionBar>
           <Action disabled classNames='order-2' data-testid='next'>
-            {t('next label')}
+            {t('next.label')}
           </Action>
           <Action disabled={!active} onClick={onInvitationCancel} data-testid='invitation-rescuer-cancel'>
-            {t('cancel label')}
+            {t('cancel.label')}
           </Action>
         </ActionBar>
       </>
@@ -81,7 +81,7 @@ export const InvitationRescuer = (props: InvitationRescuerProps) => {
     <>
       {typeof invitationState === 'undefined' ? (
         <>
-          <div role='none' className='grow flex flex-col justify-center'>
+          <div className='grow flex flex-col justify-center'>
             <InputLabel classNames='text-description'>There was a problem joining the space</InputLabel>
           </div>
           <ActionBar>
@@ -90,7 +90,7 @@ export const InvitationRescuer = (props: InvitationRescuerProps) => {
               data-testid='invitation-rescuer-blank-reset'
               onClick={() => send({ type: `reset${Kind}Invitation` })}
             >
-              {t('reset label')}
+              {t('reset.label')}
             </Action>
           </ActionBar>
         </>

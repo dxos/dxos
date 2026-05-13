@@ -15,7 +15,6 @@ import { createLinkedPorts, createProtoRpcPeer, createServiceBundle } from '@dxo
 
 import { SystemServiceImpl } from '../system';
 import { createServiceContext } from '../testing';
-
 import { ServiceRegistry } from './service-registry';
 
 // TODO(burdon): Create TestService (that doesn't require peers).

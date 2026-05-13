@@ -6,9 +6,10 @@ import { Chess as ChessJS } from 'chess.js';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Obj, Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
-import { Chess } from '@dxos/plugin-chess/types';
+import { Operation } from '@dxos/compute';
+import { Database, Obj } from '@dxos/echo';
+import { Chess } from '@dxos/plugin-chess';
+import { GameRef, Game, loadGame } from '@dxos/plugin-game';
 
 const ChessBot = Operation.make({
   meta: {
@@ -17,7 +18,7 @@ const ChessBot = Operation.make({
     description: 'Plays a random move in a chess game.',
   },
   input: Schema.Struct({
-    game: Ref.Ref(Chess.Game).annotations({
+    game: GameRef(Chess.State).annotations({
       description: 'The chess game to comment on.',
     }),
     player: Schema.optional(Schema.Literal('white', 'black')).annotations({
@@ -29,16 +30,16 @@ const ChessBot = Operation.make({
       description: 'The state of the game as an ASCII art board.',
     }),
   }),
-  types: [Chess.Game],
+  types: [Game, Chess.State],
   services: [Database.Service],
 });
 
 export default ChessBot.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ game, player = 'black' }) {
-      const loadedGame = yield* Database.load(game);
+      const { variant } = yield* loadGame(game, Chess.State);
       const chess = new ChessJS();
-      chess.loadPgn(loadedGame.pgn ?? '');
+      chess.loadPgn(variant.pgn ?? '');
       if (chess.turn() !== (player === 'white' ? 'w' : 'b')) {
         return { state: chess.ascii() };
       }
@@ -51,8 +52,9 @@ export default ChessBot.pipe(
 
       chess.move(move.san);
       const newPgn = chess.pgn();
-      Obj.change(loadedGame, (obj) => {
-        obj.pgn = newPgn;
+      Obj.update(variant, (variant) => {
+        const mutable = variant as Obj.Mutable<typeof variant>;
+        mutable.pgn = newPgn;
       });
       yield* Database.flush();
       return { state: chess.ascii() };

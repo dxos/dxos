@@ -6,40 +6,38 @@ import { isSameDay } from 'date-fns';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { companionSegment, LayoutOperation } from '@dxos/app-toolkit';
-import { type SurfaceComponentProps, useLayout } from '@dxos/app-toolkit/ui';
-import { type Feed, Obj, Query } from '@dxos/echo';
-import { AttentionOperation } from '@dxos/plugin-attention/operations';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
-import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
+import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
+import { type Feed, Filter, Obj, Query } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { useSelected } from '@dxos/react-ui-attention';
+import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Event } from '@dxos/types';
 
-import { EventStack, type EventStackActionHandler } from '../../components';
-import { meta } from '../../meta';
-import { type Calendar } from '../../types';
+import { EventStack, type EventStackActionHandler } from '#components';
+import { meta } from '#meta';
+import { type Calendar } from '#types';
 
-import { NewCalendar } from './NewCalendar';
+import { InitializeCalendar, InitializeCalendarAction } from './InitializeCalendar';
 
 const byDate =
   (direction = -1) =>
   ({ startDate: a }: Event.Event, { startDate: b }: Event.Event) =>
     a < b ? -direction : a > b ? direction : 0;
 
-export type CalendarArticleProps = SurfaceComponentProps<Calendar.Calendar> & { attendableId?: string };
+export type CalendarArticleProps = AppSurface.ObjectArticleProps<Calendar.Calendar>;
 
-export const CalendarArticle = ({ role, subject: calendar, attendableId }: CalendarArticleProps) => {
+export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
-  const layout = useLayout();
+  const showItem = useShowItem();
+  // TODO(wittjosiah): Should be `const feed = useObjectValue(calendar.feed)`.
+  const [calendar] = useObject(subject);
   const id = attendableId ?? Obj.getDXN(calendar).toString();
   const currentId = useSelected(id, 'single');
   const db = Obj.getDatabase(calendar);
 
-  // TODO(wittjosiah): Should be `const feed = useObjectValue(calendar.feed)`.
-  useObject(calendar);
   const feed = calendar.feed?.target as Feed.Feed | undefined;
   const events = useQuery(
     db,
@@ -53,9 +51,9 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
     ({ date }: { date: Date }) => {
       const match = events.find((event) => isSameDay(new Date(event.startDate), date));
       if (match) {
-        void invokePromise(AttentionOperation.Select, {
+        void invokePromise(LayoutOperation.Select, {
           contextId: id,
-          selection: { mode: 'single', id: match.id },
+          subject: { mode: 'single', id: match.id },
         });
       }
     },
@@ -66,32 +64,23 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
     (action) => {
       switch (action.type) {
         case 'current': {
-          void invokePromise(AttentionOperation.Select, {
+          const event = events.find((entry) => entry.id === action.eventId);
+          void showItem({
             contextId: id,
-            selection: { mode: 'single', id: action.eventId },
+            selectionId: action.eventId,
+            companion: linkedSegment('event'),
+            path: event ? getObjectPathFromObject(event) : undefined,
           });
-
-          const companion = companionSegment('event');
-          if (layout.mode === 'simple') {
-            void invokePromise(LayoutOperation.UpdateComplementary, {
-              subject: companion,
-              state: 'expanded',
-            });
-          } else {
-            void invokePromise(DeckOperation.ChangeCompanion, {
-              companion,
-            });
-          }
           break;
         }
       }
     },
-    [id, invokePromise, layout.mode],
+    [events, id, showItem],
   );
 
   return (
     <div role={role} className='@container dx-container overflow-hidden'>
-      <div role='none' className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] h-full'>
+      <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] h-full'>
         <Panel.Root className='hidden @3xl:block'>
           <NaturalCalendar.Root>
             <Panel.Toolbar asChild>
@@ -105,20 +94,13 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
             </Panel.Content>
           </NaturalCalendar.Root>
         </Panel.Root>
-
         <Panel.Root>
           <Panel.Toolbar asChild>
-            <Toolbar.Root>
-              {!isEmpty && (
-                <>
-                  <Toolbar.IconButton icon='ph--calendar--duotone' iconOnly variant='ghost' label={t('calendar')} />
-                </>
-              )}
-            </Toolbar.Root>
+            <Toolbar.Root>{isEmpty && <InitializeCalendarAction calendar={subject} />}</Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content asChild>
             {isEmpty ? (
-              <NewCalendar calendar={calendar} />
+              <InitializeCalendar calendar={subject} />
             ) : (
               <EventStack id={id} events={events} currentId={currentId} onAction={handleAction} />
             )}

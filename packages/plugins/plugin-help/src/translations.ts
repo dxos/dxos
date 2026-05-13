@@ -4,16 +4,16 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-import { meta } from './meta';
+import { meta } from '#meta';
 
 export const translations = [
   {
     'en-US': {
       [meta.id]: {
-        'plugin name': 'Help',
-        'open help tour': 'Show welcome tour',
-        'open shortcuts label': 'Show shortcuts',
-        'shortcuts dialog title': 'Shortcuts',
+        'plugin.name': 'Help',
+        'open-help-tour.message': 'Show welcome tour',
+        'open-shortcuts.label': 'Show shortcuts',
+        'shortcuts-dialog.title': 'Shortcuts',
       },
     },
   },

@@ -8,13 +8,11 @@ import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'rea
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
-
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { useObject, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import {
@@ -29,12 +27,12 @@ import {
   useProjectionModel,
   useTableModel,
 } from '@dxos/react-ui-table';
+import { type Table } from '@dxos/react-ui-table/types';
 import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
 
-import { meta } from '../../meta';
-import { type Table } from '../../operations';
+import { meta } from '#meta';
 
-export type TableContainerProps = SurfaceComponentProps<Table.Table>;
+export type TableContainerProps = AppSurface.ObjectArticleProps<Table.Table>;
 
 // TODO(wittjosiah): Need to handle more complex queries by restricting add row.
 export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
@@ -97,7 +95,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
     }, []);
 
     const rowActions = useMemo(
-      (): TableRowAction[] => [{ id: 'open', label: ['open object label', { ns: meta.id }] }],
+      (): TableRowAction[] => [{ id: 'open', label: ['open-object.label', { ns: meta.id }] }],
       [],
     );
 

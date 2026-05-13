@@ -12,17 +12,46 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "imports": {
+    "#capabilities": {
+      "source": "./src/capabilities/index.ts",
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "default": "./dist/lib/neutral/capabilities/index.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/neutral/meta.mjs"
+    },
+    "#plugin": {
+      "source": "./src/NativePlugin.tsx",
+      "types": "./dist/types/src/NativePlugin.d.ts",
+      "default": "./dist/lib/neutral/NativePlugin.mjs"
+    },
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/neutral/translations.mjs"
+    }
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
+    },
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/neutral/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
   "files": [
     "dist",
     "src"
@@ -46,6 +75,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "vite": "catalog:"
   },

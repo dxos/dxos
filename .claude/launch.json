@@ -2,10 +2,17 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "composer-app",
+      "name": "composer-crx",
       "runtimeExecutable": "moon",
-      "runtimeArgs": ["run", "composer-app:serve"],
+      "runtimeArgs": ["run", "composer-crx:serve"],
       "port": 5173
+    },
+    {
+      "name": "composer-app",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@dxos/composer-app", "exec", "vite", "dev"],
+      "port": 5173,
+      "autoPort": true
     },
     {
       "name": "testbench-app",
@@ -20,10 +27,29 @@
       "port": 5173
     },
     {
+      "name": "todomvc-preview",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@dxos/todomvc", "exec", "vite", "preview", "--port", "4173"],
+      "port": 4173,
+      "autoPort": true
+    },
+    {
       "name": "storybook-react",
       "runtimeExecutable": "moon",
       "runtimeArgs": ["run", "storybook-react:serve"],
       "port": 9009
+    },
+    {
+      "name": "plugin-explorer-storybook",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@dxos/plugin-explorer", "exec", "storybook", "dev", "--port", "9010", "--no-open"],
+      "port": 9010
+    },
+    {
+      "name": "docs",
+      "runtimeExecutable": "moon",
+      "runtimeArgs": ["run", "docs:serve"],
+      "port": 4321
     }
   ]
 }

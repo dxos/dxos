@@ -7,16 +7,16 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
-import { Script } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
+import { Operation, Script } from '@dxos/compute';
+import { Filter } from '@dxos/echo';
+import { SpaceOperation } from '@dxos/plugin-space';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export type FunctionsPanelProps = {
   space: Space;
@@ -70,7 +70,7 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
   );
 
   return (
-    <Settings.Container>
+    <Settings.Panel>
       {functions.length > 0 && (
         <List.Root<Operation.PersistentOperation>
           items={functions}
@@ -96,14 +96,14 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
                     <IconButton
                       icon='ph--arrow-square-out--regular'
                       iconOnly
-                      label={t('show source button label')}
+                      label={t('show-source-button.label')}
                       onClick={() => handleGoToScript(func)}
                     />
                   )) || <div />}
                   <IconButton
                     icon='ph--trash--regular'
                     iconOnly
-                    label={t('delete function button label')}
+                    label={t('delete-function-button.label')}
                     onClick={() => handleDelete(func)}
                   />
                 </List.Item>
@@ -112,8 +112,6 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
           )}
         </List.Root>
       )}
-
-      {functions.length === 0 && <div className='text-center py-4 text-description'>{t('no functions found')}</div>}
-    </Settings.Container>
+    </Settings.Panel>
   );
 };

@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
-
 type PermissionStatus = 'granted' | 'denied' | 'prompt';
 
 export type LocalEntity = LocalDirectory | LocalFile;
@@ -26,16 +24,6 @@ export type LocalDirectory = {
   permission: PermissionStatus;
   children: LocalEntity[];
 };
-
-export const FilesSettingsSchema = Schema.mutable(
-  Schema.Struct({
-    autoExport: Schema.Boolean,
-    autoExportInterval: Schema.Number,
-    openLocalFiles: Schema.optional(Schema.Boolean),
-  }),
-);
-
-export type FilesSettingsProps = Schema.Schema.Type<typeof FilesSettingsSchema>;
 
 export type FilesState = {
   exportRunning: boolean;

@@ -6,9 +6,9 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import { useMemo } from 'react';
 
+import { getQueryTarget } from '@dxos/app-toolkit/query';
 import { Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
-import { getQueryTarget } from '@dxos/plugin-space';
 import { getSpace, isSpace } from '@dxos/react-client/echo';
 import { type BoardModel } from '@dxos/react-ui-mosaic';
 import { Pipeline } from '@dxos/types';

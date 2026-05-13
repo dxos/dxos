@@ -207,6 +207,11 @@ export interface Query<T> {
    * Add options to a query.
    */
   'options'(options: QueryAST.QueryOptions): Query<T>;
+
+  /**
+   * Attach a diagnostic label for logs and tooling (execution semantics unchanged).
+   */
+  'debugLabel'(label: string): Query<T>;
 }
 
 export type Any = Query<any>;
@@ -354,7 +359,7 @@ class QueryClass implements Any {
         from: {
           _tag: 'scope',
           scope: {
-            ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+            ...(options?.includeFeeds ? { allFeedsFromSpaces: true } : {}),
           },
         },
       });
@@ -379,7 +384,7 @@ class QueryClass implements Any {
           _tag: 'scope',
           scope: {
             spaceIds: databases.map((db) => db.spaceId),
-            ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+            ...(options?.includeFeeds ? { allFeedsFromSpaces: true } : {}),
           },
         },
       });
@@ -405,10 +410,15 @@ class QueryClass implements Any {
       }
     }
 
-    const feeds = items as Feed.Feed[];
-    const queueDxns = feeds.flatMap((feed) => {
+    const feedItems = items as Feed.Feed[];
+    const feedDxns = feedItems.map((feed) => {
       const dxn = Feed.getQueueDxn(feed);
-      return dxn ? [dxn.toString()] : [];
+      if (!dxn) {
+        throw new TypeError(
+          `Query.from() expects persisted Feed objects with a queue DXN; got feed without a space (id=${Obj.getDXN(feed).toString()}).`,
+        );
+      }
+      return dxn.toString();
     });
     return new QueryClass({
       type: 'from',
@@ -416,7 +426,7 @@ class QueryClass implements Any {
       from: {
         _tag: 'scope',
         scope: {
-          queues: queueDxns,
+          feeds: feedDxns,
         },
       },
     });
@@ -427,6 +437,21 @@ class QueryClass implements Any {
       type: 'options',
       query: this.ast,
       options,
+    });
+  }
+
+  debugLabel(label: string): Any {
+    if (this.ast.type === 'options') {
+      return new QueryClass({
+        type: 'options',
+        query: this.ast.query,
+        options: { ...this.ast.options, debugLabel: label },
+      });
+    }
+    return new QueryClass({
+      type: 'options',
+      query: this.ast,
+      options: { debugLabel: label },
     });
   }
 }
@@ -460,7 +485,13 @@ export const select = <F extends Filter.Any>(filter: F): Query<Filter.Type<F>> =
  *
  * Shorthand for: `Query.select(Filter.type(schema, predicates))`.
  */
-export const type = (schema: Schema.Schema.All | string, predicates?: Filter.Props<unknown>): Any => {
+export const type: {
+  <S extends Schema.Schema.All>(
+    schema: S,
+    predicates?: Filter.Props<Schema.Schema.Type<S>>,
+  ): Query<Schema.Schema.Type<S>>;
+  (schema: string, predicates?: Filter.Props<unknown>): Query<any>;
+} = (schema: Schema.Schema.All | string, predicates?: Filter.Props<unknown>): Any => {
   return new QueryClass({
     type: 'select',
     filter: Filter.type(schema, predicates).ast,
@@ -525,7 +556,7 @@ export const from = (
   return wrapper.from(source as any, options);
 };
 
-const SCOPE_KEYS = new Set(['spaceIds', 'queues', 'allQueuesFromSpaces']);
+const SCOPE_KEYS = new Set(['spaceIds', 'feeds', 'allFeedsFromSpaces']);
 
 /** Detect a raw Scope object (plain object with only Scope-valid keys). */
 const _isScope = (value: unknown): value is QueryAST.Scope => {

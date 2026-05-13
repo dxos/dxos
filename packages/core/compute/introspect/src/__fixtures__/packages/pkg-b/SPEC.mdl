@@ -1,0 +1,60 @@
+---
+id: com.example.fixture.pkg-b
+name: PkgB
+version: 0.1.0
+extends: [com.example.fixture.pkg-a@1.0.0]
+---
+
+Fixture package: declares the `TaskCard` React component, which renders
+a `Task` (from `@fixture/pkg-a`) and subscribes to its updates via
+`useObject` from `@dxos/echo-react`.
+
+## Extensions
+
+| Term        | URI                            |
+| ----------- | ------------------------------ |
+| `component` | `org.dxos.mdl.component@1.0`   |
+
+## Components
+
+```mdl
+component TaskCard
+  desc: |
+    Card-style renderer for a Task. Subscribes to the object via useObject so
+    changes (title, description, done) re-render automatically. The `done`
+    checkbox calls the update callback to toggle state in place.
+  props:
+    task: Task                         # echo-type from pkg-a (Task.Task at the call site)
+  uses:
+    useObject from @dxos/echo-react    # subscribe to Task and obtain a mutating update callback
+  note: |
+    No outbound events — done toggle is handled by mutating the ECHO object in
+    place via update(draft => { draft.done = ... }). Replication / persistence
+    is handled by ECHO downstream of the component.
+  layout: |
+    <article>
+      <h3>{title}</h3>
+      [{description?}]
+      <label><input type=checkbox checked={done} /> done</label>
+    </article>
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?:    Prose
+    props?:   FieldMap
+    state?:   FieldMap
+    slots?:   FieldMap
+    actions?: ActionMap
+    emits?:   EventMap
+    uses?:    ProseList                # libraries / hooks the component depends on
+    note?:    Prose                    # implementation guidance (non-normative)
+    layout?:  CodeBlock
+```

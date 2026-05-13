@@ -8,7 +8,7 @@ import { createDocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { Sketch } from '../types';
+import { Sketch } from '#types';
 
 import { TLDrawStoreAdapter } from './adapter';
 

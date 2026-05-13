@@ -9,30 +9,30 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { Filter } from '@dxos/echo';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { SpacePlugin } from '@dxos/plugin-space';
+import { SpacePlugin } from '@dxos/plugin-space/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
-import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { random } from '@dxos/random';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { FeedPlugin } from '../../FeedPlugin';
-import { Subscription } from '../../types';
-import { translations } from '../../translations';
+import { translations } from '#translations';
+import { Subscription } from '#types';
 
+import { FeedPlugin } from '../../FeedPlugin';
 import { SubscriptionsArticle } from './SubscriptionsArticle';
 
 const DefaultStory = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const feeds = useQuery(space?.db, Filter.type(Subscription.Feed));
-  const feed = feeds[0];
-  if (!feed) {
+  if (!space || feeds.length === 0) {
     return <Loading />;
   }
 
-  return <SubscriptionsArticle role='article' subject={feed} />;
+  return <SubscriptionsArticle role='article' space={space} attendableId='story' />;
 };
 
 const meta: Meta<typeof DefaultStory> = {
@@ -53,9 +53,9 @@ const meta: Meta<typeof DefaultStory> = {
               Array.from({ length: 5 }).forEach(() => {
                 space.db.add(
                   Subscription.makeFeed({
-                    name: faker.company.name() + ' Blog',
-                    url: faker.internet.url(),
-                    description: faker.lorem.sentence(),
+                    name: random.company.name() + ' Blog',
+                    url: random.internet.url(),
+                    description: random.lorem.sentence(),
                   }),
                 );
               });

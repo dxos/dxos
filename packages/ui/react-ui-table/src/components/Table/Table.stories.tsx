@@ -6,25 +6,25 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Annotation, type Database, Format, Obj, type QueryAST, Ref, Type } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Annotation, type Database, Format, Obj, type QueryAST, Ref, Type, View } from '@dxos/echo';
 import { type Mutable, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Panel, ScrollArea } from '@dxos/react-ui';
+import { ViewEditor } from '@dxos/react-ui-form';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { ViewEditor, translations as formTranslations } from '@dxos/react-ui-form';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { ViewModel, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
 import { TestSchema, createObjectFactory } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
-import { useTestTableModel } from '../../testing';
-import { translations } from '../../translations';
-import { Table } from '../../types';
+import { translations } from '#translations';
 
+import { useTestTableModel } from '../../testing';
+import { Table } from '../../types';
 import { Table as TableComponent } from './Table';
 
 const Example = Schema.Struct({
@@ -74,8 +74,8 @@ const StoryViewEditor = ({
       invariant(Type.isMutable(schema));
       schema.updateTypename(getTypenameFromQuery(newQuery));
       invariant(view);
-      Obj.change(view, (obj) => {
-        obj.query.ast = newQuery as Mutable<typeof newQuery>;
+      Obj.update(view, (view) => {
+        view.query.ast = newQuery as Mutable<typeof newQuery>;
       });
     },
     [schema, view],
@@ -142,9 +142,7 @@ const DefaultStory = () => {
       <ScrollArea.Root orientation='vertical' classNames='border-l border-separator'>
         <ScrollArea.Viewport>
           <StoryViewEditor view={table.view.target} schema={schema} db={db} handleDeleteColumn={handleDeleteColumn} />
-          <SyntaxHighlighter language='json' className='text-xs'>
-            {JSON.stringify({ view: table.view.target, schema }, null, 2)}
-          </SyntaxHighlighter>
+          <JsonHighlighter data={{ view: table.view.target, schema }} classNames='text-xs' />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     </div>
@@ -174,10 +172,10 @@ const meta = {
         const [schema] = await space.db.schemaRegistry.register([Example]);
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename: schema.typename });
         const table = Table.make({ view, jsonSchema });
-        Obj.change(view, (obj) => {
-          obj.projection.fields = [
-            obj.projection.fields.find((field) => field.path === 'name')!,
-            ...obj.projection.fields.filter((field) => field.path !== 'name'),
+        Obj.update(view, (view) => {
+          view.projection.fields = [
+            view.projection.fields.find((field) => field.path === 'name')!,
+            ...view.projection.fields.filter((field) => field.path !== 'name'),
           ];
         });
 
@@ -186,9 +184,9 @@ const meta = {
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
             Obj.make(schema, {
-              name: faker.lorem.sentence(),
-              status: faker.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
-              description: faker.lorem.paragraph(),
+              name: random.lorem.sentence(),
+              status: random.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
+              description: random.lorem.paragraph(),
             }),
           );
         });
@@ -225,7 +223,7 @@ export const StaticSchema: StoryObj = {
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
 
-        const factory = createObjectFactory(space.db, faker as any);
+        const factory = createObjectFactory(space.db, random as any);
         await factory([
           { type: TestSchema.Person, count: 10 },
           // { type: TestSchema.Organization, count: 1 },
@@ -271,7 +269,7 @@ export const ArrayOfObjects: StoryObj = {
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
 
-        const factory = createObjectFactory(space.db, faker as any);
+        const factory = createObjectFactory(space.db, random as any);
         await factory([
           // { type: TestSchema.Person, count: 10 },
           // { type: TestSchema.Organization, count: 1 },
@@ -330,8 +328,8 @@ export const Tags: Meta<DefaultStoryProps> = {
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
             Obj.make(storedSchema, {
-              single: faker.helpers.arrayElement([...selectOptionIds, undefined]),
-              multiple: faker.helpers.randomSubset(selectOptionIds),
+              single: random.helpers.arrayElement([...selectOptionIds, undefined]),
+              multiple: random.helpers.randomSubset(selectOptionIds),
             }),
           );
         });

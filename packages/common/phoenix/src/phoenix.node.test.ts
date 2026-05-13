@@ -3,9 +3,8 @@
 //
 
 import { spawn } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -25,7 +24,6 @@ describe.skipIf(process.env.CI)('DaemonManager', () => {
     await trigger.wait({ timeout: 1_000 });
   });
 
-  // Fails on CI
   test('start/stop detached watchdog', async () => {
     const runId = Math.random().toString();
     const pidFile = join(TEST_DIR, `pid-${runId}.pid`);
@@ -45,9 +43,11 @@ describe.skipIf(process.env.CI)('DaemonManager', () => {
         errFile,
       });
 
-      await expect.poll(() => existsSync(params.logFile), { timeout: 1000 }).toBe(true);
-      const logs = readFileSync(params.logFile, { encoding: 'utf-8' });
-      expect(logs).to.contain('neverEndingProcess started');
+      // Poll for log content directly — the file is pre-created empty by Phoenix.start(),
+      // so polling for existence would resolve immediately before the child writes its output.
+      await expect
+        .poll(() => readFileSync(params.logFile, { encoding: 'utf-8' }), { timeout: 5000 })
+        .toContain('neverEndingProcess started');
     }
 
     // Stop

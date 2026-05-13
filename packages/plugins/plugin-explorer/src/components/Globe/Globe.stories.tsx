@@ -3,31 +3,27 @@
 //
 
 import { dot, geo, graticule, plot, sphere } from '@observablehq/plot';
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { geoCircle } from 'd3';
 import React, { useEffect } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import { feature } from 'topojson-client';
 
-import { ClientRepeater } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import CitiesData from '../../../data/cities.js';
 import CountriesData from '../../../data/countries-110m.js';
-
 import { Globe } from './Globe';
 
 // TODO(burdon): Generate data with geo lat/lng.
 // TODO(burdon): How to provide geo service via agent?
 
-const DefaultStory = () => {
-  const items = CitiesData.features.map((feature: any) => ({
-    lat: feature.geometry.coordinates[0],
-    lng: feature.geometry.coordinates[1],
-  }));
+const items = CitiesData.features.map((feature: any) => ({
+  lat: feature.geometry.coordinates[0],
+  lng: feature.geometry.coordinates[1],
+}));
 
-  return <Globe items={items} />;
-};
+const DefaultStory = () => <Globe items={items} />;
 
 const ExtendedStory = () => {
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector({ refreshRate: 200 });
@@ -37,11 +33,6 @@ const ExtendedStory = () => {
     }
 
     const land = feature(CountriesData as any, CountriesData.objects.land as any);
-    const items = CitiesData.features.map((feature: any) => ({
-      lat: feature.geometry.coordinates[0],
-      lng: feature.geometry.coordinates[1],
-    }));
-
     const city = items[0];
     const circle = geoCircle().center([city.lat, city.lng]).radius(16)();
 
@@ -50,7 +41,6 @@ const ExtendedStory = () => {
     const drawing = plot({
       // https://observablehq.com/plot/features/projections
       projection: { type: 'orthographic', rotate: [-city.lat + 30, -30] },
-      // projection: { type: 'equirectangular', rotate: [-140, -30] },
       width,
       height,
       style: {
@@ -81,14 +71,21 @@ const ExtendedStory = () => {
 
 const meta = {
   title: 'plugins/plugin-explorer/components/Globe',
-  decorators: [withTheme(), withLayout()],
+  component: Globe,
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta;
+} satisfies Meta<typeof Globe>;
 
 export default meta;
 
-export const Default = () => <ClientRepeater component={DefaultStory} createSpace />;
+type Story = StoryObj<typeof meta>;
 
-export const Extended = () => <ClientRepeater component={ExtendedStory} createSpace />;
+export const Default: Story = {
+  render: DefaultStory,
+};
+
+export const Extended: Story = {
+  render: ExtendedStory,
+};

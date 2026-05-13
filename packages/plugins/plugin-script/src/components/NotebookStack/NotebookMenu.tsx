@@ -6,8 +6,8 @@ import React from 'react';
 
 import { DropdownMenu, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
-import { type Notebook } from '../../types';
+import { meta } from '#meta';
+import { type Notebook } from '#types';
 
 export type NotebookMenuProps = {
   cell?: Notebook.Cell;
@@ -23,20 +23,20 @@ export const NotebookMenu = ({ cell, onCellInsert, onCellDelete }: NotebookMenuP
       <DropdownMenu.Content>
         <DropdownMenu.Viewport>
           <DropdownMenu.Item onClick={() => onCellInsert?.('script', cell?.id)}>
-            {t('notebook cell insert script label')}
+            {t('notebook-cell-insert-script.label')}
           </DropdownMenu.Item>
           <DropdownMenu.Item onClick={() => onCellInsert?.('prompt', cell?.id)}>
-            {t('notebook cell insert prompt label')}
+            {t('notebook-cell-insert-prompt.label')}
           </DropdownMenu.Item>
           <DropdownMenu.Item onClick={() => onCellInsert?.('query', cell?.id)}>
-            {t('notebook cell insert query label')}
+            {t('notebook-cell-insert-query.label')}
           </DropdownMenu.Item>
           <DropdownMenu.Item onClick={() => onCellInsert?.('markdown', cell?.id)}>
-            {t('notebook cell insert markdown label')}
+            {t('notebook-cell-insert-markdown.label')}
           </DropdownMenu.Item>
           {cell && onCellDelete && (
             <DropdownMenu.Item onClick={() => onCellDelete?.(cell.id)}>
-              {t('notebook cell delete label')}
+              {t('notebook-cell-delete.label')}
             </DropdownMenu.Item>
           )}
         </DropdownMenu.Viewport>

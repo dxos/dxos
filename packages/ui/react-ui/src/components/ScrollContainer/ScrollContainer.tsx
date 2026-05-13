@@ -18,12 +18,13 @@ import React, {
 import { addEventListener, combine } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { useMergeRefs } from '@dxos/react-hooks';
-import { composableProps, mx } from '@dxos/ui-theme';
-import { SlottableProps } from '@dxos/ui-types';
+import { composable, composableProps, slottable } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
+import { type SlottableProps } from '@dxos/ui-types';
 
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
-import { ScrollArea } from '../ScrollArea';
+import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea';
 
 const isBottom = (el: HTMLElement | null) => {
   return !!(el && el.scrollHeight - el.scrollTop === el.clientHeight);
@@ -54,16 +55,14 @@ const [ScrollContainerProvider, useScrollContainerContext] =
 // Root
 //
 
-type RootProps = ThemedClassName<
-  PropsWithChildren<{
-    pin?: boolean;
-    behavior?: ScrollBehavior;
-  }>
->;
+type RootProps = PropsWithChildren<{
+  pin?: boolean;
+  behavior?: ScrollBehavior;
+}>;
 
 /**
  * Headless scroll container that provides context for scroll state.
- * Render ScrollContainer.Viewport as a child to provide the scrollable area.
+ * Render ScrollContainer.Content and ScrollContainer.Viewport as children.
  */
 const Root = forwardRef<ScrollController, RootProps>(
   ({ children, pin, behavior: behaviorProp = 'smooth' }, forwardedRef) => {
@@ -134,15 +133,41 @@ const Root = forwardRef<ScrollController, RootProps>(
         setPinned={setPinned}
         setOverflow={setOverflow}
       >
-        <ScrollArea.Root thin centered padding className='relative'>
-          {children}
-        </ScrollArea.Root>
+        {children}
       </ScrollContainerProvider>
     );
   },
 );
 
 Root.displayName = 'ScrollContainer.Root';
+
+//
+// Content
+//
+
+type ContentProps = Pick<ScrollAreaRootProps, 'thin' | 'padding' | 'centered'>;
+
+/**
+ * Composable wrapper around ScrollArea.Root.
+ * Provides the DOM structure for the scroll container.
+ */
+const Content = composable<HTMLDivElement, ContentProps>(
+  ({ children, thin, padding, centered, ...props }, forwardedRef) => {
+    return (
+      <ScrollArea.Root
+        {...composableProps(props, { classNames: 'relative' })}
+        thin={thin}
+        padding={padding}
+        centered={centered}
+        ref={forwardedRef}
+      >
+        {children}
+      </ScrollArea.Root>
+    );
+  },
+);
+
+Content.displayName = 'ScrollContainer.Content';
 
 //
 // Viewport
@@ -152,7 +177,7 @@ const VIEWPORT_NAME = 'ScrollContainer.Viewport';
 
 type ViewportProps = SlottableProps;
 
-const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ children, ...props }, forwardedRef) => {
+const Viewport = slottable<HTMLDivElement, ViewportProps>(({ children, asChild, ...props }, forwardedRef) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const mergedRef = useMergeRefs([forwardedRef, scrollerRef]);
   const { setViewport, setPinned, setOverflow } = useScrollContainerContext(VIEWPORT_NAME);
@@ -175,7 +200,7 @@ const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ children, ...props
 
   return (
     <>
-      <ScrollArea.Viewport {...composableProps(props)} ref={mergedRef}>
+      <ScrollArea.Viewport asChild={asChild} {...composableProps(props)} ref={mergedRef}>
         {children}
       </ScrollArea.Viewport>
       <PinEffect scrollerRef={scrollerRef} />
@@ -251,13 +276,12 @@ const Fade = () => {
 
   return (
     <div
-      role='none'
       data-visible={overflow}
       className={mx(
         // NOTE: Gradients may not be visible with dark reader extensions.
         'z-10 absolute top-0 inset-x-0 h-24 w-full',
         'opacity-0 duration-200 transition-opacity data-[visible="true"]:opacity-100',
-        'bg-gradient-to-b from-(--surface-bg) to-transparent pointer-events-none',
+        'bg-gradient-to-b from-(--color-base-surface) to-transparent pointer-events-none',
       )}
     />
   );
@@ -278,7 +302,6 @@ const ScrollDownButton = ({ classNames }: ScrollDownButtonProps) => {
 
   return (
     <div
-      role='none'
       className={mx(
         'absolute bottom-2 right-4 opacity-100 transition-opacity duration-300',
         pinned && 'opacity-0',
@@ -307,6 +330,7 @@ export { useScrollContainerContext };
 
 export const ScrollContainer = {
   Root,
+  Content,
   Viewport,
   Fade,
   ScrollDownButton,
@@ -314,6 +338,7 @@ export const ScrollContainer = {
 
 export type {
   RootProps as ScrollContainerRootProps,
+  ContentProps as ScrollContainerContentProps,
   ViewportProps as ScrollContainerViewportProps,
   FadeProps as ScrollContainerFadeProps,
   ScrollDownButtonProps as ScrollContainerScrollDownButtonProps,

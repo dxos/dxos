@@ -39,16 +39,28 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/compute/assistant"
     },
     {
-      "path": "../../core/blueprints"
+      "path": "../../core/compute/assistant-toolkit"
     },
     {
-      "path": "../../core/conductor"
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/conductor"
+    },
+    {
+      "path": "../../core/compute/functions"
+    },
+    {
+      "path": "../../core/compute/functions-runtime"
+    },
+    {
+      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
@@ -60,13 +72,7 @@
       "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/functions-runtime"
-    },
-    {
-      "path": "../../core/operation"
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../devtools/cli-util"
@@ -81,6 +87,9 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../../sdk/client-protocol"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -91,6 +100,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
     },
     {
       "path": "../../ui/react-ui-components"
@@ -121,6 +133,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

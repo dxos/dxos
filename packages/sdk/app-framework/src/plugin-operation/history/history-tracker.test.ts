@@ -10,7 +10,8 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as TestClock from 'effect/TestClock';
 import { describe, expect } from 'vitest';
 
-import { Operation, OperationInvoker } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
+import { OperationInvoker } from '@dxos/operation';
 
 const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>;
 
@@ -25,7 +26,6 @@ import {
   toStringHandler,
   waitUntil,
 } from '../testing';
-
 import * as HistoryTracker from './history-tracker';
 import * as UndoMapping from './undo-mapping';
 import * as UndoRegistry from './undo-registry';
@@ -206,7 +206,7 @@ describe('HistoryTracker', () => {
 
   it.effect('fires ShowUndo operation when undoable operation is tracked', () =>
     Effect.gen(function* () {
-      const testMessage: [string, { ns: string }] = ['test undo message', { ns: 'test' }];
+      const testMessage: [string, { ns: string }] = ['test-undo.message', { ns: 'test' }];
       const undoMapping = UndoMapping.make({
         operation: Compute,
         inverse: HalveCompute,
@@ -250,7 +250,7 @@ describe('HistoryTracker', () => {
     Effect.gen(function* () {
       // Dynamic message that depends on input/output.
       const dynamicMessage = (input: { value: number }, output: { value: number }): [string, { ns: string }] => [
-        `computed ${input.value} to ${output.value}`,
+        `computed-${input.value}-to-${output.value}`,
         { ns: 'test' },
       ];
       const undoMapping = UndoMapping.make({
@@ -289,7 +289,7 @@ describe('HistoryTracker', () => {
       yield* waitUntil(() => showUndoWasCalled);
       expect(showUndoWasCalled).toBe(true);
       // Compute 2 * 2 = 4, so message should be 'computed 2 to 4'.
-      expect(showUndoMessage).toEqual(['computed 2 to 4', { ns: 'test' }]);
+      expect(showUndoMessage).toEqual(['computed-2-to-4', { ns: 'test' }]);
     }),
   );
 

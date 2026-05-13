@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Tag } from '@dxos/echo';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { Card } from '@dxos/react-ui';
@@ -12,8 +12,8 @@ import { type Message } from '@dxos/types';
 
 import { getMessageProps } from '../../util';
 
-export const MessageCard = ({ subject: message }: SurfaceComponentProps<Message.Message>) => {
-  const { date, email, from, hue, snippet } = getMessageProps(message, new Date(), true);
+export const MessageCard = ({ subject: message }: AppSurface.ObjectCardProps<Message.Message>) => {
+  const { date, email, from, hue, snippet } = getMessageProps(message, new Date(), { compact: true });
   return (
     <Card.Content>
       <Card.Toolbar>
@@ -33,7 +33,7 @@ export const MessageCard = ({ subject: message }: SurfaceComponentProps<Message.
       </Card.Row>
       <Card.Row>
         {message.properties?.tags && (
-          <div role='none'>
+          <div>
             {message.properties.tags.map(({ label, hue }: Tag.Tag) => (
               <span className='dx-tag' key={label} data-label={label} data-hue={hue}>
                 {label}

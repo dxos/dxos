@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export namespace WnfsAction {
   export const UploadAnnotationId = Symbol.for(`${meta.id}.annotation.upload`);

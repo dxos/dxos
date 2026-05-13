@@ -1,0 +1,54 @@
+{
+  "extends": [
+    "../../../tsconfig.base.json"
+  ],
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/types"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-space"
+    }
+  ]
+}

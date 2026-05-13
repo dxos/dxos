@@ -9,15 +9,13 @@ import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { Icon, IconButton, useThemeContext } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
-  type Comment,
   type CommentsOptions,
   type EditorView,
-  type Range,
   comments,
   createBasicExtensions,
   createThemeExtensions,
@@ -26,15 +24,16 @@ import {
   scrollThreadIntoView,
   setComments,
 } from '@dxos/ui-editor';
+import { type Comment, type Range } from '@dxos/ui-editor/types';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-theme';
+
+import { translations } from '#translations';
 
 import { MessageBody, MessageHeading, MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity } from '../testing';
-import { translations } from '../translations';
-
 import { Thread } from './Thread';
 
-faker.seed(101);
+random.seed(101);
 
 const authorId = PublicKey.random().toHex();
 
@@ -277,12 +276,12 @@ const DefaultStory = ({ text, autoCreate }: DefaultStoryProps) => {
         cursor,
         yPos: location ? Math.floor(location.top) : undefined,
         messages: autoCreate
-          ? faker.helpers.multiple(
+          ? random.helpers.multiple(
               () => ({
                 id: PublicKey.random().toHex(),
                 timestamp: new Date().toISOString(),
                 authorId: PublicKey.random().toHex(),
-                text: faker.lorem.sentence(),
+                text: random.lorem.sentence(),
               }),
               { count: { min: 1, max: 3 } },
             )
@@ -350,7 +349,7 @@ const DefaultStory = ({ text, autoCreate }: DefaultStoryProps) => {
 
   return (
     <main className='fixed inset-0 grid grid-cols-[1fr_24rem]'>
-      <div role='none' className='max-h-full overflow-y-auto p-4'>
+      <div className='max-h-full overflow-y-auto p-4'>
         <Editor
           initialValue={item.content}
           selected={selected}
@@ -362,7 +361,7 @@ const DefaultStory = ({ text, autoCreate }: DefaultStoryProps) => {
         />
       </div>
 
-      <div role='none' className='max-h-full overflow-y-auto p-4'>
+      <div className='max-h-full overflow-y-auto p-4'>
         <Sidebar
           threads={visibleThreads}
           selected={selected}
@@ -396,7 +395,7 @@ export const Default: Story = {
     text: str(
       '# Comments',
       '',
-      str(...faker.helpers.multiple(() => [faker.lorem.paragraph({ min: 5, max: 10 }), ''], { count: 20 }).flat()),
+      str(...random.helpers.multiple(() => [random.lorem.paragraph({ min: 5, max: 10 }), ''], { count: 20 }).flat()),
       '',
     ),
   },

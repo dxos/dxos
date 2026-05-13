@@ -5,7 +5,8 @@
 import React, { type ChangeEventHandler, type KeyboardEventHandler, useState } from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
-import { type SpaceId, useDatabase, useQuery } from '@dxos/react-client/echo';
+import { type SpaceId } from '@dxos/keys';
+import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input } from '@dxos/react-ui';
 
 import { TaskType } from '../types';
@@ -48,8 +49,8 @@ const TaskList = ({ id, spaceId }: { id: number; spaceId?: SpaceId }) => {
               <Input.Checkbox
                 checked={!!task.completed}
                 onCheckedChange={() =>
-                  Obj.change(task, (obj) => {
-                    obj.completed = !obj.completed;
+                  Obj.update(task, (task) => {
+                    task.completed = !task.completed;
                   })
                 }
               />

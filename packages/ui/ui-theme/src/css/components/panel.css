@@ -5,112 +5,112 @@
  */
 
 @layer dx-components {
-  .dx-panel[data-hue='neutral'],
+  [data-hue='neutral'] .dx-panel,
   .dx-panel--neutral {
     @apply bg-neutral-surface text-neutral-surface-text border-neutral-border;
   }
 
-  .dx-panel[data-hue='red'],
+  [data-hue='red'] .dx-panel,
   .dx-panel--red {
     @apply bg-red-surface text-red-surface-text border-red-border;
   }
 
-  .dx-panel[data-hue='orange'],
+  [data-hue='orange'] .dx-panel,
   .dx-panel--orange {
     @apply bg-orange-surface text-orange-surface-text border-orange-border;
   }
 
-  .dx-panel[data-hue='amber'],
+  [data-hue='amber'] .dx-panel,
   .dx-panel--amber {
     @apply bg-amber-surface text-amber-surface-text border-amber-border;
   }
 
-  .dx-panel[data-hue='yellow'],
+  [data-hue='yellow'] .dx-panel,
   .dx-panel--yellow {
     @apply bg-yellow-surface text-yellow-surface-text border-yellow-border;
   }
 
-  .dx-panel[data-hue='lime'],
+  [data-hue='lime'] .dx-panel,
   .dx-panel--lime {
     @apply bg-lime-surface text-lime-surface-text border-lime-border;
   }
 
-  .dx-panel[data-hue='green'],
+  [data-hue='green'] .dx-panel,
   .dx-panel--green {
     @apply bg-green-surface text-green-surface-text border-green-border;
   }
 
-  .dx-panel[data-hue='emerald'],
+  [data-hue='emerald'] .dx-panel,
   .dx-panel--emerald {
     @apply bg-emerald-surface text-emerald-surface-text border-emerald-border;
   }
 
-  .dx-panel[data-hue='teal'],
+  [data-hue='teal'] .dx-panel,
   .dx-panel--teal {
     @apply bg-teal-surface text-teal-surface-text border-teal-border;
   }
 
-  .dx-panel[data-hue='cyan'],
+  [data-hue='cyan'] .dx-panel,
   .dx-panel--cyan {
     @apply bg-cyan-surface text-cyan-surface-text border-cyan-border;
   }
 
-  .dx-panel[data-hue='sky'],
+  [data-hue='sky'] .dx-panel,
   .dx-panel--sky {
     @apply bg-sky-surface text-sky-surface-text border-sky-border;
   }
 
-  .dx-panel[data-hue='blue'],
+  [data-hue='blue'] .dx-panel,
   .dx-panel--blue {
     @apply bg-blue-surface text-blue-surface-text border-blue-border;
   }
 
-  .dx-panel[data-hue='indigo'],
+  [data-hue='indigo'] .dx-panel,
   .dx-panel--indigo {
     @apply bg-indigo-surface text-indigo-surface-text border-indigo-border;
   }
 
-  .dx-panel[data-hue='violet'],
+  [data-hue='violet'] .dx-panel,
   .dx-panel--violet {
     @apply bg-violet-surface text-violet-surface-text border-violet-border;
   }
 
-  .dx-panel[data-hue='purple'],
+  [data-hue='purple'] .dx-panel,
   .dx-panel--purple {
     @apply bg-purple-surface text-purple-surface-text border-purple-border;
   }
 
-  .dx-panel[data-hue='fuchsia'],
+  [data-hue='fuchsia'] .dx-panel,
   .dx-panel--fuchsia {
     @apply bg-fuchsia-surface text-fuchsia-surface-text border-fuchsia-border;
   }
 
-  .dx-panel[data-hue='pink'],
+  [data-hue='pink'] .dx-panel,
   .dx-panel--pink {
     @apply bg-pink-surface text-pink-surface-text border-pink-border;
   }
 
-  .dx-panel[data-hue='rose'],
+  [data-hue='rose'] .dx-panel,
   .dx-panel--rose {
     @apply bg-rose-surface text-rose-surface-text border-rose-border;
   }
 
-  .dx-panel[data-hue='info'],
+  [data-hue='info'] .dx-panel,
   .dx-panel--info {
     @apply bg-info-surface text-info-surface-text border-info-border;
   }
 
-  .dx-panel[data-hue='success'],
+  [data-hue='success'] .dx-panel,
   .dx-panel--success {
     @apply bg-success-surface text-success-surface-text border-success-border;
   }
 
-  .dx-panel[data-hue='warning'],
+  [data-hue='warning'] .dx-panel,
   .dx-panel--warning {
     @apply bg-warning-surface text-warning-surface-text border-warning-border;
   }
 
-  .dx-panel[data-hue='error'],
+  [data-hue='error'] .dx-panel,
   .dx-panel--error {
     @apply bg-error-surface text-error-surface-text border-error-border;
   }

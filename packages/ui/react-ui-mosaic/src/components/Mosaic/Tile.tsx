@@ -2,6 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import {
+  type Edge,
+  attachClosestEdge,
+  extractClosestEdge,
+} from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import {
   type ElementDragPayload,
@@ -11,11 +16,6 @@ import {
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { type DropTargetRecord } from '@atlaskit/pragmatic-drag-and-drop/types';
-import {
-  type Edge,
-  attachClosestEdge,
-  extractClosestEdge,
-} from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
@@ -76,7 +76,7 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
       id,
       data: dataProp,
       draggable: draggableProp,
-      current: _current,
+      current,
       debug: _,
       ...props
     },
@@ -207,10 +207,15 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
         <Comp
           {...rest}
           {...{
-            'data-mosaic-tile-id': id,
+            'data-object-id': id,
             [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
           }}
           role='listitem'
+          // Pair `current` prop with `aria-current="true"` so the
+          // `dx-current` utility (which keys off `aria-[current=true]:`)
+          // actually fires. Without this the prop is purely advisory and
+          // any `dx-current` styling on the tile would silently no-op.
+          aria-current={current ? 'true' : undefined}
           className={className}
           ref={composedRef}
         >

@@ -7,7 +7,7 @@ import { type Client } from '@dxos/client';
 import { type ObjectMigration } from '@dxos/client/echo';
 import { type Type } from '@dxos/echo';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export namespace ClientCapabilities {
   export const Client = Capability.make<Client>(`${meta.id}.capability.client`);

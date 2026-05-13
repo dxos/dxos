@@ -8,7 +8,6 @@ import { type ButtonProps, Icon, type IconProps, type ThemedClassName, useTransl
 import { osTranslations } from '@dxos/ui-theme';
 
 import { PickerButton, type PickerButtonProps } from '../PickerButton';
-
 import { iconValues } from './icons';
 
 export type IconPickerProps = {
@@ -28,7 +27,7 @@ export const IconPicker = ({ ...props }: ThemedClassName<IconPickerProps>) => {
   return (
     <PickerButton
       Component={IconPreview}
-      label={t('select icon label')}
+      label={t('select-icon.label')}
       icon='ph--selection--regular'
       values={iconValues}
       {...props}

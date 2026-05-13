@@ -29,7 +29,6 @@ import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { type MaybePromise } from '@dxos/util';
 
 import { ClientServicesHost } from '../services';
-
 import { WorkerSession } from './worker-session';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
@@ -131,20 +130,32 @@ export class WorkerRuntime {
   async start(): Promise<void> {
     log('starting...');
     try {
+      log('worker-runtime: acquiring liveness lock (background)');
       void this._livenessLock.acquire();
 
       // Steal the lock from the other worker.
+      log('worker-runtime: broadcasting stop to displace previous worker');
       this._broadcastChannel = new BroadcastChannel(this._channel);
       this._broadcastChannel.postMessage({ action: 'stop' });
       this._broadcastChannel.onmessage = async (event) => {
         if (event.data?.action === 'stop') {
+          log('worker-runtime: received stop broadcast');
           await this.stop();
         }
       };
 
+      log('worker-runtime: acquiring storage lock');
       await this._acquireLock();
+      log('worker-runtime: storage lock acquired, resolving config');
       this._config = await this._configProvider();
+      log('worker-runtime: config resolved');
+      this._signalTelemetryEnabled = this._config.get('runtime.client.signalTelemetryEnabled') ?? false;
+      const observabilityGroup = this._config.get('runtime.client.observabilityGroup');
+      if (observabilityGroup) {
+        this._signalMetadataTags.group = observabilityGroup;
+      }
       const signals = this._config.get('runtime.services.signaling');
+      log('worker-runtime: initializing client services host');
       this._clientServices.initialize({
         config: this._config,
         signalManager: this._config.get('runtime.client.edgeFeatures')?.signaling
@@ -154,8 +165,10 @@ export class WorkerRuntime {
             : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
         transportFactory: this._transportFactory,
       });
+      log('worker-runtime: client services host initialized, opening');
 
       await this._clientServices.open(new Context());
+      log('worker-runtime: client services host opened, signalling ready');
       this._ready.wake(undefined);
       log('started');
       setIdentityTags({
@@ -180,6 +193,30 @@ export class WorkerRuntime {
     await this._runtime.dispose();
     await this._onStop?.();
     await this._livenessLock.release();
+  }
+
+  /**
+   * Update signaling telemetry tags from a client-supplied config overlay.
+   *
+   * The worker services outlive individual client connections, so the first client seeds the
+   * worker's core config (storage, signaling, edge features). For fields that can legitimately
+   * differ per tab — `observabilityGroup` and `signalTelemetryEnabled` — this method lets later
+   * connections refresh the signal metadata the worker attaches to its signaling requests
+   * (last-writer-wins, matching the pre-DX-930 per-session RPC behaviour).
+   */
+  updateSignalMetadata(config: Config): void {
+    const observabilityGroup = config.get('runtime.client.observabilityGroup');
+    if (observabilityGroup) {
+      this._signalMetadataTags.group = observabilityGroup;
+    } else {
+      // Clear stale group so a later config that removes observabilityGroup stops attributing
+      // telemetry to the previous client's group (last-writer-wins).
+      delete this._signalMetadataTags.group;
+    }
+    const signalTelemetryEnabled = config.get('runtime.client.signalTelemetryEnabled');
+    if (signalTelemetryEnabled !== undefined) {
+      this._signalTelemetryEnabled = signalTelemetryEnabled;
+    }
   }
 
   /**
@@ -214,10 +251,6 @@ export class WorkerRuntime {
       !this._signalMetadataTags.origin || this._signalMetadataTags.origin === session.origin,
       `worker origin changed from ${this._signalMetadataTags.origin} to ${session.origin}?`,
     );
-    if (session.observabilityGroup) {
-      this._signalMetadataTags.group = session.observabilityGroup;
-    }
-    this._signalTelemetryEnabled = session.signalTelemetryEnabled ?? false;
     this._signalMetadataTags.origin = session.origin;
     this._sessions.add(session);
 

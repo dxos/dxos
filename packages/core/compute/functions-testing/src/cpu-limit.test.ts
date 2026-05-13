@@ -1,0 +1,151 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { describe, test } from 'vitest';
+
+import { Trigger } from '@dxos/compute';
+import { configPreset } from '@dxos/config';
+import { Context } from '@dxos/context';
+import { Obj, Ref } from '@dxos/echo';
+import { FunctionRuntimeKind } from '@dxos/protocols';
+
+import { deployFunction, observeInvocations, setup, sync } from './testing';
+
+const FIB_FUNCTION_PATH = new URL('./functions/fib.ts', import.meta.url).pathname;
+
+// Test suite to explore who CPU time limits influence function execution.
+describe('CPU limit', { tags: ['functions-e2e'] }, () => {
+  const config = configPreset({ edge: 'dev' });
+
+  test('invoke directly', { timeout: 120_000 }, async ({ expect }) => {
+    const { client, space, functionsServiceClient } = await setup(config);
+    const func = await deployFunction(
+      space,
+      functionsServiceClient,
+      FIB_FUNCTION_PATH,
+      FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS,
+    );
+    const result = await functionsServiceClient.invoke(
+      Context.default(),
+      func,
+      {
+        iterations: 100,
+      },
+      {
+        spaceId: space.id,
+      },
+    );
+    console.log(result);
+  });
+
+  test('force-trigger', { timeout: 120_000 }, async ({ expect }) => {
+    const { client, space, functionsServiceClient } = await setup(config);
+    const func = await deployFunction(
+      space,
+      functionsServiceClient,
+      FIB_FUNCTION_PATH,
+      FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS,
+    );
+    const trigger = space.db.add(
+      Obj.make(Trigger.Trigger, {
+        enabled: true,
+        function: Ref.make(func),
+        spec: Trigger.specTimer('* */30 * * * *'),
+        input: { iterations: 100 },
+      }),
+    );
+    await sync(space);
+    const result = await functionsServiceClient.forceRunCronTrigger(Context.default(), space.id, trigger.id);
+    console.log(result);
+  });
+
+  test('break CPU limit', { timeout: 120_000 }, async ({ expect }) => {
+    const { client, space, functionsServiceClient } = await setup(config);
+    const func = await deployFunction(
+      space,
+      functionsServiceClient,
+      FIB_FUNCTION_PATH,
+      FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS,
+    );
+    const trigger = space.db.add(
+      Obj.make(Trigger.Trigger, {
+        enabled: true,
+        function: Ref.make(func),
+        spec: Trigger.specTimer('* */30 * * * *'),
+        input: { iterations: 1_000_000_000 },
+      }),
+    );
+    await sync(space);
+    {
+      const result = await functionsServiceClient.forceRunCronTrigger(Context.default(), space.id, trigger.id);
+      console.log(result);
+    }
+
+    {
+      const result = await functionsServiceClient.forceRunCronTrigger(Context.default(), space.id, trigger.id);
+      console.log(result);
+    }
+
+    {
+      Obj.update(trigger, (trigger) => {
+        trigger.input!.iterations = 100;
+      });
+      await sync(space);
+      const result = await functionsServiceClient.forceRunCronTrigger(Context.default(), space.id, trigger.id);
+      console.log(result);
+    }
+  });
+
+  test('observe invocations', { timeout: 520_000 }, async ({ expect }) => {
+    const { client, space, functionsServiceClient } = await setup(config);
+    const func = await deployFunction(
+      space,
+      functionsServiceClient,
+      FIB_FUNCTION_PATH,
+      FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS,
+    );
+    const trigger = space.db.add(
+      Obj.make(Trigger.Trigger, {
+        enabled: true,
+        function: Ref.make(func),
+        spec: Trigger.specTimer('* * * * * *'),
+        input: { iterations: 1_000_000 },
+      }),
+    );
+    await sync(space);
+    await observeInvocations(space, 100);
+  });
+
+  test('break CPU limit through natural exection', { timeout: 520_000 }, async ({ expect }) => {
+    const { client, space, functionsServiceClient } = await setup(config);
+    const func = await deployFunction(
+      space,
+      functionsServiceClient,
+      FIB_FUNCTION_PATH,
+      FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS,
+    );
+    const trigger = space.db.add(
+      Obj.make(Trigger.Trigger, {
+        enabled: true,
+        function: Ref.make(func),
+        spec: Trigger.specTimer('* * * * * *'),
+        input: { iterations: 100 },
+      }),
+    );
+    await sync(space);
+    await observeInvocations(space, 5);
+
+    Obj.update(trigger, (trigger) => {
+      trigger.input!.iterations = 1_000_000_000;
+    });
+    await sync(space);
+    await observeInvocations(space, 10);
+
+    Obj.update(trigger, (trigger) => {
+      trigger.input!.iterations = 100;
+    });
+    await sync(space);
+    await observeInvocations(space, 1_000);
+  });
+});

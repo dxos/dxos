@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './factory';
 export * from './feed';
 export * from './icon';
 export * from './parent-label';

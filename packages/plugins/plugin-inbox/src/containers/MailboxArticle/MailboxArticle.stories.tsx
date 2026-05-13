@@ -6,35 +6,55 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Feed } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
+import { Feed, Filter } from '@dxos/echo';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { PreviewPlugin } from '@dxos/plugin-preview';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
+import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
-import { InboxPlugin } from '../../InboxPlugin';
-import { initializeMailbox } from '../../testing';
-import { Mailbox } from '../../types';
+import { initializeMailbox } from '#testing';
+import { Mailbox } from '#types';
 
+import { InboxPlugin } from '../../InboxPlugin';
 import { MailboxArticle } from './MailboxArticle';
+
+// No-op handlers for layout operations invoked from article components; avoids pulling in DeckPlugin.
+const MockDeckOperationsPlugin = Plugin.define({ id: 'story.mock-deck-operations', name: 'Mock Deck Ops' }).pipe(
+  AppPlugin.addOperationHandlerModule({
+    activate: () =>
+      Effect.succeed(
+        Capability.contributes(
+          Capabilities.OperationHandler,
+          OperationHandlerSet.make(
+            Operation.withHandler(LayoutOperation.Select, () => Effect.void),
+            Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
+          ),
+        ),
+      ),
+  }),
+  Plugin.make,
+);
 
 type DefaultStoryProps = {
   count?: number;
 };
 
 const DefaultStory = (_: DefaultStoryProps) => {
-  const db = useDatabase();
-  const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
-  const mailbox = mailboxes[0];
+  const spaces = useSpaces();
+  const db = useDatabase(spaces[0].id);
+  const [mailbox] = useQuery(db, Filter.type(Mailbox.Mailbox));
   if (!db || !mailbox) {
     return <Loading data={{ db: !!db, mailbox: !!mailbox }} />;
   }
 
-  return <MailboxArticle subject={mailbox} />;
+  return <MailboxArticle role='article' subject={mailbox} attendableId='story' />;
 };
 
 const meta = {
@@ -43,6 +63,7 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager<DefaultStoryProps>(({ args: { count = 0 } }) => ({
+      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({
@@ -58,6 +79,7 @@ const meta = {
         StorybookPlugin({}),
         InboxPlugin(),
         PreviewPlugin(),
+        MockDeckOperationsPlugin(),
       ],
     })),
   ],

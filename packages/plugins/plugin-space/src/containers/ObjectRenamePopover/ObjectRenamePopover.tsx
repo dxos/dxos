@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export const OBJECT_RENAME_POPOVER = `${meta.id}.ObjectRenamePopover`;
 
@@ -23,7 +23,7 @@ export const ObjectRenamePopover = ({ object }: { object: Obj.Unknown }) => {
 
   const handleDone = useCallback(() => {
     try {
-      name && Obj.change(object, () => Obj.setLabel(object, name));
+      name && Obj.update(object, () => Obj.setLabel(object, name));
     } catch (err) {
       log.error('Failed to rename object', { err });
     }
@@ -31,12 +31,12 @@ export const ObjectRenamePopover = ({ object }: { object: Obj.Unknown }) => {
   }, [object, name, invokePromise]);
 
   return (
-    <div role='none' className='p-2 flex gap-2'>
-      <div role='none' className='flex-1'>
+    <div className='p-2 flex gap-2'>
+      <div className='flex-1'>
         <Input.Root>
-          <Input.Label srOnly>{t('object name label')}</Input.Label>
+          <Input.Label srOnly>{t('object-name.label')}</Input.Label>
           <Input.TextInput
-            placeholder={t('object placeholder')}
+            placeholder={t('object.placeholder')}
             value={name}
             data-testid='spacePlugin.renameObject.input'
             onChange={({ target: { value } }) => setName(value)}
@@ -45,7 +45,7 @@ export const ObjectRenamePopover = ({ object }: { object: Obj.Unknown }) => {
         </Input.Root>
       </div>
       <Button ref={doneButton} classNames='self-stretch' onClick={handleDone}>
-        {t('done label', { ns: osTranslations })}
+        {t('done.label', { ns: osTranslations })}
       </Button>
     </div>
   );

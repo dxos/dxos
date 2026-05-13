@@ -5,12 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
+import { Operation } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
-
-import { RedeemToken } from './definitions';
 
 import { ClientCapabilities } from '../types';
+import { RedeemToken } from './definitions';
 
 const handler: Operation.WithHandler<typeof RedeemToken> = RedeemToken.pipe(
   Operation.withHandler(

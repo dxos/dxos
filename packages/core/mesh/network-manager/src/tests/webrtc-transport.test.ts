@@ -5,7 +5,6 @@
 import { describe } from 'vitest';
 
 import { TEST_SIGNAL_HOSTS, TestBuilder } from '../testing';
-
 import { basicTestSuite } from './basic-test-suite';
 
 // Segfault in node-datachannel.

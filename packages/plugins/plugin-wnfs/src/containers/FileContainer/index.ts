@@ -2,6 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FileContainer } from './FileContainer';
-
-export default FileContainer;
+export { FileContainer as default } from './FileContainer';

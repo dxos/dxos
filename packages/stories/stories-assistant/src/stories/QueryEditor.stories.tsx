@@ -6,31 +6,32 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Obj, Tag } from '@dxos/echo';
-import { translations } from '@dxos/plugin-assistant';
-import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
-import { faker } from '@dxos/random';
+import { translations } from '@dxos/plugin-assistant/translations';
+import { ForceGraph } from '@dxos/plugin-explorer/components';
+import { useGraphModel } from '@dxos/plugin-explorer/hooks';
+import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { ScrollArea } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { QueryEditor, type QueryEditorProps, useQueryBuilder } from '@dxos/react-ui-components';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 // TODO(burdon): Move.
 
-faker.seed(1);
-const generator = faker as any as ValueGenerator;
+random.seed(1);
+const generator = random as any as ValueGenerator;
 
 const DefaultStory = ({ value: valueProp }: QueryEditorProps) => {
   const { space } = useClientStory();
   const [query, setQuery] = useState<string | undefined>(valueProp);
   const filter = useQueryBuilder(query);
   const objects = useQuery(space?.db, filter).sort(Obj.sort(Obj.sortByTypename, Obj.sortByLabel));
-  const model = useGraphModel(space, filter);
+  const model = useGraphModel(space?.db, filter);
 
   return (
-    <div role='none' className='grid grid-cols-2 grow divide-x divide-subdued-separator overflow-hidden'>
+    <div className='grid grid-cols-2 grow divide-x divide-subdued-separator overflow-hidden'>
       <div className='flex flex-col overflow-hidden'>
         <QueryEditor classNames='p-2 w-full border-b border-subdued-separator' db={space?.db} onChange={setQuery} />
         <ScrollArea.Root orientation='vertical'>
@@ -49,7 +50,7 @@ const DefaultStory = ({ value: valueProp }: QueryEditorProps) => {
         </ScrollArea.Root>
         <div className='p-2 text-right text-info-text text-xs'>{objects.length}</div>
       </div>
-      <D3ForceGraph model={model} />
+      <ForceGraph model={model} />
     </div>
   );
 };
@@ -79,8 +80,8 @@ const meta: Meta<typeof QueryEditor> = {
           { type: Person.Person, count: 50 },
         ]);
         objects.forEach((obj) => {
-          Obj.change(obj, (obj) => {
-            Obj.getMeta(obj).tags = faker.helpers.uniqueArray(Object.keys(tags), faker.number.int(3));
+          Obj.update(obj, (obj) => {
+            Obj.getMeta(obj).tags = random.helpers.uniqueArray(Object.keys(tags), random.number.int(3));
           });
         });
       },

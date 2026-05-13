@@ -6,125 +6,184 @@ import { DatabaseDirectory, ObjectStructure } from '@dxos/echo-protocol';
 import { LegacyDXN as DXN, ObjectId, PublicKey } from '@dxos/keys';
 
 import { Type } from '../index';
-
 import { TestSchema } from './test-schema';
 
-const spaceKey = PublicKey.random();
+// Lazy init: Cloudflare workers disallow non-determinism at module scope (e.g. random keys).
+let cachedSpaceKeyHex: string | undefined;
+const getSpaceKeyHex = (): string => {
+  if (cachedSpaceKeyHex === undefined) {
+    cachedSpaceKeyHex = PublicKey.random().toHex();
+  }
+  return cachedSpaceKeyHex;
+};
+
+let cachedPeopleAlice: DatabaseDirectory | undefined;
+let cachedPeopleBob: DatabaseDirectory | undefined;
+let cachedOrgsDxos: DatabaseDirectory | undefined;
+let cachedOrgsCyberdyne: DatabaseDirectory | undefined;
+let cachedWorksFredCyberdyne: DatabaseDirectory | undefined;
+let cachedWorksAliceAperture: DatabaseDirectory | undefined;
+let cachedTasksTask1: DatabaseDirectory | undefined;
+let cachedTasksTask2: DatabaseDirectory | undefined;
 
 // TODO(burdon): Use Obj.make.
 
 export const PEOPLE = {
-  alice: DatabaseDirectory.make({
-    spaceKey: spaceKey.toHex(),
-    objects: {
-      [ObjectId.random()]: ObjectStructure.makeObject({
-        type: Type.getDXN(TestSchema.Person)!.toString(),
-        data: {
-          name: 'Alice',
+  get alice(): DatabaseDirectory {
+    if (cachedPeopleAlice === undefined) {
+      cachedPeopleAlice = DatabaseDirectory.make({
+        spaceKey: getSpaceKeyHex(),
+        objects: {
+          [ObjectId.random()]: ObjectStructure.makeObject({
+            type: Type.getDXN(TestSchema.Person)!.toString(),
+            data: {
+              name: 'Alice',
+            },
+          }),
         },
-      }),
-    },
-  }),
-  bob: DatabaseDirectory.make({
-    spaceKey: spaceKey.toHex(),
-    objects: {
-      [ObjectId.random()]: ObjectStructure.makeObject({
-        type: Type.getDXN(TestSchema.Person)!.toString(),
-        data: {
-          name: 'Bob',
+      });
+    }
+    return cachedPeopleAlice;
+  },
+
+  get bob(): DatabaseDirectory {
+    if (cachedPeopleBob === undefined) {
+      cachedPeopleBob = DatabaseDirectory.make({
+        spaceKey: getSpaceKeyHex(),
+        objects: {
+          [ObjectId.random()]: ObjectStructure.makeObject({
+            type: Type.getDXN(TestSchema.Person)!.toString(),
+            data: {
+              name: 'Bob',
+            },
+          }),
         },
-      }),
-    },
-  }),
+      });
+    }
+    return cachedPeopleBob;
+  },
 };
 
 export const ORGS = {
-  dxos: DatabaseDirectory.make({
-    spaceKey: spaceKey.toHex(),
-    objects: {
-      [ObjectId.random()]: ObjectStructure.makeObject({
-        type: Type.getDXN(TestSchema.Organization)!.toString(),
-        data: {
-          name: 'DXOS',
-          founded: '2023',
+  get dxos(): DatabaseDirectory {
+    if (cachedOrgsDxos === undefined) {
+      cachedOrgsDxos = DatabaseDirectory.make({
+        spaceKey: getSpaceKeyHex(),
+        objects: {
+          [ObjectId.random()]: ObjectStructure.makeObject({
+            type: Type.getDXN(TestSchema.Organization)!.toString(),
+            data: {
+              name: 'DXOS',
+              founded: '2023',
+            },
+          }),
         },
-      }),
-    },
-  }),
-  cyberdyne: DatabaseDirectory.make({
-    spaceKey: spaceKey.toHex(),
-    objects: {
-      [ObjectId.random()]: ObjectStructure.makeObject({
-        type: Type.getDXN(TestSchema.Organization)!.toString(),
-        data: {
-          name: 'Cyberdyne Systems',
-          founded: '1984',
+      });
+    }
+    return cachedOrgsDxos;
+  },
+
+  get cyberdyne(): DatabaseDirectory {
+    if (cachedOrgsCyberdyne === undefined) {
+      cachedOrgsCyberdyne = DatabaseDirectory.make({
+        spaceKey: getSpaceKeyHex(),
+        objects: {
+          [ObjectId.random()]: ObjectStructure.makeObject({
+            type: Type.getDXN(TestSchema.Organization)!.toString(),
+            data: {
+              name: 'Cyberdyne Systems',
+              founded: '1984',
+            },
+          }),
         },
-      }),
-    },
-  }),
+      });
+    }
+    return cachedOrgsCyberdyne;
+  },
 };
 
 export const WORKS_FOR = {
-  fredWorksForCyberdyne: DatabaseDirectory.make({
-    spaceKey: spaceKey.toHex(),
-    objects: {
-      [ObjectId.random()]: ObjectStructure.makeRelation({
-        type: Type.getDXN(TestSchema.EmployedBy)!.toString(),
-        source: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.bob.objects!)[0]).toString() },
-        target: { '/': DXN.fromLocalObjectId(Object.keys(ORGS.cyberdyne.objects!)[0]).toString() },
-        data: {
-          since: '2020',
-          position: 'Engineer',
+  get fredWorksForCyberdyne(): DatabaseDirectory {
+    if (cachedWorksFredCyberdyne === undefined) {
+      cachedWorksFredCyberdyne = DatabaseDirectory.make({
+        spaceKey: getSpaceKeyHex(),
+        objects: {
+          [ObjectId.random()]: ObjectStructure.makeRelation({
+            type: Type.getDXN(TestSchema.EmployedBy)!.toString(),
+            source: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.bob.objects!)[0]).toString() },
+            target: { '/': DXN.fromLocalObjectId(Object.keys(ORGS.cyberdyne.objects!)[0]).toString() },
+            data: {
+              since: '2020',
+              position: 'Engineer',
+            },
+          }),
         },
-      }),
-    },
-  }),
-  aliceWorksForAperture: DatabaseDirectory.make({
-    spaceKey: spaceKey.toHex(),
-    objects: {
-      [ObjectId.random()]: ObjectStructure.makeRelation({
-        type: Type.getDXN(TestSchema.EmployedBy)!.toString(),
-        source: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.alice.objects!)[0]).toString() },
-        target: { '/': DXN.fromLocalObjectId(Object.keys(ORGS.dxos.objects!)[0]).toString() },
-        data: {
-          since: '2018',
-          position: 'Research Scientist',
+      });
+    }
+    return cachedWorksFredCyberdyne;
+  },
+
+  get aliceWorksForAperture(): DatabaseDirectory {
+    if (cachedWorksAliceAperture === undefined) {
+      cachedWorksAliceAperture = DatabaseDirectory.make({
+        spaceKey: getSpaceKeyHex(),
+        objects: {
+          [ObjectId.random()]: ObjectStructure.makeRelation({
+            type: Type.getDXN(TestSchema.EmployedBy)!.toString(),
+            source: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.alice.objects!)[0]).toString() },
+            target: { '/': DXN.fromLocalObjectId(Object.keys(ORGS.dxos.objects!)[0]).toString() },
+            data: {
+              since: '2018',
+              position: 'Research Scientist',
+            },
+          }),
         },
-      }),
-    },
-  }),
+      });
+    }
+    return cachedWorksAliceAperture;
+  },
 };
 
 export const TASKS = {
-  task1: DatabaseDirectory.make({
-    spaceKey: spaceKey.toHex(),
-    objects: {
-      [ObjectId.random()]: ObjectStructure.makeObject({
-        type: Type.getDXN(TestSchema.Task)!.toString(),
-        data: {
-          title: 'Complete project documentation',
-          description: 'Write comprehensive documentation for the new system',
-          status: 'in-progress',
-          dueDate: '2023-12-31',
-          assignee: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.bob.objects!)[0]).toString() },
+  get task1(): DatabaseDirectory {
+    if (cachedTasksTask1 === undefined) {
+      cachedTasksTask1 = DatabaseDirectory.make({
+        spaceKey: getSpaceKeyHex(),
+        objects: {
+          [ObjectId.random()]: ObjectStructure.makeObject({
+            type: Type.getDXN(TestSchema.Task)!.toString(),
+            data: {
+              title: 'Complete project documentation',
+              description: 'Write comprehensive documentation for the new system',
+              status: 'in-progress',
+              dueDate: '2023-12-31',
+              assignee: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.bob.objects!)[0]).toString() },
+            },
+          }),
         },
-      }),
-    },
-  }),
-  task2: DatabaseDirectory.make({
-    spaceKey: spaceKey.toHex(),
-    objects: {
-      [ObjectId.random()]: ObjectStructure.makeObject({
-        type: Type.getDXN(TestSchema.Task)!.toString(),
-        data: {
-          title: 'Run experiments',
-          description: 'Conduct series of experiments on the portal device',
-          status: 'pending',
-          dueDate: '2023-11-15',
-          assignee: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.alice.objects!)[0]).toString() },
+      });
+    }
+    return cachedTasksTask1;
+  },
+
+  get task2(): DatabaseDirectory {
+    if (cachedTasksTask2 === undefined) {
+      cachedTasksTask2 = DatabaseDirectory.make({
+        spaceKey: getSpaceKeyHex(),
+        objects: {
+          [ObjectId.random()]: ObjectStructure.makeObject({
+            type: Type.getDXN(TestSchema.Task)!.toString(),
+            data: {
+              title: 'Run experiments',
+              description: 'Conduct series of experiments on the portal device',
+              status: 'pending',
+              dueDate: '2023-11-15',
+              assignee: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.alice.objects!)[0]).toString() },
+            },
+          }),
         },
-      }),
-    },
-  }),
+      });
+    }
+    return cachedTasksTask2;
+  },
 };

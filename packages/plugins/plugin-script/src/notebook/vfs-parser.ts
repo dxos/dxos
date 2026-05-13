@@ -42,6 +42,7 @@ export class VirtualTypeScriptParser {
   protected compilerOptions: ts.CompilerOptions = {
     target: ts.ScriptTarget.ES2020,
     module: ts.ModuleKind.ESNext,
+    moduleResolution: ts.ModuleResolutionKind.Bundler,
     strict: true,
     esModuleInterop: true,
     skipLibCheck: true,
@@ -91,7 +92,9 @@ export class VirtualTypeScriptParser {
     // Analyze each file.
     files.forEach((file) => {
       const sourceFile = env.getSourceFile(file.filename);
-      if (!sourceFile || !typeChecker) return;
+      if (!sourceFile || !typeChecker) {
+        return;
+      }
 
       const fileResults = this.analyzeSourceFile(sourceFile, typeChecker);
       results.push(...fileResults);
@@ -207,7 +210,9 @@ export class VirtualTypeScriptParser {
     signature: ts.Signature | undefined,
     typeChecker: ts.TypeChecker,
   ): Array<{ name: string; type: string }> {
-    if (!signature) return [];
+    if (!signature) {
+      return [];
+    }
 
     return signature.parameters.map((param) => ({
       name: param.getName(),
@@ -429,7 +434,9 @@ export class NotebookVirtualParser extends VirtualTypeScriptParser {
         const previousExports = new Set<string>();
         for (const [_prevCellId, prevAnalysis] of cellAnalysis) {
           prevAnalysis.exports.forEach((exp) => {
-            if (exp.name) previousExports.add(exp.name);
+            if (exp.name) {
+              previousExports.add(exp.name);
+            }
           });
         }
 

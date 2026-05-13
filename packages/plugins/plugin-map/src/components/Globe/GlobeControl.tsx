@@ -11,11 +11,11 @@ import {
   type GlobeController,
   type GlobeRootProps,
   type LatLngLiteral,
-  loadTopology,
   useDrag,
   useGlobeZoomHandler,
   useTour,
 } from '@dxos/react-ui-geo';
+import { loadTopology } from '@dxos/react-ui-geo/data';
 import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 

@@ -21,15 +21,14 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
   "files": [
     "dist",
     "src"
   ],
   "dependencies": {
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@radix-ui/react-context": "catalog:",
     "jsonpath-plus": "catalog:",
     "react-syntax-highlighter": "catalog:"
   },

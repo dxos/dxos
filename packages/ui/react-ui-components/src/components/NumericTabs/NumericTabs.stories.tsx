@@ -5,17 +5,16 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { ScrollArea } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { TogglePanel } from '../TogglePanel';
-
 import { NumericTabs } from './NumericTabs';
 
 const content = Array.from({ length: 15 }, () => ({
-  title: faker.lorem.paragraph(),
-  content: faker.lorem.paragraphs(3),
+  title: random.lorem.paragraph(),
+  content: random.lorem.paragraphs(3),
 }));
 
 const meta = {

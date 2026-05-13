@@ -12,37 +12,51 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "imports": {
+    "#capabilities": {
+      "source": "./src/capabilities/index.ts",
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "default": "./dist/lib/neutral/capabilities/index.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/neutral/meta.mjs"
+    },
+    "#operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "default": "./dist/lib/neutral/operations/index.mjs"
+    },
+    "#plugin": {
+      "source": "./src/AttentionPlugin.ts",
+      "types": "./dist/types/src/AttentionPlugin.d.ts",
+      "default": "./dist/lib/neutral/AttentionPlugin.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/neutral/types/index.mjs"
+    }
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     },
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "browser": "./dist/lib/browser/operations/index.mjs",
-      "node": "./dist/lib/node-esm/operations/index.mjs"
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "browser": "./dist/lib/browser/types/index.mjs",
-      "node": "./dist/lib/node-esm/types/index.mjs"
+    "./testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "default": "./dist/lib/neutral/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "types": [
-        "dist/types/src/types/index.d.ts"
-      ],
-      "operations": [
-        "dist/types/src/operations/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"
@@ -50,9 +64,9 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/keyboard": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -67,8 +81,5 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

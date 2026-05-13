@@ -39,25 +39,6 @@
     }
   },
   "types": "dist/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "proto/*": [
-        "dist/src/proto/gen/*"
-      ],
-      "buf/*": [
-        "dist/src/buf/proto/gen/*"
-      ],
-      "feed-replication": [
-        "dist/src/feed-replication.d.ts"
-      ],
-      "buf": [
-        "dist/src/buf/index.d.ts"
-      ],
-      "proto": [
-        "dist/src/proto/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"

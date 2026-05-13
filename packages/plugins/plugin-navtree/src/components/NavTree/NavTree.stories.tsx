@@ -12,21 +12,22 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useAtomCapability } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
-import { withLayout } from '@dxos/react-ui/testing';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
+import { withLayout } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { NavTreeContainer } from '../../containers';
-import { NavTreePlugin } from '../../NavTreePlugin';
-import { storybookGraphBuilders } from '../../testing';
-import { translations } from '../../translations';
+import { NavTreeContainer } from '#containers';
+import { storybookGraphBuilders } from '#testing';
+import { translations } from '#translations';
 
-faker.seed(1234);
+import { NavTreePlugin } from '../../NavTreePlugin';
+
+random.seed(1234);
 
 const StoryState = Capability.make<Atom.Atom<{ tab: string }>>('story-state');
 
@@ -43,7 +44,7 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
     <div className='flex p-1 items-center border-b border-separator'>
       <IconButton
         density='coarse'
-        icon='ph--atom--regular'
+        icon='ph--circle--regular'
         label='Test'
         iconOnly
         variant={hasAttention ? 'primary' : 'ghost'}

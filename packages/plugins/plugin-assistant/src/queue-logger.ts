@@ -2,39 +2,52 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Queue, Ref, type Space, getSpace } from '@dxos/client/echo';
-import { type Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
-import { Key, Obj } from '@dxos/echo';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+
+import { createFeedServiceLayer, type Queue, type Space, getSpace } from '@dxos/client/echo';
+import { Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
+import { Feed, Obj, Ref } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import { InvocationTraceEndEvent, InvocationTraceEventType, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
 import { InvocationOutcome } from '@dxos/functions-runtime';
-import { type InvocationTraceEvent } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { LegacyDXN, QueueSubspaceTags } from '@dxos/keys';
 
 export class QueueLogger implements SequenceLogger {
   private _space: Space;
-  private _invocationTraceQueue: Queue<InvocationTraceEvent>;
+  private _invocationTraceFeed: Feed.Feed;
+  private _feedServiceLayer: Layer.Layer<Feed.FeedService>;
 
-  constructor(private readonly sequence: Sequence) {
+  constructor(private readonly sequence: Sequence.Sequence) {
     const space = getSpace(sequence);
     invariant(space, 'Space not found');
     this._space = space;
-    let dxn = this._space.properties.invocationTraceQueue?.dxn;
-    if (!dxn) {
-      dxn = LegacyDXN.fromQueue(QueueSubspaceTags.TRACE, this._space.id, Key.ObjectId.random());
-      const newDxn = dxn;
-      Obj.change(this._space.properties, (obj) => {
-        obj.invocationTraceQueue = Ref.fromDXN(newDxn);
+    this._feedServiceLayer = createFeedServiceLayer(space.queues);
+
+    const existingFeedRef = this._space.properties.invocationTraceFeed;
+
+    if (existingFeedRef) {
+      // A feed reference exists; ensure its target is loaded. If not, fail loudly
+      // rather than silently creating a new feed and orphaning existing traces.
+      invariant(existingFeedRef.target, 'invocationTraceFeed reference is not yet loaded');
+      invariant(Feed.getQueueDxn(existingFeedRef.target), 'invocationTraceFeed has no queue DXN');
+      this._invocationTraceFeed = existingFeedRef.target;
+    } else {
+      const feed = space.db.add(Feed.make({ namespace: 'trace' }));
+      invariant(Feed.getQueueDxn(feed), 'New invocationTraceFeed has no queue DXN');
+      Obj.update(this._space.properties, (obj) => {
+        obj.invocationTraceFeed = Ref.make(feed);
       });
+      this._invocationTraceFeed = feed;
     }
-    this._invocationTraceQueue = this._space.queues.get(dxn);
   }
 
   log(event: SequenceEvent) {
     switch (event.type) {
       case 'begin':
-        void this._invocationTraceQueue.append([
+        void this._appendToTraceFeed([
           Obj.make(InvocationTraceStartEvent, {
             type: InvocationTraceEventType.START,
             invocationId: event.invocationId,
@@ -46,7 +59,7 @@ export class QueueLogger implements SequenceLogger {
         ]);
         break;
       case 'end':
-        void this._invocationTraceQueue.append([
+        void this._appendToTraceFeed([
           Obj.make(InvocationTraceEndEvent, {
             type: InvocationTraceEventType.END,
             invocationId: event.invocationId,
@@ -117,6 +130,17 @@ export class QueueLogger implements SequenceLogger {
     return LegacyDXN.fromQueue(QueueSubspaceTags.TRACE, this._space.id, invocationId);
   }
 
+  private _appendToTraceFeed(items: any[]): Promise<void> {
+    return Feed.append(this._invocationTraceFeed, items).pipe(
+      Effect.provide(this._feedServiceLayer),
+      runAndForwardErrors,
+    );
+  }
+
+  // TODO(burdon): The per-invocation trace event queues address feeds by raw queue DXN
+  // (no backing Feed.Feed object). Migration to Feed.append is blocked on either
+  // (a) materializing a Feed object per invocation, or (b) a lower-level
+  // FeedService.appendByDxn primitive. Tracked as Phase 6 work in echo/AUDIT.md.
   private _getTraceEventQueue(invocationId: string): Queue<TraceEvent> {
     const dxn = this._getTraceQueueDxn(invocationId);
     return this._space.queues.get(dxn);

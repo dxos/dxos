@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { SelectionSchema } from '@dxos/react-ui-attention';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
 export namespace AttentionAction {
   const ATTENTION_ACTION = `${meta.id}.action`;

@@ -6,30 +6,29 @@ import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { Filter, JsonSchema, Obj, Query } from '@dxos/echo';
-import { type View } from '@dxos/echo';
-import { faker } from '@dxos/random';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Filter, JsonSchema, Obj, Query, type View } from '@dxos/echo';
+import { random } from '@dxos/random';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ProjectionModel, ViewModel, createEchoChangeCallback } from '@dxos/schema';
 import { withRegistry } from '@dxos/storybook-utils';
 import { Organization } from '@dxos/types';
 
-import { createEchoChangeCallback as createKanbanChangeCallback } from '../../hooks';
-import { KanbanCardTileSimple } from '../../testing';
-import { translations } from '../../translations';
-import { Kanban } from '../../types';
+import { createEchoChangeCallback as createKanbanChangeCallback } from '#hooks';
+import { KanbanCardTileSimple } from '#testing';
+import { translations } from '#translations';
+import { Kanban } from '#types';
 
 import { KanbanBoard } from './KanbanBoard';
 
-faker.seed(1);
+random.seed(1);
 
 const createOrg = () => ({
-  name: faker.commerce.productName(),
-  description: faker.lorem.sentence(),
-  image: faker.image.url(),
-  website: faker.internet.url(),
-  status: faker.helpers.arrayElement(Organization.StatusOptions).id as Organization.Organization['status'],
+  name: random.commerce.productName(),
+  description: random.lorem.sentence(),
+  image: random.image.url(),
+  website: random.internet.url(),
+  status: random.helpers.arrayElement(Organization.StatusOptions).id as Organization.Organization['status'],
 });
 
 /**
@@ -66,7 +65,7 @@ const DefaultStory = () => {
     const initialItems = Array.from({ length: 12 }, () =>
       Obj.make(Organization.Organization, {
         ...createOrg(),
-        status: faker.helpers.arrayElement(statuses) as Organization.Organization['status'],
+        status: random.helpers.arrayElement(statuses) as Organization.Organization['status'],
       }),
     );
 
@@ -79,7 +78,9 @@ const DefaultStory = () => {
 
   const handleCardAdd = useCallback(
     (columnValue: string | undefined) => {
-      if (!state || !columnFieldPath || !registry) return undefined;
+      if (!state || !columnFieldPath || !registry) {
+        return undefined;
+      }
       const card = Obj.make(Organization.Organization, {
         ...createOrg(),
         ...(columnFieldPath ? { [columnFieldPath]: columnValue } : {}),
@@ -93,7 +94,9 @@ const DefaultStory = () => {
 
   const handleCardRemove = useCallback(
     (card: Obj.Unknown) => {
-      if (!registry) return;
+      if (!registry) {
+        return;
+      }
       const current = registry.get(items) ?? [];
       registry.set(
         items,
@@ -104,7 +107,7 @@ const DefaultStory = () => {
   );
 
   if (!state) {
-    return <></>;
+    return <Loading />;
   }
 
   return (

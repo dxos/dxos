@@ -140,7 +140,7 @@ export const useSections = (): SectionItem[] => {
     {
       id: 'agent',
       title: 'AGENT',
-      icon: 'ph--robot--regular',
+      icon: 'ph--drone--regular',
       items: [
         {
           id: '/agent/dashboard',

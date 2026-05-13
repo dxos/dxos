@@ -9,19 +9,19 @@ import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Collection } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client';
-import { SearchPlugin } from '@dxos/plugin-search';
-import { SpacePlugin } from '@dxos/plugin-space';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { SearchPlugin } from '@dxos/plugin-search/plugin';
+import { SpacePlugin } from '@dxos/plugin-space/plugin';
 import { corePlugins } from '@dxos/plugin-testing';
+import { translations as searchTranslation } from '@dxos/react-ui-search/translations';
 import { withLayout } from '@dxos/react-ui/testing';
-import { translations as searchTranslation } from '@dxos/react-ui-search';
 
-import { ReactRoot, ReactSurface, State } from '../../capabilities';
-import { meta as pluginMeta } from '../../meta';
+import { ReactRoot, ReactSurface, State } from '#capabilities';
+import { meta as pluginMeta } from '#meta';
+import { translations } from '#translations';
+import { SimpleLayoutEvents } from '#types';
+
 import { type SimpleLayoutPluginOptions } from '../../SimpleLayoutPlugin';
-import { translations } from '../../translations';
-import { SimpleLayoutEvents } from '../../types';
-
 import { SimpleLayout } from './SimpleLayout';
 
 const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
@@ -45,7 +45,7 @@ const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
         Plugin.addModule(({ isPopover = false }) => ({
           id: Capability.getModuleTag(State),
           activatesOn: ActivationEvents.Startup,
-          activatesAfter: [SimpleLayoutEvents.StateReady, AppActivationEvents.LayoutReady],
+          firesAfterActivation: [SimpleLayoutEvents.StateReady, AppActivationEvents.LayoutReady],
           activate: () => State({ initialState: { isPopover } }),
         })),
         Plugin.addModule({

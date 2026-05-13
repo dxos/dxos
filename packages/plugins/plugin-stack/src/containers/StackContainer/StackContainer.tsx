@@ -6,28 +6,26 @@ import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
 import React, { useCallback, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Obj, type Ref } from '@dxos/echo';
-import { type Collection } from '@dxos/echo';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useAppGraph, type AppSurface } from '@dxos/app-toolkit/ui';
+import { Annotation, type Collection, Obj, type Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { Graph } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { isNonNullable } from '@dxos/util';
 
-import { StackContext, StackSection } from '../../components';
-import { meta } from '../../meta';
+import { StackContext, StackSection } from '#components';
+import { meta } from '#meta';
 import {
   type AddSectionPosition,
   type CollapsedSections,
   type StackSectionItem,
   type StackSectionMetadata,
   type StackSectionView,
-} from '../../types';
+} from '#types';
 
 const collectionObjectsFamily = Atom.family((collection: Collection.Collection) =>
   Atom.make((get) => {
@@ -41,13 +39,12 @@ const collectionObjectsFamily = Atom.family((collection: Collection.Collection) 
   }),
 );
 
-type StackContainerProps = SurfaceComponentProps<Collection.Collection>;
+type StackContainerProps = AppSurface.ObjectArticleProps<Collection.Collection>;
 
 export const StackContainer = ({ attendableId, subject: collection }: StackContainerProps) => {
   const { invokePromise } = useOperationInvoker();
   const { graph } = useAppGraph();
   const { t } = useTranslation(meta.id);
-  const allMetadata = useCapabilities(AppCapabilities.Metadata);
   const [collapsedSections, setCollapsedSections] = useState<CollapsedSections>({});
 
   // TODO(wittjosiah): Re-implement stack views with relations.
@@ -61,8 +58,9 @@ export const StackContainer = ({ attendableId, subject: collection }: StackConta
 
   const collectionObjects = useAtomValue(collectionObjectsFamily(collection));
   const items = collectionObjects.map((object: Obj.Unknown) => {
-    const metadata = allMetadata.find((m) => m.id === (Obj.getTypename(object) ?? 'never'))
-      ?.metadata as StackSectionMetadata;
+    const schema = Obj.getSchema(object);
+    const iconAnnotation = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
+    const metadata: StackSectionMetadata = { icon: iconAnnotation?.icon };
     const view = {
       // ...stack.sections[object.id],
       collapsed: collapsedSections[Obj.getDXN(object).toString()],
@@ -147,7 +145,7 @@ export const StackContainer = ({ attendableId, subject: collection }: StackConta
       </Toolbar.Root>
       <StackContext.Provider
         value={{
-          attendableId: attendableId!,
+          attendableId,
           onCollapse: handleCollapse,
           onNavigate: handleNavigate,
           onDelete: handleDelete,

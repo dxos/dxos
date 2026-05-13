@@ -9,7 +9,8 @@ import { IconButton, Popover, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, Menu, useMenuActions } from '@dxos/react-ui-menu';
 import { composable, composableProps, osTranslations } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
+
 import { useMobileLayout } from '../MobileLayout';
 
 const APP_BAR_NAME = 'SimpleLayout.AppBar';
@@ -41,7 +42,7 @@ export const AppBar = composable<HTMLDivElement, AppBarProps>(
     const { keyboardOpen } = useMobileLayout(APP_BAR_NAME);
 
     // Fall back to app name if no title provided.
-    const displayTitle = title ?? t('current app name', { ns: osTranslations });
+    const displayTitle = title ?? t('current-app.name', { ns: osTranslations });
 
     // Wrap the menu trigger with Popover.Anchor when the popoverAnchorId is set.
     const AnchorRoot = popoverAnchorId ? Popover.Anchor : Fragment;
@@ -55,13 +56,13 @@ export const AppBar = composable<HTMLDivElement, AppBarProps>(
         ref={forwardedRef}
       >
         {keyboardOpen ? (
-          <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('done label')} />
+          <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('done.label')} />
         ) : showBackButton ? (
           <IconButton
             variant='ghost'
             icon='ph--caret-left--regular'
             iconOnly
-            label={t('back label')}
+            label={t('back.label')}
             onClick={onBack}
           />
         ) : (
@@ -76,7 +77,7 @@ export const AppBar = composable<HTMLDivElement, AppBarProps>(
                   variant='ghost'
                   icon='ph--dots-three-vertical--regular'
                   iconOnly
-                  label={t('actions menu label')}
+                  label={t('actions-menu.label')}
                 />
               </Menu.Trigger>
               <Menu.Content />

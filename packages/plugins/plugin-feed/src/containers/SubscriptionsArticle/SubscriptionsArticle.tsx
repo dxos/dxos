@@ -5,51 +5,50 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, companionSegment } from '@dxos/app-toolkit';
-import { type SurfaceComponentProps, useLayout } from '@dxos/app-toolkit/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { type AppSurface, useLayout } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
-import { AttentionOperation } from '@dxos/plugin-attention/operations';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { invariant } from '@dxos/invariant';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { useSelected } from '@dxos/react-ui-attention';
 
-import { SubscriptionStack, type SubscriptionStackAction } from '../../components';
-import { meta } from '../../meta';
-import { FeedOperation } from '../../operations';
-import { Subscription } from '../../types';
+import { SubscriptionStack, type SubscriptionStackAction } from '#components';
+import { meta } from '#meta';
+import { FeedOperation } from '#types';
+import { Subscription } from '#types';
 
-export type SubscriptionsArticleProps = SurfaceComponentProps<Subscription.Feed>;
+export type SubscriptionsArticleProps = AppSurface.SpaceArticleProps;
 
-export const SubscriptionsArticle = ({ role, subject, attendableId }: SubscriptionsArticleProps) => {
+export const SubscriptionsArticle = ({ role, space, attendableId }: SubscriptionsArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
-  const id = attendableId ?? Obj.getDXN(subject).toString();
-  const db = Obj.getDatabase(subject);
   const layout = useLayout();
 
-  const feeds = useQuery(db, Filter.type(Subscription.Feed));
-  const currentId = useSelected(id, 'single');
+  const feeds = useQuery(space.db, Filter.type(Subscription.Feed));
+  const currentId = useSelected(attendableId, 'single');
 
   const handleAction = useCallback(
     (action: SubscriptionStackAction) => {
       switch (action.type) {
         case 'current': {
-          void invokePromise(AttentionOperation.Select, {
-            contextId: id,
-            selection: { mode: 'single', id: action.feedId },
+          invariant(attendableId);
+          void invokePromise(LayoutOperation.Select, {
+            contextId: attendableId,
+            subject: { mode: 'single', id: action.feedId },
           });
 
-          const companion = companionSegment('feed');
+          const companion = linkedSegment('feed');
           if (layout.mode === 'simple') {
             void invokePromise(LayoutOperation.UpdateComplementary, {
               subject: companion,
               state: 'expanded',
             });
           } else {
-            void invokePromise(DeckOperation.ChangeCompanion, {
-              companion,
+            void invokePromise(LayoutOperation.UpdateCompanion, {
+              subject: companion,
             });
           }
           break;
@@ -72,27 +71,25 @@ export const SubscriptionsArticle = ({ role, subject, attendableId }: Subscripti
         }
       }
     },
-    [id, layout.mode, feeds, invokePromise],
+    [attendableId, layout.mode, feeds, invokePromise],
   );
 
   const handleCreate = useCallback(() => {
-    if (db) {
-      void invokePromise(SpaceOperation.OpenCreateObject, {
-        target: db,
-        typename: Subscription.Feed.typename,
-      });
-    }
-  }, [db, invokePromise]);
+    void invokePromise(SpaceOperation.OpenCreateObject, {
+      target: space.db,
+      typename: Subscription.Feed.typename,
+    });
+  }, [space, invokePromise]);
 
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Toolbar.IconButton label={t('add feed label')} icon='ph--plus--regular' iconOnly onClick={handleCreate} />
+          <Toolbar.IconButton label={t('add-feed.label')} icon='ph--plus--regular' iconOnly onClick={handleCreate} />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <SubscriptionStack id={id} feeds={feeds} currentId={currentId} onAction={handleAction} />
+        <SubscriptionStack id={attendableId} feeds={feeds} currentId={currentId} onAction={handleAction} />
       </Panel.Content>
     </Panel.Root>
   );

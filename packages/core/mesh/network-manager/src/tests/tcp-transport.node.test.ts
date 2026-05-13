@@ -3,7 +3,6 @@
 //
 
 import { randomBytes } from 'node:crypto';
-
 import { describe, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
@@ -12,7 +11,6 @@ import { range } from '@dxos/util';
 import { TestBuilder } from '../testing';
 import { FullyConnectedTopology } from '../topology';
 import { TransportKind } from '../transport';
-
 import { basicTestSuite } from './basic-test-suite';
 import { exchangeMessages, joinSwarm, leaveSwarm, openAndCloseAfterTest } from './utils';
 

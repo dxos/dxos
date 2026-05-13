@@ -10,9 +10,9 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
-        'toolbar menu label': 'Action menu',
-        'toolbar drag handle label': 'Drag to rearrange',
-        'toolbar close label': 'Close',
+        'toolbar-menu.label': 'Action menu',
+        'toolbar-drag-handle.label': 'Drag to rearrange',
+        'toolbar-close.label': 'Close',
       },
     },
   },

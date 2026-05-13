@@ -15,7 +15,8 @@ import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/reac
 import { mx } from '@dxos/ui-theme';
 import { byPosition, getHostPlatform, isTauri } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
+
 import { useExpandPath } from '../hooks';
 
 export type HomeProps = {};
@@ -99,7 +100,7 @@ const WorkspaceTile: MosaicStackTileComponent<Node.Node> = (props) => {
       fullWidth
       tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
       data-selected={isSelected}
-      classNames={mx('dx-focus-ring', isSelected && 'bg-hover-overlay')}
+      classNames={mx('dx-focus-ring', isSelected && 'bg-selected-surface')}
       onClick={handleSelect}
       ref={cardRef}
     >

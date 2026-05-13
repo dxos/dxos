@@ -5,16 +5,16 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useNode } from '@dxos/plugin-graph';
 import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 
-import { useAppBarProps, useNavbarActions, useSimpleLayoutState } from '../../hooks';
-import { Loading } from '../Loading';
-import { useExpandPath } from '../hooks';
-import { useMobileLayout } from '../MobileLayout';
+import { useAppBarProps, useNavbarActions, useSimpleLayoutState } from '#hooks';
 
+import { useExpandPath } from '../hooks';
+import { Loading } from '../Loading';
+import { useMobileLayout } from '../MobileLayout';
 import { AppBar } from './AppBar';
 import { NavBar } from './NavBar';
 
@@ -59,7 +59,7 @@ export const Main = () => {
       <Panel.Content role='article' className='bg-base-surface'>
         <Surface.Surface
           key={id}
-          role='article'
+          type={AppSurface.Article}
           data={data}
           limit={1}
           fallback={ErrorFallback}

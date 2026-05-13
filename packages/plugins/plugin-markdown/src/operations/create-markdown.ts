@@ -4,13 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
-import { CreateMarkdown } from './definitions';
+import { Markdown, MarkdownOperation } from '../types';
 
-import { Markdown } from '../types';
-
-const handler: Operation.WithHandler<typeof CreateMarkdown> = CreateMarkdown.pipe(
+const handler: Operation.WithHandler<typeof MarkdownOperation.CreateMarkdown> = MarkdownOperation.CreateMarkdown.pipe(
   Operation.withHandler(({ name, content }) =>
     Effect.succeed({
       object: Markdown.make({ name, content }),

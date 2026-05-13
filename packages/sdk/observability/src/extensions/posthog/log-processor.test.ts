@@ -5,7 +5,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { InvariantViolation } from '@dxos/invariant';
-import { type LogConfig, type LogEntry, LogLevel } from '@dxos/log';
+import { type LogConfig, LogEntry, type LogEntryInit, LogLevel } from '@dxos/log';
 
 // Replace the posthog-js module with a stub so log-processor's top-level import resolves to our mock.
 // Dynamic imports are used so that both the mock and log-processor are loaded after vi.mock is hoisted.
@@ -23,11 +23,12 @@ const baseConfig: LogConfig = {
   processors: [],
 };
 
-const createEntry = (overrides: Partial<LogEntry> = {}): LogEntry => ({
-  level: LogLevel.ERROR,
-  message: 'test error',
-  ...overrides,
-});
+const createEntry = (overrides: Partial<LogEntryInit> = {}): LogEntry =>
+  new LogEntry({
+    level: LogLevel.ERROR,
+    message: 'test error',
+    ...overrides,
+  });
 
 describe('logProcessor', () => {
   beforeEach(() => {

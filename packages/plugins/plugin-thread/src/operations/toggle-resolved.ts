@@ -4,23 +4,23 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
-import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
+import { ObservabilityOperation } from '@dxos/plugin-observability';
 
-import { ToggleResolved } from './definitions';
+import { ThreadOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof ToggleResolved> = ToggleResolved.pipe(
+const handler: Operation.WithHandler<typeof ThreadOperation.ToggleResolved> = ThreadOperation.ToggleResolved.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const thread = input.thread;
 
-      Obj.change(thread, (obj) => {
-        if (obj.status === 'active' || obj.status === undefined) {
-          obj.status = 'resolved';
-        } else if (obj.status === 'resolved') {
-          obj.status = 'active';
+      Obj.update(thread, (thread) => {
+        if (thread.status === 'active' || thread.status === undefined) {
+          thread.status = 'resolved';
+        } else if (thread.status === 'resolved') {
+          thread.status = 'active';
         }
       });
 

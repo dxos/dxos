@@ -2,10 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/operation';
-
-export * as ObservabilityOperation from './definitions';
-export { UserFeedback } from './definitions';
+import { OperationHandlerSet } from '@dxos/compute';
 
 export const ObservabilityOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./capture-user-feedback'),

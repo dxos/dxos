@@ -6,18 +6,18 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useRef, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-theme';
 
+import { translations } from '#translations';
+
 import { MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity, MessageStoryText } from '../testing';
-import { translations } from '../translations';
-
 import { Thread } from './Thread';
 
-faker.seed(1);
+random.seed(1);
 
 const DefaultStory = () => {
   const [pending, setPending] = useState(false);
@@ -28,7 +28,7 @@ const DefaultStory = () => {
       id: `m${i + 1}`,
       timestamp: new Date().toISOString(),
       authorId: [identityKey1.toHex(), identityKey2.toHex()][i % 2],
-      text: faker.lorem.paragraph(),
+      text: random.lorem.paragraph(),
     })),
   );
 

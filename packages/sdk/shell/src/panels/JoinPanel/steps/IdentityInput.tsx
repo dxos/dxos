@@ -35,7 +35,7 @@ export const IdentityInput = (props: IdentityInputProps) => {
           },
           (error) => {
             log.catch(error);
-            setValidationMessage(t('failed to recover identity message'));
+            setValidationMessage(t('failed-to-recover-identity.message'));
           },
         );
       } else {
@@ -45,7 +45,7 @@ export const IdentityInput = (props: IdentityInputProps) => {
           },
           (error) => {
             log.catch(error);
-            setValidationMessage(t('failed to create identity message'));
+            setValidationMessage(t('failed-to-create-identity.message'));
           },
         );
       }
@@ -76,13 +76,13 @@ export const IdentityInputImpl = ({ method, active, validationMessage, onConfirm
 
   return (
     <>
-      <div role='none' className='grow flex flex-col justify-center'>
+      <div className='grow flex flex-col justify-center'>
         <TextInput
           {...{ validationMessage }}
-          label={<InputLabel>{t(isRecover ? 'recover identity input label' : 'new identity input label')}</InputLabel>}
+          label={<InputLabel>{t(isRecover ? 'recover-identity-input.label' : 'new-identity-input.label')}</InputLabel>}
           disabled={disabled}
           data-testid='identity-input'
-          placeholder={isRecover ? t('recovery code placeholder') : t('display name placeholder')}
+          placeholder={isRecover ? t('recovery-code.placeholder') : t('display-name.placeholder')}
           onChange={({ target: { value } }) => setInputValue(value)}
         />
       </div>
@@ -94,7 +94,7 @@ export const IdentityInputImpl = ({ method, active, validationMessage, onConfirm
           onClick={() => send?.({ type: 'deselectAuthMethod' })}
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-back`}
         >
-          {t('back label')}
+          {t('back.label')}
         </Action> */}
         <Action
           variant='primary'
@@ -102,7 +102,7 @@ export const IdentityInputImpl = ({ method, active, validationMessage, onConfirm
           onClick={handleConfirm}
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-continue`}
         >
-          {pending ? t('pending label') : t('continue label')}
+          {pending ? t('pending.label') : t('continue.label')}
         </Action>
       </ActionBar>
     </>

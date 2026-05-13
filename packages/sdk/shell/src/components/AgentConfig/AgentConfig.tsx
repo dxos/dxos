@@ -10,6 +10,7 @@ import { getSize, mx, textValence } from '@dxos/ui-theme';
 import { translationKey } from '../../translations';
 import { type AgentFormProps } from '../DeviceList';
 
+// TODO(burdon): Deprecated? Docs required.
 export const AgentConfig = ({
   agentStatus,
   validationMessage,
@@ -19,8 +20,8 @@ export const AgentConfig = ({
 }: Omit<AgentFormProps, 'agentHostingEnabled'>) => {
   const { t } = useTranslation(translationKey);
   return (
-    <div role='none' className='p-1'>
-      <h2 className={mx('text-description', 'text-center mt-2')}>{t('agent heading')}</h2>
+    <div className='p-1'>
+      <h2 className={mx('text-description', 'text-center mt-2')}>{t('agent.heading')}</h2>
       {validationMessage && (
         <p role='alert' className={mx(textValence('error'), 'my-2')}>
           {validationMessage}
@@ -56,12 +57,12 @@ export const AgentConfig = ({
               </Avatar.Label>
             </Avatar.Root>
             {agentStatus === 'created' && (
-              <Tooltip.Trigger asChild content={t('destroy agent label')} side='bottom'>
+              <Tooltip.Trigger asChild content={t('destroy-agent.label')} side='bottom'>
                 <IconButton
                   variant='ghost'
                   classNames='px-0 w-(--dx-rail-action) h-(--dx-rail-action)'
                   data-testid='agent.destroy'
-                  label={t('destroy agent label')}
+                  label={t('destroy-agent.label')}
                   icon='ph--power--regular'
                   iconOnly
                   onClick={onAgentDestroy}
@@ -71,7 +72,7 @@ export const AgentConfig = ({
           </div>
           {agentStatus === 'created' && (
             <p id='devices-panel.create-agent.description' className={mx('text-description', 'my-2')}>
-              {t('agent requested description')}
+              {t('agent-requested.description')}
             </p>
           )}
         </>
@@ -92,23 +93,23 @@ export const AgentConfig = ({
               )}
             </div>
             <span className='grow font-medium text-start'>
-              {t(agentStatus === 'creatable' ? 'create agent label' : '')}
+              {t(agentStatus === 'creatable' ? 'create-agent.label' : '')}
             </span>
           </Button>
           {agentStatus === 'creatable' && (
-            <div role='none' className='space-y-2' id='devices-panel.create-agent.description'>
+            <div className='space-y-2' id='devices-panel.create-agent.description'>
               <p className='text-description'>
                 <Trans
                   {...{
                     t,
-                    i18nKey: 'create agent clickwrap',
+                    i18nKey: 'create-agent-clickwrap',
                     components: {
                       tosLink: <Link target='_blank' rel='noreferrer' />,
                     },
                   }}
                 />
               </p>
-              <p className='text-description'>{t('create agent description')}</p>
+              <p className='text-description'>{t('create-agent.description')}</p>
             </div>
           )}
         </>

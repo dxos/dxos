@@ -9,10 +9,10 @@ import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolk
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { Node } from '@dxos/plugin-graph';
 
-import { AppGraphBuilder, FileSettings, FileState, Markdown, OperationHandler, ReactSurface } from './capabilities';
-import { meta } from './meta';
-import { translations } from './translations';
-import { FileCapabilities } from './types';
+import { AppGraphBuilder, FileSettings, FileState, Markdown, OperationHandler, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { FileCapabilities } from '#types';
 
 // TODO(burdon): Rename package plugin-file (singular).
 
@@ -21,7 +21,7 @@ const SettingsReady = AppActivationEvents.createSettingsEvent(FileCapabilities.S
 export const FilesPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSettingsModule({ activate: FileSettings, activatesAfter: [SettingsReady] }),
+  AppPlugin.addSettingsModule({ activate: FileSettings, firesAfterActivation: [SettingsReady] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
@@ -62,3 +62,5 @@ export const FilesPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default FilesPlugin;

@@ -6,30 +6,30 @@ import React, { forwardRef, useEffect, useRef } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Space, getSpace } from '@dxos/client/echo';
-import { type Obj } from '@dxos/echo';
+import { Feed, type Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 import { getParentId } from '@dxos/react-ui-attention';
 
-import { Chat as ChatComponent, type ChatRootProps } from '../../components';
-import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../../hooks';
-import { AssistantCapabilities, type ChatType } from '../../types';
+import { Chat as ChatComponent, type ChatRootProps } from '#components';
+import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
+import { type Assistant, AssistantCapabilities, type ChatType } from '#types';
 
-export type ChatContainerProps = SurfaceComponentProps<
-  ChatType.Chat | undefined,
-  {
-    space?: Space;
-    companionTo?: Obj.Unknown;
-  } & Pick<ChatRootProps, 'onEvent'>
->;
+export type ChatContainerProps = (
+  | AppSurface.ObjectArticleProps<ChatType.Chat | undefined>
+  | AppSurface.ObjectSectionProps<ChatType.Chat | undefined>
+) & {
+  space?: Space;
+  companionTo?: Obj.Unknown;
+} & Pick<ChatRootProps, 'onEvent'>;
 
 export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((props, forwardedRef) => {
   const { role, attendableId, subject: chat, space: spaceProp, companionTo, onEvent } = props;
   const parentId = attendableId ? getParentId(attendableId) : undefined;
   const space = spaceProp ?? getSpace(chat);
   const settings = useAtomCapability(AssistantCapabilities.Settings);
-  const services = useChatServices({ id: space?.id });
+  const runtime = useChatServices({ id: space?.id });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
   const blueprintRegistry = useBlueprintRegistry();
@@ -37,7 +37,7 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
     space,
     chat,
     preset,
-    services,
+    runtime,
     blueprintRegistry,
     settings,
   });
@@ -62,20 +62,36 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
     }
   }, [processor, attendableId, registry, stateAtom]);
 
+  const feedTarget = chat?.feed.target;
+  const queue = space && feedTarget ? space.queues.get(Feed.getQueueDxn(feedTarget)!) : undefined;
+  const view = (chat?.view as Assistant.ChatView | undefined) ?? settings.chatView;
+
   if (!processor) {
     return null;
   }
 
   return (
-    <ChatComponent.Root db={space?.db} chat={chat} processor={processor} onEvent={onEvent}>
-      <Panel.Root role={role} classNames='dx-document' ref={forwardedRef}>
+    <ChatComponent.Root db={space?.db} chat={chat} feed={queue} processor={processor} onEvent={onEvent}>
+      <Panel.Root role={role} ref={forwardedRef}>
         <Panel.Toolbar className='bg-toolbar-surface'>
-          <ChatComponent.Toolbar classNames='dx-document' attendableId={parentId} companionTo={companionTo} />
+          <ChatComponent.Toolbar classNames='dx-document' attendableId={attendableId} companionTo={companionTo} />
         </Panel.Toolbar>
         <Panel.Content>
-          <ChatComponent.Viewport>
-            <ChatComponent.Thread />
-            <div role='none' className='p-4'>
+          <ChatComponent.Content>
+            <div className='dx-container relative'>
+              <ChatComponent.Thread viewType={view} />
+              {view !== 'summary' && (
+                <div className='absolute bottom-2 left-0 right-0'>
+                  <div className='dx-document px-4'>
+                    <ChatComponent.Status classNames='px-3 rounded-sm bg-group-surface' />
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className='dx-document px-4 pb-4'>
+              <div className='flex flex-col items-center py-2 overflow-hidden'>
+                <ChatComponent.TaskList classNames='max-h-[120px] border border-separator rounded-sm text-description' />
+              </div>
               <ChatComponent.Prompt
                 {...chatProps}
                 outline
@@ -84,7 +100,7 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
                 onOnlineChange={setOnline}
               />
             </div>
-          </ChatComponent.Viewport>
+          </ChatComponent.Content>
         </Panel.Content>
       </Panel.Root>
     </ChatComponent.Root>

@@ -3,10 +3,9 @@
 // This file has been automatically migrated to valid ESM format by Storybook.
 //
 
+import { type StorybookConfig } from '@storybook/react-vite';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-import { type StorybookConfig } from '@storybook/react-vite';
 import { type InlineConfig } from 'vite';
 import turbosnap from 'vite-plugin-turbosnap';
 import wasm from 'vite-plugin-wasm';
@@ -38,7 +37,7 @@ export const modules = [
   'sdk/*/src/**',
   'stories/*/src/**',
   'ui/*/src/**',
-  'ui/primitives/*/src/**',
+  'ui/react-primitives/*/src/**',
 ];
 
 // NOTE: Storybook test depends on relative paths.
@@ -97,6 +96,7 @@ export const createConfig = ({
     const { default: react } = await import('@vitejs/plugin-react-swc');
     const { mergeConfig } = await import('vite');
     const { default: inspect } = await import('vite-plugin-inspect');
+    const { DxosLogPlugin } = await import('@dxos/vite-plugin-log');
 
     const finalConfig = mergeConfig(
       {
@@ -143,7 +143,8 @@ export const createConfig = ({
           },
         },
         optimizeDeps: {
-          exclude: ['@dxos/wa-sqlite'],
+          // WASM modules.
+          exclude: ['@dxos/wa-sqlite', 'manifold-3d'],
           ...(isFastBundle && {
             include: [
               // React.
@@ -285,6 +286,8 @@ export const createConfig = ({
           //
           // Custom DXOS plugins.
           //
+
+          DxosLogPlugin(),
 
           IconsPlugin({
             assetPath: (name, variant) =>

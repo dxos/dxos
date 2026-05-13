@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ReactVirtualizerOptions, useVirtualizer } from '@tanstack/react-virtual';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
+import { type ReactVirtualizerOptions, useVirtualizer } from '@tanstack/react-virtual';
 import React, {
   type FC,
   forwardRef,
@@ -20,7 +20,6 @@ import { type Axis, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
-
 import { useMosaicContainerContext } from './Container';
 import { MosaicPlaceholder, type MosaicPlaceholderProps } from './Placeholder';
 import { styles } from './styles';
@@ -55,9 +54,10 @@ type MosaicStackTileComponent<TData = any> = FC<MosaicTileProps<TData>>;
 type MosaicStackProps<TData = any> = ThemedClassName<
   {
     role?: string;
-    getId: GetId<TData>;
     orientation?: Axis;
+    getId: GetId<TData>;
     items?: readonly TData[];
+    scrollIntoView?: boolean;
     Tile: MosaicStackTileComponent<TData>;
   } & Pick<MosaicTileProps<TData>, 'draggable' | 'debug'>
 >;
@@ -68,10 +68,18 @@ type MosaicStackProps<TData = any> = ThemedClassName<
  */
 const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
   (
-    { getId, orientation: orientationProp = 'vertical', items, Tile, draggable = true, debug, ...props },
+    {
+      orientation: orientationProp = 'vertical',
+      getId,
+      items,
+      scrollIntoView = true,
+      Tile,
+      draggable = true,
+      debug,
+      ...props
+    },
     forwardedRef,
   ) => {
-    invariant(Tile);
     const {
       id,
       orientation = orientationProp,
@@ -83,10 +91,17 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
     invariant(orientation === 'vertical' || orientation === 'horizontal', `Invalid orientation: ${orientation}`);
 
     const rootRef = useRef<HTMLDivElement>(null);
-    const scrollToId = useCallback((targetId: string) => {
-      const el = rootRef.current?.querySelector<HTMLElement>(`[data-mosaic-tile-id="${CSS.escape(targetId)}"]`);
-      el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    }, []);
+    const scrollToId = useCallback(
+      (targetId: string) => {
+        if (!scrollIntoView) {
+          return;
+        }
+
+        const el = rootRef.current?.querySelector<HTMLElement>(`[data-object-id="${CSS.escape(targetId)}"]`);
+        el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      },
+      [scrollIntoView],
+    );
 
     useEffect(() => {
       registerScrollTo(scrollToId);
@@ -147,8 +162,9 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
   (
     {
       orientation = 'vertical',
-      items,
       getId,
+      items,
+      scrollIntoView = true,
       Tile,
       estimateSize,
       getScrollElement,
@@ -192,11 +208,15 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
       (targetId: string) => {
         const itemIndex = visibleItems.findIndex((item) => getId(item) === targetId);
         if (itemIndex >= 0) {
+          if (!scrollIntoView) {
+            return;
+          }
+
           const virtualIndex = draggable ? itemIndex * 2 + 1 : itemIndex;
           virtualizer.scrollToIndex(virtualIndex, { align: 'start', behavior: 'smooth' });
         }
       },
-      [visibleItems, getId, draggable, virtualizer],
+      [visibleItems, getId, draggable, virtualizer, scrollIntoView],
     );
 
     useEffect(() => {

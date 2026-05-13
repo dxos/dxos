@@ -21,7 +21,6 @@ import {
   type MenuItemsMap,
 } from '../types';
 import { executeMenuAction } from '../util';
-
 import { ActionLabel } from './ActionLabel';
 import { ToolbarMenu } from './ToolbarMenu';
 

@@ -9,12 +9,11 @@ import { useObject } from '@dxos/echo-react';
 import { Icon, IconButton, type ThemedClassName, Splitter, Toolbar, Panel, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 
-import { useCountdown } from '../../hooks';
+import { useCountdown } from '#hooks';
+import { meta } from '#meta';
+import { Dream, Sequence } from '#types';
 
 import { MixerEngine } from '../../generator';
-import { Dream, Sequence } from '../../types';
-import { meta } from '../../meta';
-
 import { Sound } from '../Sound';
 
 //
@@ -91,8 +90,8 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
 
   const handleAdd = useCallback(() => {
     const sequence = Sequence.makeSequence();
-    Obj.change(dream, (obj) => {
-      obj.sequences = [...(obj.sequences ?? []), sequence];
+    Obj.update(dream, (dream) => {
+      dream.sequences = [...(dream.sequences ?? []), sequence];
     });
     setSelected(sequence.id);
   }, [dream]);
@@ -103,7 +102,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
 
   const handleDelete = useCallback(
     (id: string) => {
-      Obj.change(dream, (dream) => {
+      Obj.update(dream, (dream) => {
         dream.sequences = (dream.sequences ?? []).filter((layer) => layer.id !== id);
       });
       if (selected === id) {
@@ -118,7 +117,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
 
   const handleUpdate = useCallback(
     (updated: Sequence.Sequence) => {
-      Obj.change(dream, (dream) => {
+      Obj.update(dream, (dream) => {
         dream.sequences = (dream.sequences ?? []).map((layer) => (layer.id === updated.id ? updated : layer));
       });
       if (playing) {
@@ -130,7 +129,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
 
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
-      Obj.change(dream, (dream) => {
+      Obj.update(dream, (dream) => {
         const next = [...(dream.sequences ?? [])];
         const [moved] = next.splice(fromIndex, 1);
         next.splice(toIndex, 0, moved);
@@ -145,8 +144,8 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
   }, []);
 
   return (
-    <Splitter.Root mode={selectedLayer ? 'both' : 'upper'} classNames={classNames}>
-      <Splitter.Panel asChild position='upper'>
+    <Splitter.Root mode={selectedLayer ? 'split' : 'top'} classNames={classNames}>
+      <Splitter.Panel asChild position='top'>
         <Panel.Root>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
@@ -185,7 +184,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
         </Panel.Root>
       </Splitter.Panel>
 
-      <Splitter.Panel asChild position='lower'>
+      <Splitter.Panel asChild position='bottom'>
         {displayedLayer && <Sound sequence={displayedLayer} onUpdate={handleUpdate} />}
       </Splitter.Panel>
     </Splitter.Root>
@@ -226,7 +225,7 @@ const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDe
         variant='ghost'
         icon={item.muted ? 'ph--speaker-slash--regular' : 'ph--speaker-high--regular'}
         iconOnly
-        label={t(item.muted ? 'unmute button label' : 'mute button label')}
+        label={t(item.muted ? 'unmute-button.label' : 'mute-button.label')}
         onClick={(event) => {
           event.stopPropagation();
           onLayerUpdate({ ...item, muted: !item.muted });

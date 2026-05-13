@@ -2,16 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { inspect } from 'node:util';
-
 import chalk from 'chalk';
+import { inspect } from 'node:util';
 
 import { getPrototypeSpecificInstanceId, pickBy } from '@dxos/util';
 
 import { type LogConfig, LogLevel, shortLevelName } from '../config';
 import { type LogProcessor, getContextFromEntry, shouldLog } from '../context';
-
-import { getRelativeFilename } from './common';
 
 const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
   [LogLevel.TRACE]: 'gray',
@@ -95,21 +92,16 @@ export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
     return;
   }
 
+  const { filename, line: lineNumber } = entry.computedMeta;
   const parts: FormatParts = {
     level,
     message,
     error,
-    path: undefined,
-    line: undefined,
-    scope: undefined,
+    path: filename,
+    line: lineNumber,
+    scope: meta?.S,
     context: undefined,
   };
-
-  if (meta) {
-    parts.path = getRelativeFilename(meta.F);
-    parts.line = meta.L;
-    parts.scope = meta.S;
-  }
 
   const context = getContextFromEntry(entry);
   if (context) {

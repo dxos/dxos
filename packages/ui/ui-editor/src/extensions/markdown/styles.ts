@@ -52,20 +52,28 @@ export const formattingStyles = EditorView.theme({
   /**
    * Code and codeblocks.
    */
+  '& code': {
+    fontFamily: fontMono,
+    color: 'var(--color-cm-code)',
+    whiteSpace: 'nowrap',
+  },
   '& .cm-code': {
     fontFamily: fontMono,
+    color: 'var(--color-cm-code)',
   },
-  // Inline code spans (triggered by backticks) use `text-cm-code` + `font-mono`.
+  // Inline code spans (triggered by backticks) use `cm-code-inline` + `font-mono`.
   // Different monospace font metrics can slightly overflow the fixed CodeMirror line box,
   // so constrain them to the target 24px height.
-  '& .text-cm-code': {
+  '& .cm-code-inline': {
     fontFamily: fontMono,
     height: '24px',
-    display: 'inline-flex',
+    // display: 'inline-flex',
     alignItems: 'center',
     overflow: 'hidden',
+    whiteSpace: 'nowrap',
+    color: 'var(--color-cm-code-inline)',
   },
-  '& .text-cm-code-mark': {
+  '& .cm-code-mark': {
     fontFamily: fontMono,
     height: '24px',
     display: 'inline-flex',
@@ -109,12 +117,19 @@ export const formattingStyles = EditorView.theme({
   },
   '.cm-table-head': {
     padding: '2px 16px 2px 0px',
+    overflowWrap: 'break-word',
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'keep-all',
     textAlign: 'left',
-    borderBottom: '1px solid var(--color-cm-separator)',
     color: 'var(--color-subdued)',
+    borderBottom: '1px solid var(--color-cm-separator)',
   },
   '.cm-table-cell': {
     padding: '2px 16px 2px 0px',
+    overflowWrap: 'break-word',
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'keep-all',
+    verticalAlign: 'top',
   },
 
   /**

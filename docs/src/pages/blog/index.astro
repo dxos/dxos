@@ -1,0 +1,69 @@
+---
+//
+// Copyright 2026 DXOS.org
+//
+
+import { getCollection } from 'astro:content';
+
+import BlogLayout from '../../layouts/BlogLayout.astro';
+
+const posts = (await getCollection('blog')).sort(
+  (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime(),
+);
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+---
+<BlogLayout title="Blog" description="Latest news, engineering deep-dives, and updates from the DXOS team.">
+  <div class="section_home-hero" style="padding-bottom: 0;">
+    <div class="masthead-wrap">
+      <h1 class="heading-style-h1 balanced">Blog</h1>
+      <p class="text-size-large text-style-muted">News, engineering deep-dives, and updates from the DXOS team.</p>
+    </div>
+  </div>
+  <div class="section_grid">
+    <div class="container-large">
+      <div class="w-layout-grid feature-grid" style="grid-template-columns: 1fr; gap: 0;">
+        {posts.map((post) => (
+          <a href={`/blog/${post.data.slug}`} class="blog-card-link" style="text-decoration: none; color: inherit; display: block;">
+            <div class="blog-card" style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; padding: 2rem 0; border-bottom: 1px solid rgba(255,255,255,0.08); align-items: start;">
+              {post.data.featureImage ? (
+                <div style="aspect-ratio: 16/9; overflow: hidden; border-radius: 0.5rem;">
+                  <img
+                    src={post.data.featureImage}
+                    alt={post.data.title}
+                    style="width: 100%; height: 100%; object-fit: cover;"
+                    loading="lazy"
+                  />
+                </div>
+              ) : (
+                <div style="aspect-ratio: 16/9; background: rgba(255,255,255,0.03); border-radius: 0.5rem;"></div>
+              )}
+              <div>
+                <div class="all-caps" style="margin-bottom: 0.5rem;">{formatDate(post.data.date)}</div>
+                <div class="heading-style-h5" style="margin-bottom: 0.5rem;">{post.data.title}</div>
+                {post.data.description && (
+                  <p class="text-style-muted" style="margin-bottom: 0.75rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                    {post.data.description}
+                  </p>
+                )}
+                <div class="all-caps" style="font-size: 0.75rem; opacity: 0.6;">By {post.data.author}</div>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+  <style is:inline>
+    .blog-card-link:hover .heading-style-h5 {
+      color: #00d1b2;
+      transition: color 0.2s ease;
+    }
+    @media (max-width: 767px) {
+      .blog-card {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  </style>
+</BlogLayout>

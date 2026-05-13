@@ -5,14 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 
-import { NativeFilesystemCapabilities } from '../types';
+import { NativeFilesystemCapabilities, NativeFilesystemOperation } from '../types';
 
-import { RefreshDirectory } from './definitions';
-
-export default RefreshDirectory.pipe(
+export default NativeFilesystemOperation.RefreshDirectory.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ id }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);

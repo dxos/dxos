@@ -9,7 +9,6 @@ import { mx } from '@dxos/ui-theme';
 
 import { Heading } from '../../components';
 import { translationKey } from '../../translations';
-
 import { type JoinPanelMode } from './JoinPanelProps';
 
 export type JoinSpaceHeadingProps = {
@@ -32,7 +31,7 @@ export const JoinHeading = forwardRef(
         data-testid='join-exit'
       >
         <Icon icon='ph--x--bold' size={4} />
-        <span className='sr-only'>{t('exit label')}</span>
+        <span className='sr-only'>{t('exit.label')}</span>
       </Button>
     );
 
@@ -40,7 +39,7 @@ export const JoinHeading = forwardRef(
       <Heading
         ref={forwardedRef}
         titleId={titleId}
-        title={t(mode === 'halo-only' ? 'selecting identity heading' : 'joining space heading')}
+        title={t(mode === 'halo-only' ? 'selecting-identity.heading' : 'joining-space.heading')}
         {...(mode === 'halo-only'
           ? { ssrOnly: true }
           : { corner: exitActionParent ? cloneElement(exitActionParent, {}, exitButton) : exitButton })}

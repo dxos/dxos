@@ -4,15 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
-import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
+import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { Thread } from '@dxos/types';
 
-import { Delete, DeleteMessage } from './definitions';
+import { ThreadOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof DeleteMessage> = DeleteMessage.pipe(
+const handler: Operation.WithHandler<typeof ThreadOperation.DeleteMessage> = ThreadOperation.DeleteMessage.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject, anchor, messageId }) {
       const thread = Relation.getSource(anchor) as Thread.Thread;
@@ -27,12 +27,12 @@ const handler: Operation.WithHandler<typeof DeleteMessage> = DeleteMessage.pipe(
 
       if (msgIndex === 0 && thread.messages.length === 1) {
         // TODO(wittjosiah): This doesn't support restoring the thread.
-        yield* Operation.invoke(Delete, { subject, anchor });
+        yield* Operation.invoke(ThreadOperation.Delete, { subject, anchor });
         return { messageIndex: -1 };
       }
 
-      Obj.change(thread, (obj) => {
-        obj.messages.splice(msgIndex, 1);
+      Obj.update(thread, (thread) => {
+        thread.messages.splice(msgIndex, 1);
       });
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {

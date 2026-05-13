@@ -10,7 +10,6 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { Capabilities } from '../common';
 import { Capability } from '../core';
 import { Surface } from '../ui';
-
 import { withPluginManager } from './withPluginManager';
 
 const DefaultStory = () => {
@@ -24,7 +23,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'sdk/app-framework/withPluginManager',
+  title: 'sdk/app-framework/testing/withPluginManager',
   render: DefaultStory,
   decorators: [
     withTheme(),

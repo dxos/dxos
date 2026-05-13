@@ -11,6 +11,7 @@ import { useTextEditor } from '@dxos/react-ui-editor';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
 import {
+  compactSlots,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
@@ -21,8 +22,7 @@ import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../UserIconButton';
-
-import { type ViewMode, useMessageToolbarActions } from './useToolbar';
+import { type ViewMode, useMessageActions } from './useToolbar';
 
 //
 // Context
@@ -35,6 +35,7 @@ type MessageContextValue = {
   setViewMode: (mode: ViewMode) => void;
   message: MessageType.Message;
   sender: DXN | undefined;
+  onOpen?: () => void;
   onReply?: () => void;
   onReplyAll?: () => void;
   onForward?: () => void;
@@ -53,6 +54,7 @@ type MessageRootProps = PropsWithChildren<
 const MessageRoot = ({
   children,
   viewMode: viewModeProp = 'plain',
+  onOpen,
   onReply,
   onReplyAll,
   onForward,
@@ -64,6 +66,7 @@ const MessageRoot = ({
     <MessageContextProvider
       viewMode={viewMode}
       setViewMode={setViewMode}
+      onOpen={onOpen}
       onReply={onReply}
       onReplyAll={onReplyAll}
       onForward={onForward}
@@ -83,12 +86,12 @@ MessageRoot.displayName = 'Message.Root';
 const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
 const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
-  const { attendableId, viewMode, setViewMode, onReply, onReplyAll, onForward } =
+  const { attendableId, viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward } =
     useMessageContext(MESSAGE_TOOLBAR_NAME);
-  const menuActions = useMessageToolbarActions({ viewMode, setViewMode, onReply, onReplyAll, onForward });
+  const menuActions = useMessageActions({ viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward });
 
   return (
-    <Menu.Root {...menuActions} attendableId={attendableId}>
+    <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
       <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
     </Menu.Root>
   );
@@ -139,22 +142,22 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   const { message, sender } = useMessageContext(MESSAGE_HEADER_NAME);
 
   return (
-    <div role='none' className='p-1 flex flex-col gap-2 border-b border-subdued-separator'>
-      <div role='none' className='grid grid-cols-[2rem_1fr] gap-1'>
-        <div role='none' className='flex px-2 pt-1.5 text-subdued'>
+    <div className='p-1 flex flex-col gap-2 border-b border-subdued-separator'>
+      <div className='grid grid-cols-[2rem_1fr] gap-1'>
+        <div className='flex px-2 pt-1.5 text-subdued'>
           <Icon icon='ph--envelope-open--regular' />
         </div>
-        <div role='none' className='flex flex-col gap-1 overflow-hidden'>
+        <div className='flex flex-col gap-1 overflow-hidden'>
           <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
-          <div role='none' className='whitespace-nowrap text-sm text-description'>
-            {message.created && formatDateTime(new Date(), new Date(message.created))}
+          <div className='whitespace-nowrap text-sm text-description'>
+            {message.created && formatDateTime(new Date(message.created), new Date())}
           </div>
         </div>
       </div>
 
       {/* TODO(burdon): List other To/CC/BCC. */}
-      <div role='none'>
-        <div role='none' className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
+      <div>
+        <div className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
           <UserIconButton
             title={message.sender.name}
             value={sender}
@@ -195,7 +198,7 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   const extensions = useMemo(() => {
     return [
       createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
-      createThemeExtensions({ themeMode, slots: { scroll: { className: 'p-3' } } }),
+      createThemeExtensions({ themeMode, slots: compactSlots }),
       createMarkdownExtensions(),
       decorateMarkdown({
         skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
@@ -207,12 +210,7 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   const { parentRef } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
 
   return (
-    <div
-      role='none'
-      ref={parentRef}
-      className={mx('flex overflow-hidden', classNames)}
-      data-popover-collision-boundary={true}
-    />
+    <div className={mx('flex overflow-hidden', classNames)} data-popover-collision-boundary={true} ref={parentRef} />
   );
 };
 

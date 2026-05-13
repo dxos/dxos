@@ -14,7 +14,7 @@ import {
   type Contact,
   type CreateEpochRequest,
   type Invitation,
-  type SpaceArchive,
+  SpaceArchive,
   type Space as SpaceData,
   type SpaceMember,
   type SpaceState,
@@ -32,6 +32,14 @@ export type CreateEpochOptions = {
   automergeRootUrl?: string;
 };
 
+export type ExportSpaceOptions = {
+  /**
+   * Archive format.
+   * @default SpaceArchive.Format.BINARY
+   */
+  format?: SpaceArchive.Format;
+};
+
 export interface SpaceInternal {
   get db(): EchoDatabase;
   get data(): SpaceData;
@@ -46,7 +54,7 @@ export interface SpaceInternal {
   // TOOD(burdon): Start to factor out credentials.
   removeMember(memberKey: PublicKey): Promise<void>;
 
-  export(): Promise<SpaceArchive>;
+  export(options?: ExportSpaceOptions): Promise<SpaceArchive>;
 
   /**
    * Migrate space data to the latest version.

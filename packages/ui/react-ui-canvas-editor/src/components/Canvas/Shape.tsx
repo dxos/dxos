@@ -11,7 +11,6 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { useEditorContext } from '../../hooks';
 import { PathComponent } from '../../shapes';
 import { type CanvasBoard, isPath, isPolygon } from '../../types';
-
 import { Frame } from './Frame';
 
 export const DEFS_ID = 'dx-defs';

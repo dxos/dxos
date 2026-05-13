@@ -10,7 +10,6 @@ import { type Dimension } from '@dxos/react-ui-canvas';
 import { type ActionHandler } from '../actions';
 import { type ShapeLayout, type ShapeRegistry } from '../components';
 import { type CanvasBoard, type CanvasGraphModel } from '../types';
-
 import { type DragMonitor } from './useDragMonitor';
 
 export type EditingState<S extends CanvasBoard.Shape> = {

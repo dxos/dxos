@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 import { type PostHogConfig } from 'posthog-js';
 
 import { type Config } from '@dxos/config';
-import { LogBuffer, log } from '@dxos/log';
+import { log } from '@dxos/log';
+import { type IdbLogStore } from '@dxos/log-store-idb';
 
 import { type Extension } from '../../observability-extension';
 import { stubExtension } from '../stub';
@@ -18,8 +19,18 @@ export type ExtensionsOptions = {
   /** Deployment environment, e.g. `production` or `staging`. */
   environment?: string;
   posthog?: Partial<PostHogConfig>;
-  /** Shared log buffer for debug log dumps. Creates a local one if not provided. */
-  logBuffer?: LogBuffer;
+  /**
+   * Shared persistent log store for debug log dumps.
+   * The owning app is expected to register `logStore.processor` with `log` itself —
+   * this extension only consumes the buffered logs (via `export()`).
+   */
+  logStore?: IdbLogStore;
+  /**
+   * Maximum byte size passed to `logStore.export()` when uploading feedback logs.
+   * Should match the upload limit enforced by the server receiving the logs.
+   * When omitted the full store is exported without trimming.
+   */
+  feedbackLogMaxSize?: number;
 };
 
 /** Upload serialized logs to the feedback-logs endpoint. Returns the R2 key on success. */
@@ -48,7 +59,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   release,
   environment,
   posthog: posthogConfig,
-  logBuffer: externalLogBuffer,
+  logStore,
+  feedbackLogMaxSize,
 }) {
   if (typeof window === 'undefined') {
     log('PostHog is being stubbed because it is running in a worker.');
@@ -65,8 +77,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   const { default: posthog } = yield* Effect.promise(() => import('posthog-js'));
   const { logProcessor } = yield* Effect.promise(() => import('./log-processor'));
-  const logBuffer = externalLogBuffer ?? new LogBuffer();
   let feedbackSurveyAvailable: boolean | null = null;
+  let unregisterPosthogProcessors: (() => void) | undefined;
 
   const checkFeedbackSurveyAvailable = (): Effect.Effect<boolean> =>
     feedbackSurveyId
@@ -100,17 +112,16 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
             ...(environment ? { environment } : {}),
           });
         }
-        log.runtimeConfig.processors.push(logProcessor);
-        log.runtimeConfig.processors.push(logBuffer.logProcessor);
+        unregisterPosthogProcessors?.();
+        const removePosthogLog = log.addProcessor(logProcessor);
+        unregisterPosthogProcessors = () => {
+          removePosthogLog();
+        };
       }),
     close: () =>
       Effect.sync(() => {
-        for (const processor of [logProcessor, logBuffer.logProcessor]) {
-          const index = log.runtimeConfig.processors.indexOf(processor);
-          if (index !== -1) {
-            log.runtimeConfig.processors.splice(index, 1);
-          }
-        }
+        unregisterPosthogProcessors?.();
+        unregisterPosthogProcessors = undefined;
       }),
     enable: () => Effect.sync(() => posthog.opt_in_capturing()),
     disable: () => Effect.sync(() => posthog.opt_out_capturing()),
@@ -153,8 +164,11 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
             }
 
             let debugLogDumpKey: string | null = null;
-            if (form.includeLogs !== false && logBuffer.size > 0) {
-              debugLogDumpKey = (await uploadLogs(logBuffer.serialize())) ?? 'failed';
+            if (form.includeLogs !== false && logStore !== undefined) {
+              const ndjson = await logStore.export({ maxSize: feedbackLogMaxSize });
+              if (ndjson.length > 0) {
+                debugLogDumpKey = (await uploadLogs(ndjson)) ?? 'failed';
+              }
             }
 
             // https://posthog.com/docs/surveys/implementing-custom-surveys

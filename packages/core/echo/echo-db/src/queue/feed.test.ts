@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import { Event } from '@dxos/async';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 
 import { EchoTestBuilder } from '../testing';
-
 import { createFeedServiceLayer } from './feed-service';
 
 describe('Feed', () => {
@@ -100,6 +100,119 @@ describe('Feed', () => {
       const objDb = Obj.getDatabase(feedObject);
       expect(objDb).toBeDefined();
       expect(objDb?.spaceId).toEqual(db.spaceId);
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+  });
+
+  test('getParent returns Feed object for appended items', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'parent-test' }));
+
+      const alice = Obj.make(TestSchema.Person, { name: 'alice' });
+      yield* Feed.append(feed, [alice]);
+
+      const parent = Obj.getParent(alice);
+      expect(parent).toBeDefined();
+      expect(parent).toBe(feed);
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+  });
+
+  test('getParent returns Feed object for queried items', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'parent-query-test' }));
+
+      const alice = Obj.make(TestSchema.Person, { name: 'alice' });
+      const bob = Obj.make(TestSchema.Person, { name: 'bob' });
+      yield* Feed.append(feed, [alice, bob]);
+
+      const results = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
+      expect(results).toHaveLength(2);
+      for (const item of results) {
+        const parent = Obj.getParent(item);
+        expect(parent).toBeDefined();
+        expect(parent).toBe(feed);
+      }
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+  });
+
+  test('query.subscribe fires with current results when fire: true', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'subscribable' }));
+
+      const alice = Obj.make(TestSchema.Person, { name: 'alice' });
+      const bob = Obj.make(TestSchema.Person, { name: 'bob' });
+      yield* Feed.append(feed, [alice, bob]);
+
+      const queryResult = yield* Feed.query(feed, Filter.type(TestSchema.Person));
+      const called = new Event();
+      const calledOnce = called.waitForCount(1);
+      const unsubscribe = queryResult.subscribe(() => called.emit(), { fire: true });
+
+      yield* Effect.promise(() => calledOnce);
+      expect(queryResult.results).toHaveLength(2);
+      expect(queryResult.results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);
+      unsubscribe();
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+  });
+
+  test('query.subscribe fires when items are appended', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'reactive' }));
+
+      const alice = Obj.make(TestSchema.Person, { name: 'alice' });
+      yield* Feed.append(feed, [alice]);
+
+      const queryResult = yield* Feed.query(feed, Filter.type(TestSchema.Person));
+      const called = new Event();
+      const calledOnce = called.waitForCount(1);
+      const unsubscribe = queryResult.subscribe(() => called.emit());
+
+      const bob = Obj.make(TestSchema.Person, { name: 'bob' });
+      yield* Feed.append(feed, [bob]);
+
+      yield* Effect.promise(() => calledOnce);
+      expect(queryResult.results).toHaveLength(2);
+      expect(queryResult.results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);
+      unsubscribe();
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+  });
+
+  test('sync flushes the feed without throwing', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'syncable' }));
+
+      const alice = Obj.make(TestSchema.Person, { name: 'alice' });
+      yield* Feed.append(feed, [alice]);
+      yield* Feed.sync(feed);
+      yield* Feed.sync(feed, { shouldPush: false });
+      yield* Feed.sync(feed, { shouldPull: false });
+
+      const results = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
+      expect(results).toHaveLength(1);
     }).pipe(Effect.provide(testLayer), runAndForwardErrors);
   });
 

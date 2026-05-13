@@ -38,7 +38,9 @@ const CountStatus = () => {
     }
   }, [counter]);
 
-  if (!manager) return null;
+  if (!manager) {
+    return null;
+  }
 
   const isEven = count % 2 === 0;
 
@@ -170,7 +172,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'sdk/app-framework/PluginManagerContext',
+  title: 'sdk/app-framework/components/PluginManagerContext',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {

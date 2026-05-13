@@ -12,4 +12,5 @@ export const meta: Plugin.Meta = {
     Core theming engine providing consistent visual styling across the workspace.
     Switch between light and dark modes and apply custom theme configurations.
   `,
+  tags: ['system'],
 };

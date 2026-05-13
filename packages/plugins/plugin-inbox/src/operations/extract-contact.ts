@@ -5,17 +5,17 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
+import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { Organization, Person } from '@dxos/types';
 
-import { ExtractContact } from './definitions';
+import { InboxOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof ExtractContact> = ExtractContact.pipe(
+const handler: Operation.WithHandler<typeof InboxOperation.ExtractContact> = InboxOperation.ExtractContact.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ db, actor }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
@@ -44,8 +44,8 @@ const handler: Operation.WithHandler<typeof ExtractContact> = ExtractContact.pip
         emails: [{ value: email }],
       });
       if (name) {
-        Obj.change(newContact, (contact) => {
-          contact.fullName = name;
+        Obj.update(newContact, (newContact) => {
+          newContact.fullName = name;
         });
       }
 
@@ -91,8 +91,8 @@ const handler: Operation.WithHandler<typeof ExtractContact> = ExtractContact.pip
         log.info('found matching organization', {
           organization: matchingOrg,
         });
-        Obj.change(newContact, (contact) => {
-          contact.organization = Ref.make(matchingOrg);
+        Obj.update(newContact, (newContact) => {
+          newContact.organization = Ref.make(matchingOrg);
         });
       }
 

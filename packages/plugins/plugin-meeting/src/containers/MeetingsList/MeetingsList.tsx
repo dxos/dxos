@@ -2,35 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Obj, Type } from '@dxos/echo';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { type Channel } from '@dxos/plugin-thread/types';
-import { Query, useQuery } from '@dxos/react-client/echo';
+import { SpaceOperation } from '@dxos/plugin-space';
+import { useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
-import { List } from '@dxos/react-ui-list';
-import { ghostHover, mx } from '@dxos/ui-theme';
+import { Row, RowList } from '@dxos/react-ui-list';
+import { Channel } from '@dxos/types';
 
-import { meta } from '../../meta';
-import { Meeting } from '../../types';
-import { MeetingOperation } from '../../operations';
+import { meta } from '#meta';
+import { MeetingOperation } from '#types';
+import { Meeting } from '#types';
 
 // TODO(wittjosiah): Add a story which renders meetings alongside call?
 
-const grid = 'grid grid-cols-[1fr_auto] min-h-[2.5rem]';
-
-const MeetingItem = ({
-  meeting,
-  getLabel,
-}: {
+type MeetingItemProps = {
   meeting: Meeting.Meeting;
   getLabel: (meeting: Meeting.Meeting) => string;
-}) => {
+};
+
+const MeetingItem = ({ meeting, getLabel }: MeetingItemProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
 
@@ -40,24 +35,16 @@ const MeetingItem = ({
   );
 
   return (
-    <List.Item<Meeting.Meeting>
-      key={meeting.id}
-      item={meeting}
-      classNames={mx(grid, ghostHover, 'items-center', 'px-2', 'min-h-[3rem]')}
-    >
-      <div className='flex flex-col truncate'>
-        <List.ItemTitle classNames='truncate'>{getLabel(meeting)}</List.ItemTitle>
-      </div>
-      <Button onClick={handleSelectMeeting}>{t('select meeting label')}</Button>
-    </List.Item>
+    <Row id={meeting.id} classNames='grid grid-cols-[1fr_auto] items-center'>
+      <span className='truncate'>{getLabel(meeting)}</span>
+      <Button onClick={handleSelectMeeting}>{t('select-meeting.label')}</Button>
+    </Row>
   );
 };
 
-export type MeetingsListProps = {
-  channel: Channel.Channel;
-};
+export type MeetingsListProps = AppSurface.ArticleProps<undefined, {}, Obj.Unknown>;
 
-export const MeetingsList = ({ channel }: MeetingsListProps) => {
+export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(channel);
@@ -67,26 +54,14 @@ export const MeetingsList = ({ channel }: MeetingsListProps) => {
     return meetings.toSorted((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
   }, [meetings]);
 
-  const metadata = useCapabilities(AppCapabilities.Metadata);
-  const [meetingMetadata] = useMemo(
-    () =>
-      metadata
-        .filter(
-          (
-            capability,
-          ): capability is {
-            id: string;
-            metadata: { label: (object: any) => string; icon: string };
-          } => capability.id === Type.getTypename(Meeting.Meeting),
-        )
-        .map((c) => c.metadata),
-    [metadata],
+  const getLabel = useCallback(
+    (meeting: Meeting.Meeting) => Obj.getLabel(meeting) ?? new Date(meeting.created).toLocaleString(),
+    [],
   );
 
-  const getId = useCallback((meeting: Meeting.Meeting) => meeting.id, []);
   const handleCreateMeeting = useCallback(async () => {
     invariant(db);
-    const createResult = await invokePromise(MeetingOperation.Create, { channel });
+    const createResult = await invokePromise(MeetingOperation.Create, { channel: channel as Channel.Channel });
     invariant(Obj.instanceOf(Meeting.Meeting, createResult.data?.object));
     const addResult = await invokePromise(SpaceOperation.AddObject, {
       target: db,
@@ -100,17 +75,17 @@ export const MeetingsList = ({ channel }: MeetingsListProps) => {
   return (
     <div>
       <div className='px-2 min-h-[3rem] flex justify-end items-center'>
-        <Button onClick={handleCreateMeeting}>{t('create meeting label')}</Button>
+        <Button onClick={handleCreateMeeting}>{t('create-meeting.label')}</Button>
       </div>
-      <List.Root<Meeting.Meeting> items={sortedMeetings} isItem={Schema.is(Meeting.Meeting)} getId={getId}>
-        {({ items }) => (
-          <div role='list' className='flex flex-col w-full'>
-            {items?.map((meeting) => (
-              <MeetingItem key={meeting.id} meeting={meeting} getLabel={meetingMetadata.label} />
+      <RowList.Root>
+        <RowList.Viewport>
+          <RowList.Content aria-label={t('meeting-list.label')}>
+            {sortedMeetings.map((meeting) => (
+              <MeetingItem key={meeting.id} meeting={meeting} getLabel={getLabel} />
             ))}
-          </div>
-        )}
-      </List.Root>
+          </RowList.Content>
+        </RowList.Viewport>
+      </RowList.Root>
     </div>
   );
 };

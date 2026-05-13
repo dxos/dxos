@@ -227,3 +227,34 @@
   }
   --animate-blink: blink 1s step-start infinite;
 }
+
+/**
+ * Shimmer (text)
+ * Sweeps a brighter band across text via mask alpha — preserves the consumer's color.
+ * Translates exactly one tile period (2× element width) per cycle so the loop seam is invisible.
+ */
+@keyframes shimmer-text {
+  from {
+    mask-position-x: 100%;
+    -webkit-mask-position-x: 100%;
+  }
+  to {
+    mask-position-x: -100%;
+    -webkit-mask-position-x: -100%;
+  }
+}
+
+/**
+ * Honor user reduced-motion preference for decorative animations.
+ * Functional transitions (fade/slide/toast/blink) are intentionally excluded —
+ * suppressing them would hide UI state changes.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .animate-halo-pulse,
+  .animate-spin-slow,
+  .animate-trail,
+  .animate-trail-offset,
+  .animate-shimmer {
+    animation: none;
+  }
+}

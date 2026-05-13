@@ -6,16 +6,16 @@ import { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 
-import { type Kanban, type KanbanChangeCallback } from '../types';
+import { type Kanban, type KanbanChangeCallback } from '#types';
 
 /**
  * Creates a change callback for ECHO-backed kanban and items (plain function, no hooks).
  * Use this when the kanban and items are stored in the ECHO database.
  */
 export const createEchoChangeCallback = <T extends Obj.Unknown>(kanban: Kanban.Kanban): KanbanChangeCallback<T> => ({
-  kanban: (mutate) => Obj.change(kanban, (kanban) => mutate(kanban)),
+  kanban: (mutate) => Obj.update(kanban, (kanban) => mutate(kanban)),
   setItemField: (item, field, value) => {
-    Obj.change(item, (item: any) => {
+    Obj.update(item, (item: any) => {
       item[field] = value;
     });
   },

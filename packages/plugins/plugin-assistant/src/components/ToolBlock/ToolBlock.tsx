@@ -7,12 +7,12 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useTranslation } from '@dxos/react-ui';
 import { NumericTabs, TextCrawl, TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock, type Message } from '@dxos/types';
 import { type XmlWidgetProps } from '@dxos/ui-editor';
 import { isNonNullable, safeParseJson } from '@dxos/util';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 export const isToolMessage = (message: Message.Message) => {
   return message.blocks.some((block: ContentBlock.Any) => block._tag === 'toolCall' || block._tag === 'toolResult');
@@ -41,7 +41,7 @@ export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
             const tool = tools.find((tool) => tool.name === block.name);
             lastToolCall = { tool, block };
             return {
-              title: tool?.description ?? [t('tool call label'), tool?.name].join(' '),
+              title: tool?.description ?? [t('tool-call.label'), block?.name].join(' '),
               content: {
                 ...block,
                 input: safeParseJson(block.input),
@@ -53,13 +53,13 @@ export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
             // TODO(burdon): Parse error type.
             if (block.error) {
               return {
-                title: t('tool error label'),
+                title: t('tool-error.label'),
                 content: block,
               };
             }
 
             const title =
-              lastToolCall?.tool?.description ?? [t('tool result label'), lastToolCall?.tool?.name].join(' ');
+              lastToolCall?.tool?.description ?? [t('tool-result.label'), lastToolCall?.block?.name].join(' ');
             lastToolCall = undefined;
             return {
               title,
@@ -76,7 +76,7 @@ export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
             }
 
             return {
-              title: t('stats label'),
+              title: t('stats.label'),
               content: block,
             };
           }
@@ -92,6 +92,7 @@ export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
     }, 1_000);
   }, [view]);
 
+  // Ignore if empty.
   if (!items.length) {
     return null;
   }
@@ -105,7 +106,7 @@ type ToolPanelProps = {
   items: { title: string; content: any }[];
 } & Pick<TogglePanelRootProps, 'onChangeOpen'>;
 
-export const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
+const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
   const tabsRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState(0);
   const [open, setOpen] = useState(false);
@@ -122,13 +123,13 @@ export const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
   }, []);
 
   return (
-    <TogglePanel.Root classNames='mt-2 w-full rounded-xs' open={open} onChangeOpen={setOpen}>
+    <TogglePanel.Root classNames='w-full rounded-xs border border-subdued-separator' open={open} onChangeOpen={setOpen}>
       <TogglePanel.Header classNames='text-sm text-placeholder'>
         <TextCrawl key='status-roll' lines={items.map((item) => item.title)} autoAdvance greedy />
       </TogglePanel.Header>
       <TogglePanel.Content classNames='grid grid-cols-[32px_1fr]'>
         <NumericTabs ref={tabsRef} classNames='p-1' length={items.length} selected={selected} onSelect={handleSelect} />
-        <Json
+        <JsonHighlighter
           data={items[selected]?.content}
           classNames='p-1 text-xs bg-transparent'
           replacer={{

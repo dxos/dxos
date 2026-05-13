@@ -4,12 +4,12 @@
 
 import React from 'react';
 
-import { addressToA1Notation, isFormula, rangeToA1Notation } from '@dxos/compute';
+import { addressToA1Notation, isFormula, rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { Icon } from '@dxos/react-ui';
-
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
-import { mapFormulaIndicesToRefs } from '../../types';
+import { mapFormulaIndicesToRefs } from '#types';
+
 import { useSheetContext } from '../SheetRoot';
 
 export type SheetStatusbarProps = {};

@@ -4,17 +4,14 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AgentPrompt, EntityExtraction, ResearchBlueprint } from '@dxos/assistant-toolkit';
-import { Prompt } from '@dxos/blueprints';
+import { AgentPrompt, WebSearchBlueprint } from '@dxos/assistant-toolkit';
+import { Routine, Trigger, Operation } from '@dxos/compute';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
-import { EchoId, LegacyDXN } from '@dxos/keys';
-import { Trigger } from '@dxos/functions';
+import { DXN, Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 import { InboxOperation } from '@dxos/plugin-inbox';
-import { Mailbox } from '@dxos/plugin-inbox/types';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Mailbox } from '@dxos/plugin-inbox';
+import { Markdown } from '@dxos/plugin-markdown';
 import { type Space } from '@dxos/react-client/echo';
 import {
   type ComputeShape,
@@ -75,8 +72,8 @@ export const generator = () => ({
 
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
           const tagDxn = Obj.getDXN(tag).toString();
-          Obj.change(doc, (obj) => {
-            Obj.getMeta(obj).tags = [tagDxn];
+          Obj.update(doc, (doc) => {
+            Obj.getMeta(doc).tags = [tagDxn];
           });
 
           // space.db.add(
@@ -123,11 +120,8 @@ export const generator = () => ({
         invariant(mailbox, 'Mailbox not found');
         const mailboxFeed = await mailbox.feed?.tryLoad();
         invariant(mailboxFeed, 'Mailbox missing feed reference');
-        const feedQueueLegacyDxn = Feed.getQueueDxn(mailboxFeed);
-        invariant(feedQueueLegacyDxn, 'Mailbox feed missing queue DXN key');
-        const feedQueueParsed = feedQueueLegacyDxn.asQueueDXN();
-        invariant(feedQueueParsed, 'Invalid queue DXN');
-        const queueDxn = EchoId.fromSpaceAndObjectId(feedQueueParsed.spaceId, feedQueueParsed.queueId as any);
+        const queueDxn = Feed.getQueueDxn(mailboxFeed);
+        invariant(queueDxn, 'Mailbox feed missing queue DXN key');
         const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
         const tagDxn = Obj.getDXN(tag).toString();
 
@@ -139,10 +133,7 @@ export const generator = () => ({
           space.db.add(
             Trigger.make({
               enabled: true,
-              spec: {
-                kind: 'timer',
-                cron: '* * * * *', // Every minute.
-              },
+              spec: Trigger.specTimer('* * * * *'), // Every minute.
               function: Ref.make(Operation.serialize(InboxOperation.GoogleMailSync)),
               input: {
                 mailbox: Ref.make(mailbox),
@@ -150,23 +141,8 @@ export const generator = () => ({
             }),
           );
 
-          space.db.add(
-            Trigger.make({
-              enabled: true,
-              // TODO(wittjosiah): Queue trigger doesn't support matching query of the column.
-              spec: {
-                kind: 'queue',
-                queue: queueDxn,
-              },
-              function: Ref.make(Operation.serialize(EntityExtraction)),
-              input: {
-                source: '{{event.item}}',
-              },
-            }),
-          );
-
           const researchPrompt = space.db.add(
-            Prompt.make({
+            Routine.make({
               name: 'Research',
               description: 'Research organization',
               input: Schema.Struct({
@@ -181,19 +157,14 @@ export const generator = () => ({
                 Create a research note for it at the end.
                 NOTE: Do mocked reseach (set mockSearch to true).
               `,
-              blueprints: [Ref.make(ResearchBlueprint.make())],
+              blueprints: [Ref.make(WebSearchBlueprint.make())],
             }),
           );
 
           space.db.add(
             Trigger.make({
               enabled: true,
-              spec: {
-                kind: 'subscription',
-                query: {
-                  ast: organizationsQuery.ast,
-                },
-              },
+              spec: Trigger.specSubscription(organizationsQuery),
               function: Ref.make(Operation.serialize(AgentPrompt)),
               input: {
                 prompt: Ref.make(researchPrompt),
@@ -208,7 +179,7 @@ export const generator = () => ({
                 properties: { labels: Filter.contains('investor') },
               }),
             ).from({
-              queues: [queueDxn],
+              feeds: [queueDxn],
             }),
             jsonSchema: JsonSchema.toJsonSchema(Message.Message),
           });
@@ -616,7 +587,7 @@ export const generator = () => ({
             );
             const queueId = canvasModel.createNode(
               createConstant({
-                value: new LegacyDXN(LegacyDXN.kind.QUEUE, ['data', space.id, Key.ObjectId.random()]).toString(),
+                value: new DXN(DXN.kind.QUEUE, ['data', space.id, Key.ObjectId.random()]).toString(),
                 ...position({ x: -10, y: 5 }),
               }),
             );
@@ -767,8 +738,8 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
     functionTrigger = triggerShape.functionTrigger!.target!;
     const triggerSpec = functionTrigger.spec;
     invariant(triggerSpec && triggerSpec.kind === triggerKind, 'No trigger spec.');
-    Obj.change(functionTrigger, (ft) => {
-      initSpec(ft.spec as any);
+    Obj.update(functionTrigger, (functionTrigger) => {
+      initSpec(functionTrigger.spec as any);
     });
   });
 
@@ -803,7 +774,7 @@ const setupQueue = (
 ) => {
   const queueId = canvasModel.createNode(
     createConstant({
-      value: new LegacyDXN(LegacyDXN.kind.QUEUE, ['data', space.id, Key.ObjectId.random()]).toString(),
+      value: new DXN(DXN.kind.QUEUE, ['data', space.id, Key.ObjectId.random()]).toString(),
       ...(args?.idPosition ? rawPosition(args.idPosition) : position({ x: -18, y: 5, width: 8, height: 6 })),
     }),
   );
@@ -819,9 +790,9 @@ const setupQueue = (
 const attachTrigger = (functionTrigger: Trigger.Trigger | undefined, computeModel: ComputeGraphModel) => {
   invariant(functionTrigger);
   const inputNode = computeModel.nodes.find((node) => node.type === NODE_INPUT)!;
-  Obj.change(functionTrigger, (obj) => {
-    obj.function = Ref.make(computeModel.root);
-    obj.inputNodeId = inputNode.id;
+  Obj.update(functionTrigger, (functionTrigger) => {
+    functionTrigger.function = Ref.make(computeModel.root);
+    functionTrigger.inputNodeId = inputNode.id;
   });
 };
 

@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useMergeRefs, useThemeContext } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import {
   type DebugNode,
   type ThemeExtensionsOptions,
@@ -76,7 +76,16 @@ export const EditorStory = forwardRef<EditorController, EditorStoryProps>(
                 {view?.state.doc.toString()}
               </pre>
             )}
-            {(debug === 'tree' || debug === 'raw+tree') && <JsonFilter data={tree} classNames='p-1 text-xs' />}
+            {(debug === 'tree' || debug === 'raw+tree') && (
+              <Syntax.Root data={tree}>
+                <Syntax.Content>
+                  <Syntax.Filter />
+                  <Syntax.Viewport>
+                    <Syntax.Code classNames='p-1 text-xs' />
+                  </Syntax.Viewport>
+                </Syntax.Content>
+              </Syntax.Root>
+            )}
           </div>
         )}
       </div>

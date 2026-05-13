@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Voxel } from '../types';
+import { type Voxel } from '#types';
 
 /** Available model types for shape generation. */
 export type ModelType = 'cube' | 'wall' | 'sphere' | 'cylinder' | 'tower';

@@ -7,12 +7,11 @@ import * as Effect from 'effect/Effect';
 
 import { Event, synchronized } from '@dxos/async';
 import { type ClientServices, clientServiceBundle } from '@dxos/client-protocol';
-import { type Config } from '@dxos/config';
+import { type Config, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { EdgeSignalManager, type SignalManager, WebsocketSignalManager } from '@dxos/messaging';
@@ -22,12 +21,11 @@ import {
   createIceProvider,
   createRtcTransportFactory,
 } from '@dxos/network-manager';
-import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
+import { trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 import { EdgeAgentServiceImpl } from '../agents';
@@ -47,7 +45,6 @@ import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createLevel, createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
-
 import { ServiceContext, type ServiceContextRuntimeProps } from './service-context';
 import { ServiceRegistry } from './service-registry';
 
@@ -87,8 +84,6 @@ export class ClientServicesHost {
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
   private readonly _systemService: SystemServiceImpl;
   private readonly _loggingService: LoggingServiceImpl;
-  private readonly _tracingService = TRACE_PROCESSOR.createTraceSender();
-
   private readonly _statusUpdate = new Event<void>();
 
   private _config?: Config;
@@ -176,7 +171,6 @@ export class ClientServicesHost {
 
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
       SystemService: this._systemService,
-      TracingService: this._tracingService,
     });
   }
 
@@ -259,8 +253,9 @@ export class ClientServicesHost {
 
     const endpoint = config?.get('runtime.services.edge.url');
     if (endpoint) {
-      this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint });
-      this._edgeHttpClient = new EdgeHttpClient(endpoint);
+      const clientTag = resolveTelemetryTag(config);
+      this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint, clientTag });
+      this._edgeHttpClient = new EdgeHttpClient(endpoint, { clientTag });
     }
 
     const {
@@ -299,8 +294,7 @@ export class ClientServicesHost {
       return;
     }
 
-    const traceId = PublicKey.random().toHex();
-    log.trace('dxos.client-services.host.open', trace.begin({ id: traceId }));
+    log('opening service host');
 
     invariant(this._config, 'config not set');
     invariant(this._storage, 'storage not set');
@@ -345,7 +339,7 @@ export class ClientServicesHost {
       this._serviceContext.identityManager,
       this._serviceContext.recoveryManager,
       this._serviceContext.keyring,
-      (params) => this._createIdentity(params),
+      (params, ctx) => this._createIdentity(params, ctx),
       (profile) => this._serviceContext.broadcastProfileUpdate(profile),
     );
 
@@ -365,6 +359,7 @@ export class ClientServicesHost {
       SpacesService: new SpacesServiceImpl(
         this._serviceContext.identityManager,
         this._serviceContext.spaceManager,
+        this._serviceContext.echoHost,
         dataSpaceManagerProvider,
       ),
 
@@ -379,7 +374,6 @@ export class ClientServicesHost {
       ),
 
       LoggingService: this._loggingService,
-      TracingService: this._tracingService,
 
       // TODO(burdon): Move to new protobuf definitions.
       DevtoolsHost: new DevtoolsServiceImpl({
@@ -416,7 +410,6 @@ export class ClientServicesHost {
     this._statusUpdate.emit();
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
     log('opened', { deviceKey });
-    log.trace('dxos.client-services.host.open', trace.end({ id: traceId }));
   }
 
   @synchronized
@@ -440,9 +433,6 @@ export class ClientServicesHost {
   }
 
   async reset(): Promise<void> {
-    const traceId = PublicKey.random().toHex();
-    log.trace('dxos.sdk.client-services-host.reset', trace.begin({ id: traceId }));
-
     log.info('resetting...');
     // Emit this status update immediately so app returns to fallback.
     // This state is never cleared because the app reloads.
@@ -457,12 +447,11 @@ export class ClientServicesHost {
     }
     await this._storage!.reset();
     log.info('reset');
-    log.trace('dxos.sdk.client-services-host.reset', trace.end({ id: traceId }));
     await this._callbacks?.onReset?.();
   }
 
-  private async _createIdentity(params: CreateIdentityOptions) {
-    const identity = await this._serviceContext.createIdentity(params);
+  private async _createIdentity(params: CreateIdentityOptions, ctx?: Context) {
+    const identity = await this._serviceContext.createIdentity(params, ctx);
     await this._serviceContext.initialized.wait();
     return identity;
   }

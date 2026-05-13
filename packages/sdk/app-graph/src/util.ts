@@ -37,8 +37,12 @@ export const normalizeRelation = (relation?: Node.RelationInput): Node.Relation 
  * Shallow-compare two values: same reference, or same own-keys with === values.
  */
 export const shallowEqual = (a: unknown, b: unknown): boolean => {
-  if (a === b) return true;
-  if (a == null || b == null || typeof a !== 'object' || typeof b !== 'object') return false;
+  if (a === b) {
+    return true;
+  }
+  if (a == null || b == null || typeof a !== 'object' || typeof b !== 'object') {
+    return false;
+  }
   const keysA = Object.keys(a as Record<string, unknown>);
   const keysB = Object.keys(b as Record<string, unknown>);
   if (keysA.length !== keysB.length) {
@@ -49,6 +53,7 @@ export const shallowEqual = (a: unknown, b: unknown): boolean => {
 
 /**
  * Returns true if two NodeArg arrays are semantically identical (same id, type, data, properties per index).
+ * Inline child nodes (the `nodes` field) are compared recursively.
  */
 export const nodeArgsUnchanged = (prev: Node.NodeArg<any>[], next: Node.NodeArg<any>[]): boolean => {
   if (prev.length !== next.length) {
@@ -61,7 +66,8 @@ export const nodeArgsUnchanged = (prev: Node.NodeArg<any>[], next: Node.NodeArg<
       prevNode.id === nextNode.id &&
       prevNode.type === nextNode.type &&
       shallowEqual(prevNode.data, nextNode.data) &&
-      shallowEqual(prevNode.properties, nextNode.properties)
+      shallowEqual(prevNode.properties, nextNode.properties) &&
+      nodeArgsUnchanged(prevNode.nodes ?? [], nextNode.nodes ?? [])
     );
   });
 };
@@ -76,4 +82,20 @@ export const qualifyId = (parentId: string, ...segmentIds: string[]): string => 
  */
 export const validateSegmentId = (id: string): void => {
   invariant(!id.includes(PATH), `Node segment ID must not contain '${PATH}': ${id}`);
+};
+
+/**
+ * Extract the parent qualified ID (everything before the last path separator).
+ * Returns undefined for IDs with no parent (single segment).
+ */
+export const getParentId = (qualifiedId: string): string | undefined => {
+  const lastSlash = qualifiedId.lastIndexOf(PATH);
+  return lastSlash > 0 ? qualifiedId.slice(0, lastSlash) : undefined;
+};
+
+/**
+ * Extract the last segment of a qualified ID.
+ */
+export const getSegmentId = (qualifiedId: string): string => {
+  return qualifiedId.split(PATH).pop() ?? qualifiedId;
 };

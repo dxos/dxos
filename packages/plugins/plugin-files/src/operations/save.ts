@@ -5,14 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities } from '@dxos/app-framework';
-import { Operation } from '@dxos/operation';
-
-import { Save } from './definitions';
+import { Operation } from '@dxos/compute';
 
 import { FileCapabilities } from '../types';
+import { FilesOperation } from '../types';
 import { findFile, handleSave } from '../util';
 
-const handler: Operation.WithHandler<typeof Save> = Save.pipe(
+const handler: Operation.WithHandler<typeof FilesOperation.Save> = FilesOperation.Save.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ id }) {
       const state = yield* Capabilities.getAtomValue(FileCapabilities.State);

@@ -8,25 +8,26 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
-import { translations as editorTranslations } from '@dxos/react-ui-editor';
+import { Editor } from '@dxos/react-ui-editor';
+import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
-import { translations } from '../../translations';
-import { Markdown } from '../../types';
+import { translations } from '#translations';
+import { Markdown } from '#types';
 
-import { MarkdownEditor, type MarkdownEditorRootProps } from './MarkdownEditor';
+import { MarkdownEditor, MarkdownEditorProvider, type MarkdownEditorProviderProps } from './MarkdownEditor';
 
-type DefaultStoryProps = Omit<MarkdownEditorRootProps, 'id' | 'extensions'>;
+type DefaultStoryProps = Omit<MarkdownEditorProviderProps, 'id' | 'extensions' | 'children'>;
 
 const DefaultStory = (props: DefaultStoryProps) => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Filter.type(Markdown.Document));
   const id = doc && Obj.getDXN(doc).toString();
   if (!id) {
@@ -35,16 +36,20 @@ const DefaultStory = (props: DefaultStoryProps) => {
 
   return (
     <AttendableContainer id={id} tabIndex={0} classNames='dx-container'>
-      <MarkdownEditor.Root id={id} object={doc} {...props}>
-        <Panel.Root>
-          <Panel.Toolbar asChild>
-            <MarkdownEditor.Toolbar />
-          </Panel.Toolbar>
-          <Panel.Content asChild>
-            <MarkdownEditor.Content />
-          </Panel.Content>
-        </Panel.Root>
-      </MarkdownEditor.Root>
+      <MarkdownEditorProvider id={id} object={doc} {...props}>
+        {(editorRootProps) => (
+          <Editor.Root {...editorRootProps}>
+            <Panel.Root>
+              <Panel.Toolbar asChild>
+                <MarkdownEditor.Toolbar />
+              </Panel.Toolbar>
+              <Panel.Content asChild>
+                <MarkdownEditor.Content />
+              </Panel.Content>
+            </Panel.Root>
+          </Editor.Root>
+        )}
+      </MarkdownEditorProvider>
     </AttendableContainer>
   );
 };

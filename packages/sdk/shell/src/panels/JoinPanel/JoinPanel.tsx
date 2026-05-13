@@ -12,7 +12,6 @@ import { useId, useThemeContext } from '@dxos/react-ui';
 import { Viewport } from '../../components';
 import { ConfirmReset } from '../../steps';
 import { stepStyles } from '../../styles';
-
 import { JoinHeading } from './JoinHeading';
 import { useJoinMachine } from './joinMachine';
 import { type JoinPanelImplProps, type JoinPanelProps } from './JoinPanelProps';
@@ -57,117 +56,117 @@ export const JoinPanelImpl = ({
       {mode !== 'halo-only' && <JoinHeading {...{ titleId, mode, onExit, exitActionParent }} />}
       <Viewport.Root focusManaged activeView={activeView}>
         <Viewport.Views>
-          <Viewport.View classNames={stepStyles} id='addition method chooser'>
-            <AdditionMethodChooser send={send} active={activeView === 'addition method chooser'} />
+          <Viewport.View classNames={stepStyles} id='addition-method-chooser'>
+            <AdditionMethodChooser send={send} active={activeView === 'addition-method-chooser'} />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='reset storage confirmation'>
+          <Viewport.View classNames={stepStyles} id='reset-storage-confirmation'>
             <ConfirmResetComponent
               send={send}
-              active={activeView === 'reset storage confirmation'}
+              active={activeView === 'reset-storage-confirmation'}
               onCancel={onCancelResetStorage}
               onConfirm={onConfirmResetStorage}
             />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='create identity input'>
+          <Viewport.View classNames={stepStyles} id='create-identity-input'>
             <IdentityInputComponent
               send={send}
               method='create identity'
-              active={activeView === 'create identity input'}
+              active={activeView === 'create-identity-input'}
             />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='recover identity input'>
+          <Viewport.View classNames={stepStyles} id='recover-identity-input'>
             <IdentityInputComponent
               send={send}
               method='recover identity'
-              active={activeView === 'recover identity input'}
+              active={activeView === 'recover-identity-input'}
             />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='halo invitation input'>
+          <Viewport.View classNames={stepStyles} id='halo-invitation-input'>
             <InvitationInput
               send={send}
               Kind='Halo'
-              active={activeView === 'halo invitation input'}
+              active={activeView === 'halo-invitation-input'}
               {...(unredeemedCodes?.Halo && { unredeemedCode: unredeemedCodes.Halo })}
               {...(succeededKeys?.Halo && { succeededKeys: succeededKeys.Halo })}
             />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='halo invitation rescuer'>
+          <Viewport.View classNames={stepStyles} id='halo-invitation-rescuer'>
             <InvitationRescuer
               send={send}
               Kind='Halo'
-              active={activeView === 'halo invitation rescuer'}
+              active={activeView === 'halo-invitation-rescuer'}
               invitationState={invitationStates?.Halo}
               onInvitationCancel={onHaloInvitationCancel}
               failReason={failReasons?.Halo}
             />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='halo invitation authenticator'>
+          <Viewport.View classNames={stepStyles} id='halo-invitation-authenticator'>
             <InvitationAuthenticator
               send={send}
               Kind='Halo'
               invitationId={invitationIds?.Halo}
               authMethod={invitationAuthMethods?.Halo}
-              active={activeView === 'halo invitation authenticator'}
+              active={activeView === 'halo-invitation-authenticator'}
               onInvitationCancel={onHaloInvitationCancel}
               onInvitationAuthenticate={onHaloInvitationAuthenticate}
               {...(failed.has('Halo') && { failed: true })}
             />
           </Viewport.View>
-          {/* <Viewport.View classNames={stepStyles} id='halo invitation accepted'>
+          {/* <Viewport.View classNames={stepStyles} id='halo-invitation-accepted'>
             <InvitationAccepted
               {...{
                 send,
                 Kind: 'Halo',
-                active: activeView === 'halo invitation accepted',
+                active: activeView === 'halo-invitation-accepted',
                 doneActionParent,
                 onDone: onHaloDone,
               }}
             />
           </Viewport.View> */}
-          <Viewport.View classNames={stepStyles} id='identity added'>
+          <Viewport.View classNames={stepStyles} id='identity-added'>
             <IdentityAdded
-              {...{ send, mode, active: activeView === 'identity added', doneActionParent, onDone: onHaloDone }}
+              {...{ send, mode, active: activeView === 'identity-added', doneActionParent, onDone: onHaloDone }}
             />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='space invitation input'>
+          <Viewport.View classNames={stepStyles} id='space-invitation-input'>
             <InvitationInput
               send={send}
               Kind='Space'
-              active={activeView === 'space invitation input'}
+              active={activeView === 'space-invitation-input'}
               {...(unredeemedCodes?.Space && { unredeemedCode: unredeemedCodes.Space })}
               {...(succeededKeys?.Space && { succeededKeys: succeededKeys.Space })}
               onExit={onExit}
               exitActionParent={exitActionParent}
             />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='space invitation rescuer'>
+          <Viewport.View classNames={stepStyles} id='space-invitation-rescuer'>
             <InvitationRescuer
               send={send}
               Kind='Space'
-              active={activeView === 'space invitation rescuer'}
+              active={activeView === 'space-invitation-rescuer'}
               invitationState={invitationStates?.Space}
               onInvitationCancel={onSpaceInvitationCancel}
               failReason={failReasons?.Space}
             />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='space invitation authenticator'>
+          <Viewport.View classNames={stepStyles} id='space-invitation-authenticator'>
             <InvitationAuthenticator
               send={send}
               Kind='Space'
               invitationId={invitationIds?.Space}
               authMethod={invitationAuthMethods?.Space}
-              active={activeView === 'space invitation authenticator'}
+              active={activeView === 'space-invitation-authenticator'}
               onInvitationCancel={onSpaceInvitationCancel}
               onInvitationAuthenticate={onSpaceInvitationAuthenticate}
               {...(failed.has('Space') && { failed: true })}
             />
           </Viewport.View>
-          {/* <Viewport.View classNames={stepStyles} id='space invitation accepted'>
+          {/* <Viewport.View classNames={stepStyles} id='space-invitation-accepted'>
             <InvitationAccepted
               {...{
                 send,
                 Kind: 'Space',
-                active: activeView === 'space invitation accepted',
+                active: activeView === 'space-invitation-accepted',
                 doneActionParent,
                 onDone: onSpaceDone,
               }}
@@ -227,17 +226,17 @@ export const JoinPanel = ({
   const activeView = useMemo(() => {
     switch (true) {
       case joinState.matches({ choosingIdentity: 'choosingAuthMethod' }):
-        return 'addition method chooser';
+        return 'addition-method-chooser';
       case joinState.matches('resettingIdentity'):
-        return 'reset storage confirmation';
+        return 'reset-storage-confirmation';
       case joinState.matches({ choosingIdentity: 'creatingIdentity' }):
-        return 'create identity input';
+        return 'create-identity-input';
       case joinState.matches({ choosingIdentity: 'recoveringIdentity' }):
-        return 'recover identity input';
+        return 'recover-identity-input';
       case joinState.matches({
         choosingIdentity: { acceptingHaloInvitation: 'inputtingHaloInvitationCode' },
       }):
-        return 'halo invitation input';
+        return 'halo-invitation-input';
       case [
         {
           choosingIdentity: {
@@ -250,7 +249,7 @@ export const JoinPanel = ({
           },
         },
       ].some(joinState.matches):
-        return 'halo invitation rescuer';
+        return 'halo-invitation-rescuer';
       case [
         {
           choosingIdentity: {
@@ -270,7 +269,7 @@ export const JoinPanel = ({
           },
         },
       ].some(joinState.matches):
-        return 'halo invitation authenticator';
+        return 'halo-invitation-authenticator';
       case [
         {
           choosingIdentity: {
@@ -279,15 +278,15 @@ export const JoinPanel = ({
         },
         'finishingJoiningHalo',
       ].some(joinState.matches):
-        return 'halo invitation accepted';
+        return 'halo-invitation-accepted';
       case joinState.matches({
         choosingIdentity: 'confirmingAddedIdentity',
       }):
-        return 'identity added';
+        return 'identity-added';
       case joinState.matches({
         acceptingSpaceInvitation: 'inputtingSpaceInvitationCode',
       }):
-        return 'space invitation input';
+        return 'space-invitation-input';
       case [
         {
           acceptingSpaceInvitation: {
@@ -300,7 +299,7 @@ export const JoinPanel = ({
           },
         },
       ].some(joinState.matches):
-        return 'space invitation rescuer';
+        return 'space-invitation-rescuer';
       case [
         {
           acceptingSpaceInvitation: {
@@ -318,9 +317,9 @@ export const JoinPanel = ({
           },
         },
       ].some(joinState.matches):
-        return 'space invitation authenticator';
+        return 'space-invitation-authenticator';
       case joinState.matches('finishingJoiningSpace'):
-        return 'space invitation accepted';
+        return 'space-invitation-accepted';
       default:
         return 'never';
     }
@@ -328,10 +327,10 @@ export const JoinPanel = ({
 
   useEffect(() => {
     switch (activeView) {
-      case 'halo invitation accepted':
+      case 'halo-invitation-accepted':
         onHaloDone();
         break;
-      case 'space invitation accepted':
+      case 'space-invitation-accepted':
         onSpaceDone();
         break;
     }

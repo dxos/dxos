@@ -5,8 +5,9 @@
 import { type SpaceId } from '@dxos/keys';
 
 import type * as FeedProtocol from '../FeedProtocol';
-import { type CreateDocumentRequest, type CreateDocumentResponse } from '../proto/gen/dxos/echo/service';
+import type { SerializedError } from '../index';
 import { type QueryRequest, type QueryResponse } from '../proto/gen/dxos/echo/query';
+import { type CreateDocumentResponse } from '../proto/gen/dxos/echo/service';
 
 /*
 
@@ -79,7 +80,11 @@ export interface DataService {
   getDocument(ctx: TraceContext, spaceId: SpaceId, documentId: string): Promise<RpcResult<RawDocument | undefined>>;
 
   execQuery(ctx: TraceContext, request: QueryRequest): Promise<RpcResult<QueryResponse>>;
-  createDocument(ctx: TraceContext, request: CreateDocumentRequest): Promise<RpcResult<CreateDocumentResponse>>;
+  createDocument(
+    ctx: TraceContext,
+    spaceId: SpaceId,
+    initialValue?: Record<string, any>,
+  ): Promise<RpcResult<CreateDocumentResponse>>;
 
   // TODO(burdon): Update? Return DocumentEntry?
   changeDocument(ctx: TraceContext, spaceId: SpaceId, documentId: string, changes: Uint8Array): Promise<void>;
@@ -108,6 +113,36 @@ export interface FunctionsAiService {
    * Enables proxying HTTP requests to the AI service from other workers.
    */
   fetch(request: Request): Promise<RpcResult<Response>>;
+}
+
+export type FunctionInvokeOptions = {
+  spaceId?: SpaceId;
+  cpuTimeLimit?: number;
+  subrequestsLimit?: number;
+};
+
+export type FunctionInvokeResult =
+  | {
+      _kind: 'success';
+      data: unknown;
+    }
+  | {
+      _kind: 'error';
+      error: SerializedError;
+    };
+
+export interface FunctionsQuery {
+  spaceId?: SpaceId;
+}
+
+export interface FunctionsService {
+  query(query: FunctionsQuery): Promise<RpcResult<unknown[]>>; // TODO(dmaretskyi): The type is Operation.PersistentOperation[].
+
+  invoke(
+    deploymentId: string,
+    input: unknown,
+    options?: FunctionInvokeOptions,
+  ): Promise<RpcResult<FunctionInvokeResult>>;
 }
 
 export type ObjectDocumentJson = {

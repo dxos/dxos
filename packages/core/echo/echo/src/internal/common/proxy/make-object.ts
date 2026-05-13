@@ -8,7 +8,6 @@ import { ObjectId } from '@dxos/keys';
 
 import { getTypeAnnotation } from '../../Annotation';
 import { type AnyProperties, KindId, MetaId, type ObjectMeta, ObjectMetaSchema, ParentId } from '../types';
-
 import { defineHiddenProperty } from './define-hidden-property';
 import { attachTypedJsonSerializer } from './json-serializer';
 import { createProxy, getProxyTarget, isValidProxyTarget } from './proxy-utils';

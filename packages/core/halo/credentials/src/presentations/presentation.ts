@@ -7,7 +7,6 @@ import { type PublicKey } from '@dxos/keys';
 import { type Chain, type Presentation, type Proof } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { SIGNATURE_TYPE_ED25519 } from '../credentials';
-
 import { getPresentationProofPayload } from './signing';
 
 // TODO(burdon): Rename createPresentation?

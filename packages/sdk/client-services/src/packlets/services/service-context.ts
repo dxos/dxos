@@ -22,12 +22,12 @@ import { type RuntimeProvider } from '@dxos/effect';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
-import { PublicKey, type SpaceId } from '@dxos/keys';
+import { type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
-import { InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
+import { InvalidStorageVersionError, STORAGE_VERSION } from '@dxos/protocols';
 import { FeedProtocol } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
@@ -57,7 +57,6 @@ import {
   SpaceInvitationProtocol,
 } from '../invitations';
 import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces';
-
 import { FeedSyncer } from './feed-syncer';
 
 export type ServiceContextRuntimeProps = Pick<
@@ -75,7 +74,7 @@ export type ServiceContextRuntimeProps = Pick<
 // TODO(burdon): Rename/break-up into smaller components. And/or make members private.
 // TODO(dmaretskyi): Gets duplicated in CJS build between normal and testing bundles.
 @safeInstanceof('dxos.client-services.ServiceContext')
-@Trace.resource()
+@Trace.resource({ lifecycle: true })
 export class ServiceContext extends Resource {
   private readonly _edgeIdentityUpdateMutex = new Mutex();
 
@@ -104,8 +103,6 @@ export class ServiceContext extends Resource {
   >();
 
   private _deviceSpaceSync?: CredentialProcessor;
-
-  private readonly _instanceId = PublicKey.random().toHex();
 
   constructor(
     public readonly storage: Storage,
@@ -170,6 +167,7 @@ export class ServiceContext extends Resource {
       peerIdProvider: () => this.identityManager.identity?.deviceKey?.toHex(),
       getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
       runtime: this._runtime,
+      useSubduction: this._edgeFeatures?.subductionReplicator,
       syncQueue: async (ctx, request) => {
         return this._feedSyncer?.syncBlocking(ctx, {
           spaceId: request.spaceId as SpaceId,
@@ -225,12 +223,11 @@ export class ServiceContext extends Resource {
     }
   }
 
-  @Trace.span()
+  @Trace.span({ op: 'lifecycle' })
   protected override async _open(ctx: Context): Promise<void> {
     await this._checkStorageVersion();
 
     log('opening...');
-    log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
 
     log('opening identityManager...');
     await this.identityManager.open(ctx);
@@ -241,11 +238,11 @@ export class ServiceContext extends Resource {
     log('network identity set');
 
     log('opening edge connection...');
-    await this._edgeConnection?.open();
+    await this._edgeConnection?.open(ctx);
     log('edge connection opened');
 
     log('opening signal manager...');
-    await this.signalManager.open();
+    await this.signalManager.open(ctx);
     log('signal manager opened');
 
     log('opening network manager...');
@@ -288,14 +285,13 @@ export class ServiceContext extends Resource {
     }
 
     log('opening feed syncer...');
-    await this._feedSyncer?.open();
+    await this._feedSyncer?.open(ctx);
     log('feed syncer opened');
 
     log('loading persistent invitations...');
     const loadedInvitations = await this.invitationsManager.loadPersistentInvitations(ctx);
     log('loaded persistent invitations', { count: loadedInvitations.invitations?.length });
 
-    log.trace('dxos.sdk.service-context.open', trace.end({ id: this._instanceId }));
     log('opened');
   }
 
@@ -322,8 +318,8 @@ export class ServiceContext extends Resource {
     log('closed');
   }
 
-  async createIdentity(params: CreateIdentityOptions = {}) {
-    const ctx = Context.default();
+  async createIdentity(params: CreateIdentityOptions = {}, ctx?: Context) {
+    ctx ??= this._ctx;
     const identity = await this.identityManager.createIdentity(params, ctx);
     await this._setNetworkIdentity({ identity });
     await identity.joinNetwork(ctx);
@@ -399,7 +395,7 @@ export class ServiceContext extends Resource {
       edgeFeatures: this._edgeFeatures,
     });
     log('_initialize: opening DataSpaceManager...');
-    await this.dataSpaceManager.open();
+    await this.dataSpaceManager.open(ctx);
     log('_initialize: DataSpaceManager opened');
 
     this.edgeAgentManager = new EdgeAgentManager(
@@ -409,7 +405,7 @@ export class ServiceContext extends Resource {
       identity,
     );
     log('_initialize: opening EdgeAgentManager...');
-    await this.edgeAgentManager.open();
+    await this.edgeAgentManager.open(ctx);
     log('_initialize: EdgeAgentManager opened');
 
     this._handlerFactories.set(Invitation.Kind.SPACE, (invitation) => {
@@ -443,6 +439,7 @@ export class ServiceContext extends Resource {
           await this.dataSpaceManager.acceptSpace(this._ctx, {
             spaceKey: assertion.spaceKey,
             genesisFeedKey: assertion.genesisFeedKey,
+            tags: assertion.tags,
           });
         } catch (err) {
           log.catch(err);

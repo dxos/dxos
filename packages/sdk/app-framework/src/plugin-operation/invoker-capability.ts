@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { OperationHandlerSet, OperationInvoker } from '@dxos/operation';
+import { OperationHandlerSet } from '@dxos/compute';
+import { OperationInvoker } from '@dxos/operation';
 
 import { ActivationEvents, Capabilities } from '../common';
 import { Capability, Plugin } from '../core';

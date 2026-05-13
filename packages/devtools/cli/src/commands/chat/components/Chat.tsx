@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import { For, Match, Switch, createEffect, createMemo, createSignal, useContext } from 'solid-js';
 
 import { type ModelName } from '@dxos/ai';
-import { type AiConversation, GenerationObserver } from '@dxos/assistant';
-import { type Blueprint } from '@dxos/blueprints';
+import { type AiSession, GenerationObserver } from '@dxos/assistant';
+import { type Blueprint } from '@dxos/compute';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { useAtomValue } from '@dxos/effect-atom-solid';
 import { log } from '@dxos/log';
-import { Assistant } from '@dxos/plugin-assistant/types';
+import { Assistant } from '@dxos/plugin-assistant';
 import { isTruthy } from '@dxos/util';
 
 import { AppContext } from '../../../components';
@@ -22,7 +22,6 @@ import { DXOS_VERSION } from '../../../version';
 import { useChatMessages } from '../hooks';
 import { type ChatProcessor } from '../processor';
 import { createAssistantMessage, createUserMessage } from '../types';
-
 import { Banner } from './Banner';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
@@ -33,7 +32,7 @@ import { StatusBar } from './StatusBar';
 export type ChatProps = {
   db: Database.Database;
   processor: ChatProcessor;
-  conversation: AiConversation;
+  conversation: AiSession.Session;
   model: ModelName;
   verbose?: boolean;
   onChatSelect?: (chat: Assistant.Chat) => void;

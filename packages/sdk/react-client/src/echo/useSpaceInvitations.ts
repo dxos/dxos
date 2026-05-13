@@ -6,11 +6,10 @@ import { useMemo } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
 import { type PublicKey } from '@dxos/client';
-import { type SpaceId } from '@dxos/client/echo';
+import { type SpaceId } from '@dxos/keys';
 import { useMulticastObservable } from '@dxos/react-hooks';
 
 import { type CancellableInvitationObservable, useInvitationStatus } from '../invitations';
-
 import { useSpace } from './useSpaces';
 
 // TODO(wittjosiah): Currently unable to remove `PublicKey` from this api.

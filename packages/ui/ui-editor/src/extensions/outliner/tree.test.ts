@@ -8,7 +8,6 @@ import { beforeEach, describe, test } from 'vitest';
 
 import { type Range } from '../../types';
 import { join } from '../../util';
-
 import { type Item, listItemToString, outlinerTree, treeFacet } from './tree';
 
 const lines = [

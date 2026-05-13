@@ -12,5 +12,6 @@ export * from './config-service';
 export * from '#loaders';
 export * from '#savers';
 export * from '#plugin';
+export * from './telemetry';
 export * from './types';
 export * from './preset';

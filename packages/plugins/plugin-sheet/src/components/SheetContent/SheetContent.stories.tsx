@@ -5,23 +5,23 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withPluginManager } from '@dxos/app-framework/testing';
-import { testFunctionPlugins } from '@dxos/compute/testing';
 import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
-import { useSpace } from '@dxos/react-client/echo';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { testFunctionPlugins } from '@dxos/compute-hyperformula/testing';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
-import { translations } from '../../translations';
-import { Sheet } from '../../types';
+import { createTestCells, useTestSheet, withComputeGraphDecorator } from '#testing';
+import { translations } from '#translations';
+import { Sheet } from '#types';
+
 import { useComputeGraph } from '../ComputeGraph';
 import { SheetRoot } from '../SheetRoot';
-
 import { SheetContent } from './SheetContent';
 
 export const Basic = () => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const graph = useComputeGraph(space);
   const sheet = useTestSheet(space, graph, { cells: createTestCells() });
   if (!sheet || !graph) {
@@ -30,7 +30,7 @@ export const Basic = () => {
 
   return (
     <SheetRoot graph={graph} sheet={sheet} attendableId='test' ignoreAttention>
-      <div role='none' className='grid h-full w-full'>
+      <div className='grid h-full w-full'>
         <SheetContent />
       </div>
     </SheetRoot>

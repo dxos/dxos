@@ -2,15 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/operation';
-
-export * as ThreadOperation from './definitions';
+import { OperationHandlerSet } from '@dxos/compute';
 
 export const ThreadOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./add-message'),
+  () => import('./append-channel-message'),
   () => import('./create'),
   () => import('./create-channel'),
-  () => import('./create-channel-thread'),
   () => import('./create-proposals'),
   () => import('./delete'),
   () => import('./delete-message'),

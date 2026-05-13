@@ -18,7 +18,8 @@ import { Annotation, type Database, Entity, Filter, Obj, Query, Relation } from 
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
-import { DropdownMenu, Icon, IconButton, Treegrid } from '@dxos/react-ui';
+import { log } from '@dxos/log';
+import { TREEGRID_PARENT_OF_SEPARATOR, DropdownMenu, Icon, IconButton, Treegrid } from '@dxos/react-ui';
 import { TreeItemToggle, paddingIndentation } from '@dxos/react-ui-list';
 import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
@@ -68,7 +69,7 @@ const ObjectsTreeRow = ({
   const setExpanded = useAtomSet(model.expanded(node.id, level));
   const children = useAtomValue(model.getChildren(node.id));
   const hasChildren = children.length > 0;
-  const parentOf = hasChildren ? children.map((child) => child.id).join(Treegrid.PARENT_OF_SEPARATOR) : undefined;
+  const parentOf = hasChildren ? children.map((child) => child.id).join(TREEGRID_PARENT_OF_SEPARATOR) : undefined;
 
   const styles = node.iconHue ? getStyles(node.iconHue) : undefined;
 
@@ -104,11 +105,7 @@ const ObjectsTreeRow = ({
         classNames='grid grid-cols-subgrid col-[tree-row] cursor-pointer hover:bg-hover-surface'
         onClick={() => model.onSelect(node.entity)}
       >
-        <div
-          role='none'
-          className='indent relative grid grid-cols-subgrid col-[tree-row]'
-          style={paddingIndentation(level)}
-        >
+        <div className='indent relative grid grid-cols-subgrid col-[tree-row]' style={paddingIndentation(level)}>
           <Treegrid.Cell indent classNames='flex items-center gap-1 min-w-0'>
             <TreeItemToggle isBranch={hasChildren} open={expanded} onClick={() => setExpanded((prev) => !prev)} />
             {node.type === 'outgoing-relation' && (
@@ -240,6 +237,7 @@ class ObjectsTreeModel {
   }
 
   #makeNodeAtom(anchor: string | null): Atom.Atom<ObjectsTreeItem[]> {
+    log('makeNodeAtom', { anchor });
     if (typeof anchor === 'string') {
       invariant(ObjectId.isValid(anchor));
 
@@ -287,7 +285,7 @@ class ObjectsTreeModel {
   }
 
   #mapEntityToTreeItems(entity: Entity.Snapshot, anchor: string | null): ObjectsTreeItem {
-    const { icon, hue } = Option.fromNullable(Obj.getSchema(entity)).pipe(
+    const { icon, hue } = Option.fromNullable(Entity.getSchema(entity)).pipe(
       Option.flatMap(Annotation.IconAnnotation.get),
       Option.getOrElse(() => ({
         icon: Obj.isSnapshot(entity) ? DEFAULT_OBJECT_ICON : DEFAULT_RELATION_ICON,

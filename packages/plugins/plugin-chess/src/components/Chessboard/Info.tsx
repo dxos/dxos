@@ -5,14 +5,11 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { type JSX, type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
-import { generateName } from '@dxos/display-name';
-import { Obj } from '@dxos/echo';
-import { type SpaceMember, useMembers } from '@dxos/react-client/echo';
-import { Icon, IconButton, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Player, useGameboardContext } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
 
 import { type ExtendedChessModel } from './types';
 
@@ -29,8 +26,6 @@ export type InfoProps = ThemedClassName<
 export const Info = ({ classNames, orientation = 'white', onOrientationChange, onClose, ...props }: InfoProps) => {
   const { t } = useTranslation(meta.id);
   const { model } = useGameboardContext<ExtendedChessModel>(INFO_NAME);
-  const db = Obj.getDatabase(model.object);
-  const members = useMembers(db?.spaceId);
 
   return (
     <div
@@ -48,23 +43,13 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
               variant='ghost'
               icon='ph--x--regular'
               iconOnly
-              label={t('close info button')}
+              label={t('close-info.button')}
               size={4}
               onClick={onClose}
             />
           )
         }
-      >
-        <PlayerSelector
-          value={model.object.players?.[orientation === 'white' ? 'black' : 'white']}
-          onValueChange={(value) => {
-            Obj.change(model.object, (obj) => {
-              obj.players![orientation === 'white' ? 'black' : 'white'] = value;
-            });
-          }}
-          members={members}
-        />
-      </PlayerIndicator>
+      />
 
       <History model={model} {...props} />
 
@@ -77,23 +62,13 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
               classNames={mx('transition duration-200 ease-linear', orientation === 'white' && 'rotate-180')}
               icon='ph--arrows-clockwise--regular'
               iconOnly
-              label={t('flip board button')}
+              label={t('flip-board.button')}
               size={4}
               onClick={() => onOrientationChange(orientation === 'white' ? 'black' : 'white')}
             />
           )
         }
-      >
-        <PlayerSelector
-          value={model.object.players?.[orientation]}
-          onValueChange={(value) => {
-            Obj.change(model.object, (obj) => {
-              obj.players![orientation] = value;
-            });
-          }}
-          members={members}
-        />
-      </PlayerIndicator>
+      />
     </div>
   );
 };
@@ -116,12 +91,12 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
   const moveIndex = useAtomValue(model.moveIndex);
   const label = model.game.isGameOver()
     ? model.game.isCheckmate()
-      ? t('game.checkmate label')
+      ? t('game.checkmate.label')
       : model.game.isStalemate()
-        ? t('game.stalemate label')
-        : t('game.draw label')
+        ? t('game.stalemate.label')
+        : t('game.draw.label')
     : model.game.isCheck()
-      ? t('game.check label')
+      ? t('game.check.label')
       : undefined;
 
   const history = model.game.history();
@@ -214,40 +189,5 @@ const PlayerIndicator = ({ children, model, player, icon }: PlayerIndicatorProps
       <div className='truncate overflow-hidden items-center'>{children}</div>
       {icon}
     </div>
-  );
-};
-
-//
-// PlayerSelector
-//
-
-type PlayerSelectorProps = {
-  value?: string;
-  onValueChange: (player: string) => void;
-  members: SpaceMember[];
-};
-
-const PlayerSelector = ({ value, onValueChange, members }: PlayerSelectorProps) => {
-  const { t } = useTranslation(meta.id);
-  return (
-    <Select.Root value={value} onValueChange={onValueChange}>
-      <Select.TriggerButton placeholder={t('select player button')} />
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport>
-            {members.map((member) => {
-              const memberKey = member.identity.identityKey.toHex();
-              const displayName = member.identity?.profile?.displayName || generateName(memberKey);
-              return (
-                <Select.Option key={memberKey} value={memberKey}>
-                  {displayName}
-                </Select.Option>
-              );
-            })}
-          </Select.Viewport>
-          <Select.Arrow />
-        </Select.Content>
-      </Select.Portal>
-    </Select.Root>
   );
 };

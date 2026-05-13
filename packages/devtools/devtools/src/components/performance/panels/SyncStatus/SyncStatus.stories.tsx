@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { type Client } from '@dxos/client';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type SpaceSyncStateMap, getSyncSummary } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -15,16 +15,16 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { SyncStatus } from './SyncStatus';
 
-const random = ({ min, max }: { min: number; max: number }) => min + Math.floor(Math.random() * (max - min));
+const randomInt = ({ min, max }: { min: number; max: number }) => min + Math.floor(Math.random() * (max - min));
 
 const createSpaceSyncStateMap = async (client: Client): Promise<SpaceSyncStateMap> => {
   const spaces = await Promise.all(
-    Array.from({ length: 10 }).map(() => client.spaces.create({ name: faker.company.name() })),
+    Array.from({ length: 10 }).map(() => client.spaces.create({ name: random.company.name() })),
   );
 
   return spaces.reduce<SpaceSyncStateMap>((map, space, i) => {
     if (i > 4) {
-      const total = random({ min: 10, max: 500 });
+      const total = randomInt({ min: 10, max: 500 });
       map[space.id] = {
         localDocumentCount: total,
         remoteDocumentCount: total,
@@ -37,9 +37,9 @@ const createSpaceSyncStateMap = async (client: Client): Promise<SpaceSyncStateMa
       return map;
     }
 
-    const total = random({ min: 10, max: 500 });
-    const haveLocal = random({ min: 0, max: total });
-    const haveRemote = random({ min: 0, max: total });
+    const total = randomInt({ min: 10, max: 500 });
+    const haveLocal = randomInt({ min: 0, max: total });
+    const haveRemote = randomInt({ min: 0, max: total });
     map[space.id] = {
       localDocumentCount: haveLocal,
       remoteDocumentCount: haveRemote,

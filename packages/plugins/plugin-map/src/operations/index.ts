@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/operation';
-
-export * as MapOperation from './definitions';
+import { OperationHandlerSet } from '@dxos/compute';
 
 export const MapOperationHandlerSet = OperationHandlerSet.lazy(() => import('./toggle'));

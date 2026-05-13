@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
 
 import { SyncStatusIndicator } from './SyncStatus';
 

@@ -1,0 +1,21 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
+
+import { CommentConfig, CreateObject, OperationHandler, UndoMappings } from '#capabilities';
+import { meta } from '#meta';
+import { Sheet } from '#types';
+
+export const SheetPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
+  AppPlugin.addSchemaModule({ schema: [Sheet.Sheet] }),
+  Plugin.make,
+);
+
+export default SheetPlugin;

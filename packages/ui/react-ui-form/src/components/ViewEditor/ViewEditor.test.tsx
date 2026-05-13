@@ -11,7 +11,6 @@ import { EchoSchema, isInstanceOf } from '@dxos/echo/internal';
 import { ProjectionModel } from '@dxos/schema';
 
 import { VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
-
 import * as stories from './ViewEditor.stories';
 import { type ViewEditorDebugObjects } from './ViewEditor.stories';
 

@@ -14,25 +14,26 @@ import {
   ToolExecutionService,
   ToolResolverService,
 } from '@dxos/ai';
-import { type AiAssistantError, AiSession } from '@dxos/assistant';
-import { Type } from '@dxos/echo';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { type AiAssistantError, AiRequest } from '@dxos/assistant';
+import { Trace, Operation, OperationRegistry } from '@dxos/compute';
+import { Database } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Transcript } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { type Meeting } from './types';
+import { type Meeting } from '#types';
 
 // TODO(wittjosiah): Also include content of object which are linked to the meeting.
 export const getMeetingContent = async (
   meeting: Meeting.Meeting,
-  resolve: (typename: string) => Record<string, any>,
+  textContentCapabilities: AppCapabilities.TextContent[],
 ) => {
   const notes = await meeting.notes.load();
-  const { getTextContent } = resolve(Type.getTypename(Transcript.Transcript)!);
   const transcript = await meeting.transcript.load();
-  const content = `${await getTextContent(transcript)}\n\n${notes.content}`;
+  const textContent = textContentCapabilities.find(({ id }) => id === Transcript.Transcript.typename);
+  const content = `${await textContent?.getTextContent(transcript)}\n\n${notes.content}`;
   return content;
 };
 
@@ -45,7 +46,7 @@ export const summarizeTranscript: (content: string) => Effect.Effect<
   function* (content) {
     log.info('summarizing meeting', { contentLength: content.length });
 
-    const output = yield* new AiSession().run({
+    const output = yield* new AiRequest.Request().run({
       system: SUMMARIZE_PROMPT,
       prompt: content,
     });
@@ -59,8 +60,14 @@ export const summarizeTranscript: (content: string) => Effect.Effect<
       AiService.model('@anthropic/claude-3-5-haiku-latest'),
       ToolResolverService.layerEmpty,
       ToolExecutionService.layerEmpty,
-      TracingService.layerNoop,
-      FunctionInvocationService.layerNotAvailable,
+      Trace.writerLayerNoop,
+      Database.notAvailable,
+      Layer.succeed(Operation.Service, {
+        invoke: () => Effect.die('Not available.'),
+        schedule: () => Effect.die('Not available.'),
+        invokePromise: async () => ({ error: new Error('Not available.') }),
+      } as any),
+      Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
     ),
   ),
 );

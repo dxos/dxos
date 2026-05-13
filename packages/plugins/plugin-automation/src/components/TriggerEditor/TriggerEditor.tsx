@@ -4,11 +4,10 @@
 
 import React, { useCallback, useMemo } from 'react';
 
+import { Operation, Script, Trigger } from '@dxos/compute';
 import { ComputeGraph } from '@dxos/conductor';
-import { DXN, type Database, Entity, Feed, Obj, type Query } from '@dxos/echo';
-import { Script, Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
-import { Filter, Ref, useQuery } from '@dxos/react-client/echo';
+import { type Database, DXN, Entity, Feed, Filter, Obj, type Query, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import {
@@ -41,8 +40,8 @@ export const TriggerEditor = ({ db, types, tags, readonlySpec, trigger, ...formP
 
   const handleValuesChanged = useCallback(
     (newValues: Partial<TriggerFormSchema>) => {
-      Obj.change(trigger, (obj) => {
-        Object.assign(obj, newValues);
+      Obj.update(trigger, (trigger) => {
+        Object.assign(trigger, newValues);
       });
     },
     [trigger],

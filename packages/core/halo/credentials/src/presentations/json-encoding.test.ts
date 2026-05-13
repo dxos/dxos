@@ -3,7 +3,6 @@
 //
 
 import { inspect } from 'util';
-
 import { describe, test } from 'vitest';
 
 import { randomBytes } from '@dxos/crypto';
@@ -13,7 +12,6 @@ import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb
 import { schema } from '@dxos/protocols/proto';
 
 import { createCredential } from '../credentials';
-
 import { signPresentation } from './presentation';
 
 describe('json encoding', () => {

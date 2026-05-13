@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Registry from '@effect-atom/atom/Registry';
 import { RegistryContext } from '@effect-atom/atom-react';
+import * as Registry from '@effect-atom/atom/Registry';
 import React, { useMemo } from 'react';
 import { generatePath, useNavigate } from 'react-router-dom';
 
@@ -11,7 +11,6 @@ import { ClientProvider } from '@dxos/react-client';
 
 import { getConfig } from '../config';
 import { Todo, TodoList, createTodoList } from '../types';
-
 import { Main } from './Main';
 
 const createWorker = () =>

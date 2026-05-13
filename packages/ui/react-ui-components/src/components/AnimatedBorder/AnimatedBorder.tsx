@@ -21,14 +21,14 @@ export type AnimatedBorderProps = ThemedClassName<PropsWithChildren<{ animate?: 
  */
 export const AnimatedBorder = ({ children, classNames, animate = false }: AnimatedBorderProps) => {
   return (
-    <div role='none' className='relative overflow-hidden p-px rounded-sm'>
-      <div role='none' className={mx('relative z-10 bg-base-surface rounded-sm', classNames)}>
+    <div className='relative overflow-hidden p-px rounded-sm'>
+      <div className={mx('relative z-10 bg-base-surface rounded-sm border border-subdued-separator', classNames)}>
         {children}
       </div>
       {animate && (
         <>
-          <div role='none' className={mx(...trail, 'animate-trail')} />
-          <div role='none' className={mx(...trail, 'animate-trail-offset')} />
+          <div className={mx(...trail, 'animate-trail')} />
+          <div className={mx(...trail, 'animate-trail-offset')} />
         </>
       )}
     </div>

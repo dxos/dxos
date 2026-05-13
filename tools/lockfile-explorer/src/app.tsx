@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { resolve } from 'node:path';
-
 import fuzzy from 'fuzzy';
 import { Box, Text, render, useInput, useStdout } from 'ink';
+import { resolve } from 'node:path';
 import React, { type ReactNode, useEffect, useState } from 'react';
 
 import { entries, keys } from '@dxos/util';

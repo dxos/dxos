@@ -5,12 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
-import { RecoverIdentity } from './definitions';
-
 import { JOIN_DIALOG } from '../constants';
+import { RecoverIdentity } from './definitions';
 
 const handler: Operation.WithHandler<typeof RecoverIdentity> = RecoverIdentity.pipe(
   Operation.withHandler(

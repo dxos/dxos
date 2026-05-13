@@ -7,7 +7,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { Obj } from '@dxos/echo';
 import { Card, Toolbar } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { Focus, Mosaic, type MosaicStackTileComponent } from '../components';
 
@@ -26,6 +26,12 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
 
   return (
     <Menu.Root>
+      {/*
+       * `Mosaic.Tile` sets `aria-current` from `props.current`, which the
+       * Slot composition propagates down to `Card.Root`'s div. That's what
+       * makes `dx-current` (an `aria-[current=true]:` utility) actually
+       * fire here. See `ui-theme/src/css/components/selected.md`.
+       */}
       <Mosaic.Tile {...props} asChild>
         <Focus.Item asChild>
           <Card.Root className='dx-current dx-hover'>
@@ -39,7 +45,7 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
             </Card.Toolbar>
             {open && (
               <Card.Row>
-                <Json data={props.data} classNames='text-xs' />
+                <JsonHighlighter data={props.data} classNames='text-xs' />
               </Card.Row>
             )}
           </Card.Root>

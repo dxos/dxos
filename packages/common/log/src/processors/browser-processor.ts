@@ -2,22 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { getDebugName, safariCheck } from '@dxos/util';
+import { safariCheck } from '@dxos/util';
 
 import { LogLevel } from '../config';
 import { type LogProcessor, getContextFromEntry, shouldLog } from '../context';
-
-const getRelativeFilename = (filename: string) => {
-  // TODO(burdon): Hack uses "packages" as an anchor (pre-parse NX?)
-  // Including `packages/` part of the path so that excluded paths (e.g. from dist) are clickable in vscode.
-  const match = filename.match(/.+\/(packages\/.+\/.+)/);
-  if (match) {
-    const [, filePath] = match;
-    return filePath;
-  }
-
-  return filename;
-};
 
 type Config = {
   useTestProcessor: boolean;
@@ -47,23 +35,26 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
   // const LOG_BROWSER_CSS = ['color:gray; font-size:10px; padding-bottom: 4px', 'color:#B97852; font-size:14px;'];
   const LOG_BROWSER_CSS: string[] = [];
 
+  const { filename, line: lineNumber, context: scopeDebugName } = entry.computedMeta;
+
   let link = '';
-  if (entry.meta) {
-    const filename = getRelativeFilename(entry.meta.F);
+  if (filename !== undefined && lineNumber !== undefined) {
     const filepath = `${LOG_BROWSER_PREFIX.replace(/\/$/, '')}/${filename}`;
     // TODO(burdon): Line numbers not working for app link, even with colons.
     //  https://stackoverflow.com/a/54459820/2804332
-    link = `${filepath}#L${entry.meta.L}`;
+    link = `${filepath}#L${lineNumber}`;
   }
 
   let args = [];
 
-  if (entry.meta?.S) {
-    const scope = entry.meta?.S;
-    const scopeName = scope.name || getDebugName(scope);
-    const processPrefix = entry.meta.S?.hostSessionId ? '[worker] ' : '';
-    // TODO(dmaretskyi): Those can be made clickable with a custom formatter.
-    args.push(`%c${processPrefix}${scopeName}`, 'color:#C026D3;font-weight:bold');
+  const scope = entry.meta?.S;
+  if (scope) {
+    const scopeName = scope.name || scopeDebugName;
+    if (scopeName) {
+      const processPrefix = scope.hostSessionId ? '[worker] ' : '';
+      // TODO(dmaretskyi): Those can be made clickable with a custom formatter.
+      args.push(`%c${processPrefix}${scopeName}`, 'color:#C026D3;font-weight:bold');
+    }
   }
 
   if (entry.message) {
@@ -73,9 +64,9 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
   const context = getContextFromEntry(entry);
   if (context) {
     if (Object.keys(context).length === 1 && 'error' in context) {
-      args.push(context.error);
+      args.push(unwrapEffectError(context.error));
     } else if (Object.keys(context).length === 1 && 'err' in context) {
-      args.push(context.err);
+      args.push(unwrapEffectError(context.err));
     } else {
       args.push(context);
     }
@@ -114,10 +105,8 @@ const TEST_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
     return;
   }
 
-  let path = '';
-  if (entry.meta) {
-    path = `${getRelativeFilename(entry.meta.F)}:${entry.meta.L}`;
-  }
+  const { filename, line: lineNumber } = entry.computedMeta;
+  const path = filename !== undefined && lineNumber !== undefined ? `${filename}:${lineNumber}` : '';
 
   let args = [];
 
@@ -148,3 +137,13 @@ const TEST_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
 };
 
 export const BROWSER_PROCESSOR: LogProcessor = CONFIG.useTestProcessor ? TEST_BROWSER_PROCESSOR : APP_BROWSER_PROCESSOR;
+
+// effect-specific
+const originalSymbol = Symbol.for('effect/OriginalAnnotation');
+
+const unwrapEffectError = (error: any) => {
+  if (typeof error === 'object' && error !== null && originalSymbol in error) {
+    return error[originalSymbol];
+  }
+  return error;
+};

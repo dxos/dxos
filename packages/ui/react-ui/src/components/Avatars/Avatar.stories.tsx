@@ -9,7 +9,6 @@ import { type ChromaticPalette, type Size } from '@dxos/ui-types';
 import { hexToFallback } from '@dxos/util';
 
 import { withTheme } from '../../testing';
-
 import { Avatar, type AvatarAnimation, type AvatarStatus, type AvatarVariant } from './Avatar';
 
 type DefaultStoryProps = PropsWithChildren<{

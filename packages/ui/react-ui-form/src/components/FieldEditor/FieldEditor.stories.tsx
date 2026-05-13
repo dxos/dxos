@@ -12,9 +12,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ProjectionModel, ViewModel, createEchoChangeCallback } from '@dxos/schema';
 import { Example } from '@dxos/schema/testing';
 
-import { translations } from '../../translations';
-import { FIELD_EDITOR_DEBUG_SYMBOL, TestLayout } from '../testing';
+import { translations } from '#translations';
 
+import { FIELD_EDITOR_DEBUG_SYMBOL, TestLayout } from '../testing';
 import { FieldEditor, type FieldEditorProps } from './FieldEditor';
 
 export type FieldEditorDebugObjects = {

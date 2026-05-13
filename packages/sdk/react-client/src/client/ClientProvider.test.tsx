@@ -11,7 +11,6 @@ import { Client, Config, SystemStatus, fromHost } from '@dxos/client';
 import { log } from '@dxos/log';
 
 import { useIdentity } from '../halo';
-
 import { ClientProvider } from './ClientProvider';
 import { useClient } from './useClient';
 

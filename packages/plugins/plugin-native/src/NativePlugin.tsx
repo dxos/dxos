@@ -6,9 +6,9 @@ import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { AssistantEvents } from '@dxos/plugin-assistant';
 
-import { Ollama, SpotlightListener, Updater } from './capabilities';
-import { meta } from './meta';
-import { translations } from './translations';
+import { Ollama, SpotlightListener, Updater } from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
 
 export const NativePlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
@@ -29,3 +29,5 @@ export const NativePlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default NativePlugin;

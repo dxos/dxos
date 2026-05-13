@@ -7,8 +7,8 @@ import React, { useMemo } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
-import { Voxel } from '../../types';
+import { translations } from '#translations';
+import { Voxel } from '#types';
 
 import { VoxelArticle } from './VoxelArticle';
 
@@ -18,7 +18,7 @@ type DefaultStoryProps = {
 
 const DefaultStory = ({ voxels }: DefaultStoryProps) => {
   const world = useMemo(() => Voxel.make(voxels ? { voxels } : undefined), [voxels]);
-  return <VoxelArticle subject={world} />;
+  return <VoxelArticle subject={world} attendableId='story' role='article' />;
 };
 
 const meta = {

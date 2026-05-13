@@ -5,7 +5,7 @@
 import { sleep } from '@dxos/async';
 import { type Codec } from '@dxos/codec-protobuf';
 import { createCodecEncoding } from '@dxos/hypercore';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import type { AbstractValueEncoding } from '@dxos/vendor-hypercore/hypercore';
 
 import { type FeedWriter } from '../feed-writer';
@@ -26,9 +26,9 @@ export const defaultValueEncoding: AbstractValueEncoding<any> = createCodecEncod
 export type TestBlockGenerator<T> = (i: number) => T;
 
 export const defaultTestBlockGenerator: TestBlockGenerator<TestItem> = (i) => ({
-  id: faker.string.uuid(),
+  id: random.string.uuid(),
   index: i,
-  value: faker.lorem.sentence(),
+  value: random.lorem.sentence(),
 });
 
 /**
@@ -57,7 +57,7 @@ export class TestGenerator<T extends {}> {
         const data = this._generate(this._count++);
         const receipt = await writer.write(data);
         if (delay) {
-          await sleep(faker.number.int(delay));
+          await sleep(random.number.int(delay));
         }
 
         return receipt;

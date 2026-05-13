@@ -5,7 +5,7 @@
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 
-import { EchoId, LegacyDXN as DXN, ObjectId } from '@dxos/keys';
+import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
 
 import { ForeignKey } from '../foreign-key';
 
@@ -167,6 +167,21 @@ export interface FilterOr extends Schema.Schema.Type<typeof FilterOr_> {}
 export const FilterOr: Schema.Schema<FilterOr> = FilterOr_;
 
 /**
+ * Filter objects that are children of the specified parents.
+ * With transitive=true (default), matches grandchildren and beyond.
+ */
+const FilterChildOf_ = Schema.Struct({
+  type: Schema.Literal('child-of'),
+  /** Parent DXNs to match children of. */
+  parents: Schema.Array(DXN.Schema),
+  /** Whether to match transitively (grandchildren, etc.). Defaults to true. */
+  transitive: Schema.Boolean,
+});
+
+export interface FilterChildOf extends Schema.Schema.Type<typeof FilterChildOf_> {}
+export const FilterChildOf: Schema.Schema<FilterChildOf> = FilterChildOf_;
+
+/**
  * Union of filters.
  */
 export const Filter = Schema.Union(
@@ -178,6 +193,7 @@ export const Filter = Schema.Union(
   FilterRange,
   FilterTimestamp,
   FilterTextSearch,
+  FilterChildOf,
   FilterNot,
   FilterAnd,
   FilterOr,
@@ -409,6 +425,11 @@ export const QueryOptions = Schema.Struct({
    * Nested select statements will use this option to filter deleted objects.
    */
   deleted: Schema.optional(Schema.Literal('include', 'exclude', 'only')),
+
+  /**
+   * Diagnostics-only label for logs / tooling (not used by execution semantics).
+   */
+  debugLabel: Schema.optional(Schema.String),
 });
 
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
@@ -420,22 +441,21 @@ export const Scope = Schema.Struct({
   /**
    * The nested select statemets will select from the given spaces.
    *
-   * NOTE: Spaces and queues are unioned together if both are specified.
+   * NOTE: Spaces and feeds are unioned together if both are specified.
    */
   spaceIds: Schema.optional(Schema.Array(Schema.String)),
 
   /**
-   * If true, the nested select statements will select from all queues in the spaces specified by `spaceIds`.
+   * If true, the nested select statements will select from all feeds in the spaces specified by `spaceIds`.
    */
-  allQueuesFromSpaces: Schema.optional(Schema.Boolean),
+  allFeedsFromSpaces: Schema.optional(Schema.Boolean),
 
   /**
-   * The nested select statemets will select from the given queues.
-   * Accepts either legacy DXN format (`dxn:queue:...`) or EchoId format (`echo://...`).
+   * The nested select statemets will select from the given feeds (by underlying queue DXN).
    *
-   * NOTE: Spaces and queues are unioned together if both are specified.
+   * NOTE: Spaces and feeds are unioned together if both are specified.
    */
-  queues: Schema.optional(Schema.Array(Schema.Union(DXN.Schema, EchoId.Schema))),
+  feeds: Schema.optional(Schema.Array(DXN.Schema)),
 });
 export interface Scope extends Schema.Schema.Type<typeof Scope> {}
 

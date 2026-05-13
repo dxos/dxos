@@ -8,18 +8,17 @@ import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Graph } from '@dxos/plugin-graph';
 import { byPosition } from '@dxos/util';
 
-import { Adjust, ChangeCompanion } from './definitions';
-import { updateActiveDeck } from './helpers';
 import { incrementPlank } from '../layout';
-import { DeckCapabilities, PLANK_COMPANION_TYPE } from '../types';
+import { DeckCapabilities, DeckOperation, PLANK_COMPANION_TYPE } from '../types';
 import { computeActiveUpdates } from '../util';
+import { updateActiveDeck } from './helpers';
 
-const handler: Operation.WithHandler<typeof Adjust> = Adjust.pipe(
+const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperation.Adjust.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const _state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
@@ -57,7 +56,7 @@ const handler: Operation.WithHandler<typeof Adjust> = Adjust.pipe(
           mode: soloOperation.mode,
         });
       } else if (soloOperation?.type === 'unsolo') {
-        yield* Operation.invoke(LayoutOperation.SetLayoutMode, { mode: 'deck' });
+        yield* Operation.invoke(LayoutOperation.SetLayoutMode, { mode: 'multi' });
         yield* Operation.invoke(LayoutOperation.Open, { subject: [soloOperation.entryId] });
       }
 
@@ -73,7 +72,7 @@ const handler: Operation.WithHandler<typeof Adjust> = Adjust.pipe(
         );
 
         if (Option.isSome(companion)) {
-          yield* Operation.invoke(ChangeCompanion, { companion: companion.value.id });
+          yield* Operation.invoke(LayoutOperation.UpdateCompanion, { subject: companion.value.id });
         }
       }
     }),

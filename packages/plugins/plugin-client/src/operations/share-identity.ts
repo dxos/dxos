@@ -5,12 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/operation';
-import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
-
-import { ShareIdentity } from './definitions';
+import { Operation } from '@dxos/compute';
+import { ObservabilityOperation } from '@dxos/plugin-observability';
 
 import { Account } from '../types';
+import { ShareIdentity } from './definitions';
 
 const handler: Operation.WithHandler<typeof ShareIdentity> = ShareIdentity.pipe(
   Operation.withHandler(

@@ -13,10 +13,10 @@ import {
   SpotlightDismiss,
   State,
   UrlHandler,
-} from './capabilities';
-import { meta } from './meta';
-import { translations } from './translations';
-import { SimpleLayoutEvents } from './types';
+} from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { SimpleLayoutEvents } from '#types';
 
 export type SimpleLayoutPluginOptions = {
   /** Determines if running in popover window context (hides mobile-specific UI). */
@@ -30,7 +30,7 @@ export const SimpleLayoutPlugin = Plugin.define<SimpleLayoutPluginOptions>(meta)
   Plugin.addModule(({ isPopover = false }) => ({
     id: Capability.getModuleTag(State),
     activatesOn: ActivationEvents.Startup,
-    activatesAfter: [SimpleLayoutEvents.StateReady, AppActivationEvents.LayoutReady],
+    firesAfterActivation: [SimpleLayoutEvents.StateReady, AppActivationEvents.LayoutReady],
     activate: () => State({ initialState: { isPopover } }),
   })),
   Plugin.addModule(({ isPopover = false }) => ({
@@ -55,3 +55,5 @@ export const SimpleLayoutPlugin = Plugin.define<SimpleLayoutPluginOptions>(meta)
   }),
   Plugin.make,
 );
+
+export default SimpleLayoutPlugin;

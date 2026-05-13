@@ -8,7 +8,6 @@ import { type Node } from '@dxos/app-graph';
 import { type MenuActionProperties } from '@dxos/ui-types';
 
 import { createComment } from '../comments';
-
 import {
   Inline,
   List,

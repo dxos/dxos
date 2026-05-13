@@ -21,7 +21,6 @@ import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type Message, type PeerInfo, PeerInfoHash, type SwarmEvent } from '../signal-methods';
-
 import { type SignalManager } from './signal-manager';
 
 export class EdgeSignalManager extends Resource implements SignalManager {

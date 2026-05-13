@@ -55,8 +55,6 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={EventTile}
-                classNames='my-2'
-                gap={8}
                 items={items}
                 draggable={false}
                 getId={(item) => item.event.id}
@@ -95,7 +93,7 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={event.id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root ref={forwardedRef}>
+        <Card.Root ref={forwardedRef} fullWidth>
           <Card.Content>
             <Card.Row>
               <Card.Text>{event.title}</Card.Text>

@@ -3,5 +3,4 @@
 //
 
 export * from './meta';
-export * from './operations';
-export * from './FeedPlugin';
+export * from './types';

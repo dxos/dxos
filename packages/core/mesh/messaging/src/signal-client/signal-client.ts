@@ -7,7 +7,6 @@ import { type Context, Resource, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace } from '@dxos/protocols';
 import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { type JoinRequest, type LeaveRequest, type QueryRequest } from '@dxos/protocols/proto/dxos/edge/signal';
 import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
@@ -19,7 +18,6 @@ import {
   type SignalStatus,
   type SwarmEvent,
 } from '../signal-methods';
-
 import { SignalClientMonitor } from './signal-client-monitor';
 import { SignalLocalState } from './signal-local-state';
 import { SignalRPCClient } from './signal-rpc-client';
@@ -57,8 +55,6 @@ export class SignalClient extends Resource implements SignalClientMethods {
    */
   private _reconnectAfter = DEFAULT_RECONNECT_TIMEOUT;
 
-  private readonly _instanceId = PublicKey.random().toHex();
-
   /**
    * @internal
    */
@@ -94,7 +90,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
   }
 
   protected override async _open(): Promise<void> {
-    log.trace('dxos.mesh.signal-client.open', trace.begin({ id: this._instanceId }));
+    log('opening signal client');
 
     if ([SignalState.CONNECTED, SignalState.CONNECTING].includes(this._state)) {
       return;
@@ -137,7 +133,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
     });
 
     this._createClient();
-    log.trace('dxos.mesh.signal-client.open', trace.end({ id: this._instanceId }));
+    log('opened signal client');
   }
 
   protected override async _catch(err: Error): Promise<void> {

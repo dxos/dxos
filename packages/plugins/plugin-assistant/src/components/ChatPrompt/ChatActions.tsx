@@ -7,7 +7,8 @@ import React, { type PropsWithChildren } from 'react';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '#meta';
+
 import { type ChatEvent } from '../Chat';
 
 export type ChatActionsProps = ThemedClassName<
@@ -15,25 +16,25 @@ export type ChatActionsProps = ThemedClassName<
     microphone?: boolean;
     recording?: boolean;
     processing?: boolean;
+    debug?: boolean;
     onEvent?: (event: ChatEvent) => void;
   }>
 >;
 
-export const ChatActions = ({ classNames, children, microphone, recording, processing, onEvent }: ChatActionsProps) => {
+export const ChatActions = ({
+  classNames,
+  children,
+  microphone,
+  recording,
+  processing,
+  debug,
+  onEvent,
+}: ChatActionsProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
-    <div className={mx('flex items-center me-1', classNames)}>
+    <div className={mx('flex items-center', classNames)}>
       {children}
-
-      <IconButton
-        disabled={!processing}
-        variant='ghost'
-        icon='ph--x--regular'
-        iconOnly
-        label={t('cancel processing button')}
-        onClick={() => onEvent?.({ type: 'cancel' })}
-      />
 
       {microphone && (
         <IconButton
@@ -43,7 +44,7 @@ export const ChatActions = ({ classNames, children, microphone, recording, proce
           icon='ph--microphone--regular'
           iconOnly
           noTooltip
-          label={t('microphone button')}
+          label={t('microphone.button')}
           onMouseDown={() => onEvent?.({ type: 'record-start' })}
           onMouseUp={() => onEvent?.({ type: 'record-stop' })}
           onTouchStart={() => onEvent?.({ type: 'record-start' })}
@@ -51,12 +52,23 @@ export const ChatActions = ({ classNames, children, microphone, recording, proce
         />
       )}
 
+      {debug && (
+        <IconButton
+          variant='ghost'
+          icon='ph--wrench--regular'
+          iconOnly
+          label={t('debug.button')}
+          onClick={() => onEvent?.({ type: 'toggle-debug' })}
+        />
+      )}
+
       <IconButton
+        disabled={!processing}
         variant='ghost'
-        icon='ph--wrench--regular'
+        icon='ph--x--regular'
         iconOnly
-        label={t('debug button')}
-        onClick={() => onEvent?.({ type: 'toggle-debug' })}
+        label={t('cancel-processing.button')}
+        onClick={() => onEvent?.({ type: 'cancel' })}
       />
     </div>
   );

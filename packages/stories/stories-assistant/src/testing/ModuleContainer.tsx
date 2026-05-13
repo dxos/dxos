@@ -2,26 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React, { type FC, useCallback, useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { AiContextBinder } from '@dxos/assistant';
-import { Blueprint } from '@dxos/blueprints';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { AiContext } from '@dxos/assistant';
+import { Blueprint } from '@dxos/compute';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-db';
+import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { Assistant } from '@dxos/plugin-assistant/types';
-import { useSpace } from '@dxos/react-client/echo';
+import { Assistant } from '@dxos/plugin-assistant';
+import { useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { Loading } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
+import { Loading } from '@dxos/react-ui/testing';
 import { isNonNullable } from '@dxos/util';
 
-import { type ComponentProps, ContextModule } from '../components';
+import { type ModuleProps, ContextModule } from '../components';
 
 export type ModuleContainerProps = {
-  modules: FC<ComponentProps>[][];
+  modules: FC<ModuleProps>[][];
   blueprints?: string[];
   showContext?: boolean;
 };
@@ -29,7 +32,7 @@ export type ModuleContainerProps = {
 export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showContext }: ModuleContainerProps) => {
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const blueprintsDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
-  const space = useSpace();
+  const [space] = useSpaces();
 
   useAsyncEffect(async () => {
     if (!space) {
@@ -53,11 +56,16 @@ export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showCon
       })
       .filter(isNonNullable);
 
-    const binder = new AiContextBinder({ queue: await chat.queue.load(), registry: atomRegistry });
+    const feedTarget = await chat.feed.load();
+    const feedServiceLayer = createFeedServiceLayer(space.queues);
+    const runtime = await runAndForwardErrors(
+      Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
+    );
+    const binder = new AiContext.Binder({ feed: feedTarget, runtime, registry: atomRegistry });
     await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
   }, [space, blueprints, blueprintsDefinitions]);
 
-  const handleEvent = useCallback<NonNullable<ComponentProps['onEvent']>>((event) => {
+  const handleEvent = useCallback<NonNullable<ModuleProps['onEvent']>>((event) => {
     log.info('event', { event });
   }, []);
 
@@ -94,6 +102,7 @@ export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showCon
                   item={{ id: `module-${i}` }}
                   classNames='bg-base-surface rounded-xs border border-separator overflow-hidden'
                 >
+                  {/* TODO(burdon): Should these be surfaces? */}
                   <Component space={space} onEvent={handleEvent} />
                 </StackItem.Root>
               ))}

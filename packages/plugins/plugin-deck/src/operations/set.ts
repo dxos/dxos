@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 
-import { updateActiveDeck } from './helpers';
 import { DeckCapabilities } from '../types';
 import { computeActiveUpdates } from '../util';
+import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Set> = LayoutOperation.Set.pipe(
   Operation.withHandler(

@@ -20,12 +20,12 @@ import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
 import { Domino } from '@dxos/ui';
 import {
   type BasicExtensionsOptions,
-  type EditorInputMode,
   InputModeExtensions,
   createBasicExtensions,
   createThemeExtensions,
   defaultStyles,
 } from '@dxos/ui-editor';
+import { type EditorInputMode } from '@dxos/ui-editor/types';
 import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -137,7 +137,7 @@ const createTooltipRenderer = (themeMode: ThemeMode) => {
     return {
       dom: Domino.of('div')
         .classNames('xs:max-w-80 max-w-lg p-1 bg-base-surface rounded-sm border border-separator')
-        .children(...children).root,
+        .append(...children).root,
     };
   };
 };

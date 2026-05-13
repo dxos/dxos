@@ -5,7 +5,7 @@
 import React, { Fragment, useEffect, useMemo, useRef } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { ComputeGraphModel } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
@@ -29,16 +29,16 @@ import {
   ShapeRegistry,
 } from '@dxos/react-ui-canvas-editor';
 
-export type CanvasContainerProps = SurfaceComponentProps<CanvasBoard.CanvasBoard>;
+export type CanvasContainerProps = AppSurface.ObjectArticleProps<CanvasBoard.CanvasBoard>;
 
-export const CanvasContainer = ({ role, subject: canvas }: CanvasContainerProps) => {
-  const id = Obj.getDXN(canvas as any).toString();
-  useObject(canvas);
+export const CanvasContainer = ({ role, subject, attendableId: _attendableId }: CanvasContainerProps) => {
+  const [canvas] = useObject(subject);
+  const id = Obj.getDXN(canvas).toString();
   const graph = useMemo(
-    () => CanvasGraphModel.create<ComputeShape>(canvas.layout, (fn) => Obj.change(canvas, fn)),
-    [canvas],
+    () => CanvasGraphModel.create<ComputeShape>(canvas.layout, (fn) => Obj.update(subject, fn)),
+    [subject, canvas.layout],
   );
-  const controller = useGraphController(canvas);
+  const controller = useGraphController(subject);
   const graphMonitor = useGraphMonitor(controller?.graph);
   const registry = useMemo(() => new ShapeRegistry(computeShapes), []);
   const editorRef = useRef<EditorController>(null);

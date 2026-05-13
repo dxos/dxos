@@ -33,7 +33,6 @@ import { trace } from '@dxos/tracing';
 import { type ComplexMap, ComplexSet } from '@dxos/util';
 
 import { EdgeFeedReplicator } from '../spaces';
-
 import { TrustedKeySetAuthVerifier } from './authenticator';
 
 export type IdentityProps = {
@@ -105,7 +104,7 @@ export class Identity {
     return this._deviceStateMachine.authorizedDeviceKeys;
   }
 
-  @trace.span()
+  @trace.span({ op: 'lifecycle' })
   async open(ctx: DxosContext): Promise<void> {
     await this._presence?.open();
     await this.space.spaceState.addCredentialProcessor(this._deviceStateMachine);
@@ -121,7 +120,7 @@ export class Identity {
     await this._edgeFeedReplicator?.open();
   }
 
-  @trace.span()
+  @trace.span({ op: 'lifecycle' })
   async close(ctx: DxosContext): Promise<void> {
     await this._presence?.close();
     await this.authVerifier.close();

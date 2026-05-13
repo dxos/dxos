@@ -45,13 +45,13 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/compute/assistant"
     },
     {
-      "path": "../../core/blueprints"
+      "path": "../../core/compute/compute"
     },
     {
       "path": "../../core/echo/echo"
@@ -63,16 +63,13 @@
       "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/operation"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/react-client"

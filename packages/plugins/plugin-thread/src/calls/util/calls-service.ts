@@ -14,7 +14,6 @@ import {
   type TrackObject,
   type TracksResponse,
 } from '../types';
-
 import { HistoryCache } from './history-cache';
 import { BulkRequestDispatcher, FIFOScheduler } from './task-scheduling';
 
@@ -548,7 +547,9 @@ const waitForTransceiverToSendData = async (ctx: Context, transceiver: RTCRtpTra
   ctx.onDispose(() => waitForData.throw(new Error('Transceiver was closed')));
 
   const checkStats = async () => {
-    if (ctx.disposed) return;
+    if (ctx.disposed) {
+      return;
+    }
 
     try {
       const stats = await transceiver.sender.getStats();

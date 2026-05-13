@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Node } from '@dxos/plugin-graph';
+import { Node } from '@dxos/app-graph';
+import { linkedSegment } from '@dxos/react-ui-attention/types';
 
 /** Well-known local segment names (private — use the path helpers below). */
 const Segments = {
@@ -34,3 +35,10 @@ export const getDraftsId = (): string => Segments.drafts;
 /** Canonical qualified path to a mailbox's drafts view. */
 export const getMailboxDraftsPath = (spaceId: string, mailboxId: string): string =>
   `${getMailboxPath(spaceId, mailboxId)}/${Segments.drafts}`;
+
+/** Segment ID for a feed object message node, linked to its parent for attention propagation via {@link linkedSegment}. */
+export const getMessageSegmentId = (messageId: string): string => linkedSegment(messageId);
+
+/** Canonical qualified path to a message within a mailbox. */
+export const getMailboxMessagePath = (spaceId: string, mailboxId: string, messageId: string): string =>
+  `${getMailboxPath(spaceId, mailboxId)}/${getMessageSegmentId(messageId)}`;

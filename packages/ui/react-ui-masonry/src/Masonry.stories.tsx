@@ -5,11 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Filter } from '@dxos/client/echo';
-import { faker } from '@dxos/random';
+import { Filter } from '@dxos/echo';
+import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Card, ScrollArea } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization } from '@dxos/types';
@@ -33,15 +33,15 @@ const StoryItem = ({ data: { image, name, description } }: { data: Organization.
   );
 };
 
-type DefaultStoryProps = MasonryRootProps;
-
-const DefaultStory = (props: DefaultStoryProps) => {
+const DefaultStory = (props: MasonryRootProps) => {
   const { space } = useClientStory();
   const organizations = useQuery(space?.db, Filter.type(Organization.Organization));
 
   return (
     <Masonry.Root {...props} Tile={StoryItem}>
-      <Masonry.Content items={organizations} />
+      <Masonry.Content>
+        <Masonry.Viewport items={organizations} />
+      </Masonry.Content>
     </Masonry.Root>
   );
 };
@@ -57,7 +57,7 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
-        const factory = createObjectFactory(space.db, faker as any);
+        const factory = createObjectFactory(space.db, random as any);
         await factory([{ type: Organization.Organization, count: 36 }]);
       },
     }),
@@ -72,21 +72,3 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
-
-// TODO(burdon): Masonry currently doesn't support an external scroller.
-export const Single: Story = {
-  render: (props) => {
-    return (
-      <div className='dx-container flex justify-center'>
-        <ScrollArea.Root className='dx-card-max-width' thin padding>
-          <ScrollArea.Viewport>
-            <DefaultStory {...props} />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </div>
-    );
-  },
-  args: {
-    columns: 1,
-  },
-};

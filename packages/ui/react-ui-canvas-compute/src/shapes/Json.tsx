@@ -8,10 +8,9 @@ import React from 'react';
 import { DEFAULT_INPUT, DefaultOutput, JsonTransformInput } from '@dxos/conductor';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
-import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 
 import { useComputeNodeState } from '../hooks';
-
 import { Box, createFunctionAnchors, getHeight } from './common';
 import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
 
@@ -50,7 +49,14 @@ export const JsonComponent = ({ shape, ...props }: JsonComponentProps) => {
 
   return (
     <Box shape={shape}>
-      <JsonFilter data={value} classNames='text-xs' />
+      <Syntax.Root data={value}>
+        <Syntax.Content>
+          <Syntax.Filter />
+          <Syntax.Viewport>
+            <Syntax.Code classNames='text-xs' />
+          </Syntax.Viewport>
+        </Syntax.Content>
+      </Syntax.Root>
     </Box>
   );
 };

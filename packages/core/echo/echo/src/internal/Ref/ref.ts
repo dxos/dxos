@@ -20,8 +20,8 @@ import { EchoId, LegacyDXN as DXN, LOCAL_SPACE_TAG, ObjectId, type URI } from '@
 
 import * as Database from '../../Database';
 import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../Annotation';
-import { type JsonSchemaType } from '../JsonSchema';
 import type { AnyEntity, AnyProperties } from '../common/types';
+import { type JsonSchemaType } from '../JsonSchema';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.
@@ -163,6 +163,16 @@ export interface Ref<T> extends Pipeable.Pipeable {
    */
 
   tryLoad(): Promise<T | undefined>;
+
+  /**
+   * Subscribe to the ref's resolution event.
+   * The callback fires when the target object becomes available in the working set
+   * (e.g. when its document is loaded after sibling-client mutation).
+   * Note: the resolver only schedules a notification when the target is requested
+   * via {@link target} while it is not yet loaded.
+   * @returns Function that unsubscribes the callback.
+   */
+  onResolved(callback: () => void): () => void;
 
   /**
    * Do not inline the target object in the reference.
@@ -437,6 +447,13 @@ export class RefImpl<T> implements Ref<T> {
     }
     invariant(this.#resolver, 'Resolver is not set');
     return (await this.#resolver.resolve(this.#dxn)) as T | undefined;
+  }
+
+  /**
+   * @inheritdoc
+   */
+  onResolved(callback: () => void): () => void {
+    return this.#resolved.on(callback);
   }
 
   /**

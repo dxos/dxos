@@ -3,7 +3,8 @@
 //
 
 import { PublicKey } from '@dxos/client';
-import { type Space, type SpaceId, SpaceState } from '@dxos/client/echo';
+import { type Space, SpaceState } from '@dxos/client/echo';
+import { type SpaceId } from '@dxos/keys';
 import { useMulticastObservable } from '@dxos/react-hooks';
 
 import { useClient } from '../client';
@@ -21,7 +22,6 @@ import { useClient } from '../client';
 export const useSpace = (spaceId?: SpaceId | PublicKey): Space | undefined => {
   const client = useClient();
   const spaces = useMulticastObservable<Space[]>(client.spaces);
-
   if (!spaceId) {
     return undefined;
   }
@@ -42,6 +42,7 @@ export const useSpace = (spaceId?: SpaceId | PublicKey): Space | undefined => {
  * Requires a ClientProvider somewhere in the parent tree.
  *
  * @param spaceId the id of the space to look for.
+ * @deprecated Use useSpace.
  */
 export const useDatabase = (spaceId?: SpaceId): Space['db'] | undefined => {
   const space = useSpace(spaceId);

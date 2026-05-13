@@ -11,7 +11,6 @@ import { createEchoSchema } from '@dxos/echo/testing';
 import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
 
 import { Table } from '../types';
-
 import {
   TableModel,
   type TableModelProps,

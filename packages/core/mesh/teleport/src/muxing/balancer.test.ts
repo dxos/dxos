@@ -3,7 +3,6 @@
 //
 
 import { Duplex, pipeline } from 'node:stream';
-
 import randomBytes from 'randombytes';
 import varint from 'varint';
 import { describe, expect, test } from 'vitest';

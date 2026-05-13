@@ -3,10 +3,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities } from '@dxos/app-framework';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { SpaceCapabilities } from '../types';
-
 import { SpaceOperation } from './definitions';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.WaitForObject> = SpaceOperation.WaitForObject.pipe(

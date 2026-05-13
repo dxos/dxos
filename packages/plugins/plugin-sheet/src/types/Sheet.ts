@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { addressFromA1Notation, isFormula } from '@dxos/compute';
+import { addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 
@@ -83,18 +83,18 @@ export type SheetProps = {
 export const make = ({ name, cells = {}, ...size }: SheetProps = {}) => {
   const sheet = Obj.make(Sheet, { name, cells: {}, rows: [], columns: [], rowMeta: {}, columnMeta: {}, ranges: [] });
 
-  // Initialize and set cells within Obj.change to satisfy change context requirements.
-  Obj.change(sheet, (obj) => {
-    initialize(obj, size);
+  // Initialize and set cells within Obj.update to satisfy change context requirements.
+  Obj.update(sheet, (sheet) => {
+    initialize(sheet, size);
 
     if (cells) {
       Object.entries(cells).forEach(([key, { value }]) => {
-        const idx = addressToIndex(obj, addressFromA1Notation(key));
+        const idx = addressToIndex(sheet, addressFromA1Notation(key));
         if (isFormula(value)) {
-          value = mapFormulaRefsToIndices(obj, value);
+          value = mapFormulaRefsToIndices(sheet, value);
         }
 
-        obj.cells[idx] = { value };
+        sheet.cells[idx] = { value };
       });
     }
   });

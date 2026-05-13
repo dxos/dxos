@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 const ForexEffect = Operation.make({
   meta: {

@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, expect, it, onTestFinished } from '@effect/vitest';
 import { Registry } from '@effect-atom/atom-react';
+import { describe, expect, it, onTestFinished } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import * as Capability from './capability';

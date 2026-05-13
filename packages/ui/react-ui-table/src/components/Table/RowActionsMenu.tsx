@@ -7,8 +7,9 @@ import React from 'react';
 
 import { DropdownMenu, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
+import { translationKey } from '#translations';
+
 import { type ModalController, type TableModel } from '../../model';
-import { translationKey } from '../../translations';
 
 type RowActionsMenuProps = { model: TableModel; modals: ModalController };
 
@@ -47,7 +48,7 @@ export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
           {/* Default actions */}
           {model.features.dataEditable !== false && (
             <DropdownMenu.Item data-testid='row-menu-delete' onClick={() => model.deleteRow(state.rowIndex)}>
-              {t(hasSelection ? 'bulk delete row label' : 'delete row label')}
+              {t(hasSelection ? 'bulk-delete-row.label' : 'delete-row.label')}
             </DropdownMenu.Item>
           )}
         </DropdownMenu.Viewport>

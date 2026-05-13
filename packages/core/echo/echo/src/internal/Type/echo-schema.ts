@@ -10,11 +10,10 @@ import { type ObjectId } from '@dxos/keys';
 
 import type * as Type from '../../Type';
 import { type SchemaMeta, SchemaMetaSymbol, type TypeAnnotation, getTypeAnnotation } from '../Annotation';
-import { type JsonSchemaType, toEffectSchema, toJsonSchema } from '../JsonSchema';
-import { type TypedObject, type TypedObjectPrototype, getSnapshot } from '../Obj';
 import { ChangeId } from '../common/proxy';
 import { EntityKind, SchemaKindId } from '../common/types';
-
+import { type JsonSchemaType, toEffectSchema, toJsonSchema } from '../JsonSchema';
+import { type TypedObject, type TypedObjectPrototype, getSnapshot } from '../Obj';
 import {
   addFieldsToSchema,
   removeFieldsFromSchema,
@@ -373,7 +372,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   }
 
   /**
-   * Wrapper for Obj.change that handles the change context for the persistent schema.
+   * Wrapper for Obj.update that handles the change context for the persistent schema.
    */
   private _change(callback: (schema: PersistentSchema) => void): void {
     const changeFn = (this._persistentSchema as any)[ChangeId];

@@ -5,11 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
-
 import { Tooltip } from './Tooltip';
 
 type DefaultStoryProps = {
@@ -20,7 +19,7 @@ type DefaultStoryProps = {
 const DefaultStory = ({ tooltips, defaultOpen }: DefaultStoryProps) => {
   return (
     <Tooltip.Provider defaultOpen={defaultOpen}>
-      <div role='none' className='w-32'>
+      <div className='w-32'>
         {tooltips.map(({ label, content }, i) => (
           <Tooltip.Trigger asChild key={i} content={content} side='right'>
             <Button classNames='block w-full'>{label}</Button>
@@ -74,10 +73,10 @@ export const DefaultOpen: Story = {
 export const StressTest: Story = {
   args: {
     defaultOpen: true,
-    tooltips: faker.helpers.multiple(
+    tooltips: random.helpers.multiple(
       () => ({
-        label: faker.lorem.words(2),
-        content: faker.lorem.words(5),
+        label: random.lorem.words(2),
+        content: random.lorem.words(5),
       }),
       { count: 32 },
     ),

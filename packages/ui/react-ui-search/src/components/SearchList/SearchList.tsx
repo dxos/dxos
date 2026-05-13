@@ -2,68 +2,52 @@
 // Copyright 2025 DXOS.org
 //
 
+// `SearchList` — search-themed wrapper around `Picker` (this same package).
+//
+// What `SearchList` adds on top of `Picker`:
+//
+//   - Query state (controllable / uncontrolled).
+//   - Debounced `onSearch` callback.
+//   - Default placeholder from translation (`search.placeholder`).
+//   - `Empty` placeholder with translation (`empty-results.message`).
+//   - `Group` heading layout helper.
+//   - Convenience `Item` renderer (icon + label + suffix + check).
+//
+// Everything else (registry, virtual highlight, keyboard nav, auto-
+// select-first, scroll-into-view) comes from `Picker`. This file is a
+// thin search-domain wrapper; the heavy lifting is in `../Picker`.
+
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ChangeEvent,
   type ComponentPropsWithRef,
-  type KeyboardEvent,
   type PropsWithChildren,
   type ReactNode,
   forwardRef,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
-  useState,
 } from 'react';
 
-import {
-  type Density,
-  type Elevation,
-  Icon,
-  Input,
-  ScrollArea,
-  type ThemedClassName,
-  useDensityContext,
-  useElevationContext,
-  useThemeContext,
-  useTranslation,
-} from '@dxos/react-ui';
+import { type Density, type Elevation, Icon, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Picker, usePickerInputContext, usePickerItemContext } from '@dxos/react-ui-list';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
 
-import {
-  SearchListInputContextProvider,
-  SearchListItemContextProvider,
-  useSearchListInputContext,
-  useSearchListItemContext,
-} from './context';
+import { SearchListInputContextProvider, SearchListItemContextProvider, useSearchListInputContext } from './context';
 
 //
-// Internal types
-//
-
-type ItemData = {
-  element: HTMLElement;
-  disabled?: boolean;
-  onSelect?: () => void;
-};
-
-//
-// Root
+// Root — wraps `Picker.Root` and adds query state + debounced onSearch.
 //
 
 type SearchListRootProps = PropsWithChildren<{
   /** Controlled query value. */
   value?: string;
-
   /** Default query value for uncontrolled mode. */
   defaultValue?: string;
-
   /** Debounce delay in milliseconds. */
   debounceMs?: number;
-
   /** Callback when search query changes (debounced). */
   onSearch?: (query: string) => void;
 }>;
@@ -81,20 +65,12 @@ const SearchListRoot = ({
     onChange: undefined,
   });
 
-  const [selectedValue, setSelectedValue] = useState<string | undefined>(undefined);
-
-  // Track registered items: value -> { element, onSelect, disabled }.
-  const itemsRef = useRef<Map<string, ItemData>>(new Map());
-
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleQueryChange = useCallback(
     (newQuery: string) => {
       setQuery(newQuery);
-      // Don't update selectedValue here - let the effect handle it when items actually change.
-      // This prevents unnecessary re-renders of items when query changes.
 
-      // Debounce onSearch callback.
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
@@ -105,9 +81,6 @@ const SearchListRoot = ({
     [setQuery, onSearch, debounceMs],
   );
 
-  // Track when items change to trigger first-item selection.
-  const [itemVersion, setItemVersion] = useState(0);
-
   // Cleanup debounce on unmount.
   useEffect(() => {
     return () => {
@@ -117,108 +90,44 @@ const SearchListRoot = ({
     };
   }, []);
 
-  // Auto-select first non-disabled item when items change and no valid selection exists.
-  useEffect(() => {
-    // Check if current selection is still valid (exists and not disabled).
-    const currentItem = selectedValue !== undefined ? itemsRef.current.get(selectedValue) : undefined;
-    const isSelectionValid = currentItem !== undefined && !currentItem.disabled;
-    if (!isSelectionValid && itemsRef.current.size > 0) {
-      // Get first non-disabled item in DOM order.
-      const entries = Array.from(itemsRef.current.entries()).filter(([, data]) => !data.disabled);
-      if (entries.length > 0) {
-        entries.sort(([, a], [, b]) => {
-          const position = a.element.compareDocumentPosition(b.element);
-          if (position & Node.DOCUMENT_POSITION_FOLLOWING) {
-            return -1;
-          }
-          if (position & Node.DOCUMENT_POSITION_PRECEDING) {
-            return 1;
-          }
-          return 0;
-        });
-        const firstValue = entries[0]?.[0];
-        if (firstValue !== undefined && firstValue !== selectedValue) {
-          setSelectedValue(firstValue);
-        }
-      } else if (selectedValue !== undefined) {
-        // No valid items available, clear selection
-        setSelectedValue(undefined);
-      }
-    }
-  }, [itemVersion, selectedValue]);
-
-  const registerItem = useCallback(
-    (value: string, element: HTMLElement | null, onSelect: (() => void) | undefined, disabled?: boolean) => {
-      if (element) {
-        itemsRef.current.set(value, { element, onSelect, disabled });
-        setItemVersion((v) => v + 1);
-      }
-    },
-    [],
+  return (
+    <Picker.Root>
+      <SearchListContextBridge query={query} onQueryChange={handleQueryChange}>
+        {children}
+      </SearchListContextBridge>
+    </Picker.Root>
   );
+};
 
-  const unregisterItem = useCallback((value: string) => {
-    itemsRef.current.delete(value);
-    setItemVersion((v) => v + 1);
-  }, []);
+SearchListRoot.displayName = 'SearchList.Root';
 
-  // Get item values in DOM order by sorting registered elements (excludes disabled items).
-  const getItemValues = useCallback(() => {
-    return Array.from(itemsRef.current.entries())
-      .filter(([, data]) => !data.disabled)
-      .sort(([, a], [, b]) => {
-        // Sort by DOM position using compareDocumentPosition.
-        const position = a.element.compareDocumentPosition(b.element);
-        return position & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : position & Node.DOCUMENT_POSITION_PRECEDING ? 1 : 0;
-      })
-      .map(([value]) => value);
-  }, []);
+// Re-publishes `Picker`'s contexts with the search-specific `query` /
+// `onQueryChange` fields tacked on, so the existing
+// `SearchListInputContextValue` / `SearchListItemContextValue` shapes
+// (and the public `useSearchListInput` / `useSearchListItem` hooks)
+// keep working unchanged.
+type SearchListContextBridgeProps = PropsWithChildren<{
+  query: string;
+  onQueryChange: (value: string) => void;
+}>;
 
-  const triggerSelect = useCallback(() => {
-    if (selectedValue !== undefined) {
-      const item = itemsRef.current.get(selectedValue);
-      item?.onSelect?.();
-    }
-  }, [selectedValue]);
-
-  // Item context; stable, doesn't change when query changes.
-  const itemContextValue = useMemo(
-    () => ({
-      selectedValue,
-      onSelectedValueChange: setSelectedValue,
-      registerItem,
-      unregisterItem,
-    }),
-    [selectedValue, registerItem, unregisterItem],
-  );
-
-  const inputContextValue = useMemo(
-    () => ({
-      query,
-      onQueryChange: handleQueryChange,
-      selectedValue,
-      onSelectedValueChange: setSelectedValue,
-      getItemValues,
-      triggerSelect,
-    }),
-    [query, handleQueryChange, selectedValue, getItemValues, triggerSelect],
-  );
-
-  // NOTE: Separate contexts for items and input to avoid unnecessary re-renders of items when query changes.
+const SearchListContextBridge = ({ query, onQueryChange, children }: SearchListContextBridgeProps) => {
+  const picker = usePickerInputContext('SearchList.Root');
+  const itemCtx = usePickerItemContext('SearchList.Root');
   return (
     <SearchListInputContextProvider
-      query={inputContextValue.query}
-      onQueryChange={inputContextValue.onQueryChange}
-      selectedValue={inputContextValue.selectedValue}
-      onSelectedValueChange={inputContextValue.onSelectedValueChange}
-      getItemValues={inputContextValue.getItemValues}
-      triggerSelect={inputContextValue.triggerSelect}
+      query={query}
+      onQueryChange={onQueryChange}
+      selectedValue={picker.selectedValue}
+      onSelectedValueChange={picker.onSelectedValueChange}
+      getItemValues={picker.getItemValues}
+      triggerSelect={picker.triggerSelect}
     >
       <SearchListItemContextProvider
-        selectedValue={itemContextValue.selectedValue}
-        onSelectedValueChange={itemContextValue.onSelectedValueChange}
-        registerItem={itemContextValue.registerItem}
-        unregisterItem={itemContextValue.unregisterItem}
+        selectedValue={itemCtx.selectedValue}
+        onSelectedValueChange={itemCtx.onSelectedValueChange}
+        registerItem={itemCtx.registerItem}
+        unregisterItem={itemCtx.unregisterItem}
       >
         {children}
       </SearchListItemContextProvider>
@@ -226,24 +135,22 @@ const SearchListRoot = ({
   );
 };
 
-SearchListRoot.displayName = 'SearchList.Root';
-
 //
 // Content
 //
 
 type SearchListContentProps = {};
 
+/**
+ * Optional styling wrapper that groups `SearchList.Input` and `SearchList.Viewport` into a single
+ * `dx-expander` container. Layout-neutral: it does NOT participate in any column/grid placement.
+ *
+ * When hosting `SearchList` inside a `Column.Root` (e.g. `Dialog.Body`), the parent propagator
+ * handles column placement for SearchList's children automatically.
+ */
 const SearchListContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
-    <div
-      {...composableProps(props, {
-        role: 'none',
-        classNames:
-          'dx-expander [.dx-column_&]:col-span-full [.dx-column_&]:grid [.dx-column_&]:grid-cols-subgrid [.dx-column_&]:[&>:not(.dx-container)]:col-start-2',
-      })}
-      ref={forwardedRef}
-    >
+    <div {...composableProps(props, { role: 'none', classNames: 'dx-expander' })} ref={forwardedRef}>
       {children}
     </div>
   );
@@ -252,7 +159,8 @@ const SearchListContent = composable<HTMLDivElement>(({ children, ...props }, fo
 SearchListContent.displayName = 'SearchList.Content';
 
 //
-// Input
+// Input — search-themed wrapper around Picker.Input. Adds default
+// placeholder translation; reads/writes the query from search context.
 //
 
 type InputVariant = 'default' | 'subdued';
@@ -266,104 +174,33 @@ type SearchListInputProps = ThemedClassName<
 >;
 
 const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
-  ({ density: propsDensity, elevation: propsElevation, variant, placeholder, onChange, ...props }, forwardedRef) => {
+  ({ density, elevation, variant = 'subdued', placeholder, onChange, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
-    const { hasIosKeyboard } = useThemeContext();
-    const { query, onQueryChange, selectedValue, onSelectedValueChange, getItemValues, triggerSelect } =
-      useSearchListInputContext('SearchList.Input');
-    const density = useDensityContext(propsDensity);
-    const elevation = useElevationContext(propsElevation);
-    const defaultPlaceholder = t('search placeholder');
+    const { query, onQueryChange } = useSearchListInputContext('SearchList.Input');
+    const defaultPlaceholder = t('search.placeholder');
 
     const handleChange = useCallback(
       (event: ChangeEvent<HTMLInputElement>) => {
-        onQueryChange(event.target.value);
+        // Picker.Input drives its own keyboard handling; we let the
+        // inner change handler also fire by chaining via onChange (the
+        // Picker's onValueChange path is what updates query).
         onChange?.(event);
       },
-      [onQueryChange, onChange],
-    );
-
-    const handleKeyDown = useCallback(
-      (event: KeyboardEvent<HTMLInputElement>) => {
-        const values = getItemValues();
-        if (values.length === 0) {
-          if (event.key === 'Escape') {
-            onQueryChange('');
-          }
-          return;
-        }
-
-        const currentIndex = selectedValue !== undefined ? values.indexOf(selectedValue) : -1;
-
-        switch (event.key) {
-          case 'ArrowDown': {
-            event.preventDefault();
-            const nextIndex = currentIndex === -1 ? 0 : Math.min(currentIndex + 1, values.length - 1);
-            const nextValue = values[nextIndex];
-            if (nextValue !== undefined) {
-              onSelectedValueChange(nextValue);
-            }
-            break;
-          }
-          case 'ArrowUp': {
-            event.preventDefault();
-            const prevIndex = currentIndex === -1 ? values.length - 1 : Math.max(currentIndex - 1, 0);
-            const prevValue = values[prevIndex];
-            if (prevValue !== undefined) {
-              onSelectedValueChange(prevValue);
-            }
-            break;
-          }
-          case 'Enter': {
-            if (selectedValue !== undefined) {
-              event.preventDefault();
-              triggerSelect();
-            }
-            break;
-          }
-          case 'Home': {
-            event.preventDefault();
-            const firstValue = values[0];
-            if (firstValue !== undefined) {
-              onSelectedValueChange(firstValue);
-            }
-            break;
-          }
-          case 'End': {
-            event.preventDefault();
-            const lastValue = values[values.length - 1];
-            if (lastValue !== undefined) {
-              onSelectedValueChange(lastValue);
-            }
-            break;
-          }
-          case 'Escape': {
-            event.preventDefault();
-            if (selectedValue !== undefined) {
-              onSelectedValueChange(undefined);
-            } else {
-              onQueryChange('');
-            }
-            break;
-          }
-        }
-      },
-      [selectedValue, onSelectedValueChange, getItemValues, triggerSelect, onQueryChange],
+      [onChange],
     );
 
     return (
-      <Input.Root>
-        <Input.TextInput
-          {...props}
-          variant='subdued'
-          autoFocus={props.autoFocus && !hasIosKeyboard}
-          placeholder={placeholder ?? defaultPlaceholder}
-          value={query}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          ref={forwardedRef}
-        />
-      </Input.Root>
+      <Picker.Input
+        {...props}
+        density={density}
+        elevation={elevation}
+        variant={variant}
+        placeholder={placeholder ?? defaultPlaceholder}
+        value={query}
+        onValueChange={onQueryChange}
+        onChange={handleChange}
+        ref={forwardedRef}
+      />
     );
   },
 );
@@ -371,14 +208,14 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
 SearchListInput.displayName = 'SearchList.Input';
 
 //
-// Viewport
+// Viewport — scroll surface; carries `role='listbox'`.
 //
 
 type SearchListViewportProps = {};
 
 const SearchListViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
-    <ScrollArea.Root {...composableProps(props)} role='listbox' thin padding ref={forwardedRef}>
+    <ScrollArea.Root {...composableProps(props)} role='listbox' centered padding thin ref={forwardedRef}>
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
@@ -387,88 +224,43 @@ const SearchListViewport = composable<HTMLDivElement>(({ children, ...props }, f
 SearchListViewport.displayName = 'SearchList.Viewport';
 
 //
-// Item
+// Item — search-themed convenience wrapper around `Picker.Item`.
 //
 
 type SearchListItemProps = ThemedClassName<{
-  /** Unique identifier for the item. */
+  /** Unique identifier. */
   value: string;
-  /** Display label for the item. */
+  /** Display label. */
   label: string;
-  /** Icon to display (string identifier for Icon component). */
+  /** Icon id. */
   icon?: string;
-  /** Additional class names for the icon element. */
+  /** Additional class names for the icon. */
   iconClassNames?: string;
-  /** Whether to show a check icon. */
+  /** Show a check icon to the right. */
   checked?: boolean;
-  /** Suffix text to display after the label. */
+  /** Suffix text after the label. */
   suffix?: string;
   /** Callback when item is selected. */
   onSelect?: () => void;
-  /** Whether the item is disabled. */
+  /** Disabled. */
   disabled?: boolean;
 }>;
 
 const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
   ({ classNames, value, label, icon, iconClassNames, checked, suffix, onSelect, disabled }, forwardedRef) => {
-    const { selectedValue, registerItem, unregisterItem } = useSearchListItemContext('SearchList.Item');
-    const internalRef = useRef<HTMLDivElement>(null);
-
-    const isSelected = selectedValue === value && !disabled;
-
-    // Register this item.
-    useEffect(() => {
-      const element = internalRef.current;
-      if (element) {
-        registerItem(value, element, onSelect, disabled);
-      }
-      return () => unregisterItem(value);
-    }, [value, onSelect, disabled, registerItem, unregisterItem]);
-
-    // Scroll into view when selected.
-    useEffect(() => {
-      if (isSelected && internalRef.current) {
-        internalRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      }
-    }, [isSelected]);
-
-    const handleClick = useCallback(() => {
-      if (!disabled) {
-        onSelect?.();
-      }
-    }, [onSelect, disabled]);
-
     return (
-      <div
-        ref={(node) => {
-          internalRef.current = node;
-          if (typeof forwardedRef === 'function') {
-            forwardedRef(node);
-          } else if (forwardedRef) {
-            forwardedRef.current = node;
-          }
-        }}
-        role='option'
-        aria-selected={isSelected}
-        aria-disabled={disabled}
-        data-selected={isSelected}
-        data-disabled={disabled}
-        data-value={value}
-        tabIndex={-1}
-        className={mx(
-          'flex gap-2 items-center',
-          'py-1 px-2 rounded-xs select-none',
-          'cursor-pointer data-[selected=true]:bg-hover-overlay hover:bg-hover-overlay', // TODO(burdon): Replace with classes.
-          disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent data-[selected=true]:bg-transparent',
-          classNames,
-        )}
-        onClick={handleClick}
+      <Picker.Item
+        value={value}
+        onSelect={onSelect}
+        disabled={disabled}
+        classNames={mx('flex gap-2 items-center px-2 rounded-xs', classNames)}
+        ref={forwardedRef}
       >
         {icon && <Icon icon={icon} classNames={iconClassNames} />}
         <span className='w-0 grow truncate'>{label}</span>
         {suffix && <span className='shrink-0 text-description'>{suffix}</span>}
         {checked && <Icon icon='ph--check--regular' />}
-      </div>
+      </Picker.Item>
     );
   },
 );
@@ -485,7 +277,7 @@ const SearchListEmpty = ({ classNames }: SearchListEmptyProps) => {
   const { t } = useTranslation(translationKey);
   return (
     <div role='status' className={mx(classNames)}>
-      {t('empty results message')}
+      {t('empty-results.message')}
     </div>
   );
 };
@@ -503,9 +295,6 @@ type SearchListGroupProps = ThemedClassName<
   }>
 >;
 
-/**
- * Groups related search items with an optional heading.
- */
 const SearchListGroup = forwardRef<HTMLDivElement, SearchListGroupProps>(
   ({ classNames, heading, children }, forwardedRef) => {
     return (

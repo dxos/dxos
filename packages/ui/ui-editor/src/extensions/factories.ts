@@ -17,7 +17,6 @@ import {
   keymap,
   lineNumbers,
   placeholder,
-  scrollPastEnd,
 } from '@codemirror/view';
 import { vscodeDarkStyle, vscodeLightStyle } from '@uiw/codemirror-theme-vscode';
 import defaultsDeep from 'lodash.defaultsdeep';
@@ -31,10 +30,10 @@ import { type ChromaticPalette, type ThemeMode } from '@dxos/ui-types';
 import { hexToHue, isTruthy } from '@dxos/util';
 
 import { baseTheme, createFontTheme, editorGutter } from '../styles';
-
 import { automerge } from './automerge';
 import { SpaceAwarenessProvider, awareness } from './awareness';
 import { focus } from './focus';
+import { scrollPastEnd } from './scroll-past-end';
 
 //
 // Basic
@@ -144,6 +143,19 @@ export const createBasicExtensions = (propsProp?: BasicExtensionsOptions): Exten
     props.lineWrapping && EditorView.lineWrapping,
     props.placeholder && placeholder(props.placeholder),
     props.readOnly !== undefined && EditorState.readOnly.of(props.readOnly),
+    // `EditorState.readOnly` is advisory — CodeMirror doesn't auto-reject doc-changing
+    // transactions. Some extensions (e.g. `@codemirror/lang-markdown`'s Enter handler that
+    // continues a list) dispatch programmatic edits regardless. Drop user-initiated edits
+    // (`input` / `delete` keymap dispatches plus `undo` / `redo` from the history extension)
+    // but pass programmatic dispatches — streaming `MarkdownStream` and similar consumers
+    // depend on being able to populate the doc themselves.
+    props.readOnly &&
+      EditorState.transactionFilter.of((tr) =>
+        tr.docChanged &&
+        (tr.isUserEvent('input') || tr.isUserEvent('delete') || tr.isUserEvent('undo') || tr.isUserEvent('redo'))
+          ? []
+          : tr,
+      ),
     props.scrollPastEnd && scrollPastEnd(),
     props.tabbable && tabbable,
     props.tabSize && EditorState.tabSize.of(props.tabSize),
@@ -180,12 +192,12 @@ export const createBasicExtensions = (propsProp?: BasicExtensionsOptions): Exten
 export type ThemeExtensionsOptions = {
   monospace?: boolean;
   themeMode?: ThemeMode;
+  scrollbarThin?: boolean;
   slots?: {
     editor?: {
       className?: string;
     };
-    scroll?: {
-      // NOTE: Do not apply vertical padding to scroll container.
+    scroller?: {
       className?: string;
     };
     content?: {
@@ -219,11 +231,12 @@ export const defaultStyles = {
  */
 export const createThemeExtensions = ({
   monospace,
-  themeMode,
+  scrollbarThin,
   slots: slotsProp,
   syntaxHighlighting: syntaxHighlightingProp,
+  themeMode,
 }: ThemeExtensionsOptions = {}): Extension => {
-  const slots = defaultsDeep({}, slotsProp, defaultThemeSlots);
+  const slots: NonNullable<ThemeExtensionsOptions['slots']> = defaultsDeep({}, slotsProp, defaultThemeSlots);
   return [
     baseTheme,
     EditorView.darkTheme.of(themeMode === 'dark'),
@@ -232,11 +245,16 @@ export const createThemeExtensions = ({
       syntaxHighlighting(HighlightStyle.define(themeMode === 'dark' ? defaultStyles.dark : defaultStyles.light)),
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
-    slots.scroll?.className &&
+    (slots.scroller?.className || scrollbarThin) &&
       ViewPlugin.fromClass(
         class {
           constructor(view: EditorView) {
-            view.scrollDOM.classList.add(...slots.scroll.className.split(/\s+/));
+            if (slots.scroller?.className) {
+              view.scrollDOM.classList.add(...slots.scroller.className.split(/\s+/));
+            }
+            if (scrollbarThin) {
+              view.scrollDOM.style.setProperty('--scrollbar-size', '4px');
+            }
           }
         },
       ),

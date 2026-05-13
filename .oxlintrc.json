@@ -7,12 +7,15 @@
     "denyWarnings": true
   },
   "rules": {
+    "@dxos/eslint-plugin-rules/consistent-update-param": "warn",
     "@dxos/eslint-plugin-rules/effect-subpath-imports": "warn",
     "@dxos/eslint-plugin-rules/header": "warn",
     "@dxos/eslint-plugin-rules/import-as-namespace": "warn",
     "@dxos/eslint-plugin-rules/no-bare-dot-imports": "error",
+    "@dxos/eslint-plugin-rules/translation-key-format": "warn",
     "@dxos/eslint-plugin-rules/no-effect-run-promise": "error",
     "@dxos/eslint-plugin-rules/no-empty-promise-catch": "error",
+    "eslint/curly": ["error", "all"],
     "eslint/no-async-promise-executor": "off",
     "eslint/no-constant-binary-expression": "off",
     "eslint/no-constant-condition": "off",
@@ -55,6 +58,7 @@
     "typescript/no-this-alias": "off",
     "typescript/no-unnecessary-parameter-property-assignment": "off",
     "typescript/no-unsafe-unary-minus": "off",
+    "typescript/no-useless-default-assignment": "off",
     "typescript/no-useless-empty-export": "off",
     "typescript/require-array-sort-compare": "off",
     "typescript/restrict-template-expressions": "off",
@@ -67,6 +71,7 @@
     "unicorn/no-useless-fallback-in-spread": "off",
     "unicorn/no-useless-spread": "off",
     "unicorn/prefer-string-starts-ends-with": "off",
+    "vitest/require-mock-type-parameters": "off",
     "vitest/warn-todo": "off",
     "unused-imports/no-unused-imports": "warn",
     "import-x-js/order": "off"
@@ -103,18 +108,18 @@
   "globals": {},
   "ignorePatterns": [
     "*.d.ts",
+    "**/*.astro",
     "**/tailwind.ts",
     "**/gen/*",
     "**/typings/**",
     ".idea/**",
     ".vscode/**",
     ".claude/**",
-    "docs",
     "templates/**",
     "scripts/**",
     "docs/legacy/**",
-    "tools/swc-log-plugin/tests/__swc_snapshots__/**",
-    "tools/swc-log-plugin/test-rig/**"
+    "docs/public/webflow/**",
+    "docs/scripts/**"
   ],
   "jsPlugins": [
     "@dxos/eslint-plugin-rules",

@@ -2,17 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AppCapabilities } from '@dxos/app-toolkit';
-import { Blueprint, Template } from '@dxos/blueprints';
+import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { InboxOperation } from '../operations';
-
-const BLUEPRINT_KEY = 'org.dxos.blueprint.calendar';
+import { InboxOperation } from '#types';
+import { Calendar } from '#types';
 
 const make = () =>
   Blueprint.make({
-    key: BLUEPRINT_KEY,
+    key: Calendar.BLUEPRINT_KEY,
     name: 'Calendar',
     tools: Blueprint.toolDefinitions({ operations: [InboxOperation.GoogleCalendarSync], tools: [] }),
     instructions: Template.make({
@@ -22,8 +20,8 @@ const make = () =>
     }),
   });
 
-const blueprint: AppCapabilities.BlueprintDefinition = {
-  key: BLUEPRINT_KEY,
+const blueprint: Blueprint.Definition = {
+  key: Calendar.BLUEPRINT_KEY,
   make,
 };
 

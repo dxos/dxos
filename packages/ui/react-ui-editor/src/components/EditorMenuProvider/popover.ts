@@ -13,7 +13,8 @@ import {
   keymap,
 } from '@codemirror/view';
 
-import { type PlaceholderOptions, type Range, modalStateField, placeholder } from '@dxos/ui-editor';
+import { type PlaceholderOptions, modalStateField, placeholder } from '@dxos/ui-editor';
+import { type Range } from '@dxos/ui-editor/types';
 import { isNonNullable, isTruthy } from '@dxos/util';
 
 const DELIMITERS = [' ', ':'];
@@ -52,6 +53,7 @@ export const popover = (options: PopoverOptions = {}): Extension => {
       placeholder({
         // TODO(burdon): Translations.
         content: `Press '${Array.isArray(options.trigger) ? options.trigger[0] : options.trigger}' for commands`,
+        focusOnly: true,
         ...options.placeholder,
       }),
   ].filter(isTruthy);

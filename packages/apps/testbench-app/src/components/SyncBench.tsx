@@ -4,8 +4,8 @@
 
 /* eslint-disable no-console */
 
-import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
+import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
@@ -14,11 +14,12 @@ import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { Context } from '@dxos/context';
 import { Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import { type SpaceId } from '@dxos/keys';
 import { useClient, useConfig } from '@dxos/react-client';
-import { type SpaceId, type SpaceSyncState } from '@dxos/react-client/echo';
+import { type SpaceSyncState } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, ButtonGroup } from '@dxos/react-ui';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 const runtime = Atom.runtime(BrowserKeyValueStore.layerLocalStorage);
 
@@ -136,22 +137,18 @@ export const SyncBench = () => {
           <Button onClick={() => createObjects(1000)}>Create 1000</Button>
         </ButtonGroup>
       </div>
-      <SyntaxHighlighter language='json'>
-        {JSON.stringify(
-          {
-            config: showConfig ? config.values : 'hidden',
-            identity: {
-              did: identity?.did,
-            },
-            space: {
-              id: space?.id,
-            },
-            syncState,
+      <JsonHighlighter
+        data={{
+          config: showConfig ? config.values : 'hidden',
+          identity: {
+            did: identity?.did,
           },
-          null,
-          2,
-        )}
-      </SyntaxHighlighter>
+          space: {
+            id: space?.id,
+          },
+          syncState,
+        }}
+      />
     </div>
   );
 };

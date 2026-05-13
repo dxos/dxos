@@ -60,10 +60,16 @@ export class BaseError<Name extends string = string> extends Error {
   context: Record<string, unknown>;
 
   constructor(name: Name, options?: BaseErrorOptions) {
-    super(options?.message, { cause: options?.cause });
+    let message = options?.message;
+    if (message && options?.context && Object.keys(options.context).length > 0) {
+      message += `: ${JSON.stringify(options?.context)}`;
+    }
+
+    super(message, { cause: options?.cause });
 
     this.name = name;
     this.context = options?.context ?? {};
+
     Object.setPrototypeOf(this, new.target.prototype);
   }
 

@@ -7,9 +7,8 @@ import * as Effect from 'effect/Effect';
 
 import { Text } from '@dxos/schema';
 
-import type { FilesystemManager } from '../capabilities';
-
-import type { FilesystemEntry, FilesystemWorkspace, NativeFilesystemState } from '../types';
+import type { FilesystemManager } from '#capabilities';
+import type { FilesystemEntry, FilesystemWorkspace, NativeFilesystemState } from '#types';
 
 /** In-memory mock of FilesystemManager for tests that need graph builder integration. */
 export class MockFilesystemManager implements FilesystemManager.FilesystemManager {
@@ -55,7 +54,7 @@ export class MockFilesystemManager implements FilesystemManager.FilesystemManage
       if ('children' in entry) {
         this._seedMarkdownFiles(entry.children);
       } else if (entry.type === 'markdown') {
-        this._documents.set(entry.id, Text.make(entry.text ?? ''));
+        this._documents.set(entry.id, Text.make({ content: entry.text ?? '' }));
       }
     }
   }

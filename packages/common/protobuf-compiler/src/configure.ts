@@ -3,7 +3,6 @@
 //
 
 import { createRequire } from 'node:module';
-
 import pb from 'protobufjs';
 
 const require = createRequire(import.meta.url);

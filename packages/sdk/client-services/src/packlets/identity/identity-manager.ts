@@ -13,7 +13,6 @@ import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace } from '@dxos/protocols';
 import { Device, DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -28,7 +27,7 @@ import {
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace as Trace } from '@dxos/tracing';
-import { deferFunction, isNode } from '@dxos/util';
+import { deferFunction, isNode, isTauri } from '@dxos/util';
 
 import { createAuthProvider } from './authenticator';
 import { Identity } from './identity';
@@ -112,8 +111,7 @@ export class IdentityManager {
 
   @Trace.span({ showInBrowserTimeline: true })
   async open(ctx: Context): Promise<void> {
-    const traceId = PublicKey.random().toHex();
-    log.trace('dxos.halo.identity-manager.open', trace.begin({ id: traceId }));
+    log('opening identity manager');
 
     const identityRecord = this._metadataStore.getIdentityRecord();
     log('identity record', { identityRecord });
@@ -128,7 +126,7 @@ export class IdentityManager {
 
       this.stateUpdate.emit();
     }
-    log.trace('dxos.halo.identity-manager.open', trace.end({ id: traceId }));
+    log('opened identity manager');
   }
 
   async close(ctx: Context): Promise<void> {
@@ -210,28 +208,32 @@ export class IdentityManager {
     return identity;
   }
 
-  // TODO(nf): receive platform info rather than generating it here.
   createDefaultDeviceProfile(): DeviceProfileDocument {
+    // See TODOs in credentials.proto.
     let type: DeviceType;
-    // TODO(nf): call Platform service instead?
     if (isNode()) {
       type = DeviceType.AGENT;
     } else {
       if (platform.name?.startsWith('iOS') || platform.name?.startsWith('Android')) {
         type = DeviceType.MOBILE;
-      } else if ((globalThis as any).__args) {
+      } else if (isTauri() || !platform.name) {
+        // Tauri's __TAURI__ global isn't available in web workers. Fallback: WKWebView
+        // (Tauri on macOS) reports null for platform.name; all standard browsers don't.
         type = DeviceType.NATIVE;
       } else {
         type = DeviceType.BROWSER;
       }
     }
 
+    const os = platform.os?.family === 'OS X' ? 'macOS' : platform.os?.family;
+    const name = type === DeviceType.NATIVE || type === DeviceType.MOBILE ? 'App' : platform.name;
+
     return {
       type,
-      platform: platform.name,
+      platform: name,
       platformVersion: platform.version,
       architecture: typeof platform.os?.architecture === 'number' ? String(platform.os.architecture) : undefined,
-      os: platform.os?.family,
+      os,
       osVersion: platform.os?.version,
     };
   }

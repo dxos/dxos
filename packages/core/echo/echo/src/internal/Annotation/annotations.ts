@@ -15,7 +15,6 @@ import { type Primitive } from '@dxos/util';
 
 import { type Mutable } from '../common/proxy';
 import { type AnyProperties, EntityKind, TypeId, getSchema } from '../common/types';
-
 import { type AnnotationHelper, createAnnotationHelper } from './util';
 
 /**
@@ -91,10 +90,10 @@ export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): DXN 
  * Example: `org.dxos.type.message`
  */
 // TODO(wittjosiah): Factor out to DXN spec.
-// TODO(wittjosiah): Switch to atproto NSID regex once legacy typenames are fully migrated:
-//   /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/
 export const TypenameSchema = Schema.String.pipe(
-  Schema.pattern(/^[a-zA-Z][a-zA-Z0-9]*(\.[a-zA-Z][a-zA-Z0-9-]*){2,}$/),
+  Schema.pattern(
+    /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/,
+  ),
 ).annotations({
   description: 'Fully qualified globally unique typename in reverse-DNS form.',
   example: 'org.dxos.type.message',
@@ -444,7 +443,6 @@ export const setDescriptionWithSchema = <S extends Schema.Schema.Any>(
  * Identifies if a property should be included in a form or not.
  * By default, all properties are included in forms, so this is opt-out.
  */
-// TODO(burdon): UI concern.
 export const FormInputAnnotationId = Symbol.for('@dxos/schema/annotation/FormInput');
 export const FormInputAnnotation = createAnnotationHelper<boolean>(FormInputAnnotationId);
 
@@ -483,7 +481,7 @@ export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation
 
   const getFromAst = (ast: SchemaAST.AST) =>
     SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(ast).pipe(
-      Option.map((meta) => meta[props.id] as unknown),
+      Option.flatMap((meta) => Option.fromNullable(meta[props.id])),
       Option.map(Schema.decodeUnknownSync(props.schema)),
     );
 
@@ -535,6 +533,19 @@ export const IconAnnotation = makeUserAnnotation<IconAnnotation>({
 });
 
 /**
+ * Indicates that this entity's icon should be resolved from a property whose value is a `Ref`
+ * to another entity. Consumers (e.g. graph node builders) resolve the ref target and use that
+ * target's schema `IconAnnotation` in place of the static one declared on this schema.
+ *
+ * Useful for wrapper schemas that delegate their visual identity to a referenced sub-entity
+ * (e.g. a generic `Game` whose icon should come from its `variant` ref's typed state).
+ */
+export const IconFromRefAnnotation = makeUserAnnotation<string>({
+  id: 'org.dxos.annotation.icon.from-ref',
+  schema: Schema.String,
+});
+
+/**
  * Get the label of an entity.
  * Accepts both reactive entities and snapshots.
  */
@@ -547,7 +558,7 @@ export const getLabel = (entity: AnyProperties): string | undefined => {
 
 /**
  * Set the label of an entity.
- * Must be called within an Obj.change or Relation.change callback.
+ * Must be called within an Obj.update or Relation.update callback.
  */
 export const setLabel = (entity: Mutable<AnyProperties>, label: string) => {
   const schema = getSchema(entity);
@@ -569,7 +580,7 @@ export const getDescription = (entity: AnyProperties): string | undefined => {
 
 /**
  * Set the description of an entity.
- * Must be called within an Obj.change or Relation.change callback.
+ * Must be called within an Obj.update or Relation.update callback.
  */
 export const setDescription = (entity: Mutable<AnyProperties>, description: string) => {
   const schema = getSchema(entity);

@@ -4,17 +4,15 @@
 
 import { writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-
 import { describe, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
+import { Trigger, Operation } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
-import { Trigger } from '@dxos/functions';
+import { Feed, Obj, Query, Ref } from '@dxos/echo';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
@@ -28,7 +26,7 @@ import { Mailbox } from '../../../types';
 
 const config = configPreset({ edge: 'local' });
 
-describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
+describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
   test('bundle function', async () => {
     const artifact = await bundleFunction({
       entryPoint: new URL('./sync.ts', import.meta.url).pathname,
@@ -76,7 +74,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '*/30 * * * * *' },
+        spec: Trigger.specTimer('*/30 * * * * *'),
         input: { mailbox: Ref.make(mailbox), restrictedMode: true },
       }),
     );
@@ -101,7 +99,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '*/30 * * * * *' },
+        spec: Trigger.specTimer('*/30 * * * * *'),
         input: { mailbox: Ref.make(mailbox), restrictedMode: true },
       }),
     );
@@ -124,7 +122,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
-        spec: { kind: 'timer', cron: '*/3 * * * * *' },
+        spec: Trigger.specTimer('*/3 * * * * *'),
         input: { mailbox: Ref.make(mailbox), restrictedMode: true },
       }),
     );
@@ -159,7 +157,6 @@ const setup = async () => {
     Obj.make(AccessToken.AccessToken, {
       source: 'google.com',
       token: process.env.GOOGLE_ACCESS_TOKEN ?? failedInvariant('GOOGLE_ACCESS_TOKEN is not set'),
-      note: 'Email read access.',
     }),
   );
 
@@ -217,8 +214,9 @@ export const observeInvocations = async (space: Space, maxCount: number | null) 
   let count = 0;
   while (true) {
     try {
-      const invocations =
-        (await space.properties.invocationTraceQueue?.target!.query(Query.select(Filter.everything())).run()) ?? [];
+      const traceFeed = space.properties.invocationTraceFeed?.target;
+      const traceQueueDxn = traceFeed ? Feed.getQueueDxn(traceFeed) : undefined;
+      const invocations = traceQueueDxn ? ((await space.queues.get(traceQueueDxn).queryObjects()) ?? []) : [];
 
       for (const invocation of invocations) {
         if (Obj.instanceOf(InvocationTraceStartEvent, invocation)) {
