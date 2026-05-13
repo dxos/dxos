@@ -35,7 +35,10 @@ type DefaultStoryProps = { generator?: MessageGenerator[]; delay?: number; wait?
 
 const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: DefaultStoryProps) => {
   const [space] = useSpaces();
-  const feed = useMemo<Feed.Feed | undefined>(() => (space ? space.db.add(Feed.make({ name: 'chat' })) : undefined), [space]);
+  const feed = useMemo<Feed.Feed | undefined>(
+    () => (space ? space.db.add(Feed.make({ name: 'chat' })) : undefined),
+    [space],
+  );
   const messages = useFeedQuery(feed, Filter.type(Message.Message)) as Message.Message[];
   const [done, setDone] = useState(false);
 

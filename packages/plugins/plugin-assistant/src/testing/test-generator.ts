@@ -19,18 +19,22 @@ export const createMessage = (role: Actor.Role, blocks: ContentBlock.Any[]): Mes
   });
 };
 
-export type MessageGenerator = Effect.Effect<void, never, Database.Service | Feed.ContextFeedService | Feed.FeedService>;
+export type MessageGenerator = Effect.Effect<
+  void,
+  never,
+  Database.Service | Feed.ContextFeedService | Feed.FeedService
+>;
 
 export const createMessageGenerator = (): MessageGenerator[] => [
   Effect.gen(function* () {
     const { feed } = yield* Feed.ContextFeedService;
     yield* Feed.append(feed, [
-        createMessage('user', [
-          {
-            _tag: 'text',
-            text: random.lorem.sentence(5),
-          },
-        ]),
+      createMessage('user', [
+        {
+          _tag: 'text',
+          text: random.lorem.sentence(5),
+        },
+      ]),
     ]);
   }),
 
@@ -48,22 +52,22 @@ export const createMessageGenerator = (): MessageGenerator[] => [
     // const obj3 = db.add(Obj.make(Person.Person, { fullName: 'Bob' }));
     // const obj4 = db.add(Obj.make(Person.Person, { fullName: 'Charlie' }));
     yield* Feed.append(feed, [
-        createMessage('assistant', [
-          // Inline tag.
-          {
-            _tag: 'text',
-            text: [random.lorem.paragraph(), renderObjectLink(obj1), random.lorem.paragraph(), '\n'].join(' '),
-          },
+      createMessage('assistant', [
+        // Inline tag.
+        {
+          _tag: 'text',
+          text: [random.lorem.paragraph(), renderObjectLink(obj1), random.lorem.paragraph(), '\n'].join(' '),
+        },
 
-          // Inline cards.
-          // ...[obj1, obj2, obj3, obj4].map(
-          //   (obj) =>
-          //     ({
-          //       _tag: 'text',
-          //       text: renderObjectLink(obj, true) + '\n',
-          //     }) satisfies ContentBlock.Text,
-          // ),
-        ]),
+        // Inline cards.
+        // ...[obj1, obj2, obj3, obj4].map(
+        //   (obj) =>
+        //     ({
+        //       _tag: 'text',
+        //       text: renderObjectLink(obj, true) + '\n',
+        //     }) satisfies ContentBlock.Text,
+        // ),
+      ]),
     ]);
   }),
 
@@ -101,11 +105,11 @@ export const createMessageGenerator = (): MessageGenerator[] => [
   Effect.gen(function* () {
     const { feed } = yield* Feed.ContextFeedService;
     yield* Feed.append(feed, [
-        createMessage('assistant', [
-          {
-            _tag: 'text',
-            text:
-              trim`
+      createMessage('assistant', [
+        {
+          _tag: 'text',
+          text:
+            trim`
               ## Markdown
               Here is a [link](https://dxos.org)
 
@@ -123,158 +127,158 @@ export const createMessageGenerator = (): MessageGenerator[] => [
               const x = 1;
               \`\`\`
             ` + '\n',
-          },
-          {
-            _tag: 'text',
-            disposition: 'cot',
-            text:
-              [
-                random.lorem.paragraph(),
-                '',
-                ...Array.from({
-                  length: random.number.int({ min: 3, max: 5 }),
-                }).map((_, idx) => `${idx + 1}. ${random.lorem.paragraph()}`),
-              ].join('\n') + '\n',
-          },
-        ]),
+        },
+        {
+          _tag: 'text',
+          disposition: 'cot',
+          text:
+            [
+              random.lorem.paragraph(),
+              '',
+              ...Array.from({
+                length: random.number.int({ min: 3, max: 5 }),
+              }).map((_, idx) => `${idx + 1}. ${random.lorem.paragraph()}`),
+            ].join('\n') + '\n',
+        },
+      ]),
     ]);
   }),
 
   Effect.gen(function* () {
     const { feed } = yield* Feed.ContextFeedService;
     yield* Feed.append(feed, [
-        createMessage('assistant', [
-          {
-            _tag: 'text',
-            text: 'How can I help?',
-          },
-          {
-            _tag: 'suggestion',
-            text: 'List tools',
-          },
-          {
-            _tag: 'suggestion',
-            text: 'Show info',
-          },
-          {
-            _tag: 'suggestion',
-            text: random.lorem.paragraph(),
-          },
-        ]),
-        createMessage('assistant', [
-          {
-            _tag: 'text',
-            text: 'Select an option:',
-          },
-          {
-            _tag: 'select',
-            options: ['Option 1', 'Option 2', 'Option 3'],
-          },
-        ]),
+      createMessage('assistant', [
+        {
+          _tag: 'text',
+          text: 'How can I help?',
+        },
+        {
+          _tag: 'suggestion',
+          text: 'List tools',
+        },
+        {
+          _tag: 'suggestion',
+          text: 'Show info',
+        },
+        {
+          _tag: 'suggestion',
+          text: random.lorem.paragraph(),
+        },
+      ]),
+      createMessage('assistant', [
+        {
+          _tag: 'text',
+          text: 'Select an option:',
+        },
+        {
+          _tag: 'select',
+          options: ['Option 1', 'Option 2', 'Option 3'],
+        },
+      ]),
     ]);
   }),
 
   Effect.gen(function* () {
     const { feed } = yield* Feed.ContextFeedService;
     yield* Feed.append(feed, [
-        createMessage('assistant', [
-          {
-            _tag: 'toolkit',
-          },
-        ]),
+      createMessage('assistant', [
+        {
+          _tag: 'toolkit',
+        },
+      ]),
     ]);
   }),
 
   Effect.gen(function* () {
     const { feed } = yield* Feed.ContextFeedService;
     yield* Feed.append(feed, [
-        createMessage('user', [
-          {
-            _tag: 'text',
-            text: random.lorem.sentence(5),
-          },
-        ]),
+      createMessage('user', [
+        {
+          _tag: 'text',
+          text: random.lorem.sentence(5),
+        },
+      ]),
     ]);
   }),
 
   Effect.gen(function* () {
     const { feed } = yield* Feed.ContextFeedService;
     yield* Feed.append(feed, [
-        createMessage('assistant', [
-          {
-            _tag: 'text',
-            text: random.lorem.paragraph() + '\n',
-          },
-        ]),
-        createMessage('assistant', [
-          {
-            _tag: 'toolCall',
-            toolCallId: '1234',
-            name: 'search',
-            input: JSON.stringify({}),
-            providerExecuted: false,
-          },
-        ]),
-        createMessage('user', [
-          {
-            _tag: 'toolResult',
-            toolCallId: '1234',
-            name: 'search',
-            result: 'This is a tool result.',
-            providerExecuted: false,
-          },
-        ]),
+      createMessage('assistant', [
+        {
+          _tag: 'text',
+          text: random.lorem.paragraph() + '\n',
+        },
+      ]),
+      createMessage('assistant', [
+        {
+          _tag: 'toolCall',
+          toolCallId: '1234',
+          name: 'search',
+          input: JSON.stringify({}),
+          providerExecuted: false,
+        },
+      ]),
+      createMessage('user', [
+        {
+          _tag: 'toolResult',
+          toolCallId: '1234',
+          name: 'search',
+          result: 'This is a tool result.',
+          providerExecuted: false,
+        },
+      ]),
     ]);
   }),
 
   Effect.gen(function* () {
     const { feed } = yield* Feed.ContextFeedService;
     yield* Feed.append(feed, [
-        createMessage('assistant', [
-          {
-            _tag: 'text',
-            text: random.lorem.paragraph() + '\n',
-          },
-        ]),
-        createMessage('assistant', [
-          {
-            _tag: 'toolCall',
-            toolCallId: '4567',
-            name: 'create',
-            input: JSON.stringify({}),
-            providerExecuted: false,
-          },
-        ]),
-        createMessage('user', [
-          {
-            _tag: 'toolResult',
-            toolCallId: '4567',
-            name: 'create',
-            result: 'This is a tool result.',
-            providerExecuted: false,
-          },
-        ]),
-        createMessage('assistant', [
-          {
-            _tag: 'text',
-            text:
-              Array.from({ length: random.number.int({ min: 2, max: 3 }) })
-                .map(() => random.lorem.paragraph())
-                .join('\n\n') + '\n',
-          },
-        ]),
+      createMessage('assistant', [
+        {
+          _tag: 'text',
+          text: random.lorem.paragraph() + '\n',
+        },
+      ]),
+      createMessage('assistant', [
+        {
+          _tag: 'toolCall',
+          toolCallId: '4567',
+          name: 'create',
+          input: JSON.stringify({}),
+          providerExecuted: false,
+        },
+      ]),
+      createMessage('user', [
+        {
+          _tag: 'toolResult',
+          toolCallId: '4567',
+          name: 'create',
+          result: 'This is a tool result.',
+          providerExecuted: false,
+        },
+      ]),
+      createMessage('assistant', [
+        {
+          _tag: 'text',
+          text:
+            Array.from({ length: random.number.int({ min: 2, max: 3 }) })
+              .map(() => random.lorem.paragraph())
+              .join('\n\n') + '\n',
+        },
+      ]),
     ]);
   }),
 
   Effect.gen(function* () {
     const { feed } = yield* Feed.ContextFeedService;
     yield* Feed.append(feed, [
-        createMessage('assistant', [
-          {
-            _tag: 'text',
-            text: random.lorem.paragraph(),
-          },
-        ]),
+      createMessage('assistant', [
+        {
+          _tag: 'text',
+          text: random.lorem.paragraph(),
+        },
+      ]),
     ]);
   }),
 ];

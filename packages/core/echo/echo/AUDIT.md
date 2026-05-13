@@ -130,12 +130,12 @@ In progress (PR #11337 + follow-ups).
 
 **Prerequisite primitives:**
 
-| Primitive | Status | Unblocks |
-| --------- | ------ | -------- |
-| `FeedService.appendByDxn(queueDxn, items)` | ✅ landed in PR #11337 | per-invocation trace queues in `plugin-assistant/queue-logger.ts` |
-| `FeedService.queryByDxn(queueDxn, filter)` + `useFeedQueryByDxn(dxn, filter)` React hook | ⬜ next | DXN-driven debug panels (devtools `QueuesPanel`, `InvocationTracePanel/hooks.ts`) |
-| `ContextFeedService` Context.Tag with `{ feed: Feed.Feed }` (replaces `ContextQueueService`) | ⬜ | `assistant-toolkit/crud/graph.ts` (graph_writer toolkit) |
-| `useFeedQuery` extended with loading state (or parallel `useFeedQueryWithState`) | ⬜ | `plugin-transcription/hooks/useQueueModelAdapter.ts` |
+| Primitive                                                                                    | Status                 | Unblocks                                                                          |
+| -------------------------------------------------------------------------------------------- | ---------------------- | --------------------------------------------------------------------------------- |
+| `FeedService.appendByDxn(queueDxn, items)`                                                   | ✅ landed in PR #11337 | per-invocation trace queues in `plugin-assistant/queue-logger.ts`                 |
+| `FeedService.queryByDxn(queueDxn, filter)` + `useFeedQueryByDxn(dxn, filter)` React hook     | ⬜ next                | DXN-driven debug panels (devtools `QueuesPanel`, `InvocationTracePanel/hooks.ts`) |
+| `ContextFeedService` Context.Tag with `{ feed: Feed.Feed }` (replaces `ContextQueueService`) | ⬜                     | `assistant-toolkit/crud/graph.ts` (graph_writer toolkit)                          |
+| `useFeedQuery` extended with loading state (or parallel `useFeedQueryWithState`)             | ⬜                     | `plugin-transcription/hooks/useQueueModelAdapter.ts`                              |
 
 **Consumer migrations after primitives land:**
 

@@ -391,7 +391,9 @@ export const runQueryByDxn: {
   <Q extends Query.Any>(queueDxn: DXN, query: Q): Effect.Effect<Query.Type<Q>[], never, FeedService>;
   <F extends Filter.Any>(queueDxn: DXN, filter: F): Effect.Effect<Filter.Type<F>[], never, FeedService>;
 } = (queueDxn: DXN, queryOrFilter: Query.Any | Filter.Any) =>
-  queryByDxn(queueDxn, queryOrFilter as any).pipe(Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())));
+  queryByDxn(queueDxn, queryOrFilter as any).pipe(
+    Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())),
+  );
 
 /**
  * Creates a cursor for iterating over feed items.
