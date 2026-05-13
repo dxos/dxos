@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { createFeedServiceLayer, getSpace, type Space } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { type Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { FeedOperation } from '../types';
@@ -75,8 +76,9 @@ export const curateMagazine = async (space: Space, magazine: Magazine.Magazine):
       continue;
     }
 
-    const items = await Effect.runPromise(
-      Feed.runQuery(echoFeed, Filter.everything()).pipe(Effect.provide(feedServiceLayer)),
+    const items = await Feed.runQuery(echoFeed, Filter.everything()).pipe(
+      Effect.provide(feedServiceLayer),
+      runAndForwardErrors,
     );
 
     for (const item of items) {

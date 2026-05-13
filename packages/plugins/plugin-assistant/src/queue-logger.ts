@@ -3,11 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { type Layer } from 'effect/Layer';
+import * as Layer from 'effect/Layer';
 
 import { createFeedServiceLayer, type Queue, type Space, getSpace } from '@dxos/client/echo';
 import { Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
 import { DXN, Feed, Obj, Ref } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import { InvocationTraceEndEvent, InvocationTraceEventType, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
 import { InvocationOutcome } from '@dxos/functions-runtime';
@@ -17,7 +18,7 @@ import { QueueSubspaceTags } from '@dxos/keys';
 export class QueueLogger implements SequenceLogger {
   private _space: Space;
   private _invocationTraceFeed: Feed.Feed;
-  private _feedServiceLayer: Layer<Feed.FeedService>;
+  private _feedServiceLayer: Layer.Layer<Feed.FeedService>;
 
   constructor(private readonly sequence: Sequence.Sequence) {
     const space = getSpace(sequence);
@@ -130,8 +131,9 @@ export class QueueLogger implements SequenceLogger {
   }
 
   private _appendToTraceFeed(items: any[]): Promise<void> {
-    return Effect.runPromise(
-      Feed.append(this._invocationTraceFeed, items).pipe(Effect.provide(this._feedServiceLayer)),
+    return Feed.append(this._invocationTraceFeed, items).pipe(
+      Effect.provide(this._feedServiceLayer),
+      runAndForwardErrors,
     );
   }
 

@@ -8,6 +8,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { createFeedServiceLayer, getSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Feed, Obj, Ref } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -76,8 +77,9 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
               guid: post.guid,
             }),
           );
-          await Effect.runPromise(
-            Feed.append(echoFeed, postObjects).pipe(Effect.provide(createFeedServiceLayer(space.queues))),
+          await Feed.append(echoFeed, postObjects).pipe(
+            Effect.provide(createFeedServiceLayer(space.queues)),
+            runAndForwardErrors,
           );
         }
 
