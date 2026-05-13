@@ -26,19 +26,19 @@
       "path": "../../sdk/types"
     },
     {
-      "path": "../compute"
+      "path": "../compute/compute"
+    },
+    {
+      "path": "../compute/functions"
+    },
+    {
+      "path": "../compute/operation"
     },
     {
       "path": "../echo/echo"
     },
     {
       "path": "../echo/echo-db"
-    },
-    {
-      "path": "../functions"
-    },
-    {
-      "path": "../operation"
     },
     {
       "path": "../protocols"
