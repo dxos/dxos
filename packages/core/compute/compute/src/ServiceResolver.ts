@@ -51,6 +51,26 @@ export const resolveAll = <const Tags extends readonly Context.Tag<any, any>[]>(
   });
 
 /**
+ * Build a {@link Layer} that materialises the requested services by calling
+ * {@link resolveAll} against the {@link ServiceResolver} currently in context.
+ *
+ * The returned layer manages its own {@link Scope.Scope} and requires only a
+ * {@link ServiceResolver} (typically supplied by the process-manager runtime).
+ *
+ * @example
+ * ```ts
+ * processManagerRuntime.runPromise(
+ *   myEffect.pipe(Effect.provide(ServiceResolver.provide({ space }, Database.Service, QueueService))),
+ * );
+ * ```
+ */
+export const provide = <const Tags extends readonly Context.Tag<any, any>[]>(
+  context: ResolutionContext,
+  ...tags: Tags
+): Layer.Layer<Context.Tag.Identifier<Tags[number]>, ServiceNotAvailableError, ServiceResolver> =>
+  Layer.scopedContext(resolveAll(tags, context));
+
+/**
  * Provides context for service resolution.
  */
 export interface ResolutionContext {

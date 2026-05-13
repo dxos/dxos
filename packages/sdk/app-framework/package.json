@@ -88,6 +88,12 @@
       "browser": "./dist/lib/browser/ui/index.mjs",
       "node": "./dist/lib/node-esm/ui/index.mjs",
       "types": "./dist/types/src/ui/index.d.ts"
+    },
+    "./plugin-runtime": {
+      "source": "./src/plugin-runtime/index.ts",
+      "browser": "./dist/lib/browser/plugin-runtime/index.mjs",
+      "node": "./dist/lib/node-esm/plugin-runtime/index.mjs",
+      "types": "./dist/types/src/plugin-runtime/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -97,12 +103,14 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
@@ -114,8 +122,11 @@
     "@dxos/util": "workspace:*",
     "@dxos/web-context": "workspace:*",
     "@dxos/web-context-react": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect/cli": "catalog:",
-    "cjs-module-lexer": "catalog:"
+    "@effect/platform": "catalog:",
+    "cjs-module-lexer": "catalog:",
+    "vite-plugin-css-injected-by-js": "catalog:"
   },
   "devDependencies": {
     "@dxos/brand": "workspace:*",

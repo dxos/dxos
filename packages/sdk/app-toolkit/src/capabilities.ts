@@ -103,6 +103,16 @@ export namespace AppCapabilities {
    */
   export const Settings = Capability$.make<Settings>('org.dxos.app-framework.capability.settings');
 
+  export type Metadata = Readonly<{
+    id: string;
+    metadata: Record<string, any>;
+  }>;
+
+  /**
+   * @category Capability
+   */
+  export const Metadata = Capability$.make<Metadata>('org.dxos.app-framework.capability.metadata');
+
   export type Schema = ReadonlyArray<Type.AnyEntity>;
 
   /**
