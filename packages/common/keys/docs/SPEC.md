@@ -1,17 +1,17 @@
 # DXOS Identifiers
 
-This document specifies the identifier types used in the DXOS ecosystem: **DXN**, **DX URI**, **SpaceId**, and **ObjectId**.
+This document specifies the identifier types used in the DXOS ecosystem: **DXN**, **EchoId**, **SpaceId**, and **ObjectId**.
 
 ## Overview
 
-| Identifier | Role                                          | Format                                  | Example                               |
-| ---------- | --------------------------------------------- | --------------------------------------- | ------------------------------------- |
-| DXN        | Names a type, plugin, or other resource       | `dxn:` scheme + NSID + optional version | `dxn:org.dxos.type.calendar`          |
-| SpaceId    | Identifies a space                            | Multibase base-32 encoded key hash      | `BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE`   |
-| ObjectId   | Identifies an object within a space           | ULID                                    | `01J00J9B45YHYSGZQTQMSKMGJ6`          |
-| DX URI     | Addresses an object (or space) for resolution | URI with `dx:` scheme                   | `dx://BA25QRC2...CKE/01J00J9B...MGJ6` |
+| Identifier | Role                                          | Format                                  | Example                                 |
+| ---------- | --------------------------------------------- | --------------------------------------- | --------------------------------------- |
+| DXN        | Names a type, plugin, or other resource       | `dxn:` scheme + NSID + optional version | `dxn:org.dxos.type.calendar`            |
+| SpaceId    | Identifies a space                            | Multibase base-32 encoded key hash      | `BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE`     |
+| ObjectId   | Identifies an object within a space           | ULID                                    | `01J00J9B45YHYSGZQTQMSKMGJ6`            |
+| EchoId     | Addresses an object (or space) for resolution | URI with `echo:` scheme                 | `echo://BA25QRC2...CKE/01J00J9B...MGJ6` |
 
-DXN and DX URI serve complementary roles. A DXN names a resource abstractly (a schema definition, a plugin, a capability). A DX URI locates a concrete object within a space. They do not overlap: you would never use a DXN to point to a specific ECHO object, and you would never use a DX URI to name a schema type.
+DXN and EchoId are two URI schemes used in DXOS. A DXN names a resource abstractly (a schema definition, a plugin, a blueprint, a published operation, a capability). An EchoId addresses a specific object within a space. The two can refer to the same underlying entity -- a blueprint or dynamic schema stored in a space has both a DXN (its published name) and an EchoId (its location as an object) -- but they remain distinct in use: a DXN identifies the named resource, an EchoId identifies a particular stored object. Reference fields throughout DXOS accept any URI. DXOS natively resolves URIs whose scheme it recognizes (`dxn:`, `echo:`); URIs with other schemes (e.g. `did:`, `at://`, `cid:`) are stored opaquely today and may gain native resolution over time.
 
 ## DXN (DXOS Name)
 
@@ -92,7 +92,7 @@ Full DXN (with scheme and optional version):
 
 ### Non-use cases
 
-- Addressing specific objects in spaces (use DX URI).
+- Addressing specific objects in spaces (use EchoId).
 - Identifying spaces or identities (use SpaceId, IdentityDid).
 
 ## SpaceId
@@ -120,19 +120,19 @@ A unique identifier for an object within a space. Follows the [ULID](https://git
 - Lexicographically sortable by creation time.
 - Globally unique by construction (timestamp + randomness).
 
-## DX URI
+## EchoId
 
-A DX URI addresses a specific object within a space, or a space itself. It uses the `dx:` scheme with standard URI structure, where the space serves as the URI authority and the object is the path.
+An EchoId addresses a specific object within a space, or a space itself. It uses the `echo:` scheme with standard URI structure, where the space serves as the URI authority and the object is the path.
 
 ### Format
 
-A DX URI has two forms: one with an explicit space (authority present) and one for the current space (no authority).
+An EchoId has two forms: one with an explicit space (authority present) and one for the current space (no authority).
 
 ```
-dx://<space>/<object-id>    -- fully qualified reference (authority = space)
-dx://<space>                -- reference to a space itself
-dx:///<object-id>           -- equivalent to dx:/<object-id> (empty authority)
-dx:/<object-id>             -- current-space reference (no authority)
+echo://<space>/<object-id>    -- fully qualified reference (authority = space)
+echo://<space>                -- reference to a space itself
+echo:///<object-id>           -- equivalent to echo:/<object-id> (empty authority)
+echo:/<object-id>             -- current-space reference (no authority)
 ```
 
 | Component | URI role  | Description         | Values                                             |
@@ -140,7 +140,7 @@ dx:/<object-id>             -- current-space reference (no authority)
 | space     | Authority | Space identifier    | SpaceId                                            |
 | object-id | Path      | Object in the space | ObjectId, or omitted to reference the space itself |
 
-The space occupies the URI **authority** position (after `//`). When referencing an object in the current space, the authority is omitted. Both `dx:/<objectId>` (no authority) and `dx:///<objectId>` (empty authority) are accepted and treated equivalently, following the same convention as the [`file:` scheme](https://datatracker.ietf.org/doc/html/rfc8089).
+The space occupies the URI **authority** position (after `//`). When referencing an object in the current space, the authority is omitted. Both `echo:/<objectId>` (no authority) and `echo:///<objectId>` (empty authority) are accepted and treated equivalently, following the same convention as the [`file:` scheme](https://datatracker.ietf.org/doc/html/rfc8089).
 
 ### Why single vs double slash
 
@@ -149,30 +149,30 @@ The space occupies the URI **authority** position (after `//`). When referencing
 - `scheme://authority/path` -- the `//` introduces an authority component.
 - `scheme:/path` -- no authority; the path begins directly after the scheme.
 
-Both are valid, well-defined URI forms. DX URIs use this distinction to differentiate between fully qualified references (where the space is known) and local references (where the space is inferred from context). The `//` is not decorative -- it is the standard signal that an authority is present.
+Both are valid, well-defined URI forms. EchoIds use this distinction to differentiate between fully qualified references (where the space is known) and local references (where the space is inferred from context). The `//` is not decorative -- it is the standard signal that an authority is present.
 
-The [`file:` URI scheme](https://datatracker.ietf.org/doc/html/rfc8089) establishes the precedent for this approach. `file:///etc/hosts` (empty authority, meaning localhost) and `file:/etc/hosts` (no authority) are treated equivalently by most implementations. DX URIs follow the same convention: `dx:/<objectId>` and `dx:///<objectId>` are both valid local references and are treated identically.
+The [`file:` URI scheme](https://datatracker.ietf.org/doc/html/rfc8089) establishes the precedent for this approach. `file:///etc/hosts` (empty authority, meaning localhost) and `file:/etc/hosts` (no authority) are treated equivalently by most implementations. EchoIds follow the same convention: `echo:/<objectId>` and `echo:///<objectId>` are both valid local references and are treated identically.
 
-In URI syntax, `//` means "what follows is the authority responsible for this resource." In DX URIs, the space is the authority -- it is the container that owns and manages the objects. When a reference is local (within the same space), there is no authority to name, so it is either absent (`dx:/`) or empty (`dx:///`).
+In URI syntax, `//` means "what follows is the authority responsible for this resource." In EchoIds, the space is the authority -- it is the container that owns and manages the objects. When a reference is local (within the same space), there is no authority to name, so it is either absent (`echo:/`) or empty (`echo:///`).
 
 This avoids the need for a sentinel value (like `~` or `@`) to represent "current space." Instead, the URI structure itself encodes whether the reference is local or fully qualified -- a distinction that is part of the URI standard rather than a DXOS-specific convention.
 
 ### Examples
 
 ```
-dx://BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE/01J00J9B45YHYSGZQTQMSKMGJ6
+echo://BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE/01J00J9B45YHYSGZQTQMSKMGJ6
 ```
 
 Fully qualified reference to an object in a specific space. The SpaceId is the URI authority; the ObjectId is the path.
 
 ```
-dx:/01J00J9B45YHYSGZQTQMSKMGJ6
+echo:/01J00J9B45YHYSGZQTQMSKMGJ6
 ```
 
-Reference to an object in the current space. The absence of an authority signals that the space should be resolved from context (e.g., the space the referencing object belongs to). `dx:///01J00J9B45YHYSGZQTQMSKMGJ6` (empty authority) is equivalent.
+Reference to an object in the current space. The absence of an authority signals that the space should be resolved from context (e.g., the space the referencing object belongs to). `echo:///01J00J9B45YHYSGZQTQMSKMGJ6` (empty authority) is equivalent.
 
 ```
-dx://BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE
+echo://BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE
 ```
 
 Reference to a space itself, with no object.
@@ -180,12 +180,12 @@ Reference to a space itself, with no object.
 ### Grammar
 
 ```abnf
-DX-URI        = qualified-ref / local-ref / space-ref
+EchoId        = qualified-ref / local-ref / space-ref
 
-qualified-ref = "dx://" space-id "/" object-id
-space-ref     = "dx://" space-id
-local-ref     = "dx:/" object-id
-              / "dx:///" object-id
+qualified-ref = "echo://" space-id "/" object-id
+space-ref     = "echo://" space-id
+local-ref     = "echo:/" object-id
+              / "echo:///" object-id
 
 space-id      = "B" 32BASE32CHAR                   ; multibase base-32, 33 chars total
 object-id     = ULID                                ; 26-char Crockford base-32
@@ -193,12 +193,12 @@ object-id     = ULID                                ; 26-char Crockford base-32
 
 ### Rules
 
-- Scheme is always `dx:`.
-- `dx://` (double slash) introduces an authority -- the space. The path after it is the object.
-- `dx:/` (single slash) and `dx:///` (triple slash, empty authority) are equivalent -- the space is resolved from context. The path is the object.
+- Scheme is always `echo:`.
+- `echo://` (double slash) introduces an authority -- the space. The path after it is the object.
+- `echo:/` (single slash) and `echo:///` (triple slash, empty authority) are equivalent -- the space is resolved from context. The path is the object.
 - The object-id segment is optional in the authority form. When omitted, the URI references the space.
-- A trailing slash with no object-id is not valid. Use `dx://<space>`, not `dx://<space>/`.
-- `dx:/` must be followed by an object-id. A bare `dx:` with nothing after it is not valid.
+- A trailing slash with no object-id is not valid. Use `echo://<space>`, not `echo://<space>/`.
+- `echo:/` must be followed by an object-id. A bare `echo:` with nothing after it is not valid.
 
 ### Extensibility
 
@@ -206,10 +206,10 @@ The authority slot is designed to accommodate other identifier forms in the futu
 
 ### Encoded references
 
-When storing a reference to an ECHO object within a document (e.g., in an [Automerge](https://automerge.org/) CRDT), the DX URI is used as the reference string in an [IPLD](https://ipld.io/)-style encoding:
+When storing a reference to an ECHO object within a document (e.g., in an [Automerge](https://automerge.org/) CRDT), the EchoId is used as the reference string in an [IPLD](https://ipld.io/)-style encoding:
 
 ```json
-{ "/": "dx:/01J00J9B45YHYSGZQTQMSKMGJ6" }
+{ "/": "echo:/01J00J9B45YHYSGZQTQMSKMGJ6" }
 ```
 
 ## Comparison with atproto
@@ -223,21 +223,21 @@ DXOS identifiers are inspired by [AT Protocol](https://atproto.com/) identifiers
 | DXN      | NSID    | Names a type, schema, or resource              |
 | ObjectId | TID     | Identifies a record                            |
 | SpaceId  | DID     | Identifies the container/authority for records |
-| DX URI   | AT URI  | Composed address for a specific record         |
+| EchoId   | AT URI  | Composed address for a specific record         |
 
-### Why DX URIs have no collection segment
+### Why EchoIds have no collection segment
 
-An AT URI has three path components: `at://<did>/<collection>/<rkey>`. The collection (an NSID) sits between the repository and the record key. A DX URI has only two: `dx://<space>/<object-id>`.
+An AT URI has three path components: `at://<did>/<collection>/<rkey>`. The collection (an NSID) sits between the repository and the record key. An EchoId has only two: `echo://<space>/<object-id>`.
 
 The collection is essential in atproto because record keys are scoped to a collection. The same rkey can exist under multiple collections in the same repo, so `(DID, collection, rkey)` is the uniqueness tuple. The collection also serves as an inline type declaration -- you know the schema of a record from the URI alone, enabling routing, validation, and access control decisions without fetching the record.
 
 ECHO takes a different approach. ObjectIds are ULIDs -- globally unique by construction. An ObjectId cannot collide with another ObjectId in the same space or any other space. The uniqueness tuple is simply `(SpaceId, ObjectId)`, and in practice ObjectId alone is sufficient. There is no need for a collection segment to disambiguate.
 
-This means DX URIs are opaque about type. You must resolve an object to discover its schema, unlike an AT URI where the type is visible in the address. This is a deliberate tradeoff: ECHO objects are strongly typed, but their types are versioned and can be migrated over time. Encoding the type in the address would create a coupling between identity and schema that breaks under schema evolution -- an object's address should remain stable even as its type is migrated to a new version.
+This means EchoIds are opaque about type. You must resolve an object to discover its schema, unlike an AT URI where the type is visible in the address. This is a deliberate tradeoff: ECHO objects are strongly typed, but their types are versioned and can be migrated over time. Encoding the type in the address would create a coupling between identity and schema that breaks under schema evolution -- an object's address should remain stable even as its type is migrated to a new version.
 
 ### Why the authority is a space, not an identity
 
-An AT URI begins with a DID (the repo owner's identity). A DX URI uses a SpaceId as its authority.
+An AT URI begins with a DID (the repo owner's identity). An EchoId uses a SpaceId as its authority.
 
 In atproto, repositories are single-owner. The DID in the URI identifies both the storage location and the authority responsible for the data. Identity and storage are fused.
 
@@ -245,17 +245,17 @@ In ECHO, spaces are collaborative. Multiple identities can read, write, and repl
 
 ### Why local references omit the authority
 
-atproto resolves records through the DID -- you always know whose repo you're addressing. ECHO resolves through context: when an object references another object via `dx:/<objectId>` (no authority), the space is inferred from the referencing object's own space. This is because ECHO references are typically between objects that co-exist in a space, and forcing every internal reference to carry a full SpaceId would be verbose and fragile (spaces can be forked, migrated, or merged). See [Why single vs double slash](#why-single-vs-double-slash) for the URI-level rationale and prior art from the `file:` scheme.
+atproto resolves records through the DID -- you always know whose repo you're addressing. ECHO resolves through context: when an object references another object via `echo:/<objectId>` (no authority), the space is inferred from the referencing object's own space. This is because ECHO references are typically between objects that co-exist in a space, and forcing every internal reference to carry a full SpaceId would be verbose and fragile (spaces can be forked, migrated, or merged). See [Why single vs double slash](#why-single-vs-double-slash) for the URI-level rationale and prior art from the `file:` scheme.
 
 ## Migration from current identifiers
 
-The current `dxn:` format with kind segments is retired in favor of `dxn:<nsid>[:<version>]`. Object references move to DX URIs. The following table shows how existing identifier forms map to the new system.
+The current `dxn:` format with kind segments is retired in favor of `dxn:<nsid>[:<version>]`. Object references move to EchoIds. The following table shows how existing identifier forms map to the new system.
 
 | Current                                 | New                                | Notes                                                 |
 | --------------------------------------- | ---------------------------------- | ----------------------------------------------------- |
 | `dxn:type:org.dxos.type.calendar`       | `dxn:org.dxos.type.calendar`       | Kind segment removed; NSID follows `dxn:` directly    |
 | `dxn:type:org.dxos.type.calendar:1.0.0` | `dxn:org.dxos.type.calendar:1.0.0` | Version remains colon-separated, kind segment removed |
-| `dxn:echo:@:<objectId>`                 | `dx:/<objectId>`                   | DX URI with no authority (current space)              |
-| `dxn:echo:<spaceId>:<objectId>`         | `dx://<spaceId>/<objectId>`        | DX URI with space as authority                        |
-| `dxn:queue:<sub>:<spaceId>:<queueId>`   | `dx://<spaceId>/<queueId>`         | Queues are now feeds, which are objects in spaces     |
-| `{ "/": "dxn:echo:@:..." }`             | `{ "/": "dx:/..." }`               | Encoded references use DX URI                         |
+| `dxn:echo:@:<objectId>`                 | `echo:/<objectId>`                   | EchoId with no authority (current space)              |
+| `dxn:echo:<spaceId>:<objectId>`         | `echo://<spaceId>/<objectId>`        | EchoId with space as authority                        |
+| `dxn:queue:<sub>:<spaceId>:<queueId>`   | `echo://<spaceId>/<queueId>`         | Queues are now feeds, which are objects in spaces     |
+| `{ "/": "dxn:echo:@:..." }`             | `{ "/": "echo:/..." }`               | Encoded references use EchoId                         |
