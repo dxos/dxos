@@ -7,7 +7,7 @@ import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { type InvocationSpan } from '@dxos/functions-runtime';
 import { InvocationOutcome } from '@dxos/functions-runtime';
-import { type Database } from '@dxos/react-client/echo';
+import { type Database } from '@dxos/echo';
 import { type ChromaticPalette, IconButton, Tag } from '@dxos/react-ui';
 
 import { useFunctionNameResolver } from './hooks';
