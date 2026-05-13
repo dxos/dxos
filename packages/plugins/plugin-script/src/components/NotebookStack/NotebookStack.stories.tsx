@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { AutomationPlugin } from '@dxos/plugin-automation/testing';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
