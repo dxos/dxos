@@ -2,12 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { runInSpace } from '@dxos/app-framework/plugin-runtime';
+import { Capability, Capabilities } from '@dxos/app-framework';
 import { Agent, AgentBlueprint, Chat } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine } from '@dxos/compute';
+import { Blueprint, Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { QueueService } from '@dxos/functions';
@@ -78,18 +81,24 @@ export default Capability.makeModule(
         id: Agent.Agent.typename,
         createObject: (props, options) =>
           Effect.gen(function* () {
-            const object = yield* runInSpace(
-              options.db.spaceId,
-              [Database.Service, Feed.FeedService, QueueService],
-              Agent.makeInitialized({ name: '', instructions: '' }, AgentBlueprint.make()),
-            );
+            const object = yield* Agent.makeInitialized({ name: '', instructions: '' }, AgentBlueprint.make());
+
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          }),
+          }).pipe(
+            Effect.provide(
+              ServiceResolver.provide(
+                { space: options.db.spaceId },
+                Database.Service,
+                Feed.FeedService,
+                QueueService,
+              ).pipe(Layer.provide(Capability.asLayer(Capabilities.ServiceResolver, ServiceResolver.ServiceResolver))),
+            ),
+          ),
       }),
     ];
   }),

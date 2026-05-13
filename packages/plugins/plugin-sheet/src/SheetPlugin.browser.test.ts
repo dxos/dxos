@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { ActivationEvents, Capabilities, OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { createTestApp } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
-import { ClientEvents } from '@dxos/plugin-client/types';
+import { ClientEvents } from '@dxos/plugin-client';
 
 import { SheetCapabilities } from '#types';
 

@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import React, { type FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
@@ -14,16 +15,13 @@ import {
   Plugin,
   PluginManager,
 } from '@dxos/app-framework';
-import { runInSpace } from '@dxos/app-framework/plugin-runtime';
 import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-framework/testing';
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, AgentBlueprint, AgentHandlers, PlanningBlueprint, PlanningHandlers } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
-import { Blueprint, Routine } from '@dxos/compute';
-import { Trigger } from '@dxos/compute';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import { Blueprint, Routine, Trigger, Operation, OperationHandlerSet, ServiceResolver } from '@dxos/compute';
 import { ExampleHandlers } from '@dxos/compute/testing';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
@@ -299,15 +297,20 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
 
       if (createAgent) {
         const agentOptions = typeof createAgent === 'object' ? createAgent : {};
-        const agent = yield* runInSpace(
-          space.id,
-          [Database.Service, Feed.FeedService, QueueService],
-          Agent.makeInitialized(
-            {
-              name: agentOptions.name ?? 'Default',
-              instructions: agentOptions.instructions ?? '',
-            },
-            AgentBlueprint.make(),
+        const agent = yield* Agent.makeInitialized(
+          {
+            name: agentOptions.name ?? 'Default',
+            instructions: agentOptions.instructions ?? '',
+          },
+          AgentBlueprint.make(),
+        ).pipe(
+          Effect.provide(
+            ServiceResolver.provide(
+              { space: space.id },
+              Database.Service,
+              Feed.FeedService,
+              QueueService,
+            ).pipe(Layer.provide(Capability.asLayer(Capabilities.ServiceResolver, ServiceResolver.ServiceResolver))),
           ),
         );
         yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
