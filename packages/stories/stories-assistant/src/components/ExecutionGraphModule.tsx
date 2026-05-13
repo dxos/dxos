@@ -4,21 +4,20 @@
 
 import React from 'react';
 
-import { Filter } from '@dxos/echo';
+import { type Feed, Filter } from '@dxos/echo';
 import { InvocationTraceStartEvent } from '@dxos/functions-runtime';
-import { type Queue, useFeedQuery } from '@dxos/react-client/echo';
+import { useFeedQuery } from '@dxos/react-client/echo';
 import { Timeline, useExecutionGraph } from '@dxos/react-ui-components';
 
 import { type ModuleProps } from './types';
 
-export const ExecutionGraphModule = ({ space, traceQueue }: ModuleProps & { traceQueue?: Queue }) => {
-  const traceFeed = space.properties?.invocationTraceFeed?.target;
-  const invocations = useFeedQuery(traceFeed, Filter.type(InvocationTraceStartEvent));
-  // Use provided traceQueue, or fall back to the per-invocation trace queue from the most recent invocation.
-  // useExecutionGraph still consumes Queue<Unknown>; runtime resolution returns a Queue instance.
-  // TODO(burdon): Migrate useExecutionGraph to take a Feed.
-  const queue = traceQueue ?? (invocations?.at(-1)?.invocationTraceQueue?.target as Queue | undefined);
-  const { branches, commits } = useExecutionGraph(queue);
+export const ExecutionGraphModule = ({ space, traceFeed }: ModuleProps & { traceFeed?: Feed.Feed }) => {
+  const invocationsFeed = space.properties?.invocationTraceFeed?.target;
+  const invocations = useFeedQuery(invocationsFeed, Filter.type(InvocationTraceStartEvent));
+  // Use provided trace feed, or fall back to the per-invocation trace feed from the most recent invocation.
+  const feed = traceFeed ?? invocations?.at(-1)?.invocationTraceQueue?.target;
+  const objects = useFeedQuery(feed, Filter.everything());
+  const { branches, commits } = useExecutionGraph(objects);
 
   return (
     <div className='flex flex-col h-full'>

@@ -155,12 +155,12 @@ In progress (PR #11337 + follow-ups).
 - `QueueFactory`, `QueueImpl`, `MemoryQueue`, and the legacy `QueueService` in [echo-db/queue/](packages/core/echo/echo-db/src/queue/) — or repurpose them as Feed internals.
 - The legacy `effect-queue-service.ts` bridge layer (and its `ContextQueueService` export).
 - The `useQueue` hook in `@dxos/react-client/echo` (replaced by `useFeedQuery` / `useFeedQueryByDxn`).
-- All remaining `as Queue` stopgap casts (2 known: `InvocationTraceContainer.tsx` line 201 boundary for `ExecutionGraphPanel`, `ExecutionGraphModule.tsx` line 20 boundary for `useExecutionGraph`).
+- ✅ All remaining `as Queue` stopgap casts (2 known: `InvocationTraceContainer.tsx` line 201 boundary for `ExecutionGraphPanel`, `ExecutionGraphModule.tsx` line 20 boundary for `useExecutionGraph`) — both removed; consumers now pass `objects: readonly Obj.Unknown[]`.
 
 **Downstream API changes:**
 
-- `useExecutionGraph(queue?: Queue)` in `react-ui-components` → accept `Feed.Feed`.
-- `ExecutionGraphPanel` in `devtools` → accept `Feed.Feed`.
+- ✅ `useExecutionGraph(queue?: Queue)` in `react-ui-components` → `useExecutionGraph(objects: readonly Obj.Unknown[])`.
+- ✅ `ExecutionGraphPanel` in `devtools` → `ExecutionGraphPanel({ objects })`.
 - Re-exports through `@dxos/client/echo` — drop `type Queue` (keep `createFeedServiceLayer`).
 
 ### Phase 7 — optional: make `Feed.Feed` directly Queryable
