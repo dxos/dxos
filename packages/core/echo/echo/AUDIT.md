@@ -69,13 +69,13 @@ Mentions of the word "Queue" in [internal/common/proxy/change-context.ts](packag
 
 **Then migrate consumers** (~13 production files):
 
-| Queue method | Feed replacement | Prod sites |
-| ------------ | ---------------- | ---------- |
-| `.append(items)` | `Feed.append(feed, items)` | 9 |
-| `.delete(ids)` | `Feed.remove(feed, items)` (parameter shape differs) | 1 |
-| `.sync(...)` | `Feed.sync(feed, ...)` (after primitive lands) | 5 |
-| `.subscribe(cb)` | `Feed.query(...).subscribe(cb)` | 4 |
-| `.queryObjects()` / `.getObjectsById()` | `Feed.runQuery` / `Feed.query` | 3 |
+| Queue method                            | Feed replacement                                     | Prod sites |
+| --------------------------------------- | ---------------------------------------------------- | ---------- |
+| `.append(items)`                        | `Feed.append(feed, items)`                           | 9          |
+| `.delete(ids)`                          | `Feed.remove(feed, items)` (parameter shape differs) | 1          |
+| `.sync(...)`                            | `Feed.sync(feed, ...)` (after primitive lands)       | 5          |
+| `.subscribe(cb)`                        | `Feed.query(...).subscribe(cb)`                      | 4          |
+| `.queryObjects()` / `.getObjectsById()` | `Feed.runQuery` / `Feed.query`                       | 3          |
 
 ### Phase 5 — implement Feed iteration / retention (#7)
 
