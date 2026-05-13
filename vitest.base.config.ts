@@ -64,6 +64,10 @@ const createStorybookProject = (dirname: string) =>
   defineProject({
     test: {
       name: 'storybook',
+      // Suppress flaky `[birpc] function "undefined" not found` rejections from
+      // the storybook runner. The root config sets this too, but project-level
+      // configs do not always inherit it.
+      dangerouslyIgnoreUnhandledErrors: true,
       browser: {
         enabled: true,
         headless: true,
