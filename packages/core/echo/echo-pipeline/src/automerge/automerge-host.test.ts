@@ -154,60 +154,56 @@ describe('AutomergeHost', () => {
     await network.close();
   });
 
-  test(
-    'loadDoc with fetchFromNetwork=false does not announce when doc is in storage',
-    { timeout: 5_000 },
-    async () => {
-      // Pre-populate host1's storage with the doc, then close so that the
-      // host1 we test with has the doc on disk but did not author it (i.e.
-      // it's not in `_createdDocuments` and won't auto-announce).
-      const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
-      let documentId: DocumentId;
-      {
-        const level = await createLevel(tmpPath);
-        const provider = await setupAutomergeHost({ level });
-        const handle = await provider.createDoc({ text: 'Hello world' });
-        documentId = handle.documentId;
-        await provider.flush(Context.default());
-        await provider.close();
-        await level.close();
-      }
+  test('loadDoc with fetchFromNetwork=false does not announce when doc is in storage', { timeout: 5_000 }, async () => {
+    // Pre-populate host1's storage with the doc, then close so that the
+    // host1 we test with has the doc on disk but did not author it (i.e.
+    // it's not in `_createdDocuments` and won't auto-announce).
+    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    let documentId: DocumentId;
+    {
+      const level = await createLevel(tmpPath);
+      const provider = await setupAutomergeHost({ level });
+      const handle = await provider.createDoc({ text: 'Hello world' });
+      documentId = handle.documentId;
+      await provider.flush(Context.default());
+      await provider.close();
+      await level.close();
+    }
 
-      const level1 = await createLevel(tmpPath);
-      const host1 = await setupAutomergeHost({ level: level1 });
+    const level1 = await createLevel(tmpPath);
+    const host1 = await setupAutomergeHost({ level: level1 });
 
-      const level2 = await createLevel();
-      const host2 = await setupAutomergeHost({ level: level2 });
+    const level2 = await createLevel();
+    const host2 = await setupAutomergeHost({ level: level2 });
 
-      const network = await new TestReplicationNetwork().open();
-      await host1.addReplicator(Context.default(), await network.createReplicator());
-      await host2.addReplicator(Context.default(), await network.createReplicator());
+    const network = await new TestReplicationNetwork().open();
+    await host1.addReplicator(Context.default(), await network.createReplicator());
+    await host2.addReplicator(Context.default(), await network.createReplicator());
 
-      // Spy on host2's incoming-request event — fires when any peer sends
-      // an automerge `request` message for a doc to host2. If host1 ever
-      // announced wanting `documentId`, this would trigger.
-      const requests: DocumentId[] = [];
-      const adapter = (host2 as unknown as { _echoNetworkAdapter: EchoNetworkAdapter })._echoNetworkAdapter;
-      adapter.documentRequested.on(({ documentId: requestedId }) => {
-        requests.push(requestedId);
-      });
+    // Spy on host2's incoming-request event — fires when any peer sends
+    // an automerge `request` message for a doc to host2. If host1 ever
+    // announced wanting `documentId`, this would trigger.
+    const requests: DocumentId[] = [];
+    const adapter = (host2 as unknown as { _echoNetworkAdapter: EchoNetworkAdapter })._echoNetworkAdapter;
+    adapter.documentRequested.on(({ documentId: requestedId }) => {
+      requests.push(requestedId);
+    });
 
-      // Load the doc that's already on disk; should resolve from storage.
-      const loaded = await host1.loadDoc<{ text: string }>(Context.default(), documentId, {
-        fetchFromNetwork: false,
-      });
-      expect(loaded.doc()!.text).toEqual('Hello world');
+    // Load the doc that's already on disk; should resolve from storage.
+    const loaded = await host1.loadDoc<{ text: string }>(Context.default(), documentId, {
+      fetchFromNetwork: false,
+    });
+    expect(loaded.doc()!.text).toEqual('Hello world');
 
-      // Give any in-flight share-policy debounce a chance to fire.
-      await sleep(100);
+    // Give any in-flight share-policy debounce a chance to fire.
+    await sleep(100);
 
-      expect(requests).not.toContain(documentId);
+    expect(requests).not.toContain(documentId);
 
-      await host1.close();
-      await host2.close();
-      await network.close();
-    },
-  );
+    await host1.close();
+    await host2.close();
+    await network.close();
+  });
 
   test('collection synchronization', { timeout: 30_000 }, async () => {
     const NUM_DOCUMENTS = 10;
